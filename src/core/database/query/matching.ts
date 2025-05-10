@@ -1,6 +1,12 @@
-import { node, type Query, relation } from 'cypher-query-builder';
+import {
+  node,
+  type NodePattern,
+  type Query,
+  relation,
+} from 'cypher-query-builder';
 import { uniq } from 'lodash';
 import { DateTime } from 'luxon';
+import { type Tagged } from 'type-fest';
 import {
   type ID,
   isIdLike,
@@ -13,11 +19,17 @@ import {
 import { variable } from '../query-augmentation/condition-variables';
 import { apoc, collect, listConcat, merge } from './cypher-functions';
 
-export const requestingUser = (session: Session | ID) => {
+export const currentUser = node('currentUser', 'User', {
+  id: variable('$currentUser'),
+}) as Tagged<NodePattern, 'CurrentUser'>;
+
+export const requestingUser = (session?: Session | ID) => {
   const n = node('requestingUser', 'User', {
-    id: variable('$requestingUser'),
+    id: variable(session ? '$requestingUser' : '$currentUser'),
   });
-  n.addParam(isIdLike(session) ? session : session.userId, 'requestingUser');
+  if (session) {
+    n.addParam(isIdLike(session) ? session : session.userId, 'requestingUser');
+  }
   return n;
 };
 
