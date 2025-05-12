@@ -7,7 +7,7 @@ import {
   type NestInterceptor,
 } from '@nestjs/common';
 import { GqlExecutionContext } from '@nestjs/graphql';
-import { csv } from '@seedcompany/common';
+import { csv, type FnLike } from '@seedcompany/common';
 import { AsyncLocalStorage } from 'async_hooks';
 import { BehaviorSubject } from 'rxjs';
 import {
@@ -21,9 +21,11 @@ import {
   type Session,
   UnauthenticatedException,
 } from '~/common';
+import { loggedInSession as verifyLoggedIn } from '~/common/session';
 import { ConfigService } from '~/core';
 import { GlobalHttpHook, type IRequest } from '~/core/http';
 import { rolesForScope } from '../authorization/dto';
+import { Anonymous } from './anonymous.decorator';
 import { AuthenticationService } from './authentication.service';
 import { SessionHost } from './session.host';
 
@@ -64,13 +66,27 @@ export class SessionInterceptor implements NestInterceptor {
 
     const type = executionContext.getType();
 
+    let isMutation = true;
     let session;
     if (type === 'graphql') {
+      const gqlExecutionContext = GqlExecutionContext.create(executionContext);
+      const op = gqlExecutionContext.getInfo().operation;
+      isMutation = op.operation === 'mutation';
       session = await this.handleGql(executionContext);
     } else if (type === 'http') {
+      const request = executionContext.switchToHttp().getRequest();
+      isMutation = request.method !== 'GET' && request.method !== 'HEAD';
       session = await this.handleHttp(executionContext);
     }
     session$.next(session);
+
+    const allowAnonymous =
+      Anonymous.get(executionContext.getHandler() as FnLike) ??
+      Anonymous.get(executionContext.getClass()) ??
+      !isMutation;
+    if (!allowAnonymous && session) {
+      verifyLoggedIn(session);
+    }
 
     return next.handle();
   }

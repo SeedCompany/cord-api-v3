@@ -49,9 +49,11 @@ export class SessionPipe implements PipeTransform {
   }
 }
 
+/** @deprecated */
 export const LoggedInSession = () =>
   AnonSession({ transform: loggedInSession });
 
+/** @deprecated */
 export const AnonSession =
   (...pipes: Array<Type<PipeTransform> | PipeTransform>): ParameterDecorator =>
   (...args) => {

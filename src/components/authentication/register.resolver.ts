@@ -12,6 +12,7 @@ import { Privileges } from '../authorization';
 import { Power } from '../authorization/dto';
 import { UserLoader } from '../user';
 import { User } from '../user/dto';
+import { Anonymous } from './anonymous.decorator';
 import { AuthenticationService } from './authentication.service';
 import { RegisterInput, RegisterOutput } from './dto';
 
@@ -28,6 +29,7 @@ export class RegisterResolver {
       @sensitive-secrets
     `,
   })
+  @Anonymous()
   async register(
     @Args('input') input: RegisterInput,
     @AnonSession() session: Session,
