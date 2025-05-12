@@ -194,36 +194,10 @@ module default {
         or (__new__.mouStart > __old__.mouStart) ?? false 
         or (__new__.mouEnd < __old__.mouEnd) ?? false then (
         with
-          requestedReportPeriodsForInsertion := (
-            select requestedReportPeriods
-            filter requestedReportPeriods not in existingReports.period
-          ),
-          financialReports := (for reportPeriod in requestedReportPeriodsForInsertion
-          union (
-            insert default::FinancialReport {
-              createdAt := datetime_of_statement(),
-              modifiedAt := datetime_of_statement(),
-              createdBy := assert_exists(global currentActor),
-              modifiedBy := assert_exists(global currentActor),
-              project := __new__,
-              projectContext := __new__.projectContext,
-              container := __new__,
-              period := reportPeriod,
-            }
-          )),
-          narrativeReports := (for reportPeriod in requestedReportPeriodsForInsertion
-          union (
-            insert default::NarrativeReport {
-              createdAt := datetime_of_statement(),
-              modifiedAt := datetime_of_statement(),
-              createdBy := assert_exists(global currentActor),
-              modifiedBy := assert_exists(global currentActor),
-              project := __new__,
-              projectContext := __new__.projectContext,
-              container := __new__,
-              period := reportPeriod,
-            }
-          ))
+          insertedReports := Project::insertReports(
+            array_agg(requestedReportPeriods), 
+            array_agg(existingReports), 
+            __new__)
         for report in reportsForDeletion 
         union (
           delete report
@@ -233,37 +207,11 @@ module default {
       else if newMouStart ?!= oldMouStart 
         or newMouEnd ?!= oldMouEnd then (
         with
-          requestedReportPeriodsForInsertion := (
-            select requestedReportPeriods
-            filter requestedReportPeriods not in existingReports.period
-          ),
-          financialReports := (for reportPeriod in requestedReportPeriodsForInsertion
-          union (
-            insert default::FinancialReport {
-              createdAt := datetime_of_statement(),
-              modifiedAt := datetime_of_statement(),
-              createdBy := assert_exists(global currentActor),
-              modifiedBy := assert_exists(global currentActor),
-              project := __new__,
-              projectContext := __new__.projectContext,
-              container := __new__,
-              period := reportPeriod,
-            }
-          )),
-          narrativeReports := (for reportPeriod in requestedReportPeriodsForInsertion
-          union (
-            insert default::NarrativeReport {
-              createdAt := datetime_of_statement(),
-              modifiedAt := datetime_of_statement(),
-              createdBy := assert_exists(global currentActor),
-              modifiedBy := assert_exists(global currentActor),
-              project := __new__,
-              projectContext := __new__.projectContext,
-              container := __new__,
-              period := reportPeriod,
-            }
-          ))
-        select financialReports union narrativeReports
+          insertedReports := Project::insertReports(
+            array_agg(requestedReportPeriods), 
+            array_agg(existingReports), 
+            __new__)
+        select insertedReports
       ) else (
         select <PeriodicReport>{}
       )
@@ -374,40 +322,46 @@ module Project {
       select reportPeriodRanges
   );
 
-  # function insertReports(requestedReportPeriods: set of range<cal::local_date>,
-  #   existingReports: array<PeriodicReport>, newProject: default::Project) -> optional str
-  #   using (
-  #     with
-  #       requestedReportPeriodsForInsertion := (
-  #         select requestedReportPeriods
-  #         filter requestedReportPeriods not in existingReports.period
-  #       ),
-  #       financialReports := (for reportPeriod in requestedReportPeriodsForInsertion
-  #       union (
-  #         insert default::FinancialReport {
-  #           createdAt := datetime_of_statement(),
-  #           modifiedAt := datetime_of_statement(),
-  #           createdBy := assert_exists(global default::currentActor),
-  #           modifiedBy := assert_exists(global default::currentActor),
-  #           project := __new__,
-  #           projectContext := __new__.projectContext,
-  #           container := __new__,
-  #           period := reportPeriod,
-  #         }
-  #       )),
-  #       narrativeReports := (for reportPeriod in requestedReportPeriodsForInsertion
-  #       union (
-  #         insert default::NarrativeReport {
-  #           createdAt := datetime_of_statement(),
-  #           modifiedAt := datetime_of_statement(),
-  #           createdBy := assert_exists(global default::currentActor),
-  #           modifiedBy := assert_exists(global default::currentActor),
-  #           project := __new__,
-  #           projectContext := __new__.projectContext,
-  #           container := __new__,
-  #           period := reportPeriod,
-  #         }
-  #       ))
-  #     select financialReports union narrativeReports
-  #   )
+  function insertReports(requestedReportPeriods: array<range<cal::local_date>>,
+    existingReports: array<default::PeriodicReport>, 
+    newProject: default::Project) -> set of default::PeriodicReport
+    using (
+      with
+        requestedReportPeriodsForInsertion := (
+          select array_unpack(requestedReportPeriods)
+          filter array_unpack(requestedReportPeriods) not in (
+            for report in array_unpack(existingReports)
+            union (
+              select report.period
+            )
+          )
+        ),
+        financialReports := (for reportPeriod in requestedReportPeriodsForInsertion
+        union (
+          insert default::FinancialReport {
+            createdAt := datetime_of_statement(),
+            modifiedAt := datetime_of_statement(),
+            createdBy := assert_exists(global default::currentActor),
+            modifiedBy := assert_exists(global default::currentActor),
+            project := newProject,
+            projectContext := newProject.projectContext,
+            container := newProject,
+            period := reportPeriod,
+          }
+        )),
+        narrativeReports := (for reportPeriod in requestedReportPeriodsForInsertion
+        union (
+          insert default::NarrativeReport {
+            createdAt := datetime_of_statement(),
+            modifiedAt := datetime_of_statement(),
+            createdBy := assert_exists(global default::currentActor),
+            modifiedBy := assert_exists(global default::currentActor),
+            project := newProject,
+            projectContext := newProject.projectContext,
+            container := newProject,
+            period := reportPeriod,
+          }
+        ))
+      select financialReports union narrativeReports
+    );
 }
