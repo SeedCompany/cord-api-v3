@@ -231,10 +231,11 @@ export class AuthenticationService {
   }
 
   async asUser<R>(
-    userId: ID<'User'>,
+    user: ID<'User'> | Session,
     fn: (session: Session) => Promise<R>,
   ): Promise<R> {
-    const session = await this.sessionForUser(userId);
+    const session =
+      typeof user === 'string' ? await this.sessionForUser(user) : user;
     return await this.sessionHost.withSession(session, () => fn(session));
   }
 
