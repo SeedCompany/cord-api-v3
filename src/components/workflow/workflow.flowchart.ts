@@ -56,9 +56,7 @@ export const WorkflowFlowchart = <W extends Workflow>(workflow: () => W) => {
           cmpBy((t) => {
             const endState =
               typeof t.to === 'string' ? t.to : t.to.relatedStates?.[0];
-            return this.workflow.states.entries.findIndex(
-              (e) => e.value === endState,
-            );
+            return this.workflow.states.indexOf(endState!);
           }),
         )
         .map((t) => {

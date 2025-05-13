@@ -113,8 +113,8 @@ module default {
     
     trigger createBudgetOnInsert after insert for each do (
       insert default::Budget {
-        createdAt := datetime_of_statement(),
-        modifiedAt := datetime_of_statement(),
+        createdAt := datetime_of_transaction(),
+        modifiedAt := datetime_of_transaction(),
         createdBy := assert_exists(global currentActor),
         modifiedBy := assert_exists(global currentActor),
         project := __new__,

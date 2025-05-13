@@ -157,7 +157,7 @@ export class ProjectRepository extends CommonRepository {
   }
 
   async create(input: CreateProject) {
-    const step = input.step ?? ProjectStep.EarlyConversations;
+    const step = ProjectStep.EarlyConversations;
     const now = DateTime.local();
     const {
       primaryLocationId,

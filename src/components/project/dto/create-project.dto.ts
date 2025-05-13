@@ -17,7 +17,6 @@ import {
 } from '~/common';
 import { type Location } from '../../location/dto';
 import { ReportPeriod } from '../../periodic-report/dto';
-import { ProjectStep } from './project-step.enum';
 import { ProjectType } from './project-type.enum';
 import { IProject, type Project } from './project.dto';
 
@@ -68,9 +67,6 @@ export abstract class CreateProject {
 
   @DateField({ nullable: true })
   readonly estimatedSubmission?: CalendarDate;
-
-  @Field(() => ProjectStep, { nullable: true })
-  readonly step?: ProjectStep;
 
   @SensitivityField({
     description: 'Defaults to High, only available on internship projects',

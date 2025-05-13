@@ -1074,7 +1074,7 @@ with
            )
           )
         ),
-      newProducts := (select products filter .createdAt = datetime_of_statement())
+      newProducts := (select products filter .createdAt = datetime_of_transaction())
  select { `Added Scripture Products` := newProducts.project.name ++ ': '
          ++ newProducts.scripture.label ++ ' '
          ++ <str>newProducts.scripture.verses.`start`.chapter ++ ' - '

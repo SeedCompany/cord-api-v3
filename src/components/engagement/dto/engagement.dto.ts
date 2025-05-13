@@ -1,6 +1,5 @@
 import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
-import { keys as keysOf } from 'ts-transformer-keys';
 import { type MergeExclusive } from 'type-fest';
 import {
   Calculated,
@@ -17,7 +16,6 @@ import {
   SecuredBoolean,
   SecuredDateNullable,
   SecuredDateTimeNullable,
-  type SecuredProps,
   SecuredRichTextNullable,
   SecuredStringNullable,
   Sensitivity,
@@ -71,8 +69,6 @@ const RequiredWhenNotInDev = RequiredWhen(() => Engagement)({
  * This should be used for GraphQL but never for TypeScript types.
  */
 class Engagement extends Interfaces {
-  static readonly Props: string[] = keysOf<Engagement>();
-  static readonly SecuredProps: string[] = keysOf<SecuredProps<Engagement>>();
   static readonly Relations = {
     ...Commentable.Relations,
   } satisfies ResourceRelationsShape;
@@ -167,8 +163,6 @@ export { Engagement as IEngagement, type AnyEngagement as Engagement };
   implements: [Engagement],
 })
 export class LanguageEngagement extends Engagement {
-  static readonly Props = keysOf<LanguageEngagement>();
-  static readonly SecuredProps = keysOf<SecuredProps<LanguageEngagement>>();
   static readonly Relations = {
     ...Engagement.Relations,
     // why is this singular?
@@ -218,8 +212,6 @@ export class LanguageEngagement extends Engagement {
   implements: [Engagement],
 })
 export class InternshipEngagement extends Engagement {
-  static readonly Props = keysOf<InternshipEngagement>();
-  static readonly SecuredProps = keysOf<SecuredProps<InternshipEngagement>>();
   static readonly Parent = () =>
     import('../../project/dto').then((m) => m.InternshipProject);
 

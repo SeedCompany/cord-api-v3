@@ -1,5 +1,4 @@
 import { Field, ObjectType } from '@nestjs/graphql';
-import { keys as keysOf } from 'ts-transformer-keys';
 import {
   DbLabel,
   DbUnique,
@@ -8,7 +7,6 @@ import {
   Resource,
   type ResourceRelationsShape,
   SecuredProperty,
-  type SecuredProps,
   SecuredRoles,
   SecuredString,
   SecuredStringNullable,
@@ -35,8 +33,6 @@ const Interfaces = IntersectTypes(Resource, Actor, Pinnable, Commentable);
 })
 @DbLabel('User', 'Actor')
 export class User extends Interfaces {
-  static readonly Props = keysOf<User>();
-  static readonly SecuredProps = keysOf<SecuredProps<User>>();
   static readonly Relations = () =>
     ({
       education: [Education],

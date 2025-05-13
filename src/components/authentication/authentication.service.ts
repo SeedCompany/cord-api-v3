@@ -22,7 +22,7 @@ import { ForgotPassword } from '~/core/email/templates';
 import { disableAccessPolicies, Gel } from '~/core/gel';
 import { Privileges } from '../authorization';
 import { rolesForScope, withoutScope } from '../authorization/dto';
-import { AssignableRoles } from '../authorization/dto/assignable-roles';
+import { AssignableRoles } from '../authorization/dto/assignable-roles.dto';
 import { SystemAgentRepository } from '../user/system-agent.repository';
 import { AuthenticationRepository } from './authentication.repository';
 import { CryptoService } from './crypto.service';

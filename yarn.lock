@@ -1425,6 +1425,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@fastify/websocket@npm:^11.0.2":
+  version: 11.0.2
+  resolution: "@fastify/websocket@npm:11.0.2"
+  dependencies:
+    duplexify: "npm:^4.1.3"
+    fastify-plugin: "npm:^5.0.0"
+    ws: "npm:^8.16.0"
+  checksum: 10c0/ccdaf645d768f427542d5133d3a0f8b4ce49e4bc2496543e1fb6f1d4b8c4e07af6fb80bde7bf50acf7536cb35c839c54d94a0a6b6f1aec76d413f0e68b92e04e
+  languageName: node
+  linkType: hard
+
 "@ffprobe-installer/darwin-arm64@npm:5.0.1":
   version: 5.0.1
   resolution: "@ffprobe-installer/darwin-arm64@npm:5.0.1"
@@ -1528,15 +1539,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@golevelup/nestjs-discovery@npm:^4.0.0":
-  version: 4.0.3
-  resolution: "@golevelup/nestjs-discovery@npm:4.0.3"
+"@golevelup/nestjs-discovery@npm:^5.0.0":
+  version: 5.0.0
+  resolution: "@golevelup/nestjs-discovery@npm:5.0.0"
   dependencies:
     lodash: "npm:^4.17.21"
   peerDependencies:
-    "@nestjs/common": ^10.x || ^11.0.0
-    "@nestjs/core": ^10.x || ^11.0.0
-  checksum: 10c0/e5b95a5d8a25a5ca98ea50f66cb71870ab075f25080782ea2a2c550e17a1c61148b0c18f6b013eec3df225afe6989531cb9f6bb7f289028bb446e6dc867a5b0f
+    "@nestjs/common": ^11.0.20
+    "@nestjs/core": ^11.0.20
+  checksum: 10c0/4ad3551156873cdb27586bf516660c741015ad9c55d09f0492d6f1f799498749b60149457fe6e09470db7369c9a78eda3e88f7e9019ed2728f4de485cfc02e75
   languageName: node
   linkType: hard
 
@@ -3073,8 +3084,8 @@ __metadata:
   linkType: hard
 
 "@seedcompany/common@npm:>0.3 <1, @seedcompany/common@npm:>=0.17 <1, @seedcompany/common@npm:>=0.17 <1.0.0, @seedcompany/common@npm:>=0.19.1 <1, @seedcompany/common@npm:>=0.3.0 <1.0.0":
-  version: 0.19.1
-  resolution: "@seedcompany/common@npm:0.19.1"
+  version: 0.19.2
+  resolution: "@seedcompany/common@npm:0.19.2"
   dependencies:
     type-fest: "npm:^4.37.0"
   peerDependencies:
@@ -3082,7 +3093,7 @@ __metadata:
   peerDependenciesMeta:
     luxon:
       optional: true
-  checksum: 10c0/d34e8591273ee4be08201b7a43c66240677027b155902e2558c8ed6d80274306d785b3675d3ecd68b6da2aa8adc831c23c71f62caa947e267573844abc3f92d8
+  checksum: 10c0/a66e92ba97d3912b7bf77d7f131d3ae1c07d167d19eff8553e60985663faa7ac46fa681e4b4f73587e04277e63ab96239b95789ed4e5a35452f3d7afdb1d6bf1
   languageName: node
   linkType: hard
 
@@ -3137,9 +3148,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@seedcompany/nest@npm:^1.6.1":
-  version: 1.6.1
-  resolution: "@seedcompany/nest@npm:1.6.1"
+"@seedcompany/nest@npm:^1.8.0":
+  version: 1.8.0
+  resolution: "@seedcompany/nest@npm:1.8.0"
   dependencies:
     "@nestjs/common": "npm:^10 || ^11"
     "@nestjs/core": "npm:^10 || ^11"
@@ -3156,7 +3167,7 @@ __metadata:
     "@nestjs/graphql": ^12 || ^13
     class-transformer: ^0.5.1
     reflect-metadata: ^0.1.12 || ^0.2.0
-  checksum: 10c0/ea820ab6a0fb245f36a6bc50f9c80f675488d1c46e4151ec38eb6cc10574e3a10bc8844c410ee9169fb5aae1e4ed3a95779c20404ae341f0f0c41ae5a4f20cdf
+  checksum: 10c0/89869ca09f16602d920bc1c2303e479116d87f04da61034042ddcf1d6a5b456d7e824b393fb752693cf04a73f87bf707f371da14cdf5134b9075aacb9154b3b5
   languageName: node
   linkType: hard
 
@@ -3183,12 +3194,12 @@ __metadata:
   linkType: hard
 
 "@seedcompany/scripture@npm:>=0.8.0":
-  version: 0.9.0
-  resolution: "@seedcompany/scripture@npm:0.9.0"
+  version: 0.9.1
+  resolution: "@seedcompany/scripture@npm:0.9.1"
   dependencies:
     "@seedcompany/common": "npm:>=0.17 <1.0.0"
     type-fest: "npm:^4.37.0"
-  checksum: 10c0/667893ab528d5723c97ee42d5eb74318209bc2157361f4b9b806c29a67dfa32f09a66cfb5477ec76485574c56d2fc1b44217888f47712d3876edf7a5f65142a1
+  checksum: 10c0/04a55612fbf1c2c075acdf7c5812357b48da8dc60bc93a8635aeaa6dacbb89c7112761c5be975250c841c1b42ce44d21e5925e3b4c765e24d9601af335323348
   languageName: node
   linkType: hard
 
@@ -4140,13 +4151,6 @@ __metadata:
   version: 12.20.55
   resolution: "@types/node@npm:12.20.55"
   checksum: 10c0/3b190bb0410047d489c49bbaab592d2e6630de6a50f00ba3d7d513d59401d279972a8f5a598b5bb8ddc1702f8a2f4ec57a65d93852f9c329639738e7053637d1
-  languageName: node
-  linkType: hard
-
-"@types/node@npm:^13.7.4":
-  version: 13.13.52
-  resolution: "@types/node@npm:13.13.52"
-  checksum: 10c0/9224aaea219fe7f8b903039bb146d4c38b391d0166a8226a1efa2d43a35b5b7dddfe021c32941bb454a1543da94921c112687934da88e2a019f4bd44f9d517b5
   languageName: node
   linkType: hard
 
@@ -5816,9 +5820,10 @@ __metadata:
     "@fastify/compress": "npm:^8.0.1"
     "@fastify/cookie": "npm:^11.0.1"
     "@fastify/cors": "npm:^11.0.1"
+    "@fastify/websocket": "npm:^11.0.2"
     "@ffprobe-installer/ffprobe": "npm:^2.1.2"
     "@gel/generate": "npm:^0.7.0-canary.20250422T080308"
-    "@golevelup/nestjs-discovery": "npm:^4.0.0"
+    "@golevelup/nestjs-discovery": "npm:^5.0.0"
     "@graphql-hive/cli": "npm:>=0.44"
     "@graphql-hive/yoga": "npm:>=0.41.0"
     "@graphql-tools/utils": "npm:^10.5.4"
@@ -5836,7 +5841,7 @@ __metadata:
     "@seedcompany/common": "npm:>=0.19.1 <1"
     "@seedcompany/data-loader": "npm:^2.0.1"
     "@seedcompany/eslint-plugin": "npm:^3.4.1"
-    "@seedcompany/nest": "npm:^1.6.1"
+    "@seedcompany/nest": "npm:^1.8.0"
     "@seedcompany/nestjs-email": "npm:^4.1.1"
     "@seedcompany/scripture": "npm:>=0.8.0"
     "@tsconfig/strictest": "npm:^2.0.2"
@@ -5881,6 +5886,7 @@ __metadata:
     graphql: "npm:^16.9.0"
     graphql-parse-resolve-info: "npm:^4.14.0"
     graphql-scalars: "npm:^1.22.4"
+    graphql-ws: "npm:^6.0.4"
     graphql-yoga: "npm:^5.13.4"
     human-format: "npm:^1.2.0"
     husky: "npm:^4.3.8"
@@ -5888,7 +5894,6 @@ __metadata:
     indent-string: "npm:^5.0.0"
     ioredis: "npm:^5.3.2"
     iso-3166-1: "npm:^2.1.1"
-    ix: "npm:^5.0.0"
     jest: "npm:^29.7.0"
     jsonwebtoken: "npm:^9.0.2"
     lazy-get-decorator: "npm:^2.2.1"
@@ -5916,7 +5921,6 @@ __metadata:
     ts-morph: "npm:^25.0.1"
     ts-node: "npm:^10.9.1"
     ts-patch: "npm:^3.0.2"
-    ts-transformer-keys: "npm:^0.4.4"
     type-fest: "npm:^4.15.0"
     typescript: "npm:~5.8.3"
     typescript-transform-paths: "npm:^3.4.6"
@@ -6482,7 +6486,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"duplexify@npm:^4.1.1":
+"duplexify@npm:^4.1.1, duplexify@npm:^4.1.3":
   version: 4.1.3
   resolution: "duplexify@npm:4.1.3"
   dependencies:
@@ -8079,7 +8083,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"graphql-ws@npm:6.0.4, graphql-ws@npm:^6.0.3":
+"graphql-ws@npm:6.0.4, graphql-ws@npm:^6.0.3, graphql-ws@npm:^6.0.4":
   version: 6.0.4
   resolution: "graphql-ws@npm:6.0.4"
   peerDependencies:
@@ -9069,16 +9073,6 @@ __metadata:
     has-symbols: "npm:^1.1.0"
     set-function-name: "npm:^2.0.2"
   checksum: 10c0/f7a262808e1b41049ab55f1e9c29af7ec1025a000d243b83edf34ce2416eedd56079b117fa59376bb4a724110690f13aa8427f2ee29a09eec63a7e72367626d0
-  languageName: node
-  linkType: hard
-
-"ix@npm:^5.0.0":
-  version: 5.0.0
-  resolution: "ix@npm:5.0.0"
-  dependencies:
-    "@types/node": "npm:^13.7.4"
-    tslib: "npm:^2.3.0"
-  checksum: 10c0/2b9a1fd724fb9d42e2d0786ab03333148a776fe546cc7f27ed95d49c7d22231cc371bbc9b377a4f29cbaf8ac0cdc5ef80a21821e396cf5462f1d5b8f7a8f8624
   languageName: node
   linkType: hard
 
@@ -13578,15 +13572,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ts-transformer-keys@npm:^0.4.4":
-  version: 0.4.4
-  resolution: "ts-transformer-keys@npm:0.4.4"
-  peerDependencies:
-    typescript: ">=2.4.1"
-  checksum: 10c0/f0910b146c0bb41e4b01cdfaa74a241720978dc3ee4ae98b534a5d7ecb6867b80f98e0cf459d10fc9ab3084b66e8ae69a71658ba10fdd08b2f534c515c536cbe
-  languageName: node
-  linkType: hard
-
 "tsconfig-paths-webpack-plugin@npm:4.2.0":
   version: 4.2.0
   resolution: "tsconfig-paths-webpack-plugin@npm:4.2.0"
@@ -13629,7 +13614,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tslib@npm:2.8.1, tslib@npm:^2.0.1, tslib@npm:^2.0.3, tslib@npm:^2.1.0, tslib@npm:^2.3.0, tslib@npm:^2.4.0, tslib@npm:^2.5.0, tslib@npm:^2.6.2, tslib@npm:^2.6.3, tslib@npm:^2.8.1":
+"tslib@npm:2.8.1, tslib@npm:^2.0.1, tslib@npm:^2.0.3, tslib@npm:^2.1.0, tslib@npm:^2.4.0, tslib@npm:^2.5.0, tslib@npm:^2.6.2, tslib@npm:^2.6.3, tslib@npm:^2.8.1":
   version: 2.8.1
   resolution: "tslib@npm:2.8.1"
   checksum: 10c0/9c4759110a19c53f992d9aae23aac5ced636e99887b51b9e61def52611732872ff7668757d4e4c61f19691e36f4da981cd9485e869b4a7408d689f6bf1f14e62
@@ -14286,7 +14271,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ws@npm:8.18.1, ws@npm:^8.17.1":
+"ws@npm:8.18.1, ws@npm:^8.16.0, ws@npm:^8.17.1":
   version: 8.18.1
   resolution: "ws@npm:8.18.1"
   peerDependencies:

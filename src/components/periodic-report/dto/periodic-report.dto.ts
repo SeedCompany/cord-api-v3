@@ -1,5 +1,4 @@
 import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
-import { keys as keysOf } from 'ts-transformer-keys';
 import {
   Calculated,
   CalendarDate,
@@ -7,7 +6,6 @@ import {
   type ResourceShape,
   SecuredDateNullable,
   SecuredProperty,
-  type SecuredProps,
   SecuredStringNullable,
   Sensitivity,
   SensitivityField,
@@ -26,9 +24,6 @@ import { ReportType } from './report-type.enum';
   implements: [Resource],
 })
 class PeriodicReport extends Resource {
-  static readonly Props: string[] = keysOf<PeriodicReport>();
-  static readonly SecuredProps: string[] =
-    keysOf<SecuredProps<PeriodicReport>>();
   static readonly Parent: ResourceShape<any>['Parent'] = 'dynamic';
 
   @Field(() => ReportType)
@@ -68,8 +63,6 @@ export { PeriodicReport as IPeriodicReport };
   implements: [PeriodicReport],
 })
 export class FinancialReport extends PeriodicReport {
-  static readonly Props = keysOf<FinancialReport>();
-  static readonly SecuredProps = keysOf<SecuredProps<FinancialReport>>();
   static readonly Parent = 'dynamic';
 
   declare readonly type: 'Financial';
@@ -80,8 +73,6 @@ export class FinancialReport extends PeriodicReport {
   implements: [PeriodicReport],
 })
 export class NarrativeReport extends PeriodicReport {
-  static readonly Props = keysOf<NarrativeReport>();
-  static readonly SecuredProps = keysOf<SecuredProps<NarrativeReport>>();
   static readonly Parent = 'dynamic';
 
   declare readonly type: 'Narrative';

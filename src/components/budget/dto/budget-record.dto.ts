@@ -1,5 +1,4 @@
 import { Field, ObjectType } from '@nestjs/graphql';
-import { keys as keysOf } from 'ts-transformer-keys';
 import {
   Calculated,
   type ID,
@@ -8,7 +7,6 @@ import {
   type Secured,
   SecuredFloatNullable,
   SecuredInt,
-  type SecuredProps,
   Sensitivity,
   SensitivityField,
 } from '~/common';
@@ -27,8 +25,6 @@ const Interfaces = IntersectTypes(Resource, ChangesetAware);
   implements: Interfaces.members,
 })
 export class BudgetRecord extends Interfaces {
-  static readonly Props = keysOf<BudgetRecord>();
-  static readonly SecuredProps = keysOf<SecuredProps<BudgetRecord>>();
   static readonly Parent = () => import('./budget.dto').then((m) => m.Budget);
 
   @Field(() => Budget)

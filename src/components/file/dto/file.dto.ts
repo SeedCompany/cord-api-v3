@@ -3,7 +3,6 @@ import { simpleSwitch } from '@seedcompany/common';
 import { stripIndent } from 'common-tags';
 import { DateTime } from 'luxon';
 import { type Readable } from 'stream';
-import { keys as keysOf } from 'ts-transformer-keys';
 import { type MergeExclusive } from 'type-fest';
 import {
   DateTimeField,
@@ -15,7 +14,6 @@ import {
   Resource,
   type Secured,
   SecuredProperty,
-  type SecuredProps,
   ServerException,
 } from '~/common';
 import { type BaseNode } from '~/core/database/results';
@@ -52,9 +50,6 @@ export const resolveFileNode = (val: AnyFileNode) => {
  * This should be used for GraphQL but never for TypeScript types.
  */
 abstract class FileNode extends Resource {
-  static readonly Props: string[] = keysOf<FileNode>();
-  static readonly SecuredProps: string[] = keysOf<SecuredProps<FileNode>>();
-
   @Field(() => FileNodeType)
   readonly type: FileNodeType;
 
@@ -106,9 +101,6 @@ abstract class BaseFile extends FileNode {
   implements: [FileNode, Resource],
 })
 export class FileVersion extends BaseFile {
-  static readonly Props = keysOf<FileVersion>();
-  static readonly SecuredProps = keysOf<SecuredProps<FileVersion>>();
-
   declare readonly type: 'FileVersion';
 }
 
@@ -117,9 +109,6 @@ export class FileVersion extends BaseFile {
   implements: [FileNode, Resource],
 })
 export class File extends BaseFile {
-  static readonly Props = keysOf<File>();
-  static readonly SecuredProps = keysOf<SecuredProps<File>>();
-
   declare readonly type: 'File';
 
   readonly latestVersionId: ID;
@@ -135,9 +124,6 @@ export class File extends BaseFile {
   implements: [FileNode, Resource],
 })
 export class Directory extends FileNode {
-  static readonly Props = keysOf<Directory>();
-  static readonly SecuredProps = keysOf<SecuredProps<Directory>>();
-
   declare readonly type: 'Directory';
 
   @Field(() => Int, {

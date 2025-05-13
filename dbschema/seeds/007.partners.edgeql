@@ -125,6 +125,6 @@ with
       )
     )
   ),
-  new := (select partners filter .createdAt = datetime_of_statement())
+  new := (select partners filter .createdAt = datetime_of_transaction())
 select { `Added Partners` := new.name }
 filter count(new) > 0;

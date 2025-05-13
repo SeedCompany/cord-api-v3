@@ -1,7 +1,6 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { GraphQLString } from 'graphql';
-import { keys as keysOf } from 'ts-transformer-keys';
 import {
   Calculated,
   DbLabel,
@@ -16,7 +15,6 @@ import {
   SecuredIntNullable,
   SecuredProperty,
   SecuredPropertyList,
-  type SecuredProps,
   SecuredString,
   SecuredStringNullable,
   Sensitivity,
@@ -43,8 +41,6 @@ export abstract class SecuredTags extends SecuredPropertyList<string>(
 @RegisterResource({ db: e.Ethnologue.Language })
 @ObjectType()
 export class EthnologueLanguage {
-  static readonly Props = keysOf<EthnologueLanguage>();
-  static readonly SecuredProps = keysOf<SecuredProps<EthnologueLanguage>>();
   static readonly Parent = async () => Language;
 
   readonly __typename?: 'EthnologueLanguage';
@@ -86,8 +82,6 @@ const Interfaces = IntersectTypes(Resource, Pinnable, Postable, Commentable);
   implements: Interfaces.members,
 })
 export class Language extends Interfaces {
-  static readonly Props = keysOf<Language>();
-  static readonly SecuredProps = keysOf<SecuredProps<Language>>();
   static readonly Relations = {
     ethnologue: EthnologueLanguage,
     locations: [Location], // a child list but not creating deleting...does it still count?

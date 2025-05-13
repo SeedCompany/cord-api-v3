@@ -1,6 +1,5 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
-import { keys as keysOf } from 'ts-transformer-keys';
 import {
   DbLabel,
   type ID,
@@ -11,7 +10,6 @@ import {
   type RichTextDocument,
   RichTextField,
   type Secured,
-  type SecuredProps,
   SecuredRichText,
   SecuredRichTextNullable,
   type SetUnsecuredType,
@@ -36,9 +34,6 @@ export class PromptResponse extends Resource {
 @ObjectType()
 @DbLabel(VariantResponse.name, 'Property')
 export abstract class VariantResponse<Key extends string = string> {
-  static Props = keysOf<VariantResponse>();
-  static SecuredProps = keysOf<SecuredProps<VariantResponse>>();
-
   @Field(() => Variant)
   readonly variant: Variant<Key> & SetUnsecuredType<Key>;
 
@@ -55,8 +50,6 @@ export abstract class VariantResponse<Key extends string = string> {
 export class PromptVariantResponse<
   Key extends string = string,
 > extends Resource {
-  static Props = keysOf<PromptVariantResponse>();
-  static SecuredProps = keysOf<SecuredProps<PromptVariantResponse>>();
   static readonly Parent = 'dynamic' as 'dynamic' | (() => Promise<any>);
 
   static Relations = {

@@ -2,7 +2,6 @@ import { Field, InputType, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { many, type Many } from '@seedcompany/common';
 import { stripIndent } from 'common-tags';
 import { type UUID } from 'node:crypto';
-import { keys as keysOf } from 'ts-transformer-keys';
 import { type Merge } from 'type-fest';
 import * as uuid from 'uuid';
 import {
@@ -11,7 +10,6 @@ import {
   IdField,
   makeEnum,
   OptionalField,
-  type SecuredProps,
 } from '~/common';
 import { InlineMarkdownScalar } from '~/common/markdown.scalar';
 import { type Cell } from '~/common/xlsx.util';
@@ -136,9 +134,6 @@ export class PnpExtractionResultFilters {
 
 @InterfaceType()
 export abstract class PnpExtractionResult {
-  static readonly Props = keysOf<PnpExtractionResult>();
-  static readonly SecuredProps = keysOf<SecuredProps<PnpExtractionResult>>();
-
   constructor(private readonly fileVersionId: ID<'FileVersion'>) {}
 
   readonly problems = new Map<ID, StoredProblem>();

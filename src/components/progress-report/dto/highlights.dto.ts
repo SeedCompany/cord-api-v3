@@ -1,5 +1,4 @@
-import { keys as keysOf } from 'ts-transformer-keys';
-import { Role, type SecuredProps, Variant, type VariantOf } from '~/common';
+import { Role, Variant, type VariantOf } from '~/common';
 import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
 import { PromptVariantResponse } from '../../prompts/dto';
@@ -25,8 +24,6 @@ const variants = Variant.createList({
 
 @RegisterResource({ db: e.ProgressReport.Highlight })
 export class ProgressReportHighlight extends PromptVariantResponse<HighlightVariant> {
-  static Props = keysOf<ProgressReportHighlight>();
-  static SecuredProps = keysOf<SecuredProps<ProgressReportHighlight>>();
   static readonly Parent = () =>
     import('./progress-report.dto').then((m) => m.ProgressReport);
   static Variants = variants;

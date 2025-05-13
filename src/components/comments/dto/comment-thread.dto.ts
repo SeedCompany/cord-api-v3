@@ -1,10 +1,8 @@
 import { Field, ObjectType } from '@nestjs/graphql';
-import { keys as keysOf } from 'ts-transformer-keys';
 import {
   type ID,
   Resource,
   type ResourceRelationsShape,
-  type SecuredProps,
   type SetUnsecuredType,
   type UnsecuredDto,
 } from '~/common';
@@ -18,9 +16,6 @@ import { Comment } from './comment.dto';
   implements: [Resource],
 })
 export class CommentThread extends Resource {
-  static readonly Props = keysOf<CommentThread>();
-  static readonly SecuredProps: string[] =
-    keysOf<SecuredProps<CommentThread>>();
   static readonly Relations = {
     comments: [Comment],
   } satisfies ResourceRelationsShape;

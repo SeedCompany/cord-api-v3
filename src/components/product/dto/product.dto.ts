@@ -1,7 +1,6 @@
 import { Field, Float, Int, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { startCase } from 'lodash';
-import { keys as keysOf } from 'ts-transformer-keys';
 import { type MergeExclusive } from 'type-fest';
 import {
   DbLabel,
@@ -9,7 +8,6 @@ import {
   type Secured,
   SecuredBoolean,
   SecuredFloat,
-  type SecuredProps,
   SecuredString,
   SecuredStringNullable,
   Sensitivity,
@@ -54,8 +52,6 @@ export const resolveProductType = (
   implements: [Producible],
 })
 export class Product extends Producible {
-  static readonly Props: string[] = keysOf<Product>();
-  static readonly SecuredProps: string[] = keysOf<SecuredProps<Product>>();
   static readonly Parent = () =>
     import('../../engagement/dto').then((m) => m.LanguageEngagement);
 
@@ -128,8 +124,6 @@ export class Product extends Producible {
   `,
 })
 export class DirectScriptureProduct extends Product {
-  static readonly Props = keysOf<DirectScriptureProduct>();
-  static readonly SecuredProps = keysOf<SecuredProps<DirectScriptureProduct>>();
   static readonly Parent = Product.Parent;
 
   @Field({
@@ -169,9 +163,6 @@ export class DirectScriptureProduct extends Product {
   `,
 })
 export class DerivativeScriptureProduct extends Product {
-  static readonly Props = keysOf<DerivativeScriptureProduct>();
-  static readonly SecuredProps =
-    keysOf<SecuredProps<DerivativeScriptureProduct>>();
   static readonly Parent = Product.Parent;
 
   @Field(() => SecuredProducible, {
@@ -226,8 +217,6 @@ export class DerivativeScriptureProduct extends Product {
     'A product which does not fit into the other two types of products',
 })
 export class OtherProduct extends Product {
-  static readonly Props = keysOf<OtherProduct>();
-  static readonly SecuredProps = keysOf<SecuredProps<OtherProduct>>();
   static readonly Parent = Product.Parent;
 
   @Field()

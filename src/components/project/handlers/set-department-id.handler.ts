@@ -20,9 +20,9 @@ import {
 } from '~/core/database/query';
 import {
   type Project,
-  ProjectStatus,
-  ProjectStep,
   resolveProjectType,
+  ProjectStatus as Status,
+  ProjectStep as Step,
   stepToStatus,
 } from '../dto';
 import { ProjectTransitionedEvent } from '../workflow/events/project-transitioned.event';
@@ -47,14 +47,8 @@ export class SetDepartmentId implements IEventHandler<SubscribedEvent> {
 
     const shouldSetDepartmentId =
       !event.project.departmentId &&
-      ProjectStatus.entries.findIndex((s) => s.value === status) <=
-        ProjectStatus.entries.findIndex(
-          (s) => s.value === ProjectStatus.Active,
-        ) &&
-      ProjectStep.entries.findIndex((s) => s.value === step) >=
-        ProjectStep.entries.findIndex(
-          (s) => s.value === ProjectStep.PendingFinanceConfirmation,
-        );
+      Status.indexOf(status) <= Status.indexOf('Active') &&
+      Step.indexOf(step) >= Step.indexOf('PendingFinanceConfirmation');
     if (!shouldSetDepartmentId) {
       return;
     }

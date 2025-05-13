@@ -2,7 +2,6 @@ import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { simpleSwitch } from '@seedcompany/common';
 import { stripIndent } from 'common-tags';
 import { DateTime } from 'luxon';
-import { keys as keysOf } from 'ts-transformer-keys';
 import { type MergeExclusive } from 'type-fest';
 import {
   Calculated,
@@ -24,7 +23,6 @@ import {
   SecuredDateNullable,
   SecuredDateTime,
   SecuredDateTimeNullable,
-  type SecuredProps,
   SecuredString,
   SecuredStringNullable,
   Sensitivity,
@@ -85,8 +83,6 @@ const RequiredWhenNotInDev = RequiredWhen(() => Project)({
   implements: Interfaces.members,
 })
 class Project extends Interfaces {
-  static readonly Props: string[] = keysOf<Project>();
-  static readonly SecuredProps: string[] = keysOf<SecuredProps<Project>>();
   static readonly BaseNodeProps = [
     ...EnhancedResource.of(Resource).props,
     'type',
@@ -224,10 +220,7 @@ export { Project as IProject, type AnyProject as Project };
   resolveType: resolveProjectType,
   implements: [Project],
 })
-export class TranslationProject extends Project {
-  static readonly Props = keysOf<TranslationProject>();
-  static readonly SecuredProps = keysOf<SecuredProps<TranslationProject>>();
-}
+export class TranslationProject extends Project {}
 
 @RegisterResource({ db: e.MomentumTranslationProject })
 @ObjectType({
@@ -235,10 +228,6 @@ export class TranslationProject extends Project {
   description: 'Formerly known as our TranslationProjects',
 })
 export class MomentumTranslationProject extends TranslationProject {
-  static readonly Props = keysOf<MomentumTranslationProject>();
-  static readonly SecuredProps =
-    keysOf<SecuredProps<MomentumTranslationProject>>();
-
   declare readonly type: 'MomentumTranslation';
 }
 
@@ -247,10 +236,6 @@ export class MomentumTranslationProject extends TranslationProject {
   implements: [TranslationProject],
 })
 export class MultiplicationTranslationProject extends TranslationProject {
-  static readonly Props = keysOf<MultiplicationTranslationProject>();
-  static readonly SecuredProps =
-    keysOf<SecuredProps<MultiplicationTranslationProject>>();
-
   declare readonly type: 'MultiplicationTranslation';
 }
 
@@ -259,9 +244,6 @@ export class MultiplicationTranslationProject extends TranslationProject {
   implements: [Project],
 })
 export class InternshipProject extends Project {
-  static readonly Props = keysOf<InternshipProject>();
-  static readonly SecuredProps = keysOf<SecuredProps<InternshipProject>>();
-
   declare readonly type: 'Internship';
 }
 

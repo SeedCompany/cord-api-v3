@@ -1,5 +1,4 @@
 import { mapEntries, nonEnumerable } from '@seedcompany/common';
-import { Iterable } from 'ix';
 import { LazyGetter as Once } from 'lazy-get-decorator';
 import { assert } from 'ts-essentials';
 import {
@@ -274,38 +273,30 @@ abstract class Rangable<TSheet extends Sheet = Sheet> {
    * Iterate through the rows in this range.
    * Cell column is always the starting column.
    */
-  walkDown(): Iterable<Cell<TSheet>> {
-    return Iterable.from(
-      function* (this: Rangable<TSheet>) {
-        let current = this.start.row;
-        while (current <= this.end.row) {
-          const cell = current.cell(this.start.column);
-          if (cell.exists) {
-            yield cell;
-          }
-          current = current.move(1);
-        }
-      }.call(this),
-    );
+  *walkDown() {
+    let current = this.start.row;
+    while (current <= this.end.row) {
+      const cell = current.cell(this.start.column);
+      if (cell.exists) {
+        yield cell;
+      }
+      current = current.move(1);
+    }
   }
 
   /**
    * Iterate through the columns in this range.
    * Cell row is always the starting row.
    */
-  walkRight(): Iterable<Cell<TSheet>> {
-    return Iterable.from(
-      function* (this: Rangable<TSheet>) {
-        let current = this.start.column;
-        while (current <= this.end.column) {
-          const cell = current.cell(this.start.row);
-          if (cell.exists) {
-            yield cell;
-          }
-          current = current.move(1);
-        }
-      }.call(this),
-    );
+  *walkRight() {
+    let current = this.start.column;
+    while (current <= this.end.column) {
+      const cell = current.cell(this.start.row);
+      if (cell.exists) {
+        yield cell;
+      }
+      current = current.move(1);
+    }
   }
 
   get ref() {

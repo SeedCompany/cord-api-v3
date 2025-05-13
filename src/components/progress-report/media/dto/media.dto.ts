@@ -1,12 +1,10 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { setOf } from '@seedcompany/common';
-import { keys as keysOf } from 'ts-transformer-keys';
 import {
   EnhancedResource,
   IdField,
   type IdOf,
   Resource,
-  type SecuredProps,
   Variant,
   type VariantOf,
 } from '~/common';
@@ -26,8 +24,6 @@ export type VariantGroup = IdOf<'ProgressReportMediaVariantGroup'>;
 @InputType({ isAbstract: true })
 @ObjectType()
 export class ProgressReportMedia extends Resource {
-  static Props = keysOf<ProgressReportMedia>();
-  static SecuredProps = keysOf<SecuredProps<ProgressReportMedia>>();
   static BaseNodeProps = [
     ...EnhancedResource.of(Resource).props,
     'category',

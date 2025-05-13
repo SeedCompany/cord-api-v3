@@ -1,13 +1,6 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
-import { keys as keysOf } from 'ts-transformer-keys';
-import {
-  DateTimeField,
-  type ID,
-  Resource,
-  type SecuredProps,
-  SecuredRichText,
-} from '~/common';
+import { DateTimeField, type ID, Resource, SecuredRichText } from '~/common';
 import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
 
@@ -16,8 +9,6 @@ import { RegisterResource } from '~/core/resources';
   implements: [Resource],
 })
 export class Comment extends Resource {
-  static readonly Props = keysOf<Comment>();
-  static readonly SecuredProps: string[] = keysOf<SecuredProps<Comment>>();
   static readonly Parent = () =>
     import('./comment-thread.dto').then((m) => m.CommentThread);
 

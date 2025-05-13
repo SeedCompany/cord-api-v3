@@ -49,10 +49,9 @@ export class InternshipPositionResolver {
   domain(
     @Parent() { value: position }: SecuredInternPosition,
   ): InternshipDomain | null {
-    const domain = InternshipPosition.entries.find(
-      (entry) => position === entry.value,
-    )?.domain;
-    return position && domain ? domain : null;
+    if (!position) return null;
+    const { domain } = InternshipPosition.entry(position);
+    return domain ?? null;
   }
 
   @ResolveField(() => InternshipProgram, {
@@ -63,9 +62,8 @@ export class InternshipPositionResolver {
   program(
     @Parent() { value: position }: SecuredInternPosition,
   ): InternshipProgram | null {
-    const program = InternshipPosition.entries.find(
-      (entry) => position === entry.value,
-    )?.program;
-    return position && program ? program : null;
+    if (!position) return null;
+    const { program } = InternshipPosition.entry(position);
+    return program ?? null;
   }
 }

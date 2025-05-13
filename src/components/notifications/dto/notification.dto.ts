@@ -1,12 +1,6 @@
 import { Field, InterfaceType } from '@nestjs/graphql';
 import { type DateTime } from 'luxon';
-import { keys as keysOf } from 'ts-transformer-keys';
-import {
-  DateTimeField,
-  resolveByTypename,
-  Resource,
-  type SecuredProps,
-} from '~/common';
+import { DateTimeField, resolveByTypename, Resource } from '~/common';
 import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
 
@@ -16,9 +10,6 @@ import { RegisterResource } from '~/core/resources';
   resolveType: resolveByTypename(Notification.name),
 })
 export class Notification extends Resource {
-  static readonly Props: string[] = keysOf<Notification>();
-  static readonly SecuredProps: string[] = keysOf<SecuredProps<Notification>>();
-
   @Field(() => Boolean, {
     description: 'Whether the notification is unread for the requesting user',
   })

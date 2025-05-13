@@ -1,6 +1,7 @@
 import compression from '@fastify/compress';
 import cookieParser from '@fastify/cookie';
 import cors from '@fastify/cors';
+import websocket from '@fastify/websocket';
 import { DiscoveryService } from '@golevelup/nestjs-discovery';
 import {
   VERSION_NEUTRAL,
@@ -64,6 +65,8 @@ export class HttpAdapter extends PatchedFastifyAdapter {
 
     // Only on routes we've decorated.
     await app.register(rawBody, { global: false });
+
+    await app.register(websocket);
 
     app.setGlobalPrefix(config.hostUrl$.value.pathname.slice(1));
 
