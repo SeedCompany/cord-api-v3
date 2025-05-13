@@ -168,16 +168,18 @@ export class ResourcePrivileges<TResourceStatic extends ResourceShape<any>> {
   verifyChanges(
     changes: AnyChangesOf<TResourceStatic['prototype']>,
     {
-      pathPrefix: pathPrefixProp,
+      pathPrefix,
     }: {
       pathPrefix?: string | null;
     } = {},
   ) {
-    const pathPrefix =
-      pathPrefixProp ?? pathPrefixProp === null
-        ? null
-        : // Guess the input field path based on name convention
-          startCase(this.resource.name).split(' ').at(-1)!.toLowerCase();
+    if (pathPrefix === undefined) {
+      // Guess the input field path based on name convention
+      pathPrefix = startCase(this.resource.name)
+        .split(' ')
+        .at(-1)!
+        .toLowerCase();
+    }
 
     for (const prop of Object.keys(changes)) {
       const dtoPropName: any = isRelation(this.resource, prop)
