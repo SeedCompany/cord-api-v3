@@ -40,7 +40,7 @@ export interface FilterOptions {
 @Injectable()
 export class PolicyExecutor {
   constructor(
-    private readonly sessionHost: SessionHost,
+    readonly sessionHost: SessionHost,
     private readonly policyFactory: PolicyFactory,
     @Inject(forwardRef(() => ConditionOptimizer))
     private readonly conditionOptimizer: ConditionOptimizer & {},

@@ -5,8 +5,10 @@ import {
   EnhancedResource,
   type ResourceShape,
   type SecuredPropsPlusExtraKey,
-  type Session,
 } from '~/common';
+import { SessionHost } from '../../../authentication/session.host';
+import type { Power } from '../../dto';
+import { MissingPowerException } from '../../missing-power.exception';
 import {
   type ChildListAction,
   type ChildSingleAction,
@@ -16,15 +18,17 @@ import { type ResourceObjectContext } from '../object.type';
 import { EdgePrivileges } from './edge-privileges';
 import { PolicyExecutor } from './policy-executor';
 import { ResourcePrivileges } from './resource-privileges';
-import { UserPrivileges } from './user-privileges';
-import { UserResourcePrivileges } from './user-resource-privileges';
 
 @Injectable()
 export class Privileges {
-  constructor(private readonly policyExecutor: PolicyExecutor) {}
+  constructor(
+    private readonly policyExecutor: PolicyExecutor,
+    private readonly sessionHost: SessionHost,
+  ) {}
 
-  forUser(session: Session) {
-    return new UserPrivileges(session, this.policyExecutor);
+  /** @deprecated */
+  forUser(_session: unknown) {
+    return this;
   }
 
   forResource<TResourceStatic extends ResourceShape<any>>(
@@ -32,6 +36,7 @@ export class Privileges {
   ) {
     return new ResourcePrivileges<TResourceStatic>(
       EnhancedResource.of(resource),
+      undefined,
       this.policyExecutor,
     );
   }
@@ -67,6 +72,7 @@ export class Privileges {
     return new EdgePrivileges(
       EnhancedResource.of(resource),
       key,
+      undefined,
       this.policyExecutor,
     );
   }
@@ -75,15 +81,46 @@ export class Privileges {
    * Returns the privileges given the appropriate user & resource context.
    */
   for<TResourceStatic extends ResourceShape<any>>(
-    session: Session,
     resource: TResourceStatic | EnhancedResource<TResourceStatic>,
     object?: ResourceObjectContext<TResourceStatic>,
+  ): ResourcePrivileges<TResourceStatic>;
+  /** @deprecated */
+  for<TResourceStatic extends ResourceShape<any>>(
+    _session: unknown,
+    resource: TResourceStatic | EnhancedResource<TResourceStatic>,
+    object?: ResourceObjectContext<TResourceStatic>,
+  ): ResourcePrivileges<TResourceStatic>;
+  for<TResourceStatic extends ResourceShape<any>>(
+    sessionOrRes: any,
+    resOrCtx: any,
+    ctx?: any,
   ) {
-    return new UserResourcePrivileges<TResourceStatic>(
-      resource,
-      object,
-      session,
+    const hasSession = sessionOrRes.token && sessionOrRes.anonymous != null;
+    return new ResourcePrivileges<TResourceStatic>(
+      hasSession ? resOrCtx : sessionOrRes,
+      hasSession ? ctx : resOrCtx,
       this.policyExecutor,
     );
+  }
+
+  /**
+   * I think this should be replaced in-app code with `.for(X).verifyCan('create')`
+   */
+  verifyPower(power: Power) {
+    const session = this.sessionHost.current;
+    if (!this.powers.has(power)) {
+      throw new MissingPowerException(
+        power,
+        `User ${
+          session.anonymous ? 'anon' : session.userId
+        } does not have the requested power: ${power}`,
+      );
+    }
+  }
+
+  get powers(): Set<Power> {
+    const session = this.sessionHost.current;
+    const policies = this.policyExecutor.getPolicies(session);
+    return new Set(policies.flatMap((policy) => [...policy.powers]));
   }
 }
