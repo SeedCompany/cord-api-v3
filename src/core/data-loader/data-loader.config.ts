@@ -27,7 +27,7 @@ export class DataLoaderConfig {
         // If we have a session, use that as the cache key.
         // It will always be created / scoped within the GQL operation.
         // This ensures the cached data isn't shared between users.
-        const session = this.sessionHost.current$.value;
+        const session = this.sessionHost.currentMaybe;
         if (session) return session;
 
         return lifetimeIdFromExecutionContext(context);

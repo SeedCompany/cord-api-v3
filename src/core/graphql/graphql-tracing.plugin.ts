@@ -47,7 +47,7 @@ export class GraphqlTracingPlugin {
 
     return {
       onExecuteDone: () => {
-        const userId = this.sessionHost.current$.value?.userId;
+        const userId = this.sessionHost.currentMaybe?.userId;
         if (userId) {
           segment.setUser?.(userId);
         }

@@ -45,7 +45,7 @@ export class SessionPipe implements PipeTransform {
   constructor(private readonly sessionHost: SessionHost) {}
 
   transform() {
-    return this.sessionHost.current$.value;
+    return this.sessionHost.currentMaybe;
   }
 }
 

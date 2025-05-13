@@ -124,7 +124,7 @@ export class DatabaseService {
     parameters?: Record<string, any>,
   ): Query<Result> {
     const q = this.db.query() as Query<Result>;
-    q.params.addParam(this.sessionHost.current$.value?.userId, 'currentUser');
+    q.params.addParam(this.sessionHost.currentIfInCtx?.userId, 'currentUser');
     if (query) {
       q.raw(query, parameters);
     }

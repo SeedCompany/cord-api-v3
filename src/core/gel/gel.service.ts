@@ -115,7 +115,7 @@ export class Gel {
     const queryNames = getCurrentQueryNames();
     const traceName = queryNames?.xray ?? 'Query';
 
-    let currentActorId = this.sessionHost.current$.value?.userId;
+    let currentActorId = this.sessionHost.currentIfInCtx?.userId;
     // TODO temporarily check if UUID before applying global.
     // Once migration is complete this can be removed.
     currentActorId = isUUID(currentActorId) ? currentActorId : undefined;
