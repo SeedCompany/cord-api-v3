@@ -105,7 +105,7 @@ export class FieldRegionRepository extends DtoRepository(FieldRegion) {
   }
 
   async list({ filter, ...input }: FieldRegionListInput, session: Session) {
-    if (!this.privileges.forUser(session).can('read')) {
+    if (!this.privileges.can('read')) {
       return SecuredList.Redacted;
     }
     const result = await this.db

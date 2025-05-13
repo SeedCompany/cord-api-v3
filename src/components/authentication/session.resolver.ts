@@ -129,7 +129,7 @@ export class SessionResolver {
   }
 
   @ResolveField(() => [Power], { nullable: true })
-  async powers(@Parent() output: SessionOutput): Promise<Power[]> {
-    return [...this.privileges.forUser(output.session).powers];
+  async powers(): Promise<Power[]> {
+    return [...this.privileges.powers];
   }
 }

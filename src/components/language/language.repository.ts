@@ -247,7 +247,7 @@ export class LanguageRepository extends DtoRepository<
       ])
       .apply(languageFilters(input.filter))
       .apply(
-        this.privileges.forUser(session).filterToReadable({
+        this.privileges.filterToReadable({
           wrapContext: oncePerProject,
         }),
       )

@@ -126,7 +126,7 @@ export class OrganizationRepository extends DtoRepository<
       .matchNode('node', 'Organization')
       .apply(organizationFilters(input.filter))
       .apply(
-        this.privileges.forUser(session).filterToReadable({
+        this.privileges.filterToReadable({
           wrapContext: (inner) => (query) =>
             query
               .optionalMatch([

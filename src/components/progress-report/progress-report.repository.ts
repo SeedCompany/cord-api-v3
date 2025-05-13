@@ -47,7 +47,7 @@ export class ProgressReportRepository extends DtoRepository<
       ])
       .apply(progressReportFilters(input.filter))
       .apply(
-        this.privileges.forUser(session).filterToReadable({
+        this.privileges.filterToReadable({
           wrapContext: oncePerProject,
         }),
       )

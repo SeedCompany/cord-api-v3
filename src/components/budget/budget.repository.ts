@@ -110,7 +110,7 @@ export class BudgetRepository extends DtoRepository<
         node('project', 'Project', pickBy({ id: filter?.projectId })),
       ])
       .apply(
-        this.privileges.forUser(session).filterToReadable({
+        this.privileges.filterToReadable({
           wrapContext: oncePerProject,
         }),
       )

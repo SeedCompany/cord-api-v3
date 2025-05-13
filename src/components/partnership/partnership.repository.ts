@@ -272,7 +272,7 @@ export class PartnershipRepository extends DtoRepository<
       .with('*') // needed between call & where
       .apply(partnershipFilters(input.filter))
       .apply(
-        this.privileges.forUser(session).filterToReadable({
+        this.privileges.filterToReadable({
           wrapContext: oncePerProject,
         }),
       )

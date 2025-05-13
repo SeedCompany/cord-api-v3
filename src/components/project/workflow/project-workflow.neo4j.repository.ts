@@ -35,7 +35,7 @@ export class ProjectWorkflowNeo4jRepository
       .query()
       .apply(this.matchEvent())
       .where({ 'node.id': inArray(ids) })
-      .apply(this.privileges.forUser(session).filterToReadable())
+      .apply(this.privileges.filterToReadable())
       .apply(this.hydrate())
       .map('dto')
       .run();
@@ -47,7 +47,7 @@ export class ProjectWorkflowNeo4jRepository
       .apply(this.matchEvent())
       .where({ 'project.id': projectId })
       .with('*') // needed between where & where
-      .apply(this.privileges.forUser(session).filterToReadable())
+      .apply(this.privileges.filterToReadable())
       .apply(sorting(WorkflowEvent, { sort: 'createdAt', order: Order.ASC }))
       .apply(this.hydrate())
       .map('dto')

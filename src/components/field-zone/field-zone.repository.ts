@@ -123,7 +123,7 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
   }
 
   async list({ filter, ...input }: FieldZoneListInput, session: Session) {
-    if (!this.privileges.forUser(session).can('read')) {
+    if (!this.privileges.can('read')) {
       return SecuredList.Redacted;
     }
     const result = await this.db

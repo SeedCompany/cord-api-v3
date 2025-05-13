@@ -27,11 +27,6 @@ export class Privileges {
     private readonly sessionHost: SessionHost,
   ) {}
 
-  /** @deprecated */
-  forUser(_session: unknown) {
-    return this;
-  }
-
   forResource<TResourceStatic extends ResourceShape<any>>(
     resource: TResourceStatic | EnhancedResource<TResourceStatic>,
   ) {

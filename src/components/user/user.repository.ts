@@ -229,7 +229,7 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
       .query()
       .matchNode('node', 'User')
       .apply(userFilters(input.filter))
-      .apply(this.privileges.forUser(session).filterToReadable())
+      .apply(this.privileges.filterToReadable())
       .apply(sortWith(userSorters, input))
       .apply(paginate(input, this.hydrate(session.userId)))
       .first();
@@ -258,7 +258,7 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
           }),
         ]),
       )
-      .apply(this.privileges.forUser(session).filterToReadable())
+      .apply(this.privileges.filterToReadable())
       .apply(this.hydrate(session));
 
     const result = await query.first();

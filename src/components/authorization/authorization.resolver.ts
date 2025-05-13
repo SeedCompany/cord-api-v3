@@ -1,5 +1,4 @@
 import { Query, Resolver } from '@nestjs/graphql';
-import { AnonSession, type Session } from '~/common';
 import { Power } from './dto';
 import { Privileges } from './policy';
 
@@ -8,7 +7,7 @@ export class AuthorizationResolver {
   constructor(private readonly privileges: Privileges) {}
 
   @Query(() => [Power])
-  async powers(@AnonSession() session: Session): Promise<Power[]> {
-    return [...this.privileges.forUser(session).powers];
+  async powers(): Promise<Power[]> {
+    return [...this.privileges.powers];
   }
 }

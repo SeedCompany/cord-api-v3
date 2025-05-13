@@ -11,7 +11,7 @@ export class ProgressReportCommunityStoryRepository extends PromptVariantRespons
   CommunityStory,
 ) {
   protected filterToReadable(session: Session) {
-    return this.privileges.forUser(session).filterToReadable({
+    return this.privileges.filterToReadable({
       wrapContext: oncePerProjectFromProgressReportChild,
     });
   }

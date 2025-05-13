@@ -302,7 +302,7 @@ export class PartnerRepository extends DtoRepository<
       .matchNode('node', 'Partner')
       .apply(partnerFilters(input.filter))
       .apply(
-        this.privileges.forUser(session).filterToReadable({
+        this.privileges.filterToReadable({
           wrapContext: (inner) => (query) =>
             query
               .optionalMatch([

@@ -51,7 +51,7 @@ export class RegisterResolver {
   }
 
   @ResolveField(() => [Power])
-  async powers(@AnonSession() session: Session): Promise<Power[]> {
-    return [...this.privileges.forUser(session).powers];
+  async powers(): Promise<Power[]> {
+    return [...this.privileges.powers];
   }
 }

@@ -84,7 +84,7 @@ export class CeremonyRepository extends DtoRepository<
           : []),
       ])
       .apply(
-        this.privileges.forUser(session).filterToReadable({
+        this.privileges.filterToReadable({
           wrapContext: oncePerProject,
         }),
       )

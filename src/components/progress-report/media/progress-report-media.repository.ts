@@ -51,7 +51,7 @@ export class ProgressReportMediaRepository extends DtoRepository<
       .apply(progressReportMediaFilters({ variants: args.variants }))
       .apply(projectFromProgressReportChild)
       .apply(
-        this.privileges.forUser(session).filterToReadable({
+        this.privileges.filterToReadable({
           wrapContext: oncePerProject,
         }),
       )
@@ -79,7 +79,7 @@ export class ProgressReportMediaRepository extends DtoRepository<
       .where({ 'node.id': inArray(ids) })
       .apply(projectFromProgressReportChild)
       .apply(
-        this.privileges.forUser(session).filterToReadable({
+        this.privileges.filterToReadable({
           wrapContext: oncePerProject,
         }),
       )
@@ -111,7 +111,7 @@ export class ProgressReportMediaRepository extends DtoRepository<
       )
       .apply(projectFromProgressReportChild)
       .apply(
-        this.privileges.forUser(session).filterToReadable({
+        this.privileges.filterToReadable({
           wrapContext: oncePerProject,
         }),
       )
