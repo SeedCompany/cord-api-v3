@@ -1,10 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import {
   type CalendarDate,
-  DateInterval,
   type ID,
   type ObjectView,
-  type Range,
   type UnsecuredDto,
 } from '~/common';
 import { HandleIdLookup, IEventBus, ILogger, Logger } from '~/core';
@@ -15,7 +13,6 @@ import { FileService } from '../file';
 import { ProgressReport } from '../progress-report/dto';
 import {
   FinancialReport,
-  type MergePeriodicReports,
   NarrativeReport,
   type PeriodicReport,
   type PeriodicReportListInput,
@@ -39,47 +36,31 @@ export class PeriodicReportService {
     private readonly repo: PeriodicReportRepository,
   ) {}
 
-  async merge(input: MergePeriodicReports) {
-    if (input.intervals.length === 0) {
-      return;
-    }
-    const result = await this.repo.merge(input);
-    this.logger.info(`Merged ${input.type.toLowerCase()} reports`, {
-      existing: input.intervals.length - result.length,
-      new: result.length,
-      parent: input.parent,
-      newIntervals: result.map(({ interval }) =>
-        DateInterval.fromObject(interval).toISO(),
-      ),
-    });
-  }
-
   async update(input: UpdatePeriodicReportInput) {
-    const currentRaw = await this.repo.readOne(input.id);
-    const current = this.secure(currentRaw);
-    const changes = this.repo.getActualChanges(current, input);
+    const current = await this.repo.readOne(input.id);
+    const changes = this.repo.getActualChanges(
+      current,
+      //TODO - elimate this type assertion below somehow
+      input as UpdatePeriodicReportInput & Record<any, never>,
+    );
     this.privileges
-      .for(resolveReportType(current), currentRaw)
+      .for(resolveReportType(current), current)
       .verifyChanges(changes);
 
     const { reportFile, ...simpleChanges } = changes;
 
     const updated = this.secure(
-      await this.repo.update(
-        {
-          id: current.id,
-          start: current.start,
-          end: current.end,
-          ...simpleChanges,
-        },
-        session,
-      ),
-      session,
+      await this.repo.update({
+        id: current.id,
+        start: current.start,
+        end: current.end,
+        ...simpleChanges,
+      }),
     );
 
     if (reportFile) {
       const file = await this.files.updateDefinedFile(
-        this.secure(current, session).reportFile,
+        this.secure(current).reportFile,
         'file',
         reportFile,
       );
@@ -168,47 +149,11 @@ export class PeriodicReportService {
       : undefined;
   }
 
-  async delete(
-    parent: ID,
-    type: ReportType,
-    intervals: ReadonlyArray<Range<CalendarDate | null>>,
-  ) {
-    intervals = intervals.filter((i) => i.start || i.end);
-    if (intervals.length === 0) {
-      return;
-    }
-    const result = await this.repo.delete(parent, type, intervals);
-
-    this.logger.info('Deleted reports', { parent, type, ...result });
-  }
-
   async getFinalReport(
     parentId: ID,
     type: ReportType,
   ): Promise<PeriodicReport | undefined> {
     const report = await this.repo.getFinalReport(parentId, type);
     return report ? this.secure(report) : undefined;
-  }
-
-  async mergeFinalReport(
-    parentId: ID,
-    type: ReportType,
-    at: CalendarDate,
-  ): Promise<void> {
-    const report = await this.repo.getFinalReport(parentId, type);
-
-    if (report) {
-      if (+report.start === +at) {
-        // no change
-        return;
-      }
-      await this.repo.update({ id: report.id, start: at, end: at }, session);
-    } else {
-      await this.merge({
-        intervals: [{ start: at, end: at }],
-        type,
-        parent: parentId,
-      });
-    }
   }
 }

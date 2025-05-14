@@ -1,10 +1,16 @@
 import { type DateTimeUnit } from 'luxon';
 import { type DateInterval } from '~/common';
-import { EventsHandler, type IEventHandler, ILogger, Logger } from '~/core';
+import {
+  ConfigService,
+  EventsHandler,
+  type IEventHandler,
+  ILogger,
+  Logger,
+} from '~/core';
 import { projectRange } from '../../project/dto';
 import { ProjectUpdatedEvent } from '../../project/events';
 import { ReportPeriod, ReportType } from '../dto';
-import { PeriodicReportService } from '../periodic-report.service';
+import { PeriodicReportRepository } from '../periodic-report.repository';
 import {
   AbstractPeriodicReportSync,
   type Intervals,
@@ -18,13 +24,18 @@ export class SyncPeriodicReportsToProjectDateRange
   implements IEventHandler<SubscribedEvent>
 {
   constructor(
-    periodicReports: PeriodicReportService,
+    periodicReportsRepo: PeriodicReportRepository,
+    private readonly config: ConfigService,
     @Logger('periodic-reports:project-sync') private readonly logger: ILogger,
   ) {
-    super(periodicReports);
+    super(periodicReportsRepo);
   }
 
   async handle(event: SubscribedEvent) {
+    if (this.config.databaseEngine === 'gel') {
+      return;
+    }
+
     this.logger.debug('Project mutation, syncing periodic reports', {
       ...event,
       event: event.constructor.name,
