@@ -33,9 +33,8 @@ export class ApplyFinalizedChangesetToPartnership
           relation('out', '', 'changeset', ACTIVE),
           node('changeset', 'Changeset', { id: changeset.id }),
         ])
-        .subQuery((sub) =>
+        .subQuery(['project', 'changeset'], (sub) =>
           sub
-            .with('project, changeset')
             .match([
               node('project'),
               relation('out', 'partnershipRel', 'partnership', ACTIVE),
@@ -58,9 +57,8 @@ export class ApplyFinalizedChangesetToPartnership
           relation('out', '', 'changeset', ACTIVE),
           node('changeset', 'Changeset', { id: changeset.id }),
         ])
-        .subQuery((sub) =>
+        .subQuery(['project', 'changeset'], (sub) =>
           sub
-            .with('project, changeset')
             .match([
               node('project'),
               relation('out', 'partnershipRel', 'partnership', INACTIVE),

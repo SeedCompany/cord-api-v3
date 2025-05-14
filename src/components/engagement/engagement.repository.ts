@@ -926,27 +926,24 @@ export const engagementSorters = defineSorters(IEngagement, {
   // eslint-disable-next-line @typescript-eslint/naming-convention
   'language.*': (query, input) =>
     query
-      .with('node as eng')
-      .match([node('eng'), relation('out', '', 'language'), node('node')])
+      .match([node('outer'), relation('out', '', 'language'), node('node')])
       .apply(sortWith(languageSorters, input))
       // Use null for all internship engagements
       .union()
-      .with('node')
-      .with('node as eng')
-      .raw('where eng:InternshipEngagement')
+      .with('outer')
+      .raw('where outer:InternshipEngagement')
       .return<SortCol>('null as sortValue'),
   // eslint-disable-next-line @typescript-eslint/naming-convention
   'project.*': (query, input) =>
     query
-      .with('node as eng')
-      .match([node('eng'), relation('in', '', 'engagement'), node('node')])
+      .match([node('outer'), relation('in', '', 'engagement'), node('node')])
       .apply(sortWith(projectSorters, input)),
   // eslint-disable-next-line @typescript-eslint/naming-convention
   'currentProgressReportDue.*': (query, input) =>
     query
-      .subQuery('node', (sub) =>
+      .with('outer as parent')
+      .subQuery('parent', (sub) =>
         sub
-          .with('node as parent')
           .apply(matchCurrentDue(undefined, 'Progress'))
           .return('collect(node) as reports'),
       )
@@ -956,7 +953,6 @@ export const engagementSorters = defineSorters(IEngagement, {
           .raw('where size(reports) = 0')
           .return('null as sortValue')
           .union()
-          .with('reports')
           .with('reports')
           .raw('where size(reports) <> 0')
           .raw('unwind reports as node')

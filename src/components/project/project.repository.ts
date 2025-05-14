@@ -409,36 +409,32 @@ export const projectSorters = defineSorters(IProject, {
   // eslint-disable-next-line @typescript-eslint/naming-convention
   'primaryLocation.*': (query, input) => {
     const getPath = (anon = false) => [
-      node('project'),
+      node('outer'),
       relation('out', '', 'primaryLocation', ACTIVE),
       node(anon ? '' : 'node'),
     ];
     return query
-      .with('node as project')
       .match(getPath())
       .apply(sortWith(locationSorters, input))
       .union()
-      .with('node')
-      .with('node as project')
+      .with('outer')
       .where(not(path(getPath(true))))
       .return<SortCol>('null as sortValue');
   },
   // eslint-disable-next-line @typescript-eslint/naming-convention
   'primaryPartnership.*': (query, input) => {
     const getPath = (anon = false) => [
-      node('project'),
+      node('outer'),
       relation('out', '', 'partnership', ACTIVE),
       node(anon ? '' : 'node', 'Partnership'),
       relation('out', '', 'primary', ACTIVE),
       node('', 'Property', { value: variable('true') }),
     ];
     return query
-      .with('node as project')
       .match(getPath())
       .apply(sortWith(partnershipSorters, input))
       .union()
-      .with('node')
-      .with('node as project')
+      .with('outer')
       .where(not(path(getPath(true))))
       .return<SortCol>('null as sortValue');
   },
