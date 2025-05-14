@@ -8,10 +8,8 @@ import { CONTROLLER_WATERMARK } from '@nestjs/common/constants.js';
 import { Context } from '@nestjs/graphql';
 import { uniq } from 'lodash';
 import { type DateTime } from 'luxon';
-import { NoSessionException } from '../components/authentication/no-session.exception';
 import { SessionHost } from '../components/authentication/session.host';
 import { type ScopedRole } from '../components/authorization/dto';
-import { type GqlContextType } from './context.type';
 import { UnauthenticatedException } from './exceptions';
 import { type ID } from './id-field';
 
@@ -41,14 +39,6 @@ export function loggedInSession(session: Session): Session {
   }
   return session;
 }
-
-export const sessionFromContext = (context: GqlContextType) => {
-  const session = context.session$.value;
-  if (!session) {
-    throw new NoSessionException();
-  }
-  return session;
-};
 
 @Injectable()
 export class SessionPipe implements PipeTransform {
