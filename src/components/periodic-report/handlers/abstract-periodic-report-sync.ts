@@ -1,7 +1,7 @@
 import { type DateTimeUnit } from 'luxon';
 import { type CalendarDate, DateInterval, type ID, type Range } from '~/common';
 import { type ReportType } from '../dto';
-import { type PeriodicReportService } from '../periodic-report.service';
+import { type PeriodicReportRepository } from '../periodic-report.repository';
 
 export type Intervals = [
   updated: DateInterval | null,
@@ -9,7 +9,9 @@ export type Intervals = [
 ];
 
 export abstract class AbstractPeriodicReportSync {
-  constructor(protected readonly periodicReports: PeriodicReportService) {}
+  constructor(
+    protected readonly periodicReportsRepo: PeriodicReportRepository,
+  ) {}
 
   protected async sync(
     parent: ID,
@@ -23,9 +25,9 @@ export abstract class AbstractPeriodicReportSync {
     if (!diff) {
       return;
     }
-    await this.periodicReports.delete(parent, type, diff.removals);
+    await this.periodicReportsRepo.delete(parent, type, diff.removals);
 
-    await this.periodicReports.merge({
+    await this.periodicReportsRepo.merge({
       type,
       parent,
       intervals: diff.additions,
@@ -34,7 +36,7 @@ export abstract class AbstractPeriodicReportSync {
     if (!finalAt) {
       return;
     }
-    await this.periodicReports.mergeFinalReport(parent, type, finalAt);
+    await this.periodicReportsRepo.mergeFinalReport(parent, type, finalAt);
   }
 
   /**
