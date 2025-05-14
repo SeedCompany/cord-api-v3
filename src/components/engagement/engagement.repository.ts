@@ -132,7 +132,7 @@ export class EngagementRepository extends CommonRepository {
           relation('out', '', 'engagement'),
           node('node'),
         ])
-        .apply(matchPropsAndProjectSensAndScopedRoles(session, { view }))
+        .apply(matchPropsAndProjectSensAndScopedRoles({ view }))
         .apply(matchChangesetAndChangedProps(view?.changeset))
         .optionalMatch([
           node('node'),

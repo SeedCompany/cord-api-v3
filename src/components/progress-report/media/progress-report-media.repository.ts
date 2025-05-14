@@ -240,7 +240,7 @@ export class ProgressReportMediaRepository extends DtoRepository<
       query
         .apply(projectFromProgressReportChild)
         .apply(matchProjectSens())
-        .apply(matchProjectScopedRoles({ session, outputVar: 'scope' }))
+        .apply(matchProjectScopedRoles({ outputVar: 'scope' }))
         .match([
           [
             node('node'),

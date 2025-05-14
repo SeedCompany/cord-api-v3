@@ -91,7 +91,7 @@ export class OrganizationRepository extends DtoRepository<
           relation('out', 'organization'),
           node('node'),
         ])
-        .apply(matchProjectScopedRoles({ session }))
+        .apply(matchProjectScopedRoles())
         .with([
           'node',
           'collect(project) as projList',

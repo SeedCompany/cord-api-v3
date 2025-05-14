@@ -193,7 +193,7 @@ export class ProductRepository extends CommonRepository {
           relation('out', '', 'product', ACTIVE),
           node('node'),
         ])
-        .apply(matchPropsAndProjectSensAndScopedRoles(session))
+        .apply(matchPropsAndProjectSensAndScopedRoles())
         .optionalMatch([
           node('node'),
           relation('out', '', 'unspecifiedScripture', ACTIVE),

@@ -2,7 +2,7 @@ import { type Query } from 'cypher-query-builder';
 import { intersection } from 'lodash';
 import { inspect, type InspectOptionsStylized } from 'util';
 import { type ResourceShape, type Role } from '~/common';
-import { matchProjectScopedRoles, variable } from '~/core/database/query';
+import { matchProjectScopedRoles } from '~/core/database/query';
 import { rolesForScope, type ScopedRole, splitScope } from '../../dto/role.dto';
 import {
   type AsCypherParams,
@@ -101,7 +101,6 @@ class MemberWithRolesCondition<TResourceStatic extends ResourceWithScope>
 
     return query.apply(
       matchProjectScopedRoles({
-        session: variable('requestingUser'),
         outputVar: CQL_VAR,
       }),
     );

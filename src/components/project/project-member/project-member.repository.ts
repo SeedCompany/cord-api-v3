@@ -125,7 +125,7 @@ export class ProjectMemberRepository extends DtoRepository<
           relation('out', '', 'member', ACTIVE),
           node('node'),
         ])
-        .apply(matchPropsAndProjectSensAndScopedRoles(session))
+        .apply(matchPropsAndProjectSensAndScopedRoles())
         .match([
           node('node'),
           relation('out', '', 'user'),

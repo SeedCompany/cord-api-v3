@@ -83,7 +83,7 @@ export class ProjectRepository extends CommonRepository {
     return (query: Query) =>
       query
         .with(['node', 'node as project'])
-        .apply(matchPropsAndProjectSensAndScopedRoles(userId))
+        .apply(matchPropsAndProjectSensAndScopedRoles())
         .apply(matchChangesetAndChangedProps(changeset))
         // optional because not defined until right after creation
         .optionalMatch([

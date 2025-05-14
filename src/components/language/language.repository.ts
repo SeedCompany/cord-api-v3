@@ -184,7 +184,7 @@ export class LanguageRepository extends DtoRepository<
           relation('out', '', 'engagement'),
           node('node'),
         ])
-        .apply(matchProjectScopedRoles({ session }))
+        .apply(matchProjectScopedRoles())
         .with([
           'node',
           'collect(project) as projList',

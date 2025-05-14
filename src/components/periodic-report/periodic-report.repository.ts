@@ -416,7 +416,7 @@ export class PeriodicReportRepository extends DtoRepository<
           relation('out', '', 'report', ACTIVE),
           node('node'),
         ])
-        .apply(matchPropsAndProjectSensAndScopedRoles(session))
+        .apply(matchPropsAndProjectSensAndScopedRoles())
         .return<{ dto: UnsecuredDto<PeriodicReport> }>(
           merge('props', { parent: 'parent' }, 'extra').as('dto'),
         );

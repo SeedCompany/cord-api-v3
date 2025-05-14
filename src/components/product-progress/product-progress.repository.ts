@@ -351,7 +351,7 @@ export class ProductProgressRepository {
         relation('in', '', 'engagement'),
         node('project', 'Project'),
       ])
-      .apply(matchProjectScopedRoles({ session, outputVar: 'scope' }))
+      .apply(matchProjectScopedRoles({ outputVar: 'scope' }))
       .apply(matchProjectSens())
       .subQuery('product', (sub) =>
         sub

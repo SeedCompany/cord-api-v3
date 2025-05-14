@@ -69,7 +69,7 @@ export class ProgressReportRepository extends DtoRepository<
           relation('in', '', 'engagement', ACTIVE),
           node('project', 'Project'),
         ])
-        .apply(matchPropsAndProjectSensAndScopedRoles(session))
+        .apply(matchPropsAndProjectSensAndScopedRoles())
         .subQuery('node', this.extraRepo.extraHydrate())
         .return<{ dto: UnsecuredDto<ProgressReport> }>(
           merge('props', { parent: 'parent' }, 'extra').as('dto'),

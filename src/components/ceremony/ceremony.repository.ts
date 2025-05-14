@@ -64,7 +64,7 @@ export class CeremonyRepository extends DtoRepository<
           relation('out', '', ACTIVE),
           node('node'),
         ])
-        .apply(matchPropsAndProjectSensAndScopedRoles(session))
+        .apply(matchPropsAndProjectSensAndScopedRoles())
         .return<{ dto: UnsecuredDto<Ceremony> }>('props as dto');
   }
 

@@ -90,7 +90,7 @@ export class BudgetRepository extends DtoRepository<
         node('node', label),
       ])
       .where({ 'node.id': inArray(ids) })
-      .apply(matchPropsAndProjectSensAndScopedRoles(session, { view }))
+      .apply(matchPropsAndProjectSensAndScopedRoles({ view }))
       .apply(matchChangesetAndChangedProps(view?.changeset))
       .return<{ dto: UnsecuredDto<Budget> }>(
         merge('props', 'changedProps', {

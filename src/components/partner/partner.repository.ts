@@ -210,7 +210,7 @@ export class PartnerRepository extends DtoRepository<
           relation('out', '', 'partner'),
           node('node'),
         ])
-        .apply(matchProjectScopedRoles({ session }))
+        .apply(matchProjectScopedRoles())
         .with([
           'node',
           'collect(project) as projList',

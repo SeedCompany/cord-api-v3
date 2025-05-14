@@ -208,7 +208,7 @@ export class PartnershipRepository extends DtoRepository<
           relation('out', '', 'organization', ACTIVE),
           node('org', 'Organization'),
         ])
-        .apply(matchPropsAndProjectSensAndScopedRoles(session, { view }))
+        .apply(matchPropsAndProjectSensAndScopedRoles({ view }))
         .apply(matchChangesetAndChangedProps(view?.changeset))
         .apply(matchProps({ nodeName: 'project', outputVar: 'projectProps' }))
         .apply(
