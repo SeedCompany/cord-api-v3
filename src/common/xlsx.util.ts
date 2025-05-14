@@ -57,7 +57,8 @@ export class WorkBook {
   @Once() private get namedRanges(): Record<string, Range> {
     const rawList = this.book.Workbook?.Names ?? [];
     return mapEntries(rawList, ({ Ref: ref, Name: name }, { SKIP }) => {
-      const matched = /^'?([^']+)'?!([$\dA-Z]+(?::[$\dA-Z]+)?)$/.exec(ref);
+      const matched =
+        /^(?:\[\d+])?'?([^']+)'?!([$\dA-Z]+(?::[$\dA-Z]+)?)$/.exec(ref);
       if (!matched) {
         return SKIP;
       }
