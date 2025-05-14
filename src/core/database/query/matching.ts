@@ -19,9 +19,21 @@ import {
 import { variable } from '../query-augmentation/condition-variables';
 import { apoc, collect, listConcat, merge } from './cypher-functions';
 
-export const currentUser = node('currentUser', 'User', {
-  id: variable('$currentUser'),
-}) as Tagged<NodePattern, 'CurrentUser'>;
+const currentUserFlag = Symbol();
+const makeCurrentUser = (name: string) =>
+  Object.assign(
+    Object.defineProperty(
+      node(name, 'User', { id: variable('$currentUser') }),
+      currentUserFlag,
+      {},
+    ) as Tagged<NodePattern, 'CurrentUser'>,
+    {
+      as: makeCurrentUser,
+      is: (obj: object): obj is typeof currentUser =>
+        Object.hasOwn(obj, currentUserFlag),
+    },
+  );
+export const currentUser = makeCurrentUser('');
 
 export const requestingUser = (session?: Session | ID) => {
   const n = node('requestingUser', 'User', {
