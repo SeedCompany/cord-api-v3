@@ -71,14 +71,15 @@ export class ProjectWorkflowNotificationHandler
       toStep: event.workflowEvent.to,
     });
 
-    const [changedBy, project, primaryPartnerName] = await Promise.all([
-      this.users.readOneUnsecured(
-        workflowEvent.who.id,
-        this.config.rootUser.id,
-      ),
-      this.projects.readOneUnsecured(event.project.id, this.config.rootUser.id),
-      this.projects.getPrimaryOrganizationName(event.project.id),
-    ]);
+    const [changedBy, project, primaryPartnerName] = await this.auth.asUser(
+      this.config.rootUser.id,
+      async (_) =>
+        await Promise.all([
+          this.users.readOneUnsecured(workflowEvent.who.id, _),
+          this.projects.readOneUnsecured(event.project.id, _),
+          this.projects.getPrimaryOrganizationName(event.project.id),
+        ]),
+    );
 
     await asyncPool(1, notifyees, async (notifier) => {
       if (!notifier.email) {
