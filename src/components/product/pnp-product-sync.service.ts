@@ -67,7 +67,7 @@ export class PnpProductSyncService {
         result,
       );
     } catch (e) {
-      this.logger.warning(e.message, {
+      this.logger.error(e.message, {
         id: pnp.id,
         exception: e,
       });

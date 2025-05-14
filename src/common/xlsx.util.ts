@@ -10,6 +10,7 @@ import {
   utils,
   type WorkSheet,
 } from 'xlsx';
+import { NotFoundException } from './exceptions';
 import { CalendarDate } from './temporal';
 
 export class WorkBook {
@@ -56,8 +57,22 @@ export class WorkBook {
   @Once() private get namedRanges(): Record<string, Range> {
     const rawList = this.book.Workbook?.Names ?? [];
     return mapEntries(rawList, ({ Ref: ref, Name: name }, { SKIP }) => {
-      const matched = /^'?([^']+)'?!([$\dA-Z]+(?::[$\dA-Z]+)?)$/.exec(ref);
-      return matched ? [name, this.sheet(matched[1]).range(matched[2])] : SKIP;
+      const matched =
+        /^(?:\[\d+])?'?([^']+)'?!([$\dA-Z]+(?::[$\dA-Z]+)?)$/.exec(ref);
+      if (!matched) {
+        return SKIP;
+      }
+      const [_, sheetName, rangeStr] = matched;
+      try {
+        const range = this.sheet(sheetName).range(rangeStr);
+        return [name, range];
+      } catch (e) {
+        // Skip ranges that correspond to nonexistent sheets
+        if (e instanceof NotFoundException) {
+          return SKIP;
+        }
+        throw e;
+      }
     }).asRecord;
   }
 }
@@ -83,7 +98,7 @@ export class Sheet {
       this.workbook = this.book.book;
       this.sheet = this.workbook.Sheets[this.name];
       if (!this.sheet) {
-        throw new Error(`Cannot find ${this.name} sheet`);
+        throw new NotFoundException(`Cannot find ${this.name} sheet`);
       }
     }
     nonEnumerable(this, 'workbook' as any, 'sheet' as any);
