@@ -1,10 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import {
   type CalendarDate,
-  DateInterval,
   type ID,
   type ObjectView,
-  type Range,
   type Session,
   type UnsecuredDto,
 } from '~/common';
@@ -15,7 +13,6 @@ import { FileService } from '../file';
 import { ProgressReport } from '../progress-report/dto';
 import {
   FinancialReport,
-  type MergePeriodicReports,
   NarrativeReport,
   type PeriodicReport,
   type PeriodicReportListInput,
@@ -37,21 +34,6 @@ export class PeriodicReportService {
     private readonly privileges: Privileges,
     private readonly repo: PeriodicReportRepository,
   ) {}
-
-  async merge(input: MergePeriodicReports) {
-    if (input.intervals.length === 0) {
-      return;
-    }
-    const result = await this.repo.merge(input);
-    this.logger.info(`Merged ${input.type.toLowerCase()} reports`, {
-      existing: input.intervals.length - result.length,
-      new: result.length,
-      parent: input.parent,
-      newIntervals: result.map(({ interval }) =>
-        DateInterval.fromObject(interval).toISO(),
-      ),
-    });
-  }
 
   async update(input: UpdatePeriodicReportInput, session: Session) {
     const current = await this.repo.readOne(input.id, session);
@@ -189,20 +171,6 @@ export class PeriodicReportService {
       : undefined;
   }
 
-  async delete(
-    parent: ID,
-    type: ReportType,
-    intervals: ReadonlyArray<Range<CalendarDate | null>>,
-  ) {
-    intervals = intervals.filter((i) => i.start || i.end);
-    if (intervals.length === 0) {
-      return;
-    }
-    const result = await this.repo.delete(parent, type, intervals);
-
-    this.logger.info('Deleted reports', { parent, type, ...result });
-  }
-
   async getFinalReport(
     parentId: ID,
     type: ReportType,
@@ -210,29 +178,5 @@ export class PeriodicReportService {
   ): Promise<PeriodicReport | undefined> {
     const report = await this.repo.getFinalReport(parentId, type, session);
     return report ? this.secure(report, session) : undefined;
-  }
-
-  async mergeFinalReport(
-    parentId: ID,
-    type: ReportType,
-    at: CalendarDate,
-    session: Session,
-  ): Promise<void> {
-    const report = await this.repo.getFinalReport(parentId, type, session);
-
-    if (report) {
-      if (+report.start === +at) {
-        // no change
-        return;
-      }
-      await this.repo.update({ id: report.id, start: at, end: at }, session);
-    } else {
-      await this.merge({
-        intervals: [{ start: at, end: at }],
-        type,
-        parent: parentId,
-        session,
-      });
-    }
   }
 }

@@ -12,6 +12,7 @@ import {
 import {
   type CalendarDate,
   CreationFailed,
+  DateInterval,
   generateId,
   type ID,
   NotFoundException,
@@ -34,6 +35,7 @@ import {
   variable,
   type Variable,
 } from '~/core/database/query';
+import { ILogger, Logger } from '../../core';
 import { File } from '../file/dto';
 import {
   ProgressReport,
@@ -61,11 +63,16 @@ export class PeriodicReportRepository extends DtoRepository<
 >(IPeriodicReport) {
   constructor(
     private readonly progressRepo: ProgressReportExtraForPeriodicInterfaceRepository,
+    @Logger('periodic:report:service') private readonly logger: ILogger,
   ) {
     super();
   }
 
   async merge(input: MergePeriodicReports) {
+    if (input.intervals.length === 0) {
+      return;
+    }
+
     try {
       const Report = resolveReportType(input);
 
@@ -172,10 +179,43 @@ export class PeriodicReportRepository extends DtoRepository<
           'report.id as id, interval',
         );
 
-      return await query.run();
+      const result = await query.run();
+
+      this.logger.info(`Merged ${input.type.toLowerCase()} reports`, {
+        existing: input.intervals.length - result.length,
+        new: result.length,
+        parent: input.parent,
+        newIntervals: result.map(({ interval }) =>
+          DateInterval.fromObject(interval).toISO(),
+        ),
+      });
     } catch (exception) {
       const Report = resolveReportType({ type: input.type });
       throw new CreationFailed(Report);
+    }
+  }
+
+  async mergeFinalReport(
+    parentId: ID,
+    type: ReportType,
+    at: CalendarDate,
+    session: Session,
+  ): Promise<void> {
+    const report = await this.getFinalReport(parentId, type, session);
+
+    if (report) {
+      if (+report.start === +at) {
+        // no change
+        return;
+      }
+      await this.update({ id: report.id, start: at, end: at }, session);
+    } else {
+      await this.merge({
+        intervals: [{ start: at, end: at }],
+        type,
+        parent: parentId,
+        session,
+      });
     }
   }
 
@@ -344,7 +384,12 @@ export class PeriodicReportRepository extends DtoRepository<
     type: ReportType,
     intervals: ReadonlyArray<Range<CalendarDate | null>>,
   ) {
-    return await this.db
+    intervals = intervals.filter((i) => i.start || i.end);
+    if (intervals.length === 0) {
+      return;
+    }
+
+    const result = await this.db
       .query()
       .unwind(
         intervals.map((i) => ({ start: i.start, end: i.end })),
@@ -396,6 +441,8 @@ export class PeriodicReportRepository extends DtoRepository<
       )
       .return<{ count: number }>('count(report) as count')
       .first();
+
+    this.logger.info('Deleted reports', { baseNodeId, type, ...result });
   }
 
   protected hydrate(session: Session) {
