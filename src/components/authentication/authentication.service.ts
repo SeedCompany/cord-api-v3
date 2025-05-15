@@ -169,10 +169,12 @@ export class AuthenticationService {
       : requesterSession;
 
     if (impersonatee) {
-      const p = this.privileges.for(requesterSession, AssignableRoles);
-      const valid = impersonatee.roles.every((role) =>
-        p.can('edit', withoutScope(role)),
-      );
+      const valid = this.sessionHost.withSession(requesterSession, () => {
+        const p = this.privileges.for(AssignableRoles);
+        return impersonatee.roles.every((role) =>
+          p.can('edit', withoutScope(role)),
+        );
+      });
       if (!valid) {
         // Don't expose what the requester is unable to do as this could leak
         // private information.
