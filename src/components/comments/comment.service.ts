@@ -15,6 +15,7 @@ import {
 import { isAdmin } from '~/common/session';
 import { ResourceLoader, ResourcesHost } from '~/core';
 import { type BaseNode, isBaseNode } from '~/core/database/results';
+import { SessionHost } from '../authentication';
 import { Privileges } from '../authorization';
 import { CommentRepository } from './comment.repository';
 import {
@@ -39,6 +40,7 @@ export class CommentService {
     private readonly privileges: Privileges,
     private readonly resources: ResourceLoader,
     private readonly resourcesHost: ResourcesHost,
+    private readonly sessionHost: SessionHost,
     private readonly mentionNotificationService: CommentViaMentionNotificationService,
   ) {}
 
@@ -123,6 +125,7 @@ export class CommentService {
     thread: UnsecuredDto<CommentThread>,
     session: Session,
   ): CommentThread {
+    const session = this.sessionHost.current;
     return {
       ...thread,
       firstComment: this.secureComment(thread.firstComment, session),

@@ -13,6 +13,7 @@ import {
 import { HandleIdLookup, ILogger, Logger } from '~/core';
 import { Transactional } from '~/core/database';
 import { property } from '~/core/database/query';
+import { SessionHost } from '../authentication/session.host';
 import { Privileges } from '../authorization';
 import { AssignableRoles } from '../authorization/dto/assignable-roles.dto';
 import { LocationService } from '../location';
@@ -62,6 +63,7 @@ export class UserService {
     private readonly privileges: Privileges,
     private readonly locationService: LocationService,
     private readonly knownLanguages: KnownLanguageRepository,
+    private readonly sessionHost: SessionHost,
     private readonly userRepo: UserRepository,
     @Logger('user:service') private readonly logger: ILogger,
   ) {}
@@ -73,8 +75,12 @@ export class UserService {
   };
 
   async create(input: CreatePerson, session?: Session): Promise<ID> {
-    if (input.roles && input.roles.length > 0 && session) {
+    if (
+      input.roles &&
+      input.roles.length > 0 &&
       // Note: session is only omitted for creating RootUser
+      this.sessionHost.currentIfInCtx
+    ) {
       this.verifyRolesAreAssignable(session, input.roles);
     }
 

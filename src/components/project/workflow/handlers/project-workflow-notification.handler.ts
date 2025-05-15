@@ -13,7 +13,7 @@ import {
   ProjectStepChanged,
   type ProjectStepChangedProps,
 } from '~/core/email/templates/project-step-changed.template';
-import { AuthenticationService } from '../../../authentication';
+import { AuthenticationService, SessionHost } from '../../../authentication';
 import { ProjectService } from '../../../project';
 import { UserService } from '../../../user';
 import { type User } from '../../../user/dto';
@@ -31,6 +31,7 @@ export class ProjectWorkflowNotificationHandler
     private readonly users: UserService,
     private readonly projects: ProjectService,
     private readonly emailService: EmailService,
+    private readonly sessionHost: SessionHost,
     private readonly moduleRef: ModuleRef,
     @Logger('progress-report:status-change-notifier')
     private readonly logger: ILogger,
@@ -39,6 +40,8 @@ export class ProjectWorkflowNotificationHandler
   async handle(event: ProjectTransitionedEvent) {
     const { previousStep, next, workflowEvent, session } = event;
     const transition = typeof next !== 'string' ? next : undefined;
+
+    const session = this.sessionHost.current;
 
     // TODO on bypass: keep notifying members? add anyone else?
     const notifiers = transition?.notifiers ?? [];
