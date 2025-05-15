@@ -216,7 +216,7 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
 
   async delete(id: ID, session: Session, object: User): Promise<void> {
     const user = await this.readOne(id, session);
-    this.privileges.forUser(session, user).verifyCan('delete');
+    this.privileges.forContext(user).verifyCan('delete');
     try {
       await this.db.deleteNode(object);
     } catch (exception) {

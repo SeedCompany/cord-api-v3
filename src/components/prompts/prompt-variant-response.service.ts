@@ -87,7 +87,7 @@ export const PromptVariantResponseListService = <
       session: Session,
     ): Promise<PromptVariantResponseList<TVariant>> {
       const context = parent as any;
-      const edge = this.repo.edge.forUser(session, context);
+      const edge = this.repo.edge.forContext(context);
       const canRead = edge.can('read');
       if (!canRead) {
         return {
@@ -97,7 +97,7 @@ export const PromptVariantResponseListService = <
       }
       const results = await this.repo.list(parent.id, session);
 
-      const privileges = this.resourcePrivileges.forUser(session, context);
+      const privileges = this.resourcePrivileges.forContext(context);
 
       const [secured, prompts, variants] = await Promise.all([
         mapListResults(results, async (dto) => await this.secure(dto, session)),
@@ -130,7 +130,7 @@ export const PromptVariantResponseListService = <
       session: Session,
     ): Promise<PromptVariantResponse<TVariant>> {
       const context = await this.getPrivilegeContext(dto);
-      const privileges = this.resourcePrivileges.forUser(session, context);
+      const privileges = this.resourcePrivileges.forContext(context);
       const responses = mapKeys.fromList(dto.responses, (r) => r.variant).asMap;
       const secured = privileges.secure(dto);
       return {
@@ -174,8 +174,7 @@ export const PromptVariantResponseListService = <
         edge.resource,
         input.resource,
       );
-      const privileges = edge.forUser(
-        session,
+      const privileges = edge.forContext(
         // @ts-expect-error yeah it's not unsecured, but none of our conditions actually needs that.
         parent,
       );
@@ -194,7 +193,7 @@ export const PromptVariantResponseListService = <
     ): Promise<PromptVariantResponse<TVariant>> {
       const response = await this.repo.readOne(input.id, session);
       const context = await this.getPrivilegeContext(response);
-      const privileges = this.resourcePrivileges.forUser(session, context);
+      const privileges = this.resourcePrivileges.forContext(context);
       privileges.verifyCan('edit', 'prompt');
 
       await this.getPromptById(input.prompt);
@@ -214,7 +213,7 @@ export const PromptVariantResponseListService = <
 
       const response = await this.repo.readOne(input.id, session);
       const context = await this.getPrivilegeContext(response);
-      const privileges = this.resourcePrivileges.forUser(session, context);
+      const privileges = this.resourcePrivileges.forContext(context);
 
       const perm = privileges
         .forContext(withVariant(privileges.context!, variant.key))
@@ -261,7 +260,7 @@ export const PromptVariantResponseListService = <
       const response = await this.repo.readOne(id, session);
 
       const context = await this.getPrivilegeContext(response);
-      const privileges = this.resourcePrivileges.forUser(session, context);
+      const privileges = this.resourcePrivileges.forContext(context);
       privileges.verifyCan('delete');
 
       await this.repo.deleteNode(id);
