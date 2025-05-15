@@ -172,7 +172,7 @@ export const oncePerProject =
   (logic: QueryFragment): QueryFragment =>
   (query) =>
     query
-      .with(['project', 'collect(node) as nodeList', 'requestingUser'])
+      .with(['project', 'collect(node) as nodeList'])
       .apply(logic)
       .raw('UNWIND nodeList as node');
 

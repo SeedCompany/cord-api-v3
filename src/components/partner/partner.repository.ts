@@ -29,7 +29,6 @@ import {
   paginate,
   pinned,
   rankSens,
-  requestingUser,
   sortWith,
 } from '~/core/database/query';
 import * as departmentIdBlockUtils from '../finance/department/neo4j.utils';
@@ -301,7 +300,6 @@ export class PartnerRepository extends DtoRepository<
     const result = await this.db
       .query()
       .matchNode('node', 'Partner')
-      .match(requestingUser(session))
       .apply(partnerFilters(input.filter))
       .apply(
         this.privileges.forUser(session).filterToReadable({

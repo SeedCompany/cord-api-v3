@@ -14,7 +14,6 @@ import {
   createRelationships,
   INACTIVE,
   merge,
-  requestingUser,
   sorting,
 } from '~/core/database/query';
 import { IProject, type ProjectStep, stepToStatus } from '../dto';
@@ -46,7 +45,7 @@ export class ProjectWorkflowNeo4jRepository
       .query()
       .apply(this.matchEvent())
       .where({ 'project.id': projectId })
-      .match(requestingUser(session))
+      .with('*') // needed between where & where
       .apply(this.privileges.forUser(session).filterToReadable())
       .apply(sorting(WorkflowEvent, { sort: 'createdAt', order: Order.ASC }))
       .apply(this.hydrate())

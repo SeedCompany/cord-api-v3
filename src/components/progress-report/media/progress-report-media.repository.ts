@@ -22,7 +22,6 @@ import {
   oncePerProject,
   paginate,
   path,
-  requestingUser,
   sorting,
   variable,
 } from '~/core/database/query';
@@ -49,7 +48,6 @@ export class ProgressReportMediaRepository extends DtoRepository<
         node('node', this.resource.dbLabel),
       ])
       .apply(progressReportMediaFilters({ variants: args.variants }))
-      .match(requestingUser(session))
       .apply(projectFromProgressReportChild)
       .apply(
         this.privileges.forUser(session).filterToReadable({
@@ -79,7 +77,6 @@ export class ProgressReportMediaRepository extends DtoRepository<
       .matchNode('node', this.resource.dbLabel)
       .where({ 'node.id': inArray(ids) })
       .apply(projectFromProgressReportChild)
-      .match(requestingUser(session))
       .apply(
         this.privileges.forUser(session).filterToReadable({
           wrapContext: oncePerProject,
@@ -112,7 +109,6 @@ export class ProgressReportMediaRepository extends DtoRepository<
           .raw('LIMIT 1'),
       )
       .apply(projectFromProgressReportChild)
-      .match(requestingUser(session))
       .apply(
         this.privileges.forUser(session).filterToReadable({
           wrapContext: oncePerProject,

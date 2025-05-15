@@ -13,7 +13,6 @@ import {
   matchPropsAndProjectSensAndScopedRoles,
   oncePerProject,
   paginate,
-  requestingUser,
   sorting,
 } from '~/core/database/query';
 import {
@@ -84,7 +83,6 @@ export class CeremonyRepository extends DtoRepository<
             ]
           : []),
       ])
-      .match(requestingUser(session))
       .apply(
         this.privileges.forUser(session).filterToReadable({
           wrapContext: oncePerProject,

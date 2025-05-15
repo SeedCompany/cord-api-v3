@@ -16,7 +16,6 @@ import {
   createNode,
   createRelationships,
   merge,
-  requestingUser,
   sorting,
 } from '~/core/database/query';
 import { ProgressReport, type ProgressReportStatus as Status } from '../dto';
@@ -44,7 +43,7 @@ export class ProgressReportWorkflowRepository extends DtoRepository(
       .query()
       .apply(this.matchEvent())
       .where({ 'report.id': reportId })
-      .match(requestingUser(session))
+      .with('*') // needed between where & where
       .apply(this.privileges.forUser(session).filterToReadable())
       .apply(sorting(WorkflowEvent, { sort: 'createdAt', order: Order.ASC }))
       .apply(this.hydrate())

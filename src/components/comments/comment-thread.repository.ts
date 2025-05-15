@@ -8,7 +8,6 @@ import {
   createRelationships,
   merge,
   paginate,
-  requestingUser,
   sorting,
 } from '~/core/database/query';
 import { CommentRepository } from './comment.repository';
@@ -83,7 +82,6 @@ export class CommentThreadRepository extends DtoRepository(CommentThread) {
   ) {
     const result = await this.db
       .query()
-      .match(requestingUser(session))
       .match([
         node('node', 'CommentThread'),
         ...(parent

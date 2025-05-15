@@ -19,7 +19,6 @@ import {
   matchProps,
   merge,
   paginate,
-  requestingUser,
   sorting,
 } from '~/core/database/query';
 import {
@@ -129,7 +128,6 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
     }
     const result = await this.db
       .query()
-      .match(requestingUser(session))
       .match(node('node', 'FieldZone'))
       .apply(sorting(FieldZone, input))
       .apply(paginate(input, this.hydrate()))

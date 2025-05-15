@@ -102,10 +102,9 @@ export class PostRepository extends DtoRepository<typeof Post, [Session] | []>(
             ) OR (
               shareability.value = '${PostShareability.Membership}'
               AND
-              (node)<-[:post]-(:BaseNode)-[:member]-(:BaseNode)-[:user]->(:User { id: $requestingUser })
+              (node)<-[:post]-(:BaseNode)-[:member]-(:BaseNode)-[:user]->(:User { id: $currentUser })
             )
           `,
-          { requestingUser: session.userId },
         );
   }
 

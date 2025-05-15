@@ -22,7 +22,6 @@ import {
   merge,
   oncePerProject,
   paginate,
-  requestingUser,
   sorting,
 } from '~/core/database/query';
 import { type FileId } from '../file/dto';
@@ -110,7 +109,6 @@ export class BudgetRepository extends DtoRepository<
         relation('in', '', 'budget', ACTIVE),
         node('project', 'Project', pickBy({ id: filter?.projectId })),
       ])
-      .match(requestingUser(session))
       .apply(
         this.privileges.forUser(session).filterToReadable({
           wrapContext: oncePerProject,

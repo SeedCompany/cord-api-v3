@@ -9,7 +9,6 @@ import {
   merge,
   oncePerProject,
   paginate,
-  requestingUser,
   sortWith,
   variable,
 } from '~/core/database/query';
@@ -46,7 +45,6 @@ export class ProgressReportRepository extends DtoRepository<
         relation('in', '', 'engagement'),
         node('project', 'Project'),
       ])
-      .match(requestingUser(session))
       .apply(progressReportFilters(input.filter))
       .apply(
         this.privileges.forUser(session).filterToReadable({
@@ -100,10 +98,7 @@ export const progressReportFilters = filter.define(
         // needed in conjunction with `optionalMatch`
         .with('outer, node'),
     ),
-    engagement: filter.sub(
-      () => engagementFilters,
-      'requestingUser',
-    )((sub) =>
+    engagement: filter.sub(() => engagementFilters)((sub) =>
       sub.match([
         node('outer'),
         relation('in', '', 'report'),

@@ -23,7 +23,6 @@ import {
   oncePerProject,
   paginate,
   rankSens,
-  requestingUser,
   sortWith,
 } from '~/core/database/query';
 import {
@@ -125,7 +124,6 @@ export class OrganizationRepository extends DtoRepository<
     const query = this.db
       .query()
       .matchNode('node', 'Organization')
-      .match(requestingUser(session))
       .apply(organizationFilters(input.filter))
       .apply(
         this.privileges.forUser(session).filterToReadable({

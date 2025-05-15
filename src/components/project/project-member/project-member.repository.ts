@@ -20,7 +20,6 @@ import {
   merge,
   oncePerProject,
   paginate,
-  requestingUser,
   sorting,
 } from '~/core/database/query';
 import { UserRepository } from '../../user/user.repository';
@@ -167,7 +166,7 @@ export class ProjectMemberRepository extends DtoRepository<
               )
           : q,
       )
-      .match(requestingUser(session))
+      .with('*') // needed between where & where
       .apply(
         this.privileges.forUser(session).filterToReadable({
           wrapContext: oncePerProject,

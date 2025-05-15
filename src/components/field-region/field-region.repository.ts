@@ -18,7 +18,6 @@ import {
   matchProps,
   merge,
   paginate,
-  requestingUser,
   sorting,
 } from '~/core/database/query';
 import {
@@ -111,7 +110,6 @@ export class FieldRegionRepository extends DtoRepository(FieldRegion) {
     }
     const result = await this.db
       .query()
-      .match(requestingUser(session))
       .match(node('node', 'FieldRegion'))
       .apply(sorting(FieldRegion, input))
       .apply(paginate(input, this.hydrate()))

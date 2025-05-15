@@ -3,7 +3,7 @@ import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { type ID, type Session } from '~/common';
 import { DatabaseService, DbTraceLayer } from '~/core/database';
-import { requestingUser } from '~/core/database/query';
+import { currentUser } from '~/core/database/query';
 
 @Injectable()
 @DbTraceLayer.applyToClass()
@@ -14,7 +14,7 @@ export class PinRepository {
     const result = await this.db
       .query()
       .match([
-        requestingUser(session),
+        currentUser,
         relation('out', '', 'pinned'),
         node('node', 'BaseNode', { id }),
       ])
@@ -28,9 +28,9 @@ export class PinRepository {
     await this.db
       .query()
       .match(node('node', 'BaseNode', { id }))
-      .match(requestingUser(session))
+      .match(currentUser.as('currentUser'))
       .merge([
-        node('requestingUser'),
+        node('currentUser'),
         relation('out', 'rel', 'pinned'),
         node('node'),
       ])
@@ -44,7 +44,7 @@ export class PinRepository {
     await this.db
       .query()
       .match([
-        requestingUser(session),
+        currentUser,
         relation('out', 'rel', 'pinned'),
         node('node', 'BaseNode', { id }),
       ])

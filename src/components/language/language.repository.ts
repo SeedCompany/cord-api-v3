@@ -41,7 +41,6 @@ import {
   pinned,
   propSorter,
   rankSens,
-  requestingUser,
   sortWith,
   variable,
 } from '~/core/database/query';
@@ -246,8 +245,6 @@ export class LanguageRepository extends DtoRepository<
         relation('out', '', 'language'),
         node('node'),
       ])
-      // match requesting user once (instead of once per row)
-      .match(requestingUser(session))
       .apply(languageFilters(input.filter))
       .apply(
         this.privileges.forUser(session).filterToReadable({

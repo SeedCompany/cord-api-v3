@@ -7,15 +7,7 @@ import {
 import { uniq } from 'lodash';
 import { DateTime } from 'luxon';
 import { type Tagged } from 'type-fest';
-import {
-  type ID,
-  isIdLike,
-  labelForView,
-  many,
-  type Many,
-  type ObjectView,
-  type Session,
-} from '~/common';
+import { labelForView, many, type Many, type ObjectView } from '~/common';
 import { variable } from '../query-augmentation/condition-variables';
 import { apoc, collect, exists, listConcat, merge } from './cypher-functions';
 
@@ -34,16 +26,6 @@ const makeCurrentUser = (name: string) =>
     },
   );
 export const currentUser = makeCurrentUser('');
-
-export const requestingUser = (session?: Session | ID) => {
-  const n = node('requestingUser', 'User', {
-    id: variable(session ? '$requestingUser' : '$currentUser'),
-  });
-  if (session) {
-    n.addParam(isIdLike(session) ? session : session.userId, 'requestingUser');
-  }
-  return n;
-};
 
 /**
  * Same as `{ active: true }` but it doesn't create a bound parameter

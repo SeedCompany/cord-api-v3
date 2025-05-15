@@ -27,7 +27,6 @@ import {
   paginate,
   path,
   pinned,
-  requestingUser,
   type SortCol,
   sortWith,
   variable,
@@ -336,7 +335,6 @@ export class ProjectRepository extends CommonRepository {
       .query()
       .matchNode('node', 'Project')
       .with('distinct(node) as node, node as project')
-      .match(requestingUser(session))
       .apply(projectFilters(input.filter))
       .apply(this.privileges.for(session, IProject).filterToReadable())
       .apply(sortWith(projectSorters, input))

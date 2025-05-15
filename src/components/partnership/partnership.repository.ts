@@ -29,7 +29,6 @@ import {
   merge,
   oncePerProject,
   paginate,
-  requestingUser,
   sortWith,
   variable,
   whereNotDeletedInChangeset,
@@ -270,7 +269,7 @@ export class PartnershipRepository extends DtoRepository<
               : q,
           ),
       )
-      .match(requestingUser(session))
+      .with('*') // needed between call & where
       .apply(partnershipFilters(input.filter))
       .apply(
         this.privileges.forUser(session).filterToReadable({
