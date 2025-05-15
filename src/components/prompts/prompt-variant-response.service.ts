@@ -30,6 +30,7 @@ import {
   type PromptVariantResponse,
   type PromptVariantResponseList,
   type UpdatePromptVariantResponse,
+  type VariantResponse,
 } from './dto';
 import { type PromptVariantResponseRepository } from './prompt-variant-response.repository';
 
@@ -244,12 +245,13 @@ export const PromptVariantResponseListService = <
         responses: this.resource.Variants.map(({ key }) => ({
           ...responses.get(key),
           ...(variant.key === key
-            ? {
+            ? ({
                 variant: key,
                 response: input.response,
-                creator: responses.get(key)?.creator ?? session.userId,
+                // TODO I'm not sure it's right to fallback to the current user...?
+                creator: responses.get(key)?.creator ?? { id: session.userId },
                 modifiedAt: DateTime.now(),
-              }
+              } satisfies UnsecuredDto<VariantResponse>)
             : {}),
         })),
       };
