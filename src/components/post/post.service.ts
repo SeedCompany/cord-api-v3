@@ -9,7 +9,6 @@ import {
   Resource,
   SecuredList,
   ServerException,
-  type Session,
   type UnsecuredDto,
 } from '~/common';
 import { ILogger, Logger, ResourceLoader, ResourcesHost } from '~/core';
@@ -32,25 +31,22 @@ export class PostService {
     @Logger('post:service') private readonly logger: ILogger,
   ) {}
 
-  async create(input: CreatePost, session: Session): Promise<Post> {
+  async create(input: CreatePost): Promise<Post> {
     if (!input.parentId) {
       throw new ServerException(
         'A post must be associated with a parent node.',
       );
     }
-    const perms = await this.getPermissionsFromPostable(
-      input.parentId,
-      session,
-    );
+    const perms = await this.getPermissionsFromPostable(input.parentId);
     perms.verifyCan('create');
 
     try {
-      const result = await this.repo.create(input, session);
+      const result = await this.repo.create(input);
       if (!result) {
         throw new CreationFailed(Post);
       }
 
-      return this.secure(result.dto, session);
+      return this.secure(result.dto);
     } catch (exception) {
       this.logger.warning('Failed to create post', {
         exception,
@@ -64,18 +60,18 @@ export class PostService {
     }
   }
 
-  async update(input: UpdatePost, session: Session): Promise<Post> {
-    const object = await this.repo.readOne(input.id, session);
+  async update(input: UpdatePost): Promise<Post> {
+    const object = await this.repo.readOne(input.id);
 
     const changes = this.repo.getActualChanges(object, input);
     this.privileges.for(Post, object).verifyChanges(changes);
     const updated = await this.repo.update(object, changes);
 
-    return this.secure(updated, session);
+    return this.secure(updated);
   }
 
-  async delete(id: ID, session: Session): Promise<void> {
-    const object = await this.repo.readOne(id, session);
+  async delete(id: ID): Promise<void> {
+    const object = await this.repo.readOne(id);
 
     this.privileges.for(Post, object).verifyCan('delete');
 
@@ -93,29 +89,28 @@ export class PostService {
   async securedList(
     parent: ConcretePostable & Resource,
     input: PostListInput,
-    session: Session,
   ): Promise<SecuredPostList> {
-    const perms = await this.getPermissionsFromPostable(parent, session);
+    const perms = await this.getPermissionsFromPostable(parent);
 
     if (!perms.can('read')) {
       return SecuredList.Redacted;
     }
 
-    const results = await this.repo.securedList(input, session);
+    const results = await this.repo.securedList(input);
 
     return {
       ...results,
-      items: results.items.map((dto) => this.secure(dto, session)),
+      items: results.items.map((dto) => this.secure(dto)),
       canRead: true, // false handled above
       canCreate: perms.can('create'),
     };
   }
 
-  secure(dto: UnsecuredDto<Post>, session: Session) {
+  secure(dto: UnsecuredDto<Post>) {
     return this.privileges.for(Post).secure(dto);
   }
 
-  async getPermissionsFromPostable(resource: PostableRef, session: Session) {
+  async getPermissionsFromPostable(resource: PostableRef) {
     const parent = await this.loadPostable(resource);
     const parentType = this.resourcesHost.getByName(
       parent.__typename as 'Postable',

@@ -7,7 +7,6 @@ import {
   labelForView,
   NotFoundException,
   type ObjectView,
-  type Session,
   type UnsecuredDto,
   viewOfChangeset,
 } from '~/common';
@@ -38,7 +37,7 @@ import {
 @Injectable()
 export class BudgetRepository extends DtoRepository<
   typeof Budget,
-  [session: Session, view?: ObjectView]
+  [view?: ObjectView]
 >(Budget) {
   constructor(private readonly records: BudgetRecordRepository) {
     super();
@@ -79,7 +78,7 @@ export class BudgetRepository extends DtoRepository<
     return await this.updateProperties(existing, simpleChanges);
   }
 
-  async readMany(ids: readonly ID[], session: Session, view?: ObjectView) {
+  async readMany(ids: readonly ID[], view?: ObjectView) {
     const label = labelForView('Budget', view);
     return await this.db
       .query()
@@ -101,7 +100,7 @@ export class BudgetRepository extends DtoRepository<
       .run();
   }
 
-  async list({ filter, ...input }: BudgetListInput, session: Session) {
+  async list({ filter, ...input }: BudgetListInput) {
     const result = await this.db
       .query()
       .match([
@@ -181,7 +180,7 @@ export class BudgetRepository extends DtoRepository<
       );
   }
 
-  async listRecordsForSync(projectId: ID, session: Session, changeset?: ID) {
+  async listRecordsForSync(projectId: ID, changeset?: ID) {
     const view: ObjectView = viewOfChangeset(changeset);
     const result = await this.db
       .query()
@@ -190,7 +189,7 @@ export class BudgetRepository extends DtoRepository<
         sub
           .with('project, budget')
           .apply(this.records.recordsOfBudget({ view }))
-          .apply(this.records.hydrate({ session, view }))
+          .apply(this.records.hydrate({ view }))
           .return('collect(dto) as records'),
       )
       .return<

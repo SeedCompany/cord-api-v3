@@ -7,7 +7,6 @@ import {
   type IdOf,
   InputException,
   NotFoundException,
-  type Session,
 } from '~/common';
 import { type DbTypeOf, DtoRepository } from '~/core/database';
 import {
@@ -36,11 +35,8 @@ import {
 } from './dto';
 
 @Injectable()
-export class ProgressReportMediaRepository extends DtoRepository<
-  typeof ReportMedia,
-  [Session]
->(ReportMedia) {
-  async listForReport(report: Report, args: ListArgs, session: Session) {
+export class ProgressReportMediaRepository extends DtoRepository(ReportMedia) {
+  async listForReport(report: Report, args: ListArgs) {
     const query = this.db
       .query()
       .match([
@@ -68,11 +64,11 @@ export class ProgressReportMediaRepository extends DtoRepository<
           },
         }),
       )
-      .apply(paginate(args, this.hydrate(session)));
+      .apply(paginate(args, this.hydrate()));
     return (await query.first())!;
   }
 
-  async readMany(ids: readonly ID[], session: Session) {
+  async readMany(ids: readonly ID[]) {
     return await this.db
       .query()
       .matchNode('node', this.resource.dbLabel)
@@ -83,15 +79,12 @@ export class ProgressReportMediaRepository extends DtoRepository<
           wrapContext: oncePerProject,
         }),
       )
-      .apply(this.hydrate(session))
+      .apply(this.hydrate())
       .map('dto')
       .run();
   }
 
-  async readFeaturedOfReport(
-    ids: ReadonlyArray<IdOf<Report>>,
-    session: Session,
-  ) {
+  async readFeaturedOfReport(ids: ReadonlyArray<IdOf<Report>>) {
     return await this.db
       .query()
       .matchNode('report', 'ProgressReport')
@@ -115,12 +108,12 @@ export class ProgressReportMediaRepository extends DtoRepository<
           wrapContext: oncePerProject,
         }),
       )
-      .apply(this.hydrate(session))
+      .apply(this.hydrate())
       .map('dto')
       .run();
   }
 
-  async create(input: UploadMedia, session: Session) {
+  async create(input: UploadMedia) {
     const newVariantGroupId = await generateId();
     const query = this.db
       .query()
@@ -232,7 +225,7 @@ export class ProgressReportMediaRepository extends DtoRepository<
       .executeAndLogStats();
   }
 
-  protected hydrate(session: Session) {
+  protected hydrate() {
     return (query: Query) =>
       query
         .apply(projectFromProgressReportChild)

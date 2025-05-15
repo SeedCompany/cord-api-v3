@@ -6,7 +6,6 @@ import {
   type ObjectView,
   ReadAfterCreationFailed,
   ServerException,
-  type Session,
   type UnsecuredDto,
 } from '~/common';
 import { HandleIdLookup, IEventBus, ILogger, Logger } from '~/core';
@@ -41,11 +40,10 @@ export class ProjectChangeRequestService {
 
   async create(
     input: CreateProjectChangeRequest,
-    session: Session,
   ): Promise<ProjectChangeRequest> {
     this.privileges.for(ProjectChangeRequest).verifyCan('create');
 
-    const project = await this.projects.readOne(input.projectId, session);
+    const project = await this.projects.readOne(input.projectId);
     if (project.status !== ProjectStatus.Active) {
       throw new InputException(
         'Only active projects can create change requests',
@@ -54,7 +52,7 @@ export class ProjectChangeRequestService {
 
     const id = await this.repo.create(input);
 
-    return await this.readOne(id, session).catch((e) => {
+    return await this.readOne(id).catch((e) => {
       throw e instanceof NotFoundException
         ? new ReadAfterCreationFailed(ProjectChangeRequest)
         : e;
@@ -62,32 +60,24 @@ export class ProjectChangeRequestService {
   }
 
   @HandleIdLookup(ProjectChangeRequest)
-  async readOne(
-    id: ID,
-    session: Session,
-    _view?: ObjectView,
-  ): Promise<ProjectChangeRequest> {
-    const dto = await this.readOneUnsecured(id, session);
-    return await this.secure(dto, session);
+  async readOne(id: ID, _view?: ObjectView): Promise<ProjectChangeRequest> {
+    const dto = await this.readOneUnsecured(id);
+    return await this.secure(dto);
   }
 
-  async readMany(ids: readonly ID[], session: Session) {
-    const projectChangeRequests = await this.repo.readMany(ids, session);
+  async readMany(ids: readonly ID[]) {
+    const projectChangeRequests = await this.repo.readMany(ids);
     return await Promise.all(
-      projectChangeRequests.map((dto) => this.secure(dto, session)),
+      projectChangeRequests.map((dto) => this.secure(dto)),
     );
   }
 
-  async readOneUnsecured(
-    id: ID,
-    session: Session,
-  ): Promise<UnsecuredDto<ProjectChangeRequest>> {
-    return await this.repo.readOne(id, session);
+  async readOneUnsecured(id: ID): Promise<UnsecuredDto<ProjectChangeRequest>> {
+    return await this.repo.readOne(id);
   }
 
   async secure(
     dto: UnsecuredDto<ProjectChangeRequest>,
-    session: Session,
   ): Promise<ProjectChangeRequest> {
     return {
       ...this.privileges.for(ProjectChangeRequest).secure(dto),
@@ -97,9 +87,8 @@ export class ProjectChangeRequestService {
 
   async update(
     input: UpdateProjectChangeRequest,
-    session: Session,
   ): Promise<ProjectChangeRequest> {
-    const object = await this.readOneUnsecured(input.id, session);
+    const object = await this.readOneUnsecured(input.id);
     const changes = this.repo.getActualChanges(object, input);
     const isStatusChanged =
       object.status === Status.Pending &&
@@ -116,24 +105,22 @@ export class ProjectChangeRequestService {
           : {}),
       },
     });
-    const updated = await this.readOneUnsecured(input.id, session);
+    const updated = await this.readOneUnsecured(input.id);
 
     if (isStatusChanged) {
-      await this.eventBus.publish(
-        new ChangesetFinalizingEvent(updated, session),
-      );
+      await this.eventBus.publish(new ChangesetFinalizingEvent(updated));
       if (changes.status === Status.Approved) {
         await this.eventBus.publish(
-          new ProjectChangeRequestApprovedEvent(updated, session),
+          new ProjectChangeRequestApprovedEvent(updated),
         );
       }
     }
 
-    return await this.secure(updated, session);
+    return await this.secure(updated);
   }
 
-  async delete(id: ID, session: Session): Promise<void> {
-    const object = await this.readOne(id, session);
+  async delete(id: ID): Promise<void> {
+    const object = await this.readOne(id);
 
     this.privileges.for(ProjectChangeRequest, object).verifyCan('delete');
 
@@ -149,10 +136,9 @@ export class ProjectChangeRequestService {
 
   async list(
     input: ProjectChangeRequestListInput,
-    session: Session,
   ): Promise<ProjectChangeRequestListOutput> {
     // no need to check if canList for now, all roles allow for listing.
-    const results = await this.repo.list(input, session);
-    return await mapListResults(results, (dto) => this.secure(dto, session));
+    const results = await this.repo.list(input);
+    return await mapListResults(results, (dto) => this.secure(dto));
   }
 }

@@ -21,6 +21,6 @@ export class ProgressReportFeaturedMediaLoader extends SessionAwareLoaderStrateg
   }
 
   async loadMany(ids: ReadonlyArray<IdOf<ProgressReport>>) {
-    return await this.service.readFeaturedOfReport(ids, this.session);
+    return await this.service.readFeaturedOfReport(ids);
   }
 }

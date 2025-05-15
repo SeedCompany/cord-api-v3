@@ -3,7 +3,6 @@ import {
   type ID,
   type ObjectView,
   ServerException,
-  type Session,
   type UnsecuredDto,
 } from '~/common';
 import { HandleIdLookup } from '~/core';
@@ -26,28 +25,28 @@ export class FilmService {
     private readonly repo: FilmRepository,
   ) {}
 
-  async create(input: CreateFilm, session: Session): Promise<Film> {
-    const dto = await this.repo.create(input, session);
+  async create(input: CreateFilm): Promise<Film> {
+    const dto = await this.repo.create(input);
     this.privileges.for(Film, dto).verifyCan('create');
-    return this.secure(dto, session);
+    return this.secure(dto);
   }
 
   @HandleIdLookup(Film)
-  async readOne(id: ID, session: Session, _view?: ObjectView): Promise<Film> {
+  async readOne(id: ID, _view?: ObjectView): Promise<Film> {
     const result = await this.repo.readOne(id);
-    return this.secure(result, session);
+    return this.secure(result);
   }
 
-  async readMany(ids: readonly ID[], session: Session) {
+  async readMany(ids: readonly ID[]) {
     const films = await this.repo.readMany(ids);
-    return films.map((dto) => this.secure(dto, session));
+    return films.map((dto) => this.secure(dto));
   }
 
-  private secure(dto: UnsecuredDto<Film>, session: Session): Film {
+  private secure(dto: UnsecuredDto<Film>): Film {
     return this.privileges.for(Film).secure(dto);
   }
 
-  async update(input: UpdateFilm, session: Session): Promise<Film> {
+  async update(input: UpdateFilm): Promise<Film> {
     const film = await this.repo.readOne(input.id);
     const changes = {
       ...this.repo.getActualChanges(film, input),
@@ -59,10 +58,10 @@ export class FilmService {
     this.privileges.for(Film, film).verifyChanges(changes);
 
     const updated = await this.repo.update({ id: input.id, ...changes });
-    return this.secure(updated, session);
+    return this.secure(updated);
   }
 
-  async delete(id: ID, session: Session): Promise<void> {
+  async delete(id: ID): Promise<void> {
     const film = await this.repo.readOne(id);
 
     this.privileges.for(Film, film).verifyCan('delete');
@@ -74,11 +73,11 @@ export class FilmService {
     }
   }
 
-  async list(input: FilmListInput, session: Session): Promise<FilmListOutput> {
+  async list(input: FilmListInput): Promise<FilmListOutput> {
     const results = await this.repo.list(input);
     return {
       ...results,
-      items: results.items.map((dto) => this.secure(dto, session)),
+      items: results.items.map((dto) => this.secure(dto)),
     };
   }
 }

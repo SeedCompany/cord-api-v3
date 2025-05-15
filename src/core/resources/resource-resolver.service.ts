@@ -9,7 +9,6 @@ import {
   type Many,
   type ObjectView,
   ServerException,
-  type Session,
 } from '~/common';
 import { type BaseNode } from '../database/results';
 import { ILogger, Logger } from '../logger';
@@ -28,7 +27,7 @@ type SomeResource = ValueOf<ResourceMap>;
  *
  * WARNING: It's required that the function signature be:
  * ```
- * (id: ID, session: Session, changeset?: ID) => Promise<Resource>
+ * (id: ID, changeset?: ID) => Promise<Resource>
  * ```
  *
  * {@link ResourceResolver} can be used to invoke this function.
@@ -64,8 +63,8 @@ export class ResourceResolver {
   /**
    * Lookup a resource from a Neo4j BaseNode.
    */
-  async lookupByBaseNode(node: BaseNode, session: Session, view?: ObjectView) {
-    return await this.lookup(node.labels, node.properties.id, session, view);
+  async lookupByBaseNode(node: BaseNode, view?: ObjectView) {
+    return await this.lookup(node.labels, node.properties.id, view);
   }
 
   /**
@@ -76,25 +75,21 @@ export class ResourceResolver {
   async lookup<TResource extends SomeResource>(
     type: TResource,
     id: ID,
-    session: Session,
     view?: ObjectView,
   ): Promise<TResource['prototype']>;
   async lookup<TResourceName extends keyof ResourceMap>(
     type: TResourceName,
     id: ID,
-    session: Session,
     view?: ObjectView,
   ): Promise<ResourceMap[TResourceName]['prototype']>;
   async lookup(
     possibleTypes: Many<string | SomeResource>,
     id: ID,
-    session: Session,
     view?: ObjectView,
   ): Promise<SomeResource['prototype'] & { __typename: string }>;
   async lookup(
     possibleTypes: Many<string | SomeResource>,
     id: ID,
-    session: Session,
     view?: ObjectView,
   ): Promise<SomeResource['prototype'] & { __typename: string }> {
     const type = this.resolveType(possibleTypes);
@@ -112,7 +107,6 @@ export class ResourceResolver {
     const result = await method.handler.call(
       method.parentClass.instance,
       id,
-      session,
       view,
     );
     return {

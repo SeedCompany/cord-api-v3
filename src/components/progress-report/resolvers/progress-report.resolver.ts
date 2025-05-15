@@ -1,5 +1,5 @@
 import { Query, Resolver } from '@nestjs/graphql';
-import { AnonSession, ListArg, type Session } from '~/common';
+import { ListArg } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { PeriodicReportLoader as ReportLoader } from '../../periodic-report';
 import {
@@ -18,10 +18,9 @@ export class ProgressReportResolver {
   })
   async progressReports(
     @ListArg(ProgressReportListInput) input: ProgressReportListInput,
-    @AnonSession() session: Session,
     @Loader(ReportLoader) loader: LoaderOf<ReportLoader>,
   ): Promise<ProgressReportList> {
-    const list = await this.service.list(input, session);
+    const list = await this.service.list(input);
     loader.primeAll(list.items);
     return list;
   }

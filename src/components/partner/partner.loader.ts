@@ -10,6 +10,6 @@ export class PartnerLoader extends OrderedNestDataLoader<Partner> {
   }
 
   async loadMany(ids: readonly ID[]) {
-    return await this.partners.readMany(ids, this.session);
+    return await this.partners.readMany(ids);
   }
 }

@@ -11,7 +11,7 @@ export class SetLastStatusDate
   constructor(private readonly db: DatabaseService) {}
 
   async handle(event: EngagementUpdatedEvent) {
-    const { previous, updated, session } = event;
+    const { previous, updated } = event;
     if (previous.status === updated.status) {
       return;
     }

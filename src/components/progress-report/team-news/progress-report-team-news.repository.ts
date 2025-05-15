@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { type Session } from '~/common';
 import { PromptVariantResponseRepository } from '../../prompts/prompt-variant-response.repository';
 import { ProgressReport } from '../dto';
 import { ProgressReportTeamNews as TeamNews } from '../dto/team-news.dto';
@@ -10,7 +9,7 @@ export class ProgressReportTeamNewsRepository extends PromptVariantResponseRepos
   [ProgressReport, 'teamNews'],
   TeamNews,
 ) {
-  protected filterToReadable(session: Session) {
+  protected filterToReadable() {
     return this.privileges.filterToReadable({
       wrapContext: oncePerProjectFromProgressReportChild,
     });

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { node, type Query, relation } from 'cypher-query-builder';
-import { type Session, type UnsecuredDto } from '~/common';
+import { type UnsecuredDto } from '~/common';
 import { DtoRepository } from '~/core/database';
 import {
   ACTIVE,
@@ -25,17 +25,14 @@ import {
 import { ProgressReportExtraForPeriodicInterfaceRepository } from './progress-report-extra-for-periodic-interface.repository';
 
 @Injectable()
-export class ProgressReportRepository extends DtoRepository<
-  typeof ProgressReport,
-  [session: Session]
->(ProgressReport) {
+export class ProgressReportRepository extends DtoRepository(ProgressReport) {
   constructor(
     private readonly extraRepo: ProgressReportExtraForPeriodicInterfaceRepository,
   ) {
     super();
   }
 
-  async list(input: ProgressReportListInput, session: Session) {
+  async list(input: ProgressReportListInput) {
     const result = await this.db
       .query()
       .match([
@@ -52,12 +49,12 @@ export class ProgressReportRepository extends DtoRepository<
         }),
       )
       .apply(sortWith(progressReportSorters, input))
-      .apply(paginate(input, this.hydrate(session)))
+      .apply(paginate(input, this.hydrate()))
       .first();
     return result!; // result from paginate() will always have 1 row.
   }
 
-  protected hydrate(session: Session) {
+  protected hydrate() {
     return (query: Query) =>
       query
         .match([

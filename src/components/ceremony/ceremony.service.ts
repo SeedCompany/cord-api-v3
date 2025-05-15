@@ -4,7 +4,6 @@ import {
   InputException,
   type ObjectView,
   ServerException,
-  type Session,
   type UnsecuredDto,
 } from '~/common';
 import { HandleIdLookup } from '~/core';
@@ -26,44 +25,37 @@ export class CeremonyService {
   }
 
   @HandleIdLookup(Ceremony)
-  async readOne(
-    id: ID,
-    session: Session,
-    _view?: ObjectView,
-  ): Promise<Ceremony> {
+  async readOne(id: ID, _view?: ObjectView): Promise<Ceremony> {
     if (!id) {
       throw new InputException('No ceremony id to search for', 'ceremony.id');
     }
 
-    const dto = await this.repo.readOne(id, session);
-    return this.secure(dto, session);
+    const dto = await this.repo.readOne(id);
+    return this.secure(dto);
   }
 
-  async readMany(ids: readonly ID[], session: Session) {
-    const ceremonies = await this.repo.readMany(ids, session);
-    return ceremonies.map((dto) => this.secure(dto, session));
+  async readMany(ids: readonly ID[]) {
+    const ceremonies = await this.repo.readMany(ids);
+    return ceremonies.map((dto) => this.secure(dto));
   }
 
-  secure(dto: UnsecuredDto<Ceremony>, session: Session) {
+  secure(dto: UnsecuredDto<Ceremony>) {
     return this.privileges.for(Ceremony).secure(dto);
   }
 
-  async update(input: UpdateCeremony, session: Session): Promise<Ceremony> {
-    const object = await this.repo.readOne(input.id, session);
+  async update(input: UpdateCeremony): Promise<Ceremony> {
+    const object = await this.repo.readOne(input.id);
     const changes = this.repo.getActualChanges(object, input);
     this.privileges.for(Ceremony, object).verifyChanges(changes);
-    const updated = await this.repo.update(
-      {
-        id: input.id,
-        ...changes,
-      },
-      session,
-    );
-    return this.secure(updated, session);
+    const updated = await this.repo.update({
+      id: input.id,
+      ...changes,
+    });
+    return this.secure(updated);
   }
 
-  async delete(id: ID, session: Session): Promise<void> {
-    const object = await this.repo.readOne(id, session);
+  async delete(id: ID): Promise<void> {
+    const object = await this.repo.readOne(id);
 
     // Only called internally, not exposed directly to users
     // this.privileges.for( Ceremony, object).verifyCan('delete');

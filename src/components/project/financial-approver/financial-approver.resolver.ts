@@ -6,7 +6,7 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { AnonSession, LoggedInSession, type Session } from '~/common';
+import { AnonSession, type Session } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { Privileges } from '../../authorization';
 import { UserLoader } from '../../user';
@@ -45,7 +45,6 @@ export class FinancialApproverResolver {
   })
   async setProjectTypeFinancialApprover(
     @Args('input') input: FinancialApproverInput,
-    @LoggedInSession() session: Session,
   ): Promise<FinancialApprover | null> {
     this.privileges.for(FinancialApprover).verifyCan('edit');
     return await this.repo.write(input);

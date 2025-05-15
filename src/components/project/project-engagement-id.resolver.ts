@@ -1,11 +1,9 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import {
   type AbstractClassType,
-  AnonSession,
   type ID,
   IdArg,
   NotFoundException,
-  type Session,
 } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { Privileges } from '../authorization';
@@ -34,7 +32,6 @@ function makeResolver(
 
     @ResolveField(() => engagementClass)
     async engagement(
-      @AnonSession() session: Session,
       @Parent() project: Project,
       @IdArg() engagementId: ID,
       @Loader(EngagementLoader) engagements: LoaderOf<EngagementLoader>,

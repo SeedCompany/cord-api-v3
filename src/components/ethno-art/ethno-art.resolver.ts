@@ -1,12 +1,5 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import {
-  AnonSession,
-  type ID,
-  IdArg,
-  ListArg,
-  LoggedInSession,
-  type Session,
-} from '~/common';
+import { type ID, IdArg, ListArg } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { EthnoArtLoader, EthnoArtService } from '../ethno-art';
 import {
@@ -38,11 +31,10 @@ export class EthnoArtResolver {
     description: 'Look up ethno arts',
   })
   async ethnoArts(
-    @AnonSession() session: Session,
     @ListArg(EthnoArtListInput) input: EthnoArtListInput,
     @Loader(EthnoArtLoader) ethnoArts: LoaderOf<EthnoArtLoader>,
   ): Promise<EthnoArtListOutput> {
-    const list = await this.ethnoArtService.list(input, session);
+    const list = await this.ethnoArtService.list(input);
     ethnoArts.primeAll(list.items);
     return list;
   }
@@ -51,10 +43,9 @@ export class EthnoArtResolver {
     description: 'Create an ethno art',
   })
   async createEthnoArt(
-    @LoggedInSession() session: Session,
     @Args('input') { ethnoArt: input }: CreateEthnoArtInput,
   ): Promise<CreateEthnoArtOutput> {
-    const ethnoArt = await this.ethnoArtService.create(input, session);
+    const ethnoArt = await this.ethnoArtService.create(input);
     return { ethnoArt };
   }
 
@@ -62,21 +53,17 @@ export class EthnoArtResolver {
     description: 'Update an ethno art',
   })
   async updateEthnoArt(
-    @LoggedInSession() session: Session,
     @Args('input') { ethnoArt: input }: UpdateEthnoArtInput,
   ): Promise<UpdateEthnoArtOutput> {
-    const ethnoArt = await this.ethnoArtService.update(input, session);
+    const ethnoArt = await this.ethnoArtService.update(input);
     return { ethnoArt };
   }
 
   @Mutation(() => DeleteEthnoArtOutput, {
     description: 'Delete an ethno art',
   })
-  async deleteEthnoArt(
-    @LoggedInSession() session: Session,
-    @IdArg() id: ID,
-  ): Promise<DeleteEthnoArtOutput> {
-    await this.ethnoArtService.delete(id, session);
+  async deleteEthnoArt(@IdArg() id: ID): Promise<DeleteEthnoArtOutput> {
+    await this.ethnoArtService.delete(id);
     return { success: true };
   }
 }

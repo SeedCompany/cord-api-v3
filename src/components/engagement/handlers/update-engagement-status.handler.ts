@@ -1,5 +1,5 @@
 import type { MergeExclusive, RequireAtLeastOne } from 'type-fest';
-import { type ID, type Session, type UnsecuredDto } from '~/common';
+import { type ID, type UnsecuredDto } from '~/common';
 import { EventsHandler, type IEventHandler } from '~/core';
 import {
   type Project,
@@ -111,7 +111,6 @@ export class UpdateEngagementStatusHandler
     project,
     previousStep,
     workflowEvent,
-    session,
   }: ProjectTransitionedEvent) {
     const engagementStatus = changes.find(
       changeMatcher(previousStep, workflowEvent.to),
@@ -128,19 +127,13 @@ export class UpdateEngagementStatusHandler
       ...(previousStep !== 'Suspended' ? [EngagementStatus.Suspended] : []),
     ]);
 
-    await this.updateEngagements(
-      engagementStatus,
-      engagementIds,
-      project.type,
-      session,
-    );
+    await this.updateEngagements(engagementStatus, engagementIds, project.type);
   }
 
   private async updateEngagements(
     status: EngagementStatus,
     engagementIds: readonly ID[],
     type: ProjectType,
-    session: Session,
   ) {
     for await (const id of engagementIds) {
       const updateInput = {
@@ -148,14 +141,8 @@ export class UpdateEngagementStatusHandler
         status,
       };
       type !== ProjectType.Internship
-        ? await this.engagementService.updateLanguageEngagement(
-            updateInput,
-            session,
-          )
-        : await this.engagementService.updateInternshipEngagement(
-            updateInput,
-            session,
-          );
+        ? await this.engagementService.updateLanguageEngagement(updateInput)
+        : await this.engagementService.updateInternshipEngagement(updateInput);
     }
   }
 }

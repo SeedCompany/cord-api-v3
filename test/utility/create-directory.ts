@@ -22,7 +22,7 @@ export async function createRootDirectory(app: TestApp, name?: string) {
       relation: 'dir',
       name,
     });
-    return await app.get(FileService).getDirectory(id, session);
+    return await app.get(FileService).getDirectory(id);
   });
 }
 

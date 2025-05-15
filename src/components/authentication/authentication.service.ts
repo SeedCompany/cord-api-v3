@@ -69,7 +69,7 @@ export class AuthenticationService {
       const users = this.moduleRef.get(userMod.UserService, { strict: false });
       userId = await this.gel.usingOptions(
         disableAccessPolicies,
-        async () => await users.create(input, session),
+        async () => await users.create(input),
       );
     } catch (e) {
       // remap field prop as `email` field is at a different location in register() than createPerson()
@@ -85,7 +85,7 @@ export class AuthenticationService {
     return userId;
   }
 
-  async login(input: LoginInput, session: Session): Promise<ID> {
+  async login(input: LoginInput): Promise<ID> {
     const hash = await this.repo.getPasswordHash(input);
 
     if (!(await this.crypto.verify(hash, input.password))) {
@@ -259,7 +259,6 @@ export class AuthenticationService {
   async changePassword(
     oldPassword: string,
     newPassword: string,
-    session: Session,
   ): Promise<void> {
     if (!oldPassword)
       throw new InputException('Old Password Required', 'oldPassword');
@@ -291,10 +290,7 @@ export class AuthenticationService {
     });
   }
 
-  async resetPassword(
-    { token, password }: ResetPasswordInput,
-    session: Session,
-  ): Promise<void> {
+  async resetPassword({ token, password }: ResetPasswordInput): Promise<void> {
     const emailToken = await this.repo.findEmailToken(token);
     if (!emailToken) {
       throw new InputException('Token is invalid', 'TokenInvalid');

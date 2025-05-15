@@ -1,12 +1,5 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import {
-  AnonSession,
-  type ID,
-  IdArg,
-  ListArg,
-  LoggedInSession,
-  type Session,
-} from '~/common';
+import { type ID, IdArg, ListArg } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import {
   CreateFilmInput,
@@ -41,9 +34,8 @@ export class FilmResolver {
   async films(
     @ListArg(FilmListInput) input: FilmListInput,
     @Loader(FilmLoader) films: LoaderOf<FilmLoader>,
-    @AnonSession() session: Session,
   ): Promise<FilmListOutput> {
-    const list = await this.filmService.list(input, session);
+    const list = await this.filmService.list(input);
     films.primeAll(list.items);
     return list;
   }
@@ -52,10 +44,9 @@ export class FilmResolver {
     description: 'Create a film',
   })
   async createFilm(
-    @LoggedInSession() session: Session,
     @Args('input') { film: input }: CreateFilmInput,
   ): Promise<CreateFilmOutput> {
-    const film = await this.filmService.create(input, session);
+    const film = await this.filmService.create(input);
     return { film };
   }
 
@@ -63,21 +54,17 @@ export class FilmResolver {
     description: 'Update a film',
   })
   async updateFilm(
-    @LoggedInSession() session: Session,
     @Args('input') { film: input }: UpdateFilmInput,
   ): Promise<UpdateFilmOutput> {
-    const film = await this.filmService.update(input, session);
+    const film = await this.filmService.update(input);
     return { film };
   }
 
   @Mutation(() => DeleteFilmOutput, {
     description: 'Delete a film',
   })
-  async deleteFilm(
-    @LoggedInSession() session: Session,
-    @IdArg() id: ID,
-  ): Promise<DeleteFilmOutput> {
-    await this.filmService.delete(id, session);
+  async deleteFilm(@IdArg() id: ID): Promise<DeleteFilmOutput> {
+    await this.filmService.delete(id);
     return { success: true };
   }
 }

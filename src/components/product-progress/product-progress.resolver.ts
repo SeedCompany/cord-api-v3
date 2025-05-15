@@ -5,7 +5,6 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { LoggedInSession, type Session } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { PeriodicReportLoader } from '../periodic-report';
 import { ProductLoader } from '../product';
@@ -38,8 +37,7 @@ export class ProductProgressResolver {
   @Mutation(() => ProductProgress)
   async updateProductProgress(
     @Args('input') input: ProductProgressInput,
-    @LoggedInSession() session: Session,
   ): Promise<ProductProgress> {
-    return await this.service.update(input, session);
+    return await this.service.update(input);
   }
 }

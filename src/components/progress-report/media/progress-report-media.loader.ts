@@ -17,6 +17,6 @@ export class ProgressReportMediaLoader extends SessionAwareLoaderStrategy<
   }
 
   async loadMany(ids: ReadonlyArray<IdOf<ReportMedia>>) {
-    return await this.service.readMany(ids, this.session);
+    return await this.service.readMany(ids);
   }
 }

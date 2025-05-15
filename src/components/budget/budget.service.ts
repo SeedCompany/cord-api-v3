@@ -8,7 +8,6 @@ import {
   type ObjectView,
   Order,
   ServerException,
-  type Session,
   viewOfChangeset,
 } from '~/common';
 import { HandleIdLookup, ResourceResolver } from '~/core';
@@ -43,10 +42,7 @@ export class BudgetService {
     private readonly resources: ResourceResolver,
   ) {}
 
-  async create(
-    { projectId, ...input }: CreateBudget,
-    session: Session,
-  ): Promise<Budget> {
+  async create({ projectId, ...input }: CreateBudget): Promise<Budget> {
     const universalTemplateFileId = await generateId<FileId>();
 
     try {
@@ -58,14 +54,13 @@ export class BudgetService {
       await this.files.createDefinedFile(
         universalTemplateFileId,
         `Universal Budget Template`,
-        session,
         budgetId,
         'universalTemplateFile',
         input.universalTemplateFile,
         'budget.universalTemplateFile',
       );
 
-      return await this.readOne(budgetId, session);
+      return await this.readOne(budgetId);
     } catch (exception) {
       throw new CreationFailed(Budget, { cause: exception });
     }
@@ -73,7 +68,6 @@ export class BudgetService {
 
   async createRecord(
     input: CreateBudgetRecord,
-    session: Session,
     changeset?: ID,
   ): Promise<BudgetRecord> {
     const { organizationId, fiscalYear } = input;
@@ -91,7 +85,6 @@ export class BudgetService {
 
       const budgetRecord = await this.readOneRecord(
         recordId,
-        session,
         viewOfChangeset(changeset),
       );
 
@@ -112,8 +105,8 @@ export class BudgetService {
   }
 
   @HandleIdLookup(Budget)
-  async readOne(id: ID, session: Session, view?: ObjectView): Promise<Budget> {
-    const result = await this.budgetRepo.readOne(id, session, view);
+  async readOne(id: ID, view?: ObjectView): Promise<Budget> {
+    const result = await this.budgetRepo.readOne(id, view);
 
     const privs = this.privileges.for(Budget, result);
 
@@ -127,17 +120,12 @@ export class BudgetService {
           count: 25,
           filter: { budgetId: id },
         },
-        session,
         view,
       );
     }
 
     const changeRequest = view?.changeset
-      ? await this.resources.lookup(
-          ProjectChangeRequest,
-          view.changeset,
-          session,
-        )
+      ? await this.resources.lookup(ProjectChangeRequest, view.changeset)
       : undefined;
 
     return {
@@ -149,26 +137,22 @@ export class BudgetService {
     };
   }
 
-  async readMany(ids: readonly ID[], session: Session, view?: ObjectView) {
-    const budgets = await this.budgetRepo.readMany(ids, session, view);
+  async readMany(ids: readonly ID[], view?: ObjectView) {
+    const budgets = await this.budgetRepo.readMany(ids, view);
     return await Promise.all(
-      budgets.map(async (dto) => await this.readOne(dto.id, session, view)),
+      budgets.map(async (dto) => await this.readOne(dto.id, view)),
     );
   }
 
   @HandleIdLookup(BudgetRecord)
-  async readOneRecord(
-    id: ID,
-    session: Session,
-    view?: ObjectView,
-  ): Promise<BudgetRecord> {
-    const result = await this.budgetRecordsRepo.readOne(id, { session, view });
+  async readOneRecord(id: ID, view?: ObjectView): Promise<BudgetRecord> {
+    const result = await this.budgetRecordsRepo.readOne(id, { view });
 
     return this.privileges.for(BudgetRecord).secure(result);
   }
 
-  async update(input: UpdateBudget, session: Session): Promise<Budget> {
-    const budget = await this.readOne(input.id, session);
+  async update(input: UpdateBudget): Promise<Budget> {
+    const budget = await this.readOne(input.id);
 
     const changes = this.budgetRepo.getActualChanges(budget, input);
     this.privileges.for(Budget, budget).verifyChanges(changes);
@@ -177,21 +161,15 @@ export class BudgetService {
       budget.universalTemplateFile,
       'budget.universalTemplateFile',
       universalTemplateFile,
-      session,
     );
     return await this.budgetRepo.update(budget, simpleChanges);
   }
 
   async updateRecord(
     { id, ...input }: UpdateBudgetRecord,
-    session: Session,
     changeset?: ID,
   ): Promise<BudgetRecord> {
-    const br = await this.readOneRecord(
-      id,
-      session,
-      viewOfChangeset(changeset),
-    );
+    const br = await this.readOneRecord(id, viewOfChangeset(changeset));
     const changes = this.budgetRecordsRepo.getActualChanges(br, input);
     this.privileges.for(BudgetRecord, br).verifyChanges(changes);
 
@@ -199,13 +177,11 @@ export class BudgetService {
     return result;
   }
 
-  async delete(id: ID, session: Session): Promise<void> {
-    const budget = await this.readOne(id, session);
+  async delete(id: ID): Promise<void> {
+    const budget = await this.readOne(id);
 
     // cascade delete each budget record in this budget
-    await Promise.all(
-      budget.records.map((br) => this.deleteRecord(br.id, session)),
-    );
+    await Promise.all(budget.records.map((br) => this.deleteRecord(br.id)));
 
     try {
       await this.budgetRepo.deleteNode(budget);
@@ -214,7 +190,7 @@ export class BudgetService {
     }
   }
 
-  async deleteRecord(id: ID, session: Session, changeset?: ID): Promise<void> {
+  async deleteRecord(id: ID, changeset?: ID): Promise<void> {
     try {
       await this.budgetRecordsRepo.deleteNode(id, { changeset });
     } catch (e) {
@@ -224,37 +200,32 @@ export class BudgetService {
 
   async list(
     partialInput: Partial<BudgetListInput>,
-    session: Session,
     changeset?: ID,
   ): Promise<BudgetListOutput> {
     const input = BudgetListInput.defaultValue(BudgetListInput, partialInput);
-    const results = await this.budgetRepo.list(input, session);
+    const results = await this.budgetRepo.list(input);
     return await mapListResults(results, (id) =>
-      this.readOne(id, session, viewOfChangeset(changeset)),
+      this.readOne(id, viewOfChangeset(changeset)),
     );
   }
 
   async listUnsecure(
     partialInput: Partial<BudgetListInput>,
-    session: Session,
     changeset?: ID,
   ): Promise<BudgetListOutput> {
     const input = BudgetListInput.defaultValue(BudgetListInput, partialInput);
     const results = await this.budgetRepo.listUnsecure(input);
     return await mapListResults(results, (id) =>
-      this.readOne(id, session, viewOfChangeset(changeset)),
+      this.readOne(id, viewOfChangeset(changeset)),
     );
   }
 
   async listRecords(
     input: BudgetRecordListInput,
-    session: Session,
     view?: ObjectView,
   ): Promise<BudgetRecordListOutput> {
-    const results = await this.budgetRecordsRepo.list(input, session, view);
+    const results = await this.budgetRecordsRepo.list(input, view);
 
-    return await mapListResults(results, (id) =>
-      this.readOneRecord(id, session, view),
-    );
+    return await mapListResults(results, (id) => this.readOneRecord(id, view));
   }
 }

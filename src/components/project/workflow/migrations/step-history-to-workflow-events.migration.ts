@@ -84,7 +84,7 @@ export class StepHistoryToWorkflowEventsMigration extends BaseMigration {
           // We don't know who did it, so we can't confirm this was an official
           // transition instead of a bypass.
           // Guess that it was if a transition exists.
-          this.fakeAdminSession,
+          // this.fakeAdminSession,
         );
 
         const transition = transitions.find((t) => t.to === next.value)?.key;

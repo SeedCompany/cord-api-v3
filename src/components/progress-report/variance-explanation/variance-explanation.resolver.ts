@@ -6,7 +6,6 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import { clamp } from 'lodash';
-import { AnonSession, LoggedInSession, type Session } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { ScheduleStatus } from '../../progress-summary/dto';
 import { ProgressSummaryLoader } from '../../progress-summary/progress-summary.loader';
@@ -28,7 +27,6 @@ export class ProgressReportVarianceExplanationResolver {
 
   @ResolveField(() => VarianceExplanation)
   async varianceExplanation(
-    @AnonSession() session: Session,
     @Parent() report: ProgressReport,
     @Loader(() => ProgressReportVarianceExplanationLoader)
     loader: LoaderOf<ProgressReportVarianceExplanationLoader>,
@@ -39,9 +37,8 @@ export class ProgressReportVarianceExplanationResolver {
   @Mutation(() => ProgressReport)
   async explainProgressVariance(
     @Args({ name: 'input' }) input: ProgressReportVarianceExplanationInput,
-    @LoggedInSession() session: Session,
   ): Promise<ProgressReport> {
-    return await this.service.update(input, session);
+    return await this.service.update(input);
   }
 }
 

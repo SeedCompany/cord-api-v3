@@ -10,6 +10,6 @@ export class ProjectMemberLoader extends OrderedNestDataLoader<ProjectMember> {
   }
 
   async loadMany(ids: readonly ID[]) {
-    return await this.projectMembers.readMany(ids, this.session);
+    return await this.projectMembers.readMany(ids);
   }
 }

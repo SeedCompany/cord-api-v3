@@ -7,7 +7,6 @@ import {
   NotFoundException,
   ReadAfterCreationFailed,
   SecuredList,
-  type Session,
   type UnsecuredDto,
 } from '~/common';
 import { DtoRepository } from '~/core/database';
@@ -104,7 +103,7 @@ export class FieldRegionRepository extends DtoRepository(FieldRegion) {
         );
   }
 
-  async list({ filter, ...input }: FieldRegionListInput, session: Session) {
+  async list({ filter, ...input }: FieldRegionListInput) {
     if (!this.privileges.can('read')) {
       return SecuredList.Redacted;
     }

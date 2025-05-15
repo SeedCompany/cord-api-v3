@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { mapKeys } from '@seedcompany/common';
-import { InputException, NotFoundException, type Session } from '~/common';
+import { InputException, NotFoundException } from '~/common';
 import { ResourceLoader } from '~/core';
 import { Privileges } from '../../authorization';
 import { ProgressReport } from '../dto';
@@ -19,22 +19,19 @@ export class ProgressReportVarianceExplanationService {
     private readonly repo: ProgressReportVarianceExplanationRepository,
   ) {}
 
-  async readMany(reports: readonly ProgressReport[], session: Session) {
+  async readMany(reports: readonly ProgressReport[]) {
     const reportMap = mapKeys.fromList(reports, (r) => r.id).asMap;
     const dtos = await this.repo.readMany([...reportMap.keys()]);
     return dtos.map((dto) => {
       const report = reportMap.get(dto.report.id)!;
-      const secured = this.privilegesFor(session, report).secure(dto);
+      const secured = this.privilegesFor(report).secure(dto);
       return { ...secured, report };
     });
   }
 
-  async update(
-    input: VarianceExplanationInput,
-    session: Session,
-  ): Promise<ProgressReport> {
+  async update(input: VarianceExplanationInput): Promise<ProgressReport> {
     const report = await this.resources.load(ProgressReport, input.report);
-    const [existing] = await this.readMany([report], session);
+    const [existing] = await this.readMany([report]);
     if (!existing) {
       throw new NotFoundException();
     }
@@ -64,14 +61,14 @@ export class ProgressReportVarianceExplanationService {
       );
     }
 
-    this.privilegesFor(session, report).verifyChanges(changes);
+    this.privilegesFor(report).verifyChanges(changes);
 
     await this.repo.update({ id: report.id, ...changes });
 
     return report;
   }
 
-  private privilegesFor(session: Session, report: ProgressReport) {
+  private privilegesFor(report: ProgressReport) {
     const context = report as any; // the report is fine to give context
     return this.privileges.for(VarianceExplanation, context);
   }

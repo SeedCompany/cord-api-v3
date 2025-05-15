@@ -1,5 +1,5 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { AnonSession, type Session, Variant } from '~/common';
+import { Variant } from '~/common';
 import { Privileges, withVariant } from '../../../authorization';
 import {
   AvailableProgressReportMediaVariant as AvailableVariant,
@@ -17,7 +17,6 @@ export class ProgressReportMediaListResolver {
   })
   uploadableVariants(
     @Parent() { report }: ReportMediaList,
-    @AnonSession() session: Session,
   ): ReadonlyArray<ReportMedia['variant']> {
     const context = report as any; // the report is fine for condition context
     const privileges = this.privileges.for(ReportMedia);
@@ -31,7 +30,6 @@ export class ProgressReportMediaListResolver {
   })
   availableVariants(
     @Parent() { report }: ReportMediaList,
-    @AnonSession() session: Session,
   ): readonly AvailableVariant[] {
     const context = report as any; // the report is fine for condition context
     const privileges = this.privileges.for(ReportMedia);

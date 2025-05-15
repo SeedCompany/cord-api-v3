@@ -5,7 +5,6 @@ import {
   InputException,
   isIdLike,
   NotFoundException,
-  type Session,
   UnauthorizedException,
   type Variant,
 } from '~/common';
@@ -42,19 +41,15 @@ export class ProductProgressService {
     private readonly repo: ProductProgressRepository,
   ) {}
 
-  async getAvailableVariantsForProduct(product: Product, session: Session) {
+  async getAvailableVariantsForProduct(product: Product) {
     return Progress.Variants.filter((variant) => {
-      const privileges = this.privilegesFor(
-        session,
-        withVariant(product, variant),
-      );
+      const privileges = this.privilegesFor(withVariant(product, variant));
       return privileges.can('read', 'completed');
     });
   }
 
   async readAllForManyReports(
     reports: readonly ProgressVariantByReportInput[],
-    session: Session,
   ): Promise<readonly ProgressVariantByReportOutput[]> {
     if (reports.length === 0) {
       return [];
@@ -70,7 +65,7 @@ export class ProductProgressService {
         report,
         variant: Progress.Variants.byKey(row.variant),
         details: row.progressList.flatMap((progress) => {
-          const privileges = this.privilegesFor(session, report);
+          const privileges = this.privilegesFor(report);
           return this.secure(progress, privileges) ?? [];
         }),
       };
@@ -79,7 +74,6 @@ export class ProductProgressService {
 
   async readAllForManyProducts(
     products: readonly ProgressVariantByProductInput[],
-    session: Session,
   ): Promise<readonly ProgressVariantByProductOutput[]> {
     if (products.length === 0) {
       return [];
@@ -97,7 +91,7 @@ export class ProductProgressService {
         product,
         variant: Progress.Variants.byKey(row.variant),
         details: row.progressList.flatMap((progress) => {
-          const privileges = this.privilegesFor(session, product);
+          const privileges = this.privilegesFor(product);
           return this.secure(progress, privileges) ?? [];
         }),
       };
@@ -108,7 +102,6 @@ export class ProductProgressService {
     report: ID | ProgressReport,
     product: ID | Product,
     variant: Variant<ProgressVariant>,
-    session: Session,
   ): Promise<ProductProgress> {
     const productId = isIdLike(product) ? product : product.id;
     const reportId = isIdLike(report) ? report : report.id;
@@ -116,13 +109,10 @@ export class ProductProgressService {
       ? product
       : !isIdLike(report)
       ? report
-      : await this.repo.getScope(productId, session);
+      : await this.repo.getScope(productId);
 
     const unsecured = await this.repo.readOne(productId, reportId, variant);
-    const progress = this.secure(
-      unsecured,
-      this.privilegesFor(session, context),
-    );
+    const progress = this.secure(unsecured, this.privilegesFor(context));
     if (!progress) {
       throw new NotFoundException();
     }
@@ -131,21 +121,17 @@ export class ProductProgressService {
 
   async readOneForCurrentReport(
     input: ProgressVariantByProductInput,
-    session: Session,
   ): Promise<ProductProgress | undefined> {
     const progress = await this.repo.readOneForCurrentReport(input);
     if (!progress) {
       return undefined;
     }
-    return this.secure(progress, this.privilegesFor(session, input.product));
+    return this.secure(progress, this.privilegesFor(input.product));
   }
 
-  async update(input: ProductProgressInput, session: Session) {
-    const scope = await this.repo.getScope(input.productId, session);
-    const privileges = this.privilegesFor(
-      session,
-      withVariant(scope, input.variant),
-    );
+  async update(input: ProductProgressInput) {
+    const scope = await this.repo.getScope(input.productId);
+    const privileges = this.privilegesFor(withVariant(scope, input.variant));
     if (!privileges.can('read') || !privileges.can('edit', 'completed')) {
       throw new UnauthorizedException(
         `You do not have the permission to update the "${input.variant.label}" variant of this goal's progress`,
@@ -169,7 +155,7 @@ export class ProductProgressService {
     }
 
     const progress = await this.repo.update(input);
-    return this.secure(progress, this.privilegesFor(session, scope))!;
+    return this.secure(progress, this.privilegesFor(scope))!;
   }
 
   private secure(
@@ -190,7 +176,6 @@ export class ProductProgressService {
   }
 
   private privilegesFor(
-    session: Session,
     context: HasSensitivity & HasScope,
   ): UserResourcePrivileges<typeof StepProgress> {
     return this.privileges.for(StepProgress, context as any);

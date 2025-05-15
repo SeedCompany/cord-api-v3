@@ -22,7 +22,6 @@ import {
   type ObjectView,
   ReadAfterCreationFailed,
   ServerException,
-  type Session,
   typenameForView,
   type UnsecuredDto,
   viewOfChangeset,
@@ -98,11 +97,11 @@ export class EngagementRepository extends CommonRepository {
     super();
   }
 
-  async readOne(id: ID, session: Session, view?: ObjectView) {
+  async readOne(id: ID, view?: ObjectView) {
     const query = this.db
       .query()
       .matchNode('node', labelForView('Engagement', view), { id })
-      .apply(this.hydrate(session, view));
+      .apply(this.hydrate(view));
     const result = await query.first();
     if (!result) {
       throw new NotFoundException('Could not find Engagement');
@@ -111,17 +110,17 @@ export class EngagementRepository extends CommonRepository {
     return result.dto;
   }
 
-  async readMany(ids: readonly ID[], session: Session, view?: ObjectView) {
+  async readMany(ids: readonly ID[], view?: ObjectView) {
     return await this.db
       .query()
       .matchNode('node', labelForView('Engagement', view))
       .where({ 'node.id': inArray(ids) })
-      .apply(this.hydrate(session, view))
+      .apply(this.hydrate(view))
       .map('dto')
       .run();
   }
 
-  protected hydrate(session: Session, view?: ObjectView) {
+  protected hydrate(view?: ObjectView) {
     return (query: Query) =>
       query
         .match([
@@ -222,7 +221,6 @@ export class EngagementRepository extends CommonRepository {
 
   async createLanguageEngagement(
     input: CreateLanguageEngagement,
-    session: Session,
     changeset?: ID,
   ) {
     const pnpId = await generateId<FileId>();
@@ -282,27 +280,23 @@ export class EngagementRepository extends CommonRepository {
     await this.files.createDefinedFile(
       pnpId,
       `PNP`,
-      session,
       result.id,
       'pnp',
       input.pnp,
       'engagement.pnp',
     );
 
-    return (await this.readOne(
-      result.id,
-      session,
-      viewOfChangeset(changeset),
-    ).catch((e) => {
-      throw e instanceof NotFoundException
-        ? new ReadAfterCreationFailed(LanguageEngagement)
-        : e;
-    })) as UnsecuredDto<LanguageEngagement>;
+    return (await this.readOne(result.id, viewOfChangeset(changeset)).catch(
+      (e) => {
+        throw e instanceof NotFoundException
+          ? new ReadAfterCreationFailed(LanguageEngagement)
+          : e;
+      },
+    )) as UnsecuredDto<LanguageEngagement>;
   }
 
   async createInternshipEngagement(
     input: CreateInternshipEngagement,
-    session: Session,
     changeset?: ID,
   ) {
     const growthPlanId = await generateId<FileId>();
@@ -377,35 +371,28 @@ export class EngagementRepository extends CommonRepository {
     await this.files.createDefinedFile(
       growthPlanId,
       `Growth Plan`,
-      session,
       result.id,
       'growthPlan',
       input.growthPlan,
       'engagement.growthPlan',
     );
 
-    return (await this.readOne(
-      result.id,
-      session,
-      viewOfChangeset(changeset),
-    ).catch((e) => {
-      throw e instanceof NotFoundException
-        ? new ReadAfterCreationFailed(InternshipEngagement)
-        : e;
-    })) as UnsecuredDto<InternshipEngagement>;
+    return (await this.readOne(result.id, viewOfChangeset(changeset)).catch(
+      (e) => {
+        throw e instanceof NotFoundException
+          ? new ReadAfterCreationFailed(InternshipEngagement)
+          : e;
+      },
+    )) as UnsecuredDto<InternshipEngagement>;
   }
 
   getActualLanguageChanges = getChanges(LanguageEngagement);
 
-  async updateLanguage(
-    changes: UpdateLanguageEngagement,
-    session: Session,
-    changeset?: ID,
-  ) {
+  async updateLanguage(changes: UpdateLanguageEngagement, changeset?: ID) {
     const { id, pnp, status, ...simpleChanges } = changes;
 
     if (pnp) {
-      const engagement = await this.readOne(id, session);
+      const engagement = await this.readOne(id);
 
       if (!engagement.pnp) {
         throw new ServerException(
@@ -413,13 +400,10 @@ export class EngagementRepository extends CommonRepository {
         );
       }
 
-      await this.files.createFileVersion(
-        {
-          ...pnp,
-          parentId: engagement.pnp.id,
-        },
-        session,
-      );
+      await this.files.createFileVersion({
+        ...pnp,
+        parentId: engagement.pnp.id,
+      });
     }
 
     if (changes.firstScripture) {
@@ -443,19 +427,12 @@ export class EngagementRepository extends CommonRepository {
       });
     }
 
-    return (await this.readOne(
-      id,
-      session,
-    )) as UnsecuredDto<LanguageEngagement>;
+    return (await this.readOne(id)) as UnsecuredDto<LanguageEngagement>;
   }
 
   getActualInternshipChanges = getChanges(InternshipEngagement);
 
-  async updateInternship(
-    changes: UpdateInternshipEngagement,
-    session: Session,
-    changeset?: ID,
-  ) {
+  async updateInternship(changes: UpdateInternshipEngagement, changeset?: ID) {
     const {
       id,
       mentorId,
@@ -466,7 +443,7 @@ export class EngagementRepository extends CommonRepository {
     } = changes;
 
     if (growthPlan) {
-      const engagement = await this.readOne(id, session);
+      const engagement = await this.readOne(id);
 
       if (!engagement.growthPlan) {
         throw new ServerException(
@@ -474,13 +451,10 @@ export class EngagementRepository extends CommonRepository {
         );
       }
 
-      await this.files.createFileVersion(
-        {
-          ...growthPlan,
-          parentId: engagement.growthPlan.id,
-        },
-        session,
-      );
+      await this.files.createFileVersion({
+        ...growthPlan,
+        parentId: engagement.growthPlan.id,
+      });
     }
 
     if (mentorId !== undefined) {
@@ -513,13 +487,10 @@ export class EngagementRepository extends CommonRepository {
       });
     }
 
-    return (await this.readOne(
-      id,
-      session,
-    )) as UnsecuredDto<InternshipEngagement>;
+    return (await this.readOne(id)) as UnsecuredDto<InternshipEngagement>;
   }
 
-  async list(input: EngagementListInput, session: Session, changeset?: ID) {
+  async list(input: EngagementListInput, changeset?: ID) {
     const result = await this.db
       .query()
       .subQuery((sub) =>
@@ -554,12 +525,12 @@ export class EngagementRepository extends CommonRepository {
         }),
       )
       .apply(sortWith(engagementSorters, input))
-      .apply(paginate(input, this.hydrate(session, viewOfChangeset(changeset))))
+      .apply(paginate(input, this.hydrate(viewOfChangeset(changeset))))
       .first();
     return result!; // result from paginate() will always have 1 row.
   }
 
-  async listAllByProjectId(projectId: ID, session: Session) {
+  async listAllByProjectId(projectId: ID) {
     return await this.db
       .query()
       .match([
@@ -567,7 +538,7 @@ export class EngagementRepository extends CommonRepository {
         relation('out', '', 'engagement', ACTIVE),
         node('node', 'Engagement'),
       ])
-      .apply(this.hydrate(session))
+      .apply(this.hydrate())
       .map('dto')
       .run();
   }

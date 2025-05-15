@@ -6,7 +6,6 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { AnonSession, type Session } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { Privileges } from '../authorization';
 import { Power } from '../authorization/dto';
@@ -30,12 +29,9 @@ export class RegisterResolver {
     `,
   })
   @Anonymous()
-  async register(
-    @Args('input') input: RegisterInput,
-    @AnonSession() session: Session,
-  ): Promise<RegisterOutput> {
-    const user = await this.authentication.register(input, session);
-    await this.authentication.login(input, session);
+  async register(@Args('input') input: RegisterInput): Promise<RegisterOutput> {
+    const user = await this.authentication.register(input);
+    await this.authentication.login(input);
     await this.authentication.refreshCurrentSession();
     return { user };
   }

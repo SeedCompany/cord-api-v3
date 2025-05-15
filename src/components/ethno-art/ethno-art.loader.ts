@@ -10,6 +10,6 @@ export class EthnoArtLoader extends OrderedNestDataLoader<EthnoArt> {
   }
 
   async loadMany(ids: readonly ID[]) {
-    return await this.ethnoArt.readMany(ids, this.session);
+    return await this.ethnoArt.readMany(ids);
   }
 }

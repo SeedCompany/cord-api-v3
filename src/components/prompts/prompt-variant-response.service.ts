@@ -10,7 +10,6 @@ import {
   type ResourceShape,
   RichTextDocument,
   SecuredList,
-  type Session,
   UnauthorizedException,
   type UnsecuredDto,
   type VariantList,
@@ -85,10 +84,7 @@ export const PromptVariantResponseListService = <
       return prompt;
     }
 
-    async list(
-      parent: Resource,
-      session: Session,
-    ): Promise<PromptVariantResponseList<TVariant>> {
+    async list(parent: Resource): Promise<PromptVariantResponseList<TVariant>> {
       const context = parent as any;
       const edge = this.repo.edge.forContext(context);
       const canRead = edge.can('read');
@@ -98,12 +94,12 @@ export const PromptVariantResponseListService = <
           available: { prompts: [], variants: [] },
         };
       }
-      const results = await this.repo.list(parent.id, session);
+      const results = await this.repo.list(parent.id);
 
       const privileges = this.resourcePrivileges.forContext(context);
 
       const [secured, prompts, variants] = await Promise.all([
-        mapListResults(results, async (dto) => await this.secure(dto, session)),
+        mapListResults(results, async (dto) => await this.secure(dto)),
         this.getPrompts(),
         this.getAvailableVariants(privileges),
       ]);
@@ -130,7 +126,6 @@ export const PromptVariantResponseListService = <
 
     protected async secure(
       dto: UnsecuredDto<PromptVariantResponse<TVariant>>,
-      session: Session,
     ): Promise<PromptVariantResponse<TVariant>> {
       const context = await this.getPrivilegeContext(dto);
       const privileges = this.resourcePrivileges.forContext(context);
@@ -169,7 +164,6 @@ export const PromptVariantResponseListService = <
 
     async create(
       input: ChoosePrompt,
-      session: Session,
     ): Promise<PromptVariantResponse<TVariant>> {
       const edge = this.repo.edge;
       const parent = await this.resources.load(
@@ -185,16 +179,15 @@ export const PromptVariantResponseListService = <
 
       await this.getPromptById(input.prompt);
 
-      const dto = await this.repo.create(input, session);
+      const dto = await this.repo.create(input);
 
-      return await this.secure(dto, session);
+      return await this.secure(dto);
     }
 
     async changePrompt(
       input: ChangePrompt,
-      session: Session,
     ): Promise<PromptVariantResponse<TVariant>> {
-      const response = await this.repo.readOne(input.id, session);
+      const response = await this.repo.readOne(input.id);
       const context = await this.getPrivilegeContext(response);
       const privileges = this.resourcePrivileges.forContext(context);
       privileges.verifyCan('edit', 'prompt');
@@ -205,16 +198,15 @@ export const PromptVariantResponseListService = <
         await this.repo.changePrompt(input);
       }
 
-      return await this.secure({ ...response, prompt: input.prompt }, session);
+      return await this.secure({ ...response, prompt: input.prompt });
     }
 
     async submitResponse(
       input: UpdatePromptVariantResponse<TVariant>,
-      session: Session,
     ): Promise<PromptVariantResponse<TVariant>> {
       const variant = this.resource.Variants.byKey(input.variant);
 
-      const response = await this.repo.readOne(input.id, session);
+      const response = await this.repo.readOne(input.id);
       const context = await this.getPrivilegeContext(response);
       const privileges = this.resourcePrivileges.forContext(context);
 
@@ -235,7 +227,7 @@ export const PromptVariantResponseListService = <
           response.responses.find((r) => r.variant === variant.key)?.response,
         )
       ) {
-        await this.repo.submitResponse(input, session);
+        await this.repo.submitResponse(input);
       }
 
       const session = this.sessionHost.current;
@@ -258,11 +250,11 @@ export const PromptVariantResponseListService = <
             : {}),
         })),
       };
-      return await this.secure(updated, session);
+      return await this.secure(updated);
     }
 
-    async delete(id: IdOf<PromptVariantResponse>, session: Session) {
-      const response = await this.repo.readOne(id, session);
+    async delete(id: IdOf<PromptVariantResponse>) {
+      const response = await this.repo.readOne(id);
 
       const context = await this.getPrivilegeContext(response);
       const privileges = this.resourcePrivileges.forContext(context);

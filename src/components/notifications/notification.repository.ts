@@ -15,7 +15,6 @@ import {
   type ID,
   NotFoundException,
   type ResourceShape,
-  type Session,
   type UnsecuredDto,
 } from '~/common';
 import { CommonRepository } from '~/core/database';
@@ -49,7 +48,6 @@ export class NotificationRepository extends CommonRepository {
     recipients: ReadonlyArray<ID<'User'>> | Nil,
     type: ResourceShape<any>,
     input: Record<string, any>,
-    session: Session,
   ) {
     const extra = omit(input, [...EnhancedResource.of(Notification).props]);
     const res = await this.db
@@ -89,13 +87,13 @@ export class NotificationRepository extends CommonRepository {
             'count(recipient) as totalRecipients',
           ),
       )
-      .subQuery('node', this.hydrate(session))
+      .subQuery('node', this.hydrate())
       .return('dto, totalRecipients')
       .first();
     return res!;
   }
 
-  async markRead({ id, unread }: MarkNotificationReadArgs, session: Session) {
+  async markRead({ id, unread }: MarkNotificationReadArgs) {
     const result = await this.db
       .query()
       .match([
@@ -105,7 +103,7 @@ export class NotificationRepository extends CommonRepository {
       ])
       .setValues({ 'recipient.readAt': unread ? null : DateTime.now() })
       .with('node')
-      .apply(this.hydrate(session))
+      .apply(this.hydrate())
       .first();
     if (!result) {
       throw new NotFoundException();
@@ -113,7 +111,7 @@ export class NotificationRepository extends CommonRepository {
     return result.dto;
   }
 
-  async list(input: NotificationListInput, session: Session) {
+  async list(input: NotificationListInput) {
     const result = await this.db
       .query()
       .match(currentUser.as('currentUser'))
@@ -127,7 +125,7 @@ export class NotificationRepository extends CommonRepository {
           .apply(notificationFilters(input.filter))
           .with('node')
           .orderBy('node.createdAt', 'DESC')
-          .apply(paginate(input, this.hydrate(session))),
+          .apply(paginate(input, this.hydrate())),
       )
       .subQuery('currentUser', (q) =>
         q
@@ -144,7 +142,7 @@ export class NotificationRepository extends CommonRepository {
     return result!;
   }
 
-  protected hydrate(session: Session) {
+  protected hydrate() {
     return (query: Query) =>
       query
         .subQuery((q) => {

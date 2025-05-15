@@ -44,7 +44,6 @@ export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
           id: engagement.id,
           initialEndDate: initialEndDate || null,
         },
-        event.session,
         engagement.changeset,
       );
 

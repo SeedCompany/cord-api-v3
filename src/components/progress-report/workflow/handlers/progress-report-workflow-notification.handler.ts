@@ -113,31 +113,16 @@ export class ProgressReportWorkflowNotificationHandler
     languageId: ID,
   ): Promise<EmailReportStatusNotification> {
     const recipientId = receiver.userId ?? this.configService.rootUser.id;
-    return await this.auth.asUser(recipientId, async (recipientSession) => {
+    return await this.auth.asUser(recipientId, async () => {
       const recipient = receiver.userId
-        ? await this.userService.readOne(recipientId, recipientSession)
+        ? await this.userService.readOne(recipientId)
         : this.fakeUserFromEmailAddress(receiver.email!);
 
-      const project = await this.projectService.readOne(
-        projectId,
-        recipientSession,
-      );
-      const language = await this.languageService.readOne(
-        languageId,
-        recipientSession,
-      );
-      const report = await this.reportService.readOne(
-        reportId,
-        recipientSession,
-      );
-      const changedBy = await this.userService.readOne(
-        unsecuredEvent.who.id,
-        recipientSession,
-      );
-      const workflowEvent = this.workflowService.secure(
-        unsecuredEvent,
-        recipientSession,
-      );
+      const project = await this.projectService.readOne(projectId);
+      const language = await this.languageService.readOne(languageId);
+      const report = await this.reportService.readOne(reportId);
+      const changedBy = await this.userService.readOne(unsecuredEvent.who.id);
+      const workflowEvent = this.workflowService.secure(unsecuredEvent);
 
       return {
         changedBy,

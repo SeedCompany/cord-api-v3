@@ -1,4 +1,4 @@
-import { type Session, type UnsecuredDto } from '~/common';
+import { type UnsecuredDto } from '~/common';
 import {
   type Engagement,
   InternshipEngagement,
@@ -12,7 +12,6 @@ export class EngagementUpdatedEvent {
     public updated: UnsecuredDto<Engagement>,
     readonly previous: UnsecuredDto<Engagement>,
     readonly input: UpdateLanguageEngagement | UpdateInternshipEngagement,
-    readonly session: Session,
   ) {}
 
   isLanguageEngagement(): this is EngagementUpdatedEvent & {

@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { type Nil } from '@seedcompany/common';
-import { type ID, type Session, UnauthorizedException } from '~/common';
+import { type ID, UnauthorizedException } from '~/common';
 import { SessionHost } from '../authentication';
 import { Privileges } from '../authorization';
 import { MissingContextException } from '../authorization/policy/conditions';
@@ -42,7 +42,6 @@ export const WorkflowService = <W extends Workflow>(workflow: () => W) => {
       currentState: W['state'],
       dynamicContext: W['context'],
       privilegeContext: object,
-      session: Session,
     ) {
       let available = this.workflow.transitions;
 
@@ -106,7 +105,7 @@ export const WorkflowService = <W extends Workflow>(workflow: () => W) => {
       }));
     }
 
-    canBypass(session: Session) {
+    canBypass() {
       try {
         return this.privileges.for(this.workflow.eventResource).can('create');
       } catch (e) {
@@ -121,7 +120,6 @@ export const WorkflowService = <W extends Workflow>(workflow: () => W) => {
 
     protected getBypassIfValid(
       input: ExecuteTransitionInput,
-      session: Session,
     ): W['state'] | undefined {
       // Verify transition key is valid
       if (input.transition) {
@@ -131,7 +129,7 @@ export const WorkflowService = <W extends Workflow>(workflow: () => W) => {
       if (!input.bypassTo) {
         return undefined;
       }
-      if (!this.canBypass(session)) {
+      if (!this.canBypass()) {
         throw new UnauthorizedException(
           'You do not have permission to bypass workflow. Specify a transition instead.',
         );

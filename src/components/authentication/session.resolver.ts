@@ -123,8 +123,8 @@ export class SessionResolver {
     // They should still be able to see their own props from this field.
     // Otherwise, it could be that the impersonatee can't see the impersonator's roles,
     // and now the UI can't stop impersonating because it doesn't know the impersonator's roles.
-    return await this.authentication.asUser(impersonator, (_) =>
-      this.users.readOne(impersonator.userId, _),
+    return await this.authentication.asUser(impersonator, () =>
+      this.users.readOne(impersonator.userId),
     );
   }
 

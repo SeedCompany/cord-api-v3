@@ -3,7 +3,6 @@ import {
   type ID,
   type ObjectView,
   ServerException,
-  type Session,
   type UnsecuredDto,
 } from '~/common';
 import { HandleIdLookup } from '~/core';
@@ -24,49 +23,39 @@ export class FieldRegionService {
     private readonly repo: FieldRegionRepository,
   ) {}
 
-  async create(
-    input: CreateFieldRegion,
-    session: Session,
-  ): Promise<FieldRegion> {
+  async create(input: CreateFieldRegion): Promise<FieldRegion> {
     this.privileges.for(FieldRegion).verifyCan('create');
     const dto = await this.repo.create(input);
-    return this.secure(dto, session);
+    return this.secure(dto);
   }
 
   @HandleIdLookup(FieldRegion)
-  async readOne(
-    id: ID,
-    session: Session,
-    _view?: ObjectView,
-  ): Promise<FieldRegion> {
+  async readOne(id: ID, _view?: ObjectView): Promise<FieldRegion> {
     const result = await this.repo.readOne(id);
-    return this.secure(result, session);
+    return this.secure(result);
   }
 
-  async readMany(ids: readonly ID[], session: Session) {
+  async readMany(ids: readonly ID[]) {
     const fieldRegions = await this.repo.readMany(ids);
-    return fieldRegions.map((dto) => this.secure(dto, session));
+    return fieldRegions.map((dto) => this.secure(dto));
   }
 
-  private secure(dto: UnsecuredDto<FieldRegion>, session: Session) {
+  private secure(dto: UnsecuredDto<FieldRegion>) {
     return this.privileges.for(FieldRegion).secure(dto);
   }
 
-  async update(
-    input: UpdateFieldRegion,
-    session: Session,
-  ): Promise<FieldRegion> {
+  async update(input: UpdateFieldRegion): Promise<FieldRegion> {
     const fieldRegion = await this.repo.readOne(input.id);
 
     const changes = this.repo.getActualChanges(fieldRegion, input);
     this.privileges.for(FieldRegion, fieldRegion).verifyChanges(changes);
 
     const updated = await this.repo.update({ id: input.id, ...changes });
-    return this.secure(updated, session);
+    return this.secure(updated);
   }
 
-  async delete(id: ID, session: Session): Promise<void> {
-    const object = await this.readOne(id, session);
+  async delete(id: ID): Promise<void> {
+    const object = await this.readOne(id);
 
     this.privileges.for(FieldRegion, object).verifyCan('delete');
 
@@ -77,14 +66,11 @@ export class FieldRegionService {
     }
   }
 
-  async list(
-    input: FieldRegionListInput,
-    session: Session,
-  ): Promise<FieldRegionListOutput> {
-    const results = await this.repo.list(input, session);
+  async list(input: FieldRegionListInput): Promise<FieldRegionListOutput> {
+    const results = await this.repo.list(input);
     return {
       ...results,
-      items: results.items.map((dto) => this.secure(dto, session)),
+      items: results.items.map((dto) => this.secure(dto)),
     };
   }
 }

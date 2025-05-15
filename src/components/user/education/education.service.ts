@@ -1,10 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import {
-  type ID,
-  type ObjectView,
-  type Session,
-  type UnsecuredDto,
-} from '~/common';
+import { type ID, type ObjectView, type UnsecuredDto } from '~/common';
 import { HandleIdLookup } from '~/core';
 import { SessionHost } from '../../authentication';
 import { Privileges } from '../../authorization';
@@ -25,35 +20,29 @@ export class EducationService {
     private readonly repo: EducationRepository,
   ) {}
 
-  async create(input: CreateEducation, session: Session): Promise<Education> {
+  async create(input: CreateEducation): Promise<Education> {
     this.privileges.for(Education).verifyCan('create');
     // create education
     const result = await this.repo.create(input);
-    return this.secure(result, session);
+    return this.secure(result);
   }
 
   @HandleIdLookup(Education)
-  async readOne(
-    id: ID,
-    session: Session,
-    _view?: ObjectView,
-  ): Promise<Education> {
+  async readOne(id: ID, _view?: ObjectView): Promise<Education> {
     const result = await this.repo.readOne(id);
-    return this.secure(result, session);
+    return this.secure(result);
   }
 
-  async readMany(ids: readonly ID[], session: Session) {
+  async readMany(ids: readonly ID[]) {
     const educations = await this.repo.readMany(ids);
-    return await Promise.all(
-      educations.map((dto) => this.secure(dto, session)),
-    );
+    return await Promise.all(educations.map((dto) => this.secure(dto)));
   }
 
-  private secure(dto: UnsecuredDto<Education>, session: Session) {
+  private secure(dto: UnsecuredDto<Education>) {
     return this.privileges.for(Education).secure(dto);
   }
 
-  async update(input: UpdateEducation, session: Session): Promise<Education> {
+  async update(input: UpdateEducation): Promise<Education> {
     const ed = await this.repo.readOne(input.id);
     const result = await this.repo.getUserIdByEducation(input.id);
     const changes = this.repo.getActualChanges(ed, input);
@@ -64,21 +53,18 @@ export class EducationService {
     }
 
     const updated = await this.repo.update({ id: input.id, ...changes });
-    return this.secure(updated, session);
+    return this.secure(updated);
   }
 
   async delete(_id: ID): Promise<void> {
     // Not Implemented
   }
 
-  async list(
-    input: EducationListInput,
-    session: Session,
-  ): Promise<EducationListOutput> {
+  async list(input: EducationListInput): Promise<EducationListOutput> {
     const results = await this.repo.list(input);
     return {
       ...results,
-      items: results.items.map((dto) => this.secure(dto, session)),
+      items: results.items.map((dto) => this.secure(dto)),
     };
   }
 }

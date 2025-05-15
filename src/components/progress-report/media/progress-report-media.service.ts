@@ -3,7 +3,6 @@ import {
   generateId,
   type IdOf,
   NotImplementedException,
-  type Session,
   type UnsecuredDto,
 } from '~/common';
 import { ResourceLoader } from '~/core';
@@ -35,10 +34,9 @@ export class ProgressReportMediaService {
   async listForReport(
     report: Report,
     args: ListArgs,
-    session: Session,
   ): Promise<ReportMediaList> {
     const privileges = this.privileges.for(ReportMedia);
-    const rows = await this.repo.listForReport(report, args, session);
+    const rows = await this.repo.listForReport(report, args);
     return {
       report,
       ...rows,
@@ -47,31 +45,25 @@ export class ProgressReportMediaService {
   }
 
   // TODO change to VGroup.id/items
-  async listOfRelated(
-    media: ReportMedia,
-    session: Session,
-  ): Promise<readonly ReportMedia[]> {
-    throw new NotImplementedException().with(media, session);
+  async listOfRelated(media: ReportMedia): Promise<readonly ReportMedia[]> {
+    throw new NotImplementedException().with(media);
   }
 
-  async readMany(ids: ReadonlyArray<IdOf<ReportMedia>>, session: Session) {
-    const row = await this.repo.readMany(ids, session);
+  async readMany(ids: ReadonlyArray<IdOf<ReportMedia>>) {
+    const row = await this.repo.readMany(ids);
     return row.map((row) =>
       this.privileges.for(ReportMedia).secure(this.dbRowToDto(row)),
     );
   }
 
-  async readFeaturedOfReport(
-    ids: ReadonlyArray<IdOf<Report>>,
-    session: Session,
-  ) {
-    const rows = await this.repo.readFeaturedOfReport(ids, session);
+  async readFeaturedOfReport(ids: ReadonlyArray<IdOf<Report>>) {
+    const rows = await this.repo.readFeaturedOfReport(ids);
     return rows.map((row) =>
       this.privileges.for(ReportMedia).secure(this.dbRowToDto(row)),
     );
   }
 
-  async upload(input: UploadMedia, session: Session) {
+  async upload(input: UploadMedia) {
     const report = await this.resources.load(Report, input.reportId);
 
     const context = report as any; // the report is fine for condition context
@@ -79,13 +71,12 @@ export class ProgressReportMediaService {
       .for(ReportMedia, withVariant(context, input.variant))
       .verifyCan('create');
 
-    const initialDto = await this.repo.create(input, session);
+    const initialDto = await this.repo.create(input);
 
     const fileId = await generateId();
     await this.files.createDefinedFile(
       fileId,
       input.file.name,
-      session,
       initialDto.id,
       'file', // relation name
       input.file,
@@ -94,7 +85,7 @@ export class ProgressReportMediaService {
     );
   }
 
-  async update(input: UpdateMedia, session: Session): Promise<ReportMedia> {
+  async update(input: UpdateMedia): Promise<ReportMedia> {
     const { id, category, ...rest } = input;
 
     const loader = await this.resources.getLoader(ProgressReportMediaLoader);
@@ -119,8 +110,8 @@ export class ProgressReportMediaService {
     return updated;
   }
 
-  async delete(id: IdOf<ReportMedia>, session: Session) {
-    const media = await this.repo.readOne(id, session);
+  async delete(id: IdOf<ReportMedia>) {
+    const media = await this.repo.readOne(id);
     this.privileges
       .for(ReportMedia, this.dbRowToDto(media))
       .verifyCan('delete');

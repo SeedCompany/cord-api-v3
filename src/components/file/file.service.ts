@@ -21,7 +21,6 @@ import {
   NotFoundException,
   type Secured,
   ServerException,
-  type Session,
   UnauthorizedException,
 } from '~/common';
 import { withAddedPath } from '~/common/url.util';
@@ -66,24 +65,24 @@ export class FileService {
     @Logger('file:service') private readonly logger: ILogger,
   ) {}
 
-  async getDirectory(id: ID, session: Session): Promise<Directory> {
-    const node = await this.getFileNode(id, session);
+  async getDirectory(id: ID): Promise<Directory> {
+    const node = await this.getFileNode(id);
     if (!isDirectory(node)) {
       throw new InputException('Node is not a directory');
     }
     return node;
   }
 
-  async getFile(id: ID, session: Session): Promise<File> {
-    const node = await this.getFileNode(id, session);
+  async getFile(id: ID): Promise<File> {
+    const node = await this.getFileNode(id);
     if (!isFile(node)) {
       throw new InputException('Node is not a file');
     }
     return node;
   }
 
-  async getFileVersion(id: ID, session: Session): Promise<FileVersion> {
-    const node = await this.getFileNode(id, session);
+  async getFileVersion(id: ID): Promise<FileVersion> {
+    const node = await this.getFileNode(id);
     if (!isFileVersion(node)) {
       throw new InputException('Node is not a file version');
     }
@@ -112,11 +111,11 @@ export class FileService {
     });
   }
 
-  async getFileNode(id: ID, session?: Session): Promise<FileNode> {
+  async getFileNode(id: ID): Promise<FileNode> {
     return await this.repo.getById(id);
   }
 
-  async getFileNodes(ids: readonly ID[], session: Session) {
+  async getFileNodes(ids: readonly ID[]) {
     return await this.repo.getByIds(ids);
   }
 
@@ -207,7 +206,6 @@ export class FileService {
   async createDirectory(
     parentId: ID | undefined,
     name: string,
-    session: Session,
   ): Promise<Directory> {
     if (parentId) {
       await this.validateParentNode(
@@ -228,9 +226,9 @@ export class FileService {
       }
     }
 
-    const id = await this.repo.createDirectory(parentId, name, session);
+    const id = await this.repo.createDirectory(parentId, name);
 
-    return await this.getDirectory(id, session);
+    return await this.getDirectory(id);
   }
 
   async createRootDirectory(
@@ -259,7 +257,6 @@ export class FileService {
    */
   async createFileVersion(
     input: CreateFileVersionInput,
-    session: Session,
   ): Promise<FileWithNewVersion> {
     const {
       parentId,
@@ -341,7 +338,7 @@ export class FileService {
       existingUpload.status === 'fulfilled'
     ) {
       try {
-        await this.getFileNode(uploadId, session);
+        await this.getFileNode(uploadId);
         throw new InputException('Already uploaded', 'uploadId');
       } catch (e) {
         if (!(e instanceof NotFoundException)) {
@@ -353,7 +350,7 @@ export class FileService {
     const fileId =
       parentType === FileNodeType.File
         ? parentId
-        : await this.getOrCreateFileByName(parentId, name, session);
+        : await this.getOrCreateFileByName(parentId, name);
     this.logger.debug('Creating file version', {
       parentId: fileId,
       fileName: name,
@@ -370,16 +367,12 @@ export class FileService {
     const mimeType =
       mimeTypeOverride ?? upload?.ContentType ?? 'application/octet-stream';
 
-    const fv = await this.repo.createFileVersion(
-      fileId,
-      {
-        id: uploadId,
-        name: name,
-        mimeType,
-        size: upload?.ContentLength ?? 0,
-      },
-      session,
-    );
+    const fv = await this.repo.createFileVersion(fileId, {
+      id: uploadId,
+      name: name,
+      mimeType,
+      size: upload?.ContentLength ?? 0,
+    });
 
     // Skip S3 move if it's not needed
     if (existingUpload.status === 'rejected') {
@@ -403,7 +396,7 @@ export class FileService {
     // Change the file's name to match the latest version name
     await this.rename({ id: fileId, name });
 
-    const file = await this.getFile(fileId, session);
+    const file = await this.getFile(fileId);
 
     await this.eventBus.publish(new AfterFileUploadEvent(file, fv));
 
@@ -448,11 +441,7 @@ export class FileService {
     throw new InputException('File name is required', 'name');
   }
 
-  private async getOrCreateFileByName(
-    parentId: ID,
-    name: string,
-    session: Session,
-  ) {
+  private async getOrCreateFileByName(parentId: ID, name: string) {
     try {
       const node = await this.repo.getByName(parentId, name);
       this.logger.debug('Using existing file matching given name', {
@@ -468,7 +457,7 @@ export class FileService {
     }
 
     const fileId = await generateId();
-    await this.repo.createFile({ fileId, name, session, parentId });
+    await this.repo.createFile({ fileId, name, parentId });
 
     this.logger.debug(
       'File matching given name not found, creating a new one',
@@ -484,7 +473,6 @@ export class FileService {
   async createDefinedFile(
     fileId: ID,
     initialFileName: string | undefined,
-    session: Session,
     baseNodeId: ID,
     propertyName: string,
     initialVersion?: CreateDefinedFileVersionInput,
@@ -495,21 +483,17 @@ export class FileService {
     await this.repo.createFile({
       fileId,
       name,
-      session,
       public: isPublic,
       propOfNode: [baseNodeId, propertyName + 'Node'],
     });
 
     if (initialVersion) {
       try {
-        await this.createFileVersion(
-          {
-            parentId: fileId,
-            ...initialVersion,
-            name: initialVersion.name ?? name,
-          },
-          session,
-        );
+        await this.createFileVersion({
+          parentId: fileId,
+          ...initialVersion,
+          name: initialVersion.name ?? name,
+        });
       } catch (e) {
         if (e instanceof InputException && e.field === 'uploadId' && field) {
           throw e.withField(field + '.uploadId');
@@ -525,7 +509,6 @@ export class FileService {
     file: Secured<FileId | LinkTo<'File'> | null>,
     field: string,
     input: Input,
-    session: Session,
   ): Promise<
     FileWithNewVersion | (Input extends NonNullable<Input> ? never : undefined)
   > {
@@ -541,13 +524,10 @@ export class FileService {
     }
     const fileId = isIdLike(file.value) ? file.value : file.value.id;
     try {
-      return await this.createFileVersion(
-        {
-          parentId: fileId,
-          ...input,
-        },
-        session,
-      );
+      return await this.createFileVersion({
+        parentId: fileId,
+        ...input,
+      });
     } catch (e) {
       if (e instanceof InputException && e.field === 'uploadId' && field) {
         throw e.withField(field + '.uploadId');
@@ -563,7 +543,7 @@ export class FileService {
     }
   }
 
-  async move(input: MoveFileInput, session: Session): Promise<FileNode> {
+  async move(input: MoveFileInput): Promise<FileNode> {
     const fileNode = await this.repo.getById(input.id);
 
     if (input.name) {
@@ -572,7 +552,7 @@ export class FileService {
 
     await this.repo.move(input.id, input.parentId);
 
-    return await this.getFileNode(input.id, session);
+    return await this.getFileNode(input.id);
   }
 
   async delete(id: ID): Promise<void> {

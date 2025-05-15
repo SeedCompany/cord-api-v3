@@ -9,7 +9,6 @@ import {
   InputException,
   NotFoundException,
   ReadAfterCreationFailed,
-  type Session,
   type UnsecuredDto,
 } from '~/common';
 import { DtoRepository } from '~/core/database';
@@ -45,10 +44,7 @@ import {
 } from './dto';
 
 @Injectable()
-export class PartnerRepository extends DtoRepository<
-  typeof Partner,
-  [session: Session]
->(Partner) {
+export class PartnerRepository extends DtoRepository(Partner) {
   async partnerIdByOrg(organizationId: ID) {
     const result = await this.db
       .query()
@@ -62,7 +58,7 @@ export class PartnerRepository extends DtoRepository<
     return result?.id ?? null;
   }
 
-  async create(input: CreatePartner, session: Session) {
+  async create(input: CreatePartner) {
     const partnerExists = await this.partnerIdByOrg(input.organizationId);
     if (partnerExists) {
       throw new DuplicateException(
@@ -106,14 +102,14 @@ export class PartnerRepository extends DtoRepository<
       throw new CreationFailed(Partner);
     }
 
-    return await this.readOne(result.id, session).catch((e) => {
+    return await this.readOne(result.id).catch((e) => {
       throw e instanceof NotFoundException
         ? new ReadAfterCreationFailed(Partner)
         : e;
     });
   }
 
-  async update(changes: UpdatePartner, session: Session) {
+  async update(changes: UpdatePartner) {
     const {
       id,
       pointOfContactId,
@@ -196,10 +192,10 @@ export class PartnerRepository extends DtoRepository<
         .run();
     }
 
-    return await this.readOne(id, session);
+    return await this.readOne(id);
   }
 
-  protected hydrate(session: Session) {
+  protected hydrate() {
     return (query: Query) =>
       query
         .optionalMatch([
@@ -296,7 +292,7 @@ export class PartnerRepository extends DtoRepository<
         );
   }
 
-  async list(input: PartnerListInput, session: Session) {
+  async list(input: PartnerListInput) {
     const result = await this.db
       .query()
       .matchNode('node', 'Partner')
@@ -316,7 +312,7 @@ export class PartnerRepository extends DtoRepository<
         }),
       )
       .apply(sortWith(partnerSorters, input))
-      .apply(paginate(input, this.hydrate(session)))
+      .apply(paginate(input, this.hydrate()))
       .first();
     return result!; // result from paginate() will always have 1 row.
   }

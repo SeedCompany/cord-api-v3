@@ -1,10 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import {
-  type ID,
-  type ObjectView,
-  type Session,
-  type UnsecuredDto,
-} from '~/common';
+import { type ID, type ObjectView, type UnsecuredDto } from '~/common';
 import { HandleIdLookup } from '~/core';
 import { SessionHost } from '../../authentication';
 import { Privileges } from '../../authorization';
@@ -25,38 +20,28 @@ export class UnavailabilityService {
     private readonly repo: UnavailabilityRepository,
   ) {}
 
-  async create(
-    input: CreateUnavailability,
-    session: Session,
-  ): Promise<Unavailability> {
+  async create(input: CreateUnavailability): Promise<Unavailability> {
     this.privileges.for(Unavailability).verifyCan('create');
     const result = await this.repo.create(input);
-    return this.secure(result, session);
+    return this.secure(result);
   }
 
   @HandleIdLookup(Unavailability)
-  async readOne(
-    id: ID,
-    session: Session,
-    _view?: ObjectView,
-  ): Promise<Unavailability> {
+  async readOne(id: ID, _view?: ObjectView): Promise<Unavailability> {
     const result = await this.repo.readOne(id);
-    return this.secure(result, session);
+    return this.secure(result);
   }
 
-  async readMany(ids: readonly ID[], session: Session) {
+  async readMany(ids: readonly ID[]) {
     const unavailabilities = await this.repo.readMany(ids);
-    return unavailabilities.map((dto) => this.secure(dto, session));
+    return unavailabilities.map((dto) => this.secure(dto));
   }
 
-  private secure(dto: UnsecuredDto<Unavailability>, session: Session) {
+  private secure(dto: UnsecuredDto<Unavailability>) {
     return this.privileges.for(Unavailability).secure(dto);
   }
 
-  async update(
-    input: UpdateUnavailability,
-    session: Session,
-  ): Promise<Unavailability> {
+  async update(input: UpdateUnavailability): Promise<Unavailability> {
     const unavailability = await this.repo.readOne(input.id);
     const result = await this.repo.getUserIdByUnavailability(input.id);
     const changes = this.repo.getActualChanges(unavailability, input);
@@ -68,22 +53,21 @@ export class UnavailabilityService {
         .verifyChanges(changes);
     }
     const updated = await this.repo.update({ id: input.id, ...changes });
-    return this.secure(updated, session);
+    return this.secure(updated);
   }
 
-  async delete(id: ID, _session: Session): Promise<void> {
+  async delete(id: ID): Promise<void> {
     const ua = await this.repo.readOne(id);
     await this.repo.deleteNode(ua);
   }
 
   async list(
     input: UnavailabilityListInput,
-    session: Session,
   ): Promise<UnavailabilityListOutput> {
     const results = await this.repo.list(input);
     return {
       ...results,
-      items: results.items.map((dto) => this.secure(dto, session)),
+      items: results.items.map((dto) => this.secure(dto)),
     };
   }
 }

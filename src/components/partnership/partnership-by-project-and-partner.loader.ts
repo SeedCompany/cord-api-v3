@@ -29,6 +29,6 @@ export class PartnershipByProjectAndPartnerLoader extends SessionAwareLoaderStra
   }
 
   async loadMany(input: readonly PartnershipByProjectAndPartnerInput[]) {
-    return await this.service.readManyByProjectAndPartner(input, this.session);
+    return await this.service.readManyByProjectAndPartner(input);
   }
 }

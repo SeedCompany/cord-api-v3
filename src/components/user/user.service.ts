@@ -1,12 +1,10 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { CachedByArg } from '@seedcompany/common';
 import {
   type ID,
   type ObjectView,
   Role,
   SecuredList,
   ServerException,
-  type Session,
   UnauthorizedException,
   type UnsecuredDto,
 } from '~/common';
@@ -74,14 +72,14 @@ export class UserService {
     );
   };
 
-  async create(input: CreatePerson, session?: Session): Promise<ID> {
+  async create(input: CreatePerson): Promise<ID> {
     if (
       input.roles &&
       input.roles.length > 0 &&
       // Note: session is only omitted for creating RootUser
       this.sessionHost.currentIfInCtx
     ) {
-      this.verifyRolesAreAssignable(session, input.roles);
+      this.verifyRolesAreAssignable(input.roles);
     }
 
     const { id } = await this.userRepo.create(input);
@@ -89,74 +87,67 @@ export class UserService {
   }
 
   @HandleIdLookup(User)
-  async readOne(id: ID, session: Session, _view?: ObjectView): Promise<User> {
-    const user = await this.userRepo.readOne(id, session);
-    return this.secure(user, session);
+  async readOne(id: ID, _view?: ObjectView): Promise<User> {
+    const user = await this.userRepo.readOne(id);
+    return this.secure(user);
   }
 
-  async readOneUnsecured(
-    id: ID,
-    session: Session | ID,
-  ): Promise<UnsecuredDto<User>> {
-    return await this.userRepo.readOne(id, session);
+  async readOneUnsecured(id: ID): Promise<UnsecuredDto<User>> {
+    return await this.userRepo.readOne(id);
   }
 
-  async readMany(ids: readonly ID[], session: Session) {
-    const users = await this.userRepo.readMany(ids, session);
-    return users.map((dto) => this.secure(dto, session));
+  async readMany(ids: readonly ID[]) {
+    const users = await this.userRepo.readMany(ids);
+    return users.map((dto) => this.secure(dto));
   }
 
   async readManyActors(
     ids: readonly ID[],
-    session: Session,
   ): Promise<ReadonlyArray<User | SystemAgent>> {
-    const users = await this.userRepo.readManyActors(ids, session);
+    const users = await this.userRepo.readManyActors(ids);
     return users.map((dto) =>
-      dto.__typename === 'User'
-        ? this.secure(dto, session)
-        : (dto as SystemAgent),
+      dto.__typename === 'User' ? this.secure(dto) : (dto as SystemAgent),
     );
   }
 
-  secure(user: UnsecuredDto<User>, session: Session): User {
+  secure(user: UnsecuredDto<User>): User {
     return this.privileges.for(User).secure(user);
   }
 
   @Transactional()
-  async update(input: UpdateUser, session: Session): Promise<User> {
-    this.logger.debug('mutation update User', { input, session });
-    const user = await this.readOne(input.id, session);
+  async update(input: UpdateUser): Promise<User> {
+    this.logger.debug('mutation update User', { input });
+    const user = await this.readOne(input.id);
 
     const changes = this.userRepo.getActualChanges(user, input);
 
     this.privileges.for(User, user).verifyChanges(changes);
 
     if (changes.roles) {
-      this.verifyRolesAreAssignable(session, changes.roles);
+      this.verifyRolesAreAssignable(changes.roles);
     }
 
     const updated = await this.userRepo.update({
       id: user.id,
       ...changes,
     });
-    return this.secure(updated, session);
+    return this.secure(updated);
   }
 
-  async delete(id: ID, session: Session): Promise<void> {
-    const object = await this.readOne(id, session);
-    await this.userRepo.delete(id, session, object);
+  async delete(id: ID): Promise<void> {
+    const object = await this.readOne(id);
+    await this.userRepo.delete(id, object);
   }
 
-  async list(input: UserListInput, session: Session): Promise<UserListOutput> {
-    const results = await this.userRepo.list(input, session);
+  async list(input: UserListInput): Promise<UserListOutput> {
+    const results = await this.userRepo.list(input);
     return {
       ...results,
-      items: results.items.map((dto) => this.secure(dto, session)),
+      items: results.items.map((dto) => this.secure(dto)),
     };
   }
 
-  @CachedByArg({ weak: true })
-  getAssignableRoles(session: Session) {
+  getAssignableRoles() {
     const privileges = this.privileges.for(AssignableRoles);
     const assignableRoles = new Set(
       [...Role].filter((role) => privileges.can('edit', role)),
@@ -164,8 +155,8 @@ export class UserService {
     return assignableRoles;
   }
 
-  verifyRolesAreAssignable(session: Session, roles: readonly Role[]) {
-    const allowed = this.getAssignableRoles(session);
+  verifyRolesAreAssignable(roles: readonly Role[]) {
+    const allowed = this.getAssignableRoles();
     const invalid = roles.filter((role) => !allowed.has(role));
     if (invalid.length === 0) {
       return;
@@ -179,24 +170,20 @@ export class UserService {
   async listEducations(
     userId: ID,
     input: EducationListInput,
-    session: Session,
   ): Promise<SecuredEducationList> {
-    const user = await this.userRepo.readOne(userId, session);
+    const user = await this.userRepo.readOne(userId);
     const perms = this.privileges.for(User, user).all.education;
 
     if (!perms.read) {
       return SecuredList.Redacted;
     }
-    const result = await this.educations.list(
-      {
-        ...input,
-        filter: {
-          ...input.filter,
-          userId: userId,
-        },
+    const result = await this.educations.list({
+      ...input,
+      filter: {
+        ...input.filter,
+        userId: userId,
       },
-      session,
-    );
+    });
     return {
       ...result,
       canRead: perms.read,
@@ -207,24 +194,20 @@ export class UserService {
   async listOrganizations(
     userId: ID,
     input: OrganizationListInput,
-    session: Session,
   ): Promise<SecuredOrganizationList> {
-    const user = await this.userRepo.readOne(userId, session);
+    const user = await this.userRepo.readOne(userId);
     const perms = this.privileges.for(User, user).all.organization;
 
     if (!perms.read) {
       return SecuredList.Redacted;
     }
-    const result = await this.organizations.list(
-      {
-        ...input,
-        filter: {
-          ...input.filter,
-          userId: userId,
-        },
+    const result = await this.organizations.list({
+      ...input,
+      filter: {
+        ...input.filter,
+        userId: userId,
       },
-      session,
-    );
+    });
     return {
       ...result,
       canRead: perms.read,
@@ -235,20 +218,16 @@ export class UserService {
   async listPartners(
     userId: ID,
     input: PartnerListInput,
-    session: Session,
   ): Promise<SecuredPartnerList> {
-    const user = await this.userRepo.readOne(userId, session);
+    const user = await this.userRepo.readOne(userId);
     const perms = this.privileges.for(User, user).all.partner;
-    const result = await this.partners.list(
-      {
-        ...input,
-        filter: {
-          ...input.filter,
-          userId,
-        },
+    const result = await this.partners.list({
+      ...input,
+      filter: {
+        ...input.filter,
+        userId,
       },
-      session,
-    );
+    });
     return {
       ...result,
       canRead: perms.read,
@@ -259,24 +238,20 @@ export class UserService {
   async listUnavailabilities(
     userId: ID,
     input: UnavailabilityListInput,
-    session: Session,
   ): Promise<SecuredUnavailabilityList> {
-    const user = await this.userRepo.readOne(userId, session);
+    const user = await this.userRepo.readOne(userId);
     const perms = this.privileges.for(User, user).all.unavailability;
 
     if (!perms.read) {
       return SecuredList.Redacted;
     }
-    const result = await this.unavailabilities.list(
-      {
-        ...input,
-        filter: {
-          ...input.filter,
-          userId: userId,
-        },
+    const result = await this.unavailabilities.list({
+      ...input,
+      filter: {
+        ...input.filter,
+        userId: userId,
       },
-      session,
-    );
+    });
 
     return {
       ...result,
@@ -314,7 +289,6 @@ export class UserService {
   async listLocations(
     user: User,
     input: LocationListInput,
-    session: Session,
   ): Promise<SecuredLocationList> {
     return await this.locationService.listLocationForResource(
       this.privileges.for(User, user).forEdge('locations'),
@@ -331,8 +305,8 @@ export class UserService {
     await this.knownLanguages.delete(args);
   }
 
-  async listKnownLanguages(userId: ID, session: Session) {
-    const user = await this.userRepo.readOne(userId, session);
+  async listKnownLanguages(userId: ID) {
+    const user = await this.userRepo.readOne(userId);
     const perms = this.privileges.for(User, user).all.knownLanguage;
     if (!perms.read) {
       return [];
@@ -345,9 +319,9 @@ export class UserService {
     return !exists;
   }
 
-  async getUserByEmailAddress(email: string, session: Session) {
-    const user = await this.userRepo.getUserByEmailAddress(email, session);
-    return user ? this.secure(user, session) : null;
+  async getUserByEmailAddress(email: string) {
+    const user = await this.userRepo.getUserByEmailAddress(email);
+    return user ? this.secure(user) : null;
   }
 
   async assignOrganizationToUser(request: AssignOrganizationToUser) {

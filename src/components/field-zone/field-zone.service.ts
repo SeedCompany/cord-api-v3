@@ -3,7 +3,6 @@ import {
   type ID,
   type ObjectView,
   ServerException,
-  type Session,
   type UnsecuredDto,
 } from '~/common';
 import { HandleIdLookup } from '~/core';
@@ -24,43 +23,39 @@ export class FieldZoneService {
     private readonly repo: FieldZoneRepository,
   ) {}
 
-  async create(input: CreateFieldZone, session: Session): Promise<FieldZone> {
+  async create(input: CreateFieldZone): Promise<FieldZone> {
     this.privileges.for(FieldZone).verifyCan('create');
     const dto = await this.repo.create(input);
-    return this.secure(dto, session);
+    return this.secure(dto);
   }
 
   @HandleIdLookup(FieldZone)
-  async readOne(
-    id: ID,
-    session: Session,
-    _view?: ObjectView,
-  ): Promise<FieldZone> {
+  async readOne(id: ID, _view?: ObjectView): Promise<FieldZone> {
     const result = await this.repo.readOne(id);
-    return this.secure(result, session);
+    return this.secure(result);
   }
 
-  async readMany(ids: readonly ID[], session: Session) {
+  async readMany(ids: readonly ID[]) {
     const fieldZones = await this.repo.readMany(ids);
-    return fieldZones.map((dto) => this.secure(dto, session));
+    return fieldZones.map((dto) => this.secure(dto));
   }
 
-  private secure(dto: UnsecuredDto<FieldZone>, session: Session) {
+  private secure(dto: UnsecuredDto<FieldZone>) {
     return this.privileges.for(FieldZone).secure(dto);
   }
 
-  async update(input: UpdateFieldZone, session: Session): Promise<FieldZone> {
+  async update(input: UpdateFieldZone): Promise<FieldZone> {
     const fieldZone = await this.repo.readOne(input.id);
 
     const changes = this.repo.getActualChanges(fieldZone, input);
     this.privileges.for(FieldZone, fieldZone).verifyChanges(changes);
 
     const updated = await this.repo.update({ id: input.id, ...changes });
-    return this.secure(updated, session);
+    return this.secure(updated);
   }
 
-  async delete(id: ID, session: Session): Promise<void> {
-    const object = await this.readOne(id, session);
+  async delete(id: ID): Promise<void> {
+    const object = await this.readOne(id);
 
     this.privileges.for(FieldZone, object).verifyCan('delete');
 
@@ -71,14 +66,11 @@ export class FieldZoneService {
     }
   }
 
-  async list(
-    input: FieldZoneListInput,
-    session: Session,
-  ): Promise<FieldZoneListOutput> {
-    const results = await this.repo.list(input, session);
+  async list(input: FieldZoneListInput): Promise<FieldZoneListOutput> {
+    const results = await this.repo.list(input);
     return {
       ...results,
-      items: results.items.map((dto) => this.secure(dto, session)),
+      items: results.items.map((dto) => this.secure(dto)),
     };
   }
 }

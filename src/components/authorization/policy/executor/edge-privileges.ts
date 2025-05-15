@@ -30,11 +30,6 @@ export class EdgePrivileges<
     this.resource = EnhancedResource.of(resource);
   }
 
-  /** @deprecated */
-  get session() {
-    return this.policyExecutor.sessionHost.current;
-  }
-
   get context() {
     return this.object;
   }

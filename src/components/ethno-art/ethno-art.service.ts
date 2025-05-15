@@ -3,7 +3,6 @@ import {
   type ID,
   type ObjectView,
   ServerException,
-  type Session,
   type UnsecuredDto,
 } from '~/common';
 import { HandleIdLookup } from '~/core';
@@ -26,32 +25,32 @@ export class EthnoArtService {
     private readonly repo: EthnoArtRepository,
   ) {}
 
-  async create(input: CreateEthnoArt, session: Session): Promise<EthnoArt> {
-    const dto = await this.repo.create(input, session);
+  async create(input: CreateEthnoArt): Promise<EthnoArt> {
+    const dto = await this.repo.create(input);
     this.privileges.for(EthnoArt, dto).verifyCan('create');
-    return this.secure(dto, session);
+    return this.secure(dto);
   }
 
   @HandleIdLookup(EthnoArt)
   async readOne(
     id: ID,
-    session: Session,
+
     _view?: ObjectView,
   ): Promise<EthnoArt> {
     const result = await this.repo.readOne(id);
-    return this.secure(result, session);
+    return this.secure(result);
   }
 
-  async readMany(ids: readonly ID[], session: Session) {
+  async readMany(ids: readonly ID[]) {
     const ethnoArt = await this.repo.readMany(ids);
-    return ethnoArt.map((dto) => this.secure(dto, session));
+    return ethnoArt.map((dto) => this.secure(dto));
   }
 
-  private secure(dto: UnsecuredDto<EthnoArt>, session: Session): EthnoArt {
+  private secure(dto: UnsecuredDto<EthnoArt>): EthnoArt {
     return this.privileges.for(EthnoArt).secure(dto);
   }
 
-  async update(input: UpdateEthnoArt, session: Session): Promise<EthnoArt> {
+  async update(input: UpdateEthnoArt): Promise<EthnoArt> {
     const ethnoArt = await this.repo.readOne(input.id);
     const changes = {
       ...this.repo.getActualChanges(ethnoArt, input),
@@ -63,10 +62,10 @@ export class EthnoArtService {
     this.privileges.for(EthnoArt, ethnoArt).verifyChanges(changes);
 
     const updated = await this.repo.update({ id: input.id, ...changes });
-    return this.secure(updated, session);
+    return this.secure(updated);
   }
 
-  async delete(id: ID, session: Session): Promise<void> {
+  async delete(id: ID): Promise<void> {
     const ethnoArt = await this.repo.readOne(id);
 
     this.privileges.for(EthnoArt, ethnoArt).verifyCan('delete');
@@ -78,14 +77,11 @@ export class EthnoArtService {
     }
   }
 
-  async list(
-    input: EthnoArtListInput,
-    session: Session,
-  ): Promise<EthnoArtListOutput> {
+  async list(input: EthnoArtListInput): Promise<EthnoArtListOutput> {
     const results = await this.repo.list(input);
     return {
       ...results,
-      items: results.items.map((dto) => this.secure(dto, session)),
+      items: results.items.map((dto) => this.secure(dto)),
     };
   }
 }

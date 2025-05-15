@@ -6,7 +6,6 @@ import {
   type ID,
   Role,
   ServerException,
-  type Session,
   UnauthorizedException,
 } from '~/common';
 import { ILogger, Logger } from '~/core';
@@ -315,7 +314,6 @@ export class EngagementRules {
 
   async getAvailableTransitions(
     engagementId: ID,
-    session: Session,
     currentUserRoles?: Role[],
     changeset?: ID,
   ): Promise<EngagementStatusTransition[]> {
@@ -358,7 +356,7 @@ export class EngagementRules {
     return availableTransitionsAccordingToProject;
   }
 
-  async canBypassWorkflow(session: Session) {
+  async canBypassWorkflow() {
     const session = this.sessionHost.current;
     const roles = session.roles.map(withoutScope);
     return intersection(rolesThatCanBypassWorkflow, roles).length > 0;
@@ -366,7 +364,6 @@ export class EngagementRules {
 
   async verifyStatusChange(
     engagementId: ID,
-    session: Session,
     nextStatus: EngagementStatus,
     changeset?: ID,
   ) {
@@ -380,7 +377,6 @@ export class EngagementRules {
 
     const transitions = await this.getAvailableTransitions(
       engagementId,
-      session,
       currentUserRoles,
       changeset,
     );

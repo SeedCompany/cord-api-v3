@@ -5,7 +5,6 @@ import {
   fiscalYears,
   type ID,
   type Secured,
-  type Session,
   UnauthorizedException,
   type UnsecuredDto,
 } from '~/common';
@@ -85,7 +84,6 @@ export class SyncBudgetRecordsToFundingPartners
     // Fetch budget & only continue if it is pending
     const budget = await this.budgetRepo.listRecordsForSync(
       projectId,
-      event.session,
       changeset,
     );
 
@@ -138,7 +136,6 @@ export class SyncBudgetRecordsToFundingPartners
     // event instanceof ProjectUpdatedEvent
     const list = await this.partnershipService.list(
       { filter: { projectId: event.updated.id } },
-      event.session,
       changeset,
     );
     return list.items.filter(isFunding);
@@ -163,27 +160,14 @@ export class SyncBudgetRecordsToFundingPartners
     const removals = difference(previous, updated);
     const additions = difference(updated, previous);
 
-    await this.removeRecords(
-      budget,
-      organizationId,
-      removals,
-      event.session,
-      changeset,
-    );
-    await this.addRecords(
-      budget,
-      organizationId,
-      additions,
-      event.session,
-      changeset,
-    );
+    await this.removeRecords(budget, organizationId, removals, changeset);
+    await this.addRecords(budget, organizationId, additions, changeset);
   }
 
   private async addRecords(
     budget: PartialBudget,
     organizationId: ID,
     additions: readonly FiscalYear[],
-    session: Session,
     changeset?: ID,
   ) {
     await Promise.all(
@@ -195,7 +179,6 @@ export class SyncBudgetRecordsToFundingPartners
               fiscalYear,
               organizationId,
             },
-            session,
             changeset,
           )
           .catch((e) => {
@@ -214,7 +197,6 @@ export class SyncBudgetRecordsToFundingPartners
     budget: PartialBudget,
     organizationId: ID,
     removals: readonly FiscalYear[],
-    session: Session,
     changeset?: ID,
   ) {
     const recordsToDelete = budget.records.filter(
@@ -225,7 +207,7 @@ export class SyncBudgetRecordsToFundingPartners
 
     await Promise.all(
       recordsToDelete.map((record) =>
-        this.budgets.deleteRecord(record.id, session, changeset),
+        this.budgets.deleteRecord(record.id, changeset),
       ),
     );
   }
