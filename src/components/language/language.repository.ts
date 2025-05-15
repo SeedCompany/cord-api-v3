@@ -29,7 +29,6 @@ import {
   createNode,
   createRelationships,
   defineSorters,
-  exp,
   filter,
   FullTextIndex,
   matchChangesetAndChangedProps,
@@ -373,15 +372,11 @@ const isPresetInventory = (query: Query) =>
         ),
       })
       .return(
-        any(
-          'project',
-          collect('project'),
-          exp.path([
-            node('project'),
-            relation('out', '', 'presetInventory', ACTIVE),
-            node('', 'Property', { value: variable('true') }),
-          ]),
-        ).as('presetInventory'),
+        any('project', collect('project'), [
+          node('project'),
+          relation('out', '', 'presetInventory', ACTIVE),
+          node('', 'Property', { value: variable('true') }),
+        ]).as('presetInventory'),
       ),
   );
 
