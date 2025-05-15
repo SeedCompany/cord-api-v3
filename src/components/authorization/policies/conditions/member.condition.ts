@@ -5,7 +5,6 @@ import { type ResourceShape, type Role } from '~/common';
 import { matchProjectScopedRoles } from '~/core/database/query';
 import { rolesForScope, type ScopedRole, splitScope } from '../../dto/role.dto';
 import {
-  type AsCypherParams,
   type AsEdgeQLParams,
   type Condition,
   eqlDoesIntersect,
@@ -32,24 +31,8 @@ class MemberCondition<TResourceStatic extends ResourceWithScope>
     return getScope(object).includes('member:true');
   }
 
-  setupCypherContext(
-    query: Query,
-    prevApplied: Set<any>,
-    other: AsCypherParams<TResourceStatic>,
-  ) {
-    if (prevApplied.has('membership')) {
-      return query;
-    }
-    prevApplied.add('membership');
-
-    const param = query.params.addParam(other.session.userId, 'requestingUser');
-    Reflect.set(other, CQL_VAR, param);
-    return query;
-  }
-
-  asCypherCondition(query: Query, other: AsCypherParams<TResourceStatic>) {
-    const requester = String(Reflect.get(other, CQL_VAR));
-    return `exists((project)-[:member { active: true }]->(:ProjectMember)-[:user]->(:User { id: ${requester} }))`;
+  asCypherCondition() {
+    return 'exists((project)-[:member { active: true }]->(:ProjectMember)-[:user]->(:User { id: $currentUser }))';
   }
 
   setupEdgeQLContext({

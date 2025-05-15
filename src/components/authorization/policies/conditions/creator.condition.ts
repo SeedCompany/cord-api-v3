@@ -1,5 +1,4 @@
 import { Logger } from '@nestjs/common';
-import { type Query } from 'cypher-query-builder';
 import { inspect, type InspectOptionsStylized } from 'util';
 import {
   type ID,
@@ -11,13 +10,10 @@ import {
 } from '~/common';
 import { type LinkTo } from '~/core/resources';
 import {
-  type AsCypherParams,
   type Condition,
   type IsAllowedParams,
   MissingContextException,
 } from '../../policy/conditions';
-
-const CQL_VAR = 'requestingUser';
 
 export interface HasCreator {
   creator: MaybeSecuredProp<ID | LinkTo<'User'>>;
@@ -49,24 +45,8 @@ class CreatorCondition<TResourceStatic extends ResourceShape<HasCreator>>
     return creator === session.userId;
   }
 
-  setupCypherContext(
-    query: Query,
-    prevApplied: Set<any>,
-    other: AsCypherParams<TResourceStatic>,
-  ) {
-    if (prevApplied.has('creator')) {
-      return query;
-    }
-    prevApplied.add('creator');
-
-    const param = query.params.addParam(other.session.userId, CQL_VAR);
-    Reflect.set(other, CQL_VAR, param);
-
-    return query;
-  }
-
-  asCypherCondition(_query: Query, other: AsCypherParams<TResourceStatic>) {
-    const requester = String(Reflect.get(other, CQL_VAR));
+  asCypherCondition() {
+    const requester = '$currentUser';
     return [
       `node.creator = ${requester}`,
       `exists((node)-[:creator { active: true }]->(:Property { value: ${requester} }))`,
