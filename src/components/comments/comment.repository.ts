@@ -8,6 +8,7 @@ import {
   ACTIVE,
   createNode,
   createRelationships,
+  currentUser,
   matchProps,
   merge,
   paginate,
@@ -50,7 +51,7 @@ export class CommentRepository extends DtoRepository(Comment) {
       .apply(
         createRelationships(Comment, {
           in: { comment: variable('thread') },
-          out: { creator: ['User', session.userId] },
+          out: { creator: currentUser },
         }),
       )
       .return<{ id: ID; threadId: ID }>([

@@ -20,6 +20,7 @@ import {
   ACTIVE,
   createNode,
   createRelationships,
+  currentUser,
   defaultPermanentAfter,
   merge,
   paginate,
@@ -163,7 +164,7 @@ export const PromptVariantResponseRepository = <
               child: ['BaseNode', input.resource],
             },
             out: {
-              creator: ['User', session.userId],
+              creator: currentUser,
             },
           }),
         )
@@ -222,7 +223,7 @@ export const PromptVariantResponseRepository = <
                       child: variable('parent'),
                     },
                     out: {
-                      creator: ['User', session.userId],
+                      creator: currentUser,
                     },
                   }),
                 )

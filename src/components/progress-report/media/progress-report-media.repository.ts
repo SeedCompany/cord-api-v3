@@ -14,6 +14,7 @@ import {
   ACTIVE,
   createNode,
   createRelationships,
+  currentUser,
   deleteBaseNode,
   filter,
   matchProjectScopedRoles,
@@ -161,7 +162,7 @@ export class ProgressReportMediaRepository extends DtoRepository<
       )
       .apply(
         createRelationships(this.resource, 'out', {
-          creator: ['User', session.userId],
+          creator: currentUser,
         }),
       )
       .apply(

@@ -23,6 +23,7 @@ import {
   ACTIVE,
   createNode,
   createRelationships,
+  currentUser,
   defineSorters,
   deleteBaseNode,
   filter,
@@ -161,7 +162,7 @@ export class PeriodicReportRepository extends DtoRepository<
       .apply(
         createRelationships(File, {
           in: { reportFileNode: variable('report') },
-          out: { createdBy: ['User', input.session.userId] },
+          out: { createdBy: currentUser },
         }),
       )
       .return<{ id: ID; interval: Range<CalendarDate> }>(

@@ -6,6 +6,7 @@ import {
   ACTIVE,
   createNode,
   createRelationships,
+  currentUser,
   merge,
   paginate,
   sorting,
@@ -30,7 +31,7 @@ export class CommentThreadRepository extends DtoRepository(CommentThread) {
         .apply(
           createRelationships(CommentThread, {
             in: { commentThread: ['BaseNode', parent] },
-            out: { creator: ['User', session.userId] },
+            out: { creator: currentUser },
           }),
         )
         .return('node as thread');

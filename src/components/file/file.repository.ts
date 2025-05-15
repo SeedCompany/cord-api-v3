@@ -27,6 +27,7 @@ import {
   createNode,
   createProperty,
   createRelationships,
+  currentUser,
   matchProps,
   merge,
   paginate,
@@ -379,7 +380,7 @@ export class FileRepository extends CommonRepository {
       .apply(await createNode(Directory, { initialProps }))
       .apply(
         createRelationships(Directory, 'out', {
-          createdBy: ['User', session.userId],
+          createdBy: currentUser,
           parent: ['Directory', parentId],
         }),
       )
@@ -417,7 +418,7 @@ export class FileRepository extends CommonRepository {
       .apply(
         createRelationships(Directory, {
           in: { [relation]: ['BaseNode', resource.id] },
-          out: { createdBy: ['User', session.userId] },
+          out: { createdBy: currentUser },
         }),
       )
       .return<{ id: ID }>('node.id as id');
@@ -458,7 +459,7 @@ export class FileRepository extends CommonRepository {
       .apply(
         createRelationships(File, {
           out: {
-            createdBy: ['User', session.userId],
+            createdBy: currentUser,
             parent: ['Directory', parentId],
           },
           in: {
@@ -501,7 +502,7 @@ export class FileRepository extends CommonRepository {
       )
       .apply(
         createRelationships(FileVersion, 'out', {
-          createdBy: ['User', session.userId],
+          createdBy: currentUser,
           parent: ['File', fileId],
         }),
       )

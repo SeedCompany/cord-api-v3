@@ -15,6 +15,7 @@ import {
   ACTIVE,
   createNode,
   createRelationships,
+  currentUser,
   merge,
   sorting,
 } from '~/core/database/query';
@@ -97,7 +98,7 @@ export class ProgressReportWorkflowRepository extends DtoRepository(
       .apply(
         createRelationships(WorkflowEvent, {
           in: { workflowEvent: ['ProgressReport', report] },
-          out: { who: ['User', session.userId] },
+          out: { who: currentUser },
         }),
       )
       .apply(this.hydrate())

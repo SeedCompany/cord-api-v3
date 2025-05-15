@@ -12,6 +12,7 @@ import {
   ACTIVE,
   createNode,
   createRelationships,
+  currentUser,
   INACTIVE,
   merge,
   sorting,
@@ -109,7 +110,7 @@ export class ProjectWorkflowNeo4jRepository
       .apply(
         createRelationships(WorkflowEvent, {
           in: { workflowEvent: ['Project', project] },
-          out: { who: ['Actor', session.userId] },
+          out: { who: currentUser },
         }),
       )
       .apply(this.hydrate())
