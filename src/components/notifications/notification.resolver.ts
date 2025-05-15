@@ -1,5 +1,5 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { ListArg, LoggedInSession, type Session } from '~/common';
+import { AnonSession, ListArg, LoggedInSession, type Session } from '~/common';
 import {
   MarkNotificationReadArgs,
   Notification,
@@ -14,9 +14,13 @@ export class NotificationResolver {
 
   @Query(() => NotificationList)
   async notifications(
-    @LoggedInSession() session: Session,
+    @AnonSession() session: Session,
     @ListArg(NotificationListInput) input: NotificationListInput,
   ): Promise<NotificationList> {
+    // TODO move to DB layer?
+    if (session.anonymous) {
+      return { items: [], total: 0, totalUnread: 0, hasMore: false };
+    }
     return await this.service.list(input, session);
   }
 

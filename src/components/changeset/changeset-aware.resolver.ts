@@ -1,9 +1,9 @@
 import { Info, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import {
+  AnonSession,
   Fields,
   IsOnlyId,
-  LoggedInSession,
   Resource,
   type Session,
 } from '~/common';
@@ -55,8 +55,13 @@ export class ChangesetAwareResolver {
   })
   async changesetDiff(
     @Parent() object: ChangesetAware,
-    @LoggedInSession() session: Session,
+    @AnonSession() session: Session,
   ): Promise<ChangesetDiff | null> {
+    // TODO move to auth policy
+    if (session.anonymous) {
+      return null;
+    }
+
     const changeset = await this.changeset(object);
     if (!changeset) {
       return null;

@@ -4,7 +4,6 @@ import type {
   FastifyReply as Response,
   RouteShorthandOptions,
 } from 'fastify';
-import type { Session } from '~/common';
 
 // Exporting with I prefix to avoid ambiguity with web global types
 export type { Request as IRequest, Response as IResponse };
@@ -18,12 +17,6 @@ export type HttpHooks = Required<{
 
 export type { FastifyCorsOptions as CorsOptions } from '@fastify/cors';
 export type { SerializeOptions as CookieOptions } from '@fastify/cookie';
-
-declare module 'fastify' {
-  export interface FastifyRequest {
-    session?: Session;
-  }
-}
 
 declare module '@nestjs/common/interfaces/features/arguments-host.interface' {
   export interface HttpArgumentsHost {

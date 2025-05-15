@@ -136,9 +136,13 @@ export class UserResolver {
     nullable: true,
   })
   async userByEmail(
-    @LoggedInSession() session: Session,
+    @AnonSession() session: Session,
     @Args() { email }: CheckEmailArgs,
   ): Promise<User | null> {
+    // TODO move to auth policy?
+    if (session.anonymous) {
+      return null;
+    }
     return await this.userService.getUserByEmailAddress(email, session);
   }
 

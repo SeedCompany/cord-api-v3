@@ -1,5 +1,6 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import {
+  AnonSession,
   type ID,
   IdArg,
   ListArg,
@@ -19,12 +20,16 @@ export class PinResolver {
       'Returns whether or not the requesting user has pinned the resource ID',
   })
   async isPinned(
-    @LoggedInSession() session: Session,
+    @AnonSession() session: Session,
     @IdArg({
       description: 'A resource ID',
     })
     id: ID,
   ): Promise<boolean> {
+    // TODO move to DB layer?
+    if (session.anonymous) {
+      return false;
+    }
     return await this.pins.isPinned(id, session);
   }
 

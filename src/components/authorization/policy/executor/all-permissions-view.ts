@@ -16,8 +16,8 @@ import {
   type ChildSingleAction,
   type PropAction,
 } from '../actions';
-import { type UserEdgePrivileges } from './user-edge-privileges';
-import { type UserResourcePrivileges } from './user-resource-privileges';
+import { type EdgePrivileges } from './edge-privileges';
+import { type ResourcePrivileges } from './resource-privileges';
 
 export type AllPermissionsView<TResourceStatic extends ResourceShape<any>> =
   Record<
@@ -34,7 +34,7 @@ export const createAllPermissionsView = <
   TResourceStatic extends ResourceShape<any>,
 >(
   resource: EnhancedResource<TResourceStatic>,
-  privileges: UserResourcePrivileges<TResourceStatic>,
+  privileges: ResourcePrivileges<TResourceStatic>,
 ) =>
   createLazyRecord<AllPermissionsView<TResourceStatic>>({
     getKeys: () => [...resource.securedPropsPlusExtra, ...resource.childKeys],
@@ -67,7 +67,7 @@ export const createAllPermissionsOfEdgeView = <
   TAction extends string,
 >(
   resource: EnhancedResource<TResourceStatic>,
-  privileges: UserEdgePrivileges<TResourceStatic, TKey, TAction>,
+  privileges: EdgePrivileges<TResourceStatic, TKey, TAction>,
 ) =>
   createLazyRecord<Record<TAction, boolean>>({
     getKeys: () => [],

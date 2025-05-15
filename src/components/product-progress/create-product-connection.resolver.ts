@@ -1,5 +1,5 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { LoggedInSession, type Session, Variant } from '~/common';
+import { AnonSession, type Session, Variant } from '~/common';
 import { CreateProductOutput } from '../product/dto';
 import { ProductProgressService } from './product-progress.service';
 
@@ -12,8 +12,12 @@ export class ProgressReportCreateProductConnectionResolver {
   })
   async availableVariants(
     @Parent() { product }: CreateProductOutput,
-    @LoggedInSession() session: Session,
+    @AnonSession() session: Session,
   ): Promise<readonly Variant[]> {
+    // TODO move to auth policy
+    if (session.anonymous) {
+      return [];
+    }
     return await this.service.getAvailableVariantsForProduct(product, session);
   }
 }

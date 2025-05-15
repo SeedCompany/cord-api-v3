@@ -1,11 +1,18 @@
 import { Injectable } from '@nestjs/common';
-import { type DataLoaderOptions } from '@seedcompany/data-loader';
+import {
+  type DataLoaderOptions,
+  lifetimeIdFromExecutionContext,
+} from '@seedcompany/data-loader';
 import { NotFoundException } from '~/common';
+import { SessionHost } from '../../components/authentication';
 import { ConfigService } from '../config/config.service';
 
 @Injectable()
 export class DataLoaderConfig {
-  constructor(private readonly config: ConfigService) {}
+  constructor(
+    private readonly config: ConfigService,
+    private readonly sessionHost: SessionHost,
+  ) {}
 
   create(): DataLoaderOptions<any, any> {
     return {
@@ -16,6 +23,15 @@ export class DataLoaderConfig {
         new NotFoundException(
           `Could not find ${String(typeName)} (${String(cacheKey)})`,
         ),
+      getLifetimeId: (context) => {
+        // If we have a session, use that as the cache key.
+        // It will always be created / scoped within the GQL operation.
+        // This ensures the cached data isn't shared between users.
+        const session = this.sessionHost.currentMaybe;
+        if (session) return session;
+
+        return lifetimeIdFromExecutionContext(context);
+      },
       cache: !this.config.isCli,
     };
   }

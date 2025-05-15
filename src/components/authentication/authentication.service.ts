@@ -7,7 +7,6 @@ import { DateTime } from 'luxon';
 import type { Writable } from 'ts-essentials';
 import {
   DuplicateException,
-  type GqlContextType,
   type ID,
   InputException,
   type Role,
@@ -16,7 +15,6 @@ import {
   UnauthenticatedException,
   UnauthorizedException,
 } from '~/common';
-import { sessionFromContext } from '~/common/session';
 import { ConfigService, ILogger, Logger } from '~/core';
 import { ForgotPassword } from '~/core/email/templates';
 import { disableAccessPolicies, Gel } from '~/core/gel';
@@ -28,6 +26,7 @@ import { AuthenticationRepository } from './authentication.repository';
 import { CryptoService } from './crypto.service';
 import type { LoginInput, RegisterInput, ResetPasswordInput } from './dto';
 import { NoSessionException } from './no-session.exception';
+import { SessionHost } from './session.host';
 
 interface JwtPayload {
   iat: number;
@@ -44,6 +43,7 @@ export class AuthenticationService {
     private readonly repo: AuthenticationRepository,
     private readonly gel: Gel,
     private readonly agents: SystemAgentRepository,
+    private readonly sessionHost: SessionHost,
     private readonly moduleRef: ModuleRef,
   ) {}
 
@@ -101,10 +101,10 @@ export class AuthenticationService {
     return userId;
   }
 
-  async updateSession(context: GqlContextType) {
-    const prev = sessionFromContext(context);
+  async refreshCurrentSession() {
+    const prev = this.sessionHost.current;
     const newSession = await this.resumeSession(prev.token);
-    context.session$.next(newSession);
+    this.sessionHost.current$.next(newSession);
     return newSession;
   }
 
@@ -169,10 +169,12 @@ export class AuthenticationService {
       : requesterSession;
 
     if (impersonatee) {
-      const p = this.privileges.for(requesterSession, AssignableRoles);
-      const valid = impersonatee.roles.every((role) =>
-        p.can('edit', withoutScope(role)),
-      );
+      const valid = this.sessionHost.withSession(requesterSession, () => {
+        const p = this.privileges.for(AssignableRoles);
+        return impersonatee.roles.every((role) =>
+          p.can('edit', withoutScope(role)),
+        );
+      });
       if (!valid) {
         // Don't expose what the requester is unable to do as this could leak
         // private information.
@@ -228,6 +230,15 @@ export class AuthenticationService {
   @CachedByArg()
   private waitForRootUserIdOnce() {
     return this.repo.waitForRootUserId();
+  }
+
+  async asUser<R>(
+    user: ID<'User'> | Session,
+    fn: (session: Session) => Promise<R>,
+  ): Promise<R> {
+    const session =
+      typeof user === 'string' ? await this.sessionForUser(user) : user;
+    return await this.sessionHost.withSession(session, () => fn(session));
   }
 
   async sessionForUser(userId: ID): Promise<Session> {

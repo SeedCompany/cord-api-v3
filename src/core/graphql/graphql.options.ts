@@ -10,8 +10,7 @@ import {
   type OperationDefinitionNode,
 } from 'graphql';
 import { type Plugin as PluginNoContext } from 'graphql-yoga';
-import { BehaviorSubject } from 'rxjs';
-import { type GqlContextType, type Session } from '~/common';
+import { type GqlContextType } from '~/common';
 import { getRegisteredScalars } from '~/common/scalars';
 import { ConfigService } from '../config/config.service';
 import { VersionService } from '../config/version.service';
@@ -90,7 +89,6 @@ export class GraphqlOptions implements GqlOptionsFactory {
     return {
       [isGqlContext.KEY]: true,
       request,
-      session$: new BehaviorSubject<Session | undefined>(undefined),
     };
   };
 

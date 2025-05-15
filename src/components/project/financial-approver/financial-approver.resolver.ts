@@ -6,7 +6,7 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { LoggedInSession, type Session } from '~/common';
+import { AnonSession, LoggedInSession, type Session } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { Privileges } from '../../authorization';
 import { UserLoader } from '../../user';
@@ -30,8 +30,12 @@ export class FinancialApproverResolver {
       nullable: true,
     })
     types: readonly ProjectType[] | undefined,
-    @LoggedInSession() _: Session, // require login
+    @AnonSession() session: Session,
   ): Promise<readonly FinancialApprover[]> {
+    // TODO move to auth policy
+    if (session.anonymous) {
+      return [];
+    }
     return await this.repo.read(types);
   }
 

@@ -6,6 +6,7 @@ import { DateTime } from 'luxon';
 import { EnhancedResource, type ID, many, type ResourceShape } from '~/common';
 import { type ResourceMap } from '~/core';
 import { Variable } from '../query-augmentation/condition-variables';
+import { currentUser } from './matching';
 
 type RelationshipDefinition = Record<
   string,
@@ -14,6 +15,7 @@ type RelationshipDefinition = Record<
       id: Nullable<ID> | readonly ID[],
     ]
   | Variable
+  | typeof currentUser
 >;
 type AnyDirectionalDefinition = Partial<
   Record<RelationDirection, RelationshipDefinition>
@@ -103,7 +105,9 @@ export function createRelationships<TResourceStatic extends ResourceShape<any>>(
             direction: direction as RelationDirection,
             relLabel: relLabel,
             variable: !Array.isArray(varOrTuple)
-              ? varOrTuple.value // For variables this is the variable's value
+              ? varOrTuple instanceof Variable
+                ? varOrTuple.value
+                : undefined
               : Array.isArray(varOrTuple[1])
               ? `${relLabel}${i}`
               : relLabel,
@@ -125,7 +129,7 @@ export function createRelationships<TResourceStatic extends ResourceShape<any>>(
   const createdAt = DateTime.local();
 
   const returnTerms = flattened.flatMap((f) =>
-    f.id instanceof Variable ? [] : f.variable,
+    f.id instanceof Variable ? [] : f.variable ?? [],
   );
   if (returnTerms.length === 0) {
     // Create hash based on input to use as a unique return since a return
@@ -150,7 +154,11 @@ export function createRelationships<TResourceStatic extends ResourceShape<any>>(
         sub
           .match(
             flattened.map(({ variable, nodeLabel, id }) =>
-              id instanceof Variable ? [] : [node(variable, nodeLabel, { id })],
+              id instanceof Variable
+                ? []
+                : id === currentUser
+                ? [currentUser]
+                : [node(variable, nodeLabel, { id })],
             ),
           )
           .create(

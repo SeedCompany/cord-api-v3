@@ -1,6 +1,5 @@
-import { sessionFromContext } from '~/common/session';
 import { EventsHandler, ResourceLoader } from '~/core';
-import { GqlContextHost } from '~/core/graphql';
+import { SessionHost } from '../../../authentication';
 import { Privileges } from '../../../authorization';
 import { CanUpdateMediaUserMetadataEvent } from '../../../file/media/events/can-update-event';
 import { ProgressReportMedia as ReportMedia } from '../dto';
@@ -10,7 +9,7 @@ export class ProgressReportUpdateMediaMetadataCheckHandler {
   constructor(
     private readonly resources: ResourceLoader,
     private readonly privileges: Privileges,
-    private readonly contextHost: GqlContextHost,
+    private readonly sessionHost: SessionHost,
   ) {}
 
   async handle(event: CanUpdateMediaUserMetadataEvent) {
@@ -21,7 +20,7 @@ export class ProgressReportUpdateMediaMetadataCheckHandler {
     const reportMediaId = event.media.attachedTo[0].properties.id;
 
     const reportMedia = await this.resources.load(ReportMedia, reportMediaId);
-    const session = sessionFromContext(this.contextHost.context);
+    const session = this.sessionHost.current;
     const allowed = this.privileges
       .for(session, ReportMedia, reportMedia)
       .can('edit');
