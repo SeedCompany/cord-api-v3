@@ -6,7 +6,7 @@ import {
   type Session,
   type UnsecuredDto,
 } from '~/common';
-import { HandleIdLookup, ILogger, Logger } from '~/core';
+import { HandleIdLookup } from '~/core';
 import { Privileges } from '../authorization';
 import {
   type CreateFieldZone,
@@ -20,7 +20,6 @@ import { FieldZoneRepository } from './field-zone.repository';
 @Injectable()
 export class FieldZoneService {
   constructor(
-    @Logger('field-zone:service') private readonly logger: ILogger,
     private readonly privileges: Privileges,
     private readonly repo: FieldZoneRepository,
   ) {}
@@ -37,11 +36,6 @@ export class FieldZoneService {
     session: Session,
     _view?: ObjectView,
   ): Promise<FieldZone> {
-    this.logger.debug(`Read Field Zone`, {
-      id: id,
-      userId: session.userId,
-    });
-
     const result = await this.repo.readOne(id);
     return this.secure(result, session);
   }
@@ -73,7 +67,6 @@ export class FieldZoneService {
     try {
       await this.repo.deleteNode(object);
     } catch (exception) {
-      this.logger.error('Failed to delete', { id, exception });
       throw new ServerException('Failed to delete', exception);
     }
   }

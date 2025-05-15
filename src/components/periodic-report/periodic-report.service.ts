@@ -97,10 +97,6 @@ export class PeriodicReportService {
     session: Session,
     _view?: ObjectView,
   ): Promise<PeriodicReport> {
-    this.logger.debug(`read one`, {
-      id,
-      userId: session.userId,
-    });
     if (!id) {
       throw new NotFoundException(
         'No periodic report id to search for',

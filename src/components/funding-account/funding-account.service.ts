@@ -11,7 +11,7 @@ import {
   type Session,
   type UnsecuredDto,
 } from '~/common';
-import { HandleIdLookup, ILogger, Logger } from '~/core';
+import { HandleIdLookup } from '~/core';
 import { mapListResults } from '~/core/database/results';
 import { Privileges } from '../authorization';
 import {
@@ -26,7 +26,6 @@ import { FundingAccountRepository } from './funding-account.repository';
 @Injectable()
 export class FundingAccountService {
   constructor(
-    @Logger('funding-account:service') private readonly logger: ILogger,
     private readonly privileges: Privileges,
     private readonly repo: FundingAccountRepository,
   ) {}
@@ -50,18 +49,12 @@ export class FundingAccountService {
         throw new CreationFailed(FundingAccount);
       }
 
-      this.logger.info(`funding account created`, { id: result.id });
-
       return await this.readOne(result.id, session).catch((e) => {
         throw e instanceof NotFoundException
           ? new ReadAfterCreationFailed(FundingAccount)
           : e;
       });
     } catch (err) {
-      this.logger.error('Could not create funding account for user', {
-        exception: err,
-        userId: session.userId,
-      });
       throw new CreationFailed(FundingAccount, { cause: err });
     }
   }
@@ -72,8 +65,6 @@ export class FundingAccountService {
     session: Session,
     _view?: ObjectView,
   ): Promise<FundingAccount> {
-    this.logger.info('readOne', { id, userId: session.userId });
-
     if (!id) {
       throw new NotFoundException('Invalid: Blank ID');
     }
@@ -116,7 +107,6 @@ export class FundingAccountService {
     try {
       await this.repo.deleteNode(object);
     } catch (exception) {
-      this.logger.error('Failed to delete', { id, exception });
       throw new ServerException('Failed to delete', exception);
     }
   }

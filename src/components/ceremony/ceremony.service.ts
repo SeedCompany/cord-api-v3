@@ -7,7 +7,7 @@ import {
   type Session,
   type UnsecuredDto,
 } from '~/common';
-import { HandleIdLookup, ILogger, Logger } from '~/core';
+import { HandleIdLookup } from '~/core';
 import { Privileges } from '../authorization';
 import { CeremonyRepository } from './ceremony.repository';
 import { Ceremony, type CreateCeremony, type UpdateCeremony } from './dto';
@@ -17,7 +17,6 @@ export class CeremonyService {
   constructor(
     private readonly privileges: Privileges,
     private readonly repo: CeremonyRepository,
-    @Logger('ceremony:service') private readonly logger: ILogger,
   ) {}
 
   async create(input: CreateCeremony): Promise<ID> {
@@ -32,7 +31,6 @@ export class CeremonyService {
     session: Session,
     _view?: ObjectView,
   ): Promise<Ceremony> {
-    this.logger.debug(`Query readOne Ceremony`, { id, userId: session.userId });
     if (!id) {
       throw new InputException('No ceremony id to search for', 'ceremony.id');
     }
@@ -73,10 +71,7 @@ export class CeremonyService {
     try {
       await this.repo.deleteNode(object);
     } catch (exception) {
-      this.logger.warning('Failed to delete Ceremony', {
-        exception,
-      });
-      throw new ServerException('Failed to delete Ceremony');
+      throw new ServerException('Failed to delete Ceremony', exception);
     }
   }
 }

@@ -1,14 +1,7 @@
 import { ServerException } from '~/common';
-import {
-  ConfigService,
-  EventsHandler,
-  type IEventHandler,
-  ILogger,
-  Logger,
-} from '~/core';
+import { ConfigService, EventsHandler, type IEventHandler } from '~/core';
 import { EngagementStatus, LanguageEngagement } from '../dto';
 import { EngagementRepository } from '../engagement.repository';
-import { EngagementService } from '../engagement.service';
 import { EngagementCreatedEvent, EngagementUpdatedEvent } from '../events';
 
 type SubscribedEvent = EngagementCreatedEvent | EngagementUpdatedEvent;
@@ -17,19 +10,13 @@ type SubscribedEvent = EngagementCreatedEvent | EngagementUpdatedEvent;
 export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
   constructor(
     private readonly engagementRepo: EngagementRepository,
-    private readonly engagementService: EngagementService,
     private readonly config: ConfigService,
-    @Logger('engagement:set-initial-end-date') private readonly logger: ILogger,
   ) {}
 
   async handle(event: SubscribedEvent) {
     if (this.config.databaseEngine === 'gel') {
       return;
     }
-    this.logger.debug('Engagement mutation, set initial end date', {
-      ...event,
-      event: event.constructor.name,
-    });
 
     const engagement = 'engagement' in event ? event.engagement : event.updated;
 
@@ -72,10 +59,6 @@ export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
         event.engagement = updatedEngagement;
       }
     } catch (exception) {
-      this.logger.error(`Could not set initial end date on engagement`, {
-        userId: event.session.userId,
-        exception,
-      });
       throw new ServerException(
         'Could not set initial end date on engagement',
         exception,

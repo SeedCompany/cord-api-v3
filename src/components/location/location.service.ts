@@ -8,7 +8,7 @@ import {
   type Session,
   type UnsecuredDto,
 } from '~/common';
-import { HandleIdLookup, ILogger, Logger } from '~/core';
+import { HandleIdLookup } from '~/core';
 import { Privileges, type UserEdgePrivileges } from '../authorization';
 import { type PropAction } from '../authorization/policy/actions';
 import {
@@ -24,7 +24,6 @@ import { LocationRepository } from './location.repository';
 @Injectable()
 export class LocationService {
   constructor(
-    @Logger('location:service') private readonly logger: ILogger,
     private readonly privileges: Privileges,
     private readonly repo: LocationRepository,
   ) {}
@@ -34,7 +33,6 @@ export class LocationService {
 
     const dto = await this.repo.create(input, session);
 
-    this.logger.debug(`location created`, { id: dto.id });
     return this.secure(dto, session);
   }
 
@@ -44,11 +42,6 @@ export class LocationService {
     session: Session,
     _view?: ObjectView,
   ): Promise<Location> {
-    this.logger.debug(`Read Location`, {
-      id: id,
-      userId: session.userId,
-    });
-
     const result = await this.repo.readOne(id);
     return this.secure(result, session);
   }
@@ -83,7 +76,6 @@ export class LocationService {
     try {
       await this.repo.deleteNode(object);
     } catch (exception) {
-      this.logger.error('Failed to delete', { id, exception });
       throw new ServerException('Failed to delete', exception);
     }
   }

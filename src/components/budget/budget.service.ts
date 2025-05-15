@@ -11,7 +11,7 @@ import {
   type Session,
   viewOfChangeset,
 } from '~/common';
-import { HandleIdLookup, ILogger, Logger, ResourceResolver } from '~/core';
+import { HandleIdLookup, ResourceResolver } from '~/core';
 import { mapListResults } from '~/core/database/results';
 import { Privileges } from '../authorization';
 import { FileService } from '../file';
@@ -41,15 +41,12 @@ export class BudgetService {
     private readonly budgetRepo: BudgetRepository,
     private readonly budgetRecordsRepo: BudgetRecordRepository,
     private readonly resources: ResourceResolver,
-    @Logger('budget:service') private readonly logger: ILogger,
   ) {}
 
   async create(
     { projectId, ...input }: CreateBudget,
     session: Session,
   ): Promise<Budget> {
-    this.logger.debug('Creating budget', { projectId });
-
     const universalTemplateFileId = await generateId<FileId>();
 
     try {
@@ -57,11 +54,6 @@ export class BudgetService {
         { projectId, ...input },
         universalTemplateFileId,
       );
-
-      this.logger.debug(`Created Budget`, {
-        id: budgetId,
-        userId: session.userId,
-      });
 
       await this.files.createDefinedFile(
         universalTemplateFileId,
@@ -75,10 +67,6 @@ export class BudgetService {
 
       return await this.readOne(budgetId, session);
     } catch (exception) {
-      this.logger.error(`Could not create budget`, {
-        userId: session.userId,
-        exception,
-      });
       throw new CreationFailed(Budget, { cause: exception });
     }
   }
@@ -98,15 +86,8 @@ export class BudgetService {
 
     await this.verifyRecordUniqueness(input);
 
-    this.logger.debug('Creating BudgetRecord', input);
-
     try {
       const recordId = await this.budgetRecordsRepo.create(input, changeset);
-
-      this.logger.debug(`Created Budget Record`, {
-        id: recordId,
-        userId: session.userId,
-      });
 
       const budgetRecord = await this.readOneRecord(
         recordId,
@@ -116,10 +97,6 @@ export class BudgetService {
 
       return budgetRecord;
     } catch (exception) {
-      this.logger.error(`Could not create Budget Record`, {
-        userId: session.userId,
-        exception,
-      });
       throw new CreationFailed(BudgetRecord, { cause: exception });
     }
   }
@@ -136,11 +113,6 @@ export class BudgetService {
 
   @HandleIdLookup(Budget)
   async readOne(id: ID, session: Session, view?: ObjectView): Promise<Budget> {
-    this.logger.debug(`readOne budget`, {
-      id,
-      userId: session.userId,
-    });
-
     const result = await this.budgetRepo.readOne(id, session, view);
 
     const privs = this.privileges.for(Budget, result);
@@ -190,11 +162,6 @@ export class BudgetService {
     session: Session,
     view?: ObjectView,
   ): Promise<BudgetRecord> {
-    this.logger.debug(`readOne BudgetRecord`, {
-      id,
-      userId: session.userId,
-    });
-
     const result = await this.budgetRecordsRepo.readOne(id, { session, view });
 
     return this.privileges.for(BudgetRecord).secure(result);
@@ -220,8 +187,6 @@ export class BudgetService {
     session: Session,
     changeset?: ID,
   ): Promise<BudgetRecord> {
-    this.logger.debug('Update budget record', { id, userId: session.userId });
-
     const br = await this.readOneRecord(
       id,
       session,
@@ -230,20 +195,8 @@ export class BudgetService {
     const changes = this.budgetRecordsRepo.getActualChanges(br, input);
     this.privileges.for(BudgetRecord, br).verifyChanges(changes);
 
-    try {
-      const result = await this.budgetRecordsRepo.update(
-        br,
-        changes,
-        changeset,
-      );
-      return result;
-    } catch (e) {
-      this.logger.error('Could not update budget Record ', {
-        id,
-        userId: session.userId,
-      });
-      throw e;
-    }
+    const result = await this.budgetRecordsRepo.update(br, changes, changeset);
+    return result;
   }
 
   async delete(id: ID, session: Session): Promise<void> {
@@ -257,10 +210,7 @@ export class BudgetService {
     try {
       await this.budgetRepo.deleteNode(budget);
     } catch (e) {
-      this.logger.warning('Failed to delete budget', {
-        exception: e,
-      });
-      throw new ServerException('Failed to delete budget');
+      throw new ServerException('Failed to delete budget', e);
     }
   }
 
@@ -268,10 +218,7 @@ export class BudgetService {
     try {
       await this.budgetRecordsRepo.deleteNode(id, { changeset });
     } catch (e) {
-      this.logger.warning('Failed to delete Budget Record', {
-        exception: e,
-      });
-      throw new ServerException('Failed to delete Budget Record');
+      throw new ServerException('Failed to delete Budget Record', e);
     }
   }
 

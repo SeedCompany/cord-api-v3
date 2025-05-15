@@ -23,7 +23,7 @@ import {
   type UnsecuredDto,
 } from '~/common';
 import { isAdmin } from '~/common/session';
-import { HandleIdLookup, IEventBus, ILogger, Logger } from '~/core';
+import { HandleIdLookup, IEventBus } from '~/core';
 import { Transactional } from '~/core/database';
 import { type AnyChangesOf } from '~/core/database/changes';
 import { Privileges } from '../authorization';
@@ -93,7 +93,6 @@ export class ProjectService {
     private readonly eventBus: IEventBus,
     private readonly repo: ProjectRepository,
     private readonly projectChangeRequests: ProjectChangeRequestService,
-    @Logger('project:service') private readonly logger: ILogger,
   ) {}
 
   async create(
@@ -237,7 +236,6 @@ export class ProjectService {
     session: Session,
     view: ObjectView,
   ): Promise<readonly Project[]> {
-    this.logger.debug('read many', { ids, view });
     const projects = await this.repo.readMany(ids, session, view?.changeset);
     return await Promise.all(projects.map((dto) => this.secure(dto, session)));
   }
@@ -351,10 +349,7 @@ export class ProjectService {
     try {
       await this.repo.deleteNode(object);
     } catch (e) {
-      this.logger.warning('Failed to delete project', {
-        exception: e,
-      });
-      throw new ServerException('Failed to delete project');
+      throw new ServerException('Failed to delete project', e);
     }
 
     await this.eventBus.publish(new ProjectDeletedEvent(object, session));
@@ -374,12 +369,6 @@ export class ProjectService {
     session: Session,
     view?: ObjectView,
   ): Promise<SecuredEngagementList> {
-    this.logger.debug('list engagements ', {
-      projectId: project.id,
-      input,
-      userId: session.userId,
-    });
-
     const result = await this.engagementService.list(
       {
         ...input,

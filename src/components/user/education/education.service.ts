@@ -5,7 +5,7 @@ import {
   type Session,
   type UnsecuredDto,
 } from '~/common';
-import { HandleIdLookup, ILogger, Logger } from '~/core';
+import { HandleIdLookup } from '~/core';
 import { Privileges } from '../../authorization';
 import {
   type CreateEducation,
@@ -19,7 +19,6 @@ import { EducationRepository } from './education.repository';
 @Injectable()
 export class EducationService {
   constructor(
-    @Logger('education:service') private readonly logger: ILogger,
     private readonly privileges: Privileges,
     private readonly repo: EducationRepository,
   ) {}
@@ -37,11 +36,6 @@ export class EducationService {
     session: Session,
     _view?: ObjectView,
   ): Promise<Education> {
-    this.logger.debug(`Read Education`, {
-      id: id,
-      userId: session.userId,
-    });
-
     const result = await this.repo.readOne(id);
     return this.secure(result, session);
   }
