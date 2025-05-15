@@ -17,7 +17,7 @@ import {
   type Session,
 } from '~/common';
 import { variable } from '../query-augmentation/condition-variables';
-import { apoc, collect, listConcat, merge } from './cypher-functions';
+import { apoc, collect, exists, listConcat, merge } from './cypher-functions';
 
 const currentUserFlag = Symbol();
 const makeCurrentUser = (name: string) =>
@@ -146,3 +146,9 @@ export const property = (
     }),
   ],
 ];
+
+export const pinned = exists([
+  currentUser,
+  relation('out', '', 'pinned'),
+  node('node'),
+]);

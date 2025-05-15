@@ -38,6 +38,7 @@ import {
   merge,
   oncePerProject,
   paginate,
+  pinned,
   propSorter,
   rankSens,
   requestingUser,
@@ -225,7 +226,7 @@ export class LanguageRepository extends DtoRepository<
           merge('props', 'changedProps', {
             __typename: '"Language"',
             ethnologue: 'ethProps',
-            pinned: 'exists((:User { id: $requestingUser })-[:pinned]->(node))',
+            pinned,
             presetInventory: 'presetInventory',
             firstScriptureEngagement: 'firstScriptureEngagement { .id }',
             scope: 'scopedRoles',

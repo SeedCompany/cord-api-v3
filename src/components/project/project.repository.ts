@@ -26,6 +26,7 @@ import {
   merge,
   paginate,
   path,
+  pinned,
   requestingUser,
   type SortCol,
   sortWith,
@@ -134,7 +135,7 @@ export class ProjectRepository extends CommonRepository {
         .return<{ dto: UnsecuredDto<Project> }>(
           merge('props', 'changedProps', {
             type: 'node.type',
-            pinned: 'exists((:User { id: $requestingUser })-[:pinned]->(node))',
+            pinned,
             isMember: '"member:true" in props.scope',
             rootDirectory: 'rootDirectory { .id }',
             primaryPartnership: 'primaryPartnership { .id }',

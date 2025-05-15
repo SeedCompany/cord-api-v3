@@ -27,6 +27,7 @@ import {
   merge,
   oncePerProject,
   paginate,
+  pinned,
   rankSens,
   requestingUser,
   sortWith,
@@ -291,7 +292,7 @@ export class PartnerRepository extends DtoRepository<
             languagesOfConsulting: 'languagesOfConsulting',
             departmentIdBlock: 'departmentIdBlock',
             scope: 'scopedRoles',
-            pinned: 'exists((:User { id: $requestingUser })-[:pinned]->(node))',
+            pinned,
           }).as('dto'),
         );
   }

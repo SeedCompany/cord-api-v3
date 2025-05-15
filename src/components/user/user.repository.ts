@@ -25,6 +25,7 @@ import {
   multiPropsAsSortString,
   paginate,
   path,
+  pinned,
   property,
   requestingUser,
   type SortCol,
@@ -145,7 +146,7 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
           merge({ email: null }, 'props', {
             __typename: '"User"',
             roles: 'roles',
-            pinned: 'exists((requestingUser)-[:pinned]->(node))',
+            pinned,
           }).as('dto'),
         );
   }
