@@ -15,7 +15,6 @@ export class AttachProjectRootDirectoryHandler
       resource: project,
       relation: 'rootDirectory',
       name: `${project.id} root directory`,
-      session,
     });
 
     event.project = {

@@ -399,13 +399,11 @@ export class FileRepository extends CommonRepository {
     relation,
     name,
     public: isPublic,
-    session,
   }: {
     resource: LinkTo<any>;
     relation: string;
     name: string;
     public?: boolean;
-    session: Session;
   }) {
     const initialProps = {
       name,
