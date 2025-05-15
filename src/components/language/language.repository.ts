@@ -29,7 +29,6 @@ import {
   createNode,
   createRelationships,
   defineSorters,
-  exp,
   filter,
   FullTextIndex,
   matchChangesetAndChangedProps,
@@ -39,9 +38,9 @@ import {
   merge,
   oncePerProject,
   paginate,
+  pinned,
   propSorter,
   rankSens,
-  requestingUser,
   sortWith,
   variable,
 } from '~/core/database/query';
@@ -184,7 +183,7 @@ export class LanguageRepository extends DtoRepository<
           relation('out', '', 'engagement'),
           node('node'),
         ])
-        .apply(matchProjectScopedRoles({ session }))
+        .apply(matchProjectScopedRoles())
         .with([
           'node',
           'collect(project) as projList',
@@ -226,7 +225,7 @@ export class LanguageRepository extends DtoRepository<
           merge('props', 'changedProps', {
             __typename: '"Language"',
             ethnologue: 'ethProps',
-            pinned: 'exists((:User { id: $requestingUser })-[:pinned]->(node))',
+            pinned,
             presetInventory: 'presetInventory',
             firstScriptureEngagement: 'firstScriptureEngagement { .id }',
             scope: 'scopedRoles',
@@ -246,8 +245,6 @@ export class LanguageRepository extends DtoRepository<
         relation('out', '', 'language'),
         node('node'),
       ])
-      // match requesting user once (instead of once per row)
-      .match(requestingUser(session))
       .apply(languageFilters(input.filter))
       .apply(
         this.privileges.forUser(session).filterToReadable({
@@ -373,15 +370,11 @@ const isPresetInventory = (query: Query) =>
         ),
       })
       .return(
-        any(
-          'project',
-          collect('project'),
-          exp.path([
-            node('project'),
-            relation('out', '', 'presetInventory', ACTIVE),
-            node('', 'Property', { value: variable('true') }),
-          ]),
-        ).as('presetInventory'),
+        any('project', collect('project'), [
+          node('project'),
+          relation('out', '', 'presetInventory', ACTIVE),
+          node('', 'Property', { value: variable('true') }),
+        ]).as('presetInventory'),
       ),
   );
 

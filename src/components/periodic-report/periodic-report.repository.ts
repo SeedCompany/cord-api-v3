@@ -23,6 +23,7 @@ import {
   ACTIVE,
   createNode,
   createRelationships,
+  currentUser,
   defineSorters,
   deleteBaseNode,
   filter,
@@ -161,7 +162,7 @@ export class PeriodicReportRepository extends DtoRepository<
       .apply(
         createRelationships(File, {
           in: { reportFileNode: variable('report') },
-          out: { createdBy: ['User', input.session.userId] },
+          out: { createdBy: currentUser },
         }),
       )
       .return<{ id: ID; interval: Range<CalendarDate> }>(
@@ -416,7 +417,7 @@ export class PeriodicReportRepository extends DtoRepository<
           relation('out', '', 'report', ACTIVE),
           node('node'),
         ])
-        .apply(matchPropsAndProjectSensAndScopedRoles(session))
+        .apply(matchPropsAndProjectSensAndScopedRoles())
         .return<{ dto: UnsecuredDto<PeriodicReport> }>(
           merge('props', { parent: 'parent' }, 'extra').as('dto'),
         );

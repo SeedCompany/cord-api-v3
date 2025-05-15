@@ -22,10 +22,10 @@ import { CommonRepository } from '~/core/database';
 import {
   apoc,
   createRelationships,
+  currentUser,
   filter,
   merge,
   paginate,
-  requestingUser,
   variable,
 } from '~/core/database/query';
 import {
@@ -64,13 +64,12 @@ export class NotificationRepository extends CommonRepository {
       .with('node')
       .apply(this.service.getStrategy(type).saveForNeo4j(extra))
       .with('*')
-      .match(requestingUser(session))
       .apply(
         createRelationships(Notification, 'out', {
-          creator: variable('requestingUser'),
+          creator: currentUser,
         }),
       )
-      .subQuery(['node', 'requestingUser'], (sub) =>
+      .subQuery(['node'], (sub) =>
         sub
           .apply((q) =>
             recipients == null
@@ -102,7 +101,7 @@ export class NotificationRepository extends CommonRepository {
       .match([
         node('node', 'Notification', { id }),
         relation('out', 'recipient', 'recipient'),
-        requestingUser(session),
+        currentUser,
       ])
       .setValues({ 'recipient.readAt': unread ? null : DateTime.now() })
       .with('node')
@@ -117,25 +116,25 @@ export class NotificationRepository extends CommonRepository {
   async list(input: NotificationListInput, session: Session) {
     const result = await this.db
       .query()
-      .match(requestingUser(session))
-      .subQuery('requestingUser', (q) =>
+      .match(currentUser.as('currentUser'))
+      .subQuery('currentUser', (q) =>
         q
           .match([
             node('node', 'Notification'),
             relation('out', 'recipient', 'recipient'),
-            node('requestingUser'),
+            node('currentUser'),
           ])
           .apply(notificationFilters(input.filter))
           .with('node')
           .orderBy('node.createdAt', 'DESC')
           .apply(paginate(input, this.hydrate(session))),
       )
-      .subQuery('requestingUser', (q) =>
+      .subQuery('currentUser', (q) =>
         q
           .match([
             node('node', 'Notification'),
             relation('out', 'recipient', 'recipient'),
-            node('requestingUser'),
+            node('currentUser'),
           ])
           .where({ 'recipient.readAt': isNull() })
           .return<{ totalUnread: number }>('count(node) as totalUnread'),
@@ -170,7 +169,7 @@ export class NotificationRepository extends CommonRepository {
         .optionalMatch([
           node('node'),
           relation('out', 'recipient', 'recipient'),
-          requestingUser(session),
+          currentUser,
         ])
         .return<{ dto: UnsecuredDto<Notification> }>(
           merge('node', 'extra', {

@@ -7,6 +7,7 @@ import {
 } from 'cypher-query-builder';
 import {
   ACTIVE,
+  currentUser,
   filter,
   matchProjectSens,
   path,
@@ -28,7 +29,7 @@ export const projectFilters = filter.define(() => ProjectFilters, {
   mouStart: filter.dateTimeProp(),
   mouEnd: filter.dateTimeProp(),
   mine: filter.pathExistsWhenTrue([
-    node('requestingUser'),
+    currentUser,
     relation('in', '', 'user'),
     node('', 'ProjectMember'),
     relation('in', '', 'member'),
@@ -49,7 +50,7 @@ export const projectFilters = filter.define(() => ProjectFilters, {
     node('', 'Partner', { id }),
   ]),
   isMember: filter.pathExistsWhenTrue([
-    node('requestingUser'),
+    currentUser,
     relation('in', '', 'user'),
     node('', 'ProjectMember'),
     relation('in', '', 'member'),

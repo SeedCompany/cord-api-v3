@@ -20,12 +20,12 @@ import {
   ACTIVE,
   createNode,
   createRelationships,
+  currentUser,
   defaultPermanentAfter,
   merge,
   paginate,
   prefixNodeLabelsWithDeleted,
   type QueryFragment,
-  requestingUser,
   sorting,
   updateProperty,
   variable,
@@ -94,7 +94,6 @@ export const PromptVariantResponseRepository = <
     protected hydrate(session: Session) {
       return (query: Query) =>
         query
-          .match(requestingUser(session))
           .apply(this.filterToReadable(session))
           .match([
             node('parent', 'BaseNode'),
@@ -165,7 +164,7 @@ export const PromptVariantResponseRepository = <
               child: ['BaseNode', input.resource],
             },
             out: {
-              creator: ['User', session.userId],
+              creator: currentUser,
             },
           }),
         )
@@ -224,7 +223,7 @@ export const PromptVariantResponseRepository = <
                       child: variable('parent'),
                     },
                     out: {
-                      creator: ['User', session.userId],
+                      creator: currentUser,
                     },
                   }),
                 )

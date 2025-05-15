@@ -107,6 +107,8 @@ export function createRelationships<TResourceStatic extends ResourceShape<any>>(
             variable: !Array.isArray(varOrTuple)
               ? varOrTuple instanceof Variable
                 ? varOrTuple.value
+                : currentUser.is(varOrTuple)
+                ? relLabel
                 : undefined
               : Array.isArray(varOrTuple[1])
               ? `${relLabel}${i}`
@@ -156,8 +158,8 @@ export function createRelationships<TResourceStatic extends ResourceShape<any>>(
             flattened.map(({ variable, nodeLabel, id }) =>
               id instanceof Variable
                 ? []
-                : id === currentUser
-                ? [currentUser]
+                : currentUser.is(id)
+                ? [id.as(variable!)]
                 : [node(variable, nodeLabel, { id })],
             ),
           )

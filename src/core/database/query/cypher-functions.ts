@@ -46,6 +46,8 @@ export const count = fn1('count');
  */
 export const coalesce = fn('coalesce');
 
+export const exists = fn1('exists');
+
 /**
  * Merges maps together.
  * Note: If one expression is given, it is assumed to be a list.

@@ -1,4 +1,6 @@
-import { comparisonOfDateTimeFilter } from './filters';
+import { filter } from './index';
+
+const { comparisonOfDateTimeFilter } = filter;
 
 describe('filters', () => {
   describe('comparisonOfDateTimeFilter', () => {

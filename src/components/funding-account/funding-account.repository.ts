@@ -9,7 +9,6 @@ import {
   matchProps,
   merge,
   paginate,
-  requestingUser,
   sorting,
   variable,
 } from '~/core/database/query';
@@ -96,7 +95,6 @@ export class FundingAccountRepository extends DtoRepository(FundingAccount) {
   async list(input: FundingAccountListInput, session: Session) {
     const result = await this.db
       .query()
-      .match(requestingUser(session))
       .match(node('node', 'FundingAccount'))
       .apply(sorting(FundingAccount, input))
       .apply(paginate(input, this.hydrate()))

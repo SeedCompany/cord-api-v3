@@ -46,7 +46,6 @@ import {
   multiPropsAsSortString,
   oncePerProject,
   paginate,
-  requestingUser,
   type SortCol,
   sortWith,
   textJoinMaybe,
@@ -132,7 +131,7 @@ export class EngagementRepository extends CommonRepository {
           relation('out', '', 'engagement'),
           node('node'),
         ])
-        .apply(matchPropsAndProjectSensAndScopedRoles(session, { view }))
+        .apply(matchPropsAndProjectSensAndScopedRoles({ view }))
         .apply(matchChangesetAndChangedProps(view?.changeset))
         .optionalMatch([
           node('node'),
@@ -547,7 +546,7 @@ export class EngagementRepository extends CommonRepository {
               : q,
           ),
       )
-      .match(requestingUser(session))
+      .with('*') // needed between call & where
       .apply(engagementFilters(input.filter))
       .apply(
         this.privileges.for(session, IEngagement).filterToReadable({
@@ -857,10 +856,7 @@ export const engagementFilters = filter.define(() => EngagementFilters, {
     separateQueryForEachWord: true,
     minScore: 0.9,
   }),
-  project: filter.sub(
-    () => projectFilters,
-    'requestingUser',
-  )((sub) =>
+  project: filter.sub(() => projectFilters)((sub) =>
     sub.match([
       node('outer'),
       relation('in', '', 'engagement'),

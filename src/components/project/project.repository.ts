@@ -26,7 +26,7 @@ import {
   merge,
   paginate,
   path,
-  requestingUser,
+  pinned,
   type SortCol,
   sortWith,
   variable,
@@ -82,7 +82,7 @@ export class ProjectRepository extends CommonRepository {
     return (query: Query) =>
       query
         .with(['node', 'node as project'])
-        .apply(matchPropsAndProjectSensAndScopedRoles(userId))
+        .apply(matchPropsAndProjectSensAndScopedRoles())
         .apply(matchChangesetAndChangedProps(changeset))
         // optional because not defined until right after creation
         .optionalMatch([
@@ -134,7 +134,7 @@ export class ProjectRepository extends CommonRepository {
         .return<{ dto: UnsecuredDto<Project> }>(
           merge('props', 'changedProps', {
             type: 'node.type',
-            pinned: 'exists((:User { id: $requestingUser })-[:pinned]->(node))',
+            pinned,
             isMember: '"member:true" in props.scope',
             rootDirectory: 'rootDirectory { .id }',
             primaryPartnership: 'primaryPartnership { .id }',
@@ -335,7 +335,6 @@ export class ProjectRepository extends CommonRepository {
       .query()
       .matchNode('node', 'Project')
       .with('distinct(node) as node, node as project')
-      .match(requestingUser(session))
       .apply(projectFilters(input.filter))
       .apply(this.privileges.for(session, IProject).filterToReadable())
       .apply(sortWith(projectSorters, input))

@@ -13,7 +13,6 @@ import {
   matchPropsAndProjectSensAndScopedRoles,
   oncePerProject,
   paginate,
-  requestingUser,
   sorting,
 } from '~/core/database/query';
 import {
@@ -64,7 +63,7 @@ export class CeremonyRepository extends DtoRepository<
           relation('out', '', ACTIVE),
           node('node'),
         ])
-        .apply(matchPropsAndProjectSensAndScopedRoles(session))
+        .apply(matchPropsAndProjectSensAndScopedRoles())
         .return<{ dto: UnsecuredDto<Ceremony> }>('props as dto');
   }
 
@@ -84,7 +83,6 @@ export class CeremonyRepository extends DtoRepository<
             ]
           : []),
       ])
-      .match(requestingUser(session))
       .apply(
         this.privileges.forUser(session).filterToReadable({
           wrapContext: oncePerProject,

@@ -177,7 +177,7 @@ export class BudgetRecordRepository extends DtoRepository<
             node('organization', 'Organization'),
           ])
           .apply(matchChangesetAndChangedProps(view?.changeset))
-          .apply(matchPropsAndProjectSensAndScopedRoles(session, { view }))
+          .apply(matchPropsAndProjectSensAndScopedRoles({ view }))
           .return<{ dto: UnsecuredDto<BudgetRecord> }>(
             merge('props', 'changedProps', {
               parent: 'budget',

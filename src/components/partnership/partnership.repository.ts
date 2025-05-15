@@ -29,7 +29,6 @@ import {
   merge,
   oncePerProject,
   paginate,
-  requestingUser,
   sortWith,
   variable,
   whereNotDeletedInChangeset,
@@ -208,7 +207,7 @@ export class PartnershipRepository extends DtoRepository<
           relation('out', '', 'organization', ACTIVE),
           node('org', 'Organization'),
         ])
-        .apply(matchPropsAndProjectSensAndScopedRoles(session, { view }))
+        .apply(matchPropsAndProjectSensAndScopedRoles({ view }))
         .apply(matchChangesetAndChangedProps(view?.changeset))
         .apply(matchProps({ nodeName: 'project', outputVar: 'projectProps' }))
         .apply(
@@ -270,7 +269,7 @@ export class PartnershipRepository extends DtoRepository<
               : q,
           ),
       )
-      .match(requestingUser(session))
+      .with('*') // needed between call & where
       .apply(partnershipFilters(input.filter))
       .apply(
         this.privileges.forUser(session).filterToReadable({

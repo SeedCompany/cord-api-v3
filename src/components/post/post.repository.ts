@@ -8,6 +8,7 @@ import {
   ACTIVE,
   createNode,
   createRelationships,
+  currentUser,
   matchProps,
   merge,
   paginate,
@@ -37,7 +38,7 @@ export class PostRepository extends DtoRepository<typeof Post, [Session] | []>(
             post: ['BaseNode', input.parentId],
           },
           out: {
-            creator: ['User', session.userId],
+            creator: currentUser,
           },
         }),
       )
@@ -102,10 +103,9 @@ export class PostRepository extends DtoRepository<typeof Post, [Session] | []>(
             ) OR (
               shareability.value = '${PostShareability.Membership}'
               AND
-              (node)<-[:post]-(:BaseNode)-[:member]-(:BaseNode)-[:user]->(:User { id: $requestingUser })
+              (node)<-[:post]-(:BaseNode)-[:member]-(:BaseNode)-[:user]->(:User { id: $currentUser })
             )
           `,
-          { requestingUser: session.userId },
         );
   }
 
