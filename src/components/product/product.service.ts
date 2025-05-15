@@ -165,7 +165,7 @@ export class ProductService {
     });
 
     this.privileges
-      .for(session, resolveProductType(created), created)
+      .for(resolveProductType(created), created)
       .verifyCan('create');
 
     return created;
@@ -277,7 +277,7 @@ export class ProductService {
   }
 
   secure(dto: UnsecuredDto<AnyProduct>, session: Session): AnyProduct {
-    return this.privileges.for(session, resolveProductType(dto)).secure(dto);
+    return this.privileges.for(resolveProductType(dto)).secure(dto);
   }
 
   async updateDirect(
@@ -291,7 +291,7 @@ export class ProductService {
     const changes = this.getDirectProductChanges(input, currentProduct);
 
     this.privileges
-      .for(session, DirectScriptureProduct, currentProduct)
+      .for(DirectScriptureProduct, currentProduct)
       .verifyChanges(changes, { pathPrefix: 'product' });
     const { scriptureReferences, unspecifiedScripture, ...simpleChanges } =
       changes;
@@ -371,7 +371,7 @@ export class ProductService {
 
     const changes = this.getDerivativeProductChanges(input, currentProduct);
     this.privileges
-      .for(session, DerivativeScriptureProduct, currentProduct)
+      .for(DerivativeScriptureProduct, currentProduct)
       .verifyChanges(changes, { pathPrefix: 'product' });
 
     const { produces, scriptureReferencesOverride, ...simpleChanges } = changes;
@@ -471,7 +471,7 @@ export class ProductService {
     };
 
     this.privileges
-      .for(session, OtherProduct, currentProduct)
+      .for(OtherProduct, currentProduct)
       .verifyChanges(changes, { pathPrefix: 'product' });
 
     await this.mergeCompletionDescription(changes, currentProduct);
@@ -565,7 +565,7 @@ export class ProductService {
   async delete(id: ID, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
 
-    this.privileges.for(session, Product, object).verifyCan('delete');
+    this.privileges.for(Product, object).verifyCan('delete');
 
     try {
       await this.repo.deleteNode(object);

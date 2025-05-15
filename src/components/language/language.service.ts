@@ -50,7 +50,7 @@ export class LanguageService {
   ) {}
 
   async create(input: CreateLanguage, session: Session): Promise<Language> {
-    this.privileges.for(session, Language).verifyCan('create');
+    this.privileges.for(Language).verifyCan('create');
 
     const resultLanguage = await this.repo.create(input, session);
 
@@ -85,7 +85,7 @@ export class LanguageService {
     );
 
     return {
-      ...this.privileges.for(session, Language).secure(dto),
+      ...this.privileges.for(Language).secure(dto),
       ethnologue,
     };
   }
@@ -106,7 +106,7 @@ export class LanguageService {
       registryOfLanguageVarietiesCode:
         props.registryOfLanguageVarietiesCode ?? registryOfDialectsCode,
     });
-    this.privileges.for(session, Language, language).verifyChanges(changes);
+    this.privileges.for(Language, language).verifyChanges(changes);
 
     const { ethnologue, ...simpleChanges } = changes;
 
@@ -131,7 +131,7 @@ export class LanguageService {
   async delete(id: ID, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
 
-    this.privileges.for(session, Language, object).verifyCan('delete');
+    this.privileges.for(Language, object).verifyCan('delete');
 
     try {
       await this.repo.deleteNode(object);
@@ -159,7 +159,7 @@ export class LanguageService {
     session: Session,
   ): Promise<SecuredLocationList> {
     return await this.locationService.listLocationForResource(
-      this.privileges.for(session, Language, dto).forEdge('locations'),
+      this.privileges.for(Language, dto).forEdge('locations'),
       dto,
       input,
     );
@@ -178,7 +178,7 @@ export class LanguageService {
     return {
       ...projectListOutput,
       canRead: true,
-      canCreate: this.privileges.for(session, IProject).can('create'),
+      canCreate: this.privileges.for(IProject).can('create'),
     };
   }
 

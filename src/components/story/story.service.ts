@@ -28,7 +28,7 @@ export class StoryService {
 
   async create(input: CreateStory, session: Session): Promise<Story> {
     const dto = await this.repo.create(input, session);
-    this.privileges.for(session, Story, dto).verifyCan('create');
+    this.privileges.for(Story, dto).verifyCan('create');
     return this.secure(dto, session);
   }
 
@@ -44,7 +44,7 @@ export class StoryService {
   }
 
   private secure(dto: UnsecuredDto<Story>, session: Session): Story {
-    return this.privileges.for(session, Story).secure(dto);
+    return this.privileges.for(Story).secure(dto);
   }
 
   async update(input: UpdateStory, session: Session): Promise<Story> {
@@ -56,7 +56,7 @@ export class StoryService {
         story.scriptureReferences,
       ),
     };
-    this.privileges.for(session, Story, story).verifyChanges(changes);
+    this.privileges.for(Story, story).verifyChanges(changes);
 
     const updated = await this.repo.update({ id: input.id, ...changes });
     return this.secure(updated, session);
@@ -65,7 +65,7 @@ export class StoryService {
   async delete(id: ID, session: Session): Promise<void> {
     const story = await this.repo.readOne(id);
 
-    this.privileges.for(session, Story, story).verifyCan('delete');
+    this.privileges.for(Story, story).verifyCan('delete');
 
     try {
       await this.repo.deleteNode(story);

@@ -43,7 +43,7 @@ export class ProjectChangeRequestService {
     input: CreateProjectChangeRequest,
     session: Session,
   ): Promise<ProjectChangeRequest> {
-    this.privileges.for(session, ProjectChangeRequest).verifyCan('create');
+    this.privileges.for(ProjectChangeRequest).verifyCan('create');
 
     const project = await this.projects.readOne(input.projectId, session);
     if (project.status !== ProjectStatus.Active) {
@@ -90,7 +90,7 @@ export class ProjectChangeRequestService {
     session: Session,
   ): Promise<ProjectChangeRequest> {
     return {
-      ...this.privileges.for(session, ProjectChangeRequest).secure(dto),
+      ...this.privileges.for(ProjectChangeRequest).secure(dto),
       __typename: 'ProjectChangeRequest',
     };
   }
@@ -135,9 +135,7 @@ export class ProjectChangeRequestService {
   async delete(id: ID, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
 
-    this.privileges
-      .for(session, ProjectChangeRequest, object)
-      .verifyCan('delete');
+    this.privileges.for(ProjectChangeRequest, object).verifyCan('delete');
 
     try {
       await this.db.deleteNode(object);

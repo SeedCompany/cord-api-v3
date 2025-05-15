@@ -21,7 +21,7 @@ export class EthnologueLanguageService {
   ) {}
 
   async create(input: CreateEthnologueLanguage, session: Session): Promise<ID> {
-    this.privileges.for(session, EthnologueLanguage).verifyCan('create');
+    this.privileges.for(EthnologueLanguage).verifyCan('create');
 
     //TODO - remove the passed in languageId after migration
     return (await this.repo.create({ languageId: 'temp' as ID, ...input })).id;
@@ -43,7 +43,7 @@ export class EthnologueLanguageService {
   ) {
     return {
       ...this.privileges
-        .for(session, EthnologueLanguage)
+        .for(EthnologueLanguage)
         .secure(withEffectiveSensitivity(dto, sensitivity)),
       sensitivity,
     };
@@ -60,7 +60,7 @@ export class EthnologueLanguageService {
 
     const changes = this.repo.getActualChanges(ethnologueLanguage, input);
     this.privileges
-      .for(session, EthnologueLanguage, ethnologueLanguage)
+      .for(EthnologueLanguage, ethnologueLanguage)
       .verifyChanges(withEffectiveSensitivity(changes, sensitivity));
 
     await this.repo.update({ id: ethnologueLanguage.id, ...changes });

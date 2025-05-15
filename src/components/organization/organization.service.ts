@@ -36,7 +36,7 @@ export class OrganizationService {
   ): Promise<Organization> {
     const created = await this.repo.create(input, session);
 
-    this.privileges.for(session, Organization, created).verifyCan('create');
+    this.privileges.for(Organization, created).verifyCan('create');
 
     return this.secure(created, session);
   }
@@ -60,7 +60,7 @@ export class OrganizationService {
     dto: UnsecuredDto<Organization>,
     session: Session,
   ): Organization {
-    return this.privileges.for(session, Organization).secure(dto);
+    return this.privileges.for(Organization).secure(dto);
   }
 
   async update(
@@ -71,9 +71,7 @@ export class OrganizationService {
 
     const changes = this.repo.getActualChanges(organization, input);
 
-    this.privileges
-      .for(session, Organization, organization)
-      .verifyChanges(changes);
+    this.privileges.for(Organization, organization).verifyChanges(changes);
 
     const updated = await this.repo.update(
       { id: input.id, ...changes },
@@ -86,7 +84,7 @@ export class OrganizationService {
   async delete(id: ID, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
 
-    this.privileges.for(session, Organization, object).verifyCan('delete');
+    this.privileges.for(Organization, object).verifyCan('delete');
 
     try {
       await this.repo.deleteNode(object);
@@ -141,9 +139,7 @@ export class OrganizationService {
     session: Session,
   ): Promise<SecuredLocationList> {
     return await this.locationService.listLocationForResource(
-      this.privileges
-        .for(session, Organization, organization)
-        .forEdge('locations'),
+      this.privileges.for(Organization, organization).forEdge('locations'),
       organization,
       input,
     );

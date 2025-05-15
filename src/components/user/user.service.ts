@@ -113,7 +113,7 @@ export class UserService {
   }
 
   secure(user: UnsecuredDto<User>, session: Session): User {
-    return this.privileges.for(session, User).secure(user);
+    return this.privileges.for(User).secure(user);
   }
 
   @Transactional()
@@ -123,7 +123,7 @@ export class UserService {
 
     const changes = this.userRepo.getActualChanges(user, input);
 
-    this.privileges.for(session, User, user).verifyChanges(changes);
+    this.privileges.for(User, user).verifyChanges(changes);
 
     if (changes.roles) {
       this.verifyRolesAreAssignable(session, changes.roles);
@@ -151,7 +151,7 @@ export class UserService {
 
   @CachedByArg({ weak: true })
   getAssignableRoles(session: Session) {
-    const privileges = this.privileges.for(session, AssignableRoles);
+    const privileges = this.privileges.for(AssignableRoles);
     const assignableRoles = new Set(
       [...Role].filter((role) => privileges.can('edit', role)),
     );
@@ -176,7 +176,7 @@ export class UserService {
     session: Session,
   ): Promise<SecuredEducationList> {
     const user = await this.userRepo.readOne(userId, session);
-    const perms = this.privileges.for(session, User, user).all.education;
+    const perms = this.privileges.for(User, user).all.education;
 
     if (!perms.read) {
       return SecuredList.Redacted;
@@ -204,7 +204,7 @@ export class UserService {
     session: Session,
   ): Promise<SecuredOrganizationList> {
     const user = await this.userRepo.readOne(userId, session);
-    const perms = this.privileges.for(session, User, user).all.organization;
+    const perms = this.privileges.for(User, user).all.organization;
 
     if (!perms.read) {
       return SecuredList.Redacted;
@@ -232,7 +232,7 @@ export class UserService {
     session: Session,
   ): Promise<SecuredPartnerList> {
     const user = await this.userRepo.readOne(userId, session);
-    const perms = this.privileges.for(session, User, user).all.partner;
+    const perms = this.privileges.for(User, user).all.partner;
     const result = await this.partners.list(
       {
         ...input,
@@ -256,7 +256,7 @@ export class UserService {
     session: Session,
   ): Promise<SecuredUnavailabilityList> {
     const user = await this.userRepo.readOne(userId, session);
-    const perms = this.privileges.for(session, User, user).all.unavailability;
+    const perms = this.privileges.for(User, user).all.unavailability;
 
     if (!perms.read) {
       return SecuredList.Redacted;
@@ -311,7 +311,7 @@ export class UserService {
     session: Session,
   ): Promise<SecuredLocationList> {
     return await this.locationService.listLocationForResource(
-      this.privileges.for(session, User, user).forEdge('locations'),
+      this.privileges.for(User, user).forEdge('locations'),
       user,
       input,
     );
@@ -327,7 +327,7 @@ export class UserService {
 
   async listKnownLanguages(userId: ID, session: Session) {
     const user = await this.userRepo.readOne(userId, session);
-    const perms = this.privileges.for(session, User, user).all.knownLanguage;
+    const perms = this.privileges.for(User, user).all.knownLanguage;
     if (!perms.read) {
       return [];
     }

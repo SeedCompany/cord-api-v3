@@ -41,7 +41,7 @@ export class ProgressReportWorkflowService {
   }
 
   secure(dto: UnsecuredDto<WorkflowEvent>, session: Session): WorkflowEvent {
-    const secured = this.privileges.for(session, WorkflowEvent).secure(dto);
+    const secured = this.privileges.for(WorkflowEvent).secure(dto);
     return {
       ...secured,
       transition: dto.transition
@@ -51,7 +51,7 @@ export class ProgressReportWorkflowService {
   }
 
   getAvailableTransitions(session: Session, current: Status) {
-    const p = this.privileges.for(session, WorkflowEvent);
+    const p = this.privileges.for(WorkflowEvent);
     const available = Object.values(Transitions).filter(
       (t) =>
         (t.from ? many(t.from).includes(current) : true) &&
@@ -63,7 +63,7 @@ export class ProgressReportWorkflowService {
   }
 
   canBypass(session: Session) {
-    return this.privileges.for(session, WorkflowEvent).can('create');
+    return this.privileges.for(WorkflowEvent).can('create');
   }
 
   async executeTransition(

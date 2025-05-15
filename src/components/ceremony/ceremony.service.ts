@@ -47,13 +47,13 @@ export class CeremonyService {
   }
 
   secure(dto: UnsecuredDto<Ceremony>, session: Session) {
-    return this.privileges.for(session, Ceremony).secure(dto);
+    return this.privileges.for(Ceremony).secure(dto);
   }
 
   async update(input: UpdateCeremony, session: Session): Promise<Ceremony> {
     const object = await this.repo.readOne(input.id, session);
     const changes = this.repo.getActualChanges(object, input);
-    this.privileges.for(session, Ceremony, object).verifyChanges(changes);
+    this.privileges.for(Ceremony, object).verifyChanges(changes);
     const updated = await this.repo.update(
       {
         id: input.id,
@@ -68,7 +68,7 @@ export class CeremonyService {
     const object = await this.repo.readOne(id, session);
 
     // Only called internally, not exposed directly to users
-    // this.privileges.for(session, Ceremony, object).verifyCan('delete');
+    // this.privileges.for( Ceremony, object).verifyCan('delete');
 
     try {
       await this.repo.deleteNode(object);

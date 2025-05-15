@@ -47,7 +47,7 @@ export class FinancialApproverResolver {
     @Args('input') input: FinancialApproverInput,
     @LoggedInSession() session: Session,
   ): Promise<FinancialApprover | null> {
-    this.privileges.for(session, FinancialApprover).verifyCan('edit');
+    this.privileges.for(FinancialApprover).verifyCan('edit');
     return await this.repo.write(input);
   }
 

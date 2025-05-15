@@ -143,7 +143,7 @@ export class BudgetService {
 
     const result = await this.budgetRepo.readOne(id, session, view);
 
-    const privs = this.privileges.for(session, Budget, result);
+    const privs = this.privileges.for(Budget, result);
 
     let records = null;
     if (privs.can('read', 'records')) {
@@ -197,14 +197,14 @@ export class BudgetService {
 
     const result = await this.budgetRecordsRepo.readOne(id, { session, view });
 
-    return this.privileges.for(session, BudgetRecord).secure(result);
+    return this.privileges.for(BudgetRecord).secure(result);
   }
 
   async update(input: UpdateBudget, session: Session): Promise<Budget> {
     const budget = await this.readOne(input.id, session);
 
     const changes = this.budgetRepo.getActualChanges(budget, input);
-    this.privileges.for(session, Budget, budget).verifyChanges(changes);
+    this.privileges.for(Budget, budget).verifyChanges(changes);
     const { universalTemplateFile, ...simpleChanges } = changes;
     await this.files.updateDefinedFile(
       budget.universalTemplateFile,
@@ -228,7 +228,7 @@ export class BudgetService {
       viewOfChangeset(changeset),
     );
     const changes = this.budgetRecordsRepo.getActualChanges(br, input);
-    this.privileges.for(session, BudgetRecord, br).verifyChanges(changes);
+    this.privileges.for(BudgetRecord, br).verifyChanges(changes);
 
     try {
       const result = await this.budgetRecordsRepo.update(

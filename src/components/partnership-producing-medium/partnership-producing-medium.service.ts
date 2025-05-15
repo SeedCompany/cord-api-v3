@@ -30,7 +30,7 @@ export class PartnershipProducingMediumService {
     engagement: LanguageEngagement,
     session: Session,
   ): Promise<SecuredPartnershipsProducingMediums> {
-    const perms = this.privileges.for(session, IProject, engagement as any);
+    const perms = this.privileges.for(IProject, engagement as any);
 
     if (!perms.can('read', 'partnership')) {
       return SecuredList.Redacted;
@@ -66,7 +66,7 @@ export class PartnershipProducingMediumService {
       session,
     );
 
-    const perms = this.privileges.for(session, IProject, engagement as any);
+    const perms = this.privileges.for(IProject, engagement as any);
 
     if (!perms.can('create', 'partnership')) {
       throw new UnauthorizedException(

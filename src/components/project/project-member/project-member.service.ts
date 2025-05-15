@@ -48,7 +48,7 @@ export class ProjectMemberService {
     const created = await this.repo.create(input, session);
 
     enforcePerms &&
-      this.privileges.for(session, ProjectMember, created).verifyCan('create');
+      this.privileges.for(ProjectMember, created).verifyCan('create');
 
     return this.secure(created, session);
   }
@@ -79,9 +79,7 @@ export class ProjectMemberService {
     dto: UnsecuredDto<ProjectMember>,
     session: Session,
   ): ProjectMember {
-    const { user, ...secured } = this.privileges
-      .for(session, ProjectMember)
-      .secure(dto);
+    const { user, ...secured } = this.privileges.for(ProjectMember).secure(dto);
     return {
       ...secured,
       user: {
@@ -114,7 +112,7 @@ export class ProjectMemberService {
     });
 
     const changes = this.repo.getActualChanges(object, input);
-    this.privileges.for(session, ProjectMember, object).verifyChanges(changes);
+    this.privileges.for(ProjectMember, object).verifyChanges(changes);
 
     const updated = await this.repo.update(
       { id: object.id, ...changes },
@@ -145,7 +143,7 @@ export class ProjectMemberService {
   async delete(id: ID, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
 
-    this.privileges.for(session, ProjectMember, object).verifyCan('delete');
+    this.privileges.for(ProjectMember, object).verifyCan('delete');
 
     try {
       await this.repo.deleteNode(object);

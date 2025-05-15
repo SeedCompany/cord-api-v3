@@ -336,7 +336,7 @@ export class ProjectRepository extends CommonRepository {
       .matchNode('node', 'Project')
       .with('distinct(node) as node, node as project')
       .apply(projectFilters(input.filter))
-      .apply(this.privileges.for(session, IProject).filterToReadable())
+      .apply(this.privileges.for(IProject).filterToReadable())
       .apply(sortWith(projectSorters, input))
       .apply(paginate(input, this.hydrate(session.userId)))
       .first();

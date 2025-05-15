@@ -25,7 +25,7 @@ export class EducationService {
   ) {}
 
   async create(input: CreateEducation, session: Session): Promise<Education> {
-    this.privileges.for(session, Education).verifyCan('create');
+    this.privileges.for(Education).verifyCan('create');
     // create education
     const result = await this.repo.create(input);
     return this.secure(result, session);
@@ -54,7 +54,7 @@ export class EducationService {
   }
 
   private secure(dto: UnsecuredDto<Education>, session: Session) {
-    return this.privileges.for(session, Education).secure(dto);
+    return this.privileges.for(Education).secure(dto);
   }
 
   async update(input: UpdateEducation, session: Session): Promise<Education> {
@@ -63,7 +63,7 @@ export class EducationService {
     const changes = this.repo.getActualChanges(ed, input);
     // TODO move this condition into policies
     if (result.id !== session.userId) {
-      this.privileges.for(session, Education, ed).verifyChanges(changes);
+      this.privileges.for(Education, ed).verifyChanges(changes);
     }
 
     const updated = await this.repo.update({ id: input.id, ...changes });

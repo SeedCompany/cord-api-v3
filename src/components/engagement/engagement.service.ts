@@ -118,7 +118,7 @@ export class EngagementService {
     const project = await projects.load(projectKey);
     projects.clear(projectKey);
 
-    const projectPrivileges = this.privileges.for(session, IProject, {
+    const projectPrivileges = this.privileges.for(IProject, {
       ...project,
       project,
     } as any);
@@ -155,7 +155,7 @@ export class EngagementService {
     session: Session,
   ): E {
     const res = resolveEngagementType(dto) as unknown as ResourceShape<E>;
-    return this.privileges.for(session, res).secure(dto);
+    return this.privileges.for(res).secure(dto);
   }
 
   async updateLanguageEngagement(
@@ -182,9 +182,7 @@ export class EngagementService {
         changeset,
       );
     }
-    this.privileges
-      .for(session, LanguageEngagement, object)
-      .verifyChanges(changes);
+    this.privileges.for(LanguageEngagement, object).verifyChanges(changes);
     EngagementDateRangeException.throwIfInvalid(previous, changes);
 
     const updated = await this.repo.updateLanguage(
@@ -242,7 +240,7 @@ export class EngagementService {
       );
     }
     this.privileges
-      .for(session, InternshipEngagement, object)
+      .for(InternshipEngagement, object)
       .verifyChanges(changes, { pathPrefix: 'engagement' });
     EngagementDateRangeException.throwIfInvalid(previous, changes);
 
@@ -284,7 +282,7 @@ export class EngagementService {
     const object = await this.readOne(id, session);
 
     this.privileges
-      .for(session, resolveEngagementType(object), object)
+      .for(resolveEngagementType(object), object)
       .verifyCan('delete');
 
     await this.eventBus.publish(new EngagementWillDeleteEvent(object, session));
@@ -316,7 +314,7 @@ export class EngagementService {
     session: Session,
   ): Promise<SecuredProductList> {
     const privs = this.privileges
-      .for(session, LanguageEngagement, engagement)
+      .for(LanguageEngagement, engagement)
       .forEdge('product');
 
     if (!privs.can('read')) {

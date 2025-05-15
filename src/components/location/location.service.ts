@@ -30,7 +30,7 @@ export class LocationService {
   ) {}
 
   async create(input: CreateLocation, session: Session): Promise<Location> {
-    this.privileges.for(session, Location).verifyCan('create');
+    this.privileges.for(Location).verifyCan('create');
 
     const dto = await this.repo.create(input, session);
 
@@ -59,14 +59,14 @@ export class LocationService {
   }
 
   private secure(dto: UnsecuredDto<Location>, session: Session) {
-    return this.privileges.for(session, Location).secure(dto);
+    return this.privileges.for(Location).secure(dto);
   }
 
   async update(input: UpdateLocation, session: Session): Promise<Location> {
     const location = await this.repo.readOne(input.id);
 
     const changes = this.repo.getActualChanges(location, input);
-    this.privileges.for(session, Location, location).verifyChanges(changes);
+    this.privileges.for(Location, location).verifyChanges(changes);
 
     const updated = await this.repo.update(
       { id: input.id, ...changes },
@@ -78,7 +78,7 @@ export class LocationService {
   async delete(id: ID, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
 
-    this.privileges.for(session, Location, object).verifyCan('delete');
+    this.privileges.for(Location, object).verifyCan('delete');
 
     try {
       await this.repo.deleteNode(object);

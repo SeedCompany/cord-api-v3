@@ -41,7 +41,7 @@ function makeResolver(
     ): Promise<IEngagement> {
       // Copied from ProjectService.listEngagements
       this.privileges
-        .for(session, IProject, {
+        .for(IProject, {
           ...project,
           project,
         } as any)

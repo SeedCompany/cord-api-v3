@@ -82,9 +82,7 @@ export class CommentService {
       // I'd like to type this prop as this but somehow blows everything up.
       parent.__typename as 'Commentable',
     );
-    return this.privileges
-      .for(session, parentType, parent)
-      .forEdge('commentThreads');
+    return this.privileges.for(parentType, parent).forEdge('commentThreads');
   }
 
   async verifyCanView(resource: CommentableRef, session: Session) {
@@ -134,14 +132,14 @@ export class CommentService {
   }
 
   secureComment(dto: UnsecuredDto<Comment>, session: Session): Comment {
-    return this.privileges.for(session, Comment).secure(dto);
+    return this.privileges.for(Comment).secure(dto);
   }
 
   async update(input: UpdateCommentInput, session: Session): Promise<Comment> {
     const object = await this.repo.readOne(input.id);
 
     const changes = this.repo.getActualChanges(object, input);
-    this.privileges.for(session, Comment, object).verifyChanges(changes);
+    this.privileges.for(Comment, object).verifyChanges(changes);
     await this.repo.update(object, changes);
 
     const updated = await this.repo.readOne(object.id);
@@ -156,7 +154,7 @@ export class CommentService {
 
   async delete(id: ID, session: Session): Promise<void> {
     const object = await this.repo.readOne(id);
-    this.privileges.for(session, Comment, object).verifyCan('delete');
+    this.privileges.for(Comment, object).verifyCan('delete');
 
     const thread = await this.repo.threads.readOne(object.thread);
     if (object.id === thread.firstComment.id) {

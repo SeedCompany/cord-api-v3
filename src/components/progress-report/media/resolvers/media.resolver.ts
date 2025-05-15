@@ -55,7 +55,7 @@ export class ProgressReportMediaResolver {
     @Parent() media: ReportMedia,
     @AnonSession() session: Session,
   ): boolean {
-    return this.privileges.for(session, ReportMedia, media).can('edit');
+    return this.privileges.for(ReportMedia, media).can('edit');
   }
 
   @Mutation(() => ProgressReport)

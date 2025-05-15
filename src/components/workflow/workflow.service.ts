@@ -52,7 +52,7 @@ export const WorkflowService = <W extends Workflow>(workflow: () => W) => {
       );
 
       // Filter out transitions without authorization to execute
-      const p = this.privileges.for(session, this.workflow.eventResource);
+      const p = this.privileges.for(this.workflow.eventResource);
       available = available.filter((t) =>
         // I don't have a good way to type this right now.
         // Context usage is still fuzzy when conditions need different shapes.
@@ -108,9 +108,7 @@ export const WorkflowService = <W extends Workflow>(workflow: () => W) => {
 
     canBypass(session: Session) {
       try {
-        return this.privileges
-          .for(session, this.workflow.eventResource)
-          .can('create');
+        return this.privileges.for(this.workflow.eventResource).can('create');
       } catch (e) {
         if (e instanceof MissingContextException) {
           // Missing context, means a condition was required.

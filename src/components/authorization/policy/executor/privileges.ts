@@ -5,7 +5,6 @@ import {
   EnhancedResource,
   type ResourceShape,
   type SecuredPropsPlusExtraKey,
-  type Session,
 } from '~/common';
 import { SessionHost } from '../../../authentication/session.host';
 import type { Power } from '../../dto';
@@ -79,22 +78,10 @@ export class Privileges {
   for<TResourceStatic extends ResourceShape<any>>(
     resource: TResourceStatic | EnhancedResource<TResourceStatic>,
     object?: NoInfer<ResourceObjectContext<TResourceStatic>>,
-  ): ResourcePrivileges<TResourceStatic>;
-  /** @deprecated */
-  for<TResourceStatic extends ResourceShape<any>>(
-    _: Session,
-    resource: TResourceStatic | EnhancedResource<TResourceStatic>,
-    object?: NoInfer<ResourceObjectContext<TResourceStatic>>,
-  ): ResourcePrivileges<TResourceStatic>;
-  for<TResourceStatic extends ResourceShape<any>>(
-    sessionOrRes: any,
-    resOrCtx: any,
-    ctx?: any,
   ) {
-    const hasSession = sessionOrRes.token && sessionOrRes.anonymous != null;
     return new ResourcePrivileges<TResourceStatic>(
-      hasSession ? resOrCtx : sessionOrRes,
-      hasSession ? ctx : resOrCtx,
+      resource,
+      object,
       this.policyExecutor,
     );
   }

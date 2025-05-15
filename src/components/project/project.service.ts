@@ -107,7 +107,7 @@ export class ProjectService {
         'project.sensitivity',
       );
     }
-    this.privileges.for(session, IProject).verifyCan('create');
+    this.privileges.for(IProject).verifyCan('create');
 
     await this.validateOtherResourceId(
       input.fieldRegionId,
@@ -243,7 +243,7 @@ export class ProjectService {
   }
 
   secure(project: UnsecuredDto<Project>, session: Session) {
-    return this.privileges.for(session, IProject, project).secure(project);
+    return this.privileges.for(IProject, project).secure(project);
   }
 
   async readOne(id: ID, session: Session, changeset?: ID): Promise<Project> {
@@ -283,7 +283,7 @@ export class ProjectService {
 
     const changes = this.repo.getActualChanges(currentProject, input);
     this.privileges
-      .for(session, resolveProjectType(currentProject), currentProject)
+      .for(resolveProjectType(currentProject), currentProject)
       .verifyChanges(changes, { pathPrefix: 'project' });
     if (Object.keys(changes).length === 0) {
       return await this.readOneUnsecured(input.id, session, changeset);
@@ -346,7 +346,7 @@ export class ProjectService {
   async delete(id: ID, session: Session): Promise<void> {
     const object = await this.readOneUnsecured(id, session);
 
-    this.privileges.for(session, IProject, object).verifyCan('delete');
+    this.privileges.for(IProject, object).verifyCan('delete');
 
     try {
       await this.repo.deleteNode(object);
@@ -391,7 +391,7 @@ export class ProjectService {
       session,
       view,
     );
-    const perms = this.privileges.for(session, IProject, {
+    const perms = this.privileges.for(IProject, {
       ...project,
       project,
     } as any);
@@ -419,7 +419,7 @@ export class ProjectService {
       session,
     );
 
-    const perms = this.privileges.for(session, IProject, project).all.member;
+    const perms = this.privileges.for(IProject, project).all.member;
 
     return {
       ...result,
@@ -445,7 +445,7 @@ export class ProjectService {
       session,
       changeset,
     );
-    const perms = this.privileges.for(session, IProject, project);
+    const perms = this.privileges.for(IProject, project);
     return {
       ...result,
       canRead: perms.can('read', 'partnership'),
@@ -486,7 +486,7 @@ export class ProjectService {
     // we'll use this course all/nothing check. This, assuming role permissions
     // are set correctly, allows the users which can view all projects & their members
     // to use this feature.
-    const perms = this.privileges.for(session, User).all.projects;
+    const perms = this.privileges.for(User).all.projects;
 
     if (!perms.read) {
       return SecuredList.Redacted;
@@ -545,7 +545,7 @@ export class ProjectService {
     session: Session,
   ): Promise<SecuredLocationList> {
     return await this.locationService.listLocationForResource(
-      this.privileges.for(session, IProject, project).forEdge('otherLocations'),
+      this.privileges.for(IProject, project).forEdge('otherLocations'),
       project,
       input,
     );
@@ -557,9 +557,7 @@ export class ProjectService {
     changeset?: ID,
   ): Promise<SecuredBudget> {
     let budgetToReturn;
-    const perms = this.privileges
-      .for(session, IProject, project)
-      .forEdge('budget');
+    const perms = this.privileges.for(IProject, project).forEdge('budget');
 
     if (perms.can('read')) {
       const budgets = await this.budgetService.listUnsecure(

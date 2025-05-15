@@ -29,7 +29,7 @@ export class FieldRegionService {
     input: CreateFieldRegion,
     session: Session,
   ): Promise<FieldRegion> {
-    this.privileges.for(session, FieldRegion).verifyCan('create');
+    this.privileges.for(FieldRegion).verifyCan('create');
     const dto = await this.repo.create(input);
     return this.secure(dto, session);
   }
@@ -55,7 +55,7 @@ export class FieldRegionService {
   }
 
   private secure(dto: UnsecuredDto<FieldRegion>, session: Session) {
-    return this.privileges.for(session, FieldRegion).secure(dto);
+    return this.privileges.for(FieldRegion).secure(dto);
   }
 
   async update(
@@ -65,9 +65,7 @@ export class FieldRegionService {
     const fieldRegion = await this.repo.readOne(input.id);
 
     const changes = this.repo.getActualChanges(fieldRegion, input);
-    this.privileges
-      .for(session, FieldRegion, fieldRegion)
-      .verifyChanges(changes);
+    this.privileges.for(FieldRegion, fieldRegion).verifyChanges(changes);
 
     const updated = await this.repo.update({ id: input.id, ...changes });
     return this.secure(updated, session);
@@ -76,7 +74,7 @@ export class FieldRegionService {
   async delete(id: ID, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
 
-    this.privileges.for(session, FieldRegion, object).verifyCan('delete');
+    this.privileges.for(FieldRegion, object).verifyCan('delete');
 
     try {
       await this.repo.deleteNode(object);

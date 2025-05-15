@@ -20,7 +20,7 @@ export class ProgressReportMediaListResolver {
     @AnonSession() session: Session,
   ): ReadonlyArray<ReportMedia['variant']> {
     const context = report as any; // the report is fine for condition context
-    const privileges = this.privileges.for(session, ReportMedia);
+    const privileges = this.privileges.for(ReportMedia);
     return ReportMedia.Variants.filter((variant) =>
       privileges.forContext(withVariant(context, variant)).can('create'),
     );
@@ -34,7 +34,7 @@ export class ProgressReportMediaListResolver {
     @AnonSession() session: Session,
   ): readonly AvailableVariant[] {
     const context = report as any; // the report is fine for condition context
-    const privileges = this.privileges.for(session, ReportMedia);
+    const privileges = this.privileges.for(ReportMedia);
     return ReportMedia.Variants.filter((variant) =>
       privileges.forContext(withVariant(context, variant)).can('read'),
     ).map(

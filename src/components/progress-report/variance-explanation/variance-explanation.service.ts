@@ -73,6 +73,6 @@ export class ProgressReportVarianceExplanationService {
 
   private privilegesFor(session: Session, report: ProgressReport) {
     const context = report as any; // the report is fine to give context
-    return this.privileges.for(session, VarianceExplanation, context);
+    return this.privileges.for(VarianceExplanation, context);
   }
 }

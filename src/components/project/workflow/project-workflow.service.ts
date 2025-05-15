@@ -52,7 +52,7 @@ export class ProjectWorkflowService extends WorkflowService(
     session: Session,
   ): WorkflowEvent {
     return {
-      ...this.privileges.for(session, WorkflowEvent).secure(dto),
+      ...this.privileges.for(WorkflowEvent).secure(dto),
       transition: this.transitionByKey(dto.transition, dto.to),
     };
   }

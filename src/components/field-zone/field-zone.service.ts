@@ -26,7 +26,7 @@ export class FieldZoneService {
   ) {}
 
   async create(input: CreateFieldZone, session: Session): Promise<FieldZone> {
-    this.privileges.for(session, FieldZone).verifyCan('create');
+    this.privileges.for(FieldZone).verifyCan('create');
     const dto = await this.repo.create(input);
     return this.secure(dto, session);
   }
@@ -52,14 +52,14 @@ export class FieldZoneService {
   }
 
   private secure(dto: UnsecuredDto<FieldZone>, session: Session) {
-    return this.privileges.for(session, FieldZone).secure(dto);
+    return this.privileges.for(FieldZone).secure(dto);
   }
 
   async update(input: UpdateFieldZone, session: Session): Promise<FieldZone> {
     const fieldZone = await this.repo.readOne(input.id);
 
     const changes = this.repo.getActualChanges(fieldZone, input);
-    this.privileges.for(session, FieldZone, fieldZone).verifyChanges(changes);
+    this.privileges.for(FieldZone, fieldZone).verifyChanges(changes);
 
     const updated = await this.repo.update({ id: input.id, ...changes });
     return this.secure(updated, session);
@@ -68,7 +68,7 @@ export class FieldZoneService {
   async delete(id: ID, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
 
-    this.privileges.for(session, FieldZone, object).verifyCan('delete');
+    this.privileges.for(FieldZone, object).verifyCan('delete');
 
     try {
       await this.repo.deleteNode(object);

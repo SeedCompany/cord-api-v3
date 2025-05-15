@@ -155,7 +155,7 @@ export class SearchService {
             }
 
             const resource = this.resources.getByName(hydrated.__typename);
-            const perms = this.privileges.for(session, resource, hydrated).all;
+            const perms = this.privileges.for(resource, hydrated).all;
             return matchedProps.some((key) =>
               // @ts-expect-error strict typing is hard for this dynamic use case.
               key in perms ? perms[key].read : true,

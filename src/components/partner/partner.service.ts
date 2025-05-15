@@ -63,7 +63,7 @@ export class PartnerService {
 
     const created = await this.repo.create(input, session);
 
-    this.privileges.for(session, Partner, created).verifyCan('create');
+    this.privileges.for(Partner, created).verifyCan('create');
 
     return this.secure(created, session);
   }
@@ -92,7 +92,7 @@ export class PartnerService {
   }
 
   private secure(dto: UnsecuredDto<Partner>, session: Session) {
-    return this.privileges.for(session, Partner).secure(dto);
+    return this.privileges.for(Partner).secure(dto);
   }
 
   async update(input: UpdatePartner, session: Session): Promise<Partner> {
@@ -123,7 +123,7 @@ export class PartnerService {
       ...(departmentIdBlock !== undefined && { departmentIdBlock }),
     };
 
-    const privileges = this.privileges.for(session, Partner, partner);
+    const privileges = this.privileges.for(Partner, partner);
     privileges.verifyChanges(simpleChanges);
     if (changes.departmentIdBlock !== undefined) {
       privileges.verifyCan('edit', 'departmentIdBlock');
@@ -147,7 +147,7 @@ export class PartnerService {
   async delete(id: ID, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
 
-    this.privileges.for(session, Partner, object).verifyCan('delete');
+    this.privileges.for(Partner, object).verifyCan('delete');
 
     try {
       await this.repo.deleteNode(object);
@@ -180,7 +180,7 @@ export class PartnerService {
     return {
       ...projectListOutput,
       canRead: true,
-      canCreate: this.privileges.for(session, IProject).can('create'),
+      canCreate: this.privileges.for(IProject).can('create'),
     };
   }
 

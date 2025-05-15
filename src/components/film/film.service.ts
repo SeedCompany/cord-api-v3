@@ -28,7 +28,7 @@ export class FilmService {
 
   async create(input: CreateFilm, session: Session): Promise<Film> {
     const dto = await this.repo.create(input, session);
-    this.privileges.for(session, Film, dto).verifyCan('create');
+    this.privileges.for(Film, dto).verifyCan('create');
     return this.secure(dto, session);
   }
 
@@ -44,7 +44,7 @@ export class FilmService {
   }
 
   private secure(dto: UnsecuredDto<Film>, session: Session): Film {
-    return this.privileges.for(session, Film).secure(dto);
+    return this.privileges.for(Film).secure(dto);
   }
 
   async update(input: UpdateFilm, session: Session): Promise<Film> {
@@ -56,7 +56,7 @@ export class FilmService {
         film.scriptureReferences,
       ),
     };
-    this.privileges.for(session, Film, film).verifyChanges(changes);
+    this.privileges.for(Film, film).verifyChanges(changes);
 
     const updated = await this.repo.update({ id: input.id, ...changes });
     return this.secure(updated, session);
@@ -65,7 +65,7 @@ export class FilmService {
   async delete(id: ID, session: Session): Promise<void> {
     const film = await this.repo.readOne(id);
 
-    this.privileges.for(session, Film, film).verifyCan('delete');
+    this.privileges.for(Film, film).verifyCan('delete');
 
     try {
       await this.repo.deleteNode(film);

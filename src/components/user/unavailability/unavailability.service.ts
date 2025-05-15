@@ -27,7 +27,7 @@ export class UnavailabilityService {
     input: CreateUnavailability,
     session: Session,
   ): Promise<Unavailability> {
-    this.privileges.for(session, Unavailability).verifyCan('create');
+    this.privileges.for(Unavailability).verifyCan('create');
     const result = await this.repo.create(input);
     return this.secure(result, session);
   }
@@ -48,7 +48,7 @@ export class UnavailabilityService {
   }
 
   private secure(dto: UnsecuredDto<Unavailability>, session: Session) {
-    return this.privileges.for(session, Unavailability).secure(dto);
+    return this.privileges.for(Unavailability).secure(dto);
   }
 
   async update(
@@ -61,7 +61,7 @@ export class UnavailabilityService {
     // TODO move this condition into policies
     if (result.id !== session.userId) {
       this.privileges
-        .for(session, Unavailability, unavailability)
+        .for(Unavailability, unavailability)
         .verifyChanges(changes);
     }
     const updated = await this.repo.update({ id: input.id, ...changes });

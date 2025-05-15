@@ -28,7 +28,7 @@ export class EthnoArtService {
 
   async create(input: CreateEthnoArt, session: Session): Promise<EthnoArt> {
     const dto = await this.repo.create(input, session);
-    this.privileges.for(session, EthnoArt, dto).verifyCan('create');
+    this.privileges.for(EthnoArt, dto).verifyCan('create');
     return this.secure(dto, session);
   }
 
@@ -48,7 +48,7 @@ export class EthnoArtService {
   }
 
   private secure(dto: UnsecuredDto<EthnoArt>, session: Session): EthnoArt {
-    return this.privileges.for(session, EthnoArt).secure(dto);
+    return this.privileges.for(EthnoArt).secure(dto);
   }
 
   async update(input: UpdateEthnoArt, session: Session): Promise<EthnoArt> {
@@ -60,7 +60,7 @@ export class EthnoArtService {
         ethnoArt.scriptureReferences,
       ),
     };
-    this.privileges.for(session, EthnoArt, ethnoArt).verifyChanges(changes);
+    this.privileges.for(EthnoArt, ethnoArt).verifyChanges(changes);
 
     const updated = await this.repo.update({ id: input.id, ...changes });
     return this.secure(updated, session);
@@ -69,7 +69,7 @@ export class EthnoArtService {
   async delete(id: ID, session: Session): Promise<void> {
     const ethnoArt = await this.repo.readOne(id);
 
-    this.privileges.for(session, EthnoArt, ethnoArt).verifyCan('delete');
+    this.privileges.for(EthnoArt, ethnoArt).verifyCan('delete');
 
     try {
       await this.repo.deleteNode(ethnoArt);

@@ -68,7 +68,7 @@ export class PostService {
     const object = await this.repo.readOne(input.id, session);
 
     const changes = this.repo.getActualChanges(object, input);
-    this.privileges.for(session, Post, object).verifyChanges(changes);
+    this.privileges.for(Post, object).verifyChanges(changes);
     const updated = await this.repo.update(object, changes);
 
     return this.secure(updated, session);
@@ -77,7 +77,7 @@ export class PostService {
   async delete(id: ID, session: Session): Promise<void> {
     const object = await this.repo.readOne(id, session);
 
-    this.privileges.for(session, Post, object).verifyCan('delete');
+    this.privileges.for(Post, object).verifyCan('delete');
 
     try {
       await this.repo.deleteNode(object);
@@ -112,7 +112,7 @@ export class PostService {
   }
 
   secure(dto: UnsecuredDto<Post>, session: Session) {
-    return this.privileges.for(session, Post).secure(dto);
+    return this.privileges.for(Post).secure(dto);
   }
 
   async getPermissionsFromPostable(resource: PostableRef, session: Session) {
@@ -120,7 +120,7 @@ export class PostService {
     const parentType = this.resourcesHost.getByName(
       parent.__typename as 'Postable',
     );
-    return this.privileges.for(session, parentType, parent).forEdge('posts');
+    return this.privileges.for(parentType, parent).forEdge('posts');
   }
 
   private async loadPostable(resource: PostableRef): Promise<ConcretePostable> {

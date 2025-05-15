@@ -37,7 +37,7 @@ export class ProgressReportMediaService {
     args: ListArgs,
     session: Session,
   ): Promise<ReportMediaList> {
-    const privileges = this.privileges.for(session, ReportMedia);
+    const privileges = this.privileges.for(ReportMedia);
     const rows = await this.repo.listForReport(report, args, session);
     return {
       report,
@@ -57,7 +57,7 @@ export class ProgressReportMediaService {
   async readMany(ids: ReadonlyArray<IdOf<ReportMedia>>, session: Session) {
     const row = await this.repo.readMany(ids, session);
     return row.map((row) =>
-      this.privileges.for(session, ReportMedia).secure(this.dbRowToDto(row)),
+      this.privileges.for(ReportMedia).secure(this.dbRowToDto(row)),
     );
   }
 
@@ -67,7 +67,7 @@ export class ProgressReportMediaService {
   ) {
     const rows = await this.repo.readFeaturedOfReport(ids, session);
     return rows.map((row) =>
-      this.privileges.for(session, ReportMedia).secure(this.dbRowToDto(row)),
+      this.privileges.for(ReportMedia).secure(this.dbRowToDto(row)),
     );
   }
 
@@ -76,7 +76,7 @@ export class ProgressReportMediaService {
 
     const context = report as any; // the report is fine for condition context
     this.privileges
-      .for(session, ReportMedia, withVariant(context, input.variant))
+      .for(ReportMedia, withVariant(context, input.variant))
       .verifyCan('create');
 
     const initialDto = await this.repo.create(input, session);
@@ -100,7 +100,7 @@ export class ProgressReportMediaService {
     const loader = await this.resources.getLoader(ProgressReportMediaLoader);
     const existing = await loader.load(id);
 
-    this.privileges.for(session, ReportMedia, existing).verifyCan('edit');
+    this.privileges.for(ReportMedia, existing).verifyCan('edit');
 
     await Promise.all([
       this.repo.update(input),
@@ -122,7 +122,7 @@ export class ProgressReportMediaService {
   async delete(id: IdOf<ReportMedia>, session: Session) {
     const media = await this.repo.readOne(id, session);
     this.privileges
-      .for(session, ReportMedia, this.dbRowToDto(media))
+      .for(ReportMedia, this.dbRowToDto(media))
       .verifyCan('delete');
 
     await this.repo.deleteNode(id);

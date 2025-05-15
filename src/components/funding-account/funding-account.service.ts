@@ -35,7 +35,7 @@ export class FundingAccountService {
     input: CreateFundingAccount,
     session: Session,
   ): Promise<FundingAccount> {
-    this.privileges.for(session, FundingAccount).verifyCan('create');
+    this.privileges.for(FundingAccount).verifyCan('create');
     if (!(await this.repo.isUnique(input.name))) {
       throw new DuplicateException(
         'fundingAccount.name',
@@ -93,7 +93,7 @@ export class FundingAccountService {
     dto: UnsecuredDto<FundingAccount>,
     session: Session,
   ): Promise<FundingAccount> {
-    return this.privileges.for(session, FundingAccount).secure(dto);
+    return this.privileges.for(FundingAccount).secure(dto);
   }
 
   async update(
@@ -103,9 +103,7 @@ export class FundingAccountService {
     const fundingAccount = await this.repo.readOne(input.id);
 
     const changes = this.repo.getActualChanges(fundingAccount, input);
-    this.privileges
-      .for(session, FundingAccount, fundingAccount)
-      .verifyChanges(changes);
+    this.privileges.for(FundingAccount, fundingAccount).verifyChanges(changes);
     const updated = await this.repo.update({ id: input.id, ...changes });
     return await this.secure(updated, session);
   }
@@ -113,7 +111,7 @@ export class FundingAccountService {
   async delete(id: ID, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
 
-    this.privileges.for(session, FundingAccount, object).verifyCan('delete');
+    this.privileges.for(FundingAccount, object).verifyCan('delete');
 
     try {
       await this.repo.deleteNode(object);
@@ -127,7 +125,7 @@ export class FundingAccountService {
     input: FundingAccountListInput,
     session: Session,
   ): Promise<FundingAccountListOutput> {
-    if (this.privileges.for(session, FundingAccount).can('read')) {
+    if (this.privileges.for(FundingAccount).can('read')) {
       const results = await this.repo.list(input, session);
       return await mapListResults(results, (dto) => this.secure(dto, session));
     } else {

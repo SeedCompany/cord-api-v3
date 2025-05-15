@@ -25,6 +25,6 @@ export class ProgressReportService {
     dto: UnsecuredDto<ProgressReport>,
     session: Session,
   ): ProgressReport {
-    return this.privileges.for(session, ProgressReport).secure(dto);
+    return this.privileges.for(ProgressReport).secure(dto);
   }
 }

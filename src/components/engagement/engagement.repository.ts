@@ -549,7 +549,7 @@ export class EngagementRepository extends CommonRepository {
       .with('*') // needed between call & where
       .apply(engagementFilters(input.filter))
       .apply(
-        this.privileges.for(session, IEngagement).filterToReadable({
+        this.privileges.for(IEngagement).filterToReadable({
           wrapContext: oncePerProject,
         }),
       )

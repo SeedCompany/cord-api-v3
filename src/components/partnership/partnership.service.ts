@@ -104,9 +104,7 @@ export class PartnershipService {
           : e;
       });
 
-      this.privileges
-        .for(session, Partnership, partnership)
-        .verifyCan('create');
+      this.privileges.for(Partnership, partnership).verifyCan('create');
 
       await this.eventBus.publish(
         new PartnershipCreatedEvent(partnership, session),
@@ -155,7 +153,7 @@ export class PartnershipService {
   }
 
   secure(dto: UnsecuredDto<Partnership>, session: Session) {
-    return this.privileges.for(session, Partnership).secure(dto);
+    return this.privileges.for(Partnership).secure(dto);
   }
 
   async update(input: UpdatePartnership, session: Session, view?: ObjectView) {
@@ -193,7 +191,7 @@ export class PartnershipService {
     }
 
     const changes = this.repo.getActualChanges(object, input);
-    this.privileges.for(session, Partnership, object).verifyChanges(changes);
+    this.privileges.for(Partnership, object).verifyChanges(changes);
     const { mou, agreement, ...simpleChanges } = changes;
 
     PartnershipDateRangeException.throwIfInvalid(existing, changes);
@@ -240,7 +238,7 @@ export class PartnershipService {
   async delete(id: ID, session: Session, changeset?: ID): Promise<void> {
     const object = await this.readOne(id, session);
 
-    this.privileges.for(session, Partnership, object).verifyCan('delete');
+    this.privileges.for(Partnership, object).verifyCan('delete');
 
     // only primary one partnership could be removed
     if (object.primary.value) {

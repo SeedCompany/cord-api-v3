@@ -65,7 +65,7 @@ export class PeriodicReportService {
     const current = this.secure(currentRaw, session);
     const changes = this.repo.getActualChanges(current, input);
     this.privileges
-      .for(session, resolveReportType(current), currentRaw)
+      .for(resolveReportType(current), currentRaw)
       .verifyChanges(changes);
 
     const { reportFile, ...simpleChanges } = changes;
@@ -121,7 +121,7 @@ export class PeriodicReportService {
     dto: UnsecuredDto<PeriodicReport>,
     session: Session,
   ): PeriodicReport {
-    return this.privileges.for(session, resolveReportType(dto)).secure(dto);
+    return this.privileges.for(resolveReportType(dto)).secure(dto);
   }
 
   async list(

@@ -193,6 +193,6 @@ export class ProductProgressService {
     session: Session,
     context: HasSensitivity & HasScope,
   ): UserResourcePrivileges<typeof StepProgress> {
-    return this.privileges.for(session, StepProgress, context as any);
+    return this.privileges.for(StepProgress, context as any);
   }
 }
