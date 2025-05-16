@@ -65,15 +65,21 @@ type ResourceNameFromStatic<
   IncludeSubclasses extends boolean = false,
 > = ResourceShape<any> extends TResourceStatic
   ? string // short-circuit non-specific types
-  : {
-      [Name in keyof ResourceMap]: ResourceMap[Name] extends TResourceStatic // Only self or subclasses
-        ? IncludeSubclasses extends true
-          ? Name
-          : TResourceStatic extends ResourceMap[Name] // Exclude subclasses
-          ? Name
+  : InstanceType<TResourceStatic> extends infer TResource
+  ? {
+      [Name in keyof ResourceMap]: InstanceType<
+        ResourceMap[Name]
+      > extends infer Other
+        ? Other extends TResource // Only self or subclasses
+          ? IncludeSubclasses extends true
+            ? Name
+            : TResource extends Other // Exclude subclasses
+            ? Name
+            : never
           : never
         : never;
-    }[keyof ResourceMap];
+    }[keyof ResourceMap]
+  : never;
 
 type ResourceNameFromDBName<Name extends AllResourceDBNames> =
   // eslint-disable-next-line @typescript-eslint/naming-convention
