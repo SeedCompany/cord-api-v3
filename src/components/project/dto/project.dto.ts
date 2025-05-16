@@ -220,7 +220,9 @@ export { Project as IProject, type AnyProject as Project };
   resolveType: resolveProjectType,
   implements: [Project],
 })
-export class TranslationProject extends Project {}
+export class TranslationProject extends Project {
+  declare readonly type: 'MultiplicationTranslation' | 'MomentumTranslation';
+}
 
 @RegisterResource({ db: e.MomentumTranslationProject })
 @ObjectType({
