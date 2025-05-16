@@ -13,7 +13,7 @@ import {
   ProjectStepChanged,
   type ProjectStepChangedProps,
 } from '~/core/email/templates/project-step-changed.template';
-import { AuthenticationService } from '../../../authentication';
+import { AuthenticationService, SessionHost } from '../../../authentication';
 import { ProjectService } from '../../../project';
 import { UserService } from '../../../user';
 import { type User } from '../../../user/dto';
@@ -31,14 +31,17 @@ export class ProjectWorkflowNotificationHandler
     private readonly users: UserService,
     private readonly projects: ProjectService,
     private readonly emailService: EmailService,
+    private readonly sessionHost: SessionHost,
     private readonly moduleRef: ModuleRef,
     @Logger('progress-report:status-change-notifier')
     private readonly logger: ILogger,
   ) {}
 
   async handle(event: ProjectTransitionedEvent) {
-    const { previousStep, next, workflowEvent, session } = event;
+    const { previousStep, next, workflowEvent } = event;
     const transition = typeof next !== 'string' ? next : undefined;
+
+    const session = this.sessionHost.current;
 
     // TODO on bypass: keep notifying members? add anyone else?
     const notifiers = transition?.notifiers ?? [];
@@ -73,10 +76,10 @@ export class ProjectWorkflowNotificationHandler
 
     const [changedBy, project, primaryPartnerName] = await this.auth.asUser(
       this.config.rootUser.id,
-      async (_) =>
+      async () =>
         await Promise.all([
-          this.users.readOneUnsecured(workflowEvent.who.id, _),
-          this.projects.readOneUnsecured(event.project.id, _),
+          this.users.readOneUnsecured(workflowEvent.who.id),
+          this.projects.readOneUnsecured(event.project.id),
           this.projects.getPrimaryOrganizationName(event.project.id),
         ]),
     );
@@ -105,9 +108,9 @@ export class ProjectWorkflowNotificationHandler
     primaryPartnerName: string | null,
   ): Promise<ProjectStepChangedProps> {
     const recipientId = notifier.id ?? this.config.rootUser.id;
-    return await this.auth.asUser(recipientId, async (recipientSession) => {
+    return await this.auth.asUser(recipientId, async () => {
       const recipient = notifier.id
-        ? await this.users.readOne(recipientId, recipientSession)
+        ? await this.users.readOne(recipientId)
         : ({
             email: { value: notifier.email, canRead: true, canEdit: false },
             displayFirstName: {
@@ -125,8 +128,8 @@ export class ProjectWorkflowNotificationHandler
 
       return {
         recipient,
-        changedBy: this.users.secure(changedBy, recipientSession),
-        project: this.projects.secure(project, recipientSession),
+        changedBy: this.users.secure(changedBy),
+        project: this.projects.secure(project),
         previousStep,
         primaryPartnerName,
       };

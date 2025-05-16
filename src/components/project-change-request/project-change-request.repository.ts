@@ -1,11 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { node, type Query, relation } from 'cypher-query-builder';
-import {
-  CreationFailed,
-  type ID,
-  type Session,
-  type UnsecuredDto,
-} from '~/common';
+import { CreationFailed, type ID, type UnsecuredDto } from '~/common';
 import { DtoRepository } from '~/core/database';
 import {
   ACTIVE,
@@ -24,10 +19,9 @@ import {
 } from './dto';
 
 @Injectable()
-export class ProjectChangeRequestRepository extends DtoRepository<
-  typeof ProjectChangeRequest,
-  [session?: Session]
->(ProjectChangeRequest) {
+export class ProjectChangeRequestRepository extends DtoRepository(
+  ProjectChangeRequest,
+) {
   async create(input: CreateProjectChangeRequest) {
     const result = await this.db
       .query()
@@ -55,7 +49,7 @@ export class ProjectChangeRequestRepository extends DtoRepository<
     return result.id;
   }
 
-  protected hydrate(session?: Session) {
+  protected hydrate() {
     return (query: Query) =>
       query
         .match([
@@ -72,7 +66,7 @@ export class ProjectChangeRequestRepository extends DtoRepository<
         );
   }
 
-  async list(input: ProjectChangeRequestListInput, session: Session) {
+  async list(input: ProjectChangeRequestListInput) {
     const result = await this.db
       .query()
       .match([
@@ -87,7 +81,7 @@ export class ProjectChangeRequestRepository extends DtoRepository<
           : []),
       ])
       .apply(sorting(ProjectChangeRequest, input))
-      .apply(paginate(input, this.hydrate(session)))
+      .apply(paginate(input, this.hydrate()))
       .first();
     return result!; // result from paginate() will always have 1 row.
   }

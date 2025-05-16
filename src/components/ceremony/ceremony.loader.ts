@@ -10,6 +10,6 @@ export class CeremonyLoader extends OrderedNestDataLoader<Ceremony> {
   }
 
   async loadMany(ids: readonly ID[]) {
-    return await this.ceremonies.readMany(ids, this.session);
+    return await this.ceremonies.readMany(ids);
   }
 }

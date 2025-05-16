@@ -28,6 +28,6 @@ export class ProgressReportVarianceExplanationLoader extends OrderedNestDataLoad
   }
 
   async loadMany(reports: readonly ProgressReport[]) {
-    return await this.service.readMany(reports, this.session);
+    return await this.service.readMany(reports);
   }
 }

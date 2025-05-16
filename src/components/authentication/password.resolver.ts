@@ -1,6 +1,5 @@
 import { Args, Mutation, Resolver } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { AnonSession, LoggedInSession, type Session } from '~/common';
 import { Anonymous } from './anonymous.decorator';
 import { AuthenticationService } from './authentication.service';
 import {
@@ -24,9 +23,8 @@ export class PasswordResolver {
   })
   async changePassword(
     @Args() { oldPassword, newPassword }: ChangePasswordArgs,
-    @LoggedInSession() session: Session,
   ): Promise<ChangePasswordOutput> {
-    await this.authentication.changePassword(oldPassword, newPassword, session);
+    await this.authentication.changePassword(oldPassword, newPassword);
     return { success: true };
   }
 
@@ -49,9 +47,8 @@ export class PasswordResolver {
   @Anonymous()
   async resetPassword(
     @Args('input') input: ResetPasswordInput,
-    @AnonSession() session: Session,
   ): Promise<ResetPasswordOutput> {
-    await this.authentication.resetPassword(input, session);
+    await this.authentication.resetPassword(input);
     return { success: true };
   }
 }

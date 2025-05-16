@@ -6,7 +6,6 @@ import {
   NotFoundException,
   type ObjectView,
   ServerException,
-  type Session,
   type UnsecuredDto,
 } from '~/common';
 import { HandleIdLookup, ResourceLoader } from '~/core';
@@ -51,7 +50,7 @@ export class PartnerService {
     private readonly resourceLoader: ResourceLoader,
   ) {}
 
-  async create(input: CreatePartner, session: Session): Promise<Partner> {
+  async create(input: CreatePartner): Promise<Partner> {
     this.verifyFinancialReportingType(
       input.financialReportingTypes,
       input.types,
@@ -61,42 +60,38 @@ export class PartnerService {
       await this.verifyCountries(input.countries);
     }
 
-    const created = await this.repo.create(input, session);
+    const created = await this.repo.create(input);
 
-    this.privileges.for(session, Partner, created).verifyCan('create');
+    this.privileges.for(Partner, created).verifyCan('create');
 
-    return this.secure(created, session);
+    return this.secure(created);
   }
 
-  async readOnePartnerByOrgId(id: ID, session: Session): Promise<Partner> {
+  async readOnePartnerByOrgId(id: ID): Promise<Partner> {
     const partnerId = await this.repo.partnerIdByOrg(id);
     if (!partnerId)
       throw new NotFoundException('No Partner Exists for this Org Id');
 
-    return await this.readOne(partnerId, session);
+    return await this.readOne(partnerId);
   }
 
   @HandleIdLookup(Partner)
-  async readOne(
-    id: ID,
-    session: Session,
-    _view?: ObjectView,
-  ): Promise<Partner> {
-    const result = await this.repo.readOne(id, session);
-    return this.secure(result, session);
+  async readOne(id: ID, _view?: ObjectView): Promise<Partner> {
+    const result = await this.repo.readOne(id);
+    return this.secure(result);
   }
 
-  async readMany(ids: readonly ID[], session: Session) {
-    const partners = await this.repo.readMany(ids, session);
-    return partners.map((dto) => this.secure(dto, session));
+  async readMany(ids: readonly ID[]) {
+    const partners = await this.repo.readMany(ids);
+    return partners.map((dto) => this.secure(dto));
   }
 
-  private secure(dto: UnsecuredDto<Partner>, session: Session) {
-    return this.privileges.for(session, Partner).secure(dto);
+  private secure(dto: UnsecuredDto<Partner>) {
+    return this.privileges.for(Partner).secure(dto);
   }
 
-  async update(input: UpdatePartner, session: Session): Promise<Partner> {
-    const partner = await this.repo.readOne(input.id, session);
+  async update(input: UpdatePartner): Promise<Partner> {
+    const partner = await this.repo.readOne(input.id);
 
     if (
       !this.validateFinancialReportingType(
@@ -123,7 +118,7 @@ export class PartnerService {
       ...(departmentIdBlock !== undefined && { departmentIdBlock }),
     };
 
-    const privileges = this.privileges.for(session, Partner, partner);
+    const privileges = this.privileges.for(Partner, partner);
     privileges.verifyChanges(simpleChanges);
     if (changes.departmentIdBlock !== undefined) {
       privileges.verifyCan('edit', 'departmentIdBlock');
@@ -133,21 +128,18 @@ export class PartnerService {
       await this.verifyCountries(changes.countries);
     }
 
-    const updated = await this.repo.update(
-      {
-        id: partner.id,
-        ...changes,
-      },
-      session,
-    );
+    const updated = await this.repo.update({
+      id: partner.id,
+      ...changes,
+    });
 
-    return this.secure(updated, session);
+    return this.secure(updated);
   }
 
-  async delete(id: ID, session: Session): Promise<void> {
-    const object = await this.readOne(id, session);
+  async delete(id: ID): Promise<void> {
+    const object = await this.readOne(id);
 
-    this.privileges.for(session, Partner, object).verifyCan('delete');
+    this.privileges.for(Partner, object).verifyCan('delete');
 
     try {
       await this.repo.deleteNode(object);
@@ -156,43 +148,38 @@ export class PartnerService {
     }
   }
 
-  async list(
-    input: PartnerListInput,
-    session: Session,
-  ): Promise<PartnerListOutput> {
-    const results = await this.repo.list(input, session);
+  async list(input: PartnerListInput): Promise<PartnerListOutput> {
+    const results = await this.repo.list(input);
     return {
       ...results,
-      items: results.items.map((dto) => this.secure(dto, session)),
+      items: results.items.map((dto) => this.secure(dto)),
     };
   }
 
   async listProjects(
     partner: Partner,
     input: ProjectListInput,
-    session: Session,
   ): Promise<SecuredProjectList> {
-    const projectListOutput = await this.projectService.list(
-      { ...input, filter: { ...input.filter, partnerId: partner.id } },
-      session,
-    );
+    const projectListOutput = await this.projectService.list({
+      ...input,
+      filter: { ...input.filter, partnerId: partner.id },
+    });
 
     return {
       ...projectListOutput,
       canRead: true,
-      canCreate: this.privileges.for(session, IProject).can('create'),
+      canCreate: this.privileges.for(IProject).can('create'),
     };
   }
 
   async listLanguages(
     partner: Partner,
     input: LanguageListInput,
-    session: Session,
   ): Promise<SecuredLanguageList> {
-    const languageListOutput = await this.languageService.list(
-      { ...input, filter: { ...input.filter, partnerId: partner.id } },
-      session,
-    );
+    const languageListOutput = await this.languageService.list({
+      ...input,
+      filter: { ...input.filter, partnerId: partner.id },
+    });
     return {
       ...languageListOutput,
       canRead: true,
@@ -200,18 +187,11 @@ export class PartnerService {
       canCreate: false,
     };
   }
-  async listEngagements(
-    partner: Partner,
-    input: EngagementListInput,
-    session: Session,
-  ) {
-    return await this.engagementService.list(
-      {
-        ...input,
-        filter: { ...input.filter, partnerId: partner.id },
-      },
-      session,
-    );
+  async listEngagements(partner: Partner, input: EngagementListInput) {
+    return await this.engagementService.list({
+      ...input,
+      filter: { ...input.filter, partnerId: partner.id },
+    });
   }
 
   protected verifyFinancialReportingType(

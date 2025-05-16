@@ -30,16 +30,6 @@ export class EdgePrivileges<
     this.resource = EnhancedResource.of(resource);
   }
 
-  /** @deprecated */
-  get session() {
-    return this.policyExecutor.sessionHost.current;
-  }
-
-  /** @deprecated Use {@link forContext} instead */
-  forUser(_session: unknown, object?: ResourceObjectContext<TResourceStatic>) {
-    return object ? this.forContext(object) : this;
-  }
-
   get context() {
     return this.object;
   }

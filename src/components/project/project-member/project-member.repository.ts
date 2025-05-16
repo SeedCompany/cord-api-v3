@@ -8,7 +8,6 @@ import {
   isIdLike,
   NotFoundException,
   type Role,
-  type Session,
   type UnsecuredDto,
 } from '~/common';
 import { DtoRepository } from '~/core/database';
@@ -31,10 +30,7 @@ import {
 } from './dto';
 
 @Injectable()
-export class ProjectMemberRepository extends DtoRepository<
-  typeof ProjectMember,
-  [session: Session]
->(ProjectMember) {
+export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
   constructor(private readonly users: UserRepository) {
     super();
   }
@@ -78,10 +74,11 @@ export class ProjectMemberRepository extends DtoRepository<
     }
   }
 
-  async create(
-    { userId, projectId: projectOrId, ...input }: CreateProjectMember,
-    session: Session,
-  ) {
+  async create({
+    userId,
+    projectId: projectOrId,
+    ...input
+  }: CreateProjectMember) {
     const projectId = isIdLike(projectOrId) ? projectOrId : projectOrId.id;
 
     await this.verifyRelationshipEligibility(projectId, userId);
@@ -102,7 +99,7 @@ export class ProjectMemberRepository extends DtoRepository<
           out: { user: ['User', userId] },
         }),
       )
-      .apply(this.hydrate(session))
+      .apply(this.hydrate())
       .map('dto')
       .first();
     if (!created) {
@@ -111,12 +108,12 @@ export class ProjectMemberRepository extends DtoRepository<
     return created;
   }
 
-  async update({ id, ...changes }: UpdateProjectMember, session: Session) {
+  async update({ id, ...changes }: UpdateProjectMember) {
     await this.updateProperties({ id }, changes);
-    return await this.readOne(id, session);
+    return await this.readOne(id);
   }
 
-  protected hydrate(session: Session) {
+  protected hydrate() {
     return (query: Query) =>
       query
         .match([
@@ -131,16 +128,14 @@ export class ProjectMemberRepository extends DtoRepository<
           node('user', 'User'),
         ])
         .subQuery('user', (sub) =>
-          sub
-            .with('user as node')
-            .apply(this.users.hydrateAsNeo4j(session.userId)),
+          sub.with('user as node').apply(this.users.hydrateAsNeo4j()),
         )
         .return<{ dto: UnsecuredDto<ProjectMember> }>(
           merge('props', { user: 'dto' }).as('dto'),
         );
   }
 
-  async list({ filter, ...input }: ProjectMemberListInput, session: Session) {
+  async list({ filter, ...input }: ProjectMemberListInput) {
     const result = await this.db
       .query()
       .match([
@@ -168,12 +163,12 @@ export class ProjectMemberRepository extends DtoRepository<
       )
       .with('*') // needed between where & where
       .apply(
-        this.privileges.forUser(session).filterToReadable({
+        this.privileges.filterToReadable({
           wrapContext: oncePerProject,
         }),
       )
       .apply(sorting(ProjectMember, input))
-      .apply(paginate(input, this.hydrate(session)))
+      .apply(paginate(input, this.hydrate()))
       .first();
     return result!; // result from paginate() will always have 1 row.
   }

@@ -13,8 +13,6 @@ export class DefaultMarketingRegionMigration extends BaseMigration {
     super();
   }
   async up() {
-    const session = this.fakeAdminSession;
-
     const fieldRegionNameToMarketingRegionName = {
       'Africa - Anglophone East': 'Africa',
       'Africa - Anglophone West': 'Africa',
@@ -79,13 +77,10 @@ export class DefaultMarketingRegionMigration extends BaseMigration {
         continue;
       }
 
-      await this.locationService.update(
-        {
-          id: country.id,
-          defaultMarketingRegionId: marketingRegionId,
-        },
-        session,
-      );
+      await this.locationService.update({
+        id: country.id,
+        defaultMarketingRegionId: marketingRegionId,
+      });
     }
   }
 }

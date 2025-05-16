@@ -1,11 +1,5 @@
 import { ServerException } from '~/common';
-import {
-  ConfigService,
-  EventsHandler,
-  type IEventHandler,
-  ILogger,
-  Logger,
-} from '~/core';
+import { EventsHandler, type IEventHandler } from '~/core';
 import { DatabaseService } from '~/core/database';
 import { EngagementStatus, IEngagement } from '../dto';
 import { EngagementUpdatedEvent } from '../events';
@@ -14,14 +8,10 @@ import { EngagementUpdatedEvent } from '../events';
 export class SetLastStatusDate
   implements IEventHandler<EngagementUpdatedEvent>
 {
-  constructor(
-    private readonly db: DatabaseService,
-    private readonly config: ConfigService,
-    @Logger('engagement:set-last-status-date') private readonly logger: ILogger,
-  ) {}
+  constructor(private readonly db: DatabaseService) {}
 
   async handle(event: EngagementUpdatedEvent) {
-    const { previous, updated, session } = event;
+    const { previous, updated } = event;
     if (previous.status === updated.status) {
       return;
     }
@@ -49,13 +39,7 @@ export class SetLastStatusDate
         changes,
       });
     } catch (exception) {
-      this.logger.error(`Could not set last status date`, {
-        userId: session.userId,
-        exception,
-      });
-      throw this.config.jest
-        ? exception
-        : new ServerException('Could not set last status date', exception);
+      throw new ServerException('Could not set last status date', exception);
     }
   }
 }

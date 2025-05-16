@@ -9,7 +9,6 @@ import {
   RequiredWhen,
   type ResourceShape,
   SecuredList,
-  type Session,
   type UnsecuredDto,
   viewOfChangeset,
 } from '~/common';
@@ -68,57 +67,53 @@ export class EngagementService {
 
   async createLanguageEngagement(
     input: CreateLanguageEngagement,
-    session: Session,
     changeset?: ID,
   ): Promise<LanguageEngagement> {
-    await this.verifyCreateEngagement(input.projectId, session);
+    await this.verifyCreateEngagement(input.projectId);
     this.verifyCreationStatus(input.status);
     EngagementDateRangeException.throwIfInvalid(input);
 
     const engagement = await this.repo.createLanguageEngagement(
       input,
-      session,
       changeset,
     );
 
     RequiredWhen.verify(LanguageEngagement, engagement);
 
-    const event = new EngagementCreatedEvent(engagement, input, session);
+    const event = new EngagementCreatedEvent(engagement, input);
     await this.eventBus.publish(event);
 
-    return this.secure(event.engagement, session) as LanguageEngagement;
+    return this.secure(event.engagement) as LanguageEngagement;
   }
 
   async createInternshipEngagement(
     input: CreateInternshipEngagement,
-    session: Session,
     changeset?: ID,
   ): Promise<InternshipEngagement> {
-    await this.verifyCreateEngagement(input.projectId, session);
+    await this.verifyCreateEngagement(input.projectId);
     this.verifyCreationStatus(input.status);
     EngagementDateRangeException.throwIfInvalid(input);
 
     const engagement = await this.repo.createInternshipEngagement(
       input,
-      session,
       changeset,
     );
 
     RequiredWhen.verify(InternshipEngagement, engagement);
 
-    const event = new EngagementCreatedEvent(engagement, input, session);
+    const event = new EngagementCreatedEvent(engagement, input);
     await this.eventBus.publish(event);
 
-    return this.secure(event.engagement, session) as InternshipEngagement;
+    return this.secure(event.engagement) as InternshipEngagement;
   }
 
-  private async verifyCreateEngagement(projectId: ID, session: Session) {
+  private async verifyCreateEngagement(projectId: ID) {
     const projects = await this.resources.getLoader(ProjectLoader);
     const projectKey = { id: projectId, view: { active: true } } as const;
     const project = await projects.load(projectKey);
     projects.clear(projectKey);
 
-    const projectPrivileges = this.privileges.for(session, IProject, {
+    const projectPrivileges = this.privileges.for(IProject, {
       ...project,
       project,
     } as any);
@@ -138,53 +133,44 @@ export class EngagementService {
   @HandleIdLookup([LanguageEngagement, InternshipEngagement])
   async readOne(
     id: ID,
-    session: Session,
     view?: ObjectView,
   ): Promise<LanguageEngagement | InternshipEngagement> {
-    const dto = await this.repo.readOne(id, session, view);
-    return this.secure(dto, session);
+    const dto = await this.repo.readOne(id, view);
+    return this.secure(dto);
   }
 
-  async readMany(ids: readonly ID[], session: Session, view?: ObjectView) {
-    const engagements = await this.repo.readMany(ids, session, view);
-    return engagements.map((dto) => this.secure(dto, session));
+  async readMany(ids: readonly ID[], view?: ObjectView) {
+    const engagements = await this.repo.readMany(ids, view);
+    return engagements.map((dto) => this.secure(dto));
   }
 
-  private secure<E extends Engagement>(
-    dto: UnsecuredDto<E>,
-    session: Session,
-  ): E {
+  private secure<E extends Engagement>(dto: UnsecuredDto<E>): E {
     const res = resolveEngagementType(dto) as unknown as ResourceShape<E>;
-    return this.privileges.for(session, res).secure(dto);
+    return this.privileges.for(res).secure(dto);
   }
 
   async updateLanguageEngagement(
     input: UpdateLanguageEngagement,
-    session: Session,
     changeset?: ID,
   ): Promise<LanguageEngagement> {
     const view: ObjectView = viewOfChangeset(changeset);
 
     const previous = (await this.repo.readOne(
       input.id,
-      session,
       view,
     )) as UnsecuredDto<LanguageEngagement>;
-    const object = this.secure(previous, session);
+    const object = this.secure(previous);
 
     const { methodology, ...maybeChanges } = input;
     const changes = this.repo.getActualLanguageChanges(object, maybeChanges);
     if (changes.status) {
       await this.engagementRules.verifyStatusChange(
         input.id,
-        session,
         changes.status,
         changeset,
       );
     }
-    this.privileges
-      .for(session, LanguageEngagement, object)
-      .verifyChanges(changes);
+    this.privileges.for(LanguageEngagement, object).verifyChanges(changes);
     EngagementDateRangeException.throwIfInvalid(previous, changes);
 
     const updated = await this.repo.updateLanguage(
@@ -192,7 +178,6 @@ export class EngagementService {
         id: object.id,
         ...changes,
       },
-      session,
       changeset,
     );
 
@@ -205,50 +190,45 @@ export class EngagementService {
       throw nowMissing;
     }
 
-    const event = new EngagementUpdatedEvent(
-      updated,
-      previous,
-      { id: object.id, methodology, ...changes },
-      session,
-    );
+    const event = new EngagementUpdatedEvent(updated, previous, {
+      id: object.id,
+      methodology,
+      ...changes,
+    });
     if (Object.keys(changes).length > 0) {
       await this.eventBus.publish(event);
     }
 
-    return this.secure(event.updated, session) as LanguageEngagement;
+    return this.secure(event.updated) as LanguageEngagement;
   }
 
   async updateInternshipEngagement(
     input: UpdateInternshipEngagement,
-    session: Session,
     changeset?: ID,
   ): Promise<InternshipEngagement> {
     const view: ObjectView = viewOfChangeset(changeset);
 
     const previous = (await this.repo.readOne(
       input.id,
-      session,
       view,
     )) as UnsecuredDto<InternshipEngagement>;
-    const object = this.secure(previous, session);
+    const object = this.secure(previous);
 
     const changes = this.repo.getActualInternshipChanges(object, input);
     if (changes.status) {
       await this.engagementRules.verifyStatusChange(
         input.id,
-        session,
         changes.status,
         changeset,
       );
     }
     this.privileges
-      .for(session, InternshipEngagement, object)
+      .for(InternshipEngagement, object)
       .verifyChanges(changes, { pathPrefix: 'engagement' });
     EngagementDateRangeException.throwIfInvalid(previous, changes);
 
     const updated = await this.repo.updateInternship(
       { id: object.id, ...changes },
-      session,
       changeset,
     );
 
@@ -261,78 +241,71 @@ export class EngagementService {
       throw nowMissing;
     }
 
-    const event = new EngagementUpdatedEvent(
-      updated,
-      previous,
-      { id: object.id, ...changes },
-      session,
-    );
+    const event = new EngagementUpdatedEvent(updated, previous, {
+      id: object.id,
+      ...changes,
+    });
     if (Object.keys(changes).length > 0) {
       await this.eventBus.publish(event);
     }
 
-    return this.secure(event.updated, session) as InternshipEngagement;
+    return this.secure(event.updated) as InternshipEngagement;
   }
 
-  async triggerUpdateEvent(id: ID, session: Session) {
-    const object = await this.repo.readOne(id, session);
-    const event = new EngagementUpdatedEvent(object, object, { id }, session);
+  async triggerUpdateEvent(id: ID) {
+    const object = await this.repo.readOne(id);
+    const event = new EngagementUpdatedEvent(object, object, { id });
     await this.eventBus.publish(event);
   }
 
-  async delete(id: ID, session: Session, changeset?: ID): Promise<void> {
-    const object = await this.readOne(id, session);
+  async delete(id: ID, changeset?: ID): Promise<void> {
+    const object = await this.readOne(id);
 
     this.privileges
-      .for(session, resolveEngagementType(object), object)
+      .for(resolveEngagementType(object), object)
       .verifyCan('delete');
 
-    await this.eventBus.publish(new EngagementWillDeleteEvent(object, session));
+    await this.eventBus.publish(new EngagementWillDeleteEvent(object));
     await this.repo.deleteNode(object, { changeset });
   }
 
   async list(
     input: EngagementListInput,
-    session: Session,
     view?: ObjectView,
   ): Promise<EngagementListOutput> {
     // -- don't have to check if canList because all roles can see at least on prop of it
     // if that ever changes, create a limitedScope and add to the list function.
-    const results = await this.repo.list(input, session, view?.changeset);
+    const results = await this.repo.list(input, view?.changeset);
 
     return {
       ...results,
-      items: results.items.map((dto) => this.secure(dto, session)),
+      items: results.items.map((dto) => this.secure(dto)),
     };
   }
 
-  async listAllByProjectId(projectId: ID, session: Session) {
-    return await this.repo.listAllByProjectId(projectId, session);
+  async listAllByProjectId(projectId: ID) {
+    return await this.repo.listAllByProjectId(projectId);
   }
 
   async listProducts(
     engagement: LanguageEngagement,
     input: ProductListInput,
-    session: Session,
   ): Promise<SecuredProductList> {
     const privs = this.privileges
-      .for(session, LanguageEngagement, engagement)
+      .for(LanguageEngagement, engagement)
       .forEdge('product');
 
     if (!privs.can('read')) {
       return SecuredList.Redacted;
     }
 
-    const result = await this.products.list(
-      {
-        ...input,
-        filter: {
-          ...input.filter,
-          engagementId: engagement.id,
-        },
+    const result = await this.products.list({
+      ...input,
+      filter: {
+        ...input.filter,
+        engagementId: engagement.id,
       },
-      session,
-    );
+    });
 
     return {
       ...result,

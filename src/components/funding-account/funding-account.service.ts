@@ -8,10 +8,9 @@ import {
   ReadAfterCreationFailed,
   SecuredList,
   ServerException,
-  type Session,
   type UnsecuredDto,
 } from '~/common';
-import { HandleIdLookup, ILogger, Logger } from '~/core';
+import { HandleIdLookup } from '~/core';
 import { mapListResults } from '~/core/database/results';
 import { Privileges } from '../authorization';
 import {
@@ -26,16 +25,12 @@ import { FundingAccountRepository } from './funding-account.repository';
 @Injectable()
 export class FundingAccountService {
   constructor(
-    @Logger('funding-account:service') private readonly logger: ILogger,
     private readonly privileges: Privileges,
     private readonly repo: FundingAccountRepository,
   ) {}
 
-  async create(
-    input: CreateFundingAccount,
-    session: Session,
-  ): Promise<FundingAccount> {
-    this.privileges.for(session, FundingAccount).verifyCan('create');
+  async create(input: CreateFundingAccount): Promise<FundingAccount> {
+    this.privileges.for(FundingAccount).verifyCan('create');
     if (!(await this.repo.isUnique(input.name))) {
       throw new DuplicateException(
         'fundingAccount.name',
@@ -50,86 +45,64 @@ export class FundingAccountService {
         throw new CreationFailed(FundingAccount);
       }
 
-      this.logger.info(`funding account created`, { id: result.id });
-
-      return await this.readOne(result.id, session).catch((e) => {
+      return await this.readOne(result.id).catch((e) => {
         throw e instanceof NotFoundException
           ? new ReadAfterCreationFailed(FundingAccount)
           : e;
       });
     } catch (err) {
-      this.logger.error('Could not create funding account for user', {
-        exception: err,
-        userId: session.userId,
-      });
       throw new CreationFailed(FundingAccount, { cause: err });
     }
   }
 
   @HandleIdLookup(FundingAccount)
-  async readOne(
-    id: ID,
-    session: Session,
-    _view?: ObjectView,
-  ): Promise<FundingAccount> {
-    this.logger.info('readOne', { id, userId: session.userId });
-
+  async readOne(id: ID, _view?: ObjectView): Promise<FundingAccount> {
     if (!id) {
       throw new NotFoundException('Invalid: Blank ID');
     }
 
     const result = await this.repo.readOne(id);
-    return await this.secure(result, session);
+    return await this.secure(result);
   }
 
-  async readMany(ids: readonly ID[], session: Session) {
+  async readMany(ids: readonly ID[]) {
     const fundingAccounts = await this.repo.readMany(ids);
-    return await Promise.all(
-      fundingAccounts.map((dto) => this.secure(dto, session)),
-    );
+    return await Promise.all(fundingAccounts.map((dto) => this.secure(dto)));
   }
 
   private async secure(
     dto: UnsecuredDto<FundingAccount>,
-    session: Session,
   ): Promise<FundingAccount> {
-    return this.privileges.for(session, FundingAccount).secure(dto);
+    return this.privileges.for(FundingAccount).secure(dto);
   }
 
-  async update(
-    input: UpdateFundingAccount,
-    session: Session,
-  ): Promise<FundingAccount> {
+  async update(input: UpdateFundingAccount): Promise<FundingAccount> {
     const fundingAccount = await this.repo.readOne(input.id);
 
     const changes = this.repo.getActualChanges(fundingAccount, input);
-    this.privileges
-      .for(session, FundingAccount, fundingAccount)
-      .verifyChanges(changes);
+    this.privileges.for(FundingAccount, fundingAccount).verifyChanges(changes);
     const updated = await this.repo.update({ id: input.id, ...changes });
-    return await this.secure(updated, session);
+    return await this.secure(updated);
   }
 
-  async delete(id: ID, session: Session): Promise<void> {
-    const object = await this.readOne(id, session);
+  async delete(id: ID): Promise<void> {
+    const object = await this.readOne(id);
 
-    this.privileges.for(session, FundingAccount, object).verifyCan('delete');
+    this.privileges.for(FundingAccount, object).verifyCan('delete');
 
     try {
       await this.repo.deleteNode(object);
     } catch (exception) {
-      this.logger.error('Failed to delete', { id, exception });
       throw new ServerException('Failed to delete', exception);
     }
   }
 
   async list(
     input: FundingAccountListInput,
-    session: Session,
   ): Promise<FundingAccountListOutput> {
-    if (this.privileges.for(session, FundingAccount).can('read')) {
-      const results = await this.repo.list(input, session);
-      return await mapListResults(results, (dto) => this.secure(dto, session));
+    if (this.privileges.for(FundingAccount).can('read')) {
+      const results = await this.repo.list(input);
+      return await mapListResults(results, (dto) => this.secure(dto));
     } else {
       return SecuredList.Redacted;
     }

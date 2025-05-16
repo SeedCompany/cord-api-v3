@@ -14,7 +14,6 @@ import {
   generateId,
   type ID,
   type Range,
-  type Session,
   type UnsecuredDto,
 } from '~/common';
 import { DtoRepository } from '~/core/database';
@@ -56,7 +55,7 @@ import {
 @Injectable()
 export class PeriodicReportRepository extends DtoRepository<
   typeof IPeriodicReport,
-  [session: Session],
+  [],
   PeriodicReport
 >(IPeriodicReport) {
   constructor(
@@ -182,7 +181,7 @@ export class PeriodicReportRepository extends DtoRepository<
     return await this.updateProperties(existing, simpleChanges);
   }
 
-  async list(input: PeriodicReportListInput, session: Session) {
+  async list(input: PeriodicReportListInput) {
     const resource = input.type
       ? resolveReportType({ type: input.type })
       : IPeriodicReport;
@@ -193,7 +192,7 @@ export class PeriodicReportRepository extends DtoRepository<
       .matchNode('node', 'PeriodicReport')
       .apply(periodicReportFilters(filters))
       .apply(sorting(resource, input))
-      .apply(paginate(input, this.hydrate(session)))
+      .apply(paginate(input, this.hydrate()))
       .first();
     return result!; // result from paginate() will always have 1 row.
   }
@@ -202,12 +201,7 @@ export class PeriodicReportRepository extends DtoRepository<
     return matchCurrentDue(parentId, reportType);
   }
 
-  async getByDate(
-    parentId: ID,
-    date: CalendarDate,
-    reportType: ReportType,
-    session: Session,
-  ) {
+  async getByDate(parentId: ID, date: CalendarDate, reportType: ReportType) {
     const res = await this.db
       .query()
       .match([
@@ -233,21 +227,21 @@ export class PeriodicReportRepository extends DtoRepository<
           'end.value': greaterEqualTo(date),
         }),
       )
-      .apply(this.hydrate(session))
+      .apply(this.hydrate())
       .first();
     return res?.dto;
   }
 
-  async getCurrentDue(parentId: ID, reportType: ReportType, session: Session) {
+  async getCurrentDue(parentId: ID, reportType: ReportType) {
     const res = await this.db
       .query()
       .apply(this.matchCurrentDue(parentId, reportType))
-      .apply(this.hydrate(session))
+      .apply(this.hydrate())
       .first();
     return res?.dto;
   }
 
-  async getNextDue(parentId: ID, reportType: ReportType, session: Session) {
+  async getNextDue(parentId: ID, reportType: ReportType) {
     const res = await this.db
       .query()
       .match([
@@ -261,16 +255,12 @@ export class PeriodicReportRepository extends DtoRepository<
       .with('node, end')
       .orderBy('end.value', 'asc')
       .limit(1)
-      .apply(this.hydrate(session))
+      .apply(this.hydrate())
       .first();
     return res?.dto;
   }
 
-  async getLatestReportSubmitted(
-    parentId: ID,
-    type: ReportType,
-    session: Session,
-  ) {
+  async getLatestReportSubmitted(parentId: ID, type: ReportType) {
     const res = await this.db
       .query()
       .match([
@@ -284,12 +274,12 @@ export class PeriodicReportRepository extends DtoRepository<
       .with('node, sn')
       .orderBy('sn.value', 'desc')
       .limit(1)
-      .apply(this.hydrate(session))
+      .apply(this.hydrate())
       .first();
     return res?.dto;
   }
 
-  async getFinalReport(parentId: ID, type: ReportType, session: Session) {
+  async getFinalReport(parentId: ID, type: ReportType) {
     const res = await this.db
       .query()
       .match([
@@ -308,7 +298,7 @@ export class PeriodicReportRepository extends DtoRepository<
         node('end', 'Property'),
       ])
       .raw(`where start.value = end.value`)
-      .apply(this.hydrate(session))
+      .apply(this.hydrate())
       .first();
     return res?.dto;
   }
@@ -378,7 +368,7 @@ export class PeriodicReportRepository extends DtoRepository<
       .first();
   }
 
-  protected hydrate(session: Session) {
+  protected hydrate() {
     return (query: Query) =>
       query
         .subQuery((sub) =>

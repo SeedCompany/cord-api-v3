@@ -1,10 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import {
-  type ID,
-  type Sensitivity,
-  type Session,
-  type UnsecuredDto,
-} from '~/common';
+import { type ID, type Sensitivity, type UnsecuredDto } from '~/common';
 import { Privileges, withEffectiveSensitivity } from '../../authorization';
 import {
   type CreateEthnologueLanguage,
@@ -20,30 +15,22 @@ export class EthnologueLanguageService {
     private readonly repo: EthnologueLanguageRepository,
   ) {}
 
-  async create(input: CreateEthnologueLanguage, session: Session): Promise<ID> {
-    this.privileges.for(session, EthnologueLanguage).verifyCan('create');
+  async create(input: CreateEthnologueLanguage): Promise<ID> {
+    this.privileges.for(EthnologueLanguage).verifyCan('create');
 
     //TODO - remove the passed in languageId after migration
     return (await this.repo.create({ languageId: 'temp' as ID, ...input })).id;
   }
 
-  async readOne(
-    id: ID,
-    sensitivity: Sensitivity,
-    session: Session,
-  ): Promise<EthnologueLanguage> {
+  async readOne(id: ID, sensitivity: Sensitivity): Promise<EthnologueLanguage> {
     const dto = await this.repo.readOne(id);
-    return this.secure(dto, sensitivity, session);
+    return this.secure(dto, sensitivity);
   }
 
-  secure(
-    dto: UnsecuredDto<EthnologueLanguage>,
-    sensitivity: Sensitivity,
-    session: Session,
-  ) {
+  secure(dto: UnsecuredDto<EthnologueLanguage>, sensitivity: Sensitivity) {
     return {
       ...this.privileges
-        .for(session, EthnologueLanguage)
+        .for(EthnologueLanguage)
         .secure(withEffectiveSensitivity(dto, sensitivity)),
       sensitivity,
     };
@@ -53,14 +40,13 @@ export class EthnologueLanguageService {
     id: ID,
     input: UpdateEthnologueLanguage,
     sensitivity: Sensitivity,
-    session: Session,
   ) {
     if (!input) return;
     const ethnologueLanguage = await this.repo.readOne(id);
 
     const changes = this.repo.getActualChanges(ethnologueLanguage, input);
     this.privileges
-      .for(session, EthnologueLanguage, ethnologueLanguage)
+      .for(EthnologueLanguage, ethnologueLanguage)
       .verifyChanges(withEffectiveSensitivity(changes, sensitivity));
 
     await this.repo.update({ id: ethnologueLanguage.id, ...changes });

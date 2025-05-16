@@ -10,6 +10,6 @@ export class LocationLoader extends OrderedNestDataLoader<Location> {
   }
 
   async loadMany(ids: readonly ID[]) {
-    return await this.locations.readMany(ids, this.session);
+    return await this.locations.readMany(ids);
   }
 }

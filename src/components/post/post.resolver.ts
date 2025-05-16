@@ -6,13 +6,7 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import {
-  type ID,
-  IdArg,
-  LoggedInSession,
-  mapSecuredValue,
-  type Session,
-} from '~/common';
+import { type ID, IdArg, mapSecuredValue } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { PostLoader, PostService } from '../post';
 import { UserLoader } from '../user';
@@ -34,10 +28,9 @@ export class PostResolver {
     description: 'Create a discussion post',
   })
   async createPost(
-    @LoggedInSession() session: Session,
     @Args('input') { post: input }: CreatePostInput,
   ): Promise<CreatePostOutput> {
-    const post = await this.service.create(input, session);
+    const post = await this.service.create(input);
     return { post };
   }
 
@@ -63,21 +56,17 @@ export class PostResolver {
     description: 'Update an existing Post',
   })
   async updatePost(
-    @LoggedInSession() session: Session,
     @Args('input') { post: input }: UpdatePostInput,
   ): Promise<UpdatePostOutput> {
-    const post = await this.service.update(input, session);
+    const post = await this.service.update(input);
     return { post };
   }
 
   @Mutation(() => DeletePostOutput, {
     description: 'Delete a post',
   })
-  async deletePost(
-    @LoggedInSession() session: Session,
-    @IdArg() id: ID,
-  ): Promise<DeletePostOutput> {
-    await this.service.delete(id, session);
+  async deletePost(@IdArg() id: ID): Promise<DeletePostOutput> {
+    await this.service.delete(id);
     return { success: true };
   }
 }

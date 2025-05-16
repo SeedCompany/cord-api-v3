@@ -18,7 +18,6 @@ import {
   type ID,
   NotFoundException,
   ServerException,
-  type Session,
 } from '~/common';
 import { ILogger, type LinkTo, Logger } from '~/core';
 import { CommonRepository, OnIndex } from '~/core/database';
@@ -366,7 +365,6 @@ export class FileRepository extends CommonRepository {
   async createDirectory(
     parentId: ID | undefined,
     name: string,
-    session: Session,
     { public: isPublic }: { public?: boolean } = {},
   ): Promise<ID> {
     const initialProps = {
@@ -431,14 +429,12 @@ export class FileRepository extends CommonRepository {
   async createFile({
     fileId,
     name,
-    session,
     parentId,
     propOfNode,
     public: isPublic,
   }: {
     fileId: ID;
     name: string;
-    session: Session;
     parentId?: ID;
     propOfNode?: [baseNodeId: ID, propertyName: string];
     public?: boolean;
@@ -480,7 +476,6 @@ export class FileRepository extends CommonRepository {
     input: Pick<FileVersion, 'id' | 'name' | 'mimeType' | 'size'> & {
       public?: boolean;
     },
-    session: Session,
   ) {
     const initialProps = {
       name: input.name,

@@ -11,7 +11,7 @@ export class UpdateProjectBudgetStatusHandler
   constructor(private readonly budgets: BudgetService) {}
 
   async handle(event: ProjectTransitionedEvent) {
-    const { project, session } = event;
+    const { project } = event;
 
     const prevStatus = stepToStatus(event.previousStep);
     const nextStatus = stepToStatus(event.workflowEvent.to);
@@ -32,20 +32,17 @@ export class UpdateProjectBudgetStatusHandler
       return;
     }
 
-    const budgets = await this.budgets.list(
-      {
-        filter: {
-          projectId: project.id,
-        },
+    const budgets = await this.budgets.list({
+      filter: {
+        projectId: project.id,
       },
-      session,
-    );
+    });
 
     const budget = budgets.items.find((b) => b.status === change[0]);
     if (!budget) {
       return;
     }
 
-    await this.budgets.update({ id: budget.id, status: change[1] }, session);
+    await this.budgets.update({ id: budget.id, status: change[1] });
   }
 }

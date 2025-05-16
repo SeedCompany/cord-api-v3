@@ -7,13 +7,10 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import {
-  AnonSession,
   InvalidIdForTypeException,
   ListArg,
-  LoggedInSession,
   mapSecuredValue,
   SecuredDateRange,
-  type Session,
 } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { CeremonyLoader } from '../ceremony';
@@ -71,10 +68,9 @@ export class EngagementResolver {
   })
   async engagements(
     @ListArg(EngagementListInput) input: EngagementListInput,
-    @AnonSession() session: Session,
     @Loader(EngagementLoader) engagements: LoaderOf<EngagementLoader>,
   ): Promise<EngagementListOutput> {
-    const list = await this.service.list(input, session);
+    const list = await this.service.list(input);
     engagements.primeAll(list.items);
     return list;
   }
@@ -84,16 +80,12 @@ export class EngagementResolver {
   })
   async languageEngagements(
     @ListArg(EngagementListInput) input: EngagementListInput,
-    @AnonSession() session: Session,
     @Loader(EngagementLoader) engagements: LoaderOf<EngagementLoader>,
   ): Promise<EngagementListOutput> {
-    const list = await this.service.list(
-      {
-        ...input,
-        filter: { ...input.filter, type: 'language' },
-      },
-      session,
-    );
+    const list = await this.service.list({
+      ...input,
+      filter: { ...input.filter, type: 'language' },
+    });
     engagements.primeAll(list.items);
 
     return list;
@@ -128,11 +120,9 @@ export class EngagementResolver {
   async createLanguageEngagement(
     @Args('input')
     { engagement: input, changeset }: CreateLanguageEngagementInput,
-    @LoggedInSession() session: Session,
   ): Promise<CreateLanguageEngagementOutput> {
     const engagement = await this.service.createLanguageEngagement(
       input,
-      session,
       changeset,
     );
     return { engagement };
@@ -144,11 +134,9 @@ export class EngagementResolver {
   async createInternshipEngagement(
     @Args('input')
     { engagement: input, changeset }: CreateInternshipEngagementInput,
-    @LoggedInSession() session: Session,
   ): Promise<CreateInternshipEngagementOutput> {
     const engagement = await this.service.createInternshipEngagement(
       input,
-      session,
       changeset,
     );
     return { engagement };
@@ -160,11 +148,9 @@ export class EngagementResolver {
   async updateLanguageEngagement(
     @Args('input')
     { engagement: input, changeset }: UpdateLanguageEngagementInput,
-    @LoggedInSession() session: Session,
   ): Promise<UpdateLanguageEngagementOutput> {
     const engagement = await this.service.updateLanguageEngagement(
       input,
-      session,
       changeset,
     );
     return { engagement };
@@ -176,11 +162,9 @@ export class EngagementResolver {
   async updateInternshipEngagement(
     @Args('input')
     { engagement: input, changeset }: UpdateInternshipEngagementInput,
-    @LoggedInSession() session: Session,
   ): Promise<UpdateInternshipEngagementOutput> {
     const engagement = await this.service.updateInternshipEngagement(
       input,
-      session,
       changeset,
     );
     return { engagement };
@@ -191,9 +175,8 @@ export class EngagementResolver {
   })
   async deleteEngagement(
     @Args() { id, changeset }: ChangesetIds,
-    @LoggedInSession() session: Session,
   ): Promise<DeleteEngagementOutput> {
-    await this.service.delete(id, session, changeset);
+    await this.service.delete(id, changeset);
     return { success: true };
   }
 }

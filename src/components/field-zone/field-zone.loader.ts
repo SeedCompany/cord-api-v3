@@ -10,6 +10,6 @@ export class FieldZoneLoader extends OrderedNestDataLoader<FieldZone> {
   }
 
   async loadMany(ids: readonly ID[]) {
-    return await this.fieldZones.readMany(ids, this.session);
+    return await this.fieldZones.readMany(ids);
   }
 }

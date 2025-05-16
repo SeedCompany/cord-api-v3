@@ -1,5 +1,4 @@
 import { Args, Mutation, Resolver } from '@nestjs/graphql';
-import { LoggedInSession, type Session } from '~/common';
 import { ResourceLoader } from '~/core';
 import { ProgressReport } from '../../dto';
 import { ExecuteProgressReportTransitionInput } from '../dto/execute-progress-report-transition.input';
@@ -15,9 +14,8 @@ export class ProgressReportExecuteTransitionResolver {
   @Mutation(() => ProgressReport)
   async transitionProgressReport(
     @Args({ name: 'input' }) input: ExecuteProgressReportTransitionInput,
-    @LoggedInSession() session: Session,
   ): Promise<ProgressReport> {
-    await this.workflow.executeTransition(input, session);
+    await this.workflow.executeTransition(input);
     return await this.resources.load(ProgressReport, input.report);
   }
 }

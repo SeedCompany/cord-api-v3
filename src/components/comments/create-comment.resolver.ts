@@ -5,7 +5,6 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { LoggedInSession, type Session } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { CommentThreadLoader } from './comment-thread.loader';
 import { CommentService } from './comment.service';
@@ -20,9 +19,8 @@ export class CreateCommentResolver {
   })
   async createComment(
     @Args('input') input: CreateCommentInput,
-    @LoggedInSession() session: Session,
   ): Promise<CreateCommentOutput> {
-    const comment = await this.service.create(input, session);
+    const comment = await this.service.create(input);
     return { comment };
   }
 

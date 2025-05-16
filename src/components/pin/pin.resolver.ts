@@ -4,7 +4,6 @@ import {
   type ID,
   IdArg,
   ListArg,
-  LoggedInSession,
   NotImplementedException,
   type Session,
 } from '~/common';
@@ -30,7 +29,7 @@ export class PinResolver {
     if (session.anonymous) {
       return false;
     }
-    return await this.pins.isPinned(id, session);
+    return await this.pins.isPinned(id);
   }
 
   @Mutation(() => Boolean, {
@@ -38,7 +37,6 @@ export class PinResolver {
       'Toggles the pinned state for the resource ID for the requesting user',
   })
   async togglePinned(
-    @LoggedInSession() session: Session,
     @IdArg({
       description: 'A resource ID',
     })
@@ -50,7 +48,7 @@ export class PinResolver {
     })
     pinned?: boolean,
   ): Promise<boolean> {
-    return await this.pins.togglePinned(id, session, pinned);
+    return await this.pins.togglePinned(id, pinned);
   }
 
   // @Query(() => PinnedListOutput, {
@@ -58,7 +56,6 @@ export class PinResolver {
   //   description: "A list of the requesting user's pinned items",
   // })
   async list(
-    @LoggedInSession() _session: Session,
     @ListArg(PinnedListInput) _input: PinnedListInput,
   ): Promise<PinnedListOutput> {
     throw new NotImplementedException();

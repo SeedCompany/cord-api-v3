@@ -1,4 +1,4 @@
-import { type Session, type UnsecuredDto } from '~/common';
+import { type UnsecuredDto } from '~/common';
 import {
   type CreateInternshipEngagement,
   type CreateLanguageEngagement,
@@ -11,7 +11,6 @@ export class EngagementCreatedEvent {
   constructor(
     public engagement: UnsecuredDto<Engagement>,
     readonly input: CreateLanguageEngagement | CreateInternshipEngagement,
-    readonly session: Session,
   ) {}
 
   isLanguageEngagement(): this is EngagementCreatedEvent & {

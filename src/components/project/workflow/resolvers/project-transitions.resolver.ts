@@ -1,12 +1,7 @@
 import { Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
 import { Loader, type LoaderOf } from '@seedcompany/data-loader';
 import { stripIndent } from 'common-tags';
-import {
-  AnonSession,
-  type ParentIdMiddlewareAdditions,
-  type Session,
-  viewOfChangeset,
-} from '~/common';
+import { type ParentIdMiddlewareAdditions, viewOfChangeset } from '~/common';
 import { SerializedWorkflow } from '../../../workflow/dto';
 import { SecuredProjectStep } from '../../dto';
 import { ProjectLoader } from '../../project.loader';
@@ -29,7 +24,6 @@ export class ProjectTransitionsResolver {
   async transitions(
     @Parent() status: SecuredProjectStep & ParentIdMiddlewareAdditions,
     @Loader(ProjectLoader) projects: LoaderOf<ProjectLoader>,
-    @AnonSession() session: Session,
   ): Promise<readonly ProjectWorkflowTransition[]> {
     if (!status.canRead || !status.value) {
       return [];
@@ -38,7 +32,7 @@ export class ProjectTransitionsResolver {
       id: status.parentId,
       view: viewOfChangeset(status.changeset),
     });
-    return await this.workflow.getAvailableTransitions(project, session);
+    return await this.workflow.getAvailableTransitions(project);
   }
 
   @ResolveField(() => Boolean, {
@@ -47,9 +41,7 @@ export class ProjectTransitionsResolver {
       and change to any other state?
    `,
   })
-  async canBypassTransitions(
-    @AnonSession() session: Session,
-  ): Promise<boolean> {
-    return this.workflow.canBypass(session);
+  async canBypassTransitions(): Promise<boolean> {
+    return this.workflow.canBypass();
   }
 }

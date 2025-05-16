@@ -5,7 +5,7 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { LoggedInSession, mapSecuredValue, type Session } from '~/common';
+import { mapSecuredValue } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { OrganizationLoader } from '../organization';
 import { SecuredOrganization } from '../organization/dto';
@@ -34,14 +34,9 @@ export class BudgetRecordResolver {
     description: 'Update a budgetRecord',
   })
   async updateBudgetRecord(
-    @LoggedInSession() session: Session,
     @Args('input') { budgetRecord: input, changeset }: UpdateBudgetRecordInput,
   ): Promise<UpdateBudgetRecordOutput> {
-    const budgetRecord = await this.service.updateRecord(
-      input,
-      session,
-      changeset,
-    );
+    const budgetRecord = await this.service.updateRecord(input, changeset);
     return { budgetRecord };
   }
 }

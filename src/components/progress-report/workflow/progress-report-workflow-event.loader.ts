@@ -10,6 +10,6 @@ export class ProgressReportWorkflowEventLoader extends OrderedNestDataLoader<Wor
   }
 
   async loadMany(ids: readonly ID[]) {
-    return await this.service.readMany(ids, this.session);
+    return await this.service.readMany(ids);
   }
 }

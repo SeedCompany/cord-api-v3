@@ -7,15 +7,12 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import {
-  AnonSession,
   type ID,
   IdArg,
   ListArg,
   loadManyIgnoreMissingThrowAny,
   loadSecuredIds,
-  LoggedInSession,
   mapSecuredValue,
-  type Session,
 } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { EngagementLoader } from '../engagement';
@@ -67,11 +64,10 @@ export class PartnerResolver {
     description: 'Look up partners',
   })
   async partners(
-    @AnonSession() session: Session,
     @ListArg(PartnerListInput) input: PartnerListInput,
     @Loader(PartnerLoader) partners: LoaderOf<PartnerLoader>,
   ): Promise<PartnerListOutput> {
-    const list = await this.partnerService.list(input, session);
+    const list = await this.partnerService.list(input);
     partners.primeAll(list.items);
     return list;
   }
@@ -146,16 +142,11 @@ export class PartnerResolver {
     description: 'The list of projects the partner has a partnership with.',
   })
   async projects(
-    @AnonSession() session: Session,
     @Parent() partner: Partner,
     @ListArg(ProjectListInput) input: ProjectListInput,
     @Loader(ProjectLoader) loader: LoaderOf<ProjectLoader>,
   ): Promise<SecuredProjectList> {
-    const list = await this.partnerService.listProjects(
-      partner,
-      input,
-      session,
-    );
+    const list = await this.partnerService.listProjects(partner, input);
     loader.primeAll(list.items);
     return list;
   }
@@ -164,16 +155,11 @@ export class PartnerResolver {
     description: "Languages of the partner's affiliated translation projects",
   })
   async languages(
-    @AnonSession() session: Session,
     @Parent() partner: Partner,
     @ListArg(LanguageListInput) input: LanguageListInput,
     @Loader(LanguageLoader) loader: LoaderOf<LanguageLoader>,
   ): Promise<SecuredLanguageList> {
-    const list = await this.partnerService.listLanguages(
-      partner,
-      input,
-      session,
-    );
+    const list = await this.partnerService.listLanguages(partner, input);
     loader.primeAll(list.items);
     return list;
   }
@@ -182,16 +168,11 @@ export class PartnerResolver {
     description: "Engagements of the partner's affiliated projects",
   })
   async engagements(
-    @AnonSession() session: Session,
     @Parent() partner: Partner,
     @ListArg(EngagementListInput) input: EngagementListInput,
     @Loader(EngagementLoader) loader: LoaderOf<EngagementLoader>,
   ): Promise<EngagementListOutput> {
-    const list = await this.partnerService.listEngagements(
-      partner,
-      input,
-      session,
-    );
+    const list = await this.partnerService.listEngagements(partner, input);
     loader.primeAll(list.items);
     return list;
   }
@@ -200,10 +181,9 @@ export class PartnerResolver {
     description: 'Create a partner',
   })
   async createPartner(
-    @LoggedInSession() session: Session,
     @Args('input') { partner: input }: CreatePartnerInput,
   ): Promise<CreatePartnerOutput> {
-    const partner = await this.partnerService.create(input, session);
+    const partner = await this.partnerService.create(input);
     return { partner };
   }
 
@@ -211,21 +191,17 @@ export class PartnerResolver {
     description: 'Update a partner',
   })
   async updatePartner(
-    @LoggedInSession() session: Session,
     @Args('input') { partner: input }: UpdatePartnerInput,
   ): Promise<UpdatePartnerOutput> {
-    const partner = await this.partnerService.update(input, session);
+    const partner = await this.partnerService.update(input);
     return { partner };
   }
 
   @Mutation(() => DeletePartnerOutput, {
     description: 'Delete a partner',
   })
-  async deletePartner(
-    @LoggedInSession() session: Session,
-    @IdArg() id: ID,
-  ): Promise<DeletePartnerOutput> {
-    await this.partnerService.delete(id, session);
+  async deletePartner(@IdArg() id: ID): Promise<DeletePartnerOutput> {
+    await this.partnerService.delete(id);
     return { success: true };
   }
 }

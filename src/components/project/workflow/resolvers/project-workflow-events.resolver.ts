@@ -1,5 +1,4 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { AnonSession, type Session } from '~/common';
 import { IProject, type Project } from '../../dto';
 import { ProjectWorkflowEvent as WorkflowEvent } from '../dto';
 import { ProjectWorkflowService } from '../project-workflow.service';
@@ -11,8 +10,7 @@ export class ProjectWorkflowEventsResolver {
   @ResolveField(() => [WorkflowEvent])
   async workflowEvents(
     @Parent() report: Project,
-    @AnonSession() session: Session,
   ): Promise<readonly WorkflowEvent[]> {
-    return await this.service.list(report, session);
+    return await this.service.list(report);
   }
 }

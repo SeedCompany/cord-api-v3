@@ -1,12 +1,5 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import {
-  AnonSession,
-  type ID,
-  IdArg,
-  ListArg,
-  LoggedInSession,
-  type Session,
-} from '~/common';
+import { type ID, IdArg, ListArg } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import {
   CreateFundingAccountInput,
@@ -40,12 +33,11 @@ export class FundingAccountResolver {
     description: 'Look up funding accounts',
   })
   async fundingAccounts(
-    @AnonSession() session: Session,
     @ListArg(FundingAccountListInput) input: FundingAccountListInput,
     @Loader(FundingAccountLoader)
     fundingAccounts: LoaderOf<FundingAccountLoader>,
   ): Promise<FundingAccountListOutput> {
-    const list = await this.fundingAccountService.list(input, session);
+    const list = await this.fundingAccountService.list(input);
     fundingAccounts.primeAll(list.items);
     return list;
   }
@@ -54,13 +46,9 @@ export class FundingAccountResolver {
     description: 'Create a funding account',
   })
   async createFundingAccount(
-    @LoggedInSession() session: Session,
     @Args('input') { fundingAccount: input }: CreateFundingAccountInput,
   ): Promise<CreateFundingAccountOutput> {
-    const fundingAccount = await this.fundingAccountService.create(
-      input,
-      session,
-    );
+    const fundingAccount = await this.fundingAccountService.create(input);
     return { fundingAccount };
   }
 
@@ -68,13 +56,9 @@ export class FundingAccountResolver {
     description: 'Update a funding account',
   })
   async updateFundingAccount(
-    @LoggedInSession() session: Session,
     @Args('input') { fundingAccount: input }: UpdateFundingAccountInput,
   ): Promise<UpdateFundingAccountOutput> {
-    const fundingAccount = await this.fundingAccountService.update(
-      input,
-      session,
-    );
+    const fundingAccount = await this.fundingAccountService.update(input);
     return { fundingAccount };
   }
 
@@ -82,10 +66,9 @@ export class FundingAccountResolver {
     description: 'Delete a funding account',
   })
   async deleteFundingAccount(
-    @LoggedInSession() session: Session,
     @IdArg() id: ID,
   ): Promise<DeleteFundingAccountOutput> {
-    await this.fundingAccountService.delete(id, session);
+    await this.fundingAccountService.delete(id);
     return { success: true };
   }
 }

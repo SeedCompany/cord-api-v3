@@ -9,7 +9,7 @@ export class AttachProjectRootDirectoryHandler
   constructor(private readonly files: FileService) {}
 
   async handle(event: ProjectCreatedEvent) {
-    const { project, session } = event;
+    const { project } = event;
 
     const rootDirId = await this.files.createRootDirectory({
       resource: project,
@@ -29,7 +29,7 @@ export class AttachProjectRootDirectoryHandler
       'Photos',
     ];
     for (const folder of folders) {
-      await this.files.createDirectory(rootDirId, folder, session);
+      await this.files.createDirectory(rootDirId, folder);
     }
   }
 }

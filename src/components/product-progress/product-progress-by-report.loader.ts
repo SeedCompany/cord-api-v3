@@ -30,6 +30,6 @@ export class ProductProgressByReportLoader extends OrderedNestDataLoader<
   }
 
   async loadMany(reports: readonly ProgressVariantByReportInput[]) {
-    return await this.service.readAllForManyReports(reports, this.session);
+    return await this.service.readAllForManyReports(reports);
   }
 }

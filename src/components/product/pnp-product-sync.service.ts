@@ -4,7 +4,7 @@ import { labelOfVerseRanges } from '@seedcompany/scripture';
 import { stripIndent } from 'common-tags';
 import { difference, uniq } from 'lodash';
 import { DateTime } from 'luxon';
-import { DateInterval, type ID, type Session } from '~/common';
+import { DateInterval, type ID } from '~/common';
 import { ILogger, Logger, ResourceLoader } from '~/core';
 import { type Downloadable, type FileVersion } from '../file/dto';
 import {
@@ -217,20 +217,15 @@ export class PnpProductSyncService {
     engagementId,
     methodology,
     actionableProductRows,
-    session,
   }: {
     engagementId: ID<'LanguageEngagement'>;
     methodology: ProductMethodology;
     actionableProductRows: ReadonlyArray<
       ExtractedRow & { existingId: ID<'Product'> | undefined }
     >;
-    session: Session;
   }) {
     const createdAt = DateTime.now();
-    const storyIds = await this.getOrCreateStoriesByName(
-      actionableProductRows,
-      session,
-    );
+    const storyIds = await this.getOrCreateStoriesByName(actionableProductRows);
 
     // Create/update products 5 at a time.
     await asyncPool(5, actionableProductRows, async (row) => {
@@ -257,7 +252,7 @@ export class PnpProductSyncService {
             ...props,
             id: existingId,
           };
-          await this.products.updateDirect(updates, session);
+          await this.products.updateDirect(updates);
         } else {
           const create: CreateDirectScriptureProduct = {
             ...props,
@@ -269,7 +264,7 @@ export class PnpProductSyncService {
             // This doesn't account for row changes in subsequent PnP uploads
             createdAt: createdAt.plus({ milliseconds: index }),
           };
-          await this.products.create(create, session);
+          await this.products.create(create);
         }
       } else if (row.story) {
         const props = {
@@ -288,7 +283,7 @@ export class PnpProductSyncService {
             ...props,
             id: existingId,
           };
-          await this.products.updateDerivative(updates, session);
+          await this.products.updateDerivative(updates);
         } else {
           const create: CreateDerivativeScriptureProduct = {
             ...props,
@@ -297,16 +292,13 @@ export class PnpProductSyncService {
             pnpIndex: index,
             createdAt: createdAt.plus({ milliseconds: index }),
           };
-          await this.products.create(create, session);
+          await this.products.create(create);
         }
       }
     });
   }
 
-  private async getOrCreateStoriesByName(
-    rows: readonly ExtractedRow[],
-    session: Session,
-  ) {
+  private async getOrCreateStoriesByName(rows: readonly ExtractedRow[]) {
     const names = uniq(
       rows.flatMap((row) =>
         !row.story ? [] : row.placeholder ? 'Unknown' : row.story,
@@ -323,7 +315,7 @@ export class PnpProductSyncService {
     const byName = { ...existing };
     const newNames = difference(names, Object.keys(existing));
     await asyncPool(3, newNames, async (name) => {
-      const story = await this.stories.create({ name }, session);
+      const story = await this.stories.create({ name });
       byName[name] = story.id;
     });
     return byName as Readonly<typeof byName>;

@@ -1,6 +1,6 @@
 import { asyncPool, setOf } from '@seedcompany/common';
 import { node, relation } from 'cypher-query-builder';
-import { type ID, ServerException, type Session } from '~/common';
+import { type ID, ServerException } from '~/common';
 import { EventsHandler, type IEventHandler, ILogger, Logger } from '~/core';
 import { DatabaseService } from '~/core/database';
 import { ACTIVE, deleteBaseNode, INACTIVE } from '~/core/database/query';
@@ -24,7 +24,7 @@ export class ApplyFinalizedChangesetToEngagement
     private readonly logger: ILogger,
   ) {}
 
-  async handle({ changeset, session }: SubscribedEvent) {
+  async handle({ changeset }: SubscribedEvent) {
     this.logger.debug('Applying changeset props');
 
     try {
@@ -122,7 +122,7 @@ export class ApplyFinalizedChangesetToEngagement
         ...(result?.engagementIds ?? []),
         ...(newResult?.engagementIds ?? []),
       ]);
-      await this.triggerUpdateEvent(allEngagementIds, session);
+      await this.triggerUpdateEvent(allEngagementIds);
     } catch (exception) {
       throw new ServerException(
         'Failed to apply changeset to project',
@@ -151,9 +151,9 @@ export class ApplyFinalizedChangesetToEngagement
       .run();
   }
 
-  async triggerUpdateEvent(ids: ReadonlySet<ID>, session: Session) {
+  async triggerUpdateEvent(ids: ReadonlySet<ID>) {
     await asyncPool(1, ids, async (id) => {
-      await this.engagementService.triggerUpdateEvent(id, session);
+      await this.engagementService.triggerUpdateEvent(id);
     });
   }
 }

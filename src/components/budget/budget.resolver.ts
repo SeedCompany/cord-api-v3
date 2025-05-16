@@ -7,7 +7,6 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import { sumBy } from 'lodash';
-import { LoggedInSession, type Session } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { BudgetService } from '../budget';
 import { FileNodeLoader, resolveDefinedFile } from '../file';
@@ -37,10 +36,9 @@ export class BudgetResolver {
     description: 'Update a budget',
   })
   async updateBudget(
-    @LoggedInSession() session: Session,
     @Args('input') { budget: input }: UpdateBudgetInput,
   ): Promise<UpdateBudgetOutput> {
-    const budget = await this.service.update(input, session);
+    const budget = await this.service.update(input);
     return { budget };
   }
 }

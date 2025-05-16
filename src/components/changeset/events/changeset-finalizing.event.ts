@@ -1,4 +1,4 @@
-import { type Session, type UnsecuredDto } from '~/common';
+import { type UnsecuredDto } from '~/common';
 import { type Changeset } from '../dto';
 
 /**
@@ -8,8 +8,5 @@ import { type Changeset } from '../dto';
 export class ChangesetFinalizingEvent<
   TChangeset extends Changeset = Changeset,
 > {
-  constructor(
-    readonly changeset: UnsecuredDto<TChangeset>,
-    readonly session: Session,
-  ) {}
+  constructor(readonly changeset: UnsecuredDto<TChangeset>) {}
 }

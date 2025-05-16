@@ -1,11 +1,5 @@
 import { type DateTimeUnit } from 'luxon';
-import {
-  type CalendarDate,
-  DateInterval,
-  type ID,
-  type Range,
-  type Session,
-} from '~/common';
+import { type CalendarDate, DateInterval, type ID, type Range } from '~/common';
 import { type ReportType } from '../dto';
 import { type PeriodicReportService } from '../periodic-report.service';
 
@@ -18,7 +12,6 @@ export abstract class AbstractPeriodicReportSync {
   constructor(protected readonly periodicReports: PeriodicReportService) {}
 
   protected async sync(
-    session: Session,
     parent: ID,
     type: ReportType,
     diff: {
@@ -36,13 +29,12 @@ export abstract class AbstractPeriodicReportSync {
       type,
       parent,
       intervals: diff.additions,
-      session,
     });
 
     if (!finalAt) {
       return;
     }
-    await this.periodicReports.mergeFinalReport(parent, type, finalAt, session);
+    await this.periodicReports.mergeFinalReport(parent, type, finalAt);
   }
 
   /**

@@ -10,7 +10,6 @@ import {
   RangeException,
   ReadAfterCreationFailed,
   ServerException,
-  type Session,
   type UnsecuredDto,
   viewOfChangeset,
 } from '~/common';
@@ -58,11 +57,7 @@ export class PartnershipService {
     @Logger('partnership:service') private readonly logger: ILogger,
   ) {}
 
-  async create(
-    input: CreatePartnership,
-    session: Session,
-    changeset?: ID,
-  ): Promise<Partnership> {
+  async create(input: CreatePartnership, changeset?: ID): Promise<Partnership> {
     const { projectId, partnerId } = input;
 
     PartnershipDateRangeException.throwIfInvalid(input);
@@ -73,7 +68,7 @@ export class PartnershipService {
     );
     const primary = isFirstPartnership ? true : input.primary;
 
-    const partner = await this.partnerService.readOne(partnerId, session);
+    const partner = await this.partnerService.readOne(partnerId);
     this.verifyFinancialReportingType(
       input.financialReportingType,
       input.types ?? [],
@@ -86,7 +81,6 @@ export class PartnershipService {
           ...input,
           primary,
         },
-        session,
         changeset,
       );
 
@@ -96,7 +90,6 @@ export class PartnershipService {
 
       const partnership = await this.readOne(
         result.id,
-        session,
         viewOfChangeset(changeset),
       ).catch((e) => {
         throw e instanceof NotFoundException
@@ -104,13 +97,9 @@ export class PartnershipService {
           : e;
       });
 
-      this.privileges
-        .for(session, Partnership, partnership)
-        .verifyCan('create');
+      this.privileges.for(Partnership, partnership).verifyCan('create');
 
-      await this.eventBus.publish(
-        new PartnershipCreatedEvent(partnership, session),
-      );
+      await this.eventBus.publish(new PartnershipCreatedEvent(partnership));
 
       return partnership;
     } catch (exception) {
@@ -122,49 +111,38 @@ export class PartnershipService {
   }
 
   @HandleIdLookup(Partnership)
-  async readOne(
-    id: ID,
-    session: Session,
-    view?: ObjectView,
-  ): Promise<Partnership> {
-    const dto = await this.repo.readOne(id, session, view);
-    return this.secure(dto, session);
+  async readOne(id: ID, view?: ObjectView): Promise<Partnership> {
+    const dto = await this.repo.readOne(id, view);
+    return this.secure(dto);
   }
 
-  async readMany(ids: readonly ID[], session: Session, view?: ObjectView) {
-    const partnerships = await this.repo.readMany(ids, session, view);
-    return partnerships.map((dto) => this.secure(dto, session));
+  async readMany(ids: readonly ID[], view?: ObjectView) {
+    const partnerships = await this.repo.readMany(ids, view);
+    return partnerships.map((dto) => this.secure(dto));
   }
 
   async readManyByProjectAndPartner(
     input: readonly PartnershipByProjectAndPartnerInput[],
-    session: Session,
   ) {
-    const partnerships = await this.repo.readManyByProjectAndPartner(
-      input,
-      session,
-    );
+    const partnerships = await this.repo.readManyByProjectAndPartner(input);
     return partnerships.map((dto) => ({
       id: { project: dto.project.id, partner: dto.partner.id },
-      partnership: this.secure(dto, session),
+      partnership: this.secure(dto),
     }));
   }
 
-  async listAllByProjectId(projectId: ID, session: Session) {
-    return await this.repo.listAllByProjectId(projectId, session);
+  async listAllByProjectId(projectId: ID) {
+    return await this.repo.listAllByProjectId(projectId);
   }
 
-  secure(dto: UnsecuredDto<Partnership>, session: Session) {
-    return this.privileges.for(session, Partnership).secure(dto);
+  secure(dto: UnsecuredDto<Partnership>) {
+    return this.privileges.for(Partnership).secure(dto);
   }
 
-  async update(input: UpdatePartnership, session: Session, view?: ObjectView) {
-    const existing = await this.repo.readOne(input.id, session, view);
-    const partner = await this.partnerService.readOne(
-      existing.partner.id,
-      session,
-    );
-    const object = this.secure(existing, session);
+  async update(input: UpdatePartnership, view?: ObjectView) {
+    const existing = await this.repo.readOne(input.id, view);
+    const partner = await this.partnerService.readOne(existing.partner.id);
+    const object = this.secure(existing);
 
     try {
       this.verifyFinancialReportingType(
@@ -193,7 +171,7 @@ export class PartnershipService {
     }
 
     const changes = this.repo.getActualChanges(object, input);
-    this.privileges.for(session, Partnership, object).verifyChanges(changes);
+    this.privileges.for(Partnership, object).verifyChanges(changes);
     const { mou, agreement, ...simpleChanges } = changes;
 
     PartnershipDateRangeException.throwIfInvalid(existing, changes);
@@ -209,12 +187,7 @@ export class PartnershipService {
 
     // TODO: remove negation. Temporary fix until file handling is refactored
     if (!object.mou) {
-      await this.files.updateDefinedFile(
-        object.mou,
-        'partnership.mou',
-        mou,
-        session,
-      );
+      await this.files.updateDefinedFile(object.mou, 'partnership.mou', mou);
     }
     // TODO: remove negation. Temporary fix until file handling is refactored
     if (!object.agreement) {
@@ -222,25 +195,19 @@ export class PartnershipService {
         object.agreement,
         'partnership.agreement',
         agreement,
-        session,
       );
     }
 
-    const partnership = await this.readOne(input.id, session, view);
-    const event = new PartnershipUpdatedEvent(
-      partnership,
-      object,
-      input,
-      session,
-    );
+    const partnership = await this.readOne(input.id, view);
+    const event = new PartnershipUpdatedEvent(partnership, object, input);
     await this.eventBus.publish(event);
     return event.updated;
   }
 
-  async delete(id: ID, session: Session, changeset?: ID): Promise<void> {
-    const object = await this.readOne(id, session);
+  async delete(id: ID, changeset?: ID): Promise<void> {
+    const object = await this.readOne(id);
 
-    this.privileges.for(session, Partnership, object).verifyCan('delete');
+    this.privileges.for(Partnership, object).verifyCan('delete');
 
     // only primary one partnership could be removed
     if (object.primary.value) {
@@ -253,9 +220,7 @@ export class PartnershipService {
       }
     }
 
-    await this.eventBus.publish(
-      new PartnershipWillDeleteEvent(object, session),
-    );
+    await this.eventBus.publish(new PartnershipWillDeleteEvent(object));
 
     try {
       await this.repo.deleteNode(object, { changeset });
@@ -267,17 +232,16 @@ export class PartnershipService {
 
   async list(
     partialInput: Partial<PartnershipListInput>,
-    session: Session,
     changeset?: ID,
   ): Promise<PartnershipListOutput> {
     const input = PartnershipListInput.defaultValue(
       PartnershipListInput,
       partialInput,
     );
-    const results = await this.repo.list(input, session, changeset);
+    const results = await this.repo.list(input, changeset);
     return {
       ...results,
-      items: results.items.map((dto) => this.secure(dto, session)),
+      items: results.items.map((dto) => this.secure(dto)),
     };
   }
 

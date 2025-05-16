@@ -165,32 +165,26 @@ export class AuthenticationGelRepository
     },
   );
 
-  async getCurrentPasswordHash(session: Session) {
-    return await this.db.run(this.getCurrentPasswordHashQuery, {
-      userId: session.userId,
-    });
+  async getCurrentPasswordHash() {
+    return await this.db.run(this.getCurrentPasswordHashQuery, {});
   }
-  private readonly getCurrentPasswordHashQuery = e.params(
-    { userId: e.uuid },
-    ({ userId }) => {
-      const user = e.cast(e.User, userId);
-      const identity = e.select(e.Auth.Identity, () => ({
-        filter_single: { user },
-      }));
-      return identity.passwordHash;
-    },
-  );
+  private readonly getCurrentPasswordHashQuery = e.params({}, () => {
+    const user = e.global.currentUser;
+    const identity = e.select(e.Auth.Identity, () => ({
+      filter_single: { user },
+    }));
+    return identity.passwordHash;
+  });
 
-  async updatePassword(newPasswordHash: string, session: Session) {
+  async updatePassword(newPasswordHash: string) {
     await this.db.run(this.updatePasswordQuery, {
-      userId: session.userId,
       passwordHash: newPasswordHash,
     });
   }
   private readonly updatePasswordQuery = e.params(
-    { userId: e.uuid, passwordHash: e.str },
-    ({ userId, passwordHash }) => {
-      const user = e.cast(e.User, userId);
+    { passwordHash: e.str },
+    ({ passwordHash }) => {
+      const user = e.global.currentUser;
       const identity = e.assert_exists(
         e.select(e.Auth.Identity, () => ({
           filter_single: { user },

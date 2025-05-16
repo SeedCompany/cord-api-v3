@@ -14,18 +14,13 @@ export class PostLoader extends SessionAwareLoaderStrategy<Post> {
   }
 
   async loadMany(ids: readonly ID[]) {
-    const session = this.session;
-
-    const posts = await this.repo.readMany(ids, session);
+    const posts = await this.repo.readMany(ids);
 
     const parentIds = new Set(posts.map((post) => post.parent.properties.id));
     const parents = new Map(
       await Promise.all(
         [...parentIds].map(async (id) => {
-          const parent = await this.service.getPermissionsFromPostable(
-            id,
-            session,
-          );
+          const parent = await this.service.getPermissionsFromPostable(id);
           return [id, parent] as const;
         }),
       ),
@@ -37,7 +32,7 @@ export class PostLoader extends SessionAwareLoaderStrategy<Post> {
       } catch (error) {
         return { key: dto.id, error };
       }
-      return this.service.secure(dto, session);
+      return this.service.secure(dto);
     });
   }
 }

@@ -7,12 +7,9 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import {
-  AnonSession,
   ListArg,
-  LoggedInSession,
   mapSecuredValue,
   SecuredDateRange,
-  type Session,
   viewOfChangeset,
 } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
@@ -41,10 +38,9 @@ export class PartnershipResolver {
     description: 'Create a Partnership entry',
   })
   async createPartnership(
-    @LoggedInSession() session: Session,
     @Args('input') { partnership: input, changeset }: CreatePartnershipInput,
   ): Promise<CreatePartnershipOutput> {
-    const partnership = await this.service.create(input, session, changeset);
+    const partnership = await this.service.create(input, changeset);
     return { partnership };
   }
 
@@ -106,11 +102,10 @@ export class PartnershipResolver {
     deprecationReason: 'Query via project instead',
   })
   async partnerships(
-    @AnonSession() session: Session,
     @ListArg(PartnershipListInput) input: PartnershipListInput,
     @Loader(PartnershipLoader) partnerships: LoaderOf<PartnershipLoader>,
   ): Promise<PartnershipListOutput> {
-    const list = await this.service.list(input, session);
+    const list = await this.service.list(input);
     partnerships.primeAll(list.items);
     return list;
   }
@@ -119,12 +114,10 @@ export class PartnershipResolver {
     description: 'Update a Partnership',
   })
   async updatePartnership(
-    @LoggedInSession() session: Session,
     @Args('input') { partnership: input, changeset }: UpdatePartnershipInput,
   ): Promise<UpdatePartnershipOutput> {
     const partnership = await this.service.update(
       input,
-      session,
       viewOfChangeset(changeset),
     );
     return { partnership };
@@ -134,10 +127,9 @@ export class PartnershipResolver {
     description: 'Delete a Partnership',
   })
   async deletePartnership(
-    @LoggedInSession() session: Session,
     @Args() { id, changeset }: ChangesetIds,
   ): Promise<DeletePartnershipOutput> {
-    await this.service.delete(id, session, changeset);
+    await this.service.delete(id, changeset);
     return { success: true };
   }
 }

@@ -10,6 +10,6 @@ export class ActorLoader extends SessionAwareLoaderStrategy<Actor> {
   }
 
   async loadMany(ids: readonly ID[]) {
-    return await this.users.readManyActors(ids, this.session);
+    return await this.users.readManyActors(ids);
   }
 }

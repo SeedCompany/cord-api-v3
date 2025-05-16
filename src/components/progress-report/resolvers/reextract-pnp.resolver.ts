@@ -1,11 +1,5 @@
 import { Mutation, Resolver } from '@nestjs/graphql';
-import {
-  type ID,
-  IdArg,
-  InputException,
-  LoggedInSession,
-  type Session,
-} from '~/common';
+import { type ID, IdArg, InputException } from '~/common';
 import { IEventBus, Loader, type LoaderOf } from '~/core';
 import { FileNodeLoader, FileService, resolveDefinedFile } from '../../file';
 import { PeriodicReportLoader } from '../../periodic-report';
@@ -28,7 +22,6 @@ export class ReextractPnpResolver {
     reportId: ID,
     @Loader(PeriodicReportLoader) reportLoader: LoaderOf<PeriodicReportLoader>,
     @Loader(FileNodeLoader) fileLoader: LoaderOf<FileNodeLoader>,
-    @LoggedInSession() session: Session,
   ): Promise<PnpProgressExtractionResult> {
     const report = await reportLoader.load(reportId);
     if (report.type !== 'Progress') {
@@ -41,13 +34,10 @@ export class ReextractPnpResolver {
       throw new InputException('This report does not have a PnP uploaded');
     }
 
-    const fv = await this.files.getFileVersion(
-      file.value.latestVersionId,
-      session,
-    );
+    const fv = await this.files.getFileVersion(file.value.latestVersionId);
     const pnp = this.files.asDownloadable(fv);
 
-    const event = new PeriodicReportUploadedEvent(report, pnp, session);
+    const event = new PeriodicReportUploadedEvent(report, pnp);
     await this.eventBus.publish(event);
 
     return event.pnpResult;

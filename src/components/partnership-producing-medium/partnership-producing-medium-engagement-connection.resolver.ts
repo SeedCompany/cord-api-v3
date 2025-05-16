@@ -1,6 +1,5 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { AnonSession, type Session } from '~/common';
 import { LanguageEngagement } from '../engagement/dto';
 import { SecuredPartnershipsProducingMediums } from './dto/partnership-producing-medium.dto';
 import { PartnershipProducingMediumService } from './partnership-producing-medium.service';
@@ -17,8 +16,7 @@ export class PartnershipProducingMediumEngagementConnectionResolver {
   })
   async partnershipsProducingMediums(
     @Parent() engagement: LanguageEngagement,
-    @AnonSession() session: Session,
   ): Promise<SecuredPartnershipsProducingMediums> {
-    return await this.service.list(engagement, session);
+    return await this.service.list(engagement);
   }
 }

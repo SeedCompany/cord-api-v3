@@ -22,7 +22,6 @@ export class ExtractPnpFileOnUploadHandler {
 
     this.logger.info('Extracting progress summary', {
       report: event.report.id,
-      userId: event.session.userId,
       fileId: event.file.id,
     });
 
@@ -44,7 +43,6 @@ export class ExtractPnpFileOnUploadHandler {
     this.logger.info('Extracted progress summary', {
       ...extracted,
       report: event.report.id,
-      userId: event.session.userId,
       fileId: event.file.id,
     });
 

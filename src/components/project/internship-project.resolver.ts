@@ -1,6 +1,6 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { AnonSession, ListArg, type Session } from '~/common';
+import { ListArg } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { EngagementLoader } from '../engagement';
 import {
@@ -22,7 +22,6 @@ export class InternshipProjectResolver {
     `,
   })
   async internshipEngagements(
-    @AnonSession() session: Session,
     @Parent() project: Project,
     @ListArg(EngagementListInput) input: EngagementListInput,
     @Loader(EngagementLoader) engagements: LoaderOf<EngagementLoader>,
@@ -30,7 +29,6 @@ export class InternshipProjectResolver {
     const list = await this.projects.listEngagements(
       project,
       input,
-      session,
       project.changeset ? { changeset: project.changeset } : { active: true },
     );
     engagements.primeAll(list.items);

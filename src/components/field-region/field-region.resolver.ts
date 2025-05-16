@@ -6,15 +6,7 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import {
-  AnonSession,
-  type ID,
-  IdArg,
-  ListArg,
-  LoggedInSession,
-  mapSecuredValue,
-  type Session,
-} from '~/common';
+import { type ID, IdArg, ListArg, mapSecuredValue } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { FieldZoneLoader } from '../field-zone';
 import { SecuredFieldZone } from '../field-zone/dto';
@@ -51,11 +43,10 @@ export class FieldRegionResolver {
     description: 'Look up field regions',
   })
   async fieldRegions(
-    @AnonSession() session: Session,
     @ListArg(FieldRegionListInput) input: FieldRegionListInput,
     @Loader(FieldRegionLoader) fieldRegions: LoaderOf<FieldRegionLoader>,
   ): Promise<FieldRegionListOutput> {
-    const list = await this.fieldRegionService.list(input, session);
+    const list = await this.fieldRegionService.list(input);
     fieldRegions.primeAll(list.items);
     return list;
   }
@@ -84,10 +75,9 @@ export class FieldRegionResolver {
     description: 'Create a field region',
   })
   async createFieldRegion(
-    @LoggedInSession() session: Session,
     @Args('input') { fieldRegion: input }: CreateFieldRegionInput,
   ): Promise<CreateFieldRegionOutput> {
-    const fieldRegion = await this.fieldRegionService.create(input, session);
+    const fieldRegion = await this.fieldRegionService.create(input);
     return { fieldRegion };
   }
 
@@ -95,21 +85,17 @@ export class FieldRegionResolver {
     description: 'Update a field region',
   })
   async updateFieldRegion(
-    @LoggedInSession() session: Session,
     @Args('input') { fieldRegion: input }: UpdateFieldRegionInput,
   ): Promise<UpdateFieldRegionOutput> {
-    const fieldRegion = await this.fieldRegionService.update(input, session);
+    const fieldRegion = await this.fieldRegionService.update(input);
     return { fieldRegion };
   }
 
   @Mutation(() => DeleteFieldRegionOutput, {
     description: 'Delete a field region',
   })
-  async deleteFieldRegion(
-    @LoggedInSession() session: Session,
-    @IdArg() id: ID,
-  ): Promise<DeleteFieldRegionOutput> {
-    await this.fieldRegionService.delete(id, session);
+  async deleteFieldRegion(@IdArg() id: ID): Promise<DeleteFieldRegionOutput> {
+    await this.fieldRegionService.delete(id);
     return { success: true };
   }
 }

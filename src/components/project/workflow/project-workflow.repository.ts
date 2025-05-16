@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { type ID, type Session } from '~/common';
+import { type ID } from '~/common';
 import { e, edgeql, RepoFor } from '~/core/gel';
 import { type ProjectStep } from '../dto';
 import { projectRefShape } from '../project.gel.repository';
@@ -21,11 +21,11 @@ export class ProjectWorkflowRepository extends RepoFor(ProjectWorkflowEvent, {
   }),
   omit: ['list', 'create', 'update', 'delete', 'readMany'],
 }) {
-  async readMany(ids: readonly ID[], _session: Session) {
+  async readMany(ids: readonly ID[]) {
     return await this.defaults.readMany(ids);
   }
 
-  async list(projectId: ID, _session: Session) {
+  async list(projectId: ID) {
     const project = e.cast(e.Project, e.uuid(projectId));
     const query = e.select(project.workflowEvents, this.hydrate);
     return await this.db.run(query);
@@ -35,7 +35,6 @@ export class ProjectWorkflowRepository extends RepoFor(ProjectWorkflowEvent, {
     input: Omit<ExecuteProjectTransitionInput, 'bypassTo'> & {
       to: ProjectStep;
     },
-    _session: Session,
   ) {
     const project = e.cast(e.Project, e.uuid(input.project));
     const created = e.insert(e.Project.WorkflowEvent, {

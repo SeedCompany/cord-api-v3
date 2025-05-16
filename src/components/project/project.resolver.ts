@@ -9,7 +9,6 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import {
-  AnonSession,
   Fields,
   firstLettersOfWords,
   type ID,
@@ -17,11 +16,9 @@ import {
   IdField,
   IsOnly,
   ListArg,
-  LoggedInSession,
   mapSecuredValue,
   NotFoundException,
   SecuredDateRange,
-  type Session,
 } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { SecuredBudget } from '../budget/dto';
@@ -106,9 +103,8 @@ export class ProjectResolver {
   async projects(
     @ListArg(ProjectListInput) input: ProjectListInput,
     @Loader(ProjectLoader) projects: LoaderOf<ProjectLoader>,
-    @AnonSession() session: Session,
   ): Promise<ProjectListOutput> {
-    const list = await this.projectService.list(input, session);
+    const list = await this.projectService.list(input);
     projects.primeAll(list.items);
     return list;
   }
@@ -119,21 +115,17 @@ export class ProjectResolver {
   async translationProjects(
     @ListArg(ProjectListInput) input: ProjectListInput,
     @Loader(ProjectLoader) projects: LoaderOf<ProjectLoader>,
-    @AnonSession() session: Session,
   ): Promise<ProjectListOutput> {
-    const list = await this.projectService.list(
-      {
-        ...input,
-        filter: {
-          ...input.filter,
-          type: [
-            ProjectType.MomentumTranslation,
-            ProjectType.MultiplicationTranslation,
-          ],
-        },
+    const list = await this.projectService.list({
+      ...input,
+      filter: {
+        ...input.filter,
+        type: [
+          ProjectType.MomentumTranslation,
+          ProjectType.MultiplicationTranslation,
+        ],
       },
-      session,
-    );
+    });
     projects.primeAll(list.items);
     return list;
   }
@@ -144,18 +136,14 @@ export class ProjectResolver {
   async internshipProjects(
     @ListArg(ProjectListInput) input: ProjectListInput,
     @Loader(ProjectLoader) projects: LoaderOf<ProjectLoader>,
-    @AnonSession() session: Session,
   ): Promise<ProjectListOutput> {
-    const list = await this.projectService.list(
-      {
-        ...input,
-        filter: {
-          ...input.filter,
-          type: [ProjectType.Internship],
-        },
+    const list = await this.projectService.list({
+      ...input,
+      filter: {
+        ...input.filter,
+        type: [ProjectType.Internship],
       },
-      session,
-    );
+    });
     projects.primeAll(list.items);
     return list;
   }
@@ -169,18 +157,13 @@ export class ProjectResolver {
 
   @ResolveField(() => SecuredProjectChangeRequestList)
   async changeRequests(
-    @AnonSession() session: Session,
     @Parent() project: Project,
     @ListArg(ProjectChangeRequestListInput)
     input: ProjectChangeRequestListInput,
     @Loader(ProjectChangeRequestLoader)
     projectChangeRequests: LoaderOf<ProjectChangeRequestLoader>,
   ): Promise<SecuredProjectChangeRequestList> {
-    const list = await this.projectService.listChangeRequests(
-      project,
-      input,
-      session,
-    );
+    const list = await this.projectService.listChangeRequests(project, input);
     projectChangeRequests.primeAll(list.items);
     return list;
   }
@@ -188,20 +171,12 @@ export class ProjectResolver {
   @ResolveField(() => SecuredBudget, {
     description: `The project's current budget`,
   })
-  async budget(
-    @Parent() project: Project,
-    @AnonSession() session: Session,
-  ): Promise<SecuredBudget> {
-    return await this.projectService.currentBudget(
-      project,
-      session,
-      project.changeset,
-    );
+  async budget(@Parent() project: Project): Promise<SecuredBudget> {
+    return await this.projectService.currentBudget(project, project.changeset);
   }
 
   @ResolveField(() => SecuredEngagementList)
   async engagements(
-    @AnonSession() session: Session,
     @Parent() project: Project,
     @ListArg(EngagementListInput) input: EngagementListInput,
     @Loader(EngagementLoader) engagements: LoaderOf<EngagementLoader>,
@@ -216,7 +191,6 @@ export class ProjectResolver {
     const list = await this.projectService.listEngagements(
       project,
       input,
-      session,
       project.changeset ? { changeset: project.changeset } : { active: true },
     );
     engagements.primeAll(list.items);
@@ -227,23 +201,17 @@ export class ProjectResolver {
     description: 'The project members',
   })
   async team(
-    @AnonSession() session: Session,
     @Parent() project: Project,
     @ListArg(ProjectMemberListInput) input: ProjectMemberListInput,
     @Loader(ProjectMemberLoader) projectMembers: LoaderOf<ProjectMemberLoader>,
   ): Promise<SecuredProjectMemberList> {
-    const list = await this.projectService.listProjectMembers(
-      project,
-      input,
-      session,
-    );
+    const list = await this.projectService.listProjectMembers(project, input);
     projectMembers.primeAll(list.items);
     return list;
   }
 
   @ResolveField(() => SecuredPartnershipList)
   async partnerships(
-    @AnonSession() session: Session,
     @Parent() project: Project,
     @ListArg(PartnershipListInput) input: PartnershipListInput,
     @Loader(PartnershipLoader) partnerships: LoaderOf<PartnershipLoader>,
@@ -251,7 +219,6 @@ export class ProjectResolver {
     const list = await this.projectService.listPartnerships(
       project,
       input,
-      session,
       project.changeset,
     );
     partnerships.primeAll(list.items);
@@ -322,16 +289,11 @@ export class ProjectResolver {
 
   @ResolveField(() => SecuredLocationList)
   async otherLocations(
-    @AnonSession() session: Session,
     @Parent() project: Project,
     @ListArg(LocationListInput) input: LocationListInput,
     @Loader(LocationLoader) locations: LoaderOf<LocationLoader>,
   ): Promise<SecuredLocationList> {
-    const list = await this.projectService.listOtherLocations(
-      project,
-      input,
-      session,
-    );
+    const list = await this.projectService.listOtherLocations(project, input);
     locations.primeAll(list.items);
     return list;
   }
@@ -386,10 +348,9 @@ export class ProjectResolver {
   })
   async createProject(
     @Args('input') { project: input }: CreateProjectInput,
-    @LoggedInSession() session: Session,
   ): Promise<CreateProjectOutput> {
-    const project = await this.projectService.create(input, session);
-    const secured = this.projectService.secure(project, session);
+    const project = await this.projectService.create(input);
+    const secured = this.projectService.secure(project);
     return { project: secured };
   }
 
@@ -398,21 +359,17 @@ export class ProjectResolver {
   })
   async updateProject(
     @Args('input') { project: input, changeset }: UpdateProjectInput,
-    @LoggedInSession() session: Session,
   ): Promise<UpdateProjectOutput> {
-    const project = await this.projectService.update(input, session, changeset);
-    const secured = this.projectService.secure(project, session);
+    const project = await this.projectService.update(input, changeset);
+    const secured = this.projectService.secure(project);
     return { project: secured };
   }
 
   @Mutation(() => DeleteProjectOutput, {
     description: 'Delete a project',
   })
-  async deleteProject(
-    @IdArg() id: ID,
-    @LoggedInSession() session: Session,
-  ): Promise<DeleteProjectOutput> {
-    await this.projectService.delete(id, session);
+  async deleteProject(@IdArg() id: ID): Promise<DeleteProjectOutput> {
+    await this.projectService.delete(id);
     return { success: true };
   }
 
@@ -420,21 +377,19 @@ export class ProjectResolver {
     description: 'Add a location to a project',
   })
   async addOtherLocationToProject(
-    @LoggedInSession() session: Session,
     @Args() { projectId, locationId }: ModifyOtherLocationArgs,
   ): Promise<Project> {
     await this.projectService.addOtherLocation(projectId, locationId);
-    return await this.projectService.readOne(projectId, session);
+    return await this.projectService.readOne(projectId);
   }
 
   @Mutation(() => IProject, {
     description: 'Remove a location from a project',
   })
   async removeOtherLocationFromProject(
-    @LoggedInSession() session: Session,
     @Args() { projectId, locationId }: ModifyOtherLocationArgs,
   ): Promise<Project> {
     await this.projectService.removeOtherLocation(projectId, locationId);
-    return await this.projectService.readOne(projectId, session);
+    return await this.projectService.readOne(projectId);
   }
 }

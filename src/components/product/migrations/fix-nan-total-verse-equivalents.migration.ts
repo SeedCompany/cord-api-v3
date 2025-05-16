@@ -12,7 +12,6 @@ export class FixNaNTotalVerseEquivalentsMigration extends BaseMigration {
   }
 
   async up() {
-    const session = this.fakeAdminSession;
     const ids = await this.db
       .query()
       .match([
@@ -25,10 +24,7 @@ export class FixNaNTotalVerseEquivalentsMigration extends BaseMigration {
       .map('id')
       .run();
 
-    const products = await this.productService.readManyUnsecured(
-      ids,
-      this.fakeAdminSession,
-    );
+    const products = await this.productService.readManyUnsecured(ids);
 
     for (const p of products) {
       const correctTotalVerseEquivalent = getTotalVerseEquivalents(
@@ -36,16 +32,16 @@ export class FixNaNTotalVerseEquivalentsMigration extends BaseMigration {
       );
 
       if (p.__typename === 'DirectScriptureProduct') {
-        await this.productService.updateDirect(
-          { id: p.id, totalVerseEquivalents: correctTotalVerseEquivalent },
-          session,
-        );
+        await this.productService.updateDirect({
+          id: p.id,
+          totalVerseEquivalents: correctTotalVerseEquivalent,
+        });
       }
       if (p.__typename === 'DerivativeScriptureProduct') {
-        await this.productService.updateDerivative(
-          { id: p.id, totalVerseEquivalents: correctTotalVerseEquivalent },
-          session,
-        );
+        await this.productService.updateDerivative({
+          id: p.id,
+          totalVerseEquivalents: correctTotalVerseEquivalent,
+        });
       }
     }
   }

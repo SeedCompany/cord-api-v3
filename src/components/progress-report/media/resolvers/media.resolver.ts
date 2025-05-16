@@ -5,13 +5,7 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import {
-  AnonSession,
-  IdArg,
-  type IdOf,
-  LoggedInSession,
-  type Session,
-} from '~/common';
+import { IdArg, type IdOf } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { Privileges } from '../../../authorization';
 import { Media } from '../../../file/media/media.dto';
@@ -43,46 +37,37 @@ export class ProgressReportMediaResolver {
   @ResolveField(() => [ReportMedia], {
     description: 'The other media within the variant group',
   })
-  async related(
-    @Parent() media: ReportMedia,
-    @AnonSession() session: Session,
-  ): Promise<readonly ReportMedia[]> {
-    return await this.service.listOfRelated(media, session);
+  async related(@Parent() media: ReportMedia): Promise<readonly ReportMedia[]> {
+    return await this.service.listOfRelated(media);
   }
 
   @ResolveField(() => Boolean)
-  canEdit(
-    @Parent() media: ReportMedia,
-    @AnonSession() session: Session,
-  ): boolean {
-    return this.privileges.for(session, ReportMedia, media).can('edit');
+  canEdit(@Parent() media: ReportMedia): boolean {
+    return this.privileges.for(ReportMedia, media).can('edit');
   }
 
   @Mutation(() => ProgressReport)
   async uploadProgressReportMedia(
     @Args({ name: 'input' }) input: UploadMedia,
-    @LoggedInSession() session: Session,
     @Loader(() => PeriodicReportLoader) reports: LoaderOf<PeriodicReportLoader>,
   ) {
-    await this.service.upload(input, session);
+    await this.service.upload(input);
     return await reports.load(input.reportId);
   }
 
   @Mutation(() => ReportMedia)
   async updateProgressReportMedia(
     @Args({ name: 'input' }) input: UpdateMedia,
-    @LoggedInSession() session: Session,
   ): Promise<ReportMedia> {
-    return await this.service.update(input, session);
+    return await this.service.update(input);
   }
 
   @Mutation(() => ProgressReport)
   async deleteProgressReportMedia(
     @IdArg() id: IdOf<ReportMedia>,
-    @LoggedInSession() session: Session,
     @Loader(() => PeriodicReportLoader) reports: LoaderOf<PeriodicReportLoader>,
   ) {
-    const reportId = await this.service.delete(id, session);
+    const reportId = await this.service.delete(id);
     return await reports.load(reportId);
   }
 }

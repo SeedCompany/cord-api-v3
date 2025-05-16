@@ -1,5 +1,5 @@
 import { sortBy } from '@seedcompany/common';
-import { type ID, type Session } from '~/common';
+import { type ID } from '~/common';
 import { ILogger, Logger } from '~/core';
 import { ScriptureRange, type ScriptureRangeInput } from './dto';
 import {
@@ -17,7 +17,6 @@ export class ScriptureReferenceService {
     producibleId: ID,
     scriptureRefs: readonly ScriptureRangeInput[] | undefined,
     // eslint-disable-next-line @seedcompany/no-unused-vars
-    session: Session,
   ): Promise<void> {
     if (!scriptureRefs) {
       return;

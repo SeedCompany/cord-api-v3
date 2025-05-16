@@ -222,7 +222,7 @@ export class AuthenticationRepository {
     return result?.roles ?? [];
   }
 
-  async getCurrentPasswordHash(session: Session) {
+  async getCurrentPasswordHash() {
     const result = await this.db
       .query()
       .match([
@@ -236,10 +236,7 @@ export class AuthenticationRepository {
     return result?.passwordHash ?? null;
   }
 
-  async updatePassword(
-    newPasswordHash: string,
-    session: Session,
-  ): Promise<void> {
+  async updatePassword(newPasswordHash: string): Promise<void> {
     await this.db
       .query()
       .match([

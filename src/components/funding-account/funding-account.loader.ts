@@ -10,6 +10,6 @@ export class FundingAccountLoader extends OrderedNestDataLoader<FundingAccount> 
   }
 
   async loadMany(ids: readonly ID[]) {
-    return await this.fundingAccounts.readMany(ids, this.session);
+    return await this.fundingAccounts.readMany(ids);
   }
 }

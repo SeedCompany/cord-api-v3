@@ -5,7 +5,7 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { type ID, IdArg, LoggedInSession, type Session } from '~/common';
+import { type ID, IdArg } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { PartnershipLoader } from '../partnership';
 import { Partnership } from '../partnership/dto';
@@ -46,9 +46,8 @@ export class PartnershipProducingMediumResolver {
         'A partial list of changes to the partners producing which mediums',
     })
     input: readonly PartnershipProducingMediumInput[],
-    @LoggedInSession() session: Session,
   ): Promise<UpdatePartnershipProducingMediumOutput> {
-    await this.service.update(engagementId, input, session);
+    await this.service.update(engagementId, input);
     return { engagement: engagementId };
   }
 }

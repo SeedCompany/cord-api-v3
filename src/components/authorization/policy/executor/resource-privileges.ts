@@ -42,11 +42,6 @@ export class ResourcePrivileges<TResourceStatic extends ResourceShape<any>> {
     this.resource = EnhancedResource.of(resource);
   }
 
-  /** @deprecated Use {@link forContext} instead */
-  forUser(_session: unknown, object?: ResourceObjectContext<TResourceStatic>) {
-    return object ? this.forContext(object) : this;
-  }
-
   get context() {
     return this.object;
   }

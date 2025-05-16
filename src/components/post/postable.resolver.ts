@@ -44,7 +44,6 @@ export class PostableResolver {
           parentId: parent.id,
         },
       },
-      session,
     );
     posts.primeAll(list.items);
     return list;

@@ -7,14 +7,7 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import {
-  AnonSession,
-  type ID,
-  IdArg,
-  ListArg,
-  LoggedInSession,
-  type Session,
-} from '~/common';
+import { type ID, IdArg, ListArg } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { UserLoader } from '../user';
 import { User } from '../user/dto';
@@ -69,7 +62,6 @@ export class FileResolver {
     description: 'Return the versions of this file',
   })
   async children(
-    @AnonSession() session: Session,
     @Parent() node: File,
     @ListArg(FileListInput) input: FileListInput,
   ): Promise<FileListOutput> {
@@ -84,10 +76,7 @@ export class FileResolver {
   @Mutation(() => DeleteFileNodeOutput, {
     description: 'Delete a file node',
   })
-  async deleteFileNode(
-    @IdArg() id: ID,
-    @LoggedInSession() _session: Session,
-  ): Promise<DeleteFileNodeOutput> {
+  async deleteFileNode(@IdArg() id: ID): Promise<DeleteFileNodeOutput> {
     await this.service.delete(id);
     return { success: true };
   }
@@ -95,9 +84,7 @@ export class FileResolver {
   @Mutation(() => RequestUploadOutput, {
     description: 'Start the file upload process by requesting an upload',
   })
-  async requestFileUpload(
-    @LoggedInSession() _session: Session, // require authorized
-  ): Promise<RequestUploadOutput> {
+  async requestFileUpload(): Promise<RequestUploadOutput> {
     return await this.service.requestUpload();
   }
 
@@ -112,9 +99,8 @@ export class FileResolver {
   })
   createFileVersion(
     @Args('input') input: CreateFileVersionInput,
-    @LoggedInSession() session: Session,
   ): Promise<File> {
-    return this.service.createFileVersion(input, session);
+    return this.service.createFileVersion(input);
   }
 
   @Mutation(() => IFileNode, {
@@ -122,19 +108,15 @@ export class FileResolver {
   })
   async renameFileNode(
     @Args('input') input: RenameFileInput,
-    @LoggedInSession() session: Session,
   ): Promise<FileNode> {
     await this.service.rename(input);
-    return await this.service.getFileNode(input.id, session);
+    return await this.service.getFileNode(input.id);
   }
 
   @Mutation(() => IFileNode, {
     description: 'Move a file or directory',
   })
-  moveFileNode(
-    @Args('input') input: MoveFileInput,
-    @LoggedInSession() session: Session,
-  ): Promise<FileNode> {
-    return this.service.move(input, session);
+  moveFileNode(@Args('input') input: MoveFileInput): Promise<FileNode> {
+    return this.service.move(input);
   }
 }

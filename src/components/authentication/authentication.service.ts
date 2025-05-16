@@ -69,7 +69,7 @@ export class AuthenticationService {
       const users = this.moduleRef.get(userMod.UserService, { strict: false });
       userId = await this.gel.usingOptions(
         disableAccessPolicies,
-        async () => await users.create(input, session),
+        async () => await users.create(input),
       );
     } catch (e) {
       // remap field prop as `email` field is at a different location in register() than createPerson()
@@ -85,14 +85,17 @@ export class AuthenticationService {
     return userId;
   }
 
-  async login(input: LoginInput, session: Session): Promise<ID> {
+  async login(input: LoginInput): Promise<ID> {
     const hash = await this.repo.getPasswordHash(input);
 
     if (!(await this.crypto.verify(hash, input.password))) {
       throw new UnauthenticatedException('Invalid credentials');
     }
 
-    const userId = await this.repo.connectSessionToUser(input, session);
+    const userId = await this.repo.connectSessionToUser(
+      input,
+      this.sessionHost.current,
+    );
 
     if (!userId) {
       throw new ServerException('Login failed');
@@ -256,21 +259,20 @@ export class AuthenticationService {
   async changePassword(
     oldPassword: string,
     newPassword: string,
-    session: Session,
   ): Promise<void> {
     if (!oldPassword)
       throw new InputException('Old Password Required', 'oldPassword');
 
-    const hash = await this.repo.getCurrentPasswordHash(session);
+    const hash = await this.repo.getCurrentPasswordHash();
 
     if (!(await this.crypto.verify(hash, oldPassword))) {
       throw new UnauthenticatedException('Invalid credentials');
     }
 
     const newPasswordHash = await this.crypto.hash(newPassword);
-    await this.repo.updatePassword(newPasswordHash, session);
+    await this.repo.updatePassword(newPasswordHash);
 
-    await this.repo.deactivateAllOtherSessions(session);
+    await this.repo.deactivateAllOtherSessions(this.sessionHost.current);
   }
 
   async forgotPassword(email: string): Promise<void> {
@@ -288,10 +290,7 @@ export class AuthenticationService {
     });
   }
 
-  async resetPassword(
-    { token, password }: ResetPasswordInput,
-    session: Session,
-  ): Promise<void> {
+  async resetPassword({ token, password }: ResetPasswordInput): Promise<void> {
     const emailToken = await this.repo.findEmailToken(token);
     if (!emailToken) {
       throw new InputException('Token is invalid', 'TokenInvalid');
@@ -306,7 +305,7 @@ export class AuthenticationService {
     await this.repo.updatePasswordViaEmailToken(emailToken, pash);
     await this.repo.deactivateAllOtherSessionsByEmail(
       emailToken.email,
-      session,
+      this.sessionHost.current,
     );
     await this.repo.removeAllEmailTokensForEmail(emailToken.email);
   }

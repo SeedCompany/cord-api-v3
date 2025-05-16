@@ -8,7 +8,7 @@ export class CreateProjectDefaultBudgetHandler
 {
   constructor(private readonly budgets: BudgetService) {}
 
-  async handle({ project, session }: ProjectCreatedEvent) {
-    await this.budgets.create({ projectId: project.id }, session);
+  async handle({ project }: ProjectCreatedEvent) {
+    await this.budgets.create({ projectId: project.id });
   }
 }

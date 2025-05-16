@@ -1,5 +1,5 @@
 import { ServerException } from '~/common';
-import { EventsHandler, type IEventHandler, ILogger, Logger } from '~/core';
+import { EventsHandler, type IEventHandler } from '~/core';
 import { DatabaseService } from '~/core/database';
 import { IProject, ProjectStatus } from '../dto';
 import { ProjectCreatedEvent } from '../events';
@@ -9,17 +9,9 @@ type SubscribedEvent = ProjectCreatedEvent | ProjectTransitionedEvent;
 
 @EventsHandler(ProjectCreatedEvent, ProjectTransitionedEvent)
 export class SetInitialMouEnd implements IEventHandler<SubscribedEvent> {
-  constructor(
-    private readonly db: DatabaseService,
-    @Logger('project:set-initial-mou-end') private readonly logger: ILogger,
-  ) {}
+  constructor(private readonly db: DatabaseService) {}
 
   async handle(event: SubscribedEvent) {
-    this.logger.debug('Project mutation, set initial mou end', {
-      ...event,
-      event: event.constructor.name,
-    });
-
     const { project } = event;
 
     if (
@@ -47,10 +39,6 @@ export class SetInitialMouEnd implements IEventHandler<SubscribedEvent> {
         event.project = updatedProject;
       }
     } catch (exception) {
-      this.logger.error(`Could not set initial mou end on project`, {
-        userId: event.session.userId,
-        exception,
-      });
       throw new ServerException(
         'Could not set initial mou end on project',
         exception,

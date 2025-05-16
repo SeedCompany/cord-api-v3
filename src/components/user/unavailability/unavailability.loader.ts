@@ -10,6 +10,6 @@ export class UnavailabilityLoader extends OrderedNestDataLoader<Unavailability> 
   }
 
   async loadMany(ids: readonly ID[]) {
-    return await this.unavailabilities.readMany(ids, this.session);
+    return await this.unavailabilities.readMany(ids);
   }
 }

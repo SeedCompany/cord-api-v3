@@ -11,6 +11,6 @@ export class AssignableRolesResolver {
       'All of the roles that you have permission to assign to this user',
   })
   async assignableRoles(@AnonSession() session: Session) {
-    return [...this.service.getAssignableRoles(session)];
+    return [...this.service.getAssignableRoles()];
   }
 }

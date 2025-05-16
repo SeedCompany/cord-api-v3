@@ -15,17 +15,14 @@ export class ValidatePartnershipDateOverridesOnProjectChangeHandler
   ) {}
 
   async handle(event: ProjectUpdatedEvent) {
-    const { updated: project, changes, session } = event;
+    const { updated: project, changes } = event;
 
     if (changes.mouStart === undefined && changes.mouEnd === undefined) {
       return;
     }
 
     const canonical = { start: project.mouStart, end: project.mouEnd };
-    const partnerships = await this.partnerships.listAllByProjectId(
-      project.id,
-      session,
-    );
+    const partnerships = await this.partnerships.listAllByProjectId(project.id);
     const conflicts = DateOverrideConflictException.findConflicts(
       canonical,
       partnerships.map((partnership) => ({

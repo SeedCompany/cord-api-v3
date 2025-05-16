@@ -1,12 +1,5 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import {
-  AnonSession,
-  type ID,
-  IdArg,
-  ListArg,
-  LoggedInSession,
-  type Session,
-} from '~/common';
+import { type ID, IdArg, ListArg } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { UnavailabilityLoader, UnavailabilityService } from '../unavailability';
 import {
@@ -41,12 +34,11 @@ export class UnavailabilityResolver {
     deprecationReason: 'Query via user instead',
   })
   async unavailabilities(
-    @AnonSession() session: Session,
     @ListArg(UnavailabilityListInput) input: UnavailabilityListInput,
     @Loader(UnavailabilityLoader)
     unavailabilities: LoaderOf<UnavailabilityLoader>,
   ): Promise<UnavailabilityListOutput> {
-    const list = await this.service.list(input, session);
+    const list = await this.service.list(input);
     unavailabilities.primeAll(list.items);
     return list;
   }
@@ -56,10 +48,9 @@ export class UnavailabilityResolver {
     deprecationReason: `This is unfinished functionality, don't use`,
   })
   async createUnavailability(
-    @LoggedInSession() session: Session,
     @Args('input') { unavailability: input }: CreateUnavailabilityInput,
   ): Promise<CreateUnavailabilityOutput> {
-    const unavailability = await this.service.create(input, session);
+    const unavailability = await this.service.create(input);
     return { unavailability };
   }
 
@@ -68,10 +59,9 @@ export class UnavailabilityResolver {
     deprecationReason: `This is unfinished functionality, don't use`,
   })
   async updateUnavailability(
-    @LoggedInSession() session: Session,
     @Args('input') { unavailability: input }: UpdateUnavailabilityInput,
   ): Promise<UpdateUnavailabilityOutput> {
-    const unavailability = await this.service.update(input, session);
+    const unavailability = await this.service.update(input);
     return { unavailability };
   }
 
@@ -80,10 +70,9 @@ export class UnavailabilityResolver {
     deprecationReason: `This is unfinished functionality, don't use`,
   })
   async deleteUnavailability(
-    @LoggedInSession() session: Session,
     @IdArg() id: ID,
   ): Promise<DeleteUnavailabilityOutput> {
-    await this.service.delete(id, session);
+    await this.service.delete(id);
     return { success: true };
   }
 }

@@ -11,16 +11,7 @@ import {
 import { Book, labelOfVerseRanges } from '@seedcompany/scripture';
 import { stripIndent } from 'common-tags';
 import { startCase } from 'lodash';
-import {
-  AnonSession,
-  Fields,
-  type ID,
-  IdArg,
-  IsOnlyId,
-  ListArg,
-  LoggedInSession,
-  type Session,
-} from '~/common';
+import { Fields, type ID, IdArg, IsOnlyId, ListArg } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { type IdsAndView, IdsAndViewArg } from '../changeset/dto';
 import { ProductLoader, ProductService } from '../product';
@@ -69,11 +60,10 @@ export class ProductResolver {
     description: 'Look up products',
   })
   async products(
-    @AnonSession() session: Session,
     @ListArg(ProductListInput) input: ProductListInput,
     @Loader(ProductLoader) products: LoaderOf<ProductLoader>,
   ): Promise<ProductListOutput> {
-    const list = await this.productService.list(input, session);
+    const list = await this.productService.list(input);
     products.primeAll(list.items);
     return list;
   }
@@ -219,10 +209,9 @@ export class ProductResolver {
     description: 'Create a direct scripture product',
   })
   async createDirectScriptureProduct(
-    @LoggedInSession() session: Session,
     @Args('input') input: CreateDirectScriptureProduct,
   ): Promise<CreateProductOutput> {
-    const product = await this.productService.create(input, session);
+    const product = await this.productService.create(input);
     return { product };
   }
 
@@ -230,10 +219,9 @@ export class ProductResolver {
     description: 'Create a derivative scripture product',
   })
   async createDerivativeScriptureProduct(
-    @LoggedInSession() session: Session,
     @Args('input') input: CreateDerivativeScriptureProduct,
   ): Promise<CreateProductOutput> {
-    const product = await this.productService.create(input, session);
+    const product = await this.productService.create(input);
     return { product };
   }
 
@@ -241,10 +229,9 @@ export class ProductResolver {
     description: 'Create an other product entry',
   })
   async createOtherProduct(
-    @LoggedInSession() session: Session,
     @Args('input') input: CreateOtherProduct,
   ): Promise<CreateProductOutput> {
-    const product = await this.productService.create(input, session);
+    const product = await this.productService.create(input);
     return { product };
   }
 
@@ -252,10 +239,9 @@ export class ProductResolver {
     description: 'Update a direct scripture product',
   })
   async updateDirectScriptureProduct(
-    @LoggedInSession() session: Session,
     @Args('input') input: UpdateDirectScriptureProduct,
   ): Promise<UpdateProductOutput> {
-    const product = await this.productService.updateDirect(input, session);
+    const product = await this.productService.updateDirect(input);
     return { product };
   }
 
@@ -263,10 +249,9 @@ export class ProductResolver {
     description: 'Update a derivative scripture product',
   })
   async updateDerivativeScriptureProduct(
-    @LoggedInSession() session: Session,
     @Args('input') input: UpdateDerivativeScriptureProduct,
   ): Promise<UpdateProductOutput> {
-    const product = await this.productService.updateDerivative(input, session);
+    const product = await this.productService.updateDerivative(input);
     return { product };
   }
 
@@ -274,21 +259,17 @@ export class ProductResolver {
     description: 'Update an other product entry',
   })
   async updateOtherProduct(
-    @LoggedInSession() session: Session,
     @Args('input') input: UpdateOtherProduct,
   ): Promise<UpdateProductOutput> {
-    const product = await this.productService.updateOther(input, session);
+    const product = await this.productService.updateOther(input);
     return { product };
   }
 
   @Mutation(() => DeleteProductOutput, {
     description: 'Delete a product entry',
   })
-  async deleteProduct(
-    @LoggedInSession() session: Session,
-    @IdArg() id: ID,
-  ): Promise<DeleteProductOutput> {
-    await this.productService.delete(id, session);
+  async deleteProduct(@IdArg() id: ID): Promise<DeleteProductOutput> {
+    await this.productService.delete(id);
     return { success: true };
   }
 }

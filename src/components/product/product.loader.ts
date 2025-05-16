@@ -25,7 +25,7 @@ export class ProductLoader extends OrderedNestDataLoader<AnyProduct> {
   }
 
   async loadMany(ids: readonly ID[]) {
-    return await this.products.readMany(ids, this.session);
+    return await this.products.readMany(ids);
   }
 
   getOptions(): OrderedNestDataLoaderOptions<AnyProduct> {

@@ -10,6 +10,6 @@ export class EducationLoader extends OrderedNestDataLoader<Education> {
   }
 
   async loadMany(ids: readonly ID[]) {
-    return await this.educations.readMany(ids, this.session);
+    return await this.educations.readMany(ids);
   }
 }

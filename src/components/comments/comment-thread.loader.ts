@@ -14,13 +14,12 @@ export class CommentThreadLoader extends OrderedNestDataLoader<CommentThread> {
   }
 
   async loadMany(ids: readonly ID[]) {
-    const session = this.session;
     const threads = await this.repo.threads.readMany(ids);
     return await Promise.all(
       threads.map(async (thread) => {
         try {
-          await this.service.verifyCanView(thread.parent, session);
-          return this.service.secureThread(thread, session);
+          await this.service.verifyCanView(thread.parent);
+          return this.service.secureThread(thread);
         } catch (error) {
           return { key: thread.id, error };
         }

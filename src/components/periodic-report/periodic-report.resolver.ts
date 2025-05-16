@@ -10,10 +10,10 @@ import {
   AnonSession,
   CalendarDate,
   ListArg,
-  LoggedInSession,
   type Session,
   UnauthorizedException,
 } from '~/common';
+import { isAdmin } from '~/common/session';
 import { Loader, type LoaderOf } from '~/core';
 import { type IdsAndView, IdsAndViewArg } from '../changeset/dto';
 import { FileNodeLoader, resolveDefinedFile } from '../file';
@@ -51,10 +51,10 @@ export class PeriodicReportResolver {
     @Loader(ReportLoader) loader: LoaderOf<ReportLoader>,
   ): Promise<PeriodicReportListOutput> {
     // Only let admins do this for now.
-    if (!session.roles.includes('global:Administrator')) {
+    if (!isAdmin(session)) {
       throw new UnauthorizedException();
     }
-    const list = await this.service.list(session, input);
+    const list = await this.service.list(input);
     loader.primeAll(list.items);
     return list;
   }
@@ -70,21 +70,19 @@ export class PeriodicReportResolver {
     description: 'Update a report file',
   })
   async uploadPeriodicReport(
-    @LoggedInSession() session: Session,
     @Args('input')
     { reportId: id, file: reportFile }: UploadPeriodicReportInput,
   ): Promise<IPeriodicReport> {
-    return await this.service.update({ id, reportFile }, session);
+    return await this.service.update({ id, reportFile });
   }
 
   @Mutation(() => IPeriodicReport, {
     description: 'Update a report',
   })
   async updatePeriodicReport(
-    @LoggedInSession() session: Session,
     @Args('input') input: UpdatePeriodicReportInput,
   ): Promise<IPeriodicReport> {
-    return await this.service.update(input, session);
+    return await this.service.update(input);
   }
 
   @ResolveField(() => SecuredFile)

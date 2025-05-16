@@ -83,10 +83,7 @@ export class SyncProgressReportToEngagementDateRange
 
     const engagements =
       event instanceof ProjectUpdatedEvent
-        ? await this.engagements.listAllByProjectId(
-            event.updated.id,
-            event.session,
-          )
+        ? await this.engagements.listAllByProjectId(event.updated.id)
         : event instanceof EngagementUpdatedEvent
         ? [event.updated]
         : [event.engagement];
@@ -102,7 +99,6 @@ export class SyncProgressReportToEngagementDateRange
       const diff = this.diffBy(updated, prev, 'quarter');
 
       await this.sync(
-        event.session,
         engagement.id,
         ReportType.Progress,
         diff,

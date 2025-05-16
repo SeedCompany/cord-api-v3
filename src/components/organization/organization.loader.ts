@@ -10,6 +10,6 @@ export class OrganizationLoader extends OrderedNestDataLoader<Organization> {
   }
 
   async loadMany(ids: readonly ID[]) {
-    return await this.organizations.readMany(ids, this.session);
+    return await this.organizations.readMany(ids);
   }
 }
