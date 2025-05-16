@@ -20,7 +20,7 @@ runRepl({
     const { ResourcesHost } = await import('~/core');
     const { e } = await import('~/core/gel');
     const { AuthenticationService } = await import(
-      './components/authentication'
+      './core/authentication/authentication.service'
     );
     const { Pnp } = await import('./components/pnp');
 

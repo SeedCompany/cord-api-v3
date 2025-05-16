@@ -13,11 +13,11 @@ import {
   UnauthenticatedException,
 } from '~/common';
 import { ConfigService, ILogger, Loader, type LoaderOf, Logger } from '~/core';
-import { HttpAdapter } from '~/core/http';
-import { Privileges } from '../authorization';
-import { Power } from '../authorization/dto';
-import { UserLoader, UserService } from '../user';
-import { User } from '../user/dto';
+import { Privileges } from '../../components/authorization';
+import { Power } from '../../components/authorization/dto';
+import { UserLoader, UserService } from '../../components/user';
+import { User } from '../../components/user/dto';
+import { HttpAdapter } from '../http';
 import { AuthLevel } from './auth-level.decorator';
 import { AuthenticationService } from './authentication.service';
 import { SessionOutput } from './dto';

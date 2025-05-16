@@ -6,14 +6,8 @@ import {
   ServerException,
   type Session,
 } from '~/common';
-import { RootUserAlias } from '~/core/config/root-user.config';
-import {
-  DbTraceLayer,
-  disableAccessPolicies,
-  e,
-  Gel,
-  withScope,
-} from '~/core/gel';
+import { RootUserAlias } from '../config/root-user.config';
+import { DbTraceLayer, disableAccessPolicies, e, Gel, withScope } from '../gel';
 import type { AuthenticationRepository } from './authentication.repository';
 import { type LoginInput } from './dto';
 

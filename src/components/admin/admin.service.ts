@@ -3,11 +3,11 @@ import { ModuleRef } from '@nestjs/core';
 import { LazyGetter as Once } from 'lazy-get-decorator';
 import { DateTime } from 'luxon';
 import { Role, ServerException } from '~/common';
+import { AuthenticationService } from '~/core/authentication/authentication.service';
+import { CryptoService } from '~/core/authentication/crypto.service';
 import { ConfigService } from '~/core/config/config.service';
 import { Transactional } from '~/core/database';
 import { ILogger, Logger } from '~/core/logger';
-import { AuthenticationService } from '../authentication';
-import { CryptoService } from '../authentication/crypto.service';
 import { AdminRepository } from './admin.repository';
 
 @Injectable()

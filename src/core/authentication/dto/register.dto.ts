@@ -1,7 +1,7 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { MinLength } from 'class-validator';
 import { type ID } from '~/common';
-import { CreatePerson } from '../../user/dto';
+import { CreatePerson } from '../../../components/user/dto';
 
 @InputType()
 export abstract class RegisterInput extends CreatePerson {

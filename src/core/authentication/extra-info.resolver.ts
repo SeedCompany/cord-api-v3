@@ -1,8 +1,8 @@
 import { ResolveField, Resolver } from '@nestjs/graphql';
 import { mapValues } from '@seedcompany/common';
 import { type AbstractClassType, EnhancedResource } from '~/common';
-import { Privileges } from '../authorization';
-import { BetaFeatures } from '../authorization/dto/beta-features.dto';
+import { Privileges } from '../../components/authorization';
+import { BetaFeatures } from '../../components/authorization/dto/beta-features.dto';
 import { LoginOutput, RegisterOutput, SessionOutput } from './dto';
 
 function AuthExtraInfoResolver(concreteClass: AbstractClassType<any>) {

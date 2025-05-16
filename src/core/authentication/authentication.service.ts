@@ -16,12 +16,15 @@ import {
   UnauthorizedException,
 } from '~/common';
 import { ConfigService, ILogger, Logger } from '~/core';
-import { ForgotPassword } from '~/core/email/templates';
-import { disableAccessPolicies, Gel } from '~/core/gel';
-import { Privileges } from '../authorization';
-import { rolesForScope, withoutScope } from '../authorization/dto';
-import { AssignableRoles } from '../authorization/dto/assignable-roles.dto';
-import { SystemAgentRepository } from '../user/system-agent.repository';
+import { Privileges } from '../../components/authorization';
+import {
+  rolesForScope,
+  withoutScope,
+} from '../../components/authorization/dto';
+import { AssignableRoles } from '../../components/authorization/dto/assignable-roles.dto';
+import { SystemAgentRepository } from '../../components/user/system-agent.repository';
+import { ForgotPassword } from '../email/templates';
+import { disableAccessPolicies, Gel } from '../gel';
 import { AuthenticationRepository } from './authentication.repository';
 import { CryptoService } from './crypto.service';
 import type { LoginInput, RegisterInput, ResetPasswordInput } from './dto';
@@ -65,7 +68,7 @@ export class AuthenticationService {
 
     let userId;
     try {
-      const userMod = await import('../user');
+      const userMod = await import('../../components/user');
       const users = this.moduleRef.get(userMod.UserService, { strict: false });
       userId = await this.gel.usingOptions(
         disableAccessPolicies,

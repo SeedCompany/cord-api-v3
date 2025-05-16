@@ -1,6 +1,6 @@
 import { faker } from '@faker-js/faker';
 import { generateId, isValidId, Role } from '~/common';
-import { type RegisterInput } from '../../src/components/authentication/dto';
+import { type RegisterInput } from '~/core/authentication/dto';
 import { type User, UserStatus } from '../../src/components/user/dto';
 import { type TestApp } from './create-app';
 import { fragments, type RawUser } from './fragments';

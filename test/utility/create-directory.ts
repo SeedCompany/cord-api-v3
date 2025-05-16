@@ -1,10 +1,8 @@
 import { faker } from '@faker-js/faker';
 import { startCase } from 'lodash';
 import { type ID } from '~/common';
-import {
-  AuthenticationService,
-  SessionHost,
-} from '../../src/components/authentication';
+import { AuthenticationService } from '~/core/authentication/authentication.service';
+import { SessionHost } from '~/core/authentication/session.host';
 import { FileService } from '../../src/components/file';
 import { type TestApp } from './create-app';
 import { fileNode, type RawDirectory } from './fragments';

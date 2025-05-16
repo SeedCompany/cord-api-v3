@@ -2,9 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { LazyGetter as Once } from 'lazy-get-decorator';
 import { type ID, Role } from '~/common';
+import { AuthenticationRepository } from '~/core/authentication/authentication.repository';
 import { RootUserAlias } from '~/core/config/root-user.config';
 import { DbTraceLayer, disableAccessPolicies, e, Gel } from '~/core/gel';
-import { AuthenticationRepository } from '../authentication/authentication.repository';
 import { SystemAgentRepository } from '../user/system-agent.repository';
 
 @Injectable()
