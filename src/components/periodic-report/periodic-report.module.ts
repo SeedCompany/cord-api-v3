@@ -1,4 +1,5 @@
 import { forwardRef, Module } from '@nestjs/common';
+import { splitDb } from '~/core';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { EngagementModule } from '../engagement/engagement.module';
 import { FileModule } from '../file/file.module';
@@ -7,6 +8,7 @@ import { ProjectModule } from '../project/project.module';
 import * as handlers from './handlers';
 import { PeriodicReportParentResolver } from './periodic-report-parent.resolver';
 import { PeriodicReportProjectConnectionResolver } from './periodic-report-project-connection.resolver';
+import { PeriodicReportGelRepository } from './periodic-report.gel.repository';
 import { PeriodicReportLoader } from './periodic-report.loader';
 import { PeriodicReportRepository } from './periodic-report.repository';
 import { PeriodicReportResolver } from './periodic-report.resolver';
@@ -25,7 +27,7 @@ import { PeriodicReportService } from './periodic-report.service';
     PeriodicReportResolver,
     PeriodicReportProjectConnectionResolver,
     PeriodicReportParentResolver,
-    PeriodicReportRepository,
+    splitDb(PeriodicReportRepository, PeriodicReportGelRepository),
     PeriodicReportLoader,
     ...Object.values(handlers),
   ],

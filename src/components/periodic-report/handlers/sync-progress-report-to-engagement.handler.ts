@@ -1,5 +1,11 @@
 import { DateInterval, type UnsecuredDto } from '~/common';
-import { EventsHandler, type IEventHandler, ILogger, Logger } from '~/core';
+import {
+  ConfigService,
+  EventsHandler,
+  type IEventHandler,
+  ILogger,
+  Logger,
+} from '~/core';
 import { EngagementService } from '../../engagement';
 import { type Engagement, engagementRange } from '../../engagement/dto';
 import {
@@ -8,7 +14,7 @@ import {
 } from '../../engagement/events';
 import { ProjectUpdatedEvent } from '../../project/events';
 import { ReportType } from '../dto';
-import { PeriodicReportService } from '../periodic-report.service';
+import { PeriodicReportRepository } from '../periodic-report.repository';
 import {
   AbstractPeriodicReportSync,
   type Intervals,
@@ -29,14 +35,19 @@ export class SyncProgressReportToEngagementDateRange
   implements IEventHandler<SubscribedEvent>
 {
   constructor(
-    periodicReports: PeriodicReportService,
+    periodicReportsRepo: PeriodicReportRepository,
+    private readonly config: ConfigService,
     private readonly engagements: EngagementService,
     @Logger('progress-report:engagement-sync') private readonly logger: ILogger,
   ) {
-    super(periodicReports);
+    super(periodicReportsRepo);
   }
 
   async handle(event: SubscribedEvent) {
+    if (this.config.databaseEngine === 'gel') {
+      return;
+    }
+
     // Only LanguageEngagements
     if (
       !(
