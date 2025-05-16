@@ -1,5 +1,5 @@
 import { type ID } from '~/common';
-import { LoaderFactory, OrderedNestDataLoader } from '~/core';
+import { type DataLoaderStrategy, LoaderFactory } from '~/core/data-loader';
 import { ProgressReport } from '../progress-report/dto';
 import {
   FinancialReport,
@@ -15,12 +15,12 @@ import { PeriodicReportService } from './periodic-report.service';
   NarrativeReport,
   ProgressReport,
 ])
-export class PeriodicReportLoader extends OrderedNestDataLoader<PeriodicReport> {
-  constructor(private readonly periodicReports: PeriodicReportService) {
-    super();
-  }
+export class PeriodicReportLoader
+  implements DataLoaderStrategy<PeriodicReport, ID<IPeriodicReport>>
+{
+  constructor(private readonly periodicReports: PeriodicReportService) {}
 
-  async loadMany(ids: readonly ID[]) {
+  async loadMany(ids: ReadonlyArray<ID<IPeriodicReport>>) {
     return await this.periodicReports.readMany(ids);
   }
 }

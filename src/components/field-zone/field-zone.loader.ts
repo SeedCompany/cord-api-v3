@@ -1,15 +1,15 @@
 import { type ID } from '~/common';
-import { LoaderFactory, OrderedNestDataLoader } from '~/core';
+import { type DataLoaderStrategy, LoaderFactory } from '~/core/data-loader';
 import { FieldZone } from './dto';
 import { FieldZoneService } from './field-zone.service';
 
 @LoaderFactory(() => FieldZone)
-export class FieldZoneLoader extends OrderedNestDataLoader<FieldZone> {
-  constructor(private readonly fieldZones: FieldZoneService) {
-    super();
-  }
+export class FieldZoneLoader
+  implements DataLoaderStrategy<FieldZone, ID<FieldZone>>
+{
+  constructor(private readonly fieldZones: FieldZoneService) {}
 
-  async loadMany(ids: readonly ID[]) {
+  async loadMany(ids: ReadonlyArray<ID<FieldZone>>) {
     return await this.fieldZones.readMany(ids);
   }
 }

@@ -1,26 +1,26 @@
-import { type DataLoaderOptions } from '@seedcompany/data-loader';
-import { type IdOf } from '~/common';
-import { LoaderFactory, SessionAwareLoaderStrategy } from '~/core';
+import { type ID } from '~/common';
+import {
+  type DataLoaderStrategy,
+  LoaderFactory,
+  type LoaderOptionsOf,
+} from '~/core/data-loader';
 import { type ProgressReport } from '../dto';
 import { type ProgressReportMedia as ReportMedia } from './dto';
 import { ProgressReportMediaService } from './progress-report-media.service';
 
 @LoaderFactory()
-export class ProgressReportFeaturedMediaLoader extends SessionAwareLoaderStrategy<
-  ReportMedia,
-  IdOf<ProgressReport>
-> {
-  constructor(private readonly service: ProgressReportMediaService) {
-    super();
-  }
+export class ProgressReportFeaturedMediaLoader
+  implements DataLoaderStrategy<ReportMedia, ID<ProgressReport>>
+{
+  constructor(private readonly service: ProgressReportMediaService) {}
 
-  getOptions(): DataLoaderOptions<ReportMedia, IdOf<ProgressReport>> {
+  getOptions() {
     return {
       propertyKey: 'report',
-    };
+    } satisfies LoaderOptionsOf<ProgressReportFeaturedMediaLoader>;
   }
 
-  async loadMany(ids: ReadonlyArray<IdOf<ProgressReport>>) {
+  async loadMany(ids: ReadonlyArray<ID<ProgressReport>>) {
     return await this.service.readFeaturedOfReport(ids);
   }
 }

@@ -1,15 +1,15 @@
 import { type ID } from '~/common';
-import { LoaderFactory, OrderedNestDataLoader } from '~/core';
+import { type DataLoaderStrategy, LoaderFactory } from '~/core/data-loader';
 import { ProgressReportWorkflowEvent as WorkflowEvent } from './dto/workflow-event.dto';
 import { ProgressReportWorkflowService } from './progress-report-workflow.service';
 
 @LoaderFactory(() => WorkflowEvent)
-export class ProgressReportWorkflowEventLoader extends OrderedNestDataLoader<WorkflowEvent> {
-  constructor(private readonly service: ProgressReportWorkflowService) {
-    super();
-  }
+export class ProgressReportWorkflowEventLoader
+  implements DataLoaderStrategy<WorkflowEvent, ID<WorkflowEvent>>
+{
+  constructor(private readonly service: ProgressReportWorkflowService) {}
 
-  async loadMany(ids: readonly ID[]) {
+  async loadMany(ids: ReadonlyArray<ID<WorkflowEvent>>) {
     return await this.service.readMany(ids);
   }
 }

@@ -1,5 +1,5 @@
 import { type ID, NotFoundException, type ObjectView } from '~/common';
-import { LoaderFactory, ObjectViewAwareLoader } from '~/core';
+import { LoaderFactory, ObjectViewAwareLoader } from '~/core/data-loader';
 import { BudgetService } from './budget.service';
 import { BudgetRecord } from './dto';
 

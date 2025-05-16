@@ -1,19 +1,17 @@
 import { type ID } from '~/common';
-import { LoaderFactory, SessionAwareLoaderStrategy } from '~/core';
+import { type DataLoaderStrategy, LoaderFactory } from '~/core/data-loader';
 import { type Post } from './dto';
 import { PostRepository } from './post.repository';
 import { PostService } from './post.service';
 
 @LoaderFactory()
-export class PostLoader extends SessionAwareLoaderStrategy<Post> {
+export class PostLoader implements DataLoaderStrategy<Post, ID<Post>> {
   constructor(
     private readonly service: PostService,
     private readonly repo: PostRepository,
-  ) {
-    super();
-  }
+  ) {}
 
-  async loadMany(ids: readonly ID[]) {
+  async loadMany(ids: ReadonlyArray<ID<Post>>) {
     const posts = await this.repo.readMany(ids);
 
     const parentIds = new Set(posts.map((post) => post.parent.properties.id));

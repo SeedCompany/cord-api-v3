@@ -1,22 +1,19 @@
 import { forwardRef, Inject } from '@nestjs/common';
-import { type IdOf } from '~/common';
-import { LoaderFactory, SessionAwareLoaderStrategy } from '~/core';
+import { type ID } from '~/common';
+import { type DataLoaderStrategy, LoaderFactory } from '~/core/data-loader';
 import { ProgressReportMedia as ReportMedia } from './dto';
 import { ProgressReportMediaService } from './progress-report-media.service';
 
 @LoaderFactory(() => ReportMedia)
-export class ProgressReportMediaLoader extends SessionAwareLoaderStrategy<
-  ReportMedia,
-  IdOf<ReportMedia>
-> {
+export class ProgressReportMediaLoader
+  implements DataLoaderStrategy<ReportMedia, ID<ReportMedia>>
+{
   constructor(
     @Inject(forwardRef(() => ProgressReportMediaService))
     private readonly service: ProgressReportMediaService & {},
-  ) {
-    super();
-  }
+  ) {}
 
-  async loadMany(ids: ReadonlyArray<IdOf<ReportMedia>>) {
+  async loadMany(ids: ReadonlyArray<ID<ReportMedia>>) {
     return await this.service.readMany(ids);
   }
 }
