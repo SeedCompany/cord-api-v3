@@ -13,7 +13,7 @@ import {
   type YogaServerInstance,
   type YogaServerOptions,
 } from 'graphql-yoga';
-import { AsyncResource } from 'node:async_hooks';
+import { AsyncLocalStorage } from 'node:async_hooks';
 import type { WebSocket } from 'ws';
 import { type GqlContextType } from '~/common';
 import { HttpAdapter, type IRequest } from '../http';
@@ -105,7 +105,10 @@ export class Driver extends AbstractDriver<DriverConfig> {
    *    So this allows our "yoga" plugins to be executed.
    */
   private makeWsHandler(options: DriverConfig) {
-    const asyncContextBySocket = new WeakMap<WebSocket, AsyncResource>();
+    const asyncContextBySocket = new WeakMap<
+      WebSocket,
+      <R>(fn: () => R) => R
+    >();
     interface WsExecutionArgs extends ExecutionArgs {
       socket: WebSocket;
       envelop: ReturnType<ReturnType<typeof envelop>>;
@@ -125,7 +128,7 @@ export class Driver extends AbstractDriver<DriverConfig> {
       // unique envelop (yoga) instance per request.
       execute: (wsArgs) => {
         const { envelop, socket, ...args } = wsArgs as WsExecutionArgs;
-        return asyncContextBySocket.get(socket)!.runInAsyncScope(() => {
+        return asyncContextBySocket.get(socket)!(() => {
           return envelop.execute(args);
         });
       },
@@ -134,7 +137,7 @@ export class Driver extends AbstractDriver<DriverConfig> {
         // Because this is called via socket.onmessage, we don't have
         // the same async context we started with.
         // Grab and resume it.
-        return asyncContextBySocket.get(socket)!.runInAsyncScope(() => {
+        return asyncContextBySocket.get(socket)!(() => {
           return envelop.subscribe(args);
         });
       },
@@ -174,7 +177,7 @@ export class Driver extends AbstractDriver<DriverConfig> {
 
     const wsHandler: FastifyRoute['wsHandler'] = function (socket, req) {
       // Save a reference to the current async context, so we can resume it.
-      asyncContextBySocket.set(socket, new AsyncResource('graphql-ws'));
+      asyncContextBySocket.set(socket, AsyncLocalStorage.snapshot());
       return fastifyWsHandler.call(this, socket, req);
     };
     return wsHandler;
