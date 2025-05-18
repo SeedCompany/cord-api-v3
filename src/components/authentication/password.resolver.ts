@@ -1,6 +1,6 @@
 import { Args, Mutation, Resolver } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { Anonymous } from './anonymous.decorator';
+import { AuthLevel } from './auth-level.decorator';
 import { AuthenticationService } from './authentication.service';
 import {
   ChangePasswordArgs,
@@ -31,6 +31,7 @@ export class PasswordResolver {
   @Mutation(() => ForgotPasswordOutput, {
     description: 'Forgot password; send password reset email',
   })
+  @AuthLevel('anonymous')
   async forgotPassword(
     @Args() { email }: ForgotPasswordArgs,
   ): Promise<ForgotPasswordOutput> {
@@ -44,7 +45,7 @@ export class PasswordResolver {
       @sensitive-secrets
     `,
   })
-  @Anonymous()
+  @AuthLevel('anonymous')
   async resetPassword(
     @Args('input') input: ResetPasswordInput,
   ): Promise<ResetPasswordOutput> {
