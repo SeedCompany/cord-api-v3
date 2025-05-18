@@ -1,7 +1,7 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { type ID, type Role, UnauthenticatedException } from '~/common';
 import { type AuthenticationService } from './authentication.service';
-import { SessionHost } from './session.host';
+import { SessionHost } from './session/session.host';
 
 /**
  * A facade for authentication functionality that is public to the codebase.

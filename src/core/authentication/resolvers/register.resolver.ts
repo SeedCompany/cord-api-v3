@@ -11,9 +11,9 @@ import { Privileges } from '../../../components/authorization';
 import { Power } from '../../../components/authorization/dto';
 import { UserLoader } from '../../../components/user';
 import { User } from '../../../components/user/dto';
-import { AuthLevel } from '../auth-level.decorator';
 import { AuthenticationService } from '../authentication.service';
 import { RegisterInput, RegisterOutput } from '../dto';
+import { AuthLevel } from '../session/auth-level.decorator';
 
 @Resolver(RegisterOutput)
 @AuthLevel('anonymous')

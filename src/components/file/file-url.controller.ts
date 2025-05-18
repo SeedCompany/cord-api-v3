@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { type ID } from '~/common';
 import { AuthLevel, Identity } from '~/core/authentication';
-import { SessionInterceptor } from '~/core/authentication/session.interceptor';
+import { SessionInterceptor } from '~/core/authentication/session/session.interceptor';
 import { HttpAdapter, type IRequest, type IResponse } from '~/core/http';
 import { FileService } from './file.service';
 

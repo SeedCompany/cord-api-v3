@@ -28,8 +28,8 @@ import { disableAccessPolicies, Gel } from '../gel';
 import { AuthenticationRepository } from './authentication.repository';
 import { CryptoService } from './crypto.service';
 import type { LoginInput, RegisterInput, ResetPasswordInput } from './dto';
-import { NoSessionException } from './no-session.exception';
-import { SessionHost } from './session.host';
+import { NoSessionException } from './session/no-session.exception';
+import { SessionHost } from './session/session.host';
 
 interface JwtPayload {
   iat: number;

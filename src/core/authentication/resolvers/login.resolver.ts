@@ -11,10 +11,10 @@ import { Privileges } from '../../../components/authorization';
 import { Power } from '../../../components/authorization/dto';
 import { UserLoader } from '../../../components/user';
 import { User } from '../../../components/user/dto';
-import { AuthLevel } from '../auth-level.decorator';
 import { AuthenticationService } from '../authentication.service';
 import { LoginInput, LoginOutput, LogoutOutput } from '../dto';
-import { SessionHost } from '../session.host';
+import { AuthLevel } from '../session/auth-level.decorator';
+import { SessionHost } from '../session/session.host';
 
 @Resolver(LoginOutput)
 @AuthLevel('anonymous')

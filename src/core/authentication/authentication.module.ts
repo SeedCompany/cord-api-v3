@@ -17,8 +17,8 @@ import { LoginResolver } from './resolvers/login.resolver';
 import { PasswordResolver } from './resolvers/password.resolver';
 import { RegisterResolver } from './resolvers/register.resolver';
 import { SessionResolver } from './resolvers/session.resolver';
-import { SessionHost, SessionHostImpl } from './session.host';
-import { SessionInterceptor } from './session.interceptor';
+import { SessionHost, SessionHostImpl } from './session/session.host';
+import { SessionInterceptor } from './session/session.interceptor';
 
 @Global()
 @Module({

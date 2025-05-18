@@ -24,9 +24,9 @@ import {
 import { ConfigService } from '~/core';
 import { Identity } from '~/core/authentication';
 import { GlobalHttpHook, type IRequest } from '~/core/http';
-import { rolesForScope } from '../../components/authorization/dto';
+import { rolesForScope } from '../../../components/authorization/dto';
+import { AuthenticationService } from '../authentication.service';
 import { AuthLevel } from './auth-level.decorator';
-import { AuthenticationService } from './authentication.service';
 import { SessionHost } from './session.host';
 
 @Injectable()
