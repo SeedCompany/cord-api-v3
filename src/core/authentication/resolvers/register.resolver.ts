@@ -7,13 +7,13 @@ import {
 } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { Loader, type LoaderOf } from '~/core';
-import { Privileges } from '../../components/authorization';
-import { Power } from '../../components/authorization/dto';
-import { UserLoader } from '../../components/user';
-import { User } from '../../components/user/dto';
-import { AuthLevel } from './auth-level.decorator';
-import { AuthenticationService } from './authentication.service';
-import { RegisterInput, RegisterOutput } from './dto';
+import { Privileges } from '../../../components/authorization';
+import { Power } from '../../../components/authorization/dto';
+import { UserLoader } from '../../../components/user';
+import { User } from '../../../components/user/dto';
+import { AuthLevel } from '../auth-level.decorator';
+import { AuthenticationService } from '../authentication.service';
+import { RegisterInput, RegisterOutput } from '../dto';
 
 @Resolver(RegisterOutput)
 @AuthLevel('anonymous')

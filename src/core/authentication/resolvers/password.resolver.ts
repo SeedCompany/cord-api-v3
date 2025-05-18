@@ -1,7 +1,7 @@
 import { Args, Mutation, Resolver } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { AuthLevel } from './auth-level.decorator';
-import { AuthenticationService } from './authentication.service';
+import { AuthLevel } from '../auth-level.decorator';
+import { AuthenticationService } from '../authentication.service';
 import {
   ChangePasswordArgs,
   ChangePasswordOutput,
@@ -9,7 +9,7 @@ import {
   ForgotPasswordOutput,
   ResetPasswordInput,
   ResetPasswordOutput,
-} from './dto';
+} from '../dto';
 
 @Resolver()
 export class PasswordResolver {

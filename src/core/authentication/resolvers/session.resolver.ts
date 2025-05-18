@@ -13,16 +13,16 @@ import {
   UnauthenticatedException,
 } from '~/common';
 import { ConfigService, ILogger, Loader, type LoaderOf, Logger } from '~/core';
-import { Privileges } from '../../components/authorization';
-import { Power } from '../../components/authorization/dto';
-import { UserLoader, UserService } from '../../components/user';
-import { User } from '../../components/user/dto';
-import { HttpAdapter } from '../http';
-import { AuthLevel } from './auth-level.decorator';
-import { AuthenticationService } from './authentication.service';
-import { SessionOutput } from './dto';
-import { SessionHost } from './session.host';
-import { SessionInterceptor } from './session.interceptor';
+import { Privileges } from '../../../components/authorization';
+import { Power } from '../../../components/authorization/dto';
+import { UserLoader, UserService } from '../../../components/user';
+import { User } from '../../../components/user/dto';
+import { HttpAdapter } from '../../http';
+import { AuthLevel } from '../auth-level.decorator';
+import { AuthenticationService } from '../authentication.service';
+import { SessionOutput } from '../dto';
+import { SessionHost } from '../session.host';
+import { SessionInterceptor } from '../session.interceptor';
 
 @Resolver(SessionOutput)
 @AuthLevel('sessionless')

@@ -12,13 +12,13 @@ import {
   LoginExtraInfoResolver,
   RegisterExtraInfoResolver,
   SessionExtraInfoResolver,
-} from './extra-info.resolver';
-import { LoginResolver } from './login.resolver';
-import { PasswordResolver } from './password.resolver';
-import { RegisterResolver } from './register.resolver';
+} from './resolvers/extra-info.resolver';
+import { LoginResolver } from './resolvers/login.resolver';
+import { PasswordResolver } from './resolvers/password.resolver';
+import { RegisterResolver } from './resolvers/register.resolver';
+import { SessionResolver } from './resolvers/session.resolver';
 import { SessionHost, SessionHostImpl } from './session.host';
 import { SessionInterceptor } from './session.interceptor';
-import { SessionResolver } from './session.resolver';
 
 @Global()
 @Module({
