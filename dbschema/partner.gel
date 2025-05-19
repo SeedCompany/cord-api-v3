@@ -41,6 +41,13 @@ module default {
     multi languagesOfConsulting: Language;
     multi fieldRegions: FieldRegion;
     multi countries: Location;
+    multi strategicAlliances: Partner {
+      constraint exclusive;
+    };
+
+    parent: Partner {
+      constraint exclusive;
+    };
 
     startDate: cal::local_date;
 
