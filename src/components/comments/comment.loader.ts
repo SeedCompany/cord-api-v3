@@ -1,16 +1,13 @@
 import { type ID } from '~/common';
-import { OrderedNestDataLoader } from '~/core';
-import { LoaderFactory } from '~/core/resources/loader.registry';
+import { type DataLoaderStrategy, LoaderFactory } from '~/core/data-loader';
 import { CommentService } from './comment.service';
 import { Comment } from './dto';
 
 @LoaderFactory(() => Comment)
-export class CommentLoader extends OrderedNestDataLoader<Comment> {
-  constructor(private readonly comments: CommentService) {
-    super();
-  }
+export class CommentLoader implements DataLoaderStrategy<Comment, ID<Comment>> {
+  constructor(private readonly comments: CommentService) {}
 
-  async loadMany(ids: readonly ID[]) {
+  async loadMany(ids: ReadonlyArray<ID<Comment>>) {
     return await this.comments.readMany(ids);
   }
 }

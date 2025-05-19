@@ -1,5 +1,5 @@
 import { type ID, type ObjectView } from '~/common';
-import { LoaderFactory, ObjectViewAwareLoader } from '~/core';
+import { LoaderFactory, ObjectViewAwareLoader } from '~/core/data-loader';
 import { Language } from './dto';
 import { LanguageService } from './language.service';
 

@@ -1,8 +1,8 @@
 import {
+  type DataLoaderStrategy,
   LoaderFactory,
   type LoaderOptionsOf,
-  OrderedNestDataLoader,
-} from '~/core';
+} from '~/core/data-loader';
 import {
   type ProgressVariantByProductInput,
   type ProgressVariantByProductOutput,
@@ -10,14 +10,15 @@ import {
 import { ProductProgressService } from './product-progress.service';
 
 @LoaderFactory()
-export class ProductProgressByProductLoader extends OrderedNestDataLoader<
-  ProgressVariantByProductOutput,
-  ProgressVariantByProductInput,
-  string
-> {
-  constructor(private readonly service: ProductProgressService) {
-    super();
-  }
+export class ProductProgressByProductLoader
+  implements
+    DataLoaderStrategy<
+      ProgressVariantByProductOutput,
+      ProgressVariantByProductInput,
+      string
+    >
+{
+  constructor(private readonly service: ProductProgressService) {}
 
   getOptions() {
     return {

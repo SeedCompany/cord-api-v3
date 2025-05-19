@@ -1,24 +1,20 @@
 import { type ID } from '~/common';
 import {
+  type DataLoaderStrategy,
   LoaderFactory,
   type LoaderOptionsOf,
-  OrderedNestDataLoader,
-} from '~/core';
+} from '~/core/data-loader';
 import { type ProgressReport } from '../dto';
 import { type ProgressReportVarianceExplanation as VarianceExplanation } from './variance-explanation.dto';
 import { ProgressReportVarianceExplanationService } from './variance-explanation.service';
 
 @LoaderFactory()
-export class ProgressReportVarianceExplanationLoader extends OrderedNestDataLoader<
-  VarianceExplanation,
-  ProgressReport,
-  ID
-> {
+export class ProgressReportVarianceExplanationLoader
+  implements DataLoaderStrategy<VarianceExplanation, ProgressReport, ID>
+{
   constructor(
     private readonly service: ProgressReportVarianceExplanationService,
-  ) {
-    super();
-  }
+  ) {}
 
   getOptions() {
     return {

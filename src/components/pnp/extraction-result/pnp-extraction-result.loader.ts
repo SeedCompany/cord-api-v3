@@ -1,6 +1,5 @@
-import { type DataLoaderStrategy } from '@seedcompany/data-loader';
 import { type ID } from '~/common';
-import { LoaderFactory } from '~/core';
+import { type DataLoaderStrategy, LoaderFactory } from '~/core/data-loader';
 import { type PnpExtractionResult } from './extraction-result.dto';
 import { PnpExtractionResultRepository } from './pnp-extraction-result.gel.repository';
 

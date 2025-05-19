@@ -1,9 +1,9 @@
 import { type ID } from '~/common';
 import {
+  type DataLoaderStrategy,
   LoaderFactory,
-  OrderedNestDataLoader,
-  type OrderedNestDataLoaderOptions,
-} from '~/core';
+  type LoaderOptionsOf,
+} from '~/core/data-loader';
 import {
   type AnyProduct,
   DerivativeScriptureProduct,
@@ -19,19 +19,18 @@ import { ProductService } from './product.service';
   DerivativeScriptureProduct,
   OtherProduct,
 ])
-export class ProductLoader extends OrderedNestDataLoader<AnyProduct> {
-  constructor(private readonly products: ProductService) {
-    super();
-  }
+export class ProductLoader
+  implements DataLoaderStrategy<AnyProduct, ID<'Product'>>
+{
+  constructor(private readonly products: ProductService) {}
 
-  async loadMany(ids: readonly ID[]) {
+  async loadMany(ids: ReadonlyArray<ID<'Product'>>) {
     return await this.products.readMany(ids);
   }
 
-  getOptions(): OrderedNestDataLoaderOptions<AnyProduct> {
+  getOptions() {
     return {
-      ...super.getOptions(),
       maxBatchSize: 25,
-    };
+    } satisfies LoaderOptionsOf<ProductLoader>;
   }
 }
