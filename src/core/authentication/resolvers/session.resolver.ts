@@ -7,35 +7,30 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
-import {
-  type GqlContextType,
-  ServerException,
-  UnauthenticatedException,
-} from '~/common';
-import { ConfigService, ILogger, Loader, type LoaderOf, Logger } from '~/core';
+import { type GqlContextType, ServerException } from '~/common';
+import { ConfigService, Loader, type LoaderOf } from '~/core';
 import { Privileges } from '../../../components/authorization';
 import { Power } from '../../../components/authorization/dto';
 import { UserLoader, UserService } from '../../../components/user';
 import { User } from '../../../components/user/dto';
 import { HttpAdapter } from '../../http';
-import { AuthenticationService } from '../authentication.service';
 import { SessionOutput } from '../dto';
 import { AuthLevel } from '../session/auth-level.decorator';
 import { SessionHost } from '../session/session.host';
-import { SessionInterceptor } from '../session/session.interceptor';
+import { SessionInitiator } from '../session/session.initiator';
+import { SessionManager } from '../session/session.manager';
 
 @Resolver(SessionOutput)
 @AuthLevel('sessionless')
 export class SessionResolver {
   constructor(
-    private readonly authentication: AuthenticationService,
+    private readonly sessionManager: SessionManager,
+    private readonly sessionInitiator: SessionInitiator,
+    private readonly sessionHost: SessionHost,
     private readonly privileges: Privileges,
     private readonly config: ConfigService,
-    private readonly sessionInt: SessionInterceptor,
-    private readonly sessionHost: SessionHost,
     private readonly users: UserService,
     private readonly http: HttpAdapter,
-    @Logger('session:resolver') private readonly logger: ILogger,
   ) {}
 
   @Query(() => SessionOutput, {
@@ -52,49 +47,34 @@ export class SessionResolver {
     })
     browser?: boolean,
   ): Promise<SessionOutput> {
-    const existingToken = this.sessionInt.getTokenFromContext(context);
-    const impersonatee = this.sessionInt.getImpersonateeFromContext(context);
-
-    let token = existingToken || (await this.authentication.createToken());
-    let session;
-    try {
-      session = await this.authentication.resumeSession(token, impersonatee);
-    } catch (exception) {
-      if (!(exception instanceof UnauthenticatedException)) {
-        throw exception;
-      }
-      this.logger.debug(
-        'Failed to use existing session token, creating new one.',
-        { exception },
-      );
-      token = await this.authentication.createToken();
-      session = await this.authentication.resumeSession(token, impersonatee);
+    const { request, response } = context;
+    if (!request) {
+      throw new ServerException('Cannot start session without a request');
     }
+    const session = await this.sessionInitiator.start(request);
     // Set for data loaders invoked later in operation
     this.sessionHost.current$.next(session);
 
-    const userFromSession = session.anonymous ? undefined : session.userId;
-
     if (browser) {
-      const { name, expires, ...options } = this.config.sessionCookie(
-        context.request!,
-      );
-      if (!context.response) {
+      const { name, expires, ...options } = this.config.sessionCookie(request);
+      if (!response) {
         throw new ServerException(
           'Cannot use cookie session without a response object',
         );
       }
-      this.http.setCookie(context.response, name, token, {
+      this.http.setCookie(response, name, session.token, {
         ...options,
         expires: expires
           ? DateTime.local().plus(expires).toJSDate()
           : undefined,
       });
-
-      return { user: userFromSession, session };
     }
 
-    return { token, user: userFromSession, session };
+    return {
+      token: !browser ? session.token : undefined,
+      user: session.anonymous ? undefined : session.userId,
+      session,
+    };
   }
 
   @ResolveField(() => User, {
@@ -125,7 +105,7 @@ export class SessionResolver {
     // They should still be able to see their own props from this field.
     // Otherwise, it could be that the impersonatee can't see the impersonator's roles,
     // and now the UI can't stop impersonating because it doesn't know the impersonator's roles.
-    return await this.authentication.asUser(impersonator, () =>
+    return await this.sessionManager.asUser(impersonator, () =>
       this.users.readOne(impersonator.userId),
     );
   }

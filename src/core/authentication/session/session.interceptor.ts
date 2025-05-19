@@ -1,40 +1,24 @@
 import {
   type CallHandler,
   type ExecutionContext,
-  forwardRef,
-  Inject,
   Injectable,
   type NestInterceptor,
 } from '@nestjs/common';
 import { GqlExecutionContext } from '@nestjs/graphql';
-import { csv, type FnLike } from '@seedcompany/common';
-import { AsyncLocalStorage } from 'async_hooks';
+import { type FnLike } from '@seedcompany/common';
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { BehaviorSubject } from 'rxjs';
-import {
-  type GqlContextType,
-  type ID,
-  InputException,
-  isIdLike,
-  many,
-  type Many,
-  Role,
-  type Session,
-  UnauthenticatedException,
-} from '~/common';
-import { ConfigService } from '~/core';
-import { Identity } from '~/core/authentication';
-import { GlobalHttpHook, type IRequest } from '~/core/http';
-import { rolesForScope } from '../../../components/authorization/dto';
-import { AuthenticationService } from '../authentication.service';
+import { type Session } from '~/common';
+import { GlobalHttpHook } from '../../http';
+import { Identity } from '../identity.service';
 import { AuthLevel } from './auth-level.decorator';
 import { SessionHost } from './session.host';
+import { SessionInitiator } from './session.initiator';
 
 @Injectable()
 export class SessionInterceptor implements NestInterceptor {
   constructor(
-    @Inject(forwardRef(() => AuthenticationService))
-    private readonly auth: AuthenticationService & {},
-    private readonly config: ConfigService,
+    private readonly sessionInitiator: SessionInitiator,
     private readonly sessionHost: SessionHost,
     private readonly identity: Identity,
   ) {}
@@ -75,7 +59,10 @@ export class SessionInterceptor implements NestInterceptor {
       return next.handle();
     }
 
-    const session = await this.startFromContext(executionContext);
+    const request = this.getRequest(executionContext);
+    const session = request
+      ? await this.sessionInitiator.resume(request)
+      : undefined;
     if (session) {
       session$.next(session);
       if (authLevel === 'authenticated') {
@@ -103,97 +90,20 @@ export class SessionInterceptor implements NestInterceptor {
     }
   }
 
-  private async startFromContext(executionContext: ExecutionContext) {
+  private getRequest(executionContext: ExecutionContext) {
     switch (executionContext.getType()) {
       case 'graphql': {
         const gqlExecutionContext =
           GqlExecutionContext.create(executionContext);
         const ctx = gqlExecutionContext.getContext();
-        return await this.hydrateSession(ctx);
+        return ctx.request;
       }
       case 'http': {
         const request = executionContext.switchToHttp().getRequest();
-        return await this.hydrateSession({ request });
+        return request;
       }
       default:
         return undefined;
     }
   }
-
-  async hydrateSession(context: Pick<GqlContextType, 'request'>) {
-    const token = this.getTokenFromContext(context);
-    if (!token) {
-      throw new UnauthenticatedException();
-    }
-    const impersonatee = this.getImpersonateeFromContext(context);
-    return await this.auth.resumeSession(token, impersonatee);
-  }
-
-  getTokenFromContext(context: Pick<GqlContextType, 'request'>): string | null {
-    return (
-      this.getTokenFromAuthHeader(context.request) ??
-      this.getTokenFromCookie(context.request)
-    );
-  }
-
-  private getTokenFromAuthHeader(req: IRequest | undefined): string | null {
-    const header = req?.headers?.authorization;
-
-    if (!header) {
-      return null;
-    }
-    if (!header.startsWith('Bearer ')) {
-      return null;
-    }
-
-    return header.replace('Bearer ', '');
-  }
-
-  private getTokenFromCookie(req: IRequest | undefined): string | null {
-    return req?.cookies?.[this.config.sessionCookie(req).name] || null;
-  }
-
-  getImpersonateeFromContext(
-    context: Pick<GqlContextType, 'request'>,
-  ): Session['impersonatee'] {
-    const user = context.request?.headers?.['x-cord-impersonate-user'] as
-      | ID
-      | undefined;
-    if (user && !isIdLike(user)) {
-      throw new InputException(
-        `Invalid user ID given in "X-CORD-Impersonate-User" header`,
-      );
-    }
-
-    const roles = csvHeader(
-      context.request?.headers?.['x-cord-impersonate-role'],
-    );
-
-    if (!roles && !user) {
-      return undefined;
-    }
-
-    const scoped = (roles ?? [])
-      .map(assertValidRole)
-      .map(rolesForScope('global'));
-
-    return { id: user, roles: scoped };
-  }
-}
-
-const assertValidRole = (role: string): Role => {
-  if (Role.has(role)) {
-    return role;
-  }
-  throw new InputException(
-    `Invalid role "${role}" from "X-CORD-Impersonate-Role" header`,
-  );
-};
-
-function csvHeader(headerVal: Many<string> | undefined) {
-  if (!headerVal) {
-    return undefined;
-  }
-  const items = many(headerVal).flatMap((itemCsv) => csv(itemCsv ?? ''));
-  return items && items.length > 0 ? items : undefined;
 }

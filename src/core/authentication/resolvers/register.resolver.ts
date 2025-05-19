@@ -31,8 +31,6 @@ export class RegisterResolver {
   })
   async register(@Args('input') input: RegisterInput): Promise<RegisterOutput> {
     const user = await this.authentication.register(input);
-    await this.authentication.login(input);
-    await this.authentication.refreshCurrentSession();
     return { user };
   }
 

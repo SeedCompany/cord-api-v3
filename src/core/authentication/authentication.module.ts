@@ -1,13 +1,14 @@
-import { forwardRef, Global, Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { splitDb } from '~/core';
-import { Identity } from '~/core/authentication';
 import { AuthorizationModule } from '../../components/authorization/authorization.module';
 import { UserModule } from '../../components/user/user.module';
 import { AuthenticationGelRepository } from './authentication.gel.repository';
 import { AuthenticationRepository } from './authentication.repository';
 import { AuthenticationService } from './authentication.service';
 import { CryptoService } from './crypto.service';
+import { Identity } from './identity.service';
+import { JwtService } from './jwt.service';
 import {
   LoginExtraInfoResolver,
   RegisterExtraInfoResolver,
@@ -18,9 +19,10 @@ import { PasswordResolver } from './resolvers/password.resolver';
 import { RegisterResolver } from './resolvers/register.resolver';
 import { SessionResolver } from './resolvers/session.resolver';
 import { SessionHost, SessionHostImpl } from './session/session.host';
+import { SessionInitiator } from './session/session.initiator';
 import { SessionInterceptor } from './session/session.interceptor';
+import { SessionManager } from './session/session.manager';
 
-@Global()
 @Module({
   imports: [
     forwardRef(() => UserModule),
@@ -34,15 +36,21 @@ import { SessionInterceptor } from './session/session.interceptor';
     SessionExtraInfoResolver,
     LoginExtraInfoResolver,
     RegisterExtraInfoResolver,
+
     Identity,
+
+    { provide: APP_INTERCEPTOR, useClass: SessionInterceptor },
+    SessionInitiator,
+    SessionManager,
+    { provide: 'SessionInitiator', useExisting: SessionInitiator },
+    { provide: 'SessionManager', useExisting: SessionManager },
+    { provide: SessionHost, useClass: SessionHostImpl },
+
     AuthenticationService,
     splitDb(AuthenticationRepository, AuthenticationGelRepository),
-    { provide: 'AUTHENTICATION', useExisting: AuthenticationService },
+    JwtService,
     CryptoService,
-    SessionInterceptor,
-    { provide: APP_INTERCEPTOR, useExisting: SessionInterceptor },
-    { provide: SessionHost, useClass: SessionHostImpl },
   ],
-  exports: [Identity, SessionHost, SessionInterceptor, 'AUTHENTICATION'],
+  exports: [Identity],
 })
 export class AuthenticationModule {}

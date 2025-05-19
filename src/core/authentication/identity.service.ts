@@ -1,7 +1,9 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { type ID, type Role, UnauthenticatedException } from '~/common';
-import { type AuthenticationService } from './authentication.service';
+import { type IRequest } from '../http/types';
 import { SessionHost } from './session/session.host';
+import type { SessionInitiator } from './session/session.initiator';
+import type { SessionManager } from './session/session.manager';
 
 /**
  * A facade for authentication functionality that is public to the codebase.
@@ -9,8 +11,10 @@ import { SessionHost } from './session/session.host';
 @Injectable()
 export class Identity {
   constructor(
-    @Inject(forwardRef(() => 'AUTHENTICATION'))
-    private readonly auth: AuthenticationService & {},
+    @Inject(forwardRef(() => 'SessionManager'))
+    private readonly sessionManager: SessionManager & {},
+    @Inject(forwardRef(() => 'SessionInitiator'))
+    private readonly sessionInitiator: SessionInitiator & {},
     private readonly sessionHost: SessionHost,
   ) {}
 
@@ -80,14 +84,18 @@ export class Identity {
   }
 
   async asUser<R>(user: ID<'User'>, fn: () => Promise<R>): Promise<R> {
-    return await this.auth.asUser(user, fn);
+    return await this.sessionManager.asUser(user, fn);
   }
 
   /**
    * Run this function with the current user as an ephemeral one this role
    */
   asRole<R>(role: Role, fn: () => R): R {
-    return this.auth.asRole(role, fn);
+    return this.sessionManager.asRole(role, fn);
+  }
+
+  async identifyRequest(request: IRequest) {
+    return await this.sessionInitiator.resume(request);
   }
 
   /**
@@ -95,6 +103,6 @@ export class Identity {
    */
   async readyForCli() {
     // Ensure the default root session is ready to go for data loaders
-    await this.auth.lazySessionForRootUser();
+    await this.sessionManager.lazySessionForRootUser();
   }
 }

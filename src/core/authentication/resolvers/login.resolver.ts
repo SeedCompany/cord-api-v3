@@ -33,7 +33,6 @@ export class LoginResolver {
   })
   async login(@Args('input') input: LoginInput): Promise<LoginOutput> {
     const user = await this.authentication.login(input);
-    await this.authentication.refreshCurrentSession();
     return { user };
   }
 
@@ -46,7 +45,6 @@ export class LoginResolver {
   async logout(): Promise<LogoutOutput> {
     const session = this.sessionHost.current;
     await this.authentication.logout(session.token);
-    await this.authentication.refreshCurrentSession(); // ensure session data is fresh
     return { success: true };
   }
 

@@ -1,5 +1,5 @@
 import { Injectable, type OnModuleDestroy } from '@nestjs/common';
-import { AsyncLocalStorage } from 'async_hooks';
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { BehaviorSubject } from 'rxjs';
 import { type Session } from '~/common';
 import { AsyncLocalStorageNoContextException } from '../../async-local-storage-no-context.exception';
