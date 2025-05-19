@@ -45,6 +45,8 @@ export class User extends Interfaces {
       ...Commentable.Relations,
     } satisfies ResourceRelationsShape);
 
+  declare readonly __typename: 'User';
+
   @Field()
   @DbUnique('EmailAddress')
   email: SecuredStringNullable;

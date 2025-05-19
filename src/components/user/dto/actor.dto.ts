@@ -19,6 +19,8 @@ import { e } from '~/core/gel';
   resolveType: resolveByTypename(Actor.name),
 })
 export class Actor extends DataObject {
+  declare readonly __typename: 'User' | 'SystemAgent';
+
   @IdField()
   readonly id: ID;
 }
@@ -31,7 +33,7 @@ export class Actor extends DataObject {
   implements: [Actor],
 })
 export abstract class SystemAgent extends Actor {
-  __typename?: 'SystemAgent';
+  declare readonly __typename: 'SystemAgent';
 
   @NameField()
   readonly name: string;
