@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { type ID, type ObjectView, type UnsecuredDto } from '~/common';
 import { HandleIdLookup } from '~/core';
-import { SessionHost } from '../../authentication';
+import { Identity } from '~/core/authentication';
 import { Privileges } from '../../authorization';
 import {
   type CreateUnavailability,
@@ -16,7 +16,7 @@ import { UnavailabilityRepository } from './unavailability.repository';
 export class UnavailabilityService {
   constructor(
     private readonly privileges: Privileges,
-    private readonly sessionHost: SessionHost,
+    private readonly identity: Identity,
     private readonly repo: UnavailabilityRepository,
   ) {}
 
@@ -46,7 +46,7 @@ export class UnavailabilityService {
     const result = await this.repo.getUserIdByUnavailability(input.id);
     const changes = this.repo.getActualChanges(unavailability, input);
     // TODO move this condition into policies
-    const session = this.sessionHost.current;
+    const session = this.identity.current;
     if (result.id !== session.userId) {
       this.privileges
         .for(Unavailability, unavailability)

@@ -17,7 +17,7 @@ import {
   type UnwrapSecured,
 } from '~/common';
 import { AbortError, retry, type RetryOptions } from '~/common/retry';
-import { SessionHost } from '../../components/authentication/session.host';
+import { Identity } from '../authentication';
 import { ConfigService } from '../config/config.service';
 import { ILogger, Logger } from '../logger';
 import { ShutdownHook } from '../shutdown.hook';
@@ -64,7 +64,7 @@ export class DatabaseService {
   constructor(
     private readonly db: Connection,
     private readonly config: ConfigService,
-    private readonly sessionHost: SessionHost,
+    private readonly identity: Identity,
     private readonly shutdown$: ShutdownHook,
     @Logger('database:service') private readonly logger: ILogger,
   ) {}
@@ -124,7 +124,7 @@ export class DatabaseService {
     parameters?: Record<string, any>,
   ): Query<Result> {
     const q = this.db.query() as Query<Result>;
-    q.params.addParam(this.sessionHost.currentIfInCtx?.userId, 'currentUser');
+    q.params.addParam(this.identity.currentIfInCtx?.userId, 'currentUser');
     if (query) {
       q.raw(query, parameters);
     }

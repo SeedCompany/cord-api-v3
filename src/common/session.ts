@@ -8,7 +8,7 @@ import { CONTROLLER_WATERMARK } from '@nestjs/common/constants.js';
 import { Context } from '@nestjs/graphql';
 import { uniq } from 'lodash';
 import { type DateTime } from 'luxon';
-import { SessionHost } from '../components/authentication/session.host';
+import { Identity } from '~/core/authentication';
 import { type ScopedRole } from '../components/authorization/dto';
 import { UnauthenticatedException } from './exceptions';
 import { type ID } from './id-field';
@@ -42,10 +42,10 @@ export function loggedInSession(session: Session): Session {
 
 @Injectable()
 export class SessionPipe implements PipeTransform {
-  constructor(private readonly sessionHost: SessionHost) {}
+  constructor(private readonly identity: Identity) {}
 
   transform() {
-    return this.sessionHost.currentMaybe;
+    return this.identity.currentMaybe;
   }
 }
 

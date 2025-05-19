@@ -16,8 +16,8 @@ import {
   type VariantOf,
 } from '~/common';
 import { ResourceLoader } from '~/core';
+import { Identity } from '~/core/authentication';
 import { mapListResults } from '~/core/database/results';
-import { SessionHost } from '../authentication';
 import {
   Privileges,
   type UserResourcePrivileges,
@@ -53,7 +53,7 @@ export const PromptVariantResponseListService = <
   abstract class PromptVariantResponseListServiceClass {
     @Inject(Privileges)
     protected readonly privileges: Privileges;
-    @Inject() protected readonly sessionHost: SessionHost;
+    @Inject() protected readonly identity: Identity;
     @Inject(ResourceLoader)
     protected readonly resources: ResourceLoader;
     @Inject(repo)
@@ -230,7 +230,7 @@ export const PromptVariantResponseListService = <
         await this.repo.submitResponse(input);
       }
 
-      const session = this.sessionHost.current;
+      const session = this.identity.current;
       const responses = mapKeys.fromList(
         response.responses,
         (response) => response.variant,

@@ -57,7 +57,7 @@ export class EdgePrivileges<
       : perm.isAllowed({
           object: this.object,
           resource: this.resource,
-          session: this.policyExecutor.sessionHost.current,
+          session: this.policyExecutor.identity.current,
         });
   }
 
