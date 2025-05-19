@@ -63,7 +63,7 @@ export class ProjectChangeRequestRepository extends DtoRepository<
           relation('in', '', 'changeset', ACTIVE),
           node('project', 'Project'),
         ])
-        .apply(matchPropsAndProjectSensAndScopedRoles(session))
+        .apply(matchPropsAndProjectSensAndScopedRoles())
         .return<{ dto: UnsecuredDto<ProjectChangeRequest> }>(
           merge('props', {
             canEdit: `props.status = "${Status.Pending}"`,

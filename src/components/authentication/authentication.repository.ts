@@ -5,8 +5,8 @@ import { type ID, ServerException, type Session } from '~/common';
 import { DatabaseService, DbTraceLayer, OnIndex } from '~/core/database';
 import {
   ACTIVE,
+  currentUser,
   matchUserGloballyScopedRoles,
-  requestingUser,
   variable,
 } from '~/core/database/query';
 import { type ScopedRole } from '../authorization/dto';
@@ -226,7 +226,7 @@ export class AuthenticationRepository {
     const result = await this.db
       .query()
       .match([
-        requestingUser(session),
+        currentUser,
         relation('out', '', 'password', ACTIVE),
         node('password', 'Property'),
       ])
@@ -243,7 +243,7 @@ export class AuthenticationRepository {
     await this.db
       .query()
       .match([
-        requestingUser(session),
+        currentUser,
         relation('out', '', 'password', ACTIVE),
         node('password', 'Property'),
       ])
@@ -331,7 +331,7 @@ export class AuthenticationRepository {
     await this.db
       .query()
       .match([
-        requestingUser(session),
+        currentUser,
         relation('out', 'oldRel', 'token', ACTIVE),
         node('token', 'Token'),
       ])

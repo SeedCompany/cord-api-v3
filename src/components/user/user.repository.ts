@@ -25,8 +25,8 @@ import {
   multiPropsAsSortString,
   paginate,
   path,
+  pinned,
   property,
-  requestingUser,
   type SortCol,
   sortWith,
 } from '~/core/database/query';
@@ -127,7 +127,7 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
     return await this.readOne(id, id);
   }
 
-  protected hydrate(requestingUserId: Session | ID) {
+  protected hydrate(_: Session | ID) {
     return (query: Query) =>
       query
         .subQuery('node', (sub) =>
@@ -140,12 +140,11 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
             .return('collect(role.value) as roles'),
         )
         .apply(matchProps())
-        .match(requestingUser(requestingUserId))
         .return<{ dto: UnsecuredDto<User> }>(
           merge({ email: null }, 'props', {
             __typename: '"User"',
             roles: 'roles',
-            pinned: 'exists((requestingUser)-[:pinned]->(node))',
+            pinned,
           }).as('dto'),
         );
   }
@@ -229,7 +228,6 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
     const result = await this.db
       .query()
       .matchNode('node', 'User')
-      .match(requestingUser(session))
       .apply(userFilters(input.filter))
       .apply(this.privileges.forUser(session).filterToReadable())
       .apply(sortWith(userSorters, input))

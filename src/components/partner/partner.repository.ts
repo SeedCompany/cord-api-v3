@@ -27,8 +27,8 @@ import {
   merge,
   oncePerProject,
   paginate,
+  pinned,
   rankSens,
-  requestingUser,
   sortWith,
 } from '~/core/database/query';
 import * as departmentIdBlockUtils from '../finance/department/neo4j.utils';
@@ -209,7 +209,7 @@ export class PartnerRepository extends DtoRepository<
           relation('out', '', 'partner'),
           node('node'),
         ])
-        .apply(matchProjectScopedRoles({ session }))
+        .apply(matchProjectScopedRoles())
         .with([
           'node',
           'collect(project) as projList',
@@ -291,7 +291,7 @@ export class PartnerRepository extends DtoRepository<
             languagesOfConsulting: 'languagesOfConsulting',
             departmentIdBlock: 'departmentIdBlock',
             scope: 'scopedRoles',
-            pinned: 'exists((:User { id: $requestingUser })-[:pinned]->(node))',
+            pinned,
           }).as('dto'),
         );
   }
@@ -300,7 +300,6 @@ export class PartnerRepository extends DtoRepository<
     const result = await this.db
       .query()
       .matchNode('node', 'Partner')
-      .match(requestingUser(session))
       .apply(partnerFilters(input.filter))
       .apply(
         this.privileges.forUser(session).filterToReadable({

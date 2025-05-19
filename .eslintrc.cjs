@@ -198,6 +198,17 @@ const config = {
     ],
     // TODO Enable this and fix errors (both types & logic changes will be needed)
     '@typescript-eslint/no-unnecessary-condition': 'off',
+
+    // Allow unused session while we migrate
+    '@seedcompany/no-unused-vars': [
+      'warn',
+      {
+        args: 'after-used',
+        ignoreRestSiblings: true,
+        argsIgnorePattern: '(^_|^session$)',
+        varsIgnorePattern: '^_',
+      },
+    ],
   },
   overrides: [
     {

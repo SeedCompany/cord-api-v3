@@ -1,16 +1,12 @@
-import { type Query } from 'cypher-query-builder';
 import { inspect, type InspectOptionsStylized } from 'util';
 import { type User } from '../../../user/dto';
 import {
-  type AsCypherParams,
   type AsEdgeQLParams,
   type Condition,
   fqnRelativeTo,
   type IsAllowedParams,
   MissingContextException,
 } from '../../policy/conditions';
-
-const CQL_VAR = 'requestingUser';
 
 class SelfCondition<TResourceStatic extends typeof User>
   implements Condition<TResourceStatic>
@@ -22,25 +18,8 @@ class SelfCondition<TResourceStatic extends typeof User>
     return object.id === session.userId;
   }
 
-  setupCypherContext(
-    query: Query,
-    prevApplied: Set<any>,
-    other: AsCypherParams<TResourceStatic>,
-  ) {
-    if (prevApplied.has('self')) {
-      return query;
-    }
-    prevApplied.add('self');
-
-    const param = query.params.addParam(other.session.userId, CQL_VAR);
-    Reflect.set(other, CQL_VAR, param);
-
-    return query;
-  }
-
-  asCypherCondition(_query: Query, other: AsCypherParams<TResourceStatic>) {
-    const requester = String(Reflect.get(other, CQL_VAR));
-    return `node:User AND node.id = ${requester}`;
+  asCypherCondition() {
+    return 'node:User AND node.id = $currentUser';
   }
 
   asEdgeQLCondition({ namespace }: AsEdgeQLParams<any>) {

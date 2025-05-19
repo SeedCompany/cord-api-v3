@@ -25,7 +25,7 @@ import { variable } from '../query-augmentation/condition-variables';
 import { intersects } from './comparators';
 import { collect } from './cypher-functions';
 import { escapeLuceneSyntax, type FullTextIndex } from './full-text';
-import { ACTIVE } from './matching';
+import { ACTIVE, currentUser } from './matching';
 import { path as pathPattern } from './where-path';
 
 export type Builder<T, K extends keyof T = keyof T> = (
@@ -175,7 +175,7 @@ export const pathExistsWhenTrue: typeof pathExists = (pattern) => (args) =>
   args.value ? pathExists(pattern)(args) : null;
 
 export const isPinned = pathExists<{ pinned?: boolean }, 'pinned'>([
-  node('requestingUser'),
+  currentUser,
   relation('out', '', 'pinned'),
   node('node'),
 ]);
