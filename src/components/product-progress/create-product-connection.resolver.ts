@@ -18,6 +18,6 @@ export class ProgressReportCreateProductConnectionResolver {
     if (session.anonymous) {
       return [];
     }
-    return await this.service.getAvailableVariantsForProduct(product, session);
+    return await this.service.getAvailableVariantsForProduct(product);
   }
 }

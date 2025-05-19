@@ -103,15 +103,12 @@ export class ExtractPnpProgressHandler {
     await Promise.all(
       updates.map(async ({ extracted, ...input }) => {
         try {
-          await this.progress.update(
-            {
-              ...input,
-              reportId: event.report.id,
-              // TODO this seems fine for now as only this variant will upload PnPs.
-              variant: Progress.FallbackVariant,
-            },
-            event.session,
-          );
+          await this.progress.update({
+            ...input,
+            reportId: event.report.id,
+            // TODO this seems fine for now as only this variant will upload PnPs.
+            variant: Progress.FallbackVariant,
+          });
         } catch (e) {
           if (
             !(

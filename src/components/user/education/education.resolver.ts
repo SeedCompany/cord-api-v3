@@ -1,13 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Args, Mutation, Query } from '@nestjs/graphql';
-import {
-  AnonSession,
-  type ID,
-  IdArg,
-  ListArg,
-  LoggedInSession,
-  type Session,
-} from '~/common';
+import { type ID, IdArg, ListArg } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { EducationLoader, EducationService } from '../education';
 import {
@@ -30,10 +23,9 @@ export class EducationResolver {
     deprecationReason: `This is unfinished functionality, don't use`,
   })
   async createEducation(
-    @LoggedInSession() session: Session,
     @Args('input') { education: input }: CreateEducationInput,
   ): Promise<CreateEducationOutput> {
-    const education = await this.service.create(input, session);
+    const education = await this.service.create(input);
     return { education };
   }
 
@@ -53,11 +45,10 @@ export class EducationResolver {
     deprecationReason: 'Query via user instead',
   })
   async educations(
-    @AnonSession() session: Session,
     @ListArg(EducationListInput) input: EducationListInput,
     @Loader(EducationLoader) educations: LoaderOf<EducationLoader>,
   ): Promise<EducationListOutput> {
-    const list = await this.service.list(input, session);
+    const list = await this.service.list(input);
     educations.primeAll(list.items);
     return list;
   }
@@ -67,10 +58,9 @@ export class EducationResolver {
     deprecationReason: `This is unfinished functionality, don't use`,
   })
   async updateEducation(
-    @LoggedInSession() session: Session,
     @Args('input') { education: input }: UpdateEducationInput,
   ): Promise<UpdateEducationOutput> {
-    const education = await this.service.update(input, session);
+    const education = await this.service.update(input);
     return { education };
   }
 
@@ -78,10 +68,7 @@ export class EducationResolver {
     description: 'Delete an education',
     deprecationReason: `This is unfinished functionality, don't use`,
   })
-  async deleteEducation(
-    @LoggedInSession() session: Session,
-    @IdArg() id: ID,
-  ): Promise<DeleteEducationOutput> {
+  async deleteEducation(@IdArg() id: ID): Promise<DeleteEducationOutput> {
     await this.service.delete(id);
     return { success: true };
   }

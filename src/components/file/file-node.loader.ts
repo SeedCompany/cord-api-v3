@@ -10,6 +10,6 @@ export class FileNodeLoader extends OrderedNestDataLoader<FileNode> {
   }
 
   async loadMany(ids: ID[]) {
-    return await this.files.getFileNodes(ids, this.session);
+    return await this.files.getFileNodes(ids);
   }
 }

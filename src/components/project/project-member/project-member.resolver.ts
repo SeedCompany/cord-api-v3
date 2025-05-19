@@ -1,5 +1,5 @@
 import { Args, Mutation, Resolver } from '@nestjs/graphql';
-import { type ID, IdArg, LoggedInSession, type Session } from '~/common';
+import { type ID, IdArg } from '~/common';
 import { ProjectMemberService } from '../project-member';
 import {
   CreateProjectMemberInput,
@@ -17,10 +17,9 @@ export class ProjectMemberResolver {
     description: 'Create a project member',
   })
   async createProjectMember(
-    @LoggedInSession() session: Session,
     @Args('input') { projectMember: input }: CreateProjectMemberInput,
   ): Promise<CreateProjectMemberOutput> {
-    const projectMember = await this.service.create(input, session);
+    const projectMember = await this.service.create(input);
     return { projectMember };
   }
 
@@ -28,10 +27,9 @@ export class ProjectMemberResolver {
     description: 'Update a project member',
   })
   async updateProjectMember(
-    @LoggedInSession() session: Session,
     @Args('input') { projectMember: input }: UpdateProjectMemberInput,
   ): Promise<UpdateProjectMemberOutput> {
-    const projectMember = await this.service.update(input, session);
+    const projectMember = await this.service.update(input);
     return { projectMember };
   }
 
@@ -39,10 +37,9 @@ export class ProjectMemberResolver {
     description: 'Delete a project member',
   })
   async deleteProjectMember(
-    @LoggedInSession() session: Session,
     @IdArg() id: ID,
   ): Promise<DeleteProjectMemberOutput> {
-    await this.service.delete(id, session);
+    await this.service.delete(id);
     return { success: true };
   }
 }

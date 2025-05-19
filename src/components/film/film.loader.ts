@@ -10,6 +10,6 @@ export class FilmLoader extends OrderedNestDataLoader<Film> {
   }
 
   async loadMany(ids: readonly ID[]) {
-    return await this.films.readMany(ids, this.session);
+    return await this.films.readMany(ids);
   }
 }

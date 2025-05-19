@@ -38,7 +38,6 @@ export class SyncPeriodicReportsToProjectDateRange
 
     const narrativeDiff = this.diffBy(...intervals, 'quarter');
     await this.sync(
-      event.session,
       project.id,
       ReportType.Narrative,
       narrativeDiff,
@@ -50,7 +49,6 @@ export class SyncPeriodicReportsToProjectDateRange
     }
     const financialDiff = this.diffFinancial(intervals, event);
     await this.sync(
-      event.session,
       project.id,
       ReportType.Financial,
       financialDiff,

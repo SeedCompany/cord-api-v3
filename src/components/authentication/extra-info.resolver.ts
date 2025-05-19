@@ -17,7 +17,7 @@ function AuthExtraInfoResolver(concreteClass: AbstractClassType<any>) {
 
     @ResolveField(() => BetaFeatures)
     betaFeatures(@AnonSession() session: Session): BetaFeatures {
-      const privileges = this.privileges.for(session, BetaFeatures);
+      const privileges = this.privileges.for(BetaFeatures);
       const { props } = EnhancedResource.of(BetaFeatures);
       return mapValues.fromList([...props], (prop) =>
         privileges.can('edit', prop),

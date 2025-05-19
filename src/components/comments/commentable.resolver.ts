@@ -41,10 +41,10 @@ export class CommentableResolver {
       return { parent, ...SecuredList.Redacted };
     }
     if (onlyTotal) {
-      const total = await this.service.getThreadCount(parent, session);
+      const total = await this.service.getThreadCount(parent);
       return { total };
     }
-    const list = await this.service.listThreads(parent, input, session);
+    const list = await this.service.listThreads(parent, input);
     commentThreads.primeAll(list.items);
     return list;
   }

@@ -9,17 +9,14 @@ import {
 } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import {
-  AnonSession,
   firstLettersOfWords,
   type ID,
   IdArg,
   IdField,
   ListArg,
-  LoggedInSession,
   SecuredDate,
   SecuredIntNullable,
   SecuredStringNullable,
-  type Session,
   viewOfChangeset,
 } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
@@ -125,12 +122,11 @@ export class LanguageResolver {
 
   @ResolveField(() => SecuredLocationList)
   async locations(
-    @AnonSession() session: Session,
     @Parent() language: Language,
     @ListArg(LocationListInput) input: LocationListInput,
     @Loader(LocationLoader) locations: LoaderOf<LocationLoader>,
   ): Promise<SecuredLocationList> {
-    const list = await this.langService.listLocations(language, input, session);
+    const list = await this.langService.listLocations(language, input);
     locations.primeAll(list.items);
     return list;
   }
@@ -138,23 +134,19 @@ export class LanguageResolver {
   @ResolveField(() => SecuredDate, {
     description: 'The earliest start date from its engagements.',
   })
-  async sponsorStartDate(
-    @AnonSession() session: Session,
-    @Parent() language: Language,
-  ): Promise<SecuredDate> {
-    return await this.langService.sponsorStartDate(language, session);
+  async sponsorStartDate(@Parent() language: Language): Promise<SecuredDate> {
+    return await this.langService.sponsorStartDate(language);
   }
 
   @ResolveField(() => SecuredTranslationProjectList, {
     description: 'The list of projects the language is engagement in.',
   })
   async projects(
-    @AnonSession() session: Session,
     @Parent() language: Language,
     @ListArg(ProjectListInput) input: ProjectListInput,
     @Loader(ProjectLoader) loader: LoaderOf<ProjectLoader>,
   ): Promise<SecuredProjectList> {
-    const list = await this.langService.listProjects(language, input, session);
+    const list = await this.langService.listProjects(language, input);
     loader.primeAll(list.items);
     return list;
   }
@@ -163,16 +155,11 @@ export class LanguageResolver {
     description: "The list of the language's engagements.",
   })
   async engagements(
-    @AnonSession() session: Session,
     @Parent() language: Language,
     @ListArg(EngagementListInput) input: EngagementListInput,
     @Loader(EngagementLoader) loader: LoaderOf<EngagementLoader>,
   ): Promise<SecuredEngagementList> {
-    const list = await this.langService.listEngagements(
-      language,
-      input,
-      session,
-    );
+    const list = await this.langService.listEngagements(language, input);
     loader.primeAll(list.items);
     return list;
   }
@@ -181,11 +168,10 @@ export class LanguageResolver {
     description: 'Look up languages',
   })
   async languages(
-    @AnonSession() session: Session,
     @ListArg(LanguageListInput) input: LanguageListInput,
     @Loader(LanguageLoader) languages: LoaderOf<LanguageLoader>,
   ): Promise<LanguageListOutput> {
-    const list = await this.langService.list(input, session);
+    const list = await this.langService.list(input);
     languages.primeAll(list.items);
     return list;
   }
@@ -194,10 +180,9 @@ export class LanguageResolver {
     description: 'Create a language',
   })
   async createLanguage(
-    @LoggedInSession() session: Session,
     @Args('input') { language: input }: CreateLanguageInput,
   ): Promise<CreateLanguageOutput> {
-    const language = await this.langService.create(input, session);
+    const language = await this.langService.create(input);
     return { language };
   }
 
@@ -205,12 +190,10 @@ export class LanguageResolver {
     description: 'Update a language',
   })
   async updateLanguage(
-    @LoggedInSession() session: Session,
     @Args('input') { language: input, changeset }: UpdateLanguageInput,
   ): Promise<UpdateLanguageOutput> {
     const language = await this.langService.update(
       input,
-      session,
       viewOfChangeset(changeset),
     );
     return { language };
@@ -219,11 +202,8 @@ export class LanguageResolver {
   @Mutation(() => DeleteLanguageOutput, {
     description: 'Delete a language',
   })
-  async deleteLanguage(
-    @LoggedInSession() session: Session,
-    @IdArg() id: ID,
-  ): Promise<DeleteLanguageOutput> {
-    await this.langService.delete(id, session);
+  async deleteLanguage(@IdArg() id: ID): Promise<DeleteLanguageOutput> {
+    await this.langService.delete(id);
     return { success: true };
   }
 
@@ -231,21 +211,19 @@ export class LanguageResolver {
     description: 'Add a location to a language',
   })
   async addLocationToLanguage(
-    @LoggedInSession() session: Session,
     @Args() { languageId, locationId }: ModifyLocationArgs,
   ): Promise<Language> {
     await this.langService.addLocation(languageId, locationId);
-    return await this.langService.readOne(languageId, session);
+    return await this.langService.readOne(languageId);
   }
 
   @Mutation(() => Language, {
     description: 'Remove a location from a language',
   })
   async removeLocationFromLanguage(
-    @LoggedInSession() session: Session,
     @Args() { languageId, locationId }: ModifyLocationArgs,
   ): Promise<Language> {
     await this.langService.removeLocation(languageId, locationId);
-    return await this.langService.readOne(languageId, session);
+    return await this.langService.readOne(languageId);
   }
 }

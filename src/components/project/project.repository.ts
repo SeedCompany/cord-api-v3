@@ -8,7 +8,6 @@ import {
   type ID,
   NotFoundException,
   Sensitivity,
-  type Session,
   type UnsecuredDto,
 } from '~/common';
 import { ConfigService } from '~/core';
@@ -55,11 +54,11 @@ export class ProjectRepository extends CommonRepository {
     super();
   }
 
-  async readOne(id: ID, userId: ID, changeset?: ID) {
+  async readOne(id: ID, changeset?: ID) {
     const query = this.db
       .query()
       .match([node('node', 'Project', { id })])
-      .apply(this.hydrate(userId, changeset));
+      .apply(this.hydrate(changeset));
     const result = await query.first();
     if (!result) {
       throw new NotFoundException('Could not find project');
@@ -68,17 +67,17 @@ export class ProjectRepository extends CommonRepository {
     return result.dto;
   }
 
-  async readMany(ids: readonly ID[], session: Session, changeset?: ID) {
+  async readMany(ids: readonly ID[], changeset?: ID) {
     return await this.db
       .query()
       .matchNode('node', 'Project')
       .where({ 'node.id': inArray(ids) })
-      .apply(this.hydrate(session.userId, changeset))
+      .apply(this.hydrate(changeset))
       .map('dto')
       .run();
   }
 
-  private hydrate(userId: ID, changeset?: ID) {
+  private hydrate(changeset?: ID) {
     return (query: Query) =>
       query
         .with(['node', 'node as project'])
@@ -330,15 +329,15 @@ export class ProjectRepository extends CommonRepository {
     return result;
   }
 
-  async list(input: ProjectListInput, session: Session) {
+  async list(input: ProjectListInput) {
     const result = await this.db
       .query()
       .matchNode('node', 'Project')
       .with('distinct(node) as node, node as project')
       .apply(projectFilters(input.filter))
-      .apply(this.privileges.for(session, IProject).filterToReadable())
+      .apply(this.privileges.for(IProject).filterToReadable())
       .apply(sortWith(projectSorters, input))
-      .apply(paginate(input, this.hydrate(session.userId)))
+      .apply(paginate(input, this.hydrate()))
       .first();
     return result!; // result from paginate() will always have 1 row.
   }

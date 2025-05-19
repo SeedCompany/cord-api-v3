@@ -6,7 +6,6 @@ import {
   type ID,
   NotFoundException,
   ReadAfterCreationFailed,
-  type Session,
   type UnsecuredDto,
 } from '~/common';
 import { DtoRepository, OnIndex } from '~/core/database';
@@ -34,11 +33,8 @@ import {
 } from './dto';
 
 @Injectable()
-export class OrganizationRepository extends DtoRepository<
-  typeof Organization,
-  [session: Session]
->(Organization) {
-  async create(input: CreateOrganization, session: Session) {
+export class OrganizationRepository extends DtoRepository(Organization) {
+  async create(input: CreateOrganization) {
     if (!(await this.isUnique(input.name))) {
       throw new DuplicateException(
         'organization.name',
@@ -65,20 +61,20 @@ export class OrganizationRepository extends DtoRepository<
       throw new CreationFailed(Organization);
     }
 
-    return await this.readOne(result.id, session).catch((e) => {
+    return await this.readOne(result.id).catch((e) => {
       throw e instanceof NotFoundException
         ? new ReadAfterCreationFailed(Organization)
         : e;
     });
   }
 
-  async update(changes: UpdateOrganization, session: Session) {
+  async update(changes: UpdateOrganization) {
     const { id, ...simpleChanges } = changes;
     await this.updateProperties({ id }, simpleChanges);
-    return await this.readOne(id, session);
+    return await this.readOne(id);
   }
 
-  protected hydrate(session: Session) {
+  protected hydrate() {
     return (query: Query) =>
       query
         .optionalMatch([
@@ -120,13 +116,13 @@ export class OrganizationRepository extends DtoRepository<
         );
   }
 
-  async list(input: OrganizationListInput, session: Session) {
+  async list(input: OrganizationListInput) {
     const query = this.db
       .query()
       .matchNode('node', 'Organization')
       .apply(organizationFilters(input.filter))
       .apply(
-        this.privileges.forUser(session).filterToReadable({
+        this.privileges.filterToReadable({
           wrapContext: (inner) => (query) =>
             query
               .optionalMatch([
@@ -142,7 +138,7 @@ export class OrganizationRepository extends DtoRepository<
         }),
       )
       .apply(sortWith(organizationSorters, input))
-      .apply(paginate(input, this.hydrate(session)));
+      .apply(paginate(input, this.hydrate()));
     return (await query.first())!; // result from paginate() will always have 1 row.
   }
 

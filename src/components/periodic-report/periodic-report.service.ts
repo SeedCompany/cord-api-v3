@@ -7,7 +7,6 @@ import {
   NotFoundException,
   type ObjectView,
   type Range,
-  type Session,
   type UnsecuredDto,
 } from '~/common';
 import { HandleIdLookup, IEventBus, ILogger, Logger } from '~/core';
@@ -60,12 +59,12 @@ export class PeriodicReportService {
     }
   }
 
-  async update(input: UpdatePeriodicReportInput, session: Session) {
-    const currentRaw = await this.repo.readOne(input.id, session);
-    const current = this.secure(currentRaw, session);
+  async update(input: UpdatePeriodicReportInput) {
+    const currentRaw = await this.repo.readOne(input.id);
+    const current = this.secure(currentRaw);
     const changes = this.repo.getActualChanges(current, input);
     this.privileges
-      .for(session, resolveReportType(current), currentRaw)
+      .for(resolveReportType(current), currentRaw)
       .verifyChanges(changes);
 
     const { reportFile, ...simpleChanges } = changes;
@@ -77,13 +76,11 @@ export class PeriodicReportService {
         current.reportFile,
         'file',
         reportFile,
-        session,
       );
       await this.eventBus.publish(
         new PeriodicReportUploadedEvent(
           updated,
           this.files.asDownloadable(file.newVersion),
-          session,
         ),
       );
     }
@@ -92,15 +89,7 @@ export class PeriodicReportService {
   }
 
   @HandleIdLookup([FinancialReport, NarrativeReport, ProgressReport])
-  async readOne(
-    id: ID,
-    session: Session,
-    _view?: ObjectView,
-  ): Promise<PeriodicReport> {
-    this.logger.debug(`read one`, {
-      id,
-      userId: session.userId,
-    });
+  async readOne(id: ID, _view?: ObjectView): Promise<PeriodicReport> {
     if (!id) {
       throw new NotFoundException(
         'No periodic report id to search for',
@@ -108,31 +97,27 @@ export class PeriodicReportService {
       );
     }
 
-    const result = await this.repo.readOne(id, session);
-    return this.secure(result, session);
+    const result = await this.repo.readOne(id);
+    return this.secure(result);
   }
 
-  async readMany(ids: readonly ID[], session: Session) {
-    const periodicReports = await this.repo.readMany(ids, session);
-    return periodicReports.map((dto) => this.secure(dto, session));
+  async readMany(ids: readonly ID[]) {
+    const periodicReports = await this.repo.readMany(ids);
+    return periodicReports.map((dto) => this.secure(dto));
   }
 
-  private secure(
-    dto: UnsecuredDto<PeriodicReport>,
-    session: Session,
-  ): PeriodicReport {
-    return this.privileges.for(session, resolveReportType(dto)).secure(dto);
+  private secure(dto: UnsecuredDto<PeriodicReport>): PeriodicReport {
+    return this.privileges.for(resolveReportType(dto)).secure(dto);
   }
 
   async list(
-    session: Session,
     input: PeriodicReportListInput,
   ): Promise<SecuredPeriodicReportList> {
-    const results = await this.repo.list(input, session);
+    const results = await this.repo.list(input);
 
     return {
       ...results,
-      items: results.items.map((dto) => this.secure(dto, session)),
+      items: results.items.map((dto) => this.secure(dto)),
       canRead: true,
       canCreate: true,
     };
@@ -142,28 +127,21 @@ export class PeriodicReportService {
     parentId: ID,
     date: CalendarDate,
     reportType: Type & ReportType,
-    session: Session,
   ): Promise<PeriodicReportTypeMap[Type] | undefined> {
-    const report = await this.repo.getByDate(
-      parentId,
-      date,
-      reportType,
-      session,
-    );
+    const report = await this.repo.getByDate(parentId, date, reportType);
     return report
-      ? (this.secure(report, session) as PeriodicReportTypeMap[Type])
+      ? (this.secure(report) as PeriodicReportTypeMap[Type])
       : undefined;
   }
 
   async getCurrentReportDue<Type extends keyof PeriodicReportTypeMap>(
     parentId: ID,
     reportType: Type & ReportType,
-    session: Session,
   ): Promise<PeriodicReportTypeMap[Type] | undefined> {
     const report: UnsecuredDto<PeriodicReport> | undefined =
-      await this.repo.getCurrentDue(parentId, reportType, session);
+      await this.repo.getCurrentDue(parentId, reportType);
     return report
-      ? (this.secure(report, session) as PeriodicReportTypeMap[Type])
+      ? (this.secure(report) as PeriodicReportTypeMap[Type])
       : undefined;
   }
 
@@ -174,26 +152,20 @@ export class PeriodicReportService {
   async getNextReportDue<Type extends keyof PeriodicReportTypeMap>(
     parentId: ID,
     reportType: Type & ReportType,
-    session: Session,
   ): Promise<PeriodicReportTypeMap[Type] | undefined> {
-    const report = await this.repo.getNextDue(parentId, reportType, session);
+    const report = await this.repo.getNextDue(parentId, reportType);
     return report
-      ? (this.secure(report, session) as PeriodicReportTypeMap[Type])
+      ? (this.secure(report) as PeriodicReportTypeMap[Type])
       : undefined;
   }
 
   async getLatestReportSubmitted<Type extends keyof PeriodicReportTypeMap>(
     parentId: ID,
     type: Type & ReportType,
-    session: Session,
   ): Promise<PeriodicReportTypeMap[Type] | undefined> {
-    const report = await this.repo.getLatestReportSubmitted(
-      parentId,
-      type,
-      session,
-    );
+    const report = await this.repo.getLatestReportSubmitted(parentId, type);
     return report
-      ? (this.secure(report, session) as PeriodicReportTypeMap[Type])
+      ? (this.secure(report) as PeriodicReportTypeMap[Type])
       : undefined;
   }
 
@@ -214,19 +186,17 @@ export class PeriodicReportService {
   async getFinalReport(
     parentId: ID,
     type: ReportType,
-    session: Session,
   ): Promise<PeriodicReport | undefined> {
-    const report = await this.repo.getFinalReport(parentId, type, session);
-    return report ? this.secure(report, session) : undefined;
+    const report = await this.repo.getFinalReport(parentId, type);
+    return report ? this.secure(report) : undefined;
   }
 
   async mergeFinalReport(
     parentId: ID,
     type: ReportType,
     at: CalendarDate,
-    session: Session,
   ): Promise<void> {
-    const report = await this.repo.getFinalReport(parentId, type, session);
+    const report = await this.repo.getFinalReport(parentId, type);
 
     if (report) {
       if (+report.start === +at) {
@@ -242,7 +212,6 @@ export class PeriodicReportService {
         intervals: [{ start: at, end: at }],
         type,
         parent: parentId,
-        session,
       });
     }
   }

@@ -8,10 +8,9 @@ import {
   type ObjectView,
   Order,
   ServerException,
-  type Session,
   viewOfChangeset,
 } from '~/common';
-import { HandleIdLookup, ILogger, Logger, ResourceResolver } from '~/core';
+import { HandleIdLookup, ResourceResolver } from '~/core';
 import { mapListResults } from '~/core/database/results';
 import { Privileges } from '../authorization';
 import { FileService } from '../file';
@@ -41,15 +40,9 @@ export class BudgetService {
     private readonly budgetRepo: BudgetRepository,
     private readonly budgetRecordsRepo: BudgetRecordRepository,
     private readonly resources: ResourceResolver,
-    @Logger('budget:service') private readonly logger: ILogger,
   ) {}
 
-  async create(
-    { projectId, ...input }: CreateBudget,
-    session: Session,
-  ): Promise<Budget> {
-    this.logger.debug('Creating budget', { projectId });
-
+  async create({ projectId, ...input }: CreateBudget): Promise<Budget> {
     const universalTemplateFileId = await generateId<FileId>();
 
     try {
@@ -58,34 +51,23 @@ export class BudgetService {
         universalTemplateFileId,
       );
 
-      this.logger.debug(`Created Budget`, {
-        id: budgetId,
-        userId: session.userId,
-      });
-
       await this.files.createDefinedFile(
         universalTemplateFileId,
         `Universal Budget Template`,
-        session,
         budgetId,
         'universalTemplateFile',
         input.universalTemplateFile,
         'budget.universalTemplateFile',
       );
 
-      return await this.readOne(budgetId, session);
+      return await this.readOne(budgetId);
     } catch (exception) {
-      this.logger.error(`Could not create budget`, {
-        userId: session.userId,
-        exception,
-      });
       throw new CreationFailed(Budget, { cause: exception });
     }
   }
 
   async createRecord(
     input: CreateBudgetRecord,
-    session: Session,
     changeset?: ID,
   ): Promise<BudgetRecord> {
     const { organizationId, fiscalYear } = input;
@@ -98,28 +80,16 @@ export class BudgetService {
 
     await this.verifyRecordUniqueness(input);
 
-    this.logger.debug('Creating BudgetRecord', input);
-
     try {
       const recordId = await this.budgetRecordsRepo.create(input, changeset);
 
-      this.logger.debug(`Created Budget Record`, {
-        id: recordId,
-        userId: session.userId,
-      });
-
       const budgetRecord = await this.readOneRecord(
         recordId,
-        session,
         viewOfChangeset(changeset),
       );
 
       return budgetRecord;
     } catch (exception) {
-      this.logger.error(`Could not create Budget Record`, {
-        userId: session.userId,
-        exception,
-      });
       throw new CreationFailed(BudgetRecord, { cause: exception });
     }
   }
@@ -135,15 +105,10 @@ export class BudgetService {
   }
 
   @HandleIdLookup(Budget)
-  async readOne(id: ID, session: Session, view?: ObjectView): Promise<Budget> {
-    this.logger.debug(`readOne budget`, {
-      id,
-      userId: session.userId,
-    });
+  async readOne(id: ID, view?: ObjectView): Promise<Budget> {
+    const result = await this.budgetRepo.readOne(id, view);
 
-    const result = await this.budgetRepo.readOne(id, session, view);
-
-    const privs = this.privileges.for(session, Budget, result);
+    const privs = this.privileges.for(Budget, result);
 
     let records = null;
     if (privs.can('read', 'records')) {
@@ -155,17 +120,12 @@ export class BudgetService {
           count: 25,
           filter: { budgetId: id },
         },
-        session,
         view,
       );
     }
 
     const changeRequest = view?.changeset
-      ? await this.resources.lookup(
-          ProjectChangeRequest,
-          view.changeset,
-          session,
-        )
+      ? await this.resources.lookup(ProjectChangeRequest, view.changeset)
       : undefined;
 
     return {
@@ -177,137 +137,95 @@ export class BudgetService {
     };
   }
 
-  async readMany(ids: readonly ID[], session: Session, view?: ObjectView) {
-    const budgets = await this.budgetRepo.readMany(ids, session, view);
+  async readMany(ids: readonly ID[], view?: ObjectView) {
+    const budgets = await this.budgetRepo.readMany(ids, view);
     return await Promise.all(
-      budgets.map(async (dto) => await this.readOne(dto.id, session, view)),
+      budgets.map(async (dto) => await this.readOne(dto.id, view)),
     );
   }
 
   @HandleIdLookup(BudgetRecord)
-  async readOneRecord(
-    id: ID,
-    session: Session,
-    view?: ObjectView,
-  ): Promise<BudgetRecord> {
-    this.logger.debug(`readOne BudgetRecord`, {
-      id,
-      userId: session.userId,
-    });
+  async readOneRecord(id: ID, view?: ObjectView): Promise<BudgetRecord> {
+    const result = await this.budgetRecordsRepo.readOne(id, { view });
 
-    const result = await this.budgetRecordsRepo.readOne(id, { session, view });
-
-    return this.privileges.for(session, BudgetRecord).secure(result);
+    return this.privileges.for(BudgetRecord).secure(result);
   }
 
-  async update(input: UpdateBudget, session: Session): Promise<Budget> {
-    const budget = await this.readOne(input.id, session);
+  async update(input: UpdateBudget): Promise<Budget> {
+    const budget = await this.readOne(input.id);
 
     const changes = this.budgetRepo.getActualChanges(budget, input);
-    this.privileges.for(session, Budget, budget).verifyChanges(changes);
+    this.privileges.for(Budget, budget).verifyChanges(changes);
     const { universalTemplateFile, ...simpleChanges } = changes;
     await this.files.updateDefinedFile(
       budget.universalTemplateFile,
       'budget.universalTemplateFile',
       universalTemplateFile,
-      session,
     );
     return await this.budgetRepo.update(budget, simpleChanges);
   }
 
   async updateRecord(
     { id, ...input }: UpdateBudgetRecord,
-    session: Session,
     changeset?: ID,
   ): Promise<BudgetRecord> {
-    this.logger.debug('Update budget record', { id, userId: session.userId });
-
-    const br = await this.readOneRecord(
-      id,
-      session,
-      viewOfChangeset(changeset),
-    );
+    const br = await this.readOneRecord(id, viewOfChangeset(changeset));
     const changes = this.budgetRecordsRepo.getActualChanges(br, input);
-    this.privileges.for(session, BudgetRecord, br).verifyChanges(changes);
+    this.privileges.for(BudgetRecord, br).verifyChanges(changes);
 
-    try {
-      const result = await this.budgetRecordsRepo.update(
-        br,
-        changes,
-        changeset,
-      );
-      return result;
-    } catch (e) {
-      this.logger.error('Could not update budget Record ', {
-        id,
-        userId: session.userId,
-      });
-      throw e;
-    }
+    const result = await this.budgetRecordsRepo.update(br, changes, changeset);
+    return result;
   }
 
-  async delete(id: ID, session: Session): Promise<void> {
-    const budget = await this.readOne(id, session);
+  async delete(id: ID): Promise<void> {
+    const budget = await this.readOne(id);
 
     // cascade delete each budget record in this budget
-    await Promise.all(
-      budget.records.map((br) => this.deleteRecord(br.id, session)),
-    );
+    await Promise.all(budget.records.map((br) => this.deleteRecord(br.id)));
 
     try {
       await this.budgetRepo.deleteNode(budget);
     } catch (e) {
-      this.logger.warning('Failed to delete budget', {
-        exception: e,
-      });
-      throw new ServerException('Failed to delete budget');
+      throw new ServerException('Failed to delete budget', e);
     }
   }
 
-  async deleteRecord(id: ID, session: Session, changeset?: ID): Promise<void> {
+  async deleteRecord(id: ID, changeset?: ID): Promise<void> {
     try {
       await this.budgetRecordsRepo.deleteNode(id, { changeset });
     } catch (e) {
-      this.logger.warning('Failed to delete Budget Record', {
-        exception: e,
-      });
-      throw new ServerException('Failed to delete Budget Record');
+      throw new ServerException('Failed to delete Budget Record', e);
     }
   }
 
   async list(
     partialInput: Partial<BudgetListInput>,
-    session: Session,
     changeset?: ID,
   ): Promise<BudgetListOutput> {
     const input = BudgetListInput.defaultValue(BudgetListInput, partialInput);
-    const results = await this.budgetRepo.list(input, session);
+    const results = await this.budgetRepo.list(input);
     return await mapListResults(results, (id) =>
-      this.readOne(id, session, viewOfChangeset(changeset)),
+      this.readOne(id, viewOfChangeset(changeset)),
     );
   }
 
   async listUnsecure(
     partialInput: Partial<BudgetListInput>,
-    session: Session,
     changeset?: ID,
   ): Promise<BudgetListOutput> {
     const input = BudgetListInput.defaultValue(BudgetListInput, partialInput);
     const results = await this.budgetRepo.listUnsecure(input);
     return await mapListResults(results, (id) =>
-      this.readOne(id, session, viewOfChangeset(changeset)),
+      this.readOne(id, viewOfChangeset(changeset)),
     );
   }
 
   async listRecords(
     input: BudgetRecordListInput,
-    session: Session,
     view?: ObjectView,
   ): Promise<BudgetRecordListOutput> {
-    const results = await this.budgetRecordsRepo.list(input, session, view);
+    const results = await this.budgetRecordsRepo.list(input, view);
 
-    return await mapListResults(results, (id) =>
-      this.readOneRecord(id, session, view),
-    );
+    return await mapListResults(results, (id) => this.readOneRecord(id, view));
   }
 }

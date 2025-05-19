@@ -1,6 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, type Query, relation } from 'cypher-query-builder';
-import { type ID, type Session, type UnsecuredDto } from '~/common';
+import { type ID, type UnsecuredDto } from '~/common';
 import { DtoRepository } from '~/core/database';
 import {
   ACTIVE,
@@ -23,7 +23,7 @@ export class CommentThreadRepository extends DtoRepository(CommentThread) {
     super();
   }
 
-  async create(parent: ID, session: Session) {
+  async create(parent: ID) {
     const createThreadNode = await createNode(CommentThread, {});
     return (query: Query) =>
       query
@@ -76,11 +76,7 @@ export class CommentThreadRepository extends DtoRepository(CommentThread) {
         );
   }
 
-  async list(
-    parent: ID | undefined,
-    input: CommentThreadListInput,
-    session: Session,
-  ) {
+  async list(parent: ID | undefined, input: CommentThreadListInput) {
     const result = await this.db
       .query()
       .match([

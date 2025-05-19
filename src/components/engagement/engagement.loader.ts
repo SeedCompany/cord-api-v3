@@ -15,6 +15,6 @@ export class EngagementLoader extends ObjectViewAwareLoader<Engagement> {
   }
 
   async loadManyByView(ids: readonly ID[], view: ObjectView) {
-    return await this.engagements.readMany(ids, this.session, view);
+    return await this.engagements.readMany(ids, view);
   }
 }

@@ -47,7 +47,7 @@ export class CommentThreadResolver {
     // TODO move to auth policy
     verifyLoggedIn(session);
     const resource = await this.service.loadCommentable(resourceId);
-    const list = await this.service.listThreads(resource, input, session);
+    const list = await this.service.listThreads(resource, input);
     commentThreads.primeAll(list.items);
     return list;
   }
@@ -56,16 +56,11 @@ export class CommentThreadResolver {
     description: 'List of comments belonging to a thread',
   })
   async comments(
-    @AnonSession() session: Session,
     @Parent() thread: CommentThread,
     @ListArg(CommentListInput) input: CommentListInput,
     @Loader(CommentLoader) comments: LoaderOf<CommentLoader>,
   ): Promise<CommentList> {
-    const list = await this.service.listCommentsByThreadId(
-      thread,
-      input,
-      session,
-    );
+    const list = await this.service.listCommentsByThreadId(thread, input);
     comments.primeAll(list.items);
     return list;
   }

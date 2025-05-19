@@ -1,5 +1,5 @@
 import { Args, Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { AnonSession, type ID, IdArg, type Session } from '~/common';
+import { type ID, IdArg } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { Product } from '../product/dto';
 import { ProductProgress, VariantProgressArg } from './dto';
@@ -29,9 +29,8 @@ export class ProductConnectionResolver {
     @IdArg({ name: 'reportId' }) reportId: ID,
     @Parent() product: Product,
     @Args() { variant }: VariantProgressArg,
-    @AnonSession() session: Session,
   ): Promise<ProductProgress> {
-    return await this.service.readOne(reportId, product, variant, session);
+    return await this.service.readOne(reportId, product, variant);
   }
 
   @ResolveField(() => ProductProgress, {
@@ -41,11 +40,7 @@ export class ProductConnectionResolver {
   async progressOfCurrentReportDue(
     @Parent() product: Product,
     @Args() { variant }: VariantProgressArg,
-    @AnonSession() session: Session,
   ): Promise<ProductProgress | undefined> {
-    return await this.service.readOneForCurrentReport(
-      { product, variant },
-      session,
-    );
+    return await this.service.readOneForCurrentReport({ product, variant });
   }
 }

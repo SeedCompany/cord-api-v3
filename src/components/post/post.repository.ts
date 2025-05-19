@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { inArray, node, type Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { type ID, type Session, type UnsecuredDto } from '~/common';
+import { type ID, type UnsecuredDto } from '~/common';
 import { type DbTypeOf, DtoRepository } from '~/core/database';
 import { type ChangesOf } from '~/core/database/changes';
 import {
@@ -19,10 +19,8 @@ import { type PostListInput } from './dto/list-posts.dto';
 import { PostShareability } from './dto/shareability.dto';
 
 @Injectable()
-export class PostRepository extends DtoRepository<typeof Post, [Session] | []>(
-  Post,
-) {
-  async create(input: CreatePost, session: Session) {
+export class PostRepository extends DtoRepository(Post) {
+  async create(input: CreatePost) {
     const initialProps = {
       type: input.type,
       shareability: input.shareability,
@@ -53,18 +51,18 @@ export class PostRepository extends DtoRepository<typeof Post, [Session] | []>(
     return await this.updateProperties(existing, changes);
   }
 
-  async readMany(ids: readonly ID[], session: Session) {
+  async readMany(ids: readonly ID[]) {
     return await this.db
       .query()
       .matchNode('node', 'Post')
       .where({ 'node.id': inArray(ids) })
-      .apply(this.filterAuthorized(session))
+      .apply(this.filterAuthorized())
       .apply(this.hydrate())
       .map('dto')
       .run();
   }
 
-  async securedList({ filter, ...input }: PostListInput, session: Session) {
+  async securedList({ filter, ...input }: PostListInput) {
     const result = await this.db
       .query()
       .match([
@@ -78,14 +76,14 @@ export class PostRepository extends DtoRepository<typeof Post, [Session] | []>(
             ]
           : []),
       ])
-      .apply(this.filterAuthorized(session))
+      .apply(this.filterAuthorized())
       .apply(sorting(Post, input))
       .apply(paginate(input, this.hydrate()))
       .first();
     return result!;
   }
 
-  protected filterAuthorized(session: Session) {
+  protected filterAuthorized() {
     return (query: Query) =>
       query
         .with('node')

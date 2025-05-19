@@ -7,15 +7,7 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import { all as countries, whereAlpha3 } from 'iso-3166-1';
-import {
-  AnonSession,
-  type ID,
-  IdArg,
-  ListArg,
-  LoggedInSession,
-  mapSecuredValue,
-  type Session,
-} from '~/common';
+import { type ID, IdArg, ListArg, mapSecuredValue } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { FieldRegionLoader } from '../field-region';
 import { SecuredFieldRegion } from '../field-region/dto';
@@ -56,11 +48,10 @@ export class LocationResolver {
     description: 'Look up locations',
   })
   async locations(
-    @AnonSession() session: Session,
     @ListArg(LocationListInput) input: LocationListInput,
     @Loader(LocationLoader) locations: LoaderOf<LocationLoader>,
   ): Promise<LocationListOutput> {
-    const list = await this.locationService.list(input, session);
+    const list = await this.locationService.list(input);
     locations.primeAll(list.items);
     return list;
   }
@@ -128,10 +119,9 @@ export class LocationResolver {
     description: 'Create a location',
   })
   async createLocation(
-    @LoggedInSession() session: Session,
     @Args('input') { location: input }: CreateLocationInput,
   ): Promise<CreateLocationOutput> {
-    const location = await this.locationService.create(input, session);
+    const location = await this.locationService.create(input);
     return { location };
   }
 
@@ -139,21 +129,17 @@ export class LocationResolver {
     description: 'Update a location',
   })
   async updateLocation(
-    @LoggedInSession() session: Session,
     @Args('input') { location: input }: UpdateLocationInput,
   ): Promise<UpdateLocationOutput> {
-    const location = await this.locationService.update(input, session);
+    const location = await this.locationService.update(input);
     return { location };
   }
 
   @Mutation(() => DeleteLocationOutput, {
     description: 'Delete a location',
   })
-  async deleteLocation(
-    @LoggedInSession() session: Session,
-    @IdArg() id: ID,
-  ): Promise<DeleteLocationOutput> {
-    await this.locationService.delete(id, session);
+  async deleteLocation(@IdArg() id: ID): Promise<DeleteLocationOutput> {
+    await this.locationService.delete(id);
     return { success: true };
   }
 }

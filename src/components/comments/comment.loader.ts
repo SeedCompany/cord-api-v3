@@ -11,6 +11,6 @@ export class CommentLoader extends OrderedNestDataLoader<Comment> {
   }
 
   async loadMany(ids: readonly ID[]) {
-    return await this.comments.readMany(ids, this.session);
+    return await this.comments.readMany(ids);
   }
 }

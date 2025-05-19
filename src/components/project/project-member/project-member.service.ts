@@ -8,7 +8,6 @@ import {
   type ObjectView,
   type Role,
   ServerException,
-  type Session,
   UnauthorizedException,
   type UnsecuredDto,
 } from '~/common';
@@ -37,7 +36,6 @@ export class ProjectMemberService {
 
   async create(
     input: CreateProjectMember,
-    session: Session,
     enforcePerms = true,
   ): Promise<ProjectMember> {
     enforcePerms &&
@@ -45,20 +43,16 @@ export class ProjectMemberService {
         this.resources.load('User', input.userId),
       ));
 
-    const created = await this.repo.create(input, session);
+    const created = await this.repo.create(input);
 
     enforcePerms &&
-      this.privileges.for(session, ProjectMember, created).verifyCan('create');
+      this.privileges.for(ProjectMember, created).verifyCan('create');
 
-    return this.secure(created, session);
+    return this.secure(created);
   }
 
   @HandleIdLookup(ProjectMember)
-  async readOne(
-    id: ID,
-    session: Session,
-    _view?: ObjectView,
-  ): Promise<ProjectMember> {
+  async readOne(id: ID, _view?: ObjectView): Promise<ProjectMember> {
     if (!id) {
       throw new NotFoundException(
         'No project member id to search for',
@@ -66,22 +60,17 @@ export class ProjectMemberService {
       );
     }
 
-    const dto = await this.repo.readOne(id, session);
-    return this.secure(dto, session);
+    const dto = await this.repo.readOne(id);
+    return this.secure(dto);
   }
 
-  async readMany(ids: readonly ID[], session: Session) {
-    const projectMembers = await this.repo.readMany(ids, session);
-    return projectMembers.map((dto) => this.secure(dto, session));
+  async readMany(ids: readonly ID[]) {
+    const projectMembers = await this.repo.readMany(ids);
+    return projectMembers.map((dto) => this.secure(dto));
   }
 
-  private secure(
-    dto: UnsecuredDto<ProjectMember>,
-    session: Session,
-  ): ProjectMember {
-    const { user, ...secured } = this.privileges
-      .for(session, ProjectMember)
-      .secure(dto);
+  private secure(dto: UnsecuredDto<ProjectMember>): ProjectMember {
+    const { user, ...secured } = this.privileges.for(ProjectMember).secure(dto);
     return {
       ...secured,
       user: {
@@ -90,18 +79,14 @@ export class ProjectMemberService {
           user.value && user.canRead
             ? this.userService.secure(
                 user.value as unknown as UnsecuredDto<User>,
-                session,
               )
             : undefined,
       },
     };
   }
 
-  async update(
-    input: UpdateProjectMember,
-    session: Session,
-  ): Promise<ProjectMember> {
-    const object = await this.readOne(input.id, session);
+  async update(input: UpdateProjectMember): Promise<ProjectMember> {
+    const object = await this.readOne(input.id);
 
     await this.assertValidRoles(input.roles, () => {
       const user = object.user.value;
@@ -114,13 +99,10 @@ export class ProjectMemberService {
     });
 
     const changes = this.repo.getActualChanges(object, input);
-    this.privileges.for(session, ProjectMember, object).verifyChanges(changes);
+    this.privileges.for(ProjectMember, object).verifyChanges(changes);
 
-    const updated = await this.repo.update(
-      { id: object.id, ...changes },
-      session,
-    );
-    return this.secure(updated, session);
+    const updated = await this.repo.update({ id: object.id, ...changes });
+    return this.secure(updated);
   }
 
   private async assertValidRoles(
@@ -142,10 +124,10 @@ export class ProjectMemberService {
     }
   }
 
-  async delete(id: ID, session: Session): Promise<void> {
-    const object = await this.readOne(id, session);
+  async delete(id: ID): Promise<void> {
+    const object = await this.readOne(id);
 
-    this.privileges.for(session, ProjectMember, object).verifyCan('delete');
+    this.privileges.for(ProjectMember, object).verifyCan('delete');
 
     try {
       await this.repo.deleteNode(object);
@@ -154,14 +136,11 @@ export class ProjectMemberService {
     }
   }
 
-  async list(
-    input: ProjectMemberListInput,
-    session: Session,
-  ): Promise<ProjectMemberListOutput> {
-    const results = await this.repo.list(input, session);
+  async list(input: ProjectMemberListInput): Promise<ProjectMemberListOutput> {
+    const results = await this.repo.list(input);
     return {
       ...results,
-      items: results.items.map((dto) => this.secure(dto, session)),
+      items: results.items.map((dto) => this.secure(dto)),
     };
   }
 }

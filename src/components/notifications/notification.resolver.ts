@@ -1,5 +1,5 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { AnonSession, ListArg, LoggedInSession, type Session } from '~/common';
+import { AnonSession, ListArg, type Session } from '~/common';
 import {
   MarkNotificationReadArgs,
   Notification,
@@ -21,14 +21,13 @@ export class NotificationResolver {
     if (session.anonymous) {
       return { items: [], total: 0, totalUnread: 0, hasMore: false };
     }
-    return await this.service.list(input, session);
+    return await this.service.list(input);
   }
 
   @Mutation(() => Notification)
   async readNotification(
-    @LoggedInSession() session: Session,
     @Args() input: MarkNotificationReadArgs,
   ): Promise<Notification> {
-    return await this.service.markRead(input, session);
+    return await this.service.markRead(input);
   }
 }

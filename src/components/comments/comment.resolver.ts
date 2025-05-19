@@ -5,7 +5,7 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { type ID, IdArg, LoggedInSession, type Session } from '~/common';
+import { type ID, IdArg } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { UserLoader } from '../user';
 import { User } from '../user/dto';
@@ -28,21 +28,17 @@ export class CommentResolver {
     description: 'Update an existing comment',
   })
   async updateComment(
-    @LoggedInSession() session: Session,
     @Args('input') input: UpdateCommentInput,
   ): Promise<UpdateCommentOutput> {
-    const comment = await this.service.update(input, session);
+    const comment = await this.service.update(input);
     return { comment };
   }
 
   @Mutation(() => DeleteCommentOutput, {
     description: 'Delete a comment',
   })
-  async deleteComment(
-    @LoggedInSession() session: Session,
-    @IdArg() id: ID,
-  ): Promise<DeleteCommentOutput> {
-    await this.service.delete(id, session);
+  async deleteComment(@IdArg() id: ID): Promise<DeleteCommentOutput> {
+    await this.service.delete(id);
     return { success: true };
   }
 

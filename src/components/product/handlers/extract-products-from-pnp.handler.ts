@@ -35,11 +35,8 @@ export class ExtractProductsFromPnpHandler
     }
     const availableSteps = getAvailableSteps({ methodology });
 
-    const file = await this.files.getFile(engagement.pnp.id, event.session);
-    const fv = await this.files.getFileVersion(
-      file.latestVersionId,
-      event.session,
-    );
+    const file = await this.files.getFile(engagement.pnp.id);
+    const fv = await this.files.getFileVersion(file.latestVersionId);
     const pnp = this.files.asDownloadable(fv);
 
     const result = new PnpPlanningExtractionResult(pnp.id);
@@ -55,7 +52,6 @@ export class ExtractProductsFromPnpHandler
       engagementId: engagement.id,
       methodology,
       actionableProductRows,
-      session: event.session,
     });
 
     await this.planningExtractionResultSaver.save(file.latestVersionId, result);

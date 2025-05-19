@@ -9,7 +9,6 @@ import {
   NotFoundException,
   ReadAfterCreationFailed,
   ServerException,
-  type Session,
   type UnsecuredDto,
 } from '~/common';
 import { DtoRepository, OnIndex } from '~/core/database';
@@ -40,7 +39,7 @@ export class LocationRepository extends DtoRepository(Location) {
   constructor(private readonly files: FileService) {
     super();
   }
-  async create(input: CreateLocation, session: Session) {
+  async create(input: CreateLocation) {
     const checkName = await this.doesNameExist(input.name);
     if (checkName) {
       throw new DuplicateException(
@@ -85,7 +84,6 @@ export class LocationRepository extends DtoRepository(Location) {
     await this.files.createDefinedFile(
       mapImageId,
       input.name,
-      session,
       dto.id,
       'mapImage',
       input.mapImage,
@@ -96,7 +94,7 @@ export class LocationRepository extends DtoRepository(Location) {
     return dto;
   }
 
-  async update(changes: UpdateLocation, session: Session) {
+  async update(changes: UpdateLocation) {
     const {
       id,
       fundingAccountId,
@@ -126,13 +124,10 @@ export class LocationRepository extends DtoRepository(Location) {
         );
       }
 
-      await this.files.createFileVersion(
-        {
-          ...mapImage,
-          parentId: location.mapImage.id,
-        },
-        session,
-      );
+      await this.files.createFileVersion({
+        ...mapImage,
+        parentId: location.mapImage.id,
+      });
     }
 
     if (defaultFieldRegionId !== undefined) {

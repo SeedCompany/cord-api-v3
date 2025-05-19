@@ -3,10 +3,9 @@ import {
   type ID,
   type ObjectView,
   ServerException,
-  type Session,
   type UnsecuredDto,
 } from '~/common';
-import { HandleIdLookup, ILogger, Logger } from '~/core';
+import { HandleIdLookup } from '~/core';
 import { Privileges } from '../authorization';
 import {
   type CreateFieldZone,
@@ -20,72 +19,58 @@ import { FieldZoneRepository } from './field-zone.repository';
 @Injectable()
 export class FieldZoneService {
   constructor(
-    @Logger('field-zone:service') private readonly logger: ILogger,
     private readonly privileges: Privileges,
     private readonly repo: FieldZoneRepository,
   ) {}
 
-  async create(input: CreateFieldZone, session: Session): Promise<FieldZone> {
-    this.privileges.for(session, FieldZone).verifyCan('create');
+  async create(input: CreateFieldZone): Promise<FieldZone> {
+    this.privileges.for(FieldZone).verifyCan('create');
     const dto = await this.repo.create(input);
-    return this.secure(dto, session);
+    return this.secure(dto);
   }
 
   @HandleIdLookup(FieldZone)
-  async readOne(
-    id: ID,
-    session: Session,
-    _view?: ObjectView,
-  ): Promise<FieldZone> {
-    this.logger.debug(`Read Field Zone`, {
-      id: id,
-      userId: session.userId,
-    });
-
+  async readOne(id: ID, _view?: ObjectView): Promise<FieldZone> {
     const result = await this.repo.readOne(id);
-    return this.secure(result, session);
+    return this.secure(result);
   }
 
-  async readMany(ids: readonly ID[], session: Session) {
+  async readMany(ids: readonly ID[]) {
     const fieldZones = await this.repo.readMany(ids);
-    return fieldZones.map((dto) => this.secure(dto, session));
+    return fieldZones.map((dto) => this.secure(dto));
   }
 
-  private secure(dto: UnsecuredDto<FieldZone>, session: Session) {
-    return this.privileges.for(session, FieldZone).secure(dto);
+  private secure(dto: UnsecuredDto<FieldZone>) {
+    return this.privileges.for(FieldZone).secure(dto);
   }
 
-  async update(input: UpdateFieldZone, session: Session): Promise<FieldZone> {
+  async update(input: UpdateFieldZone): Promise<FieldZone> {
     const fieldZone = await this.repo.readOne(input.id);
 
     const changes = this.repo.getActualChanges(fieldZone, input);
-    this.privileges.for(session, FieldZone, fieldZone).verifyChanges(changes);
+    this.privileges.for(FieldZone, fieldZone).verifyChanges(changes);
 
     const updated = await this.repo.update({ id: input.id, ...changes });
-    return this.secure(updated, session);
+    return this.secure(updated);
   }
 
-  async delete(id: ID, session: Session): Promise<void> {
-    const object = await this.readOne(id, session);
+  async delete(id: ID): Promise<void> {
+    const object = await this.readOne(id);
 
-    this.privileges.for(session, FieldZone, object).verifyCan('delete');
+    this.privileges.for(FieldZone, object).verifyCan('delete');
 
     try {
       await this.repo.deleteNode(object);
     } catch (exception) {
-      this.logger.error('Failed to delete', { id, exception });
       throw new ServerException('Failed to delete', exception);
     }
   }
 
-  async list(
-    input: FieldZoneListInput,
-    session: Session,
-  ): Promise<FieldZoneListOutput> {
-    const results = await this.repo.list(input, session);
+  async list(input: FieldZoneListInput): Promise<FieldZoneListOutput> {
+    const results = await this.repo.list(input);
     return {
       ...results,
-      items: results.items.map((dto) => this.secure(dto, session)),
+      items: results.items.map((dto) => this.secure(dto)),
     };
   }
 }

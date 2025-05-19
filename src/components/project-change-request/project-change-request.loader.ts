@@ -17,6 +17,6 @@ export class ProjectChangeRequestLoader extends OrderedNestDataLoader<ProjectCha
   }
 
   async loadMany(ids: readonly ID[]) {
-    return await this.projectChangeRequests.readMany(ids, this.session);
+    return await this.projectChangeRequests.readMany(ids);
   }
 }

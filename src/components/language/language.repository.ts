@@ -17,7 +17,6 @@ import {
   type ObjectView,
   ReadAfterCreationFailed,
   ServerException,
-  type Session,
   type UnsecuredDto,
 } from '~/common';
 import { DtoRepository, OnIndex, UniquenessError } from '~/core/database';
@@ -59,7 +58,7 @@ import { EthnologueLanguageService } from './ethnologue-language';
 @Injectable()
 export class LanguageRepository extends DtoRepository<
   typeof Language,
-  [session: Session, view?: ObjectView]
+  [view?: ObjectView]
 >(Language) {
   constructor(
     private readonly ethnologueLanguageService: EthnologueLanguageService,
@@ -67,7 +66,7 @@ export class LanguageRepository extends DtoRepository<
     super();
   }
 
-  async create(input: CreateLanguage, session: Session) {
+  async create(input: CreateLanguage) {
     const initialProps = {
       name: input.name,
       displayName: input.displayName,
@@ -89,7 +88,6 @@ export class LanguageRepository extends DtoRepository<
 
     const ethnologueId = await this.ethnologueLanguageService.create(
       input?.ethnologue,
-      session,
     );
 
     const createLanguage = this.db
@@ -127,36 +125,32 @@ export class LanguageRepository extends DtoRepository<
       throw new CreationFailed(Language);
     }
 
-    return await this.readOne(result.id, session).catch((e) => {
+    return await this.readOne(result.id).catch((e) => {
       throw e instanceof NotFoundException
         ? new ReadAfterCreationFailed(Language)
         : e;
     });
   }
 
-  async update(
-    changes: Omit<UpdateLanguage, 'ethnologue'>,
-    session: Session,
-    changeset?: ID,
-  ) {
+  async update(changes: Omit<UpdateLanguage, 'ethnologue'>, changeset?: ID) {
     const { id, ...simpleChanges } = changes;
 
     await this.updateProperties({ id }, simpleChanges, changeset);
 
-    return await this.readOne(changes.id, session);
+    return await this.readOne(changes.id);
   }
 
-  async readMany(ids: readonly ID[], session: Session, view?: ObjectView) {
+  async readMany(ids: readonly ID[], view?: ObjectView) {
     return await this.db
       .query()
       .matchNode('node', labelForView('Language', view))
       .where({ 'node.id': inArray(ids) })
-      .apply(this.hydrate(session, view))
+      .apply(this.hydrate(view))
       .map('dto')
       .run();
   }
 
-  async readOneByEth(ethnologueId: ID, session: Session) {
+  async readOneByEth(ethnologueId: ID) {
     const dto = await this.db
       .query()
       .match([
@@ -164,7 +158,7 @@ export class LanguageRepository extends DtoRepository<
         relation('in', '', 'ethnologue', ACTIVE),
         node('node', 'Language'),
       ])
-      .apply(this.hydrate(session))
+      .apply(this.hydrate())
       .map('dto')
       .first();
     if (!dto) {
@@ -173,7 +167,7 @@ export class LanguageRepository extends DtoRepository<
     return dto;
   }
 
-  protected hydrate(session: Session, view?: ObjectView) {
+  protected hydrate(view?: ObjectView) {
     return (query: Query) =>
       query
         .optionalMatch([
@@ -234,7 +228,7 @@ export class LanguageRepository extends DtoRepository<
         );
   }
 
-  async list(input: LanguageListInput, session: Session) {
+  async list(input: LanguageListInput) {
     const result = await this.db
       .query()
       .matchNode('node', 'Language')
@@ -247,12 +241,12 @@ export class LanguageRepository extends DtoRepository<
       ])
       .apply(languageFilters(input.filter))
       .apply(
-        this.privileges.forUser(session).filterToReadable({
+        this.privileges.filterToReadable({
           wrapContext: oncePerProject,
         }),
       )
       .apply(sortWith(languageSorters, input))
-      .apply(paginate(input, this.hydrate(session)))
+      .apply(paginate(input, this.hydrate()))
       .first();
     return result!; // result from paginate() will always have 1 row.
   }

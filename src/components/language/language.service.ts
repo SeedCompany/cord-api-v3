@@ -7,7 +7,6 @@ import {
   type ObjectView,
   type SecuredDate,
   ServerException,
-  type Session,
   type UnsecuredDto,
 } from '~/common';
 import { HandleIdLookup, ILogger, Logger } from '~/core';
@@ -49,64 +48,59 @@ export class LanguageService {
     @Logger('language:service') private readonly logger: ILogger,
   ) {}
 
-  async create(input: CreateLanguage, session: Session): Promise<Language> {
-    this.privileges.for(session, Language).verifyCan('create');
+  async create(input: CreateLanguage): Promise<Language> {
+    this.privileges.for(Language).verifyCan('create');
 
-    const resultLanguage = await this.repo.create(input, session);
+    const resultLanguage = await this.repo.create(input);
 
-    return this.secure(resultLanguage, session);
+    return this.secure(resultLanguage);
   }
 
   @HandleIdLookup(Language)
   async readOne(
     langId: ID,
-    session: Session,
+
     view?: ObjectView,
   ): Promise<Language> {
-    const dto = await this.repo.readOne(langId, session, view);
-    return this.secure(dto, session);
+    const dto = await this.repo.readOne(langId, view);
+    return this.secure(dto);
   }
 
-  async readMany(ids: readonly ID[], session: Session, view?: ObjectView) {
-    const languages = await this.repo.readMany(ids, session, view);
-    return languages.map((dto) => this.secure(dto, session));
+  async readMany(ids: readonly ID[], view?: ObjectView) {
+    const languages = await this.repo.readMany(ids, view);
+    return languages.map((dto) => this.secure(dto));
   }
 
-  async readOneByEthId(ethnologueId: ID, session: Session) {
-    const dto = await this.repo.readOneByEth(ethnologueId, session);
-    return this.secure(dto, session);
+  async readOneByEthId(ethnologueId: ID) {
+    const dto = await this.repo.readOneByEth(ethnologueId);
+    return this.secure(dto);
   }
 
-  private secure(dto: UnsecuredDto<Language>, session: Session) {
+  private secure(dto: UnsecuredDto<Language>) {
     const ethnologue = this.ethnologueLanguageService.secure(
       dto.ethnologue,
       dto.sensitivity,
-      session,
     );
 
     return {
-      ...this.privileges.for(session, Language).secure(dto),
+      ...this.privileges.for(Language).secure(dto),
       ethnologue,
     };
   }
 
-  async update(
-    input: UpdateLanguage,
-    session: Session,
-    view?: ObjectView,
-  ): Promise<Language> {
+  async update(input: UpdateLanguage, view?: ObjectView): Promise<Language> {
     if (input.hasExternalFirstScripture) {
       await this.verifyExternalFirstScripture(input.id);
     }
     const { registryOfDialectsCode, ...props } = input;
 
-    const language = await this.repo.readOne(input.id, session, view);
+    const language = await this.repo.readOne(input.id, view);
     const changes = this.repo.getActualChanges(language, {
       ...props,
       registryOfLanguageVarietiesCode:
         props.registryOfLanguageVarietiesCode ?? registryOfDialectsCode,
     });
-    this.privileges.for(session, Language, language).verifyChanges(changes);
+    this.privileges.for(Language, language).verifyChanges(changes);
 
     const { ethnologue, ...simpleChanges } = changes;
 
@@ -115,23 +109,21 @@ export class LanguageService {
         language.ethnologue.id,
         ethnologue,
         language.sensitivity,
-        session,
       );
     }
 
     const updated = await this.repo.update(
       { id: language.id, ...simpleChanges },
-      session,
       view?.changeset,
     );
 
-    return this.secure(updated, session);
+    return this.secure(updated);
   }
 
-  async delete(id: ID, session: Session): Promise<void> {
-    const object = await this.readOne(id, session);
+  async delete(id: ID): Promise<void> {
+    const object = await this.readOne(id);
 
-    this.privileges.for(session, Language, object).verifyCan('delete');
+    this.privileges.for(Language, object).verifyCan('delete');
 
     try {
       await this.repo.deleteNode(object);
@@ -141,25 +133,21 @@ export class LanguageService {
     }
   }
 
-  async list(
-    input: LanguageListInput,
-    session: Session,
-  ): Promise<LanguageListOutput> {
-    const results = await this.repo.list(input, session);
+  async list(input: LanguageListInput): Promise<LanguageListOutput> {
+    const results = await this.repo.list(input);
 
     return {
       ...results,
-      items: results.items.map((dto) => this.secure(dto, session)),
+      items: results.items.map((dto) => this.secure(dto)),
     };
   }
 
   async listLocations(
     dto: Language,
     input: LocationListInput,
-    session: Session,
   ): Promise<SecuredLocationList> {
     return await this.locationService.listLocationForResource(
-      this.privileges.for(session, Language, dto).forEdge('locations'),
+      this.privileges.for(Language, dto).forEdge('locations'),
       dto,
       input,
     );
@@ -168,29 +156,24 @@ export class LanguageService {
   async listProjects(
     language: Language,
     input: ProjectListInput,
-    session: Session,
   ): Promise<SecuredProjectList> {
-    const projectListOutput = await this.projectService.list(
-      { ...input, filter: { ...input.filter, languageId: language.id } },
-      session,
-    );
+    const projectListOutput = await this.projectService.list({
+      ...input,
+      filter: { ...input.filter, languageId: language.id },
+    });
 
     return {
       ...projectListOutput,
       canRead: true,
-      canCreate: this.privileges.for(session, IProject).can('create'),
+      canCreate: this.privileges.for(IProject).can('create'),
     };
   }
 
-  async listEngagements(
-    language: Language,
-    input: EngagementListInput,
-    session: Session,
-  ) {
-    const list = await this.engagementService.list(
-      { ...input, filter: { ...input.filter, languageId: language.id } },
-      session,
-    );
+  async listEngagements(language: Language, input: EngagementListInput) {
+    const list = await this.engagementService.list({
+      ...input,
+      filter: { ...input.filter, languageId: language.id },
+    });
     return {
       ...list,
       canRead: true,
@@ -198,16 +181,13 @@ export class LanguageService {
     };
   }
 
-  async sponsorStartDate(
-    language: Language,
-    session: Session,
-  ): Promise<SecuredDate> {
+  async sponsorStartDate(language: Language): Promise<SecuredDate> {
     const engagementIds = await this.repo.getEngagementIdsForLanguage(language);
 
     try {
       const engagements = await Promise.all(
         engagementIds.map((engagementId) =>
-          this.engagementService.readOne(engagementId, session),
+          this.engagementService.readOne(engagementId),
         ),
       );
       const statusesToIgnore = setOf([

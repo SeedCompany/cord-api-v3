@@ -7,7 +7,6 @@ import {
   NotFoundException,
   type PaginatedListType,
   ReadAfterCreationFailed,
-  type Session,
   type UnsecuredDto,
 } from '~/common';
 import { type DbTypeOf, DtoRepository } from '~/core/database';
@@ -38,7 +37,7 @@ export class FilmRepository extends DtoRepository(Film) {
     super();
   }
 
-  async create(input: CreateFilm, session: Session) {
+  async create(input: CreateFilm) {
     if (!(await this.isUnique(input.name))) {
       throw new DuplicateException(
         'film.name',
@@ -63,7 +62,6 @@ export class FilmRepository extends DtoRepository(Film) {
     await this.scriptureRefsService.create(
       result.id,
       input.scriptureReferences,
-      session,
     );
 
     return await this.readOne(result.id).catch((e) => {

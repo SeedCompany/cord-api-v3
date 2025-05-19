@@ -30,11 +30,8 @@ export class LoginResolver {
     `,
   })
   @Anonymous()
-  async login(
-    @Args('input') input: LoginInput,
-    @AnonSession() session: Session,
-  ): Promise<LoginOutput> {
-    const user = await this.authentication.login(input, session);
+  async login(@Args('input') input: LoginInput): Promise<LoginOutput> {
+    const user = await this.authentication.login(input);
     await this.authentication.refreshCurrentSession();
     return { user };
   }
@@ -61,7 +58,7 @@ export class LoginResolver {
   }
 
   @ResolveField(() => [Power])
-  async powers(@AnonSession() session: Session): Promise<Power[]> {
-    return [...this.privileges.forUser(session).powers];
+  async powers(): Promise<Power[]> {
+    return [...this.privileges.powers];
   }
 }

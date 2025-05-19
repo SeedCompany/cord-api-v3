@@ -16,7 +16,7 @@ export class BudgetRecordLoader extends ObjectViewAwareLoader<BudgetRecord> {
   }
 
   async loadOne(id: ID, view?: ObjectView): Promise<BudgetRecord> {
-    return await this.budgets.readOneRecord(id, this.session, view);
+    return await this.budgets.readOneRecord(id, view);
   }
 
   // Below is the same logic as SingleItemLoader

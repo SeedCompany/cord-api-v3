@@ -8,14 +8,11 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import {
-  AnonSession,
   firstLettersOfWords,
   type ID,
   IdArg,
   IdField,
   ListArg,
-  LoggedInSession,
-  type Session,
 } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { LocationLoader } from '../location';
@@ -49,10 +46,9 @@ export class OrganizationResolver {
     description: 'Create an organization',
   })
   async createOrganization(
-    @LoggedInSession() session: Session,
     @Args('input') { organization: input }: CreateOrganizationInput,
   ): Promise<CreateOrganizationOutput> {
-    const organization = await this.orgs.create(input, session);
+    const organization = await this.orgs.create(input);
     return { organization };
   }
 
@@ -77,23 +73,21 @@ export class OrganizationResolver {
     description: 'Look up organizations',
   })
   async organizations(
-    @AnonSession() session: Session,
     @ListArg(OrganizationListInput) input: OrganizationListInput,
     @Loader(OrganizationLoader) organizations: LoaderOf<OrganizationLoader>,
   ): Promise<OrganizationListOutput> {
-    const list = await this.orgs.list(input, session);
+    const list = await this.orgs.list(input);
     organizations.primeAll(list.items);
     return list;
   }
 
   @ResolveField(() => SecuredLocationList)
   async locations(
-    @AnonSession() session: Session,
     @Parent() organization: Organization,
     @ListArg(LocationListInput) input: LocationListInput,
     @Loader(LocationLoader) locations: LoaderOf<LocationLoader>,
   ): Promise<SecuredLocationList> {
-    const list = await this.orgs.listLocations(organization, input, session);
+    const list = await this.orgs.listLocations(organization, input);
     locations.primeAll(list.items);
     return list;
   }
@@ -102,21 +96,17 @@ export class OrganizationResolver {
     description: 'Update an organization',
   })
   async updateOrganization(
-    @LoggedInSession() session: Session,
     @Args('input') { organization: input }: UpdateOrganizationInput,
   ): Promise<UpdateOrganizationOutput> {
-    const organization = await this.orgs.update(input, session);
+    const organization = await this.orgs.update(input);
     return { organization };
   }
 
   @Mutation(() => DeleteOrganizationOutput, {
     description: 'Delete an organization',
   })
-  async deleteOrganization(
-    @LoggedInSession() session: Session,
-    @IdArg() id: ID,
-  ): Promise<DeleteOrganizationOutput> {
-    await this.orgs.delete(id, session);
+  async deleteOrganization(@IdArg() id: ID): Promise<DeleteOrganizationOutput> {
+    await this.orgs.delete(id);
     return { success: true };
   }
 
@@ -124,21 +114,19 @@ export class OrganizationResolver {
     description: 'Add a location to a organization',
   })
   async addLocationToOrganization(
-    @LoggedInSession() session: Session,
     @Args() { organizationId, locationId }: ModifyLocationArgs,
   ): Promise<Organization> {
     await this.orgs.addLocation(organizationId, locationId);
-    return await this.orgs.readOne(organizationId, session);
+    return await this.orgs.readOne(organizationId);
   }
 
   @Mutation(() => Organization, {
     description: 'Remove a location from a organization',
   })
   async removeLocationFromOrganization(
-    @LoggedInSession() session: Session,
     @Args() { organizationId, locationId }: ModifyLocationArgs,
   ): Promise<Organization> {
     await this.orgs.removeLocation(organizationId, locationId);
-    return await this.orgs.readOne(organizationId, session);
+    return await this.orgs.readOne(organizationId);
   }
 }

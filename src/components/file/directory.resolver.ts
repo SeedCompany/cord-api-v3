@@ -7,14 +7,7 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import {
-  AnonSession,
-  type ID,
-  IdArg,
-  ListArg,
-  LoggedInSession,
-  type Session,
-} from '~/common';
+import { type ID, IdArg, ListArg } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { UserLoader } from '../user';
 import { User } from '../user/dto';
@@ -46,7 +39,6 @@ export class DirectoryResolver {
     description: 'Return the file nodes of this directory',
   })
   async children(
-    @AnonSession() session: Session,
     @Parent() node: Directory,
     @ListArg(FileListInput) input: FileListInput,
   ): Promise<FileListOutput> {
@@ -83,9 +75,8 @@ export class DirectoryResolver {
 
   @Mutation(() => Directory)
   async createDirectory(
-    @LoggedInSession() session: Session,
     @Args('input') { parentId, name }: CreateDirectoryInput,
   ): Promise<Directory> {
-    return await this.service.createDirectory(parentId, name, session);
+    return await this.service.createDirectory(parentId, name);
   }
 }
