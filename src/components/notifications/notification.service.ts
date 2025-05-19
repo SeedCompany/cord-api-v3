@@ -14,8 +14,7 @@ import {
   type Session,
   type UnsecuredDto,
 } from '~/common';
-import { sessionFromContext } from '~/common/session';
-import { GqlContextHost } from '~/core/graphql';
+import { SessionHost } from '../authentication';
 import {
   type MarkNotificationReadArgs,
   type Notification,
@@ -33,8 +32,8 @@ import {
 export abstract class NotificationService {
   @Inject(forwardRef(() => NotificationRepository))
   protected readonly repo: NotificationRepository & {};
-  @Inject(GqlContextHost)
-  protected readonly gqlContextHost: GqlContextHost;
+  @Inject(SessionHost)
+  protected readonly sessionHost: SessionHost;
 
   /**
    * If the recipient list is given (not nil), it will override the strategy's recipient resolution.
@@ -44,7 +43,7 @@ export abstract class NotificationService {
     recipients: ReadonlyArray<ID<'User'>> | Nil,
     input: T extends { Input: infer Input } ? Input : InputOf<T['prototype']>,
   ) {
-    const session = sessionFromContext(this.gqlContextHost.context);
+    const session = this.sessionHost.current;
     const { dto, ...rest } = await this.repo.create(
       recipients,
       type,

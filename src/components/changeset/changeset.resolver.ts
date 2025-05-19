@@ -1,8 +1,8 @@
 import { Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
 import {
+  AnonSession,
   type ID,
   IdArg,
-  LoggedInSession,
   type ObjectView,
   type Session,
 } from '~/common';
@@ -28,7 +28,7 @@ export class ChangesetResolver {
   })
   async difference(
     @Parent() changeset: Changeset,
-    @LoggedInSession() session: Session,
+    @AnonSession() session: Session,
     @IdArg({
       name: 'resource',
       nullable: true,
@@ -37,6 +37,11 @@ export class ChangesetResolver {
     })
     parent?: ID,
   ): Promise<ChangesetDiff> {
+    // TODO move to auth policy
+    if (session.anonymous) {
+      return { added: [], removed: [], changed: [] };
+    }
+
     const diff = await this.repo.difference(changeset.id, parent);
     const load = (node: BaseNode, view?: ObjectView) =>
       this.resources.loadByBaseNode(node, view ?? { changeset: changeset.id });

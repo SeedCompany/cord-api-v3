@@ -5,7 +5,6 @@ import { Driver } from './driver';
 import { GqlContextHost, GqlContextHostImpl } from './gql-context.host';
 import { GraphqlErrorFormatter } from './graphql-error-formatter';
 import { GraphqlLoggingPlugin } from './graphql-logging.plugin';
-import { GraphqlSessionPlugin } from './graphql-session.plugin';
 import { GraphqlTracingPlugin } from './graphql-tracing.plugin';
 import { GraphqlOptions } from './graphql.options';
 
@@ -18,7 +17,6 @@ import './types';
     GraphqlErrorFormatter,
     GraphqlLoggingPlugin,
     GraphqlTracingPlugin,
-    GraphqlSessionPlugin,
   ],
   exports: [GraphqlOptions],
 })

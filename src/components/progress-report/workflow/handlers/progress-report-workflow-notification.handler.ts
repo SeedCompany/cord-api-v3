@@ -113,40 +113,43 @@ export class ProgressReportWorkflowNotificationHandler
     languageId: ID,
   ): Promise<EmailReportStatusNotification> {
     const recipientId = receiver.userId ?? this.configService.rootUser.id;
-    const recipientSession = await this.auth.sessionForUser(recipientId);
+    return await this.auth.asUser(recipientId, async (recipientSession) => {
+      const recipient = receiver.userId
+        ? await this.userService.readOne(recipientId, recipientSession)
+        : this.fakeUserFromEmailAddress(receiver.email!);
 
-    const recipient = receiver.userId
-      ? await this.userService.readOne(recipientId, recipientSession)
-      : this.fakeUserFromEmailAddress(receiver.email!);
+      const project = await this.projectService.readOne(
+        projectId,
+        recipientSession,
+      );
+      const language = await this.languageService.readOne(
+        languageId,
+        recipientSession,
+      );
+      const report = await this.reportService.readOne(
+        reportId,
+        recipientSession,
+      );
+      const changedBy = await this.userService.readOne(
+        unsecuredEvent.who.id,
+        recipientSession,
+      );
+      const workflowEvent = this.workflowService.secure(
+        unsecuredEvent,
+        recipientSession,
+      );
 
-    const project = await this.projectService.readOne(
-      projectId,
-      recipientSession,
-    );
-    const language = await this.languageService.readOne(
-      languageId,
-      recipientSession,
-    );
-    const report = await this.reportService.readOne(reportId, recipientSession);
-    const changedBy = await this.userService.readOne(
-      unsecuredEvent.who.id,
-      recipientSession,
-    );
-    const workflowEvent = this.workflowService.secure(
-      unsecuredEvent,
-      recipientSession,
-    );
-
-    return {
-      changedBy,
-      recipient,
-      project,
-      language,
-      report,
-      newStatusVal: report.status?.value,
-      previousStatusVal: report.status?.value ? previousStatus : undefined,
-      workflowEvent: workflowEvent,
-    };
+      return {
+        changedBy,
+        recipient,
+        project,
+        language,
+        report,
+        newStatusVal: report.status?.value,
+        previousStatusVal: report.status?.value ? previousStatus : undefined,
+        workflowEvent: workflowEvent,
+      };
+    });
   }
 
   private fakeUserFromEmailAddress(

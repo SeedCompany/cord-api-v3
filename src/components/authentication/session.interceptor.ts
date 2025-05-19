@@ -7,7 +7,9 @@ import {
   type NestInterceptor,
 } from '@nestjs/common';
 import { GqlExecutionContext } from '@nestjs/graphql';
-import { csv } from '@seedcompany/common';
+import { csv, type FnLike } from '@seedcompany/common';
+import { AsyncLocalStorage } from 'async_hooks';
+import { BehaviorSubject } from 'rxjs';
 import {
   type GqlContextType,
   type ID,
@@ -19,10 +21,13 @@ import {
   type Session,
   UnauthenticatedException,
 } from '~/common';
+import { loggedInSession as verifyLoggedIn } from '~/common/session';
 import { ConfigService } from '~/core';
-import { type IRequest } from '~/core/http';
+import { GlobalHttpHook, type IRequest } from '~/core/http';
 import { rolesForScope } from '../authorization/dto';
+import { Anonymous } from './anonymous.decorator';
 import { AuthenticationService } from './authentication.service';
+import { SessionHost } from './session.host';
 
 @Injectable()
 export class SessionInterceptor implements NestInterceptor {
@@ -30,14 +35,57 @@ export class SessionInterceptor implements NestInterceptor {
     @Inject(forwardRef(() => AuthenticationService))
     private readonly auth: AuthenticationService & {},
     private readonly config: ConfigService,
+    private readonly sessionHost: SessionHost,
   ) {}
 
+  private readonly sessionByRequest = new AsyncLocalStorage<
+    SessionHost['current$']
+  >();
+
+  @GlobalHttpHook()
+  onRequest(...[_req, _reply, next]: Parameters<GlobalHttpHook>) {
+    // Create a holder to use later to declare the session after it is constructed
+    const sessionForTheRequest = new BehaviorSubject<Session | undefined>(
+      undefined,
+    );
+    // Store this as the current holder for the current request.
+    // This is our private store, so the code below won't interfere with
+    // a different SessionHost context.
+    this.sessionByRequest.run(sessionForTheRequest, () =>
+      // Also declare this as the session for the entire HTTP/GQL operation.
+      // This is what the rest of the codebase pulls from unless it is overridden.
+      this.sessionHost.withSession(sessionForTheRequest, next),
+    );
+  }
+
   async intercept(executionContext: ExecutionContext, next: CallHandler) {
+    const session$ = this.sessionByRequest.getStore();
+    if (!session$) {
+      throw new Error('Session holder for request is not in async context');
+    }
+
     const type = executionContext.getType();
+
+    let isMutation = true;
+    let session;
     if (type === 'graphql') {
-      await this.handleGql(executionContext);
+      const gqlExecutionContext = GqlExecutionContext.create(executionContext);
+      const op = gqlExecutionContext.getInfo().operation;
+      isMutation = op.operation === 'mutation';
+      session = await this.handleGql(executionContext);
     } else if (type === 'http') {
-      await this.handleHttp(executionContext);
+      const request = executionContext.switchToHttp().getRequest();
+      isMutation = request.method !== 'GET' && request.method !== 'HEAD';
+      session = await this.handleHttp(executionContext);
+    }
+    session$.next(session);
+
+    const allowAnonymous =
+      Anonymous.get(executionContext.getHandler() as FnLike) ??
+      Anonymous.get(executionContext.getClass()) ??
+      !isMutation;
+    if (!allowAnonymous && session) {
+      verifyLoggedIn(session);
     }
 
     return next.handle();
@@ -53,7 +101,7 @@ export class SessionInterceptor implements NestInterceptor {
       return;
     }
     const request = executionContext.switchToHttp().getRequest();
-    request.session = await this.hydrateSession({ request });
+    return await this.hydrateSession({ request });
   }
 
   private async handleGql(executionContext: ExecutionContext) {
@@ -61,10 +109,11 @@ export class SessionInterceptor implements NestInterceptor {
     const ctx = gqlExecutionContext.getContext();
     const info = gqlExecutionContext.getInfo();
 
-    if (!ctx.session$.value && info.fieldName !== 'session') {
+    if (info.fieldName !== 'session') {
       const session = await this.hydrateSession(ctx);
-      ctx.session$.next(session);
+      return session;
     }
+    return undefined;
   }
 
   async hydrateSession(context: Pick<GqlContextType, 'request'>) {

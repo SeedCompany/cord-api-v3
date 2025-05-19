@@ -1,6 +1,7 @@
 import { Args, Mutation, Resolver } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { AnonSession, LoggedInSession, type Session } from '~/common';
+import { Anonymous } from './anonymous.decorator';
 import { AuthenticationService } from './authentication.service';
 import {
   ChangePasswordArgs,
@@ -45,6 +46,7 @@ export class PasswordResolver {
       @sensitive-secrets
     `,
   })
+  @Anonymous()
   async resetPassword(
     @Args('input') input: ResetPasswordInput,
     @AnonSession() session: Session,

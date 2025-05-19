@@ -1,18 +1,18 @@
 import {
   Args,
-  Context,
   Mutation,
   Parent,
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { AnonSession, type GqlContextType, type Session } from '~/common';
+import { AnonSession, type Session } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { Privileges } from '../authorization';
 import { Power } from '../authorization/dto';
 import { UserLoader } from '../user';
 import { User } from '../user/dto';
+import { Anonymous } from './anonymous.decorator';
 import { AuthenticationService } from './authentication.service';
 import { LoginInput, LoginOutput, LogoutOutput } from './dto';
 
@@ -29,13 +29,13 @@ export class LoginResolver {
       @sensitive-secrets
     `,
   })
+  @Anonymous()
   async login(
     @Args('input') input: LoginInput,
     @AnonSession() session: Session,
-    @Context() context: GqlContextType,
   ): Promise<LoginOutput> {
     const user = await this.authentication.login(input, session);
-    await this.authentication.updateSession(context);
+    await this.authentication.refreshCurrentSession();
     return { user };
   }
 
@@ -45,12 +45,10 @@ export class LoginResolver {
       @sensitive-secrets
     `,
   })
-  async logout(
-    @AnonSession() session: Session,
-    @Context() context: GqlContextType,
-  ): Promise<LogoutOutput> {
+  @Anonymous()
+  async logout(@AnonSession() session: Session): Promise<LogoutOutput> {
     await this.authentication.logout(session.token);
-    await this.authentication.updateSession(context); // ensure session data is fresh
+    await this.authentication.refreshCurrentSession(); // ensure session data is fresh
     return { success: true };
   }
 
