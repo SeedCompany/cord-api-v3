@@ -9,6 +9,7 @@ import {
   SecuredBoolean,
   SecuredDateNullable,
   SecuredProperty,
+  SecuredPropertyList,
   SecuredStringNullable,
   Sensitivity,
   SensitivityField,
@@ -66,6 +67,9 @@ export class Partner extends Interfaces {
   >;
 
   readonly countries: Required<Secured<ReadonlyArray<LinkTo<'Location'>>>>;
+  readonly strategicAlliances: Required<
+    Secured<ReadonlyArray<LinkTo<'Partner'>>>
+  >;
 
   readonly languagesOfConsulting: Required<
     Secured<ReadonlyArray<LinkTo<'Language'>>>
@@ -87,12 +91,19 @@ export class Partner extends Interfaces {
 
   @Field()
   readonly departmentIdBlock: SecuredFinanceDepartmentIdBlockNullable;
+
+  readonly parent: Secured<LinkTo<'Partner'> | null>;
 }
 
 @ObjectType({
   description: SecuredProperty.descriptionFor('a partner'),
 })
 export class SecuredPartner extends SecuredProperty(Partner) {}
+
+@ObjectType({
+  description: SecuredPropertyList.descriptionFor('a list of partners'),
+})
+export class SecuredPartners extends SecuredPropertyList(Partner) {}
 
 declare module '~/core/resources/map' {
   interface ResourceMap {

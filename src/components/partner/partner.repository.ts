@@ -93,6 +93,8 @@ export class PartnerRepository extends DtoRepository(Partner) {
           fieldRegions: ['FieldRegion', input.fieldRegions],
           countries: ['Location', input.countries],
           languagesOfConsulting: ['Language', input.languagesOfConsulting],
+          strategicAlliances: ['Partner', input.strategicAlliances],
+          parent: ['Partner', input.parentId],
         }),
       )
       .apply(departmentIdBlockUtils.createMaybe(input.departmentIdBlock))
@@ -118,10 +120,22 @@ export class PartnerRepository extends DtoRepository(Partner) {
       countries,
       languagesOfConsulting,
       departmentIdBlock,
+      strategicAlliances,
+      parentId,
       ...simpleChanges
     } = changes;
 
     await this.updateProperties({ id }, simpleChanges);
+
+    if (parentId !== undefined) {
+      if (parentId === id) {
+        throw new InputException(
+          'A partner cannot be its own parent organization',
+          'partner.parent',
+        );
+      }
+      await this.updateRelation('parent', 'Partner', changes.id, parentId);
+    }
 
     if (pointOfContactId !== undefined) {
       await this.updateRelation(
@@ -165,6 +179,26 @@ export class PartnerRepository extends DtoRepository(Partner) {
       } catch (e) {
         throw e instanceof InputException
           ? e.withField('partner.fieldRegions')
+          : e;
+      }
+    }
+
+    if (strategicAlliances) {
+      if (strategicAlliances.includes(changes.id)) {
+        throw new InputException(
+          'A partner cannot be its own strategic ally',
+          'partner.strategicAlliances',
+        );
+      }
+      try {
+        await this.updateRelationList({
+          id: changes.id,
+          relation: 'strategicAlliances',
+          newList: strategicAlliances,
+        });
+      } catch (e) {
+        throw e instanceof InputException
+          ? e.withField('partner.strategicAlliances')
           : e;
       }
     }
@@ -257,6 +291,26 @@ export class PartnerRepository extends DtoRepository(Partner) {
               ),
             ),
         )
+        .subQuery('node', (sub) =>
+          sub
+            .match([
+              node('node'),
+              relation('out', '', 'strategicAlliances'),
+              node('strategicAlliances', 'Partner'),
+            ])
+            .return(
+              collect('strategicAlliances { .id }').as('strategicAlliances'),
+            ),
+        )
+        .subQuery('node', (sub) =>
+          sub
+            .optionalMatch([
+              node('node'),
+              relation('out', '', 'parent', ACTIVE),
+              node('parent', 'Partner'),
+            ])
+            .return('parent { .id } as parent'),
+        )
         .apply(matchProps())
         .optionalMatch([
           node('node'),
@@ -288,6 +342,8 @@ export class PartnerRepository extends DtoRepository(Partner) {
             departmentIdBlock: 'departmentIdBlock',
             scope: 'scopedRoles',
             pinned,
+            parent: 'parent { .id }',
+            strategicAlliances: 'strategicAlliances',
           }).as('dto'),
         );
   }
