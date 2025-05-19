@@ -9,8 +9,6 @@ import {
 import { DateTime } from 'luxon';
 import { type GqlContextType, ServerException } from '~/common';
 import { ConfigService, Loader, type LoaderOf } from '~/core';
-import { Privileges } from '../../../components/authorization';
-import { Power } from '../../../components/authorization/dto';
 import { UserLoader, UserService } from '../../../components/user';
 import { User } from '../../../components/user/dto';
 import { HttpAdapter } from '../../http';
@@ -27,7 +25,6 @@ export class SessionResolver {
     private readonly sessionManager: SessionManager,
     private readonly sessionInitiator: SessionInitiator,
     private readonly sessionHost: SessionHost,
-    private readonly privileges: Privileges,
     private readonly config: ConfigService,
     private readonly users: UserService,
     private readonly http: HttpAdapter,
@@ -108,10 +105,5 @@ export class SessionResolver {
     return await this.sessionManager.asUser(impersonator, () =>
       this.users.readOne(impersonator.userId),
     );
-  }
-
-  @ResolveField(() => [Power], { nullable: true })
-  async powers(): Promise<Power[]> {
-    return [...this.privileges.powers];
   }
 }

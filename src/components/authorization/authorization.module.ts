@@ -1,6 +1,11 @@
 import { Global, Module } from '@nestjs/common';
 import { AssignableRolesGranter } from './assignable-roles.granter';
-import { AuthorizationResolver } from './authorization.resolver';
+import {
+  AuthorizationResolver,
+  LoginExtraInfoResolver,
+  RegisterExtraInfoResolver,
+  SessionExtraInfoResolver,
+} from './authorization.resolver';
 import { BetaFeaturesGranter } from './dto/beta-features.dto';
 import * as Policies from './policies';
 import { PolicyModule } from './policy/policy.module';
@@ -10,6 +15,9 @@ import { PolicyModule } from './policy/policy.module';
   imports: [PolicyModule],
   providers: [
     AuthorizationResolver,
+    LoginExtraInfoResolver,
+    RegisterExtraInfoResolver,
+    SessionExtraInfoResolver,
     ...Object.values(Policies),
     AssignableRolesGranter,
     BetaFeaturesGranter,

@@ -7,8 +7,6 @@ import {
 } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { Loader, type LoaderOf } from '~/core';
-import { Privileges } from '../../../components/authorization';
-import { Power } from '../../../components/authorization/dto';
 import { UserLoader } from '../../../components/user';
 import { User } from '../../../components/user/dto';
 import { AuthenticationService } from '../authentication.service';
@@ -22,7 +20,6 @@ export class LoginResolver {
   constructor(
     private readonly authentication: AuthenticationService,
     private readonly sessionHost: SessionHost,
-    private readonly privileges: Privileges,
   ) {}
 
   @Mutation(() => LoginOutput, {
@@ -54,10 +51,5 @@ export class LoginResolver {
     @Loader(UserLoader) users: LoaderOf<UserLoader>,
   ): Promise<User> {
     return await users.load(user);
-  }
-
-  @ResolveField(() => [Power])
-  async powers(): Promise<Power[]> {
-    return [...this.privileges.powers];
   }
 }

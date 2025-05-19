@@ -9,11 +9,6 @@ import { AuthenticationService } from './authentication.service';
 import { CryptoService } from './crypto.service';
 import { Identity } from './identity.service';
 import { JwtService } from './jwt.service';
-import {
-  LoginExtraInfoResolver,
-  RegisterExtraInfoResolver,
-  SessionExtraInfoResolver,
-} from './resolvers/extra-info.resolver';
 import { LoginResolver } from './resolvers/login.resolver';
 import { PasswordResolver } from './resolvers/password.resolver';
 import { RegisterResolver } from './resolvers/register.resolver';
@@ -33,9 +28,6 @@ import { SessionManager } from './session/session.manager';
     PasswordResolver,
     RegisterResolver,
     SessionResolver,
-    SessionExtraInfoResolver,
-    LoginExtraInfoResolver,
-    RegisterExtraInfoResolver,
 
     Identity,
 

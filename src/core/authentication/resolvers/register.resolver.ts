@@ -7,8 +7,6 @@ import {
 } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { Loader, type LoaderOf } from '~/core';
-import { Privileges } from '../../../components/authorization';
-import { Power } from '../../../components/authorization/dto';
 import { UserLoader } from '../../../components/user';
 import { User } from '../../../components/user/dto';
 import { AuthenticationService } from '../authentication.service';
@@ -18,10 +16,7 @@ import { AuthLevel } from '../session/auth-level.decorator';
 @Resolver(RegisterOutput)
 @AuthLevel('anonymous')
 export class RegisterResolver {
-  constructor(
-    private readonly authentication: AuthenticationService,
-    private readonly privileges: Privileges,
-  ) {}
+  constructor(private readonly authentication: AuthenticationService) {}
 
   @Mutation(() => RegisterOutput, {
     description: stripIndent`
@@ -42,10 +37,5 @@ export class RegisterResolver {
     @Loader(UserLoader) users: LoaderOf<UserLoader>,
   ): Promise<User> {
     return await users.load(user);
-  }
-
-  @ResolveField(() => [Power])
-  async powers(): Promise<Power[]> {
-    return [...this.privileges.powers];
   }
 }
