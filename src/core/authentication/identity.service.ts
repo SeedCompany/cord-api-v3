@@ -36,4 +36,12 @@ export class Identity {
   asRole<R>(role: Role, fn: () => R): R {
     return this.auth.asRole(role, fn);
   }
+
+  /**
+   * @deprecated probably replace this with something more explicit.
+   */
+  async readyForCli() {
+    // Ensure the default root session is ready to go for data loaders
+    await this.auth.lazySessionForRootUser();
+  }
 }
