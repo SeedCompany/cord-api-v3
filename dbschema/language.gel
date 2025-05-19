@@ -68,6 +68,14 @@ module default {
       constraint regexp(r'^[A-Z]{2}\d{2}$');
     };
     
+    required isAvailableForReporting: bool {
+      default := false;
+    };
+
+    required isWiderComm: bool {
+      default := false;
+    };
+    
     sponsorEstimatedEndDate: cal::local_date;
     
     required hasExternalFirstScripture: bool {
