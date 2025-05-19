@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import type { ID, Role } from '~/common';
 import { type AuthenticationService } from '../../components/authentication';
 import { SessionHost } from '../../components/authentication/session.host';
@@ -9,7 +9,7 @@ import { SessionHost } from '../../components/authentication/session.host';
 @Injectable()
 export class Identity {
   constructor(
-    @Inject('AUTHENTICATION')
+    @Inject(forwardRef(() => 'AUTHENTICATION'))
     private readonly auth: AuthenticationService & {},
     private readonly sessionHost: SessionHost,
   ) {}

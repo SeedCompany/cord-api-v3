@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { entries, mapKeys } from '@seedcompany/common';
 import { Connection, node, type Query, relation } from 'cypher-query-builder';
 import { LazyGetter } from 'lazy-get-decorator';
@@ -64,6 +64,7 @@ export class DatabaseService {
   constructor(
     private readonly db: Connection,
     private readonly config: ConfigService,
+    @Inject(forwardRef(() => Identity))
     private readonly identity: Identity,
     private readonly shutdown$: ShutdownHook,
     @Logger('database:service') private readonly logger: ILogger,
