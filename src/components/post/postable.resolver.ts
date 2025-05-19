@@ -1,12 +1,6 @@
 import { Info, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { type GraphQLResolveInfo } from 'graphql';
-import {
-  AnonSession,
-  ListArg,
-  type Resource,
-  SecuredList,
-  type Session,
-} from '~/common';
+import { ListArg, type Resource } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { Postable } from './dto';
 import { PostListInput, SecuredPostList } from './dto/list-posts.dto';
@@ -24,14 +18,8 @@ export class PostableResolver {
     @Info() info: GraphQLResolveInfo & {},
     @Parent() parent: Postable & Resource,
     @ListArg(PostListInput) input: PostListInput,
-    @AnonSession() session: Session,
     @Loader(PostLoader) posts: LoaderOf<PostLoader>,
   ): Promise<SecuredPostList> {
-    // TODO move to auth policy
-    if (session.anonymous) {
-      return SecuredList.Redacted;
-    }
-
     const list = await this.service.securedList(
       {
         ...parent,

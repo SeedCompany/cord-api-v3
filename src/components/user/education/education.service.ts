@@ -47,8 +47,7 @@ export class EducationService {
     const result = await this.repo.getUserIdByEducation(input.id);
     const changes = this.repo.getActualChanges(ed, input);
     // TODO move this condition into policies
-    const session = this.identity.current;
-    if (result.id !== session.userId) {
+    if (!this.identity.isSelf(result.id)) {
       this.privileges.for(Education, ed).verifyChanges(changes);
     }
 

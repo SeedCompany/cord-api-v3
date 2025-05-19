@@ -6,7 +6,6 @@ import {
 } from '@nestjs/common';
 import { CONTROLLER_WATERMARK } from '@nestjs/common/constants.js';
 import { Context } from '@nestjs/graphql';
-import { uniq } from 'lodash';
 import { type DateTime } from 'luxon';
 import { Identity } from '~/core/authentication';
 import { type ScopedRole } from '../components/authorization/dto';
@@ -70,11 +69,3 @@ export const AnonSession =
 
 const SessionWatermark: ParameterDecorator = (target, key) =>
   Reflect.defineMetadata('SESSION_WATERMARK', true, target.constructor, key!);
-
-export const addScope = (session: Session, scope?: ScopedRole[]) => ({
-  ...session,
-  roles: uniq([...session.roles, ...(scope ?? [])]),
-});
-
-export const isAdmin = (session: Session) =>
-  session.roles.includes('global:Administrator');

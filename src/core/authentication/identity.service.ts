@@ -26,6 +26,40 @@ export class Identity {
     return this.sessionHost.currentIfInCtx;
   }
 
+  /**
+   * Is the current user an admin?
+   *
+   * Not the best API, use is discouraged.
+   * Prefer using Auth Policies / {@link Privileges}`.for.can()`
+   */
+  get isAdmin() {
+    return this.current.roles.includes('global:Administrator');
+  }
+
+  /**
+   * Is the current user (or impersonator) an admin?
+   * This ignores impersonation.
+   *
+   * Not the best API, use is discouraged.
+   * Prefer using Auth Policies / {@link Privileges}`.for.can()`
+   */
+  get isImpersonatorAdmin() {
+    const session = this.current;
+    return (session.impersonator ?? session).roles.includes(
+      'global:Administrator',
+    );
+  }
+
+  /**
+   * Is this the ID of the current user?
+   *
+   * Not the best API, use is discouraged.
+   * Prefer using Auth Policies / {@link Privileges}`.for.can()`
+   */
+  isSelf(id: ID<'User'>) {
+    return id === this.current.userId;
+  }
+
   async asUser<R>(user: ID<'User'>, fn: () => Promise<R>): Promise<R> {
     return await this.auth.asUser(user, fn);
   }

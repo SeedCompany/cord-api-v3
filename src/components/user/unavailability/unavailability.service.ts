@@ -46,8 +46,7 @@ export class UnavailabilityService {
     const result = await this.repo.getUserIdByUnavailability(input.id);
     const changes = this.repo.getActualChanges(unavailability, input);
     // TODO move this condition into policies
-    const session = this.identity.current;
-    if (result.id !== session.userId) {
+    if (!this.identity.isSelf(result.id)) {
       this.privileges
         .for(Unavailability, unavailability)
         .verifyChanges(changes);
