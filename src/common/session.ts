@@ -9,7 +9,6 @@ import { Context } from '@nestjs/graphql';
 import { type DateTime } from 'luxon';
 import { Identity } from '~/core/authentication';
 import { type ScopedRole } from '../components/authorization/dto';
-import { UnauthenticatedException } from './exceptions';
 import { type ID } from './id-field';
 
 export interface Session {
@@ -32,13 +31,6 @@ export interface Session {
   };
 }
 
-export function loggedInSession(session: Session): Session {
-  if (session.anonymous) {
-    throw new UnauthenticatedException('User is not logged in');
-  }
-  return session;
-}
-
 @Injectable()
 export class SessionPipe implements PipeTransform {
   constructor(private readonly identity: Identity) {}
@@ -49,8 +41,7 @@ export class SessionPipe implements PipeTransform {
 }
 
 /** @deprecated */
-export const LoggedInSession = () =>
-  AnonSession({ transform: loggedInSession });
+export const LoggedInSession = () => AnonSession();
 
 /** @deprecated */
 export const AnonSession =

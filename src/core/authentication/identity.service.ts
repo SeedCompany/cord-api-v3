@@ -1,5 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import type { ID, Role } from '~/common';
+import { type ID, type Role, UnauthenticatedException } from '~/common';
 import { type AuthenticationService } from '../../components/authentication';
 import { SessionHost } from '../../components/authentication/session.host';
 
@@ -34,6 +34,15 @@ export class Identity {
    */
   get isAnonymous() {
     return this.current.anonymous;
+  }
+
+  /**
+   * Manually verify the current requestor is logged in.
+   */
+  verifyLoggedIn(session?: Identity['current']) {
+    if ((session ?? this.current).anonymous) {
+      throw new UnauthenticatedException('User is not logged in');
+    }
   }
 
   /**
