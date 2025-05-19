@@ -28,7 +28,8 @@ import {
   type Session,
 } from '~/common';
 import { searchCamelCase } from '~/common/search-camel-case';
-import { InjectableCommand, type ResourceLike, ResourcesHost } from '~/core';
+import { InjectableCommand } from '~/core/cli';
+import { type ResourceLike, ResourcesHost } from '~/core/resources';
 import {
   ChildListAction,
   ChildSingleAction,
