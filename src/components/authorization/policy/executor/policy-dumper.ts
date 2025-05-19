@@ -15,19 +15,13 @@ import { Chalk, type ChalkInstance } from 'chalk';
 import Table from 'cli-table3';
 import { Command, Option } from 'clipanion';
 import { startCase } from 'lodash';
-import { DateTime } from 'luxon';
 import fs from 'node:fs/promises';
 import { type LiteralUnion } from 'type-fest';
 import { inspect } from 'util';
 import xlsx from 'xlsx';
-import {
-  type EnhancedResource,
-  firstOr,
-  type ID,
-  Role,
-  type Session,
-} from '~/common';
+import { type EnhancedResource, firstOr, Role } from '~/common';
 import { searchCamelCase } from '~/common/search-camel-case';
+import { Identity } from '~/core/authentication';
 import { InjectableCommand } from '~/core/cli';
 import { type ResourceLike, ResourcesHost } from '~/core/resources';
 import {
@@ -45,6 +39,7 @@ type AnyResource = EnhancedResource<any>;
 @Injectable()
 export class PolicyDumper {
   constructor(
+    private readonly identity: Identity,
     private readonly resources: ResourcesHost,
     private readonly executor: PolicyExecutor,
   ) {}
@@ -173,51 +168,45 @@ export class PolicyDumper {
     resource: AnyResource,
     options: { props: boolean | ReadonlySet<string> },
   ): DumpedRow[] {
-    const session: Session = {
-      token: 'system',
-      issuedAt: DateTime.now(),
-      userId: 'anonymous' as ID,
-      anonymous: false,
-      roles: [`global:${role}`],
-    };
-    const resolve = (action: string, prop?: string) =>
-      this.executor.resolve({
-        session,
-        resource,
-        calculatedAsCondition: true,
-        optimizeConditions: true,
-        action,
-        prop,
-      });
-    return [
-      {
-        role,
-        resource,
-        edge: undefined,
-        ...mapValues.fromList(ResourceAction, (action) => resolve(action))
-          .asRecord,
-      },
-      ...(options.props !== false
-        ? ([
-            [resource.securedPropsPlusExtra, PropAction],
-            [resource.childSingleKeys, ChildSingleAction],
-            [resource.childListKeys, ChildListAction],
-          ] as const)
-        : []
-      ).flatMap(([set, actions]) =>
-        [...set]
-          .filter(
-            (p) => typeof options.props === 'boolean' || options.props.has(p),
-          )
-          .map((prop) => ({
-            role,
-            resource,
-            edge: prop,
-            ...mapValues.fromList(actions, (action) => resolve(action, prop))
-              .asRecord,
-          })),
-      ),
-    ];
+    return this.identity.asRole(role, () => {
+      const resolve = (action: string, prop?: string) =>
+        this.executor.resolve({
+          resource,
+          calculatedAsCondition: true,
+          optimizeConditions: true,
+          action,
+          prop,
+        });
+      return [
+        {
+          role,
+          resource,
+          edge: undefined,
+          ...mapValues.fromList(ResourceAction, (action) => resolve(action))
+            .asRecord,
+        },
+        ...(options.props !== false
+          ? ([
+              [resource.securedPropsPlusExtra, PropAction],
+              [resource.childSingleKeys, ChildSingleAction],
+              [resource.childListKeys, ChildListAction],
+            ] as const)
+          : []
+        ).flatMap(([set, actions]) =>
+          [...set]
+            .filter(
+              (p) => typeof options.props === 'boolean' || options.props.has(p),
+            )
+            .map((prop) => ({
+              role,
+              resource,
+              edge: prop,
+              ...mapValues.fromList(actions, (action) => resolve(action, prop))
+                .asRecord,
+            })),
+        ),
+      ];
+    });
   }
 }
 

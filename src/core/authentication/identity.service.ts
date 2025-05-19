@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { ID } from '~/common';
+import type { ID, Role } from '~/common';
 import { type AuthenticationService } from '../../components/authentication';
 import { SessionHost } from '../../components/authentication/session.host';
 
@@ -28,5 +28,12 @@ export class Identity {
 
   async asUser<R>(user: ID<'User'>, fn: () => Promise<R>): Promise<R> {
     return await this.auth.asUser(user, fn);
+  }
+
+  /**
+   * Run this function with the current user as an ephemeral one this role
+   */
+  asRole<R>(role: Role, fn: () => R): R {
+    return this.auth.asRole(role, fn);
   }
 }
