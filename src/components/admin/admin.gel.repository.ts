@@ -1,4 +1,6 @@
 import { Injectable } from '@nestjs/common';
+import { ModuleRef } from '@nestjs/core';
+import { LazyGetter as Once } from 'lazy-get-decorator';
 import { type ID, Role } from '~/common';
 import { RootUserAlias } from '~/core/config/root-user.config';
 import { DbTraceLayer, disableAccessPolicies, e, Gel } from '~/core/gel';
@@ -11,10 +13,14 @@ export class AdminGelRepository {
   private readonly db: Gel;
   constructor(
     gel: Gel,
-    readonly auth: AuthenticationRepository,
+    private readonly moduleRef: ModuleRef,
     readonly agents: SystemAgentRepository,
   ) {
     this.db = gel.withOptions(disableAccessPolicies);
+  }
+
+  @Once() get auth() {
+    return this.moduleRef.get(AuthenticationRepository, { strict: false });
   }
 
   async finishing(callback: () => Promise<void>) {

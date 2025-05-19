@@ -1,4 +1,6 @@
 import { Injectable, type OnApplicationBootstrap } from '@nestjs/common';
+import { ModuleRef } from '@nestjs/core';
+import { LazyGetter as Once } from 'lazy-get-decorator';
 import { DateTime } from 'luxon';
 import { Role, ServerException } from '~/common';
 import { ConfigService } from '~/core/config/config.service';
@@ -12,12 +14,19 @@ import { AdminRepository } from './admin.repository';
 export class AdminService implements OnApplicationBootstrap {
   constructor(
     private readonly config: ConfigService,
-    private readonly authentication: AuthenticationService,
-    private readonly crypto: CryptoService,
     private readonly repo: AdminRepository,
+    private readonly moduleRef: ModuleRef,
     @Logger('admin:service') private readonly logger: ILogger,
     @Logger('admin:database') private readonly dbLogger: ILogger,
   ) {}
+
+  @Once() private get authentication() {
+    return this.moduleRef.get(AuthenticationService, { strict: false });
+  }
+
+  @Once() private get crypto() {
+    return this.moduleRef.get(CryptoService, { strict: false });
+  }
 
   async onApplicationBootstrap(): Promise<void> {
     if (!this.config.dbRootObjectsSync) {
