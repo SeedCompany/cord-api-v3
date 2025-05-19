@@ -169,6 +169,12 @@ export class Language extends Interfaces {
   @Field()
   readonly tags: SecuredTags;
 
+  @Field()
+  readonly isWiderComm: SecuredBoolean;
+
+  @Field()
+  readonly isAvailableForReporting: SecuredBoolean;
+
   @Calculated()
   @Field({
     description: stripIndent`

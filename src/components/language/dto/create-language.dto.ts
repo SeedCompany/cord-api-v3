@@ -13,6 +13,7 @@ import {
   type CalendarDate,
   DateField,
   NameField,
+  OptionalField,
   Sensitivity,
   SensitivityField,
 } from '~/common';
@@ -104,6 +105,12 @@ export abstract class CreateLanguage {
   @Field(() => [String], { nullable: true })
   @Transform(({ value }) => uniq(value))
   readonly tags?: string[] = [];
+
+  @OptionalField()
+  readonly isWiderComm?: boolean = false;
+
+  @OptionalField()
+  readonly isAvailableForReporting?: boolean = false;
 }
 
 @InputType()
