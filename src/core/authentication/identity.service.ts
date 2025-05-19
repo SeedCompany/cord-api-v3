@@ -27,6 +27,16 @@ export class Identity {
   }
 
   /**
+   * Is the current requestor anonymous (not logged in)?
+   *
+   * Not the best API, use is discouraged.
+   * Prefer using Auth Policies / {@link Privileges}`.for.can()`
+   */
+  get isAnonymous() {
+    return this.current.anonymous;
+  }
+
+  /**
    * Is the current user an admin?
    *
    * Not the best API, use is discouraged.
