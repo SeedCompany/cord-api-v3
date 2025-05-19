@@ -4,20 +4,18 @@ import { DateTime } from 'luxon';
 import type { Writable } from 'ts-essentials';
 import {
   type ID,
+  Poll,
   type Role,
   ServerException,
   type Session,
   UnauthorizedException,
 } from '~/common';
+import { IEventBus } from '~/core/events';
 import { ILogger, Logger } from '~/core/logger';
-import { Privileges } from '../../../components/authorization';
-import {
-  rolesForScope,
-  withoutScope,
-} from '../../../components/authorization/dto';
-import { AssignableRoles } from '../../../components/authorization/dto/assignable-roles.dto';
+import { rolesForScope } from '../../../components/authorization/dto';
 import { SystemAgentRepository } from '../../../components/user/system-agent.repository';
 import { AuthenticationRepository } from '../authentication.repository';
+import { CanImpersonateEvent } from '../events/can-impersonate.event';
 import { JwtService } from '../jwt.service';
 import { NoSessionException } from './no-session.exception';
 import { SessionHost } from './session.host';
@@ -29,7 +27,7 @@ import { SessionHost } from './session.host';
 export class SessionManager {
   constructor(
     private readonly agents: SystemAgentRepository,
-    private readonly privileges: Privileges,
+    private readonly events: IEventBus,
     private readonly jwt: JwtService,
     private readonly sessionHost: SessionHost,
     private readonly repo: AuthenticationRepository,
@@ -107,13 +105,15 @@ export class SessionManager {
       : requesterSession;
 
     if (impersonatee) {
-      const valid = this.sessionHost.withSession(requesterSession, () => {
-        const p = this.privileges.for(AssignableRoles);
-        return impersonatee.roles.every((role) =>
-          p.can('edit', withoutScope(role)),
+      const allowImpersonation = new Poll();
+      await this.sessionHost.withSession(requesterSession, async () => {
+        const event = new CanImpersonateEvent(
+          requesterSession,
+          allowImpersonation,
         );
+        await this.events.publish(event);
       });
-      if (!valid) {
+      if (!(allowImpersonation.plurality && !allowImpersonation.vetoed)) {
         // Don't expose what the requester is unable to do as this could leak
         // private information.
         throw new UnauthorizedException(
