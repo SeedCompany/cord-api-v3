@@ -1,11 +1,6 @@
 import { ResolveField, Resolver } from '@nestjs/graphql';
 import { mapValues } from '@seedcompany/common';
-import {
-  type AbstractClassType,
-  AnonSession,
-  EnhancedResource,
-  type Session,
-} from '~/common';
+import { type AbstractClassType, EnhancedResource } from '~/common';
 import { Privileges } from '../authorization';
 import { BetaFeatures } from '../authorization/dto/beta-features.dto';
 import { LoginOutput, RegisterOutput, SessionOutput } from './dto';
@@ -16,7 +11,7 @@ function AuthExtraInfoResolver(concreteClass: AbstractClassType<any>) {
     constructor(private readonly privileges: Privileges) {}
 
     @ResolveField(() => BetaFeatures)
-    betaFeatures(@AnonSession() session: Session): BetaFeatures {
+    betaFeatures(): BetaFeatures {
       const privileges = this.privileges.for(BetaFeatures);
       const { props } = EnhancedResource.of(BetaFeatures);
       return mapValues.fromList([...props], (prop) =>

@@ -1,6 +1,5 @@
 import { Info, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
 import {
-  AnonSession,
   Fields,
   type ID,
   IdArg,
@@ -8,16 +7,19 @@ import {
   ListArg,
   type Resource,
   SecuredList,
-  type Session,
 } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
+import { Identity } from '~/core/authentication';
 import { CommentThreadLoader } from './comment-thread.loader';
 import { CommentService } from './comment.service';
 import { Commentable, CommentThreadList, CommentThreadListInput } from './dto';
 
 @Resolver(Commentable)
 export class CommentableResolver {
-  constructor(private readonly service: CommentService) {}
+  constructor(
+    private readonly service: CommentService,
+    private readonly identity: Identity,
+  ) {}
 
   @Query(() => Commentable, {
     description: 'Load a commentable resource by ID',
@@ -32,12 +34,11 @@ export class CommentableResolver {
   async commentThreads(
     @Parent() parent: Commentable & Resource,
     @ListArg(CommentThreadListInput) input: CommentThreadListInput,
-    @AnonSession() session: Session,
     @Loader(CommentThreadLoader) commentThreads: LoaderOf<CommentThreadLoader>,
     @Info(Fields, IsOnly(['total'])) onlyTotal: boolean,
   ) {
     // TODO move to auth policy
-    if (session.anonymous) {
+    if (this.identity.isAnonymous) {
       return { parent, ...SecuredList.Redacted };
     }
     if (onlyTotal) {
