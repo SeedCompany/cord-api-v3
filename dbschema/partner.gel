@@ -31,6 +31,7 @@ module default {
     
     pointOfContact: User;
     languageOfWiderCommunication: Language;
+    languageOfReporting: Language;
     
     required organization: Organization {
       readonly := true;
