@@ -8,10 +8,10 @@ import { GqlExecutionContext } from '@nestjs/graphql';
 import { type FnLike } from '@seedcompany/common';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { BehaviorSubject } from 'rxjs';
-import { type Session } from '~/common';
 import { GlobalHttpHook } from '../../http';
 import { Identity } from '../identity.service';
 import { AuthLevel } from './auth-level.decorator';
+import { type Session } from './session.dto';
 import { SessionHost } from './session.host';
 import { SessionInitiator } from './session.initiator';
 

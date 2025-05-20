@@ -6,7 +6,6 @@ import {
   type ID,
   InputException,
   ServerException,
-  type Session,
   UnauthenticatedException,
 } from '~/common';
 import { ILogger, Logger } from '~/core/logger';
@@ -16,6 +15,7 @@ import { AuthenticationRepository } from './authentication.repository';
 import { CryptoService } from './crypto.service';
 import type { LoginInput, RegisterInput, ResetPasswordInput } from './dto';
 import { JwtService } from './jwt.service';
+import { type Session } from './session/session.dto';
 import { SessionHost } from './session/session.host';
 import { SessionManager } from './session/session.manager';
 

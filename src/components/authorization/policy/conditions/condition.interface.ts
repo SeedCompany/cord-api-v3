@@ -2,11 +2,8 @@
 import { type Many } from '@seedcompany/common';
 import { type Query } from 'cypher-query-builder';
 import { inspect, type InspectOptionsStylized } from 'util';
-import {
-  type EnhancedResource,
-  type ResourceShape,
-  type Session,
-} from '~/common';
+import { type EnhancedResource, type ResourceShape } from '~/common';
+import { type Session } from '~/core/authentication';
 import { type ResourceObjectContext } from '../object.type';
 import { type Policy } from '../policy.factory';
 

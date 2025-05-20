@@ -1,6 +1,7 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { type ID, type Session } from '~/common';
+import { type ID } from '~/common';
+import { type Session } from '../session/session.dto';
 
 @ObjectType()
 export abstract class SessionOutput {

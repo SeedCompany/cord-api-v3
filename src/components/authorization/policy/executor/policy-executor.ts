@@ -1,8 +1,8 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { CachedByArg } from '@seedcompany/common';
 import { identity, intersection } from 'lodash';
-import { type EnhancedResource, type Session } from '~/common';
-import { Identity } from '~/core/authentication';
+import { type EnhancedResource } from '~/common';
+import { Identity, type Session } from '~/core/authentication';
 import { type QueryFragment } from '~/core/database/query';
 import { withoutScope } from '../../dto';
 import { RoleCondition } from '../../policies/conditions/role.condition';

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { type ID, ServerException, type Session } from '~/common';
+import { type ID, ServerException } from '~/common';
 import { type ScopedRole } from '../../components/authorization/dto';
 import { DatabaseService, DbTraceLayer, OnIndex } from '../database';
 import {
@@ -11,6 +11,7 @@ import {
   variable,
 } from '../database/query';
 import { type LoginInput } from './dto';
+import { type Session } from './session/session.dto';
 
 interface EmailToken {
   email: string;

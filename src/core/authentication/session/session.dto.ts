@@ -1,6 +1,6 @@
 import { type DateTime } from 'luxon';
-import { type ScopedRole } from '../components/authorization/dto';
-import { type ID } from './id-field';
+import { type ID } from '~/common/id-field';
+import { type ScopedRole } from '../../../components/authorization/dto';
 
 export interface Session {
   readonly token: string;

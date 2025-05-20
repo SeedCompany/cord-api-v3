@@ -7,7 +7,6 @@ import {
   Poll,
   type Role,
   ServerException,
-  type Session,
   UnauthorizedException,
 } from '~/common';
 import { IEventBus } from '~/core/events';
@@ -18,6 +17,7 @@ import { AuthenticationRepository } from '../authentication.repository';
 import { CanImpersonateEvent } from '../events/can-impersonate.event';
 import { JwtService } from '../jwt.service';
 import { NoSessionException } from './no-session.exception';
+import { type Session } from './session.dto';
 import { SessionHost } from './session.host';
 
 /**
