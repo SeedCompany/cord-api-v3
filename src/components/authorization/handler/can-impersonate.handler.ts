@@ -9,7 +9,9 @@ export class CanImpersonateHandler {
 
   handle(event: CanImpersonateEvent) {
     const p = this.privileges.for(AssignableRoles);
-    const valid = event.session.roles.every((role) => p.can('edit', role));
+    const valid = event.session.roles
+      .values()
+      .every((role) => p.can('edit', role));
     event.allow.vote(valid);
   }
 }

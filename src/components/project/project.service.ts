@@ -159,9 +159,10 @@ export class ProjectService {
       await this.projectMembers.create(
         {
           userId: session.userId,
-          roles: session.roles.filter((role) =>
-            Role.applicableToProjectMembership.has(role),
-          ),
+          roles: session.roles
+            .values()
+            .filter((role) => Role.applicableToProjectMembership.has(role))
+            .toArray(),
           projectId: project,
         },
         false,

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { CachedByArg } from '@seedcompany/common';
+import { CachedByArg, setOf } from '@seedcompany/common';
 import { DateTime } from 'luxon';
 import type { Writable } from 'ts-essentials';
 import {
@@ -78,10 +78,10 @@ export class SessionManager {
       impersonatee && result.userId
         ? {
             id: impersonatee?.id ?? ghost?.id,
-            roles: [
+            roles: setOf([
               ...(impersonatee.roles ?? []),
               ...(result.impersonateeRoles ?? []),
-            ],
+            ]),
           }
         : undefined;
 
@@ -125,7 +125,7 @@ export class SessionManager {
   }
 
   @CachedByArg()
-  lazySessionForRootUser(input?: Partial<Session>) {
+  lazySessionForRootUser(input?: Parameters<Session['with']>[0]) {
     const promiseOfRootId = this.waitForRootUserIdOnce().then((id) => {
       (session as Writable<Session>).userId = id;
       return id;

@@ -1,6 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { CachedByArg } from '@seedcompany/common';
-import { identity, intersection } from 'lodash';
+import { identity } from 'lodash';
 import { type EnhancedResource } from '~/common';
 import { Identity, type Session } from '~/core/authentication';
 import { type QueryFragment } from '~/core/database/query';
@@ -147,8 +147,8 @@ export class PolicyExecutor {
       }
 
       const roleCondition =
-        policy.roles && policy.roles.length > 0
-          ? new RoleCondition(new Set(policy.roles))
+        policy.roles && policy.roles.size > 0
+          ? new RoleCondition(policy.roles)
           : undefined;
 
       if (!roleCondition && condition === true) {
@@ -279,11 +279,10 @@ export class PolicyExecutor {
       if (!policy.roles) {
         return true; // policy doesn't limit roles
       }
-      const rolesSpecifiedByPolicyThatUserHas = intersection(
-        policy.roles,
+      const rolesSpecifiedByPolicyThatUserHas = policy.roles.intersection(
         session.roles,
       );
-      return rolesSpecifiedByPolicyThatUserHas.length > 0;
+      return rolesSpecifiedByPolicyThatUserHas.size > 0;
     });
     return policies;
   }

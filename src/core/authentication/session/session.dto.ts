@@ -6,7 +6,7 @@ class RawSession extends DataObject {
   readonly token: string;
   readonly issuedAt: DateTime;
   readonly userId: ID;
-  readonly roles: readonly Role[];
+  readonly roles: Iterable<Role>;
   readonly anonymous: boolean;
 
   /**
@@ -18,13 +18,17 @@ class RawSession extends DataObject {
    */
   readonly impersonatee?: {
     id?: ID;
-    roles: readonly Role[];
+    roles: ReadonlySet<Role>;
   };
 }
 
 export class Session extends RawSession {
+  declare readonly roles: ReadonlySet<Role>;
+
   static from(session: RawSession): Session {
-    return Session.defaultValue(Session, session);
+    return Object.assign(Session.defaultValue(Session), session, {
+      roles: new Set(session.roles),
+    });
   }
 
   with(next: Partial<RawSession>): Session {
@@ -41,7 +45,7 @@ export class Session extends RawSession {
   }
 
   get isAdmin() {
-    return this.roles.includes('Administrator');
+    return this.roles.has('Administrator');
   }
 
   isSelf(id: ID<'User'>) {

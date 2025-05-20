@@ -1,5 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { csv } from '@seedcompany/common';
+import { csv, setOf } from '@seedcompany/common';
 import {
   type ID,
   InputException,
@@ -90,15 +90,15 @@ export class SessionInitiator {
       );
     }
 
-    const roles = csvHeader(request?.headers?.['x-cord-impersonate-role']);
+    const rawRoles = csvHeader(request?.headers?.['x-cord-impersonate-role']);
 
-    if (!roles && !user) {
+    if (!rawRoles && !user) {
       return undefined;
     }
 
-    const scoped = (roles ?? []).map(assertValidRole);
+    const roles = setOf((rawRoles ?? []).map(assertValidRole));
 
-    return { id: user, roles: scoped };
+    return { id: user, roles };
   }
 }
 

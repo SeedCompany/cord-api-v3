@@ -1,5 +1,6 @@
 /* eslint-disable no-case-declarations */
 import { Injectable } from '@nestjs/common';
+import { setOf } from '@seedcompany/common';
 import { node, relation } from 'cypher-query-builder';
 import { first, intersection } from 'lodash';
 import {
@@ -28,7 +29,7 @@ interface StatusRule {
   transitions: Transition[];
 }
 
-const rolesThatCanBypassWorkflow: Role[] = [Role.Administrator];
+const rolesThatCanBypassWorkflow = setOf<Role>([Role.Administrator]);
 
 @Injectable()
 export class EngagementRules {
@@ -328,8 +329,7 @@ export class EngagementRules {
     );
 
     // If current user is not an approver (based on roles) then don't allow any transitions
-    const currentUserRoles = session.roles;
-    if (intersection(approvers, currentUserRoles).length === 0) {
+    if (session.roles.intersection(setOf(approvers)).size === 0) {
       return [];
     }
 
@@ -356,7 +356,7 @@ export class EngagementRules {
 
   canBypassWorkflow() {
     const { roles } = this.identity.current;
-    return intersection(rolesThatCanBypassWorkflow, roles).length > 0;
+    return roles.intersection(rolesThatCanBypassWorkflow).size > 0;
   }
 
   async verifyStatusChange(
