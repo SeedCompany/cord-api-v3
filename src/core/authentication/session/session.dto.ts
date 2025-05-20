@@ -1,5 +1,5 @@
 import { type DateTime } from 'luxon';
-import { DataObject } from '~/common';
+import { DataObject, UnauthenticatedException } from '~/common';
 import { type ID } from '~/common/id-field';
 import { type ScopedRole } from '../../../components/authorization/dto';
 
@@ -30,5 +30,22 @@ export class Session extends RawSession {
 
   with(next: Partial<RawSession>): Session {
     return Object.assign(Session.defaultValue(Session), this, next);
+  }
+
+  /**
+   * Manually verify the current requestor is logged in.
+   */
+  verifyLoggedIn() {
+    if (this.anonymous) {
+      throw new UnauthenticatedException('User is not logged in');
+    }
+  }
+
+  get isAdmin() {
+    return this.roles.includes('global:Administrator');
+  }
+
+  isSelf(id: ID<'User'>) {
+    return id === this.userId;
   }
 }

@@ -1,5 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { type ID, type Role, UnauthenticatedException } from '~/common';
+import { type ID, type Role } from '~/common';
 import { type IRequest } from '../http/types';
 import { SessionHost } from './session/session.host';
 import type { SessionInitiator } from './session/session.initiator';
@@ -44,9 +44,7 @@ export class Identity {
    * Manually verify the current requestor is logged in.
    */
   verifyLoggedIn(session?: Identity['current']) {
-    if ((session ?? this.current).anonymous) {
-      throw new UnauthenticatedException('User is not logged in');
-    }
+    (session ?? this.current).verifyLoggedIn();
   }
 
   /**
@@ -56,7 +54,7 @@ export class Identity {
    * Prefer using Auth Policies / {@link Privileges}`.for.can()`
    */
   get isAdmin() {
-    return this.current.roles.includes('global:Administrator');
+    return this.current.isAdmin;
   }
 
   /**
@@ -68,9 +66,7 @@ export class Identity {
    */
   get isImpersonatorAdmin() {
     const session = this.current;
-    return (session.impersonator ?? session).roles.includes(
-      'global:Administrator',
-    );
+    return (session.impersonator ?? session).isAdmin;
   }
 
   /**
@@ -80,7 +76,7 @@ export class Identity {
    * Prefer using Auth Policies / {@link Privileges}`.for.can()`
    */
   isSelf(id: ID<'User'>) {
-    return id === this.current.userId;
+    return this.current.isSelf(id);
   }
 
   async asUser<R>(user: ID<'User'>, fn: () => Promise<R>): Promise<R> {
