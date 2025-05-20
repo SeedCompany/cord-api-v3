@@ -25,7 +25,6 @@ import { Identity } from '~/core/authentication';
 import { Transactional } from '~/core/database';
 import { type AnyChangesOf } from '~/core/database/changes';
 import { Privileges } from '../authorization';
-import { withoutScope } from '../authorization/dto';
 import { BudgetService } from '../budget';
 import { BudgetStatus, type SecuredBudget } from '../budget/dto';
 import { EngagementService } from '../engagement';
@@ -160,9 +159,9 @@ export class ProjectService {
       await this.projectMembers.create(
         {
           userId: session.userId,
-          roles: session.roles
-            .map(withoutScope)
-            .filter((role) => Role.applicableToProjectMembership.has(role)),
+          roles: session.roles.filter((role) =>
+            Role.applicableToProjectMembership.has(role),
+          ),
           projectId: project,
         },
         false,

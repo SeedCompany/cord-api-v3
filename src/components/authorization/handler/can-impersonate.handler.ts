@@ -1,6 +1,5 @@
 import { CanImpersonateEvent } from '~/core/authentication/events/can-impersonate.event';
 import { EventsHandler } from '~/core/events';
-import { withoutScope } from '../dto';
 import { AssignableRoles } from '../dto/assignable-roles.dto';
 import { Privileges } from '../policy';
 
@@ -10,9 +9,7 @@ export class CanImpersonateHandler {
 
   handle(event: CanImpersonateEvent) {
     const p = this.privileges.for(AssignableRoles);
-    const valid = event.session.roles.every((role) =>
-      p.can('edit', withoutScope(role)),
-    );
+    const valid = event.session.roles.every((role) => p.can('edit', role));
     event.allow.vote(valid);
   }
 }

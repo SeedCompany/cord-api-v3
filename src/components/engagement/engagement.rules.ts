@@ -12,7 +12,6 @@ import { ILogger, Logger } from '~/core';
 import { Identity } from '~/core/authentication';
 import { DatabaseService } from '~/core/database';
 import { ACTIVE, INACTIVE } from '~/core/database/query';
-import { withoutScope } from '../authorization/dto';
 import { ProjectStep } from '../project/dto';
 import {
   EngagementStatus,
@@ -314,7 +313,7 @@ export class EngagementRules {
 
   async getAvailableTransitions(
     engagementId: ID,
-    currentUserRoles?: Role[],
+    currentUserRoles?: readonly Role[],
     changeset?: ID,
   ): Promise<EngagementStatusTransition[]> {
     const session = this.identity.current;
@@ -330,7 +329,7 @@ export class EngagementRules {
     );
 
     // If current user is not an approver (based on roles) then don't allow any transitions
-    currentUserRoles ??= session.roles.map(withoutScope);
+    currentUserRoles ??= session.roles;
     if (intersection(approvers, currentUserRoles).length === 0) {
       return [];
     }
@@ -358,7 +357,7 @@ export class EngagementRules {
 
   async canBypassWorkflow() {
     const session = this.identity.current;
-    const roles = session.roles.map(withoutScope);
+    const roles = session.roles;
     return intersection(rolesThatCanBypassWorkflow, roles).length > 0;
   }
 
@@ -370,7 +369,7 @@ export class EngagementRules {
     // If current user's roles include a role that can bypass workflow
     // stop the check here.
     const session = this.identity.current;
-    const currentUserRoles = session.roles.map(withoutScope);
+    const currentUserRoles = session.roles;
     if (intersection(rolesThatCanBypassWorkflow, currentUserRoles).length > 0) {
       return;
     }

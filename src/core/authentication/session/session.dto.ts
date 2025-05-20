@@ -1,13 +1,12 @@
 import { type DateTime } from 'luxon';
-import { DataObject, UnauthenticatedException } from '~/common';
+import { DataObject, type Role, UnauthenticatedException } from '~/common';
 import { type ID } from '~/common/id-field';
-import { type ScopedRole } from '../../../components/authorization/dto';
 
 class RawSession extends DataObject {
   readonly token: string;
   readonly issuedAt: DateTime;
   readonly userId: ID;
-  readonly roles: readonly ScopedRole[];
+  readonly roles: readonly Role[];
   readonly anonymous: boolean;
 
   /**
@@ -19,7 +18,7 @@ class RawSession extends DataObject {
    */
   readonly impersonatee?: {
     id?: ID;
-    roles: readonly ScopedRole[];
+    roles: readonly Role[];
   };
 }
 
@@ -42,7 +41,7 @@ export class Session extends RawSession {
   }
 
   get isAdmin() {
-    return this.roles.includes('global:Administrator');
+    return this.roles.includes('Administrator');
   }
 
   isSelf(id: ID<'User'>) {

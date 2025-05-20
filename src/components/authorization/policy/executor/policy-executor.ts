@@ -4,7 +4,6 @@ import { identity, intersection } from 'lodash';
 import { type EnhancedResource } from '~/common';
 import { Identity, type Session } from '~/core/authentication';
 import { type QueryFragment } from '~/core/database/query';
-import { withoutScope } from '../../dto';
 import { RoleCondition } from '../../policies/conditions/role.condition';
 import { type Permission } from '../builder/perm-granter';
 import {
@@ -282,7 +281,7 @@ export class PolicyExecutor {
       }
       const rolesSpecifiedByPolicyThatUserHas = intersection(
         policy.roles,
-        session.roles.map(withoutScope),
+        session.roles,
       );
       return rolesSpecifiedByPolicyThatUserHas.length > 0;
     });

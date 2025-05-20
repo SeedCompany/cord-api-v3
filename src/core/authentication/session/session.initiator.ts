@@ -11,7 +11,6 @@ import {
 } from '~/common';
 import { ConfigService } from '~/core/config/config.service';
 import { ILogger, Logger } from '~/core/logger';
-import { rolesForScope } from '../../../components/authorization/dto';
 import { type IRequest } from '../../http';
 import { type Session } from './session.dto';
 import { type SessionManager } from './session.manager';
@@ -97,9 +96,7 @@ export class SessionInitiator {
       return undefined;
     }
 
-    const scoped = (roles ?? [])
-      .map(assertValidRole)
-      .map(rolesForScope('global'));
+    const scoped = (roles ?? []).map(assertValidRole);
 
     return { id: user, roles: scoped };
   }
