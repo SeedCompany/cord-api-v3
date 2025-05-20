@@ -2,6 +2,7 @@ export * from './actor.dto';
 export * from './user.dto';
 export * from './list-users.dto';
 export * from './create-person.dto';
+export * from './create-person-output.dto';
 export * from './update-user.dto';
 export * from './delete-user.dto';
 export * from './check-email.dto';

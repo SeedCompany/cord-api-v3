@@ -12,7 +12,6 @@ import {
 import { type ID } from '~/common';
 import { AuthLevel, Identity } from '~/core/authentication';
 import { HttpAdapter, type IRequest, type IResponse } from '~/core/http';
-import { SessionInterceptor } from '../authentication/session.interceptor';
 import { FileService } from './file.service';
 
 @Controller(FileUrlController.path)
@@ -23,7 +22,6 @@ export class FileUrlController {
   constructor(
     @Inject(forwardRef(() => FileService))
     private readonly files: FileService & {},
-    private readonly sessionHost: SessionInterceptor,
     private readonly identity: Identity,
     private readonly http: HttpAdapter,
   ) {}
@@ -38,7 +36,7 @@ export class FileUrlController {
     const node = await this.files.getFileNode(fileId);
 
     if (!node.public) {
-      const session = await this.sessionHost.hydrateSession({ request });
+      const session = await this.identity.identifyRequest(request);
       this.identity.verifyLoggedIn(session);
     }
 

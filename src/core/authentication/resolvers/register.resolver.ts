@@ -7,21 +7,16 @@ import {
 } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { Loader, type LoaderOf } from '~/core';
-import { Privileges } from '../authorization';
-import { Power } from '../authorization/dto';
-import { UserLoader } from '../user';
-import { User } from '../user/dto';
-import { AuthLevel } from './auth-level.decorator';
-import { AuthenticationService } from './authentication.service';
-import { RegisterInput, RegisterOutput } from './dto';
+import { UserLoader } from '../../../components/user';
+import { User } from '../../../components/user/dto';
+import { AuthenticationService } from '../authentication.service';
+import { RegisterInput, RegisterOutput } from '../dto';
+import { AuthLevel } from '../session/auth-level.decorator';
 
 @Resolver(RegisterOutput)
 @AuthLevel('anonymous')
 export class RegisterResolver {
-  constructor(
-    private readonly authentication: AuthenticationService,
-    private readonly privileges: Privileges,
-  ) {}
+  constructor(private readonly authentication: AuthenticationService) {}
 
   @Mutation(() => RegisterOutput, {
     description: stripIndent`
@@ -31,8 +26,6 @@ export class RegisterResolver {
   })
   async register(@Args('input') input: RegisterInput): Promise<RegisterOutput> {
     const user = await this.authentication.register(input);
-    await this.authentication.login(input);
-    await this.authentication.refreshCurrentSession();
     return { user };
   }
 
@@ -44,10 +37,5 @@ export class RegisterResolver {
     @Loader(UserLoader) users: LoaderOf<UserLoader>,
   ): Promise<User> {
     return await users.load(user);
-  }
-
-  @ResolveField(() => [Power])
-  async powers(): Promise<Power[]> {
-    return [...this.privileges.powers];
   }
 }

@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import process from 'node:process';
 import { AdminModule } from './components/admin/admin.module';
-import { AuthenticationModule } from './components/authentication/authentication.module';
 import { AuthorizationModule } from './components/authorization/authorization.module';
 import { BudgetModule } from './components/budget/budget.module';
 import { CeremonyModule } from './components/ceremony/ceremony.module';
@@ -52,7 +51,6 @@ if (process.env.NODE_ENV !== 'production') {
     LoggerModule.forRoot(),
     CoreModule,
     AdminModule,
-    AuthenticationModule,
     AuthorizationModule,
     BudgetModule,
     CeremonyModule,

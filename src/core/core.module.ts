@@ -2,6 +2,7 @@ import { Global, Module } from '@nestjs/common';
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { DataLoaderModule } from '@seedcompany/data-loader';
 import { EmailModule } from '@seedcompany/nestjs-email';
+import { AuthenticationModule } from './authentication/authentication.module';
 import { AwsS3Factory } from './aws-s3.factory';
 import { CacheModule } from './cache/cache.module';
 import { CliModule } from './cli/cli.module';
@@ -40,6 +41,7 @@ import { WaitResolver } from './wait.resolver';
     TracingModule,
     ResourceModule,
     ValidationModule,
+    AuthenticationModule,
   ],
   providers: [
     AwsS3Factory,
@@ -67,6 +69,7 @@ import { WaitResolver } from './wait.resolver';
     ShutdownHookProvider,
     TracingModule,
     ValidationModule,
+    AuthenticationModule,
   ],
 })
 export class CoreModule {}

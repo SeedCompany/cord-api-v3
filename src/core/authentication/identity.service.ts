@@ -1,7 +1,9 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { type ID, type Role, UnauthenticatedException } from '~/common';
-import { type AuthenticationService } from '../../components/authentication';
-import { SessionHost } from '../../components/authentication/session.host';
+import { type ID, type Role } from '~/common';
+import { type IRequest } from '../http/types';
+import { SessionHost } from './session/session.host';
+import type { SessionInitiator } from './session/session.initiator';
+import type { SessionManager } from './session/session.manager';
 
 /**
  * A facade for authentication functionality that is public to the codebase.
@@ -9,8 +11,10 @@ import { SessionHost } from '../../components/authentication/session.host';
 @Injectable()
 export class Identity {
   constructor(
-    @Inject(forwardRef(() => 'AUTHENTICATION'))
-    private readonly auth: AuthenticationService & {},
+    @Inject(forwardRef(() => 'SessionManager'))
+    private readonly sessionManager: SessionManager & {},
+    @Inject(forwardRef(() => 'SessionInitiator'))
+    private readonly sessionInitiator: SessionInitiator & {},
     private readonly sessionHost: SessionHost,
   ) {}
 
@@ -40,9 +44,7 @@ export class Identity {
    * Manually verify the current requestor is logged in.
    */
   verifyLoggedIn(session?: Identity['current']) {
-    if ((session ?? this.current).anonymous) {
-      throw new UnauthenticatedException('User is not logged in');
-    }
+    (session ?? this.current).verifyLoggedIn();
   }
 
   /**
@@ -52,7 +54,7 @@ export class Identity {
    * Prefer using Auth Policies / {@link Privileges}`.for.can()`
    */
   get isAdmin() {
-    return this.current.roles.includes('global:Administrator');
+    return this.current.isAdmin;
   }
 
   /**
@@ -64,9 +66,7 @@ export class Identity {
    */
   get isImpersonatorAdmin() {
     const session = this.current;
-    return (session.impersonator ?? session).roles.includes(
-      'global:Administrator',
-    );
+    return (session.impersonator ?? session).isAdmin;
   }
 
   /**
@@ -76,18 +76,22 @@ export class Identity {
    * Prefer using Auth Policies / {@link Privileges}`.for.can()`
    */
   isSelf(id: ID<'User'>) {
-    return id === this.current.userId;
+    return this.current.isSelf(id);
   }
 
   async asUser<R>(user: ID<'User'>, fn: () => Promise<R>): Promise<R> {
-    return await this.auth.asUser(user, fn);
+    return await this.sessionManager.asUser(user, fn);
   }
 
   /**
    * Run this function with the current user as an ephemeral one this role
    */
   asRole<R>(role: Role, fn: () => R): R {
-    return this.auth.asRole(role, fn);
+    return this.sessionManager.asRole(role, fn);
+  }
+
+  async identifyRequest(request: IRequest) {
+    return await this.sessionInitiator.resume(request);
   }
 
   /**
@@ -95,6 +99,6 @@ export class Identity {
    */
   async readyForCli() {
     // Ensure the default root session is ready to go for data loaders
-    await this.auth.lazySessionForRootUser();
+    await this.sessionManager.lazySessionForRootUser();
   }
 }

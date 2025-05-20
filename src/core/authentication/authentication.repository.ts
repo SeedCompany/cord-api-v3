@@ -1,16 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { type ID, ServerException, type Session } from '~/common';
-import { DatabaseService, DbTraceLayer, OnIndex } from '~/core/database';
+import { type ID, ServerException } from '~/common';
+import { type ScopedRole } from '../../components/authorization/dto';
+import { DatabaseService, DbTraceLayer, OnIndex } from '../database';
 import {
   ACTIVE,
   currentUser,
   matchUserGloballyScopedRoles,
   variable,
-} from '~/core/database/query';
-import { type ScopedRole } from '../authorization/dto';
+} from '../database/query';
 import { type LoginInput } from './dto';
+import { type Session } from './session/session.dto';
 
 interface EmailToken {
   email: string;
