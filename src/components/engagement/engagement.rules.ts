@@ -313,7 +313,6 @@ export class EngagementRules {
 
   async getAvailableTransitions(
     engagementId: ID,
-    currentUserRoles?: readonly Role[],
     changeset?: ID,
   ): Promise<EngagementStatusTransition[]> {
     const session = this.identity.current;
@@ -329,7 +328,7 @@ export class EngagementRules {
     );
 
     // If current user is not an approver (based on roles) then don't allow any transitions
-    currentUserRoles ??= session.roles;
+    const currentUserRoles = session.roles;
     if (intersection(approvers, currentUserRoles).length === 0) {
       return [];
     }
@@ -355,9 +354,8 @@ export class EngagementRules {
     return availableTransitionsAccordingToProject;
   }
 
-  async canBypassWorkflow() {
-    const session = this.identity.current;
-    const roles = session.roles;
+  canBypassWorkflow() {
+    const { roles } = this.identity.current;
     return intersection(rolesThatCanBypassWorkflow, roles).length > 0;
   }
 
@@ -366,17 +364,12 @@ export class EngagementRules {
     nextStatus: EngagementStatus,
     changeset?: ID,
   ) {
-    // If current user's roles include a role that can bypass workflow
-    // stop the check here.
-    const session = this.identity.current;
-    const currentUserRoles = session.roles;
-    if (intersection(rolesThatCanBypassWorkflow, currentUserRoles).length > 0) {
+    if (this.canBypassWorkflow()) {
       return;
     }
 
     const transitions = await this.getAvailableTransitions(
       engagementId,
-      currentUserRoles,
       changeset,
     );
 
