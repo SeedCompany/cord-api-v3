@@ -8,8 +8,8 @@ import {
   type Role,
   SecuredProperty,
 } from '~/common';
-import { RegisterResource } from '~/core';
 import { e } from '~/core/gel';
+import { RegisterResource } from '~/core/resources';
 
 @RegisterResource({
   db: e.Actor,
