@@ -15,7 +15,6 @@ import { AuthenticationRepository } from './authentication.repository';
 import { CryptoService } from './crypto.service';
 import type { LoginInput, RegisterInput, ResetPasswordInput } from './dto';
 import { JwtService } from './jwt.service';
-import { type Session } from './session/session.dto';
 import { SessionHost } from './session/session.host';
 import { SessionManager } from './session/session.manager';
 
@@ -36,10 +35,9 @@ export class AuthenticationService {
     private readonly moduleRef: ModuleRef,
   ) {}
 
-  async register(
-    { password, ...input }: RegisterInput,
-    session?: Session,
-  ): Promise<ID> {
+  async register({ password, ...input }: RegisterInput): Promise<ID> {
+    const session = this.sessionHost.currentIfInCtx;
+
     // ensure no other tokens are associated with this user
     if (session) {
       await this.logout(session.token, false);
@@ -63,6 +61,10 @@ export class AuthenticationService {
 
     const passwordHash = await this.crypto.hash(password);
     await this.repo.savePasswordHashOnUser(userId, passwordHash);
+
+    if (!session) {
+      return userId;
+    }
 
     return await this.login({
       email: input.email,
