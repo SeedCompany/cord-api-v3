@@ -1,4 +1,4 @@
-import { Injectable, type OnModuleDestroy } from '@nestjs/common';
+import { type OnModuleDestroy } from '@nestjs/common';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { BehaviorSubject } from 'rxjs';
 import { AsyncLocalStorageNoContextException } from '../../async-local-storage-no-context.exception';
@@ -8,7 +8,11 @@ import { type Session } from './session.dto';
 /**
  * A service holding the current session / user
  */
-export abstract class SessionHost {
+export class SessionHost implements OnModuleDestroy {
+  private readonly als = new AsyncLocalStorage<
+    BehaviorSubject<Session | undefined>
+  >();
+
   /**
    * Retrieve the current session.
    *
@@ -39,35 +43,6 @@ export abstract class SessionHost {
    * It must exist, meaning that this call is within a {@link withSession} stack.
    * This subject could still not (yet) have an actual session value.
    */
-  abstract get current$(): BehaviorSubject<Session | undefined>;
-
-  /**
-   * Retrieve the current session or undefined.
-   *
-   * This is allowed to be called outside a {@link withSession} stack
-   * and will just return undefined.
-   */
-  abstract get currentIfInCtx(): Session | undefined;
-
-  /**
-   * Run a function with a given session.
-   */
-  abstract withSession<R>(
-    session: BehaviorSubject<Session | undefined> | Session | undefined,
-    fn: () => R,
-  ): R;
-}
-
-@Injectable()
-export class SessionHostImpl extends SessionHost implements OnModuleDestroy {
-  private readonly als = new AsyncLocalStorage<
-    BehaviorSubject<Session | undefined>
-  >();
-
-  get currentIfInCtx() {
-    return this.als.getStore()?.value;
-  }
-
   get current$() {
     const subject = this.als.getStore();
     if (!subject) {
@@ -78,10 +53,23 @@ export class SessionHostImpl extends SessionHost implements OnModuleDestroy {
     return subject;
   }
 
+  /**
+   * Retrieve the current session or undefined.
+   *
+   * This is allowed to be called outside a {@link withSession} stack
+   * and will just return undefined.
+   */
+  get currentIfInCtx() {
+    return this.als.getStore()?.value;
+  }
+
+  /**
+   * Run a function with a given session.
+   */
   withSession<R>(
     session: BehaviorSubject<Session | undefined> | Session | undefined,
     fn: () => R,
-  ): R {
+  ) {
     const session$ =
       session instanceof BehaviorSubject
         ? session

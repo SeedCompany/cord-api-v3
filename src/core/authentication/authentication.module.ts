@@ -12,7 +12,7 @@ import { LoginResolver } from './resolvers/login.resolver';
 import { PasswordResolver } from './resolvers/password.resolver';
 import { RegisterResolver } from './resolvers/register.resolver';
 import { SessionResolver } from './resolvers/session.resolver';
-import { SessionHost, SessionHostImpl } from './session/session.host';
+import { SessionHost } from './session/session.host';
 import { SessionInitiator } from './session/session.initiator';
 import { SessionInterceptor } from './session/session.interceptor';
 import { SessionManager } from './session/session.manager';
@@ -32,7 +32,7 @@ import { SessionManager } from './session/session.manager';
     SessionManager,
     { provide: 'SessionInitiator', useExisting: SessionInitiator },
     { provide: 'SessionManager', useExisting: SessionManager },
-    { provide: SessionHost, useClass: SessionHostImpl },
+    SessionHost,
 
     AuthenticationService,
     splitDb(AuthenticationRepository, AuthenticationGelRepository),
