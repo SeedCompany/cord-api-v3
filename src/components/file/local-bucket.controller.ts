@@ -11,6 +11,7 @@ import {
 import { DateTime } from 'luxon';
 import { URL } from 'node:url';
 import { InputException } from '~/common';
+import { AuthLevel } from '~/core/authentication';
 import {
   HttpAdapter,
   type IRequest,
@@ -23,6 +24,7 @@ import { FileBucket, InvalidSignedUrlException } from './bucket';
  * This fakes S3 web hosting for use with LocalBuckets.
  */
 @Controller(LocalBucketController.path)
+@AuthLevel('sessionless')
 export class LocalBucketController {
   static path = '/local-bucket';
 

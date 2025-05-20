@@ -11,12 +11,13 @@ import { Privileges } from '../authorization';
 import { Power } from '../authorization/dto';
 import { UserLoader } from '../user';
 import { User } from '../user/dto';
-import { Anonymous } from './anonymous.decorator';
+import { AuthLevel } from './auth-level.decorator';
 import { AuthenticationService } from './authentication.service';
 import { LoginInput, LoginOutput, LogoutOutput } from './dto';
 import { SessionHost } from './session.host';
 
 @Resolver(LoginOutput)
+@AuthLevel('anonymous')
 export class LoginResolver {
   constructor(
     private readonly authentication: AuthenticationService,
@@ -30,7 +31,6 @@ export class LoginResolver {
       @sensitive-secrets
     `,
   })
-  @Anonymous()
   async login(@Args('input') input: LoginInput): Promise<LoginOutput> {
     const user = await this.authentication.login(input);
     await this.authentication.refreshCurrentSession();
@@ -43,7 +43,6 @@ export class LoginResolver {
       @sensitive-secrets
     `,
   })
-  @Anonymous()
   async logout(): Promise<LogoutOutput> {
     const session = this.sessionHost.current;
     await this.authentication.logout(session.token);

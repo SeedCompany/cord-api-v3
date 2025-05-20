@@ -18,12 +18,14 @@ import { Privileges } from '../authorization';
 import { Power } from '../authorization/dto';
 import { UserLoader, UserService } from '../user';
 import { User } from '../user/dto';
+import { AuthLevel } from './auth-level.decorator';
 import { AuthenticationService } from './authentication.service';
 import { SessionOutput } from './dto';
 import { SessionHost } from './session.host';
 import { SessionInterceptor } from './session.interceptor';
 
 @Resolver(SessionOutput)
+@AuthLevel('sessionless')
 export class SessionResolver {
   constructor(
     private readonly authentication: AuthenticationService,

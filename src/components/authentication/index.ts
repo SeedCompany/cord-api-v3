@@ -1,3 +1,3 @@
 export * from './authentication.service';
 export { SessionHost } from './session.host';
-export * from './anonymous.decorator';
+export * from './auth-level.decorator';

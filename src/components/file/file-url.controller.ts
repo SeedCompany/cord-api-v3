@@ -10,12 +10,13 @@ import {
   Response,
 } from '@nestjs/common';
 import { type ID } from '~/common';
-import { Identity } from '~/core/authentication';
+import { AuthLevel, Identity } from '~/core/authentication';
 import { HttpAdapter, type IRequest, type IResponse } from '~/core/http';
 import { SessionInterceptor } from '../authentication/session.interceptor';
 import { FileService } from './file.service';
 
 @Controller(FileUrlController.path)
+@AuthLevel('sessionless')
 export class FileUrlController {
   static path = '/file';
 

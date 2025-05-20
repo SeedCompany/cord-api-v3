@@ -25,7 +25,7 @@ import { ConfigService } from '~/core';
 import { Identity } from '~/core/authentication';
 import { GlobalHttpHook, type IRequest } from '~/core/http';
 import { rolesForScope } from '../authorization/dto';
-import { Anonymous } from './anonymous.decorator';
+import { AuthLevel } from './auth-level.decorator';
 import { AuthenticationService } from './authentication.service';
 import { SessionHost } from './session.host';
 
@@ -65,56 +65,59 @@ export class SessionInterceptor implements NestInterceptor {
       throw new Error('Session holder for request is not in async context');
     }
 
-    const type = executionContext.getType();
+    const isMutation = this.isMutation(executionContext);
+    const authLevel =
+      AuthLevel.get(executionContext.getHandler() as FnLike) ??
+      AuthLevel.get(executionContext.getClass()) ??
+      (isMutation ? 'authenticated' : 'anonymous');
 
-    let isMutation = true;
-    let session;
-    if (type === 'graphql') {
-      const gqlExecutionContext = GqlExecutionContext.create(executionContext);
-      const op = gqlExecutionContext.getInfo().operation;
-      isMutation = op.operation === 'mutation';
-      session = await this.handleGql(executionContext);
-    } else if (type === 'http') {
-      const request = executionContext.switchToHttp().getRequest();
-      isMutation = request.method !== 'GET' && request.method !== 'HEAD';
-      session = await this.handleHttp(executionContext);
+    if (authLevel === 'sessionless') {
+      return next.handle();
     }
-    session$.next(session);
 
-    const allowAnonymous =
-      Anonymous.get(executionContext.getHandler() as FnLike) ??
-      Anonymous.get(executionContext.getClass()) ??
-      !isMutation;
-    if (!allowAnonymous && session) {
-      this.identity.verifyLoggedIn();
+    const session = await this.startFromContext(executionContext);
+    if (session) {
+      session$.next(session);
+      if (authLevel === 'authenticated') {
+        this.identity.verifyLoggedIn();
+      }
     }
 
     return next.handle();
   }
 
-  private async handleHttp(executionContext: ExecutionContext) {
-    const enabled = Reflect.getMetadata(
-      'SESSION_WATERMARK',
-      executionContext.getClass(),
-      executionContext.getHandler().name,
-    );
-    if (!enabled) {
-      return;
+  private isMutation(executionContext: ExecutionContext) {
+    switch (executionContext.getType()) {
+      case 'graphql': {
+        const gqlExecutionContext =
+          GqlExecutionContext.create(executionContext);
+        const op = gqlExecutionContext.getInfo().operation;
+        return op.operation === 'mutation';
+      }
+      case 'http': {
+        const request = executionContext.switchToHttp().getRequest();
+        return request.method !== 'GET' && request.method !== 'HEAD';
+      }
+      default:
+        return undefined;
     }
-    const request = executionContext.switchToHttp().getRequest();
-    return await this.hydrateSession({ request });
   }
 
-  private async handleGql(executionContext: ExecutionContext) {
-    const gqlExecutionContext = GqlExecutionContext.create(executionContext);
-    const ctx = gqlExecutionContext.getContext();
-    const info = gqlExecutionContext.getInfo();
-
-    if (info.fieldName !== 'session') {
-      const session = await this.hydrateSession(ctx);
-      return session;
+  private async startFromContext(executionContext: ExecutionContext) {
+    switch (executionContext.getType()) {
+      case 'graphql': {
+        const gqlExecutionContext =
+          GqlExecutionContext.create(executionContext);
+        const ctx = gqlExecutionContext.getContext();
+        return await this.hydrateSession(ctx);
+      }
+      case 'http': {
+        const request = executionContext.switchToHttp().getRequest();
+        return await this.hydrateSession({ request });
+      }
+      default:
+        return undefined;
     }
-    return undefined;
   }
 
   async hydrateSession(context: Pick<GqlContextType, 'request'>) {

@@ -11,11 +11,12 @@ import { Privileges } from '../authorization';
 import { Power } from '../authorization/dto';
 import { UserLoader } from '../user';
 import { User } from '../user/dto';
-import { Anonymous } from './anonymous.decorator';
+import { AuthLevel } from './auth-level.decorator';
 import { AuthenticationService } from './authentication.service';
 import { RegisterInput, RegisterOutput } from './dto';
 
 @Resolver(RegisterOutput)
+@AuthLevel('anonymous')
 export class RegisterResolver {
   constructor(
     private readonly authentication: AuthenticationService,
@@ -28,7 +29,6 @@ export class RegisterResolver {
       @sensitive-secrets
     `,
   })
-  @Anonymous()
   async register(@Args('input') input: RegisterInput): Promise<RegisterOutput> {
     const user = await this.authentication.register(input);
     await this.authentication.login(input);
