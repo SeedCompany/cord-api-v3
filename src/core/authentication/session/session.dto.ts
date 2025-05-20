@@ -1,8 +1,9 @@
 import { type DateTime } from 'luxon';
+import { DataObject } from '~/common';
 import { type ID } from '~/common/id-field';
 import { type ScopedRole } from '../../../components/authorization/dto';
 
-export interface Session {
+class RawSession extends DataObject {
   readonly token: string;
   readonly issuedAt: DateTime;
   readonly userId: ID;
@@ -20,4 +21,14 @@ export interface Session {
     id?: ID;
     roles: readonly ScopedRole[];
   };
+}
+
+export class Session extends RawSession {
+  static from(session: RawSession): Session {
+    return Session.defaultValue(Session, session);
+  }
+
+  with(next: Partial<RawSession>): Session {
+    return Object.assign(Session.defaultValue(Session), this, next);
+  }
 }

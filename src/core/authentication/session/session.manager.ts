@@ -17,7 +17,7 @@ import { AuthenticationRepository } from '../authentication.repository';
 import { CanImpersonateEvent } from '../events/can-impersonate.event';
 import { JwtService } from '../jwt.service';
 import { NoSessionException } from './no-session.exception';
-import { type Session } from './session.dto';
+import { Session } from './session.dto';
 import { SessionHost } from './session.host';
 
 /**
@@ -86,22 +86,21 @@ export class SessionManager {
           }
         : undefined;
 
-    const requesterSession: Session = {
+    const requesterSession = Session.from({
       token,
       issuedAt: DateTime.fromMillis(iat),
       userId: result.userId ?? anon.id,
       anonymous: !result.userId,
       roles: result.roles,
-    };
+    });
 
-    const session: Session = impersonatee
-      ? {
-          ...requesterSession,
+    const session = impersonatee
+      ? requesterSession.with({
           userId: impersonatee?.id ?? requesterSession.userId,
           roles: impersonatee.roles,
           impersonator: requesterSession,
           impersonatee,
-        }
+        })
       : requesterSession;
 
     if (impersonatee) {
@@ -133,14 +132,14 @@ export class SessionManager {
       return id;
     });
     const unresolvedId = 'unresolvedId' as ID;
-    const session: Session = {
+    const session = Session.from({
       token: 'system',
       issuedAt: DateTime.now(),
       userId: unresolvedId,
       anonymous: false,
       roles: ['global:Administrator'],
       ...input,
-    };
+    });
     type LazySession = Session &
       Promise<Session> & { withRoles: (...roles: Role[]) => LazySession };
     return new Proxy(session, {
@@ -180,25 +179,25 @@ export class SessionManager {
   }
 
   asRole<R>(role: Role, fn: () => R): R {
-    const session: Session = {
+    const session = Session.from({
       token: 'system',
       issuedAt: DateTime.now(),
       userId: 'anonymous' as ID,
       anonymous: false,
       roles: [`global:${role}`],
-    };
+    });
     return this.sessionHost.withSession(session, fn);
   }
 
   async sessionForUser(userId: ID): Promise<Session> {
     const roles = await this.repo.rolesForUser(userId);
-    const session: Session = {
+    const session = Session.from({
       token: 'system',
       issuedAt: DateTime.now(),
       userId,
       anonymous: false,
       roles,
-    };
+    });
     return session;
   }
 }
