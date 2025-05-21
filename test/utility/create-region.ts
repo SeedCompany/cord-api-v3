@@ -5,7 +5,6 @@ import {
 } from '../../src/components/field-region/dto';
 import { type TestApp } from './create-app';
 import { createPerson } from './create-person';
-import { getUserFromSession } from './create-session';
 import { createZone } from './create-zone';
 import { fragments } from './fragments';
 import { gql } from './gql-tag';
@@ -25,9 +24,11 @@ export async function createRegion(
 
     directorId:
       input.directorId ||
-      (await getUserFromSession(app)).id ||
       (await runAsAdmin(app, async () => {
-        return (await createPerson(app)).id;
+        const director = await createPerson(app, {
+          roles: ['RegionalDirector'],
+        });
+        return director.id;
       })),
     ...input,
   };

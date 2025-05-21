@@ -24,8 +24,12 @@ describe('Field Zone e2e', () => {
     // Zones can only be created by admin
     await loginAsAdmin(app);
 
-    director = await createPerson(app);
-    newDirector = await createPerson(app);
+    director = await createPerson(app, {
+      roles: ['FieldOperationsDirector'],
+    });
+    newDirector = await createPerson(app, {
+      roles: ['FieldOperationsDirector'],
+    });
   });
 
   afterAll(async () => {
