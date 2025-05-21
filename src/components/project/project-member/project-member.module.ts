@@ -3,6 +3,7 @@ import { splitDb } from '~/core';
 import { AuthorizationModule } from '../../authorization/authorization.module';
 import { UserModule } from '../../user/user.module';
 import { ProjectModule } from '../project.module';
+import { AvailableRolesToProjectResolver } from './available-roles-to-project.resolver';
 import { ProjectMemberGelRepository } from './project-member.gel.repository';
 import { ProjectMemberLoader } from './project-member.loader';
 import { ProjectMemberRepository } from './project-member.repository';
@@ -17,6 +18,7 @@ import { ProjectMemberService } from './project-member.service';
   ],
   providers: [
     ProjectMemberResolver,
+    AvailableRolesToProjectResolver,
     ProjectMemberService,
     splitDb(ProjectMemberRepository, ProjectMemberGelRepository),
     ProjectMemberLoader,
