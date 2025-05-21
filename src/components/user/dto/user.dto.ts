@@ -2,6 +2,7 @@ import { Field, ObjectType } from '@nestjs/graphql';
 import {
   DbLabel,
   DbUnique,
+  Grandparent,
   IntersectTypes,
   NameField,
   Resource,
@@ -78,7 +79,9 @@ export class User extends Interfaces {
   @Field()
   status: SecuredUserStatus;
 
-  @Field()
+  @Field({
+    middleware: [Grandparent.store],
+  })
   roles: SecuredRoles;
 
   @Field()
