@@ -8,6 +8,7 @@ import { FieldRegionLoader } from './field-region.loader';
 import { FieldRegionRepository } from './field-region.repository';
 import { FieldRegionResolver } from './field-region.resolver';
 import { FieldRegionService } from './field-region.service';
+import { RestrictRegionDirectorRemovalHandler } from './handlers/restrict-region-director-removal.handler';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { FieldRegionService } from './field-region.service';
     FieldRegionService,
     splitDb(FieldRegionRepository, FieldRegionGelRepository),
     FieldRegionLoader,
+    RestrictRegionDirectorRemovalHandler,
   ],
   exports: [FieldRegionService],
 })

@@ -115,4 +115,17 @@ export class FieldRegionRepository extends DtoRepository(FieldRegion) {
       .first();
     return result!; // result from paginate() will always have 1 row.
   }
+
+  async readAllByDirector(id: ID<'User'>) {
+    return await this.db
+      .query()
+      .match([
+        node('node', 'FieldRegion'),
+        relation('out', '', 'director', ACTIVE),
+        node('', 'User', { id }),
+      ])
+      .apply(this.hydrate())
+      .map('dto')
+      .run();
+  }
 }
