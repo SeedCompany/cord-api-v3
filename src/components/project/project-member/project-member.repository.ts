@@ -20,7 +20,10 @@ import {
   merge,
   oncePerProject,
   paginate,
+  randomUUID,
   sorting,
+  updateProperty,
+  variable,
 } from '~/core/database/query';
 import { type FilterFn } from '~/core/database/query/filters';
 import { userFilters, UserRepository } from '../../user/user.repository';
@@ -182,6 +185,63 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
         'email.value as email',
       ])
       .run();
+  }
+
+  async replaceMembershipsOnOpenProjects(
+    oldDirector: ID<'User'>,
+    newDirector: ID<'User'>,
+    role: Role,
+  ) {
+    const now = DateTime.now();
+    const result = await this.db
+      .query()
+      .match([
+        node('project', 'Project'),
+        relation('out', '', 'member', ACTIVE),
+        node('node', 'ProjectMember'),
+      ])
+      .apply(
+        projectMemberFilters({
+          user: { id: oldDirector },
+          active: true,
+          roles: [role],
+          project: { status: ['Active', 'InDevelopment'] },
+        }),
+      )
+      .apply(
+        updateProperty({
+          resource: ProjectMember,
+          key: 'inactiveAt',
+          value: now,
+          permanentAfter: 0,
+        }),
+      )
+      .with('project')
+      .apply(
+        await createNode(ProjectMember, {
+          baseNodeProps: {
+            id: variable(randomUUID()),
+            createdAt: now,
+          },
+          initialProps: {
+            roles: [role],
+            inactiveAt: null,
+            modifiedAt: now,
+          },
+        }),
+      )
+      .apply(
+        createRelationships(ProjectMember, {
+          in: { member: variable('project') },
+          out: { user: ['User', newDirector] },
+        }),
+      )
+      .return<{ id: ID }>('project.id as id')
+      .run();
+    return {
+      projects: result.map(({ id }) => id) as readonly ID[],
+      timestampId: now,
+    };
   }
 }
 
