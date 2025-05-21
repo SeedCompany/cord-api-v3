@@ -1,12 +1,11 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { type MaybeAsync } from '@seedcompany/common';
-import { difference } from 'lodash';
+import { type MaybeAsync, setOf } from '@seedcompany/common';
 import {
   type ID,
   InputException,
   NotFoundException,
   type ObjectView,
-  type Role,
+  Role,
   ServerException,
   UnauthorizedException,
   type UnsecuredDto,
@@ -105,6 +104,18 @@ export class ProjectMemberService {
     return this.secure(updated);
   }
 
+  getAvailableRoles(user: User) {
+    const availableRoles = (user.roles.value ?? []).flatMap((role: Role) =>
+      Object.values(Role.Hierarchies)
+        .flatMap((hierarchy: Role[]) => {
+          const idx = hierarchy.indexOf(role);
+          return idx > -1 ? hierarchy.slice(0, idx) : [];
+        })
+        .concat(role),
+    );
+    return setOf(availableRoles);
+  }
+
   private async assertValidRoles(
     roles: readonly Role[] | undefined,
     forUser: () => MaybeAsync<User>,
@@ -113,10 +124,10 @@ export class ProjectMemberService {
       return;
     }
     const user = await forUser();
-    const availableRoles = user.roles.value ?? [];
-    const forbiddenRoles = difference(roles, availableRoles);
-    if (forbiddenRoles.length) {
-      const forbiddenRolesStr = forbiddenRoles.join(', ');
+    const availableRoles = this.getAvailableRoles(user);
+    const forbiddenRoles = setOf(roles).difference(availableRoles);
+    if (forbiddenRoles.size > 0) {
+      const forbiddenRolesStr = [...forbiddenRoles].join(', ');
       throw new InputException(
         `Role(s) ${forbiddenRolesStr} cannot be assigned to this project member`,
         'input.roles',
