@@ -1,7 +1,11 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { type ParentIdMiddlewareAdditions } from '~/common';
-import { EngagementStatusTransition, SecuredEngagementStatus } from './dto';
+import { Grandparent } from '~/common';
+import {
+  type Engagement,
+  EngagementStatusTransition,
+  SecuredEngagementStatus,
+} from './dto';
 import { EngagementRules } from './engagement.rules';
 
 @Resolver(SecuredEngagementStatus)
@@ -12,15 +16,15 @@ export class EngagementStatusResolver {
     description: 'The available statuses a engagement can be transitioned to.',
   })
   async transitions(
-    @Parent()
-    status: SecuredEngagementStatus & ParentIdMiddlewareAdditions,
+    @Grandparent() eng: Engagement,
+    @Parent() status: SecuredEngagementStatus,
   ): Promise<EngagementStatusTransition[]> {
     if (!status.canRead || !status.canEdit || !status.value) {
       return [];
     }
     return await this.engagementRules.getAvailableTransitions(
-      status.parentId,
-      status.changeset,
+      eng.id,
+      eng.changeset,
     );
   }
 
