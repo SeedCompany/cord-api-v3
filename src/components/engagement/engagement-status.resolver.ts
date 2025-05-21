@@ -20,7 +20,6 @@ export class EngagementStatusResolver {
     }
     return await this.engagementRules.getAvailableTransitions(
       status.parentId,
-      undefined,
       status.changeset,
     );
   }
@@ -31,7 +30,7 @@ export class EngagementStatusResolver {
       and change the status to any other status?
    `,
   })
-  async canBypassTransitions(): Promise<boolean> {
-    return await this.engagementRules.canBypassWorkflow();
+  canBypassTransitions(): boolean {
+    return this.engagementRules.canBypassWorkflow();
   }
 }

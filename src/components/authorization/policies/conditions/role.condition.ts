@@ -1,6 +1,5 @@
 import { inspect } from 'util';
 import { type Role } from '~/common';
-import { withoutScope } from '../../dto';
 import {
   type AsEdgeQLParams,
   type Condition,
@@ -13,7 +12,7 @@ export class RoleCondition implements Condition {
   constructor(readonly allowed: ReadonlySet<Role>) {}
 
   isAllowed({ session }: IsAllowedParams<any>) {
-    const given = session.roles.map(withoutScope);
+    const given = session.roles.values();
     return given.some((role) => this.allowed.has(role));
   }
 

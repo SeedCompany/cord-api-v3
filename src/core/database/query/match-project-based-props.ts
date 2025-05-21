@@ -1,11 +1,8 @@
 import { oneLine } from 'common-tags';
 import { node, type Query, relation } from 'cypher-query-builder';
-import { type Sensitivity } from '~/common';
+import { type Role, type Sensitivity } from '~/common';
 import { type QueryFragment } from '~/core/database/query';
-import {
-  type GlobalScopedRole,
-  type ScopedRole,
-} from '../../../components/authorization/dto';
+import { type ScopedRole } from '../../../components/authorization/dto';
 import { ProjectType } from '../../../components/project/dto/project-type.enum';
 import {
   apoc,
@@ -156,14 +153,8 @@ export const matchUserGloballyScopedRoles =
           relation('out', '', 'roles', ACTIVE),
           node('role', 'Property'),
         ])
-        .return<{ [K in Output]: readonly GlobalScopedRole[] }>(
-          reduce(
-            'scopedRoles',
-            [],
-            apoc.coll.flatten(collect('role.value')),
-            'role',
-            listConcat('scopedRoles', [`"global:" + role`]),
-          ).as(outputVar),
+        .return<{ [K in Output]: readonly Role[] }>(
+          apoc.coll.flatten(collect('role.value')).as(outputVar),
         ),
     );
 
