@@ -50,6 +50,18 @@ export const Role = makeEnum({
         'RegionalDirector',
         'FieldOperationsDirector',
       ]),
+
+      /**
+       * Named hierarchies of roles, ordered ascending.
+       */
+      Hierarchies: {
+        Finance: ['FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller'],
+        Field: [
+          'ProjectManager',
+          'RegionalDirector',
+          'FieldOperationsDirector',
+        ],
+      } satisfies Record<string, Role[]>,
     };
   },
 });
