@@ -3,6 +3,7 @@ import {
   FilterField,
   type ID,
   ListField,
+  OptionalField,
   PaginatedList,
   Role,
   SecuredList,
@@ -18,6 +19,9 @@ export abstract class ProjectMemberFilters {
     empty: 'omit',
   })
   readonly roles?: readonly Role[];
+
+  @OptionalField()
+  readonly active?: boolean;
 
   readonly projectId?: ID;
 }
