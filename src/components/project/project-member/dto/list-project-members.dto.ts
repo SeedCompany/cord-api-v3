@@ -8,6 +8,7 @@ import {
   SecuredList,
   SortablePaginationInput,
 } from '~/common';
+import { UserFilters } from '../../../user/dto';
 import { ProjectFilters } from '../../dto';
 import { ProjectMember } from './project-member.dto';
 
@@ -25,6 +26,9 @@ export abstract class ProjectMemberFilters {
 
   @FilterField(() => ProjectFilters)
   readonly project?: ProjectFilters & {};
+
+  @FilterField(() => UserFilters)
+  readonly user?: UserFilters & {};
 }
 
 @InputType()

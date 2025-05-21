@@ -23,7 +23,7 @@ import {
   sorting,
 } from '~/core/database/query';
 import { type FilterFn } from '~/core/database/query/filters';
-import { UserRepository } from '../../user/user.repository';
+import { userFilters, UserRepository } from '../../user/user.repository';
 import { type ProjectFilters } from '../dto';
 import { projectFilters } from '../project-filters.query';
 import {
@@ -190,6 +190,13 @@ export const projectMemberFilters = filter.define(() => ProjectMemberFilters, {
       node('node', 'Project'),
       relation('out', '', 'member', ACTIVE),
       node('outer'),
+    ]),
+  ),
+  user: filter.sub(() => userFilters)((sub) =>
+    sub.match([
+      node('outer'),
+      relation('out', '', 'user'),
+      node('node', 'User'),
     ]),
   ),
   roles: filter.intersectsProp(),
