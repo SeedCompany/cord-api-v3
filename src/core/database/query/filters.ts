@@ -112,6 +112,10 @@ export const propVal =
     return { [prop ?? key]: cond };
   };
 
+export const baseNodeProp =
+  <T>(prop?: string): Builder<T> =>
+  ({ key, value }) => ({ [`node.${prop ?? key}`]: value });
+
 export const propPartialVal =
   <T, K extends ConditionalKeys<Required<T>, string>>(
     prop?: string,

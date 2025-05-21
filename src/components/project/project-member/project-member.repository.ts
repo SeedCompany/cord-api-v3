@@ -161,7 +161,7 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
     return result!; // result from paginate() will always have 1 row.
   }
 
-  async listAsNotifiers(projectId: ID, roles?: Role[]) {
+  async listAsNotifiers(project: ID<'Project'>, roles?: Role[]) {
     return await this.db
       .query()
       .match([
@@ -169,7 +169,7 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
         relation('out', '', 'user', ACTIVE),
         node('user', 'User'),
       ])
-      .apply(projectMemberFilters({ projectId, roles }))
+      .apply(projectMemberFilters({ project: { id: project }, roles }))
       .with('user')
       .optionalMatch([
         node('user'),
@@ -185,11 +185,6 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
 }
 
 export const projectMemberFilters = filter.define(() => ProjectMemberFilters, {
-  projectId: filter.pathExists((id) => [
-    node('', 'Project', { id }),
-    relation('out', '', 'member', ACTIVE),
-    node('node'),
-  ]),
   project: filter.sub((): FilterFn<ProjectFilters> => projectFilters)((sub) =>
     sub.match([
       node('node', 'Project'),
