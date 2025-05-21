@@ -22,7 +22,10 @@ import {
   paginate,
   sorting,
 } from '~/core/database/query';
+import { type FilterFn } from '~/core/database/query/filters';
 import { UserRepository } from '../../user/user.repository';
+import { type ProjectFilters } from '../dto';
+import { projectFilters } from '../project-filters.query';
 import {
   type CreateProjectMember,
   ProjectMember,
@@ -187,6 +190,13 @@ export const projectMemberFilters = filter.define(() => ProjectMemberFilters, {
     relation('out', '', 'member', ACTIVE),
     node('node'),
   ]),
+  project: filter.sub((): FilterFn<ProjectFilters> => projectFilters)((sub) =>
+    sub.match([
+      node('node', 'Project'),
+      relation('out', '', 'member', ACTIVE),
+      node('outer'),
+    ]),
+  ),
   roles: filter.intersectsProp(),
   active: filter.isPropNotNull('inactiveAt'),
 });
