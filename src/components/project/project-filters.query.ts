@@ -16,6 +16,7 @@ import {
 import { locationFilters } from '../location/location.repository';
 import { partnershipFilters } from '../partnership/partnership.repository';
 import { ProjectFilters } from './dto';
+import { projectMemberFilters } from './project-member/project-member.repository';
 import { ProjectNameIndex } from './project.repository';
 
 export const projectFilters = filter.define(() => ProjectFilters, {
@@ -56,6 +57,22 @@ export const projectFilters = filter.define(() => ProjectFilters, {
     relation('in', '', 'member'),
     node('node'),
   ]),
+  membership: filter.sub(() => projectMemberFilters)((sub) =>
+    sub.match([
+      currentUser,
+      relation('in', '', 'user'),
+      node('node', 'ProjectMember'),
+      relation('in', '', 'member'),
+      node('outer'),
+    ]),
+  ),
+  members: filter.sub(() => projectMemberFilters)((sub) =>
+    sub.match([
+      node('node', 'ProjectMember'),
+      relation('in', '', 'member'),
+      node('outer'),
+    ]),
+  ),
   userId: ({ value }) => ({
     userId: [
       // TODO We can leak if the project includes this person, if the
