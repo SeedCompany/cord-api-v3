@@ -33,7 +33,7 @@ export const projectFilters = filter.define(() => ProjectFilters, {
     currentUser,
     relation('in', '', 'user'),
     node('', 'ProjectMember'),
-    relation('in', '', 'member'),
+    relation('in', '', 'member', ACTIVE),
     node('node'),
   ]),
   languageId: filter.pathExists((id) => [
@@ -54,7 +54,7 @@ export const projectFilters = filter.define(() => ProjectFilters, {
     currentUser,
     relation('in', '', 'user'),
     node('', 'ProjectMember'),
-    relation('in', '', 'member'),
+    relation('in', '', 'member', ACTIVE),
     node('node'),
   ]),
   membership: filter.sub(() => projectMemberFilters)((sub) =>
@@ -62,14 +62,14 @@ export const projectFilters = filter.define(() => ProjectFilters, {
       currentUser,
       relation('in', '', 'user'),
       node('node', 'ProjectMember'),
-      relation('in', '', 'member'),
+      relation('in', '', 'member', ACTIVE),
       node('outer'),
     ]),
   ),
   members: filter.sub(() => projectMemberFilters)((sub) =>
     sub.match([
       node('node', 'ProjectMember'),
-      relation('in', '', 'member'),
+      relation('in', '', 'member', ACTIVE),
       node('outer'),
     ]),
   ),
