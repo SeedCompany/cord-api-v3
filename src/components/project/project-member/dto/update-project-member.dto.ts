@@ -1,7 +1,8 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { type ID, IdField, ListField, Role } from '~/common';
+import { type DateTime } from 'luxon';
+import { DateTimeField, type ID, IdField, ListField, Role } from '~/common';
 import { ProjectMember } from './project-member.dto';
 
 @InputType()
@@ -11,6 +12,11 @@ export abstract class UpdateProjectMember {
 
   @ListField(() => Role, { optional: true })
   readonly roles?: readonly Role[];
+
+  @DateTimeField({
+    nullable: true,
+  })
+  readonly inactiveAt?: DateTime | null;
 }
 
 @InputType()
