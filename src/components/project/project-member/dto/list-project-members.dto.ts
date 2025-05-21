@@ -1,13 +1,15 @@
 import { InputType, ObjectType } from '@nestjs/graphql';
 import {
   FilterField,
-  type ID,
   ListField,
+  OptionalField,
   PaginatedList,
   Role,
   SecuredList,
   SortablePaginationInput,
 } from '~/common';
+import { UserFilters } from '../../../user/dto';
+import { ProjectFilters } from '../../dto';
 import { ProjectMember } from './project-member.dto';
 
 @InputType()
@@ -19,7 +21,14 @@ export abstract class ProjectMemberFilters {
   })
   readonly roles?: readonly Role[];
 
-  readonly projectId?: ID;
+  @OptionalField()
+  readonly active?: boolean;
+
+  @FilterField(() => ProjectFilters)
+  readonly project?: ProjectFilters & {};
+
+  @FilterField(() => UserFilters)
+  readonly user?: UserFilters & {};
 }
 
 @InputType()

@@ -389,6 +389,7 @@ export class UserRepository extends DtoRepository(User) {
 }
 
 export const userFilters = filter.define(() => UserFilters, {
+  id: filter.baseNodeProp(),
   pinned: filter.isPinned,
   name: filter.fullText({
     index: () => NameIndex,
