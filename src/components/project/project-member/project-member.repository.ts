@@ -90,6 +90,7 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
           initialProps: {
             roles: input.roles ?? [],
             modifiedAt: DateTime.local(),
+            inactiveAt: input.inactiveAt ?? null,
           },
         }),
       )
