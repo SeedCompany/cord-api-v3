@@ -1,7 +1,6 @@
 import { InputType, ObjectType } from '@nestjs/graphql';
 import {
   FilterField,
-  type ID,
   ListField,
   OptionalField,
   PaginatedList,
@@ -26,8 +25,6 @@ export abstract class ProjectMemberFilters {
 
   @FilterField(() => ProjectFilters)
   readonly project?: ProjectFilters & {};
-
-  readonly projectId?: ID;
 }
 
 @InputType()

@@ -496,18 +496,24 @@ export class EngagementRepository extends CommonRepository {
       .subQuery((sub) =>
         sub
           .match([
-            node('project', 'Project', pickBy({ id: input.filter?.projectId })),
+            node(
+              'project',
+              'Project',
+              pickBy({ id: input.filter?.project?.id }),
+            ),
             relation('out', '', 'engagement', ACTIVE),
             node('node', 'Engagement'),
           ])
           .apply(whereNotDeletedInChangeset(changeset))
           .return(['node', 'project'])
           .apply((q) =>
-            changeset && input.filter?.projectId
+            changeset && input.filter?.project?.id
               ? q
                   .union()
                   .match([
-                    node('project', 'Project', { id: input.filter.projectId }),
+                    node('project', 'Project', {
+                      id: input.filter.project?.id,
+                    }),
                     relation('out', '', 'engagement', INACTIVE),
                     node('node', 'Engagement'),
                     relation('in', '', 'changeset', ACTIVE),
@@ -739,11 +745,6 @@ export const engagementFilters = filter.define(() => EngagementFilters, {
     ),
   }),
   status: filter.stringListProp(),
-  projectId: filter.pathExists((id) => [
-    node('node'),
-    relation('in', '', 'engagement'),
-    node('project', 'Project', { id }),
-  ]),
   partnerId: filter.pathExists((id) => [
     node('node'),
     relation('in', '', 'engagement'),

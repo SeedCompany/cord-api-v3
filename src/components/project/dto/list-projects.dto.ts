@@ -29,6 +29,8 @@ import {
 
 @InputType()
 export abstract class ProjectFilters {
+  readonly id?: ID<'Project'>;
+
   @OptionalField()
   readonly name?: string;
 

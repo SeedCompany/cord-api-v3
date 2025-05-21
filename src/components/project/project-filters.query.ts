@@ -20,6 +20,7 @@ import { projectMemberFilters } from './project-member/project-member.repository
 import { ProjectNameIndex } from './project.repository';
 
 export const projectFilters = filter.define(() => ProjectFilters, {
+  id: filter.baseNodeProp(),
   type: filter.stringListBaseNodeProp(),
   pinned: filter.isPinned,
   status: filter.stringListProp(),
