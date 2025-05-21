@@ -5,7 +5,7 @@ import {
   InputException,
   NotFoundException,
   type ObjectView,
-  type Role,
+  Role,
   ServerException,
   UnauthorizedException,
   type UnsecuredDto,
@@ -105,7 +105,14 @@ export class ProjectMemberService {
   }
 
   getAvailableRoles(user: User) {
-    const availableRoles = user.roles.value ?? [];
+    const availableRoles = (user.roles.value ?? []).flatMap((role: Role) =>
+      Object.values(Role.Hierarchies)
+        .flatMap((hierarchy: Role[]) => {
+          const idx = hierarchy.indexOf(role);
+          return idx > -1 ? hierarchy.slice(0, idx) : [];
+        })
+        .concat(role),
+    );
     return setOf(availableRoles);
   }
 
