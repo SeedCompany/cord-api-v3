@@ -189,4 +189,5 @@ export const projectMemberFilters = filter.define(() => ProjectMemberFilters, {
     node('node'),
   ]),
   roles: filter.intersectsProp(),
+  active: filter.isPropNotNull('inactiveAt'),
 });
