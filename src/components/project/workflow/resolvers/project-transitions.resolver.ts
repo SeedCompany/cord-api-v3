@@ -1,10 +1,8 @@
 import { Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
-import { Loader, type LoaderOf } from '@seedcompany/data-loader';
 import { stripIndent } from 'common-tags';
-import { type ParentIdMiddlewareAdditions, viewOfChangeset } from '~/common';
+import { Grandparent } from '~/common';
 import { SerializedWorkflow } from '../../../workflow/dto';
-import { SecuredProjectStep } from '../../dto';
-import { ProjectLoader } from '../../project.loader';
+import { type Project, SecuredProjectStep } from '../../dto';
 import { ProjectWorkflowTransition } from '../dto';
 import { ProjectWorkflowService } from '../project-workflow.service';
 
@@ -22,16 +20,12 @@ export class ProjectTransitionsResolver {
       'The transitions currently available to execute for this project',
   })
   async transitions(
-    @Parent() status: SecuredProjectStep & ParentIdMiddlewareAdditions,
-    @Loader(ProjectLoader) projects: LoaderOf<ProjectLoader>,
+    @Grandparent() project: Project,
+    @Parent() status: SecuredProjectStep,
   ): Promise<readonly ProjectWorkflowTransition[]> {
     if (!status.canRead || !status.value) {
       return [];
     }
-    const project = await projects.load({
-      id: status.parentId,
-      view: viewOfChangeset(status.changeset),
-    });
     return await this.workflow.getAvailableTransitions(project);
   }
 

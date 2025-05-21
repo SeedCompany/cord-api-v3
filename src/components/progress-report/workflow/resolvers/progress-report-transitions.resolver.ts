@@ -1,6 +1,5 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { type ParentIdMiddlewareAdditions } from '~/common';
 import { SecuredProgressReportStatus } from '../../dto';
 import { ProgressReportWorkflowTransition } from '../dto/workflow-transition.dto';
 import { ProgressReportWorkflowService } from '../progress-report-workflow.service';
@@ -13,7 +12,7 @@ export class ProgressReportTransitionsResolver {
     description: 'The available statuses the report can be transitioned to.',
   })
   async transitions(
-    @Parent() status: SecuredProgressReportStatus & ParentIdMiddlewareAdditions,
+    @Parent() status: SecuredProgressReportStatus,
   ): Promise<ProgressReportWorkflowTransition[]> {
     if (!status.canRead || !status.value) {
       return [];

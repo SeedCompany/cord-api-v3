@@ -7,8 +7,8 @@ import {
   DateTimeField,
   DbLabel,
   type DBNames,
+  Grandparent,
   IntersectTypes,
-  parentIdMiddleware,
   RequiredWhen,
   Resource,
   type ResourceRelationsShape,
@@ -91,7 +91,7 @@ class Engagement extends Interfaces {
   }>;
 
   @Field(() => SecuredEngagementStatus, {
-    middleware: [parentIdMiddleware],
+    middleware: [Grandparent.store],
   })
   @DbLabel('EngagementStatus')
   readonly status: SecuredEngagementStatus;
