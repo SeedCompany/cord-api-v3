@@ -6,6 +6,7 @@ import {
   type UnsecuredDto,
 } from '~/common';
 import { HandleIdLookup } from '~/core';
+import { IEventBus } from '~/core/events';
 import { Privileges } from '../authorization';
 import {
   type CreateFieldZone,
@@ -14,12 +15,14 @@ import {
   type FieldZoneListOutput,
   type UpdateFieldZone,
 } from './dto';
+import { FieldZoneUpdatedEvent } from './events/field-zone-updated.event';
 import { FieldZoneRepository } from './field-zone.repository';
 
 @Injectable()
 export class FieldZoneService {
   constructor(
     private readonly privileges: Privileges,
+    private readonly events: IEventBus,
     private readonly repo: FieldZoneRepository,
   ) {}
 
@@ -50,7 +53,18 @@ export class FieldZoneService {
     const changes = this.repo.getActualChanges(fieldZone, input);
     this.privileges.for(FieldZone, fieldZone).verifyChanges(changes);
 
+    if (Object.keys(changes).length === 0) {
+      return this.secure(fieldZone);
+    }
+
     const updated = await this.repo.update({ id: input.id, ...changes });
+
+    const event = new FieldZoneUpdatedEvent(fieldZone, updated, {
+      id: input.id,
+      ...changes,
+    });
+    await this.events.publish(event);
+
     return this.secure(updated);
   }
 

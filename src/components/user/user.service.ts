@@ -11,7 +11,7 @@ import {
 import { HandleIdLookup, ILogger, Logger } from '~/core';
 import { Identity } from '~/core/authentication';
 import { Transactional } from '~/core/database';
-import { property } from '~/core/database/query';
+import { IEventBus } from '~/core/events';
 import { Privileges } from '../authorization';
 import { AssignableRoles } from '../authorization/dto/assignable-roles.dto';
 import { LocationService } from '../location';
@@ -42,6 +42,7 @@ import {
   type EducationListInput,
   type SecuredEducationList,
 } from './education/dto';
+import { UserUpdatedEvent } from './events/user-updated.event';
 import { KnownLanguageRepository } from './known-language.repository';
 import { UnavailabilityService } from './unavailability';
 import {
@@ -62,15 +63,10 @@ export class UserService {
     private readonly locationService: LocationService,
     private readonly knownLanguages: KnownLanguageRepository,
     private readonly identity: Identity,
+    private readonly events: IEventBus,
     private readonly userRepo: UserRepository,
     @Logger('user:service') private readonly logger: ILogger,
   ) {}
-
-  roleProperties = (roles?: Role[]) => {
-    return (roles || []).flatMap((role) =>
-      property('roles', role, 'user', `role${role}`),
-    );
-  };
 
   async create(input: CreatePerson): Promise<ID> {
     if (
@@ -117,20 +113,29 @@ export class UserService {
   @Transactional()
   async update(input: UpdateUser): Promise<User> {
     this.logger.debug('mutation update User', { input });
-    const user = await this.readOne(input.id);
+    const user = await this.userRepo.readOne(input.id);
 
     const changes = this.userRepo.getActualChanges(user, input);
 
     this.privileges.for(User, user).verifyChanges(changes);
 
+    if (Object.keys(changes).length === 0) {
+      return this.secure(user);
+    }
+
     if (changes.roles) {
       this.verifyRolesAreAssignable(changes.roles);
     }
 
-    const updated = await this.userRepo.update({
+    input = {
       id: user.id,
       ...changes,
-    });
+    };
+    const updated = await this.userRepo.update(input);
+
+    const event = new UserUpdatedEvent(user, updated, input);
+    await this.events.publish(event);
+
     return this.secure(updated);
   }
 
