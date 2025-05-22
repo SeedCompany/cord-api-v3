@@ -7,6 +7,7 @@ import { BudgetModule } from './components/budget/budget.module';
 import { CeremonyModule } from './components/ceremony/ceremony.module';
 import { ChangesetModule } from './components/changeset/changeset.module';
 import { CommentModule } from './components/comments/comment.module';
+import { DBLUploadNotificationModule } from './components/dbl-upload-notification/dbl-upload-notification.module';
 import { EngagementModule } from './components/engagement/engagement.module';
 import { EthnoArtModule } from './components/ethno-art/ethno-art.module';
 import { FieldRegionModule } from './components/field-region/field-region.module';
@@ -90,6 +91,7 @@ if (process.env.NODE_ENV !== 'production') {
     NotificationModule,
     SystemNotificationModule,
     FinanceDepartmentModule,
+    DBLUploadNotificationModule,
   ],
 })
 export class AppModule {}
