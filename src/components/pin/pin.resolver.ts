@@ -1,32 +1,28 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import {
-  AnonSession,
-  type ID,
-  IdArg,
-  ListArg,
-  NotImplementedException,
-  type Session,
-} from '~/common';
+import { type ID, IdArg, ListArg, NotImplementedException } from '~/common';
+import { Identity } from '~/core/authentication';
 import { PinnedListInput, type PinnedListOutput } from './dto';
 import { PinService } from './pin.service';
 
 @Resolver()
 export class PinResolver {
-  constructor(readonly pins: PinService) {}
+  constructor(
+    private readonly pins: PinService,
+    private readonly identity: Identity,
+  ) {}
 
   @Query(() => Boolean, {
     description:
       'Returns whether or not the requesting user has pinned the resource ID',
   })
   async isPinned(
-    @AnonSession() session: Session,
     @IdArg({
       description: 'A resource ID',
     })
     id: ID,
   ): Promise<boolean> {
     // TODO move to DB layer?
-    if (session.anonymous) {
+    if (this.identity.isAnonymous) {
       return false;
     }
     return await this.pins.isPinned(id);

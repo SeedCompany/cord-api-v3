@@ -6,7 +6,6 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { AnonSession, type Session } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { Privileges } from '../authorization';
 import { Power } from '../authorization/dto';
@@ -15,11 +14,13 @@ import { User } from '../user/dto';
 import { Anonymous } from './anonymous.decorator';
 import { AuthenticationService } from './authentication.service';
 import { LoginInput, LoginOutput, LogoutOutput } from './dto';
+import { SessionHost } from './session.host';
 
 @Resolver(LoginOutput)
 export class LoginResolver {
   constructor(
     private readonly authentication: AuthenticationService,
+    private readonly sessionHost: SessionHost,
     private readonly privileges: Privileges,
   ) {}
 
@@ -43,7 +44,8 @@ export class LoginResolver {
     `,
   })
   @Anonymous()
-  async logout(@AnonSession() session: Session): Promise<LogoutOutput> {
+  async logout(): Promise<LogoutOutput> {
+    const session = this.sessionHost.current;
     await this.authentication.logout(session.token);
     await this.authentication.refreshCurrentSession(); // ensure session data is fresh
     return { success: true };

@@ -1,11 +1,11 @@
-import { Inject, Injectable, type Type } from '@nestjs/common';
+import { Injectable, type Type } from '@nestjs/common';
 import {
   DataLoaderContext,
   type DataLoaderStrategy,
 } from '@seedcompany/data-loader';
 import type { ConditionalKeys, Merge, ValueOf } from 'type-fest';
 import { type ID, type Many, type ObjectView, ServerException } from '~/common';
-import type { AuthenticationService } from '../../components/authentication';
+import { Identity } from '../authentication';
 import { ConfigService } from '../config/config.service';
 import { type BaseNode } from '../database/results';
 import { GqlContextHost } from '../graphql';
@@ -44,7 +44,7 @@ export class ResourceLoader {
     private readonly loaderRegistry: ResourceLoaderRegistry,
     private readonly contextHost: GqlContextHost,
     private readonly config: ConfigService,
-    @Inject('AUTHENTICATION') private readonly auth: AuthenticationService & {},
+    private readonly identity: Identity,
     private readonly loaderContext: DataLoaderContext,
     private readonly resourceResolver: ResourceResolver,
   ) {}
@@ -111,13 +111,12 @@ export class ResourceLoader {
     type: Type<DataLoaderStrategy<T, Key, CachedKey>>,
   ) {
     if (this.config.isCli) {
-      // Ensure the default root session is ready to go for data loaders
-      await this.auth.lazySessionForRootUser();
+      await this.identity.readyForCli();
     }
-    return await this.loaderContext.getLoader<T, Key, CachedKey>(
-      type,
-      this.config.isCli ? CLI_CONTEXT_ID : this.contextHost.context,
-    );
+    const context = this.config.isCli
+      ? CLI_CONTEXT_ID
+      : this.contextHost.context;
+    return await this.loaderContext.getLoader<T, Key, CachedKey>(type, context);
   }
 
   private findLoaderFactory(type: Many<keyof ResourceMap | SomeResourceType>) {

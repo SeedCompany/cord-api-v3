@@ -1,7 +1,7 @@
 import { forwardRef, Global, Module } from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
-import { SessionPipe } from '~/common/session';
 import { splitDb } from '~/core';
+import { Identity } from '~/core/authentication';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { UserModule } from '../user/user.module';
 import { AuthenticationGelRepository } from './authentication.gel.repository';
@@ -34,6 +34,7 @@ import { SessionResolver } from './session.resolver';
     SessionExtraInfoResolver,
     LoginExtraInfoResolver,
     RegisterExtraInfoResolver,
+    Identity,
     AuthenticationService,
     splitDb(AuthenticationRepository, AuthenticationGelRepository),
     { provide: 'AUTHENTICATION', useExisting: AuthenticationService },
@@ -41,9 +42,9 @@ import { SessionResolver } from './session.resolver';
     SessionInterceptor,
     { provide: APP_INTERCEPTOR, useExisting: SessionInterceptor },
     { provide: SessionHost, useClass: SessionHostImpl },
-    SessionPipe,
   ],
   exports: [
+    Identity,
     SessionHost,
     SessionInterceptor,
     AuthenticationService,

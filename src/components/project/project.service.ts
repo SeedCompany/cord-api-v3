@@ -20,11 +20,10 @@ import {
   UnauthorizedException,
   type UnsecuredDto,
 } from '~/common';
-import { isAdmin } from '~/common/session';
 import { HandleIdLookup, IEventBus } from '~/core';
+import { Identity } from '~/core/authentication';
 import { Transactional } from '~/core/database';
 import { type AnyChangesOf } from '~/core/database/changes';
-import { SessionHost } from '../authentication';
 import { Privileges } from '../authorization';
 import { withoutScope } from '../authorization/dto';
 import { BudgetService } from '../budget';
@@ -89,7 +88,7 @@ export class ProjectService {
     @Inject(forwardRef(() => EngagementService))
     private readonly engagementService: EngagementService & {},
     private readonly privileges: Privileges,
-    private readonly sessionHost: SessionHost,
+    private readonly identity: Identity,
     private readonly eventBus: IEventBus,
     private readonly repo: ProjectRepository,
     private readonly projectChangeRequests: ProjectChangeRequestService,
@@ -137,8 +136,7 @@ export class ProjectService {
     );
 
     // Only allow admins to specify department IDs
-    const session = this.sessionHost.current;
-    if (input.departmentId && !isAdmin(session.impersonator ?? session)) {
+    if (input.departmentId && !this.identity.isImpersonatorAdmin) {
       throw UnauthorizedException.fromPrivileges(
         'edit',
         undefined,
@@ -158,6 +156,7 @@ export class ProjectService {
       RequiredWhen.verify(IProject, project);
 
       // Add creator to the project team with their global roles
+      const session = this.identity.current;
       await this.projectMembers.create(
         {
           userId: session.userId,
@@ -252,10 +251,9 @@ export class ProjectService {
       );
 
     // Only allow admins to specify department IDs
-    const session = this.sessionHost.current;
     if (
       input.departmentId !== undefined &&
-      !isAdmin(session.impersonator ?? session)
+      !this.identity.isImpersonatorAdmin
     ) {
       throw UnauthorizedException.fromPrivileges(
         'edit',

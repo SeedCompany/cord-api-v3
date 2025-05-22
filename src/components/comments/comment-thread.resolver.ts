@@ -1,8 +1,8 @@
 import { Args, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { AnonSession, type ID, IdArg, ListArg, type Session } from '~/common';
-import { loggedInSession as verifyLoggedIn } from '~/common/session';
+import { type ID, IdArg, ListArg } from '~/common';
 import { Loader, type LoaderOf, ResourceLoader } from '~/core';
+import { Identity } from '~/core/authentication';
 import { UserLoader } from '../user';
 import { User } from '../user/dto';
 import { CommentThreadLoader } from './comment-thread.loader';
@@ -23,6 +23,7 @@ export class CommentThreadResolver {
   constructor(
     private readonly service: CommentService,
     private readonly resources: ResourceLoader,
+    private readonly identity: Identity,
   ) {}
 
   @Query(() => CommentThread, {
@@ -41,11 +42,10 @@ export class CommentThreadResolver {
   async commentThreads(
     @IdArg({ name: 'resource' }) resourceId: ID,
     @ListArg(CommentThreadListInput) input: CommentThreadListInput,
-    @AnonSession() session: Session,
     @Loader(CommentThreadLoader) commentThreads: LoaderOf<CommentThreadLoader>,
   ): Promise<CommentThreadList> {
     // TODO move to auth policy
-    verifyLoggedIn(session);
+    this.identity.verifyLoggedIn();
     const resource = await this.service.loadCommentable(resourceId);
     const list = await this.service.listThreads(resource, input);
     commentThreads.primeAll(list.items);

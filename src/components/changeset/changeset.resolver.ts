@@ -1,12 +1,7 @@
 import { Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
-import {
-  AnonSession,
-  type ID,
-  IdArg,
-  type ObjectView,
-  type Session,
-} from '~/common';
+import { type ID, IdArg, type ObjectView } from '~/common';
 import { ResourceLoader } from '~/core';
+import { Identity } from '~/core/authentication';
 import { type BaseNode } from '~/core/database/results';
 import { ChangesetRepository } from './changeset.repository';
 import { Changeset, ChangesetDiff, type ResourceChange } from './dto';
@@ -16,6 +11,7 @@ export class ChangesetResolver {
   constructor(
     private readonly repo: ChangesetRepository,
     private readonly resources: ResourceLoader,
+    private readonly identity: Identity,
   ) {}
 
   @Query(() => Changeset)
@@ -28,7 +24,6 @@ export class ChangesetResolver {
   })
   async difference(
     @Parent() changeset: Changeset,
-    @AnonSession() session: Session,
     @IdArg({
       name: 'resource',
       nullable: true,
@@ -38,7 +33,7 @@ export class ChangesetResolver {
     parent?: ID,
   ): Promise<ChangesetDiff> {
     // TODO move to auth policy
-    if (session.anonymous) {
+    if (this.identity.isAnonymous) {
       return { added: [], removed: [], changed: [] };
     }
 

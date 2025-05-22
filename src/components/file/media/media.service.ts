@@ -9,7 +9,7 @@ import {
   ServerException,
   UnauthorizedException,
 } from '~/common';
-import { IEventBus } from '~/core';
+import { IEventBus } from '~/core/events';
 import { type FileVersion } from '../dto';
 import { CanUpdateMediaUserMetadataEvent } from './events/can-update-event';
 import { MediaDetector } from './media-detector.service';

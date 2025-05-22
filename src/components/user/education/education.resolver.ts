@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { Args, Mutation, Query } from '@nestjs/graphql';
+import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { type ID, IdArg, ListArg } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { EducationLoader, EducationService } from '../education';
@@ -14,7 +13,7 @@ import {
   UpdateEducationOutput,
 } from './dto';
 
-@Injectable()
+@Resolver()
 export class EducationResolver {
   constructor(private readonly service: EducationService) {}
 

@@ -9,9 +9,9 @@ import {
   type UnsecuredDto,
 } from '~/common';
 import { HandleIdLookup, ILogger, Logger } from '~/core';
+import { Identity } from '~/core/authentication';
 import { Transactional } from '~/core/database';
 import { property } from '~/core/database/query';
-import { SessionHost } from '../authentication/session.host';
 import { Privileges } from '../authorization';
 import { AssignableRoles } from '../authorization/dto/assignable-roles.dto';
 import { LocationService } from '../location';
@@ -61,7 +61,7 @@ export class UserService {
     private readonly privileges: Privileges,
     private readonly locationService: LocationService,
     private readonly knownLanguages: KnownLanguageRepository,
-    private readonly sessionHost: SessionHost,
+    private readonly identity: Identity,
     private readonly userRepo: UserRepository,
     @Logger('user:service') private readonly logger: ILogger,
   ) {}
@@ -77,7 +77,7 @@ export class UserService {
       input.roles &&
       input.roles.length > 0 &&
       // Note: session is only omitted for creating RootUser
-      this.sessionHost.currentIfInCtx
+      this.identity.currentIfInCtx
     ) {
       this.verifyRolesAreAssignable(input.roles);
     }

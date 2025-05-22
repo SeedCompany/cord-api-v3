@@ -256,6 +256,17 @@ export class AuthenticationService {
     return session;
   }
 
+  asRole<R>(role: Role, fn: () => R): R {
+    const session: Session = {
+      token: 'system',
+      issuedAt: DateTime.now(),
+      userId: 'anonymous' as ID,
+      anonymous: false,
+      roles: [`global:${role}`],
+    };
+    return this.sessionHost.withSession(session, fn);
+  }
+
   async changePassword(
     oldPassword: string,
     newPassword: string,

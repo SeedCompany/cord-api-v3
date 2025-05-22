@@ -10,7 +10,7 @@ import {
   Response,
 } from '@nestjs/common';
 import { type ID } from '~/common';
-import { loggedInSession as verifyLoggedIn } from '~/common/session';
+import { Identity } from '~/core/authentication';
 import { HttpAdapter, type IRequest, type IResponse } from '~/core/http';
 import { SessionInterceptor } from '../authentication/session.interceptor';
 import { FileService } from './file.service';
@@ -23,6 +23,7 @@ export class FileUrlController {
     @Inject(forwardRef(() => FileService))
     private readonly files: FileService & {},
     private readonly sessionHost: SessionInterceptor,
+    private readonly identity: Identity,
     private readonly http: HttpAdapter,
   ) {}
 
@@ -37,7 +38,7 @@ export class FileUrlController {
 
     if (!node.public) {
       const session = await this.sessionHost.hydrateSession({ request });
-      verifyLoggedIn(session);
+      this.identity.verifyLoggedIn(session);
     }
 
     // TODO authorization using session

@@ -8,7 +8,6 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import {
-  AnonSession,
   firstLettersOfWords,
   type ID,
   IdArg,
@@ -16,9 +15,9 @@ import {
   ListArg,
   NotFoundException,
   ReadAfterCreationFailed,
-  type Session,
 } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
+import { Identity } from '~/core/authentication';
 import { LocationLoader } from '../location';
 import { LocationListInput, SecuredLocationList } from '../location/dto';
 import { OrganizationLoader } from '../organization';
@@ -72,6 +71,7 @@ export class UserResolver {
   constructor(
     private readonly userService: UserService,
     private readonly timeZoneService: TimeZoneService,
+    private readonly identity: Identity,
   ) {}
 
   @Query(() => User, {
@@ -133,12 +133,9 @@ export class UserResolver {
     description: 'Returns a user for a given email address',
     nullable: true,
   })
-  async userByEmail(
-    @AnonSession() session: Session,
-    @Args() { email }: CheckEmailArgs,
-  ): Promise<User | null> {
+  async userByEmail(@Args() { email }: CheckEmailArgs): Promise<User | null> {
     // TODO move to auth policy?
-    if (session.anonymous) {
+    if (this.identity.isAnonymous) {
       return null;
     }
     return await this.userService.getUserByEmailAddress(email);

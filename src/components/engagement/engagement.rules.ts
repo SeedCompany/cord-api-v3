@@ -9,9 +9,9 @@ import {
   UnauthorizedException,
 } from '~/common';
 import { ILogger, Logger } from '~/core';
+import { Identity } from '~/core/authentication';
 import { DatabaseService } from '~/core/database';
 import { ACTIVE, INACTIVE } from '~/core/database/query';
-import { SessionHost } from '../authentication';
 import { withoutScope } from '../authorization/dto';
 import { ProjectStep } from '../project/dto';
 import {
@@ -35,7 +35,7 @@ const rolesThatCanBypassWorkflow: Role[] = [Role.Administrator];
 export class EngagementRules {
   constructor(
     private readonly db: DatabaseService,
-    private readonly sessionHost: SessionHost,
+    private readonly identity: Identity,
     // eslint-disable-next-line @seedcompany/no-unused-vars
     @Logger('engagement:rules') private readonly logger: ILogger,
   ) {}
@@ -317,7 +317,7 @@ export class EngagementRules {
     currentUserRoles?: Role[],
     changeset?: ID,
   ): Promise<EngagementStatusTransition[]> {
-    const session = this.sessionHost.current;
+    const session = this.identity.current;
     if (session.anonymous) {
       return [];
     }
@@ -357,7 +357,7 @@ export class EngagementRules {
   }
 
   async canBypassWorkflow() {
-    const session = this.sessionHost.current;
+    const session = this.identity.current;
     const roles = session.roles.map(withoutScope);
     return intersection(rolesThatCanBypassWorkflow, roles).length > 0;
   }
@@ -369,7 +369,7 @@ export class EngagementRules {
   ) {
     // If current user's roles include a role that can bypass workflow
     // stop the check here.
-    const session = this.sessionHost.current;
+    const session = this.identity.current;
     const currentUserRoles = session.roles.map(withoutScope);
     if (intersection(rolesThatCanBypassWorkflow, currentUserRoles).length > 0) {
       return;

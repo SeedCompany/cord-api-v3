@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { type Nil } from '@seedcompany/common';
 import { type ID, UnauthorizedException } from '~/common';
-import { SessionHost } from '../authentication';
+import { Identity } from '~/core/authentication';
 import { Privileges } from '../authorization';
 import { MissingContextException } from '../authorization/policy/conditions';
 import { type Workflow } from './define-workflow';
@@ -20,7 +20,7 @@ export const WorkflowService = <W extends Workflow>(workflow: () => W) => {
   @Injectable()
   abstract class WorkflowServiceClass {
     @Inject() protected readonly privileges: Privileges;
-    @Inject() protected readonly sessionHost: SessionHost;
+    @Inject() protected readonly identity: Identity;
     protected readonly workflow: W;
 
     constructor() {
@@ -143,7 +143,7 @@ export const WorkflowService = <W extends Workflow>(workflow: () => W) => {
         transitionPermissionSerializer(
           this.workflow,
           this.privileges,
-          this.sessionHost,
+          this.identity,
         ),
       );
     }

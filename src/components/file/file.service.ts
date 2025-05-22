@@ -2,7 +2,7 @@ import {
   GetObjectCommand as GetObject,
   PutObjectCommand as PutObject,
 } from '@aws-sdk/client-s3';
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { bufferFromStream, cleanJoin, type Nil } from '@seedcompany/common';
 import { fileTypeFromBuffer } from 'file-type';
 import { intersection } from 'lodash';
@@ -60,6 +60,7 @@ export class FileService {
     private readonly repo: FileRepository,
     private readonly rollbacks: RollbackManager,
     private readonly config: ConfigService,
+    @Inject(forwardRef(() => MediaService))
     private readonly mediaService: MediaService,
     private readonly eventBus: IEventBus,
     @Logger('file:service') private readonly logger: ILogger,

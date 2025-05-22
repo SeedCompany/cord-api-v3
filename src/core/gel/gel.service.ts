@@ -6,7 +6,7 @@ import { type QueryArgs } from 'gel/dist/ifaces';
 import { TraceLayer } from '~/common';
 import { retry, type RetryOptions } from '~/common/retry';
 import { TracingService } from '~/core/tracing';
-import { SessionHost } from '../../components/authentication/session.host';
+import { Identity } from '../authentication';
 import { TypedEdgeQL } from './edgeql';
 import { cleanError } from './errors';
 import { InlineQueryRuntimeMap } from './generated-client/inline-queries';
@@ -23,7 +23,7 @@ export class Gel {
     private readonly transactionContext: TransactionContext,
     private readonly optionsContext: OptionsContext,
     private readonly tracing: TracingService,
-    private readonly sessionHost: SessionHost,
+    private readonly identity: Identity,
     @Optional() private readonly childOptions: ApplyOptions[] = [],
     @Optional() private childExecutor?: Executor,
   ) {}
@@ -34,7 +34,7 @@ export class Gel {
       this.transactionContext,
       this.optionsContext,
       this.tracing,
-      this.sessionHost,
+      this.identity,
       [...this.childOptions],
       this.childExecutor,
     );
@@ -115,7 +115,7 @@ export class Gel {
     const queryNames = getCurrentQueryNames();
     const traceName = queryNames?.xray ?? 'Query';
 
-    let currentActorId = this.sessionHost.currentIfInCtx?.userId;
+    let currentActorId = this.identity.currentIfInCtx?.userId;
     // TODO temporarily check if UUID before applying global.
     // Once migration is complete this can be removed.
     currentActorId = isUUID(currentActorId) ? currentActorId : undefined;

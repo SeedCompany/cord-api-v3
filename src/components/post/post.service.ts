@@ -12,6 +12,7 @@ import {
   type UnsecuredDto,
 } from '~/common';
 import { ILogger, Logger, ResourceLoader, ResourcesHost } from '~/core';
+import { Identity } from '~/core/authentication';
 import { type BaseNode, isBaseNode } from '~/core/database/results';
 import { Privileges } from '../authorization';
 import { type CreatePost, Post, Postable, type UpdatePost } from './dto';
@@ -24,6 +25,7 @@ type PostableRef = ID | BaseNode | ConcretePostable;
 @Injectable()
 export class PostService {
   constructor(
+    private readonly identity: Identity,
     private readonly privileges: Privileges,
     private readonly repo: PostRepository,
     private readonly resources: ResourceLoader,
@@ -90,6 +92,11 @@ export class PostService {
     parent: ConcretePostable & Resource,
     input: PostListInput,
   ): Promise<SecuredPostList> {
+    // TODO move to auth policy
+    if (this.identity.isAnonymous) {
+      return SecuredList.Redacted;
+    }
+
     const perms = await this.getPermissionsFromPostable(parent);
 
     if (!perms.can('read')) {

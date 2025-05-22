@@ -9,11 +9,11 @@ import {
   ILogger,
   Logger,
 } from '~/core';
+import { Identity } from '~/core/authentication';
 import {
   type ProgressReportStatusChangedProps as EmailReportStatusNotification,
   ProgressReportStatusChanged,
 } from '~/core/email/templates/progress-report-status-changed.template';
-import { AuthenticationService } from '../../../authentication';
 import { LanguageService } from '../../../language';
 import { PeriodicReportService } from '../../../periodic-report';
 import { ProjectService } from '../../../project';
@@ -36,7 +36,7 @@ export class ProgressReportWorkflowNotificationHandler
   implements IEventHandler<WorkflowUpdatedEvent>
 {
   constructor(
-    private readonly auth: AuthenticationService,
+    private readonly identity: Identity,
     private readonly repo: ProgressReportWorkflowRepository,
     private readonly configService: ConfigService,
     private readonly userService: UserService,
@@ -113,7 +113,7 @@ export class ProgressReportWorkflowNotificationHandler
     languageId: ID,
   ): Promise<EmailReportStatusNotification> {
     const recipientId = receiver.userId ?? this.configService.rootUser.id;
-    return await this.auth.asUser(recipientId, async () => {
+    return await this.identity.asUser(recipientId, async () => {
       const recipient = receiver.userId
         ? await this.userService.readOne(recipientId)
         : this.fakeUserFromEmailAddress(receiver.email!);

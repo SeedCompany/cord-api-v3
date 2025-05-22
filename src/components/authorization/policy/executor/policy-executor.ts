@@ -2,8 +2,8 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { CachedByArg } from '@seedcompany/common';
 import { identity, intersection } from 'lodash';
 import { type EnhancedResource, type Session } from '~/common';
+import { Identity } from '~/core/authentication';
 import { type QueryFragment } from '~/core/database/query';
-import { SessionHost } from '../../../authentication/session.host';
 import { withoutScope } from '../../dto';
 import { RoleCondition } from '../../policies/conditions/role.condition';
 import { type Permission } from '../builder/perm-granter';
@@ -40,7 +40,7 @@ export interface FilterOptions {
 @Injectable()
 export class PolicyExecutor {
   constructor(
-    readonly sessionHost: SessionHost,
+    readonly identity: Identity,
     private readonly policyFactory: PolicyFactory,
     @Inject(forwardRef(() => ConditionOptimizer))
     private readonly conditionOptimizer: ConditionOptimizer & {},
@@ -64,7 +64,7 @@ export class PolicyExecutor {
       }
     }
 
-    const session = this.sessionHost.current;
+    const session = this.identity.current;
     const policies = this.getPolicies(session);
     const isChildRelation = prop && resource.childKeys.has(prop);
 
@@ -187,7 +187,7 @@ export class PolicyExecutor {
 
       const other = {
         resource: params.resource,
-        session: this.sessionHost.current,
+        session: this.identity.current,
       };
       return query
         .comment("Loading policy condition's context")

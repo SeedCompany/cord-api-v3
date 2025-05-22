@@ -10,6 +10,7 @@ import {
   type UnsecuredDto,
 } from '~/common';
 import { HandleIdLookup, IEventBus, ILogger, Logger } from '~/core';
+import { Identity } from '~/core/authentication';
 import { type Variable } from '~/core/database/query';
 import { Privileges } from '../authorization';
 import { FileService } from '../file';
@@ -35,6 +36,7 @@ export class PeriodicReportService {
     private readonly files: FileService,
     @Logger('periodic:report:service') private readonly logger: ILogger,
     private readonly eventBus: IEventBus,
+    private readonly identity: Identity,
     private readonly privileges: Privileges,
     private readonly repo: PeriodicReportRepository,
   ) {}

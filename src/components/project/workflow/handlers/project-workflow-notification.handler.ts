@@ -9,11 +9,11 @@ import {
   ILogger,
   Logger,
 } from '~/core';
+import { Identity } from '~/core/authentication';
 import {
   ProjectStepChanged,
   type ProjectStepChangedProps,
 } from '~/core/email/templates/project-step-changed.template';
-import { AuthenticationService, SessionHost } from '../../../authentication';
 import { ProjectService } from '../../../project';
 import { UserService } from '../../../user';
 import { type User } from '../../../user/dto';
@@ -26,12 +26,11 @@ export class ProjectWorkflowNotificationHandler
   implements IEventHandler<ProjectTransitionedEvent>
 {
   constructor(
-    private readonly auth: AuthenticationService,
+    private readonly identity: Identity,
     private readonly config: ConfigService,
     private readonly users: UserService,
     private readonly projects: ProjectService,
     private readonly emailService: EmailService,
-    private readonly sessionHost: SessionHost,
     private readonly moduleRef: ModuleRef,
     @Logger('progress-report:status-change-notifier')
     private readonly logger: ILogger,
@@ -41,7 +40,7 @@ export class ProjectWorkflowNotificationHandler
     const { previousStep, next, workflowEvent } = event;
     const transition = typeof next !== 'string' ? next : undefined;
 
-    const session = this.sessionHost.current;
+    const session = this.identity.current;
 
     // TODO on bypass: keep notifying members? add anyone else?
     const notifiers = transition?.notifiers ?? [];
@@ -74,7 +73,7 @@ export class ProjectWorkflowNotificationHandler
       toStep: event.workflowEvent.to,
     });
 
-    const [changedBy, project, primaryPartnerName] = await this.auth.asUser(
+    const [changedBy, project, primaryPartnerName] = await this.identity.asUser(
       this.config.rootUser.id,
       async () =>
         await Promise.all([
@@ -108,7 +107,7 @@ export class ProjectWorkflowNotificationHandler
     primaryPartnerName: string | null,
   ): Promise<ProjectStepChangedProps> {
     const recipientId = notifier.id ?? this.config.rootUser.id;
-    return await this.auth.asUser(recipientId, async () => {
+    return await this.identity.asUser(recipientId, async () => {
       const recipient = notifier.id
         ? await this.users.readOne(recipientId)
         : ({

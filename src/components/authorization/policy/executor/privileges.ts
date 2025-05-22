@@ -6,7 +6,7 @@ import {
   type ResourceShape,
   type SecuredPropsPlusExtraKey,
 } from '~/common';
-import { SessionHost } from '../../../authentication/session.host';
+import { Identity } from '~/core/authentication';
 import type { Power } from '../../dto';
 import { MissingPowerException } from '../../missing-power.exception';
 import {
@@ -23,7 +23,7 @@ import { ResourcePrivileges } from './resource-privileges';
 export class Privileges {
   constructor(
     private readonly policyExecutor: PolicyExecutor,
-    private readonly sessionHost: SessionHost,
+    private readonly identity: Identity,
   ) {}
 
   forResource<TResourceStatic extends ResourceShape<any>>(
@@ -90,7 +90,7 @@ export class Privileges {
    * I think this should be replaced in-app code with `.for(X).verifyCan('create')`
    */
   verifyPower(power: Power) {
-    const session = this.sessionHost.current;
+    const session = this.identity.current;
     if (!this.powers.has(power)) {
       throw new MissingPowerException(
         power,
@@ -102,7 +102,7 @@ export class Privileges {
   }
 
   get powers(): Set<Power> {
-    const session = this.sessionHost.current;
+    const session = this.identity.current;
     const policies = this.policyExecutor.getPolicies(session);
     return new Set(policies.flatMap((policy) => [...policy.powers]));
   }

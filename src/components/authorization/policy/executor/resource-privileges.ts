@@ -106,7 +106,7 @@ export class ResourcePrivileges<TResourceStatic extends ResourceShape<any>> {
       : perm.isAllowed({
           object: this.object,
           resource: this.resource,
-          session: this.policyExecutor.sessionHost.current,
+          session: this.policyExecutor.identity.current,
         });
   }
 
