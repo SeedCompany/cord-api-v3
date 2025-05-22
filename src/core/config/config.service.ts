@@ -248,7 +248,7 @@ export const makeConfig = (env: EnvironmentService) =>
       return {
         origin,
         credentials: true,
-        // Add POST (+ defaults) to allow local file uploads
+        // Add PUT (+ defaults) to allow local file uploads
         methods: ['GET', 'HEAD', 'POST', 'PUT'],
       } satisfies CorsOptions;
     })();
