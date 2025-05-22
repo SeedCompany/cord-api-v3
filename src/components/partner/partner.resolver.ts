@@ -42,6 +42,8 @@ import {
   Partner,
   PartnerListInput,
   PartnerListOutput,
+  SecuredPartner,
+  SecuredPartners,
   UpdatePartnerInput,
   UpdatePartnerOutput,
 } from './dto';
@@ -58,6 +60,25 @@ export class PartnerResolver {
     @IdArg() id: ID,
   ): Promise<Partner> {
     return await partners.load(id);
+  }
+
+  @ResolveField(() => SecuredPartner)
+  async parent(
+    @Parent() partner: Partner,
+    @Loader(PartnerLoader) partners: LoaderOf<PartnerLoader>,
+  ): Promise<SecuredPartner> {
+    return await mapSecuredValue(partner.parent, ({ id }) => partners.load(id));
+  }
+
+  @ResolveField(() => SecuredPartners)
+  async strategicAlliances(
+    @Parent() partner: Partner,
+    @Loader(PartnerLoader) loader: LoaderOf<PartnerLoader>,
+  ): Promise<SecuredPartners> {
+    return await loadSecuredIds(loader, {
+      ...partner.strategicAlliances,
+      value: partner.strategicAlliances.value?.map((alliance) => alliance.id),
+    });
   }
 
   @Query(() => PartnerListOutput, {
