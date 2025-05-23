@@ -7,6 +7,26 @@ import { type PnpExtractionResult, PnpProblemType } from './extraction-result';
 import { type PlanningSheet } from './planning-sheet';
 import { type ProgressSheet } from './progress-sheet';
 
+const ApprovedCustomSteps = new Map<string, Step>([
+  ['draft & keyboard', Step.ExegesisAndFirstDraft],
+  ['firstdraft', Step.ExegesisAndFirstDraft],
+  ['exegesis, 1st draft, keyboard', Step.ExegesisAndFirstDraft],
+  ['internalization & first draft', Step.ExegesisAndFirstDraft],
+  ['exegesis 1st draft & keybrd', Step.ExegesisAndFirstDraft],
+  ['first draft', Step.ExegesisAndFirstDraft],
+  ['first draft & keyboard', Step.ExegesisAndFirstDraft],
+  ['exegesis, 1st draft. keyboard', Step.ExegesisAndFirstDraft],
+  ['team check & 1st testing', Step.TeamCheck],
+  ['team check & 1st test', Step.TeamCheck],
+  ['team check & revision', Step.TeamCheck],
+  ['team check & 1st test', Step.TeamCheck],
+  ['field test', Step.CommunityTesting],
+  ['community check', Step.CommunityTesting],
+  ['community review', Step.CommunityTesting],
+  ['community testing & revision', Step.CommunityTesting],
+  ['team check & 1st test', Step.CommunityTesting],
+]);
+
 /**
  * Fuzzy match available steps to their column address.
  */
@@ -16,11 +36,22 @@ export function findStepColumns(
   availableSteps: readonly Step[] = [...Step],
 ) {
   const matchedColumns: Partial<Record<Step, Column>> = {};
-  let remainingSteps = availableSteps;
+
+  // transform known and approved custom headers to standard ones
+  let remainingSteps = availableSteps.map(
+    (step) => ApprovedCustomSteps.get(step.trim().toLowerCase()) ?? step,
+  );
+
   const possibleSteps = sheet.stepLabels
     .walkRight()
     .filter((cell) => !!cell.asString)
-    .map((cell) => ({ label: cell.asString!, column: cell.column, cell }))
+    .map((cell) => ({
+      label:
+        ApprovedCustomSteps.get(cell.asString!.trim().toLowerCase()) ??
+        cell.asString!,
+      column: cell.column,
+      cell,
+    }))
     .toArray();
   possibleSteps.forEach(({ label, column, cell }, index) => {
     if (index === possibleSteps.length - 1) {
@@ -30,6 +61,7 @@ export function findStepColumns(
       matchedColumns[Step.Completed] = column;
       return;
     }
+
     const distances = remainingSteps.map((step) => {
       const humanLabel = startCase(step).replace(' And ', ' & ');
       const distance = levenshtein.distance(label, humanLabel);
@@ -41,6 +73,10 @@ export function findStepColumns(
       distances.filter(([_, distance]) => distance < 5),
       ([_, distance]) => distance,
     )[0]?.[0];
+
+    // const isApproved = ApprovedCustomSteps.get(
+    //   label.trim().toLowerCase(),
+    // );
     if (!chosen) {
       result?.addProblem(NonStandardStep, cell, { label });
       return;
