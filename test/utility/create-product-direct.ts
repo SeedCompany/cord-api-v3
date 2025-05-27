@@ -1,4 +1,5 @@
 import { isValidId } from '~/common';
+import { graphql } from '~/graphql';
 import {
   type CreateDirectScriptureProduct,
   ProductMedium,
@@ -7,7 +8,6 @@ import {
 } from '../../src/components/product/dto';
 import { type TestApp } from './create-app';
 import { fragments, type RawProduct } from './fragments';
-import { gql } from './gql-tag';
 
 export async function createDirectProduct(
   app: TestApp,
@@ -21,18 +21,20 @@ export async function createDirectProduct(
   };
 
   const result = await app.graphql.mutate(
-    gql`
-      mutation createDirectScriptureProduct(
-        $input: CreateDirectScriptureProduct!
-      ) {
-        createDirectScriptureProduct(input: $input) {
-          product {
-            ...product
+    graphql(
+      `
+        mutation createDirectScriptureProduct(
+          $input: CreateDirectScriptureProduct!
+        ) {
+          createDirectScriptureProduct(input: $input) {
+            product {
+              ...product
+            }
           }
         }
-      }
-      ${fragments.product}
-    `,
+      `,
+      [fragments.product],
+    ),
     {
       input: product,
     },

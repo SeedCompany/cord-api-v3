@@ -11,6 +11,7 @@ import {
   Role,
   Sensitivity,
 } from '~/common';
+import { graphql } from '~/graphql';
 import { BudgetStatus } from '../src/components/budget/dto';
 import { type FieldRegion } from '../src/components/field-region/dto';
 import { type Location } from '../src/components/location/dto';
@@ -41,7 +42,6 @@ import {
   createZone,
   errors,
   fragments,
-  gql,
   type Raw,
   registerUser,
   runAsAdmin,
@@ -53,13 +53,13 @@ import { forceProjectTo } from './utility/transition-project';
 const deleteProject =
   (app: TestApp) => async (id: ID | string | { id: ID | string }) =>
     await app.graphql.mutate(
-      gql`
+      graphql(`
         mutation DeleteProject($id: ID!) {
           deleteProject(id: $id) {
             __typename
           }
         }
-      `,
+      `),
       {
         id: isIdLike(id) || typeof id === 'string' ? id : id.id,
       },
@@ -70,18 +70,20 @@ const listProjects = async (
   input?: Partial<ProjectListInput>,
 ) => {
   const { projects } = await app.graphql.query(
-    gql`
-      query ProjectList($input: ProjectListInput) {
-        projects(input: $input) {
-          items {
-            ...project
+    graphql(
+      `
+        query ProjectList($input: ProjectListInput) {
+          projects(input: $input) {
+            items {
+              ...project
+            }
+            hasMore
+            total
           }
-          hasMore
-          total
         }
-      }
-      ${fragments.project}
-    `,
+      `,
+      [fragments.project],
+    ),
     { input },
   );
   return projects as PaginatedListType<Raw<Project>>;
@@ -142,14 +144,16 @@ describe('Project e2e', () => {
     const project = await createProject(app, { fieldRegionId: fieldRegion.id });
 
     const result = await app.graphql.query(
-      gql`
-        query project($id: ID!) {
-          project(id: $id) {
-            ...project
+      graphql(
+        `
+          query project($id: ID!) {
+            project(id: $id) {
+              ...project
+            }
           }
-        }
-        ${fragments.project}
-      `,
+        `,
+        [fragments.project],
+      ),
       {
         id: project.id,
       },
@@ -218,10 +222,44 @@ describe('Project e2e', () => {
     };
 
     const res = await app.graphql.mutate(
-      gql`
-        mutation createProject($input: CreateProjectInput!) {
-          createProject(input: $input) {
-            project {
+      graphql(
+        `
+          mutation createProject($input: CreateProjectInput!) {
+            createProject(input: $input) {
+              project {
+                ...project
+                budget {
+                  value {
+                    ...budget
+                  }
+                }
+                fieldRegion {
+                  value {
+                    id
+                    name {
+                      value
+                    }
+                  }
+                }
+              }
+            }
+          }
+        `,
+        [fragments.project, fragments.budget],
+      ),
+      {
+        input: {
+          project: proj,
+        },
+      },
+    );
+    const project = res.createProject.project;
+
+    const result = await app.graphql.query(
+      graphql(
+        `
+          query project($id: ID!) {
+            project(id: $id) {
               ...project
               budget {
                 value {
@@ -238,41 +276,9 @@ describe('Project e2e', () => {
               }
             }
           }
-        }
-        ${fragments.project}
-        ${fragments.budget}
-      `,
-      {
-        input: {
-          project: proj,
-        },
-      },
-    );
-    const project = res.createProject.project;
-
-    const result = await app.graphql.query(
-      gql`
-        query project($id: ID!) {
-          project(id: $id) {
-            ...project
-            budget {
-              value {
-                ...budget
-              }
-            }
-            fieldRegion {
-              value {
-                id
-                name {
-                  value
-                }
-              }
-            }
-          }
-        }
-        ${fragments.project}
-        ${fragments.budget}
-      `,
+        `,
+        [fragments.project, fragments.budget],
+      ),
       {
         id: project.id,
       },
@@ -292,16 +298,18 @@ describe('Project e2e', () => {
     const namenew = faker.lorem.word() + ' Project';
 
     const result = await app.graphql.query(
-      gql`
-        mutation updateProject($id: ID!, $name: String!) {
-          updateProject(input: { project: { id: $id, name: $name } }) {
-            project {
-              ...project
+      graphql(
+        `
+          mutation updateProject($id: ID!, $name: String!) {
+            updateProject(input: { project: { id: $id, name: $name } }) {
+              project {
+                ...project
+              }
             }
           }
-        }
-        ${fragments.project}
-      `,
+        `,
+        [fragments.project],
+      ),
       {
         id: project.id,
         name: namenew,
@@ -323,14 +331,16 @@ describe('Project e2e', () => {
 
     await app.graphql
       .query(
-        gql`
-          query project($id: ID!) {
-            project(id: $id) {
-              ...project
+        graphql(
+          `
+            query project($id: ID!) {
+              project(id: $id) {
+                ...project
+              }
             }
-          }
-          ${fragments.project}
-        `,
+          `,
+          [fragments.project],
+        ),
         {
           id: project.id,
         },
@@ -404,18 +414,20 @@ describe('Project e2e', () => {
     );
 
     const { projects } = await app.graphql.query(
-      gql`
-        query projects($type: [ProjectType!]) {
-          projects(input: { filter: { type: $type } }) {
-            items {
-              ...project
+      graphql(
+        `
+          query projects($type: [ProjectType!]) {
+            projects(input: { filter: { type: $type } }) {
+              items {
+                ...project
+              }
+              hasMore
+              total
             }
-            hasMore
-            total
           }
-        }
-        ${fragments.project}
-      `,
+        `,
+        [fragments.project],
+      ),
       {
         type,
       },
@@ -475,7 +487,7 @@ describe('Project e2e', () => {
 
     const getSensitivitySortedProjects = async (order: 'ASC' | 'DESC') =>
       await app.graphql.query(
-        gql`
+        graphql(`
           query projects($input: ProjectListInput!) {
             projects(input: $input) {
               hasMore
@@ -486,7 +498,7 @@ describe('Project e2e', () => {
               }
             }
           }
-        `,
+        `),
         {
           input: {
             sort: 'sensitivity',
@@ -543,18 +555,20 @@ describe('Project e2e', () => {
     );
 
     const { projects } = await app.graphql.query(
-      gql`
-        query projects {
-          projects(input: { filter: { mine: true } }) {
-            items {
-              ...project
+      graphql(
+        `
+          query projects {
+            projects(input: { filter: { mine: true } }) {
+              items {
+                ...project
+              }
+              hasMore
+              total
             }
-            hasMore
-            total
           }
-        }
-        ${fragments.project}
-      `,
+        `,
+        [fragments.project],
+      ),
     );
 
     expect(projects.items.length).toBeGreaterThanOrEqual(numProjects);
@@ -577,18 +591,20 @@ describe('Project e2e', () => {
 
     // filter pinned projects
     const { projects: pinnedProjects } = await app.graphql.query(
-      gql`
-        query projects {
-          projects(input: { filter: { pinned: true } }) {
-            items {
-              ...project
+      graphql(
+        `
+          query projects {
+            projects(input: { filter: { pinned: true } }) {
+              items {
+                ...project
+              }
+              hasMore
+              total
             }
-            hasMore
-            total
           }
-        }
-        ${fragments.project}
-      `,
+        `,
+        [fragments.project],
+      ),
     );
 
     expect(pinnedProjects.items.length).toBe(1);
@@ -596,18 +612,20 @@ describe('Project e2e', () => {
 
     // filter unpinned projects
     const { projects: unpinnedProjects } = await app.graphql.query(
-      gql`
-        query projects {
-          projects(input: { filter: { pinned: false } }) {
-            items {
-              ...project
+      graphql(
+        `
+          query projects {
+            projects(input: { filter: { pinned: false } }) {
+              items {
+                ...project
+              }
+              hasMore
+              total
             }
-            hasMore
-            total
           }
-        }
-        ${fragments.project}
-      `,
+        `,
+        [fragments.project],
+      ),
     );
 
     expect(unpinnedProjects.items.length).toBeGreaterThanOrEqual(numProjects);
@@ -633,18 +651,20 @@ describe('Project e2e', () => {
     );
 
     const { projects } = await app.graphql.query(
-      gql`
-        query projects {
-          projects(input: { filter: { presetInventory: true } }) {
-            items {
-              ...project
+      graphql(
+        `
+          query projects {
+            projects(input: { filter: { presetInventory: true } }) {
+              items {
+                ...project
+              }
+              hasMore
+              total
             }
-            hasMore
-            total
           }
-        }
-        ${fragments.project}
-      `,
+        `,
+        [fragments.project],
+      ),
     );
 
     expect(projects.items.length).toBeGreaterThanOrEqual(numProjects);
@@ -663,22 +683,23 @@ describe('Project e2e', () => {
     });
 
     const queryProject = await app.graphql.query(
-      gql`
-        query project($id: ID!) {
-          project(id: $id) {
-            ...project
-            engagements {
-              items {
-                ...languageEngagement
+      graphql(
+        `
+          query project($id: ID!) {
+            project(id: $id) {
+              ...project
+              engagements {
+                items {
+                  ...languageEngagement
+                }
+                hasMore
+                total
               }
-              hasMore
-              total
             }
           }
-        }
-        ${fragments.project},
-        ${fragments.languageEngagement}
-      `,
+        `,
+        [fragments.project, fragments.languageEngagement],
+      ),
       {
         id: project.id,
       },
@@ -707,22 +728,23 @@ describe('Project e2e', () => {
       countryOfOriginId: location.id,
     });
     const queryProject = await app.graphql.query(
-      gql`
-        query project($id: ID!) {
-          project(id: $id) {
-            ...project
-            engagements {
-              items {
-                ...internshipEngagement
+      graphql(
+        `
+          query project($id: ID!) {
+            project(id: $id) {
+              ...project
+              engagements {
+                items {
+                  ...internshipEngagement
+                }
+                hasMore
+                total
               }
-              hasMore
-              total
             }
           }
-        }
-        ${fragments.project},
-        ${fragments.internshipEngagement}
-      `,
+        `,
+        [fragments.project, fragments.internshipEngagement],
+      ),
       {
         id: project.id,
       },
@@ -752,22 +774,23 @@ describe('Project e2e', () => {
     });
 
     const queryProject = await app.graphql.query(
-      gql`
-        query project($id: ID!) {
-          project(id: $id) {
-            ...project
-            team {
-              items {
-                ...projectMember
+      graphql(
+        `
+          query project($id: ID!) {
+            project(id: $id) {
+              ...project
+              team {
+                items {
+                  ...projectMember
+                }
+                hasMore
+                total
               }
-              hasMore
-              total
             }
           }
-        }
-        ${fragments.project},
-        ${fragments.projectMember}
-      `,
+        `,
+        [fragments.project, fragments.projectMember],
+      ),
       {
         id: project.id,
       },
@@ -796,22 +819,23 @@ describe('Project e2e', () => {
     );
 
     const queryProject = await app.graphql.query(
-      gql`
-        query project($id: ID!) {
-          project(id: $id) {
-            ...project
-            partnerships {
-              items {
-                ...partnership
+      graphql(
+        `
+          query project($id: ID!) {
+            project(id: $id) {
+              ...project
+              partnerships {
+                items {
+                  ...partnership
+                }
+                hasMore
+                total
               }
-              hasMore
-              total
             }
           }
-        }
-        ${fragments.project},
-        ${fragments.partnership}
-      `,
+        `,
+        [fragments.project, fragments.partnership],
+      ),
       {
         id: project.id,
       },
@@ -840,7 +864,7 @@ describe('Project e2e', () => {
 
       // Ensure the result from the change to Active returns the correct budget status
       const { updatedProject } = await app.graphql.mutate(
-        gql`
+        graphql(`
           mutation updateProject($input: ExecuteProjectTransitionInput!) {
             updatedProject: transitionProject(input: $input) {
               departmentId {
@@ -856,7 +880,7 @@ describe('Project e2e', () => {
               }
             }
           }
-        `,
+        `),
         {
           input: {
             project: project.id,
@@ -884,16 +908,18 @@ describe('Project e2e', () => {
     };
 
     const { createProject } = await app.graphql.mutate(
-      gql`
-        mutation createProject($input: CreateProjectInput!) {
-          createProject(input: $input) {
-            project {
-              ...project
+      graphql(
+        `
+          mutation createProject($input: CreateProjectInput!) {
+            createProject(input: $input) {
+              project {
+                ...project
+              }
             }
           }
-        }
-        ${fragments.project}
-      `,
+        `,
+        [fragments.project],
+      ),
       {
         input: {
           project,
@@ -913,16 +939,18 @@ describe('Project e2e', () => {
     };
 
     const { createProject } = await app.graphql.mutate(
-      gql`
-        mutation createProject($input: CreateProjectInput!) {
-          createProject(input: $input) {
-            project {
-              ...project
+      graphql(
+        `
+          mutation createProject($input: CreateProjectInput!) {
+            createProject(input: $input) {
+              project {
+                ...project
+              }
             }
           }
-        }
-        ${fragments.project}
-      `,
+        `,
+        [fragments.project],
+      ),
       {
         input: {
           project,
@@ -954,16 +982,18 @@ describe('Project e2e', () => {
 
     // Create Partnership with Funding type
     await app.graphql.mutate(
-      gql`
-        mutation createPartnership($input: CreatePartnershipInput!) {
-          createPartnership(input: $input) {
-            partnership {
-              ...partnership
+      graphql(
+        `
+          mutation createPartnership($input: CreatePartnershipInput!) {
+            createPartnership(input: $input) {
+              partnership {
+                ...partnership
+              }
             }
           }
-        }
-        ${fragments.partnership}
-      `,
+        `,
+        [fragments.partnership],
+      ),
       {
         input: {
           partnership,
@@ -973,28 +1003,30 @@ describe('Project e2e', () => {
 
     // Update Project with mou dates
     const result = await app.graphql.mutate(
-      gql`
-        mutation updateProject($id: ID!, $mouStart: Date!, $mouEnd: Date!) {
-          updateProject(
-            input: {
-              project: { id: $id, mouStart: $mouStart, mouEnd: $mouEnd }
-            }
-          ) {
-            project {
-              ...project
-              budget {
-                value {
-                  id
-                  records {
+      graphql(
+        `
+          mutation updateProject($id: ID!, $mouStart: Date!, $mouEnd: Date!) {
+            updateProject(
+              input: {
+                project: { id: $id, mouStart: $mouStart, mouEnd: $mouEnd }
+              }
+            ) {
+              project {
+                ...project
+                budget {
+                  value {
                     id
+                    records {
+                      id
+                    }
                   }
                 }
               }
             }
           }
-        }
-        ${fragments.project}
-      `,
+        `,
+        [fragments.project],
+      ),
       {
         id: proj.id,
         mouStart: CalendarDate.fromISO('2020-08-23'),
@@ -1023,16 +1055,18 @@ describe('Project e2e', () => {
     };
 
     await app.graphql.mutate(
-      gql`
-        mutation createPartnership($input: CreatePartnershipInput!) {
-          createPartnership(input: $input) {
-            partnership {
-              ...partnership
+      graphql(
+        `
+          mutation createPartnership($input: CreatePartnershipInput!) {
+            createPartnership(input: $input) {
+              partnership {
+                ...partnership
+              }
             }
           }
-        }
-        ${fragments.partnership}
-      `,
+        `,
+        [fragments.partnership],
+      ),
       {
         input: {
           partnership,
@@ -1041,7 +1075,7 @@ describe('Project e2e', () => {
     );
 
     const projectQueryResult = await app.graphql.query(
-      gql`
+      graphql(`
         query project($id: ID!) {
           project(id: $id) {
             budget {
@@ -1060,7 +1094,7 @@ describe('Project e2e', () => {
             }
           }
         }
-      `,
+      `),
       {
         id: project.id,
       },
@@ -1084,7 +1118,7 @@ describe('Project e2e', () => {
           fieldRegionId: fieldRegion.id,
         });
         const result = await app.graphql.mutate(
-          gql`
+          graphql(`
             mutation updateProject($id: ID!) {
               project: transitionProject(
                 # updating to this step assigns a dept id
@@ -1095,7 +1129,7 @@ describe('Project e2e', () => {
                 }
               }
             }
-          `,
+          `),
           {
             id: project.id,
           },

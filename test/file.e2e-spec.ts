@@ -9,6 +9,7 @@ import {
 } from 'luxon';
 import { type ID, Role } from '~/common';
 import { DatabaseService } from '~/core/database';
+import { graphql } from '~/graphql';
 import { FileBucket, type LocalBucket } from '../src/components/file/bucket';
 import {
   type Directory,
@@ -25,7 +26,6 @@ import {
   generateFakeFile,
   getFileNode,
   getFileNodeChildren,
-  gql,
   registerUser,
   requestFileUpload,
   runInIsolatedSession,
@@ -64,13 +64,13 @@ export async function uploadFile(
 
 async function deleteNode(app: TestApp, id: ID) {
   await app.graphql.mutate(
-    gql`
+    graphql(`
       mutation deleteFileNode($id: ID!) {
         deleteFileNode(id: $id) {
           __typename
         }
       }
-    `,
+    `),
     {
       id,
     },
@@ -80,13 +80,13 @@ async function deleteNode(app: TestApp, id: ID) {
 async function expectNodeNotFound(app: TestApp, id: ID) {
   await app.graphql
     .query(
-      gql`
+      graphql(`
         query fileNode($id: ID!) {
           fileNode(id: $id) {
             id
           }
         }
-      `,
+      `),
       {
         id,
       },

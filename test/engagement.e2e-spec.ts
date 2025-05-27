@@ -2,6 +2,7 @@ import { faker } from '@faker-js/faker';
 import { some } from 'lodash';
 import { DateTime, Interval } from 'luxon';
 import { generateId, type ID, Role } from '~/common';
+import { graphql } from '~/graphql';
 import {
   type CreateInternshipEngagement,
   EngagementStatus,
@@ -33,7 +34,6 @@ import {
   errors,
   fragments,
   getUserFromSession,
-  gql,
   type Raw,
   registerUser,
   requestFileUpload,
@@ -118,18 +118,20 @@ describe('Engagement e2e', () => {
       projectId: project.id,
     };
     const result = await app.graphql.mutate(
-      gql`
-        mutation createLanguageEngagement(
-          $input: CreateLanguageEngagementInput!
-        ) {
-          createLanguageEngagement(input: $input) {
-            engagement {
-              ...languageEngagement
+      graphql(
+        `
+          mutation createLanguageEngagement(
+            $input: CreateLanguageEngagementInput!
+          ) {
+            createLanguageEngagement(input: $input) {
+              engagement {
+                ...languageEngagement
+              }
             }
           }
-        }
-        ${fragments.languageEngagement}
-      `,
+        `,
+        [fragments.languageEngagement],
+      ),
       {
         input: {
           engagement: languageEngagement,
@@ -184,18 +186,20 @@ describe('Engagement e2e', () => {
     };
 
     const result = await app.graphql.mutate(
-      gql`
-        mutation createInternshipEngagement(
-          $input: CreateInternshipEngagementInput!
-        ) {
-          createInternshipEngagement(input: $input) {
-            engagement {
-              ...internshipEngagement
+      graphql(
+        `
+          mutation createInternshipEngagement(
+            $input: CreateInternshipEngagementInput!
+          ) {
+            createInternshipEngagement(input: $input) {
+              engagement {
+                ...internshipEngagement
+              }
             }
           }
-        }
-        ${fragments.internshipEngagement}
-      `,
+        `,
+        [fragments.internshipEngagement],
+      ),
       {
         input: {
           engagement: internshipEngagement,
@@ -232,14 +236,16 @@ describe('Engagement e2e', () => {
     });
 
     const { engagement: actual } = await app.graphql.query(
-      gql`
-        query engagement($id: ID!) {
-          engagement(id: $id) {
-            ...languageEngagement
+      graphql(
+        `
+          query engagement($id: ID!) {
+            engagement(id: $id) {
+              ...languageEngagement
+            }
           }
-        }
-        ${fragments.languageEngagement}
-      `,
+        `,
+        [fragments.languageEngagement],
+      ),
       {
         id: languageEngagement.id,
       },
@@ -286,14 +292,16 @@ describe('Engagement e2e', () => {
     });
 
     const { engagement: actual } = await app.graphql.query(
-      gql`
-        query engagement($id: ID!) {
-          engagement(id: $id) {
-            ...internshipEngagement
+      graphql(
+        `
+          query engagement($id: ID!) {
+            engagement(id: $id) {
+              ...internshipEngagement
+            }
           }
-        }
-        ${fragments.internshipEngagement}
-      `,
+        `,
+        [fragments.internshipEngagement],
+      ),
       {
         id: internshipEngagement.id,
       },
@@ -334,18 +342,20 @@ describe('Engagement e2e', () => {
     const updateParatextRegistryId = faker.lorem.word();
 
     const result = await app.graphql.mutate(
-      gql`
-        mutation updateLanguageEngagement(
-          $input: UpdateLanguageEngagementInput!
-        ) {
-          updateLanguageEngagement(input: $input) {
-            engagement {
-              ...languageEngagement
+      graphql(
+        `
+          mutation updateLanguageEngagement(
+            $input: UpdateLanguageEngagementInput!
+          ) {
+            updateLanguageEngagement(input: $input) {
+              engagement {
+                ...languageEngagement
+              }
             }
           }
-        }
-        ${fragments.languageEngagement}
-      `,
+        `,
+        [fragments.languageEngagement],
+      ),
       {
         input: {
           engagement: {
@@ -386,19 +396,21 @@ describe('Engagement e2e', () => {
     ];
 
     const result = await app.graphql.mutate(
-      gql`
-        mutation updateInternshipEngagement(
-          $input: UpdateInternshipEngagementInput!
-        ) {
-          updateInternshipEngagement(input: $input) {
-            engagement {
-              ...internshipEngagement
-              modifiedAt
+      graphql(
+        `
+          mutation updateInternshipEngagement(
+            $input: UpdateInternshipEngagementInput!
+          ) {
+            updateInternshipEngagement(input: $input) {
+              engagement {
+                ...internshipEngagement
+                modifiedAt
+              }
             }
           }
-        }
-        ${fragments.internshipEngagement}
-      `,
+        `,
+        [fragments.internshipEngagement],
+      ),
       {
         input: {
           engagement: {
@@ -439,13 +451,13 @@ describe('Engagement e2e', () => {
     });
 
     const result = await app.graphql.mutate(
-      gql`
+      graphql(`
         mutation deleteEngagement($id: ID!) {
           deleteEngagement(id: $id) {
             __typename
           }
         }
-      `,
+      `),
       {
         id: languageEngagement.id,
       },
@@ -455,14 +467,16 @@ describe('Engagement e2e', () => {
     expect(actual).toBeTruthy();
     await app.graphql
       .query(
-        gql`
-          query engagement($id: ID!) {
-            engagement(id: $id) {
-              ...languageEngagement
+        graphql(
+          `
+            query engagement($id: ID!) {
+              engagement(id: $id) {
+                ...languageEngagement
+              }
             }
-          }
-          ${fragments.languageEngagement}
-        `,
+          `,
+          [fragments.languageEngagement],
+        ),
         {
           id: languageEngagement.id,
         },
@@ -485,14 +499,16 @@ describe('Engagement e2e', () => {
       engagementId: languageEngagement.id,
     });
     const result = await app.graphql.query(
-      gql`
-        query engagement($id: ID!) {
-          engagement(id: $id) {
-            ...languageEngagement
+      graphql(
+        `
+          query engagement($id: ID!) {
+            engagement(id: $id) {
+              ...languageEngagement
+            }
           }
-        }
-        ${fragments.languageEngagement}
-      `,
+        `,
+        [fragments.languageEngagement],
+      ),
       {
         id: languageEngagement.id,
       },
@@ -524,14 +540,16 @@ describe('Engagement e2e', () => {
     });
 
     const result = await app.graphql.query(
-      gql`
-        query engagement($id: ID!) {
-          engagement(id: $id) {
-            ...languageEngagement
+      graphql(
+        `
+          query engagement($id: ID!) {
+            engagement(id: $id) {
+              ...languageEngagement
+            }
           }
-        }
-        ${fragments.languageEngagement}
-      `,
+        `,
+        [fragments.languageEngagement],
+      ),
       {
         id: languageEngagement.id,
       },
@@ -551,14 +569,16 @@ describe('Engagement e2e', () => {
     });
 
     const languageEngagementRead = await app.graphql.query(
-      gql`
-        query engagement($id: ID!) {
-          engagement(id: $id) {
-            ...languageEngagement
+      graphql(
+        `
+          query engagement($id: ID!) {
+            engagement(id: $id) {
+              ...languageEngagement
+            }
           }
-        }
-        ${fragments.languageEngagement}
-      `,
+        `,
+        [fragments.languageEngagement],
+      ),
       {
         id: languageEngagement.id,
       },
@@ -570,7 +590,7 @@ describe('Engagement e2e', () => {
     await registerUser(app, { roles: [Role.FieldOperationsDirector] });
     const date = '2020-05-13';
     const result = await app.graphql.mutate(
-      gql`
+      graphql(`
         mutation updateCeremony($input: UpdateCeremonyInput!) {
           updateCeremony(input: $input) {
             ceremony {
@@ -586,7 +606,7 @@ describe('Engagement e2e', () => {
             }
           }
         }
-      `,
+      `),
       {
         input: {
           ceremony: {
@@ -615,14 +635,16 @@ describe('Engagement e2e', () => {
     });
 
     const internshipEngagementRead = await app.graphql.query(
-      gql`
-        query engagement($id: ID!) {
-          engagement(id: $id) {
-            ...internshipEngagement
+      graphql(
+        `
+          query engagement($id: ID!) {
+            engagement(id: $id) {
+              ...internshipEngagement
+            }
           }
-        }
-        ${fragments.internshipEngagement}
-      `,
+        `,
+        [fragments.internshipEngagement],
+      ),
       {
         id: ie.id,
       },
@@ -634,7 +656,7 @@ describe('Engagement e2e', () => {
     await registerUser(app, { roles: [Role.FieldOperationsDirector] });
     const date = '2020-05-13';
     const result = await app.graphql.mutate(
-      gql`
+      graphql(`
         mutation updateCeremony($input: UpdateCeremonyInput!) {
           updateCeremony(input: $input) {
             ceremony {
@@ -650,7 +672,7 @@ describe('Engagement e2e', () => {
             }
           }
         }
-      `,
+      `),
       {
         input: {
           ceremony: {
@@ -676,14 +698,16 @@ describe('Engagement e2e', () => {
     });
 
     const languageEngagementRead = await app.graphql.query(
-      gql`
-        query engagement($id: ID!) {
-          engagement(id: $id) {
-            ...languageEngagement
+      graphql(
+        `
+          query engagement($id: ID!) {
+            engagement(id: $id) {
+              ...languageEngagement
+            }
           }
-        }
-        ${fragments.languageEngagement}
-      `,
+        `,
+        [fragments.languageEngagement],
+      ),
       {
         id: languageEngagement.id,
       },
@@ -696,13 +720,13 @@ describe('Engagement e2e', () => {
     const ceremonyId = languageEngagementRead?.engagement?.ceremony?.value?.id;
 
     await app.graphql.mutate(
-      gql`
+      graphql(`
         mutation deleteEngagement($id: ID!) {
           deleteEngagement(id: $id) {
             __typename
           }
         }
-      `,
+      `),
       {
         id: languageEngagement.id,
       },
@@ -710,14 +734,16 @@ describe('Engagement e2e', () => {
 
     await app.graphql
       .query(
-        gql`
-          query ceremony($id: ID!) {
-            ceremony(id: $id) {
-              ...ceremony
+        graphql(
+          `
+            query ceremony($id: ID!) {
+              ceremony(id: $id) {
+                ...ceremony
+              }
             }
-          }
-          ${fragments.ceremony}
-        `,
+          `,
+          [fragments.ceremony],
+        ),
         {
           id: ceremonyId,
         },
@@ -742,7 +768,7 @@ describe('Engagement e2e', () => {
       mentorId: mentor.id,
     });
     const { engagements } = await app.graphql.query(
-      gql`
+      graphql(`
         query {
           engagements(input: { count: 7 }) {
             items {
@@ -757,7 +783,7 @@ describe('Engagement e2e', () => {
             }
           }
         }
-      `,
+      `),
     );
 
     expect(
@@ -867,18 +893,21 @@ describe('Engagement e2e', () => {
     });
 
     const { engagement: actual } = await app.graphql.query(
-      gql`
-      query {
-        engagement(id: "${internshipEngagement.id}") {
-          ... on InternshipEngagement {
-            id
-            methodologies {
-              value
+      graphql(`
+        query EngagementById($id: ID!) {
+          engagement(id: $id) {
+            ... on InternshipEngagement {
+              id
+              methodologies {
+                value
+              }
             }
           }
         }
-      }
-      `,
+      `),
+      {
+        id: internshipEngagement.id,
+      },
     );
     expect(internshipEngagement.id).toBeDefined();
     expect(actual.methodologies).toBeDefined();
@@ -1099,7 +1128,7 @@ describe('Engagement e2e', () => {
       const {
         project: { engagements },
       } = await app.graphql.query(
-        gql`
+        graphql(`
           query ($id: ID!) {
             project(id: $id) {
               id
@@ -1113,7 +1142,7 @@ describe('Engagement e2e', () => {
               }
             }
           }
-        `,
+        `),
         {
           id: project.id,
           step: expectedNewStatus,
@@ -1295,13 +1324,13 @@ describe('Engagement e2e', () => {
 
     await expect(
       app.graphql.mutate(
-        gql`
+        graphql(`
           mutation deleteEngagement($id: ID!) {
             deleteEngagement(id: $id) {
               __typename
             }
           }
-        `,
+        `),
         {
           id: engagement.id,
         },

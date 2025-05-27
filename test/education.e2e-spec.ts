@@ -1,13 +1,13 @@
 import { faker } from '@faker-js/faker';
 import { times } from 'lodash';
 import { isValidId, Role } from '~/common';
+import { graphql } from '~/graphql';
 import { type User } from '../src/components/user/dto';
 import { type Education } from '../src/components/user/education/dto';
 import {
   createEducation,
   createSession,
   createTestApp,
-  gql,
   registerUser,
   type TestApp,
 } from './utility';
@@ -36,14 +36,16 @@ describe('Education e2e', () => {
     const education = await createEducation(app, { userId: user.id });
 
     const { education: actual } = await app.graphql.query(
-      gql`
-        query education($id: ID!) {
-          education(id: $id) {
-            ...education
+      graphql(
+        `
+          query education($id: ID!) {
+            education(id: $id) {
+              ...education
+            }
           }
-        }
-        ${fragments.education}
-      `,
+        `,
+        [fragments.education],
+      ),
       {
         id: education.id,
       },
@@ -60,16 +62,18 @@ describe('Education e2e', () => {
     const newInstitution = faker.company.name();
 
     const result = await app.graphql.mutate(
-      gql`
-        mutation updateEducation($input: UpdateEducationInput!) {
-          updateEducation(input: $input) {
-            education {
-              ...education
+      graphql(
+        `
+          mutation updateEducation($input: UpdateEducationInput!) {
+            updateEducation(input: $input) {
+              education {
+                ...education
+              }
             }
           }
-        }
-        ${fragments.education}
-      `,
+        `,
+        [fragments.education],
+      ),
       {
         input: {
           education: {
@@ -90,13 +94,13 @@ describe('Education e2e', () => {
     const education = await createEducation(app, { userId: user.id });
 
     const result = await app.graphql.mutate(
-      gql`
+      graphql(`
         mutation deleteEducation($id: ID!) {
           deleteEducation(id: $id) {
             __typename
           }
         }
-      `,
+      `),
       {
         id: education.id,
       },
@@ -114,20 +118,22 @@ describe('Education e2e', () => {
     );
 
     const result = await app.graphql.query(
-      gql`
-        query UserEducation($id: ID!) {
-          user(id: $id) {
-            education {
-              items {
-                ...education
+      graphql(
+        `
+          query UserEducation($id: ID!) {
+            user(id: $id) {
+              education {
+                items {
+                  ...education
+                }
+                hasMore
+                total
               }
-              hasMore
-              total
             }
           }
-        }
-        ${fragments.education}
-      `,
+        `,
+        [fragments.education],
+      ),
       {
         id: user.id,
       },

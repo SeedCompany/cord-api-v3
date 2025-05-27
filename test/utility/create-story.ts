@@ -1,8 +1,8 @@
 import { faker } from '@faker-js/faker';
+import { graphql } from '~/graphql';
 import { type CreateStory, type Story } from '../../src/components/story/dto';
 import { type TestApp } from './create-app';
 import { fragments } from './fragments';
-import { gql } from './gql-tag';
 
 export async function createStory(
   app: TestApp,
@@ -11,16 +11,18 @@ export async function createStory(
   const name = input.name || faker.hacker.noun() + faker.company.name();
 
   const result = await app.graphql.mutate(
-    gql`
-      mutation createStory($input: CreateStoryInput!) {
-        createStory(input: $input) {
-          story {
-            ...story
+    graphql(
+      `
+        mutation createStory($input: CreateStoryInput!) {
+          createStory(input: $input) {
+            story {
+              ...story
+            }
           }
         }
-      }
-      ${fragments.story}
-    `,
+      `,
+      [fragments.story],
+    ),
     {
       input: {
         story: {

@@ -1,4 +1,5 @@
 import { type ID } from '~/common';
+import { graphql } from '~/graphql';
 import {
   EngagementStatus,
   type InternshipEngagement,
@@ -11,7 +12,6 @@ import { createFundingAccount } from './create-funding-account';
 import { createLocation } from './create-location';
 import { createRegion } from './create-region';
 import { fragments } from './fragments';
-import { gql } from './gql-tag';
 import { runAsAdmin } from './login';
 import {
   changeProjectStep,
@@ -25,21 +25,23 @@ export const changeInternshipEngagementStatus = async (
   to: EngagementStatus,
 ): Promise<InternshipEngagement> => {
   const result = await app.graphql.mutate(
-    gql`
-      mutation updateInternshipEngagement(
-        $id: ID!
-        $status: EngagementStatus!
-      ) {
-        updateInternshipEngagement(
-          input: { engagement: { id: $id, status: $status } }
+    graphql(
+      `
+        mutation updateInternshipEngagement(
+          $id: ID!
+          $status: EngagementStatus!
         ) {
-          engagement {
-            ...internshipEngagement
+          updateInternshipEngagement(
+            input: { engagement: { id: $id, status: $status } }
+          ) {
+            engagement {
+              ...internshipEngagement
+            }
           }
         }
-      }
-      ${fragments.internshipEngagement}
-    `,
+      `,
+      [fragments.internshipEngagement],
+    ),
     {
       id,
       status: to,
@@ -54,18 +56,23 @@ export const changeLanguageEngagementStatus = async (
   to: EngagementStatus,
 ): Promise<LanguageEngagement> => {
   const result = await app.graphql.mutate(
-    gql`
-      mutation updateLanguageEngagement($id: ID!, $status: EngagementStatus!) {
-        updateLanguageEngagement(
-          input: { engagement: { id: $id, status: $status } }
+    graphql(
+      `
+        mutation updateLanguageEngagement(
+          $id: ID!
+          $status: EngagementStatus!
         ) {
-          engagement {
-            ...languageEngagement
+          updateLanguageEngagement(
+            input: { engagement: { id: $id, status: $status } }
+          ) {
+            engagement {
+              ...languageEngagement
+            }
           }
         }
-      }
-      ${fragments.languageEngagement}
-    `,
+      `,
+      [fragments.languageEngagement],
+    ),
     {
       id,
       status: to,

@@ -1,6 +1,7 @@
 import { faker } from '@faker-js/faker';
 import { upperFirst } from 'lodash';
 import { isValidId } from '~/common';
+import { graphql } from '~/graphql';
 import {
   type CreateEducation,
   Degree,
@@ -8,7 +9,6 @@ import {
 } from '../../src/components/user/education/dto';
 import { type TestApp } from './create-app';
 import { fragments } from './fragments';
-import { gql } from './gql-tag';
 
 export async function createEducation(
   app: TestApp,
@@ -23,16 +23,18 @@ export async function createEducation(
   };
 
   const result = await app.graphql.mutate(
-    gql`
-      mutation createEducation($input: CreateEducationInput!) {
-        createEducation(input: $input) {
-          education {
-            ...education
+    graphql(
+      `
+        mutation createEducation($input: CreateEducationInput!) {
+          createEducation(input: $input) {
+            education {
+              ...education
+            }
           }
         }
-      }
-      ${fragments.education}
-    `,
+      `,
+      [fragments.education],
+    ),
     {
       input: {
         education: {

@@ -1,4 +1,5 @@
 import { generateId, isValidId } from '~/common';
+import { graphql } from '~/graphql';
 import {
   type CreateFieldRegion,
   type FieldRegion,
@@ -7,7 +8,6 @@ import { type TestApp } from './create-app';
 import { createPerson } from './create-person';
 import { createZone } from './create-zone';
 import { fragments } from './fragments';
-import { gql } from './gql-tag';
 import { runAsAdmin } from './login';
 
 export async function createRegion(
@@ -34,32 +34,32 @@ export async function createRegion(
   };
 
   const result = await app.graphql.mutate(
-    gql`
-      mutation createFieldRegion($input: CreateFieldRegionInput!) {
-        createFieldRegion(input: $input) {
-          fieldRegion {
-            ...fieldRegion
-            fieldZone {
-              value {
-                ...fieldZone
+    graphql(
+      `
+        mutation createFieldRegion($input: CreateFieldRegionInput!) {
+          createFieldRegion(input: $input) {
+            fieldRegion {
+              ...fieldRegion
+              fieldZone {
+                value {
+                  ...fieldZone
+                }
+                canRead
+                canEdit
               }
-              canRead
-              canEdit
-            }
-            director {
-              value {
-                ...user
+              director {
+                value {
+                  ...user
+                }
+                canRead
+                canEdit
               }
-              canRead
-              canEdit
             }
           }
         }
-      }
-      ${fragments.fieldRegion}
-      ${fragments.fieldZone}
-      ${fragments.user}
-    `,
+      `,
+      [fragments.fieldRegion, fragments.fieldZone, fragments.user],
+    ),
     {
       input: {
         fieldRegion,

@@ -1,5 +1,6 @@
 import { faker } from '@faker-js/faker';
 import { CalendarDate, generateId, isValidId } from '~/common';
+import { graphql } from '~/graphql';
 import {
   type CreateEthnologueLanguage,
   type CreateLanguage,
@@ -7,7 +8,6 @@ import {
 } from '../../src/components/language/dto';
 import { type TestApp } from './create-app';
 import { fragments } from './fragments';
-import { gql } from './gql-tag';
 
 export async function createLanguage(
   app: TestApp,
@@ -43,16 +43,18 @@ export async function createLanguage(
   };
 
   const result = await app.graphql.mutate(
-    gql`
-      mutation createLanguage($input: CreateLanguageInput!) {
-        createLanguage(input: $input) {
-          language {
-            ...language
+    graphql(
+      `
+        mutation createLanguage($input: CreateLanguageInput!) {
+          createLanguage(input: $input) {
+            language {
+              ...language
+            }
           }
         }
-      }
-      ${fragments.language}
-    `,
+      `,
+      [fragments.language],
+    ),
     {
       input: {
         language: {
@@ -75,16 +77,18 @@ export async function createLanguage(
 export async function createLanguageMinimal(app: TestApp) {
   const languageName = faker.location.country() + '' + (await generateId());
   const result = await app.graphql.mutate(
-    gql`
-      mutation createLanguage($input: CreateLanguageInput!) {
-        createLanguage(input: $input) {
-          language {
-            ...language
+    graphql(
+      `
+        mutation createLanguage($input: CreateLanguageInput!) {
+          createLanguage(input: $input) {
+            language {
+              ...language
+            }
           }
         }
-      }
-      ${fragments.language}
-    `,
+      `,
+      [fragments.language],
+    ),
     {
       input: {
         language: {

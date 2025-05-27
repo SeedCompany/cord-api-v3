@@ -1,5 +1,6 @@
 import { faker } from '@faker-js/faker';
 import { CalendarDate, Role } from '~/common';
+import { graphql } from '~/graphql';
 import { PartnerType } from '../src/components/partner/dto';
 import { ProjectStep } from '../src/components/project/dto';
 import {
@@ -12,7 +13,6 @@ import {
   createRegion,
   createSession,
   createTestApp,
-  gql,
   registerUser,
   runAsAdmin,
   type TestApp,
@@ -25,22 +25,24 @@ import {
 
 const readProject = (app: TestApp, id: string, changeset?: string) =>
   app.graphql.query(
-    gql`
-      query project($id: ID!, $changeset: ID) {
-        project(id: $id, changeset: $changeset) {
-          ...project
-          budget {
-            value {
-              id
-              records {
+    graphql(
+      `
+        query project($id: ID!, $changeset: ID) {
+          project(id: $id, changeset: $changeset) {
+            ...project
+            budget {
+              value {
                 id
+                records {
+                  id
+                }
               }
             }
           }
         }
-      }
-      ${fragments.project}
-    `,
+      `,
+      [fragments.project],
+    ),
     {
       id,
       changeset,
@@ -101,16 +103,18 @@ describe('Project Changeset Aware e2e', () => {
     // Update project with changeset
     const newCRName = faker.lorem.word() + ' ' + faker.string.uuid();
     const mutationResult = await app.graphql.mutate(
-      gql`
-        mutation updateProject($input: UpdateProjectInput!) {
-          updateProject(input: $input) {
-            project {
-              ...project
+      graphql(
+        `
+          mutation updateProject($input: UpdateProjectInput!) {
+            updateProject(input: $input) {
+              project {
+                ...project
+              }
             }
           }
-        }
-        ${fragments.project}
-      `,
+        `,
+        [fragments.project],
+      ),
       {
         input: {
           project: {
@@ -148,16 +152,18 @@ describe('Project Changeset Aware e2e', () => {
     const mouStart = '2020-08-23';
     const mouEnd = '2021-08-22';
     const mutationResult = await app.graphql.mutate(
-      gql`
-        mutation updateProject($input: UpdateProjectInput!) {
-          updateProject(input: $input) {
-            project {
-              ...project
+      graphql(
+        `
+          mutation updateProject($input: UpdateProjectInput!) {
+            updateProject(input: $input) {
+              project {
+                ...project
+              }
             }
           }
-        }
-        ${fragments.project}
-      `,
+        `,
+        [fragments.project],
+      ),
       {
         input: {
           project: {
@@ -208,24 +214,26 @@ describe('Project Changeset Aware e2e', () => {
 
     // Update Project with mou dates
     await app.graphql.mutate(
-      gql`
-        mutation updateProject($input: UpdateProjectInput!) {
-          updateProject(input: $input) {
-            project {
-              ...project
-              budget {
-                value {
-                  id
-                  records {
+      graphql(
+        `
+          mutation updateProject($input: UpdateProjectInput!) {
+            updateProject(input: $input) {
+              project {
+                ...project
+                budget {
+                  value {
                     id
+                    records {
+                      id
+                    }
                   }
                 }
               }
             }
           }
-        }
-        ${fragments.project}
-      `,
+        `,
+        [fragments.project],
+      ),
       {
         input: {
           project: {
@@ -261,16 +269,18 @@ describe('Project Changeset Aware e2e', () => {
 
     // Update project step with changeset
     const mutationResult = await app.graphql.mutate(
-      gql`
-        mutation updateProject($input: UpdateProjectInput!) {
-          updateProject(input: $input) {
-            project {
-              ...project
+      graphql(
+        `
+          mutation updateProject($input: UpdateProjectInput!) {
+            updateProject(input: $input) {
+              project {
+                ...project
+              }
             }
           }
-        }
-        ${fragments.project}
-      `,
+        `,
+        [fragments.project],
+      ),
       {
         input: {
           project: {

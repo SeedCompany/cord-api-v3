@@ -1,4 +1,5 @@
 import { CalendarDate, type ID, isValidId } from '~/common';
+import { graphql } from '~/graphql';
 import { PartnerType } from '../../src/components/partner/dto';
 import {
   type CreatePartnership,
@@ -10,7 +11,6 @@ import { type TestApp } from './create-app';
 import { createPartner } from './create-partner';
 import { createProject } from './create-project';
 import { fragments } from './fragments';
-import { gql } from './gql-tag';
 
 export async function createPartnership(
   app: TestApp,
@@ -29,16 +29,18 @@ export async function createPartnership(
   };
 
   const result = await app.graphql.mutate(
-    gql`
-      mutation createPartnership($input: CreatePartnershipInput!) {
-        createPartnership(input: $input) {
-          partnership {
-            ...partnership
+    graphql(
+      `
+        mutation createPartnership($input: CreatePartnershipInput!) {
+          createPartnership(input: $input) {
+            partnership {
+              ...partnership
+            }
           }
         }
-      }
-      ${fragments.partnership}
-    `,
+      `,
+      [fragments.partnership],
+    ),
     {
       input: {
         partnership,

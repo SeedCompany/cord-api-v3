@@ -1,11 +1,11 @@
 import { faker } from '@faker-js/faker';
+import { graphql } from '~/graphql';
 import {
   type CreateFundingAccount,
   type FundingAccount,
 } from '../../src/components/funding-account/dto';
 import { type TestApp } from './create-app';
 import { fragments } from './fragments';
-import { gql } from './gql-tag';
 
 export async function createFundingAccount(
   app: TestApp,
@@ -16,16 +16,18 @@ export async function createFundingAccount(
     input.accountNumber || faker.number.int({ min: 0, max: 9 });
 
   const result = await app.graphql.mutate(
-    gql`
-      mutation createFundingAccount($input: CreateFundingAccountInput!) {
-        createFundingAccount(input: $input) {
-          fundingAccount {
-            ...fundingAccount
+    graphql(
+      `
+        mutation createFundingAccount($input: CreateFundingAccountInput!) {
+          createFundingAccount(input: $input) {
+            fundingAccount {
+              ...fundingAccount
+            }
           }
         }
-      }
-      ${fragments.fundingAccount}
-    `,
+      `,
+      [fragments.fundingAccount],
+    ),
     {
       input: {
         fundingAccount: {

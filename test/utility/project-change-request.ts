@@ -1,5 +1,6 @@
 import { faker } from '@faker-js/faker';
 import { type ID, isValidId } from '~/common';
+import { graphql } from '~/graphql';
 import {
   type CreateProjectChangeRequest,
   type ProjectChangeRequest,
@@ -7,7 +8,6 @@ import {
 } from '../../src/components/project-change-request/dto';
 import { type TestApp } from './create-app';
 import { fragments } from './fragments';
-import { gql } from './gql-tag';
 
 export async function createProjectChangeRequest(
   app: TestApp,
@@ -21,18 +21,20 @@ export async function createProjectChangeRequest(
   };
 
   const result = await app.graphql.mutate(
-    gql`
-      mutation CreateProjectChangeRequest(
-        $input: CreateProjectChangeRequestInput!
-      ) {
-        createProjectChangeRequest(input: $input) {
-          projectChangeRequest {
-            ...projectChangeRequest
+    graphql(
+      `
+        mutation CreateProjectChangeRequest(
+          $input: CreateProjectChangeRequestInput!
+        ) {
+          createProjectChangeRequest(input: $input) {
+            projectChangeRequest {
+              ...projectChangeRequest
+            }
           }
         }
-      }
-      ${fragments.projectChangeRequest}
-    `,
+      `,
+      [fragments.projectChangeRequest],
+    ),
     {
       input: {
         projectChangeRequest: changeRequest,
@@ -51,18 +53,20 @@ export async function createProjectChangeRequest(
 
 export async function approveProjectChangeRequest(app: TestApp, id: ID) {
   const result = await app.graphql.mutate(
-    gql`
-      mutation ApproveProjectChangeRequest($id: ID!) {
-        updateProjectChangeRequest(
-          input: { projectChangeRequest: { id: $id, status: Approved } }
-        ) {
-          projectChangeRequest {
-            ...projectChangeRequest
+    graphql(
+      `
+        mutation ApproveProjectChangeRequest($id: ID!) {
+          updateProjectChangeRequest(
+            input: { projectChangeRequest: { id: $id, status: Approved } }
+          ) {
+            projectChangeRequest {
+              ...projectChangeRequest
+            }
           }
         }
-      }
-      ${fragments.projectChangeRequest}
-    `,
+      `,
+      [fragments.projectChangeRequest],
+    ),
     {
       id,
     },

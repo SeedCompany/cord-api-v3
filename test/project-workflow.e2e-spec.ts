@@ -1,4 +1,5 @@
 import { CalendarDate, Role } from '~/common';
+import { graphql } from '~/graphql';
 import { type Language } from '../src/components/language/dto';
 import { type Location } from '../src/components/location/dto';
 import { PartnerType } from '../src/components/partner/dto';
@@ -22,7 +23,6 @@ import {
   createSession,
   createTestApp,
   fragments,
-  gql,
   registerUser,
   runAsAdmin,
   type TestApp,
@@ -90,22 +90,24 @@ describe('Project-Workflow e2e', () => {
     const project = await createProject(app, { type });
 
     const queryProject = await app.graphql.query(
-      gql`
-        query project($id: ID!) {
-          project(id: $id) {
-            ...project
-            budget {
-              value {
-                id
-                status
+      graphql(
+        `
+          query project($id: ID!) {
+            project(id: $id) {
+              ...project
+              budget {
+                value {
+                  id
+                  status
+                }
+                canRead
+                canEdit
               }
-              canRead
-              canEdit
             }
           }
-        }
-        ${fragments.project}
-      `,
+        `,
+        [fragments.project],
+      ),
       {
         id: project.id,
       },
@@ -147,14 +149,16 @@ describe('Project-Workflow e2e', () => {
     });
 
     let result = await app.graphql.query(
-      gql`
-        query project($id: ID!) {
-          project(id: $id) {
-            ...project
+      graphql(
+        `
+          query project($id: ID!) {
+            project(id: $id) {
+              ...project
+            }
           }
-        }
-        ${fragments.project}
-      `,
+        `,
+        [fragments.project],
+      ),
       {
         id: project.id,
       },

@@ -1,6 +1,7 @@
 import { faker } from '@faker-js/faker';
 import { times } from 'lodash';
 import { generateId, type IdOf, isValidId } from '~/common';
+import { graphql } from '~/graphql';
 import { type Location } from '../src/components/location/dto';
 import {
   createFundingAccount,
@@ -9,7 +10,6 @@ import {
   createSession,
   createTestApp,
   fragments,
-  gql,
   loginAsAdmin,
   type TestApp,
 } from './utility';
@@ -33,14 +33,16 @@ describe('Location e2e', () => {
     const st = await createLocation(app);
 
     const { location: actual } = await app.graphql.query(
-      gql`
-        query location($id: ID!) {
-          location(id: $id) {
-            ...location
+      graphql(
+        `
+          query location($id: ID!) {
+            location(id: $id) {
+              ...location
+            }
           }
-        }
-        ${fragments.location}
-      `,
+        `,
+        [fragments.location],
+      ),
       {
         id: st.id,
       },
@@ -56,16 +58,18 @@ describe('Location e2e', () => {
     const st = await createLocation(app);
     const newName = faker.company.name();
     const result = await app.graphql.mutate(
-      gql`
-        mutation updateLocation($input: UpdateLocationInput!) {
-          updateLocation(input: $input) {
-            location {
-              ...location
+      graphql(
+        `
+          mutation updateLocation($input: UpdateLocationInput!) {
+            updateLocation(input: $input) {
+              location {
+                ...location
+              }
             }
           }
-        }
-        ${fragments.location}
-      `,
+        `,
+        [fragments.location],
+      ),
       {
         input: {
           location: {
@@ -84,13 +88,13 @@ describe('Location e2e', () => {
   it.skip('delete location', async () => {
     const st = await createLocation(app);
     const result = await app.graphql.mutate(
-      gql`
+      graphql(`
         mutation deleteLocation($id: ID!) {
           deleteLocation(id: $id) {
             __typename
           }
         }
-      `,
+      `),
       {
         id: st.id,
       },
@@ -112,18 +116,22 @@ describe('Location e2e', () => {
       ),
     );
 
-    const { locations } = await app.graphql.query(gql`
-      query {
-        locations(input: { count: 15 }) {
-          items {
-            ...location
+    const { locations } = await app.graphql.query(
+      graphql(
+        `
+          query {
+            locations(input: { count: 15 }) {
+              items {
+                ...location
+              }
+              hasMore
+              total
+            }
           }
-          hasMore
-          total
-        }
-      }
-      ${fragments.location}
-    `);
+        `,
+        [fragments.location],
+      ),
+    );
 
     expect(locations.items.length).toBeGreaterThanOrEqual(numLocations);
   });
@@ -136,16 +144,18 @@ describe('Location e2e', () => {
     const newFieldRegion = await createRegion(app);
 
     const result = await app.graphql.mutate(
-      gql`
-        mutation updateLocation($input: UpdateLocationInput!) {
-          updateLocation(input: $input) {
-            location {
-              ...location
+      graphql(
+        `
+          mutation updateLocation($input: UpdateLocationInput!) {
+            updateLocation(input: $input) {
+              location {
+                ...location
+              }
             }
           }
-        }
-        ${fragments.location}
-      `,
+        `,
+        [fragments.location],
+      ),
       {
         input: {
           location: {
@@ -168,16 +178,18 @@ describe('Location e2e', () => {
     const newMarketingRegion = await createLocation(app);
 
     const result = await app.graphql.mutate(
-      gql`
-        mutation updateLocation($input: UpdateLocationInput!) {
-          updateLocation(input: $input) {
-            location {
-              ...location
+      graphql(
+        `
+          mutation updateLocation($input: UpdateLocationInput!) {
+            updateLocation(input: $input) {
+              location {
+                ...location
+              }
             }
           }
-        }
-        ${fragments.location}
-      `,
+        `,
+        [fragments.location],
+      ),
       {
         input: {
           location: {
@@ -200,16 +212,18 @@ describe('Location e2e', () => {
     const newFundingAccount = await createFundingAccount(app);
 
     const result = await app.graphql.mutate(
-      gql`
-        mutation updateLocation($input: UpdateLocationInput!) {
-          updateLocation(input: $input) {
-            location {
-              ...location
+      graphql(
+        `
+          mutation updateLocation($input: UpdateLocationInput!) {
+            updateLocation(input: $input) {
+              location {
+                ...location
+              }
             }
           }
-        }
-        ${fragments.location}
-      `,
+        `,
+        [fragments.location],
+      ),
       {
         input: {
           location: {

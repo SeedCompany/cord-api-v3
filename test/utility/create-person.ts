@@ -1,9 +1,9 @@
 import { faker } from '@faker-js/faker';
 import { generateId, isValidId } from '~/common';
+import { graphql } from '~/graphql';
 import { type CreatePerson } from '../../src/components/user/dto';
 import { type TestApp } from './create-app';
 import { fragments, type RawUser } from './fragments';
-import { gql } from './gql-tag';
 
 export async function createPerson(
   app: TestApp,
@@ -25,16 +25,18 @@ export async function createPerson(
       };
 
   const result = await app.graphql.mutate(
-    gql`
-      mutation createPerson($input: CreatePersonInput!) {
-        createPerson(input: $input) {
-          user {
-            ...user
+    graphql(
+      `
+        mutation createPerson($input: CreatePersonInput!) {
+          createPerson(input: $input) {
+            user {
+              ...user
+            }
           }
         }
-      }
-      ${fragments.user}
-    `,
+      `,
+      [fragments.user],
+    ),
     {
       input: {
         person,
