@@ -1,11 +1,11 @@
 import { faker } from '@faker-js/faker';
+import { graphql } from '~/graphql';
 import {
   type CreateOrganization,
   type Organization,
 } from '../../src/components/organization/dto';
 import { type TestApp } from './create-app';
 import { fragments } from './fragments';
-import { gql } from './gql-tag';
 import { type Raw } from './raw.type';
 
 export async function createOrganization(
@@ -16,16 +16,18 @@ export async function createOrganization(
   const address = input.address || faker.location.city();
 
   const result = await app.graphql.mutate(
-    gql`
-      mutation createOrganization($input: CreateOrganizationInput!) {
-        createOrganization(input: $input) {
-          organization {
-            ...org
+    graphql(
+      `
+        mutation createOrganization($input: CreateOrganizationInput!) {
+          createOrganization(input: $input) {
+            organization {
+              ...org
+            }
           }
         }
-      }
-      ${fragments.org}
-    `,
+      `,
+      [fragments.org],
+    ),
     {
       input: {
         organization: {

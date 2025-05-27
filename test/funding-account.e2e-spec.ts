@@ -1,13 +1,13 @@
 import { faker } from '@faker-js/faker';
 import { times } from 'lodash';
 import { isValidId, Role } from '~/common';
+import { graphql } from '~/graphql';
 import { type FundingAccount } from '../src/components/funding-account/dto';
 import {
   createFundingAccount,
   createSession,
   createTestApp,
   fragments,
-  gql,
   registerUser,
   runAsAdmin,
   type TestApp,
@@ -38,14 +38,16 @@ describe('FundingAccount e2e', () => {
     const st = await runAsAdmin(app, createFundingAccount);
 
     const { fundingAccount: actual } = await app.graphql.query(
-      gql`
-        query st($id: ID!) {
-          fundingAccount(id: $id) {
-            ...fundingAccount
+      graphql(
+        `
+          query st($id: ID!) {
+            fundingAccount(id: $id) {
+              ...fundingAccount
+            }
           }
-        }
-        ${fragments.fundingAccount}
-      `,
+        `,
+        [fragments.fundingAccount],
+      ),
       {
         id: st.id,
       },
@@ -63,16 +65,18 @@ describe('FundingAccount e2e', () => {
     const newAccountNumber = faker.number.int({ min: 0, max: 9 });
     await runAsAdmin(app, async () => {
       const result = await app.graphql.mutate(
-        gql`
-          mutation updateFundingAccount($input: UpdateFundingAccountInput!) {
-            updateFundingAccount(input: $input) {
-              fundingAccount {
-                ...fundingAccount
+        graphql(
+          `
+            mutation updateFundingAccount($input: UpdateFundingAccountInput!) {
+              updateFundingAccount(input: $input) {
+                fundingAccount {
+                  ...fundingAccount
+                }
               }
             }
-          }
-          ${fragments.fundingAccount}
-        `,
+          `,
+          [fragments.fundingAccount],
+        ),
         {
           input: {
             fundingAccount: {
@@ -94,13 +98,13 @@ describe('FundingAccount e2e', () => {
   it.skip('delete funding account', async () => {
     const st = await runAsAdmin(app, createFundingAccount);
     const result = await app.graphql.mutate(
-      gql`
+      graphql(`
         mutation deleteFundingAccount($id: ID!) {
           deleteFundingAccount(id: $id) {
             __typename
           }
         }
-      `,
+      `),
       {
         id: st.id,
       },
@@ -121,18 +125,22 @@ describe('FundingAccount e2e', () => {
     );
     await registerUser(app, { roles: [Role.LeadFinancialAnalyst] });
 
-    const { fundingAccounts } = await app.graphql.query(gql`
-      query {
-        fundingAccounts(input: { count: 15 }) {
-          items {
-            ...fundingAccount
+    const { fundingAccounts } = await app.graphql.query(
+      graphql(
+        `
+          query {
+            fundingAccounts(input: { count: 15 }) {
+              items {
+                ...fundingAccount
+              }
+              hasMore
+              total
+            }
           }
-          hasMore
-          total
-        }
-      }
-      ${fragments.fundingAccount}
-    `);
+        `,
+        [fragments.fundingAccount],
+      ),
+    );
 
     expect(fundingAccounts.items.length).toBeGreaterThanOrEqual(
       numFundingAccounts,

@@ -1,4 +1,5 @@
 import { CalendarDate, type ID, Role } from '~/common';
+import { graphql } from '~/graphql';
 import { EngagementStatus } from '../src/components/engagement/dto';
 import { type Language } from '../src/components/language/dto';
 import { ProjectChangeRequestType } from '../src/components/project-change-request/dto';
@@ -14,7 +15,6 @@ import {
   createSession,
   createTestApp,
   errors,
-  gql,
   registerUser,
   runAsAdmin,
   type TestApp,
@@ -25,22 +25,24 @@ import { forceProjectTo } from './utility/transition-project';
 
 const readEngagements = (app: TestApp, id: string, changeset?: string) =>
   app.graphql.query(
-    gql`
-      query project($id: ID!, $changeset: ID) {
-        project(id: $id, changeset: $changeset) {
-          ...project
-          engagements {
-            items {
-              id
-              status {
-                value
+    graphql(
+      `
+        query project($id: ID!, $changeset: ID) {
+          project(id: $id, changeset: $changeset) {
+            ...project
+            engagements {
+              items {
+                id
+                status {
+                  value
+                }
               }
             }
           }
         }
-      }
-      ${fragments.project}
-    `,
+      `,
+      [fragments.project],
+    ),
     {
       id,
       changeset,
@@ -49,33 +51,35 @@ const readEngagements = (app: TestApp, id: string, changeset?: string) =>
 
 const readLanguageEngagement = (app: TestApp, id: string, changeset?: string) =>
   app.graphql.query(
-    gql`
-      query engagement($id: ID!, $changeset: ID) {
-        engagement(id: $id, changeset: $changeset) {
-          ...languageEngagement
-          changeset {
-            id
-            difference {
-              added {
-                id
-              }
-              removed {
-                id
-              }
-              changed {
-                previous {
+    graphql(
+      `
+        query engagement($id: ID!, $changeset: ID) {
+          engagement(id: $id, changeset: $changeset) {
+            ...languageEngagement
+            changeset {
+              id
+              difference {
+                added {
                   id
                 }
-                updated {
+                removed {
                   id
+                }
+                changed {
+                  previous {
+                    id
+                  }
+                  updated {
+                    id
+                  }
                 }
               }
             }
           }
         }
-      }
-      ${fragments.languageEngagement}
-    `,
+      `,
+      [fragments.languageEngagement],
+    ),
     {
       id,
       changeset,
@@ -84,7 +88,7 @@ const readLanguageEngagement = (app: TestApp, id: string, changeset?: string) =>
 
 const readProjectChangeset = (app: TestApp, id: string, changeset?: string) =>
   app.graphql.query(
-    gql`
+    graphql(`
       query project($id: ID!, $changeset: ID) {
         project(id: $id, changeset: $changeset) {
           id
@@ -109,7 +113,7 @@ const readProjectChangeset = (app: TestApp, id: string, changeset?: string) =>
           }
         }
       }
-    `,
+    `),
     {
       id,
       changeset,
@@ -167,18 +171,20 @@ describe('Engagement Changeset Aware e2e', () => {
 
     // Create new engagement with changeset
     const changesetEngagement = await app.graphql.mutate(
-      gql`
-        mutation createLanguageEngagement(
-          $input: CreateLanguageEngagementInput!
-        ) {
-          createLanguageEngagement(input: $input) {
-            engagement {
-              ...languageEngagement
+      graphql(
+        `
+          mutation createLanguageEngagement(
+            $input: CreateLanguageEngagementInput!
+          ) {
+            createLanguageEngagement(input: $input) {
+              engagement {
+                ...languageEngagement
+              }
             }
           }
-        }
-        ${fragments.languageEngagement}
-      `,
+        `,
+        [fragments.languageEngagement],
+      ),
       {
         input: {
           engagement: {
@@ -217,18 +223,20 @@ describe('Engagement Changeset Aware e2e', () => {
     });
     // Update engagement prop with changeset
     await app.graphql.mutate(
-      gql`
-        mutation updateLanguageEngagement(
-          $input: UpdateLanguageEngagementInput!
-        ) {
-          updateLanguageEngagement(input: $input) {
-            engagement {
-              ...languageEngagement
+      graphql(
+        `
+          mutation updateLanguageEngagement(
+            $input: UpdateLanguageEngagementInput!
+          ) {
+            updateLanguageEngagement(input: $input) {
+              engagement {
+                ...languageEngagement
+              }
             }
           }
-        }
-        ${fragments.languageEngagement}
-      `,
+        `,
+        [fragments.languageEngagement],
+      ),
       {
         input: {
           engagement: {
@@ -264,18 +272,20 @@ describe('Engagement Changeset Aware e2e', () => {
 
     // Create new engagement with changeset
     const changesetEngagement = await app.graphql.mutate(
-      gql`
-        mutation createLanguageEngagement(
-          $input: CreateLanguageEngagementInput!
-        ) {
-          createLanguageEngagement(input: $input) {
-            engagement {
-              ...languageEngagement
+      graphql(
+        `
+          mutation createLanguageEngagement(
+            $input: CreateLanguageEngagementInput!
+          ) {
+            createLanguageEngagement(input: $input) {
+              engagement {
+                ...languageEngagement
+              }
             }
           }
-        }
-        ${fragments.languageEngagement}
-      `,
+        `,
+        [fragments.languageEngagement],
+      ),
       {
         input: {
           engagement: {
@@ -295,18 +305,20 @@ describe('Engagement Changeset Aware e2e', () => {
       changesetEngagement.createLanguageEngagement.engagement.id;
 
     await app.graphql.mutate(
-      gql`
-        mutation updateLanguageEngagement(
-          $input: UpdateLanguageEngagementInput!
-        ) {
-          updateLanguageEngagement(input: $input) {
-            engagement {
-              ...languageEngagement
+      graphql(
+        `
+          mutation updateLanguageEngagement(
+            $input: UpdateLanguageEngagementInput!
+          ) {
+            updateLanguageEngagement(input: $input) {
+              engagement {
+                ...languageEngagement
+              }
             }
           }
-        }
-        ${fragments.languageEngagement}
-      `,
+        `,
+        [fragments.languageEngagement],
+      ),
       {
         input: {
           engagement: {
@@ -338,18 +350,20 @@ describe('Engagement Changeset Aware e2e', () => {
     });
 
     const le = await app.graphql.mutate(
-      gql`
-        mutation createLanguageEngagement(
-          $input: CreateLanguageEngagementInput!
-        ) {
-          createLanguageEngagement(input: $input) {
-            engagement {
-              ...languageEngagement
+      graphql(
+        `
+          mutation createLanguageEngagement(
+            $input: CreateLanguageEngagementInput!
+          ) {
+            createLanguageEngagement(input: $input) {
+              engagement {
+                ...languageEngagement
+              }
             }
           }
-        }
-        ${fragments.languageEngagement}
-      `,
+        `,
+        [fragments.languageEngagement],
+      ),
       {
         input: {
           engagement: {
@@ -365,13 +379,13 @@ describe('Engagement Changeset Aware e2e', () => {
     // Delete engagement in changeset
     await runAsAdmin(app, async () => {
       await app.graphql.mutate(
-        gql`
+        graphql(`
           mutation deleteEngagement($id: ID!, $changeset: ID) {
             deleteEngagement(id: $id, changeset: $changeset) {
               __typename
             }
           }
-        `,
+        `),
         {
           id: le.createLanguageEngagement.engagement.id,
           changeset: changeset.id,
@@ -412,18 +426,20 @@ describe('Engagement Changeset Aware e2e', () => {
     // Create new engagement with changeset
     await app.graphql
       .mutate(
-        gql`
-          mutation createLanguageEngagement(
-            $input: CreateLanguageEngagementInput!
-          ) {
-            createLanguageEngagement(input: $input) {
-              engagement {
-                ...languageEngagement
+        graphql(
+          `
+            mutation createLanguageEngagement(
+              $input: CreateLanguageEngagementInput!
+            ) {
+              createLanguageEngagement(input: $input) {
+                engagement {
+                  ...languageEngagement
+                }
               }
             }
-          }
-          ${fragments.languageEngagement}
-        `,
+          `,
+          [fragments.languageEngagement],
+        ),
         {
           input: {
             engagement: {

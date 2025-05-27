@@ -1,10 +1,10 @@
 import { faker } from '@faker-js/faker';
 import { generateId, isValidId, Role } from '~/common';
 import { type RegisterInput } from '~/core/authentication/dto';
+import { graphql } from '~/graphql';
 import { type User, UserStatus } from '../../src/components/user/dto';
 import { type TestApp } from './create-app';
 import { fragments, type RawUser } from './fragments';
-import { gql } from './gql-tag';
 import { login, runAsAdmin, runInIsolatedSession } from './login';
 
 export const generateRegisterInput = async (): Promise<RegisterInput> => ({
@@ -35,16 +35,18 @@ export async function registerUserWithStrictInput(
     ...input,
   };
   const result = await app.graphql.mutate(
-    gql`
-      mutation createUser($input: RegisterInput!) {
-        register(input: $input) {
-          user {
-            ...user
+    graphql(
+      `
+        mutation createUser($input: RegisterInput!) {
+          register(input: $input) {
+            user {
+              ...user
+            }
           }
         }
-      }
-      ${fragments.user}
-    `,
+      `,
+      [fragments.user],
+    ),
     {
       input: user,
     },
@@ -80,16 +82,18 @@ export async function registerUser(
   };
 
   const result = await app.graphql.mutate(
-    gql`
-      mutation createUser($input: RegisterInput!) {
-        register(input: $input) {
-          user {
-            ...user
+    graphql(
+      `
+        mutation createUser($input: RegisterInput!) {
+          register(input: $input) {
+            user {
+              ...user
+            }
           }
         }
-      }
-      ${fragments.user}
-    `,
+      `,
+      [fragments.user],
+    ),
     {
       input: user,
     },
@@ -105,13 +109,13 @@ export async function registerUser(
   if (roles && roles.length > 0) {
     await runAsAdmin(app, async () => {
       await app.graphql.mutate(
-        gql`
+        graphql(`
           mutation AddRolesToUser($userId: ID!, $roles: [Role!]!) {
             updateUser(input: { user: { id: $userId, roles: $roles } }) {
               __typename
             }
           }
-        `,
+        `),
         {
           userId: actual.id,
           roles,

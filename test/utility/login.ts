@@ -1,12 +1,12 @@
 import { ConfigService } from '~/core';
 import { type LoginInput } from '~/core/authentication/dto';
+import { graphql } from '~/graphql';
 import { type TestApp } from './create-app';
 import { createSession } from './create-session';
-import { gql } from './gql-tag';
 
 export async function login(app: TestApp, input: LoginInput) {
   const res = await app.graphql.mutate(
-    gql`
+    graphql(`
       mutation login($input: LoginInput!) {
         login(input: $input) {
           user {
@@ -14,7 +14,7 @@ export async function login(app: TestApp, input: LoginInput) {
           }
         }
       }
-    `,
+    `),
     { input },
   );
   app.graphql.email = input.email;

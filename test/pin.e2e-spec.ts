@@ -1,11 +1,11 @@
 import { Role } from '~/common';
+import { graphql } from '~/graphql';
 import {
   createPin,
   createProject,
   createSession,
   createTestApp,
   fragments,
-  gql,
   registerUser,
   type TestApp,
 } from './utility';
@@ -29,14 +29,16 @@ describe('Pin e2e', () => {
 
     await createPin(app, project.id, true);
     const result = await app.graphql.query(
-      gql`
-        query project($id: ID!) {
-          project(id: $id) {
-            ...project
+      graphql(
+        `
+          query project($id: ID!) {
+            project(id: $id) {
+              ...project
+            }
           }
-        }
-        ${fragments.project}
-      `,
+        `,
+        [fragments.project],
+      ),
       {
         id: project.id,
       },

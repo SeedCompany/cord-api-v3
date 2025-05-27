@@ -1,4 +1,5 @@
 import { isValidId } from '~/common';
+import { graphql } from '~/graphql';
 import {
   type CreateProjectMember,
   type ProjectMember,
@@ -11,7 +12,6 @@ import {
   type TestApp,
 } from '../utility';
 import { getUserFromSession } from './create-session';
-import { gql } from './gql-tag';
 
 export async function createProjectMember(
   app: TestApp,
@@ -27,16 +27,18 @@ export async function createProjectMember(
   };
 
   const result = await app.graphql.mutate(
-    gql`
-      mutation createProjectMember($input: CreateProjectMemberInput!) {
-        createProjectMember(input: $input) {
-          projectMember {
-            ...projectMember
+    graphql(
+      `
+        mutation createProjectMember($input: CreateProjectMemberInput!) {
+          createProjectMember(input: $input) {
+            projectMember {
+              ...projectMember
+            }
           }
         }
-      }
-      ${fragments.projectMember}
-    `,
+      `,
+      [fragments.projectMember],
+    ),
     {
       input: {
         projectMember,

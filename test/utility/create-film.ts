@@ -1,8 +1,8 @@
 import { faker } from '@faker-js/faker';
+import { graphql } from '~/graphql';
 import { type CreateFilm, type Film } from '../../src/components/film/dto';
 import { type TestApp } from './create-app';
 import { fragments } from './fragments';
-import { gql } from './gql-tag';
 
 export async function createFilm(
   app: TestApp,
@@ -11,16 +11,18 @@ export async function createFilm(
   const name = input.name || faker.hacker.noun() + faker.company.name();
 
   const result = await app.graphql.mutate(
-    gql`
-      mutation createFilm($input: CreateFilmInput!) {
-        createFilm(input: $input) {
-          film {
-            ...film
+    graphql(
+      `
+        mutation createFilm($input: CreateFilmInput!) {
+          createFilm(input: $input) {
+            film {
+              ...film
+            }
           }
         }
-      }
-      ${fragments.film}
-    `,
+      `,
+      [fragments.film],
+    ),
     {
       input: {
         film: {

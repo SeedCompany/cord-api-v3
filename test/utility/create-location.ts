@@ -1,6 +1,7 @@
 import { faker } from '@faker-js/faker';
 import { all as countries } from 'iso-3166-1';
 import { isValidId } from '~/common';
+import { graphql } from '~/graphql';
 import {
   type CreateLocation,
   type Location,
@@ -8,7 +9,6 @@ import {
 } from '../../src/components/location/dto';
 import { type TestApp } from './create-app';
 import { fragments } from './fragments';
-import { gql } from './gql-tag';
 
 export async function createLocation(
   app: TestApp,
@@ -22,16 +22,18 @@ export async function createLocation(
   };
 
   const result = await app.graphql.mutate(
-    gql`
-      mutation createLocation($input: CreateLocationInput!) {
-        createLocation(input: $input) {
-          location {
-            ...location
+    graphql(
+      `
+        mutation createLocation($input: CreateLocationInput!) {
+          createLocation(input: $input) {
+            location {
+              ...location
+            }
           }
         }
-      }
-      ${fragments.location}
-    `,
+      `,
+      [fragments.location],
+    ),
     {
       input: {
         location,

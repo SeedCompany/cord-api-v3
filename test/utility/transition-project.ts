@@ -1,11 +1,11 @@
 import { type ID } from '~/common';
+import { graphql } from '~/graphql';
 import { type IProject, ProjectStep } from '../../src/components/project/dto';
 import {
   type ExecuteProjectTransitionInput,
   type ProjectWorkflowTransition,
 } from '../../src/components/project/workflow/dto';
 import { type TestApp } from './create-app';
-import { gql } from './gql-tag';
 import { runAsAdmin } from './login';
 
 export const stepsFromEarlyConversationToBeforeActive = [
@@ -56,7 +56,7 @@ export const transitionProject = async (
   input: ExecuteProjectTransitionInput,
 ) => {
   const result = await app.graphql.mutate(
-    gql`
+    graphql(`
       mutation TransitionProject($input: ExecuteProjectTransitionInput!) {
         transitionProject(input: $input) {
           step {
@@ -75,7 +75,7 @@ export const transitionProject = async (
           status
         }
       }
-    `,
+    `),
     { input },
   );
   return await (result.transitionProject as ReturnType<
@@ -85,7 +85,7 @@ export const transitionProject = async (
 
 export const getProjectTransitions = async (app: TestApp, project: ID) => {
   const result = await app.graphql.mutate(
-    gql`
+    graphql(`
       query ProjectTransitions($project: ID!) {
         project(id: $project) {
           step {
@@ -104,7 +104,7 @@ export const getProjectTransitions = async (app: TestApp, project: ID) => {
           status
         }
       }
-    `,
+    `),
     { project },
   );
   return result.project as Pick<IProject, 'step' | 'status'> & {

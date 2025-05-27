@@ -1,5 +1,6 @@
 import { faker } from '@faker-js/faker';
 import { CalendarDate, isValidId } from '~/common';
+import { graphql } from '~/graphql';
 import {
   type CreateProject,
   ProjectType,
@@ -7,7 +8,6 @@ import {
 import { type TestApp } from './create-app';
 import { createRegion } from './create-region';
 import { fragments, type RawProject } from './fragments';
-import { gql } from './gql-tag';
 import { runAsAdmin } from './login';
 
 export async function createProject(
@@ -30,16 +30,18 @@ export async function createProject(
   };
 
   const result = await app.graphql.mutate(
-    gql`
-      mutation createProject($input: CreateProjectInput!) {
-        createProject(input: $input) {
-          project {
-            ...project
+    graphql(
+      `
+        mutation createProject($input: CreateProjectInput!) {
+          createProject(input: $input) {
+            project {
+              ...project
+            }
           }
         }
-      }
-      ${fragments.project}
-    `,
+      `,
+      [fragments.project],
+    ),
     {
       input: {
         project,

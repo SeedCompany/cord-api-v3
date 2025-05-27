@@ -6,6 +6,7 @@ import {
   type PaginatedListType,
   type Variant,
 } from '~/common';
+import { graphql } from '~/graphql';
 import { type CreateLanguageEngagement } from '../src/components/engagement/dto';
 import { type Media } from '../src/components/file/media/media.dto';
 import { type Language } from '../src/components/language/dto';
@@ -23,7 +24,6 @@ import {
   createTestApp,
   fragments,
   generateFakeFile,
-  gql,
   type Raw,
   registerUser,
   requestFileUpload,
@@ -62,21 +62,23 @@ describe('ProgressReport Media e2e', () => {
     language = await runAsAdmin(app, createLanguage);
 
     const { createEng } = await app.graphql.mutate(
-      gql`
-        mutation CreateLanguageEngagement($input: CreateLanguageEngagement!) {
-          createEng: createLanguageEngagement(input: { engagement: $input }) {
-            engagement {
-              ...languageEngagement
-              progressReports(input: { count: 1 }) {
-                items {
-                  id
+      graphql(
+        `
+          mutation CreateLanguageEngagement($input: CreateLanguageEngagement!) {
+            createEng: createLanguageEngagement(input: { engagement: $input }) {
+              engagement {
+                ...languageEngagement
+                progressReports(input: { count: 1 }) {
+                  items {
+                    id
+                  }
                 }
               }
             }
           }
-        }
-        ${fragments.languageEngagement}
-      `,
+        `,
+        [fragments.languageEngagement],
+      ),
       {
         input: {
           projectId: project.id,
@@ -93,7 +95,7 @@ describe('ProgressReport Media e2e', () => {
 
   it('View uploadable options', async () => {
     const { report } = await app.graphql.query(
-      gql`
+      graphql(`
         query ($id: ID!) {
           report: periodicReport(id: $id) {
             ... on ProgressReport {
@@ -105,7 +107,7 @@ describe('ProgressReport Media e2e', () => {
             }
           }
         }
-      `,
+      `),
       { id: reportId },
     );
     const { uploadableVariants } = report.media;
@@ -173,14 +175,16 @@ describe('ProgressReport Media e2e', () => {
       caption: 'This it updates!',
     } satisfies UpdateProgressReportMedia;
     const { update } = await app.graphql.mutate(
-      gql`
-        mutation Update($input: UpdateProgressReportMedia!) {
-          update: updateProgressReportMedia(input: $input) {
-            ...reportMedia
+      graphql(
+        `
+          mutation Update($input: UpdateProgressReportMedia!) {
+            update: updateProgressReportMedia(input: $input) {
+              ...reportMedia
+            }
           }
-        }
-        ${reportMediaFrag}
-      `,
+        `,
+        [reportMediaFrag],
+      ),
       { input },
     );
 
@@ -255,21 +259,23 @@ describe('ProgressReport Media e2e', () => {
     });
 
     const { report: updated } = await app.graphql.mutate(
-      gql`
-        mutation Delete($id: ID!) {
-          report: deleteProgressReportMedia(id: $id) {
-            id
-            media {
-              items {
-                ...reportMedia
+      graphql(
+        `
+          mutation Delete($id: ID!) {
+            report: deleteProgressReportMedia(id: $id) {
+              id
+              media {
+                items {
+                  ...reportMedia
+                }
+                hasMore
+                total
               }
-              hasMore
-              total
             }
           }
-        }
-        ${reportMediaFrag}
-      `,
+        `,
+        [reportMediaFrag],
+      ),
       { id: report.media.items[0]!.id },
     );
 
@@ -371,21 +377,23 @@ async function uploadMedia(
   input: Merge<UploadProgressReportMedia, { variant: MediaVariant }>,
 ) {
   const { upload } = await app.graphql.mutate(
-    gql`
-      mutation Upload($input: UploadProgressReportMedia!) {
-        upload: uploadProgressReportMedia(input: $input) {
-          id
-          media {
-            items {
-              ...reportMedia
+    graphql(
+      `
+        mutation Upload($input: UploadProgressReportMedia!) {
+          upload: uploadProgressReportMedia(input: $input) {
+            id
+            media {
+              items {
+                ...reportMedia
+              }
+              hasMore
+              total
             }
-            hasMore
-            total
           }
         }
-      }
-      ${reportMediaFrag}
-    `,
+      `,
+      [reportMediaFrag],
+    ),
     { input },
   );
   return upload as {
@@ -396,24 +404,26 @@ async function uploadMedia(
 
 async function getFeaturedMedia(app: TestApp, id: IdOf<ProgressReport>) {
   const { report } = await app.graphql.query(
-    gql`
-      query ($id: ID!) {
-        report: periodicReport(id: $id) {
-          ... on ProgressReport {
-            featuredMedia {
-              ...reportMedia
+    graphql(
+      `
+        query ($id: ID!) {
+          report: periodicReport(id: $id) {
+            ... on ProgressReport {
+              featuredMedia {
+                ...reportMedia
+              }
             }
           }
         }
-      }
-      ${reportMediaFrag}
-    `,
+      `,
+      [reportMediaFrag],
+    ),
     { id },
   );
   return report.featuredMedia as RawReportMedia | null;
 }
 
-const reportMediaFrag = gql`
+const reportMediaFrag = graphql(`
   fragment reportMedia on ProgressReportMedia {
     id
     category
@@ -431,7 +441,7 @@ const reportMediaFrag = gql`
     canEdit
     canDelete
   }
-`;
+`);
 type RawReportMedia = Omit<
   Raw<ProgressReportMedia>,
   'media' | 'file' | 'creator' | 'scope'

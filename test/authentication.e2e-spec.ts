@@ -3,12 +3,12 @@ import { jest } from '@jest/globals';
 import { EmailService } from '@seedcompany/nestjs-email';
 import { Connection } from 'cypher-query-builder';
 import { isValidId } from '~/common';
+import { graphql } from '~/graphql';
 import {
   createSession,
   createTestApp,
   fragments,
   generateRegisterInput,
-  gql,
   login,
   logout,
   registerUser,
@@ -38,13 +38,13 @@ describe('Authentication e2e', () => {
     // create user first
     await registerUser(app, fakeUser);
     await app.graphql.mutate(
-      gql`
+      graphql(`
         mutation forgotPassword($email: String!) {
           forgotPassword(email: $email) {
             __typename
           }
         }
-      `,
+      `),
       {
         email: email,
       },
@@ -59,13 +59,13 @@ describe('Authentication e2e', () => {
     const token = tokenRes ? tokenRes.token : '';
     const newPassword = faker.internet.password();
     await app.graphql.mutate(
-      gql`
+      graphql(`
         mutation resetPassword($input: ResetPasswordInput!) {
           resetPassword(input: $input) {
             __typename
           }
         }
-      `,
+      `),
       {
         input: {
           token: token,
@@ -90,14 +90,16 @@ describe('Authentication e2e', () => {
 
     await login(app, { email: fakeUser.email, password: fakeUser.password });
     const result = await app.graphql.query(
-      gql`
-        query user($id: ID!) {
-          user(id: $id) {
-            ...user
+      graphql(
+        `
+          query user($id: ID!) {
+            user(id: $id) {
+              ...user
+            }
           }
-        }
-        ${fragments.user}
-      `,
+        `,
+        [fragments.user],
+      ),
       {
         id: user.id,
       },
@@ -125,13 +127,13 @@ describe('Authentication e2e', () => {
 
     const newPassword = faker.internet.password();
     await app.graphql.mutate(
-      gql`
+      graphql(`
         mutation changePassword($oldPassword: String!, $newPassword: String!) {
           changePassword(oldPassword: $oldPassword, newPassword: $newPassword) {
             __typename
           }
         }
-      `,
+      `),
       {
         oldPassword: fakeUser.password,
         newPassword: newPassword,

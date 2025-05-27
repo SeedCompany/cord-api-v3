@@ -1,4 +1,5 @@
 import { faker } from '@faker-js/faker';
+import { graphql } from '~/graphql';
 import {
   type CreatePartner,
   type Partner,
@@ -9,7 +10,6 @@ import { type TestApp } from './create-app';
 import { createOrganization } from './create-organization';
 import { createPerson } from './create-person';
 import { fragments } from './fragments';
-import { gql } from './gql-tag';
 
 export async function createPartner(
   app: TestApp,
@@ -28,16 +28,18 @@ export async function createPartner(
   };
 
   const result = await app.graphql.mutate(
-    gql`
-      mutation createPartner($input: CreatePartnerInput!) {
-        createPartner(input: $input) {
-          partner {
-            ...partner
+    graphql(
+      `
+        mutation createPartner($input: CreatePartnerInput!) {
+          createPartner(input: $input) {
+            partner {
+              ...partner
+            }
           }
         }
-      }
-      ${fragments.partner}
-    `,
+      `,
+      [fragments.partner],
+    ),
     {
       input: {
         partner: createPartner,

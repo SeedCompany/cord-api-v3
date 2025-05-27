@@ -2,6 +2,7 @@ import { faker } from '@faker-js/faker';
 import got from 'got';
 import type { MarkOptional } from 'ts-essentials';
 import { type ID } from '~/common';
+import { graphql } from '~/graphql';
 import type {
   CreateFileVersionInput,
   FileListInput,
@@ -11,7 +12,6 @@ import { mimeTypes } from '../../src/components/file/mimeTypes';
 import { type TestApp } from './create-app';
 import type { RawFile, RawFileNode, RawFileNodeChildren } from './fragments';
 import * as fragments from './fragments';
-import { gql } from './gql-tag';
 
 export const generateFakeFile = () => {
   const content = Buffer.from(
@@ -31,14 +31,16 @@ export type FakeFile = ReturnType<typeof generateFakeFile>;
 export async function requestFileUpload(
   app: TestApp,
 ): Promise<RequestUploadOutput> {
-  const res = await app.graphql.mutate(gql`
-    mutation {
-      requestFileUpload {
-        id
-        url
+  const res = await app.graphql.mutate(
+    graphql(`
+      mutation {
+        requestFileUpload {
+          id
+          url
+        }
       }
-    }
-  `);
+    `),
+  );
   return res.requestFileUpload;
 }
 
@@ -77,14 +79,16 @@ export async function createFileVersion(
   };
 
   const result = await app.graphql.mutate(
-    gql`
-      mutation createFileVersion($input: CreateFileVersionInput!) {
-        createFileVersion(input: $input) {
-          ...fileNode
+    graphql(
+      `
+        mutation createFileVersion($input: CreateFileVersionInput!) {
+          createFileVersion(input: $input) {
+            ...fileNode
+          }
         }
-      }
-      ${fragments.fileNode}
-    `,
+      `,
+      [fragments.fileNode],
+    ),
     {
       input: file,
     },
@@ -97,14 +101,16 @@ export async function createFileVersion(
 
 export async function getFileNode(app: TestApp, id: ID) {
   const result = await app.graphql.query(
-    gql`
-      query getFileNode($id: ID!) {
-        fileNode(id: $id) {
-          ...fileNode
+    graphql(
+      `
+        query getFileNode($id: ID!) {
+          fileNode(id: $id) {
+            ...fileNode
+          }
         }
-      }
-      ${fragments.fileNode}
-    `,
+      `,
+      [fragments.fileNode],
+    ),
     {
       id,
     },
@@ -121,23 +127,25 @@ export async function getFileNodeChildren(
   input?: Partial<FileListInput>,
 ) {
   const result = await app.graphql.query(
-    gql`
-      query getFileNode($id: ID!, $input: FileListInput) {
-        fileNode(id: $id) {
-          ... on File {
-            children(input: $input) {
-              ...children
+    graphql(
+      `
+        query getFileNode($id: ID!, $input: FileListInput) {
+          fileNode(id: $id) {
+            ... on File {
+              children(input: $input) {
+                ...children
+              }
             }
-          }
-          ... on Directory {
-            children(input: $input) {
-              ...children
+            ... on Directory {
+              children(input: $input) {
+                ...children
+              }
             }
           }
         }
-      }
-      ${fragments.fileNodeChildren}
-    `,
+      `,
+      [fragments.fileNodeChildren],
+    ),
     {
       id,
       input,
