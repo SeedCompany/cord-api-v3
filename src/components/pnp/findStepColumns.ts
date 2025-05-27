@@ -7,6 +7,23 @@ import { type PnpExtractionResult, PnpProblemType } from './extraction-result';
 import { type PlanningSheet } from './planning-sheet';
 import { type ProgressSheet } from './progress-sheet';
 
+const ApprovedCustomSteps = new Map<string, Step>([
+  ['draft & keyboard', Step.ExegesisAndFirstDraft],
+  ['first draft', Step.ExegesisAndFirstDraft],
+  ['exegesis, 1st draft, keyboard', Step.ExegesisAndFirstDraft],
+  ['internalization & first draft', Step.ExegesisAndFirstDraft],
+  ['exegesis 1st draft & keybrd', Step.ExegesisAndFirstDraft],
+  ['first draft & keyboard', Step.ExegesisAndFirstDraft],
+  ['exegesis, 1st draft. keyboard', Step.ExegesisAndFirstDraft],
+  ['team check & 1st testing', Step.TeamCheck],
+  ['team check & revision', Step.TeamCheck],
+  ['team check & 1st test', Step.TeamCheck],
+  ['field test', Step.CommunityTesting],
+  ['community check', Step.CommunityTesting],
+  ['community review', Step.CommunityTesting],
+  ['community testing & revision', Step.CommunityTesting],
+]);
+
 /**
  * Fuzzy match available steps to their column address.
  */
@@ -21,7 +38,9 @@ export function findStepColumns(
     .walkRight()
     .filter((cell) => !!cell.asString)
     .map((cell) => ({
-      label: cell.asString!.trim(),
+      label:
+        ApprovedCustomSteps.get(cell.asString!.trim().toLowerCase()) ??
+        cell.asString!,
       column: cell.column,
       cell,
     }))
