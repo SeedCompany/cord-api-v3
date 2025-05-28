@@ -151,7 +151,7 @@ export async function getFileNodeChildren(
       input,
     },
   );
-  if (result.fileNode.__typename === 'FileVersion') fail();
+  if (result.fileNode.__typename === 'FileVersion') throw new Error();
 
   const actual = result.fileNode.children;
 

@@ -1,7 +1,7 @@
 import { faker } from '@faker-js/faker';
 import { some } from 'lodash';
 import { DateTime, Interval } from 'luxon';
-import { generateId, type ID, Role } from '~/common';
+import { generateId, Role } from '~/common';
 import { graphql } from '~/graphql';
 import {
   type CreateInternshipEngagement,
@@ -209,7 +209,7 @@ describe('Engagement e2e', () => {
     expect(actual.lastReactivatedAt.value).toBeNull();
   });
 
-  it('reads a an language engagement by id', async () => {
+  it('reads a language engagement by id', async () => {
     project = await createProject(app);
     const upload = await requestFileUpload(app);
     const fakeFile = await uploadFileContents(app, upload.url);
@@ -227,7 +227,7 @@ describe('Engagement e2e', () => {
       graphql(
         `
           query engagement($id: ID!) {
-            engagement(id: $id) {
+            engagement: languageEngagement(id: $id) {
               ...languageEngagement
             }
           }
@@ -284,6 +284,7 @@ describe('Engagement e2e', () => {
         `
           query engagement($id: ID!) {
             engagement(id: $id) {
+              __typename
               ...internshipEngagement
             }
           }
@@ -294,6 +295,7 @@ describe('Engagement e2e', () => {
         id: internshipEngagement.id,
       },
     );
+    if (actual.__typename !== 'InternshipEngagement') throw new Error();
 
     expect(actual.id).toBe(internshipEngagement.id);
     expect(actual.intern).toMatchObject(internshipEngagement.intern);
@@ -490,7 +492,7 @@ describe('Engagement e2e', () => {
       graphql(
         `
           query engagement($id: ID!) {
-            engagement(id: $id) {
+            engagement: languageEngagement(id: $id) {
               ...languageEngagement
             }
           }
@@ -532,18 +534,18 @@ describe('Engagement e2e', () => {
         `
           query engagement($id: ID!) {
             engagement(id: $id) {
-              ...languageEngagement
+              ...engagement
             }
           }
         `,
-        [fragments.languageEngagement],
+        [fragments.engagement],
       ),
       {
         id: languageEngagement.id,
       },
     );
 
-    expect(result?.engagement?.ceremony?.value?.id).toBeDefined();
+    expect(result.engagement.ceremony.value?.id).toBeDefined();
   });
 
   it('updates ceremony for language engagement', async () => {
@@ -561,19 +563,18 @@ describe('Engagement e2e', () => {
         `
           query engagement($id: ID!) {
             engagement(id: $id) {
-              ...languageEngagement
+              ...engagement
             }
           }
         `,
-        [fragments.languageEngagement],
+        [fragments.engagement],
       ),
       {
         id: languageEngagement.id,
       },
     );
-    expect(
-      languageEngagementRead?.engagement?.ceremony?.value?.id,
-    ).toBeDefined();
+    const ceremony = languageEngagementRead.engagement.ceremony.value;
+    expect(ceremony).toBeDefined();
 
     await registerUser(app, { roles: [Role.FieldOperationsDirector] });
     const date = '2020-05-13';
@@ -598,7 +599,7 @@ describe('Engagement e2e', () => {
       {
         input: {
           ceremony: {
-            id: languageEngagementRead?.engagement?.ceremony?.value?.id,
+            id: ceremony.id,
             planned: true,
             estimatedDate: date,
           },
@@ -627,19 +628,18 @@ describe('Engagement e2e', () => {
         `
           query engagement($id: ID!) {
             engagement(id: $id) {
-              ...internshipEngagement
+              ...engagement
             }
           }
         `,
-        [fragments.internshipEngagement],
+        [fragments.engagement],
       ),
       {
         id: ie.id,
       },
     );
-    expect(
-      internshipEngagementRead?.engagement?.ceremony?.value?.id,
-    ).toBeDefined();
+    const ceremony = internshipEngagementRead.engagement.ceremony.value;
+    expect(ceremony).toBeDefined();
 
     await registerUser(app, { roles: [Role.FieldOperationsDirector] });
     const date = '2020-05-13';
@@ -664,7 +664,7 @@ describe('Engagement e2e', () => {
       {
         input: {
           ceremony: {
-            id: internshipEngagementRead?.engagement?.ceremony?.value?.id,
+            id: ceremony.id,
             planned: true,
             estimatedDate: date,
           },
@@ -690,11 +690,11 @@ describe('Engagement e2e', () => {
         `
           query engagement($id: ID!) {
             engagement(id: $id) {
-              ...languageEngagement
+              ...engagement
             }
           }
         `,
-        [fragments.languageEngagement],
+        [fragments.engagement],
       ),
       {
         id: languageEngagement.id,
@@ -884,6 +884,7 @@ describe('Engagement e2e', () => {
       graphql(`
         query EngagementById($id: ID!) {
           engagement(id: $id) {
+            __typename
             ... on InternshipEngagement {
               id
               methodologies {
@@ -897,7 +898,7 @@ describe('Engagement e2e', () => {
         id: internshipEngagement.id,
       },
     );
-    expect(internshipEngagement.id).toBeDefined();
+    if (actual.__typename !== 'InternshipEngagement') throw new Error();
     expect(actual.methodologies).toBeDefined();
     expect(actual.methodologies.value).toMatchObject([]);
   });
@@ -1117,7 +1118,7 @@ describe('Engagement e2e', () => {
         project: { engagements },
       } = await app.graphql.query(
         graphql(`
-          query ($id: ID!) {
+          query EngagementStatus($id: ID!) {
             project(id: $id) {
               id
               engagements {
@@ -1136,10 +1137,8 @@ describe('Engagement e2e', () => {
           step: expectedNewStatus,
         },
       );
-      const actual = engagements.items.find(
-        (e: { id: ID }) => e.id === engagement.id,
-      );
-      expect(actual.status.value).toBe(expectedNewStatus);
+      const actual = engagements.items.find((e) => e.id === engagement.id);
+      expect(actual?.status.value).toBe(expectedNewStatus);
     },
   );
 

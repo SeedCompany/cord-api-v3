@@ -140,29 +140,13 @@ describe('Project-Workflow e2e', () => {
 
       return [location, fieldRegion];
     });
-    await updateProject(app, {
+    let result = await updateProject(app, {
       id: project.id,
       primaryLocationId: location.id,
       fieldRegionId: fieldRegion.id,
     });
-
-    let result = await app.graphql.query(
-      graphql(
-        `
-          query project($id: ID!) {
-            project(id: $id) {
-              ...project
-            }
-          }
-        `,
-        [fragments.project],
-      ),
-      {
-        id: project.id,
-      },
-    );
-    expect(result.project.primaryLocation.value.id).toBe(location.id);
-    expect(result.project.fieldRegion.value.id).toBe(fieldRegion.id);
+    expect(result.primaryLocation.value.id).toBe(location.id);
+    expect(result.fieldRegion.value.id).toBe(fieldRegion.id);
 
     // Enter MOU dates
     await fieldOpsDirector.login();

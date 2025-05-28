@@ -207,8 +207,8 @@ describe('Partnership Changeset Aware e2e', () => {
       projectId: project.id,
     });
 
-    // Delete partnereship in changeset
-    let result = await app.graphql.mutate(
+    // Delete partnership in changeset
+    await app.graphql.mutate(
       graphql(`
         mutation deletePartnership($id: ID!, $changeset: ID) {
           deletePartnership(id: $id, changeset: $changeset) {
@@ -221,11 +221,9 @@ describe('Partnership Changeset Aware e2e', () => {
         changeset: changeset.id,
       },
     );
-    const actual = result.deletePartnership;
-    expect(actual).toBeTruthy();
 
     // List partnerships without changeset
-    result = await readPartnerships(app, project.id);
+    let result = await readPartnerships(app, project.id);
     expect(result.project.partnerships.items.length).toBe(2);
     // List partnerships with changeset
     result = await readPartnerships(app, project.id, changeset.id);

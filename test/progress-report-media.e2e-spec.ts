@@ -101,7 +101,7 @@ describe('ProgressReport Media e2e', () => {
       `),
       { id: reportId },
     );
-    if (report.__typename !== 'ProgressReport') fail();
+    if (report.__typename !== 'ProgressReport') throw new Error();
     const { uploadableVariants } = report.media;
     const keys = uploadableVariants.map((v) => v.key);
     expect(keys).toEqual(['draft', 'translated', 'fpm']);
@@ -410,7 +410,7 @@ async function getFeaturedMedia(app: TestApp, id: IdOf<ProgressReport>) {
     ),
     { id },
   );
-  if (report.__typename !== 'ProgressReport') fail();
+  if (report.__typename !== 'ProgressReport') throw new Error();
   return report.featuredMedia;
 }
 

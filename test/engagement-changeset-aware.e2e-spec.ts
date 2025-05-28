@@ -53,7 +53,7 @@ const readLanguageEngagement = (app: TestApp, id: string, changeset?: string) =>
     graphql(
       `
         query engagement($id: ID!, $changeset: ID) {
-          engagement(id: $id, changeset: $changeset) {
+          engagement: languageEngagement(id: $id, changeset: $changeset) {
             ...languageEngagement
             changeset {
               id

@@ -106,6 +106,8 @@ describe('Product e2e', () => {
       },
     );
     const actual = result.product;
+    if (actual.__typename !== 'DirectScriptureProduct') throw new Error();
+
     expect(actual?.unspecifiedScripture?.value).toMatchObject({
       book: 'Matthew',
       totalVerses: 10,
@@ -189,6 +191,8 @@ describe('Product e2e', () => {
       },
     );
     const actual = result.product;
+    if (actual.__typename !== 'DerivativeScriptureProduct') throw new Error();
+
     expect(actual.produces).toBeDefined();
     expect(actual.produces?.value).toBeDefined();
     expect(actual.produces?.value?.id).toBe(story.id);
@@ -270,6 +274,8 @@ describe('Product e2e', () => {
       },
     );
     const actual = result.product;
+    if (actual.__typename !== 'DerivativeScriptureProduct') throw new Error();
+
     expect(actual.scriptureReferencesOverride?.value).toBeDefined();
     expect(actual.scriptureReferencesOverride?.value).toEqual(
       expect.arrayContaining(randomScriptureReferences),
@@ -359,6 +365,8 @@ describe('Product e2e', () => {
     );
 
     const actual = result.updateDirectScriptureProduct.product;
+    if (actual.__typename !== 'DirectScriptureProduct') throw new Error();
+
     expect(actual.mediums.value).toEqual(updateProduct.mediums);
     expect(actual.purposes.value).toEqual(updateProduct.purposes);
     expect(actual.methodology.value).toEqual(updateProduct.methodology);
@@ -443,8 +451,9 @@ describe('Product e2e', () => {
         },
       },
     );
-
     const actual = result.updateDerivativeScriptureProduct.product;
+    if (actual.__typename !== 'DerivativeScriptureProduct') throw new Error();
+
     expect(actual.produces).toBeDefined();
     expect(actual.produces?.value).toBeDefined();
     expect(actual.produces?.value?.id).toBe(film.id);
@@ -530,6 +539,7 @@ describe('Product e2e', () => {
     );
 
     const actual = result.updateDerivativeScriptureProduct.product;
+    if (actual.__typename !== 'DerivativeScriptureProduct') throw new Error();
 
     expect(actual.scriptureReferencesOverride?.value).toEqual(
       expect.arrayContaining(override),
@@ -615,6 +625,8 @@ describe('Product e2e', () => {
     );
 
     const actual = result.updateDerivativeScriptureProduct.product;
+    if (actual.__typename !== 'DerivativeScriptureProduct') throw new Error();
+
     expect(actual.scriptureReferencesOverride?.value).toBeNull();
     expect(actual.produces?.value?.scriptureReferences?.value).toEqual(
       actual.scriptureReferences.value,
@@ -802,7 +814,7 @@ describe('Product e2e', () => {
     const { engagement: actual } = await app.graphql.query(
       graphql(`
         query engagement($id: ID!) {
-          engagement(id: $id) {
+          engagement: languageEngagement(id: $id) {
             ... on LanguageEngagement {
               id
               products {

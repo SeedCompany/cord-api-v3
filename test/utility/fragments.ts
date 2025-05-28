@@ -431,6 +431,7 @@ export type scriptureRange = FragmentOf<typeof scriptureRange>;
 export const product = graphql(
   `
     fragment product on Product {
+      __typename
       id
       createdAt
       mediums {

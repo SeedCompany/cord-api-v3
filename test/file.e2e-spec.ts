@@ -144,7 +144,7 @@ describe('File e2e', () => {
 
     const created = await uploadFile(app, root.id, fakeFile);
     const fetched = await getFileNode(app, created.id);
-    if (fetched.__typename !== 'File') fail();
+    if (fetched.__typename !== 'File') throw new Error();
     for (const file of [created, fetched]) {
       expect(file.id).toBeDefined();
       expect(file.name).toEqual(fakeFile.name);
@@ -169,7 +169,7 @@ describe('File e2e', () => {
 
     // Maybe get version from file.children when implemented
     const version = await getFileNode(app, upload.id);
-    if (version.__typename !== 'FileVersion') fail();
+    if (version.__typename !== 'FileVersion') throw new Error();
 
     expect(version.id).toBeDefined();
     expect(version.name).toEqual(fakeFile.name);
