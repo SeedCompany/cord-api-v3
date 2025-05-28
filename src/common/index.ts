@@ -37,7 +37,7 @@ export * from './optional-field';
 export * from './order.enum';
 export * from './pagination.input';
 export * from './pagination-list';
-export * from './parent-id.middleware';
+export * from './grandparent.middleware';
 export * from './parent-types';
 export * from './poll';
 export * from './resource.dto';
