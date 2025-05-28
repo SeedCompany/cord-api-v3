@@ -3,7 +3,6 @@ import { times } from 'lodash';
 import { isValidId, Role } from '~/common';
 import { graphql } from '~/graphql';
 import { ScriptureRange } from '../src/components/scripture/dto';
-import { type Story } from '../src/components/story/dto';
 import {
   createSession,
   createStory,
@@ -117,7 +116,7 @@ describe('Story e2e', () => {
         id: st.id,
       },
     );
-    const actual: Story | undefined = result.deleteStory;
+    const actual = result.deleteStory;
     expect(actual).toBeTruthy();
   });
 

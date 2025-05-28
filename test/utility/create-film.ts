@@ -1,8 +1,8 @@
 import { faker } from '@faker-js/faker';
 import { graphql } from '~/graphql';
-import { type CreateFilm, type Film } from '../../src/components/film/dto';
+import { type CreateFilm } from '../../src/components/film/dto';
 import { type TestApp } from './create-app';
-import { fragments } from './fragments';
+import * as fragments from './fragments';
 
 export async function createFilm(
   app: TestApp,
@@ -32,7 +32,7 @@ export async function createFilm(
       },
     },
   );
-  const fm: Film = result.createFilm.film;
+  const fm = result.createFilm.film;
 
   expect(fm).toBeTruthy();
 

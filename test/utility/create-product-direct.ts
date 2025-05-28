@@ -7,7 +7,7 @@ import {
   ProductPurpose,
 } from '../../src/components/product/dto';
 import { type TestApp } from './create-app';
-import { fragments, type RawProduct } from './fragments';
+import * as fragments from './fragments';
 
 export async function createDirectProduct(
   app: TestApp,
@@ -40,7 +40,7 @@ export async function createDirectProduct(
     },
   );
 
-  const actual: RawProduct = result.createDirectScriptureProduct.product;
+  const actual = result.createDirectScriptureProduct.product;
   expect(actual).toBeTruthy();
 
   expect(isValidId(actual.id)).toBe(true);

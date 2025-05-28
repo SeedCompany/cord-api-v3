@@ -1,8 +1,6 @@
 import { faker } from '@faker-js/faker';
 import { isValidId, Role } from '~/common';
 import { graphql } from '~/graphql';
-import { type FieldRegion } from '../src/components/field-region/dto';
-import { type FieldZone } from '../src/components/field-zone/dto';
 import {
   createPerson,
   createRegion,
@@ -13,12 +11,11 @@ import {
   loginAsAdmin,
   type TestApp,
 } from './utility';
-import { type RawUser } from './utility/fragments';
 
 describe('Region e2e', () => {
   let app: TestApp;
-  let director: RawUser;
-  let fieldZone: FieldZone;
+  let director: fragments.user;
+  let fieldZone: fragments.fieldZone;
 
   beforeAll(async () => {
     app = await createTestApp();
@@ -233,7 +230,7 @@ describe('Region e2e', () => {
         },
       },
     );
-    const updated = result.updateFieldregion.fieldRegion;
+    const updated = result.updateFieldRegion.fieldRegion;
 
     expect(updated).toBeTruthy();
     expect(updated.id).toBe(fieldRegion.id);
@@ -258,7 +255,7 @@ describe('Region e2e', () => {
         id: fieldRegion.id,
       },
     );
-    const actual: FieldRegion | undefined = result.deleteFieldRegion;
+    const actual = result.deleteFieldRegion;
     expect(actual).toBeTruthy();
   });
 

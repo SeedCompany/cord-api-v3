@@ -12,11 +12,11 @@ import {
   createRegion,
   createSession,
   createTestApp,
+  fragments,
   registerUser,
   runAsAdmin,
   type TestApp,
 } from './utility';
-import { fragments } from './utility/fragments';
 import { forceProjectTo } from './utility/transition-project';
 
 const readPartnerships = (app: TestApp, id: string, changeset?: string) =>
@@ -221,7 +221,7 @@ describe('Partnership Changeset Aware e2e', () => {
         changeset: changeset.id,
       },
     );
-    const actual: boolean | undefined = result.deletePartnership;
+    const actual = result.deletePartnership;
     expect(actual).toBeTruthy();
 
     // List partnerships without changeset

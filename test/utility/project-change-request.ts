@@ -3,11 +3,10 @@ import { type ID, isValidId } from '~/common';
 import { graphql } from '~/graphql';
 import {
   type CreateProjectChangeRequest,
-  type ProjectChangeRequest,
   ProjectChangeRequestType,
 } from '../../src/components/project-change-request/dto';
 import { type TestApp } from './create-app';
-import { fragments } from './fragments';
+import * as fragments from './fragments';
 
 export async function createProjectChangeRequest(
   app: TestApp,
@@ -42,8 +41,7 @@ export async function createProjectChangeRequest(
     },
   );
 
-  const actual: ProjectChangeRequest =
-    result.createProjectChangeRequest.projectChangeRequest;
+  const actual = result.createProjectChangeRequest.projectChangeRequest;
   expect(actual).toBeTruthy();
 
   expect(isValidId(actual.id)).toBe(true);
@@ -72,8 +70,7 @@ export async function approveProjectChangeRequest(app: TestApp, id: ID) {
     },
   );
 
-  const actual: ProjectChangeRequest =
-    result.updateProjectChangeRequest.projectChangeRequest;
+  const actual = result.updateProjectChangeRequest.projectChangeRequest;
   expect(actual).toBeTruthy();
 
   return actual;

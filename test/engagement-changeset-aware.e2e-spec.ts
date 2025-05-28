@@ -1,7 +1,6 @@
 import { CalendarDate, type ID, Role } from '~/common';
 import { graphql } from '~/graphql';
 import { EngagementStatus } from '../src/components/engagement/dto';
-import { type Language } from '../src/components/language/dto';
 import { ProjectChangeRequestType } from '../src/components/project-change-request/dto';
 import {
   approveProjectChangeRequest,
@@ -15,12 +14,12 @@ import {
   createSession,
   createTestApp,
   errors,
+  fragments,
   registerUser,
   runAsAdmin,
   type TestApp,
   updateProject,
 } from './utility';
-import { fragments } from './utility/fragments';
 import { forceProjectTo } from './utility/transition-project';
 
 const readEngagements = (app: TestApp, id: string, changeset?: string) =>
@@ -140,7 +139,7 @@ const activeProject = async (app: TestApp, projectId: ID) => {
 
 describe('Engagement Changeset Aware e2e', () => {
   let app: TestApp;
-  let language: Language;
+  let language: fragments.language;
 
   beforeAll(async () => {
     app = await createTestApp();

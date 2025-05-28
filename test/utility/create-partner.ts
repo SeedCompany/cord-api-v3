@@ -2,14 +2,13 @@ import { faker } from '@faker-js/faker';
 import { graphql } from '~/graphql';
 import {
   type CreatePartner,
-  type Partner,
   PartnerType,
 } from '../../src/components/partner/dto';
 import { FinancialReportingType } from '../../src/components/partnership/dto';
 import { type TestApp } from './create-app';
 import { createOrganization } from './create-organization';
 import { createPerson } from './create-person';
-import { fragments } from './fragments';
+import * as fragments from './fragments';
 
 export async function createPartner(
   app: TestApp,
@@ -46,7 +45,7 @@ export async function createPartner(
       },
     },
   );
-  const partner: Partner = result.createPartner.partner;
+  const partner = result.createPartner.partner;
 
   expect(partner).toBeTruthy();
 

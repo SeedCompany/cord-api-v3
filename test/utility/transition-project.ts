@@ -1,10 +1,7 @@
 import { type ID } from '~/common';
 import { graphql } from '~/graphql';
-import { type IProject, ProjectStep } from '../../src/components/project/dto';
-import {
-  type ExecuteProjectTransitionInput,
-  type ProjectWorkflowTransition,
-} from '../../src/components/project/workflow/dto';
+import { ProjectStep } from '../../src/components/project/dto';
+import { type ExecuteProjectTransitionInput } from '../../src/components/project/workflow/dto';
 import { type TestApp } from './create-app';
 import { runAsAdmin } from './login';
 
@@ -78,9 +75,7 @@ export const transitionProject = async (
     `),
     { input },
   );
-  return await (result.transitionProject as ReturnType<
-    typeof getProjectTransitions
-  >);
+  return result.transitionProject;
 };
 
 export const getProjectTransitions = async (app: TestApp, project: ID) => {
@@ -107,7 +102,5 @@ export const getProjectTransitions = async (app: TestApp, project: ID) => {
     `),
     { project },
   );
-  return result.project as Pick<IProject, 'step' | 'status'> & {
-    step: { transitions: ProjectWorkflowTransition[] };
-  };
+  return result.project;
 };

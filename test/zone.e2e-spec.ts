@@ -2,22 +2,21 @@ import { faker } from '@faker-js/faker';
 import { times } from 'lodash';
 import { isValidId } from '~/common';
 import { graphql } from '~/graphql';
-import { type FieldZone } from '../src/components/field-zone/dto';
 import {
   createPerson,
   createSession,
   createTestApp,
   createZone,
+  fragments,
   loginAsAdmin,
   type TestApp,
 } from './utility';
-import { fragments, type RawUser } from './utility/fragments';
 
 describe('Field Zone e2e', () => {
   let app: TestApp;
-  let director: RawUser;
+  let director: fragments.user;
 
-  let newDirector: RawUser;
+  let newDirector: fragments.user;
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
@@ -166,7 +165,7 @@ describe('Field Zone e2e', () => {
         id: fieldZone.id,
       },
     );
-    const actual: FieldZone | undefined = result.deleteFieldZone;
+    const actual = result.deleteFieldZone;
 
     expect(actual).toBeTruthy();
   });

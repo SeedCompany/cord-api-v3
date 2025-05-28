@@ -1,12 +1,9 @@
 import { generateId, isValidId } from '~/common';
 import { graphql } from '~/graphql';
-import {
-  type CreateFieldZone,
-  type FieldZone,
-} from '../../src/components/field-zone/dto';
+import { type CreateFieldZone } from '../../src/components/field-zone/dto';
 import { type TestApp } from './create-app';
 import { createPerson } from './create-person';
-import { fragments } from './fragments';
+import * as fragments from './fragments';
 import { runAsAdmin } from './login';
 
 export async function createZone(
@@ -54,7 +51,7 @@ export async function createZone(
     },
   );
 
-  const actual: FieldZone = result.createFieldZone.fieldZone;
+  const actual = result.createFieldZone.fieldZone;
   expect(actual).toBeTruthy();
 
   expect(isValidId(actual.id)).toBe(true);

@@ -4,11 +4,10 @@ import { isValidId } from '~/common';
 import { graphql } from '~/graphql';
 import {
   type CreateLocation,
-  type Location,
   LocationType,
 } from '../../src/components/location/dto';
 import { type TestApp } from './create-app';
-import { fragments } from './fragments';
+import * as fragments from './fragments';
 
 export async function createLocation(
   app: TestApp,
@@ -41,7 +40,7 @@ export async function createLocation(
     },
   );
 
-  const actual: Location = result.createLocation.location;
+  const actual = result.createLocation.location;
   expect(actual).toBeTruthy();
 
   expect(isValidId(actual.id)).toBe(true);

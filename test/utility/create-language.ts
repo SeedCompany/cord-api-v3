@@ -4,10 +4,9 @@ import { graphql } from '~/graphql';
 import {
   type CreateEthnologueLanguage,
   type CreateLanguage,
-  type Language,
 } from '../../src/components/language/dto';
 import { type TestApp } from './create-app';
-import { fragments } from './fragments';
+import * as fragments from './fragments';
 
 export async function createLanguage(
   app: TestApp,
@@ -64,7 +63,7 @@ export async function createLanguage(
     },
   );
 
-  const actual: Language = result.createLanguage.language;
+  const actual = result.createLanguage.language;
 
   expect(actual).toBeTruthy();
 
@@ -99,7 +98,7 @@ export async function createLanguageMinimal(app: TestApp) {
     },
   );
 
-  const actual: Language = result.createLanguage.language;
+  const actual = result.createLanguage.language;
 
   expect(actual).toBeTruthy();
 

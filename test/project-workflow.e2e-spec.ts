@@ -1,7 +1,5 @@
 import { CalendarDate, Role } from '~/common';
 import { graphql } from '~/graphql';
-import { type Language } from '../src/components/language/dto';
-import { type Location } from '../src/components/location/dto';
 import { PartnerType } from '../src/components/partner/dto';
 import {
   ProjectStatus,
@@ -38,8 +36,8 @@ describe('Project-Workflow e2e', () => {
   let consultantManager: TestUser;
   let financialAnalyst: TestUser;
   let controller: TestUser;
-  let location: Location;
-  let language: Language;
+  let location: fragments.location;
+  let language: fragments.language;
 
   beforeAll(async () => {
     app = await createTestApp();

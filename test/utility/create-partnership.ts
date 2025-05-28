@@ -4,13 +4,12 @@ import { PartnerType } from '../../src/components/partner/dto';
 import {
   type CreatePartnership,
   FinancialReportingType,
-  type Partnership,
   PartnershipAgreementStatus,
 } from '../../src/components/partnership/dto';
 import { type TestApp } from './create-app';
 import { createPartner } from './create-partner';
 import { createProject } from './create-project';
-import { fragments } from './fragments';
+import * as fragments from './fragments';
 
 export async function createPartnership(
   app: TestApp,
@@ -49,7 +48,7 @@ export async function createPartnership(
     },
   );
 
-  const actual: Partnership = result.createPartnership.partnership;
+  const actual = result.createPartnership.partnership;
   expect(actual).toBeTruthy();
 
   expect(isValidId(actual.id)).toBe(true);

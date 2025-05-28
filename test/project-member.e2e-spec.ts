@@ -1,8 +1,6 @@
 import { DateTime, Interval } from 'luxon';
 import { Role } from '~/common';
 import { graphql } from '~/graphql';
-import { type Project } from '../src/components/project/dto';
-import { type ProjectMember } from '../src/components/project/project-member/dto';
 import {
   createPerson,
   createProject,
@@ -11,7 +9,6 @@ import {
   createTestApp,
   errors,
   fragments,
-  type Raw,
   registerUser,
   runAsAdmin,
   type TestApp,
@@ -19,7 +16,7 @@ import {
 
 describe('ProjectMember e2e', () => {
   let app: TestApp;
-  let project: Raw<Project>;
+  let project: fragments.project;
 
   beforeAll(async () => {
     app = await createTestApp();
@@ -90,7 +87,7 @@ describe('ProjectMember e2e', () => {
       },
     );
 
-    const actual: boolean | undefined = result.deleteProjectMember;
+    const actual = result.deleteProjectMember;
     expect(actual).toBeTruthy();
 
     await expect(
@@ -184,8 +181,7 @@ describe('ProjectMember e2e', () => {
     expect(result.updateProjectMember.projectMember.roles.value).toEqual(
       expect.arrayContaining([Role.ProjectManager]),
     );
-    const updated: Raw<ProjectMember> =
-      result.updateProjectMember.projectMember;
+    const updated = result.updateProjectMember.projectMember;
     expect(updated).toBeTruthy();
     expect(+DateTime.fromISO(updated.modifiedAt)).toBeGreaterThan(
       +DateTime.fromISO(projectMember.modifiedAt),

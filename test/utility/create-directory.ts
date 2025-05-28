@@ -6,7 +6,7 @@ import { SessionManager } from '~/core/authentication/session/session.manager';
 import { graphql } from '~/graphql';
 import { FileService } from '../../src/components/file';
 import { type TestApp } from './create-app';
-import { fileNode, type RawDirectory } from './fragments';
+import { fileNode } from './fragments';
 
 export async function createRootDirectory(app: TestApp, name?: string) {
   name = name ?? startCase(faker.lorem.words());
@@ -50,7 +50,7 @@ export async function createDirectory(
     },
   );
 
-  const actual: RawDirectory = result.createDirectory;
+  const actual = result.createDirectory;
   expect(actual).toBeTruthy();
   expect(actual.name).toBe(input.name);
 

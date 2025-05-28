@@ -5,11 +5,9 @@ import { graphql } from '~/graphql';
 import { PartnerType } from '../src/components/partner/dto';
 import {
   FinancialReportingType,
-  type Partnership,
   PartnershipAgreementStatus,
   type UpdatePartnershipInput,
 } from '../src/components/partnership/dto';
-import { type Project } from '../src/components/project/dto';
 import {
   createPartner,
   createPartnership,
@@ -18,14 +16,13 @@ import {
   createTestApp,
   errors,
   fragments,
-  type Raw,
   registerUser,
   type TestApp,
 } from './utility';
 
 describe('Partnership e2e', () => {
   let app: TestApp;
-  let project: Raw<Project>;
+  let project: fragments.project;
 
   beforeAll(async () => {
     app = await createTestApp();
@@ -60,7 +57,7 @@ describe('Partnership e2e', () => {
       },
     );
 
-    const actual: Partnership = result.partnership;
+    const actual = result.partnership;
 
     expect(actual.id).toBe(partnership.id);
     expect(actual.agreementStatus.value).toBe(
@@ -144,7 +141,7 @@ describe('Partnership e2e', () => {
       },
     );
 
-    const actual: boolean | undefined = result.deletePartnership;
+    const actual = result.deletePartnership;
     expect(actual).toBeTruthy();
     await app.graphql
       .query(
@@ -329,7 +326,7 @@ describe('Partnership e2e', () => {
       },
     );
 
-    const actual: Partnership = result.partnership;
+    const actual = result.partnership;
 
     expect(actual.id).toBe(partnership.id);
     expect(actual.agreementStatus.value).toBe(
@@ -483,9 +480,7 @@ describe('Partnership e2e', () => {
       primary: true,
     });
 
-    const getPartnershipById = async (
-      partnershipId: ID,
-    ): Promise<Partnership> => {
+    const getPartnershipById = async (partnershipId: ID) => {
       const result = await app.graphql.query(
         graphql(
           `

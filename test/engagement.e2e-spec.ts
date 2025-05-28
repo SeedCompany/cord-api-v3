@@ -6,19 +6,10 @@ import { graphql } from '~/graphql';
 import {
   type CreateInternshipEngagement,
   EngagementStatus,
-  type InternshipEngagement,
   InternshipPosition,
-  type LanguageEngagement,
 } from '../src/components/engagement/dto';
-import { type Language } from '../src/components/language/dto';
-import { type Location } from '../src/components/location/dto';
 import { ProductMethodology } from '../src/components/product/dto';
-import {
-  type Project,
-  ProjectStep,
-  ProjectType,
-} from '../src/components/project/dto';
-import { type User } from '../src/components/user/dto';
+import { ProjectStep, ProjectType } from '../src/components/project/dto';
 import {
   createDirectProduct,
   createFundingAccount,
@@ -34,7 +25,6 @@ import {
   errors,
   fragments,
   getUserFromSession,
-  type Raw,
   registerUser,
   requestFileUpload,
   runAsAdmin,
@@ -56,13 +46,13 @@ import {
 
 describe('Engagement e2e', () => {
   let app: TestApp;
-  let project: Raw<Project>;
-  let internshipProject: Raw<Project>;
-  let language: Language;
-  let location: Location;
+  let project: fragments.project;
+  let internshipProject: fragments.project;
+  let language: fragments.language;
+  let location: fragments.location;
   let user: TestUser;
-  let intern: Partial<User>;
-  let mentor: Partial<User>;
+  let intern: { id: string };
+  let mentor: { id: string };
 
   beforeAll(async () => {
     app = await createTestApp();
@@ -139,8 +129,7 @@ describe('Engagement e2e', () => {
       },
     );
 
-    const actual: LanguageEngagement =
-      result.createLanguageEngagement.engagement;
+    const actual = result.createLanguageEngagement.engagement;
     expect(actual.id).toBeDefined();
     expect(actual.firstScripture.value).toBeNull();
     expect(actual.lukePartnership.value).toBeNull();
@@ -207,8 +196,7 @@ describe('Engagement e2e', () => {
       },
     );
 
-    const actual: InternshipEngagement =
-      result.createInternshipEngagement.engagement;
+    const actual = result.createInternshipEngagement.engagement;
     expect(actual.id).toBeDefined();
     expect(actual.countryOfOrigin.value).toBeNull();
     expect(actual.mentor.value).toBeNull();
@@ -463,7 +451,7 @@ describe('Engagement e2e', () => {
       },
     );
 
-    const actual: boolean | undefined = result.deleteEngagement;
+    const actual = result.deleteEngagement;
     expect(actual).toBeTruthy();
     await app.graphql
       .query(

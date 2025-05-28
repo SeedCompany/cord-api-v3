@@ -7,7 +7,7 @@ import {
   ProductPurpose,
 } from '../../src/components/product/dto';
 import { type TestApp } from './create-app';
-import { fragments, type RawProduct } from './fragments';
+import * as fragments from './fragments';
 
 export async function createDerivativeProduct(
   app: TestApp,
@@ -40,7 +40,7 @@ export async function createDerivativeProduct(
     },
   );
 
-  const actual: RawProduct = result.createDerivativeScriptureProduct.product;
+  const actual = result.createDerivativeScriptureProduct.product;
   expect(actual).toBeTruthy();
 
   expect(isValidId(actual.id)).toBe(true);

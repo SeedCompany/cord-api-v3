@@ -1,12 +1,8 @@
 import { faker } from '@faker-js/faker';
 import { graphql } from '~/graphql';
-import {
-  type CreateOrganization,
-  type Organization,
-} from '../../src/components/organization/dto';
+import { type CreateOrganization } from '../../src/components/organization/dto';
 import { type TestApp } from './create-app';
-import { fragments } from './fragments';
-import { type Raw } from './raw.type';
+import * as fragments from './fragments';
 
 export async function createOrganization(
   app: TestApp,
@@ -38,7 +34,7 @@ export async function createOrganization(
       },
     },
   );
-  const org: Raw<Organization> = result.createOrganization.organization;
+  const org = result.createOrganization.organization;
 
   expect(org).toBeTruthy();
 

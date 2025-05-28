@@ -1,11 +1,8 @@
 import { faker } from '@faker-js/faker';
 import { graphql } from '~/graphql';
-import {
-  type CreateFundingAccount,
-  type FundingAccount,
-} from '../../src/components/funding-account/dto';
+import { type CreateFundingAccount } from '../../src/components/funding-account/dto';
 import { type TestApp } from './create-app';
-import { fragments } from './fragments';
+import * as fragments from './fragments';
 
 export async function createFundingAccount(
   app: TestApp,
@@ -38,7 +35,7 @@ export async function createFundingAccount(
       },
     },
   );
-  const st: FundingAccount = result.createFundingAccount.fundingAccount;
+  const st = result.createFundingAccount.fundingAccount;
 
   expect(st).toBeTruthy();
 

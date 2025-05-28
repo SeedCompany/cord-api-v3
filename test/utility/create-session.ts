@@ -1,8 +1,7 @@
 import { graphql } from '~/graphql';
-import { type User } from '../../src/components/user/dto';
 import { type TestApp } from './create-app';
 
-export async function createSession(app: TestApp): Promise<string> {
+export async function createSession(app: TestApp) {
   const result = await app.graphql.query(
     graphql(`
       query SessionToken {
@@ -14,11 +13,11 @@ export async function createSession(app: TestApp): Promise<string> {
   );
   const token = result.session.token;
   expect(token).toBeTruthy();
-  app.graphql.authToken = token;
+  app.graphql.authToken = token!;
   return token;
 }
 
-export async function getUserFromSession(app: TestApp): Promise<Partial<User>> {
+export async function getUserFromSession(app: TestApp) {
   const result = await app.graphql.query(
     graphql(`
       query SessionUser {

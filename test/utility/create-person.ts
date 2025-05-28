@@ -3,7 +3,7 @@ import { generateId, isValidId } from '~/common';
 import { graphql } from '~/graphql';
 import { type CreatePerson } from '../../src/components/user/dto';
 import { type TestApp } from './create-app';
-import { fragments, type RawUser } from './fragments';
+import * as fragments from './fragments';
 
 export async function createPerson(
   app: TestApp,
@@ -44,7 +44,7 @@ export async function createPerson(
     },
   );
 
-  const actual: RawUser = result.createPerson.user;
+  const actual = result.createPerson.user;
   expect(actual).toBeTruthy();
 
   expect(isValidId(actual.id)).toBe(true);

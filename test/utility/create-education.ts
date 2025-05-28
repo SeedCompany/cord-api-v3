@@ -5,10 +5,9 @@ import { graphql } from '~/graphql';
 import {
   type CreateEducation,
   Degree,
-  type Education,
 } from '../../src/components/user/education/dto';
 import { type TestApp } from './create-app';
-import { fragments } from './fragments';
+import * as fragments from './fragments';
 
 export async function createEducation(
   app: TestApp,
@@ -44,7 +43,7 @@ export async function createEducation(
     },
   );
 
-  const actual: Education = result.createEducation.education;
+  const actual = result.createEducation.education;
   expect(actual).toBeTruthy();
 
   expect(isValidId(actual.id)).toBe(true);

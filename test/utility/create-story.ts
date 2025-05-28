@@ -1,8 +1,8 @@
 import { faker } from '@faker-js/faker';
 import { graphql } from '~/graphql';
-import { type CreateStory, type Story } from '../../src/components/story/dto';
+import { type CreateStory } from '../../src/components/story/dto';
 import { type TestApp } from './create-app';
-import { fragments } from './fragments';
+import * as fragments from './fragments';
 
 export async function createStory(
   app: TestApp,
@@ -32,7 +32,7 @@ export async function createStory(
       },
     },
   );
-  const st: Story = result.createStory.story;
+  const st = result.createStory.story;
 
   expect(st).toBeTruthy();
 

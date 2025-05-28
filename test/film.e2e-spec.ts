@@ -2,7 +2,6 @@ import { faker } from '@faker-js/faker';
 import { times } from 'lodash';
 import { isValidId, Role } from '~/common';
 import { graphql } from '~/graphql';
-import { type Film } from '../src/components/film/dto';
 import { ScriptureRange } from '../src/components/scripture/dto';
 import {
   createFilm,
@@ -117,7 +116,7 @@ describe('Film e2e', () => {
         id: fm.id,
       },
     );
-    const actual: Film | undefined = result.deleteFilm;
+    const actual = result.deleteFilm;
     expect(actual).toBeTruthy();
   });
 

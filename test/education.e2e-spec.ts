@@ -2,20 +2,18 @@ import { faker } from '@faker-js/faker';
 import { times } from 'lodash';
 import { isValidId, Role } from '~/common';
 import { graphql } from '~/graphql';
-import { type User } from '../src/components/user/dto';
-import { type Education } from '../src/components/user/education/dto';
 import {
   createEducation,
   createSession,
   createTestApp,
+  fragments,
   registerUser,
   type TestApp,
 } from './utility';
-import { fragments } from './utility/fragments';
 
 describe('Education e2e', () => {
   let app: TestApp;
-  let user: User;
+  let user: fragments.user;
 
   beforeAll(async () => {
     app = await createTestApp();
@@ -105,7 +103,7 @@ describe('Education e2e', () => {
         id: education.id,
       },
     );
-    const actual: Education | undefined = result.deleteEducation;
+    const actual = result.deleteEducation;
     expect(actual).toBeTruthy();
   });
 

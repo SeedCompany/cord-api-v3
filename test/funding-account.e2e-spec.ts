@@ -2,7 +2,6 @@ import { faker } from '@faker-js/faker';
 import { times } from 'lodash';
 import { isValidId, Role } from '~/common';
 import { graphql } from '~/graphql';
-import { type FundingAccount } from '../src/components/funding-account/dto';
 import {
   createFundingAccount,
   createSession,
@@ -109,7 +108,7 @@ describe('FundingAccount e2e', () => {
         id: st.id,
       },
     );
-    const actual: FundingAccount | undefined = result.deleteFundingAccount;
+    const actual = result.deleteFundingAccount;
     expect(actual).toBeTruthy();
   });
 

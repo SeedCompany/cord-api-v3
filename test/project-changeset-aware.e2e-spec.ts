@@ -13,11 +13,11 @@ import {
   createRegion,
   createSession,
   createTestApp,
+  fragments,
   registerUser,
   runAsAdmin,
   type TestApp,
 } from './utility';
-import { fragments } from './utility/fragments';
 import {
   changeProjectStep,
   stepsFromEarlyConversationToBeforeActive,

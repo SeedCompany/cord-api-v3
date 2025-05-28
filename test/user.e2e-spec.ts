@@ -2,12 +2,10 @@ import { faker } from '@faker-js/faker';
 import { times } from 'lodash';
 import { firstLettersOfWords, isValidId } from '~/common';
 import { graphql } from '~/graphql';
-import { type Organization } from '../src/components/organization/dto';
 import { type SecuredTimeZone } from '../src/components/timezone/timezone.dto';
 import {
   type UpdateUser,
   type UpdateUserInput,
-  type User,
   UserStatus,
 } from '../src/components/user/dto';
 import {
@@ -22,16 +20,14 @@ import {
   generateRequireFieldsRegisterInput,
   login,
   loginAsAdmin,
-  type Raw,
   registerUser,
   runInIsolatedSession,
   type TestApp,
 } from './utility';
-import { type RawUser } from './utility/fragments';
 
 describe('User e2e', () => {
   let app: TestApp;
-  let org: Raw<Organization>;
+  let org: fragments.org;
 
   beforeAll(async () => {
     app = await createTestApp();
@@ -67,8 +63,7 @@ describe('User e2e', () => {
       },
     );
 
-    const actual: RawUser & { avatarLetters: string; fullName: string } =
-      result.user;
+    const actual = result.user;
     expect(actual).toBeTruthy();
 
     expect(isValidId(actual.id)).toBe(true);
@@ -142,7 +137,7 @@ describe('User e2e', () => {
         },
       },
     );
-    const actual: User = result.updateUser.user;
+    const actual = result.updateUser.user;
 
     expect(actual).toBeTruthy();
 
@@ -179,7 +174,7 @@ describe('User e2e', () => {
       },
     );
 
-    const actual: User | undefined = result.deleteUser;
+    const actual = result.deleteUser;
     expect(actual).toBeTruthy();
 
     return true;

@@ -1,15 +1,7 @@
 import { type Merge } from 'type-fest';
-import {
-  CalendarDate,
-  type IdOf,
-  isIdLike,
-  type PaginatedListType,
-  type Variant,
-} from '~/common';
+import { CalendarDate, type IdOf, isIdLike } from '~/common';
 import { graphql } from '~/graphql';
 import { type CreateLanguageEngagement } from '../src/components/engagement/dto';
-import { type Media } from '../src/components/file/media/media.dto';
-import { type Language } from '../src/components/language/dto';
 import { type ProgressReport } from '../src/components/progress-report/dto';
 import {
   type MediaVariant,
@@ -24,7 +16,6 @@ import {
   createTestApp,
   fragments,
   generateFakeFile,
-  type Raw,
   registerUser,
   requestFileUpload,
   runAsAdmin,
@@ -33,12 +24,11 @@ import {
   type TestUser,
   uploadFileContents,
 } from './utility';
-import { type RawProject } from './utility/fragments';
 
 describe('ProgressReport Media e2e', () => {
   let app: TestApp;
-  let project: RawProject;
-  let language: Language;
+  let project: fragments.project;
+  let language: fragments.language;
   let reportId: IdOf<ProgressReport>;
   let image: ReturnType<typeof generateFakeFile>;
 
@@ -96,8 +86,9 @@ describe('ProgressReport Media e2e', () => {
   it('View uploadable options', async () => {
     const { report } = await app.graphql.query(
       graphql(`
-        query ($id: ID!) {
+        query UploadableVariantsOfReportMedia($id: ID!) {
           report: periodicReport(id: $id) {
+            __typename
             ... on ProgressReport {
               media {
                 uploadableVariants {
@@ -110,8 +101,9 @@ describe('ProgressReport Media e2e', () => {
       `),
       { id: reportId },
     );
+    if (report.__typename !== 'ProgressReport') fail();
     const { uploadableVariants } = report.media;
-    const keys = uploadableVariants.map((v: Variant) => v.key);
+    const keys = uploadableVariants.map((v) => v.key);
     expect(keys).toEqual(['draft', 'translated', 'fpm']);
   });
 
@@ -396,10 +388,7 @@ async function uploadMedia(
     ),
     { input },
   );
-  return upload as {
-    id: IdOf<ProgressReport>;
-    media: PaginatedListType<RawReportMedia>;
-  };
+  return upload;
 }
 
 async function getFeaturedMedia(app: TestApp, id: IdOf<ProgressReport>) {
@@ -408,6 +397,7 @@ async function getFeaturedMedia(app: TestApp, id: IdOf<ProgressReport>) {
       `
         query ($id: ID!) {
           report: periodicReport(id: $id) {
+            __typename
             ... on ProgressReport {
               featuredMedia {
                 ...reportMedia
@@ -420,7 +410,8 @@ async function getFeaturedMedia(app: TestApp, id: IdOf<ProgressReport>) {
     ),
     { id },
   );
-  return report.featuredMedia as RawReportMedia | null;
+  if (report.__typename !== 'ProgressReport') fail();
+  return report.featuredMedia;
 }
 
 const reportMediaFrag = graphql(`
@@ -442,10 +433,3 @@ const reportMediaFrag = graphql(`
     canDelete
   }
 `);
-type RawReportMedia = Omit<
-  Raw<ProgressReportMedia>,
-  'media' | 'file' | 'creator' | 'scope'
-> & {
-  media: Raw<Media>;
-  canEdit: boolean;
-};

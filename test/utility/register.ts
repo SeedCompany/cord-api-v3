@@ -2,9 +2,9 @@ import { faker } from '@faker-js/faker';
 import { generateId, isValidId, Role } from '~/common';
 import { type RegisterInput } from '~/core/authentication/dto';
 import { graphql } from '~/graphql';
-import { type User, UserStatus } from '../../src/components/user/dto';
+import { UserStatus } from '../../src/components/user/dto';
 import { type TestApp } from './create-app';
-import { fragments, type RawUser } from './fragments';
+import * as fragments from './fragments';
 import { login, runAsAdmin, runInIsolatedSession } from './login';
 
 export const generateRegisterInput = async (): Promise<RegisterInput> => ({
@@ -51,7 +51,7 @@ export async function registerUserWithStrictInput(
       input: user,
     },
   );
-  const actual: RawUser = result.register.user;
+  const actual = result.register.user;
   expect(actual).toBeTruthy();
 
   expect(isValidId(actual.id)).toBe(true);
@@ -60,7 +60,7 @@ export async function registerUserWithStrictInput(
   return actual;
 }
 
-export type TestUser = User & {
+export type TestUser = fragments.user & {
   /**
    * Login as the user with the current session
    */
@@ -98,7 +98,7 @@ export async function registerUser(
       input: user,
     },
   );
-  const actual: User = result.register.user;
+  const actual = result.register.user;
   expect(actual).toBeTruthy();
 
   expect(isValidId(actual.id)).toBe(true);

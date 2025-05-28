@@ -14,11 +14,7 @@ import { createLocation } from './create-location';
 import { createPerson } from './create-person';
 import { createProject } from './create-project';
 import { getUserFromSession } from './create-session';
-import {
-  fragments,
-  type RawInternshipEngagement,
-  type RawLanguageEngagement,
-} from './fragments';
+import * as fragments from './fragments';
 import { runAsAdmin } from './login';
 
 export async function createLanguageEngagement(
@@ -62,8 +58,7 @@ export async function createLanguageEngagement(
     },
   );
 
-  const actual: RawLanguageEngagement =
-    result.createLanguageEngagement.engagement;
+  const actual = result.createLanguageEngagement.engagement;
 
   expect(actual).toBeTruthy();
   expect(isValidId(actual.id)).toBe(true);
@@ -116,8 +111,7 @@ export async function createInternshipEngagement(
     },
   );
 
-  const actual: RawInternshipEngagement =
-    result.createInternshipEngagement.engagement;
+  const actual = result.createInternshipEngagement.engagement;
 
   expect(actual).toBeTruthy();
   expect(isValidId(actual.id)).toBe(true);
@@ -157,8 +151,7 @@ export async function createInternshipEngagementWithMinimumValues(
     },
   );
 
-  const actual: RawInternshipEngagement =
-    result.createInternshipEngagement.engagement;
+  const actual = result.createInternshipEngagement.engagement;
 
   expect(actual).toBeTruthy();
   expect(isValidId(actual.id)).toBe(true);

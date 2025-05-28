@@ -11,10 +11,10 @@ import {
   createSession,
   createTestApp,
   errors,
+  fragments,
   loginAsAdmin,
   type TestApp,
 } from './utility';
-import { fragments } from './utility/fragments';
 
 describe('Language e2e', () => {
   let app: TestApp;

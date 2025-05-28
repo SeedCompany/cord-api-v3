@@ -1,17 +1,13 @@
 import { type ID } from '~/common';
 import { graphql } from '~/graphql';
-import {
-  EngagementStatus,
-  type InternshipEngagement,
-  type LanguageEngagement,
-} from '../../src/components/engagement/dto';
+import { EngagementStatus } from '../../src/components/engagement/dto';
 import { ProjectStep } from '../../src/components/project/dto';
 import { type TestApp } from './create-app';
 import { getCurrentEngagementStatus } from './create-engagement';
 import { createFundingAccount } from './create-funding-account';
 import { createLocation } from './create-location';
 import { createRegion } from './create-region';
-import { fragments } from './fragments';
+import * as fragments from './fragments';
 import { runAsAdmin } from './login';
 import {
   changeProjectStep,
@@ -23,7 +19,7 @@ export const changeInternshipEngagementStatus = async (
   app: TestApp,
   id: ID,
   to: EngagementStatus,
-): Promise<InternshipEngagement> => {
+) => {
   const result = await app.graphql.mutate(
     graphql(
       `
@@ -54,7 +50,7 @@ export const changeLanguageEngagementStatus = async (
   app: TestApp,
   id: ID,
   to: EngagementStatus,
-): Promise<LanguageEngagement> => {
+) => {
   const result = await app.graphql.mutate(
     graphql(
       `
@@ -86,7 +82,7 @@ export const transitionEngagementToActive = async (
   app: TestApp,
   projectId: ID,
   langEngagementId: ID,
-): Promise<any> => {
+) => {
   await runAsAdmin(app, async () => {
     const fundingAccount = await createFundingAccount(app);
     const location = await createLocation(app, {

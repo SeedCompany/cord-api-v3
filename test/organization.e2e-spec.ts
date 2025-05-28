@@ -3,7 +3,6 @@ import { sortBy } from '@seedcompany/common';
 import { times } from 'lodash';
 import { generateId, isValidId, Role } from '~/common';
 import { graphql } from '~/graphql';
-import { type Organization } from '../src/components/organization/dto';
 import {
   createOrganization,
   createSession,
@@ -253,7 +252,7 @@ describe('Organization e2e', () => {
       },
     );
 
-    const actual: Organization | undefined = result.deleteOrganization;
+    const actual = result.deleteOrganization;
     expect(actual).toBeTruthy();
   });
 

@@ -1,26 +1,5 @@
-import { type Except, type Merge, type MergeExclusive } from 'type-fest';
-import { type ID, type Secured } from '~/common';
-import { graphql } from '~/graphql';
-import {
-  type IEngagement,
-  type InternshipEngagement,
-  type LanguageEngagement,
-} from '../../src/components/engagement/dto';
-import {
-  type File,
-  type FileListOutput,
-  type FileVersion,
-  type IFileNode,
-  type SecuredFile,
-} from '../../src/components/file/dto';
-import { type SecuredLanguage } from '../../src/components/language/dto';
-import {
-  type Product,
-  type ProductApproach,
-} from '../../src/components/product/dto';
-import { type Project } from '../../src/components/project/dto';
-import { type User } from '../../src/components/user/dto';
-import { type Raw } from './raw.type';
+/* eslint-disable @typescript-eslint/naming-convention */
+import { type FragmentOf, graphql } from '~/graphql';
 
 export const org = graphql(`
   fragment org on Organization {
@@ -88,6 +67,7 @@ export const org = graphql(`
     }
   }
 `);
+export type org = FragmentOf<typeof org>;
 
 export const user = graphql(`
   fragment user on User {
@@ -171,7 +151,7 @@ export const user = graphql(`
     }
   }
 `);
-export type RawUser = Merge<Raw<User>, { timezone: Secured<{ name: string }> }>;
+export type user = FragmentOf<typeof user>;
 
 export const language = graphql(`
   fragment language on Language {
@@ -320,6 +300,7 @@ export const language = graphql(`
     }
   }
 `);
+export type language = FragmentOf<typeof language>;
 
 export const unavailability = graphql(`
   fragment unavailability on Unavailability {
@@ -342,6 +323,7 @@ export const unavailability = graphql(`
     }
   }
 `);
+export type unavailability = FragmentOf<typeof unavailability>;
 
 export const education = graphql(`
   fragment education on Education {
@@ -364,6 +346,7 @@ export const education = graphql(`
     }
   }
 `);
+export type education = FragmentOf<typeof education>;
 
 export const fileNodeChildren = graphql(`
   fragment children on FileListOutput {
@@ -376,13 +359,12 @@ export const fileNodeChildren = graphql(`
     }
   }
 `);
-export type RawFileNodeChildren = Pick<FileListOutput, 'total' | 'hasMore'> & {
-  items: Array<Pick<IFileNode, 'id' | 'type' | 'name'>>;
-};
+export type fileNodeChildren = FragmentOf<typeof fileNodeChildren>;
 
 export const fileNode = graphql(
   `
     fragment fileNode on FileNode {
+      __typename
       id
       type
       name
@@ -413,29 +395,10 @@ export const fileNode = graphql(
   `,
   [user],
 );
-type RawNode<Node, Without extends keyof Node, Add> = Raw<
-  Merge<Except<Node, Without>, Add>
->;
-export type RawBaseFileNode = RawNode<
-  IFileNode,
-  'createdById',
-  {
-    createdBy: User;
-    parents: Array<Pick<IFileNode, 'id' | 'type' | 'name'>>;
-  }
->;
-export type RawDirectory = RawBaseFileNode;
-export type RawFileVersion = RawBaseFileNode &
-  RawNode<FileVersion, keyof IFileNode, { url: string }>;
-export type RawFile = RawFileVersion &
-  RawNode<
-    File,
-    'latestVersionId' | 'modifiedById' | keyof IFileNode,
-    {
-      modifiedBy: User;
-    }
-  >;
-export type RawFileNode = RawDirectory | RawFileVersion | RawFile;
+export type fileNode = FragmentOf<typeof fileNode>;
+export type directory = Extract<fileNode, { __typename: 'Directory' }>;
+export type fileVersion = Extract<fileNode, { __typename: 'FileVersion' }>;
+export type file = Extract<fileNode, { __typename: 'File' }>;
 
 export const scriptureReference = graphql(`
   fragment scriptureReference on ScriptureReference {
@@ -444,6 +407,7 @@ export const scriptureReference = graphql(`
     verse
   }
 `);
+export type scriptureReference = FragmentOf<typeof scriptureReference>;
 
 export const scriptureRange = graphql(
   `
@@ -462,6 +426,7 @@ export const scriptureRange = graphql(
   `,
   [scriptureReference],
 );
+export type scriptureRange = FragmentOf<typeof scriptureRange>;
 
 export const product = graphql(
   `
@@ -491,7 +456,7 @@ export const product = graphql(
   `,
   [scriptureRange],
 );
-export type RawProduct = Raw<Product> & { approach?: ProductApproach };
+export type product = FragmentOf<typeof product>;
 
 export const project = graphql(`
   fragment project on Project {
@@ -597,19 +562,7 @@ export const project = graphql(`
     }
   }
 `);
-export type RawProject = Raw<Project> & {
-  engagements: { canRead: boolean; canCreate: boolean };
-  partnerships: { canRead: boolean; canCreate: boolean };
-  team: { canRead: boolean; canCreate: boolean };
-  rootDirectory: Secured<{
-    id: ID;
-    children: {
-      items: {
-        name: string;
-      };
-    };
-  }>;
-};
+export type project = FragmentOf<typeof project>;
 
 export const partner = graphql(
   `
@@ -666,6 +619,7 @@ export const partner = graphql(
   `,
   [org, user],
 );
+export type partner = FragmentOf<typeof partner>;
 
 export const partnership = graphql(
   `
@@ -735,6 +689,7 @@ export const partnership = graphql(
   `,
   [partner],
 );
+export type partnership = FragmentOf<typeof partnership>;
 
 export const projectMember = graphql(`
   fragment projectMember on ProjectMember {
@@ -755,10 +710,12 @@ export const projectMember = graphql(`
     }
   }
 `);
+export type projectMember = FragmentOf<typeof projectMember>;
 
 export const engagement = graphql(
   `
     fragment engagement on Engagement {
+      __typename
       id
       createdAt
       modifiedAt
@@ -916,29 +873,7 @@ export const engagement = graphql(
   `,
   [language, product],
 );
-type RawBaseEngagement = Except<Raw<IEngagement>, 'ceremony'> & {
-  ceremony: Secured<{ id: ID }>;
-};
-export type RawLanguageEngagement = RawBaseEngagement &
-  Merge<
-    Except<LanguageEngagement, keyof IEngagement>,
-    {
-      language: SecuredLanguage;
-      pnp: SecuredFile;
-    }
-  >;
-export type RawInternshipEngagement = RawBaseEngagement &
-  Merge<
-    Except<InternshipEngagement, keyof IEngagement>,
-    {
-      language: SecuredLanguage;
-      pnp: SecuredFile;
-    }
-  >;
-export type RawEngagement = MergeExclusive<
-  RawLanguageEngagement,
-  RawInternshipEngagement
->;
+export type engagement = FragmentOf<typeof engagement>;
 
 export const languageEngagement = graphql(
   `
@@ -948,6 +883,7 @@ export const languageEngagement = graphql(
   `,
   [engagement],
 );
+export type languageEngagement = FragmentOf<typeof languageEngagement>;
 
 export const internshipEngagement = graphql(
   `
@@ -957,6 +893,7 @@ export const internshipEngagement = graphql(
   `,
   [engagement],
 );
+export type internshipEngagement = FragmentOf<typeof internshipEngagement>;
 
 export const fieldZone = graphql(`
   fragment fieldZone on FieldZone {
@@ -973,6 +910,7 @@ export const fieldZone = graphql(`
     }
   }
 `);
+export type fieldZone = FragmentOf<typeof fieldZone>;
 
 export const fieldRegion = graphql(`
   fragment fieldRegion on FieldRegion {
@@ -993,6 +931,7 @@ export const fieldRegion = graphql(`
     }
   }
 `);
+export type fieldRegion = FragmentOf<typeof fieldRegion>;
 
 export const budgetRecord = graphql(
   `
@@ -1020,6 +959,7 @@ export const budgetRecord = graphql(
   `,
   [org],
 );
+export type budgetRecord = FragmentOf<typeof budgetRecord>;
 
 export const budget = graphql(
   `
@@ -1042,6 +982,7 @@ export const budget = graphql(
   `,
   [budgetRecord],
 );
+export type budget = FragmentOf<typeof budget>;
 
 export const film = graphql(
   `
@@ -1060,6 +1001,7 @@ export const film = graphql(
   `,
   [scriptureRange],
 );
+export type film = FragmentOf<typeof film>;
 
 export const story = graphql(
   `
@@ -1078,6 +1020,7 @@ export const story = graphql(
   `,
   [scriptureRange],
 );
+export type story = FragmentOf<typeof story>;
 
 export const ceremony = graphql(`
   fragment ceremony on Ceremony {
@@ -1101,6 +1044,7 @@ export const ceremony = graphql(`
     }
   }
 `);
+export type ceremony = FragmentOf<typeof ceremony>;
 
 export const fundingAccount = graphql(`
   fragment fundingAccount on FundingAccount {
@@ -1118,6 +1062,7 @@ export const fundingAccount = graphql(`
     createdAt
   }
 `);
+export type fundingAccount = FragmentOf<typeof fundingAccount>;
 
 export const locationName = graphql(`
   fragment locationName on Location {
@@ -1171,6 +1116,7 @@ export const location = graphql(
   `,
   [fundingAccount, fieldRegion, locationName],
 );
+export type location = FragmentOf<typeof location>;
 
 export const projectChangeRequest = graphql(`
   fragment projectChangeRequest on ProjectChangeRequest {
@@ -1194,28 +1140,4 @@ export const projectChangeRequest = graphql(`
     canEdit
   }
 `);
-
-export const fragments = {
-  org,
-  user,
-  language,
-  unavailability,
-  education,
-  product,
-  project,
-  partnership,
-  projectMember,
-  languageEngagement,
-  internshipEngagement,
-  fieldZone,
-  fieldRegion,
-  location,
-  budget,
-  budgetRecord,
-  film,
-  story,
-  ceremony,
-  partner,
-  fundingAccount,
-  projectChangeRequest,
-};
+export type projectChangeRequest = FragmentOf<typeof projectChangeRequest>;

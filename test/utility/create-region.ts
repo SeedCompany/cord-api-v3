@@ -1,13 +1,10 @@
 import { generateId, isValidId } from '~/common';
 import { graphql } from '~/graphql';
-import {
-  type CreateFieldRegion,
-  type FieldRegion,
-} from '../../src/components/field-region/dto';
+import { type CreateFieldRegion } from '../../src/components/field-region/dto';
 import { type TestApp } from './create-app';
 import { createPerson } from './create-person';
 import { createZone } from './create-zone';
-import { fragments } from './fragments';
+import * as fragments from './fragments';
 import { runAsAdmin } from './login';
 
 export async function createRegion(
@@ -67,7 +64,7 @@ export async function createRegion(
     },
   );
 
-  const actual: FieldRegion = result.createFieldRegion.fieldRegion;
+  const actual = result.createFieldRegion.fieldRegion;
   expect(actual).toBeTruthy();
 
   expect(isValidId(actual.id)).toBe(true);

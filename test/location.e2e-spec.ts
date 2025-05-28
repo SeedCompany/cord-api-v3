@@ -99,7 +99,7 @@ describe('Location e2e', () => {
         id: st.id,
       },
     );
-    const actual: Location | undefined = result.deleteLocation;
+    const actual = result.deleteLocation;
     expect(actual).toBeTruthy();
   });
 

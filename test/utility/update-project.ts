@@ -1,7 +1,7 @@
 import { graphql } from '~/graphql';
 import { type UpdateProject } from '../../src/components/project/dto';
 import { type TestApp } from './create-app';
-import { fragments } from './fragments';
+import * as fragments from './fragments';
 
 export async function updateProject(app: TestApp, input: UpdateProject) {
   const result = await app.graphql.mutate(

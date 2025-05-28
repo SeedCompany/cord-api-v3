@@ -1,7 +1,7 @@
+import { type TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/core';
 import { type INestApplication } from '@nestjs/common';
 import got from 'got';
 import {
-  type DocumentNode,
   type FormattedExecutionResult,
   type GraphQLFormattedError,
   print,
@@ -14,12 +14,12 @@ import { type ErrorExpectations } from './expect-gql-error';
 import './expect-gql-error';
 
 export interface GraphQLTestClient {
-  query: <TData = AnyObject, TVars = AnyObject>(
-    query: DocumentNode | string,
+  query: <TData extends AnyObject, TVars extends AnyObject>(
+    query: DocumentNode<TData, any>,
     variables?: TVars,
   ) => GqlResult<TData>;
-  mutate: <TData = AnyObject, TVars = AnyObject>(
-    query: DocumentNode | string,
+  mutate: <TData extends AnyObject, TVars extends AnyObject>(
+    query: DocumentNode<TData, any>,
     variables?: TVars,
   ) => GqlResult<TData>;
   authToken: string;
@@ -36,11 +36,11 @@ export const createGraphqlClient = async (
   let authToken = '';
   let email: string | undefined = undefined;
 
-  const execute = <TData = AnyObject, TVars = AnyObject>(
-    doc: DocumentNode | string,
+  const execute = <TData extends AnyObject, TVars extends AnyObject>(
+    doc: DocumentNode<TData, TVars>,
     variables?: TVars,
   ) => {
-    const query = typeof doc === 'string' ? doc : print(doc);
+    const query = print(doc);
     const result = got
       .post({
         url: `${url}/graphql`,

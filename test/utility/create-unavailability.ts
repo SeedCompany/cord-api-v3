@@ -2,12 +2,9 @@ import { faker } from '@faker-js/faker';
 import { DateTime } from 'luxon';
 import { isValidId } from '~/common';
 import { graphql } from '~/graphql';
-import {
-  type CreateUnavailability,
-  type Unavailability,
-} from '../../src/components/user/unavailability/dto';
+import { type CreateUnavailability } from '../../src/components/user/unavailability/dto';
 import { type TestApp } from './create-app';
-import { fragments } from './fragments';
+import * as fragments from './fragments';
 
 export async function createUnavailability(
   app: TestApp,
@@ -43,7 +40,7 @@ export async function createUnavailability(
     },
   );
 
-  const actual: Unavailability = result.createUnavailability.unavailability;
+  const actual = result.createUnavailability.unavailability;
   expect(actual).toBeTruthy();
 
   expect(isValidId(actual.id)).toBe(true);

@@ -10,7 +10,6 @@ import type {
 } from '../../src/components/file/dto';
 import { mimeTypes } from '../../src/components/file/mimeTypes';
 import { type TestApp } from './create-app';
-import type { RawFile, RawFileNode, RawFileNodeChildren } from './fragments';
 import * as fragments from './fragments';
 
 export const generateFakeFile = () => {
@@ -94,7 +93,7 @@ export async function createFileVersion(
     },
   );
 
-  const actual: RawFile = result.createFileVersion;
+  const actual = result.createFileVersion;
 
   return actual;
 }
@@ -116,7 +115,7 @@ export async function getFileNode(app: TestApp, id: ID) {
     },
   );
 
-  const actual: RawFileNode = result.fileNode;
+  const actual = result.fileNode;
 
   return actual;
 }
@@ -131,6 +130,7 @@ export async function getFileNodeChildren(
       `
         query getFileNode($id: ID!, $input: FileListInput) {
           fileNode(id: $id) {
+            __typename
             ... on File {
               children(input: $input) {
                 ...children
@@ -151,8 +151,9 @@ export async function getFileNodeChildren(
       input,
     },
   );
+  if (result.fileNode.__typename === 'FileVersion') fail();
 
-  const actual: RawFileNodeChildren = result.fileNode.children;
+  const actual = result.fileNode.children;
 
   return actual;
 }

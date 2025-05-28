@@ -7,7 +7,7 @@ import {
 } from '../../src/components/project/dto';
 import { type TestApp } from './create-app';
 import { createRegion } from './create-region';
-import { fragments, type RawProject } from './fragments';
+import * as fragments from './fragments';
 import { runAsAdmin } from './login';
 
 export async function createProject(
@@ -49,7 +49,7 @@ export async function createProject(
     },
   );
 
-  const actual: RawProject = result.createProject.project;
+  const actual = result.createProject.project;
   expect(actual).toBeTruthy();
 
   expect(isValidId(actual.id)).toBe(true);

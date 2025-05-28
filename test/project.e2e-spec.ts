@@ -7,19 +7,15 @@ import {
   type ID,
   isIdLike,
   Order,
-  type PaginatedListType,
   Role,
   Sensitivity,
 } from '~/common';
 import { graphql } from '~/graphql';
 import { BudgetStatus } from '../src/components/budget/dto';
-import { type FieldRegion } from '../src/components/field-region/dto';
-import { type Location } from '../src/components/location/dto';
 import { PartnerType } from '../src/components/partner/dto';
 import { type CreatePartnership } from '../src/components/partnership/dto';
 import {
   type CreateProject,
-  type Project,
   type ProjectListInput,
   ProjectType,
 } from '../src/components/project/dto';
@@ -42,11 +38,9 @@ import {
   createZone,
   errors,
   fragments,
-  type Raw,
   registerUser,
   runAsAdmin,
   type TestApp,
-  type TestUser,
 } from './utility';
 import { forceProjectTo } from './utility/transition-project';
 
@@ -86,16 +80,16 @@ const listProjects = async (
     ),
     { input },
   );
-  return projects as PaginatedListType<Raw<Project>>;
+  return projects;
 };
 
 describe('Project e2e', () => {
   let app: TestApp;
-  let intern: TestUser;
-  let mentor: TestUser;
-  let director: TestUser;
-  let fieldRegion: FieldRegion;
-  let location: Location;
+  let intern: fragments.user;
+  let mentor: fragments.user;
+  let director: fragments.user;
+  let fieldRegion: fragments.fieldRegion;
+  let location: fragments.location;
 
   beforeAll(async () => {
     app = await createTestApp();
@@ -159,7 +153,7 @@ describe('Project e2e', () => {
       },
     );
 
-    const actual: Project = result.project;
+    const actual = result.project;
     expect(actual.id).toBe(project.id);
     expect(actual.type).toBe(project.type);
     expect(actual.sensitivity).toBe(project.sensitivity);
@@ -191,7 +185,7 @@ describe('Project e2e', () => {
     expect(actual.partnerships.canCreate).toBe(true);
     expect(actual.team.canRead).toBe(true);
     expect(actual.team.canCreate).toBe(true);
-    expect(actual.rootDirectory.value!.children.items).toEqual([
+    expect(actual.rootDirectory.value.children.items).toEqual([
       { name: 'Approval Documents' },
       { name: 'Consultant Reports' },
       { name: 'Field Correspondence' },
@@ -380,7 +374,7 @@ describe('Project e2e', () => {
 
     // only be concerned with projects listed here,
     // ignore other ones that have slipped in from other tests
-    const filterNames = (list: PaginatedListType<Raw<Project>>) =>
+    const filterNames = (list: typeof ascProjects) =>
       intersection(
         list.items.map((p) => p.name.value),
         unsorted,
@@ -506,9 +500,8 @@ describe('Project e2e', () => {
           },
         },
       );
-    const getSortedSensitivities = (
-      projects: PaginatedListType<Raw<Project>>,
-    ) => projects.items.map((project) => project.sensitivity);
+    const getSortedSensitivities = (projects: typeof ascendingProjects) =>
+      projects.items.map((project) => project.sensitivity);
 
     const { projects: ascendingProjects } = await getSensitivitySortedProjects(
       'ASC',
@@ -630,9 +623,7 @@ describe('Project e2e', () => {
 
     expect(unpinnedProjects.items.length).toBeGreaterThanOrEqual(numProjects);
     // pinned project should be excluded
-    const result = unpinnedProjects.items.find(
-      ({ id }: Partial<Project>) => id === project.id,
-    );
+    const result = unpinnedProjects.items.find(({ id }) => id === project.id);
     expect(result).toBeUndefined();
   });
 

@@ -11,10 +11,10 @@ import {
   createRegion,
   createSession,
   createTestApp,
+  fragments,
   loginAsAdmin,
   type TestApp,
 } from './utility';
-import { fragments } from './utility/fragments';
 import { forceProjectTo } from './utility/transition-project';
 
 const readLanguage = (app: TestApp, id: string, changeset?: string) =>

@@ -1,14 +1,10 @@
 import { isValidId } from '~/common';
 import { graphql } from '~/graphql';
-import {
-  type CreateProjectMember,
-  type ProjectMember,
-} from '../../src/components/project/project-member/dto';
+import { type CreateProjectMember } from '../../src/components/project/project-member/dto';
 import {
   createPerson,
   createProject,
   fragments,
-  type Raw,
   type TestApp,
 } from '../utility';
 import { getUserFromSession } from './create-session';
@@ -46,7 +42,7 @@ export async function createProjectMember(
     },
   );
 
-  const actual: Raw<ProjectMember> = result.createProjectMember.projectMember;
+  const actual = result.createProjectMember.projectMember;
 
   expect(actual).toBeTruthy();
   expect(isValidId(actual.id)).toBe(true);
