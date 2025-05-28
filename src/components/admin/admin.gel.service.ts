@@ -3,9 +3,9 @@ import {
   Injectable,
   type OnApplicationBootstrap,
 } from '@nestjs/common';
+import { CryptoService } from '~/core/authentication/crypto.service';
 import { ConfigService } from '~/core/config/config.service';
 import { ILogger, Logger } from '~/core/logger';
-import { CryptoService } from '../authentication/crypto.service';
 import { AdminGelRepository } from './admin.gel.repository';
 import { AdminRepository } from './admin.repository';
 

@@ -1,6 +1,5 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { splitDb } from '~/core/database';
-import { AuthenticationModule } from '../authentication/authentication.module';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { LanguageModule } from '../language/language.module';
 import { LocationModule } from '../location/location.module';
@@ -26,7 +25,6 @@ import { UserService } from './user.service';
 
 @Module({
   imports: [
-    forwardRef(() => AuthenticationModule),
     forwardRef(() => AuthorizationModule),
     EducationModule,
     forwardRef(() => OrganizationModule),

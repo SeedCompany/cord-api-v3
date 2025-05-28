@@ -7,14 +7,12 @@ import {
 } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { Loader, type LoaderOf } from '~/core';
-import { Privileges } from '../authorization';
-import { Power } from '../authorization/dto';
-import { UserLoader } from '../user';
-import { User } from '../user/dto';
-import { AuthLevel } from './auth-level.decorator';
-import { AuthenticationService } from './authentication.service';
-import { LoginInput, LoginOutput, LogoutOutput } from './dto';
-import { SessionHost } from './session.host';
+import { UserLoader } from '../../../components/user';
+import { User } from '../../../components/user/dto';
+import { AuthenticationService } from '../authentication.service';
+import { LoginInput, LoginOutput, LogoutOutput } from '../dto';
+import { AuthLevel } from '../session/auth-level.decorator';
+import { SessionHost } from '../session/session.host';
 
 @Resolver(LoginOutput)
 @AuthLevel('anonymous')
@@ -22,7 +20,6 @@ export class LoginResolver {
   constructor(
     private readonly authentication: AuthenticationService,
     private readonly sessionHost: SessionHost,
-    private readonly privileges: Privileges,
   ) {}
 
   @Mutation(() => LoginOutput, {
@@ -33,7 +30,6 @@ export class LoginResolver {
   })
   async login(@Args('input') input: LoginInput): Promise<LoginOutput> {
     const user = await this.authentication.login(input);
-    await this.authentication.refreshCurrentSession();
     return { user };
   }
 
@@ -46,7 +42,6 @@ export class LoginResolver {
   async logout(): Promise<LogoutOutput> {
     const session = this.sessionHost.current;
     await this.authentication.logout(session.token);
-    await this.authentication.refreshCurrentSession(); // ensure session data is fresh
     return { success: true };
   }
 
@@ -56,10 +51,5 @@ export class LoginResolver {
     @Loader(UserLoader) users: LoaderOf<UserLoader>,
   ): Promise<User> {
     return await users.load(user);
-  }
-
-  @ResolveField(() => [Power])
-  async powers(): Promise<Power[]> {
-    return [...this.privileges.powers];
   }
 }

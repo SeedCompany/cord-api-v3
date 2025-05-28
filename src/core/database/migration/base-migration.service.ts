@@ -1,12 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { node, not, relation } from 'cypher-query-builder';
-import { DateTime } from 'luxon';
+import { type DateTime } from 'luxon';
 import {
   EnhancedResource,
   type ID,
   type MaybeUnsecuredInstance,
   type ResourceShape,
-  type Session,
   type UnwrapSecured,
 } from '~/common';
 import { type DbChanges } from '~/core/database/changes';
@@ -41,21 +40,6 @@ export abstract class BaseMigration {
   protected logger: ILogger;
 
   abstract up(): Promise<void>;
-
-  /**
-   * Sometimes a session is "needed" to read data from the app.
-   * Usually it's required just to provide user authorization.
-   * This is not guaranteed to work, especially for usage with writes.
-   */
-  protected get fakeAdminSession(): Session {
-    return {
-      token: '',
-      issuedAt: DateTime.now(),
-      roles: ['global:Administrator'],
-      userId: 'fake admin :(' as ID,
-      anonymous: false,
-    };
-  }
 
   protected async addProperty<
     TResourceStatic extends ResourceShape<any>,

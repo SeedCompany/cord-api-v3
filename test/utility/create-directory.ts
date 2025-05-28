@@ -1,10 +1,8 @@
 import { faker } from '@faker-js/faker';
 import { startCase } from 'lodash';
 import { type ID } from '~/common';
-import {
-  AuthenticationService,
-  SessionHost,
-} from '../../src/components/authentication';
+import { SessionHost } from '~/core/authentication/session/session.host';
+import { SessionManager } from '~/core/authentication/session/session.manager';
 import { FileService } from '../../src/components/file';
 import { type TestApp } from './create-app';
 import { fileNode, type RawDirectory } from './fragments';
@@ -13,7 +11,7 @@ import { gql } from './gql-tag';
 export async function createRootDirectory(app: TestApp, name?: string) {
   name = name ?? startCase(faker.lorem.words());
   const session = await app
-    .get(AuthenticationService)
+    .get(SessionManager)
     .resumeSession(app.graphql.authToken);
   return await app.get(SessionHost).withSession(session, async () => {
     const id = await app.get(FileService).createRootDirectory({
