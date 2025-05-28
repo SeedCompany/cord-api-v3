@@ -44,6 +44,13 @@ export class ProjectMemberService {
 
     const created = await this.repo.create(input);
 
+    if (input.inactiveAt && input.inactiveAt < created.createdAt) {
+      throw new InputException(
+        'Inactive date cannot be before creation date',
+        'projectMember.inactiveAt',
+      );
+    }
+
     enforcePerms &&
       this.privileges.for(ProjectMember, created).verifyCan('create');
 
@@ -96,6 +103,13 @@ export class ProjectMemberService {
       }
       return user;
     });
+
+    if (input.inactiveAt && input.inactiveAt < object.createdAt) {
+      throw new InputException(
+        'Inactive date cannot be before creation date',
+        'projectMember.inactiveAt',
+      );
+    }
 
     const changes = this.repo.getActualChanges(object, input);
     this.privileges.for(ProjectMember, object).verifyChanges(changes);

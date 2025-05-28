@@ -7,5 +7,16 @@ module Project {
     constraint exclusive on ((.project, .user));
     
     multi roles: default::Role;
+
+    active := not exists .inactiveAt; 
+
+    inactiveAt: datetime;
+    trigger enforceValidDates after update for each do (
+      assert(
+        __new__.inactiveAt >= __new__.createdAt
+          or not exists __new__.inactiveAt, # allow clearing
+        message := "Inactive point must be after the created point"
+      )
+    );
   }
 }
