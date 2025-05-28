@@ -1,13 +1,13 @@
 import { faker } from '@faker-js/faker';
 import { times } from 'lodash';
 import { isValidId } from '~/common';
+import { graphql } from '~/graphql';
 import { type FieldZone } from '../src/components/field-zone/dto';
 import {
   createPerson,
   createSession,
   createTestApp,
   createZone,
-  gql,
   loginAsAdmin,
   type TestApp,
 } from './utility';
@@ -54,23 +54,23 @@ describe('Field Zone e2e', () => {
     const fieldZone = await createZone(app, { directorId: director.id });
 
     const { fieldZone: actual } = await app.graphql.query(
-      gql`
-        query fieldZone($id: ID!) {
-          fieldZone(id: $id) {
-            ...fieldZone
-            director {
-              value {
-                ...user
+      graphql(
+        `
+          query fieldZone($id: ID!) {
+            fieldZone(id: $id) {
+              ...fieldZone
+              director {
+                value {
+                  ...user
+                }
+                canEdit
+                canRead
               }
-              canEdit
-              canRead
             }
           }
-        }
-
-        ${fragments.fieldZone}
-        ${fragments.user}
-      `,
+        `,
+        [fragments.fieldZone, fragments.user],
+      ),
       {
         id: fieldZone.id,
       },
@@ -87,16 +87,18 @@ describe('Field Zone e2e', () => {
     const newName = faker.company.name();
 
     const result = await app.graphql.mutate(
-      gql`
-        mutation updateFieldZone($input: UpdateFieldZoneInput!) {
-          updateFieldZone(input: $input) {
-            fieldZone {
-              ...fieldZone
+      graphql(
+        `
+          mutation updateFieldZone($input: UpdateFieldZoneInput!) {
+            updateFieldZone(input: $input) {
+              fieldZone {
+                ...fieldZone
+              }
             }
           }
-        }
-        ${fragments.fieldZone}
-      `,
+        `,
+        [fragments.fieldZone],
+      ),
       {
         input: {
           fieldZone: {
@@ -117,22 +119,23 @@ describe('Field Zone e2e', () => {
     const fieldZone = await createZone(app, { directorId: director.id });
 
     const result = await app.graphql.mutate(
-      gql`
-        mutation updateFieldZone($input: UpdateFieldZoneInput!) {
-          updateFieldZone(input: $input) {
-            fieldZone {
-              ...fieldZone
-              director {
-                value {
-                  ...user
+      graphql(
+        `
+          mutation updateFieldZone($input: UpdateFieldZoneInput!) {
+            updateFieldZone(input: $input) {
+              fieldZone {
+                ...fieldZone
+                director {
+                  value {
+                    ...user
+                  }
                 }
               }
             }
           }
-        }
-        ${fragments.fieldZone}
-        ${fragments.user}
-      `,
+        `,
+        [fragments.fieldZone, fragments.user],
+      ),
       {
         input: {
           fieldZone: {
@@ -152,13 +155,13 @@ describe('Field Zone e2e', () => {
     const fieldZone = await createZone(app, { directorId: director.id });
 
     const result = await app.graphql.mutate(
-      gql`
+      graphql(`
         mutation deleteFieldZone($id: ID!) {
           deleteFieldZone(id: $id) {
             __typename
           }
         }
-      `,
+      `),
       {
         id: fieldZone.id,
       },
@@ -176,18 +179,22 @@ describe('Field Zone e2e', () => {
       ),
     );
 
-    const { fieldZones } = await app.graphql.query(gql`
-      query {
-        fieldZones(input: { page: 1, count: 25 }) {
-          items {
-            ...fieldZone
+    const { fieldZones } = await app.graphql.query(
+      graphql(
+        `
+          query {
+            fieldZones(input: { page: 1, count: 25 }) {
+              items {
+                ...fieldZone
+              }
+              hasMore
+              total
+            }
           }
-          hasMore
-          total
-        }
-      }
-      ${fragments.fieldZone}
-    `);
+        `,
+        [fragments.fieldZone],
+      ),
+    );
 
     expect(fieldZones.items.length).toBeGreaterThanOrEqual(2);
   });

@@ -1,4 +1,5 @@
 import { faker } from '@faker-js/faker';
+import { graphql } from '~/graphql';
 import {
   approveProjectChangeRequest,
   createFundingAccount,
@@ -10,7 +11,6 @@ import {
   createRegion,
   createSession,
   createTestApp,
-  gql,
   loginAsAdmin,
   type TestApp,
 } from './utility';
@@ -19,14 +19,16 @@ import { forceProjectTo } from './utility/transition-project';
 
 const readLanguage = (app: TestApp, id: string, changeset?: string) =>
   app.graphql.query(
-    gql`
-      query language($id: ID!, $changeset: ID) {
-        language(id: $id, changeset: $changeset) {
-          ...language
+    graphql(
+      `
+        query language($id: ID!, $changeset: ID) {
+          language(id: $id, changeset: $changeset) {
+            ...language
+          }
         }
-      }
-      ${fragments.language}
-    `,
+      `,
+      [fragments.language],
+    ),
     {
       id,
       changeset,
@@ -78,16 +80,18 @@ describe.skip('Language Changeset Aware e2e', () => {
     const newLanguageName = faker.company.name();
     // Update language name with changeset
     await app.graphql.mutate(
-      gql`
-        mutation updateLanguage($input: UpdateLanguageInput!) {
-          updateLanguage(input: $input) {
-            language {
-              ...language
+      graphql(
+        `
+          mutation updateLanguage($input: UpdateLanguageInput!) {
+            updateLanguage(input: $input) {
+              language {
+                ...language
+              }
             }
           }
-        }
-        ${fragments.language}
-      `,
+        `,
+        [fragments.language],
+      ),
       {
         input: {
           language: {

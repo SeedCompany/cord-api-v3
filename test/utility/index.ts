@@ -1,4 +1,3 @@
-export * from './gql-tag';
 export * from './create-app';
 export * from './create-education';
 export * from './create-file';

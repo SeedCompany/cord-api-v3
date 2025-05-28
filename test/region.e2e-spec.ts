@@ -1,5 +1,6 @@
 import { faker } from '@faker-js/faker';
 import { isValidId, Role } from '~/common';
+import { graphql } from '~/graphql';
 import { type FieldRegion } from '../src/components/field-region/dto';
 import { type FieldZone } from '../src/components/field-zone/dto';
 import {
@@ -9,7 +10,6 @@ import {
   createTestApp,
   createZone,
   fragments,
-  gql,
   loginAsAdmin,
   type TestApp,
 } from './utility';
@@ -69,30 +69,30 @@ describe('Region e2e', () => {
     });
 
     const { fieldRegion: actual } = await app.graphql.query(
-      gql`
-        query fieldRegion($id: ID!) {
-          fieldRegion(id: $id) {
-            ...fieldRegion
-            director {
-              value {
-                ...user
+      graphql(
+        `
+          query fieldRegion($id: ID!) {
+            fieldRegion(id: $id) {
+              ...fieldRegion
+              director {
+                value {
+                  ...user
+                }
+                canEdit
+                canRead
               }
-              canEdit
-              canRead
-            }
-            fieldZone {
-              value {
-                ...fieldZone
+              fieldZone {
+                value {
+                  ...fieldZone
+                }
+                canEdit
+                canRead
               }
-              canEdit
-              canRead
             }
           }
-        }
-        ${fragments.fieldRegion}
-        ${fragments.fieldZone}
-        ${fragments.user}
-      `,
+        `,
+        [fragments.fieldRegion, fragments.fieldZone, fragments.user],
+      ),
       {
         id: fieldRegion.id,
       },
@@ -113,32 +113,32 @@ describe('Region e2e', () => {
     const newName = faker.company.name();
 
     const result = await app.graphql.mutate(
-      gql`
-        mutation updateFieldRegion($input: UpdateFieldRegionInput!) {
-          updateFieldRegion(input: $input) {
-            fieldRegion {
-              ...fieldRegion
-              director {
-                value {
-                  ...user
+      graphql(
+        `
+          mutation updateFieldRegion($input: UpdateFieldRegionInput!) {
+            updateFieldRegion(input: $input) {
+              fieldRegion {
+                ...fieldRegion
+                director {
+                  value {
+                    ...user
+                  }
+                  canEdit
+                  canRead
                 }
-                canEdit
-                canRead
-              }
-              fieldZone {
-                value {
-                  ...fieldZone
+                fieldZone {
+                  value {
+                    ...fieldZone
+                  }
+                  canEdit
+                  canRead
                 }
-                canEdit
-                canRead
               }
             }
           }
-        }
-        ${fragments.fieldRegion}
-        ${fragments.fieldZone}
-        ${fragments.user}
-      `,
+        `,
+        [fragments.fieldRegion, fragments.fieldZone, fragments.user],
+      ),
       {
         input: {
           fieldRegion: {
@@ -165,22 +165,23 @@ describe('Region e2e', () => {
     });
 
     const result = await app.graphql.mutate(
-      gql`
-        mutation updateFieldRegion($input: UpdateFieldRegionInput!) {
-          updateFieldRegion(input: $input) {
-            fieldRegion {
-              ...fieldRegion
-              fieldZone {
-                value {
-                  ...fieldZone
+      graphql(
+        `
+          mutation updateFieldRegion($input: UpdateFieldRegionInput!) {
+            updateFieldRegion(input: $input) {
+              fieldRegion {
+                ...fieldRegion
+                fieldZone {
+                  value {
+                    ...fieldZone
+                  }
                 }
               }
             }
           }
-        }
-        ${fragments.fieldRegion}
-        ${fragments.fieldZone}
-      `,
+        `,
+        [fragments.fieldRegion, fragments.fieldZone],
+      ),
       {
         input: {
           fieldRegion: {
@@ -206,22 +207,23 @@ describe('Region e2e', () => {
     });
 
     const result = await app.graphql.mutate(
-      gql`
-        mutation updateFieldRegion($input: UpdateFieldRegionInput!) {
-          updateFieldRegion(input: $input) {
-            fieldRegion {
-              ...fieldRegion
-              director {
-                value {
-                  ...user
+      graphql(
+        `
+          mutation updateFieldRegion($input: UpdateFieldRegionInput!) {
+            updateFieldRegion(input: $input) {
+              fieldRegion {
+                ...fieldRegion
+                director {
+                  value {
+                    ...user
+                  }
                 }
               }
             }
           }
-        }
-        ${fragments.fieldRegion}
-        ${fragments.user}
-      `,
+        `,
+        [fragments.fieldRegion, fragments.user],
+      ),
       {
         input: {
           fieldRegion: {
@@ -245,13 +247,13 @@ describe('Region e2e', () => {
     });
 
     const result = await app.graphql.mutate(
-      gql`
+      graphql(`
         mutation deleteFieldRegion($id: ID!) {
           deleteFieldRegion(id: $id) {
             __typename
           }
         }
-      `,
+      `),
       {
         id: fieldRegion.id,
       },
@@ -272,18 +274,22 @@ describe('Region e2e', () => {
       ),
     );
 
-    const { fieldRegions } = await app.graphql.query(gql`
-      query {
-        fieldRegions(input: { page: 1, count: 25 }) {
-          items {
-            ...fieldRegion
+    const { fieldRegions } = await app.graphql.query(
+      graphql(
+        `
+          query {
+            fieldRegions(input: { page: 1, count: 25 }) {
+              items {
+                ...fieldRegion
+              }
+              hasMore
+              total
+            }
           }
-          hasMore
-          total
-        }
-      }
-      ${fragments.fieldRegion}
-    `);
+        `,
+        [fragments.fieldRegion],
+      ),
+    );
 
     expect(fieldRegions.items.length).toBeGreaterThanOrEqual(2);
   });

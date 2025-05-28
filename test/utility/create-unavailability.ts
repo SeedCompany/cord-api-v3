@@ -1,13 +1,13 @@
 import { faker } from '@faker-js/faker';
 import { DateTime } from 'luxon';
 import { isValidId } from '~/common';
+import { graphql } from '~/graphql';
 import {
   type CreateUnavailability,
   type Unavailability,
 } from '../../src/components/user/unavailability/dto';
 import { type TestApp } from './create-app';
 import { fragments } from './fragments';
-import { gql } from './gql-tag';
 
 export async function createUnavailability(
   app: TestApp,
@@ -22,16 +22,18 @@ export async function createUnavailability(
   };
 
   const result = await app.graphql.mutate(
-    gql`
-      mutation createUnavailability($input: CreateUnavailabilityInput!) {
-        createUnavailability(input: $input) {
-          unavailability {
-            ...unavailability
+    graphql(
+      `
+        mutation createUnavailability($input: CreateUnavailabilityInput!) {
+          createUnavailability(input: $input) {
+            unavailability {
+              ...unavailability
+            }
           }
         }
-      }
-      ${fragments.unavailability}
-    `,
+      `,
+      [fragments.unavailability],
+    ),
     {
       input: {
         unavailability: {

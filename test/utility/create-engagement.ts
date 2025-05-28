@@ -1,6 +1,7 @@
 import { faker } from '@faker-js/faker';
 import { DateTime } from 'luxon';
 import { type ID, isValidId } from '~/common';
+import { graphql } from '~/graphql';
 import {
   type CreateInternshipEngagement,
   type CreateLanguageEngagement,
@@ -18,7 +19,6 @@ import {
   type RawInternshipEngagement,
   type RawLanguageEngagement,
 } from './fragments';
-import { gql } from './gql-tag';
 import { runAsAdmin } from './login';
 
 export async function createLanguageEngagement(
@@ -41,18 +41,20 @@ export async function createLanguageEngagement(
     ...input,
   };
   const result = await app.graphql.mutate(
-    gql`
-      mutation createLanguageEngagement(
-        $input: CreateLanguageEngagementInput!
-      ) {
-        createLanguageEngagement(input: $input) {
-          engagement {
-            ...languageEngagement
+    graphql(
+      `
+        mutation createLanguageEngagement(
+          $input: CreateLanguageEngagementInput!
+        ) {
+          createLanguageEngagement(input: $input) {
+            engagement {
+              ...languageEngagement
+            }
           }
         }
-      }
-      ${fragments.languageEngagement}
-    `,
+      `,
+      [fragments.languageEngagement],
+    ),
     {
       input: {
         engagement: languageEngagement,
@@ -93,18 +95,20 @@ export async function createInternshipEngagement(
   };
 
   const result = await app.graphql.mutate(
-    gql`
-      mutation createInternshipEngagement(
-        $input: CreateInternshipEngagementInput!
-      ) {
-        createInternshipEngagement(input: $input) {
-          engagement {
-            ...internshipEngagement
+    graphql(
+      `
+        mutation createInternshipEngagement(
+          $input: CreateInternshipEngagementInput!
+        ) {
+          createInternshipEngagement(input: $input) {
+            engagement {
+              ...internshipEngagement
+            }
           }
         }
-      }
-      ${fragments.internshipEngagement}
-    `,
+      `,
+      [fragments.internshipEngagement],
+    ),
     {
       input: {
         engagement: internshipEngagement,
@@ -132,18 +136,20 @@ export async function createInternshipEngagementWithMinimumValues(
   };
 
   const result = await app.graphql.mutate(
-    gql`
-      mutation createInternshipEngagement(
-        $input: CreateInternshipEngagementInput!
-      ) {
-        createInternshipEngagement(input: $input) {
-          engagement {
-            ...internshipEngagement
+    graphql(
+      `
+        mutation createInternshipEngagement(
+          $input: CreateInternshipEngagementInput!
+        ) {
+          createInternshipEngagement(input: $input) {
+            engagement {
+              ...internshipEngagement
+            }
           }
         }
-      }
-      ${fragments.internshipEngagement}
-    `,
+      `,
+      [fragments.internshipEngagement],
+    ),
     {
       input: {
         engagement: internshipEngagement,
@@ -162,9 +168,9 @@ export async function createInternshipEngagementWithMinimumValues(
 
 export async function getCurrentEngagementStatus(app: TestApp, id: ID) {
   const result = await app.graphql.query(
-    gql`
-    query {
-      engagement(id: "${id}"){
+    graphql(`
+      query EngStatus($id: ID!) {
+        engagement(id: $id) {
           modifiedAt
           statusModifiedAt {
             value
@@ -176,9 +182,10 @@ export async function getCurrentEngagementStatus(app: TestApp, id: ID) {
               type
             }
           }
+        }
       }
-    }
-  `,
+    `),
+    { id },
   );
 
   expect(result).toBeTruthy();

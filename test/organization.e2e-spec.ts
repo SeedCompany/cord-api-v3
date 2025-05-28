@@ -2,6 +2,7 @@ import { faker } from '@faker-js/faker';
 import { sortBy } from '@seedcompany/common';
 import { times } from 'lodash';
 import { generateId, isValidId, Role } from '~/common';
+import { graphql } from '~/graphql';
 import { type Organization } from '../src/components/organization/dto';
 import {
   createOrganization,
@@ -9,7 +10,6 @@ import {
   createTestApp,
   errors,
   fragments,
-  gql,
   registerUser,
   type TestApp,
 } from './utility';
@@ -40,14 +40,16 @@ describe('Organization e2e', () => {
     const org = await createOrganization(app);
 
     const { organization: actual } = await app.graphql.query(
-      gql`
-        query org($id: ID!) {
-          organization(id: $id) {
-            ...org
+      graphql(
+        `
+          query org($id: ID!) {
+            organization(id: $id) {
+              ...org
+            }
           }
-        }
-        ${fragments.org}
-      `,
+        `,
+        [fragments.org],
+      ),
       {
         id: org.id,
       },
@@ -61,14 +63,16 @@ describe('Organization e2e', () => {
   it('create & read organization', async () => {
     const org = await createOrganization(app);
     const { organization: actual } = await app.graphql.query(
-      gql`
-        query org($id: ID!) {
-          organization(id: $id) {
-            ...org
+      graphql(
+        `
+          query org($id: ID!) {
+            organization(id: $id) {
+              ...org
+            }
           }
-        }
-        ${fragments.org}
-      `,
+        `,
+        [fragments.org],
+      ),
       {
         id: org.id,
       },
@@ -94,16 +98,18 @@ describe('Organization e2e', () => {
     const newName = faker.company.name();
 
     const result = await app.graphql.mutate(
-      gql`
-        mutation updateOrganization($input: UpdateOrganizationInput!) {
-          updateOrganization(input: $input) {
-            organization {
-              ...org
+      graphql(
+        `
+          mutation updateOrganization($input: UpdateOrganizationInput!) {
+            updateOrganization(input: $input) {
+              organization {
+                ...org
+              }
             }
           }
-        }
-        ${fragments.org}
-      `,
+        `,
+        [fragments.org],
+      ),
       {
         input: {
           organization: {
@@ -125,16 +131,18 @@ describe('Organization e2e', () => {
 
     await app.graphql
       .mutate(
-        gql`
-          mutation updateOrganization($input: UpdateOrganizationInput!) {
-            updateOrganization(input: $input) {
-              organization {
-                ...org
+        graphql(
+          `
+            mutation updateOrganization($input: UpdateOrganizationInput!) {
+              updateOrganization(input: $input) {
+                organization {
+                  ...org
+                }
               }
             }
-          }
-          ${fragments.org}
-        `,
+          `,
+          [fragments.org],
+        ),
         {
           input: {
             organization: {
@@ -148,16 +156,18 @@ describe('Organization e2e', () => {
 
     await app.graphql
       .mutate(
-        gql`
-          mutation updateOrganization($input: UpdateOrganizationInput!) {
-            updateOrganization(input: $input) {
-              organization {
-                ...org
+        graphql(
+          `
+            mutation updateOrganization($input: UpdateOrganizationInput!) {
+              updateOrganization(input: $input) {
+                organization {
+                  ...org
+                }
               }
             }
-          }
-          ${fragments.org}
-        `,
+          `,
+          [fragments.org],
+        ),
         {
           input: {
             organization: {
@@ -171,16 +181,18 @@ describe('Organization e2e', () => {
 
     await app.graphql
       .mutate(
-        gql`
-          mutation updateOrganization($input: UpdateOrganizationInput!) {
-            updateOrganization(input: $input) {
-              organization {
-                ...org
+        graphql(
+          `
+            mutation updateOrganization($input: UpdateOrganizationInput!) {
+              updateOrganization(input: $input) {
+                organization {
+                  ...org
+                }
               }
             }
-          }
-          ${fragments.org}
-        `,
+          `,
+          [fragments.org],
+        ),
         {
           input: {
             organization: {
@@ -200,16 +212,18 @@ describe('Organization e2e', () => {
 
     await app.graphql
       .mutate(
-        gql`
-          mutation updateOrganization($input: UpdateOrganizationInput!) {
-            updateOrganization(input: $input) {
-              organization {
-                ...org
+        graphql(
+          `
+            mutation updateOrganization($input: UpdateOrganizationInput!) {
+              updateOrganization(input: $input) {
+                organization {
+                  ...org
+                }
               }
             }
-          }
-          ${fragments.org}
-        `,
+          `,
+          [fragments.org],
+        ),
         {
           input: {
             organization: {
@@ -227,13 +241,13 @@ describe('Organization e2e', () => {
     const org = await createOrganization(app);
 
     const result = await app.graphql.mutate(
-      gql`
+      graphql(`
         mutation deleteOrganization($id: ID!) {
           deleteOrganization(id: $id) {
             __typename
           }
         }
-      `,
+      `),
       {
         id: org.id,
       },
@@ -246,13 +260,13 @@ describe('Organization e2e', () => {
   it('delete organization with blank, mismatch, invalid id', async () => {
     const org = await createOrganization(app);
 
-    const DeleteOrganization = gql`
+    const DeleteOrganization = graphql(`
       mutation deleteOrganization($id: ID!) {
         deleteOrganization(id: $id) {
           __typename
         }
       }
-    `;
+    `);
     await app.graphql
       .mutate(DeleteOrganization, { id: '' })
       .expectError(errors.invalidId());
@@ -273,14 +287,16 @@ describe('Organization e2e', () => {
     const org = await createOrganization(app);
 
     const { organization: actual } = await app.graphql.query(
-      gql`
-        query org($id: ID!) {
-          organization(id: $id) {
-            ...org
+      graphql(
+        `
+          query org($id: ID!) {
+            organization(id: $id) {
+              ...org
+            }
           }
-        }
-        ${fragments.org}
-      `,
+        `,
+        [fragments.org],
+      ),
       {
         id: org.id,
       },
@@ -289,7 +305,7 @@ describe('Organization e2e', () => {
     expect(actual.name.canEdit).toBe(true);
   });
 
-  const Organizations = gql`
+  const Organizations = graphql(`
     query organizations($input: OrganizationListInput) {
       organizations(input: $input) {
         items {
@@ -302,7 +318,7 @@ describe('Organization e2e', () => {
         total
       }
     }
-  `;
+  `);
   it.skip('List of organizations sorted by name to be alphabetical, ignoring case sensitivity. Order: ASCENDING', async () => {
     await registerUser(app, {
       roles: [Role.FieldOperationsDirector],

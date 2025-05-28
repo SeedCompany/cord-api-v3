@@ -21,11 +21,12 @@ jobs:
       - name: Check for no duplicate dependencies
         run: yarn dedupe --check
 
+      - name: Generate GQL Schema
+        run: yarn start -- --gen-schema && yarn gql-tada generate output
+
       - name: Check TypeScript
         run: yarn type-check
 
-      - name: Generate GQL Schema
-        run: yarn start -- --gen-schema
       - name: Upload GQL Schema
         uses: actions/upload-artifact@v4
         with:

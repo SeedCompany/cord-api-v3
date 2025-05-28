@@ -1,6 +1,7 @@
 import { faker } from '@faker-js/faker';
 import { times } from 'lodash';
 import { firstLettersOfWords, isValidId } from '~/common';
+import { graphql } from '~/graphql';
 import { type Organization } from '../src/components/organization/dto';
 import { type SecuredTimeZone } from '../src/components/timezone/timezone.dto';
 import {
@@ -19,7 +20,6 @@ import {
   fragments,
   generateRegisterInput,
   generateRequireFieldsRegisterInput,
-  gql,
   login,
   loginAsAdmin,
   type Raw,
@@ -50,16 +50,18 @@ describe('User e2e', () => {
     const user = await createPerson(app, fakeUser);
 
     const result = await app.graphql.query(
-      gql`
-        query user($id: ID!) {
-          user(id: $id) {
-            ...user
-            avatarLetters
-            fullName
+      graphql(
+        `
+          query user($id: ID!) {
+            user(id: $id) {
+              ...user
+              avatarLetters
+              fullName
+            }
           }
-        }
-        ${fragments.user}
-      `,
+        `,
+        [fragments.user],
+      ),
       {
         id: user.id,
       },
@@ -120,16 +122,18 @@ describe('User e2e', () => {
     };
 
     const result = await app.graphql.mutate(
-      gql`
-        mutation updateUser($input: UpdateUserInput!) {
-          updateUser(input: $input) {
-            user {
-              ...user
+      graphql(
+        `
+          mutation updateUser($input: UpdateUserInput!) {
+            updateUser(input: $input) {
+              user {
+                ...user
+              }
             }
           }
-        }
-        ${fragments.user}
-      `,
+        `,
+        [fragments.user],
+      ),
       {
         input: {
           user: {
@@ -163,13 +167,13 @@ describe('User e2e', () => {
     // create user first
     const user = await createPerson(app);
     const result = await app.graphql.query(
-      gql`
+      graphql(`
         mutation deleteUser($id: ID!) {
           deleteUser(id: $id) {
             __typename
           }
         }
-      `,
+      `),
       {
         id: user.id,
       },
@@ -185,18 +189,22 @@ describe('User e2e', () => {
   it('list view of users', async () => {
     await Promise.all(times(4).map(() => createPerson(app)));
 
-    const { users } = await app.graphql.query(gql`
-      query {
-        users(input: { count: 25, page: 1 }) {
-          items {
-            ...user
+    const { users } = await app.graphql.query(
+      graphql(
+        `
+          query {
+            users(input: { count: 25, page: 1 }) {
+              items {
+                ...user
+              }
+              hasMore
+              total
+            }
           }
-          hasMore
-          total
-        }
-      }
-      ${fragments.user}
-    `);
+        `,
+        [fragments.user],
+      ),
+    );
 
     expect(users.items.length).toBeGreaterThanOrEqual(2);
   });
@@ -204,7 +212,7 @@ describe('User e2e', () => {
   it('assign organization to user', async () => {
     const newUser = await createPerson(app);
     await app.graphql.mutate(
-      gql`
+      graphql(`
         mutation assignOrganizationToUser($orgId: ID!, $userId: ID!) {
           assignOrganizationToUser(
             input: { request: { orgId: $orgId, userId: $userId } }
@@ -212,7 +220,7 @@ describe('User e2e', () => {
             __typename
           }
         }
-      `,
+      `),
       {
         orgId: org.id,
         userId: newUser.id,
@@ -220,24 +228,25 @@ describe('User e2e', () => {
     );
 
     const result1 = await app.graphql.query(
-      gql`
-        query user($id: ID!) {
-          user(id: $id) {
-            ...user
-            organizations {
-              items {
-                ...org
+      graphql(
+        `
+          query user($id: ID!) {
+            user(id: $id) {
+              ...user
+              organizations {
+                items {
+                  ...org
+                }
+                hasMore
+                total
+                canRead
+                canCreate
               }
-              hasMore
-              total
-              canRead
-              canCreate
             }
           }
-        }
-        ${fragments.user}
-        ${fragments.org}
-      `,
+        `,
+        [fragments.user, fragments.org],
+      ),
       {
         id: newUser.id,
       },
@@ -252,7 +261,7 @@ describe('User e2e', () => {
 
     // assign organization to user
     await app.graphql.mutate(
-      gql`
+      graphql(`
         mutation assignOrganizationToUser($orgId: ID!, $userId: ID!) {
           assignOrganizationToUser(
             input: { request: { orgId: $orgId, userId: $userId } }
@@ -260,7 +269,7 @@ describe('User e2e', () => {
             __typename
           }
         }
-      `,
+      `),
       {
         orgId: org.id,
         userId: newUser.id,
@@ -269,7 +278,7 @@ describe('User e2e', () => {
 
     // remove organization from user
     await app.graphql.mutate(
-      gql`
+      graphql(`
         mutation removeOrganizationFromUser($orgId: ID!, $userId: ID!) {
           removeOrganizationFromUser(
             input: { request: { orgId: $orgId, userId: $userId } }
@@ -277,7 +286,7 @@ describe('User e2e', () => {
             __typename
           }
         }
-      `,
+      `),
       {
         orgId: org.id,
         userId: newUser.id,
@@ -288,7 +297,7 @@ describe('User e2e', () => {
   it('assign primary organization to user', async () => {
     const newUser = await createPerson(app);
     await app.graphql.mutate(
-      gql`
+      graphql(`
         mutation assignOrganizationToUser(
           $orgId: ID!
           $userId: ID!
@@ -302,7 +311,7 @@ describe('User e2e', () => {
             __typename
           }
         }
-      `,
+      `),
       {
         orgId: org.id,
         userId: newUser.id,
@@ -316,7 +325,7 @@ describe('User e2e', () => {
 
     // assign primary organization to user
     await app.graphql.mutate(
-      gql`
+      graphql(`
         mutation assignOrganizationToUser(
           $orgId: ID!
           $userId: ID!
@@ -330,7 +339,7 @@ describe('User e2e', () => {
             __typename
           }
         }
-      `,
+      `),
       {
         orgId: org.id,
         userId: newUser.id,
@@ -340,7 +349,7 @@ describe('User e2e', () => {
 
     // remove primary organization from user
     await app.graphql.mutate(
-      gql`
+      graphql(`
         mutation removeOrganizationFromUser($orgId: ID!, $userId: ID!) {
           removeOrganizationFromUser(
             input: { request: { orgId: $orgId, userId: $userId } }
@@ -348,7 +357,7 @@ describe('User e2e', () => {
             __typename
           }
         }
-      `,
+      `),
       {
         orgId: org.id,
         userId: newUser.id,
@@ -363,24 +372,25 @@ describe('User e2e', () => {
     const edu = await createEducation(app, { userId: newUser.id });
 
     const result = await app.graphql.query(
-      gql`
-        query user($id: ID!) {
-          user(id: $id) {
-            ...user
-            education {
-              items {
-                ...education
+      graphql(
+        `
+          query user($id: ID!) {
+            user(id: $id) {
+              ...user
+              education {
+                items {
+                  ...education
+                }
+                hasMore
+                total
+                canRead
+                canCreate
               }
-              hasMore
-              total
-              canRead
-              canCreate
             }
           }
-        }
-        ${fragments.user}
-        ${fragments.education}
-      `,
+        `,
+        [fragments.user, fragments.education],
+      ),
       {
         id: newUser.id,
       },
@@ -396,24 +406,25 @@ describe('User e2e', () => {
     const unavail = await createUnavailability(app, { userId: newUser.id });
 
     const result = await app.graphql.query(
-      gql`
-        query user($id: ID!) {
-          user(id: $id) {
-            ...user
-            unavailabilities {
-              items {
-                ...unavailability
+      graphql(
+        `
+          query user($id: ID!) {
+            user(id: $id) {
+              ...user
+              unavailabilities {
+                items {
+                  ...unavailability
+                }
+                hasMore
+                total
+                canRead
+                canCreate
               }
-              hasMore
-              total
-              canRead
-              canCreate
             }
           }
-        }
-        ${fragments.user}
-        ${fragments.unavailability}
-      `,
+        `,
+        [fragments.user, fragments.unavailability],
+      ),
       {
         id: newUser.id,
       },
@@ -441,7 +452,7 @@ describe('User e2e', () => {
     const person = await createPerson(app);
 
     const result = await app.graphql.mutate(
-      gql`
+      graphql(`
         mutation updateUser($input: UpdateUserInput!) {
           updateUser(input: $input) {
             user {
@@ -451,7 +462,7 @@ describe('User e2e', () => {
             }
           }
         }
-      `,
+      `),
       {
         input: {
           user: {

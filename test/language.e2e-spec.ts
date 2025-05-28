@@ -1,6 +1,7 @@
 import { faker } from '@faker-js/faker';
 import { times } from 'lodash';
 import { isValidId } from '~/common';
+import { graphql } from '~/graphql';
 import { type UpdateLanguage } from '../src/components/language/dto';
 import {
   createLanguage,
@@ -10,7 +11,6 @@ import {
   createSession,
   createTestApp,
   errors,
-  gql,
   loginAsAdmin,
   type TestApp,
 } from './utility';
@@ -39,14 +39,16 @@ describe('Language e2e', () => {
     const language = await createLanguage(app);
 
     const { language: actual } = await app.graphql.query(
-      gql`
-        query language($id: ID!) {
-          language(id: $id) {
-            ...language
+      graphql(
+        `
+          query language($id: ID!) {
+            language(id: $id) {
+              ...language
+            }
           }
-        }
-        ${fragments.language}
-      `,
+        `,
+        [fragments.language],
+      ),
       {
         id: language.id,
       },
@@ -102,13 +104,13 @@ describe('Language e2e', () => {
     const language = await createLanguage(app);
 
     const result = await app.graphql.mutate(
-      gql`
+      graphql(`
         mutation deleteLanguage($id: ID!) {
           deleteLanguage(id: $id) {
             __typename
           }
         }
-      `,
+      `),
       {
         id: language.id,
       },
@@ -117,14 +119,16 @@ describe('Language e2e', () => {
     expect(result.deleteLanguage).toBeTruthy();
     await app.graphql
       .query(
-        gql`
-          query language($id: ID!) {
-            language(id: $id) {
-              ...language
+        graphql(
+          `
+            query language($id: ID!) {
+              language(id: $id) {
+                ...language
+              }
             }
-          }
-          ${fragments.language}
-        `,
+          `,
+          [fragments.language],
+        ),
         {
           id: language.id,
         },
@@ -139,18 +143,22 @@ describe('Language e2e', () => {
     await Promise.all(times(numLanguages).map(() => createLanguage(app)));
 
     // test reading new lang
-    const { languages } = await app.graphql.query(gql`
-      query {
-        languages {
-          items {
-            ...language
+    const { languages } = await app.graphql.query(
+      graphql(
+        `
+          query {
+            languages {
+              items {
+                ...language
+              }
+              hasMore
+              total
+            }
           }
-          hasMore
-          total
-        }
-      }
-      ${fragments.language}
-    `);
+        `,
+        [fragments.language],
+      ),
+    );
 
     expect(languages.items.length).toBeGreaterThan(numLanguages);
   });
@@ -159,7 +167,7 @@ describe('Language e2e', () => {
     const lang = await createLanguage(app);
     const project = await createProject(app);
     await app.graphql.mutate(
-      gql`
+      graphql(`
         mutation createLanguageEngagement(
           $input: CreateLanguageEngagementInput!
         ) {
@@ -173,7 +181,7 @@ describe('Language e2e', () => {
             }
           }
         }
-      `,
+      `),
       {
         input: {
           engagement: {
@@ -184,29 +192,31 @@ describe('Language e2e', () => {
       },
     );
     // test reading new lang
-    const result = await app.graphql.query(gql`
-      query {
-        languages {
-          items {
-            projects {
-              items {
-                engagements {
-                  items {
-                    status {
-                      transitions {
-                        to
+    const result = await app.graphql.query(
+      graphql(`
+        query {
+          languages {
+            items {
+              projects {
+                items {
+                  engagements {
+                    items {
+                      status {
+                        transitions {
+                          to
+                        }
                       }
                     }
                   }
                 }
               }
             }
+            hasMore
+            total
           }
-          hasMore
-          total
         }
-      }
-    `);
+      `),
+    );
     expect(result).toBeTruthy();
   });
 
@@ -227,22 +237,23 @@ describe('Language e2e', () => {
     );
 
     const queryProject = await app.graphql.query(
-      gql`
-        query language($id: ID!) {
-          language(id: $id) {
-            ...language
-            projects {
-              items {
-                ...project
+      graphql(
+        `
+          query language($id: ID!) {
+            language(id: $id) {
+              ...language
+              projects {
+                items {
+                  ...project
+                }
+                hasMore
+                total
               }
-              hasMore
-              total
             }
           }
-        }
-        ${fragments.language},
-        ${fragments.project}
-      `,
+        `,
+        [fragments.language, fragments.project],
+      ),
       {
         id: language.id,
       },
@@ -273,16 +284,18 @@ describe('Language e2e', () => {
 
     await expect(
       app.graphql.mutate(
-        gql`
-          mutation updateLanguage($input: UpdateLanguageInput!) {
-            updateLanguage(input: $input) {
-              language {
-                ...language
+        graphql(
+          `
+            mutation updateLanguage($input: UpdateLanguageInput!) {
+              updateLanguage(input: $input) {
+                language {
+                  ...language
+                }
               }
             }
-          }
-          ${fragments.language}
-        `,
+          `,
+          [fragments.language],
+        ),
         {
           input: {
             language: {
@@ -324,14 +337,16 @@ describe('Language e2e', () => {
     });
 
     const { language: actual } = await app.graphql.query(
-      gql`
-        query language($id: ID!) {
-          language(id: $id) {
-            ...language
+      graphql(
+        `
+          query language($id: ID!) {
+            language(id: $id) {
+              ...language
+            }
           }
-        }
-        ${fragments.language}
-      `,
+        `,
+        [fragments.language],
+      ),
       {
         id: language.id,
       },
@@ -352,18 +367,22 @@ describe('Language e2e', () => {
       languageId: language.id,
     });
 
-    const { languages } = await app.graphql.query(gql`
-      query {
-        languages(input: { filter: { presetInventory: true } }) {
-          items {
-            ...language
+    const { languages } = await app.graphql.query(
+      graphql(
+        `
+          query {
+            languages(input: { filter: { presetInventory: true } }) {
+              items {
+                ...language
+              }
+              hasMore
+              total
+            }
           }
-          hasMore
-          total
-        }
-      }
-      ${fragments.language}
-    `);
+        `,
+        [fragments.language],
+      ),
+    );
 
     expect(languages.items.length).toBeGreaterThan(1);
   });
@@ -371,16 +390,18 @@ describe('Language e2e', () => {
 
 async function updateLanguage(app: TestApp, update: Partial<UpdateLanguage>) {
   const result = await app.graphql.mutate(
-    gql`
-      mutation updateLanguage($input: UpdateLanguageInput!) {
-        updateLanguage(input: $input) {
-          language {
-            ...language
+    graphql(
+      `
+        mutation updateLanguage($input: UpdateLanguageInput!) {
+          updateLanguage(input: $input) {
+            language {
+              ...language
+            }
           }
         }
-      }
-      ${fragments.language}
-    `,
+      `,
+      [fragments.language],
+    ),
     {
       input: {
         language: update,
