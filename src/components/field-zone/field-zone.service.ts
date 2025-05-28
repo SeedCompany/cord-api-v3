@@ -1,12 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import {
   type ID,
+  InputException,
+  NotFoundException,
   type ObjectView,
   ServerException,
   type UnsecuredDto,
 } from '~/common';
 import { HandleIdLookup } from '~/core';
+import { IEventBus } from '~/core/events';
 import { Privileges } from '../authorization';
+import { UserService } from '../user';
 import {
   type CreateFieldZone,
   FieldZone,
@@ -14,17 +18,21 @@ import {
   type FieldZoneListOutput,
   type UpdateFieldZone,
 } from './dto';
+import { FieldZoneUpdatedEvent } from './events/field-zone-updated.event';
 import { FieldZoneRepository } from './field-zone.repository';
 
 @Injectable()
 export class FieldZoneService {
   constructor(
     private readonly privileges: Privileges,
+    private readonly events: IEventBus,
+    private readonly users: UserService,
     private readonly repo: FieldZoneRepository,
   ) {}
 
   async create(input: CreateFieldZone): Promise<FieldZone> {
     this.privileges.for(FieldZone).verifyCan('create');
+    await this.validateDirectorRole(input.directorId);
     const dto = await this.repo.create(input);
     return this.secure(dto);
   }
@@ -50,8 +58,42 @@ export class FieldZoneService {
     const changes = this.repo.getActualChanges(fieldZone, input);
     this.privileges.for(FieldZone, fieldZone).verifyChanges(changes);
 
+    if (changes.directorId) {
+      await this.validateDirectorRole(changes.directorId);
+    }
+
+    if (Object.keys(changes).length === 0) {
+      return this.secure(fieldZone);
+    }
+
     const updated = await this.repo.update({ id: input.id, ...changes });
+
+    const event = new FieldZoneUpdatedEvent(fieldZone, updated, {
+      id: input.id,
+      ...changes,
+    });
+    await this.events.publish(event);
+
     return this.secure(updated);
+  }
+
+  private async validateDirectorRole(directorId: ID<'User'>) {
+    let director;
+    try {
+      director = await this.users.readOneUnsecured(directorId);
+    } catch (e) {
+      if (e instanceof NotFoundException) {
+        throw e.withField('fieldZone.directorId');
+      }
+      throw e;
+    }
+    if (!director.roles.includes('FieldOperationsDirector')) {
+      throw new InputException(
+        'User does not have the Field Operations Director role',
+        'fieldZone.directorId',
+      );
+    }
+    return director;
   }
 
   async delete(id: ID): Promise<void> {

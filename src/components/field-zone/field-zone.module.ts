@@ -7,6 +7,7 @@ import { FieldZoneLoader } from './field-zone.loader';
 import { FieldZoneRepository } from './field-zone.repository';
 import { FieldZoneResolver } from './field-zone.resolver';
 import { FieldZoneService } from './field-zone.service';
+import { RestrictZoneDirectorRemovalHandler } from './handlers/restrict-zone-director-removal.handler';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { FieldZoneService } from './field-zone.service';
     FieldZoneService,
     splitDb(FieldZoneRepository, FieldZoneGelRepository),
     FieldZoneLoader,
+    RestrictZoneDirectorRemovalHandler,
   ],
   exports: [FieldZoneService],
 })

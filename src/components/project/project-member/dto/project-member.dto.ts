@@ -3,6 +3,7 @@ import { DateTime } from 'luxon';
 import {
   DateTimeField,
   Resource,
+  SecuredDateTimeNullable,
   SecuredRoles,
   Sensitivity,
   SensitivityField,
@@ -30,6 +31,9 @@ export class ProjectMember extends Resource {
     description: "Based on the project's sensitivity",
   })
   readonly sensitivity: Sensitivity;
+
+  @Field()
+  readonly inactiveAt: SecuredDateTimeNullable;
 
   @DateTimeField()
   readonly modifiedAt: DateTime;
