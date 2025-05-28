@@ -1,13 +1,6 @@
 import { type Role } from '~/common';
 
-export type ProjectScope = 'project';
-export type GlobalScope = 'global';
-
-// Scope for roles. Does this role apply anywhere or only with project membership?
-export type AuthScope = GlobalScope | ProjectScope;
-
-export type ProjectScopedRole = `${ProjectScope}:${Role}`;
-export type GlobalScopedRole = `${GlobalScope}:${Role}`;
+type AuthScope = 'global' | 'project';
 
 export type ScopedRole = `${AuthScope}:${Role}` | 'member:true';
 

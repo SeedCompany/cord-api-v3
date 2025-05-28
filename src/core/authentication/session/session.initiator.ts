@@ -1,5 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { csv } from '@seedcompany/common';
+import { csv, setOf } from '@seedcompany/common';
 import {
   type ID,
   InputException,
@@ -11,7 +11,6 @@ import {
 } from '~/common';
 import { ConfigService } from '~/core/config/config.service';
 import { ILogger, Logger } from '~/core/logger';
-import { rolesForScope } from '../../../components/authorization/dto';
 import { type IRequest } from '../../http';
 import { type Session } from './session.dto';
 import { type SessionManager } from './session.manager';
@@ -91,17 +90,15 @@ export class SessionInitiator {
       );
     }
 
-    const roles = csvHeader(request?.headers?.['x-cord-impersonate-role']);
+    const rawRoles = csvHeader(request?.headers?.['x-cord-impersonate-role']);
 
-    if (!roles && !user) {
+    if (!rawRoles && !user) {
       return undefined;
     }
 
-    const scoped = (roles ?? [])
-      .map(assertValidRole)
-      .map(rolesForScope('global'));
+    const roles = setOf((rawRoles ?? []).map(assertValidRole));
 
-    return { id: user, roles: scoped };
+    return { id: user, roles };
   }
 }
 

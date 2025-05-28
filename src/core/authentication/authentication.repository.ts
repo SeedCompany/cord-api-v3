@@ -1,8 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { type ID, ServerException } from '~/common';
-import { type ScopedRole } from '../../components/authorization/dto';
+import { type ID, type Role, ServerException } from '~/common';
 import { DatabaseService, DbTraceLayer, OnIndex } from '../database';
 import {
   ACTIVE,
@@ -201,8 +200,8 @@ export class AuthenticationRepository {
       )
       .return<{
         userId: ID | null;
-        roles: readonly ScopedRole[];
-        impersonateeRoles: readonly ScopedRole[] | null;
+        roles: readonly Role[];
+        impersonateeRoles: readonly Role[] | null;
       }>([
         'user.id as userId',
         'roles',

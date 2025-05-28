@@ -3,7 +3,7 @@ import {
   DiscoveryService,
 } from '@golevelup/nestjs-discovery';
 import { Injectable, type OnModuleInit } from '@nestjs/common';
-import { entries, mapEntries, mapValues } from '@seedcompany/common';
+import { entries, mapEntries, mapValues, setOf } from '@seedcompany/common';
 import { pick, startCase } from 'lodash';
 import { type DeepWritable, type Writable } from 'ts-essentials';
 import { type EnhancedResource, many, type Role } from '~/common';
@@ -35,7 +35,7 @@ export interface Policy {
   /* Policy Name */
   name: string;
   /* Only applies to these roles */
-  roles?: readonly Role[];
+  roles?: ReadonlySet<Role>;
   /* What the policy grants */
   grants: Grants;
   /* An optimization to determine Powers this policy contains */
@@ -103,7 +103,7 @@ export class PolicyFactory implements OnModuleInit {
   ): PlainPolicy {
     const name = startCase(discoveredClass.name.replace(/Policy$/, ''));
 
-    const roles = meta.role === 'all' ? undefined : many(meta.role);
+    const roles = meta.role === 'all' ? undefined : setOf(many(meta.role));
 
     const grants: WritableGrants = new Map();
     const resultList = many(meta.def(resGranter)).flat();

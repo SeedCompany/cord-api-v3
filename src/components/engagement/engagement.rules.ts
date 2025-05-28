@@ -1,5 +1,6 @@
 /* eslint-disable no-case-declarations */
 import { Injectable } from '@nestjs/common';
+import { setOf } from '@seedcompany/common';
 import { node, relation } from 'cypher-query-builder';
 import { first, intersection } from 'lodash';
 import {
@@ -12,7 +13,6 @@ import { ILogger, Logger } from '~/core';
 import { Identity } from '~/core/authentication';
 import { DatabaseService } from '~/core/database';
 import { ACTIVE, INACTIVE } from '~/core/database/query';
-import { withoutScope } from '../authorization/dto';
 import { ProjectStep } from '../project/dto';
 import {
   EngagementStatus,
@@ -29,7 +29,7 @@ interface StatusRule {
   transitions: Transition[];
 }
 
-const rolesThatCanBypassWorkflow: Role[] = [Role.Administrator];
+const rolesThatCanBypassWorkflow = setOf<Role>([Role.Administrator]);
 
 @Injectable()
 export class EngagementRules {
@@ -314,7 +314,6 @@ export class EngagementRules {
 
   async getAvailableTransitions(
     engagementId: ID,
-    currentUserRoles?: Role[],
     changeset?: ID,
   ): Promise<EngagementStatusTransition[]> {
     const session = this.identity.current;
@@ -330,8 +329,7 @@ export class EngagementRules {
     );
 
     // If current user is not an approver (based on roles) then don't allow any transitions
-    currentUserRoles ??= session.roles.map(withoutScope);
-    if (intersection(approvers, currentUserRoles).length === 0) {
+    if (session.roles.intersection(setOf(approvers)).size === 0) {
       return [];
     }
 
@@ -356,10 +354,9 @@ export class EngagementRules {
     return availableTransitionsAccordingToProject;
   }
 
-  async canBypassWorkflow() {
-    const session = this.identity.current;
-    const roles = session.roles.map(withoutScope);
-    return intersection(rolesThatCanBypassWorkflow, roles).length > 0;
+  canBypassWorkflow() {
+    const { roles } = this.identity.current;
+    return roles.intersection(rolesThatCanBypassWorkflow).size > 0;
   }
 
   async verifyStatusChange(
@@ -367,17 +364,12 @@ export class EngagementRules {
     nextStatus: EngagementStatus,
     changeset?: ID,
   ) {
-    // If current user's roles include a role that can bypass workflow
-    // stop the check here.
-    const session = this.identity.current;
-    const currentUserRoles = session.roles.map(withoutScope);
-    if (intersection(rolesThatCanBypassWorkflow, currentUserRoles).length > 0) {
+    if (this.canBypassWorkflow()) {
       return;
     }
 
     const transitions = await this.getAvailableTransitions(
       engagementId,
-      currentUserRoles,
       changeset,
     );
 

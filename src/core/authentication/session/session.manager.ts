@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { CachedByArg } from '@seedcompany/common';
+import { CachedByArg, setOf } from '@seedcompany/common';
 import { DateTime } from 'luxon';
 import type { Writable } from 'ts-essentials';
 import {
@@ -11,7 +11,6 @@ import {
 } from '~/common';
 import { IEventBus } from '~/core/events';
 import { ILogger, Logger } from '~/core/logger';
-import { rolesForScope } from '../../../components/authorization/dto';
 import { SystemAgentRepository } from '../../../components/user/system-agent.repository';
 import { AuthenticationRepository } from '../authentication.repository';
 import { CanImpersonateEvent } from '../events/can-impersonate.event';
@@ -79,10 +78,10 @@ export class SessionManager {
       impersonatee && result.userId
         ? {
             id: impersonatee?.id ?? ghost?.id,
-            roles: [
+            roles: setOf([
               ...(impersonatee.roles ?? []),
               ...(result.impersonateeRoles ?? []),
-            ],
+            ]),
           }
         : undefined;
 
@@ -126,7 +125,7 @@ export class SessionManager {
   }
 
   @CachedByArg()
-  lazySessionForRootUser(input?: Partial<Session>) {
+  lazySessionForRootUser(input?: Parameters<Session['with']>[0]) {
     const promiseOfRootId = this.waitForRootUserIdOnce().then((id) => {
       (session as Writable<Session>).userId = id;
       return id;
@@ -137,7 +136,7 @@ export class SessionManager {
       issuedAt: DateTime.now(),
       userId: unresolvedId,
       anonymous: false,
-      roles: ['global:Administrator'],
+      roles: ['Administrator'],
       ...input,
     });
     type LazySession = Session &
@@ -152,7 +151,7 @@ export class SessionManager {
         if (p === 'withRoles') {
           return (...roles: Role[]) =>
             this.lazySessionForRootUser({
-              roles: roles.map(rolesForScope('global')),
+              roles,
             });
         }
         if (p === 'then') {
@@ -184,7 +183,7 @@ export class SessionManager {
       issuedAt: DateTime.now(),
       userId: 'anonymous' as ID,
       anonymous: false,
-      roles: [`global:${role}`],
+      roles: [role],
     });
     return this.sessionHost.withSession(session, fn);
   }

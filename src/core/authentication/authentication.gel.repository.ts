@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { IntegrityError } from 'gel';
 import { type ID, type PublicOf, ServerException } from '~/common';
 import { RootUserAlias } from '../config/root-user.config';
-import { DbTraceLayer, disableAccessPolicies, e, Gel, withScope } from '../gel';
+import { DbTraceLayer, disableAccessPolicies, e, Gel } from '../gel';
 import type { AuthenticationRepository } from './authentication.repository';
 import { type LoginInput } from './dto';
 import { type Session } from './session/session.dto';
@@ -138,8 +138,8 @@ export class AuthenticationGelRepository
       return e.select(e.Auth.Session, (session) => ({
         filter_single: { token },
         userId: session.user.id,
-        roles: withScope('global', session.user.roles),
-        impersonateeRoles: withScope('global', impersonatee.roles),
+        roles: session.user.roles,
+        impersonateeRoles: impersonatee.roles,
       }));
     },
   );
@@ -151,7 +151,7 @@ export class AuthenticationGelRepository
     { userId: e.uuid },
     ({ userId }) => {
       const user = e.cast(e.User, userId);
-      return withScope('global', user.roles);
+      return user.roles;
     },
   );
 
