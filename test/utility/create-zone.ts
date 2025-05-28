@@ -5,7 +5,6 @@ import {
 } from '../../src/components/field-zone/dto';
 import { type TestApp } from './create-app';
 import { createPerson } from './create-person';
-import { getUserFromSession } from './create-session';
 import { fragments } from './fragments';
 import { gql } from './gql-tag';
 import { runAsAdmin } from './login';
@@ -18,10 +17,12 @@ export async function createZone(
     name: 'Zone' + (await generateId()),
     directorId:
       input.directorId ||
-      (await getUserFromSession(app)).id ||
       // don't want to have to declare the role at the top level. The person part doesn't really matter here.
       (await runAsAdmin(app, async () => {
-        return (await createPerson(app)).id;
+        const director = await createPerson(app, {
+          roles: ['FieldOperationsDirector'],
+        });
+        return director.id;
       })),
     ...input,
   };

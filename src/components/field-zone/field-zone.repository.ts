@@ -133,4 +133,17 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
       .first();
     return result!; // result from paginate() will always have 1 row.
   }
+
+  async readAllByDirector(id: ID<'User'>) {
+    return await this.db
+      .query()
+      .match([
+        node('node', 'FieldZone'),
+        relation('out', '', 'director', ACTIVE),
+        node('', 'User', { id }),
+      ])
+      .apply(this.hydrate())
+      .map('dto')
+      .run();
+  }
 }

@@ -28,9 +28,9 @@ describe('Region e2e', () => {
     await loginAsAdmin(app);
 
     director = await createPerson(app, {
-      roles: [Role.FieldOperationsDirector, Role.ProjectManager],
+      roles: [Role.RegionalDirector],
     });
-    fieldZone = await createZone(app, { directorId: director.id });
+    fieldZone = await createZone(app);
   });
 
   afterAll(async () => {
