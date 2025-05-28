@@ -11,10 +11,9 @@ import {
   ServerException,
   type UnsecuredDto,
 } from '~/common';
-import { isAdmin } from '~/common/session';
 import { ResourceLoader, ResourcesHost } from '~/core';
+import { Identity } from '~/core/authentication';
 import { type BaseNode, isBaseNode } from '~/core/database/results';
-import { SessionHost } from '../authentication';
 import { Privileges } from '../authorization';
 import { CommentRepository } from './comment.repository';
 import {
@@ -39,7 +38,7 @@ export class CommentService {
     private readonly privileges: Privileges,
     private readonly resources: ResourceLoader,
     private readonly resourcesHost: ResourcesHost,
-    private readonly sessionHost: SessionHost,
+    private readonly identity: Identity,
     private readonly mentionNotificationService: CommentViaMentionNotificationService,
   ) {}
 
@@ -118,12 +117,11 @@ export class CommentService {
   }
 
   secureThread(thread: UnsecuredDto<CommentThread>): CommentThread {
-    const session = this.sessionHost.current;
     return {
       ...thread,
       firstComment: this.secureComment(thread.firstComment),
       latestComment: this.secureComment(thread.latestComment),
-      canDelete: thread.creator === session.userId || isAdmin(session),
+      canDelete: this.identity.isSelf(thread.creator) || this.identity.isAdmin,
     };
   }
 

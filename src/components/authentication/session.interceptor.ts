@@ -21,8 +21,8 @@ import {
   type Session,
   UnauthenticatedException,
 } from '~/common';
-import { loggedInSession as verifyLoggedIn } from '~/common/session';
 import { ConfigService } from '~/core';
+import { Identity } from '~/core/authentication';
 import { GlobalHttpHook, type IRequest } from '~/core/http';
 import { rolesForScope } from '../authorization/dto';
 import { Anonymous } from './anonymous.decorator';
@@ -36,6 +36,7 @@ export class SessionInterceptor implements NestInterceptor {
     private readonly auth: AuthenticationService & {},
     private readonly config: ConfigService,
     private readonly sessionHost: SessionHost,
+    private readonly identity: Identity,
   ) {}
 
   private readonly sessionByRequest = new AsyncLocalStorage<
@@ -85,7 +86,7 @@ export class SessionInterceptor implements NestInterceptor {
       Anonymous.get(executionContext.getClass()) ??
       !isMutation;
     if (!allowAnonymous && session) {
-      verifyLoggedIn(session);
+      this.identity.verifyLoggedIn();
     }
 
     return next.handle();

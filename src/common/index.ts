@@ -49,7 +49,7 @@ export * from './secured-mapper';
 export * from './sensitivity.enum';
 export * from './trace-layer';
 export * from './util';
-export { type Session, LoggedInSession, AnonSession } from './session';
+export { type Session } from './session';
 export * from './types';
 export * from './validators';
 export * from './name-field';

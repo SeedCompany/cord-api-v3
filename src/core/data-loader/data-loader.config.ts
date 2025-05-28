@@ -4,14 +4,14 @@ import {
   lifetimeIdFromExecutionContext,
 } from '@seedcompany/data-loader';
 import { NotFoundException } from '~/common';
-import { SessionHost } from '../../components/authentication';
+import { Identity } from '../authentication';
 import { ConfigService } from '../config/config.service';
 
 @Injectable()
 export class DataLoaderConfig {
   constructor(
     private readonly config: ConfigService,
-    private readonly sessionHost: SessionHost,
+    private readonly identity: Identity,
   ) {}
 
   create(): DataLoaderOptions<any, any> {
@@ -27,7 +27,7 @@ export class DataLoaderConfig {
         // If we have a session, use that as the cache key.
         // It will always be created / scoped within the GQL operation.
         // This ensures the cached data isn't shared between users.
-        const session = this.sessionHost.currentMaybe;
+        const session = this.identity.currentMaybe;
         if (session) return session;
 
         return lifetimeIdFromExecutionContext(context);

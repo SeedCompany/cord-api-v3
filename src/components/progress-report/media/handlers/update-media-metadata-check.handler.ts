@@ -1,5 +1,4 @@
 import { EventsHandler, ResourceLoader } from '~/core';
-import { SessionHost } from '../../../authentication';
 import { Privileges } from '../../../authorization';
 import { CanUpdateMediaUserMetadataEvent } from '../../../file/media/events/can-update-event';
 import { ProgressReportMedia as ReportMedia } from '../dto';
@@ -9,7 +8,6 @@ export class ProgressReportUpdateMediaMetadataCheckHandler {
   constructor(
     private readonly resources: ResourceLoader,
     private readonly privileges: Privileges,
-    private readonly sessionHost: SessionHost,
   ) {}
 
   async handle(event: CanUpdateMediaUserMetadataEvent) {
