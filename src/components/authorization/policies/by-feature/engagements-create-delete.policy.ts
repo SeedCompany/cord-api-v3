@@ -1,6 +1,6 @@
-import { any, field, Hierarchies, member, Policy } from '../util';
+import { any, field, member, Policy, Role } from '../util';
 
-@Policy([...Hierarchies.Field, ...Hierarchies.Finance], (r) => [
+@Policy([...Role.Hierarchies.Field, ...Role.Hierarchies.Finance], (r) => [
   r.Project,
   r.Engagement.read,
   r.Engagement.whenAll(
