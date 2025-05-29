@@ -67,16 +67,15 @@ export class FieldRegionRepository extends DtoRepository(FieldRegion) {
 
   async update(changes: UpdateFieldRegion) {
     const { id, directorId, fieldZoneId, ...simpleChanges } = changes;
-
-    if (directorId) {
-      // TODO update director - lol this was never implemented
-    }
-
-    if (fieldZoneId) {
-      // TODO update field zone - neither was this
-    }
-
     await this.updateProperties({ id }, simpleChanges);
+
+    if (directorId !== undefined) {
+      await this.updateRelation('director', 'User', id, directorId);
+    }
+
+    if (fieldZoneId !== undefined) {
+      await this.updateRelation('zone', 'FieldZone', id, fieldZoneId);
+    }
 
     return await this.readOne(id);
   }
