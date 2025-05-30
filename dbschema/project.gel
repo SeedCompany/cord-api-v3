@@ -322,8 +322,11 @@ module Project {
               firstDayOfNextPeriod := (select firstDayOfMonth + <cal::relative_duration>(monthInterval ++ ' month')),
             select range(<cal::local_date>firstDayOfMonth, <cal::local_date>firstDayOfNextPeriod)
           )
+        ),
+        additionalReportPeriodRange := (
+          select range(<cal::local_date>endDate, <cal::local_date>endDate, inc_upper := true)
         )
-      select reportPeriodRanges
+      select reportPeriodRanges union additionalReportPeriodRange
   );
 
   function determine_requested_report_periods(requestedReportPeriods: array<range<cal::local_date>>,
