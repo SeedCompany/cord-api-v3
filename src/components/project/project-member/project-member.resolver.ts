@@ -24,7 +24,7 @@ export class ProjectMemberResolver {
     nullable: true,
   })
   active(@Parent() member: ProjectMember): boolean | null {
-    return !member.inactiveAt.canRead ? !member.inactiveAt.value : null;
+    return member.inactiveAt.canRead ? !member.inactiveAt.value : null;
   }
 
   @Mutation(() => CreateProjectMemberOutput, {
