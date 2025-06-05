@@ -3,10 +3,10 @@ import { startCase } from 'lodash';
 import { type ID } from '~/common';
 import { SessionHost } from '~/core/authentication/session/session.host';
 import { SessionManager } from '~/core/authentication/session/session.manager';
+import { graphql } from '~/graphql';
 import { FileService } from '../../src/components/file';
 import { type TestApp } from './create-app';
-import { fileNode, type RawDirectory } from './fragments';
-import { gql } from './gql-tag';
+import { fileNode } from './fragments';
 
 export async function createRootDirectory(app: TestApp, name?: string) {
   name = name ?? startCase(faker.lorem.words());
@@ -34,23 +34,24 @@ export async function createDirectory(
     name: name ?? startCase(faker.lorem.words()),
   };
 
-  const result = await app.graphql.mutate(
-    gql`
-      mutation createDirectory($input: CreateDirectoryInput!) {
-        createDirectory(input: $input) {
-          ...fileNode
-        }
-      }
-      ${fileNode}
-    `,
-    {
-      input,
-    },
-  );
+  const result = await app.graphql.mutate(CreateDirectoryDoc, {
+    input,
+  });
 
-  const actual: RawDirectory = result.createDirectory;
+  const actual = result.createDirectory;
   expect(actual).toBeTruthy();
   expect(actual.name).toBe(input.name);
 
   return actual;
 }
+
+const CreateDirectoryDoc = graphql(
+  `
+    mutation createDirectory($input: CreateDirectoryInput!) {
+      createDirectory(input: $input) {
+        ...fileNode
+      }
+    }
+  `,
+  [fileNode],
+);

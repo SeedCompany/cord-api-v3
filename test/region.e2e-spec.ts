@@ -1,7 +1,6 @@
 import { faker } from '@faker-js/faker';
 import { isValidId, Role } from '~/common';
-import { type FieldRegion } from '../src/components/field-region/dto';
-import { type FieldZone } from '../src/components/field-zone/dto';
+import { graphql } from '~/graphql';
 import {
   createPerson,
   createRegion,
@@ -9,16 +8,14 @@ import {
   createTestApp,
   createZone,
   fragments,
-  gql,
   loginAsAdmin,
   type TestApp,
 } from './utility';
-import { type RawUser } from './utility/fragments';
 
 describe('Region e2e', () => {
   let app: TestApp;
-  let director: RawUser;
-  let fieldZone: FieldZone;
+  let director: fragments.user;
+  let fieldZone: fragments.fieldZone;
 
   beforeAll(async () => {
     app = await createTestApp();
@@ -69,30 +66,30 @@ describe('Region e2e', () => {
     });
 
     const { fieldRegion: actual } = await app.graphql.query(
-      gql`
-        query fieldRegion($id: ID!) {
-          fieldRegion(id: $id) {
-            ...fieldRegion
-            director {
-              value {
-                ...user
+      graphql(
+        `
+          query fieldRegion($id: ID!) {
+            fieldRegion(id: $id) {
+              ...fieldRegion
+              director {
+                value {
+                  ...user
+                }
+                canEdit
+                canRead
               }
-              canEdit
-              canRead
-            }
-            fieldZone {
-              value {
-                ...fieldZone
+              fieldZone {
+                value {
+                  ...fieldZone
+                }
+                canEdit
+                canRead
               }
-              canEdit
-              canRead
             }
           }
-        }
-        ${fragments.fieldRegion}
-        ${fragments.fieldZone}
-        ${fragments.user}
-      `,
+        `,
+        [fragments.fieldRegion, fragments.fieldZone, fragments.user],
+      ),
       {
         id: fieldRegion.id,
       },
@@ -113,32 +110,32 @@ describe('Region e2e', () => {
     const newName = faker.company.name();
 
     const result = await app.graphql.mutate(
-      gql`
-        mutation updateFieldRegion($input: UpdateFieldRegionInput!) {
-          updateFieldRegion(input: $input) {
-            fieldRegion {
-              ...fieldRegion
-              director {
-                value {
-                  ...user
+      graphql(
+        `
+          mutation updateFieldRegion($input: UpdateFieldRegionInput!) {
+            updateFieldRegion(input: $input) {
+              fieldRegion {
+                ...fieldRegion
+                director {
+                  value {
+                    ...user
+                  }
+                  canEdit
+                  canRead
                 }
-                canEdit
-                canRead
-              }
-              fieldZone {
-                value {
-                  ...fieldZone
+                fieldZone {
+                  value {
+                    ...fieldZone
+                  }
+                  canEdit
+                  canRead
                 }
-                canEdit
-                canRead
               }
             }
           }
-        }
-        ${fragments.fieldRegion}
-        ${fragments.fieldZone}
-        ${fragments.user}
-      `,
+        `,
+        [fragments.fieldRegion, fragments.fieldZone, fragments.user],
+      ),
       {
         input: {
           fieldRegion: {
@@ -165,27 +162,28 @@ describe('Region e2e', () => {
     });
 
     const result = await app.graphql.mutate(
-      gql`
-        mutation updateFieldRegion($input: UpdateFieldRegionInput!) {
-          updateFieldRegion(input: $input) {
-            fieldRegion {
-              ...fieldRegion
-              fieldZone {
-                value {
-                  ...fieldZone
+      graphql(
+        `
+          mutation updateFieldRegion($input: UpdateFieldRegionInput!) {
+            updateFieldRegion(input: $input) {
+              fieldRegion {
+                ...fieldRegion
+                fieldZone {
+                  value {
+                    ...fieldZone
+                  }
                 }
               }
             }
           }
-        }
-        ${fragments.fieldRegion}
-        ${fragments.fieldZone}
-      `,
+        `,
+        [fragments.fieldRegion, fragments.fieldZone],
+      ),
       {
         input: {
           fieldRegion: {
             id: fieldRegion.id,
-            zoneId: newZone.id,
+            fieldZoneId: newZone.id,
           },
         },
       },
@@ -194,7 +192,7 @@ describe('Region e2e', () => {
 
     expect(updated).toBeTruthy();
     expect(updated.id).toBe(fieldRegion.id);
-    expect(updated.fieldZone.value.id).toBe(newZone.id);
+    expect(updated.fieldZone.value!.id).toBe(newZone.id);
   });
 
   // This test should be updated with refactoring of location service for zone
@@ -206,22 +204,23 @@ describe('Region e2e', () => {
     });
 
     const result = await app.graphql.mutate(
-      gql`
-        mutation updateFieldRegion($input: UpdateFieldRegionInput!) {
-          updateFieldRegion(input: $input) {
-            fieldRegion {
-              ...fieldRegion
-              director {
-                value {
-                  ...user
+      graphql(
+        `
+          mutation updateFieldRegion($input: UpdateFieldRegionInput!) {
+            updateFieldRegion(input: $input) {
+              fieldRegion {
+                ...fieldRegion
+                director {
+                  value {
+                    ...user
+                  }
                 }
               }
             }
           }
-        }
-        ${fragments.fieldRegion}
-        ${fragments.user}
-      `,
+        `,
+        [fragments.fieldRegion, fragments.user],
+      ),
       {
         input: {
           fieldRegion: {
@@ -231,11 +230,11 @@ describe('Region e2e', () => {
         },
       },
     );
-    const updated = result.updateFieldregion.fieldRegion;
+    const updated = result.updateFieldRegion.fieldRegion;
 
     expect(updated).toBeTruthy();
     expect(updated.id).toBe(fieldRegion.id);
-    expect(updated.director.value.id).toBe(newDirector.id);
+    expect(updated.director.value!.id).toBe(newDirector.id);
   });
 
   it.skip('delete region', async () => {
@@ -245,18 +244,18 @@ describe('Region e2e', () => {
     });
 
     const result = await app.graphql.mutate(
-      gql`
+      graphql(`
         mutation deleteFieldRegion($id: ID!) {
           deleteFieldRegion(id: $id) {
             __typename
           }
         }
-      `,
+      `),
       {
         id: fieldRegion.id,
       },
     );
-    const actual: FieldRegion | undefined = result.deleteFieldRegion;
+    const actual = result.deleteFieldRegion;
     expect(actual).toBeTruthy();
   });
 
@@ -272,18 +271,22 @@ describe('Region e2e', () => {
       ),
     );
 
-    const { fieldRegions } = await app.graphql.query(gql`
-      query {
-        fieldRegions(input: { page: 1, count: 25 }) {
-          items {
-            ...fieldRegion
+    const { fieldRegions } = await app.graphql.query(
+      graphql(
+        `
+          query FieldRegions {
+            fieldRegions(input: { page: 1, count: 25 }) {
+              items {
+                ...fieldRegion
+              }
+              hasMore
+              total
+            }
           }
-          hasMore
-          total
-        }
-      }
-      ${fragments.fieldRegion}
-    `);
+        `,
+        [fragments.fieldRegion],
+      ),
+    );
 
     expect(fieldRegions.items.length).toBeGreaterThanOrEqual(2);
   });

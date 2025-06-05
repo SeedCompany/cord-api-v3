@@ -1,18 +1,13 @@
 import { times } from 'lodash';
-import { type Merge } from 'type-fest';
-import { Role, type Secured } from '~/common';
-import { type Film } from '../src/components/film/dto';
+import { Role } from '~/common';
+import { graphql } from '~/graphql';
 import {
-  type AnyProduct,
-  type DerivativeScriptureProduct as InternalDerivativeScriptureProduct,
-  type Producible,
   ProducibleType,
   ProductMedium,
   ProductMethodology,
   ProductPurpose,
 } from '../src/components/product/dto';
 import { ScriptureRange } from '../src/components/scripture/dto';
-import { type Story } from '../src/components/story/dto';
 import {
   createDerivativeProduct,
   createDirectProduct,
@@ -23,26 +18,15 @@ import {
   createTestApp,
   errors,
   fragments,
-  gql,
   registerUser,
   type TestApp,
 } from './utility';
-import {
-  type RawLanguageEngagement,
-  type RawProduct,
-} from './utility/fragments';
-
-// Shape for public API
-type DerivativeScriptureProduct = Merge<
-  InternalDerivativeScriptureProduct,
-  { produces: Secured<Producible & { __typename: string }> }
->;
 
 describe('Product e2e', () => {
   let app: TestApp;
-  let engagement: RawLanguageEngagement;
-  let story: Story;
-  let film: Film;
+  let engagement: fragments.languageEngagement;
+  let story: fragments.story;
+  let film: fragments.film;
 
   beforeAll(async () => {
     app = await createTestApp();
@@ -65,19 +49,21 @@ describe('Product e2e', () => {
     });
 
     const result = await app.graphql.query(
-      gql`
-        query product($id: ID!) {
-          product(id: $id) {
-            ...product
+      graphql(
+        `
+          query product($id: ID!) {
+            product(id: $id) {
+              ...product
+            }
           }
-        }
-        ${fragments.product}
-      `,
+        `,
+        [fragments.product],
+      ),
       {
         id: product.id,
       },
     );
-    const actual: RawProduct = result.product;
+    const actual = result.product;
     expect(actual.id).toBe(product.id);
     expect(actual.mediums.value).toEqual(product.mediums.value);
     expect(actual.purposes.value).toEqual(product.purposes.value);
@@ -95,29 +81,33 @@ describe('Product e2e', () => {
     });
 
     const result = await app.graphql.query(
-      gql`
-        query product($id: ID!) {
-          product(id: $id) {
-            ...product
-            ... on DirectScriptureProduct {
-              unspecifiedScripture {
-                value {
-                  book
-                  totalVerses
+      graphql(
+        `
+          query product($id: ID!) {
+            product(id: $id) {
+              ...product
+              ... on DirectScriptureProduct {
+                unspecifiedScripture {
+                  value {
+                    book
+                    totalVerses
+                  }
+                  canRead
+                  canEdit
                 }
-                canRead
-                canEdit
               }
             }
           }
-        }
-        ${fragments.product}
-      `,
+        `,
+        [fragments.product],
+      ),
       {
         id: product.id,
       },
     );
-    const actual: AnyProduct = result.product;
+    const actual = result.product;
+    if (actual.__typename !== 'DirectScriptureProduct') throw new Error();
+
     expect(actual?.unspecifiedScripture?.value).toMatchObject({
       book: 'Matthew',
       totalVerses: 10,
@@ -144,61 +134,65 @@ describe('Product e2e', () => {
     });
 
     const result = await app.graphql.query(
-      gql`
-        query product($id: ID!) {
-          product(id: $id) {
-            ...product
-            ... on DerivativeScriptureProduct {
-              produces {
-                value {
-                  id
-                  __typename
-                  scriptureReferences {
-                    value {
-                      start {
-                        book
-                        chapter
-                        verse
+      graphql(
+        `
+          query product($id: ID!) {
+            product(id: $id) {
+              ...product
+              ... on DerivativeScriptureProduct {
+                produces {
+                  value {
+                    id
+                    __typename
+                    scriptureReferences {
+                      value {
+                        start {
+                          book
+                          chapter
+                          verse
+                        }
+                        end {
+                          book
+                          chapter
+                          verse
+                        }
                       }
-                      end {
-                        book
-                        chapter
-                        verse
-                      }
+                      canRead
+                      canEdit
                     }
-                    canRead
-                    canEdit
                   }
+                  canRead
+                  canEdit
                 }
-                canRead
-                canEdit
-              }
-              scriptureReferencesOverride {
-                canRead
-                canEdit
-                value {
-                  start {
-                    book
-                    chapter
-                    verse
-                  }
-                  end {
-                    book
-                    chapter
-                    verse
+                scriptureReferencesOverride {
+                  canRead
+                  canEdit
+                  value {
+                    start {
+                      book
+                      chapter
+                      verse
+                    }
+                    end {
+                      book
+                      chapter
+                      verse
+                    }
                   }
                 }
               }
             }
           }
-        }
-        ${fragments.product}
-      `,
+        `,
+        [fragments.product],
+      ),
       {
         id: product.id,
       },
     );
-    const actual: DerivativeScriptureProduct = result.product;
+    const actual = result.product;
+    if (actual.__typename !== 'DerivativeScriptureProduct') throw new Error();
+
     expect(actual.produces).toBeDefined();
     expect(actual.produces?.value).toBeDefined();
     expect(actual.produces?.value?.id).toBe(story.id);
@@ -223,61 +217,65 @@ describe('Product e2e', () => {
     });
 
     const result = await app.graphql.query(
-      gql`
-        query product($id: ID!) {
-          product(id: $id) {
-            ...product
-            ... on DerivativeScriptureProduct {
-              produces {
-                value {
-                  id
-                  __typename
-                  scriptureReferences {
-                    value {
-                      start {
-                        book
-                        chapter
-                        verse
+      graphql(
+        `
+          query product($id: ID!) {
+            product(id: $id) {
+              ...product
+              ... on DerivativeScriptureProduct {
+                produces {
+                  value {
+                    id
+                    __typename
+                    scriptureReferences {
+                      value {
+                        start {
+                          book
+                          chapter
+                          verse
+                        }
+                        end {
+                          book
+                          chapter
+                          verse
+                        }
                       }
-                      end {
-                        book
-                        chapter
-                        verse
-                      }
+                      canRead
+                      canEdit
                     }
-                    canRead
-                    canEdit
                   }
+                  canRead
+                  canEdit
                 }
-                canRead
-                canEdit
-              }
-              scriptureReferencesOverride {
-                value {
-                  start {
-                    book
-                    chapter
-                    verse
+                scriptureReferencesOverride {
+                  value {
+                    start {
+                      book
+                      chapter
+                      verse
+                    }
+                    end {
+                      book
+                      chapter
+                      verse
+                    }
                   }
-                  end {
-                    book
-                    chapter
-                    verse
-                  }
+                  canRead
+                  canEdit
                 }
-                canRead
-                canEdit
               }
             }
           }
-        }
-        ${fragments.product}
-      `,
+        `,
+        [fragments.product],
+      ),
       {
         id: product.id,
       },
     );
-    const actual: DerivativeScriptureProduct = result.product;
+    const actual = result.product;
+    if (actual.__typename !== 'DerivativeScriptureProduct') throw new Error();
+
     expect(actual.scriptureReferencesOverride?.value).toBeDefined();
     expect(actual.scriptureReferencesOverride?.value).toEqual(
       expect.arrayContaining(randomScriptureReferences),
@@ -296,16 +294,18 @@ describe('Product e2e', () => {
     });
 
     const result = await app.graphql.query(
-      gql`
-        mutation updateDirectScriptureProduct($id: ID!) {
-          updateDirectScriptureProduct(input: { id: $id }) {
-            product {
-              ...product
+      graphql(
+        `
+          mutation updateDirectScriptureProduct($id: ID!) {
+            updateDirectScriptureProduct(input: { id: $id }) {
+              product {
+                ...product
+              }
             }
           }
-        }
-        ${fragments.product}
-      `,
+        `,
+        [fragments.product],
+      ),
       {
         id: product.id,
       },
@@ -332,28 +332,30 @@ describe('Product e2e', () => {
     };
 
     const result = await app.graphql.query(
-      gql`
-        mutation updateDirectScriptureProduct(
-          $input: UpdateDirectScriptureProduct!
-        ) {
-          updateDirectScriptureProduct(input: $input) {
-            product {
-              ...product
-              ... on DirectScriptureProduct {
-                unspecifiedScripture {
-                  value {
-                    book
-                    totalVerses
+      graphql(
+        `
+          mutation updateDirectScriptureProduct(
+            $input: UpdateDirectScriptureProduct!
+          ) {
+            updateDirectScriptureProduct(input: $input) {
+              product {
+                ...product
+                ... on DirectScriptureProduct {
+                  unspecifiedScripture {
+                    value {
+                      book
+                      totalVerses
+                    }
+                    canRead
+                    canEdit
                   }
-                  canRead
-                  canEdit
                 }
               }
             }
           }
-        }
-        ${fragments.product}
-      `,
+        `,
+        [fragments.product],
+      ),
       {
         input: {
           id: product.id,
@@ -362,7 +364,9 @@ describe('Product e2e', () => {
       },
     );
 
-    const actual: AnyProduct = result.updateDirectScriptureProduct.product;
+    const actual = result.updateDirectScriptureProduct.product;
+    if (actual.__typename !== 'DirectScriptureProduct') throw new Error();
+
     expect(actual.mediums.value).toEqual(updateProduct.mediums);
     expect(actual.purposes.value).toEqual(updateProduct.purposes);
     expect(actual.methodology.value).toEqual(updateProduct.methodology);
@@ -384,60 +388,62 @@ describe('Product e2e', () => {
     const updateProduces = film.id;
 
     const result = await app.graphql.query(
-      gql`
-        mutation updateDerivativeScriptureProduct(
-          $input: UpdateDerivativeScriptureProduct!
-        ) {
-          updateDerivativeScriptureProduct(input: $input) {
-            product {
-              ...product
-              ... on DerivativeScriptureProduct {
-                produces {
-                  value {
-                    id
-                    __typename
-                    scriptureReferences {
-                      value {
-                        start {
-                          book
-                          chapter
-                          verse
+      graphql(
+        `
+          mutation updateDerivativeScriptureProduct(
+            $input: UpdateDerivativeScriptureProduct!
+          ) {
+            updateDerivativeScriptureProduct(input: $input) {
+              product {
+                ...product
+                ... on DerivativeScriptureProduct {
+                  produces {
+                    value {
+                      id
+                      __typename
+                      scriptureReferences {
+                        value {
+                          start {
+                            book
+                            chapter
+                            verse
+                          }
+                          end {
+                            book
+                            chapter
+                            verse
+                          }
                         }
-                        end {
-                          book
-                          chapter
-                          verse
-                        }
+                        canRead
+                        canEdit
                       }
-                      canRead
-                      canEdit
                     }
+                    canRead
+                    canEdit
                   }
-                  canRead
-                  canEdit
-                }
-                scriptureReferencesOverride {
-                  value {
-                    start {
-                      book
-                      chapter
-                      verse
+                  scriptureReferencesOverride {
+                    value {
+                      start {
+                        book
+                        chapter
+                        verse
+                      }
+                      end {
+                        book
+                        chapter
+                        verse
+                      }
                     }
-                    end {
-                      book
-                      chapter
-                      verse
-                    }
+                    canRead
+                    canEdit
                   }
-                  canRead
-                  canEdit
                 }
               }
             }
           }
-        }
-        ${fragments.product}
-      `,
+        `,
+        [fragments.product],
+      ),
       {
         input: {
           id: product.id,
@@ -445,8 +451,9 @@ describe('Product e2e', () => {
         },
       },
     );
+    const actual = result.updateDerivativeScriptureProduct.product;
+    if (actual.__typename !== 'DerivativeScriptureProduct') throw new Error();
 
-    const actual: AnyProduct = result.updateDerivativeScriptureProduct.product;
     expect(actual.produces).toBeDefined();
     expect(actual.produces?.value).toBeDefined();
     expect(actual.produces?.value?.id).toBe(film.id);
@@ -467,60 +474,62 @@ describe('Product e2e', () => {
     const override = ScriptureRange.randomList();
 
     const result = await app.graphql.query(
-      gql`
-        mutation updateDerivativeScriptureProduct(
-          $input: UpdateDerivativeScriptureProduct!
-        ) {
-          updateDerivativeScriptureProduct(input: $input) {
-            product {
-              ...product
-              ... on DerivativeScriptureProduct {
-                produces {
-                  value {
-                    id
-                    __typename
-                    scriptureReferences {
-                      value {
-                        start {
-                          book
-                          chapter
-                          verse
+      graphql(
+        `
+          mutation updateDerivativeScriptureProduct(
+            $input: UpdateDerivativeScriptureProduct!
+          ) {
+            updateDerivativeScriptureProduct(input: $input) {
+              product {
+                ...product
+                ... on DerivativeScriptureProduct {
+                  produces {
+                    value {
+                      id
+                      __typename
+                      scriptureReferences {
+                        value {
+                          start {
+                            book
+                            chapter
+                            verse
+                          }
+                          end {
+                            book
+                            chapter
+                            verse
+                          }
                         }
-                        end {
-                          book
-                          chapter
-                          verse
-                        }
+                        canRead
+                        canEdit
                       }
-                      canRead
-                      canEdit
                     }
+                    canRead
+                    canEdit
                   }
-                  canRead
-                  canEdit
-                }
-                scriptureReferencesOverride {
-                  value {
-                    start {
-                      book
-                      chapter
-                      verse
+                  scriptureReferencesOverride {
+                    value {
+                      start {
+                        book
+                        chapter
+                        verse
+                      }
+                      end {
+                        book
+                        chapter
+                        verse
+                      }
                     }
-                    end {
-                      book
-                      chapter
-                      verse
-                    }
+                    canRead
+                    canEdit
                   }
-                  canRead
-                  canEdit
                 }
               }
             }
           }
-        }
-        ${fragments.product}
-      `,
+        `,
+        [fragments.product],
+      ),
       {
         input: {
           id: product.id,
@@ -529,8 +538,8 @@ describe('Product e2e', () => {
       },
     );
 
-    const actual: DerivativeScriptureProduct =
-      result.updateDerivativeScriptureProduct.product;
+    const actual = result.updateDerivativeScriptureProduct.product;
+    if (actual.__typename !== 'DerivativeScriptureProduct') throw new Error();
 
     expect(actual.scriptureReferencesOverride?.value).toEqual(
       expect.arrayContaining(override),
@@ -551,60 +560,62 @@ describe('Product e2e', () => {
     });
 
     const result = await app.graphql.query(
-      gql`
-        mutation updateDerivativeScriptureProduct(
-          $input: UpdateDerivativeScriptureProduct!
-        ) {
-          updateDerivativeScriptureProduct(input: $input) {
-            product {
-              ...product
-              ... on DerivativeScriptureProduct {
-                produces {
-                  value {
-                    id
-                    __typename
-                    scriptureReferences {
-                      value {
-                        start {
-                          book
-                          chapter
-                          verse
+      graphql(
+        `
+          mutation updateDerivativeScriptureProduct(
+            $input: UpdateDerivativeScriptureProduct!
+          ) {
+            updateDerivativeScriptureProduct(input: $input) {
+              product {
+                ...product
+                ... on DerivativeScriptureProduct {
+                  produces {
+                    value {
+                      id
+                      __typename
+                      scriptureReferences {
+                        value {
+                          start {
+                            book
+                            chapter
+                            verse
+                          }
+                          end {
+                            book
+                            chapter
+                            verse
+                          }
                         }
-                        end {
-                          book
-                          chapter
-                          verse
-                        }
+                        canRead
+                        canEdit
                       }
-                      canRead
-                      canEdit
                     }
+                    canRead
+                    canEdit
                   }
-                  canRead
-                  canEdit
-                }
-                scriptureReferencesOverride {
-                  value {
-                    start {
-                      book
-                      chapter
-                      verse
+                  scriptureReferencesOverride {
+                    value {
+                      start {
+                        book
+                        chapter
+                        verse
+                      }
+                      end {
+                        book
+                        chapter
+                        verse
+                      }
                     }
-                    end {
-                      book
-                      chapter
-                      verse
-                    }
+                    canRead
+                    canEdit
                   }
-                  canRead
-                  canEdit
                 }
               }
             }
           }
-        }
-        ${fragments.product}
-      `,
+        `,
+        [fragments.product],
+      ),
       {
         input: {
           id: product.id,
@@ -613,8 +624,9 @@ describe('Product e2e', () => {
       },
     );
 
-    const actual: DerivativeScriptureProduct =
-      result.updateDerivativeScriptureProduct.product;
+    const actual = result.updateDerivativeScriptureProduct.product;
+    if (actual.__typename !== 'DerivativeScriptureProduct') throw new Error();
+
     expect(actual.scriptureReferencesOverride?.value).toBeNull();
     expect(actual.produces?.value?.scriptureReferences?.value).toEqual(
       actual.scriptureReferences.value,
@@ -627,30 +639,32 @@ describe('Product e2e', () => {
     });
     expect(product.id).toBeTruthy();
     const result = await app.graphql.mutate(
-      gql`
+      graphql(`
         mutation deleteProduct($id: ID!) {
           deleteProduct(id: $id) {
             __typename
           }
         }
-      `,
+      `),
       {
         id: product.id,
       },
     );
 
-    const actual: boolean | undefined = result.deleteProduct;
+    const actual = result.deleteProduct;
     expect(actual).toBeTruthy();
     await app.graphql
       .query(
-        gql`
-          query product($id: ID!) {
-            product(id: $id) {
-              ...product
+        graphql(
+          `
+            query product($id: ID!) {
+              product(id: $id) {
+                ...product
+              }
             }
-          }
-          ${fragments.product}
-        `,
+          `,
+          [fragments.product],
+        ),
         {
           id: product.id,
         },
@@ -670,7 +684,7 @@ describe('Product e2e', () => {
     );
 
     const { products } = await app.graphql.query(
-      gql`
+      graphql(`
         query products {
           products {
             items {
@@ -680,7 +694,7 @@ describe('Product e2e', () => {
             total
           }
         }
-      `,
+      `),
       {},
     );
 
@@ -700,7 +714,7 @@ describe('Product e2e', () => {
     );
 
     const { products } = await app.graphql.query(
-      gql`
+      graphql(`
         query products {
           products {
             items {
@@ -720,7 +734,7 @@ describe('Product e2e', () => {
             total
           }
         }
-      `,
+      `),
       {},
     );
 
@@ -741,7 +755,7 @@ describe('Product e2e', () => {
     );
 
     const { products } = await app.graphql.query(
-      gql`
+      graphql(`
         query products {
           products {
             items {
@@ -779,7 +793,7 @@ describe('Product e2e', () => {
             total
           }
         }
-      `,
+      `),
       {},
     );
 
@@ -798,9 +812,9 @@ describe('Product e2e', () => {
     );
 
     const { engagement: actual } = await app.graphql.query(
-      gql`
+      graphql(`
         query engagement($id: ID!) {
-          engagement(id: $id) {
+          engagement: languageEngagement(id: $id) {
             ... on LanguageEngagement {
               id
               products {
@@ -811,7 +825,7 @@ describe('Product e2e', () => {
             }
           }
         }
-      `,
+      `),
       {
         id: engagement.id,
       },

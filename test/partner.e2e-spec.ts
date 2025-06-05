@@ -1,5 +1,6 @@
 import { faker } from '@faker-js/faker';
 import { Role } from '~/common';
+import { graphql } from '~/graphql';
 import { PartnerType } from '../src/components/partner/dto';
 import { FinancialReportingType } from '../src/components/partnership/dto';
 import {
@@ -10,7 +11,6 @@ import {
   createTestApp,
   errors,
   fragments,
-  gql,
   registerUser,
   runAsAdmin,
   type TestApp,
@@ -50,16 +50,18 @@ describe('Partner e2e', () => {
     const address = faker.location.city();
 
     const result = await app.graphql.mutate(
-      gql`
-        mutation updatePartner($input: UpdatePartnerInput!) {
-          updatePartner(input: $input) {
-            partner {
-              ...partner
+      graphql(
+        `
+          mutation updatePartner($input: UpdatePartnerInput!) {
+            updatePartner(input: $input) {
+              partner {
+                ...partner
+              }
             }
           }
-        }
-        ${fragments.partner}
-      `,
+        `,
+        [fragments.partner],
+      ),
       {
         input: {
           partner: {
@@ -77,7 +79,7 @@ describe('Partner e2e', () => {
     );
     const updated = result.updatePartner.partner;
     expect(updated).toBeTruthy();
-    expect(updated.pointOfContact.value.id).toBe(person.id);
+    expect(updated.pointOfContact.value!.id).toBe(person.id);
     expect(updated.types.value).toEqual(expect.arrayContaining(types));
     expect(updated.financialReportingTypes.value).toEqual(
       financialReportingTypes,
@@ -96,13 +98,13 @@ describe('Partner e2e', () => {
 
     await runAsAdmin(app, async () => {
       await app.graphql.mutate(
-        gql`
+        graphql(`
           mutation deletePartner($id: ID!) {
             deletePartner(id: $id) {
               __typename
             }
           }
-        `,
+        `),
         {
           id: pt.id,
         },
@@ -116,18 +118,22 @@ describe('Partner e2e', () => {
     await createPartner(app, { organizationId: org1.id });
     await createPartner(app, { organizationId: org2.id });
     const numPartners = 2;
-    const { partners } = await app.graphql.query(gql`
-      query {
-        partners(input: { count: 25 }) {
-          items {
-            ...partner
+    const { partners } = await app.graphql.query(
+      graphql(
+        `
+          query {
+            partners(input: { count: 25 }) {
+              items {
+                ...partner
+              }
+              hasMore
+              total
+            }
           }
-          hasMore
-          total
-        }
-      }
-      ${fragments.partner}
-    `);
+        `,
+        [fragments.partner],
+      ),
+    );
 
     expect(partners.items.length).toBeGreaterThanOrEqual(numPartners);
   });

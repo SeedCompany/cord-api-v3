@@ -1,53 +1,35 @@
 import { CalendarDate, type ID, isValidId } from '~/common';
-import { PartnerType } from '../../src/components/partner/dto';
-import {
-  type CreatePartnership,
-  FinancialReportingType,
-  type Partnership,
-  PartnershipAgreementStatus,
-} from '../../src/components/partnership/dto';
+import { graphql, type InputOf } from '~/graphql';
 import { type TestApp } from './create-app';
 import { createPartner } from './create-partner';
 import { createProject } from './create-project';
-import { fragments } from './fragments';
-import { gql } from './gql-tag';
+import * as fragments from './fragments';
 
 export async function createPartnership(
   app: TestApp,
-  { changeset, ...input }: Partial<CreatePartnership> & { changeset?: ID } = {},
+  {
+    changeset,
+    ...input
+  }: Partial<InputOf<typeof CreatePartnershipDoc>> & { changeset?: ID } = {},
 ) {
-  const partnership: CreatePartnership = {
+  const partnership = {
     projectId: input.projectId || (await createProject(app)).id,
-    agreementStatus: PartnershipAgreementStatus.AwaitingSignature,
-    mouStatus: PartnershipAgreementStatus.AwaitingSignature,
-    types: [PartnerType.Managing],
-    financialReportingType: FinancialReportingType.Funded,
+    agreementStatus: 'AwaitingSignature',
+    mouStatus: 'AwaitingSignature',
+    types: ['Managing'],
+    financialReportingType: 'Funded',
     partnerId: input.partnerId || (await createPartner(app)).id,
-    mouStartOverride: CalendarDate.local(),
-    mouEndOverride: CalendarDate.local(),
+    mouStartOverride: CalendarDate.local().toISO(),
+    mouEndOverride: CalendarDate.local().toISO(),
     ...input,
-  };
+  } satisfies InputOf<typeof CreatePartnershipDoc>;
 
-  const result = await app.graphql.mutate(
-    gql`
-      mutation createPartnership($input: CreatePartnershipInput!) {
-        createPartnership(input: $input) {
-          partnership {
-            ...partnership
-          }
-        }
-      }
-      ${fragments.partnership}
-    `,
-    {
-      input: {
-        partnership,
-        changeset,
-      },
-    },
-  );
+  const result = await app.graphql.mutate(CreatePartnershipDoc, {
+    input: partnership,
+    changeset,
+  });
 
-  const actual: Partnership = result.createPartnership.partnership;
+  const actual = result.createPartnership.partnership;
   expect(actual).toBeTruthy();
 
   expect(isValidId(actual.id)).toBe(true);
@@ -59,3 +41,16 @@ export async function createPartnership(
 
   return actual;
 }
+
+const CreatePartnershipDoc = graphql(
+  `
+    mutation createPartnership($input: CreatePartnership!, $changeset: ID) {
+      createPartnership(input: { partnership: $input, changeset: $changeset }) {
+        partnership {
+          ...partnership
+        }
+      }
+    }
+  `,
+  [fragments.partnership],
+);

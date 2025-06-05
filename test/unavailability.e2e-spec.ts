@@ -1,21 +1,19 @@
 import { faker } from '@faker-js/faker';
 import { times } from 'lodash';
 import { isValidId, Role } from '~/common';
-import { type User } from '../src/components/user/dto';
-import { type Unavailability } from '../src/components/user/unavailability/dto';
+import { graphql } from '~/graphql';
 import {
   createSession,
   createTestApp,
   createUnavailability,
-  gql,
+  fragments,
   registerUser,
   type TestApp,
 } from './utility';
-import { fragments } from './utility/fragments';
 
 describe('Unavailability e2e', () => {
   let app: TestApp;
-  let user: User;
+  let user: fragments.user;
 
   beforeAll(async () => {
     app = await createTestApp();
@@ -36,14 +34,16 @@ describe('Unavailability e2e', () => {
     const unavailability = await createUnavailability(app, { userId: user.id });
 
     const { unavailability: actual } = await app.graphql.query(
-      gql`
-        query unavailability($id: ID!) {
-          unavailability(id: $id) {
-            ...unavailability
+      graphql(
+        `
+          query unavailability($id: ID!) {
+            unavailability(id: $id) {
+              ...unavailability
+            }
           }
-        }
-        ${fragments.unavailability}
-      `,
+        `,
+        [fragments.unavailability],
+      ),
       {
         id: unavailability.id,
       },
@@ -60,16 +60,18 @@ describe('Unavailability e2e', () => {
     const newDesc = faker.company.name();
 
     const result = await app.graphql.mutate(
-      gql`
-        mutation updateUnavailability($input: UpdateUnavailabilityInput!) {
-          updateUnavailability(input: $input) {
-            unavailability {
-              ...unavailability
+      graphql(
+        `
+          mutation updateUnavailability($input: UpdateUnavailabilityInput!) {
+            updateUnavailability(input: $input) {
+              unavailability {
+                ...unavailability
+              }
             }
           }
-        }
-        ${fragments.unavailability}
-      `,
+        `,
+        [fragments.unavailability],
+      ),
       {
         input: {
           unavailability: {
@@ -90,18 +92,18 @@ describe('Unavailability e2e', () => {
     const unavailability = await createUnavailability(app, { userId: user.id });
 
     const result = await app.graphql.mutate(
-      gql`
+      graphql(`
         mutation deleteUnavailability($id: ID!) {
           deleteUnavailability(id: $id) {
             __typename
           }
         }
-      `,
+      `),
       {
         id: unavailability.id,
       },
     );
-    const actual: Unavailability | undefined = result.deleteUnavailability;
+    const actual = result.deleteUnavailability;
     expect(actual).toBeTruthy();
   });
 
@@ -115,20 +117,22 @@ describe('Unavailability e2e', () => {
     );
 
     const result = await app.graphql.query(
-      gql`
-        query UsersUnavailabilities($id: ID!) {
-          user(id: $id) {
-            unavailabilities {
-              items {
-                ...unavailability
+      graphql(
+        `
+          query UsersUnavailabilities($id: ID!) {
+            user(id: $id) {
+              unavailabilities {
+                items {
+                  ...unavailability
+                }
+                hasMore
+                total
               }
-              hasMore
-              total
             }
           }
-        }
-        ${fragments.unavailability}
-      `,
+        `,
+        [fragments.unavailability],
+      ),
       {
         id: user.id,
       },

@@ -1,38 +1,36 @@
 import { faker } from '@faker-js/faker';
-import { type CreateFilm, type Film } from '../../src/components/film/dto';
+import { graphql, type InputOf } from '~/graphql';
 import { type TestApp } from './create-app';
-import { fragments } from './fragments';
-import { gql } from './gql-tag';
+import * as fragments from './fragments';
 
 export async function createFilm(
   app: TestApp,
-  input: Partial<CreateFilm> = {},
+  input: Partial<InputOf<typeof CreateFilmDoc>> = {},
 ) {
   const name = input.name || faker.hacker.noun() + faker.company.name();
 
-  const result = await app.graphql.mutate(
-    gql`
-      mutation createFilm($input: CreateFilmInput!) {
-        createFilm(input: $input) {
-          film {
-            ...film
-          }
-        }
-      }
-      ${fragments.film}
-    `,
-    {
-      input: {
-        film: {
-          ...input,
-          name,
-        },
-      },
+  const result = await app.graphql.mutate(CreateFilmDoc, {
+    input: {
+      ...input,
+      name,
     },
-  );
-  const fm: Film = result.createFilm.film;
+  });
+  const fm = result.createFilm.film;
 
   expect(fm).toBeTruthy();
 
   return fm;
 }
+
+const CreateFilmDoc = graphql(
+  `
+    mutation createFilm($input: CreateFilm!) {
+      createFilm(input: { film: $input }) {
+        film {
+          ...film
+        }
+      }
+    }
+  `,
+  [fragments.film],
+);

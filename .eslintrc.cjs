@@ -93,6 +93,16 @@ const restrictedImports = [
     kind: 'value',
     message: 'Be sure to specify the `type` modifier',
   },
+  {
+    importNames: ['ResultOf', 'VariablesOf'],
+    path: '@graphql-typed-document-node/core',
+    replacement: { path: '~/graphql' },
+  },
+  {
+    importNames: ['FragmentOf', 'ResultOf', 'VariablesOf'],
+    path: 'gql.tada',
+    replacement: { path: '~/graphql' },
+  },
 ];
 
 const namingConvention = [

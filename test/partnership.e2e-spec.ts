@@ -1,14 +1,12 @@
 import { sample, times } from 'lodash';
 import { v1 as uuid } from 'uuid';
-import { CalendarDate, type ID, Role } from '~/common';
+import { type ID, Role } from '~/common';
+import { graphql } from '~/graphql';
 import { PartnerType } from '../src/components/partner/dto';
 import {
   FinancialReportingType,
-  type Partnership,
   PartnershipAgreementStatus,
-  type UpdatePartnershipInput,
 } from '../src/components/partnership/dto';
-import { type Project } from '../src/components/project/dto';
 import {
   createPartner,
   createPartnership,
@@ -17,15 +15,13 @@ import {
   createTestApp,
   errors,
   fragments,
-  gql,
-  type Raw,
   registerUser,
   type TestApp,
 } from './utility';
 
 describe('Partnership e2e', () => {
   let app: TestApp;
-  let project: Raw<Project>;
+  let project: fragments.project;
 
   beforeAll(async () => {
     app = await createTestApp();
@@ -44,21 +40,22 @@ describe('Partnership e2e', () => {
     const partnership = await createPartnership(app, { projectId: project.id });
 
     const result = await app.graphql.query(
-      gql`
-        query partnership($id: ID!) {
-          partnership(id: $id) {
-            ...partnership
+      graphql(
+        `
+          query partnership($id: ID!) {
+            partnership(id: $id) {
+              ...partnership
+            }
           }
-        }
-        ${fragments.partnership}
-      `,
+        `,
+        [fragments.partnership],
+      ),
       {
         id: partnership.id,
-        projectId: project.id,
       },
     );
 
-    const actual: Partnership = result.partnership;
+    const actual = result.partnership;
 
     expect(actual.id).toBe(partnership.id);
     expect(actual.agreementStatus.value).toBe(
@@ -85,29 +82,29 @@ describe('Partnership e2e', () => {
     const newMouStatus = sample(Object.values(PartnershipAgreementStatus));
     const newTypes = [PartnerType.Managing];
 
-    const input: UpdatePartnershipInput = {
-      partnership: {
-        id: partnership.id,
-        agreementStatus: partnership.agreementStatus.canEdit
-          ? newAgreementStatus
-          : undefined,
-        mouStatus: partnership.mouStatus.canEdit ? newMouStatus : undefined,
-        types: partnership.types.canEdit ? newTypes : undefined,
-      },
-    };
-
     const result = await app.graphql.query(
-      gql`
-        mutation updatePartnership($input: UpdatePartnershipInput!) {
-          updatePartnership(input: $input) {
-            partnership {
-              ...partnership
+      graphql(
+        `
+          mutation updatePartnership($input: UpdatePartnership!) {
+            updatePartnership(input: { partnership: $input }) {
+              partnership {
+                ...partnership
+              }
             }
           }
-        }
-        ${fragments.partnership}
-      `,
-      { input },
+        `,
+        [fragments.partnership],
+      ),
+      {
+        input: {
+          id: partnership.id,
+          agreementStatus: partnership.agreementStatus.canEdit
+            ? newAgreementStatus
+            : undefined,
+          mouStatus: partnership.mouStatus.canEdit ? newMouStatus : undefined,
+          types: partnership.types.canEdit ? newTypes : undefined,
+        },
+      },
     );
     expect(result.updatePartnership.partnership.id).toBe(partnership.id);
     partnership.agreementStatus.canEdit &&
@@ -128,30 +125,32 @@ describe('Partnership e2e', () => {
     const partnership = await createPartnership(app, { projectId: project.id });
     expect(partnership.id).toBeTruthy();
     const result = await app.graphql.mutate(
-      gql`
+      graphql(`
         mutation deletePartnership($id: ID!) {
           deletePartnership(id: $id) {
             __typename
           }
         }
-      `,
+      `),
       {
         id: partnership.id,
       },
     );
 
-    const actual: boolean | undefined = result.deletePartnership;
+    const actual = result.deletePartnership;
     expect(actual).toBeTruthy();
     await app.graphql
       .query(
-        gql`
-          query partnership($id: ID!) {
-            partnership(id: $id) {
-              ...partnership
+        graphql(
+          `
+            query partnership($id: ID!) {
+              partnership(id: $id) {
+                ...partnership
+              }
             }
-          }
-          ${fragments.partnership}
-        `,
+          `,
+          [fragments.partnership],
+        ),
         {
           id: partnership.id,
         },
@@ -166,28 +165,30 @@ describe('Partnership e2e', () => {
     const mouEndOverride = '2020-01-01';
 
     const result = await app.graphql.query(
-      gql`
-        mutation updatePartnership(
-          $id: ID!
-          $startOverride: Date!
-          $endOverride: Date!
-        ) {
-          updatePartnership(
-            input: {
-              partnership: {
-                id: $id
-                mouStartOverride: $startOverride
-                mouEndOverride: $endOverride
+      graphql(
+        `
+          mutation updatePartnership(
+            $id: ID!
+            $startOverride: Date!
+            $endOverride: Date!
+          ) {
+            updatePartnership(
+              input: {
+                partnership: {
+                  id: $id
+                  mouStartOverride: $startOverride
+                  mouEndOverride: $endOverride
+                }
+              }
+            ) {
+              partnership {
+                ...partnership
               }
             }
-          ) {
-            partnership {
-              ...partnership
-            }
           }
-        }
-        ${fragments.partnership}
-      `,
+        `,
+        [fragments.partnership],
+      ),
       {
         id: partnership.id,
         startOverride: mouStartOverride,
@@ -214,7 +215,7 @@ describe('Partnership e2e', () => {
     );
 
     const { partnerships } = await app.graphql.query(
-      gql`
+      graphql(`
         query {
           partnerships {
             items {
@@ -227,7 +228,7 @@ describe('Partnership e2e', () => {
             total
           }
         }
-      `,
+      `),
     );
 
     expect(partnerships.items.length).toBeGreaterThanOrEqual(numPartnerships);
@@ -245,7 +246,7 @@ describe('Partnership e2e', () => {
     );
 
     const result = await app.graphql.query(
-      gql`
+      graphql(`
         query partnerships($projectId: ID!) {
           project(id: $projectId) {
             partnerships {
@@ -260,7 +261,7 @@ describe('Partnership e2e', () => {
             }
           }
         }
-      `,
+      `),
       {
         projectId: project.id,
       },
@@ -306,20 +307,22 @@ describe('Partnership e2e', () => {
     });
 
     const result = await app.graphql.query(
-      gql`
-        query partnership($id: ID!) {
-          partnership(id: $id) {
-            ...partnership
+      graphql(
+        `
+          query partnership($id: ID!) {
+            partnership(id: $id) {
+              ...partnership
+            }
           }
-        }
-        ${fragments.partnership}
-      `,
+        `,
+        [fragments.partnership],
+      ),
       {
         id: partnership.id,
       },
     );
 
-    const actual: Partnership = result.partnership;
+    const actual = result.partnership;
 
     expect(actual.id).toBe(partnership.id);
     expect(actual.agreementStatus.value).toBe(
@@ -338,29 +341,31 @@ describe('Partnership e2e', () => {
 
   it('should create budget records if types field contains Funding', async () => {
     await createPartnership(app, {
-      mouStartOverride: CalendarDate.fromISO('2020-08-01'),
-      mouEndOverride: CalendarDate.fromISO('2022-08-01'),
+      mouStartOverride: '2020-08-01',
+      mouEndOverride: '2022-08-01',
       types: [PartnerType.Funding, PartnerType.Managing],
       projectId: project.id,
     });
 
     const result = await app.graphql.query(
-      gql`
-        query project($id: ID!) {
-          project(id: $id) {
-            ...project
-            budget {
-              value {
-                id
-                records {
+      graphql(
+        `
+          query project($id: ID!) {
+            project(id: $id) {
+              ...project
+              budget {
+                value {
                   id
+                  records {
+                    id
+                  }
                 }
               }
             }
           }
-        }
-        ${fragments.project}
-      `,
+        `,
+        [fragments.project],
+      ),
       {
         id: project.id,
       },
@@ -368,7 +373,7 @@ describe('Partnership e2e', () => {
 
     const actual = result.project;
     expect(actual.id).toBe(project.id);
-    expect(actual.budget.value.records.length).toBe(3);
+    expect(actual.budget.value!.records.length).toBe(3);
   });
 
   it('should throw error if financialReportingType is not subset of its Partner financialReportingTypes on create', async () => {
@@ -404,16 +409,18 @@ describe('Partnership e2e', () => {
 
     await expect(
       app.graphql.mutate(
-        gql`
-          mutation updatePartnership($input: UpdatePartnershipInput!) {
-            updatePartnership(input: $input) {
-              partnership {
-                ...partnership
+        graphql(
+          `
+            mutation updatePartnership($input: UpdatePartnershipInput!) {
+              updatePartnership(input: $input) {
+                partnership {
+                  ...partnership
+                }
               }
             }
-          }
-          ${fragments.partnership}
-        `,
+          `,
+          [fragments.partnership],
+        ),
         {
           input: {
             partnership: {
@@ -469,21 +476,20 @@ describe('Partnership e2e', () => {
       primary: true,
     });
 
-    const getPartnershipById = async (
-      partnershipId: ID,
-    ): Promise<Partnership> => {
+    const getPartnershipById = async (partnershipId: ID) => {
       const result = await app.graphql.query(
-        gql`
-          query partnership($id: ID!) {
-            partnership(id: $id) {
-              ...partnership
+        graphql(
+          `
+            query partnership($id: ID!) {
+              partnership(id: $id) {
+                ...partnership
+              }
             }
-          }
-          ${fragments.partnership}
-        `,
+          `,
+          [fragments.partnership],
+        ),
         {
           id: partnershipId,
-          projectId: project.id,
         },
       );
       return result.partnership;
@@ -491,13 +497,13 @@ describe('Partnership e2e', () => {
 
     const deletePartnership = async (partnershipId: ID): Promise<void> => {
       await app.graphql.mutate(
-        gql`
+        graphql(`
           mutation deletePartnership($id: ID!) {
             deletePartnership(id: $id) {
               __typename
             }
           }
-        `,
+        `),
         {
           id: partnershipId,
         },
@@ -512,24 +518,25 @@ describe('Partnership e2e', () => {
     expect(partnership3.primary.value).toBe(true);
 
     // update partnership2 primary to true, check others' primary is false
-    const input: UpdatePartnershipInput = {
-      partnership: {
-        id: partnership2.id,
-        primary: true,
-      },
-    };
     await app.graphql.query(
-      gql`
-        mutation updatePartnership($input: UpdatePartnershipInput!) {
-          updatePartnership(input: $input) {
-            partnership {
-              ...partnership
+      graphql(
+        `
+          mutation updatePartnership($input: UpdatePartnership!) {
+            updatePartnership(input: { partnership: $input }) {
+              partnership {
+                ...partnership
+              }
             }
           }
-        }
-        ${fragments.partnership}
-      `,
-      { input },
+        `,
+        [fragments.partnership],
+      ),
+      {
+        input: {
+          id: partnership2.id,
+          primary: true,
+        },
+      },
     );
     partnership1 = await getPartnershipById(partnership1.id);
     partnership2 = await getPartnershipById(partnership2.id);

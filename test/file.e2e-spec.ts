@@ -9,39 +9,34 @@ import {
 } from 'luxon';
 import { type ID, Role } from '~/common';
 import { DatabaseService } from '~/core/database';
+import { graphql } from '~/graphql';
 import { FileBucket, type LocalBucket } from '../src/components/file/bucket';
 import {
   type Directory,
   FileNodeType,
   type RequestUploadOutput,
 } from '../src/components/file/dto';
-import { type User } from '../src/components/user/dto';
 import {
   createFileVersion,
   createSession,
   createTestApp,
   errors,
   type FakeFile,
+  type fragments,
   generateFakeFile,
   getFileNode,
   getFileNodeChildren,
-  gql,
   registerUser,
   requestFileUpload,
   runInIsolatedSession,
   type TestApp,
+  type TestUser,
   uploadFileContents,
 } from './utility';
 import {
   createDirectory,
   createRootDirectory,
 } from './utility/create-directory';
-import {
-  type RawDirectory,
-  type RawFile,
-  type RawFileNode,
-  type RawFileVersion,
-} from './utility/fragments';
 
 export async function uploadFile(
   app: TestApp,
@@ -64,13 +59,13 @@ export async function uploadFile(
 
 async function deleteNode(app: TestApp, id: ID) {
   await app.graphql.mutate(
-    gql`
+    graphql(`
       mutation deleteFileNode($id: ID!) {
         deleteFileNode(id: $id) {
           __typename
         }
       }
-    `,
+    `),
     {
       id,
     },
@@ -80,13 +75,13 @@ async function deleteNode(app: TestApp, id: ID) {
 async function expectNodeNotFound(app: TestApp, id: ID) {
   await app.graphql
     .query(
-      gql`
+      graphql(`
         query fileNode($id: ID!) {
           fileNode(id: $id) {
             id
           }
         }
-      `,
+      `),
       {
         id,
       },
@@ -122,7 +117,7 @@ describe('File e2e', () => {
   let app: TestApp;
   let bucket: LocalBucket;
   let root: Directory;
-  let me: User;
+  let me: TestUser;
 
   beforeAll(async () => {
     app = await createTestApp();
@@ -148,7 +143,8 @@ describe('File e2e', () => {
     const fakeFile = generateFakeFile();
 
     const created = await uploadFile(app, root.id, fakeFile);
-    const fetched = (await getFileNode(app, created.id)) as RawFile;
+    const fetched = await getFileNode(app, created.id);
+    if (fetched.__typename !== 'File') throw new Error();
     for (const file of [created, fetched]) {
       expect(file.id).toBeDefined();
       expect(file.name).toEqual(fakeFile.name);
@@ -172,7 +168,8 @@ describe('File e2e', () => {
     const file = await uploadFile(app, root.id, fakeFile, upload);
 
     // Maybe get version from file.children when implemented
-    const version = (await getFileNode(app, upload.id)) as RawFileVersion;
+    const version = await getFileNode(app, upload.id);
+    if (version.__typename !== 'FileVersion') throw new Error();
 
     expect(version.id).toBeDefined();
     expect(version.name).toEqual(fakeFile.name);
@@ -216,8 +213,8 @@ describe('File e2e', () => {
   });
 
   async function assertFileChanges(
-    updated: RawFile,
-    initial: RawFile,
+    updated: fragments.file,
+    initial: fragments.file,
     input: FakeFile,
   ) {
     expect(updated.id).toEqual(initial.id);
@@ -275,15 +272,15 @@ describe('File e2e', () => {
     const upload = await requestFileUpload(app);
     const file = await uploadFile(app, root.id, {}, upload);
     // Maybe get version from file.children when implemented
-    const version = (await getFileNode(app, upload.id)) as RawFileVersion;
+    const version = await getFileNode(app, upload.id);
     await deleteNode(app, version.id);
     await expectNodeNotFound(app, version.id);
     await expectNodeNotFound(app, file.id);
   });
 
   describe('directory children', () => {
-    let dir: RawDirectory;
-    let expectedChildren: RawFileNode[];
+    let dir: fragments.directory;
+    let expectedChildren: fragments.fileNode[];
     let expectedTotalChildren: number;
     let expectedTotalDirs: number;
     let expectedTotalFiles: number;
@@ -396,7 +393,7 @@ describe('File e2e', () => {
   });
 
   describe('file children', () => {
-    let file: RawFile;
+    let file: fragments.file;
     const expectedVersionIds: ID[] = [];
     let expectedTotalVersions: number;
 

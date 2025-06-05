@@ -1,76 +1,66 @@
 import { faker } from '@faker-js/faker';
+import { type SetOptional } from 'type-fest';
 import { type ID, isValidId } from '~/common';
-import {
-  type CreateProjectChangeRequest,
-  type ProjectChangeRequest,
-  ProjectChangeRequestType,
-} from '../../src/components/project-change-request/dto';
+import { graphql, type InputOf } from '~/graphql';
 import { type TestApp } from './create-app';
-import { fragments } from './fragments';
-import { gql } from './gql-tag';
+import * as fragments from './fragments';
 
 export async function createProjectChangeRequest(
   app: TestApp,
-  input: Partial<CreateProjectChangeRequest>,
+  input: SetOptional<
+    InputOf<typeof CreateChangeRequestDoc>,
+    'types' | 'summary'
+  >,
 ) {
-  const changeRequest: CreateProjectChangeRequest = {
-    projectId: input.projectId!, // Project status should be Active
-    types: [ProjectChangeRequestType.Other],
-    summary: faker.string.alpha(),
-    ...input,
-  };
-
-  const result = await app.graphql.mutate(
-    gql`
-      mutation CreateProjectChangeRequest(
-        $input: CreateProjectChangeRequestInput!
-      ) {
-        createProjectChangeRequest(input: $input) {
-          projectChangeRequest {
-            ...projectChangeRequest
-          }
-        }
-      }
-      ${fragments.projectChangeRequest}
-    `,
-    {
-      input: {
-        projectChangeRequest: changeRequest,
-      },
+  const result = await app.graphql.mutate(CreateChangeRequestDoc, {
+    input: {
+      types: ['Other'],
+      summary: faker.string.alpha(),
+      ...input,
     },
-  );
+  });
 
-  const actual: ProjectChangeRequest =
-    result.createProjectChangeRequest.projectChangeRequest;
+  const actual = result.createProjectChangeRequest.projectChangeRequest;
   expect(actual).toBeTruthy();
 
   expect(isValidId(actual.id)).toBe(true);
 
   return actual;
 }
-
-export async function approveProjectChangeRequest(app: TestApp, id: ID) {
-  const result = await app.graphql.mutate(
-    gql`
-      mutation ApproveProjectChangeRequest($id: ID!) {
-        updateProjectChangeRequest(
-          input: { projectChangeRequest: { id: $id, status: Approved } }
-        ) {
-          projectChangeRequest {
-            ...projectChangeRequest
-          }
+const CreateChangeRequestDoc = graphql(
+  `
+    mutation CreateProjectChangeRequest($input: CreateProjectChangeRequest!) {
+      createProjectChangeRequest(input: { projectChangeRequest: $input }) {
+        projectChangeRequest {
+          ...projectChangeRequest
         }
       }
-      ${fragments.projectChangeRequest}
-    `,
-    {
-      id,
-    },
-  );
+    }
+  `,
+  [fragments.projectChangeRequest],
+);
 
-  const actual: ProjectChangeRequest =
-    result.updateProjectChangeRequest.projectChangeRequest;
+export async function approveProjectChangeRequest(app: TestApp, id: ID) {
+  const result = await app.graphql.mutate(ApproveProjectChangeRequestDoc, {
+    id,
+  });
+
+  const actual = result.updateProjectChangeRequest.projectChangeRequest;
   expect(actual).toBeTruthy();
 
   return actual;
 }
+const ApproveProjectChangeRequestDoc = graphql(
+  `
+    mutation ApproveProjectChangeRequest($id: ID!) {
+      updateProjectChangeRequest(
+        input: { projectChangeRequest: { id: $id, status: Approved } }
+      ) {
+        projectChangeRequest {
+          ...projectChangeRequest
+        }
+      }
+    }
+  `,
+  [fragments.projectChangeRequest],
+);

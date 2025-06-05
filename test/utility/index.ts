@@ -1,4 +1,3 @@
-export * from './gql-tag';
 export * from './create-app';
 export * from './create-education';
 export * from './create-file';
@@ -18,7 +17,6 @@ export * from './login';
 export * from './logout';
 export * as errors from './error-shape-helpers';
 export * as fragments from './fragments';
-export * from './raw.type';
 export * from './create-region';
 export * from './create-location';
 export * from './create-engagement';

@@ -1,15 +1,14 @@
 import { faker } from '@faker-js/faker';
 import { sortBy } from '@seedcompany/common';
 import { times } from 'lodash';
-import { generateId, isValidId, Role } from '~/common';
-import { type Organization } from '../src/components/organization/dto';
+import { generateId, type ID, isValidId, Role } from '~/common';
+import { graphql } from '~/graphql';
 import {
   createOrganization,
   createSession,
   createTestApp,
   errors,
   fragments,
-  gql,
   registerUser,
   type TestApp,
 } from './utility';
@@ -40,14 +39,16 @@ describe('Organization e2e', () => {
     const org = await createOrganization(app);
 
     const { organization: actual } = await app.graphql.query(
-      gql`
-        query org($id: ID!) {
-          organization(id: $id) {
-            ...org
+      graphql(
+        `
+          query org($id: ID!) {
+            organization(id: $id) {
+              ...org
+            }
           }
-        }
-        ${fragments.org}
-      `,
+        `,
+        [fragments.org],
+      ),
       {
         id: org.id,
       },
@@ -61,14 +62,16 @@ describe('Organization e2e', () => {
   it('create & read organization', async () => {
     const org = await createOrganization(app);
     const { organization: actual } = await app.graphql.query(
-      gql`
-        query org($id: ID!) {
-          organization(id: $id) {
-            ...org
+      graphql(
+        `
+          query org($id: ID!) {
+            organization(id: $id) {
+              ...org
+            }
           }
-        }
-        ${fragments.org}
-      `,
+        `,
+        [fragments.org],
+      ),
       {
         id: org.id,
       },
@@ -94,16 +97,18 @@ describe('Organization e2e', () => {
     const newName = faker.company.name();
 
     const result = await app.graphql.mutate(
-      gql`
-        mutation updateOrganization($input: UpdateOrganizationInput!) {
-          updateOrganization(input: $input) {
-            organization {
-              ...org
+      graphql(
+        `
+          mutation updateOrganization($input: UpdateOrganizationInput!) {
+            updateOrganization(input: $input) {
+              organization {
+                ...org
+              }
             }
           }
-        }
-        ${fragments.org}
-      `,
+        `,
+        [fragments.org],
+      ),
       {
         input: {
           organization: {
@@ -125,20 +130,22 @@ describe('Organization e2e', () => {
 
     await app.graphql
       .mutate(
-        gql`
-          mutation updateOrganization($input: UpdateOrganizationInput!) {
-            updateOrganization(input: $input) {
-              organization {
-                ...org
+        graphql(
+          `
+            mutation updateOrganization($input: UpdateOrganizationInput!) {
+              updateOrganization(input: $input) {
+                organization {
+                  ...org
+                }
               }
             }
-          }
-          ${fragments.org}
-        `,
+          `,
+          [fragments.org],
+        ),
         {
           input: {
             organization: {
-              id: '',
+              id: '' as ID,
               name: newName,
             },
           },
@@ -148,19 +155,22 @@ describe('Organization e2e', () => {
 
     await app.graphql
       .mutate(
-        gql`
-          mutation updateOrganization($input: UpdateOrganizationInput!) {
-            updateOrganization(input: $input) {
-              organization {
-                ...org
+        graphql(
+          `
+            mutation updateOrganization($input: UpdateOrganizationInput!) {
+              updateOrganization(input: $input) {
+                organization {
+                  ...org
+                }
               }
             }
-          }
-          ${fragments.org}
-        `,
+          `,
+          [fragments.org],
+        ),
         {
           input: {
             organization: {
+              // @ts-expect-error confirming runtime error here
               id5: '',
               name: newName,
             },
@@ -171,20 +181,22 @@ describe('Organization e2e', () => {
 
     await app.graphql
       .mutate(
-        gql`
-          mutation updateOrganization($input: UpdateOrganizationInput!) {
-            updateOrganization(input: $input) {
-              organization {
-                ...org
+        graphql(
+          `
+            mutation updateOrganization($input: UpdateOrganizationInput!) {
+              updateOrganization(input: $input) {
+                organization {
+                  ...org
+                }
               }
             }
-          }
-          ${fragments.org}
-        `,
+          `,
+          [fragments.org],
+        ),
         {
           input: {
             organization: {
-              id: '!@#$%^',
+              id: '!@#$%^' as ID,
               name: newName,
             },
           },
@@ -200,20 +212,23 @@ describe('Organization e2e', () => {
 
     await app.graphql
       .mutate(
-        gql`
-          mutation updateOrganization($input: UpdateOrganizationInput!) {
-            updateOrganization(input: $input) {
-              organization {
-                ...org
+        graphql(
+          `
+            mutation updateOrganization($input: UpdateOrganizationInput!) {
+              updateOrganization(input: $input) {
+                organization {
+                  ...org
+                }
               }
             }
-          }
-          ${fragments.org}
-        `,
+          `,
+          [fragments.org],
+        ),
         {
           input: {
             organization: {
               id: org.id,
+              // @ts-expect-error confirming runtime error here
               name2: newName,
             },
           },
@@ -227,44 +242,45 @@ describe('Organization e2e', () => {
     const org = await createOrganization(app);
 
     const result = await app.graphql.mutate(
-      gql`
+      graphql(`
         mutation deleteOrganization($id: ID!) {
           deleteOrganization(id: $id) {
             __typename
           }
         }
-      `,
+      `),
       {
         id: org.id,
       },
     );
 
-    const actual: Organization | undefined = result.deleteOrganization;
+    const actual = result.deleteOrganization;
     expect(actual).toBeTruthy();
   });
 
   it('delete organization with blank, mismatch, invalid id', async () => {
     const org = await createOrganization(app);
 
-    const DeleteOrganization = gql`
+    const DeleteOrganization = graphql(`
       mutation deleteOrganization($id: ID!) {
         deleteOrganization(id: $id) {
           __typename
         }
       }
-    `;
+    `);
     await app.graphql
-      .mutate(DeleteOrganization, { id: '' })
+      .mutate(DeleteOrganization, { id: '' as ID })
       .expectError(errors.invalidId());
 
     await app.graphql.mutate(DeleteOrganization).expectError(errors.schema());
 
     await app.graphql
+      // @ts-expect-error confirming runtime error here
       .mutate(DeleteOrganization, { id5: org.id })
       .expectError(errors.schema());
 
     await app.graphql
-      .mutate(DeleteOrganization, { id: '!@#$%' })
+      .mutate(DeleteOrganization, { id: '!@#$%' as ID })
       .expectError(errors.invalidId());
   });
 
@@ -273,14 +289,16 @@ describe('Organization e2e', () => {
     const org = await createOrganization(app);
 
     const { organization: actual } = await app.graphql.query(
-      gql`
-        query org($id: ID!) {
-          organization(id: $id) {
-            ...org
+      graphql(
+        `
+          query org($id: ID!) {
+            organization(id: $id) {
+              ...org
+            }
           }
-        }
-        ${fragments.org}
-      `,
+        `,
+        [fragments.org],
+      ),
       {
         id: org.id,
       },
@@ -289,7 +307,7 @@ describe('Organization e2e', () => {
     expect(actual.name.canEdit).toBe(true);
   });
 
-  const Organizations = gql`
+  const Organizations = graphql(`
     query organizations($input: OrganizationListInput) {
       organizations(input: $input) {
         items {
@@ -302,7 +320,7 @@ describe('Organization e2e', () => {
         total
       }
     }
-  `;
+  `);
   it.skip('List of organizations sorted by name to be alphabetical, ignoring case sensitivity. Order: ASCENDING', async () => {
     await registerUser(app, {
       roles: [Role.FieldOperationsDirector],
@@ -378,31 +396,38 @@ describe('Organization e2e', () => {
 
     await app.graphql
       .query(Organizations, {
+        // @ts-expect-error confirming runtime error here
         input: { count1: 10 },
       })
       .expectError();
 
     await app.graphql
       .query(Organizations, {
+        // @ts-expect-error confirming runtime error here
         input: { page1: 1 },
       })
       .expectError();
 
     await app.graphql
       .query(Organizations, {
+        // @ts-expect-error confirming runtime error here
         input: { sort1: 'name' },
       })
       .expectError();
 
     await app.graphql
       .query(Organizations, {
-        input: { order1: 'ASC' },
+        input: {
+          // @ts-expect-error confirming runtime error here
+          order1: 'ASC',
+        },
       })
       .expectError();
 
     await app.graphql
       .query(Organizations, {
         input: {
+          // @ts-expect-error confirming runtime error here
           filter1: {
             name: '',
           },
@@ -443,13 +468,17 @@ describe('Organization e2e', () => {
 
     await app.graphql
       .query(Organizations, {
-        input: { order: 'ASCENDING' },
+        input: {
+          // @ts-expect-error confirming runtime error here
+          order: 'ASCENDING',
+        },
       })
       .expectError();
 
     await app.graphql
       .query(Organizations, {
         input: {
+          // @ts-expect-error confirming runtime error here
           filter1: {
             name: '',
           },
