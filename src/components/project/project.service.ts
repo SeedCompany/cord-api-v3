@@ -354,7 +354,10 @@ export class ProjectService {
         ...input,
         filter: {
           ...input.filter,
-          projectId: project.id,
+          project: {
+            id: project.id,
+            ...input.filter?.project,
+          },
         },
       },
       view,
@@ -379,7 +382,10 @@ export class ProjectService {
       ...input,
       filter: {
         ...input.filter,
-        projectId: project.id,
+        project: {
+          id: project.id,
+          ...input.filter?.project,
+        },
       },
     });
 

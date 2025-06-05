@@ -50,9 +50,13 @@ export const define =
   <T extends Record<string, any>>(
     filterClass: () => AbstractClass<T>,
     builders: Builders<T>,
-  ) =>
-  (filters: T | Nil) =>
+  ): FilterFn<T> =>
+  (filters) =>
     builder(filters ?? {}, builders);
+
+export type FilterFn<T extends Record<string, any>> = (
+  filters: T | Nil,
+) => (query: Query) => void;
 
 /**
  * A helper to split filters given and call their respective functions.
@@ -107,6 +111,10 @@ export const propVal =
     ]);
     return { [prop ?? key]: cond };
   };
+
+export const baseNodeProp =
+  <T>(prop?: string): Builder<T> =>
+  ({ key, value }) => ({ [`node.${prop ?? key}`]: value });
 
 export const propPartialVal =
   <T, K extends ConditionalKeys<Required<T>, string>>(

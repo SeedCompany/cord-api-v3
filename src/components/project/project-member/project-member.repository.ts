@@ -15,16 +15,21 @@ import {
   ACTIVE,
   createNode,
   createRelationships,
+  filter,
   matchPropsAndProjectSensAndScopedRoles,
   merge,
   oncePerProject,
   paginate,
   sorting,
 } from '~/core/database/query';
-import { UserRepository } from '../../user/user.repository';
+import { type FilterFn } from '~/core/database/query/filters';
+import { userFilters, UserRepository } from '../../user/user.repository';
+import { type ProjectFilters } from '../dto';
+import { projectFilters } from '../project-filters.query';
 import {
   type CreateProjectMember,
   ProjectMember,
+  ProjectMemberFilters,
   type ProjectMemberListInput,
   type UpdateProjectMember,
 } from './dto';
@@ -140,28 +145,11 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
     const result = await this.db
       .query()
       .match([
-        node(
-          'project',
-          'Project',
-          filter?.projectId ? { id: filter.projectId } : {},
-        ),
+        node('project', 'Project'),
         relation('out', '', 'member'),
         node('node', 'ProjectMember'),
       ])
-      .apply((q) =>
-        filter?.roles
-          ? q
-              .match([
-                node('node'),
-                relation('out', '', 'roles', ACTIVE),
-                node('role', 'Property'),
-              ])
-              .raw(
-                `WHERE size(apoc.coll.intersection(role.value, $filteredRoles)) > 0`,
-                { filteredRoles: filter.roles },
-              )
-          : q,
-      )
+      .apply(projectMemberFilters(filter))
       .with('*') // needed between where & where
       .apply(
         this.privileges.filterToReadable({
@@ -174,30 +162,15 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
     return result!; // result from paginate() will always have 1 row.
   }
 
-  async listAsNotifiers(projectId: ID, roles?: Role[]) {
+  async listAsNotifiers(project: ID<'Project'>, roles?: Role[]) {
     return await this.db
       .query()
       .match([
-        node('', 'Project', { id: projectId }),
-        relation('out', '', 'member', ACTIVE),
         node('node', 'ProjectMember'),
         relation('out', '', 'user', ACTIVE),
         node('user', 'User'),
       ])
-      .apply((q) =>
-        roles
-          ? q
-              .match([
-                node('node'),
-                relation('out', '', 'roles', ACTIVE),
-                node('role', 'Property'),
-              ])
-              .raw(
-                `WHERE size(apoc.coll.intersection(role.value, $filteredRoles)) > 0`,
-                { filteredRoles: roles },
-              )
-          : q,
-      )
+      .apply(projectMemberFilters({ project: { id: project }, roles }))
       .with('user')
       .optionalMatch([
         node('user'),
@@ -211,3 +184,22 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
       .run();
   }
 }
+
+export const projectMemberFilters = filter.define(() => ProjectMemberFilters, {
+  project: filter.sub((): FilterFn<ProjectFilters> => projectFilters)((sub) =>
+    sub.match([
+      node('node', 'Project'),
+      relation('out', '', 'member', ACTIVE),
+      node('outer'),
+    ]),
+  ),
+  user: filter.sub(() => userFilters)((sub) =>
+    sub.match([
+      node('outer'),
+      relation('out', '', 'user'),
+      node('node', 'User'),
+    ]),
+  ),
+  roles: filter.intersectsProp(),
+  active: filter.isPropNotNull('inactiveAt'),
+});
