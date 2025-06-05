@@ -18,6 +18,8 @@ export class PartnerGelRepository
       countries: true,
       languagesOfConsulting: true,
       departmentIdBlock: departmentIdBlock.hydrate,
+      strategicAlliances: true,
+      parent: true,
     }),
     omit: ['create', 'update'],
   })

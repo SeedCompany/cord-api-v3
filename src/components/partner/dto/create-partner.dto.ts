@@ -50,6 +50,14 @@ export abstract class CreatePartner {
   @IdField({ nullable: true })
   readonly languageOfWiderCommunicationId?: ID<'Language'> | null;
 
+  @IdField({ nullable: true })
+  readonly parentId?: ID<'Partner'> | null;
+
+  @Field(() => [IDType], { nullable: true })
+  @IsId({ each: true })
+  @Transform(({ value }) => uniq(value))
+  readonly strategicAlliances?: ReadonlyArray<ID<'Partner'>> = [];
+
   @Field(() => [IDType], { nullable: true })
   @IsId({ each: true })
   @Transform(({ value }) => uniq(value))
