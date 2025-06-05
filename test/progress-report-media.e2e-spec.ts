@@ -1,10 +1,8 @@
-import { type Merge } from 'type-fest';
-import { CalendarDate, type IdOf, isIdLike } from '~/common';
-import { graphql } from '~/graphql';
+import { CalendarDate, type ID, type IdOf, isIdLike } from '~/common';
+import { graphql, type InputOf } from '~/graphql';
 import { type CreateLanguageEngagement } from '../src/components/engagement/dto';
 import { type ProgressReport } from '../src/components/progress-report/dto';
 import {
-  type MediaVariant,
   type ProgressReportMedia,
   type UpdateProgressReportMedia,
   type UploadProgressReportMedia,
@@ -38,8 +36,8 @@ describe('ProgressReport Media e2e', () => {
     await registerUser(app, { roles: ['ProjectManager'] });
 
     project = await createProject(app, {
-      mouStart: CalendarDate.local(2023, 1, 1),
-      mouEnd: CalendarDate.local(2024, 1, 1),
+      mouStart: CalendarDate.local(2023, 1, 1).toISO(),
+      mouEnd: CalendarDate.local(2024, 1, 1).toISO(),
     });
 
     image = {
@@ -148,7 +146,7 @@ describe('ProgressReport Media e2e', () => {
     await uploadFileContents(app, url, image);
     const report = await uploadMedia(app, {
       reportId,
-      variant: 'draft',
+      variant: 'draft' as ID,
       category: 'CommunityEngagement',
       file: {
         uploadId,
@@ -191,7 +189,7 @@ describe('ProgressReport Media e2e', () => {
     await uploadFileContents(app, upload1.url, image);
     const report = await uploadMedia(app, {
       reportId,
-      variant: 'draft',
+      variant: 'draft' as ID,
       file: { uploadId: upload1.id, name: 'asdf' },
     });
     const media1 = report.media.items[0]!;
@@ -200,7 +198,7 @@ describe('ProgressReport Media e2e', () => {
     await uploadFileContents(app, upload2.url, image);
     const reportUpdated = await uploadMedia(app, {
       reportId,
-      variant: 'fpm',
+      variant: 'fpm' as ID,
       variantGroup: media1.variantGroup,
       file: { uploadId: upload2.id, name: 'asdf' },
     });
@@ -217,7 +215,7 @@ describe('ProgressReport Media e2e', () => {
     await uploadFileContents(app, upload1.url, image);
     const report = await uploadMedia(app, {
       reportId,
-      variant: 'draft',
+      variant: 'draft' as ID,
       file: { uploadId: upload1.id, name: 'asdf' },
     });
     const media1 = report.media.items[0]!;
@@ -227,7 +225,7 @@ describe('ProgressReport Media e2e', () => {
     await expect(
       uploadMedia(app, {
         reportId,
-        variant: 'draft',
+        variant: 'draft' as ID,
         variantGroup: media1.variantGroup,
         file: { uploadId: upload2.id, name: 'asdf' },
       }),
@@ -243,7 +241,7 @@ describe('ProgressReport Media e2e', () => {
 
     const report = await uploadMedia(app, {
       reportId,
-      variant: 'draft',
+      variant: 'draft' as ID,
       file: {
         uploadId,
         name: 'A picture',
@@ -366,28 +364,9 @@ describe('ProgressReport Media e2e', () => {
 
 async function uploadMedia(
   app: TestApp,
-  input: Merge<UploadProgressReportMedia, { variant: MediaVariant }>,
+  input: InputOf<typeof UploadMediaDoc>,
 ) {
-  const { upload } = await app.graphql.mutate(
-    graphql(
-      `
-        mutation Upload($input: UploadProgressReportMedia!) {
-          upload: uploadProgressReportMedia(input: $input) {
-            id
-            media {
-              items {
-                ...reportMedia
-              }
-              hasMore
-              total
-            }
-          }
-        }
-      `,
-      [reportMediaFrag],
-    ),
-    { input },
-  );
+  const { upload } = await app.graphql.mutate(UploadMediaDoc, { input });
   return upload;
 }
 
@@ -433,3 +412,20 @@ const reportMediaFrag = graphql(`
     canDelete
   }
 `);
+const UploadMediaDoc = graphql(
+  `
+    mutation Upload($input: UploadProgressReportMedia!) {
+      upload: uploadProgressReportMedia(input: $input) {
+        id
+        media {
+          items {
+            ...reportMedia
+          }
+          hasMore
+          total
+        }
+      }
+    }
+  `,
+  [reportMediaFrag],
+);

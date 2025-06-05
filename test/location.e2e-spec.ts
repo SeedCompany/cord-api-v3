@@ -167,7 +167,7 @@ describe('Location e2e', () => {
     );
     const updated = result.updateLocation.location;
     expect(updated).toBeTruthy();
-    expect(updated.defaultFieldRegion.value.id).toBe(newFieldRegion.id);
+    expect(updated.defaultFieldRegion.value!.id).toBe(newFieldRegion.id);
   });
 
   it('update location with defaultMarketingRegion', async () => {
@@ -201,7 +201,9 @@ describe('Location e2e', () => {
     );
     const updated = result.updateLocation.location;
     expect(updated).toBeTruthy();
-    expect(updated.defaultMarketingRegion.value.id).toBe(newMarketingRegion.id);
+    expect(updated.defaultMarketingRegion.value!.id).toBe(
+      newMarketingRegion.id,
+    );
   });
 
   it('update location with funding account', async () => {
@@ -235,6 +237,6 @@ describe('Location e2e', () => {
     );
     const updated = result.updateLocation.location;
     expect(updated).toBeTruthy();
-    expect(updated.fundingAccount.value.id).toBe(newFundingAccount.id);
+    expect(updated.fundingAccount.value!.id).toBe(newFundingAccount.id);
   });
 });

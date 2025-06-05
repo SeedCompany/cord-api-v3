@@ -1,25 +1,22 @@
 import { ConfigService } from '~/core';
-import { type LoginInput } from '~/core/authentication/dto';
-import { graphql } from '~/graphql';
+import { graphql, type InputOf } from '~/graphql';
 import { type TestApp } from './create-app';
 import { createSession } from './create-session';
 
-export async function login(app: TestApp, input: LoginInput) {
-  const res = await app.graphql.mutate(
-    graphql(`
-      mutation login($input: LoginInput!) {
-        login(input: $input) {
-          user {
-            id
-          }
-        }
-      }
-    `),
-    { input },
-  );
+export async function login(app: TestApp, input: InputOf<typeof LoginDoc>) {
+  const res = await app.graphql.mutate(LoginDoc, { input });
   app.graphql.email = input.email;
   return res;
 }
+const LoginDoc = graphql(`
+  mutation login($input: LoginInput!) {
+    login(input: $input) {
+      user {
+        id
+      }
+    }
+  }
+`);
 
 export const loginAsAdmin = async (app: TestApp) => {
   const { email, password } = app.get(ConfigService).rootUser;

@@ -147,7 +147,7 @@ describe('Field Zone e2e', () => {
     const updated = result.updateFieldZone.fieldZone;
     expect(updated).toBeTruthy();
     expect(updated.id).toBe(fieldZone.id);
-    expect(updated.director.value.id).toBe(newDirector.id);
+    expect(updated.director.value!.id).toBe(newDirector.id);
   });
 
   it('delete field zone', async () => {

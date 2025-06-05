@@ -1,44 +1,20 @@
 import { isValidId } from '~/common';
-import { graphql } from '~/graphql';
-import {
-  type CreateDirectScriptureProduct,
-  ProductMedium,
-  ProductMethodology,
-  ProductPurpose,
-} from '../../src/components/product/dto';
+import { graphql, type InputOf } from '~/graphql';
 import { type TestApp } from './create-app';
 import * as fragments from './fragments';
 
 export async function createDirectProduct(
   app: TestApp,
-  input: CreateDirectScriptureProduct,
+  input: InputOf<typeof CreateDirectScriptureProductDoc>,
 ) {
-  const product: CreateDirectScriptureProduct = {
-    mediums: [ProductMedium.Print],
-    purposes: [ProductPurpose.ChurchLife],
-    methodology: ProductMethodology.Paratext,
-    ...input,
-  };
-
-  const result = await app.graphql.mutate(
-    graphql(
-      `
-        mutation createDirectScriptureProduct(
-          $input: CreateDirectScriptureProduct!
-        ) {
-          createDirectScriptureProduct(input: $input) {
-            product {
-              ...product
-            }
-          }
-        }
-      `,
-      [fragments.product],
-    ),
-    {
-      input: product,
+  const result = await app.graphql.mutate(CreateDirectScriptureProductDoc, {
+    input: {
+      mediums: ['Print'],
+      purposes: ['ChurchLife'],
+      methodology: 'Paratext',
+      ...input,
     },
-  );
+  });
 
   const actual = result.createDirectScriptureProduct.product;
   expect(actual).toBeTruthy();
@@ -47,3 +23,18 @@ export async function createDirectProduct(
 
   return actual;
 }
+
+const CreateDirectScriptureProductDoc = graphql(
+  `
+    mutation createDirectScriptureProduct(
+      $input: CreateDirectScriptureProduct!
+    ) {
+      createDirectScriptureProduct(input: $input) {
+        product {
+          ...product
+        }
+      }
+    }
+  `,
+  [fragments.product],
+);

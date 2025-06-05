@@ -1,12 +1,11 @@
 import { sample, times } from 'lodash';
 import { v1 as uuid } from 'uuid';
-import { CalendarDate, type ID, Role } from '~/common';
+import { type ID, Role } from '~/common';
 import { graphql } from '~/graphql';
 import { PartnerType } from '../src/components/partner/dto';
 import {
   FinancialReportingType,
   PartnershipAgreementStatus,
-  type UpdatePartnershipInput,
 } from '../src/components/partnership/dto';
 import {
   createPartner,
@@ -53,7 +52,6 @@ describe('Partnership e2e', () => {
       ),
       {
         id: partnership.id,
-        projectId: project.id,
       },
     );
 
@@ -84,22 +82,11 @@ describe('Partnership e2e', () => {
     const newMouStatus = sample(Object.values(PartnershipAgreementStatus));
     const newTypes = [PartnerType.Managing];
 
-    const input: UpdatePartnershipInput = {
-      partnership: {
-        id: partnership.id,
-        agreementStatus: partnership.agreementStatus.canEdit
-          ? newAgreementStatus
-          : undefined,
-        mouStatus: partnership.mouStatus.canEdit ? newMouStatus : undefined,
-        types: partnership.types.canEdit ? newTypes : undefined,
-      },
-    };
-
     const result = await app.graphql.query(
       graphql(
         `
-          mutation updatePartnership($input: UpdatePartnershipInput!) {
-            updatePartnership(input: $input) {
+          mutation updatePartnership($input: UpdatePartnership!) {
+            updatePartnership(input: { partnership: $input }) {
               partnership {
                 ...partnership
               }
@@ -108,7 +95,16 @@ describe('Partnership e2e', () => {
         `,
         [fragments.partnership],
       ),
-      { input },
+      {
+        input: {
+          id: partnership.id,
+          agreementStatus: partnership.agreementStatus.canEdit
+            ? newAgreementStatus
+            : undefined,
+          mouStatus: partnership.mouStatus.canEdit ? newMouStatus : undefined,
+          types: partnership.types.canEdit ? newTypes : undefined,
+        },
+      },
     );
     expect(result.updatePartnership.partnership.id).toBe(partnership.id);
     partnership.agreementStatus.canEdit &&
@@ -345,8 +341,8 @@ describe('Partnership e2e', () => {
 
   it('should create budget records if types field contains Funding', async () => {
     await createPartnership(app, {
-      mouStartOverride: CalendarDate.fromISO('2020-08-01'),
-      mouEndOverride: CalendarDate.fromISO('2022-08-01'),
+      mouStartOverride: '2020-08-01',
+      mouEndOverride: '2022-08-01',
       types: [PartnerType.Funding, PartnerType.Managing],
       projectId: project.id,
     });
@@ -377,7 +373,7 @@ describe('Partnership e2e', () => {
 
     const actual = result.project;
     expect(actual.id).toBe(project.id);
-    expect(actual.budget.value.records.length).toBe(3);
+    expect(actual.budget.value!.records.length).toBe(3);
   });
 
   it('should throw error if financialReportingType is not subset of its Partner financialReportingTypes on create', async () => {
@@ -494,7 +490,6 @@ describe('Partnership e2e', () => {
         ),
         {
           id: partnershipId,
-          projectId: project.id,
         },
       );
       return result.partnership;
@@ -523,17 +518,11 @@ describe('Partnership e2e', () => {
     expect(partnership3.primary.value).toBe(true);
 
     // update partnership2 primary to true, check others' primary is false
-    const input: UpdatePartnershipInput = {
-      partnership: {
-        id: partnership2.id,
-        primary: true,
-      },
-    };
     await app.graphql.query(
       graphql(
         `
-          mutation updatePartnership($input: UpdatePartnershipInput!) {
-            updatePartnership(input: $input) {
+          mutation updatePartnership($input: UpdatePartnership!) {
+            updatePartnership(input: { partnership: $input }) {
               partnership {
                 ...partnership
               }
@@ -542,7 +531,12 @@ describe('Partnership e2e', () => {
         `,
         [fragments.partnership],
       ),
-      { input },
+      {
+        input: {
+          id: partnership2.id,
+          primary: true,
+        },
+      },
     );
     partnership1 = await getPartnershipById(partnership1.id);
     partnership2 = await getPartnershipById(partnership2.id);

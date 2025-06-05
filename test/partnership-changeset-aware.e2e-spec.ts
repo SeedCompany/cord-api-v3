@@ -1,4 +1,4 @@
-import { Role } from '~/common';
+import { type ID, Role } from '~/common';
 import { graphql } from '~/graphql';
 import { PartnershipAgreementStatus } from '../src/components/partnership/dto';
 import {
@@ -19,7 +19,7 @@ import {
 } from './utility';
 import { forceProjectTo } from './utility/transition-project';
 
-const readPartnerships = (app: TestApp, id: string, changeset?: string) =>
+const readPartnerships = (app: TestApp, id: ID, changeset?: ID) =>
   app.graphql.query(
     graphql(
       `
@@ -42,7 +42,7 @@ const readPartnerships = (app: TestApp, id: string, changeset?: string) =>
     },
   );
 
-const readPartnership = (app: TestApp, id: string, changeset?: string) =>
+const readPartnership = (app: TestApp, id: ID, changeset?: ID) =>
   app.graphql.query(
     graphql(
       `

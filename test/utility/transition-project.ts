@@ -1,40 +1,39 @@
 import { type ID } from '~/common';
-import { graphql } from '~/graphql';
-import { ProjectStep } from '../../src/components/project/dto';
-import { type ExecuteProjectTransitionInput } from '../../src/components/project/workflow/dto';
+import { graphql, type InputOf } from '~/graphql';
 import { type TestApp } from './create-app';
 import { runAsAdmin } from './login';
 
-export const stepsFromEarlyConversationToBeforeActive = [
-  ProjectStep.PendingConceptApproval,
-  ProjectStep.PrepForConsultantEndorsement,
-  ProjectStep.PendingConsultantEndorsement,
-  ProjectStep.PrepForFinancialEndorsement,
-  ProjectStep.PendingFinancialEndorsement,
-  ProjectStep.FinalizingProposal,
-  ProjectStep.PendingRegionalDirectorApproval,
-  ProjectStep.PendingZoneDirectorApproval,
-  ProjectStep.PendingFinanceConfirmation,
+export type ExecuteProjectTransitionInput = InputOf<
+  typeof TransitionProjectDoc
+>;
+type Step = ExecuteProjectTransitionInput['bypassTo'] & {};
+
+export const stepsFromEarlyConversationToBeforeActive: Step[] = [
+  'PendingConceptApproval',
+  'PrepForConsultantEndorsement',
+  'PendingConsultantEndorsement',
+  'PrepForFinancialEndorsement',
+  'PendingFinancialEndorsement',
+  'FinalizingProposal',
+  'PendingRegionalDirectorApproval',
+  'PendingZoneDirectorApproval',
+  'PendingFinanceConfirmation',
 ];
 
 export const stepsFromEarlyConversationToBeforeCompleted = [
   ...stepsFromEarlyConversationToBeforeActive,
-  ProjectStep.Active,
-  ProjectStep.FinalizingCompletion,
+  'Active',
+  'FinalizingCompletion',
 ];
 
 export const stepsFromEarlyConversationToBeforeTerminated = [
   ...stepsFromEarlyConversationToBeforeActive,
-  ProjectStep.Active,
-  ProjectStep.DiscussingTermination,
-  ProjectStep.PendingTerminationApproval,
+  'Active',
+  'DiscussingTermination',
+  'PendingTerminationApproval',
 ];
 
-export const changeProjectStep = async (
-  app: TestApp,
-  id: ID,
-  to: ProjectStep,
-) => {
+export const changeProjectStep = async (app: TestApp, id: ID, to: Step) => {
   const project = await transitionProject(app, { project: id, bypassTo: to });
   return project.step.transitions;
 };
@@ -42,7 +41,7 @@ export const changeProjectStep = async (
 export const forceProjectTo = async (
   app: TestApp,
   project: ID,
-  bypassTo: ProjectStep,
+  bypassTo: Step,
 ) =>
   await runAsAdmin(app, async () => {
     return await transitionProject(app, { project, bypassTo });
@@ -52,31 +51,29 @@ export const transitionProject = async (
   app: TestApp,
   input: ExecuteProjectTransitionInput,
 ) => {
-  const result = await app.graphql.mutate(
-    graphql(`
-      mutation TransitionProject($input: ExecuteProjectTransitionInput!) {
-        transitionProject(input: $input) {
-          step {
-            canRead
-            canEdit
-            value
-            transitions {
-              key
-              label
-              to
-              type
-              disabled
-              disabledReason
-            }
-          }
-          status
-        }
-      }
-    `),
-    { input },
-  );
+  const result = await app.graphql.mutate(TransitionProjectDoc, { input });
   return result.transitionProject;
 };
+const TransitionProjectDoc = graphql(`
+  mutation TransitionProject($input: ExecuteProjectTransitionInput!) {
+    transitionProject(input: $input) {
+      step {
+        canRead
+        canEdit
+        value
+        transitions {
+          key
+          label
+          to
+          type
+          disabled
+          disabledReason
+        }
+      }
+      status
+    }
+  }
+`);
 
 export const getProjectTransitions = async (app: TestApp, project: ID) => {
   const result = await app.graphql.mutate(

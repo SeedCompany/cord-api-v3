@@ -1,28 +1,14 @@
 import { faker } from '@faker-js/faker';
 import { CalendarDate, generateId, isValidId } from '~/common';
-import { graphql } from '~/graphql';
-import {
-  type CreateEthnologueLanguage,
-  type CreateLanguage,
-} from '../../src/components/language/dto';
+import { graphql, type InputOf } from '~/graphql';
 import { type TestApp } from './create-app';
 import * as fragments from './fragments';
 
 export async function createLanguage(
   app: TestApp,
-  input: Partial<CreateLanguage> = {},
+  input: Partial<InputOf<typeof CreateLanguageDoc>> = {},
 ) {
-  const ethnologueLanguage: CreateEthnologueLanguage = {
-    code: faker.helpers.replaceSymbols('???').toLowerCase(),
-    provisionalCode: faker.helpers.replaceSymbols('???').toLowerCase(),
-    name: faker.person.firstName(),
-    // this represents the largest number that is less than the 32-bit max for GraphQL
-    population: faker.number.int({ max: 2147483647 }),
-    ...input.ethnologue,
-  };
-  const language: CreateLanguage = {
-    name: faker.location.country() + '' + (await generateId()),
-    displayName: faker.company.name() + '' + (await generateId()),
+  return await createLanguageMinimal(app, {
     displayNamePronunciation: faker.lorem.word(),
     isDialect: faker.datatype.boolean(),
     // this represents the largest number that is less than the 32-bit max for GraphQL
@@ -32,78 +18,56 @@ export async function createLanguage(
       .toString(),
     leastOfThese: faker.datatype.boolean(),
     leastOfTheseReason: faker.lorem.sentence(),
-    ethnologue: ethnologueLanguage,
+    ethnologue: {
+      code: faker.helpers.replaceSymbols('???').toLowerCase(),
+      provisionalCode: faker.helpers.replaceSymbols('???').toLowerCase(),
+      name: faker.person.firstName(),
+      // this represents the largest number that is less than the 32-bit max for GraphQL
+      population: faker.number.int({ max: 2147483647 }),
+      ...input.ethnologue,
+    },
     signLanguageCode:
       faker.helpers.replaceSymbols('??').toUpperCase() +
       faker.number.int({ min: 10, max: 99 }).toString(),
-    sponsorEstimatedEndDate: CalendarDate.fromISO('1991-01-01'),
+    sponsorEstimatedEndDate: CalendarDate.fromISO('1991-01-01').toISO(),
     tags: ['tag1', 'tag2'],
     ...input,
-  };
+  });
+}
 
-  const result = await app.graphql.mutate(
-    graphql(
-      `
-        mutation createLanguage($input: CreateLanguageInput!) {
-          createLanguage(input: $input) {
-            language {
-              ...language
-            }
-          }
-        }
-      `,
-      [fragments.language],
-    ),
-    {
-      input: {
-        language: {
-          ...language,
-        },
-      },
+export async function createLanguageMinimal(
+  app: TestApp,
+  input: Partial<InputOf<typeof CreateLanguageDoc>> = {},
+) {
+  const name =
+    input.name ?? faker.location.country() + '' + (await generateId());
+  const result = await app.graphql.mutate(CreateLanguageDoc, {
+    input: {
+      displayName: faker.company.name() + '' + (await generateId()),
+      ...input,
+      name,
     },
-  );
+  });
 
   const actual = result.createLanguage.language;
 
   expect(actual).toBeTruthy();
 
   expect(isValidId(actual.id)).toBe(true);
-  expect(actual.name.value).toBe(language.name);
+  expect(actual.name.value).toBe(name);
 
   return actual;
 }
 
-export async function createLanguageMinimal(app: TestApp) {
-  const languageName = faker.location.country() + '' + (await generateId());
-  const result = await app.graphql.mutate(
-    graphql(
-      `
-        mutation createLanguage($input: CreateLanguageInput!) {
-          createLanguage(input: $input) {
-            language {
-              ...language
-            }
-          }
+const CreateLanguageDoc = graphql(
+  `
+    mutation createLanguage($input: CreateLanguage!) {
+      createLanguage(input: { language: $input }) {
+        language {
+          ...language
         }
-      `,
-      [fragments.language],
-    ),
-    {
-      input: {
-        language: {
-          name: languageName,
-          displayName: faker.company.name() + '' + (await generateId()),
-        },
-      },
-    },
-  );
-
-  const actual = result.createLanguage.language;
-
-  expect(actual).toBeTruthy();
-
-  expect(isValidId(actual.id)).toBe(true);
-  expect(actual.name.value).toBe(languageName);
-
-  return actual;
-}
+      }
+    }
+  `,
+  [fragments.language],
+);

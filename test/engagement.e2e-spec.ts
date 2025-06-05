@@ -1,10 +1,9 @@
 import { faker } from '@faker-js/faker';
 import { some } from 'lodash';
 import { DateTime, Interval } from 'luxon';
-import { generateId, Role } from '~/common';
+import { generateId, type ID, Role } from '~/common';
 import { graphql } from '~/graphql';
 import {
-  type CreateInternshipEngagement,
   EngagementStatus,
   InternshipPosition,
 } from '../src/components/engagement/dto';
@@ -51,8 +50,8 @@ describe('Engagement e2e', () => {
   let language: fragments.language;
   let location: fragments.location;
   let user: TestUser;
-  let intern: { id: string };
-  let mentor: { id: string };
+  let intern: { id: ID };
+  let mentor: { id: ID };
 
   beforeAll(async () => {
     app = await createTestApp();
@@ -169,18 +168,14 @@ describe('Engagement e2e', () => {
     internshipProject = await createProject(app, {
       type: ProjectType.Internship,
     });
-    const internshipEngagement: CreateInternshipEngagement = {
-      projectId: internshipProject.id,
-      internId: user.id,
-    };
 
     const result = await app.graphql.mutate(
       graphql(
         `
           mutation createInternshipEngagement(
-            $input: CreateInternshipEngagementInput!
+            $input: CreateInternshipEngagement!
           ) {
-            createInternshipEngagement(input: $input) {
+            createInternshipEngagement(input: { engagement: $input }) {
               engagement {
                 ...internshipEngagement
               }
@@ -191,7 +186,8 @@ describe('Engagement e2e', () => {
       ),
       {
         input: {
-          engagement: internshipEngagement,
+          projectId: internshipProject.id,
+          internId: user.id,
         },
       },
     );
@@ -417,8 +413,8 @@ describe('Engagement e2e', () => {
     const updated = result.updateInternshipEngagement.engagement;
     expect(updated).toBeTruthy();
     expect(updated.id).toBe(internshipEngagement.id);
-    expect(updated.mentor.value.id).toBe(mentor.id);
-    expect(updated.countryOfOrigin.value.id).toBe(location.id);
+    expect(updated.mentor.value!.id).toBe(mentor.id);
+    expect(updated.countryOfOrigin.value!.id).toBe(location.id);
     expect(updated.position.value).toBe(updatePosition);
     expect(updated.methodologies.value).toEqual(
       expect.arrayContaining(updateMethodologies),
@@ -573,7 +569,7 @@ describe('Engagement e2e', () => {
         id: languageEngagement.id,
       },
     );
-    const ceremony = languageEngagementRead.engagement.ceremony.value;
+    const ceremony = languageEngagementRead.engagement.ceremony.value!;
     expect(ceremony).toBeDefined();
 
     await registerUser(app, { roles: [Role.FieldOperationsDirector] });
@@ -638,7 +634,7 @@ describe('Engagement e2e', () => {
         id: ie.id,
       },
     );
-    const ceremony = internshipEngagementRead.engagement.ceremony.value;
+    const ceremony = internshipEngagementRead.engagement.ceremony.value!;
     expect(ceremony).toBeDefined();
 
     await registerUser(app, { roles: [Role.FieldOperationsDirector] });
@@ -733,7 +729,7 @@ describe('Engagement e2e', () => {
           [fragments.ceremony],
         ),
         {
-          id: ceremonyId,
+          id: ceremonyId!,
         },
       )
       .expectError(errors.notFound());
@@ -1134,7 +1130,6 @@ describe('Engagement e2e', () => {
         `),
         {
           id: project.id,
-          step: expectedNewStatus,
         },
       );
       const actual = engagements.items.find((e) => e.id === engagement.id);
@@ -1169,7 +1164,7 @@ describe('Engagement e2e', () => {
 
       const modAtMillis = DateTime.fromISO(actual.modifiedAt).toMillis();
       const statusModMillis = DateTime.fromISO(
-        actual.statusModifiedAt.value,
+        actual.statusModifiedAt.value!,
       ).toMillis();
       expect(modAtMillis).toBe(statusModMillis);
     });

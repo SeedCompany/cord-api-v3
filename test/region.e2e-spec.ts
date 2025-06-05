@@ -183,7 +183,7 @@ describe('Region e2e', () => {
         input: {
           fieldRegion: {
             id: fieldRegion.id,
-            zoneId: newZone.id,
+            fieldZoneId: newZone.id,
           },
         },
       },
@@ -192,7 +192,7 @@ describe('Region e2e', () => {
 
     expect(updated).toBeTruthy();
     expect(updated.id).toBe(fieldRegion.id);
-    expect(updated.fieldZone.value.id).toBe(newZone.id);
+    expect(updated.fieldZone.value!.id).toBe(newZone.id);
   });
 
   // This test should be updated with refactoring of location service for zone
@@ -234,7 +234,7 @@ describe('Region e2e', () => {
 
     expect(updated).toBeTruthy();
     expect(updated.id).toBe(fieldRegion.id);
-    expect(updated.director.value.id).toBe(newDirector.id);
+    expect(updated.director.value!.id).toBe(newDirector.id);
   });
 
   it.skip('delete region', async () => {
@@ -274,7 +274,7 @@ describe('Region e2e', () => {
     const { fieldRegions } = await app.graphql.query(
       graphql(
         `
-          query {
+          query FieldRegions {
             fieldRegions(input: { page: 1, count: 25 }) {
               items {
                 ...fieldRegion

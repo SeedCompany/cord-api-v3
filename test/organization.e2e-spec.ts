@@ -1,7 +1,7 @@
 import { faker } from '@faker-js/faker';
 import { sortBy } from '@seedcompany/common';
 import { times } from 'lodash';
-import { generateId, isValidId, Role } from '~/common';
+import { generateId, type ID, isValidId, Role } from '~/common';
 import { graphql } from '~/graphql';
 import {
   createOrganization,
@@ -145,7 +145,7 @@ describe('Organization e2e', () => {
         {
           input: {
             organization: {
-              id: '',
+              id: '' as ID,
               name: newName,
             },
           },
@@ -170,6 +170,7 @@ describe('Organization e2e', () => {
         {
           input: {
             organization: {
+              // @ts-expect-error confirming runtime error here
               id5: '',
               name: newName,
             },
@@ -195,7 +196,7 @@ describe('Organization e2e', () => {
         {
           input: {
             organization: {
-              id: '!@#$%^',
+              id: '!@#$%^' as ID,
               name: newName,
             },
           },
@@ -227,6 +228,7 @@ describe('Organization e2e', () => {
           input: {
             organization: {
               id: org.id,
+              // @ts-expect-error confirming runtime error here
               name2: newName,
             },
           },
@@ -267,17 +269,18 @@ describe('Organization e2e', () => {
       }
     `);
     await app.graphql
-      .mutate(DeleteOrganization, { id: '' })
+      .mutate(DeleteOrganization, { id: '' as ID })
       .expectError(errors.invalidId());
 
     await app.graphql.mutate(DeleteOrganization).expectError(errors.schema());
 
     await app.graphql
+      // @ts-expect-error confirming runtime error here
       .mutate(DeleteOrganization, { id5: org.id })
       .expectError(errors.schema());
 
     await app.graphql
-      .mutate(DeleteOrganization, { id: '!@#$%' })
+      .mutate(DeleteOrganization, { id: '!@#$%' as ID })
       .expectError(errors.invalidId());
   });
 
@@ -393,31 +396,38 @@ describe('Organization e2e', () => {
 
     await app.graphql
       .query(Organizations, {
+        // @ts-expect-error confirming runtime error here
         input: { count1: 10 },
       })
       .expectError();
 
     await app.graphql
       .query(Organizations, {
+        // @ts-expect-error confirming runtime error here
         input: { page1: 1 },
       })
       .expectError();
 
     await app.graphql
       .query(Organizations, {
+        // @ts-expect-error confirming runtime error here
         input: { sort1: 'name' },
       })
       .expectError();
 
     await app.graphql
       .query(Organizations, {
-        input: { order1: 'ASC' },
+        input: {
+          // @ts-expect-error confirming runtime error here
+          order1: 'ASC',
+        },
       })
       .expectError();
 
     await app.graphql
       .query(Organizations, {
         input: {
+          // @ts-expect-error confirming runtime error here
           filter1: {
             name: '',
           },
@@ -458,13 +468,17 @@ describe('Organization e2e', () => {
 
     await app.graphql
       .query(Organizations, {
-        input: { order: 'ASCENDING' },
+        input: {
+          // @ts-expect-error confirming runtime error here
+          order: 'ASCENDING',
+        },
       })
       .expectError();
 
     await app.graphql
       .query(Organizations, {
         input: {
+          // @ts-expect-error confirming runtime error here
           filter1: {
             name: '',
           },

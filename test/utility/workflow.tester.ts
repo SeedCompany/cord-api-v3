@@ -112,7 +112,10 @@ export class ProjectWorkflowTester extends WorkflowTester<
 
   protected async fetchTransitions() {
     const res = await getProjectTransitions(this.app, this.id);
-    return res.step.transitions;
+    return res.step.transitions.map((t) => ({
+      ...t,
+      disabledReason: t.disabledReason ?? undefined,
+    }));
   }
 
   protected async doExecute(input: ExecuteProjectTransitionInput) {
@@ -122,7 +125,10 @@ export class ProjectWorkflowTester extends WorkflowTester<
     });
     return {
       state: res.step.value!,
-      transitions: res.step.transitions,
+      transitions: res.step.transitions.map((t) => ({
+        ...t,
+        disabledReason: t.disabledReason ?? undefined,
+      })),
     };
   }
 }

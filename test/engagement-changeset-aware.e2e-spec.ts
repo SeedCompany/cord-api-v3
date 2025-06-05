@@ -1,4 +1,4 @@
-import { CalendarDate, type ID, Role } from '~/common';
+import { type ID, Role } from '~/common';
 import { graphql } from '~/graphql';
 import { EngagementStatus } from '../src/components/engagement/dto';
 import { ProjectChangeRequestType } from '../src/components/project-change-request/dto';
@@ -22,7 +22,7 @@ import {
 } from './utility';
 import { forceProjectTo } from './utility/transition-project';
 
-const readEngagements = (app: TestApp, id: string, changeset?: string) =>
+const readEngagements = (app: TestApp, id: ID, changeset?: ID) =>
   app.graphql.query(
     graphql(
       `
@@ -48,7 +48,7 @@ const readEngagements = (app: TestApp, id: string, changeset?: string) =>
     },
   );
 
-const readLanguageEngagement = (app: TestApp, id: string, changeset?: string) =>
+const readLanguageEngagement = (app: TestApp, id: ID, changeset?: ID) =>
   app.graphql.query(
     graphql(
       `
@@ -85,7 +85,7 @@ const readLanguageEngagement = (app: TestApp, id: string, changeset?: string) =>
     },
   );
 
-const readProjectChangeset = (app: TestApp, id: string, changeset?: string) =>
+const readProjectChangeset = (app: TestApp, id: ID, changeset?: ID) =>
   app.graphql.query(
     graphql(`
       query project($id: ID!, $changeset: ID) {
@@ -240,7 +240,7 @@ describe('Engagement Changeset Aware e2e', () => {
         input: {
           engagement: {
             id: languageEngagement.id,
-            completeDate: CalendarDate.fromISO('2100-08-22'),
+            completeDate: '2100-08-22',
           },
           changeset: changeset.id,
         },
@@ -290,7 +290,7 @@ describe('Engagement Changeset Aware e2e', () => {
           engagement: {
             languageId: language.id,
             projectId: project.id,
-            completeDate: CalendarDate.fromISO('2021-09-22'),
+            completeDate: '2021-09-22',
           },
           changeset: changeset.id,
         },
@@ -322,7 +322,7 @@ describe('Engagement Changeset Aware e2e', () => {
         input: {
           engagement: {
             id: engagementId,
-            completeDate: CalendarDate.fromISO('2100-08-22'),
+            completeDate: '2100-08-22',
           },
           changeset: changeset.id,
         },
@@ -368,7 +368,7 @@ describe('Engagement Changeset Aware e2e', () => {
           engagement: {
             languageId: language.id,
             projectId: project.id,
-            completeDate: CalendarDate.fromISO('2021-09-22'),
+            completeDate: '2021-09-22',
           },
           changeset: changeset.id,
         },
@@ -405,7 +405,7 @@ describe('Engagement Changeset Aware e2e', () => {
       project.id,
       changeset.id,
     );
-    expect(projectChangeset.project.changeset.difference.removed[0].id).toBe(
+    expect(projectChangeset.project.changeset!.difference.removed[0].id).toBe(
       le.createLanguageEngagement.engagement.id,
     );
   });

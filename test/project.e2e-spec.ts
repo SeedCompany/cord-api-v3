@@ -10,15 +10,10 @@ import {
   Role,
   Sensitivity,
 } from '~/common';
-import { graphql } from '~/graphql';
+import { graphql, type InputOf } from '~/graphql';
 import { BudgetStatus } from '../src/components/budget/dto';
 import { PartnerType } from '../src/components/partner/dto';
-import { type CreatePartnership } from '../src/components/partnership/dto';
-import {
-  type CreateProject,
-  type ProjectListInput,
-  ProjectType,
-} from '../src/components/project/dto';
+import { ProjectType } from '../src/components/project/dto';
 import {
   createFundingAccount,
   createInternshipEngagement,
@@ -55,33 +50,31 @@ const deleteProject =
         }
       `),
       {
-        id: isIdLike(id) || typeof id === 'string' ? id : id.id,
+        id: isIdLike(id) || typeof id === 'string' ? (id as ID) : (id.id as ID),
       },
     );
 
 const listProjects = async (
   app: TestApp,
-  input?: Partial<ProjectListInput>,
+  input?: InputOf<typeof ProjectListDoc>,
 ) => {
-  const { projects } = await app.graphql.query(
-    graphql(
-      `
-        query ProjectList($input: ProjectListInput) {
-          projects(input: $input) {
-            items {
-              ...project
-            }
-            hasMore
-            total
-          }
-        }
-      `,
-      [fragments.project],
-    ),
-    { input },
-  );
+  const { projects } = await app.graphql.query(ProjectListDoc, { input });
   return projects;
 };
+const ProjectListDoc = graphql(
+  `
+    query ProjectList($input: ProjectListInput) {
+      projects(input: $input) {
+        items {
+          ...project
+        }
+        hasMore
+        total
+      }
+    }
+  `,
+  [fragments.project],
+);
 
 describe('Project e2e', () => {
   let app: TestApp;
@@ -185,7 +178,7 @@ describe('Project e2e', () => {
     expect(actual.partnerships.canCreate).toBe(true);
     expect(actual.team.canRead).toBe(true);
     expect(actual.team.canCreate).toBe(true);
-    expect(actual.rootDirectory.value.children.items).toEqual([
+    expect(actual.rootDirectory.value!.children.items).toEqual([
       { name: 'Approval Documents' },
       { name: 'Consultant Reports' },
       { name: 'Field Correspondence' },
@@ -209,12 +202,6 @@ describe('Project e2e', () => {
   });
 
   it('create & read project with budget and field region by id', async () => {
-    const proj: CreateProject = {
-      name: faker.string.uuid(),
-      type: ProjectType.MomentumTranslation,
-      fieldRegionId: fieldRegion.id,
-    };
-
     const res = await app.graphql.mutate(
       graphql(
         `
@@ -243,7 +230,11 @@ describe('Project e2e', () => {
       ),
       {
         input: {
-          project: proj,
+          project: {
+            name: faker.string.uuid(),
+            type: ProjectType.MomentumTranslation,
+            fieldRegionId: fieldRegion.id,
+          },
         },
       },
     );
@@ -281,9 +272,9 @@ describe('Project e2e', () => {
     const actual = result.project;
     expect(actual.id).toBe(project.id);
     expect(actual.type).toBe(project.type);
-    expect(actual.budget.value.id).toBe(project.budget.value.id);
-    expect(actual.fieldRegion.value.name.value).toBe(
-      project.fieldRegion.value.name.value,
+    expect(actual.budget.value!.id).toBe(project.budget.value!.id);
+    expect(actual.fieldRegion.value!.name.value).toBe(
+      project.fieldRegion.value!.name.value,
     );
   });
 
@@ -423,7 +414,7 @@ describe('Project e2e', () => {
         [fragments.project],
       ),
       {
-        type,
+        type: [type],
       },
     );
     expect(projects.items.length).toBeGreaterThanOrEqual(numProjects);
@@ -880,7 +871,7 @@ describe('Project e2e', () => {
         },
       );
 
-      expect(updatedProject.budget.value.status).toBe(BudgetStatus.Current);
+      expect(updatedProject.budget.value!.status).toBe(BudgetStatus.Current);
       // TODO move this assertion
       expect(updatedProject.departmentId.value).toContain(
         fundingAccount.accountNumber.value?.toString(),
@@ -892,12 +883,6 @@ describe('Project e2e', () => {
 
   // #727 create without mouStart, mouEnd, estimatedSubmission
   it('can create without mouStart, mouEnd and estimatedSubmission', async () => {
-    const project: CreateProject = {
-      name: faker.string.uuid(),
-      type: ProjectType.MomentumTranslation,
-      fieldRegionId: fieldRegion.id,
-    };
-
     const { createProject } = await app.graphql.mutate(
       graphql(
         `
@@ -913,7 +898,11 @@ describe('Project e2e', () => {
       ),
       {
         input: {
-          project,
+          project: {
+            name: faker.string.uuid(),
+            type: ProjectType.MomentumTranslation,
+            fieldRegionId: fieldRegion.id,
+          },
         },
       },
     );
@@ -921,14 +910,6 @@ describe('Project e2e', () => {
   });
 
   it('can create without mouStart, if mouEnd is defined', async () => {
-    const project: CreateProject = {
-      name: faker.string.uuid(),
-      type: ProjectType.MomentumTranslation,
-      mouEnd: CalendarDate.fromISO('1992-11-01'),
-      estimatedSubmission: CalendarDate.fromISO('1993-11-01'),
-      fieldRegionId: fieldRegion.id,
-    };
-
     const { createProject } = await app.graphql.mutate(
       graphql(
         `
@@ -944,7 +925,13 @@ describe('Project e2e', () => {
       ),
       {
         input: {
-          project,
+          project: {
+            name: faker.string.uuid(),
+            type: 'MomentumTranslation',
+            mouEnd: '1992-11-01',
+            estimatedSubmission: '1993-11-01',
+            fieldRegionId: fieldRegion.id,
+          },
         },
       },
     );
@@ -965,12 +952,6 @@ describe('Project e2e', () => {
       fieldRegionId: fieldRegion.id,
     });
 
-    const partnership: CreatePartnership = {
-      projectId: proj.id,
-      partnerId: (await createPartner(app, { organizationId: org.id })).id,
-      types: [PartnerType.Funding],
-    };
-
     // Create Partnership with Funding type
     await app.graphql.mutate(
       graphql(
@@ -987,7 +968,13 @@ describe('Project e2e', () => {
       ),
       {
         input: {
-          partnership,
+          partnership: {
+            projectId: proj.id,
+            partnerId: (
+              await createPartner(app, { organizationId: org.id })
+            ).id,
+            types: ['Funding'],
+          },
         },
       },
     );
@@ -1020,14 +1007,14 @@ describe('Project e2e', () => {
       ),
       {
         id: proj.id,
-        mouStart: CalendarDate.fromISO('2020-08-23'),
-        mouEnd: CalendarDate.fromISO('2021-08-22'),
+        mouStart: CalendarDate.fromISO('2020-08-23').toISO(),
+        mouEnd: CalendarDate.fromISO('2021-08-22').toISO(),
       },
     );
 
     const actual = result.updateProject.project;
     expect(actual.id).toBe(proj.id);
-    expect(actual.budget.value.records.length).toBe(2);
+    expect(actual.budget.value!.records.length).toBe(2);
   });
 
   /**
@@ -1039,12 +1026,6 @@ describe('Project e2e', () => {
       name: faker.string.uuid() + ' project',
       fieldRegionId: fieldRegion.id,
     });
-    const partnership: CreatePartnership = {
-      projectId: project.id,
-      partnerId: (await createPartner(app, { organizationId: org.id })).id,
-      types: [PartnerType.Funding],
-    };
-
     await app.graphql.mutate(
       graphql(
         `
@@ -1060,7 +1041,13 @@ describe('Project e2e', () => {
       ),
       {
         input: {
-          partnership,
+          partnership: {
+            projectId: project.id,
+            partnerId: (
+              await createPartner(app, { organizationId: org.id })
+            ).id,
+            types: [PartnerType.Funding],
+          },
         },
       },
     );
@@ -1091,7 +1078,8 @@ describe('Project e2e', () => {
       },
     );
     const firstBudgetRecordOrganizationId =
-      projectQueryResult.project.budget.value.records[0].organization.value.id;
+      projectQueryResult.project.budget.value!.records[0]!.organization.value!
+        .id;
     expect(firstBudgetRecordOrganizationId).toBe(org.id);
   });
 

@@ -34,21 +34,9 @@ export async function createDirectory(
     name: name ?? startCase(faker.lorem.words()),
   };
 
-  const result = await app.graphql.mutate(
-    graphql(
-      `
-        mutation createDirectory($input: CreateDirectoryInput!) {
-          createDirectory(input: $input) {
-            ...fileNode
-          }
-        }
-      `,
-      [fileNode],
-    ),
-    {
-      input,
-    },
-  );
+  const result = await app.graphql.mutate(CreateDirectoryDoc, {
+    input,
+  });
 
   const actual = result.createDirectory;
   expect(actual).toBeTruthy();
@@ -56,3 +44,14 @@ export async function createDirectory(
 
   return actual;
 }
+
+const CreateDirectoryDoc = graphql(
+  `
+    mutation createDirectory($input: CreateDirectoryInput!) {
+      createDirectory(input: $input) {
+        ...fileNode
+      }
+    }
+  `,
+  [fileNode],
+);

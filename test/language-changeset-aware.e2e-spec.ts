@@ -1,4 +1,5 @@
 import { faker } from '@faker-js/faker';
+import { type ID } from '~/common';
 import { graphql } from '~/graphql';
 import {
   approveProjectChangeRequest,
@@ -17,7 +18,7 @@ import {
 } from './utility';
 import { forceProjectTo } from './utility/transition-project';
 
-const readLanguage = (app: TestApp, id: string, changeset?: string) =>
+const readLanguage = (app: TestApp, id: ID, changeset?: ID) =>
   app.graphql.query(
     graphql(
       `

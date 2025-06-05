@@ -1,8 +1,7 @@
 import { faker } from '@faker-js/faker';
 import { times } from 'lodash';
 import { isValidId } from '~/common';
-import { graphql } from '~/graphql';
-import { type UpdateLanguage } from '../src/components/language/dto';
+import { graphql, type InputOf } from '~/graphql';
 import {
   createLanguage,
   createLanguageEngagement,
@@ -388,27 +387,24 @@ describe('Language e2e', () => {
   });
 });
 
-async function updateLanguage(app: TestApp, update: Partial<UpdateLanguage>) {
-  const result = await app.graphql.mutate(
-    graphql(
-      `
-        mutation updateLanguage($input: UpdateLanguageInput!) {
-          updateLanguage(input: $input) {
-            language {
-              ...language
-            }
-          }
-        }
-      `,
-      [fragments.language],
-    ),
-    {
-      input: {
-        language: update,
-      },
-    },
-  );
+async function updateLanguage(
+  app: TestApp,
+  input: InputOf<typeof UpdateLanguageDoc>,
+) {
+  const result = await app.graphql.mutate(UpdateLanguageDoc, { input });
   const updated = result.updateLanguage.language;
-  expect(updated.id).toBe(update.id);
+  expect(updated.id).toBe(input.id);
   return updated;
 }
+const UpdateLanguageDoc = graphql(
+  `
+    mutation updateLanguage($input: UpdateLanguage!) {
+      updateLanguage(input: { language: $input }) {
+        language {
+          ...language
+        }
+      }
+    }
+  `,
+  [fragments.language],
+);

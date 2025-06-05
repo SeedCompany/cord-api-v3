@@ -1,47 +1,23 @@
 import { faker } from '@faker-js/faker';
 import { upperFirst } from 'lodash';
 import { isValidId } from '~/common';
-import { graphql } from '~/graphql';
-import {
-  type CreateEducation,
-  Degree,
-} from '../../src/components/user/education/dto';
+import { graphql, type InputOf } from '~/graphql';
 import { type TestApp } from './create-app';
 import * as fragments from './fragments';
 
 export async function createEducation(
   app: TestApp,
-  input: Partial<CreateEducation> = {},
+  input: Partial<InputOf<typeof CreateEducationDoc>> = {},
 ) {
-  const education: CreateEducation = {
-    userId: input.userId!,
-    degree: Degree.Associates,
-    major: upperFirst(faker.hacker.adjective()) + ' Degree',
-    institution: faker.company.name(),
-    ...input,
-  };
-
-  const result = await app.graphql.mutate(
-    graphql(
-      `
-        mutation createEducation($input: CreateEducationInput!) {
-          createEducation(input: $input) {
-            education {
-              ...education
-            }
-          }
-        }
-      `,
-      [fragments.education],
-    ),
-    {
-      input: {
-        education: {
-          ...education,
-        },
-      },
+  const result = await app.graphql.mutate(CreateEducationDoc, {
+    input: {
+      userId: input.userId!,
+      degree: 'Associates',
+      major: upperFirst(faker.hacker.adjective()) + ' Degree',
+      institution: faker.company.name(),
+      ...input,
     },
-  );
+  });
 
   const actual = result.createEducation.education;
   expect(actual).toBeTruthy();
@@ -50,3 +26,16 @@ export async function createEducation(
 
   return actual;
 }
+
+const CreateEducationDoc = graphql(
+  `
+    mutation createEducation($input: CreateEducation!) {
+      createEducation(input: { education: $input }) {
+        education {
+          ...education
+        }
+      }
+    }
+  `,
+  [fragments.education],
+);

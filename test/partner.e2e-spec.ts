@@ -79,7 +79,7 @@ describe('Partner e2e', () => {
     );
     const updated = result.updatePartner.partner;
     expect(updated).toBeTruthy();
-    expect(updated.pointOfContact.value.id).toBe(person.id);
+    expect(updated.pointOfContact.value!.id).toBe(person.id);
     expect(updated.types.value).toEqual(expect.arrayContaining(types));
     expect(updated.financialReportingTypes.value).toEqual(
       financialReportingTypes,

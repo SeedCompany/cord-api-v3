@@ -31,5 +31,5 @@ export async function getUserFromSession(app: TestApp) {
   );
   const user = result.session.user;
   expect(user).toBeTruthy();
-  return user;
+  return user!;
 }

@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker';
-import { CalendarDate, Role } from '~/common';
+import { CalendarDate, type ID, Role } from '~/common';
 import { graphql } from '~/graphql';
 import { PartnerType } from '../src/components/partner/dto';
 import { ProjectStep } from '../src/components/project/dto';
@@ -23,7 +23,7 @@ import {
   stepsFromEarlyConversationToBeforeActive,
 } from './utility/transition-project';
 
-const readProject = (app: TestApp, id: string, changeset?: string) =>
+const readProject = (app: TestApp, id: ID, changeset?: ID) =>
   app.graphql.query(
     graphql(
       `
@@ -60,8 +60,8 @@ const activeProject = async (app: TestApp) => {
     return [location, fieldRegion];
   });
   const project = await createProject(app, {
-    mouStart: CalendarDate.local(2020),
-    mouEnd: CalendarDate.local(2021),
+    mouStart: CalendarDate.local(2020).toISO(),
+    mouEnd: CalendarDate.local(2021).toISO(),
     primaryLocationId: location.id,
     fieldRegionId: fieldRegion.id,
   });
@@ -168,8 +168,8 @@ describe('Project Changeset Aware e2e', () => {
         input: {
           project: {
             id: project.id,
-            mouStart: CalendarDate.fromISO(mouStart),
-            mouEnd: CalendarDate.fromISO(mouEnd),
+            mouStart,
+            mouEnd,
           },
           changeset: changeset.id,
         },
@@ -238,8 +238,8 @@ describe('Project Changeset Aware e2e', () => {
         input: {
           project: {
             id: project.id,
-            mouStart: CalendarDate.fromISO('2020-08-23'),
-            mouEnd: CalendarDate.fromISO('2021-08-22'),
+            mouStart: '2020-08-23',
+            mouEnd: '2021-08-22',
           },
           changeset: changeset.id,
         },
@@ -248,17 +248,17 @@ describe('Project Changeset Aware e2e', () => {
 
     // Query project without changeset
     let result = await readProject(app, project.id);
-    expect(result.project.budget.value.records.length).toBe(0);
+    expect(result.project.budget.value!.records.length).toBe(0);
 
     // Query project with changeset
     result = await readProject(app, project.id, changeset.id);
-    expect(result.project.budget.value.records.length).toBe(2);
+    expect(result.project.budget.value!.records.length).toBe(2);
 
     await approveProjectChangeRequest(app, changeset.id);
 
     // Query project without changeset
     result = await readProject(app, project.id);
-    expect(result.project.budget.value.records.length).toBe(2);
+    expect(result.project.budget.value!.records.length).toBe(2);
   });
 
   it.skip('project step', async () => {
@@ -285,7 +285,7 @@ describe('Project Changeset Aware e2e', () => {
         input: {
           project: {
             id: project.id,
-            step: ProjectStep.FinalizingCompletion,
+            // step: ProjectStep.FinalizingCompletion,
           },
           changeset: changeset.id,
         },

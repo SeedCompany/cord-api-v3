@@ -1,13 +1,7 @@
 import { faker } from '@faker-js/faker';
 import { times } from 'lodash';
 import { firstLettersOfWords, isValidId } from '~/common';
-import { graphql } from '~/graphql';
-import { type SecuredTimeZone } from '../src/components/timezone/timezone.dto';
-import {
-  type UpdateUser,
-  type UpdateUserInput,
-  UserStatus,
-} from '../src/components/user/dto';
+import { graphql, type InputOf } from '~/graphql';
 import {
   createEducation,
   createOrganization,
@@ -73,12 +67,10 @@ describe('User e2e', () => {
     expect(actual.displayFirstName.value).toBe(fakeUser.displayFirstName);
     expect(actual.displayLastName.value).toBe(fakeUser.displayLastName);
     expect(actual.phone.value).toBe(fakeUser.phone);
-    expect((actual.timezone as SecuredTimeZone).value?.name).toBe(
-      fakeUser.timezone,
-    );
+    expect(actual.timezone.value?.name).toBe(fakeUser.timezone);
     expect(actual.about.value).toBe(fakeUser.about);
     expect(actual.status.value).toBe(fakeUser.status);
-    expect(actual.avatarLetters).toBe(firstLettersOfWords(actual.fullName));
+    expect(actual.avatarLetters).toBe(firstLettersOfWords(actual.fullName!));
 
     return true;
   });
@@ -103,7 +95,7 @@ describe('User e2e', () => {
     // create user first
     const user = await createPerson(app);
 
-    const fakeUser: UpdateUser = {
+    const fakeUser: InputOf<typeof UpdateUserDoc> = {
       id: user.id,
       email: faker.internet.email(),
       realFirstName: faker.person.firstName(),
@@ -113,30 +105,23 @@ describe('User e2e', () => {
       phone: faker.phone.number(),
       timezone: 'America/New_York',
       about: 'new about detail',
-      status: UserStatus.Disabled,
+      status: 'Disabled',
     };
-
-    const result = await app.graphql.mutate(
-      graphql(
-        `
-          mutation updateUser($input: UpdateUserInput!) {
-            updateUser(input: $input) {
-              user {
-                ...user
-              }
+    const UpdateUserDoc = graphql(
+      `
+        mutation updateUser($input: UpdateUser!) {
+          updateUser(input: { user: $input }) {
+            user {
+              ...user
             }
           }
-        `,
-        [fragments.user],
-      ),
-      {
-        input: {
-          user: {
-            ...fakeUser,
-          },
-        },
-      },
+        }
+      `,
+      [fragments.user],
     );
+    const result = await app.graphql.mutate(UpdateUserDoc, {
+      input: fakeUser,
+    });
     const actual = result.updateUser.user;
 
     expect(actual).toBeTruthy();
@@ -149,9 +134,7 @@ describe('User e2e', () => {
     expect(actual.displayFirstName.value).toBe(fakeUser.displayFirstName);
     expect(actual.displayLastName.value).toBe(fakeUser.displayLastName);
     expect(actual.phone.value).toBe(fakeUser.phone);
-    expect((actual.timezone as SecuredTimeZone).value?.name).toBe(
-      fakeUser.timezone,
-    );
+    expect(actual.timezone.value?.name).toBe(fakeUser.timezone);
     expect(actual.about.value).toBe(fakeUser.about);
     expect(actual.status.value).toBe(fakeUser.status);
 
@@ -448,8 +431,8 @@ describe('User e2e', () => {
 
     const result = await app.graphql.mutate(
       graphql(`
-        mutation updateUser($input: UpdateUserInput!) {
-          updateUser(input: $input) {
+        mutation updateUser($input: UpdateUser!) {
+          updateUser(input: { user: $input }) {
             user {
               email {
                 value
@@ -460,11 +443,9 @@ describe('User e2e', () => {
       `),
       {
         input: {
-          user: {
-            id: person.id,
-            email: null,
-          },
-        } satisfies UpdateUserInput,
+          id: person.id,
+          email: null,
+        },
       },
     );
     expect(result.updateUser.user.email.value).toBeNull();
