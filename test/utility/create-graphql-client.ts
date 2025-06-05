@@ -15,12 +15,12 @@ import './expect-gql-error';
 
 export interface GraphQLTestClient {
   query: <TData extends AnyObject, TVars extends AnyObject>(
-    query: DocumentNode<TData, any>,
-    variables?: TVars,
+    query: DocumentNode<TData, TVars>,
+    variables?: NoInfer<TVars>,
   ) => GqlResult<TData>;
   mutate: <TData extends AnyObject, TVars extends AnyObject>(
-    query: DocumentNode<TData, any>,
-    variables?: TVars,
+    query: DocumentNode<TData, TVars>,
+    variables?: NoInfer<TVars>,
   ) => GqlResult<TData>;
   authToken: string;
   email?: string;
