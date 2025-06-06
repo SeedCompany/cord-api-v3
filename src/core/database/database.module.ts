@@ -40,6 +40,9 @@ export class DatabaseModule implements OnApplicationShutdown {
 
   async onApplicationShutdown() {
     if (this.config.neo4j.ephemeral) {
+      if (this.config.jest) {
+        await this.dbService.dropStaleTestDbs();
+      }
       await this.dbService.dropDb();
     }
     await this.db.close();

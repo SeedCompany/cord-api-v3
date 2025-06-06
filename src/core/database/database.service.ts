@@ -3,8 +3,14 @@ import { entries, mapKeys } from '@seedcompany/common';
 import { Connection, node, type Query, relation } from 'cypher-query-builder';
 import { LazyGetter } from 'lazy-get-decorator';
 import { pickBy, startCase } from 'lodash';
-import { Duration } from 'luxon';
-import { defer, firstValueFrom, shareReplay, takeUntil } from 'rxjs';
+import { DateTime, Duration } from 'luxon';
+import {
+  defer,
+  EmptyError,
+  firstValueFrom,
+  shareReplay,
+  takeUntil,
+} from 'rxjs';
 import {
   DuplicateException,
   type ID,
@@ -207,6 +213,24 @@ export class DatabaseService {
       return; // don't drop the default db
     }
     await this.runAdminCommand('DROP', dbName);
+  }
+
+  async dropStaleTestDbs() {
+    const info = await this.getServerInfo().catch((e) => {
+      if (e instanceof EmptyError) return null;
+      throw e;
+    });
+    const staleTestDbs = (info?.databases ?? []).filter(({ name }) => {
+      const match = /test\.([\d-]+\.[\d-]+)\..+/.exec(name);
+      if (!match) {
+        return false;
+      }
+      const dt = DateTime.fromFormat(match[1], 'y-MM-dd.HH-mm-ss');
+      return dt.diffNow().as('hours') < -1;
+    });
+    for (const staleTestDb of staleTestDbs) {
+      await this.runAdminCommand('DROP', staleTestDb.name);
+    }
   }
 
   private async runAdminCommand(action: 'CREATE' | 'DROP', dbName: string) {
