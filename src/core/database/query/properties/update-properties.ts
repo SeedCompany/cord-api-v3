@@ -7,7 +7,7 @@ import {
   type ResourceShape,
 } from '~/common';
 import { type DbChanges } from '../../changes';
-import { apoc, collect, merge, type Variable, variable } from '../index';
+import { apoc, collect, merge, Variable, variable } from '../index';
 import { type PropUpdateStat, updateProperty } from './update-property';
 
 export interface UpdatePropertiesOptions<
@@ -21,6 +21,7 @@ export interface UpdatePropertiesOptions<
   changeset?: Variable;
   nodeName?: string;
   outputStatsVar?: string;
+  now?: DateTime | Variable;
 }
 
 export const updateProperties =
@@ -35,6 +36,7 @@ export const updateProperties =
     changeset,
     nodeName = 'node',
     outputStatsVar = 'stats',
+    now,
   }: UpdatePropertiesOptions<TResourceStatic, TObject>) =>
   <R>(query: Query<R>) => {
     const resource = EnhancedResource.of(resourceIn);
@@ -61,7 +63,10 @@ export const updateProperties =
               labels: variable('prop.labels'),
               changeset,
               nodeName,
-              now: query.params.addParam(DateTime.local(), 'now'),
+              now:
+                now instanceof Variable
+                  ? now
+                  : query.params.addParam(now ?? DateTime.local(), 'now'),
             }),
           )
           .return<{
