@@ -16,6 +16,10 @@ const fn =
 /** Create a function with a name that takes a single argument */
 const fn1 = (name: string) => (arg: ExpressionInput) => fn(name)(arg);
 
+/** Create a function with a name that takes two arguments */
+const fn2 = (name: string) => (arg1: ExpressionInput, arg2: ExpressionInput) =>
+  fn(name)(arg1, arg2);
+
 const fn0 = (name: string) => () => fn(name)();
 
 /**
@@ -78,6 +82,11 @@ export const apoc = {
   coll: {
     flatten: fn1('apoc.coll.flatten'),
     indexOf: fn('apoc.coll.indexOf'),
+    /**
+     * Returns the distinct union of the two given LIST<ANY> values.
+     * @see https://neo4j.com/docs/apoc/current/overview/apoc.coll/apoc.coll.union/
+     */
+    union: fn2('apoc.coll.union'),
   },
   convert: {
     /** Converts Neo4j node to object/map of the node's properties */

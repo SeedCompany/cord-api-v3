@@ -1,5 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { type Node, node, type Query, relation } from 'cypher-query-builder';
+import {
+  type Node,
+  node,
+  not,
+  type Query,
+  relation,
+} from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   CreationFailed,
@@ -13,6 +19,7 @@ import {
 import { DtoRepository } from '~/core/database';
 import {
   ACTIVE,
+  apoc,
   createNode,
   createRelationships,
   filter,
@@ -20,7 +27,11 @@ import {
   merge,
   oncePerProject,
   paginate,
+  path,
+  randomUUID,
   sorting,
+  updateProperty,
+  variable,
 } from '~/core/database/query';
 import { type FilterFn } from '~/core/database/query/filters';
 import { userFilters, UserRepository } from '../../user/user.repository';
@@ -182,6 +193,127 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
         'email.value as email',
       ])
       .run();
+  }
+
+  async replaceMembershipsOnOpenProjects(
+    oldDirector: ID<'User'>,
+    newDirector: ID<'User'>,
+    role: Role,
+  ) {
+    const nowVal = DateTime.now();
+    const now = variable('$now');
+    const createMember = await createNode(ProjectMember, {
+      baseNodeProps: {
+        id: variable(randomUUID()),
+        createdAt: now,
+      },
+      initialProps: {
+        roles: [role],
+        inactiveAt: null,
+        modifiedAt: now,
+      },
+    });
+    const result = await this.db
+      .query()
+      .raw('', { now: nowVal })
+      .match([
+        node('project', 'Project'),
+        relation('out', '', 'member', ACTIVE),
+        node('node', 'ProjectMember'),
+      ])
+      .apply(
+        projectMemberFilters({
+          user: { id: oldDirector },
+          active: true,
+          roles: [role],
+          project: { status: ['Active', 'InDevelopment'] },
+        }),
+      )
+      .apply(
+        updateProperty({
+          resource: ProjectMember,
+          key: 'inactiveAt',
+          value: now,
+          permanentAfter: 0,
+        }),
+      )
+      .with('project')
+      .subQuery('project', (sub) =>
+        sub
+          .match([
+            [
+              node('project'),
+              relation('out', '', 'member', ACTIVE),
+              node('node', 'ProjectMember'),
+              relation('out', '', 'user', ACTIVE),
+              node('', 'User', { id: newDirector }),
+            ],
+            [
+              node('node', 'ProjectMember'),
+              relation('out', '', 'roles', ACTIVE),
+              node('roles', 'Property'),
+            ],
+          ])
+          .apply(
+            updateProperty({
+              resource: ProjectMember,
+              key: 'roles',
+              value: variable(apoc.coll.union('roles.value', [`"${role}"`])),
+              now,
+              permanentAfter: 0,
+              outputStatsVar: 'inactiveStats',
+            }),
+          )
+          .apply(
+            updateProperty({
+              resource: ProjectMember,
+              key: 'inactiveAt',
+              value: null,
+              now,
+              permanentAfter: 0,
+              outputStatsVar: 'rolesStats',
+            }),
+          )
+          .apply(
+            updateProperty({
+              resource: ProjectMember,
+              key: 'modifiedAt',
+              value: now,
+              now,
+              permanentAfter: 0,
+              outputStatsVar: 'modifiedAtStats',
+            }),
+          )
+          .return('node as member')
+          .union()
+          .with('project')
+          .with('project')
+          .where(
+            not(
+              path([
+                node('project'),
+                relation('out', '', 'member', ACTIVE),
+                node('', 'ProjectMember'),
+                relation('out', '', 'user', ACTIVE),
+                node('', 'User', { id: newDirector }),
+              ]),
+            ),
+          )
+          .apply(createMember)
+          .apply(
+            createRelationships(ProjectMember, {
+              in: { member: variable('project') },
+              out: { user: ['User', newDirector] },
+            }),
+          )
+          .return('node as member'),
+      )
+      .return<{ id: ID }>('project.id as id')
+      .run();
+    return {
+      projects: result.map(({ id }) => id) as readonly ID[],
+      timestampId: nowVal,
+    };
   }
 }
 

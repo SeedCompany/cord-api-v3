@@ -72,4 +72,65 @@ export class ProjectMemberGelRepository
         ),
     ];
   }
+
+  async replaceMembershipsOnOpenProjects(
+    oldDirector: ID<'User'>,
+    newDirector: ID<'User'>,
+    role: Role,
+  ) {
+    return await this.db.run(this.replaceMembershipsOnOpenProjectsQuery, {
+      oldDirector,
+      newDirector,
+      role,
+    });
+  }
+  private readonly replaceMembershipsOnOpenProjectsQuery = e.params(
+    {
+      oldDirector: e.uuid,
+      newDirector: e.uuid,
+      role: e.Role,
+    },
+    ($) => {
+      const oldDirector = e.cast(e.User, $.oldDirector);
+      const newDirector = e.cast(e.User, $.newDirector);
+
+      const members = e.select(e.Project.members, (member) => ({
+        filter: e.all(
+          e.set(
+            e.op(member.user, '=', oldDirector),
+            e.op(member.active, '=', true),
+            e.op($.role, 'in', member.roles),
+            e.op(member.project.status, 'in', e.set('Active', 'InDevelopment')),
+          ),
+        ),
+      }));
+      const inactivated = e.update(members, () => ({
+        set: {
+          inactiveAt: e.datetime_of_transaction(),
+        },
+      }));
+      const replacements = e.for(inactivated.project, (project) =>
+        e
+          .insert(e.Project.Member, {
+            project,
+            projectContext: project.projectContext,
+            user: newDirector,
+            roles: $.role,
+          })
+          .unlessConflict((member) => ({
+            on: member.user,
+            else: e.update(member, () => ({
+              set: {
+                roles: { '+=': $.role },
+                inactiveAt: null,
+              },
+            })),
+          })),
+      );
+      return e.select({
+        timestampId: e.datetime_of_transaction(),
+        projects: replacements.project.id,
+      });
+    },
+  );
 }
