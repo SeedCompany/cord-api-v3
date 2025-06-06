@@ -110,12 +110,22 @@ export class ProjectMemberGelRepository
         },
       }));
       const replacements = e.for(inactivated.project, (project) =>
-        e.insert(e.Project.Member, {
-          project,
-          projectContext: project.projectContext,
-          user: newDirector,
-          roles: $.role,
-        }),
+        e
+          .insert(e.Project.Member, {
+            project,
+            projectContext: project.projectContext,
+            user: newDirector,
+            roles: $.role,
+          })
+          .unlessConflict((member) => ({
+            on: member.user,
+            else: e.update(member, () => ({
+              set: {
+                roles: { '+=': $.role },
+                inactiveAt: null,
+              },
+            })),
+          })),
       );
       return e.select({
         timestampId: e.datetime_of_transaction(),
