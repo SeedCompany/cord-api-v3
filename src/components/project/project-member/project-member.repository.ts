@@ -195,6 +195,52 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
       .run();
   }
 
+  async addDefaultForRole(
+    role: Role,
+    projectId: ID<'Project'>,
+    userId: ID<'User'>,
+  ) {
+    const now = DateTime.now();
+    await this.db
+      .query()
+      .match([
+        node('project', 'Project'),
+        relation('out', '', 'member', ACTIVE),
+        node('node', 'ProjectMember'),
+      ])
+      .apply(
+        projectMemberFilters({
+          active: true,
+          roles: [role],
+          project: {
+            id: projectId,
+          },
+        }),
+      )
+      .with('project, collect(node) as members')
+      .raw('WHERE size(members) = 0')
+      .apply(
+        await createNode(ProjectMember, {
+          baseNodeProps: {
+            createdAt: now,
+          },
+          initialProps: {
+            roles: [role],
+            inactiveAt: null,
+            modifiedAt: now,
+          },
+        }),
+      )
+      .apply(
+        createRelationships(ProjectMember, {
+          in: { member: variable('project') },
+          out: { user: ['User', userId] },
+        }),
+      )
+      .return<{ id: ID<'ProjectMember'> }>('node.id as id')
+      .executeAndLogStats();
+  }
+
   async replaceMembershipsOnOpenProjects(
     oldDirector: ID<'User'>,
     newDirector: ID<'User'>,
