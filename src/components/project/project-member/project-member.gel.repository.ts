@@ -73,6 +73,54 @@ export class ProjectMemberGelRepository
     ];
   }
 
+  async addDefaultForRole(
+    role: Role,
+    project: ID<'Project'>,
+    user: ID<'User'>,
+  ) {
+    await this.db.run(this.addDefaultForRoleQuery, {
+      role,
+      project,
+      user,
+    });
+  }
+  private readonly addDefaultForRoleQuery = e.params(
+    {
+      role: e.Role,
+      project: e.uuid,
+      user: e.uuid,
+    },
+    ($) => {
+      const project = e.cast(e.Project, $.project);
+      const user = e.cast(e.User, $.user);
+
+      const membersWithRole = e.select(project.members, (member) => ({
+        filter: e.all(
+          e.set(
+            e.op(member.active, '=', true),
+            e.op($.role, 'in', member.roles),
+          ),
+        ),
+      }));
+      const hasMemberWithRole = e.op('exists', membersWithRole);
+      const createNew = e.insert(e.Project.Member, {
+        project,
+        projectContext: project.projectContext,
+        user,
+        roles: $.role,
+      });
+      const exp = e.op(
+        'if',
+        hasMemberWithRole,
+        'then',
+        membersWithRole,
+        'else',
+        createNew,
+      );
+      return e.select(exp);
+    },
+  );
+
   async replaceMembershipsOnOpenProjects(
     oldDirector: ID<'User'>,
     newDirector: ID<'User'>,

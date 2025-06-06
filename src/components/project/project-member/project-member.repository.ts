@@ -32,6 +32,7 @@ import {
   sorting,
   updateProperty,
   variable,
+  Variable,
 } from '~/core/database/query';
 import { type FilterFn } from '~/core/database/query/filters';
 import { conditionalOn } from '~/core/database/query/properties/update-property';
@@ -202,6 +203,41 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
       .run();
   }
 
+  async addDefaultForRole(
+    role: Role,
+    project: ID<'Project'>,
+    user: ID<'User'>,
+  ) {
+    const now = DateTime.now();
+    await this.db
+      .query()
+      .apply((q) => {
+        q.params.addParam(now, 'now');
+      })
+      .match(node('project', 'Project', { id: project }))
+      .subQuery('project', (sub) =>
+        sub
+          .match([
+            node('project'),
+            relation('out', '', 'member', ACTIVE),
+            node('node', 'ProjectMember'),
+          ])
+          .apply(
+            projectMemberFilters({
+              active: true,
+              roles: [role],
+            }),
+          )
+          .with('count(node) as members')
+          .raw('WHERE members = 0')
+          .return('true as filtered'),
+      )
+      .with('*')
+      .apply(await this.upsertMember(user, role))
+      .return<{ id: ID<'ProjectMember'> }>('project.id as id')
+      .executeAndLogStats();
+  }
+
   async replaceMembershipsOnOpenProjects(
     oldDirector: ID<'User'>,
     newDirector: ID<'User'>,
@@ -211,20 +247,11 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
   ) {
     const nowVal = DateTime.now();
     const now = variable('$now');
-    const createMember = await createNode(ProjectMember, {
-      baseNodeProps: {
-        id: variable(randomUUID()),
-        createdAt: now,
-      },
-      initialProps: {
-        roles: [role],
-        inactiveAt: null,
-        modifiedAt: now,
-      },
-    });
     const result = await this.db
       .query()
-      .raw('', { now: nowVal })
+      .apply((q) => {
+        q.params.addParam(nowVal, 'now');
+      })
       .match([
         node('project', 'Project'),
         relation('out', '', 'member', ACTIVE),
@@ -282,7 +309,31 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
           )
           .return('stats as oldMemberStats'),
       )
-      .subQuery('project', (sub) =>
+      .with('project')
+      .apply(await this.upsertMember(newDirector, role))
+      .return<{ id: ID }>('project.id as id')
+      .run();
+    return {
+      projects: result.map(({ id }) => id) as readonly ID[],
+      timestampId: nowVal,
+    };
+  }
+
+  protected async upsertMember(user: ID<'User'> | Variable, role: Role) {
+    const now = variable('$now');
+    const createMember = await createNode(ProjectMember, {
+      baseNodeProps: {
+        id: variable(randomUUID()),
+        createdAt: now,
+      },
+      initialProps: {
+        roles: [role],
+        inactiveAt: null,
+        modifiedAt: now,
+      },
+    });
+    return (query: Query) =>
+      query.subQuery('project', (sub) =>
         sub
           .match([
             [
@@ -290,7 +341,7 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
               relation('out', '', 'member', ACTIVE),
               node('node', 'ProjectMember'),
               relation('out', '', 'user', ACTIVE),
-              node('', 'User', { id: newDirector }),
+              node('', 'User', { id: user }),
             ],
             [
               node('node', 'ProjectMember'),
@@ -339,7 +390,7 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
                 relation('out', '', 'member', ACTIVE),
                 node('', 'ProjectMember'),
                 relation('out', '', 'user', ACTIVE),
-                node('', 'User', { id: newDirector }),
+                node('', 'User', { id: user }),
               ]),
             ),
           )
@@ -347,17 +398,11 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
           .apply(
             createRelationships(ProjectMember, {
               in: { member: variable('project') },
-              out: { user: ['User', newDirector] },
+              out: { user: user instanceof Variable ? user : ['User', user] },
             }),
           )
           .return('node as member'),
-      )
-      .return<{ id: ID }>('project.id as id')
-      .run();
-    return {
-      projects: result.map(({ id }) => id) as readonly ID[],
-      timestampId: nowVal,
-    };
+      );
   }
 }
 
