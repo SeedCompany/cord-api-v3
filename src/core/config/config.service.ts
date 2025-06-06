@@ -5,8 +5,8 @@ import type {
 } from '@seedcompany/nestjs-email';
 import type { Server as HttpServer } from 'http';
 import { type LRUCache } from 'lru-cache';
-import { Duration, type DurationLike } from 'luxon';
-import { nanoid } from 'nanoid';
+import { DateTime, Duration, type DurationLike } from 'luxon';
+import { customAlphabet } from 'nanoid';
 import { type Config as Neo4JDriverConfig } from 'neo4j-driver';
 import { BehaviorSubject } from 'rxjs';
 import type { Class, Merge, ReadonlyDeep } from 'type-fest';
@@ -175,7 +175,9 @@ export const makeConfig = (env: EnvironmentService) =>
         username,
         password,
         database: this.jest
-          ? `test.${nanoid().replace(/[-_]/g, '')}`
+          ? `test.${DateTime.now().toFormat(
+              'y-MM-dd.HH-mm-ss',
+            )}.${customAlphabet('abcdefghjkmnpqrstuvwxyz', 7)()}`
           : database,
         ephemeral: this.jest,
         driverConfig,
