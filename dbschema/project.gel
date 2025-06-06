@@ -124,22 +124,33 @@ module default {
     );
 
     trigger createPeriodicReports after insert for each 
-      when (
-        exists __new__.financialReportPeriod
-        and exists __new__.mouStart
-        and exists __new__.mouEnd
-      )  
-      do (
+    when (exists __new__.mouStart and exists __new__.mouEnd)  
+    do (
       with
-        interval := (select 
-          if __new__.financialReportPeriod = default::ReportPeriod.Monthly then '1' else '3'),
         reportRanges := Project::create_periodic_report_ranges(
           __new__.mouStart,
           __new__.mouEnd,
-          interval
+          '3'
         ),
-        insertedReports := Project::insert_reports(array_agg(reportRanges), __new__)
-      select insertedReports
+        insertedFinancialReports := (
+          select 
+          if __new__.financialReportPeriod = default::ReportPeriod.Monthly then (
+            with
+              financialReportRanges := Project::create_periodic_report_ranges(
+                __new__.mouStart,
+                __new__.mouEnd,
+                '1'
+              ),
+              financialReports := Project::insert_financial_reports(array_agg(financialReportRanges), __new__)
+            select financialReports
+          ) else if __new__.financialReportPeriod = default::ReportPeriod.Quarterly then (
+              select Project::insert_financial_reports(array_agg(reportRanges), __new__)
+            ) else (
+              select <default::FinancialReport>{}
+            )
+        ),
+        insertedNarrativeAndProgressReports := Project::insert_narrative_and_progress_reports(array_agg(reportRanges), __new__)
+      select insertedFinancialReports union insertedNarrativeAndProgressReports
     );
 
     trigger addRemovePeriodicReports after update for each 
@@ -154,59 +165,69 @@ module default {
         oldMouStart := __old__.mouStart,
         newMouEnd := __new__.mouEnd,
         oldMouEnd := __old__.mouEnd,
-        existingReports := (
-          select FinancialReport union NarrativeReport
-          filter .container.id = __old__.id
-        ),
-        interval := (
-          select (if __new__.financialReportPeriod = default::ReportPeriod.Monthly then '1' else '3')
-        ),
-        requestedReportPeriods := Project::create_periodic_report_ranges(
+        monthlyReportRanges := Project::create_periodic_report_ranges(
           __new__.mouStart,
           __new__.mouEnd,
-          interval
+          '1'
+        ),        
+        quarterlyReportRanges := Project::create_periodic_report_ranges(
+          __new__.mouStart,
+          __new__.mouEnd,
+          '3'
         ),
-        reportsForDeletion := (
-            select existingReports
+        financialReports := (
+          select default::FinancialReport
+          filter .container.id = __old__.id
+        ),
+        financialReportsForDeletion := (
+            select financialReports
             filter not exists .reportFile
-        )  
-      select
-      # start date, end date, or financial report period were deleted
-      if not exists __new__.mouStart
-        or not exists __new__.mouEnd
-        or not exists __new__.financialReportPeriod then (
-        for report in reportsForDeletion 
-        union (
-          delete report 
+        ),                 
+        narrativeAndProgressReports := (
+          select NarrativeReport union ProgressReport
+          filter .container.id = __old__.id
+        ),
+        narrativeAndProgressReportsForDeletion := (
+            select narrativeAndProgressReports
+            filter not exists .reportFile
         )
-      )
-      # financial report period changes, start date is moved forward, or end date is moved backward
-      else if __old__.financialReportPeriod ?!= __new__.financialReportPeriod
-        or (__new__.mouStart > __old__.mouStart) ?? false 
-        or (__new__.mouEnd < __old__.mouEnd) ?? false then (
-        with
-          periodsForInsertion := Project::determine_requested_report_periods(
-            array_agg(requestedReportPeriods), 
-            array_agg(existingReports)
-          ),
-          insertedReports := Project::insert_reports(array_agg(periodsForInsertion), __new__),
-          deletedReports := (for report in reportsForDeletion 
+      select
+      # start date or end date were deleted - delete all reports
+      if not exists __new__.mouStart or not exists __new__.mouEnd then (
+        for report in financialReportsForDeletion union narrativeAndProgressReportsForDeletion 
+        union (
+          delete report
+        )
+      # financial report period was deleted - delete financial reports
+      ) else if not exists __new__.financialReportPeriod then (
+        for report in financialReportsForDeletion 
+        union (
+          delete report
+        )
+      # start date is moved forward or end date is moved backward (contraction) - delete all
+      # reports that are not in the new range
+      ) else if (__new__.mouStart > __old__.mouStart) ?? false or (__new__.mouEnd < __old__.mouEnd) ?? false then (
+          for report in financialReportsForDeletion union narrativeAndProgressReportsForDeletion  
           union (
             delete report
-            filter report.period not in requestedReportPeriods
-          ))
-        select insertedReports
-      )
-      # start or end dates otherwise change
-      else if newMouStart ?!= oldMouStart 
-        or newMouEnd ?!= oldMouEnd then (
+            filter report.period not in monthlyReportRanges union quarterlyReportRanges
+          )
+      # financial report period changes - delete all financial reports and insert new ones
+      ) else if __old__.financialReportPeriod ?!= __new__.financialReportPeriod then (
         with
-          periodsForInsertion := Project::determine_requested_report_periods(
-            array_agg(requestedReportPeriods), 
-            array_agg(existingReports)
-          ),        
-          insertedReports := Project::insert_reports(array_agg(periodsForInsertion), __new__)
-        select insertedReports
+        insertedFinancialReports := Project::insert_financial_reports(__new__, array_agg(financialReports),
+          array_agg(monthlyReportRanges), array_agg(quarterlyReportRanges))
+        for report in financialReportsForDeletion 
+        union (
+          delete report
+        )
+      # start or end dates otherwise change (expansion) - insert all new reports
+      ) else if newMouStart ?!= oldMouStart or newMouEnd ?!= oldMouEnd then (
+        with
+          insertedFinancialReports := Project::insert_financial_reports(__new__, array_agg(financialReports),
+            array_agg(monthlyReportRanges), array_agg(quarterlyReportRanges))
+        select Project::insert_narrative_and_progress_reports(__new__, array_agg(quarterlyReportRanges),
+          array_agg(narrativeAndProgressReports))
       # nothing changes
       ) else (
         select <PeriodicReport>{}
@@ -300,7 +321,8 @@ module Project {
     };
   }
 
-  # creates the ranges for the given start and end dates based upon the given month interval
+  # creates the ranges for the given start and end dates based upon the given month interval,
+  # appending one additional range bound by matching end dates
   function create_periodic_report_ranges(startDate: cal::local_date, endDate: cal::local_date, 
     monthInterval: str) -> set of range<cal::local_date>
     using (
@@ -333,27 +355,19 @@ module Project {
             select report.period
           )
         )
-     select periodsForInsertion
+      select periodsForInsertion
   );
 
-  function insert_reports(requestedReportPeriodsForInsertion: array<range<cal::local_date>>,
-    newProject: default::Project) -> set of default::PeriodicReport
+  function insert_narrative_and_progress_reports(newProject: default::Project,
+    quarterlyReportRanges: array<range<cal::local_date>>,
+    narrativeAndProgressReports: array<default::PeriodicReport>) -> set of default::PeriodicReport
     using (
       with
-        financialReports := (for reportPeriod in array_unpack(requestedReportPeriodsForInsertion)
-        union (
-          insert default::FinancialReport {
-            createdAt := datetime_of_statement(),
-            modifiedAt := datetime_of_statement(),
-            createdBy := assert_exists(global default::currentActor),
-            modifiedBy := assert_exists(global default::currentActor),
-            project := newProject,
-            projectContext := newProject.projectContext,
-            container := newProject,
-            period := reportPeriod,
-          }
-        )),
-        narrativeReports := (for reportPeriod in array_unpack(requestedReportPeriodsForInsertion)
+        periodsForInsertion := Project::determine_requested_report_periods(
+          quarterlyReportRanges, 
+          narrativeAndProgressReports
+        ),
+        narrativeReports := (for reportPeriod in periodsForInsertion
         union (
           insert default::NarrativeReport {
             createdAt := datetime_of_statement(),
@@ -365,7 +379,55 @@ module Project {
             container := newProject,
             period := reportPeriod,
           }
+        )),
+        progressReports := (for reportPeriod in periodsForInsertion
+        union (
+          insert default::ProgressReport {
+            createdAt := datetime_of_statement(),
+            modifiedAt := datetime_of_statement(),
+            createdBy := assert_exists(global default::currentActor),
+            modifiedBy := assert_exists(global default::currentActor),
+            project := newProject,
+            projectContext := newProject.projectContext,
+            container := newProject,
+            period := reportPeriod,
+          }
         ))
-      select financialReports union narrativeReports
+      select narrativeReports union progressReports
     );
+
+  function insert_financial_reports(newProject: default::Project,
+    financialReports: array<default::FinancialReport>,    
+    monthlyReportRanges: array<range<cal::local_date>>,
+    quarterlyReportRanges: array<range<cal::local_date>>) -> set of default::PeriodicReport
+    using (
+      with
+        periodsForInsertion := (
+          select
+          if newProject.financialReportPeriod = default::ReportPeriod.Monthly then (
+            select Project::determine_requested_report_periods(
+                monthlyReportRanges,
+                financialReports
+              )
+          ) else (
+              select Project::determine_requested_report_periods(
+                quarterlyReportRanges,
+                financialReports
+              ) 
+          ) 
+        )
+        select (for reportPeriod in periodsForInsertion
+        union (
+          insert default::FinancialReport {
+            createdAt := datetime_of_statement(),
+            modifiedAt := datetime_of_statement(),
+            createdBy := assert_exists(global default::currentActor),
+            modifiedBy := assert_exists(global default::currentActor),
+            project := newProject,
+            projectContext := newProject.projectContext,
+            container := newProject,
+            period := reportPeriod,
+          }
+        ))
+    );    
 }
