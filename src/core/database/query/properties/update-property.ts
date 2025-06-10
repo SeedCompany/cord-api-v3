@@ -36,12 +36,14 @@ export type UpdatePropertyOptions<
     id: ID;
   },
   Key extends keyof DbChanges<TObject> & string,
+  StatsVar extends string = 'stats',
 > = DeactivatePropertyOptions<TResourceStatic, TObject, Key> &
   CreatePropertyOptions<TResourceStatic, TObject, Key> & {
     /**
      * The property is permanent after this given duration.
      */
     permanentAfter?: Variable | DurationIn;
+    outputStatsVar?: StatsVar;
   };
 
 export interface PropUpdateStat {
@@ -62,11 +64,16 @@ export const updateProperty =
       id: ID;
     },
     Key extends keyof DbChanges<TObject> & string,
+    const StatsVar extends string = 'stats',
   >(
-    options: UpdatePropertyOptions<TResourceStatic, TObject, Key>,
+    options: UpdatePropertyOptions<TResourceStatic, TObject, Key, StatsVar>,
   ) =>
-  <R>(query: Query<R>): Query<{ stats: PropUpdateStat }> => {
-    const { permanentAfter, ...resolved } = {
+  <R>(query: Query<R>): Query<{ [_ in StatsVar]: PropUpdateStat }> => {
+    const {
+      permanentAfter,
+      outputStatsVar = 'stats',
+      ...resolved
+    } = {
       ...options,
       nodeName: options.nodeName ?? 'node',
       value:
@@ -93,12 +100,12 @@ export const updateProperty =
       query
         .apply(deactivateProperty<TResourceStatic, TObject, Key>(resolved))
         .apply(createProperty<TResourceStatic, TObject, Key>(resolved))
-        .return<{ stats: PropUpdateStat }>([
+        .return<{ [_ in StatsVar]: PropUpdateStat }>([
           exp({
             method: '"new entry"',
             deactivated: 'numPropsDeactivated',
             created: 'numPropsCreated',
-          }).as('stats'),
+          }).as(outputStatsVar),
         ]);
 
     if (!permanentAfter) {
@@ -111,11 +118,11 @@ export const updateProperty =
           'existingProp.value': value.toString(),
           'existingProp.modifiedAt': now.toString(),
         })
-        .return<{ stats: PropUpdateStat }>([
+        .return<{ [_ in StatsVar]: PropUpdateStat }>([
           exp({
             method: '"inline replace"',
             updated: 1,
-          }).as('stats'),
+          }).as(outputStatsVar),
         ]);
 
     return query
