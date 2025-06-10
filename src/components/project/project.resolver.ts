@@ -18,6 +18,7 @@ import {
   ListArg,
   mapSecuredValue,
   NotFoundException,
+  OptionalField,
   SecuredDateRange,
 } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
@@ -83,6 +84,14 @@ class ModifyOtherLocationArgs {
   locationId: ID;
 }
 
+@ArgsType()
+class IsMemberArgs {
+  @OptionalField({
+    description: 'Consider inactive memberships as well',
+  })
+  includeInactive?: boolean;
+}
+
 @Resolver(IProject)
 export class ProjectResolver {
   constructor(private readonly projectService: ProjectService) {}
@@ -146,6 +155,19 @@ export class ProjectResolver {
     });
     projects.primeAll(list.items);
     return list;
+  }
+
+  @ResolveField(() => Boolean, {
+    description: 'Is the requesting user a member of this project?',
+  })
+  isMember(
+    @Parent() project: Project,
+    @Args() { includeInactive }: IsMemberArgs,
+  ): boolean {
+    return (
+      !!project.membership &&
+      (includeInactive ? true : !project.membership.inactiveAt)
+    );
   }
 
   @ResolveField(() => String, { nullable: true })

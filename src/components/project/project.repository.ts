@@ -15,12 +15,15 @@ import { CommonRepository, OnIndex, UniquenessError } from '~/core/database';
 import { type ChangesOf, getChanges } from '~/core/database/changes';
 import {
   ACTIVE,
+  collect,
   createNode,
   createRelationships,
+  currentUser,
   defineSorters,
   FullTextIndex,
   matchChangesetAndChangedProps,
   matchProjectSens,
+  matchProps,
   matchPropsAndProjectSensAndScopedRoles,
   merge,
   paginate,
@@ -89,6 +92,19 @@ export class ProjectRepository extends CommonRepository {
           relation('out', '', 'rootDirectory', ACTIVE),
           node('rootDirectory', 'Directory'),
         ])
+        .subQuery('node', (sub) =>
+          sub
+            .match([
+              node('node'),
+              relation('out', '', 'member', ACTIVE),
+              node('membership'),
+              relation('out', '', 'user'),
+              currentUser,
+            ])
+            .apply(matchProps({ nodeName: 'membership', outputVar: 'dto' }))
+            .with(collect('dto').as('dtos'))
+            .return('dtos[0] as membership'),
+        )
         .optionalMatch([
           node('node'),
           relation('out', '', 'partnership', ACTIVE),
@@ -134,7 +150,7 @@ export class ProjectRepository extends CommonRepository {
           merge('props', 'changedProps', {
             type: 'node.type',
             pinned,
-            isMember: '"member:true" in props.scope',
+            membership: 'membership',
             rootDirectory: 'rootDirectory { .id }',
             primaryPartnership: 'primaryPartnership { .id }',
             primaryLocation: 'primaryLocation { .id }',

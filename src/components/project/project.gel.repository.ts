@@ -38,6 +38,11 @@ const hydrate = e.shape(e.Project, (project) => ({
   __typename: project.__type__.name.slice(9, null),
 
   rootDirectory: true,
+  membership: {
+    id: true,
+    roles: true,
+    inactiveAt: true,
+  },
   primaryPartnership: e
     .select(project.partnerships, (p) => ({
       filter: e.op(p.primary, '=', true),
