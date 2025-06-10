@@ -15,7 +15,6 @@ import {
   EnhancedResource,
   type ID,
   type Range,
-  type Session,
 } from '~/common';
 import { CommonRepository, type DbTypeOf, OnIndex } from '~/core/database';
 import { type DbChanges, getChanges } from '~/core/database/changes';
@@ -82,12 +81,12 @@ export class ProductRepository extends CommonRepository {
     super();
   }
 
-  async readMany(ids: readonly ID[], session: Session) {
+  async readMany(ids: readonly ID[]) {
     const query = this.db
       .query()
       .matchNode('node', 'Product')
       .where({ 'node.id': inArray(ids) })
-      .apply(this.hydrate(session))
+      .apply(this.hydrate())
       .map('dto');
     return await query.run();
   }
@@ -183,7 +182,7 @@ export class ProductRepository extends CommonRepository {
     return res;
   }
 
-  protected hydrate(session: Session) {
+  protected hydrate() {
     return (query: Query) =>
       query
         .match([
@@ -193,7 +192,7 @@ export class ProductRepository extends CommonRepository {
           relation('out', '', 'product', ACTIVE),
           node('node'),
         ])
-        .apply(matchPropsAndProjectSensAndScopedRoles(session))
+        .apply(matchPropsAndProjectSensAndScopedRoles())
         .optionalMatch([
           node('node'),
           relation('out', '', 'unspecifiedScripture', ACTIVE),
@@ -487,7 +486,7 @@ export class ProductRepository extends CommonRepository {
     });
   }
 
-  async list(input: ProductListInput, session: Session) {
+  async list(input: ProductListInput) {
     const result = await this.db
       .query()
       .matchNode('node', 'Product')
@@ -514,7 +513,7 @@ export class ProductRepository extends CommonRepository {
         })(q);
       })
       .apply(sorting(Product, input))
-      .apply(paginate(input, this.hydrate(session)))
+      .apply(paginate(input, this.hydrate()))
       .first();
     return result!; // result from paginate() will always have 1 row.
   }

@@ -1,15 +1,15 @@
 import { type ID } from '~/common';
-import { LoaderFactory, OrderedNestDataLoader } from '~/core';
+import { type DataLoaderStrategy, LoaderFactory } from '~/core/data-loader';
 import { Organization } from './dto';
 import { OrganizationService } from './organization.service';
 
 @LoaderFactory(() => Organization)
-export class OrganizationLoader extends OrderedNestDataLoader<Organization> {
-  constructor(private readonly organizations: OrganizationService) {
-    super();
-  }
+export class OrganizationLoader
+  implements DataLoaderStrategy<Organization, ID<Organization>>
+{
+  constructor(private readonly organizations: OrganizationService) {}
 
-  async loadMany(ids: readonly ID[]) {
-    return await this.organizations.readMany(ids, this.session);
+  async loadMany(ids: ReadonlyArray<ID<Organization>>) {
+    return await this.organizations.readMany(ids);
   }
 }

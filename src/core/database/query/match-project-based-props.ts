@@ -1,15 +1,8 @@
 import { oneLine } from 'common-tags';
 import { node, type Query, relation } from 'cypher-query-builder';
-import { type ID, type Sensitivity, type Session } from '~/common';
-import {
-  type QueryFragment,
-  requestingUser,
-  Variable,
-} from '~/core/database/query';
-import {
-  type GlobalScopedRole,
-  type ScopedRole,
-} from '../../../components/authorization/dto';
+import { type Role, type Sensitivity } from '~/common';
+import { type QueryFragment } from '~/core/database/query';
+import { type ScopedRole } from '../../../components/authorization/dto';
 import { ProjectType } from '../../../components/project/dto/project-type.enum';
 import {
   apoc,
@@ -19,20 +12,21 @@ import {
   merge,
   reduce,
 } from './cypher-functions';
-import { ACTIVE, matchProps, type MatchPropsOptions } from './matching';
+import {
+  ACTIVE,
+  currentUser,
+  matchProps,
+  type MatchPropsOptions,
+} from './matching';
 
 export const matchPropsAndProjectSensAndScopedRoles =
-  (session?: Session | ID | Variable, propsOptions?: MatchPropsOptions) =>
+  (propsOptions?: MatchPropsOptions) =>
   <R>(query: Query<R>) =>
     query.comment`
       matchPropsAndProjectSensAndScopedRoles()
     `.subQuery((sub) =>
       sub
-        .with([
-          'node',
-          'project',
-          ...(session instanceof Variable ? [session.name] : []),
-        ])
+        .with(['node', 'project'])
         .apply(matchProjectSens('project'))
         .apply(
           matchProps(
@@ -41,66 +35,58 @@ export const matchPropsAndProjectSensAndScopedRoles =
               : { ...propsOptions, view: { active: true } },
           ),
         )
-        .apply((q) =>
-          !session ? q : q.apply(matchProjectScopedRoles({ session })),
-        )
+        .apply(matchProjectScopedRoles())
         .return([
           merge(propsOptions?.outputVar ?? 'props', {
             sensitivity: 'sensitivity',
-            scope: session ? `scopedRoles` : null,
+            scope: 'scopedRoles',
           }).as(propsOptions?.outputVar ?? 'props'),
         ]),
     );
 
 export const matchProjectScopedRoles =
   <Output extends string = 'scopedRoles'>({
-    session,
     projectVar = 'project',
     outputVar = 'scopedRoles' as Output,
   }: {
-    session: Session | ID | Variable;
     projectVar?: string;
     outputVar?: Output;
-  }) =>
+  } = {}) =>
   <R>(query: Query<R>) =>
-    query.comment`matchProjectScopedRoles()`.subQuery(
-      [projectVar, session instanceof Variable ? session : null],
-      (sub) =>
-        sub
-          .match([
-            [
-              node(projectVar),
-              relation('out', '', 'member'),
-              node('projectMember'),
-              relation('out', '', 'user'),
-              session instanceof Variable
-                ? node(session.name)
-                : requestingUser(session),
-            ],
-            [
-              node('projectMember'),
-              relation('out', '', 'roles', ACTIVE),
-              node('rolesProp', 'Property'),
-            ],
-          ])
-          .with(collect('rolesProp.value').as('memberRoleProps'))
-          .return<{ [K in Output]: ScopedRole[] }>(
-            listConcat(
-              'case size(memberRoleProps) > 0 when true then ["member:true"] else [] end',
-              reduce(
-                'scopedRoles',
-                [],
-                apoc.coll.flatten('memberRoleProps'),
-                'role',
-                listConcat('scopedRoles', [`"project:" + role`]),
-              ),
-            ).as(outputVar),
-          )
-          .union()
-          .with('project')
-          .with('project')
-          .raw('WHERE project IS NULL')
-          .return(`[] as ${outputVar}`),
+    query.comment`matchProjectScopedRoles()`.subQuery([projectVar], (sub) =>
+      sub
+        .match([
+          [
+            node(projectVar),
+            relation('out', '', 'member'),
+            node('projectMember'),
+            relation('out', '', 'user'),
+            currentUser,
+          ],
+          [
+            node('projectMember'),
+            relation('out', '', 'roles', ACTIVE),
+            node('rolesProp', 'Property'),
+          ],
+        ])
+        .with(collect('rolesProp.value').as('memberRoleProps'))
+        .return<{ [K in Output]: ScopedRole[] }>(
+          listConcat(
+            'case size(memberRoleProps) > 0 when true then ["member:true"] else [] end',
+            reduce(
+              'scopedRoles',
+              [],
+              apoc.coll.flatten('memberRoleProps'),
+              'role',
+              listConcat('scopedRoles', [`"project:" + role`]),
+            ),
+          ).as(outputVar),
+        )
+        .union()
+        .with('project')
+        .with('project')
+        .raw('WHERE project IS NULL')
+        .return(`[] as ${outputVar}`),
     );
 
 export const matchProjectSens =
@@ -155,7 +141,7 @@ export const matchProjectSens =
 
 export const matchUserGloballyScopedRoles =
   <Output extends string = 'scopedRoles'>(
-    userVar = 'requestingUser',
+    userVar: string,
     outputVar = 'globalRoles' as Output,
   ) =>
   <R>(query: Query<R>) =>
@@ -167,14 +153,8 @@ export const matchUserGloballyScopedRoles =
           relation('out', '', 'roles', ACTIVE),
           node('role', 'Property'),
         ])
-        .return<{ [K in Output]: readonly GlobalScopedRole[] }>(
-          reduce(
-            'scopedRoles',
-            [],
-            apoc.coll.flatten(collect('role.value')),
-            'role',
-            listConcat('scopedRoles', [`"global:" + role`]),
-          ).as(outputVar),
+        .return<{ [K in Output]: readonly Role[] }>(
+          apoc.coll.flatten(collect('role.value')).as(outputVar),
         ),
     );
 
@@ -183,7 +163,7 @@ export const oncePerProject =
   (logic: QueryFragment): QueryFragment =>
   (query) =>
     query
-      .with(['project', 'collect(node) as nodeList', 'requestingUser'])
+      .with(['project', 'collect(node) as nodeList'])
       .apply(logic)
       .raw('UNWIND nodeList as node');
 

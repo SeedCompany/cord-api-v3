@@ -12,9 +12,9 @@ import {
   DbUnique,
   Disabled,
   EnhancedResource,
+  Grandparent,
   IntersectTypes,
   NameField,
-  parentIdMiddleware,
   RequiredWhen,
   Resource,
   type ResourceRelationsShape,
@@ -119,7 +119,7 @@ class Project extends Interfaces {
   readonly departmentId: SecuredStringNullable;
 
   @Field({
-    middleware: [parentIdMiddleware],
+    middleware: [Grandparent.store],
   })
   @DbLabel('ProjectStep')
   @DbSort(sortingForEnumIndex(ProjectStep))
@@ -220,7 +220,9 @@ export { Project as IProject, type AnyProject as Project };
   resolveType: resolveProjectType,
   implements: [Project],
 })
-export class TranslationProject extends Project {}
+export class TranslationProject extends Project {
+  declare readonly type: 'MultiplicationTranslation' | 'MomentumTranslation';
+}
 
 @RegisterResource({ db: e.MomentumTranslationProject })
 @ObjectType({

@@ -6,15 +6,7 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import {
-  AnonSession,
-  type ID,
-  IdArg,
-  ListArg,
-  LoggedInSession,
-  mapSecuredValue,
-  type Session,
-} from '~/common';
+import { type ID, IdArg, ListArg, mapSecuredValue } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { UserLoader } from '../user';
 import { SecuredUser } from '../user/dto';
@@ -49,11 +41,10 @@ export class FieldZoneResolver {
     description: 'Look up field zones',
   })
   async fieldZones(
-    @AnonSession() session: Session,
     @ListArg(FieldZoneListInput) input: FieldZoneListInput,
     @Loader(FieldZoneLoader) fieldZones: LoaderOf<FieldZoneLoader>,
   ): Promise<FieldZoneListOutput> {
-    const list = await this.fieldZoneService.list(input, session);
+    const list = await this.fieldZoneService.list(input);
     fieldZones.primeAll(list.items);
     return list;
   }
@@ -72,10 +63,9 @@ export class FieldZoneResolver {
     description: 'Create a field zone',
   })
   async createFieldZone(
-    @LoggedInSession() session: Session,
     @Args('input') { fieldZone: input }: CreateFieldZoneInput,
   ): Promise<CreateFieldZoneOutput> {
-    const fieldZone = await this.fieldZoneService.create(input, session);
+    const fieldZone = await this.fieldZoneService.create(input);
     return { fieldZone };
   }
 
@@ -83,21 +73,17 @@ export class FieldZoneResolver {
     description: 'Update a field zone',
   })
   async updateFieldZone(
-    @LoggedInSession() session: Session,
     @Args('input') { fieldZone: input }: UpdateFieldZoneInput,
   ): Promise<UpdateFieldZoneOutput> {
-    const fieldZone = await this.fieldZoneService.update(input, session);
+    const fieldZone = await this.fieldZoneService.update(input);
     return { fieldZone };
   }
 
   @Mutation(() => DeleteFieldZoneOutput, {
     description: 'Delete a field zone',
   })
-  async deleteFieldZone(
-    @LoggedInSession() session: Session,
-    @IdArg() id: ID,
-  ): Promise<DeleteFieldZoneOutput> {
-    await this.fieldZoneService.delete(id, session);
+  async deleteFieldZone(@IdArg() id: ID): Promise<DeleteFieldZoneOutput> {
+    await this.fieldZoneService.delete(id);
     return { success: true };
   }
 }

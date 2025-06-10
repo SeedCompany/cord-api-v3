@@ -1,5 +1,5 @@
 import { type ID, type ObjectView } from '~/common';
-import { LoaderFactory, ObjectViewAwareLoader } from '~/core';
+import { LoaderFactory, ObjectViewAwareLoader } from '~/core/data-loader';
 import {
   InternshipProject,
   IProject,
@@ -17,7 +17,7 @@ import { ProjectService } from './project.service';
   MultiplicationTranslationProject,
   InternshipProject,
 ])
-export class ProjectLoader extends ObjectViewAwareLoader<Project> {
+export class ProjectLoader extends ObjectViewAwareLoader<Project, IProject> {
   constructor(private readonly projects: ProjectService) {
     super();
   }
@@ -26,6 +26,6 @@ export class ProjectLoader extends ObjectViewAwareLoader<Project> {
     ids: readonly ID[],
     view: ObjectView,
   ): Promise<readonly Project[]> {
-    return await this.projects.readMany(ids, this.session, view);
+    return await this.projects.readMany(ids, view);
   }
 }

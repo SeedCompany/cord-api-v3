@@ -1,50 +1,44 @@
 import { faker } from '@faker-js/faker';
 import { DateTime } from 'luxon';
+import type { SetOptional } from 'type-fest';
 import { isValidId } from '~/common';
-import {
-  type CreateUnavailability,
-  type Unavailability,
-} from '../../src/components/user/unavailability/dto';
+import { graphql, type InputOf } from '~/graphql';
 import { type TestApp } from './create-app';
-import { fragments } from './fragments';
-import { gql } from './gql-tag';
+import * as fragments from './fragments';
 
 export async function createUnavailability(
   app: TestApp,
-  input: Partial<CreateUnavailability> = {},
+  input: SetOptional<
+    InputOf<typeof CreateUnavailabilityDoc>,
+    'description' | 'start' | 'end'
+  >,
 ) {
-  const unavailability: CreateUnavailability = {
-    userId: input.userId!,
-    description: faker.location.country(),
-    start: DateTime.utc(),
-    end: DateTime.utc().plus({ years: 1 }),
-    ...input,
-  };
-
-  const result = await app.graphql.mutate(
-    gql`
-      mutation createUnavailability($input: CreateUnavailabilityInput!) {
-        createUnavailability(input: $input) {
-          unavailability {
-            ...unavailability
-          }
-        }
-      }
-      ${fragments.unavailability}
-    `,
-    {
-      input: {
-        unavailability: {
-          ...unavailability,
-        },
-      },
+  const result = await app.graphql.mutate(CreateUnavailabilityDoc, {
+    input: {
+      description: faker.location.country(),
+      start: DateTime.now().toISO(),
+      end: DateTime.now().plus({ years: 1 }).toISO(),
+      ...input,
     },
-  );
+  });
 
-  const actual: Unavailability = result.createUnavailability.unavailability;
+  const actual = result.createUnavailability.unavailability;
   expect(actual).toBeTruthy();
 
   expect(isValidId(actual.id)).toBe(true);
 
   return actual;
 }
+
+const CreateUnavailabilityDoc = graphql(
+  `
+    mutation createUnavailability($input: CreateUnavailability!) {
+      createUnavailability(input: { unavailability: $input }) {
+        unavailability {
+          ...unavailability
+        }
+      }
+    }
+  `,
+  [fragments.unavailability],
+);

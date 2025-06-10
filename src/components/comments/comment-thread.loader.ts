@@ -1,26 +1,25 @@
 import { type ID } from '~/common';
-import { LoaderFactory, OrderedNestDataLoader } from '~/core';
+import { type DataLoaderStrategy, LoaderFactory } from '~/core/data-loader';
 import { CommentRepository } from './comment.repository';
 import { CommentService } from './comment.service';
 import { CommentThread } from './dto';
 
 @LoaderFactory(() => CommentThread)
-export class CommentThreadLoader extends OrderedNestDataLoader<CommentThread> {
+export class CommentThreadLoader
+  implements DataLoaderStrategy<CommentThread, ID<CommentThread>>
+{
   constructor(
     private readonly service: CommentService,
     private readonly repo: CommentRepository,
-  ) {
-    super();
-  }
+  ) {}
 
-  async loadMany(ids: readonly ID[]) {
-    const session = this.session;
+  async loadMany(ids: ReadonlyArray<ID<CommentThread>>) {
     const threads = await this.repo.threads.readMany(ids);
     return await Promise.all(
       threads.map(async (thread) => {
         try {
-          await this.service.verifyCanView(thread.parent, session);
-          return this.service.secureThread(thread, session);
+          await this.service.verifyCanView(thread.parent);
+          return this.service.secureThread(thread);
         } catch (error) {
           return { key: thread.id, error };
         }

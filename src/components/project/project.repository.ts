@@ -8,7 +8,6 @@ import {
   type ID,
   NotFoundException,
   Sensitivity,
-  type Session,
   type UnsecuredDto,
 } from '~/common';
 import { ConfigService } from '~/core';
@@ -26,7 +25,7 @@ import {
   merge,
   paginate,
   path,
-  requestingUser,
+  pinned,
   type SortCol,
   sortWith,
   variable,
@@ -55,11 +54,11 @@ export class ProjectRepository extends CommonRepository {
     super();
   }
 
-  async readOne(id: ID, userId: ID, changeset?: ID) {
+  async readOne(id: ID, changeset?: ID) {
     const query = this.db
       .query()
       .match([node('node', 'Project', { id })])
-      .apply(this.hydrate(userId, changeset));
+      .apply(this.hydrate(changeset));
     const result = await query.first();
     if (!result) {
       throw new NotFoundException('Could not find project');
@@ -68,21 +67,21 @@ export class ProjectRepository extends CommonRepository {
     return result.dto;
   }
 
-  async readMany(ids: readonly ID[], session: Session, changeset?: ID) {
+  async readMany(ids: readonly ID[], changeset?: ID) {
     return await this.db
       .query()
       .matchNode('node', 'Project')
       .where({ 'node.id': inArray(ids) })
-      .apply(this.hydrate(session.userId, changeset))
+      .apply(this.hydrate(changeset))
       .map('dto')
       .run();
   }
 
-  private hydrate(userId: ID, changeset?: ID) {
+  private hydrate(changeset?: ID) {
     return (query: Query) =>
       query
         .with(['node', 'node as project'])
-        .apply(matchPropsAndProjectSensAndScopedRoles(userId))
+        .apply(matchPropsAndProjectSensAndScopedRoles())
         .apply(matchChangesetAndChangedProps(changeset))
         // optional because not defined until right after creation
         .optionalMatch([
@@ -134,7 +133,7 @@ export class ProjectRepository extends CommonRepository {
         .return<{ dto: UnsecuredDto<Project> }>(
           merge('props', 'changedProps', {
             type: 'node.type',
-            pinned: 'exists((:User { id: $requestingUser })-[:pinned]->(node))',
+            pinned,
             isMember: '"member:true" in props.scope',
             rootDirectory: 'rootDirectory { .id }',
             primaryPartnership: 'primaryPartnership { .id }',
@@ -330,16 +329,15 @@ export class ProjectRepository extends CommonRepository {
     return result;
   }
 
-  async list(input: ProjectListInput, session: Session) {
+  async list(input: ProjectListInput) {
     const result = await this.db
       .query()
       .matchNode('node', 'Project')
       .with('distinct(node) as node, node as project')
-      .match(requestingUser(session))
       .apply(projectFilters(input.filter))
-      .apply(this.privileges.for(session, IProject).filterToReadable())
+      .apply(this.privileges.for(IProject).filterToReadable())
       .apply(sortWith(projectSorters, input))
-      .apply(paginate(input, this.hydrate(session.userId)))
+      .apply(paginate(input, this.hydrate()))
       .first();
     return result!; // result from paginate() will always have 1 row.
   }

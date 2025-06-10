@@ -1,23 +1,24 @@
 import { faker } from '@faker-js/faker';
 import { generateId, isValidId, Role } from '~/common';
-import { type RegisterInput } from '../../src/components/authentication/dto';
-import { type User, UserStatus } from '../../src/components/user/dto';
+import { graphql, type InputOf } from '~/graphql';
 import { type TestApp } from './create-app';
-import { fragments, type RawUser } from './fragments';
-import { gql } from './gql-tag';
+import * as fragments from './fragments';
 import { login, runAsAdmin, runInIsolatedSession } from './login';
 
-export const generateRegisterInput = async (): Promise<RegisterInput> => ({
-  ...(await generateRequireFieldsRegisterInput()),
-  phone: faker.phone.number(),
-  about: 'about detail',
-  status: UserStatus.Active,
-  roles: [Role.ProjectManager, Role.Consultant],
-  title: faker.person.jobTitle(),
-});
+type RegisterInput = InputOf<typeof RegisterUserDoc>;
 
-export const generateRequireFieldsRegisterInput =
-  async (): Promise<RegisterInput> => ({
+export const generateRegisterInput = async () =>
+  ({
+    ...(await generateRequireFieldsRegisterInput()),
+    phone: faker.phone.number(),
+    about: 'about detail',
+    status: 'Active',
+    roles: [Role.ProjectManager, Role.Consultant],
+    title: faker.person.jobTitle(),
+  } satisfies RegisterInput);
+
+export const generateRequireFieldsRegisterInput = async () =>
+  ({
     email: faker.internet.email(),
     realFirstName: faker.person.firstName(),
     realLastName: faker.person.lastName(),
@@ -25,31 +26,14 @@ export const generateRequireFieldsRegisterInput =
     displayLastName: faker.person.lastName() + (await generateId()),
     password: faker.internet.password(),
     timezone: 'America/Chicago',
-  });
+  } satisfies RegisterInput);
 
 export async function registerUserWithStrictInput(
   app: TestApp,
   input: RegisterInput,
 ) {
-  const user: RegisterInput = {
-    ...input,
-  };
-  const result = await app.graphql.mutate(
-    gql`
-      mutation createUser($input: RegisterInput!) {
-        register(input: $input) {
-          user {
-            ...user
-          }
-        }
-      }
-      ${fragments.user}
-    `,
-    {
-      input: user,
-    },
-  );
-  const actual: RawUser = result.register.user;
+  const result = await app.graphql.mutate(RegisterUserDoc, { input });
+  const actual = result.register.user;
   expect(actual).toBeTruthy();
 
   expect(isValidId(actual.id)).toBe(true);
@@ -58,7 +42,7 @@ export async function registerUserWithStrictInput(
   return actual;
 }
 
-export type TestUser = User & {
+export type TestUser = fragments.user & {
   /**
    * Login as the user with the current session
    */
@@ -79,22 +63,8 @@ export async function registerUser(
     ...input,
   };
 
-  const result = await app.graphql.mutate(
-    gql`
-      mutation createUser($input: RegisterInput!) {
-        register(input: $input) {
-          user {
-            ...user
-          }
-        }
-      }
-      ${fragments.user}
-    `,
-    {
-      input: user,
-    },
-  );
-  const actual: User = result.register.user;
+  const result = await app.graphql.mutate(RegisterUserDoc, { input: user });
+  const actual = result.register.user;
   expect(actual).toBeTruthy();
 
   expect(isValidId(actual.id)).toBe(true);
@@ -104,19 +74,10 @@ export async function registerUser(
   // instead of actually trying to create a user the intended way.
   if (roles && roles.length > 0) {
     await runAsAdmin(app, async () => {
-      await app.graphql.mutate(
-        gql`
-          mutation AddRolesToUser($userId: ID!, $roles: [Role!]!) {
-            updateUser(input: { user: { id: $userId, roles: $roles } }) {
-              __typename
-            }
-          }
-        `,
-        {
-          userId: actual.id,
-          roles,
-        },
-      );
+      await app.graphql.mutate(AddRolesToUser, {
+        userId: actual.id,
+        roles,
+      });
     });
   }
 
@@ -133,3 +94,24 @@ export async function registerUser(
       }),
   };
 }
+
+const RegisterUserDoc = graphql(
+  `
+    mutation RegisterUser($input: RegisterInput!) {
+      register(input: $input) {
+        user {
+          ...user
+        }
+      }
+    }
+  `,
+  [fragments.user],
+);
+
+const AddRolesToUser = graphql(`
+  mutation AddRolesToUser($userId: ID!, $roles: [Role!]!) {
+    updateUser(input: { user: { id: $userId, roles: $roles } }) {
+      __typename
+    }
+  }
+`);

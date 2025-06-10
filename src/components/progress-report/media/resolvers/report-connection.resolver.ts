@@ -1,11 +1,5 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import {
-  AnonSession,
-  type IdOf,
-  ListArg,
-  NotFoundException,
-  type Session,
-} from '~/common';
+import { type IdOf, ListArg, NotFoundException } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { ProgressReport } from '../../dto';
 import {
@@ -43,8 +37,7 @@ export class ProgressReportMediaProgressReportConnectionResolver {
   async media(
     @Parent() report: ProgressReport,
     @ListArg(ListArgs) input: ListArgs,
-    @AnonSession() session: Session,
   ): Promise<ReportMediaList> {
-    return await this.service.listForReport(report, input, session);
+    return await this.service.listForReport(report, input);
   }
 }

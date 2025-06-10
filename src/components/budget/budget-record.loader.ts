@@ -1,5 +1,5 @@
 import { type ID, NotFoundException, type ObjectView } from '~/common';
-import { LoaderFactory, ObjectViewAwareLoader } from '~/core';
+import { LoaderFactory, ObjectViewAwareLoader } from '~/core/data-loader';
 import { BudgetService } from './budget.service';
 import { BudgetRecord } from './dto';
 
@@ -16,7 +16,7 @@ export class BudgetRecordLoader extends ObjectViewAwareLoader<BudgetRecord> {
   }
 
   async loadOne(id: ID, view?: ObjectView): Promise<BudgetRecord> {
-    return await this.budgets.readOneRecord(id, this.session, view);
+    return await this.budgets.readOneRecord(id, view);
   }
 
   // Below is the same logic as SingleItemLoader

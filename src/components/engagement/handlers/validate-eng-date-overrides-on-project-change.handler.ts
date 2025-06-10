@@ -10,16 +10,13 @@ export class ValidateEngDateOverridesOnProjectChangeHandler
   constructor(private readonly engagements: EngagementService) {}
 
   async handle(event: ProjectUpdatedEvent) {
-    const { updated: project, changes, session } = event;
+    const { updated: project, changes } = event;
 
     if (changes.mouStart === undefined && changes.mouEnd === undefined) {
       return;
     }
 
-    const engagements = await this.engagements.listAllByProjectId(
-      project.id,
-      session,
-    );
+    const engagements = await this.engagements.listAllByProjectId(project.id);
     const canonical = { start: project.mouStart, end: project.mouEnd };
     const conflicts = DateOverrideConflictException.findConflicts(
       canonical,

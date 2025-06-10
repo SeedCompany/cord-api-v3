@@ -1,14 +1,13 @@
 import { faker } from '@faker-js/faker';
 import { times } from 'lodash';
 import { isValidId, Role } from '~/common';
-import { type Film } from '../src/components/film/dto';
+import { graphql } from '~/graphql';
 import { ScriptureRange } from '../src/components/scripture/dto';
 import {
   createFilm,
   createSession,
   createTestApp,
   fragments,
-  gql,
   registerUser,
   type TestApp,
 } from './utility';
@@ -43,14 +42,16 @@ describe('Film e2e', () => {
     const scriptureReferences = ScriptureRange.randomList();
     const fm = await createFilm(app, { name, scriptureReferences });
     const { film: actual } = await app.graphql.query(
-      gql`
-        query fm($id: ID!) {
-          film(id: $id) {
-            ...film
+      graphql(
+        `
+          query fm($id: ID!) {
+            film(id: $id) {
+              ...film
+            }
           }
-        }
-        ${fragments.film}
-      `,
+        `,
+        [fragments.film],
+      ),
       {
         id: fm.id,
       },
@@ -69,16 +70,18 @@ describe('Film e2e', () => {
     const newName = faker.company.name();
     const scriptureReferences = ScriptureRange.randomList();
     const result = await app.graphql.mutate(
-      gql`
-        mutation updateFilm($input: UpdateFilmInput!) {
-          updateFilm(input: $input) {
-            film {
-              ...film
+      graphql(
+        `
+          mutation updateFilm($input: UpdateFilmInput!) {
+            updateFilm(input: $input) {
+              film {
+                ...film
+              }
             }
           }
-        }
-        ${fragments.film}
-      `,
+        `,
+        [fragments.film],
+      ),
       {
         input: {
           film: {
@@ -102,18 +105,18 @@ describe('Film e2e', () => {
   it.skip('delete film', async () => {
     const fm = await createFilm(app);
     const result = await app.graphql.mutate(
-      gql`
+      graphql(`
         mutation deleteFilm($id: ID!) {
           deleteFilm(id: $id) {
             __typename
           }
         }
-      `,
+      `),
       {
         id: fm.id,
       },
     );
-    const actual: Film | undefined = result.deleteFilm;
+    const actual = result.deleteFilm;
     expect(actual).toBeTruthy();
   });
 
@@ -121,18 +124,22 @@ describe('Film e2e', () => {
     const numFilms = 2;
     await Promise.all(times(numFilms).map(() => createFilm(app)));
 
-    const { films } = await app.graphql.query(gql`
-      query {
-        films(input: { count: 15 }) {
-          items {
-            ...film
+    const { films } = await app.graphql.query(
+      graphql(
+        `
+          query {
+            films(input: { count: 15 }) {
+              items {
+                ...film
+              }
+              hasMore
+              total
+            }
           }
-          hasMore
-          total
-        }
-      }
-      ${fragments.film}
-    `);
+        `,
+        [fragments.film],
+      ),
+    );
 
     expect(films.items.length).toBeGreaterThanOrEqual(numFilms);
   });

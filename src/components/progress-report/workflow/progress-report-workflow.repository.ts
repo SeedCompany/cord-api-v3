@@ -7,7 +7,6 @@ import {
   Order,
   type Role,
   ServerException,
-  type Session,
   type UnsecuredDto,
 } from '~/common';
 import { DtoRepository } from '~/core/database';
@@ -15,8 +14,8 @@ import {
   ACTIVE,
   createNode,
   createRelationships,
+  currentUser,
   merge,
-  requestingUser,
   sorting,
 } from '~/core/database/query';
 import { ProgressReport, type ProgressReportStatus as Status } from '../dto';
@@ -27,25 +26,24 @@ import { ProgressReportWorkflowEvent as WorkflowEvent } from './dto/workflow-eve
 export class ProgressReportWorkflowRepository extends DtoRepository(
   WorkflowEvent,
 ) {
-  // @ts-expect-error It doesn't have match base signature
-  async readMany(ids: readonly ID[], session: Session) {
+  async readMany(ids: readonly ID[]) {
     return await this.db
       .query()
       .apply(this.matchEvent())
       .where({ 'node.id': inArray(ids) })
-      .apply(this.privileges.forUser(session).filterToReadable())
+      .apply(this.privileges.filterToReadable())
       .apply(this.hydrate())
       .map('dto')
       .run();
   }
 
-  async list(reportId: ID, session: Session) {
+  async list(reportId: ID) {
     return await this.db
       .query()
       .apply(this.matchEvent())
       .where({ 'report.id': reportId })
-      .match(requestingUser(session))
-      .apply(this.privileges.forUser(session).filterToReadable())
+      .with('*') // needed between where & where
+      .apply(this.privileges.filterToReadable())
       .apply(sorting(WorkflowEvent, { sort: 'createdAt', order: Order.ASC }))
       .apply(this.hydrate())
       .map('dto')
@@ -81,13 +79,10 @@ export class ProgressReportWorkflowRepository extends DtoRepository(
         );
   }
 
-  async recordEvent(
-    {
-      report,
-      ...props
-    }: SetRequired<ExecuteProgressReportTransitionInput, 'status'>,
-    session: Session,
-  ) {
+  async recordEvent({
+    report,
+    ...props
+  }: SetRequired<ExecuteProgressReportTransitionInput, 'status'>) {
     const result = await this.db
       .query()
       .apply(
@@ -98,7 +93,7 @@ export class ProgressReportWorkflowRepository extends DtoRepository(
       .apply(
         createRelationships(WorkflowEvent, {
           in: { workflowEvent: ['ProgressReport', report] },
-          out: { who: ['User', session.userId] },
+          out: { who: currentUser },
         }),
       )
       .apply(this.hydrate())

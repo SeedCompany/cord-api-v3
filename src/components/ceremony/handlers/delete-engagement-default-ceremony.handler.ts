@@ -11,7 +11,7 @@ export class DetachEngagementRootDirectoryHandler
     private readonly config: ConfigService,
   ) {}
 
-  async handle({ engagement, session }: EngagementWillDeleteEvent) {
+  async handle({ engagement }: EngagementWillDeleteEvent) {
     if (this.config.databaseEngine === 'gel') {
       return;
     }
@@ -26,6 +26,6 @@ export class DetachEngagementRootDirectoryHandler
       return;
     }
 
-    await this.ceremonies.delete(ceremonyId, session);
+    await this.ceremonies.delete(ceremonyId);
   }
 }

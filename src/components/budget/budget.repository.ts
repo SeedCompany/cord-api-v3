@@ -7,7 +7,6 @@ import {
   labelForView,
   NotFoundException,
   type ObjectView,
-  type Session,
   type UnsecuredDto,
   viewOfChangeset,
 } from '~/common';
@@ -22,7 +21,6 @@ import {
   merge,
   oncePerProject,
   paginate,
-  requestingUser,
   sorting,
 } from '~/core/database/query';
 import { type FileId } from '../file/dto';
@@ -39,7 +37,7 @@ import {
 @Injectable()
 export class BudgetRepository extends DtoRepository<
   typeof Budget,
-  [session: Session, view?: ObjectView]
+  [view?: ObjectView]
 >(Budget) {
   constructor(private readonly records: BudgetRecordRepository) {
     super();
@@ -80,7 +78,7 @@ export class BudgetRepository extends DtoRepository<
     return await this.updateProperties(existing, simpleChanges);
   }
 
-  async readMany(ids: readonly ID[], session: Session, view?: ObjectView) {
+  async readMany(ids: readonly ID[], view?: ObjectView) {
     const label = labelForView('Budget', view);
     return await this.db
       .query()
@@ -90,7 +88,7 @@ export class BudgetRepository extends DtoRepository<
         node('node', label),
       ])
       .where({ 'node.id': inArray(ids) })
-      .apply(matchPropsAndProjectSensAndScopedRoles(session, { view }))
+      .apply(matchPropsAndProjectSensAndScopedRoles({ view }))
       .apply(matchChangesetAndChangedProps(view?.changeset))
       .return<{ dto: UnsecuredDto<Budget> }>(
         merge('props', 'changedProps', {
@@ -102,7 +100,7 @@ export class BudgetRepository extends DtoRepository<
       .run();
   }
 
-  async list({ filter, ...input }: BudgetListInput, session: Session) {
+  async list({ filter, ...input }: BudgetListInput) {
     const result = await this.db
       .query()
       .match([
@@ -110,9 +108,8 @@ export class BudgetRepository extends DtoRepository<
         relation('in', '', 'budget', ACTIVE),
         node('project', 'Project', pickBy({ id: filter?.projectId })),
       ])
-      .match(requestingUser(session))
       .apply(
-        this.privileges.forUser(session).filterToReadable({
+        this.privileges.filterToReadable({
           wrapContext: oncePerProject,
         }),
       )
@@ -183,7 +180,7 @@ export class BudgetRepository extends DtoRepository<
       );
   }
 
-  async listRecordsForSync(projectId: ID, session: Session, changeset?: ID) {
+  async listRecordsForSync(projectId: ID, changeset?: ID) {
     const view: ObjectView = viewOfChangeset(changeset);
     const result = await this.db
       .query()
@@ -192,7 +189,7 @@ export class BudgetRepository extends DtoRepository<
         sub
           .with('project, budget')
           .apply(this.records.recordsOfBudget({ view }))
-          .apply(this.records.hydrate({ session, view }))
+          .apply(this.records.hydrate({ view }))
           .return('collect(dto) as records'),
       )
       .return<

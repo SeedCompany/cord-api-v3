@@ -1,13 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import {
   type ID,
+  InputException,
+  NotFoundException,
   type ObjectView,
   ServerException,
-  type Session,
   type UnsecuredDto,
 } from '~/common';
-import { HandleIdLookup, ILogger, Logger } from '~/core';
+import { HandleIdLookup } from '~/core';
+import { IEventBus } from '~/core/events';
 import { Privileges } from '../authorization';
+import { UserService } from '../user';
 import {
   type CreateFieldZone,
   FieldZone,
@@ -15,77 +18,101 @@ import {
   type FieldZoneListOutput,
   type UpdateFieldZone,
 } from './dto';
+import { FieldZoneUpdatedEvent } from './events/field-zone-updated.event';
 import { FieldZoneRepository } from './field-zone.repository';
 
 @Injectable()
 export class FieldZoneService {
   constructor(
-    @Logger('field-zone:service') private readonly logger: ILogger,
     private readonly privileges: Privileges,
+    private readonly events: IEventBus,
+    private readonly users: UserService,
     private readonly repo: FieldZoneRepository,
   ) {}
 
-  async create(input: CreateFieldZone, session: Session): Promise<FieldZone> {
-    this.privileges.for(session, FieldZone).verifyCan('create');
+  async create(input: CreateFieldZone): Promise<FieldZone> {
+    this.privileges.for(FieldZone).verifyCan('create');
+    await this.validateDirectorRole(input.directorId);
     const dto = await this.repo.create(input);
-    return this.secure(dto, session);
+    return this.secure(dto);
   }
 
   @HandleIdLookup(FieldZone)
-  async readOne(
-    id: ID,
-    session: Session,
-    _view?: ObjectView,
-  ): Promise<FieldZone> {
-    this.logger.debug(`Read Field Zone`, {
-      id: id,
-      userId: session.userId,
-    });
-
+  async readOne(id: ID, _view?: ObjectView): Promise<FieldZone> {
     const result = await this.repo.readOne(id);
-    return this.secure(result, session);
+    return this.secure(result);
   }
 
-  async readMany(ids: readonly ID[], session: Session) {
+  async readMany(ids: readonly ID[]) {
     const fieldZones = await this.repo.readMany(ids);
-    return fieldZones.map((dto) => this.secure(dto, session));
+    return fieldZones.map((dto) => this.secure(dto));
   }
 
-  private secure(dto: UnsecuredDto<FieldZone>, session: Session) {
-    return this.privileges.for(session, FieldZone).secure(dto);
+  private secure(dto: UnsecuredDto<FieldZone>) {
+    return this.privileges.for(FieldZone).secure(dto);
   }
 
-  async update(input: UpdateFieldZone, session: Session): Promise<FieldZone> {
+  async update(input: UpdateFieldZone): Promise<FieldZone> {
     const fieldZone = await this.repo.readOne(input.id);
 
     const changes = this.repo.getActualChanges(fieldZone, input);
-    this.privileges.for(session, FieldZone, fieldZone).verifyChanges(changes);
+    this.privileges.for(FieldZone, fieldZone).verifyChanges(changes);
+
+    if (changes.directorId) {
+      await this.validateDirectorRole(changes.directorId);
+    }
+
+    if (Object.keys(changes).length === 0) {
+      return this.secure(fieldZone);
+    }
 
     const updated = await this.repo.update({ id: input.id, ...changes });
-    return this.secure(updated, session);
+
+    const event = new FieldZoneUpdatedEvent(fieldZone, updated, {
+      id: input.id,
+      ...changes,
+    });
+    await this.events.publish(event);
+
+    return this.secure(updated);
   }
 
-  async delete(id: ID, session: Session): Promise<void> {
-    const object = await this.readOne(id, session);
+  private async validateDirectorRole(directorId: ID<'User'>) {
+    let director;
+    try {
+      director = await this.users.readOneUnsecured(directorId);
+    } catch (e) {
+      if (e instanceof NotFoundException) {
+        throw e.withField('fieldZone.directorId');
+      }
+      throw e;
+    }
+    if (!director.roles.includes('FieldOperationsDirector')) {
+      throw new InputException(
+        'User does not have the Field Operations Director role',
+        'fieldZone.directorId',
+      );
+    }
+    return director;
+  }
 
-    this.privileges.for(session, FieldZone, object).verifyCan('delete');
+  async delete(id: ID): Promise<void> {
+    const object = await this.readOne(id);
+
+    this.privileges.for(FieldZone, object).verifyCan('delete');
 
     try {
       await this.repo.deleteNode(object);
     } catch (exception) {
-      this.logger.error('Failed to delete', { id, exception });
       throw new ServerException('Failed to delete', exception);
     }
   }
 
-  async list(
-    input: FieldZoneListInput,
-    session: Session,
-  ): Promise<FieldZoneListOutput> {
-    const results = await this.repo.list(input, session);
+  async list(input: FieldZoneListInput): Promise<FieldZoneListOutput> {
+    const results = await this.repo.list(input);
     return {
       ...results,
-      items: results.items.map((dto) => this.secure(dto, session)),
+      items: results.items.map((dto) => this.secure(dto)),
     };
   }
 }

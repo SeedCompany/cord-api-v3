@@ -7,21 +7,13 @@ import {
   type ID,
   isIdLike,
   Order,
-  type PaginatedListType,
   Role,
   Sensitivity,
 } from '~/common';
+import { graphql, type InputOf } from '~/graphql';
 import { BudgetStatus } from '../src/components/budget/dto';
-import { type FieldRegion } from '../src/components/field-region/dto';
-import { type Location } from '../src/components/location/dto';
 import { PartnerType } from '../src/components/partner/dto';
-import { type CreatePartnership } from '../src/components/partnership/dto';
-import {
-  type CreateProject,
-  type Project,
-  type ProjectListInput,
-  ProjectType,
-} from '../src/components/project/dto';
+import { ProjectType } from '../src/components/project/dto';
 import {
   createFundingAccount,
   createInternshipEngagement,
@@ -41,59 +33,56 @@ import {
   createZone,
   errors,
   fragments,
-  gql,
-  type Raw,
   registerUser,
   runAsAdmin,
   type TestApp,
-  type TestUser,
 } from './utility';
 import { forceProjectTo } from './utility/transition-project';
 
 const deleteProject =
   (app: TestApp) => async (id: ID | string | { id: ID | string }) =>
     await app.graphql.mutate(
-      gql`
+      graphql(`
         mutation DeleteProject($id: ID!) {
           deleteProject(id: $id) {
             __typename
           }
         }
-      `,
+      `),
       {
-        id: isIdLike(id) || typeof id === 'string' ? id : id.id,
+        id: isIdLike(id) || typeof id === 'string' ? (id as ID) : (id.id as ID),
       },
     );
 
 const listProjects = async (
   app: TestApp,
-  input?: Partial<ProjectListInput>,
+  input?: InputOf<typeof ProjectListDoc>,
 ) => {
-  const { projects } = await app.graphql.query(
-    gql`
-      query ProjectList($input: ProjectListInput) {
-        projects(input: $input) {
-          items {
-            ...project
-          }
-          hasMore
-          total
-        }
-      }
-      ${fragments.project}
-    `,
-    { input },
-  );
-  return projects as PaginatedListType<Raw<Project>>;
+  const { projects } = await app.graphql.query(ProjectListDoc, { input });
+  return projects;
 };
+const ProjectListDoc = graphql(
+  `
+    query ProjectList($input: ProjectListInput) {
+      projects(input: $input) {
+        items {
+          ...project
+        }
+        hasMore
+        total
+      }
+    }
+  `,
+  [fragments.project],
+);
 
 describe('Project e2e', () => {
   let app: TestApp;
-  let intern: TestUser;
-  let mentor: TestUser;
-  let director: TestUser;
-  let fieldRegion: FieldRegion;
-  let location: Location;
+  let intern: fragments.user;
+  let mentor: fragments.user;
+  let director: fragments.user;
+  let fieldRegion: fragments.fieldRegion;
+  let location: fragments.location;
 
   beforeAll(async () => {
     app = await createTestApp();
@@ -142,20 +131,22 @@ describe('Project e2e', () => {
     const project = await createProject(app, { fieldRegionId: fieldRegion.id });
 
     const result = await app.graphql.query(
-      gql`
-        query project($id: ID!) {
-          project(id: $id) {
-            ...project
+      graphql(
+        `
+          query project($id: ID!) {
+            project(id: $id) {
+              ...project
+            }
           }
-        }
-        ${fragments.project}
-      `,
+        `,
+        [fragments.project],
+      ),
       {
         id: project.id,
       },
     );
 
-    const actual: Project = result.project;
+    const actual = result.project;
     expect(actual.id).toBe(project.id);
     expect(actual.type).toBe(project.type);
     expect(actual.sensitivity).toBe(project.sensitivity);
@@ -211,17 +202,49 @@ describe('Project e2e', () => {
   });
 
   it('create & read project with budget and field region by id', async () => {
-    const proj: CreateProject = {
-      name: faker.string.uuid(),
-      type: ProjectType.MomentumTranslation,
-      fieldRegionId: fieldRegion.id,
-    };
-
     const res = await app.graphql.mutate(
-      gql`
-        mutation createProject($input: CreateProjectInput!) {
-          createProject(input: $input) {
-            project {
+      graphql(
+        `
+          mutation createProject($input: CreateProjectInput!) {
+            createProject(input: $input) {
+              project {
+                ...project
+                budget {
+                  value {
+                    ...budget
+                  }
+                }
+                fieldRegion {
+                  value {
+                    id
+                    name {
+                      value
+                    }
+                  }
+                }
+              }
+            }
+          }
+        `,
+        [fragments.project, fragments.budget],
+      ),
+      {
+        input: {
+          project: {
+            name: faker.string.uuid(),
+            type: ProjectType.MomentumTranslation,
+            fieldRegionId: fieldRegion.id,
+          },
+        },
+      },
+    );
+    const project = res.createProject.project;
+
+    const result = await app.graphql.query(
+      graphql(
+        `
+          query project($id: ID!) {
+            project(id: $id) {
               ...project
               budget {
                 value {
@@ -238,41 +261,9 @@ describe('Project e2e', () => {
               }
             }
           }
-        }
-        ${fragments.project}
-        ${fragments.budget}
-      `,
-      {
-        input: {
-          project: proj,
-        },
-      },
-    );
-    const project = res.createProject.project;
-
-    const result = await app.graphql.query(
-      gql`
-        query project($id: ID!) {
-          project(id: $id) {
-            ...project
-            budget {
-              value {
-                ...budget
-              }
-            }
-            fieldRegion {
-              value {
-                id
-                name {
-                  value
-                }
-              }
-            }
-          }
-        }
-        ${fragments.project}
-        ${fragments.budget}
-      `,
+        `,
+        [fragments.project, fragments.budget],
+      ),
       {
         id: project.id,
       },
@@ -281,9 +272,9 @@ describe('Project e2e', () => {
     const actual = result.project;
     expect(actual.id).toBe(project.id);
     expect(actual.type).toBe(project.type);
-    expect(actual.budget.value.id).toBe(project.budget.value.id);
-    expect(actual.fieldRegion.value.name.value).toBe(
-      project.fieldRegion.value.name.value,
+    expect(actual.budget.value!.id).toBe(project.budget.value!.id);
+    expect(actual.fieldRegion.value!.name.value).toBe(
+      project.fieldRegion.value!.name.value,
     );
   });
 
@@ -292,16 +283,18 @@ describe('Project e2e', () => {
     const namenew = faker.lorem.word() + ' Project';
 
     const result = await app.graphql.query(
-      gql`
-        mutation updateProject($id: ID!, $name: String!) {
-          updateProject(input: { project: { id: $id, name: $name } }) {
-            project {
-              ...project
+      graphql(
+        `
+          mutation updateProject($id: ID!, $name: String!) {
+            updateProject(input: { project: { id: $id, name: $name } }) {
+              project {
+                ...project
+              }
             }
           }
-        }
-        ${fragments.project}
-      `,
+        `,
+        [fragments.project],
+      ),
       {
         id: project.id,
         name: namenew,
@@ -323,14 +316,16 @@ describe('Project e2e', () => {
 
     await app.graphql
       .query(
-        gql`
-          query project($id: ID!) {
-            project(id: $id) {
-              ...project
+        graphql(
+          `
+            query project($id: ID!) {
+              project(id: $id) {
+                ...project
+              }
             }
-          }
-          ${fragments.project}
-        `,
+          `,
+          [fragments.project],
+        ),
         {
           id: project.id,
         },
@@ -370,7 +365,7 @@ describe('Project e2e', () => {
 
     // only be concerned with projects listed here,
     // ignore other ones that have slipped in from other tests
-    const filterNames = (list: PaginatedListType<Raw<Project>>) =>
+    const filterNames = (list: typeof ascProjects) =>
       intersection(
         list.items.map((p) => p.name.value),
         unsorted,
@@ -404,20 +399,22 @@ describe('Project e2e', () => {
     );
 
     const { projects } = await app.graphql.query(
-      gql`
-        query projects($type: [ProjectType!]) {
-          projects(input: { filter: { type: $type } }) {
-            items {
-              ...project
+      graphql(
+        `
+          query projects($type: [ProjectType!]) {
+            projects(input: { filter: { type: $type } }) {
+              items {
+                ...project
+              }
+              hasMore
+              total
             }
-            hasMore
-            total
           }
-        }
-        ${fragments.project}
-      `,
+        `,
+        [fragments.project],
+      ),
       {
-        type,
+        type: [type],
       },
     );
     expect(projects.items.length).toBeGreaterThanOrEqual(numProjects);
@@ -475,7 +472,7 @@ describe('Project e2e', () => {
 
     const getSensitivitySortedProjects = async (order: 'ASC' | 'DESC') =>
       await app.graphql.query(
-        gql`
+        graphql(`
           query projects($input: ProjectListInput!) {
             projects(input: $input) {
               hasMore
@@ -486,7 +483,7 @@ describe('Project e2e', () => {
               }
             }
           }
-        `,
+        `),
         {
           input: {
             sort: 'sensitivity',
@@ -494,9 +491,8 @@ describe('Project e2e', () => {
           },
         },
       );
-    const getSortedSensitivities = (
-      projects: PaginatedListType<Raw<Project>>,
-    ) => projects.items.map((project) => project.sensitivity);
+    const getSortedSensitivities = (projects: typeof ascendingProjects) =>
+      projects.items.map((project) => project.sensitivity);
 
     const { projects: ascendingProjects } = await getSensitivitySortedProjects(
       'ASC',
@@ -543,18 +539,20 @@ describe('Project e2e', () => {
     );
 
     const { projects } = await app.graphql.query(
-      gql`
-        query projects {
-          projects(input: { filter: { mine: true } }) {
-            items {
-              ...project
+      graphql(
+        `
+          query projects {
+            projects(input: { filter: { mine: true } }) {
+              items {
+                ...project
+              }
+              hasMore
+              total
             }
-            hasMore
-            total
           }
-        }
-        ${fragments.project}
-      `,
+        `,
+        [fragments.project],
+      ),
     );
 
     expect(projects.items.length).toBeGreaterThanOrEqual(numProjects);
@@ -577,18 +575,20 @@ describe('Project e2e', () => {
 
     // filter pinned projects
     const { projects: pinnedProjects } = await app.graphql.query(
-      gql`
-        query projects {
-          projects(input: { filter: { pinned: true } }) {
-            items {
-              ...project
+      graphql(
+        `
+          query projects {
+            projects(input: { filter: { pinned: true } }) {
+              items {
+                ...project
+              }
+              hasMore
+              total
             }
-            hasMore
-            total
           }
-        }
-        ${fragments.project}
-      `,
+        `,
+        [fragments.project],
+      ),
     );
 
     expect(pinnedProjects.items.length).toBe(1);
@@ -596,25 +596,25 @@ describe('Project e2e', () => {
 
     // filter unpinned projects
     const { projects: unpinnedProjects } = await app.graphql.query(
-      gql`
-        query projects {
-          projects(input: { filter: { pinned: false } }) {
-            items {
-              ...project
+      graphql(
+        `
+          query projects {
+            projects(input: { filter: { pinned: false } }) {
+              items {
+                ...project
+              }
+              hasMore
+              total
             }
-            hasMore
-            total
           }
-        }
-        ${fragments.project}
-      `,
+        `,
+        [fragments.project],
+      ),
     );
 
     expect(unpinnedProjects.items.length).toBeGreaterThanOrEqual(numProjects);
     // pinned project should be excluded
-    const result = unpinnedProjects.items.find(
-      ({ id }: Partial<Project>) => id === project.id,
-    );
+    const result = unpinnedProjects.items.find(({ id }) => id === project.id);
     expect(result).toBeUndefined();
   });
 
@@ -633,18 +633,20 @@ describe('Project e2e', () => {
     );
 
     const { projects } = await app.graphql.query(
-      gql`
-        query projects {
-          projects(input: { filter: { presetInventory: true } }) {
-            items {
-              ...project
+      graphql(
+        `
+          query projects {
+            projects(input: { filter: { presetInventory: true } }) {
+              items {
+                ...project
+              }
+              hasMore
+              total
             }
-            hasMore
-            total
           }
-        }
-        ${fragments.project}
-      `,
+        `,
+        [fragments.project],
+      ),
     );
 
     expect(projects.items.length).toBeGreaterThanOrEqual(numProjects);
@@ -663,22 +665,23 @@ describe('Project e2e', () => {
     });
 
     const queryProject = await app.graphql.query(
-      gql`
-        query project($id: ID!) {
-          project(id: $id) {
-            ...project
-            engagements {
-              items {
-                ...languageEngagement
+      graphql(
+        `
+          query project($id: ID!) {
+            project(id: $id) {
+              ...project
+              engagements {
+                items {
+                  ...languageEngagement
+                }
+                hasMore
+                total
               }
-              hasMore
-              total
             }
           }
-        }
-        ${fragments.project},
-        ${fragments.languageEngagement}
-      `,
+        `,
+        [fragments.project, fragments.languageEngagement],
+      ),
       {
         id: project.id,
       },
@@ -707,22 +710,23 @@ describe('Project e2e', () => {
       countryOfOriginId: location.id,
     });
     const queryProject = await app.graphql.query(
-      gql`
-        query project($id: ID!) {
-          project(id: $id) {
-            ...project
-            engagements {
-              items {
-                ...internshipEngagement
+      graphql(
+        `
+          query project($id: ID!) {
+            project(id: $id) {
+              ...project
+              engagements {
+                items {
+                  ...internshipEngagement
+                }
+                hasMore
+                total
               }
-              hasMore
-              total
             }
           }
-        }
-        ${fragments.project},
-        ${fragments.internshipEngagement}
-      `,
+        `,
+        [fragments.project, fragments.internshipEngagement],
+      ),
       {
         id: project.id,
       },
@@ -752,22 +756,23 @@ describe('Project e2e', () => {
     });
 
     const queryProject = await app.graphql.query(
-      gql`
-        query project($id: ID!) {
-          project(id: $id) {
-            ...project
-            team {
-              items {
-                ...projectMember
+      graphql(
+        `
+          query project($id: ID!) {
+            project(id: $id) {
+              ...project
+              team {
+                items {
+                  ...projectMember
+                }
+                hasMore
+                total
               }
-              hasMore
-              total
             }
           }
-        }
-        ${fragments.project},
-        ${fragments.projectMember}
-      `,
+        `,
+        [fragments.project, fragments.projectMember],
+      ),
       {
         id: project.id,
       },
@@ -796,22 +801,23 @@ describe('Project e2e', () => {
     );
 
     const queryProject = await app.graphql.query(
-      gql`
-        query project($id: ID!) {
-          project(id: $id) {
-            ...project
-            partnerships {
-              items {
-                ...partnership
+      graphql(
+        `
+          query project($id: ID!) {
+            project(id: $id) {
+              ...project
+              partnerships {
+                items {
+                  ...partnership
+                }
+                hasMore
+                total
               }
-              hasMore
-              total
             }
           }
-        }
-        ${fragments.project},
-        ${fragments.partnership}
-      `,
+        `,
+        [fragments.project, fragments.partnership],
+      ),
       {
         id: project.id,
       },
@@ -840,7 +846,7 @@ describe('Project e2e', () => {
 
       // Ensure the result from the change to Active returns the correct budget status
       const { updatedProject } = await app.graphql.mutate(
-        gql`
+        graphql(`
           mutation updateProject($input: ExecuteProjectTransitionInput!) {
             updatedProject: transitionProject(input: $input) {
               departmentId {
@@ -856,7 +862,7 @@ describe('Project e2e', () => {
               }
             }
           }
-        `,
+        `),
         {
           input: {
             project: project.id,
@@ -865,7 +871,7 @@ describe('Project e2e', () => {
         },
       );
 
-      expect(updatedProject.budget.value.status).toBe(BudgetStatus.Current);
+      expect(updatedProject.budget.value!.status).toBe(BudgetStatus.Current);
       // TODO move this assertion
       expect(updatedProject.departmentId.value).toContain(
         fundingAccount.accountNumber.value?.toString(),
@@ -877,26 +883,26 @@ describe('Project e2e', () => {
 
   // #727 create without mouStart, mouEnd, estimatedSubmission
   it('can create without mouStart, mouEnd and estimatedSubmission', async () => {
-    const project: CreateProject = {
-      name: faker.string.uuid(),
-      type: ProjectType.MomentumTranslation,
-      fieldRegionId: fieldRegion.id,
-    };
-
     const { createProject } = await app.graphql.mutate(
-      gql`
-        mutation createProject($input: CreateProjectInput!) {
-          createProject(input: $input) {
-            project {
-              ...project
+      graphql(
+        `
+          mutation createProject($input: CreateProjectInput!) {
+            createProject(input: $input) {
+              project {
+                ...project
+              }
             }
           }
-        }
-        ${fragments.project}
-      `,
+        `,
+        [fragments.project],
+      ),
       {
         input: {
-          project,
+          project: {
+            name: faker.string.uuid(),
+            type: ProjectType.MomentumTranslation,
+            fieldRegionId: fieldRegion.id,
+          },
         },
       },
     );
@@ -904,28 +910,28 @@ describe('Project e2e', () => {
   });
 
   it('can create without mouStart, if mouEnd is defined', async () => {
-    const project: CreateProject = {
-      name: faker.string.uuid(),
-      type: ProjectType.MomentumTranslation,
-      mouEnd: CalendarDate.fromISO('1992-11-01'),
-      estimatedSubmission: CalendarDate.fromISO('1993-11-01'),
-      fieldRegionId: fieldRegion.id,
-    };
-
     const { createProject } = await app.graphql.mutate(
-      gql`
-        mutation createProject($input: CreateProjectInput!) {
-          createProject(input: $input) {
-            project {
-              ...project
+      graphql(
+        `
+          mutation createProject($input: CreateProjectInput!) {
+            createProject(input: $input) {
+              project {
+                ...project
+              }
             }
           }
-        }
-        ${fragments.project}
-      `,
+        `,
+        [fragments.project],
+      ),
       {
         input: {
-          project,
+          project: {
+            name: faker.string.uuid(),
+            type: 'MomentumTranslation',
+            mouEnd: '1992-11-01',
+            estimatedSubmission: '1993-11-01',
+            fieldRegionId: fieldRegion.id,
+          },
         },
       },
     );
@@ -946,65 +952,69 @@ describe('Project e2e', () => {
       fieldRegionId: fieldRegion.id,
     });
 
-    const partnership: CreatePartnership = {
-      projectId: proj.id,
-      partnerId: (await createPartner(app, { organizationId: org.id })).id,
-      types: [PartnerType.Funding],
-    };
-
     // Create Partnership with Funding type
     await app.graphql.mutate(
-      gql`
-        mutation createPartnership($input: CreatePartnershipInput!) {
-          createPartnership(input: $input) {
-            partnership {
-              ...partnership
+      graphql(
+        `
+          mutation createPartnership($input: CreatePartnershipInput!) {
+            createPartnership(input: $input) {
+              partnership {
+                ...partnership
+              }
             }
           }
-        }
-        ${fragments.partnership}
-      `,
+        `,
+        [fragments.partnership],
+      ),
       {
         input: {
-          partnership,
+          partnership: {
+            projectId: proj.id,
+            partnerId: (
+              await createPartner(app, { organizationId: org.id })
+            ).id,
+            types: ['Funding'],
+          },
         },
       },
     );
 
     // Update Project with mou dates
     const result = await app.graphql.mutate(
-      gql`
-        mutation updateProject($id: ID!, $mouStart: Date!, $mouEnd: Date!) {
-          updateProject(
-            input: {
-              project: { id: $id, mouStart: $mouStart, mouEnd: $mouEnd }
-            }
-          ) {
-            project {
-              ...project
-              budget {
-                value {
-                  id
-                  records {
+      graphql(
+        `
+          mutation updateProject($id: ID!, $mouStart: Date!, $mouEnd: Date!) {
+            updateProject(
+              input: {
+                project: { id: $id, mouStart: $mouStart, mouEnd: $mouEnd }
+              }
+            ) {
+              project {
+                ...project
+                budget {
+                  value {
                     id
+                    records {
+                      id
+                    }
                   }
                 }
               }
             }
           }
-        }
-        ${fragments.project}
-      `,
+        `,
+        [fragments.project],
+      ),
       {
         id: proj.id,
-        mouStart: CalendarDate.fromISO('2020-08-23'),
-        mouEnd: CalendarDate.fromISO('2021-08-22'),
+        mouStart: CalendarDate.fromISO('2020-08-23').toISO(),
+        mouEnd: CalendarDate.fromISO('2021-08-22').toISO(),
       },
     );
 
     const actual = result.updateProject.project;
     expect(actual.id).toBe(proj.id);
-    expect(actual.budget.value.records.length).toBe(2);
+    expect(actual.budget.value!.records.length).toBe(2);
   });
 
   /**
@@ -1016,32 +1026,34 @@ describe('Project e2e', () => {
       name: faker.string.uuid() + ' project',
       fieldRegionId: fieldRegion.id,
     });
-    const partnership: CreatePartnership = {
-      projectId: project.id,
-      partnerId: (await createPartner(app, { organizationId: org.id })).id,
-      types: [PartnerType.Funding],
-    };
-
     await app.graphql.mutate(
-      gql`
-        mutation createPartnership($input: CreatePartnershipInput!) {
-          createPartnership(input: $input) {
-            partnership {
-              ...partnership
+      graphql(
+        `
+          mutation createPartnership($input: CreatePartnershipInput!) {
+            createPartnership(input: $input) {
+              partnership {
+                ...partnership
+              }
             }
           }
-        }
-        ${fragments.partnership}
-      `,
+        `,
+        [fragments.partnership],
+      ),
       {
         input: {
-          partnership,
+          partnership: {
+            projectId: project.id,
+            partnerId: (
+              await createPartner(app, { organizationId: org.id })
+            ).id,
+            types: [PartnerType.Funding],
+          },
         },
       },
     );
 
     const projectQueryResult = await app.graphql.query(
-      gql`
+      graphql(`
         query project($id: ID!) {
           project(id: $id) {
             budget {
@@ -1060,13 +1072,14 @@ describe('Project e2e', () => {
             }
           }
         }
-      `,
+      `),
       {
         id: project.id,
       },
     );
     const firstBudgetRecordOrganizationId =
-      projectQueryResult.project.budget.value.records[0].organization.value.id;
+      projectQueryResult.project.budget.value!.records[0]!.organization.value!
+        .id;
     expect(firstBudgetRecordOrganizationId).toBe(org.id);
   });
 
@@ -1084,7 +1097,7 @@ describe('Project e2e', () => {
           fieldRegionId: fieldRegion.id,
         });
         const result = await app.graphql.mutate(
-          gql`
+          graphql(`
             mutation updateProject($id: ID!) {
               project: transitionProject(
                 # updating to this step assigns a dept id
@@ -1095,7 +1108,7 @@ describe('Project e2e', () => {
                 }
               }
             }
-          `,
+          `),
           {
             id: project.id,
           },

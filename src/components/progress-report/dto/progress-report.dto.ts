@@ -3,7 +3,6 @@ import {
   Calculated,
   DbSort,
   IntersectTypes,
-  parentIdMiddleware,
   Resource,
   type ResourceRelationsShape,
   SecuredProperty,
@@ -48,9 +47,7 @@ export class ProgressReport extends Interfaces {
   /** @deprecated */
   declare readonly reportFile: DefinedFile;
 
-  @Field(() => SecuredStatus, {
-    middleware: [parentIdMiddleware],
-  })
+  @Field(() => SecuredStatus)
   @Calculated()
   @DbSort(sortingForEnumIndex(Status))
   readonly status: SecuredStatus;

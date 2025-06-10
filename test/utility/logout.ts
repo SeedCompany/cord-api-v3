@@ -1,14 +1,13 @@
+import { graphql } from '~/graphql';
 import { type TestApp } from './create-app';
-import { gql } from './gql-tag';
 
 export async function logout(app: TestApp) {
-  return await app.graphql.mutate(
-    gql`
-      mutation {
-        logout {
-          __typename
-        }
-      }
-    `,
-  );
+  return await app.graphql.mutate(LogoutDoc);
 }
+const LogoutDoc = graphql(`
+  mutation Logout {
+    logout {
+      __typename
+    }
+  }
+`);

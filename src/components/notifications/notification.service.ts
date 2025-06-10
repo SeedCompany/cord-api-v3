@@ -11,11 +11,8 @@ import {
   type ID,
   type ResourceShape,
   ServerException,
-  type Session,
   type UnsecuredDto,
 } from '~/common';
-import { sessionFromContext } from '~/common/session';
-import { GqlContextHost } from '~/core/graphql';
 import {
   type MarkNotificationReadArgs,
   type Notification,
@@ -33,8 +30,6 @@ import {
 export abstract class NotificationService {
   @Inject(forwardRef(() => NotificationRepository))
   protected readonly repo: NotificationRepository & {};
-  @Inject(GqlContextHost)
-  protected readonly gqlContextHost: GqlContextHost;
 
   /**
    * If the recipient list is given (not nil), it will override the strategy's recipient resolution.
@@ -44,13 +39,7 @@ export abstract class NotificationService {
     recipients: ReadonlyArray<ID<'User'>> | Nil,
     input: T extends { Input: infer Input } ? Input : InputOf<T['prototype']>,
   ) {
-    const session = sessionFromContext(this.gqlContextHost.context);
-    const { dto, ...rest } = await this.repo.create(
-      recipients,
-      type,
-      input,
-      session,
-    );
+    const { dto, ...rest } = await this.repo.create(recipients, type, input);
     return {
       ...rest,
       notification: this.secure(dto) as T['prototype'],
@@ -85,19 +74,16 @@ export class NotificationServiceImpl
     return strategy;
   }
 
-  async list(
-    input: NotificationListInput,
-    session: Session,
-  ): Promise<NotificationList> {
-    const result = await this.repo.list(input, session);
+  async list(input: NotificationListInput): Promise<NotificationList> {
+    const result = await this.repo.list(input);
     return {
       ...result,
       items: result.items.map((dto) => this.secure(dto)),
     };
   }
 
-  async markRead(input: MarkNotificationReadArgs, session: Session) {
-    const result = await this.repo.markRead(input, session);
+  async markRead(input: MarkNotificationReadArgs) {
+    const result = await this.repo.markRead(input);
     return this.secure(result);
   }
 

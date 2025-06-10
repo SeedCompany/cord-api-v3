@@ -1,24 +1,7 @@
 import {
-  type DataLoaderOptions as BaseOptions,
+  type DataLoaderOptions,
   type DataLoaderStrategy,
 } from '@seedcompany/data-loader';
-import { type ID } from '~/common';
-
-/**
- * @deprecated
- */
-export type OrderedNestDataLoaderOptions<
-  T,
-  Key = ID,
-  CachedKey = Key,
-> = DataLoaderOptions<T, Key, CachedKey>;
-
-// Defaults Key to ID.
-export type DataLoaderOptions<T, Key = ID, CachedKey = Key> = BaseOptions<
-  T,
-  Key,
-  CachedKey
->;
 
 export type LoaderOptionsOf<
   Strategy,

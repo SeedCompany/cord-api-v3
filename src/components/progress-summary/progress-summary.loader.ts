@@ -1,17 +1,17 @@
 import { type ID } from '~/common';
 import {
+  type DataLoaderStrategy,
   LoaderFactory,
   type LoaderOptionsOf,
-  OrderedNestDataLoader,
-} from '~/core';
+} from '~/core/data-loader';
 import { type FetchedSummaries } from './dto';
 import { ProgressSummaryRepository } from './progress-summary.repository';
 
 @LoaderFactory()
-export class ProgressSummaryLoader extends OrderedNestDataLoader<FetchedSummaries> {
-  constructor(private readonly repo: ProgressSummaryRepository) {
-    super();
-  }
+export class ProgressSummaryLoader
+  implements DataLoaderStrategy<FetchedSummaries, ID<'ProgressReport'>>
+{
+  constructor(private readonly repo: ProgressSummaryRepository) {}
 
   getOptions() {
     return {
@@ -19,7 +19,7 @@ export class ProgressSummaryLoader extends OrderedNestDataLoader<FetchedSummarie
     } satisfies LoaderOptionsOf<ProgressSummaryLoader>;
   }
 
-  async loadMany(ids: readonly ID[]) {
+  async loadMany(ids: ReadonlyArray<ID<'ProgressReport'>>) {
     return await this.repo.readMany(ids);
   }
 }

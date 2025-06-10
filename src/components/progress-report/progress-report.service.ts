@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { type Session, type UnsecuredDto } from '~/common';
+import { type UnsecuredDto } from '~/common';
 import { Privileges } from '../authorization';
 import { ProgressReport, type ProgressReportListInput } from './dto';
 import { ProgressReportRepository } from './progress-report.repository';
@@ -11,20 +11,17 @@ export class ProgressReportService {
     private readonly privileges: Privileges,
   ) {}
 
-  async list(input: ProgressReportListInput, session: Session) {
-    const results = await this.repo.list(input, session);
+  async list(input: ProgressReportListInput) {
+    const results = await this.repo.list(input);
     return {
       ...results,
-      items: results.items.map((dto) => this.secure(dto, session)),
+      items: results.items.map((dto) => this.secure(dto)),
       canRead: true,
       canCreate: false,
     };
   }
 
-  private secure(
-    dto: UnsecuredDto<ProgressReport>,
-    session: Session,
-  ): ProgressReport {
-    return this.privileges.for(session, ProgressReport).secure(dto);
+  private secure(dto: UnsecuredDto<ProgressReport>): ProgressReport {
+    return this.privileges.for(ProgressReport).secure(dto);
   }
 }

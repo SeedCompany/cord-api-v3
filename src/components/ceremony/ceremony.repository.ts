@@ -1,11 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { node, type Query, relation } from 'cypher-query-builder';
-import {
-  CreationFailed,
-  type ID,
-  type Session,
-  type UnsecuredDto,
-} from '~/common';
+import { CreationFailed, type ID, type UnsecuredDto } from '~/common';
 import { DtoRepository } from '~/core/database';
 import {
   ACTIVE,
@@ -13,7 +8,6 @@ import {
   matchPropsAndProjectSensAndScopedRoles,
   oncePerProject,
   paginate,
-  requestingUser,
   sorting,
 } from '~/core/database/query';
 import {
@@ -24,10 +18,7 @@ import {
 } from './dto';
 
 @Injectable()
-export class CeremonyRepository extends DtoRepository<
-  typeof Ceremony,
-  [session: Session]
->(Ceremony) {
+export class CeremonyRepository extends DtoRepository(Ceremony) {
   async create(input: CreateCeremony) {
     const initialProps = {
       type: input.type,
@@ -48,13 +39,13 @@ export class CeremonyRepository extends DtoRepository<
     return result;
   }
 
-  async update(changes: UpdateCeremony, session: Session) {
+  async update(changes: UpdateCeremony) {
     const { id, ...simpleChanges } = changes;
     await this.updateProperties({ id }, simpleChanges);
-    return await this.readOne(id, session);
+    return await this.readOne(id);
   }
 
-  protected hydrate(session: Session) {
+  protected hydrate() {
     return (query: Query) =>
       query
         .match([
@@ -64,11 +55,11 @@ export class CeremonyRepository extends DtoRepository<
           relation('out', '', ACTIVE),
           node('node'),
         ])
-        .apply(matchPropsAndProjectSensAndScopedRoles(session))
+        .apply(matchPropsAndProjectSensAndScopedRoles())
         .return<{ dto: UnsecuredDto<Ceremony> }>('props as dto');
   }
 
-  async list({ filter, ...input }: CeremonyListInput, session: Session) {
+  async list({ filter, ...input }: CeremonyListInput) {
     const result = await this.db
       .query()
       .match([
@@ -84,9 +75,8 @@ export class CeremonyRepository extends DtoRepository<
             ]
           : []),
       ])
-      .match(requestingUser(session))
       .apply(
-        this.privileges.forUser(session).filterToReadable({
+        this.privileges.filterToReadable({
           wrapContext: oncePerProject,
         }),
       )
@@ -102,7 +92,7 @@ export class CeremonyRepository extends DtoRepository<
               .return<{ sortValue: string }>('prop.value as sortValue'),
         }),
       )
-      .apply(paginate(input, this.hydrate(session)))
+      .apply(paginate(input, this.hydrate()))
       .first();
     return result!; // result from paginate() will always have 1 row.
   }

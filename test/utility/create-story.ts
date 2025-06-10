@@ -1,38 +1,36 @@
 import { faker } from '@faker-js/faker';
-import { type CreateStory, type Story } from '../../src/components/story/dto';
+import { graphql, type InputOf } from '~/graphql';
 import { type TestApp } from './create-app';
-import { fragments } from './fragments';
-import { gql } from './gql-tag';
+import * as fragments from './fragments';
 
 export async function createStory(
   app: TestApp,
-  input: Partial<CreateStory> = {},
+  input: Partial<InputOf<typeof CreateStoryDoc>> = {},
 ) {
   const name = input.name || faker.hacker.noun() + faker.company.name();
 
-  const result = await app.graphql.mutate(
-    gql`
-      mutation createStory($input: CreateStoryInput!) {
-        createStory(input: $input) {
-          story {
-            ...story
-          }
-        }
-      }
-      ${fragments.story}
-    `,
-    {
-      input: {
-        story: {
-          ...input,
-          name,
-        },
-      },
+  const result = await app.graphql.mutate(CreateStoryDoc, {
+    input: {
+      ...input,
+      name,
     },
-  );
-  const st: Story = result.createStory.story;
+  });
+  const st = result.createStory.story;
 
   expect(st).toBeTruthy();
 
   return st;
 }
+
+const CreateStoryDoc = graphql(
+  `
+    mutation createStory($input: CreateStory!) {
+      createStory(input: { story: $input }) {
+        story {
+          ...story
+        }
+      }
+    }
+  `,
+  [fragments.story],
+);

@@ -1,20 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { inArray, node, type Query, relation } from 'cypher-query-builder';
-import {
-  type ID,
-  Order,
-  type PublicOf,
-  type Session,
-  type UnsecuredDto,
-} from '~/common';
+import { type ID, Order, type PublicOf, type UnsecuredDto } from '~/common';
 import { DtoRepository } from '~/core/database';
 import {
   ACTIVE,
   createNode,
   createRelationships,
+  currentUser,
   INACTIVE,
   merge,
-  requestingUser,
   sorting,
 } from '~/core/database/query';
 import { IProject, type ProjectStep, stepToStatus } from '../dto';
@@ -29,25 +23,24 @@ export class ProjectWorkflowNeo4jRepository
   extends DtoRepository(WorkflowEvent)
   implements PublicOf<ProjectWorkflowRepository>
 {
-  // @ts-expect-error It doesn't have match base signature
-  async readMany(ids: readonly ID[], session: Session) {
+  async readMany(ids: readonly ID[]) {
     return await this.db
       .query()
       .apply(this.matchEvent())
       .where({ 'node.id': inArray(ids) })
-      .apply(this.privileges.forUser(session).filterToReadable())
+      .apply(this.privileges.filterToReadable())
       .apply(this.hydrate())
       .map('dto')
       .run();
   }
 
-  async list(projectId: ID, session: Session) {
+  async list(projectId: ID) {
     return await this.db
       .query()
       .apply(this.matchEvent())
       .where({ 'project.id': projectId })
-      .match(requestingUser(session))
-      .apply(this.privileges.forUser(session).filterToReadable())
+      .with('*') // needed between where & where
+      .apply(this.privileges.filterToReadable())
       .apply(sorting(WorkflowEvent, { sort: 'createdAt', order: Order.ASC }))
       .apply(this.hydrate())
       .map('dto')
@@ -93,13 +86,10 @@ export class ProjectWorkflowNeo4jRepository
         );
   }
 
-  async recordEvent(
-    {
-      project,
-      ...props
-    }: Omit<ExecuteProjectTransitionInput, 'bypassTo'> & { to: ProjectStep },
-    session: Session,
-  ) {
+  async recordEvent({
+    project,
+    ...props
+  }: Omit<ExecuteProjectTransitionInput, 'bypassTo'> & { to: ProjectStep }) {
     const result = await this.db
       .query()
       .apply(
@@ -110,7 +100,7 @@ export class ProjectWorkflowNeo4jRepository
       .apply(
         createRelationships(WorkflowEvent, {
           in: { workflowEvent: ['Project', project] },
-          out: { who: ['Actor', session.userId] },
+          out: { who: currentUser },
         }),
       )
       .apply(this.hydrate())

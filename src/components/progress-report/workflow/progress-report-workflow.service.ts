@@ -3,7 +3,6 @@ import {
   type ID,
   many,
   type RichTextDocument,
-  type Session,
   UnauthorizedException,
   type UnsecuredDto,
 } from '~/common';
@@ -27,21 +26,18 @@ export class ProgressReportWorkflowService {
     private readonly eventBus: IEventBus,
   ) {}
 
-  async list(
-    report: ProgressReport,
-    session: Session,
-  ): Promise<WorkflowEvent[]> {
-    const dtos = await this.repo.list(report.id, session);
-    return dtos.map((dto) => this.secure(dto, session));
+  async list(report: ProgressReport): Promise<WorkflowEvent[]> {
+    const dtos = await this.repo.list(report.id);
+    return dtos.map((dto) => this.secure(dto));
   }
 
-  async readMany(ids: readonly ID[], session: Session) {
-    const dtos = await this.repo.readMany(ids, session);
-    return dtos.map((dto) => this.secure(dto, session));
+  async readMany(ids: readonly ID[]) {
+    const dtos = await this.repo.readMany(ids);
+    return dtos.map((dto) => this.secure(dto));
   }
 
-  secure(dto: UnsecuredDto<WorkflowEvent>, session: Session): WorkflowEvent {
-    const secured = this.privileges.for(session, WorkflowEvent).secure(dto);
+  secure(dto: UnsecuredDto<WorkflowEvent>): WorkflowEvent {
+    const secured = this.privileges.for(WorkflowEvent).secure(dto);
     return {
       ...secured,
       transition: dto.transition
@@ -50,8 +46,8 @@ export class ProgressReportWorkflowService {
     };
   }
 
-  getAvailableTransitions(session: Session, current: Status) {
-    const p = this.privileges.for(session, WorkflowEvent);
+  getAvailableTransitions(current: Status) {
+    const p = this.privileges.for(WorkflowEvent);
     const available = Object.values(Transitions).filter(
       (t) =>
         (t.from ? many(t.from).includes(current) : true) &&
@@ -62,24 +58,21 @@ export class ProgressReportWorkflowService {
     return available;
   }
 
-  canBypass(session: Session) {
-    return this.privileges.for(session, WorkflowEvent).can('create');
+  canBypass() {
+    return this.privileges.for(WorkflowEvent).can('create');
   }
 
-  async executeTransition(
-    input: ExecuteProgressReportTransitionInput,
-    session: Session,
-  ) {
+  async executeTransition(input: ExecuteProgressReportTransitionInput) {
     const { report: reportId, notes } = input;
 
     const currentStatus = await this.repo.currentStatus(reportId);
-    const next = this.validateExecutionInput(input, currentStatus, session);
+    const next = this.validateExecutionInput(input, currentStatus);
     const isTransition = typeof next !== 'string';
 
     const [unsecuredEvent] = await Promise.all([
       isTransition
-        ? this.recordTransition(reportId, next, session, notes)
-        : this.recordBypass(reportId, next, session, notes),
+        ? this.recordTransition(reportId, next, notes)
+        : this.recordBypass(reportId, next, notes),
       this.repo.changeStatus(reportId, isTransition ? next.to : next),
     ]);
 
@@ -95,12 +88,11 @@ export class ProgressReportWorkflowService {
   private validateExecutionInput(
     input: ExecuteProgressReportTransitionInput,
     currentStatus: Status,
-    session: Session,
   ) {
     const { transition: transitionId, status: overrideStatus } = input;
 
     if (overrideStatus) {
-      if (!this.canBypass(session)) {
+      if (!this.canBypass()) {
         throw new UnauthorizedException(
           'You do not have permission to bypass workflow. Specify a transition ID instead.',
         );
@@ -108,7 +100,7 @@ export class ProgressReportWorkflowService {
       return overrideStatus;
     }
 
-    const available = this.getAvailableTransitions(session, currentStatus);
+    const available = this.getAvailableTransitions(currentStatus);
     const transition = available.find((t) => t.id === transitionId);
     if (!transition) {
       throw new UnauthorizedException('This transition is not available');
@@ -119,21 +111,12 @@ export class ProgressReportWorkflowService {
   async recordTransition(
     report: ID,
     { id: transition, to: status }: InternalTransition,
-    session: Session,
     notes?: RichTextDocument,
   ) {
-    return await this.repo.recordEvent(
-      { report, status, transition, notes },
-      session,
-    );
+    return await this.repo.recordEvent({ report, status, transition, notes });
   }
 
-  async recordBypass(
-    report: ID,
-    status: Status,
-    session: Session,
-    notes?: RichTextDocument,
-  ) {
-    return await this.repo.recordEvent({ report, status, notes }, session);
+  async recordBypass(report: ID, status: Status, notes?: RichTextDocument) {
+    return await this.repo.recordEvent({ report, status, notes });
   }
 }

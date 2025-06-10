@@ -2,12 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { isNotNil, setHas, setOf } from '@seedcompany/common';
 import { uniqBy } from 'lodash';
 import type { ValueOf } from 'type-fest';
-import {
-  type ID,
-  NotFoundException,
-  ServerException,
-  type Session,
-} from '~/common';
+import { type ID, NotFoundException, ServerException } from '~/common';
 import {
   type ResourceMap,
   ResourceResolver,
@@ -28,7 +23,7 @@ import { SearchRepository } from './search.repository';
 type HydratorMap = {
   [K in keyof SearchableMap]?: Hydrator<SearchableMap[K]>;
 };
-type Hydrator<R> = (id: ID, session: Session) => Promise<R>;
+type Hydrator<R> = (id: ID) => Promise<R>;
 
 type Match<Types extends string> = ValueOf<{
   [Type in Types]: {
@@ -41,7 +36,7 @@ type Match<Types extends string> = ValueOf<{
 @Injectable()
 export class SearchService {
   // mapping of base nodes to functions that,
-  // given id & session, will return the object.
+  // given id will return the object.
   /* eslint-disable @typescript-eslint/naming-convention */
   private readonly customHydrators: HydratorMap = {
     PartnerByOrg: async (...args) => ({
@@ -64,7 +59,7 @@ export class SearchService {
     private readonly repo: SearchRepository,
   ) {}
 
-  async search(input: SearchInput, session: Session): Promise<SearchOutput> {
+  async search(input: SearchInput): Promise<SearchOutput> {
     const types = input.type
       ? setOf(
           // Expand interfaces to their concretes
@@ -146,7 +141,7 @@ export class SearchService {
         .map(
           async ({ type, id, matchedProps }): Promise<SearchResult | null> => {
             const hydrator = this.hydrate(type);
-            const hydrated = await hydrator(id, session);
+            const hydrated = await hydrator(id);
             if (
               !hydrated ||
               !(hydrated.__typename in this.resources.getEnhancedMap())
@@ -155,7 +150,7 @@ export class SearchService {
             }
 
             const resource = this.resources.getByName(hydrated.__typename);
-            const perms = this.privileges.for(session, resource, hydrated).all;
+            const perms = this.privileges.for(resource, hydrated).all;
             return matchedProps.some((key) =>
               // @ts-expect-error strict typing is hard for this dynamic use case.
               key in perms ? perms[key].read : true,

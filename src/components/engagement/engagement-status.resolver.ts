@@ -1,11 +1,11 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
+import { Grandparent } from '~/common';
 import {
-  AnonSession,
-  type ParentIdMiddlewareAdditions,
-  type Session,
-} from '~/common';
-import { EngagementStatusTransition, SecuredEngagementStatus } from './dto';
+  type Engagement,
+  EngagementStatusTransition,
+  SecuredEngagementStatus,
+} from './dto';
 import { EngagementRules } from './engagement.rules';
 
 @Resolver(SecuredEngagementStatus)
@@ -16,18 +16,15 @@ export class EngagementStatusResolver {
     description: 'The available statuses a engagement can be transitioned to.',
   })
   async transitions(
-    @Parent()
-    status: SecuredEngagementStatus & ParentIdMiddlewareAdditions,
-    @AnonSession() session: Session,
+    @Grandparent() eng: Engagement,
+    @Parent() status: SecuredEngagementStatus,
   ): Promise<EngagementStatusTransition[]> {
     if (!status.canRead || !status.canEdit || !status.value) {
       return [];
     }
     return await this.engagementRules.getAvailableTransitions(
-      status.parentId,
-      session,
-      undefined,
-      status.changeset,
+      eng.id,
+      eng.changeset,
     );
   }
 
@@ -37,9 +34,7 @@ export class EngagementStatusResolver {
       and change the status to any other status?
    `,
   })
-  async canBypassTransitions(
-    @AnonSession() session: Session,
-  ): Promise<boolean> {
-    return await this.engagementRules.canBypassWorkflow(session);
+  canBypassTransitions(): boolean {
+    return this.engagementRules.canBypassWorkflow();
   }
 }

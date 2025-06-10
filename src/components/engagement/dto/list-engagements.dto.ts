@@ -45,7 +45,6 @@ export abstract class EngagementFilters {
   })
   readonly status?: readonly EngagementStatus[];
 
-  readonly projectId?: ID;
   @FilterField(() => ProjectFilters)
   readonly project?: ProjectFilters & {};
 

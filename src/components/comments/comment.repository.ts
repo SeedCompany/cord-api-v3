@@ -1,17 +1,17 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, type Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { type ID, type Session, type UnsecuredDto } from '~/common';
+import { type ID, type UnsecuredDto } from '~/common';
 import { DtoRepository } from '~/core/database';
 import { type ChangesOf } from '~/core/database/changes';
 import {
   ACTIVE,
   createNode,
   createRelationships,
+  currentUser,
   matchProps,
   merge,
   paginate,
-  requestingUser,
   sorting,
   variable,
 } from '~/core/database/query';
@@ -32,7 +32,7 @@ export class CommentRepository extends DtoRepository(Comment) {
     super();
   }
 
-  async create(input: CreateCommentInput, session: Session) {
+  async create(input: CreateCommentInput) {
     const initialProps = {
       body: input.body,
       modifiedAt: DateTime.local(),
@@ -45,13 +45,13 @@ export class CommentRepository extends DtoRepository(Comment) {
               q
                 .matchNode('thread', 'CommentThread', { id: input.threadId })
                 .return('thread')
-          : await this.threads.create(input.resourceId, session),
+          : await this.threads.create(input.resourceId),
       )
       .apply(await createNode(Comment, { initialProps }))
       .apply(
         createRelationships(Comment, {
           in: { comment: variable('thread') },
-          out: { creator: ['User', session.userId] },
+          out: { creator: currentUser },
         }),
       )
       .return<{ id: ID; threadId: ID }>([
@@ -89,10 +89,9 @@ export class CommentRepository extends DtoRepository(Comment) {
         );
   }
 
-  async list(threadId: ID, input: CommentListInput, session: Session) {
+  async list(threadId: ID, input: CommentListInput) {
     const result = await this.db
       .query()
-      .match(requestingUser(session))
       .match([
         node('thread', 'CommentThread', { id: threadId }),
         relation('out', '', 'comment', ACTIVE),

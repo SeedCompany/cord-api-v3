@@ -1,4 +1,5 @@
-import { Role } from '~/common';
+import { type ID, Role } from '~/common';
+import { graphql } from '~/graphql';
 import { PartnershipAgreementStatus } from '../src/components/partnership/dto';
 import {
   approveProjectChangeRequest,
@@ -11,45 +12,48 @@ import {
   createRegion,
   createSession,
   createTestApp,
-  gql,
+  fragments,
   registerUser,
   runAsAdmin,
   type TestApp,
 } from './utility';
-import { fragments } from './utility/fragments';
 import { forceProjectTo } from './utility/transition-project';
 
-const readPartnerships = (app: TestApp, id: string, changeset?: string) =>
+const readPartnerships = (app: TestApp, id: ID, changeset?: ID) =>
   app.graphql.query(
-    gql`
-      query project($id: ID!, $changeset: ID) {
-        project(id: $id, changeset: $changeset) {
-          ...project
-          partnerships {
-            items {
-              id
+    graphql(
+      `
+        query project($id: ID!, $changeset: ID) {
+          project(id: $id, changeset: $changeset) {
+            ...project
+            partnerships {
+              items {
+                id
+              }
             }
           }
         }
-      }
-      ${fragments.project}
-    `,
+      `,
+      [fragments.project],
+    ),
     {
       id,
       changeset,
     },
   );
 
-const readPartnership = (app: TestApp, id: string, changeset?: string) =>
+const readPartnership = (app: TestApp, id: ID, changeset?: ID) =>
   app.graphql.query(
-    gql`
-      query partnership($id: ID!, $changeset: ID) {
-        partnership(id: $id, changeset: $changeset) {
-          ...partnership
+    graphql(
+      `
+        query partnership($id: ID!, $changeset: ID) {
+          partnership(id: $id, changeset: $changeset) {
+            ...partnership
+          }
         }
-      }
-      ${fragments.partnership}
-    `,
+      `,
+      [fragments.partnership],
+    ),
     {
       id,
       changeset,
@@ -102,16 +106,18 @@ describe('Partnership Changeset Aware e2e', () => {
     });
     // Create new partnership with changeset
     const changesetPartnership = await app.graphql.mutate(
-      gql`
-        mutation createPartnership($input: CreatePartnershipInput!) {
-          createPartnership(input: $input) {
-            partnership {
-              ...partnership
+      graphql(
+        `
+          mutation createPartnership($input: CreatePartnershipInput!) {
+            createPartnership(input: $input) {
+              partnership {
+                ...partnership
+              }
             }
           }
-        }
-        ${fragments.partnership}
-      `,
+        `,
+        [fragments.partnership],
+      ),
       {
         input: {
           partnership: {
@@ -147,16 +153,18 @@ describe('Partnership Changeset Aware e2e', () => {
     });
     // Update partnership prop with changeset
     await app.graphql.mutate(
-      gql`
-        mutation updatePartnership($input: UpdatePartnershipInput!) {
-          updatePartnership(input: $input) {
-            partnership {
-              ...partnership
+      graphql(
+        `
+          mutation updatePartnership($input: UpdatePartnershipInput!) {
+            updatePartnership(input: $input) {
+              partnership {
+                ...partnership
+              }
             }
           }
-        }
-        ${fragments.partnership}
-      `,
+        `,
+        [fragments.partnership],
+      ),
       {
         input: {
           partnership: {
@@ -199,25 +207,23 @@ describe('Partnership Changeset Aware e2e', () => {
       projectId: project.id,
     });
 
-    // Delete partnereship in changeset
-    let result = await app.graphql.mutate(
-      gql`
+    // Delete partnership in changeset
+    await app.graphql.mutate(
+      graphql(`
         mutation deletePartnership($id: ID!, $changeset: ID) {
           deletePartnership(id: $id, changeset: $changeset) {
             __typename
           }
         }
-      `,
+      `),
       {
         id: partnership.id,
         changeset: changeset.id,
       },
     );
-    const actual: boolean | undefined = result.deletePartnership;
-    expect(actual).toBeTruthy();
 
     // List partnerships without changeset
-    result = await readPartnerships(app, project.id);
+    let result = await readPartnerships(app, project.id);
     expect(result.project.partnerships.items.length).toBe(2);
     // List partnerships with changeset
     result = await readPartnerships(app, project.id, changeset.id);

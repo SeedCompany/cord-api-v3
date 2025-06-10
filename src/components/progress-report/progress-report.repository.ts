@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { node, type Query, relation } from 'cypher-query-builder';
-import { type Session, type UnsecuredDto } from '~/common';
+import { type UnsecuredDto } from '~/common';
 import { DtoRepository } from '~/core/database';
 import {
   ACTIVE,
@@ -9,7 +9,6 @@ import {
   merge,
   oncePerProject,
   paginate,
-  requestingUser,
   sortWith,
   variable,
 } from '~/core/database/query';
@@ -26,17 +25,14 @@ import {
 import { ProgressReportExtraForPeriodicInterfaceRepository } from './progress-report-extra-for-periodic-interface.repository';
 
 @Injectable()
-export class ProgressReportRepository extends DtoRepository<
-  typeof ProgressReport,
-  [session: Session]
->(ProgressReport) {
+export class ProgressReportRepository extends DtoRepository(ProgressReport) {
   constructor(
     private readonly extraRepo: ProgressReportExtraForPeriodicInterfaceRepository,
   ) {
     super();
   }
 
-  async list(input: ProgressReportListInput, session: Session) {
+  async list(input: ProgressReportListInput) {
     const result = await this.db
       .query()
       .match([
@@ -46,20 +42,19 @@ export class ProgressReportRepository extends DtoRepository<
         relation('in', '', 'engagement'),
         node('project', 'Project'),
       ])
-      .match(requestingUser(session))
       .apply(progressReportFilters(input.filter))
       .apply(
-        this.privileges.forUser(session).filterToReadable({
+        this.privileges.filterToReadable({
           wrapContext: oncePerProject,
         }),
       )
       .apply(sortWith(progressReportSorters, input))
-      .apply(paginate(input, this.hydrate(session)))
+      .apply(paginate(input, this.hydrate()))
       .first();
     return result!; // result from paginate() will always have 1 row.
   }
 
-  protected hydrate(session: Session) {
+  protected hydrate() {
     return (query: Query) =>
       query
         .match([
@@ -69,7 +64,7 @@ export class ProgressReportRepository extends DtoRepository<
           relation('in', '', 'engagement', ACTIVE),
           node('project', 'Project'),
         ])
-        .apply(matchPropsAndProjectSensAndScopedRoles(session))
+        .apply(matchPropsAndProjectSensAndScopedRoles())
         .subQuery('node', this.extraRepo.extraHydrate())
         .return<{ dto: UnsecuredDto<ProgressReport> }>(
           merge('props', { parent: 'parent' }, 'extra').as('dto'),
@@ -100,10 +95,7 @@ export const progressReportFilters = filter.define(
         // needed in conjunction with `optionalMatch`
         .with('outer, node'),
     ),
-    engagement: filter.sub(
-      () => engagementFilters,
-      'requestingUser',
-    )((sub) =>
+    engagement: filter.sub(() => engagementFilters)((sub) =>
       sub.match([
         node('outer'),
         relation('in', '', 'report'),

@@ -1,15 +1,15 @@
 import { type ID } from '~/common';
-import { LoaderFactory, OrderedNestDataLoader } from '~/core';
+import { type DataLoaderStrategy, LoaderFactory } from '~/core/data-loader';
 import { Unavailability } from './dto';
 import { UnavailabilityService } from './unavailability.service';
 
 @LoaderFactory(() => Unavailability)
-export class UnavailabilityLoader extends OrderedNestDataLoader<Unavailability> {
-  constructor(private readonly unavailabilities: UnavailabilityService) {
-    super();
-  }
+export class UnavailabilityLoader
+  implements DataLoaderStrategy<Unavailability, ID<Unavailability>>
+{
+  constructor(private readonly unavailabilities: UnavailabilityService) {}
 
-  async loadMany(ids: readonly ID[]) {
-    return await this.unavailabilities.readMany(ids, this.session);
+  async loadMany(ids: ReadonlyArray<ID<Unavailability>>) {
+    return await this.unavailabilities.readMany(ids);
   }
 }

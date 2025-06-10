@@ -93,6 +93,16 @@ const restrictedImports = [
     kind: 'value',
     message: 'Be sure to specify the `type` modifier',
   },
+  {
+    importNames: ['ResultOf', 'VariablesOf'],
+    path: '@graphql-typed-document-node/core',
+    replacement: { path: '~/graphql' },
+  },
+  {
+    importNames: ['FragmentOf', 'ResultOf', 'VariablesOf'],
+    path: 'gql.tada',
+    replacement: { path: '~/graphql' },
+  },
 ];
 
 const namingConvention = [
@@ -198,6 +208,17 @@ const config = {
     ],
     // TODO Enable this and fix errors (both types & logic changes will be needed)
     '@typescript-eslint/no-unnecessary-condition': 'off',
+
+    // Allow unused session while we migrate
+    '@seedcompany/no-unused-vars': [
+      'warn',
+      {
+        args: 'after-used',
+        ignoreRestSiblings: true,
+        argsIgnorePattern: '(^_|^session$)',
+        varsIgnorePattern: '^_',
+      },
+    ],
   },
   overrides: [
     {

@@ -1,10 +1,16 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { entries, mapKeys } from '@seedcompany/common';
 import { Connection, node, type Query, relation } from 'cypher-query-builder';
 import { LazyGetter } from 'lazy-get-decorator';
 import { pickBy, startCase } from 'lodash';
-import { Duration } from 'luxon';
-import { defer, firstValueFrom, shareReplay, takeUntil } from 'rxjs';
+import { DateTime, Duration } from 'luxon';
+import {
+  defer,
+  EmptyError,
+  firstValueFrom,
+  shareReplay,
+  takeUntil,
+} from 'rxjs';
 import {
   DuplicateException,
   type ID,
@@ -17,6 +23,7 @@ import {
   type UnwrapSecured,
 } from '~/common';
 import { AbortError, retry, type RetryOptions } from '~/common/retry';
+import { Identity } from '../authentication';
 import { ConfigService } from '../config/config.service';
 import { ILogger, Logger } from '../logger';
 import { ShutdownHook } from '../shutdown.hook';
@@ -63,6 +70,8 @@ export class DatabaseService {
   constructor(
     private readonly db: Connection,
     private readonly config: ConfigService,
+    @Inject(forwardRef(() => Identity))
+    private readonly identity: Identity,
     private readonly shutdown$: ShutdownHook,
     @Logger('database:service') private readonly logger: ILogger,
   ) {}
@@ -122,6 +131,7 @@ export class DatabaseService {
     parameters?: Record<string, any>,
   ): Query<Result> {
     const q = this.db.query() as Query<Result>;
+    q.params.addParam(this.identity.currentIfInCtx?.userId, 'currentUser');
     if (query) {
       q.raw(query, parameters);
     }
@@ -203,6 +213,24 @@ export class DatabaseService {
       return; // don't drop the default db
     }
     await this.runAdminCommand('DROP', dbName);
+  }
+
+  async dropStaleTestDbs() {
+    const info = await this.getServerInfo().catch((e) => {
+      if (e instanceof EmptyError) return null;
+      throw e;
+    });
+    const staleTestDbs = (info?.databases ?? []).filter(({ name }) => {
+      const match = /test\.([\d-]+\.[\d-]+)\..+/.exec(name);
+      if (!match) {
+        return false;
+      }
+      const dt = DateTime.fromFormat(match[1], 'y-MM-dd.HH-mm-ss');
+      return dt.diffNow().as('hours') < -1;
+    });
+    for (const staleTestDb of staleTestDbs) {
+      await this.runAdminCommand('DROP', staleTestDb.name);
+    }
   }
 
   private async runAdminCommand(action: 'CREATE' | 'DROP', dbName: string) {

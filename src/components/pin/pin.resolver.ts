@@ -1,31 +1,31 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import {
-  type ID,
-  IdArg,
-  ListArg,
-  LoggedInSession,
-  NotImplementedException,
-  type Session,
-} from '~/common';
+import { type ID, IdArg, ListArg, NotImplementedException } from '~/common';
+import { Identity } from '~/core/authentication';
 import { PinnedListInput, type PinnedListOutput } from './dto';
 import { PinService } from './pin.service';
 
 @Resolver()
 export class PinResolver {
-  constructor(readonly pins: PinService) {}
+  constructor(
+    private readonly pins: PinService,
+    private readonly identity: Identity,
+  ) {}
 
   @Query(() => Boolean, {
     description:
       'Returns whether or not the requesting user has pinned the resource ID',
   })
   async isPinned(
-    @LoggedInSession() session: Session,
     @IdArg({
       description: 'A resource ID',
     })
     id: ID,
   ): Promise<boolean> {
-    return await this.pins.isPinned(id, session);
+    // TODO move to DB layer?
+    if (this.identity.isAnonymous) {
+      return false;
+    }
+    return await this.pins.isPinned(id);
   }
 
   @Mutation(() => Boolean, {
@@ -33,7 +33,6 @@ export class PinResolver {
       'Toggles the pinned state for the resource ID for the requesting user',
   })
   async togglePinned(
-    @LoggedInSession() session: Session,
     @IdArg({
       description: 'A resource ID',
     })
@@ -45,7 +44,7 @@ export class PinResolver {
     })
     pinned?: boolean,
   ): Promise<boolean> {
-    return await this.pins.togglePinned(id, session, pinned);
+    return await this.pins.togglePinned(id, pinned);
   }
 
   // @Query(() => PinnedListOutput, {
@@ -53,7 +52,6 @@ export class PinResolver {
   //   description: "A list of the requesting user's pinned items",
   // })
   async list(
-    @LoggedInSession() _session: Session,
     @ListArg(PinnedListInput) _input: PinnedListInput,
   ): Promise<PinnedListOutput> {
     throw new NotImplementedException();

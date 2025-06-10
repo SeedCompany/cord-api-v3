@@ -1,5 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { type Node, node, type Query, relation } from 'cypher-query-builder';
+import {
+  type Node,
+  node,
+  not,
+  type Query,
+  relation,
+} from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   CreationFailed,
@@ -8,34 +14,39 @@ import {
   isIdLike,
   NotFoundException,
   type Role,
-  type Session,
   type UnsecuredDto,
 } from '~/common';
 import { DtoRepository } from '~/core/database';
 import {
   ACTIVE,
+  apoc,
   createNode,
   createRelationships,
+  filter,
   matchPropsAndProjectSensAndScopedRoles,
   merge,
   oncePerProject,
   paginate,
-  requestingUser,
+  path,
+  randomUUID,
   sorting,
+  updateProperty,
+  variable,
 } from '~/core/database/query';
-import { UserRepository } from '../../user/user.repository';
+import { type FilterFn } from '~/core/database/query/filters';
+import { userFilters, UserRepository } from '../../user/user.repository';
+import { type ProjectFilters } from '../dto';
+import { projectFilters } from '../project-filters.query';
 import {
   type CreateProjectMember,
   ProjectMember,
+  ProjectMemberFilters,
   type ProjectMemberListInput,
   type UpdateProjectMember,
 } from './dto';
 
 @Injectable()
-export class ProjectMemberRepository extends DtoRepository<
-  typeof ProjectMember,
-  [session: Session]
->(ProjectMember) {
+export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
   constructor(private readonly users: UserRepository) {
     super();
   }
@@ -79,10 +90,11 @@ export class ProjectMemberRepository extends DtoRepository<
     }
   }
 
-  async create(
-    { userId, projectId: projectOrId, ...input }: CreateProjectMember,
-    session: Session,
-  ) {
+  async create({
+    userId,
+    projectId: projectOrId,
+    ...input
+  }: CreateProjectMember) {
     const projectId = isIdLike(projectOrId) ? projectOrId : projectOrId.id;
 
     await this.verifyRelationshipEligibility(projectId, userId);
@@ -94,6 +106,7 @@ export class ProjectMemberRepository extends DtoRepository<
           initialProps: {
             roles: input.roles ?? [],
             modifiedAt: DateTime.local(),
+            inactiveAt: input.inactiveAt ?? null,
           },
         }),
       )
@@ -103,7 +116,7 @@ export class ProjectMemberRepository extends DtoRepository<
           out: { user: ['User', userId] },
         }),
       )
-      .apply(this.hydrate(session))
+      .apply(this.hydrate())
       .map('dto')
       .first();
     if (!created) {
@@ -112,12 +125,12 @@ export class ProjectMemberRepository extends DtoRepository<
     return created;
   }
 
-  async update({ id, ...changes }: UpdateProjectMember, session: Session) {
+  async update({ id, ...changes }: UpdateProjectMember) {
     await this.updateProperties({ id }, changes);
-    return await this.readOne(id, session);
+    return await this.readOne(id);
   }
 
-  protected hydrate(session: Session) {
+  protected hydrate() {
     return (query: Query) =>
       query
         .match([
@@ -125,84 +138,50 @@ export class ProjectMemberRepository extends DtoRepository<
           relation('out', '', 'member', ACTIVE),
           node('node'),
         ])
-        .apply(matchPropsAndProjectSensAndScopedRoles(session))
+        .apply(matchPropsAndProjectSensAndScopedRoles())
         .match([
           node('node'),
           relation('out', '', 'user'),
           node('user', 'User'),
         ])
         .subQuery('user', (sub) =>
-          sub
-            .with('user as node')
-            .apply(this.users.hydrateAsNeo4j(session.userId)),
+          sub.with('user as node').apply(this.users.hydrateAsNeo4j()),
         )
         .return<{ dto: UnsecuredDto<ProjectMember> }>(
           merge('props', { user: 'dto' }).as('dto'),
         );
   }
 
-  async list({ filter, ...input }: ProjectMemberListInput, session: Session) {
+  async list({ filter, ...input }: ProjectMemberListInput) {
     const result = await this.db
       .query()
       .match([
-        node(
-          'project',
-          'Project',
-          filter?.projectId ? { id: filter.projectId } : {},
-        ),
+        node('project', 'Project'),
         relation('out', '', 'member'),
         node('node', 'ProjectMember'),
       ])
-      .apply((q) =>
-        filter?.roles
-          ? q
-              .match([
-                node('node'),
-                relation('out', '', 'roles', ACTIVE),
-                node('role', 'Property'),
-              ])
-              .raw(
-                `WHERE size(apoc.coll.intersection(role.value, $filteredRoles)) > 0`,
-                { filteredRoles: filter.roles },
-              )
-          : q,
-      )
-      .match(requestingUser(session))
+      .apply(projectMemberFilters(filter))
+      .with('*') // needed between where & where
       .apply(
-        this.privileges.forUser(session).filterToReadable({
+        this.privileges.filterToReadable({
           wrapContext: oncePerProject,
         }),
       )
       .apply(sorting(ProjectMember, input))
-      .apply(paginate(input, this.hydrate(session)))
+      .apply(paginate(input, this.hydrate()))
       .first();
     return result!; // result from paginate() will always have 1 row.
   }
 
-  async listAsNotifiers(projectId: ID, roles?: Role[]) {
+  async listAsNotifiers(project: ID<'Project'>, roles?: Role[]) {
     return await this.db
       .query()
       .match([
-        node('', 'Project', { id: projectId }),
-        relation('out', '', 'member', ACTIVE),
         node('node', 'ProjectMember'),
         relation('out', '', 'user', ACTIVE),
         node('user', 'User'),
       ])
-      .apply((q) =>
-        roles
-          ? q
-              .match([
-                node('node'),
-                relation('out', '', 'roles', ACTIVE),
-                node('role', 'Property'),
-              ])
-              .raw(
-                `WHERE size(apoc.coll.intersection(role.value, $filteredRoles)) > 0`,
-                { filteredRoles: roles },
-              )
-          : q,
-      )
+      .apply(projectMemberFilters({ project: { id: project }, roles }))
       .with('user')
       .optionalMatch([
         node('user'),
@@ -215,4 +194,144 @@ export class ProjectMemberRepository extends DtoRepository<
       ])
       .run();
   }
+
+  async replaceMembershipsOnOpenProjects(
+    oldDirector: ID<'User'>,
+    newDirector: ID<'User'>,
+    role: Role,
+  ) {
+    const nowVal = DateTime.now();
+    const now = variable('$now');
+    const createMember = await createNode(ProjectMember, {
+      baseNodeProps: {
+        id: variable(randomUUID()),
+        createdAt: now,
+      },
+      initialProps: {
+        roles: [role],
+        inactiveAt: null,
+        modifiedAt: now,
+      },
+    });
+    const result = await this.db
+      .query()
+      .raw('', { now: nowVal })
+      .match([
+        node('project', 'Project'),
+        relation('out', '', 'member', ACTIVE),
+        node('node', 'ProjectMember'),
+      ])
+      .apply(
+        projectMemberFilters({
+          user: { id: oldDirector },
+          active: true,
+          roles: [role],
+          project: { status: ['Active', 'InDevelopment'] },
+        }),
+      )
+      .apply(
+        updateProperty({
+          resource: ProjectMember,
+          key: 'inactiveAt',
+          value: now,
+          permanentAfter: 0,
+        }),
+      )
+      .with('project')
+      .subQuery('project', (sub) =>
+        sub
+          .match([
+            [
+              node('project'),
+              relation('out', '', 'member', ACTIVE),
+              node('node', 'ProjectMember'),
+              relation('out', '', 'user', ACTIVE),
+              node('', 'User', { id: newDirector }),
+            ],
+            [
+              node('node', 'ProjectMember'),
+              relation('out', '', 'roles', ACTIVE),
+              node('roles', 'Property'),
+            ],
+          ])
+          .apply(
+            updateProperty({
+              resource: ProjectMember,
+              key: 'roles',
+              value: variable(apoc.coll.union('roles.value', [`"${role}"`])),
+              now,
+              permanentAfter: 0,
+              outputStatsVar: 'inactiveStats',
+            }),
+          )
+          .apply(
+            updateProperty({
+              resource: ProjectMember,
+              key: 'inactiveAt',
+              value: null,
+              now,
+              permanentAfter: 0,
+              outputStatsVar: 'rolesStats',
+            }),
+          )
+          .apply(
+            updateProperty({
+              resource: ProjectMember,
+              key: 'modifiedAt',
+              value: now,
+              now,
+              permanentAfter: 0,
+              outputStatsVar: 'modifiedAtStats',
+            }),
+          )
+          .return('node as member')
+          .union()
+          .with('project')
+          .with('project')
+          .where(
+            not(
+              path([
+                node('project'),
+                relation('out', '', 'member', ACTIVE),
+                node('', 'ProjectMember'),
+                relation('out', '', 'user', ACTIVE),
+                node('', 'User', { id: newDirector }),
+              ]),
+            ),
+          )
+          .apply(createMember)
+          .apply(
+            createRelationships(ProjectMember, {
+              in: { member: variable('project') },
+              out: { user: ['User', newDirector] },
+            }),
+          )
+          .return('node as member'),
+      )
+      .return<{ id: ID }>('project.id as id')
+      .run();
+    return {
+      projects: result.map(({ id }) => id) as readonly ID[],
+      timestampId: nowVal,
+    };
+  }
 }
+
+export const projectMemberFilters = filter.define(() => ProjectMemberFilters, {
+  project: filter.sub((): FilterFn<ProjectFilters> => projectFilters)((sub) =>
+    sub.match([
+      node('node', 'Project'),
+      relation('out', '', 'member', ACTIVE),
+      node('outer'),
+    ]),
+  ),
+  user: filter.sub(() => userFilters)((sub) =>
+    sub.match([
+      node('outer'),
+      relation('out', '', 'user'),
+      node('node', 'User'),
+    ]),
+  ),
+  roles: filter.intersectsProp(),
+  active: filter.isPropNotNull('inactiveAt'),
+});

@@ -9,11 +9,11 @@ import {
   ILogger,
   Logger,
 } from '~/core';
+import { Identity } from '~/core/authentication';
 import {
   ProjectStepChanged,
   type ProjectStepChangedProps,
 } from '~/core/email/templates/project-step-changed.template';
-import { AuthenticationService } from '../../../authentication';
 import { ProjectService } from '../../../project';
 import { UserService } from '../../../user';
 import { type User } from '../../../user/dto';
@@ -26,7 +26,7 @@ export class ProjectWorkflowNotificationHandler
   implements IEventHandler<ProjectTransitionedEvent>
 {
   constructor(
-    private readonly auth: AuthenticationService,
+    private readonly identity: Identity,
     private readonly config: ConfigService,
     private readonly users: UserService,
     private readonly projects: ProjectService,
@@ -37,8 +37,10 @@ export class ProjectWorkflowNotificationHandler
   ) {}
 
   async handle(event: ProjectTransitionedEvent) {
-    const { previousStep, next, workflowEvent, session } = event;
+    const { previousStep, next, workflowEvent } = event;
     const transition = typeof next !== 'string' ? next : undefined;
+
+    const session = this.identity.current;
 
     // TODO on bypass: keep notifying members? add anyone else?
     const notifiers = transition?.notifiers ?? [];
@@ -71,14 +73,15 @@ export class ProjectWorkflowNotificationHandler
       toStep: event.workflowEvent.to,
     });
 
-    const [changedBy, project, primaryPartnerName] = await Promise.all([
-      this.users.readOneUnsecured(
-        workflowEvent.who.id,
-        this.config.rootUser.id,
-      ),
-      this.projects.readOneUnsecured(event.project.id, this.config.rootUser.id),
-      this.projects.getPrimaryOrganizationName(event.project.id),
-    ]);
+    const [changedBy, project, primaryPartnerName] = await this.identity.asUser(
+      this.config.rootUser.id,
+      async () =>
+        await Promise.all([
+          this.users.readOneUnsecured(workflowEvent.who.id),
+          this.projects.readOneUnsecured(event.project.id),
+          this.projects.getPrimaryOrganizationName(event.project.id),
+        ]),
+    );
 
     await asyncPool(1, notifyees, async (notifier) => {
       if (!notifier.email) {
@@ -104,30 +107,31 @@ export class ProjectWorkflowNotificationHandler
     primaryPartnerName: string | null,
   ): Promise<ProjectStepChangedProps> {
     const recipientId = notifier.id ?? this.config.rootUser.id;
-    const recipientSession = await this.auth.sessionForUser(recipientId);
-    const recipient = notifier.id
-      ? await this.users.readOne(recipientId, recipientSession)
-      : ({
-          email: { value: notifier.email, canRead: true, canEdit: false },
-          displayFirstName: {
-            value: notifier.email!.split('@')[0],
-            canRead: true,
-            canEdit: false,
-          },
-          displayLastName: { value: '', canRead: true, canEdit: false },
-          timezone: {
-            value: this.config.defaultTimeZone,
-            canRead: true,
-            canEdit: false,
-          },
-        } satisfies ProjectStepChangedProps['recipient']);
+    return await this.identity.asUser(recipientId, async () => {
+      const recipient = notifier.id
+        ? await this.users.readOne(recipientId)
+        : ({
+            email: { value: notifier.email, canRead: true, canEdit: false },
+            displayFirstName: {
+              value: notifier.email!.split('@')[0],
+              canRead: true,
+              canEdit: false,
+            },
+            displayLastName: { value: '', canRead: true, canEdit: false },
+            timezone: {
+              value: this.config.defaultTimeZone,
+              canRead: true,
+              canEdit: false,
+            },
+          } satisfies ProjectStepChangedProps['recipient']);
 
-    return {
-      recipient,
-      changedBy: this.users.secure(changedBy, recipientSession),
-      project: this.projects.secure(project, recipientSession),
-      previousStep,
-      primaryPartnerName,
-    };
+      return {
+        recipient,
+        changedBy: this.users.secure(changedBy),
+        project: this.projects.secure(project),
+        previousStep,
+        primaryPartnerName,
+      };
+    });
   }
 }

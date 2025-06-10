@@ -1,3 +1,5 @@
+using extension pg_unaccent;
+
 module default {
   global currentActorId: uuid;
   global currentActor := (select Actor filter .id = global currentActorId);
@@ -5,17 +7,13 @@ module default {
   global currentRoles := (global currentActor).roles;
 
   scalar type ReportPeriod extending enum<Monthly, Quarterly>;
-  
-  # Helper function to workaround native support for sort ignoring accents
-  # https://stackoverflow.com/a/11007216
-  # https://github.com/geldata/gel/issues/386
-  function str_sortable(value: str) -> str
-  using (
+
+  # Helper function to sort strings in a more natural way
+  function str_sortable(value: str) -> str using (
     str_lower(
-      re_replace('Ñ', 'N',
+      ext::pg_unaccent::unaccent(
         str_trim(re_replace('[ [\\]|,\\-$]+', ' ', value, flags := 'g')),
-        flags := 'g'
-       )
+      )
     )
   );
 

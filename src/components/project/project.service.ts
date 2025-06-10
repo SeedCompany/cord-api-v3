@@ -7,7 +7,6 @@ import {
   EnhancedResource,
   type ID,
   InputException,
-  isIdLike,
   many,
   NotFoundException,
   type ObjectView,
@@ -18,16 +17,14 @@ import {
   Role,
   SecuredList,
   ServerException,
-  type Session,
   UnauthorizedException,
   type UnsecuredDto,
 } from '~/common';
-import { isAdmin } from '~/common/session';
-import { HandleIdLookup, IEventBus, ILogger, Logger } from '~/core';
+import { HandleIdLookup, IEventBus } from '~/core';
+import { Identity } from '~/core/authentication';
 import { Transactional } from '~/core/database';
 import { type AnyChangesOf } from '~/core/database/changes';
 import { Privileges } from '../authorization';
-import { withoutScope } from '../authorization/dto';
 import { BudgetService } from '../budget';
 import { BudgetStatus, type SecuredBudget } from '../budget/dto';
 import { EngagementService } from '../engagement';
@@ -90,16 +87,13 @@ export class ProjectService {
     @Inject(forwardRef(() => EngagementService))
     private readonly engagementService: EngagementService & {},
     private readonly privileges: Privileges,
+    private readonly identity: Identity,
     private readonly eventBus: IEventBus,
     private readonly repo: ProjectRepository,
     private readonly projectChangeRequests: ProjectChangeRequestService,
-    @Logger('project:service') private readonly logger: ILogger,
   ) {}
 
-  async create(
-    input: CreateProject,
-    session: Session,
-  ): Promise<UnsecuredDto<Project>> {
+  async create(input: CreateProject): Promise<UnsecuredDto<Project>> {
     ProjectDateRangeException.throwIfInvalid(input);
     if (input.type !== ProjectType.Internship && input.sensitivity) {
       throw new InputException(
@@ -107,7 +101,7 @@ export class ProjectService {
         'project.sensitivity',
       );
     }
-    this.privileges.for(session, IProject).verifyCan('create');
+    this.privileges.for(IProject).verifyCan('create');
 
     await this.validateOtherResourceId(
       input.fieldRegionId,
@@ -141,7 +135,7 @@ export class ProjectService {
     );
 
     // Only allow admins to specify department IDs
-    if (input.departmentId && !isAdmin(session.impersonator ?? session)) {
+    if (input.departmentId && !this.identity.isImpersonatorAdmin) {
       throw UnauthorizedException.fromPrivileges(
         'edit',
         undefined,
@@ -152,7 +146,7 @@ export class ProjectService {
 
     try {
       const { id } = await this.repo.create(input);
-      const project = await this.readOneUnsecured(id, session).catch((e) => {
+      const project = await this.readOneUnsecured(id).catch((e) => {
         throw e instanceof NotFoundException
           ? new ReadAfterCreationFailed(IProject)
           : e;
@@ -161,15 +155,16 @@ export class ProjectService {
       RequiredWhen.verify(IProject, project);
 
       // Add creator to the project team with their global roles
+      const session = this.identity.current;
       await this.projectMembers.create(
         {
           userId: session.userId,
           roles: session.roles
-            .map(withoutScope)
-            .filter((role) => Role.applicableToProjectMembership.has(role)),
+            .values()
+            .filter((role) => Role.applicableToProjectMembership.has(role))
+            .toArray(),
           projectId: project,
         },
-        session,
         false,
       );
       // Skip another read query to fetch the fresh isMember flag
@@ -179,7 +174,7 @@ export class ProjectService {
         scope: ['member:true'],
       });
 
-      const event = new ProjectCreatedEvent(project, session);
+      const event = new ProjectCreatedEvent(project);
       await this.eventBus.publish(event);
 
       return event.project;
@@ -198,10 +193,9 @@ export class ProjectService {
   ])
   async readOneTranslation(
     id: ID,
-    session: Session,
     view?: ObjectView,
   ): Promise<TranslationProject> {
-    const project = await this.readOne(id, session, view?.changeset);
+    const project = await this.readOne(id, view?.changeset);
     if (project.type === ProjectType.Internship) {
       throw new Error('Project is not a translation project');
     }
@@ -211,10 +205,9 @@ export class ProjectService {
   @HandleIdLookup(InternshipProject)
   async readOneInternship(
     id: ID,
-    session: Session,
     view?: ObjectView,
   ): Promise<InternshipProject> {
-    const project = await this.readOne(id, session, view?.changeset);
+    const project = await this.readOne(id, view?.changeset);
     if (project.type !== ProjectType.Internship) {
       throw new Error('Project is not an internship project');
     }
@@ -223,45 +216,34 @@ export class ProjectService {
 
   async readOneUnsecured(
     id: ID,
-    sessionOrUserId: Session | ID,
     changeset?: ID,
   ): Promise<UnsecuredDto<Project>> {
-    const userId = isIdLike(sessionOrUserId)
-      ? sessionOrUserId
-      : sessionOrUserId.userId;
-    return await this.repo.readOne(id, userId, changeset);
+    return await this.repo.readOne(id, changeset);
   }
 
   async readMany(
     ids: readonly ID[],
-    session: Session,
     view: ObjectView,
   ): Promise<readonly Project[]> {
-    this.logger.debug('read many', { ids, view });
-    const projects = await this.repo.readMany(ids, session, view?.changeset);
-    return await Promise.all(projects.map((dto) => this.secure(dto, session)));
+    const projects = await this.repo.readMany(ids, view?.changeset);
+    return await Promise.all(projects.map((dto) => this.secure(dto)));
   }
 
-  secure(project: UnsecuredDto<Project>, session: Session) {
-    return this.privileges.for(session, IProject, project).secure(project);
+  secure(project: UnsecuredDto<Project>) {
+    return this.privileges.for(IProject, project).secure(project);
   }
 
-  async readOne(id: ID, session: Session, changeset?: ID): Promise<Project> {
-    const unsecured = await this.readOneUnsecured(id, session, changeset);
-    return this.secure(unsecured, session);
+  async readOne(id: ID, changeset?: ID): Promise<Project> {
+    const unsecured = await this.readOneUnsecured(id, changeset);
+    return this.secure(unsecured);
   }
 
   @Transactional()
   async update(
     input: UpdateProject,
-    session: Session,
     changeset?: ID,
   ): Promise<UnsecuredDto<Project>> {
-    const currentProject = await this.readOneUnsecured(
-      input.id,
-      session,
-      changeset,
-    );
+    const currentProject = await this.readOneUnsecured(input.id, changeset);
     if (input.sensitivity && currentProject.type !== ProjectType.Internship)
       throw new InputException(
         'Can only set sensitivity on Internship Projects',
@@ -271,7 +253,7 @@ export class ProjectService {
     // Only allow admins to specify department IDs
     if (
       input.departmentId !== undefined &&
-      !isAdmin(session.impersonator ?? session)
+      !this.identity.isImpersonatorAdmin
     ) {
       throw UnauthorizedException.fromPrivileges(
         'edit',
@@ -283,10 +265,10 @@ export class ProjectService {
 
     const changes = this.repo.getActualChanges(currentProject, input);
     this.privileges
-      .for(session, resolveProjectType(currentProject), currentProject)
+      .for(resolveProjectType(currentProject), currentProject)
       .verifyChanges(changes, { pathPrefix: 'project' });
     if (Object.keys(changes).length === 0) {
-      return await this.readOneUnsecured(input.id, session, changeset);
+      return await this.readOneUnsecured(input.id, changeset);
     }
 
     ProjectDateRangeException.throwIfInvalid(currentProject, changes);
@@ -295,7 +277,6 @@ export class ProjectService {
       try {
         const location = await this.locationService.readOne(
           changes.primaryLocationId,
-          session,
         );
         if (!location.fundingAccount.value) {
           throw new InputException(
@@ -333,65 +314,55 @@ export class ProjectService {
       throw nowMissing;
     }
 
-    const event = new ProjectUpdatedEvent(
-      updated,
-      currentProject,
-      { id: updated.id, ...changes },
-      session,
-    );
+    const event = new ProjectUpdatedEvent(updated, currentProject, {
+      id: updated.id,
+      ...changes,
+    });
     await this.eventBus.publish(event);
     return event.updated;
   }
 
-  async delete(id: ID, session: Session): Promise<void> {
-    const object = await this.readOneUnsecured(id, session);
+  async delete(id: ID): Promise<void> {
+    const object = await this.readOneUnsecured(id);
 
-    this.privileges.for(session, IProject, object).verifyCan('delete');
+    this.privileges.for(IProject, object).verifyCan('delete');
 
     try {
       await this.repo.deleteNode(object);
     } catch (e) {
-      this.logger.warning('Failed to delete project', {
-        exception: e,
-      });
-      throw new ServerException('Failed to delete project');
+      throw new ServerException('Failed to delete project', e);
     }
 
-    await this.eventBus.publish(new ProjectDeletedEvent(object, session));
+    await this.eventBus.publish(new ProjectDeletedEvent(object));
   }
 
-  async list(input: ProjectListInput, session: Session) {
-    const results = await this.repo.list(input, session);
+  async list(input: ProjectListInput) {
+    const results = await this.repo.list(input);
     return {
       ...results,
-      items: results.items.map((dto) => this.secure(dto, session)),
+      items: results.items.map((dto) => this.secure(dto)),
     };
   }
 
   async listEngagements(
     project: Project,
     input: EngagementListInput,
-    session: Session,
     view?: ObjectView,
   ): Promise<SecuredEngagementList> {
-    this.logger.debug('list engagements ', {
-      projectId: project.id,
-      input,
-      userId: session.userId,
-    });
-
     const result = await this.engagementService.list(
       {
         ...input,
         filter: {
           ...input.filter,
-          projectId: project.id,
+          project: {
+            id: project.id,
+            ...input.filter?.project,
+          },
         },
       },
-      session,
       view,
     );
-    const perms = this.privileges.for(session, IProject, {
+    const perms = this.privileges.for(IProject, {
       ...project,
       project,
     } as any);
@@ -406,20 +377,19 @@ export class ProjectService {
   async listProjectMembers(
     project: Project,
     input: ProjectMemberListInput,
-    session: Session,
   ): Promise<SecuredProjectMemberList> {
-    const result = await this.projectMembers.list(
-      {
-        ...input,
-        filter: {
-          ...input.filter,
-          projectId: project.id,
+    const result = await this.projectMembers.list({
+      ...input,
+      filter: {
+        ...input.filter,
+        project: {
+          id: project.id,
+          ...input.filter?.project,
         },
       },
-      session,
-    );
+    });
 
-    const perms = this.privileges.for(session, IProject, project).all.member;
+    const perms = this.privileges.for(IProject, project).all.member;
 
     return {
       ...result,
@@ -431,7 +401,6 @@ export class ProjectService {
   async listPartnerships(
     project: Project,
     input: PartnershipListInput,
-    session: Session,
     changeset?: ID,
   ): Promise<SecuredPartnershipList> {
     const result = await this.partnerships.list(
@@ -442,10 +411,9 @@ export class ProjectService {
           projectId: project.id,
         },
       },
-      session,
       changeset,
     );
-    const perms = this.privileges.for(session, IProject, project);
+    const perms = this.privileges.for(IProject, project);
     return {
       ...result,
       canRead: perms.can('read', 'partnership'),
@@ -456,18 +424,14 @@ export class ProjectService {
   async listChangeRequests(
     project: Project,
     input: ProjectChangeRequestListInput,
-    session: Session,
   ): Promise<SecuredProjectChangeRequestList> {
-    const result = await this.projectChangeRequests.list(
-      {
-        ...input,
-        filter: {
-          ...input.filter,
-          projectId: project.id,
-        },
+    const result = await this.projectChangeRequests.list({
+      ...input,
+      filter: {
+        ...input.filter,
+        projectId: project.id,
       },
-      session,
-    );
+    });
 
     return {
       ...result,
@@ -479,29 +443,25 @@ export class ProjectService {
   async listProjectsByUserId(
     userId: ID,
     input: ProjectListInput,
-    session: Session,
   ): Promise<SecuredProjectList> {
     // Instead of trying to handle which subset of projects should be included,
     // based on doing the work of seeing which project teams they can view,
     // we'll use this course all/nothing check. This, assuming role permissions
     // are set correctly, allows the users which can view all projects & their members
     // to use this feature.
-    const perms = this.privileges.for(session, User).all.projects;
+    const perms = this.privileges.for(User).all.projects;
 
     if (!perms.read) {
       return SecuredList.Redacted;
     }
 
-    const result = await this.list(
-      {
-        ...input,
-        filter: {
-          ...input.filter,
-          userId,
-        },
+    const result = await this.list({
+      ...input,
+      filter: {
+        ...input.filter,
+        userId,
       },
-      session,
-    );
+    });
 
     return {
       ...result,
@@ -542,10 +502,9 @@ export class ProjectService {
   async listOtherLocations(
     project: Project,
     input: LocationListInput,
-    session: Session,
   ): Promise<SecuredLocationList> {
     return await this.locationService.listLocationForResource(
-      this.privileges.for(session, IProject, project).forEdge('otherLocations'),
+      this.privileges.for(IProject, project).forEdge('otherLocations'),
       project,
       input,
     );
@@ -553,13 +512,10 @@ export class ProjectService {
 
   async currentBudget(
     project: IProject,
-    session: Session,
     changeset?: ID,
   ): Promise<SecuredBudget> {
     let budgetToReturn;
-    const perms = this.privileges
-      .for(session, IProject, project)
-      .forEdge('budget');
+    const perms = this.privileges.for(IProject, project).forEdge('budget');
 
     if (perms.can('read')) {
       const budgets = await this.budgetService.listUnsecure(
@@ -568,7 +524,6 @@ export class ProjectService {
             projectId: project.id,
           },
         },
-        session,
         changeset,
       );
 

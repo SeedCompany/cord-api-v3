@@ -8,7 +8,6 @@ import {
   NotFoundException,
   ReadAfterCreationFailed,
   SecuredList,
-  type Session,
   type UnsecuredDto,
 } from '~/common';
 import { DtoRepository } from '~/core/database';
@@ -19,7 +18,6 @@ import {
   matchProps,
   merge,
   paginate,
-  requestingUser,
   sorting,
 } from '~/core/database/query';
 import {
@@ -123,17 +121,29 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
     await query.run();
   }
 
-  async list({ filter, ...input }: FieldZoneListInput, session: Session) {
-    if (!this.privileges.forUser(session).can('read')) {
+  async list({ filter, ...input }: FieldZoneListInput) {
+    if (!this.privileges.can('read')) {
       return SecuredList.Redacted;
     }
     const result = await this.db
       .query()
-      .match(requestingUser(session))
       .match(node('node', 'FieldZone'))
       .apply(sorting(FieldZone, input))
       .apply(paginate(input, this.hydrate()))
       .first();
     return result!; // result from paginate() will always have 1 row.
+  }
+
+  async readAllByDirector(id: ID<'User'>) {
+    return await this.db
+      .query()
+      .match([
+        node('node', 'FieldZone'),
+        relation('out', '', 'director', ACTIVE),
+        node('', 'User', { id }),
+      ])
+      .apply(this.hydrate())
+      .map('dto')
+      .run();
   }
 }

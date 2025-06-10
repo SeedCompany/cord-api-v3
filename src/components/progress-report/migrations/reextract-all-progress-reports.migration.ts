@@ -18,14 +18,13 @@ export class ReextractPnpProgressReportsMigration extends BaseMigration {
   }
 
   async up() {
-    const session = this.fakeAdminSession;
     const pnps = createPaginator((page) =>
       this.grabSomePnpsToReextract(page, 100),
     );
     await asyncPool(2, pnps, async ({ dto: report, fv }) => {
       try {
         const pnp = this.files.asDownloadable(fv);
-        const event = new PeriodicReportUploadedEvent(report, pnp, session);
+        const event = new PeriodicReportUploadedEvent(report, pnp);
         await this.db.conn.runInTransaction(() => this.eventBus.publish(event));
       } catch (e) {
         this.logger.error('Failed to re-extract PnP', {

@@ -1,15 +1,13 @@
 import { type ID } from '~/common';
-import { LoaderFactory, SessionAwareLoaderStrategy } from '~/core';
+import { type DataLoaderStrategy, LoaderFactory } from '~/core/data-loader';
 import { Actor } from './dto';
 import { UserService } from './user.service';
 
 @LoaderFactory(() => Actor)
-export class ActorLoader extends SessionAwareLoaderStrategy<Actor> {
-  constructor(private readonly users: UserService) {
-    super();
-  }
+export class ActorLoader implements DataLoaderStrategy<Actor, ID<Actor>> {
+  constructor(private readonly users: UserService) {}
 
-  async loadMany(ids: readonly ID[]) {
-    return await this.users.readManyActors(ids, this.session);
+  async loadMany(ids: ReadonlyArray<ID<Actor>>) {
+    return await this.users.readManyActors(ids);
   }
 }

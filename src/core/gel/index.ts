@@ -2,7 +2,6 @@ export * from './reexports';
 export { edgeql, type EdgeQLArgsOf, type EdgeQLReturnOf } from './edgeql';
 export type { OptionsFn } from './options.context';
 export * from './gel.service';
-export * from './withScope';
 export { ExclusivityViolationError } from './errors/constraint-violation.error';
 export * from './common.repository';
 export * from './dto.repository';

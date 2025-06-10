@@ -1,5 +1,4 @@
 import { Args, Mutation, Resolver } from '@nestjs/graphql';
-import { LoggedInSession, type Session } from '~/common';
 import { CeremonyService } from '../ceremony';
 import { UpdateCeremonyInput, UpdateCeremonyOutput } from './dto';
 
@@ -11,10 +10,9 @@ export class CeremonyResolver {
     description: 'Update a ceremony',
   })
   async updateCeremony(
-    @LoggedInSession() session: Session,
     @Args('input') { ceremony: input }: UpdateCeremonyInput,
   ): Promise<UpdateCeremonyOutput> {
-    const ceremony = await this.service.update(input, session);
+    const ceremony = await this.service.update(input);
     return { ceremony };
   }
 }

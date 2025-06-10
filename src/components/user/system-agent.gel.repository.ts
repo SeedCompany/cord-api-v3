@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { type Role } from '~/common';
-import { disableAccessPolicies, edgeql, Gel } from '~/core/gel';
+import { disableAccessPolicies, e, Gel } from '~/core/gel';
 import { SystemAgentRepository } from './system-agent.repository';
 
 @Injectable()
@@ -12,15 +12,15 @@ export class SystemAgentGelRepository extends SystemAgentRepository {
   }
 
   protected async upsertAgent(name: string, roles?: readonly Role[]) {
-    const query = edgeql(`
-      select (
-        (select SystemAgent filter .name = <str>$name) ??
-        (insert SystemAgent {
-          name := <str>$name,
-          roles := array_unpack(<optional array<Role>>$roles)
-        })
-      ) {*}
-    `);
-    return await this.db.run(query, { name, roles });
+    const upserted = e.op(
+      e.select(e.SystemAgent, () => ({ filter_single: { name } })),
+      '??',
+      e.insert(e.SystemAgent, { name, roles }),
+    );
+    const query = e.select(upserted, (agent) => ({
+      __typename: e.str('SystemAgent' as const),
+      ...agent['*'],
+    }));
+    return await this.db.run(query);
   }
 }

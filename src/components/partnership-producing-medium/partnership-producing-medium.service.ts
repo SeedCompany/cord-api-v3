@@ -5,7 +5,6 @@ import {
   type ID,
   InputException,
   SecuredList,
-  type Session,
   UnauthorizedException,
 } from '~/common';
 import { ResourceResolver } from '~/core';
@@ -28,9 +27,8 @@ export class PartnershipProducingMediumService {
 
   async list(
     engagement: LanguageEngagement,
-    session: Session,
   ): Promise<SecuredPartnershipsProducingMediums> {
-    const perms = this.privileges.for(session, IProject, engagement as any);
+    const perms = this.privileges.for(IProject, engagement as any);
 
     if (!perms.can('read', 'partnership')) {
       return SecuredList.Redacted;
@@ -54,7 +52,6 @@ export class PartnershipProducingMediumService {
   async update(
     engagementId: ID,
     input: readonly PartnershipProducingMediumInput[],
-    session: Session,
   ) {
     if (uniqBy(input, (pair) => pair.medium).length !== input.length) {
       throw new InputException('A medium can only be mentioned once');
@@ -63,10 +60,9 @@ export class PartnershipProducingMediumService {
     const engagement = await this.resources.lookup(
       LanguageEngagement,
       engagementId,
-      session,
     );
 
-    const perms = this.privileges.for(session, IProject, engagement as any);
+    const perms = this.privileges.for(IProject, engagement as any);
 
     if (!perms.can('create', 'partnership')) {
       throw new UnauthorizedException(

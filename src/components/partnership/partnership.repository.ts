@@ -10,7 +10,6 @@ import {
   labelForView,
   NotFoundException,
   type ObjectView,
-  type Session,
   type UnsecuredDto,
   viewOfChangeset,
 } from '~/common';
@@ -29,7 +28,6 @@ import {
   merge,
   oncePerProject,
   paginate,
-  requestingUser,
   sortWith,
   variable,
   whereNotDeletedInChangeset,
@@ -50,12 +48,12 @@ import type { PartnershipByProjectAndPartnerInput } from './partnership-by-proje
 @Injectable()
 export class PartnershipRepository extends DtoRepository<
   typeof Partnership,
-  [session: Session, view?: ObjectView]
+  [view?: ObjectView]
 >(Partnership) {
   constructor(private readonly files: FileService) {
     super();
   }
-  async create(input: CreatePartnership, session: Session, changeset?: ID) {
+  async create(input: CreatePartnership, changeset?: ID) {
     const { projectId, partnerId } = input;
     await this.verifyRelationshipEligibility(projectId, partnerId, changeset);
 
@@ -99,7 +97,6 @@ export class PartnershipRepository extends DtoRepository<
     await this.files.createDefinedFile(
       mouId,
       `MOU`,
-      session,
       result.id,
       'mou',
       input.mou,
@@ -109,7 +106,6 @@ export class PartnershipRepository extends DtoRepository<
     await this.files.createDefinedFile(
       agreementId,
       `Partner Agreement`,
-      session,
       result.id,
       'agreement',
       input.agreement,
@@ -129,7 +125,7 @@ export class PartnershipRepository extends DtoRepository<
     return undefined as unknown;
   }
 
-  async readMany(ids: readonly ID[], session: Session, view?: ObjectView) {
+  async readMany(ids: readonly ID[], view?: ObjectView) {
     const label = labelForView('Partnership', view);
 
     return await this.db
@@ -159,14 +155,13 @@ export class PartnershipRepository extends DtoRepository<
               : q,
           ),
       )
-      .apply(this.hydrate(session, view))
+      .apply(this.hydrate(view))
       .map('dto')
       .run();
   }
 
   async readManyByProjectAndPartner(
     input: readonly PartnershipByProjectAndPartnerInput[],
-    session: Session,
   ) {
     return await this.db
       .query()
@@ -178,12 +173,12 @@ export class PartnershipRepository extends DtoRepository<
         relation('out', '', 'partner', ACTIVE),
         node('partner', 'Partner', { id: variable('input.partner') }),
       ])
-      .apply(this.hydrate(session))
+      .apply(this.hydrate())
       .map('dto')
       .run();
   }
 
-  async listAllByProjectId(projectId: ID, session: Session) {
+  async listAllByProjectId(projectId: ID) {
     return await this.db
       .query()
       .match([
@@ -191,12 +186,12 @@ export class PartnershipRepository extends DtoRepository<
         relation('out', '', 'partnership', ACTIVE),
         node('node', 'Partnership'),
       ])
-      .apply(this.hydrate(session))
+      .apply(this.hydrate())
       .map('dto')
       .run();
   }
 
-  protected override hydrate(session: Session, view?: ObjectView) {
+  protected override hydrate(view?: ObjectView) {
     return (query: Query) =>
       query
         .match([
@@ -208,7 +203,7 @@ export class PartnershipRepository extends DtoRepository<
           relation('out', '', 'organization', ACTIVE),
           node('org', 'Organization'),
         ])
-        .apply(matchPropsAndProjectSensAndScopedRoles(session, { view }))
+        .apply(matchPropsAndProjectSensAndScopedRoles({ view }))
         .apply(matchChangesetAndChangedProps(view?.changeset))
         .apply(matchProps({ nodeName: 'project', outputVar: 'projectProps' }))
         .apply(
@@ -243,7 +238,7 @@ export class PartnershipRepository extends DtoRepository<
         );
   }
 
-  async list(input: PartnershipListInput, session: Session, changeset?: ID) {
+  async list(input: PartnershipListInput, changeset?: ID) {
     const result = await this.db
       .query()
       .subQuery((s) =>
@@ -270,15 +265,15 @@ export class PartnershipRepository extends DtoRepository<
               : q,
           ),
       )
-      .match(requestingUser(session))
+      .with('*') // needed between call & where
       .apply(partnershipFilters(input.filter))
       .apply(
-        this.privileges.forUser(session).filterToReadable({
+        this.privileges.filterToReadable({
           wrapContext: oncePerProject,
         }),
       )
       .apply(sortWith(partnershipSorters, input))
-      .apply(paginate(input, this.hydrate(session, viewOfChangeset(changeset))))
+      .apply(paginate(input, this.hydrate(viewOfChangeset(changeset))))
       .first();
     return result!; // result from paginate() will always have 1 row.
   }

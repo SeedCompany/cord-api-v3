@@ -1,6 +1,5 @@
-import { CalendarDate, Role } from '~/common';
-import { type Language } from '../src/components/language/dto';
-import { type Location } from '../src/components/location/dto';
+import { Role } from '~/common';
+import { graphql } from '~/graphql';
 import { PartnerType } from '../src/components/partner/dto';
 import {
   ProjectStatus,
@@ -22,7 +21,6 @@ import {
   createSession,
   createTestApp,
   fragments,
-  gql,
   registerUser,
   runAsAdmin,
   type TestApp,
@@ -38,8 +36,8 @@ describe('Project-Workflow e2e', () => {
   let consultantManager: TestUser;
   let financialAnalyst: TestUser;
   let controller: TestUser;
-  let location: Location;
-  let language: Language;
+  let location: fragments.location;
+  let language: fragments.language;
 
   beforeAll(async () => {
     app = await createTestApp();
@@ -90,27 +88,29 @@ describe('Project-Workflow e2e', () => {
     const project = await createProject(app, { type });
 
     const queryProject = await app.graphql.query(
-      gql`
-        query project($id: ID!) {
-          project(id: $id) {
-            ...project
-            budget {
-              value {
-                id
-                status
+      graphql(
+        `
+          query project($id: ID!) {
+            project(id: $id) {
+              ...project
+              budget {
+                value {
+                  id
+                  status
+                }
+                canRead
+                canEdit
               }
-              canRead
-              canEdit
             }
           }
-        }
-        ${fragments.project}
-      `,
+        `,
+        [fragments.project],
+      ),
       {
         id: project.id,
       },
     );
-    expect(queryProject.project.budget.value.status).toBe('Pending');
+    expect(queryProject.project.budget.value!.status).toBe('Pending');
   });
 
   it('General development user flow', async () => {
@@ -140,34 +140,20 @@ describe('Project-Workflow e2e', () => {
 
       return [location, fieldRegion];
     });
-    await updateProject(app, {
+    let result = await updateProject(app, {
       id: project.id,
       primaryLocationId: location.id,
       fieldRegionId: fieldRegion.id,
     });
-
-    let result = await app.graphql.query(
-      gql`
-        query project($id: ID!) {
-          project(id: $id) {
-            ...project
-          }
-        }
-        ${fragments.project}
-      `,
-      {
-        id: project.id,
-      },
-    );
-    expect(result.project.primaryLocation.value.id).toBe(location.id);
-    expect(result.project.fieldRegion.value.id).toBe(fieldRegion.id);
+    expect(result.primaryLocation.value!.id).toBe(location.id);
+    expect(result.fieldRegion.value!.id).toBe(fieldRegion.id);
 
     // Enter MOU dates
     await fieldOpsDirector.login();
     result = await updateProject(app, {
       id: project.id,
-      mouStart: CalendarDate.fromISO('1991-01-01'),
-      mouEnd: CalendarDate.fromISO('1992-01-01'),
+      mouStart: '1991-01-01',
+      mouEnd: '1992-01-01',
     });
     expect(result.mouStart.value).toBe('1991-01-01');
     expect(result.mouEnd.value).toBe('1992-01-01');
@@ -175,7 +161,7 @@ describe('Project-Workflow e2e', () => {
     // Enter estimatedSubmission date
     result = await updateProject(app, {
       id: project.id,
-      estimatedSubmission: CalendarDate.fromISO('2020-01-01'),
+      estimatedSubmission: '2020-01-01',
     });
     expect(result.estimatedSubmission.value).toBe('2020-01-01');
 

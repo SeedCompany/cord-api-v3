@@ -1,10 +1,10 @@
-import { Merge } from 'cypher-query-builder';
-import { type PatternCollection } from 'cypher-query-builder/dist/typings/clauses/pattern-clause';
+import { type Nil } from '@seedcompany/common';
+import { Merge, NodePattern, type Pattern } from 'cypher-query-builder';
 import { type Many, ServerException } from '~/common';
 import { quoteKey } from '../query-augmentation/interpolate';
 
 export type ExpressionInput =
-  | Many<string | boolean | number | null | undefined>
+  | Many<string | boolean | number | Pattern | Nil>
   | readonly ExpressionInput[]
   | { [prop: string]: ExpressionInput }
   | CypherExpression;
@@ -43,11 +43,11 @@ export const exp = (exp: ExpressionInput): CypherExpression => {
   );
 };
 
-exp.path = (pattern: Exclude<PatternCollection, any[][]>) => {
+const expPath = (pattern: Pattern[]) => {
   // Using merge as shortcut to compile path to string.
   const clause = new Merge(pattern);
   // Slice off the "MERGE " prefix from built clause.
-  return exp(clause.build().slice(6));
+  return clause.build().slice(6);
 };
 
 export const isExp = (value: unknown): value is CypherExpression =>
@@ -71,7 +71,15 @@ const buildExp = (exp: ExpressionInput): string => {
     return exp.toString();
   }
 
+  if (exp instanceof NodePattern) {
+    return expPath([exp]);
+  }
+
   if (isArray(exp)) {
+    if (exp[0] instanceof NodePattern) {
+      return expPath(exp as unknown as NodePattern[]);
+    }
+
     const list = exp.filter((e) => e !== undefined).map(buildExp);
     return shouldMultiline(list)
       ? `[${makeMultiline(list)}]`

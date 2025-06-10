@@ -3,7 +3,6 @@ import {
   type ID,
   type ObjectView,
   ServerException,
-  type Session,
   type UnsecuredDto,
 } from '~/common';
 import { HandleIdLookup } from '~/core';
@@ -30,63 +29,45 @@ export class OrganizationService {
     private readonly repo: OrganizationRepository,
   ) {}
 
-  async create(
-    input: CreateOrganization,
-    session: Session,
-  ): Promise<Organization> {
-    const created = await this.repo.create(input, session);
+  async create(input: CreateOrganization): Promise<Organization> {
+    const created = await this.repo.create(input);
 
-    this.privileges.for(session, Organization, created).verifyCan('create');
+    this.privileges.for(Organization, created).verifyCan('create');
 
-    return this.secure(created, session);
+    return this.secure(created);
   }
 
   @HandleIdLookup(Organization)
-  async readOne(
-    orgId: ID,
-    session: Session,
-    _view?: ObjectView,
-  ): Promise<Organization> {
-    const result = await this.repo.readOne(orgId, session);
-    return this.secure(result, session);
+  async readOne(orgId: ID, _view?: ObjectView): Promise<Organization> {
+    const result = await this.repo.readOne(orgId);
+    return this.secure(result);
   }
 
-  async readMany(ids: readonly ID[], session: Session) {
-    const organizations = await this.repo.readMany(ids, session);
-    return organizations.map((dto) => this.secure(dto, session));
+  async readMany(ids: readonly ID[]) {
+    const organizations = await this.repo.readMany(ids);
+    return organizations.map((dto) => this.secure(dto));
   }
 
-  private secure(
-    dto: UnsecuredDto<Organization>,
-    session: Session,
-  ): Organization {
-    return this.privileges.for(session, Organization).secure(dto);
+  private secure(dto: UnsecuredDto<Organization>): Organization {
+    return this.privileges.for(Organization).secure(dto);
   }
 
-  async update(
-    input: UpdateOrganization,
-    session: Session,
-  ): Promise<Organization> {
-    const organization = await this.readOne(input.id, session);
+  async update(input: UpdateOrganization): Promise<Organization> {
+    const organization = await this.readOne(input.id);
 
     const changes = this.repo.getActualChanges(organization, input);
 
-    this.privileges
-      .for(session, Organization, organization)
-      .verifyChanges(changes);
+    this.privileges.for(Organization, organization).verifyChanges(changes);
 
-    const updated = await this.repo.update(
-      { id: input.id, ...changes },
-      session,
-    );
+    const updated = await this.repo.update({ id: input.id, ...changes });
 
-    return this.secure(updated, session);
+    return this.secure(updated);
   }
 
-  async delete(id: ID, session: Session): Promise<void> {
-    const object = await this.readOne(id, session);
+  async delete(id: ID): Promise<void> {
+    const object = await this.readOne(id);
 
-    this.privileges.for(session, Organization, object).verifyCan('delete');
+    this.privileges.for(Organization, object).verifyCan('delete');
 
     try {
       await this.repo.deleteNode(object);
@@ -95,14 +76,11 @@ export class OrganizationService {
     }
   }
 
-  async list(
-    input: OrganizationListInput,
-    session: Session,
-  ): Promise<OrganizationListOutput> {
-    const results = await this.repo.list(input, session);
+  async list(input: OrganizationListInput): Promise<OrganizationListOutput> {
+    const results = await this.repo.list(input);
     return {
       ...results,
-      items: results.items.map((dto) => this.secure(dto, session)),
+      items: results.items.map((dto) => this.secure(dto)),
     };
   }
 
@@ -138,12 +116,9 @@ export class OrganizationService {
   async listLocations(
     organization: Organization,
     input: LocationListInput,
-    session: Session,
   ): Promise<SecuredLocationList> {
     return await this.locationService.listLocationForResource(
-      this.privileges
-        .for(session, Organization, organization)
-        .forEdge('locations'),
+      this.privileges.for(Organization, organization).forEdge('locations'),
       organization,
       input,
     );

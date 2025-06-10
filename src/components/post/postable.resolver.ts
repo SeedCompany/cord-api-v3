@@ -1,11 +1,6 @@
 import { Info, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { type GraphQLResolveInfo } from 'graphql';
-import {
-  ListArg,
-  LoggedInSession,
-  type Resource,
-  type Session,
-} from '~/common';
+import { ListArg, type Resource } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { Postable } from './dto';
 import { PostListInput, SecuredPostList } from './dto/list-posts.dto';
@@ -23,7 +18,6 @@ export class PostableResolver {
     @Info() info: GraphQLResolveInfo & {},
     @Parent() parent: Postable & Resource,
     @ListArg(PostListInput) input: PostListInput,
-    @LoggedInSession() session: Session,
     @Loader(PostLoader) posts: LoaderOf<PostLoader>,
   ): Promise<SecuredPostList> {
     const list = await this.service.securedList(
@@ -38,7 +32,6 @@ export class PostableResolver {
           parentId: parent.id,
         },
       },
-      session,
     );
     posts.primeAll(list.items);
     return list;

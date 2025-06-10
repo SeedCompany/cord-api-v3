@@ -1,5 +1,5 @@
 import { type ID, type ObjectView } from '~/common';
-import { LoaderFactory, ObjectViewAwareLoader } from '~/core';
+import { LoaderFactory, ObjectViewAwareLoader } from '~/core/data-loader';
 import { Partnership } from './dto';
 import { PartnershipService } from './partnership.service';
 
@@ -10,6 +10,6 @@ export class PartnershipLoader extends ObjectViewAwareLoader<Partnership> {
   }
 
   async loadManyByView(ids: readonly ID[], view: ObjectView) {
-    return await this.partnerships.readMany(ids, this.session, view);
+    return await this.partnerships.readMany(ids, view);
   }
 }

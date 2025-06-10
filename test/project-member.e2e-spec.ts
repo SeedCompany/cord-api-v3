@@ -1,7 +1,6 @@
 import { DateTime, Interval } from 'luxon';
 import { Role } from '~/common';
-import { type Project } from '../src/components/project/dto';
-import { type ProjectMember } from '../src/components/project/project-member/dto';
+import { graphql } from '~/graphql';
 import {
   createPerson,
   createProject,
@@ -10,8 +9,6 @@ import {
   createTestApp,
   errors,
   fragments,
-  gql,
-  type Raw,
   registerUser,
   runAsAdmin,
   type TestApp,
@@ -19,7 +16,7 @@ import {
 
 describe('ProjectMember e2e', () => {
   let app: TestApp;
-  let project: Raw<Project>;
+  let project: fragments.project;
 
   beforeAll(async () => {
     app = await createTestApp();
@@ -78,31 +75,33 @@ describe('ProjectMember e2e', () => {
     });
 
     const result = await app.graphql.mutate(
-      gql`
+      graphql(`
         mutation deleteProjectMember($id: ID!) {
           deleteProjectMember(id: $id) {
             __typename
           }
         }
-      `,
+      `),
       {
         id: projectMember.id,
       },
     );
 
-    const actual: boolean | undefined = result.deleteProjectMember;
+    const actual = result.deleteProjectMember;
     expect(actual).toBeTruthy();
 
     await expect(
       app.graphql.query(
-        gql`
-          query projectMember($id: ID!) {
-            projectMember(id: $id) {
-              ...projectMember
+        graphql(
+          `
+            query projectMember($id: ID!) {
+              projectMember(id: $id) {
+                ...projectMember
+              }
             }
-          }
-          ${fragments.projectMember}
-        `,
+          `,
+          [fragments.projectMember],
+        ),
         {
           id: projectMember.id,
         },
@@ -123,13 +122,13 @@ describe('ProjectMember e2e', () => {
     });
 
     await app.graphql.mutate(
-      gql`
+      graphql(`
         mutation deleteProjectMember($id: ID!) {
           deleteProjectMember(id: $id) {
             __typename
           }
         }
-      `,
+      `),
       {
         id: projectMember.id,
       },
@@ -155,16 +154,18 @@ describe('ProjectMember e2e', () => {
       });
 
       const result = await app.graphql.query(
-        gql`
-          mutation updateProjectMember($input: UpdateProjectMemberInput!) {
-            updateProjectMember(input: $input) {
-              projectMember {
-                ...projectMember
+        graphql(
+          `
+            mutation updateProjectMember($input: UpdateProjectMemberInput!) {
+              updateProjectMember(input: $input) {
+                projectMember {
+                  ...projectMember
+                }
               }
             }
-          }
-          ${fragments.projectMember}
-        `,
+          `,
+          [fragments.projectMember],
+        ),
         {
           input: {
             projectMember: {
@@ -180,8 +181,7 @@ describe('ProjectMember e2e', () => {
     expect(result.updateProjectMember.projectMember.roles.value).toEqual(
       expect.arrayContaining([Role.ProjectManager]),
     );
-    const updated: Raw<ProjectMember> =
-      result.updateProjectMember.projectMember;
+    const updated = result.updateProjectMember.projectMember;
     expect(updated).toBeTruthy();
     expect(+DateTime.fromISO(updated.modifiedAt)).toBeGreaterThan(
       +DateTime.fromISO(projectMember.modifiedAt),
@@ -197,16 +197,18 @@ describe('ProjectMember e2e', () => {
 
     await expect(
       app.graphql.query(
-        gql`
-          mutation updateProjectMember($input: UpdateProjectMemberInput!) {
-            updateProjectMember(input: $input) {
-              projectMember {
-                ...projectMember
+        graphql(
+          `
+            mutation updateProjectMember($input: UpdateProjectMemberInput!) {
+              updateProjectMember(input: $input) {
+                projectMember {
+                  ...projectMember
+                }
               }
             }
-          }
-          ${fragments.projectMember}
-        `,
+          `,
+          [fragments.projectMember],
+        ),
         {
           input: {
             projectMember: {

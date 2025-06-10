@@ -15,17 +15,16 @@ import {
   type ID,
   NotFoundException,
   type ResourceShape,
-  type Session,
   type UnsecuredDto,
 } from '~/common';
 import { CommonRepository } from '~/core/database';
 import {
   apoc,
   createRelationships,
+  currentUser,
   filter,
   merge,
   paginate,
-  requestingUser,
   variable,
 } from '~/core/database/query';
 import {
@@ -49,7 +48,6 @@ export class NotificationRepository extends CommonRepository {
     recipients: ReadonlyArray<ID<'User'>> | Nil,
     type: ResourceShape<any>,
     input: Record<string, any>,
-    session: Session,
   ) {
     const extra = omit(input, [...EnhancedResource.of(Notification).props]);
     const res = await this.db
@@ -64,13 +62,12 @@ export class NotificationRepository extends CommonRepository {
       .with('node')
       .apply(this.service.getStrategy(type).saveForNeo4j(extra))
       .with('*')
-      .match(requestingUser(session))
       .apply(
         createRelationships(Notification, 'out', {
-          creator: variable('requestingUser'),
+          creator: currentUser,
         }),
       )
-      .subQuery(['node', 'requestingUser'], (sub) =>
+      .subQuery(['node'], (sub) =>
         sub
           .apply((q) =>
             recipients == null
@@ -90,23 +87,23 @@ export class NotificationRepository extends CommonRepository {
             'count(recipient) as totalRecipients',
           ),
       )
-      .subQuery('node', this.hydrate(session))
+      .subQuery('node', this.hydrate())
       .return('dto, totalRecipients')
       .first();
     return res!;
   }
 
-  async markRead({ id, unread }: MarkNotificationReadArgs, session: Session) {
+  async markRead({ id, unread }: MarkNotificationReadArgs) {
     const result = await this.db
       .query()
       .match([
         node('node', 'Notification', { id }),
         relation('out', 'recipient', 'recipient'),
-        requestingUser(session),
+        currentUser,
       ])
       .setValues({ 'recipient.readAt': unread ? null : DateTime.now() })
       .with('node')
-      .apply(this.hydrate(session))
+      .apply(this.hydrate())
       .first();
     if (!result) {
       throw new NotFoundException();
@@ -114,28 +111,28 @@ export class NotificationRepository extends CommonRepository {
     return result.dto;
   }
 
-  async list(input: NotificationListInput, session: Session) {
+  async list(input: NotificationListInput) {
     const result = await this.db
       .query()
-      .match(requestingUser(session))
-      .subQuery('requestingUser', (q) =>
+      .match(currentUser.as('currentUser'))
+      .subQuery('currentUser', (q) =>
         q
           .match([
             node('node', 'Notification'),
             relation('out', 'recipient', 'recipient'),
-            node('requestingUser'),
+            node('currentUser'),
           ])
           .apply(notificationFilters(input.filter))
           .with('node')
           .orderBy('node.createdAt', 'DESC')
-          .apply(paginate(input, this.hydrate(session))),
+          .apply(paginate(input, this.hydrate())),
       )
-      .subQuery('requestingUser', (q) =>
+      .subQuery('currentUser', (q) =>
         q
           .match([
             node('node', 'Notification'),
             relation('out', 'recipient', 'recipient'),
-            node('requestingUser'),
+            node('currentUser'),
           ])
           .where({ 'recipient.readAt': isNull() })
           .return<{ totalUnread: number }>('count(node) as totalUnread'),
@@ -145,7 +142,7 @@ export class NotificationRepository extends CommonRepository {
     return result!;
   }
 
-  protected hydrate(session: Session) {
+  protected hydrate() {
     return (query: Query) =>
       query
         .subQuery((q) => {
@@ -170,7 +167,7 @@ export class NotificationRepository extends CommonRepository {
         .optionalMatch([
           node('node'),
           relation('out', 'recipient', 'recipient'),
-          requestingUser(session),
+          currentUser,
         ])
         .return<{ dto: UnsecuredDto<Notification> }>(
           merge('node', 'extra', {

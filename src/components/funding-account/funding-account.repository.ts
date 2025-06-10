@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { node, type Query, relation } from 'cypher-query-builder';
-import { type ID, type Session, type UnsecuredDto } from '~/common';
+import { type ID, type UnsecuredDto } from '~/common';
 import { DtoRepository } from '~/core/database';
 import {
   ACTIVE,
@@ -9,7 +9,6 @@ import {
   matchProps,
   merge,
   paginate,
-  requestingUser,
   sorting,
   variable,
 } from '~/core/database/query';
@@ -93,10 +92,9 @@ export class FundingAccountRepository extends DtoRepository(FundingAccount) {
         );
   }
 
-  async list(input: FundingAccountListInput, session: Session) {
+  async list(input: FundingAccountListInput) {
     const result = await this.db
       .query()
-      .match(requestingUser(session))
       .match(node('node', 'FundingAccount'))
       .apply(sorting(FundingAccount, input))
       .apply(paginate(input, this.hydrate()))

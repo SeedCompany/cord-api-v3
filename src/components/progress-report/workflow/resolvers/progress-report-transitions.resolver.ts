@@ -1,10 +1,5 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import {
-  AnonSession,
-  type ParentIdMiddlewareAdditions,
-  type Session,
-} from '~/common';
 import { SecuredProgressReportStatus } from '../../dto';
 import { ProgressReportWorkflowTransition } from '../dto/workflow-transition.dto';
 import { ProgressReportWorkflowService } from '../progress-report-workflow.service';
@@ -17,13 +12,12 @@ export class ProgressReportTransitionsResolver {
     description: 'The available statuses the report can be transitioned to.',
   })
   async transitions(
-    @Parent() status: SecuredProgressReportStatus & ParentIdMiddlewareAdditions,
-    @AnonSession() session: Session,
+    @Parent() status: SecuredProgressReportStatus,
   ): Promise<ProgressReportWorkflowTransition[]> {
     if (!status.canRead || !status.value) {
       return [];
     }
-    return this.workflow.getAvailableTransitions(session, status.value);
+    return this.workflow.getAvailableTransitions(status.value);
   }
 
   @ResolveField(() => Boolean, {
@@ -32,9 +26,7 @@ export class ProgressReportTransitionsResolver {
       and change the status to any other status?
    `,
   })
-  async canBypassTransitions(
-    @AnonSession() session: Session,
-  ): Promise<boolean> {
-    return this.workflow.canBypass(session);
+  async canBypassTransitions(): Promise<boolean> {
+    return this.workflow.canBypass();
   }
 }

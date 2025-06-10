@@ -1,20 +1,20 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { type ID, type Session } from '~/common';
+import { type ID } from '~/common';
 import { DatabaseService, DbTraceLayer } from '~/core/database';
-import { requestingUser } from '~/core/database/query';
+import { currentUser } from '~/core/database/query';
 
 @Injectable()
 @DbTraceLayer.applyToClass()
 export class PinRepository {
   constructor(private readonly db: DatabaseService) {}
 
-  async isPinned(id: ID, session: Session): Promise<boolean> {
+  async isPinned(id: ID): Promise<boolean> {
     const result = await this.db
       .query()
       .match([
-        requestingUser(session),
+        currentUser,
         relation('out', '', 'pinned'),
         node('node', 'BaseNode', { id }),
       ])
@@ -23,14 +23,14 @@ export class PinRepository {
     return !!result;
   }
 
-  async add(id: ID, session: Session): Promise<void> {
+  async add(id: ID): Promise<void> {
     const createdAt = DateTime.local();
     await this.db
       .query()
       .match(node('node', 'BaseNode', { id }))
-      .match(requestingUser(session))
+      .match(currentUser.as('currentUser'))
       .merge([
-        node('requestingUser'),
+        node('currentUser'),
         relation('out', 'rel', 'pinned'),
         node('node'),
       ])
@@ -40,11 +40,11 @@ export class PinRepository {
       .run();
   }
 
-  async remove(id: ID, session: Session): Promise<void> {
+  async remove(id: ID): Promise<void> {
     await this.db
       .query()
       .match([
-        requestingUser(session),
+        currentUser,
         relation('out', 'rel', 'pinned'),
         node('node', 'BaseNode', { id }),
       ])

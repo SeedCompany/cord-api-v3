@@ -8,7 +8,6 @@ import {
   Order,
   type PaginatedListType,
   type ResourceShape,
-  type Session,
   type UnsecuredDto,
   type VariantList,
   type VariantOf,
@@ -20,12 +19,12 @@ import {
   ACTIVE,
   createNode,
   createRelationships,
+  currentUser,
   defaultPermanentAfter,
   merge,
   paginate,
   prefixNodeLabelsWithDeleted,
   type QueryFragment,
-  requestingUser,
   sorting,
   updateProperty,
   variable,
@@ -55,10 +54,9 @@ export const PromptVariantResponseRepository = <
   parentEdge: ListEdge<Parent>,
   resource: TResourceStatic,
 ) => {
-  abstract class PromptVariantResponseRepositoryClass extends DtoRepository<
-    TResourceStatic,
-    [Session]
-  >(resource) {
+  abstract class PromptVariantResponseRepositoryClass extends DtoRepository<TResourceStatic>(
+    resource,
+  ) {
     declare readonly resource: EnhancedResource<TResourceStatic>;
 
     @Once()
@@ -72,7 +70,6 @@ export const PromptVariantResponseRepository = <
 
     async list(
       parentId: ID,
-      session: Session,
     ): Promise<
       PaginatedListType<UnsecuredDto<PromptVariantResponse<TVariant>>>
     > {
@@ -86,16 +83,15 @@ export const PromptVariantResponseRepository = <
         .apply(
           sorting(this.resource.type, { sort: 'createdAt', order: Order.ASC }),
         )
-        .apply(paginate({ count: 25, page: 1 }, this.hydrate(session)))
+        .apply(paginate({ count: 25, page: 1 }, this.hydrate()))
         .first();
       return result!; // the result from paginate() will always have 1 row.
     }
 
-    protected hydrate(session: Session) {
+    protected hydrate() {
       return (query: Query) =>
         query
-          .match(requestingUser(session))
-          .apply(this.filterToReadable(session))
+          .apply(this.filterToReadable())
           .match([
             node('parent', 'BaseNode'),
             relation('out', undefined, 'child'),
@@ -136,11 +132,10 @@ export const PromptVariantResponseRepository = <
           );
     }
 
-    protected abstract filterToReadable(session: Session): QueryFragment;
+    protected abstract filterToReadable(): QueryFragment;
 
     async create(
       input: ChoosePrompt,
-      session: Session,
     ): Promise<UnsecuredDto<PromptVariantResponse<TVariant>>> {
       // @ts-expect-error uhhhh yolo ¯\_(ツ)_/¯
       const resource: typeof PromptVariantResponse = this.resource.type;
@@ -165,19 +160,16 @@ export const PromptVariantResponseRepository = <
               child: ['BaseNode', input.resource],
             },
             out: {
-              creator: ['User', session.userId],
+              creator: currentUser,
             },
           }),
         )
-        .apply(this.hydrate(session))
+        .apply(this.hydrate())
         .first();
       return result!.dto;
     }
 
-    async submitResponse(
-      input: UpdatePromptVariantResponse<TVariant>,
-      session: Session,
-    ) {
+    async submitResponse(input: UpdatePromptVariantResponse<TVariant>) {
       const query = this.db.query();
       const permanentAfter = permanentAfterAsVar(defaultPermanentAfter, query)!;
       const now = query.params.addParam(DateTime.now(), 'now');
@@ -224,7 +216,7 @@ export const PromptVariantResponseRepository = <
                       child: variable('parent'),
                     },
                     out: {
-                      creator: ['User', session.userId],
+                      creator: currentUser,
                     },
                   }),
                 )

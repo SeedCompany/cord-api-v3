@@ -1,52 +1,45 @@
 import { isValidId } from '~/common';
-import {
-  type CreateProjectMember,
-  type ProjectMember,
-} from '../../src/components/project/project-member/dto';
+import { graphql, type InputOf } from '~/graphql';
 import {
   createPerson,
   createProject,
   fragments,
-  type Raw,
   type TestApp,
 } from '../utility';
 import { getUserFromSession } from './create-session';
-import { gql } from './gql-tag';
 
 export async function createProjectMember(
   app: TestApp,
-  input: Partial<CreateProjectMember> = {},
+  input: Partial<InputOf<typeof CreateProjectMemberDoc>> = {},
 ) {
-  const projectMember: CreateProjectMember = {
-    userId:
-      input.userId ||
-      (await getUserFromSession(app)).id ||
-      (await createPerson(app)).id,
-    projectId: input.projectId ?? (await createProject(app)).id,
-    ...input,
-  };
-
-  const result = await app.graphql.mutate(
-    gql`
-      mutation createProjectMember($input: CreateProjectMemberInput!) {
-        createProjectMember(input: $input) {
-          projectMember {
-            ...projectMember
-          }
-        }
-      }
-      ${fragments.projectMember}
-    `,
-    {
-      input: {
-        projectMember,
-      },
+  const userId =
+    input.userId ||
+    (await getUserFromSession(app)).id ||
+    (await createPerson(app)).id;
+  const result = await app.graphql.mutate(CreateProjectMemberDoc, {
+    input: {
+      userId,
+      projectId: input.projectId ?? (await createProject(app)).id,
+      ...input,
     },
-  );
+  });
 
-  const actual: Raw<ProjectMember> = result.createProjectMember.projectMember;
+  const actual = result.createProjectMember.projectMember;
 
   expect(actual).toBeTruthy();
   expect(isValidId(actual.id)).toBe(true);
   return actual;
 }
+
+const CreateProjectMemberDoc = graphql(
+  `
+    mutation createProjectMember($input: CreateProjectMember!) {
+      createProjectMember(input: { projectMember: $input }) {
+        projectMember {
+          ...projectMember
+        }
+      }
+    }
+  `,
+  [fragments.projectMember],
+);

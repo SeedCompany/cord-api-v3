@@ -5,13 +5,7 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import {
-  AnonSession,
-  IdArg,
-  type IdOf,
-  LoggedInSession,
-  type Session,
-} from '~/common';
+import { IdArg, type IdOf } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { PeriodicReportLoader } from '../../periodic-report';
 import { type PeriodicReport } from '../../periodic-report/dto';
@@ -33,43 +27,38 @@ export class ProgressReportTeamNewsResolver {
   @ResolveField(() => PromptVariantResponseList)
   async teamNews(
     @Parent() report: ProgressReport,
-    @AnonSession() session: Session,
   ): Promise<PromptVariantResponseList<TeamNewsVariant>> {
-    return await this.service.list(report, session);
+    return await this.service.list(report);
   }
 
   @Mutation(() => PromptVariantResponse)
   async createProgressReportTeamNews(
     @Args({ name: 'input' }) input: ChoosePrompt,
-    @LoggedInSession() session: Session,
   ): Promise<PromptVariantResponse> {
-    return await this.service.create(input, session);
+    return await this.service.create(input);
   }
 
   @Mutation(() => PromptVariantResponse)
   async changeProgressReportTeamNewsPrompt(
     @Args({ name: 'input' }) input: ChangePrompt,
-    @LoggedInSession() session: Session,
   ): Promise<PromptVariantResponse> {
-    return await this.service.changePrompt(input, session);
+    return await this.service.changePrompt(input);
   }
 
   @Mutation(() => PromptVariantResponse)
   async updateProgressReportTeamNewsResponse(
     @Args({ name: 'input' })
     input: UpdatePromptVariantResponse<TeamNewsVariant>,
-    @LoggedInSession() session: Session,
   ): Promise<PromptVariantResponse> {
-    return await this.service.submitResponse(input, session);
+    return await this.service.submitResponse(input);
   }
 
   @Mutation(() => ProgressReport)
   async deleteProgressReportTeamNews(
     @IdArg() id: IdOf<PromptVariantResponse>,
-    @LoggedInSession() session: Session,
     @Loader(PeriodicReportLoader) reports: LoaderOf<PeriodicReportLoader>,
   ): Promise<PeriodicReport> {
-    const response = await this.service.delete(id, session);
+    const response = await this.service.delete(id);
     return await reports.load(response.parent.properties.id);
   }
 }

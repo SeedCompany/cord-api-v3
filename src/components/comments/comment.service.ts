@@ -9,11 +9,10 @@ import {
   Resource,
   SecuredList,
   ServerException,
-  type Session,
   type UnsecuredDto,
 } from '~/common';
-import { isAdmin } from '~/common/session';
 import { ResourceLoader, ResourcesHost } from '~/core';
+import { Identity } from '~/core/authentication';
 import { type BaseNode, isBaseNode } from '~/core/database/results';
 import { Privileges } from '../authorization';
 import { CommentRepository } from './comment.repository';
@@ -39,19 +38,17 @@ export class CommentService {
     private readonly privileges: Privileges,
     private readonly resources: ResourceLoader,
     private readonly resourcesHost: ResourcesHost,
+    private readonly identity: Identity,
     private readonly mentionNotificationService: CommentViaMentionNotificationService,
   ) {}
 
-  async create(input: CreateCommentInput, session: Session) {
-    const perms = await this.getPermissionsFromResource(
-      input.resourceId,
-      session,
-    );
+  async create(input: CreateCommentInput) {
+    const perms = await this.getPermissionsFromResource(input.resourceId);
     perms.verifyCan('create');
 
     let dto;
     try {
-      const result = await this.repo.create(input, session);
+      const result = await this.repo.create(input);
       if (!result) {
         throw new CreationFailed(Comment);
       }
@@ -73,22 +70,20 @@ export class CommentService {
     const mentionees = this.mentionNotificationService.extract(dto);
     await this.mentionNotificationService.notify(mentionees, dto);
 
-    return this.secureComment(dto, session);
+    return this.secureComment(dto);
   }
 
-  async getPermissionsFromResource(resource: CommentableRef, session: Session) {
+  async getPermissionsFromResource(resource: CommentableRef) {
     const parent = await this.loadCommentable(resource);
     const parentType = this.resourcesHost.getByName(
       // I'd like to type this prop as this but somehow blows everything up.
       parent.__typename as 'Commentable',
     );
-    return this.privileges
-      .for(session, parentType, parent)
-      .forEdge('commentThreads');
+    return this.privileges.for(parentType, parent).forEdge('commentThreads');
   }
 
-  async verifyCanView(resource: CommentableRef, session: Session) {
-    const perms = await this.getPermissionsFromResource(resource, session);
+  async verifyCanView(resource: CommentableRef) {
+    const perms = await this.getPermissionsFromResource(resource);
     perms.verifyCan('read');
   }
 
@@ -111,37 +106,34 @@ export class CommentService {
     return parent as Commentable;
   }
 
-  async readOne(id: ID, session: Session): Promise<Comment> {
+  async readOne(id: ID): Promise<Comment> {
     const dto = await this.repo.readOne(id);
-    return this.secureComment(dto, session);
+    return this.secureComment(dto);
   }
 
-  async readMany(ids: readonly ID[], session: Session) {
+  async readMany(ids: readonly ID[]) {
     const comments = await this.repo.readMany(ids);
-    return comments.map((dto) => this.secureComment(dto, session));
+    return comments.map((dto) => this.secureComment(dto));
   }
 
-  secureThread(
-    thread: UnsecuredDto<CommentThread>,
-    session: Session,
-  ): CommentThread {
+  secureThread(thread: UnsecuredDto<CommentThread>): CommentThread {
     return {
       ...thread,
-      firstComment: this.secureComment(thread.firstComment, session),
-      latestComment: this.secureComment(thread.latestComment, session),
-      canDelete: thread.creator === session.userId || isAdmin(session),
+      firstComment: this.secureComment(thread.firstComment),
+      latestComment: this.secureComment(thread.latestComment),
+      canDelete: this.identity.isSelf(thread.creator) || this.identity.isAdmin,
     };
   }
 
-  secureComment(dto: UnsecuredDto<Comment>, session: Session): Comment {
-    return this.privileges.for(session, Comment).secure(dto);
+  secureComment(dto: UnsecuredDto<Comment>): Comment {
+    return this.privileges.for(Comment).secure(dto);
   }
 
-  async update(input: UpdateCommentInput, session: Session): Promise<Comment> {
+  async update(input: UpdateCommentInput): Promise<Comment> {
     const object = await this.repo.readOne(input.id);
 
     const changes = this.repo.getActualChanges(object, input);
-    this.privileges.for(session, Comment, object).verifyChanges(changes);
+    this.privileges.for(Comment, object).verifyChanges(changes);
     await this.repo.update(object, changes);
 
     const updated = await this.repo.readOne(object.id);
@@ -151,12 +143,12 @@ export class CommentService {
     const newMentionees = difference(prevMentionees, nowMentionees);
     await this.mentionNotificationService.notify(newMentionees, updated);
 
-    return this.secureComment(updated, session);
+    return this.secureComment(updated);
   }
 
-  async delete(id: ID, session: Session): Promise<void> {
+  async delete(id: ID): Promise<void> {
     const object = await this.repo.readOne(id);
-    this.privileges.for(session, Comment, object).verifyCan('delete');
+    this.privileges.for(Comment, object).verifyCan('delete');
 
     const thread = await this.repo.threads.readOne(object.thread);
     if (object.id === thread.firstComment.id) {
@@ -170,8 +162,8 @@ export class CommentService {
     }
   }
 
-  async getThreadCount(parent: Commentable, session: Session) {
-    const perms = await this.getPermissionsFromResource(parent, session);
+  async getThreadCount(parent: Commentable) {
+    const perms = await this.getPermissionsFromResource(parent);
 
     // Do check here since we don't filter in the db query.
     // Will need to be updated with DB switch.
@@ -185,9 +177,8 @@ export class CommentService {
   async listThreads(
     parent: Commentable,
     input: CommentThreadListInput,
-    session: Session,
   ): Promise<CommentThreadList> {
-    const perms = await this.getPermissionsFromResource(parent, session);
+    const perms = await this.getPermissionsFromResource(parent);
 
     // Do check here since we don't filter in the db query.
     // Will need to be updated with DB switch.
@@ -195,11 +186,11 @@ export class CommentService {
       return { ...SecuredList.Redacted, parent };
     }
 
-    const results = await this.repo.threads.list(parent.id, input, session);
+    const results = await this.repo.threads.list(parent.id, input);
 
     return {
       ...results,
-      items: results.items.map((dto) => this.secureThread(dto, session)),
+      items: results.items.map((dto) => this.secureThread(dto)),
       parent,
       canRead: true,
       canCreate: perms.can('create'),
@@ -209,9 +200,8 @@ export class CommentService {
   async listCommentsByThreadId(
     thread: CommentThread,
     input: CommentListInput,
-    session: Session,
   ): Promise<CommentList> {
-    const perms = await this.getPermissionsFromResource(thread.parent, session);
+    const perms = await this.getPermissionsFromResource(thread.parent);
 
     // Do check here since we don't filter in the db query.
     // Will need to be updated with DB switch.
@@ -219,11 +209,11 @@ export class CommentService {
       return SecuredList.Redacted;
     }
 
-    const results = await this.repo.list(thread.id, input, session);
+    const results = await this.repo.list(thread.id, input);
 
     return {
       ...results,
-      items: results.items.map((dto) => this.secureComment(dto, session)),
+      items: results.items.map((dto) => this.secureComment(dto)),
       canRead: true,
       canCreate: perms.can('create'),
     };

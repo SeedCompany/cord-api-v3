@@ -18,7 +18,6 @@ import {
   type ID,
   NotFoundException,
   ServerException,
-  type Session,
 } from '~/common';
 import { ILogger, type LinkTo, Logger } from '~/core';
 import { CommonRepository, OnIndex } from '~/core/database';
@@ -27,6 +26,7 @@ import {
   createNode,
   createProperty,
   createRelationships,
+  currentUser,
   matchProps,
   merge,
   paginate,
@@ -365,7 +365,6 @@ export class FileRepository extends CommonRepository {
   async createDirectory(
     parentId: ID | undefined,
     name: string,
-    session: Session,
     { public: isPublic }: { public?: boolean } = {},
   ): Promise<ID> {
     const initialProps = {
@@ -379,7 +378,7 @@ export class FileRepository extends CommonRepository {
       .apply(await createNode(Directory, { initialProps }))
       .apply(
         createRelationships(Directory, 'out', {
-          createdBy: ['User', session.userId],
+          createdBy: currentUser,
           parent: ['Directory', parentId],
         }),
       )
@@ -398,13 +397,11 @@ export class FileRepository extends CommonRepository {
     relation,
     name,
     public: isPublic,
-    session,
   }: {
     resource: LinkTo<any>;
     relation: string;
     name: string;
     public?: boolean;
-    session: Session;
   }) {
     const initialProps = {
       name,
@@ -417,7 +414,7 @@ export class FileRepository extends CommonRepository {
       .apply(
         createRelationships(Directory, {
           in: { [relation]: ['BaseNode', resource.id] },
-          out: { createdBy: ['User', session.userId] },
+          out: { createdBy: currentUser },
         }),
       )
       .return<{ id: ID }>('node.id as id');
@@ -432,14 +429,12 @@ export class FileRepository extends CommonRepository {
   async createFile({
     fileId,
     name,
-    session,
     parentId,
     propOfNode,
     public: isPublic,
   }: {
     fileId: ID;
     name: string;
-    session: Session;
     parentId?: ID;
     propOfNode?: [baseNodeId: ID, propertyName: string];
     public?: boolean;
@@ -458,7 +453,7 @@ export class FileRepository extends CommonRepository {
       .apply(
         createRelationships(File, {
           out: {
-            createdBy: ['User', session.userId],
+            createdBy: currentUser,
             parent: ['Directory', parentId],
           },
           in: {
@@ -481,7 +476,6 @@ export class FileRepository extends CommonRepository {
     input: Pick<FileVersion, 'id' | 'name' | 'mimeType' | 'size'> & {
       public?: boolean;
     },
-    session: Session,
   ) {
     const initialProps = {
       name: input.name,
@@ -501,7 +495,7 @@ export class FileRepository extends CommonRepository {
       )
       .apply(
         createRelationships(FileVersion, 'out', {
-          createdBy: ['User', session.userId],
+          createdBy: currentUser,
           parent: ['File', fileId],
         }),
       )

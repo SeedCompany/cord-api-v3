@@ -1,14 +1,8 @@
 import { Args, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import {
-  AnonSession,
-  type ID,
-  IdArg,
-  ListArg,
-  LoggedInSession,
-  type Session,
-} from '~/common';
+import { type ID, IdArg, ListArg } from '~/common';
 import { Loader, type LoaderOf, ResourceLoader } from '~/core';
+import { Identity } from '~/core/authentication';
 import { UserLoader } from '../user';
 import { User } from '../user/dto';
 import { CommentThreadLoader } from './comment-thread.loader';
@@ -29,6 +23,7 @@ export class CommentThreadResolver {
   constructor(
     private readonly service: CommentService,
     private readonly resources: ResourceLoader,
+    private readonly identity: Identity,
   ) {}
 
   @Query(() => CommentThread, {
@@ -47,11 +42,12 @@ export class CommentThreadResolver {
   async commentThreads(
     @IdArg({ name: 'resource' }) resourceId: ID,
     @ListArg(CommentThreadListInput) input: CommentThreadListInput,
-    @LoggedInSession() session: Session,
     @Loader(CommentThreadLoader) commentThreads: LoaderOf<CommentThreadLoader>,
   ): Promise<CommentThreadList> {
+    // TODO move to auth policy
+    this.identity.verifyLoggedIn();
     const resource = await this.service.loadCommentable(resourceId);
-    const list = await this.service.listThreads(resource, input, session);
+    const list = await this.service.listThreads(resource, input);
     commentThreads.primeAll(list.items);
     return list;
   }
@@ -60,16 +56,11 @@ export class CommentThreadResolver {
     description: 'List of comments belonging to a thread',
   })
   async comments(
-    @AnonSession() session: Session,
     @Parent() thread: CommentThread,
     @ListArg(CommentListInput) input: CommentListInput,
     @Loader(CommentLoader) comments: LoaderOf<CommentLoader>,
   ): Promise<CommentList> {
-    const list = await this.service.listCommentsByThreadId(
-      thread,
-      input,
-      session,
-    );
+    const list = await this.service.listCommentsByThreadId(thread, input);
     comments.primeAll(list.items);
     return list;
   }

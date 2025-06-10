@@ -1,9 +1,9 @@
 import { type ID } from '~/common';
 import {
+  type DataLoaderStrategy,
   LoaderFactory,
   type LoaderOptionsOf,
-  SessionAwareLoaderStrategy,
-} from '~/core';
+} from '~/core/data-loader';
 import { type Partnership } from './dto';
 import { PartnershipService } from './partnership.service';
 
@@ -13,14 +13,15 @@ export interface PartnershipByProjectAndPartnerInput {
 }
 
 @LoaderFactory()
-export class PartnershipByProjectAndPartnerLoader extends SessionAwareLoaderStrategy<
-  { id: PartnershipByProjectAndPartnerInput; partnership: Partnership },
-  PartnershipByProjectAndPartnerInput,
-  string
-> {
-  constructor(private readonly service: PartnershipService) {
-    super();
-  }
+export class PartnershipByProjectAndPartnerLoader
+  implements
+    DataLoaderStrategy<
+      { id: PartnershipByProjectAndPartnerInput; partnership: Partnership },
+      PartnershipByProjectAndPartnerInput,
+      string
+    >
+{
+  constructor(private readonly service: PartnershipService) {}
 
   getOptions() {
     return {
@@ -29,6 +30,6 @@ export class PartnershipByProjectAndPartnerLoader extends SessionAwareLoaderStra
   }
 
   async loadMany(input: readonly PartnershipByProjectAndPartnerInput[]) {
-    return await this.service.readManyByProjectAndPartner(input, this.session);
+    return await this.service.readManyByProjectAndPartner(input);
   }
 }

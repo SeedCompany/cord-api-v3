@@ -1,62 +1,56 @@
 import { generateId, isValidId } from '~/common';
-import {
-  type CreateFieldZone,
-  type FieldZone,
-} from '../../src/components/field-zone/dto';
+import { graphql, type InputOf } from '~/graphql';
 import { type TestApp } from './create-app';
 import { createPerson } from './create-person';
-import { getUserFromSession } from './create-session';
-import { fragments } from './fragments';
-import { gql } from './gql-tag';
+import * as fragments from './fragments';
 import { runAsAdmin } from './login';
 
 export async function createZone(
   app: TestApp,
-  input: Partial<CreateFieldZone> = {},
+  input: Partial<InputOf<typeof CreateFieldZoneDoc>> = {},
 ) {
-  const fieldZone: CreateFieldZone = {
-    name: 'Zone' + (await generateId()),
-    directorId:
-      input.directorId ||
-      (await getUserFromSession(app)).id ||
-      // don't want to have to declare the role at the top level. The person part doesn't really matter here.
-      (await runAsAdmin(app, async () => {
-        return (await createPerson(app)).id;
-      })),
-    ...input,
-  };
-
-  const result = await app.graphql.mutate(
-    gql`
-      mutation createFieldZone($input: CreateFieldZoneInput!) {
-        createFieldZone(input: $input) {
-          fieldZone {
-            ...fieldZone
-            director {
-              value {
-                ...user
-              }
-              canRead
-              canEdit
-            }
-          }
-        }
-      }
-      ${fragments.fieldZone}
-      ${fragments.user}
-    `,
-    {
-      input: {
-        fieldZone,
-      },
+  const name = input.name ?? 'Zone' + (await generateId());
+  const result = await app.graphql.mutate(CreateFieldZoneDoc, {
+    input: {
+      directorId:
+        input.directorId ||
+        // don't want to have to declare the role at the top level. The person part doesn't really matter here.
+        (await runAsAdmin(app, async () => {
+          const director = await createPerson(app, {
+            roles: ['FieldOperationsDirector'],
+          });
+          return director.id;
+        })),
+      ...input,
+      name,
     },
-  );
+  });
 
-  const actual: FieldZone = result.createFieldZone.fieldZone;
+  const actual = result.createFieldZone.fieldZone;
   expect(actual).toBeTruthy();
 
   expect(isValidId(actual.id)).toBe(true);
-  expect(actual.name.value).toBe(fieldZone.name);
+  expect(actual.name.value).toBe(name);
 
   return actual;
 }
+
+const CreateFieldZoneDoc = graphql(
+  `
+    mutation createFieldZone($input: CreateFieldZone!) {
+      createFieldZone(input: { fieldZone: $input }) {
+        fieldZone {
+          ...fieldZone
+          director {
+            value {
+              ...user
+            }
+            canRead
+            canEdit
+          }
+        }
+      }
+    }
+  `,
+  [fragments.fieldZone, fragments.user],
+);

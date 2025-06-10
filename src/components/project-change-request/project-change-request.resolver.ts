@@ -5,7 +5,7 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { type ID, IdArg, LoggedInSession, type Session } from '~/common';
+import { type ID, IdArg } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { ProjectLoader } from '../project';
 import { IProject, type Project } from '../project/dto';
@@ -40,9 +40,8 @@ export class ProjectChangeRequestResolver {
   async createProjectChangeRequest(
     @Args('input')
     { projectChangeRequest: input }: CreateProjectChangeRequestInput,
-    @LoggedInSession() session: Session,
   ): Promise<CreateProjectChangeRequestOutput> {
-    const projectChangeRequest = await this.service.create(input, session);
+    const projectChangeRequest = await this.service.create(input);
     return { projectChangeRequest };
   }
 
@@ -50,11 +49,10 @@ export class ProjectChangeRequestResolver {
     description: 'Update a project change request',
   })
   async updateProjectChangeRequest(
-    @LoggedInSession() session: Session,
     @Args('input')
     { projectChangeRequest: input }: UpdateProjectChangeRequestInput,
   ): Promise<UpdateProjectChangeRequestOutput> {
-    const projectChangeRequest = await this.service.update(input, session);
+    const projectChangeRequest = await this.service.update(input);
     return { projectChangeRequest };
   }
 
@@ -62,10 +60,9 @@ export class ProjectChangeRequestResolver {
     description: 'Delete a project change request',
   })
   async deleteProjectChangeRequest(
-    @LoggedInSession() session: Session,
     @IdArg() id: ID,
   ): Promise<DeleteProjectChangeRequestOutput> {
-    await this.service.delete(id, session);
+    await this.service.delete(id);
     return { success: true };
   }
 }

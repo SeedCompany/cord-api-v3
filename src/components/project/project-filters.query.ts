@@ -7,6 +7,7 @@ import {
 } from 'cypher-query-builder';
 import {
   ACTIVE,
+  currentUser,
   filter,
   matchProjectSens,
   path,
@@ -15,9 +16,11 @@ import {
 import { locationFilters } from '../location/location.repository';
 import { partnershipFilters } from '../partnership/partnership.repository';
 import { ProjectFilters } from './dto';
+import { projectMemberFilters } from './project-member/project-member.repository';
 import { ProjectNameIndex } from './project.repository';
 
 export const projectFilters = filter.define(() => ProjectFilters, {
+  id: filter.baseNodeProp(),
   type: filter.stringListBaseNodeProp(),
   pinned: filter.isPinned,
   status: filter.stringListProp(),
@@ -28,10 +31,10 @@ export const projectFilters = filter.define(() => ProjectFilters, {
   mouStart: filter.dateTimeProp(),
   mouEnd: filter.dateTimeProp(),
   mine: filter.pathExistsWhenTrue([
-    node('requestingUser'),
+    currentUser,
     relation('in', '', 'user'),
     node('', 'ProjectMember'),
-    relation('in', '', 'member'),
+    relation('in', '', 'member', ACTIVE),
     node('node'),
   ]),
   languageId: filter.pathExists((id) => [
@@ -49,12 +52,28 @@ export const projectFilters = filter.define(() => ProjectFilters, {
     node('', 'Partner', { id }),
   ]),
   isMember: filter.pathExistsWhenTrue([
-    node('requestingUser'),
+    currentUser,
     relation('in', '', 'user'),
     node('', 'ProjectMember'),
-    relation('in', '', 'member'),
+    relation('in', '', 'member', ACTIVE),
     node('node'),
   ]),
+  membership: filter.sub(() => projectMemberFilters)((sub) =>
+    sub.match([
+      currentUser,
+      relation('in', '', 'user'),
+      node('node', 'ProjectMember'),
+      relation('in', '', 'member', ACTIVE),
+      node('outer'),
+    ]),
+  ),
+  members: filter.sub(() => projectMemberFilters)((sub) =>
+    sub.match([
+      node('node', 'ProjectMember'),
+      relation('in', '', 'member', ACTIVE),
+      node('outer'),
+    ]),
+  ),
   userId: ({ value }) => ({
     userId: [
       // TODO We can leak if the project includes this person, if the

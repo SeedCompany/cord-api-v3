@@ -1,8 +1,8 @@
 import {
+  type DataLoaderStrategy,
   LoaderFactory,
   type LoaderOptionsOf,
-  OrderedNestDataLoader,
-} from '~/core';
+} from '~/core/data-loader';
 import {
   type ProgressVariantByReportInput,
   type ProgressVariantByReportOutput,
@@ -10,14 +10,15 @@ import {
 import { ProductProgressService } from './product-progress.service';
 
 @LoaderFactory()
-export class ProductProgressByReportLoader extends OrderedNestDataLoader<
-  ProgressVariantByReportOutput,
-  ProgressVariantByReportInput,
-  string
-> {
-  constructor(private readonly service: ProductProgressService) {
-    super();
-  }
+export class ProductProgressByReportLoader
+  implements
+    DataLoaderStrategy<
+      ProgressVariantByReportOutput,
+      ProgressVariantByReportInput,
+      string
+    >
+{
+  constructor(private readonly service: ProductProgressService) {}
 
   getOptions() {
     return {
@@ -30,6 +31,6 @@ export class ProductProgressByReportLoader extends OrderedNestDataLoader<
   }
 
   async loadMany(reports: readonly ProgressVariantByReportInput[]) {
-    return await this.service.readAllForManyReports(reports, this.session);
+    return await this.service.readAllForManyReports(reports);
   }
 }

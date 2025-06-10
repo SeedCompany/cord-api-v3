@@ -8,7 +8,6 @@ import {
   type ID,
   type Role,
   ServerException,
-  type Session,
   type UnsecuredDto,
 } from '~/common';
 import { DtoRepository, OnIndex, UniquenessError } from '~/core/database';
@@ -25,8 +24,8 @@ import {
   multiPropsAsSortString,
   paginate,
   path,
+  pinned,
   property,
-  requestingUser,
   type SortCol,
   sortWith,
 } from '~/core/database/query';
@@ -42,17 +41,15 @@ import {
 } from './dto';
 
 @Injectable()
-export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
-  User,
-) {
-  async readManyActors(ids: readonly ID[], session: Session) {
+export class UserRepository extends DtoRepository(User) {
+  async readManyActors(ids: readonly ID[]) {
     return await this.db
       .query()
       .raw('', { ids })
       .matchNode('user', 'User')
       .where({ 'user.id': inArray('$ids', true) })
       .with('user as node')
-      .apply(this.hydrate(session))
+      .apply(this.hydrate())
       .union()
       .matchNode('agent', 'SystemAgent')
       .where({ 'agent.id': inArray('$ids', true) })
@@ -124,10 +121,10 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
       await this.updateRoles(id, roles);
     }
 
-    return await this.readOne(id, id);
+    return await this.readOne(id);
   }
 
-  protected hydrate(requestingUserId: Session | ID) {
+  protected hydrate() {
     return (query: Query) =>
       query
         .subQuery('node', (sub) =>
@@ -140,12 +137,11 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
             .return('collect(role.value) as roles'),
         )
         .apply(matchProps())
-        .match(requestingUser(requestingUserId))
         .return<{ dto: UnsecuredDto<User> }>(
           merge({ email: null }, 'props', {
             __typename: '"User"',
             roles: 'roles',
-            pinned: 'exists((requestingUser)-[:pinned]->(node))',
+            pinned,
           }).as('dto'),
         );
   }
@@ -181,7 +177,7 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
   }
 
   private async updateRoles(id: ID, roles: readonly Role[]): Promise<void> {
-    const { roles: existingRoles } = await this.readOne(id, id);
+    const { roles: existingRoles } = await this.readOne(id);
     const removals = difference(existingRoles, roles);
     const additions = difference(roles, existingRoles);
 
@@ -215,9 +211,9 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
     }
   }
 
-  async delete(id: ID, session: Session, object: User): Promise<void> {
-    const user = await this.readOne(id, session);
-    this.privileges.forUser(session, user).verifyCan('delete');
+  async delete(id: ID, object: User): Promise<void> {
+    const user = await this.readOne(id);
+    this.privileges.forContext(user).verifyCan('delete');
     try {
       await this.db.deleteNode(object);
     } catch (exception) {
@@ -225,15 +221,14 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
     }
   }
 
-  async list(input: UserListInput, session: Session) {
+  async list(input: UserListInput) {
     const result = await this.db
       .query()
       .matchNode('node', 'User')
-      .match(requestingUser(session))
       .apply(userFilters(input.filter))
-      .apply(this.privileges.forUser(session).filterToReadable())
+      .apply(this.privileges.filterToReadable())
       .apply(sortWith(userSorters, input))
-      .apply(paginate(input, this.hydrate(session.userId)))
+      .apply(paginate(input, this.hydrate()))
       .first();
     return result!; // result from paginate() will always have 1 row.
   }
@@ -247,7 +242,7 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
     return !!result;
   }
 
-  async getUserByEmailAddress(email: string, session: Session) {
+  async getUserByEmailAddress(email: string) {
     const query = this.db
       .query()
       .matchNode('node', 'User')
@@ -260,8 +255,8 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
           }),
         ]),
       )
-      .apply(this.privileges.forUser(session).filterToReadable())
-      .apply(this.hydrate(session));
+      .apply(this.privileges.filterToReadable())
+      .apply(this.hydrate());
 
     const result = await query.first();
     return result?.dto ?? null;
@@ -383,8 +378,8 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
     }
   }
 
-  hydrateAsNeo4j(session: Session | ID) {
-    return this.hydrate(session);
+  hydrateAsNeo4j() {
+    return this.hydrate();
   }
 
   @OnIndex('schema')
@@ -394,6 +389,7 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
 }
 
 export const userFilters = filter.define(() => UserFilters, {
+  id: filter.baseNodeProp(),
   pinned: filter.isPinned,
   name: filter.fullText({
     index: () => NameIndex,

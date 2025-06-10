@@ -1,11 +1,14 @@
 import { groupBy } from '@seedcompany/common';
-import { type DataLoaderOptions } from '@seedcompany/data-loader';
+import {
+  type DataLoaderOptions,
+  type DataLoaderStrategy,
+} from '@seedcompany/data-loader';
 import { type ID, type ObjectView, viewOfChangeset } from '~/common';
 import { type ChangesetAware } from '../../components/changeset/dto';
-import { SessionAwareLoaderStrategy } from './session-aware-loader.strategy';
+import type { ResourceNameLike } from '../resources';
 
-interface Key {
-  id: ID;
+interface Key<Kind extends ResourceNameLike | object> {
+  id: ID<Kind>;
   view: ObjectView;
 }
 
@@ -17,13 +20,15 @@ interface Key {
  */
 export abstract class ObjectViewAwareLoader<
   T extends ChangesetAware,
-> extends SessionAwareLoaderStrategy<T, Key, string> {
+  Kind extends ResourceNameLike | object = T,
+> implements DataLoaderStrategy<T, Key<Kind>, string>
+{
   abstract loadManyByView(
-    ids: readonly ID[],
+    ids: ReadonlyArray<ID<Kind>>,
     view: ObjectView,
   ): Promise<readonly T[]>;
 
-  async loadMany(keys: readonly Key[]): Promise<readonly T[]> {
+  async loadMany(keys: ReadonlyArray<Key<Kind>>): Promise<readonly T[]> {
     const grouped = groupBy(keys, (key) => viewId(key.view));
 
     const items = await Promise.all(
@@ -37,7 +42,7 @@ export abstract class ObjectViewAwareLoader<
     return items.flat();
   }
 
-  getOptions(): DataLoaderOptions<T, Key, string> {
+  getOptions(): DataLoaderOptions<T, Key<Kind>, string> {
     return {
       propertyKey: (obj: T) => ({
         id: obj.id,

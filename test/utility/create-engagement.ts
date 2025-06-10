@@ -1,187 +1,140 @@
 import { faker } from '@faker-js/faker';
 import { DateTime } from 'luxon';
 import { type ID, isValidId } from '~/common';
-import {
-  type CreateInternshipEngagement,
-  type CreateLanguageEngagement,
-  InternshipPosition,
-} from '../../src/components/engagement/dto';
-import { ProductMethodology } from '../../src/components/product/dto';
+import { graphql, type InputOf } from '~/graphql';
 import { type TestApp } from './create-app';
 import { createLanguage } from './create-language';
 import { createLocation } from './create-location';
 import { createPerson } from './create-person';
 import { createProject } from './create-project';
 import { getUserFromSession } from './create-session';
-import {
-  fragments,
-  type RawInternshipEngagement,
-  type RawLanguageEngagement,
-} from './fragments';
-import { gql } from './gql-tag';
+import * as fragments from './fragments';
 import { runAsAdmin } from './login';
 
 export async function createLanguageEngagement(
   app: TestApp,
-  input: Partial<CreateLanguageEngagement> = {},
+  input: Partial<InputOf<typeof UpdateLangEngDoc>> = {},
 ) {
-  const languageEngagement: CreateLanguageEngagement = {
-    languageId:
-      input.languageId ??
-      (await runAsAdmin(app, async () => {
-        return (await createLanguage(app)).id;
-      })),
-    projectId: input.projectId ?? (await createProject(app)).id,
-    lukePartnership: true,
-    disbursementCompleteDate: DateTime.local(),
-    startDateOverride: DateTime.local(),
-    endDateOverride: DateTime.local(),
-    completeDate: DateTime.local(),
-    paratextRegistryId: faker.lorem.word(),
-    ...input,
-  };
-  const result = await app.graphql.mutate(
-    gql`
-      mutation createLanguageEngagement(
-        $input: CreateLanguageEngagementInput!
-      ) {
-        createLanguageEngagement(input: $input) {
-          engagement {
-            ...languageEngagement
-          }
-        }
-      }
-      ${fragments.languageEngagement}
-    `,
-    {
-      input: {
-        engagement: languageEngagement,
-      },
-    },
-  );
+  const now = DateTime.now().toISO();
 
-  const actual: RawLanguageEngagement =
-    result.createLanguageEngagement.engagement;
+  const result = await app.graphql.mutate(UpdateLangEngDoc, {
+    input: {
+      languageId:
+        input.languageId ??
+        (await runAsAdmin(app, async () => {
+          return (await createLanguage(app)).id;
+        })),
+      projectId: input.projectId ?? (await createProject(app)).id,
+      lukePartnership: true,
+      disbursementCompleteDate: now,
+      startDateOverride: now,
+      endDateOverride: now,
+      completeDate: now,
+      paratextRegistryId: faker.lorem.word(),
+      ...input,
+    },
+  });
+
+  const actual = result.createLanguageEngagement.engagement;
 
   expect(actual).toBeTruthy();
   expect(isValidId(actual.id)).toBe(true);
   expect(actual.modifiedAt).toBeTruthy();
   return actual;
 }
+const UpdateLangEngDoc = graphql(
+  `
+    mutation createLanguageEngagement($input: CreateLanguageEngagement!) {
+      createLanguageEngagement(input: { engagement: $input }) {
+        engagement {
+          ...languageEngagement
+        }
+      }
+    }
+  `,
+  [fragments.languageEngagement],
+);
 
 export async function createInternshipEngagement(
   app: TestApp,
-  input: Partial<CreateInternshipEngagement> = {},
+  input: Partial<InputOf<typeof UpdateInternshipEngDoc>> = {},
 ) {
   const currentUserId = (await getUserFromSession(app)).id;
-  const internshipEngagement: CreateInternshipEngagement = {
-    projectId: input.projectId || (await createProject(app)).id,
+  const now = DateTime.now().toISO();
+
+  return await createInternshipEngagementWithMinimumValues(app, {
     countryOfOriginId:
       input.countryOfOriginId ||
       (await runAsAdmin(app, async () => {
         return (await createLocation(app)).id;
       })),
-    internId: input.internId || currentUserId || (await createPerson(app)).id,
     mentorId: input.mentorId || currentUserId || (await createPerson(app)).id,
-    position: InternshipPosition.Administration,
-    methodologies: [ProductMethodology.Film],
-    disbursementCompleteDate: DateTime.local(),
-    startDateOverride: DateTime.local(),
-    endDateOverride: DateTime.local(),
-    completeDate: DateTime.local(),
+    position: 'Administration',
+    methodologies: ['Film'],
+    disbursementCompleteDate: now,
+    startDateOverride: now,
+    endDateOverride: now,
+    completeDate: now,
     ...input,
-  };
-
-  const result = await app.graphql.mutate(
-    gql`
-      mutation createInternshipEngagement(
-        $input: CreateInternshipEngagementInput!
-      ) {
-        createInternshipEngagement(input: $input) {
-          engagement {
-            ...internshipEngagement
-          }
-        }
-      }
-      ${fragments.internshipEngagement}
-    `,
-    {
-      input: {
-        engagement: internshipEngagement,
-      },
-    },
-  );
-
-  const actual: RawInternshipEngagement =
-    result.createInternshipEngagement.engagement;
-
-  expect(actual).toBeTruthy();
-  expect(isValidId(actual.id)).toBe(true);
-
-  return actual;
+  });
 }
 
 export async function createInternshipEngagementWithMinimumValues(
   app: TestApp,
-  input: Partial<CreateInternshipEngagement> = {},
+  input: Partial<InputOf<typeof UpdateInternshipEngDoc>> = {},
 ) {
   const currentUserId = (await getUserFromSession(app)).id;
-  const internshipEngagement: CreateInternshipEngagement = {
-    projectId: input.projectId || (await createProject(app)).id,
-    internId: input.internId || currentUserId || (await createPerson(app)).id,
-  };
+  const projectId = input.projectId || (await createProject(app)).id;
+  const internId =
+    input.internId || currentUserId || (await createPerson(app)).id;
 
-  const result = await app.graphql.mutate(
-    gql`
-      mutation createInternshipEngagement(
-        $input: CreateInternshipEngagementInput!
-      ) {
-        createInternshipEngagement(input: $input) {
-          engagement {
-            ...internshipEngagement
-          }
-        }
-      }
-      ${fragments.internshipEngagement}
-    `,
-    {
-      input: {
-        engagement: internshipEngagement,
-      },
+  const result = await app.graphql.mutate(UpdateInternshipEngDoc, {
+    input: {
+      ...input,
+      projectId,
+      internId,
     },
-  );
+  });
 
-  const actual: RawInternshipEngagement =
-    result.createInternshipEngagement.engagement;
+  const actual = result.createInternshipEngagement.engagement;
 
   expect(actual).toBeTruthy();
   expect(isValidId(actual.id)).toBe(true);
 
   return actual;
 }
-
-export async function getCurrentEngagementStatus(app: TestApp, id: ID) {
-  const result = await app.graphql.query(
-    gql`
-    query {
-      engagement(id: "${id}"){
-          modifiedAt
-          statusModifiedAt {
-            value
-          }
-          status {
-            value
-            transitions {
-              to
-              type
-            }
-          }
+const UpdateInternshipEngDoc = graphql(
+  `
+    mutation createInternshipEngagement($input: CreateInternshipEngagement!) {
+      createInternshipEngagement(input: { engagement: $input }) {
+        engagement {
+          ...internshipEngagement
+        }
       }
     }
   `,
-  );
+  [fragments.internshipEngagement],
+);
 
+export async function getCurrentEngagementStatus(app: TestApp, id: ID) {
+  const result = await app.graphql.query(EngStatusDoc, { id });
   expect(result).toBeTruthy();
-
   return result.engagement;
 }
+const EngStatusDoc = graphql(`
+  query EngStatus($id: ID!) {
+    engagement(id: $id) {
+      modifiedAt
+      statusModifiedAt {
+        value
+      }
+      status {
+        value
+        transitions {
+          to
+          type
+        }
+      }
+    }
+  }
+`);

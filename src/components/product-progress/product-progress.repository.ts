@@ -7,7 +7,6 @@ import {
   generateId,
   type ID,
   NotFoundException,
-  type Session,
   type Variant,
 } from '~/common';
 import { DatabaseService } from '~/core/database';
@@ -341,7 +340,7 @@ export class ProductProgressRepository {
     return result.dto;
   }
 
-  async getScope(productId: ID, session: Session) {
+  async getScope(productId: ID) {
     const query = this.db
       .query()
       .match([
@@ -351,7 +350,7 @@ export class ProductProgressRepository {
         relation('in', '', 'engagement'),
         node('project', 'Project'),
       ])
-      .apply(matchProjectScopedRoles({ session, outputVar: 'scope' }))
+      .apply(matchProjectScopedRoles({ outputVar: 'scope' }))
       .apply(matchProjectSens())
       .subQuery('product', (sub) =>
         sub

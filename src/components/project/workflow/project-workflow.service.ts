@@ -4,7 +4,6 @@ import {
   type ID,
   type MaybeSecured,
   RequiredWhen,
-  type Session,
   type UnsecuredDto,
   unwrapSecured,
 } from '~/common';
@@ -37,65 +36,52 @@ export class ProjectWorkflowService extends WorkflowService(
     super();
   }
 
-  async list(report: Project, session: Session): Promise<WorkflowEvent[]> {
-    const dtos = await this.repo.list(report.id, session);
-    return dtos.map((dto) => this.secure(dto, session));
+  async list(report: Project): Promise<WorkflowEvent[]> {
+    const dtos = await this.repo.list(report.id);
+    return dtos.map((dto) => this.secure(dto));
   }
 
-  async readMany(ids: readonly ID[], session: Session) {
-    const dtos = await this.repo.readMany(ids, session);
-    return dtos.map((dto) => this.secure(dto, session));
+  async readMany(ids: readonly ID[]) {
+    const dtos = await this.repo.readMany(ids);
+    return dtos.map((dto) => this.secure(dto));
   }
 
-  private secure(
-    dto: UnsecuredDto<WorkflowEvent>,
-    session: Session,
-  ): WorkflowEvent {
+  private secure(dto: UnsecuredDto<WorkflowEvent>): WorkflowEvent {
     return {
-      ...this.privileges.for(session, WorkflowEvent).secure(dto),
+      ...this.privileges.for(WorkflowEvent).secure(dto),
       transition: this.transitionByKey(dto.transition, dto.to),
     };
   }
 
-  async getAvailableTransitions(
-    project: MaybeSecured<Project>,
-    session: Session,
-  ) {
+  async getAvailableTransitions(project: MaybeSecured<Project>) {
     return await this.resolveAvailable(
       unwrapSecured(project.step)!,
       { project, moduleRef: this.moduleRef },
       { ...project, project },
-      session,
     );
   }
 
-  async executeTransition(
-    input: ExecuteProjectTransitionInput,
-    session: Session,
-  ) {
+  async executeTransition(input: ExecuteProjectTransitionInput) {
     const { project: projectId, notes } = input;
 
-    const previous = await this.projects.readOneUnsecured(projectId, session);
+    const previous = await this.projects.readOneUnsecured(projectId);
 
     const next =
-      this.getBypassIfValid(input, session) ??
+      this.getBypassIfValid(input) ??
       findTransition(
-        await this.getAvailableTransitions(previous, session),
+        await this.getAvailableTransitions(previous),
         input.transition,
       );
 
-    const unsecuredEvent = await this.repo.recordEvent(
-      {
-        project: projectId,
-        ...(typeof next !== 'string'
-          ? { transition: next.key, to: next.to }
-          : { to: next }),
-        notes,
-      },
-      session,
-    );
+    const unsecuredEvent = await this.repo.recordEvent({
+      project: projectId,
+      ...(typeof next !== 'string'
+        ? { transition: next.key, to: next.to }
+        : { to: next }),
+      notes,
+    });
 
-    const updated = await this.projects.readOneUnsecured(projectId, session);
+    const updated = await this.projects.readOneUnsecured(projectId);
 
     RequiredWhen.verify(IProject, updated);
 
@@ -104,10 +90,9 @@ export class ProjectWorkflowService extends WorkflowService(
       previous.step,
       next,
       unsecuredEvent,
-      session,
     );
     await this.eventBus.publish(event);
 
-    return this.projects.secure(event.project, session);
+    return this.projects.secure(event.project);
   }
 }

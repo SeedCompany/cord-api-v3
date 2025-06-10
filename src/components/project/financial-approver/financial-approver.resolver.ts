@@ -6,8 +6,8 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { LoggedInSession, type Session } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
+import { Identity } from '~/core/authentication';
 import { Privileges } from '../../authorization';
 import { UserLoader } from '../../user';
 import { User } from '../../user/dto';
@@ -20,6 +20,7 @@ export class FinancialApproverResolver {
   constructor(
     private readonly repo: FinancialApproverRepository,
     private readonly privileges: Privileges,
+    private readonly identity: Identity,
   ) {}
 
   @Query(() => [FinancialApprover])
@@ -30,8 +31,11 @@ export class FinancialApproverResolver {
       nullable: true,
     })
     types: readonly ProjectType[] | undefined,
-    @LoggedInSession() _: Session, // require login
   ): Promise<readonly FinancialApprover[]> {
+    // TODO move to auth policy
+    if (this.identity.isAnonymous) {
+      return [];
+    }
     return await this.repo.read(types);
   }
 
@@ -41,9 +45,8 @@ export class FinancialApproverResolver {
   })
   async setProjectTypeFinancialApprover(
     @Args('input') input: FinancialApproverInput,
-    @LoggedInSession() session: Session,
   ): Promise<FinancialApprover | null> {
-    this.privileges.for(session, FinancialApprover).verifyCan('edit');
+    this.privileges.for(FinancialApprover).verifyCan('edit');
     return await this.repo.write(input);
   }
 

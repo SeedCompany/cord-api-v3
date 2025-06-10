@@ -7,7 +7,6 @@ import {
   labelForView,
   NotFoundException,
   type ObjectView,
-  type Session,
   type UnsecuredDto,
 } from '~/common';
 import { DtoRepository } from '~/core/database';
@@ -35,7 +34,6 @@ interface BudgetRecordHydrateArgs {
   recordVar?: string;
   projectVar?: string;
   outputVar?: string;
-  session: Session;
   view?: ObjectView;
 }
 
@@ -127,11 +125,7 @@ export class BudgetRecordRepository extends DtoRepository<
     return result.dto;
   }
 
-  async list(
-    input: BudgetRecordListInput,
-    session: Session,
-    view?: ObjectView,
-  ) {
+  async list(input: BudgetRecordListInput, view?: ObjectView) {
     const { budgetId } = input.filter ?? {};
     const result = await this.db
       .query()
@@ -151,7 +145,6 @@ export class BudgetRecordRepository extends DtoRepository<
     recordVar = 'node',
     projectVar = 'project',
     outputVar = 'dto',
-    session,
     view,
   }: BudgetRecordHydrateArgs) {
     return (query: Query) =>
@@ -177,7 +170,7 @@ export class BudgetRecordRepository extends DtoRepository<
             node('organization', 'Organization'),
           ])
           .apply(matchChangesetAndChangedProps(view?.changeset))
-          .apply(matchPropsAndProjectSensAndScopedRoles(session, { view }))
+          .apply(matchPropsAndProjectSensAndScopedRoles({ view }))
           .return<{ dto: UnsecuredDto<BudgetRecord> }>(
             merge('props', 'changedProps', {
               parent: 'budget',

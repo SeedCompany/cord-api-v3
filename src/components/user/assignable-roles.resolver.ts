@@ -1,5 +1,5 @@
 import { ResolveField, Resolver } from '@nestjs/graphql';
-import { AnonSession, Role, SecuredRoles, type Session } from '~/common';
+import { Role, SecuredRoles } from '~/common';
 import { UserService } from './user.service';
 
 @Resolver(SecuredRoles)
@@ -8,9 +8,9 @@ export class AssignableRolesResolver {
 
   @ResolveField(() => [Role], {
     description:
-      'All of the roles that you have permission to assign to this user',
+      'All of the roles that _you_ have permission to assign to this user',
   })
-  async assignableRoles(@AnonSession() session: Session) {
-    return [...this.service.getAssignableRoles(session)];
+  async assignableRoles() {
+    return [...this.service.getAssignableRoles()];
   }
 }

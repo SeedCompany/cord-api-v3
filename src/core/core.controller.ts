@@ -1,7 +1,9 @@
 import { Controller, Get, HttpStatus, Redirect } from '@nestjs/common';
+import { AuthLevel } from '~/core/authentication';
 import { ConfigService } from './config/config.service';
 
 @Controller()
+@AuthLevel('sessionless')
 export class CoreController {
   constructor(private readonly config: ConfigService) {}
 

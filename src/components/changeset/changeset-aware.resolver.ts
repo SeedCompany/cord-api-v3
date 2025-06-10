@@ -1,13 +1,8 @@
 import { Info, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import {
-  Fields,
-  IsOnlyId,
-  LoggedInSession,
-  Resource,
-  type Session,
-} from '~/common';
+import { Fields, IsOnlyId, Resource } from '~/common';
 import { ResourceLoader, ResourceResolver } from '~/core';
+import { Identity } from '~/core/authentication';
 import { ChangesetResolver } from './changeset.resolver';
 import { Changeset, ChangesetAware, ChangesetDiff } from './dto';
 
@@ -15,6 +10,7 @@ import { Changeset, ChangesetAware, ChangesetDiff } from './dto';
 export class ChangesetAwareResolver {
   constructor(
     private readonly resources: ResourceLoader,
+    private readonly identity: Identity,
     private readonly resourceResolver: ResourceResolver,
     private readonly changesetResolver: ChangesetResolver,
   ) {}
@@ -55,17 +51,17 @@ export class ChangesetAwareResolver {
   })
   async changesetDiff(
     @Parent() object: ChangesetAware,
-    @LoggedInSession() session: Session,
   ): Promise<ChangesetDiff | null> {
+    // TODO move to auth policy
+    if (this.identity.isAnonymous) {
+      return null;
+    }
+
     const changeset = await this.changeset(object);
     if (!changeset) {
       return null;
     }
-    const diff = await this.changesetResolver.difference(
-      changeset,
-      session,
-      object.id,
-    );
+    const diff = await this.changesetResolver.difference(changeset, object.id);
     return diff;
   }
 }

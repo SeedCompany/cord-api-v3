@@ -1,14 +1,13 @@
 import { faker } from '@faker-js/faker';
 import { times } from 'lodash';
 import { isValidId, Role } from '~/common';
+import { graphql } from '~/graphql';
 import { ScriptureRange } from '../src/components/scripture/dto';
-import { type Story } from '../src/components/story/dto';
 import {
   createSession,
   createStory,
   createTestApp,
   fragments,
-  gql,
   registerUser,
   type TestApp,
 } from './utility';
@@ -43,14 +42,16 @@ describe('Story e2e', () => {
     const story = await createStory(app, { name, scriptureReferences });
 
     const { story: actual } = await app.graphql.query(
-      gql`
-        query st($id: ID!) {
-          story(id: $id) {
-            ...story
+      graphql(
+        `
+          query st($id: ID!) {
+            story(id: $id) {
+              ...story
+            }
           }
-        }
-        ${fragments.story}
-      `,
+        `,
+        [fragments.story],
+      ),
       {
         id: story.id,
       },
@@ -69,16 +70,18 @@ describe('Story e2e', () => {
     const newName = faker.company.name();
     const scriptureReferences = ScriptureRange.randomList();
     const result = await app.graphql.mutate(
-      gql`
-        mutation updateStory($input: UpdateStoryInput!) {
-          updateStory(input: $input) {
-            story {
-              ...story
+      graphql(
+        `
+          mutation updateStory($input: UpdateStoryInput!) {
+            updateStory(input: $input) {
+              story {
+                ...story
+              }
             }
           }
-        }
-        ${fragments.story}
-      `,
+        `,
+        [fragments.story],
+      ),
       {
         input: {
           story: {
@@ -102,18 +105,18 @@ describe('Story e2e', () => {
   it.skip('delete story', async () => {
     const st = await createStory(app);
     const result = await app.graphql.mutate(
-      gql`
+      graphql(`
         mutation deleteStory($id: ID!) {
           deleteStory(id: $id) {
             __typename
           }
         }
-      `,
+      `),
       {
         id: st.id,
       },
     );
-    const actual: Story | undefined = result.deleteStory;
+    const actual = result.deleteStory;
     expect(actual).toBeTruthy();
   });
 
@@ -121,18 +124,22 @@ describe('Story e2e', () => {
     const numStories = 2;
     await Promise.all(times(numStories).map(() => createStory(app)));
 
-    const { stories } = await app.graphql.query(gql`
-      query {
-        stories(input: { count: 15 }) {
-          items {
-            ...story
+    const { stories } = await app.graphql.query(
+      graphql(
+        `
+          query {
+            stories(input: { count: 15 }) {
+              items {
+                ...story
+              }
+              hasMore
+              total
+            }
           }
-          hasMore
-          total
-        }
-      }
-      ${fragments.story}
-    `);
+        `,
+        [fragments.story],
+      ),
+    );
 
     expect(stories.items.length).toBeGreaterThanOrEqual(numStories);
   });

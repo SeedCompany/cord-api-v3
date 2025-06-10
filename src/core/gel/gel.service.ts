@@ -1,10 +1,12 @@
 /* eslint-disable @typescript-eslint/unified-signatures */
 import { Injectable, Optional } from '@nestjs/common';
+import { isUUID } from 'class-validator';
 import { type $, type Executor } from 'gel';
 import { type QueryArgs } from 'gel/dist/ifaces';
 import { TraceLayer } from '~/common';
 import { retry, type RetryOptions } from '~/common/retry';
 import { TracingService } from '~/core/tracing';
+import { Identity } from '../authentication';
 import { TypedEdgeQL } from './edgeql';
 import { cleanError } from './errors';
 import { InlineQueryRuntimeMap } from './generated-client/inline-queries';
@@ -21,6 +23,7 @@ export class Gel {
     private readonly transactionContext: TransactionContext,
     private readonly optionsContext: OptionsContext,
     private readonly tracing: TracingService,
+    private readonly identity: Identity,
     @Optional() private readonly childOptions: ApplyOptions[] = [],
     @Optional() private childExecutor?: Executor,
   ) {}
@@ -31,6 +34,7 @@ export class Gel {
       this.transactionContext,
       this.optionsContext,
       this.tracing,
+      this.identity,
       [...this.childOptions],
       this.childExecutor,
     );
@@ -111,6 +115,11 @@ export class Gel {
     const queryNames = getCurrentQueryNames();
     const traceName = queryNames?.xray ?? 'Query';
 
+    let currentActorId = this.identity.currentIfInCtx?.userId;
+    // TODO temporarily check if UUID before applying global.
+    // Once migration is complete this can be removed.
+    currentActorId = isUUID(currentActorId) ? currentActorId : undefined;
+
     return await this.tracing.capture(traceName, async (segment) => {
       // Show this segment separately in the service map
       segment.namespace = 'remote';
@@ -122,8 +131,18 @@ export class Gel {
       };
 
       return await this.usingOptions(
-        (opts) =>
-          opts.tag || !queryNames ? opts : opts.withQueryTag(queryNames.gel),
+        (opts) => {
+          if (queryNames && !opts.tag) {
+            opts = opts.withQueryTag(queryNames.gel);
+          }
+          // TODO sync caching strategy with the solution that resolves
+          // https://github.com/geldata/gel-js/issues/1280
+          if (currentActorId && !opts.globals.get('currentActorId')) {
+            opts = opts.withGlobals({ currentActorId });
+          }
+
+          return opts;
+        },
         () => this.doRun(query, args),
       );
     });

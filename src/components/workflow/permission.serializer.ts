@@ -1,6 +1,6 @@
 import { setOf } from '@seedcompany/common';
-import { DateTime } from 'luxon';
-import { type ID, Role, type Session } from '~/common';
+import { type ID, Role } from '~/common';
+import { type Identity } from '~/core/authentication';
 import { type Privileges, type UserResourcePrivileges } from '../authorization';
 import { Condition } from '../authorization/policy/conditions';
 import { type Workflow } from './define-workflow';
@@ -8,31 +8,30 @@ import { type SerializedWorkflowTransitionPermission as SerializedTransitionPerm
 import { TransitionCondition } from './workflow.granter';
 
 export const transitionPermissionSerializer =
-  <W extends Workflow>(workflow: W, privileges: Privileges) =>
+  <W extends Workflow>(
+    workflow: W,
+    privileges: Privileges,
+    identity: Identity,
+  ) =>
   (transition: W['transition']): readonly SerializedTransitionPermission[] => {
     const all = [...Role].flatMap((role) => {
-      const session: Session = {
-        token: 'system',
-        issuedAt: DateTime.now(),
-        userId: 'anonymous' as ID,
-        anonymous: false,
-        roles: [`global:${role}`],
-      };
-      const p = privileges.for(session, workflow.eventResource);
-      const readEvent = resolve(p, 'read', transition.key);
-      const execute = resolve(p, 'create', transition.key);
-      return [
-        {
-          role,
-          readEvent: readEvent !== false,
-          condition: renderCondition(readEvent),
-        },
-        {
-          role,
-          execute: execute !== false,
-          condition: renderCondition(execute),
-        },
-      ];
+      return identity.asRole(role, () => {
+        const p = privileges.for(workflow.eventResource);
+        const readEvent = resolve(p, 'read', transition.key);
+        const execute = resolve(p, 'create', transition.key);
+        return [
+          {
+            role,
+            readEvent: readEvent !== false,
+            condition: renderCondition(readEvent),
+          },
+          {
+            role,
+            execute: execute !== false,
+            condition: renderCondition(execute),
+          },
+        ];
+      });
     });
 
     // Remove roles that are never applicable.

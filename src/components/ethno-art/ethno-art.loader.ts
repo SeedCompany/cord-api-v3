@@ -1,15 +1,15 @@
 import { type ID } from '~/common';
-import { LoaderFactory, OrderedNestDataLoader } from '~/core';
+import { type DataLoaderStrategy, LoaderFactory } from '~/core/data-loader';
 import { EthnoArt } from './dto';
 import { EthnoArtService } from './ethno-art.service';
 
 @LoaderFactory(() => EthnoArt)
-export class EthnoArtLoader extends OrderedNestDataLoader<EthnoArt> {
-  constructor(private readonly ethnoArt: EthnoArtService) {
-    super();
-  }
+export class EthnoArtLoader
+  implements DataLoaderStrategy<EthnoArt, ID<EthnoArt>>
+{
+  constructor(private readonly ethnoArt: EthnoArtService) {}
 
-  async loadMany(ids: readonly ID[]) {
-    return await this.ethnoArt.readMany(ids, this.session);
+  async loadMany(ids: ReadonlyArray<ID<EthnoArt>>) {
+    return await this.ethnoArt.readMany(ids);
   }
 }

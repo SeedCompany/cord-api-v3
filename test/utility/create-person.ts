@@ -1,17 +1,25 @@
 import { faker } from '@faker-js/faker';
 import { generateId, isValidId } from '~/common';
-import { type CreatePerson } from '../../src/components/user/dto';
+import { graphql, type InputOf, type ResultOf } from '~/graphql';
 import { type TestApp } from './create-app';
-import { fragments, type RawUser } from './fragments';
-import { gql } from './gql-tag';
+import * as fragments from './fragments';
 
 export async function createPerson(
   app: TestApp,
-  input: Partial<CreatePerson> = {},
+  input: InputOf<typeof CreatePersonDoc>,
+  addDefaults: false,
+): Promise<ResultOf<typeof CreatePersonDoc>['createPerson']['user']>;
+export async function createPerson(
+  app: TestApp,
+  input?: Partial<InputOf<typeof CreatePersonDoc>>,
+): Promise<ResultOf<typeof CreatePersonDoc>['createPerson']['user']>;
+export async function createPerson(
+  app: TestApp,
+  input: Partial<InputOf<typeof CreatePersonDoc>> = {},
   addDefaults = true,
 ) {
-  const person: CreatePerson = !addDefaults
-    ? (input as CreatePerson)
+  const person = !addDefaults
+    ? (input as InputOf<typeof CreatePersonDoc>)
     : {
         email: faker.internet.email(),
         realFirstName: faker.person.firstName(),
@@ -24,28 +32,27 @@ export async function createPerson(
         ...input,
       };
 
-  const result = await app.graphql.mutate(
-    gql`
-      mutation createPerson($input: CreatePersonInput!) {
-        createPerson(input: $input) {
-          user {
-            ...user
-          }
-        }
-      }
-      ${fragments.user}
-    `,
-    {
-      input: {
-        person,
-      },
-    },
-  );
+  const result = await app.graphql.mutate(CreatePersonDoc, {
+    input: person,
+  });
 
-  const actual: RawUser = result.createPerson.user;
+  const actual = result.createPerson.user;
   expect(actual).toBeTruthy();
 
   expect(isValidId(actual.id)).toBe(true);
 
   return actual;
 }
+
+const CreatePersonDoc = graphql(
+  `
+    mutation createPerson($input: CreatePerson!) {
+      createPerson(input: { person: $input }) {
+        user {
+          ...user
+        }
+      }
+    }
+  `,
+  [fragments.user],
+);

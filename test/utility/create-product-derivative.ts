@@ -1,47 +1,40 @@
 import { isValidId } from '~/common';
-import {
-  type CreateDerivativeScriptureProduct,
-  ProductMedium,
-  ProductMethodology,
-  ProductPurpose,
-} from '../../src/components/product/dto';
+import { graphql, type InputOf } from '~/graphql';
 import { type TestApp } from './create-app';
-import { fragments, type RawProduct } from './fragments';
-import { gql } from './gql-tag';
+import * as fragments from './fragments';
 
 export async function createDerivativeProduct(
   app: TestApp,
-  input: CreateDerivativeScriptureProduct,
+  input: InputOf<typeof CreateDerivativeScriptureProductDoc>,
 ) {
-  const product: CreateDerivativeScriptureProduct = {
-    mediums: [ProductMedium.Print],
-    purposes: [ProductPurpose.ChurchLife],
-    methodology: ProductMethodology.Paratext,
-    ...input,
-  };
-
-  const result = await app.graphql.mutate(
-    gql`
-      mutation createDerivativeScriptureProduct(
-        $input: CreateDerivativeScriptureProduct!
-      ) {
-        createDerivativeScriptureProduct(input: $input) {
-          product {
-            ...product
-          }
-        }
-      }
-      ${fragments.product}
-    `,
-    {
-      input: product,
+  const result = await app.graphql.mutate(CreateDerivativeScriptureProductDoc, {
+    input: {
+      mediums: ['Print'],
+      purposes: ['ChurchLife'],
+      methodology: 'Paratext',
+      ...input,
     },
-  );
+  });
 
-  const actual: RawProduct = result.createDerivativeScriptureProduct.product;
+  const actual = result.createDerivativeScriptureProduct.product;
   expect(actual).toBeTruthy();
 
   expect(isValidId(actual.id)).toBe(true);
 
   return actual;
 }
+
+const CreateDerivativeScriptureProductDoc = graphql(
+  `
+    mutation createDerivativeScriptureProduct(
+      $input: CreateDerivativeScriptureProduct!
+    ) {
+      createDerivativeScriptureProduct(input: $input) {
+        product {
+          ...product
+        }
+      }
+    }
+  `,
+  [fragments.product],
+);

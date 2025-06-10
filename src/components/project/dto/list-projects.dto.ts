@@ -16,6 +16,7 @@ import {
 } from '~/common';
 import { LocationFilters } from '../../location/dto';
 import { PartnershipFilters } from '../../partnership/dto';
+import { ProjectMemberFilters } from '../project-member/dto';
 import { ProjectStatus } from './project-status.enum';
 import { ProjectStep } from './project-step.enum';
 import { ProjectType } from './project-type.enum';
@@ -28,6 +29,8 @@ import {
 
 @InputType()
 export abstract class ProjectFilters {
+  readonly id?: ID<'Project'>;
+
   @OptionalField()
   readonly name?: string;
 
@@ -95,6 +98,17 @@ export abstract class ProjectFilters {
     description: 'Only projects that the requesting user is a member of',
   })
   readonly isMember?: boolean;
+
+  @FilterField(() => ProjectMemberFilters, {
+    description:
+      "Only projects with the requesting user's membership that matches these filters",
+  })
+  readonly membership?: ProjectMemberFilters & {};
+
+  @FilterField(() => ProjectMemberFilters, {
+    description: 'Only projects with _any_ members matching these filters',
+  })
+  readonly members?: ProjectMemberFilters & {};
 
   @OptionalField({
     description: 'Filter for projects with two or more engagements.',

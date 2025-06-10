@@ -1,14 +1,14 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, type Query, relation } from 'cypher-query-builder';
-import { type ID, type Session, type UnsecuredDto } from '~/common';
+import { type ID, type UnsecuredDto } from '~/common';
 import { DtoRepository } from '~/core/database';
 import {
   ACTIVE,
   createNode,
   createRelationships,
+  currentUser,
   merge,
   paginate,
-  requestingUser,
   sorting,
 } from '~/core/database/query';
 import { CommentRepository } from './comment.repository';
@@ -23,7 +23,7 @@ export class CommentThreadRepository extends DtoRepository(CommentThread) {
     super();
   }
 
-  async create(parent: ID, session: Session) {
+  async create(parent: ID) {
     const createThreadNode = await createNode(CommentThread, {});
     return (query: Query) =>
       query
@@ -31,7 +31,7 @@ export class CommentThreadRepository extends DtoRepository(CommentThread) {
         .apply(
           createRelationships(CommentThread, {
             in: { commentThread: ['BaseNode', parent] },
-            out: { creator: ['User', session.userId] },
+            out: { creator: currentUser },
           }),
         )
         .return('node as thread');
@@ -76,14 +76,9 @@ export class CommentThreadRepository extends DtoRepository(CommentThread) {
         );
   }
 
-  async list(
-    parent: ID | undefined,
-    input: CommentThreadListInput,
-    session: Session,
-  ) {
+  async list(parent: ID | undefined, input: CommentThreadListInput) {
     const result = await this.db
       .query()
-      .match(requestingUser(session))
       .match([
         node('node', 'CommentThread'),
         ...(parent

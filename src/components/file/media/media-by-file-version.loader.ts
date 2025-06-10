@@ -3,7 +3,7 @@ import {
   type DataLoaderStrategy,
 } from '@seedcompany/data-loader';
 import { type ID } from '~/common';
-import { LoaderFactory } from '~/core/resources';
+import { LoaderFactory } from '~/core/data-loader';
 import { type AnyMedia } from './media.dto';
 import { MediaRepository } from './media.repository';
 

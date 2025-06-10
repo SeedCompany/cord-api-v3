@@ -6,5 +6,5 @@ export * from './cli';
 export { splitDb, splitDb2 } from './database';
 export * from './events';
 export * from './resources';
-export * from './data-loader';
+export { type LoaderOf, Loader } from './data-loader';
 export * from './tracing';

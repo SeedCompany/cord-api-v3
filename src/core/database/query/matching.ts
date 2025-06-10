@@ -1,25 +1,31 @@
-import { node, type Query, relation } from 'cypher-query-builder';
+import {
+  node,
+  type NodePattern,
+  type Query,
+  relation,
+} from 'cypher-query-builder';
 import { uniq } from 'lodash';
 import { DateTime } from 'luxon';
-import {
-  type ID,
-  isIdLike,
-  labelForView,
-  many,
-  type Many,
-  type ObjectView,
-  type Session,
-} from '~/common';
+import { type Tagged } from 'type-fest';
+import { labelForView, many, type Many, type ObjectView } from '~/common';
 import { variable } from '../query-augmentation/condition-variables';
-import { apoc, collect, listConcat, merge } from './cypher-functions';
+import { apoc, collect, exists, listConcat, merge } from './cypher-functions';
 
-export const requestingUser = (session: Session | ID) => {
-  const n = node('requestingUser', 'User', {
-    id: variable('$requestingUser'),
-  });
-  n.addParam(isIdLike(session) ? session : session.userId, 'requestingUser');
-  return n;
-};
+const currentUserFlag = Symbol();
+const makeCurrentUser = (name: string) =>
+  Object.assign(
+    Object.defineProperty(
+      node(name, 'User', { id: variable('$currentUser') }),
+      currentUserFlag,
+      {},
+    ) as Tagged<NodePattern, 'CurrentUser'>,
+    {
+      as: makeCurrentUser,
+      is: (obj: object): obj is typeof currentUser =>
+        Object.hasOwn(obj, currentUserFlag),
+    },
+  );
+export const currentUser = makeCurrentUser('');
 
 /**
  * Same as `{ active: true }` but it doesn't create a bound parameter
@@ -122,3 +128,9 @@ export const property = (
     }),
   ],
 ];
+
+export const pinned = exists([
+  currentUser,
+  relation('out', '', 'pinned'),
+  node('node'),
+]);

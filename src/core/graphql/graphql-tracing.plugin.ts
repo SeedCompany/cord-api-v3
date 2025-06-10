@@ -4,16 +4,20 @@ import {
   type GraphQLResolveInfo as ResolveInfo,
   type ResponsePath,
 } from 'graphql';
+import { Identity } from '../authentication';
 import { type Segment, TracingService } from '../tracing';
 import { Plugin } from './plugin.decorator';
 
 @Plugin()
 export class GraphqlTracingPlugin {
-  constructor(private readonly tracing: TracingService) {}
+  constructor(
+    private readonly tracing: TracingService,
+    private readonly identity: Identity,
+  ) {}
 
   onExecute: Plugin['onExecute'] = ({ args }) => {
     const { operationName, contextValue } = args;
-    const { operation, session$, params } = contextValue;
+    const { operation, params } = contextValue;
 
     let segment: Segment;
     try {
@@ -43,7 +47,7 @@ export class GraphqlTracingPlugin {
 
     return {
       onExecuteDone: () => {
-        const userId = session$.value?.userId;
+        const userId = this.identity.currentMaybe?.userId;
         if (userId) {
           segment.setUser?.(userId);
         }
