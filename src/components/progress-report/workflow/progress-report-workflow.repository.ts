@@ -16,6 +16,7 @@ import {
   createRelationships,
   currentUser,
   merge,
+  path,
   sorting,
 } from '~/core/database/query';
 import { ProgressReport, type ProgressReportStatus as Status } from '../dto';
@@ -133,16 +134,23 @@ export class ProgressReportWorkflowRepository extends DtoRepository(
     const query = this.db
       .query()
       .match([
-        node('report', 'ProgressReport', { id: reportId }),
+        node('', 'ProgressReport', { id: reportId }),
         relation('in', '', ACTIVE),
-        node('engagement', 'Engagement'),
+        node('', 'Engagement'),
         relation('in', '', 'engagement', ACTIVE),
-        node('project', 'Project'),
+        node('', 'Project'),
         relation('out', '', 'member', ACTIVE),
         node('member', 'ProjectMember'),
         relation('out', '', 'user', ACTIVE),
         node('user', 'User'),
       ])
+      .where(
+        path([
+          node('member'),
+          relation('out', '', 'inactiveAt', ACTIVE),
+          node('', 'Property', { value: null }),
+        ]),
+      )
       .match([
         node('user'),
         relation('out', '', 'email', ACTIVE),
