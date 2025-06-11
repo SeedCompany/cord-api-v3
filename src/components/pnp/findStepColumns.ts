@@ -1,4 +1,4 @@
-import { sortBy } from '@seedcompany/common';
+import { mapOf, sortBy } from '@seedcompany/common';
 import levenshtein from 'fastest-levenshtein';
 import { startCase } from 'lodash';
 import { type Column } from '~/common/xlsx.util';
@@ -7,7 +7,7 @@ import { type PnpExtractionResult, PnpProblemType } from './extraction-result';
 import { type PlanningSheet } from './planning-sheet';
 import { type ProgressSheet } from './progress-sheet';
 
-const ApprovedCustomSteps = new Map<string, Step>([
+const ApprovedAliases = mapOf<string, Step>([
   ['draft & keyboard', Step.ExegesisAndFirstDraft],
   ['first draft', Step.ExegesisAndFirstDraft],
   ['exegesis, 1st draft, keyboard', Step.ExegesisAndFirstDraft],
@@ -38,9 +38,7 @@ export function findStepColumns(
     .walkRight()
     .filter((cell) => !!cell.asString)
     .map((cell) => ({
-      label:
-        ApprovedCustomSteps.get(cell.asString!.trim().toLowerCase()) ??
-        cell.asString!,
+      label: cell.asString!.trim(),
       column: cell.column,
       cell,
     }))
@@ -69,6 +67,11 @@ const chooseStep = (
   label: string,
   available: ReadonlySet<Step>,
 ): Step | undefined => {
+  const alias = ApprovedAliases.get(label.toLowerCase());
+  if (alias) {
+    return alias;
+  }
+
   const distances = available.values().map((step) => {
     const humanLabel = startCase(step).replace(' And ', ' & ');
     const distance = levenshtein.distance(label, humanLabel);
