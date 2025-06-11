@@ -3,10 +3,7 @@ import { splitDb } from '~/core';
 import { NotificationRepository as GelRepository } from './notification.gel.repository';
 import { NotificationRepository as Neo4jRepository } from './notification.repository';
 import { NotificationResolver } from './notification.resolver';
-import {
-  NotificationService,
-  NotificationServiceImpl,
-} from './notification.service';
+import { NotificationService, NotificationServiceImpl } from './notification.service';
 
 @Module({
   providers: [

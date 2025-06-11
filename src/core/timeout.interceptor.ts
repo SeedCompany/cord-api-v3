@@ -27,9 +27,7 @@ export class TimeoutInterceptor implements NestInterceptor {
 
     const timeout$ = fromEvent(response.raw, 'timeout').pipe(
       map(() => {
-        throw new ServiceUnavailableException(
-          'Unable to fulfill request in a timely manner',
-        );
+        throw new ServiceUnavailableException('Unable to fulfill request in a timely manner');
       }),
     );
 

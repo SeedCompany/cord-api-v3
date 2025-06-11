@@ -4,20 +4,8 @@ import { type Role, type Sensitivity } from '~/common';
 import { type QueryFragment } from '~/core/database/query';
 import { type ScopedRole } from '../../../components/authorization/dto';
 import { ProjectType } from '../../../components/project/dto/project-type.enum';
-import {
-  apoc,
-  coalesce,
-  collect,
-  listConcat,
-  merge,
-  reduce,
-} from './cypher-functions';
-import {
-  ACTIVE,
-  currentUser,
-  matchProps,
-  type MatchPropsOptions,
-} from './matching';
+import { apoc, coalesce, collect, listConcat, merge, reduce } from './cypher-functions';
+import { ACTIVE, currentUser, matchProps, type MatchPropsOptions } from './matching';
 
 export const matchPropsAndProjectSensAndScopedRoles =
   (propsOptions?: MatchPropsOptions) =>
@@ -99,9 +87,7 @@ export const matchProjectSens =
       sub
         .with(projectVar) // import
         .with(projectVar) // needed for where clause
-        .raw(
-          `WHERE ${projectVar} IS NOT NULL AND ${projectVar}.type = "${ProjectType.Internship}"`,
-        )
+        .raw(`WHERE ${projectVar} IS NOT NULL AND ${projectVar}.type = "${ProjectType.Internship}"`)
         .match([
           node(projectVar),
           relation('out', '', 'sensitivity', ACTIVE),
@@ -140,19 +126,12 @@ export const matchProjectSens =
     );
 
 export const matchUserGloballyScopedRoles =
-  <Output extends string = 'scopedRoles'>(
-    userVar: string,
-    outputVar = 'globalRoles' as Output,
-  ) =>
+  <Output extends string = 'scopedRoles'>(userVar: string, outputVar = 'globalRoles' as Output) =>
   <R>(query: Query<R>) =>
     query.comment('matchUserGloballyScopedRoles()').subQuery((sub) =>
       sub
         .with(userVar)
-        .match([
-          node(userVar),
-          relation('out', '', 'roles', ACTIVE),
-          node('role', 'Property'),
-        ])
+        .match([node(userVar), relation('out', '', 'roles', ACTIVE), node('role', 'Property')])
         .return<{ [K in Output]: readonly Role[] }>(
           apoc.coll.flatten(collect('role.value')).as(outputVar),
         ),

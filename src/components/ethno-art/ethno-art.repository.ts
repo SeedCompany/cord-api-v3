@@ -10,23 +10,9 @@ import {
   type UnsecuredDto,
 } from '~/common';
 import { type DbTypeOf, DtoRepository } from '~/core/database';
-import {
-  createNode,
-  matchProps,
-  merge,
-  paginate,
-  sorting,
-} from '~/core/database/query';
-import {
-  ScriptureReferenceRepository,
-  ScriptureReferenceService,
-} from '../scripture';
-import {
-  type CreateEthnoArt,
-  EthnoArt,
-  type EthnoArtListInput,
-  type UpdateEthnoArt,
-} from './dto';
+import { createNode, matchProps, merge, paginate, sorting } from '~/core/database/query';
+import { ScriptureReferenceRepository, ScriptureReferenceService } from '../scripture';
+import { type CreateEthnoArt, EthnoArt, type EthnoArtListInput, type UpdateEthnoArt } from './dto';
 
 @Injectable()
 export class EthnoArtRepository extends DtoRepository(EthnoArt) {
@@ -39,10 +25,7 @@ export class EthnoArtRepository extends DtoRepository(EthnoArt) {
 
   async create(input: CreateEthnoArt) {
     if (!(await this.isUnique(input.name))) {
-      throw new DuplicateException(
-        'ethnoArt.name',
-        'Ethno art with this name already exists',
-      );
+      throw new DuplicateException('ethnoArt.name', 'Ethno art with this name already exists');
     }
 
     const initialProps = {
@@ -59,15 +42,10 @@ export class EthnoArtRepository extends DtoRepository(EthnoArt) {
       throw new CreationFailed(EthnoArt);
     }
 
-    await this.scriptureRefsService.create(
-      result.id,
-      input.scriptureReferences,
-    );
+    await this.scriptureRefsService.create(result.id, input.scriptureReferences);
 
     return await this.readOne(result.id).catch((e) => {
-      throw e instanceof NotFoundException
-        ? new ReadAfterCreationFailed(EthnoArt)
-        : e;
+      throw e instanceof NotFoundException ? new ReadAfterCreationFailed(EthnoArt) : e;
     });
   }
 
@@ -84,15 +62,11 @@ export class EthnoArtRepository extends DtoRepository(EthnoArt) {
     return (await super.readOne(id)) as UnsecuredDto<EthnoArt>;
   }
 
-  async readMany(
-    ids: readonly ID[],
-  ): Promise<ReadonlyArray<UnsecuredDto<EthnoArt>>> {
+  async readMany(ids: readonly ID[]): Promise<ReadonlyArray<UnsecuredDto<EthnoArt>>> {
     const items = await super.readMany(ids);
     return items.map((r) => ({
       ...r,
-      scriptureReferences: this.scriptureRefsService.parseList(
-        r.scriptureReferences,
-      ),
+      scriptureReferences: this.scriptureRefsService.parseList(r.scriptureReferences),
     }));
   }
 
@@ -110,9 +84,7 @@ export class EthnoArtRepository extends DtoRepository(EthnoArt) {
       ...result!,
       items: result!.items.map((r) => ({
         ...r,
-        scriptureReferences: this.scriptureRefsService.parseList(
-          r.scriptureReferences,
-        ),
+        scriptureReferences: this.scriptureRefsService.parseList(r.scriptureReferences),
       })),
     };
   }

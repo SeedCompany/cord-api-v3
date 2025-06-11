@@ -9,9 +9,7 @@ import { type Session } from './session.dto';
  * A service holding the current session / user
  */
 export class SessionHost implements OnModuleDestroy {
-  private readonly als = new AsyncLocalStorage<
-    BehaviorSubject<Session | undefined>
-  >();
+  private readonly als = new AsyncLocalStorage<BehaviorSubject<Session | undefined>>();
 
   /**
    * Retrieve the current session.
@@ -46,9 +44,7 @@ export class SessionHost implements OnModuleDestroy {
   get current$() {
     const subject = this.als.getStore();
     if (!subject) {
-      throw new AsyncLocalStorageNoContextException(
-        'A session context has not been declared',
-      );
+      throw new AsyncLocalStorageNoContextException('A session context has not been declared');
     }
     return subject;
   }
@@ -66,14 +62,8 @@ export class SessionHost implements OnModuleDestroy {
   /**
    * Run a function with a given session.
    */
-  withSession<R>(
-    session: BehaviorSubject<Session | undefined> | Session | undefined,
-    fn: () => R,
-  ) {
-    const session$ =
-      session instanceof BehaviorSubject
-        ? session
-        : new BehaviorSubject(session);
+  withSession<R>(session: BehaviorSubject<Session | undefined> | Session | undefined, fn: () => R) {
+    const session$ = session instanceof BehaviorSubject ? session : new BehaviorSubject(session);
     return this.als.run(session$, fn);
   }
 

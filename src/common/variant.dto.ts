@@ -42,10 +42,7 @@ export class Variant<Key extends string = string> {
       value: (key: VKey) => {
         const found = list.find((v) => v.key === key);
         if (!found) {
-          throw new InputException(
-            `Variant with key "${key}" was not found`,
-            'variant',
-          );
+          throw new InputException(`Variant with key "${key}" was not found`, 'variant');
         }
         return found;
       },
@@ -60,10 +57,11 @@ export type VariantList<VKey extends string> = ReadonlyArray<Variant<VKey>> & {
 
 export type VariantKeyOf<T> = T extends Variant<infer K> ? K : never;
 
-export type VariantOf<TResourceStatic extends ResourceShape<any>> =
-  TResourceStatic extends { Variants: ReadonlyArray<Variant<infer VariantKey>> }
-    ? VariantKey
-    : never;
+export type VariantOf<TResourceStatic extends ResourceShape<any>> = TResourceStatic extends {
+  Variants: ReadonlyArray<Variant<infer VariantKey>>;
+}
+  ? VariantKey
+  : never;
 
 /**
  * A variant input field.
@@ -86,9 +84,7 @@ export const VariantInputField = <
 
   // Resolve default to variant object
   const resolveVariant = (value: Variant<VariantOf<Res>> | VariantOf<Res>) =>
-    typeof value === 'string'
-      ? resource.Variants.find((v) => v.key === value)
-      : value;
+    typeof value === 'string' ? resource.Variants.find((v) => v.key === value) : value;
   const defaultVariant = many
     ? (defaultValue as any[])?.map(resolveVariant)
     : resolveVariant(defaultValue as VariantOf<Res>);
@@ -110,8 +106,7 @@ export const VariantInputField = <
       return resolveVariant(value);
     }),
     IsIn(resource.Variants, {
-      message: ({ value }) =>
-        `Variant with key "${String(value)}" was not found`,
+      message: ({ value }) => `Variant with key "${String(value)}" was not found`,
       each: many,
     }),
   );

@@ -1,10 +1,4 @@
-import {
-  Args,
-  Mutation,
-  Parent,
-  ResolveField,
-  Resolver,
-} from '@nestjs/graphql';
+import { Args, Mutation, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { IdArg, type IdOf } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { Privileges } from '../../../authorization';

@@ -1,8 +1,4 @@
-import {
-  type NonEmptyArray,
-  setInspectOnClass,
-  setToStringTag,
-} from '@seedcompany/common';
+import { type NonEmptyArray, setInspectOnClass, setToStringTag } from '@seedcompany/common';
 import {
   type DateObjectUnits,
   DateTime,
@@ -35,9 +31,7 @@ export class CalendarDate<IsValid extends boolean = DefaultValidity>
     return o instanceof CalendarDate;
   }
 
-  static fromDateTime<IsValid extends boolean>(
-    dt: DateTime<IsValid>,
-  ): CalendarDate<IsValid> {
+  static fromDateTime<IsValid extends boolean>(dt: DateTime<IsValid>): CalendarDate<IsValid> {
     return Object.assign(
       new CalendarDate<IsValid>(),
       dt instanceof CalendarDate ? dt : dt.startOf('day'),
@@ -93,11 +87,7 @@ export class CalendarDate<IsValid extends boolean = DefaultValidity>
     return CalendarDate.fromDateTime(super.fromSQL(text, options));
   }
 
-  static fromFormat(
-    text: string,
-    format: string,
-    opts?: DateTimeOptions,
-  ): CalendarDate {
+  static fromFormat(text: string, format: string, opts?: DateTimeOptions): CalendarDate {
     return CalendarDate.fromDateTime(super.fromFormat(text, format, opts));
   }
 
@@ -143,17 +133,8 @@ export class CalendarDate<IsValid extends boolean = DefaultValidity>
     hour: number,
     opts?: DateTimeJSOptions,
   ): CalendarDate;
-  static local(
-    year: number,
-    month: number,
-    day: number,
-    opts?: DateTimeJSOptions,
-  ): CalendarDate;
-  static local(
-    year: number,
-    month: number,
-    opts?: DateTimeJSOptions,
-  ): CalendarDate;
+  static local(year: number, month: number, day: number, opts?: DateTimeJSOptions): CalendarDate;
+  static local(year: number, month: number, opts?: DateTimeJSOptions): CalendarDate;
   static local(year: number, opts?: DateTimeJSOptions): CalendarDate;
   static local(opts?: DateTimeJSOptions): CalendarDate;
   static local(...args: any) {
@@ -213,12 +194,7 @@ export class CalendarDate<IsValid extends boolean = DefaultValidity>
     hour: number,
     options?: LocaleOptions,
   ): DateTime;
-  static utc(
-    year: number,
-    month: number,
-    day: number,
-    options?: LocaleOptions,
-  ): DateTime;
+  static utc(year: number, month: number, day: number, options?: LocaleOptions): DateTime;
   static utc(year: number, month: number, options?: LocaleOptions): DateTime;
   static utc(year: number, options?: LocaleOptions): DateTime;
   static utc(options?: LocaleOptions): DateTime;
@@ -247,9 +223,7 @@ export class CalendarDate<IsValid extends boolean = DefaultValidity>
   }
 
   reconfigure(properties: LocaleOptions): this {
-    return CalendarDate.fromDateTime(
-      super.reconfigure(properties) as DateTime,
-    ) as this;
+    return CalendarDate.fromDateTime(super.reconfigure(properties) as DateTime) as this;
   }
 
   set(values: DateObjectUnits): this {
@@ -257,9 +231,7 @@ export class CalendarDate<IsValid extends boolean = DefaultValidity>
   }
 
   setLocale(locale: string): this {
-    return CalendarDate.fromDateTime(
-      super.setLocale(locale) as DateTime,
-    ) as this;
+    return CalendarDate.fromDateTime(super.setLocale(locale) as DateTime) as this;
   }
 
   setZone(_zone: string | Zone, _options?: ZoneOptions): CalendarDate {

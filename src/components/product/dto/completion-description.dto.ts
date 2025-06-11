@@ -12,8 +12,7 @@ export class ProductCompletionDescriptionSuggestionsInput extends PaginationInpu
 
   @Field(() => ProductMethodology, {
     nullable: true,
-    description:
-      'Optionally limit suggestions to only ones for this methodology',
+    description: 'Optionally limit suggestions to only ones for this methodology',
   })
   methodology?: ProductMethodology;
 }

@@ -1,13 +1,6 @@
 import { LazyGetter as Once } from 'lazy-get-decorator';
 import { CalendarDate, DateInterval, expandToFullFiscalYears } from '~/common';
-import {
-  type Cell,
-  type Column,
-  Range,
-  type Row,
-  Sheet,
-  type WorkBook,
-} from '~/common/xlsx.util';
+import { type Cell, type Column, Range, type Row, Sheet, type WorkBook } from '~/common/xlsx.util';
 
 export abstract class PlanningSheet extends Sheet {
   static register(book: WorkBook) {
@@ -27,9 +20,7 @@ export abstract class PlanningSheet extends Sheet {
   }
 
   @Once() get revision() {
-    return (
-      this.revisionCell.asDate ?? CalendarDate.fromMillis(0).plus({ day: 1 })
-    );
+    return this.revisionCell.asDate ?? CalendarDate.fromMillis(0).plus({ day: 1 });
   }
   protected abstract revisionCell: Cell;
 
@@ -103,9 +94,7 @@ export class WrittenScripturePlanningSheet extends PlanningSheet {
   protected myNotesFallbackCell = this.cell('AI16');
 
   @Once() protected get goalColumn() {
-    return this.revision > CalendarDate.local(2025, 2, 24)
-      ? this.column('P')
-      : this.column('Q');
+    return this.revision > CalendarDate.local(2025, 2, 24) ? this.column('P') : this.column('Q');
   }
 
   bookName(goalRow: Row) {
@@ -115,10 +104,7 @@ export class WrittenScripturePlanningSheet extends PlanningSheet {
   @Once() get goalsEnd() {
     const lastRow = super.goalsEnd.row;
     let row = this.goalsStart.row;
-    while (
-      row < lastRow &&
-      this.bookName(row).asString !== 'Other Goals and Milestones'
-    ) {
+    while (row < lastRow && this.bookName(row).asString !== 'Other Goals and Milestones') {
       row = row.move(1);
     }
     return super.goalsEnd.column.cell(row);

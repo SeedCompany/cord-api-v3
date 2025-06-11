@@ -2,28 +2,15 @@ import { DateInterval, type UnsecuredDto } from '~/common';
 import { EventsHandler, type IEventHandler, ILogger, Logger } from '~/core';
 import { EngagementService } from '../../engagement';
 import { type Engagement, engagementRange } from '../../engagement/dto';
-import {
-  EngagementCreatedEvent,
-  EngagementUpdatedEvent,
-} from '../../engagement/events';
+import { EngagementCreatedEvent, EngagementUpdatedEvent } from '../../engagement/events';
 import { ProjectUpdatedEvent } from '../../project/events';
 import { ReportType } from '../dto';
 import { PeriodicReportService } from '../periodic-report.service';
-import {
-  AbstractPeriodicReportSync,
-  type Intervals,
-} from './abstract-periodic-report-sync';
+import { AbstractPeriodicReportSync, type Intervals } from './abstract-periodic-report-sync';
 
-type SubscribedEvent =
-  | EngagementCreatedEvent
-  | EngagementUpdatedEvent
-  | ProjectUpdatedEvent;
+type SubscribedEvent = EngagementCreatedEvent | EngagementUpdatedEvent | ProjectUpdatedEvent;
 
-@EventsHandler(
-  EngagementCreatedEvent,
-  EngagementUpdatedEvent,
-  ProjectUpdatedEvent,
-)
+@EventsHandler(EngagementCreatedEvent, EngagementUpdatedEvent, ProjectUpdatedEvent)
 export class SyncProgressReportToEngagementDateRange
   extends AbstractPeriodicReportSync
   implements IEventHandler<SubscribedEvent>
@@ -40,11 +27,9 @@ export class SyncProgressReportToEngagementDateRange
     // Only LanguageEngagements
     if (
       !(
-        ((event instanceof EngagementCreatedEvent ||
-          event instanceof EngagementUpdatedEvent) &&
+        ((event instanceof EngagementCreatedEvent || event instanceof EngagementUpdatedEvent) &&
           event.isLanguageEngagement()) ||
-        (event instanceof ProjectUpdatedEvent &&
-          event.updated.type.includes('Translation'))
+        (event instanceof ProjectUpdatedEvent && event.updated.type.includes('Translation'))
       )
     ) {
       return;

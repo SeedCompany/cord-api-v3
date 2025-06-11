@@ -1,10 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import {
-  type ID,
-  type ObjectView,
-  ServerException,
-  type UnsecuredDto,
-} from '~/common';
+import { type ID, type ObjectView, ServerException, type UnsecuredDto } from '~/common';
 import { HandleIdLookup } from '~/core';
 import { ifDiff } from '~/core/database/changes';
 import { Privileges } from '../authorization';
@@ -20,10 +15,7 @@ import { FilmRepository } from './film.repository';
 
 @Injectable()
 export class FilmService {
-  constructor(
-    private readonly privileges: Privileges,
-    private readonly repo: FilmRepository,
-  ) {}
+  constructor(private readonly privileges: Privileges, private readonly repo: FilmRepository) {}
 
   async create(input: CreateFilm): Promise<Film> {
     const dto = await this.repo.create(input);

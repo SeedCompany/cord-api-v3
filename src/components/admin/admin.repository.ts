@@ -114,11 +114,7 @@ export class AdminRepository extends CommonRepository {
       .first();
   }
 
-  async createOrgResult(
-    createdAt: DateTime,
-    defaultOrgId: string,
-    defaultOrgName: string,
-  ) {
+  async createOrgResult(createdAt: DateTime, defaultOrgId: string, defaultOrgName: string) {
     return await this.db
       .query()
       .match(node('rootuser', 'RootUser'))

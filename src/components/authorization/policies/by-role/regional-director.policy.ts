@@ -9,10 +9,7 @@ import * as PM from './project-manager.policy';
   r.Project.when(member).edit.specifically(
     (p) => p.rootDirectory.edit.when(sensMediumOrLower).read,
   ),
-  r.ProjectWorkflowEvent.transitions(
-    PM.projectTransitions,
-    PM.momentumProjectsTransitions,
-  ).execute,
+  r.ProjectWorkflowEvent.transitions(PM.projectTransitions, PM.momentumProjectsTransitions).execute,
   r.ProjectWorkflowEvent.read.transitions(
     'Approve Concept',
     'Request Concept Changes',

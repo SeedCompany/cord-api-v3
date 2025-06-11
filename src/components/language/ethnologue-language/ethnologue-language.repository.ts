@@ -17,9 +17,7 @@ import {
 } from '../dto';
 
 @Injectable()
-export class EthnologueLanguageRepository extends DtoRepository(
-  EthnologueLanguage,
-) {
+export class EthnologueLanguageRepository extends DtoRepository(EthnologueLanguage) {
   async create(input: CreateEthnologueLanguage & { languageId: ID }) {
     const initialProps = {
       code: input.code,
@@ -59,9 +57,7 @@ export class EthnologueLanguageRepository extends DtoRepository(
     }
 
     return await this.readOne(result.id).catch((e) => {
-      throw e instanceof NotFoundException
-        ? new ReadAfterCreationFailed(EthnologueLanguage)
-        : e;
+      throw e instanceof NotFoundException ? new ReadAfterCreationFailed(EthnologueLanguage) : e;
     });
   }
 
@@ -71,10 +67,7 @@ export class EthnologueLanguageRepository extends DtoRepository(
     try {
       await this.updateProperties({ id }, simpleChanges);
     } catch (exception) {
-      throw new ServerException(
-        'Failed to update ethnologue language',
-        exception,
-      );
+      throw new ServerException('Failed to update ethnologue language', exception);
     }
 
     return undefined as unknown;

@@ -82,12 +82,8 @@ describe('Organization e2e', () => {
   });
 
   it.skip('create organization with mandatory field blank, mismatch or removed', async () => {
-    await expect(
-      createOrganization(app, { name: '' }),
-    ).rejects.toThrowGqlError();
-    await expect(
-      createOrganization(app, { name: undefined }),
-    ).rejects.toThrowGqlError();
+    await expect(createOrganization(app, { name: '' })).rejects.toThrowGqlError();
+    await expect(createOrganization(app, { name: undefined })).rejects.toThrowGqlError();
   });
 
   // UPDATE ORG
@@ -268,9 +264,7 @@ describe('Organization e2e', () => {
         }
       }
     `);
-    await app.graphql
-      .mutate(DeleteOrganization, { id: '' as ID })
-      .expectError(errors.invalidId());
+    await app.graphql.mutate(DeleteOrganization, { id: '' as ID }).expectError(errors.invalidId());
 
     await app.graphql.mutate(DeleteOrganization).expectError(errors.schema());
 
@@ -375,10 +369,7 @@ describe('Organization e2e', () => {
       },
     });
     const items = organizations.items;
-    const sorted = sortBy(items, [
-      (org: any) => org.name.value.toLowerCase(),
-      'desc',
-    ]);
+    const sorted = sortBy(items, [(org: any) => org.name.value.toLowerCase(), 'desc']);
     expect(sorted).toEqual(items);
   });
 

@@ -4,10 +4,7 @@ import { CommonRepository, e } from '~/core/gel';
 import { type PinRepository } from './pin.repository';
 
 @Injectable()
-export class PinGelRepository
-  extends CommonRepository
-  implements PublicOf<PinRepository>
-{
+export class PinGelRepository extends CommonRepository implements PublicOf<PinRepository> {
   async isPinned(id: ID) {
     const resource = e.cast(e.Mixin.Pinnable, e.uuid(id));
     const query = e.op(resource, 'in', e.global.currentUser.pins);

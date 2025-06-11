@@ -28,24 +28,18 @@ export class IndexerModule implements OnModuleInit {
       return;
     }
 
-    const discovered =
-      await this.discover.providerMethodsWithMetaAtKey<IndexMode>(DB_INDEX_KEY);
+    const discovered = await this.discover.providerMethodsWithMetaAtKey<IndexMode>(DB_INDEX_KEY);
     this.logger.debug('Discovered indexers', { count: discovered.length });
     const groupedByMode = groupToMapBy(discovered, (d) => d.meta);
 
-    const finishing = this.db.runOnceUntilCompleteAfterConnecting(
-      async (serverInfo) => {
-        for (const [mode, discoveredOfMode] of groupedByMode.entries()) {
-          await this.db.conn.runInTransaction(
-            () => this.doIndexing(discoveredOfMode, serverInfo),
-            {
-              queryLogger: this.logger,
-            },
-          );
-          this.logger.debug(`Finished syncing ${mode} indexes`);
-        }
-      },
-    );
+    const finishing = this.db.runOnceUntilCompleteAfterConnecting(async (serverInfo) => {
+      for (const [mode, discoveredOfMode] of groupedByMode.entries()) {
+        await this.db.conn.runInTransaction(() => this.doIndexing(discoveredOfMode, serverInfo), {
+          queryLogger: this.logger,
+        });
+        this.logger.debug(`Finished syncing ${mode} indexes`);
+      }
+    });
     // Wait for indexing to finish when running tests, else just let it run in
     // background and allow webserver to start.
     if (this.config.jest) {
@@ -76,20 +70,14 @@ export class IndexerModule implements OnModuleInit {
           : statement.replace(' FOR ', ' ON ').replace(' REQUIRE ', ' ASSERT '),
       );
       for (const [i, statement] of Object.entries(statements)) {
-        if (
-          serverInfo.edition === 'community' &&
-          statement.toUpperCase().includes('IS UNIQUE')
-        ) {
-          this.logger.debug(
-            'Skipping constraint not supported on Neo4j Community Edition',
-            { constraint: statement },
-          );
+        if (serverInfo.edition === 'community' && statement.toUpperCase().includes('IS UNIQUE')) {
+          this.logger.debug('Skipping constraint not supported on Neo4j Community Edition', {
+            constraint: statement,
+          });
           continue;
         }
 
-        const indexName = statement.match(
-          /create (?:index|constraint) ([\w_]+)/i,
-        )?.[1];
+        const indexName = statement.match(/create (?:index|constraint) ([\w_]+)/i)?.[1];
         const src = `${parentClass.name}.${methodName}`;
         const indexStr = Number(i) > 0 ? ` #${Number(i) + 1}` : '';
         const name = indexName ? `${indexName} (${src})` : `${src}${indexStr}`;
@@ -103,10 +91,9 @@ export class IndexerModule implements OnModuleInit {
             e.code === 'Neo.DatabaseError.Schema.ConstraintCreationFailed' &&
             e.message.includes('constraint requires Neo4j Enterprise Edition')
           ) {
-            this.logger.debug(
-              'Skipping constraint not supported on Neo4j Community Edition',
-              { constraint: statement },
-            );
+            this.logger.debug('Skipping constraint not supported on Neo4j Community Edition', {
+              constraint: statement,
+            });
           } else {
             this.logger.error('Failed to apply index', {
               index: name,

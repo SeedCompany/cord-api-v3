@@ -1,10 +1,4 @@
-import {
-  Args,
-  Mutation,
-  Parent,
-  ResolveField,
-  Resolver,
-} from '@nestjs/graphql';
+import { Args, Mutation, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { Loader, type LoaderOf } from '~/core';
 import { CommentThreadLoader } from './comment-thread.loader';
 import { CommentService } from './comment.service';
@@ -17,9 +11,7 @@ export class CreateCommentResolver {
   @Mutation(() => CreateCommentOutput, {
     description: 'Create a comment',
   })
-  async createComment(
-    @Args('input') input: CreateCommentInput,
-  ): Promise<CreateCommentOutput> {
+  async createComment(@Args('input') input: CreateCommentInput): Promise<CreateCommentOutput> {
     const comment = await this.service.create(input);
     return { comment };
   }

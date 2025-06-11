@@ -15,9 +15,7 @@ export abstract class UnavailabilityFilters {
 }
 
 @InputType()
-export class UnavailabilityListInput extends SortablePaginationInput<
-  keyof Unavailability
->({
+export class UnavailabilityListInput extends SortablePaginationInput<keyof Unavailability>({
   defaultSort: 'start',
   defaultOrder: Order.DESC,
 }) {
@@ -30,6 +28,4 @@ export class UnavailabilityListOutput extends PaginatedList(Unavailability) {}
 @ObjectType({
   description: SecuredList.descriptionFor('unavailabilities'),
 })
-export abstract class SecuredUnavailabilityList extends SecuredList(
-  Unavailability,
-) {}
+export abstract class SecuredUnavailabilityList extends SecuredList(Unavailability) {}

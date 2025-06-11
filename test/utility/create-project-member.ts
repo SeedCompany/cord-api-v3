@@ -1,21 +1,13 @@
 import { isValidId } from '~/common';
 import { graphql, type InputOf } from '~/graphql';
-import {
-  createPerson,
-  createProject,
-  fragments,
-  type TestApp,
-} from '../utility';
+import { createPerson, createProject, fragments, type TestApp } from '../utility';
 import { getUserFromSession } from './create-session';
 
 export async function createProjectMember(
   app: TestApp,
   input: Partial<InputOf<typeof CreateProjectMemberDoc>> = {},
 ) {
-  const userId =
-    input.userId ||
-    (await getUserFromSession(app)).id ||
-    (await createPerson(app)).id;
+  const userId = input.userId || (await getUserFromSession(app)).id || (await createPerson(app)).id;
   const result = await app.graphql.mutate(CreateProjectMemberDoc, {
     input: {
       userId,

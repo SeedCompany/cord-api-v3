@@ -14,6 +14,4 @@ export const OrganizationReach = makeEnum({
 @ObjectType({
   description: SecuredEnumList.descriptionFor('organization reach'),
 })
-export class SecuredOrganizationReach extends SecuredEnumList(
-  OrganizationReach,
-) {}
+export class SecuredOrganizationReach extends SecuredEnumList(OrganizationReach) {}

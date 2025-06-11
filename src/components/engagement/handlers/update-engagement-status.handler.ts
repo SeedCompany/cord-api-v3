@@ -72,10 +72,7 @@ const changes: Change[] = [
 type Change = RequireAtLeastOne<{ from: Condition; to: Condition }> & {
   newStatus: EngagementStatus;
 };
-type Condition = MergeExclusive<
-  { status: ProjectStatus },
-  { step: ProjectStep }
->;
+type Condition = MergeExclusive<{ status: ProjectStatus }, { step: ProjectStep }>;
 
 type ProjectState = Pick<UnsecuredDto<Project>, 'status' | 'step'>;
 const changeMatcher = (previousStep: ProjectStep, updatedStep: ProjectStep) => {
@@ -89,9 +86,7 @@ const changeMatcher = (previousStep: ProjectStep, updatedStep: ProjectStep) => {
   };
   return ({ from, to }: Change) => {
     const toMatches = to ? matches(to, updated) : !matches(from!, updated);
-    const fromMatches = from
-      ? matches(from, previous)
-      : !matches(to!, previous);
+    const fromMatches = from ? matches(from, previous) : !matches(to!, previous);
     return toMatches && fromMatches;
   };
 };
@@ -99,22 +94,14 @@ const matches = (cond: Condition, p: ProjectState) =>
   cond.step ? cond.step === p.step : cond.status === p.status;
 
 @EventsHandler(ProjectTransitionedEvent)
-export class UpdateEngagementStatusHandler
-  implements IEventHandler<ProjectTransitionedEvent>
-{
+export class UpdateEngagementStatusHandler implements IEventHandler<ProjectTransitionedEvent> {
   constructor(
     private readonly repo: EngagementRepository,
     private readonly engagementService: EngagementService,
   ) {}
 
-  async handle({
-    project,
-    previousStep,
-    workflowEvent,
-  }: ProjectTransitionedEvent) {
-    const engagementStatus = changes.find(
-      changeMatcher(previousStep, workflowEvent.to),
-    )?.newStatus;
+  async handle({ project, previousStep, workflowEvent }: ProjectTransitionedEvent) {
+    const engagementStatus = changes.find(changeMatcher(previousStep, workflowEvent.to))?.newStatus;
     if (!engagementStatus) return;
 
     const engagementIds = await this.repo.getOngoingEngagementIds(project.id, [

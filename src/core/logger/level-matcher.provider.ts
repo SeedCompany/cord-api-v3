@@ -24,18 +24,14 @@ export const LevelMatcherProvider: Provider<Promise<LevelMatcher>> = {
 
     const envDefault = process.env.LOG_LEVEL_DEFAULT as LogLevel | undefined;
     // env levels take the form of a,b=level;c,d=level
-    const envLevels = mapEntries(
-      (process.env.LOG_LEVELS || '').split(';'),
-      (pair, { SKIP }) => {
-        const matched = /\s*([\w\s,\-:*]+)=\s*(\w+)\s*/.exec(pair);
-        return matched ? [matched[1], matched[2] as LogLevel] : SKIP;
-      },
-    ).asRecord;
+    const envLevels = mapEntries((process.env.LOG_LEVELS || '').split(';'), (pair, { SKIP }) => {
+      const matched = /\s*([\w\s,\-:*]+)=\s*(\w+)\s*/.exec(pair);
+      return matched ? [matched[1], matched[2] as LogLevel] : SKIP;
+    }).asRecord;
 
     const levels = [envLevels, yamlOverrides.levels ?? {}, defaults.levels];
 
-    const defaultLevel =
-      envDefault ?? yamlOverrides.defaultLevel ?? defaults.defaultLevel;
+    const defaultLevel = envDefault ?? yamlOverrides.defaultLevel ?? defaults.defaultLevel;
     return new LevelMatcher(levels, defaultLevel);
   },
 };

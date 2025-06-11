@@ -1,11 +1,4 @@
-import {
-  Args,
-  Mutation,
-  Parent,
-  Query,
-  ResolveField,
-  Resolver,
-} from '@nestjs/graphql';
+import { Args, Mutation, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
 import { CalendarDate, ListArg, UnauthorizedException } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { Identity } from '~/core/authentication';

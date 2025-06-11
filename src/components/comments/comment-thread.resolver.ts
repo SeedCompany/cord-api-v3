@@ -96,10 +96,7 @@ export class CommentThreadResolver {
   }
 
   @ResolveField(() => User)
-  async creator(
-    @Parent() thread: CommentThread,
-    @Loader(UserLoader) users: LoaderOf<UserLoader>,
-  ) {
+  async creator(@Parent() thread: CommentThread, @Loader(UserLoader) users: LoaderOf<UserLoader>) {
     return await users.load(thread.creator);
   }
 }

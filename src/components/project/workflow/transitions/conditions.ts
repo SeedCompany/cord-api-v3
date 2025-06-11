@@ -34,13 +34,10 @@ export const HasEngagement: Condition = {
 };
 
 export const RequireOngoingEngagementsToBeFinalizingCompletion: Condition = {
-  description:
-    'All engagements must be Finalizing Completion or in a terminal status',
+  description: 'All engagements must be Finalizing Completion or in a terminal status',
   async resolve({ project, moduleRef }) {
     const repo = moduleRef.get(EngagementService, { strict: false });
-    const hasOngoing = await repo.hasOngoing(project.id, [
-      EngagementStatus.FinalizingCompletion,
-    ]);
+    const hasOngoing = await repo.hasOngoing(project.id, [EngagementStatus.FinalizingCompletion]);
     return {
       status: hasOngoing ? 'DISABLED' : 'ENABLED',
       disabledReason: `The project cannot be completed since some ongoing engagements are not "Finalizing Completion"`,

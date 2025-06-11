@@ -3,16 +3,12 @@ import { ModuleRef } from '@nestjs/core';
 import type { PublicOf } from '~/common';
 import { ConfigService } from '../config/config.service';
 
-export const splitDb = <T>(
-  neo4jRepository: Type<T>,
-  gelRepository: Type<PublicOf<T>>,
-) =>
+export const splitDb = <T>(neo4jRepository: Type<T>, gelRepository: Type<PublicOf<T>>) =>
   ({
     provide: neo4jRepository,
     inject: [ModuleRef, ConfigService],
     useFactory: async (moduleRef: ModuleRef, config: ConfigService) => {
-      const cls =
-        config.databaseEngine === 'gel' ? gelRepository : neo4jRepository;
+      const cls = config.databaseEngine === 'gel' ? gelRepository : neo4jRepository;
       return await moduleRef.create<T>(cls);
     },
   } satisfies Provider);

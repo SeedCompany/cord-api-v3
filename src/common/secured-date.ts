@@ -19,9 +19,7 @@ export abstract class SecuredDateTime implements ISecured, Secured<DateTime> {
 }
 
 @ObjectType({ implements: [ISecured] })
-export abstract class SecuredDateTimeNullable
-  implements ISecured, Secured<DateTime | null>
-{
+export abstract class SecuredDateTimeNullable implements ISecured, Secured<DateTime | null> {
   @DateTimeField({ nullable: true })
   readonly value?: DateTime | null;
 
@@ -45,9 +43,7 @@ export abstract class SecuredDate implements ISecured, Secured<CalendarDate> {
 }
 
 @ObjectType({ implements: [ISecured] })
-export abstract class SecuredDateNullable
-  implements ISecured, Secured<CalendarDate | null>
-{
+export abstract class SecuredDateNullable implements ISecured, Secured<CalendarDate | null> {
   @DateField({ nullable: true })
   readonly value?: CalendarDate | null;
 
@@ -68,9 +64,7 @@ export abstract class DateRange implements Range<CalendarDate | null> {
 }
 
 @ObjectType({ implements: [ISecured] })
-export abstract class SecuredDateRange
-  implements ISecured, Secured<Range<CalendarDate | null>>
-{
+export abstract class SecuredDateRange implements ISecured, Secured<Range<CalendarDate | null>> {
   static fromPair(
     start: Secured<CalendarDate | null>,
     end: Secured<CalendarDate | null>,

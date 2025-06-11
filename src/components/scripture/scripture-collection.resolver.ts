@@ -1,12 +1,4 @@
-import {
-  Args,
-  Float,
-  Int,
-  Parent,
-  Query,
-  ResolveField,
-  Resolver,
-} from '@nestjs/graphql';
+import { Args, Float, Int, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
 import { labelOfVerseRanges, parseScripture } from '@seedcompany/scripture';
 import { ScriptureRange } from './dto';
 import { ScriptureCollection } from './dto/scripture-collection.dto';
@@ -40,8 +32,7 @@ export class ScriptureCollectionResolver {
   }
 
   @ResolveField(() => Float, {
-    description:
-      'The total number of verse equivalents in this scripture collection',
+    description: 'The total number of verse equivalents in this scripture collection',
   })
   totalVerseEquivalents(@Parent() { verses }: ScriptureCollection): number {
     return getTotalVerseEquivalents(...verses);

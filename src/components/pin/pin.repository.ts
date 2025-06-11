@@ -13,11 +13,7 @@ export class PinRepository {
   async isPinned(id: ID): Promise<boolean> {
     const result = await this.db
       .query()
-      .match([
-        currentUser,
-        relation('out', '', 'pinned'),
-        node('node', 'BaseNode', { id }),
-      ])
+      .match([currentUser, relation('out', '', 'pinned'), node('node', 'BaseNode', { id })])
       .return('node')
       .first();
     return !!result;
@@ -29,11 +25,7 @@ export class PinRepository {
       .query()
       .match(node('node', 'BaseNode', { id }))
       .match(currentUser.as('currentUser'))
-      .merge([
-        node('currentUser'),
-        relation('out', 'rel', 'pinned'),
-        node('node'),
-      ])
+      .merge([node('currentUser'), relation('out', 'rel', 'pinned'), node('node')])
       .onCreate.setValues({
         'rel.createdAt': createdAt,
       })
@@ -43,11 +35,7 @@ export class PinRepository {
   async remove(id: ID): Promise<void> {
     await this.db
       .query()
-      .match([
-        currentUser,
-        relation('out', 'rel', 'pinned'),
-        node('node', 'BaseNode', { id }),
-      ])
+      .match([currentUser, relation('out', 'rel', 'pinned'), node('node', 'BaseNode', { id })])
       .delete('rel')
       .run();
   }

@@ -28,8 +28,7 @@ export function PaginatedList<Type, ListItem = Type>(
   {
     @Field(() => [itemClass], {
       description:
-        options.itemsDescription ||
-        PaginatedList.itemDescriptionFor(lowerCase(itemClass.name)),
+        options.itemsDescription || PaginatedList.itemDescriptionFor(lowerCase(itemClass.name)),
     })
     readonly items: readonly ListItem[];
 

@@ -110,11 +110,7 @@ describe('Unavailability e2e', () => {
   it('List view of unavailabilities', async () => {
     // create 2 unavailabilities
     const numUnavail = 2;
-    await Promise.all(
-      times(numUnavail).map(() =>
-        createUnavailability(app, { userId: user.id }),
-      ),
-    );
+    await Promise.all(times(numUnavail).map(() => createUnavailability(app, { userId: user.id })));
 
     const result = await app.graphql.query(
       graphql(
@@ -138,8 +134,6 @@ describe('Unavailability e2e', () => {
       },
     );
 
-    expect(result.user.unavailabilities.items.length).toBeGreaterThanOrEqual(
-      numUnavail,
-    );
+    expect(result.user.unavailabilities.items.length).toBeGreaterThanOrEqual(numUnavail);
   });
 });

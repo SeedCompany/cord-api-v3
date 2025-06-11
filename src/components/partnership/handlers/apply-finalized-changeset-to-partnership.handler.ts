@@ -12,9 +12,7 @@ import {
 type SubscribedEvent = ChangesetFinalizingEvent;
 
 @EventsHandler(ChangesetFinalizingEvent)
-export class ApplyFinalizedChangesetToPartnership
-  implements IEventHandler<SubscribedEvent>
-{
+export class ApplyFinalizedChangesetToPartnership implements IEventHandler<SubscribedEvent> {
   constructor(
     private readonly db: DatabaseService,
     @Logger('partnership:change-request:finalized')
@@ -41,11 +39,7 @@ export class ApplyFinalizedChangesetToPartnership
               relation('out', 'partnershipRel', 'partnership', ACTIVE),
               node('node', 'Partnership'),
             ])
-            .apply(
-              changeset.applied
-                ? commitChangesetProps()
-                : rejectChangesetProps(),
-            )
+            .apply(changeset.applied ? commitChangesetProps() : rejectChangesetProps())
             .return('1 as one'),
         )
         .return('project')
@@ -79,10 +73,7 @@ export class ApplyFinalizedChangesetToPartnership
       // Remove deleting partnerships
       await this.removeDeletingPartnerships(changeset.id);
     } catch (exception) {
-      throw new ServerException(
-        'Failed to apply changeset to partnership',
-        exception,
-      );
+      throw new ServerException('Failed to apply changeset to partnership', exception);
     }
   }
 

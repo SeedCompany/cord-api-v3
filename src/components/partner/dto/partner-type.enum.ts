@@ -10,6 +10,4 @@ export const PartnerType = makeEnum({
 @ObjectType({
   description: SecuredEnumList.descriptionFor('partner types'),
 })
-export abstract class SecuredPartnerTypes extends SecuredEnumList(
-  PartnerType,
-) {}
+export abstract class SecuredPartnerTypes extends SecuredEnumList(PartnerType) {}

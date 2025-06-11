@@ -116,10 +116,7 @@ export class BudgetRecordRepository extends DtoRepository<
       .return<{ dto: UnsecuredDto<BudgetRecord> }>('dto');
     const result = await query.first();
     if (!result) {
-      throw new NotFoundException(
-        'Could not find BudgetRecord',
-        'budgetRecord.budgetId',
-      );
+      throw new NotFoundException('Could not find BudgetRecord', 'budgetRecord.budgetId');
     }
 
     return result.dto;
@@ -129,11 +126,7 @@ export class BudgetRecordRepository extends DtoRepository<
     const { budgetId } = input.filter ?? {};
     const result = await this.db
       .query()
-      .matchNode(
-        'budget',
-        labelForView('Budget', view),
-        pickBy({ id: budgetId }),
-      )
+      .matchNode('budget', labelForView('Budget', view), pickBy({ id: budgetId }))
       .apply(this.recordsOfBudget({ view }))
       .apply(sorting(BudgetRecord, input))
       .apply(paginate(input))

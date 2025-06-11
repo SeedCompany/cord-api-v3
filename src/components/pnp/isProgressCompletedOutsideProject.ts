@@ -1,9 +1,4 @@
-import {
-  CalendarDate,
-  fiscalQuarter,
-  fiscalYear,
-  fullFiscalQuarter,
-} from '~/common';
+import { CalendarDate, fiscalQuarter, fiscalYear, fullFiscalQuarter } from '~/common';
 import { type Cell } from '~/common/xlsx.util';
 import { ProductStep } from '../product/dto';
 import { type PnpExtractionResult, PnpProblemType } from './extraction-result';
@@ -21,8 +16,7 @@ export const isProgressCompletedOutsideProject = (
     return false;
   }
   // Steps completion dates smallest unit is quarters, so expand project range to that.
-  const projectTimeframe =
-    pnp.planning.projectDateRange.expandToFull('quarter');
+  const projectTimeframe = pnp.planning.projectDateRange.expandToFull('quarter');
   if (projectTimeframe.contains(completeDate)) {
     return false;
   }
@@ -88,11 +82,7 @@ const GoalProgressedAfterProject = PnpProblemType.register({
   wiki: 'https://github.com/SeedCompany/cord-docs/wiki/PnP-Extraction-Validation:-Errors-and-Troubleshooting-Steps#6-steps-of-goals-are-marked-complete-after-this-projects-date-range',
 });
 
-const renderCtx = (ctx: {
-  goal: string;
-  step: ProductStep;
-  completed: string;
-}) => {
+const renderCtx = (ctx: { goal: string; step: ProductStep; completed: string }) => {
   const step = ProductStep.entry(ctx.step).label;
   const date = CalendarDate.fromISO(ctx.completed);
   const completed = `Q${fiscalQuarter(date)} FY${fiscalYear(date)}`;

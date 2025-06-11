@@ -31,9 +31,7 @@ export function Transactional(options?: TransactionOptions) {
 
     const clsName: string = target.constructor.name;
     const methodDescription =
-      typeof methodName === 'symbol'
-        ? methodName.description ?? 'symbol'
-        : methodName;
+      typeof methodName === 'symbol' ? methodName.description ?? 'symbol' : methodName;
     const initiator = `${clsName}.${methodDescription}`;
 
     // Wrap the method in a runInTransaction call
@@ -41,16 +39,13 @@ export function Transactional(options?: TransactionOptions) {
     descriptor.value = async function (...args: any[]) {
       // @ts-expect-error this works but TS still has problems with indexing on symbols
       const connection: Connection = this[ConnKey];
-      return await connection.runInTransaction(
-        () => origMethod.apply(this, args),
-        {
-          ...options,
-          metadata: {
-            initiator,
-            ...options?.metadata,
-          },
+      return await connection.runInTransaction(() => origMethod.apply(this, args), {
+        ...options,
+        metadata: {
+          initiator,
+          ...options?.metadata,
         },
-      );
+      });
     };
   }) as MethodDecorator;
 }

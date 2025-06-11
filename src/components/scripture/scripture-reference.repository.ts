@@ -104,19 +104,10 @@ export class ScriptureReferenceRepository {
         .comment('ScriptureRefs.list()')
         .match([
           node(nodeName),
-          relation(
-            'out',
-            'scriptureRangeRel',
-            dynamicRel ? undefined : relationName,
-            ACTIVE,
-          ),
+          relation('out', 'scriptureRangeRel', dynamicRel ? undefined : relationName, ACTIVE),
           node('scriptureRange', 'ScriptureRange'),
         ])
-        .apply((q) =>
-          dynamicRel
-            ? q.raw(`WHERE type(scriptureRangeRel) = ${relationName}`)
-            : q,
-        )
+        .apply((q) => (dynamicRel ? q.raw(`WHERE type(scriptureRangeRel) = ${relationName}`) : q))
         .return<{ scriptureReferences: DbScriptureReferences }>(
           collect('scriptureRange').as(outVar),
         );

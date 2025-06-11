@@ -34,9 +34,7 @@ import { type UpdateEthnologueLanguage } from './update-language.dto';
 @ObjectType({
   description: SecuredPropertyList.descriptionFor('tags'),
 })
-export abstract class SecuredTags extends SecuredPropertyList<string>(
-  GraphQLString,
-) {}
+export abstract class SecuredTags extends SecuredPropertyList<string>(GraphQLString) {}
 
 @RegisterResource({ db: e.Ethnologue.Language })
 @ObjectType()
@@ -118,8 +116,7 @@ export class Language extends Interfaces {
   @Field(() => EthnologueLanguage)
   readonly ethnologue: EthnologueLanguage &
     SetUnsecuredType<
-      UnsecuredDto<EthnologueLanguage> &
-        SetChangeType<'ethnologue', UpdateEthnologueLanguage>
+      UnsecuredDto<EthnologueLanguage> & SetChangeType<'ethnologue', UpdateEthnologueLanguage>
     >;
 
   @Field({

@@ -24,10 +24,7 @@ export class MyConstraintViolationError extends ConstraintViolationError {
   }
 
   get stack() {
-    const stack = this.orig.stack!.replace(
-      /^ConstraintViolationError:/,
-      this.name + ':',
-    );
+    const stack = this.orig.stack!.replace(/^ConstraintViolationError:/, this.name + ':');
     Object.defineProperty(this, 'stack', {
       writable: true,
       configurable: true,
@@ -55,9 +52,7 @@ export class MyConstraintViolationError extends ConstraintViolationError {
     const { fqn: objectFQN, property, constraint } = matches.groups!;
 
     const ctor =
-      constraint === 'std::exclusive'
-        ? ExclusivityViolationError
-        : PointerConstraintViolationError;
+      constraint === 'std::exclusive' ? ExclusivityViolationError : PointerConstraintViolationError;
 
     return Object.assign(new ctor(e), { objectFQN, property, constraint });
   }

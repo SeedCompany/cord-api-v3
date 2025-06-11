@@ -33,14 +33,9 @@ export class ProjectMemberService {
     private readonly repo: ProjectMemberRepository,
   ) {}
 
-  async create(
-    input: CreateProjectMember,
-    enforcePerms = true,
-  ): Promise<ProjectMember> {
+  async create(input: CreateProjectMember, enforcePerms = true): Promise<ProjectMember> {
     enforcePerms &&
-      (await this.assertValidRoles(input.roles, () =>
-        this.resources.load('User', input.userId),
-      ));
+      (await this.assertValidRoles(input.roles, () => this.resources.load('User', input.userId)));
 
     const created = await this.repo.create(input);
 
@@ -51,8 +46,7 @@ export class ProjectMemberService {
       );
     }
 
-    enforcePerms &&
-      this.privileges.for(ProjectMember, created).verifyCan('create');
+    enforcePerms && this.privileges.for(ProjectMember, created).verifyCan('create');
 
     return this.secure(created);
   }
@@ -60,10 +54,7 @@ export class ProjectMemberService {
   @HandleIdLookup(ProjectMember)
   async readOne(id: ID, _view?: ObjectView): Promise<ProjectMember> {
     if (!id) {
-      throw new NotFoundException(
-        'No project member id to search for',
-        'projectMember.id',
-      );
+      throw new NotFoundException('No project member id to search for', 'projectMember.id');
     }
 
     const dto = await this.repo.readOne(id);
@@ -83,9 +74,7 @@ export class ProjectMemberService {
         ...user,
         value:
           user.value && user.canRead
-            ? this.userService.secure(
-                user.value as unknown as UnsecuredDto<User>,
-              )
+            ? this.userService.secure(user.value as unknown as UnsecuredDto<User>)
             : undefined,
       },
     };
@@ -97,9 +86,7 @@ export class ProjectMemberService {
     await this.assertValidRoles(input.roles, () => {
       const user = object.user.value;
       if (!user) {
-        throw new UnauthorizedException(
-          'Cannot read user to verify roles available',
-        );
+        throw new UnauthorizedException('Cannot read user to verify roles available');
       }
       return user;
     });

@@ -46,9 +46,7 @@ export class ProgressReportVarianceExplanationRepository extends DtoRepository(
           sub
             .with(ctx)
             .apply(matchProps({ optional: true, excludeBaseProps: true }))
-            .return<{ dto: UnsecuredDto<VarianceExplanation> }>(
-              merge(defaults, 'props').as('dto'),
-            ),
+            .return<{ dto: UnsecuredDto<VarianceExplanation> }>(merge(defaults, 'props').as('dto')),
         )
         .return('dto');
   }

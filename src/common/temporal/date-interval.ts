@@ -142,10 +142,7 @@ export class DateInterval
     return int && int.end > int.start ? fromSuper(int) : null;
   }
   set(values: Partial<Record<'start' | 'end', CalendarDate>>) {
-    return DateInterval.fromDateTimes(
-      values.start ?? this.start,
-      values.end ?? this.end,
-    );
+    return DateInterval.fromDateTimes(values.start ?? this.start, values.end ?? this.end);
   }
   splitAt(...dates: CalendarDate[]) {
     return toSuper(this)
@@ -177,17 +174,13 @@ export class DateInterval
     return `[${this.start.toISO()} – ${this.end.toISO()}]`;
   }
   expandToFull(unit: DateTimeUnit): DateInterval {
-    return DateInterval.fromDateTimes(
-      this.start.startOf(unit),
-      this.end.endOf(unit),
-    );
+    return DateInterval.fromDateTimes(this.start.startOf(unit), this.end.endOf(unit));
   }
 }
 
 setInspectOnClass(DateInterval, (i) => ({ collapsed }) => {
   return collapsed(`${format(i.start)} – ${format(i.end)}`, 'Dates');
 });
-const format = (date: CalendarDate) =>
-  date.toLocaleString(CalendarDate.DATE_SHORT);
+const format = (date: CalendarDate) => date.toLocaleString(CalendarDate.DATE_SHORT);
 
 setToStringTag(DateInterval, 'DateInterval');

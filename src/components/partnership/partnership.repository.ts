@@ -46,10 +46,9 @@ import {
 import type { PartnershipByProjectAndPartnerInput } from './partnership-by-project-and-partner.loader';
 
 @Injectable()
-export class PartnershipRepository extends DtoRepository<
-  typeof Partnership,
-  [view?: ObjectView]
->(Partnership) {
+export class PartnershipRepository extends DtoRepository<typeof Partnership, [view?: ObjectView]>(
+  Partnership,
+) {
   constructor(private readonly files: FileService) {
     super();
   }
@@ -61,8 +60,7 @@ export class PartnershipRepository extends DtoRepository<
     const agreementId = await generateId<FileId>();
 
     const initialProps = {
-      agreementStatus:
-        input.agreementStatus || PartnershipAgreementStatus.NotAttached,
+      agreementStatus: input.agreementStatus || PartnershipAgreementStatus.NotAttached,
       agreement: agreementId,
       mou: mouId,
       mouStatus: input.mouStatus || PartnershipAgreementStatus.NotAttached,
@@ -115,10 +113,7 @@ export class PartnershipRepository extends DtoRepository<
     return result;
   }
 
-  async update(
-    changes: Omit<UpdatePartnership, 'mou' | 'agreement'>,
-    changeset?: ID,
-  ) {
+  async update(changes: Omit<UpdatePartnership, 'mou' | 'agreement'>, changeset?: ID) {
     const { id, ...simpleChanges } = changes;
     await this.updateProperties({ id }, simpleChanges, changeset);
 
@@ -132,11 +127,7 @@ export class PartnershipRepository extends DtoRepository<
       .query()
       .subQuery((sub) =>
         sub
-          .match([
-            node('project'),
-            relation('out', '', 'partnership', ACTIVE),
-            node('node', label),
-          ])
+          .match([node('project'), relation('out', '', 'partnership', ACTIVE), node('node', label)])
           .raw('WHERE node.id in $ids', { ids })
           .return('project, node')
           .apply((q) =>
@@ -160,9 +151,7 @@ export class PartnershipRepository extends DtoRepository<
       .run();
   }
 
-  async readManyByProjectAndPartner(
-    input: readonly PartnershipByProjectAndPartnerInput[],
-  ) {
+  async readManyByProjectAndPartner(input: readonly PartnershipByProjectAndPartnerInput[]) {
     return await this.db
       .query()
       .unwind([...input], 'input')
@@ -278,11 +267,7 @@ export class PartnershipRepository extends DtoRepository<
     return result!; // result from paginate() will always have 1 row.
   }
 
-  private async verifyRelationshipEligibility(
-    projectId: ID,
-    partnerId: ID,
-    changeset?: ID,
-  ) {
+  private async verifyRelationshipEligibility(projectId: ID, partnerId: ID, changeset?: ID) {
     const result =
       (await this.db
         .query()
@@ -326,17 +311,11 @@ export class PartnershipRepository extends DtoRepository<
         .first()) ?? {};
 
     if (!result.project) {
-      throw new NotFoundException(
-        'Could not find project',
-        'partnership.projectId',
-      );
+      throw new NotFoundException('Could not find project', 'partnership.projectId');
     }
 
     if (!result.partner) {
-      throw new NotFoundException(
-        'Could not find partner',
-        'partnership.partnerId',
-      );
+      throw new NotFoundException('Could not find partner', 'partnership.partnerId');
     }
 
     if (result.partnership) {
@@ -437,11 +416,7 @@ export const partnershipFilters = filter.define(() => PartnershipFilters, {
   projectId: filter.skip,
   types: filter.intersectsProp(),
   partner: filter.sub(() => partnerFilters)((sub) =>
-    sub.match([
-      node('outer'),
-      relation('out', '', 'partner'),
-      node('node', 'Partner'),
-    ]),
+    sub.match([node('outer'), relation('out', '', 'partner'), node('node', 'Partner')]),
   ),
 });
 
@@ -450,10 +425,6 @@ export const partnershipSorters = defineSorters(Partnership, {
   'partner.*': (query, input) =>
     query
       .with('node as partnership')
-      .match([
-        node('partnership'),
-        relation('out', '', 'partner'),
-        node('node', 'Partner'),
-      ])
+      .match([node('partnership'), relation('out', '', 'partner'), node('node', 'Partner')])
       .apply(sortWith(partnerSorters, input)),
 });

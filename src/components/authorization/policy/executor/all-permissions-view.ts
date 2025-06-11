@@ -19,20 +19,14 @@ import {
 import { type EdgePrivileges } from './edge-privileges';
 import { type ResourcePrivileges } from './resource-privileges';
 
-export type AllPermissionsView<TResourceStatic extends ResourceShape<any>> =
-  Record<
-    SecuredPropsPlusExtraKey<TResourceStatic>,
-    Record<PropAction, boolean>
-  > &
-    Record<
-      ChildSinglesKey<TResourceStatic>,
-      Record<ChildSingleAction, boolean>
-    > &
-    Record<ChildListsKey<TResourceStatic>, Record<ChildListAction, boolean>>;
+export type AllPermissionsView<TResourceStatic extends ResourceShape<any>> = Record<
+  SecuredPropsPlusExtraKey<TResourceStatic>,
+  Record<PropAction, boolean>
+> &
+  Record<ChildSinglesKey<TResourceStatic>, Record<ChildSingleAction, boolean>> &
+  Record<ChildListsKey<TResourceStatic>, Record<ChildListAction, boolean>>;
 
-export const createAllPermissionsView = <
-  TResourceStatic extends ResourceShape<any>,
->(
+export const createAllPermissionsView = <TResourceStatic extends ResourceShape<any>>(
   resource: EnhancedResource<TResourceStatic>,
   privileges: ResourcePrivileges<TResourceStatic>,
 ) =>
@@ -43,8 +37,7 @@ export const createAllPermissionsView = <
         getKeys: () => CompatAction.values,
         calculate: (actionInput, propPerms) => {
           const action =
-            actionInput === 'canEdit' &&
-            resource.childListKeys.has(propName as any)
+            actionInput === 'canEdit' && resource.childListKeys.has(propName as any)
               ? 'create' // Handled deprecated checks to list.canEdit === list.create
               : compatMap.forward[actionInput];
           // @ts-expect-error dynamic usage here is struggling
@@ -56,10 +49,7 @@ export const createAllPermissionsView = <
       }) as any,
   });
 
-export type AllPermissionsOfEdgeView<TAction extends string> = Record<
-  TAction,
-  boolean
->;
+export type AllPermissionsOfEdgeView<TAction extends string> = Record<TAction, boolean>;
 
 export const createAllPermissionsOfEdgeView = <
   TResourceStatic extends ResourceShape<any>,
@@ -78,19 +68,13 @@ const asLegacyAction = (action: AnyAction) =>
   `can${startCase(action)}` as `can${PascalCase<AnyAction>}`;
 
 type CompatAction = EnumType<typeof CompatAction>;
-const CompatAction = makeEnum([
-  ...AnyAction,
-  ...[...AnyAction].map(asLegacyAction),
-]);
+const CompatAction = makeEnum([...AnyAction, ...[...AnyAction].map(asLegacyAction)]);
 
 const compatMap = {
   forward: {
     ...mapValues.fromList(
       CompatAction,
-      (action) =>
-        (action.startsWith('can')
-          ? action.slice(3).toLowerCase()
-          : action) as AnyAction,
+      (action) => (action.startsWith('can') ? action.slice(3).toLowerCase() : action) as AnyAction,
     ).asRecord,
   },
   backward: {

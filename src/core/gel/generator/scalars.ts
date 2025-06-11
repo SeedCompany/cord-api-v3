@@ -3,10 +3,7 @@ import { mapEntries } from '@seedcompany/common';
 import { set } from 'lodash';
 import { codecs } from '../codecs';
 
-export const customScalars = mapEntries(codecs, (codec) => [
-  codec.info.ts,
-  codec.info,
-]).asMap;
+export const customScalars = mapEntries(codecs, (codec) => [codec.info.ts, codec.info]).asMap;
 
 export function setTsTypesFromOurScalarCodecs() {
   // this is used for schema interfaces & query builder

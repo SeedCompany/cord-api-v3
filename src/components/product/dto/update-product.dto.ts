@@ -1,13 +1,6 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import {
-  type ID,
-  IdField,
-  IntersectTypes,
-  NameField,
-  OmitType,
-  PickType,
-} from '~/common';
+import { type ID, IdField, IntersectTypes, NameField, OmitType, PickType } from '~/common';
 import {
   CreateBaseProduct,
   CreateDerivativeScriptureProduct,
@@ -28,10 +21,7 @@ export abstract class UpdateBaseProduct extends OmitType(CreateBaseProduct, [
 @InputType()
 export abstract class UpdateDirectScriptureProduct extends IntersectTypes(
   UpdateBaseProduct,
-  PickType(CreateDirectScriptureProduct, [
-    'scriptureReferences',
-    'unspecifiedScripture',
-  ]),
+  PickType(CreateDirectScriptureProduct, ['scriptureReferences', 'unspecifiedScripture']),
 ) {
   totalVerses?: number;
   totalVerseEquivalents?: number;
@@ -40,10 +30,7 @@ export abstract class UpdateDirectScriptureProduct extends IntersectTypes(
 @InputType()
 export abstract class UpdateDerivativeScriptureProduct extends IntersectTypes(
   UpdateBaseProduct,
-  PickType(CreateDerivativeScriptureProduct, [
-    'scriptureReferencesOverride',
-    'composite',
-  ]),
+  PickType(CreateDerivativeScriptureProduct, ['scriptureReferencesOverride', 'composite']),
 ) {
   @IdField({
     optional: true,

@@ -1,10 +1,5 @@
 import { ObjectType } from '@nestjs/graphql';
-import {
-  type EnumType,
-  makeEnum,
-  SecuredEnum,
-  SecuredEnumList,
-} from '~/common';
+import { type EnumType, makeEnum, SecuredEnum, SecuredEnumList } from '~/common';
 
 export type FinancialReportingType = EnumType<typeof FinancialReportingType>;
 export const FinancialReportingType = makeEnum({
@@ -22,7 +17,6 @@ export abstract class SecuredFinancialReportingTypes extends SecuredEnumList(
 @ObjectType({
   description: SecuredEnum.descriptionFor('financial reporting type'),
 })
-export abstract class SecuredFinancialReportingType extends SecuredEnum(
-  FinancialReportingType,
-  { nullable: true },
-) {}
+export abstract class SecuredFinancialReportingType extends SecuredEnum(FinancialReportingType, {
+  nullable: true,
+}) {}

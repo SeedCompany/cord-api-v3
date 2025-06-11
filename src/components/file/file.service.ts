@@ -1,7 +1,4 @@
-import {
-  GetObjectCommand as GetObject,
-  PutObjectCommand as PutObject,
-} from '@aws-sdk/client-s3';
+import { GetObjectCommand as GetObject, PutObjectCommand as PutObject } from '@aws-sdk/client-s3';
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { bufferFromStream, cleanJoin, type Nil } from '@seedcompany/common';
 import { fileTypeFromBuffer } from 'file-type';
@@ -92,16 +89,12 @@ export class FileService {
 
   asDownloadable<T extends object>(obj: T, fileVersionId: ID): Downloadable<T>;
   asDownloadable(fileVersion: FileVersion): Downloadable<FileVersion>;
-  asDownloadable<T extends object>(
-    obj: T,
-    fileVersionId?: ID,
-  ): Downloadable<T> {
+  asDownloadable<T extends object>(obj: T, fileVersionId?: ID): Downloadable<T> {
     const id = fileVersionId ?? (obj as unknown as FileVersion).id;
 
     let downloading: Promise<Buffer> | undefined;
     return Object.assign(obj, {
-      download: () =>
-        (downloading ??= this.downloadFileVersion(id).then(bufferFromStream)),
+      download: () => (downloading ??= this.downloadFileVersion(id).then(bufferFromStream)),
       stream: async () => {
         if (downloading) {
           // If already buffering file, just use that instead of going to source.
@@ -162,15 +155,13 @@ export class FileService {
       await this.bucket.headObject(id);
       return await this.bucket.getSignedUrl(GetObject, {
         Key: id,
-        ResponseContentDisposition: `${disposition}; filename="${encodeURIComponent(
-          node.name,
-        )}"`,
+        ResponseContentDisposition: `${disposition}; filename="${encodeURIComponent(node.name)}"`,
         ResponseContentType: node.mimeType,
         ResponseCacheControl: this.determineCacheHeader(node),
         signing: {
-          expiresIn: this.config.files.cacheTtl.version[
-            node.public ? 'public' : 'private'
-          ].plus({ seconds: 10 }), // buffer to ensure validity while cached is fresh
+          expiresIn: this.config.files.cacheTtl.version[node.public ? 'public' : 'private'].plus({
+            seconds: 10,
+          }), // buffer to ensure validity while cached is fresh
         },
       });
     } catch (e) {
@@ -180,8 +171,7 @@ export class FileService {
   }
 
   determineCacheHeader(node: FileNode) {
-    const duration = (name: string, d: DurationIn) =>
-      `${name}=${Duration.from(d).as('seconds')}`;
+    const duration = (name: string, d: DurationIn) => `${name}=${Duration.from(d).as('seconds')}`;
 
     const { cacheTtl } = this.config.files;
     const publicStr = node.public ? 'public' : 'private';
@@ -197,17 +187,11 @@ export class FileService {
     return await this.repo.getParentsById(nodeId);
   }
 
-  async listChildren(
-    parent: FileNode,
-    input: FileListInput | undefined,
-  ): Promise<FileListOutput> {
+  async listChildren(parent: FileNode, input: FileListInput | undefined): Promise<FileListOutput> {
     return await this.repo.getChildrenById(parent, input);
   }
 
-  async createDirectory(
-    parentId: ID | undefined,
-    name: string,
-  ): Promise<Directory> {
+  async createDirectory(parentId: ID | undefined, name: string): Promise<Directory> {
     if (parentId) {
       await this.validateParentNode(
         parentId,
@@ -232,9 +216,7 @@ export class FileService {
     return await this.getDirectory(id);
   }
 
-  async createRootDirectory(
-    ...args: Parameters<FileRepository['createRootDirectory']>
-  ) {
+  async createRootDirectory(...args: Parameters<FileRepository['createRootDirectory']>) {
     return await this.repo.createRootDirectory(...args);
   }
 
@@ -256,9 +238,7 @@ export class FileService {
    * If the given parent is a directory, this will attach the new version to
    * the existing file with the same name or create a new file if not found.
    */
-  async createFileVersion(
-    input: CreateFileVersionInput,
-  ): Promise<FileWithNewVersion> {
+  async createFileVersion(input: CreateFileVersionInput): Promise<FileWithNewVersion> {
     const {
       parentId,
       file: uploadingFile,
@@ -290,9 +270,7 @@ export class FileService {
           })
         : false;
       if (prevExists) {
-        throw new InputException(
-          'A file with this ID already exists. Request an new upload ID.',
-        );
+        throw new InputException('A file with this ID already exists. Request an new upload ID.');
       }
 
       const body = await uploadingFile.arrayBuffer();
@@ -315,29 +293,17 @@ export class FileService {
       this.bucket.headObject(uploadId),
     ]);
 
-    if (
-      tempUpload.status === 'rejected' &&
-      existingUpload.status === 'rejected'
-    ) {
+    if (tempUpload.status === 'rejected' && existingUpload.status === 'rejected') {
       if (tempUpload.reason instanceof NotFoundException) {
         throw new NotFoundException('Could not find upload', 'uploadId');
       }
       throw new CreationFailed(FileVersion);
-    } else if (
-      tempUpload.status === 'fulfilled' &&
-      existingUpload.status === 'fulfilled'
-    ) {
+    } else if (tempUpload.status === 'fulfilled' && existingUpload.status === 'fulfilled') {
       if (tempUpload.value && existingUpload.value) {
-        throw new InputException(
-          'Upload request has already been used',
-          'uploadId',
-        );
+        throw new InputException('Upload request has already been used', 'uploadId');
       }
       throw new CreationFailed(FileVersion);
-    } else if (
-      tempUpload.status === 'rejected' &&
-      existingUpload.status === 'fulfilled'
-    ) {
+    } else if (tempUpload.status === 'rejected' && existingUpload.status === 'fulfilled') {
       try {
         await this.getFileNode(uploadId);
         throw new InputException('Already uploaded', 'uploadId');
@@ -365,8 +331,7 @@ export class FileService {
         ? existingUpload.value
         : undefined;
 
-    const mimeType =
-      mimeTypeOverride ?? upload?.ContentType ?? 'application/octet-stream';
+    const mimeType = mimeTypeOverride ?? upload?.ContentType ?? 'application/octet-stream';
 
     const fv = await this.repo.createFileVersion(fileId, {
       id: uploadId,
@@ -381,14 +346,12 @@ export class FileService {
 
       // Undo the above operation by moving it back to temp folder.
       this.rollbacks.add(async () => {
-        await this.bucket
-          .moveObject(uploadId, `temp/${uploadId}`)
-          .catch((e) => {
-            this.logger.error('Failed to move file back to temp holding', {
-              uploadId,
-              exception: e,
-            });
+        await this.bucket.moveObject(uploadId, `temp/${uploadId}`).catch((e) => {
+          this.logger.error('Failed to move file back to temp holding', {
+            uploadId,
+            exception: e,
           });
+        });
       });
     }
 
@@ -413,20 +376,14 @@ export class FileService {
     if (!node) {
       throw new NotFoundException('Could not find parent', 'parentId');
     }
-    const type = intersection(
-      node.labels,
-      Object.keys(FileNodeType),
-    )[0] as FileNodeType;
+    const type = intersection(node.labels, Object.keys(FileNodeType))[0] as FileNodeType;
     if (!isType(type)) {
       throw new InputException(typeMismatchError, 'parentId');
     }
     return type;
   }
 
-  private async resolveName(
-    name?: string,
-    input?: CreateDefinedFileVersionInput,
-  ) {
+  private async resolveName(name?: string, input?: CreateDefinedFileVersionInput) {
     if (name) {
       return sanitizeFilename(name);
     }
@@ -460,14 +417,11 @@ export class FileService {
     const fileId = await generateId();
     await this.repo.createFile({ fileId, name, parentId });
 
-    this.logger.debug(
-      'File matching given name not found, creating a new one',
-      {
-        parentId,
-        fileName: name,
-        fileId: fileId,
-      },
-    );
+    this.logger.debug('File matching given name not found, creating a new one', {
+      parentId,
+      fileName: name,
+      fileId: fileId,
+    });
     return fileId;
   }
 
@@ -504,24 +458,17 @@ export class FileService {
     }
   }
 
-  async updateDefinedFile<
-    Input extends CreateDefinedFileVersionInput | undefined,
-  >(
+  async updateDefinedFile<Input extends CreateDefinedFileVersionInput | undefined>(
     file: Secured<FileId | LinkTo<'File'> | null>,
     field: string,
     input: Input,
-  ): Promise<
-    FileWithNewVersion | (Input extends NonNullable<Input> ? never : undefined)
-  > {
+  ): Promise<FileWithNewVersion | (Input extends NonNullable<Input> ? never : undefined)> {
     if (input == null) {
       // @ts-expect-error idk why TS doesn't like this, but the signature is right.
       return undefined;
     }
     if (!file.canRead || !file.canEdit || !file.value) {
-      throw new UnauthorizedException(
-        'You do not have permission to update this file',
-        field,
-      );
+      throw new UnauthorizedException('You do not have permission to update this file', field);
     }
     const fileId = isIdLike(file.value) ? file.value : file.value.id;
     try {

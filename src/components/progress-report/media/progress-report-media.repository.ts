@@ -181,10 +181,7 @@ export class ProgressReportMediaRepository extends DtoRepository(ReportMedia) {
     if (input.variantGroup) {
       const vg = await this.getBaseNode(input.variantGroup, 'VariantGroup');
       if (!vg) {
-        throw new NotFoundException(
-          'Variant group does not exist',
-          'variantGroup',
-        );
+        throw new NotFoundException('Variant group does not exist', 'variantGroup');
       }
     }
 
@@ -198,10 +195,7 @@ export class ProgressReportMediaRepository extends DtoRepository(ReportMedia) {
       .return('vg')
       .first();
     if (variantAlreadyExists) {
-      throw new InputException(
-        'Variant group already has this variant',
-        'variant',
-      );
+      throw new InputException('Variant group already has this variant', 'variant');
     }
 
     throw new CreationFailed(ReportMedia);
@@ -232,26 +226,10 @@ export class ProgressReportMediaRepository extends DtoRepository(ReportMedia) {
         .apply(matchProjectSens())
         .apply(matchProjectScopedRoles({ outputVar: 'scope' }))
         .match([
-          [
-            node('node'),
-            relation('in', '', 'child', ACTIVE),
-            node('report', 'ProgressReport'),
-          ],
-          [
-            node('node'),
-            relation('in', '', 'child', ACTIVE),
-            node('variantGroup', 'VariantGroup'),
-          ],
-          [
-            node('node'),
-            relation('out', '', 'fileNode', ACTIVE),
-            node('file', 'File'),
-          ],
-          [
-            node('node'),
-            relation('out', '', 'creator', ACTIVE),
-            node('creator', 'User'),
-          ],
+          [node('node'), relation('in', '', 'child', ACTIVE), node('report', 'ProgressReport')],
+          [node('node'), relation('in', '', 'child', ACTIVE), node('variantGroup', 'VariantGroup')],
+          [node('node'), relation('out', '', 'fileNode', ACTIVE), node('file', 'File')],
+          [node('node'), relation('out', '', 'creator', ACTIVE), node('creator', 'User')],
         ])
         .subQuery('file', (sub) =>
           sub
@@ -280,10 +258,11 @@ export class ProgressReportMediaRepository extends DtoRepository(ReportMedia) {
   }
 }
 
-export const progressReportMediaFilters = filter.define<
-  Pick<ListArgs, 'variants'>
->(() => ListArgs, {
-  variants: ({ value }) => ({
-    'node.variant': inArray(value.map((v) => v.key)),
-  }),
-});
+export const progressReportMediaFilters = filter.define<Pick<ListArgs, 'variants'>>(
+  () => ListArgs,
+  {
+    variants: ({ value }) => ({
+      'node.variant': inArray(value.map((v) => v.key)),
+    }),
+  },
+);

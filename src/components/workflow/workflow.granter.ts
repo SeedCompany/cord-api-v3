@@ -11,10 +11,9 @@ import {
 } from '../authorization/policy/conditions';
 import { type Workflow } from './define-workflow';
 
-export function WorkflowEventGranter<
-  W extends Workflow,
-  EventClass extends W['eventResource'],
->(workflow: () => W) {
+export function WorkflowEventGranter<W extends Workflow, EventClass extends W['eventResource']>(
+  workflow: () => W,
+) {
   type State = W['state'];
   type Names = W['transition']['name'];
 
@@ -37,8 +36,7 @@ export function WorkflowEventGranter<
      * Can read & execute all transitions.
      */
     get executeAll(): this {
-      return this.transitions(workflow().transitions.map((t) => t.name))
-        .execute;
+      return this.transitions(workflow().transitions.map((t) => t.name)).execute;
     }
 
     /**
@@ -48,9 +46,7 @@ export function WorkflowEventGranter<
       return this[action]('create');
     }
 
-    isTransitions(
-      ...transitions: Array<Many<Names> | (() => Iterable<Names>)>
-    ) {
+    isTransitions(...transitions: Array<Many<Names> | (() => Iterable<Names>)>) {
       return TransitionCondition.fromName(
         workflow(),
         transitions.flatMap((t) => (typeof t === 'function' ? [...t()] : t)),
@@ -83,14 +79,10 @@ interface TransitionCheck<W extends Workflow> {
   endState?: W['state'];
 }
 
-export class TransitionCondition<W extends Workflow>
-  implements Condition<W['eventResource']>
-{
+export class TransitionCondition<W extends Workflow> implements Condition<W['eventResource']> {
   readonly allowedTransitionKeys;
 
-  protected constructor(
-    private readonly checks: ReadonlyArray<TransitionCheck<W>>,
-  ) {
+  protected constructor(private readonly checks: ReadonlyArray<TransitionCheck<W>>) {
     this.allowedTransitionKeys = new Set(checks.flatMap((c) => c.key));
   }
 
@@ -107,10 +99,7 @@ export class TransitionCondition<W extends Workflow>
     );
   }
 
-  static fromEndState<W extends Workflow>(
-    workflow: W,
-    states: ReadonlyArray<W['state']>,
-  ) {
+  static fromEndState<W extends Workflow>(workflow: W, states: ReadonlyArray<W['state']>) {
     const allowed = new Set(states);
     return new TransitionCondition(
       [...allowed].map((endState) => ({
@@ -138,20 +127,13 @@ export class TransitionCondition<W extends Workflow>
 
   asCypherCondition(query: Query) {
     // TODO bypasses to statuses won't work with this. How should these be filtered?
-    const required = query.params.addParam(
-      this.allowedTransitionKeys,
-      'allowedTransitions',
-    );
+    const required = query.params.addParam(this.allowedTransitionKeys, 'allowedTransitions');
     return `node.transition IN ${String(required)}`;
   }
 
   asEdgeQLCondition() {
     // TODO bypasses to statuses won't work with this. How should these be filtered?
-    const transitionAllowed = eqlInLiteralSet(
-      '.transitionKey',
-      this.allowedTransitionKeys,
-      'uuid',
-    );
+    const transitionAllowed = eqlInLiteralSet('.transitionKey', this.allowedTransitionKeys, 'uuid');
     // If no transition then false
     return `((${transitionAllowed}) ?? false)`;
   }
@@ -162,9 +144,7 @@ export class TransitionCondition<W extends Workflow>
         conditions
           .flatMap((condition) => condition.checks)
           .map((check) => {
-            const key = check.name
-              ? `name:${check.name}`
-              : `state:${check.endState!}`;
+            const key = check.name ? `name:${check.name}` : `state:${check.endState!}`;
             return [key, check];
           }),
       ).values(),
@@ -176,8 +156,7 @@ export class TransitionCondition<W extends Workflow>
     const checks = [...conditions[0].checks].filter((check1) =>
       conditions.every((cond) =>
         cond.checks.some(
-          (check2) =>
-            check1.name === check2.name || check1.endState === check2.endState,
+          (check2) => check1.name === check2.name || check1.endState === check2.endState,
         ),
       ),
     );
@@ -194,12 +173,8 @@ export class TransitionCondition<W extends Workflow>
     }
     const checkNames = this.checks.flatMap((c) => c.name ?? []);
     const checkEndStates = this.checks.flatMap((c) => c.endState ?? []);
-    const transitions =
-      checkNames.length > 0 ? render('Transitions', checkNames) : undefined;
-    const endStates =
-      checkEndStates.length > 0
-        ? render('End States', checkEndStates)
-        : undefined;
+    const transitions = checkNames.length > 0 ? render('Transitions', checkNames) : undefined;
+    const endStates = checkEndStates.length > 0 ? render('End States', checkEndStates) : undefined;
     if (transitions && endStates) {
       return `(${transitions} OR ${endStates})`;
     }
@@ -209,10 +184,7 @@ export class TransitionCondition<W extends Workflow>
 
 const TransitionKey = Symbol('TransitionKey');
 
-export const withTransitionKey = <T extends object>(
-  obj: T,
-  transitionKey: ID,
-) =>
+export const withTransitionKey = <T extends object>(obj: T, transitionKey: ID) =>
   Object.defineProperty(obj, TransitionKey, {
     value: transitionKey,
     enumerable: false,

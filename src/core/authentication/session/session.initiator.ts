@@ -39,10 +39,7 @@ export class SessionInitiator {
       if (!(exception instanceof UnauthenticatedException)) {
         throw exception;
       }
-      this.logger.debug(
-        'Failed to use existing session token, creating new one.',
-        { exception },
-      );
+      this.logger.debug('Failed to use existing session token, creating new one.', { exception });
       token = await this.sessionManager.createToken();
       session = await this.sessionManager.resumeSession(token, impersonatee);
     }
@@ -60,9 +57,7 @@ export class SessionInitiator {
   }
 
   private getToken(request: IRequest): string | null {
-    return (
-      this.getTokenFromAuthHeader(request) ?? this.getTokenFromCookie(request)
-    );
+    return this.getTokenFromAuthHeader(request) ?? this.getTokenFromCookie(request);
   }
 
   private getTokenFromAuthHeader(req: IRequest): string | null {
@@ -85,9 +80,7 @@ export class SessionInitiator {
   private getImpersonatee(request: IRequest): Session['impersonatee'] {
     const user = request.headers?.['x-cord-impersonate-user'] as ID | undefined;
     if (user && !isIdLike(user)) {
-      throw new InputException(
-        `Invalid user ID given in "X-CORD-Impersonate-User" header`,
-      );
+      throw new InputException(`Invalid user ID given in "X-CORD-Impersonate-User" header`);
     }
 
     const rawRoles = csvHeader(request?.headers?.['x-cord-impersonate-role']);
@@ -106,9 +99,7 @@ const assertValidRole = (role: string): Role => {
   if (Role.has(role)) {
     return role;
   }
-  throw new InputException(
-    `Invalid role "${role}" from "X-CORD-Impersonate-Role" header`,
-  );
+  throw new InputException(`Invalid role "${role}" from "X-CORD-Impersonate-Role" header`);
 };
 
 function csvHeader(headerVal: Many<string> | undefined) {

@@ -8,13 +8,9 @@ import { type ScriptureReference } from './scripture-reference.dto';
 import { type UnspecifiedScripturePortionInput } from './unspecified-scripture-portion.dto';
 
 // We assume this is only used on the ScriptureReference object
-type ValidationArgs = Merge<
-  ValidationArguments,
-  { object: ScriptureReference }
->;
+type ValidationArgs = Merge<ValidationArguments, { object: ScriptureReference }>;
 
-export const IsValidBook = () =>
-  applyDecorators(NormalizeBook(), IsScriptureBook());
+export const IsValidBook = () => applyDecorators(NormalizeBook(), IsScriptureBook());
 
 const IsScriptureBook = createValidationDecorator({
   name: 'ScriptureBook',

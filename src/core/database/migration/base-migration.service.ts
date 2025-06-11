@@ -57,15 +57,7 @@ export abstract class BaseMigration {
     const result = await this.db
       .query()
       .matchNode('node', resource.dbLabel)
-      .where(
-        not(
-          path([
-            node('node'),
-            relation('out', '', property, ACTIVE),
-            node('', 'Property'),
-          ]),
-        ),
-      )
+      .where(not(path([node('node'), relation('out', '', property, ACTIVE), node('', 'Property')])))
       .create([
         node('node'),
         relation('out', undefined, property, {
@@ -78,14 +70,10 @@ export abstract class BaseMigration {
           value,
         }),
       ])
-      .return<{ numPropsCreated: number }>(
-        'count(newPropNode) as numPropsCreated',
-      )
+      .return<{ numPropsCreated: number }>('count(newPropNode) as numPropsCreated')
       .first();
     this.logger.info(
-      `Created ${result?.numPropsCreated ?? 0} ${
-        resource.name
-      }.${property} default props`,
+      `Created ${result?.numPropsCreated ?? 0} ${resource.name}.${property} default props`,
     );
   }
 }

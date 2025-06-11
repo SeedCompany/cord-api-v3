@@ -18,22 +18,13 @@ import { inherit, member, Policy, Role } from '../util';
         'sponsorEstimatedEndDate',
       ).none,
   ),
-  r.Location.when(member).read.specifically(
-    (p) => p.many('fundingAccount').none,
-  ),
-  r.Partnership.when(member).specifically(
-    (p) => p.many('organization', 'partner', 'types').read,
-  ),
+  r.Location.when(member).read.specifically((p) => p.many('fundingAccount').none),
+  r.Partnership.when(member).specifically((p) => p.many('organization', 'partner', 'types').read),
   r.Product.read,
   r.Project.when(member)
     .read.specifically((p) => [
       p.rootDirectory.edit,
-      p.many(
-        'departmentId',
-        'marketingLocation',
-        'marketingRegionOverride',
-        'fieldRegion',
-      ).none,
+      p.many('departmentId', 'marketingLocation', 'marketingRegionOverride', 'fieldRegion').none,
     ])
     .children((c) => c.posts.edit),
   r.ProjectMember.when(member).read,

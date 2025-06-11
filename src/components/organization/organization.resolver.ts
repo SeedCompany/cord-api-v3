@@ -1,19 +1,5 @@
-import {
-  Args,
-  ArgsType,
-  Mutation,
-  Parent,
-  Query,
-  ResolveField,
-  Resolver,
-} from '@nestjs/graphql';
-import {
-  firstLettersOfWords,
-  type ID,
-  IdArg,
-  IdField,
-  ListArg,
-} from '~/common';
+import { Args, ArgsType, Mutation, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
+import { firstLettersOfWords, type ID, IdArg, IdField, ListArg } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { LocationLoader } from '../location';
 import { LocationListInput, SecuredLocationList } from '../location/dto';
@@ -64,9 +50,7 @@ export class OrganizationResolver {
 
   @ResolveField(() => String, { nullable: true })
   avatarLetters(@Parent() org: Organization): string | undefined {
-    return org.name.canRead && org.name.value
-      ? firstLettersOfWords(org.name.value)
-      : undefined;
+    return org.name.canRead && org.name.value ? firstLettersOfWords(org.name.value) : undefined;
   }
 
   @Query(() => OrganizationListOutput, {

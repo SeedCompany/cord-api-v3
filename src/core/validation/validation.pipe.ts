@@ -1,7 +1,4 @@
-import {
-  ValidationPipe as BaseValidationPipe,
-  Injectable,
-} from '@nestjs/common';
+import { ValidationPipe as BaseValidationPipe, Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { useContainer, type ValidatorOptions } from 'class-validator';
 import { ValidationException } from './validation.exception';
@@ -25,10 +22,7 @@ export class ValidationPipe extends BaseValidationPipe {
     },
   };
 
-  protected async validate(
-    object: object,
-    validatorOptions?: ValidatorOptions,
-  ) {
+  protected async validate(object: object, validatorOptions?: ValidatorOptions) {
     useContainer(this.containerForLib, { fallback: true });
     return await super.validate(object, validatorOptions);
   }

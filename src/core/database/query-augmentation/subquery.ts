@@ -25,9 +25,7 @@ declare module 'cypher-query-builder/dist/typings/query' {
      * )
      * .return(['x', 'y'])
      */
-    subQuery<SubResult>(
-      sub: (query: Query<Result>) => Query<SubResult>,
-    ): Query<Result & SubResult>;
+    subQuery<SubResult>(sub: (query: Query<Result>) => Query<SubResult>): Query<Result & SubResult>;
     subQuery<SubResult>(
       importVars: Many<string | Variable | null | undefined>,
       sub: (query: Query<Result>) => Query<SubResult>,
@@ -37,9 +35,7 @@ declare module 'cypher-query-builder/dist/typings/query' {
 
 Query.prototype.subQuery = function subQuery(
   this: Query,
-  subOrImport:
-    | Many<string | Variable | null | undefined>
-    | ((query: Query) => void),
+  subOrImport: Many<string | Variable | null | undefined> | ((query: Query) => void),
   maybeSub?: (query: Query) => void,
 ) {
   const subClause = new SubQueryClause();

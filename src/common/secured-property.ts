@@ -21,15 +21,9 @@ export interface Secured<T> {
   readonly canEdit: boolean;
 }
 
-export type SecuredProps<Dto extends Record<string, any>> = ConditionalPick<
-  Dto,
-  Secured<any>
->;
+export type SecuredProps<Dto extends Record<string, any>> = ConditionalPick<Dto, Secured<any>>;
 
-export type SecuredKeys<Dto extends Record<string, any>> = ConditionalKeys<
-  Dto,
-  Secured<any>
->;
+export type SecuredKeys<Dto extends Record<string, any>> = ConditionalKeys<Dto, Secured<any>>;
 
 export type MaybeSecured<Dto> = Dto | UnsecuredDto<Dto>;
 
@@ -106,36 +100,24 @@ export function SecuredProperty<
   valueClass: Class<GqlType> | AbstractClassType<GqlType> | GraphQLScalarType,
   options: SecuredPropertyOptions<Nullable> = {},
 ) {
-  return InnerSecuredProperty<typeof valueClass, TsType, Nullable>(
-    valueClass,
-    options,
-  );
+  return InnerSecuredProperty<typeof valueClass, TsType, Nullable>(valueClass, options);
 }
 
-export interface SecuredPropertyOptions<
-  Nullable extends boolean | undefined = false,
-> extends Pick<FieldOptions, 'description'> {
+export interface SecuredPropertyOptions<Nullable extends boolean | undefined = false>
+  extends Pick<FieldOptions, 'description'> {
   /** Whether the property can be null (when the requester can read) */
   nullable?: Nullable;
 }
 
-type SecuredValue<
-  T,
-  Nullable extends boolean | undefined,
-> = Nullable extends true ? T | null : T;
+type SecuredValue<T, Nullable extends boolean | undefined> = Nullable extends true ? T | null : T;
 
 function InnerSecuredProperty<
   GqlType extends GqlTypeReference,
   TsType = GqlType,
   Nullable extends boolean | undefined = false,
->(
-  valueClass: GqlType,
-  { nullable: _, ...options }: SecuredPropertyOptions<Nullable> = {},
-) {
+>(valueClass: GqlType, { nullable: _, ...options }: SecuredPropertyOptions<Nullable> = {}) {
   @ObjectType({ isAbstract: true, implements: [ISecured] })
-  abstract class SecuredPropertyClass
-    implements ISecured, Secured<SecuredValue<TsType, Nullable>>
-  {
+  abstract class SecuredPropertyClass implements ISecured, Secured<SecuredValue<TsType, Nullable>> {
     @Field(() => valueClass as Type<GqlType>, {
       ...options,
       nullable: true,
@@ -150,18 +132,13 @@ function InnerSecuredProperty<
   return SecuredPropertyClass;
 }
 
-SecuredEnum.descriptionFor = SecuredProperty.descriptionFor = (
-  value: string,
-) => stripIndent`
+SecuredEnum.descriptionFor = SecuredProperty.descriptionFor = (value: string) => stripIndent`
   An object with ${value} \`value\` and additional authorization information.
   The value is only given if \`canRead\` is \`true\` otherwise it is \`null\`.
   These \`can*\` authorization properties are specific to the user making the request.
 `;
 
-type SecuredList<T, Nullable extends boolean | undefined> = SecuredValue<
-  readonly T[],
-  Nullable
->;
+type SecuredList<T, Nullable extends boolean | undefined> = SecuredValue<readonly T[], Nullable>;
 
 export function SecuredEnumList<
   T extends string,
@@ -171,16 +148,10 @@ export function SecuredEnumList<
   valueClass: { [key in T]: EnumValue } | MadeEnum<EnumValue>,
   options: SecuredPropertyOptions<Nullable> = {},
 ) {
-  return SecuredList<EnumValue, EnumValue, Nullable>(
-    valueClass as any,
-    options,
-  );
+  return SecuredList<EnumValue, EnumValue, Nullable>(valueClass as any, options);
 }
 
-export function SecuredPropertyList<
-  T,
-  Nullable extends boolean | undefined = false,
->(
+export function SecuredPropertyList<T, Nullable extends boolean | undefined = false>(
   valueClass: Class<T> | AbstractClassType<T> | GraphQLScalarType,
   options: SecuredPropertyOptions<Nullable> = {},
 ) {
@@ -192,9 +163,7 @@ function SecuredList<GQL, TS, Nullable extends boolean | undefined = false>(
   options: SecuredPropertyOptions<Nullable> = {},
 ) {
   @ObjectType({ isAbstract: true, implements: [ISecured] })
-  abstract class SecuredPropertyListClass
-    implements ISecured, Secured<SecuredList<TS, Nullable>>
-  {
+  abstract class SecuredPropertyListClass implements ISecured, Secured<SecuredList<TS, Nullable>> {
     @Field(() => [valueClass as Type<GQL>], {
       nullable: options.nullable,
     })
@@ -219,27 +188,22 @@ SecuredEnumList.descriptionFor = SecuredPropertyList.descriptionFor = (
 @ObjectType({
   description: SecuredProperty.descriptionFor('a string or null'),
 })
-export abstract class SecuredStringNullable extends SecuredProperty<
-  string,
-  string,
-  true
->(GraphQLString, {
-  nullable: true,
-}) {}
+export abstract class SecuredStringNullable extends SecuredProperty<string, string, true>(
+  GraphQLString,
+  {
+    nullable: true,
+  },
+) {}
 
 @ObjectType({
   description: SecuredProperty.descriptionFor('a string'),
 })
-export abstract class SecuredString extends SecuredProperty<string>(
-  GraphQLString,
-) {}
+export abstract class SecuredString extends SecuredProperty<string>(GraphQLString) {}
 
 @ObjectType({
   description: SecuredPropertyList.descriptionFor('strings'),
 })
-export abstract class SecuredStringList extends SecuredPropertyList<string>(
-  GraphQLString,
-) {}
+export abstract class SecuredStringList extends SecuredPropertyList<string>(GraphQLString) {}
 
 @ObjectType({
   description: SecuredProperty.descriptionFor('an integer'),
@@ -249,11 +213,7 @@ export abstract class SecuredInt extends SecuredProperty<number>(Int) {}
 @ObjectType({
   description: SecuredProperty.descriptionFor('an integer or null'),
 })
-export abstract class SecuredIntNullable extends SecuredProperty<
-  number,
-  number,
-  true
->(Int, {
+export abstract class SecuredIntNullable extends SecuredProperty<number, number, true>(Int, {
   nullable: true,
 }) {}
 
@@ -265,26 +225,21 @@ export abstract class SecuredFloat extends SecuredProperty<number>(Float) {}
 @ObjectType({
   description: SecuredProperty.descriptionFor('a float or null'),
 })
-export abstract class SecuredFloatNullable extends SecuredProperty<
-  number,
-  number,
-  true
->(Float, { nullable: true }) {}
+export abstract class SecuredFloatNullable extends SecuredProperty<number, number, true>(Float, {
+  nullable: true,
+}) {}
 
 @ObjectType({
   description: SecuredProperty.descriptionFor('a boolean'),
 })
-export abstract class SecuredBoolean extends SecuredProperty<boolean>(
-  GraphQLBoolean,
-) {}
+export abstract class SecuredBoolean extends SecuredProperty<boolean>(GraphQLBoolean) {}
 
 @ObjectType({
   description: SecuredProperty.descriptionFor('a boolean or null'),
 })
-export abstract class SecuredBooleanNullable extends SecuredProperty<
-  boolean,
-  boolean,
-  true
->(GraphQLBoolean, {
-  nullable: true,
-}) {}
+export abstract class SecuredBooleanNullable extends SecuredProperty<boolean, boolean, true>(
+  GraphQLBoolean,
+  {
+    nullable: true,
+  },
+) {}

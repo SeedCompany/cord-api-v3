@@ -79,10 +79,7 @@ export class AuthenticationService {
       throw new UnauthenticatedException('Invalid credentials');
     }
 
-    const userId = await this.repo.connectSessionToUser(
-      input,
-      this.sessionHost.current,
-    );
+    const userId = await this.repo.connectSessionToUser(input, this.sessionHost.current);
 
     if (!userId) {
       throw new ServerException('Login failed');
@@ -98,12 +95,8 @@ export class AuthenticationService {
     refresh && (await this.sessionManager.refreshCurrentSession());
   }
 
-  async changePassword(
-    oldPassword: string,
-    newPassword: string,
-  ): Promise<void> {
-    if (!oldPassword)
-      throw new InputException('Old Password Required', 'oldPassword');
+  async changePassword(oldPassword: string, newPassword: string): Promise<void> {
+    if (!oldPassword) throw new InputException('Old Password Required', 'oldPassword');
 
     const hash = await this.repo.getCurrentPasswordHash();
 
@@ -145,10 +138,7 @@ export class AuthenticationService {
     const pash = await this.crypto.hash(password);
 
     await this.repo.updatePasswordViaEmailToken(emailToken, pash);
-    await this.repo.deactivateAllOtherSessionsByEmail(
-      emailToken.email,
-      this.sessionHost.current,
-    );
+    await this.repo.deactivateAllOtherSessionsByEmail(emailToken.email, this.sessionHost.current);
     await this.repo.removeAllEmailTokensForEmail(emailToken.email);
   }
 }

@@ -1,10 +1,4 @@
-import {
-  entries,
-  isNotNil,
-  many,
-  type Many,
-  mapKeys,
-} from '@seedcompany/common';
+import { entries, isNotNil, many, type Many, mapKeys } from '@seedcompany/common';
 import { type Query } from 'cypher-query-builder';
 import { pickBy } from 'lodash';
 import { type LiteralUnion } from 'type-fest';
@@ -48,8 +42,7 @@ export const FullTextIndex = (config: {
       const options =
         entries(pickBy(parsedConfig, (v) => v !== undefined)).length > 0
           ? {
-              indexConfig: mapKeys(parsedConfig, (k) => `fulltext.${k}`)
-                .asRecord,
+              indexConfig: mapKeys(parsedConfig, (k) => `fulltext.${k}`).asRecord,
             }
           : undefined;
       const query = `
@@ -105,8 +98,7 @@ export const IndexFullTextQueryNodes = (
   procedure('db.index.fulltext.queryNodes', ['node', 'score'])({
     indexName,
     query,
-    ...(options &&
-    (Object.values(options).filter(isNotNil).length > 0 || isExp(options))
+    ...(options && (Object.values(options).filter(isNotNil).length > 0 || isExp(options))
       ? { options }
       : undefined),
   });

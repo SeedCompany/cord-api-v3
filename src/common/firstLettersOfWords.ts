@@ -24,22 +24,14 @@ const lowercasePattern = RegExp(
 const matchAndMerge = (pattern: RegExp, str: string, group = 1) =>
   Array.from(str.matchAll(pattern), (m) => m[group]).join('');
 
-export function firstLettersOfWords(
-  words: string,
-  limit: number | null = 3,
-): string {
+export function firstLettersOfWords(words: string, limit: number | null = 3): string {
   // If the string has uppercase characters we use the uppercase pattern which
   // will ignore lowercase characters after word-like boundaries.
   // If the string doesn't have any uppercase characters we fallback to the lowercase pattern
   // which is less ideal but gives something instead of an empty string.
   // See tests for differences in the two patterns.
-  const pattern = words.match(hasUppercaseLettersPattern)
-    ? uppercasePattern
-    : lowercasePattern;
-  const letters =
-    matchAndMerge(pattern, words) || matchAndMerge(lowercasePattern, words);
+  const pattern = words.match(hasUppercaseLettersPattern) ? uppercasePattern : lowercasePattern;
+  const letters = matchAndMerge(pattern, words) || matchAndMerge(lowercasePattern, words);
 
-  return limit === Infinity || limit == null
-    ? letters
-    : letters.slice(0, limit);
+  return limit === Infinity || limit == null ? letters : letters.slice(0, limit);
 }

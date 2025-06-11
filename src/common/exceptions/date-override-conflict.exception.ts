@@ -48,24 +48,22 @@ export class DateOverrideConflictException extends RangeException {
       end: CalendarDate | null;
     }>,
   ): NonEmptyArray<Conflict> | undefined {
-    const maybeConflicts = items.flatMap<Conflict | null>(
-      ({ start, end, ...item }) => [
-        canonical.start && start && canonical.start > start
-          ? {
-              ...item,
-              point: 'start' as const,
-              date: start,
-            }
-          : null,
-        canonical.end && end && canonical.end < end
-          ? {
-              ...item,
-              point: 'end' as const,
-              date: end,
-            }
-          : null,
-      ],
-    );
+    const maybeConflicts = items.flatMap<Conflict | null>(({ start, end, ...item }) => [
+      canonical.start && start && canonical.start > start
+        ? {
+            ...item,
+            point: 'start' as const,
+            date: start,
+          }
+        : null,
+      canonical.end && end && canonical.end < end
+        ? {
+            ...item,
+            point: 'end' as const,
+            date: end,
+          }
+        : null,
+    ]);
     return asNonEmpty(maybeConflicts.filter(isNotFalsy));
   }
 }

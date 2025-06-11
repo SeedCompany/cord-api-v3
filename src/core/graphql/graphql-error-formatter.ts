@@ -4,10 +4,7 @@ import { GraphQLError } from 'graphql';
 import { handleStreamOrSingleExecutionResult } from 'graphql-yoga';
 import { LazyGetter } from 'lazy-get-decorator';
 import { ExceptionFilter } from '../exception/exception.filter';
-import {
-  ExceptionNormalizer,
-  NormalizedException,
-} from '../exception/exception.normalizer';
+import { ExceptionNormalizer, NormalizedException } from '../exception/exception.normalizer';
 import { Plugin } from './plugin.decorator';
 
 declare module 'graphql' {
@@ -43,9 +40,7 @@ export class GraphqlErrorFormatter {
     onExecuteDone: (params) =>
       handleStreamOrSingleExecutionResult(params, ({ result, setResult }) => {
         if (result.errors && result.errors.length > 0) {
-          const errors = result.errors.flatMap((error) =>
-            this.formatError(error),
-          );
+          const errors = result.errors.flatMap((error) => this.formatError(error));
           setResult({ ...result, errors });
         }
       }),
@@ -61,9 +56,7 @@ export class GraphqlErrorFormatter {
   formatError = (error: unknown) => {
     if (!(error instanceof GraphQLError)) {
       // I don't think this happens.
-      return new GraphQLError(
-        error instanceof Error ? error.message : String(error),
-      );
+      return new GraphQLError(error instanceof Error ? error.message : String(error));
     }
 
     const normalized =

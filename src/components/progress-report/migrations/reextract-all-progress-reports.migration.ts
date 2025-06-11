@@ -10,17 +10,12 @@ import { type ProgressReport } from '../dto';
 
 @Migration('2025-01-06T09:00:00')
 export class ReextractPnpProgressReportsMigration extends BaseMigration {
-  constructor(
-    private readonly eventBus: IEventBus,
-    private readonly files: FileService,
-  ) {
+  constructor(private readonly eventBus: IEventBus, private readonly files: FileService) {
     super();
   }
 
   async up() {
-    const pnps = createPaginator((page) =>
-      this.grabSomePnpsToReextract(page, 100),
-    );
+    const pnps = createPaginator((page) => this.grabSomePnpsToReextract(page, 100));
     await asyncPool(2, pnps, async ({ dto: report, fv }) => {
       try {
         const pnp = this.files.asDownloadable(fv);
@@ -66,11 +61,7 @@ export class ReextractPnpProgressReportsMigration extends BaseMigration {
           .skip(page * size)
           .limit(size),
       )
-      .match([
-        node('parent', 'BaseNode'),
-        relation('out', '', 'report', ACTIVE),
-        node('report'),
-      ])
+      .match([node('parent', 'BaseNode'), relation('out', '', 'report', ACTIVE), node('report')])
       .apply(matchProps({ nodeName: 'report' }))
       .return<{
         // These are close enough lol
@@ -82,9 +73,7 @@ export class ReextractPnpProgressReportsMigration extends BaseMigration {
   }
 }
 
-async function* createPaginator<T>(
-  getPage: (page: number) => Promise<readonly T[]>,
-) {
+async function* createPaginator<T>(getPage: (page: number) => Promise<readonly T[]>) {
   let page = 0;
   do {
     const currentPage = await getPage(page);

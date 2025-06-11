@@ -1,13 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { simpleSwitch } from '@seedcompany/common';
-import {
-  equals,
-  inArray,
-  node,
-  not,
-  type Query,
-  relation,
-} from 'cypher-query-builder';
+import { equals, inArray, node, not, type Query, relation } from 'cypher-query-builder';
 import {
   CreationFailed,
   DuplicateException,
@@ -56,13 +49,10 @@ import {
 import { EthnologueLanguageService } from './ethnologue-language';
 
 @Injectable()
-export class LanguageRepository extends DtoRepository<
-  typeof Language,
-  [view?: ObjectView]
->(Language) {
-  constructor(
-    private readonly ethnologueLanguageService: EthnologueLanguageService,
-  ) {
+export class LanguageRepository extends DtoRepository<typeof Language, [view?: ObjectView]>(
+  Language,
+) {
+  constructor(private readonly ethnologueLanguageService: EthnologueLanguageService) {
     super();
   }
 
@@ -86,9 +76,7 @@ export class LanguageRepository extends DtoRepository<
       canDelete: true,
     };
 
-    const ethnologueId = await this.ethnologueLanguageService.create(
-      input?.ethnologue,
-    );
+    const ethnologueId = await this.ethnologueLanguageService.create(input?.ethnologue);
 
     const createLanguage = this.db
       .query()
@@ -126,9 +114,7 @@ export class LanguageRepository extends DtoRepository<
     }
 
     return await this.readOne(result.id).catch((e) => {
-      throw e instanceof NotFoundException
-        ? new ReadAfterCreationFailed(Language)
-        : e;
+      throw e instanceof NotFoundException ? new ReadAfterCreationFailed(Language) : e;
     });
   }
 
@@ -201,11 +187,7 @@ export class LanguageRepository extends DtoRepository<
             .raw('WHERE size(projList) = 0')
             .return(`props.sensitivity as effectiveSensitivity`),
         )
-        .match([
-          node('node'),
-          relation('out', '', 'ethnologue'),
-          node('eth', 'EthnologueLanguage'),
-        ])
+        .match([node('node'), relation('out', '', 'ethnologue'), node('eth', 'EthnologueLanguage')])
         .apply(matchProps({ nodeName: 'eth', outputVar: 'ethProps' }))
         .apply(isPresetInventory)
         .optionalMatch([
@@ -301,9 +283,7 @@ export const languageFilters = filter.define(() => LanguageFilters, {
   leastOfThese: filter.propVal(),
   isSignLanguage: filter.propVal(),
   isDialect: filter.propVal(),
-  registryOfDialectsCode: filter.propPartialVal(
-    'registryOfLanguageVarietiesCode',
-  ),
+  registryOfDialectsCode: filter.propPartialVal('registryOfLanguageVarietiesCode'),
   registryOfLanguageVarietiesCode: filter.propPartialVal(),
   partnerId: filter.pathExists((id) => [
     node('node'),
@@ -319,11 +299,7 @@ export const languageFilters = filter.define(() => LanguageFilters, {
   name: filter.fullText({
     index: () => NameIndex,
     matchToNode: (q) =>
-      q.match([
-        node('node', 'Language'),
-        relation('out', '', undefined, ACTIVE),
-        node('match'),
-      ]),
+      q.match([node('node', 'Language'), relation('out', '', undefined, ACTIVE), node('match')]),
   }),
   ethnologue: filter.sub(() => ethnologueFilters)((sub) =>
     sub.match([
@@ -377,22 +353,12 @@ export const languageSorters = defineSorters(Language, {
   'ethnologue.*': (query, input) =>
     query
       .with('node as lang')
-      .match([
-        node('lang'),
-        relation('out', '', 'ethnologue'),
-        node('node', 'EthnologueLanguage'),
-      ])
+      .match([node('lang'), relation('out', '', 'ethnologue'), node('node', 'EthnologueLanguage')])
       .apply(sortWith(ethnologueSorters, input)),
-  ['registryOfDialectsCode' as any]: propSorter(
-    'registryOfLanguageVarietiesCode',
-  ),
+  ['registryOfDialectsCode' as any]: propSorter('registryOfLanguageVarietiesCode'),
   population: (query) =>
     query
-      .match([
-        node('node'),
-        relation('out', '', 'populationOverride', ACTIVE),
-        node('override'),
-      ])
+      .match([node('node'), relation('out', '', 'populationOverride', ACTIVE), node('override')])
       .match([
         node('node'),
         relation('out', '', 'ethnologue'),

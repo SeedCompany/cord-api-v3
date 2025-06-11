@@ -10,19 +10,12 @@ export class FlattenAggregateOptimizer implements Optimizer {
       input.conditions.some((c) => c instanceof AndConditions)
     ) {
       return AndConditions.from(
-        ...input.conditions.flatMap((c) =>
-          c instanceof AndConditions ? c.conditions : c,
-        ),
+        ...input.conditions.flatMap((c) => (c instanceof AndConditions ? c.conditions : c)),
       );
     }
-    if (
-      input instanceof OrConditions &&
-      input.conditions.some((c) => c instanceof OrConditions)
-    ) {
+    if (input instanceof OrConditions && input.conditions.some((c) => c instanceof OrConditions)) {
       return OrConditions.from(
-        ...input.conditions.flatMap((c) =>
-          c instanceof OrConditions ? c.conditions : c,
-        ),
+        ...input.conditions.flatMap((c) => (c instanceof OrConditions ? c.conditions : c)),
       );
     }
     return input;

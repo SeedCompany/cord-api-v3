@@ -1,7 +1,4 @@
-import {
-  type DiscoveredClassWithMeta,
-  DiscoveryService,
-} from '@golevelup/nestjs-discovery';
+import { type DiscoveredClassWithMeta, DiscoveryService } from '@golevelup/nestjs-discovery';
 import { Injectable, type OnModuleInit } from '@nestjs/common';
 import { entries, mapEntries, mapValues, setOf } from '@seedcompany/common';
 import { pick, startCase } from 'lodash';
@@ -10,15 +7,8 @@ import { type EnhancedResource, many, type Role } from '~/common';
 import { ResourcesHost } from '~/core/resources';
 import { Power } from '../dto';
 import { ChildListAction, ChildSingleAction } from './actions';
-import {
-  extract,
-  type Permission,
-  type Permissions,
-} from './builder/perm-granter';
-import {
-  POLICY_METADATA_KEY,
-  type PolicyMetadata,
-} from './builder/policy.decorator';
+import { extract, type Permission, type Permissions } from './builder/perm-granter';
+import { POLICY_METADATA_KEY, type PolicyMetadata } from './builder/policy.decorator';
 import { all, any, Condition } from './conditions';
 import { type ResourcesGranter } from './granters';
 import { GrantersFactory } from './granters.factory';
@@ -72,10 +62,9 @@ export class PolicyFactory implements OnModuleInit {
   }
 
   async onModuleInit() {
-    const discoveredPolicies =
-      await this.discovery.providersWithMetaAtKey<PolicyMetadata>(
-        POLICY_METADATA_KEY,
-      );
+    const discoveredPolicies = await this.discovery.providersWithMetaAtKey<PolicyMetadata>(
+      POLICY_METADATA_KEY,
+    );
 
     const resGranter = await this.grantersFactory.makeGranters();
 
@@ -108,8 +97,7 @@ export class PolicyFactory implements OnModuleInit {
     const grants: WritableGrants = new Map();
     const resultList = many(meta.def(resGranter)).flat();
     for (const resourceGrant of resultList) {
-      const { resource, perms, props, childRelationships } =
-        resourceGrant[extract]();
+      const { resource, perms, props, childRelationships } = resourceGrant[extract]();
       if (!grants.has(resource)) {
         grants.set(resource, {
           objectLevel: {},
@@ -122,17 +110,13 @@ export class PolicyFactory implements OnModuleInit {
       for (const prop of props) {
         for (const propName of prop.properties) {
           const propPerms = (propLevel[propName] ??= {});
-          prop.perms.forEach((perms) =>
-            this.mergePermissions(propPerms, perms),
-          );
+          prop.perms.forEach((perms) => this.mergePermissions(propPerms, perms));
         }
       }
       for (const childRelation of childRelationships) {
         for (const relationName of childRelation.relationNames) {
           const childPerms = (childRelations[relationName] ??= {});
-          childRelation.perms.forEach((perms) =>
-            this.mergePermissions(childPerms, perms),
-          );
+          childRelation.perms.forEach((perms) => this.mergePermissions(childPerms, perms));
         }
       }
     }
@@ -155,13 +139,9 @@ export class PolicyFactory implements OnModuleInit {
    * Declare permissions of missing interfaces based on the intersection
    * its implementations
    */
-  private defaultInterfacesFromAllImplementationsIntersection(
-    grantMap: WritableGrants,
-  ) {
+  private defaultInterfacesFromAllImplementationsIntersection(grantMap: WritableGrants) {
     const interfaceCandidates = new Set(
-      [...grantMap.keys()]
-        .map((res) => this.resourcesHost.getInterfaces(res))
-        .flat(),
+      [...grantMap.keys()].map((res) => this.resourcesHost.getInterfaces(res)).flat(),
     );
 
     const allKeysOf = (list: Array<object | undefined>) =>
@@ -197,16 +177,10 @@ export class PolicyFactory implements OnModuleInit {
       const interfaceGrants: ResourceGrants = {
         objectLevel: intersectPermissions(objectLevelPermissions),
         propLevel: mapValues.fromList(allKeysOf(propLevelPermissions), (prop) =>
-          intersectPermissions(
-            propLevelPermissions.map((propLevel) => propLevel[prop]),
-          ),
+          intersectPermissions(propLevelPermissions.map((propLevel) => propLevel[prop])),
         ).asRecord,
-        childRelations: mapValues.fromList(
-          allKeysOf(childRelationPermissions),
-          (prop) =>
-            intersectPermissions(
-              childRelationPermissions.map((propLevel) => propLevel[prop]),
-            ),
+        childRelations: mapValues.fromList(allKeysOf(childRelationPermissions), (prop) =>
+          intersectPermissions(childRelationPermissions.map((propLevel) => propLevel[prop])),
         ).asRecord,
       };
 
@@ -216,9 +190,7 @@ export class PolicyFactory implements OnModuleInit {
 
   private stripImplementationsMatchingInterfaces(grantMap: WritableGrants) {
     const interfaceCandidates = new Set(
-      [...grantMap.keys()]
-        .map((res) => this.resourcesHost.getInterfaces(res))
-        .flat(),
+      [...grantMap.keys()].map((res) => this.resourcesHost.getInterfaces(res)).flat(),
     );
 
     for (const interfaceRes of interfaceCandidates) {
@@ -236,19 +208,13 @@ export class PolicyFactory implements OnModuleInit {
           continue;
         }
         // Only bother checking object level read/create/delete as that is all our DB AP's use
-        const isSame = entries(implGrants.objectLevel).every(
-          ([action, perm]) => {
-            if (action === 'edit') {
-              return true;
-            }
-            const ifacePerm = interfaceGrants?.objectLevel[action];
-            return (
-              ifacePerm &&
-              perm &&
-              Condition.id(ifacePerm) === Condition.id(perm)
-            );
-          },
-        );
+        const isSame = entries(implGrants.objectLevel).every(([action, perm]) => {
+          if (action === 'edit') {
+            return true;
+          }
+          const ifacePerm = interfaceGrants?.objectLevel[action];
+          return ifacePerm && perm && Condition.id(ifacePerm) === Condition.id(perm);
+        });
         if (isSame) {
           grantMap.delete(impl);
         }
@@ -290,9 +256,7 @@ export class PolicyFactory implements OnModuleInit {
         }
         // If policy doesn't specify this implementation then use most specific
         // interface given.
-        const interfaceToApply = this.resourcesHost
-          .getInterfaces(impl)
-          .find((i) => grants.has(i));
+        const interfaceToApply = this.resourcesHost.getInterfaces(impl).find((i) => grants.has(i));
         const interfacePerms = interfaceToApply && grants.get(interfaceToApply);
         if (!interfacePerms) {
           // Safety check, but this shouldn't ever happen, since we only got
@@ -331,9 +295,7 @@ export class PolicyFactory implements OnModuleInit {
     existing: Writable<Permissions<TAction>>,
     toMerge: Permissions<TAction>,
   ) {
-    for (const [action, perm] of Object.entries(toMerge) as Array<
-      [TAction, Permission]
-    >) {
+    for (const [action, perm] of Object.entries(toMerge) as Array<[TAction, Permission]>) {
       existing[action] = this.mergePermission([perm, existing[action]], any);
     }
     return existing;
@@ -396,12 +358,9 @@ const cloneGrants = (grants: Grants): WritableGrants =>
   new Map([
     ...mapValues(grants, (_, grant) => ({
       objectLevel: clonePermissions(grant.objectLevel),
-      propLevel: mapValues(grant.propLevel, (_, perms) =>
-        clonePermissions(perms),
-      ).asRecord,
-      childRelations: mapValues(grant.childRelations, (_, perms) =>
-        clonePermissions(perms),
-      ).asRecord,
+      propLevel: mapValues(grant.propLevel, (_, perms) => clonePermissions(perms)).asRecord,
+      childRelations: mapValues(grant.childRelations, (_, perms) => clonePermissions(perms))
+        .asRecord,
     })),
   ]);
 

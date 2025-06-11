@@ -1,9 +1,5 @@
 import { node, type Query, relation } from 'cypher-query-builder';
-import {
-  DateTime,
-  Duration,
-  type DurationLikeObject as MyDuration,
-} from 'luxon';
+import { DateTime, Duration, type DurationLikeObject as MyDuration } from 'luxon';
 import {
   type DurationIn,
   type ID,
@@ -12,21 +8,10 @@ import {
 } from '~/common';
 import { type DbChanges } from '../../changes';
 import { varInExp } from '../../query-augmentation/subquery';
-import {
-  ACTIVE,
-  coalesce,
-  exp,
-  INACTIVE,
-  type QueryFragment,
-  variable,
-  Variable,
-} from '../index';
+import { ACTIVE, coalesce, exp, INACTIVE, type QueryFragment, variable, Variable } from '../index';
 import { maybeWhereAnd } from '../maybe-where-and';
 import { createProperty, type CreatePropertyOptions } from './create-property';
-import {
-  deactivateProperty,
-  type DeactivatePropertyOptions,
-} from './deactivate-property';
+import { deactivateProperty, type DeactivatePropertyOptions } from './deactivate-property';
 
 export const defaultPermanentAfter: MyDuration = { minutes: 30 };
 
@@ -81,10 +66,7 @@ export const updateProperty =
           ? options.value
           : variable(query.params.addParam(options.value, 'value').toString()),
       now: options.now ?? query.params.addParam(DateTime.now(), 'now'),
-      permanentAfter: permanentAfterAsVar(
-        options.permanentAfter ?? defaultPermanentAfter,
-        query,
-      ),
+      permanentAfter: permanentAfterAsVar(options.permanentAfter ?? defaultPermanentAfter, query),
     };
     const { nodeName, key, value, now } = resolved;
 
@@ -139,11 +121,7 @@ export const updateProperty =
   };
 
 const loadExistingProp =
-  (
-    nodeName: string,
-    key: string | Variable,
-    changeset?: Variable,
-  ): QueryFragment =>
+  (nodeName: string, key: string | Variable, changeset?: Variable): QueryFragment =>
   (query) =>
     query
       .optionalMatch([
@@ -155,26 +133,12 @@ const loadExistingProp =
           changeset ? INACTIVE : ACTIVE,
         ),
         node('existingProp', 'Property'),
-        ...(changeset
-          ? [
-              relation('in', '', 'changeset', ACTIVE),
-              node(changeset.toString()),
-            ]
-          : []),
+        ...(changeset ? [relation('in', '', 'changeset', ACTIVE), node(changeset.toString())] : []),
       ])
-      .apply(
-        maybeWhereAnd(
-          key instanceof Variable &&
-            `type(existingPropRel) = ${key.toString()}`,
-        ),
-      );
+      .apply(maybeWhereAnd(key instanceof Variable && `type(existingPropRel) = ${key.toString()}`));
 
 export const determineIfPermanent =
-  (
-    permanentAfter: string,
-    now: Variable,
-    nodeName = 'existingProp',
-  ): QueryFragment =>
+  (permanentAfter: string, now: Variable, nodeName = 'existingProp'): QueryFragment =>
   (query) =>
     query.subQuery([nodeName], (sub) =>
       sub.return(
@@ -185,10 +149,7 @@ export const determineIfPermanent =
       ),
     );
 
-export function permanentAfterAsVar(
-  permanentAfter: Variable | DurationIn,
-  query: Query,
-) {
+export function permanentAfterAsVar(permanentAfter: Variable | DurationIn, query: Query) {
   if (permanentAfter instanceof Variable) {
     return permanentAfter.toString();
   }

@@ -3,9 +3,7 @@ import { PaginatedList, SortablePaginationInput } from '~/common';
 import { FundingAccount } from './funding-account.dto';
 
 @InputType()
-export class FundingAccountListInput extends SortablePaginationInput<
-  keyof FundingAccount
->({
+export class FundingAccountListInput extends SortablePaginationInput<keyof FundingAccount>({
   defaultSort: 'name',
 }) {}
 

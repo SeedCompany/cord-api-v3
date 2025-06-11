@@ -47,11 +47,7 @@ export const PartialType = BasePartialType as <T, Args extends unknown[]>(
  *
  * @see https://docs.nestjs.com/graphql/mapped-types#pick
  */
-export const PickType = BasePickType as <
-  T,
-  K extends keyof T,
-  Args extends unknown[],
->(
+export const PickType = BasePickType as <T, K extends keyof T, Args extends unknown[]>(
   classRef: AbstractClass<T, Args>,
   keys: readonly K[],
   decorator?: ClassDecoratorFactory,
@@ -65,11 +61,7 @@ export const PickType = BasePickType as <
  *
  * @see https://docs.nestjs.com/graphql/mapped-types#omit
  */
-export const OmitType = BaseOmitType as <
-  T,
-  K extends keyof T,
-  Args extends unknown[],
->(
+export const OmitType = BaseOmitType as <T, K extends keyof T, Args extends unknown[]>(
   classRef: AbstractClass<T, Args>,
   keys: readonly K[],
   decorator?: ClassDecoratorFactory,
@@ -127,18 +119,7 @@ export function IntersectTypes<A, B, C, D, E, F, G, H, Args extends unknown[]>(
   type7: AbstractClass<G>,
   type8: AbstractClass<H>,
 ): IntersectedType<A & B & C & D & E & F & G & H, Args>;
-export function IntersectTypes<
-  A,
-  B,
-  C,
-  D,
-  E,
-  F,
-  G,
-  H,
-  I,
-  Args extends unknown[],
->(
+export function IntersectTypes<A, B, C, D, E, F, G, H, I, Args extends unknown[]>(
   type1: AbstractClass<A, Args>,
   type2: AbstractClass<B>,
   type3: AbstractClass<C>,
@@ -149,18 +130,7 @@ export function IntersectTypes<
   type8: AbstractClass<H>,
   type9: AbstractClass<I>,
 ): IntersectedType<A & B & C & D & E & F & G & H & I, Args>;
-export function IntersectTypes<
-  A,
-  B,
-  C,
-  D,
-  E,
-  F,
-  G,
-  H,
-  I,
-  Args extends unknown[],
->(
+export function IntersectTypes<A, B, C, D, E, F, G, H, I, Args extends unknown[]>(
   type1: AbstractClass<A, Args>,
   type2: AbstractClass<B>,
   type3: AbstractClass<C>,
@@ -176,10 +146,7 @@ export function IntersectTypes<T, Args extends unknown[]>(
   ...types: Array<AbstractClass<T, Args>>
 ): IntersectedType<T, Args> {
   return Object.assign(
-    (types as any).reduce(
-      (a: any, b: any) => (a ? IntersectionType(a, b) : b),
-      undefined,
-    ),
+    (types as any).reduce((a: any, b: any) => (a ? IntersectionType(a, b) : b), undefined),
     {
       members: types,
     },

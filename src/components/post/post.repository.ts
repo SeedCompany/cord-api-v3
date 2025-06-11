@@ -44,10 +44,7 @@ export class PostRepository extends DtoRepository(Post) {
       .first();
   }
 
-  async update(
-    existing: UnsecuredDto<Post>,
-    changes: ChangesOf<Post, UpdatePost>,
-  ) {
+  async update(existing: UnsecuredDto<Post>, changes: ChangesOf<Post, UpdatePost>) {
     return await this.updateProperties(existing, changes);
   }
 
@@ -110,16 +107,8 @@ export class PostRepository extends DtoRepository(Post) {
   protected hydrate() {
     return (query: Query) =>
       query
-        .match([
-          node('node'),
-          relation('in', '', 'post', ACTIVE),
-          node('parent', 'BaseNode'),
-        ])
-        .match([
-          node('node'),
-          relation('out', '', 'creator', ACTIVE),
-          node('creator', 'User'),
-        ])
+        .match([node('node'), relation('in', '', 'post', ACTIVE), node('parent', 'BaseNode')])
+        .match([node('node'), relation('out', '', 'creator', ACTIVE), node('creator', 'User')])
         .apply(matchProps())
         .return<{ dto: DbTypeOf<Post> }>(
           merge('props', {

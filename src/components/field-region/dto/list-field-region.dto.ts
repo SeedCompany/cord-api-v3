@@ -14,9 +14,7 @@ export abstract class FieldRegionFilters {
 }
 
 @InputType()
-export class FieldRegionListInput extends SortablePaginationInput<
-  keyof FieldRegion
->({
+export class FieldRegionListInput extends SortablePaginationInput<keyof FieldRegion>({
   defaultSort: 'name',
 }) {
   @FilterField(() => FieldRegionFilters, { internal: true })

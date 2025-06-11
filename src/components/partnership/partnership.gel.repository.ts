@@ -17,9 +17,7 @@ export class PartnershipGelRepository
       agreement: true,
       parent: e.select({
         identity: partnership.project.id,
-        labels: e.array_agg(
-          e.set(partnership.project.__type__.name.slice(9, null)),
-        ),
+        labels: e.array_agg(e.set(partnership.project.__type__.name.slice(9, null))),
         properties: e.select({
           id: partnership.project.id,
           createdAt: partnership.project.createdAt,
@@ -29,9 +27,7 @@ export class PartnershipGelRepository
   })
   implements PublicOf<PartnershipRepository>
 {
-  async readManyByProjectAndPartner(
-    input: readonly PartnershipByProjectAndPartnerInput[],
-  ) {
+  async readManyByProjectAndPartner(input: readonly PartnershipByProjectAndPartnerInput[]) {
     return await this.db.run(this.readManyByProjectAndPartnerQuery, { input });
   }
   private readonly readManyByProjectAndPartnerQuery = e.params(
@@ -53,9 +49,8 @@ export class PartnershipGelRepository
   async listAllByProjectId(project: ID) {
     return await this.db.run(this.listAllByProjectIdQuery, { project });
   }
-  private readonly listAllByProjectIdQuery = e.params(
-    { project: e.uuid },
-    ($) => e.select(e.cast(e.Project, $.project).partnerships, this.hydrate),
+  private readonly listAllByProjectIdQuery = e.params({ project: e.uuid }, ($) =>
+    e.select(e.cast(e.Project, $.project).partnerships, this.hydrate),
   );
 
   async isFirstPartnership(projectId: ID) {

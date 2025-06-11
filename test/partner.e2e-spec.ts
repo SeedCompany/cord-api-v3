@@ -81,13 +81,9 @@ describe('Partner e2e', () => {
     expect(updated).toBeTruthy();
     expect(updated.pointOfContact.value!.id).toBe(person.id);
     expect(updated.types.value).toEqual(expect.arrayContaining(types));
-    expect(updated.financialReportingTypes.value).toEqual(
-      financialReportingTypes,
-    );
+    expect(updated.financialReportingTypes.value).toEqual(financialReportingTypes);
     expect(updated.pmcEntityCode.value).toEqual(pmcEntityCode);
-    expect(updated.globalInnovationsClient.value).toEqual(
-      globalInnovationsClient,
-    );
+    expect(updated.globalInnovationsClient.value).toEqual(globalInnovationsClient);
     expect(updated.active.value).toEqual(active);
     expect(updated.address.value).toEqual(address);
   });
@@ -141,9 +137,7 @@ describe('Partner e2e', () => {
   it('should throw error if try to create duplicate partners for organization', async () => {
     const org = await createOrganization(app);
     await createPartner(app, { organizationId: org.id });
-    await expect(
-      createPartner(app, { organizationId: org.id }),
-    ).rejects.toThrowGqlError(
+    await expect(createPartner(app, { organizationId: org.id })).rejects.toThrowGqlError(
       errors.duplicate({
         message: 'Partner for organization already exists.',
         field: 'partner.organizationId',
@@ -179,8 +173,7 @@ describe('Partner e2e', () => {
       }),
     ).rejects.toThrowGqlError(
       errors.input({
-        message:
-          'Financial reporting type can only be applied to managing partners',
+        message: 'Financial reporting type can only be applied to managing partners',
         field: 'partnership.financialReportingType',
       }),
     );

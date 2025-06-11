@@ -1,16 +1,7 @@
 import { ArgsType, Field, InputType, ObjectType } from '@nestjs/graphql';
-import {
-  Role,
-  type SetUnsecuredType,
-  Variant,
-  VariantInputField,
-  type VariantOf,
-} from '~/common';
+import { Role, type SetUnsecuredType, Variant, VariantInputField, type VariantOf } from '~/common';
 import { RegisterResource } from '~/core/resources';
-import {
-  type ProductProgress,
-  type UnsecuredProductProgress,
-} from './product-progress.dto';
+import { type ProductProgress, type UnsecuredProductProgress } from './product-progress.dto';
 
 export type ProgressVariant = VariantOf<typeof ProgressReportVariantProgress>;
 
@@ -18,9 +9,7 @@ export type ProgressVariant = VariantOf<typeof ProgressReportVariantProgress>;
 @ObjectType()
 export class ProgressReportVariantProgress {
   static readonly Parent = () =>
-    import('../../progress-report/dto/progress-report.dto').then(
-      (m) => m.ProgressReport,
-    );
+    import('../../progress-report/dto/progress-report.dto').then((m) => m.ProgressReport);
 
   static readonly Variants = Variant.createList({
     partner: {
@@ -32,12 +21,10 @@ export class ProgressReportVariantProgress {
       responsibleRole: Role.ProjectManager,
     },
   });
-  static readonly FallbackVariant =
-    ProgressReportVariantProgress.Variants.byKey('official');
+  static readonly FallbackVariant = ProgressReportVariantProgress.Variants.byKey('official');
 
   @Field(() => Variant)
-  readonly variant: Variant<ProgressVariant> &
-    SetUnsecuredType<ProgressVariant>;
+  readonly variant: Variant<ProgressVariant> & SetUnsecuredType<ProgressVariant>;
 
   readonly details: readonly ProductProgress[] &
     SetUnsecuredType<readonly UnsecuredProductProgress[]>;

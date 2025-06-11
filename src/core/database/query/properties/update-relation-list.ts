@@ -17,19 +17,13 @@ export const updateRelationList =
     const relName =
       options.relation instanceof Variable
         ? options.relation
-        : variable(
-            query.params.addParam(options.relation, 'relationName').toString(),
-          );
+        : variable(query.params.addParam(options.relation, 'relationName').toString());
     const newList =
       options.newList instanceof Variable
         ? options.newList
-        : variable(
-            query.params.addParam(options.newList, 'newList').toString(),
-          );
+        : variable(query.params.addParam(options.newList, 'newList').toString());
 
-    query.comment(
-      `updateListProperty(${String(nodeName)}, ${String(relName)})`,
-    );
+    query.comment(`updateListProperty(${String(nodeName)}, ${String(relName)})`);
     return query.subQuery([nodeName, relName, newList], (sub) =>
       sub
         .with([

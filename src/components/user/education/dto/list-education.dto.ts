@@ -14,9 +14,7 @@ export abstract class EducationFilters {
 }
 
 @InputType()
-export class EducationListInput extends SortablePaginationInput<
-  keyof Education
->({
+export class EducationListInput extends SortablePaginationInput<keyof Education>({
   defaultSort: 'institution',
 }) {
   @FilterField(() => EducationFilters, { internal: true })

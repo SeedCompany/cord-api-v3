@@ -25,10 +25,7 @@ import { FileNodeType } from './file-node-type.enum';
  * This should be used for TypeScript types as we'll always be passing around
  * concrete nodes.
  */
-export type AnyFileNode = MergeExclusive<
-  MergeExclusive<File, Directory>,
-  FileVersion
->;
+export type AnyFileNode = MergeExclusive<MergeExclusive<File, Directory>, FileVersion>;
 
 export const resolveFileNode = (val: AnyFileNode) => {
   const type = simpleSwitch(val.type, {
@@ -133,8 +130,7 @@ export class Directory extends FileNode {
   readonly size: number;
 
   @Field(() => Int, {
-    description:
-      'The total number of files under this directory and all its subdirectories',
+    description: 'The total number of files under this directory and all its subdirectories',
   })
   readonly totalFiles: number;
 
@@ -176,8 +172,7 @@ export const asDirectory = (node: AnyFileNode) => {
   return node;
 };
 
-export const isFile = (node: AnyFileNode): node is File =>
-  node.type === FileNodeType.File;
+export const isFile = (node: AnyFileNode): node is File => node.type === FileNodeType.File;
 
 export const asFile = (node: AnyFileNode) => {
   if (!isFile(node)) {

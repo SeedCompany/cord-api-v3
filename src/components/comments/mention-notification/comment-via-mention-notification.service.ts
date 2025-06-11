@@ -12,10 +12,7 @@ export class CommentViaMentionNotificationService {
     return []; // TODO
   }
 
-  async notify(
-    mentionees: ReadonlyArray<ID<'User'>>,
-    comment: UnsecuredDto<Comment>,
-  ) {
+  async notify(mentionees: ReadonlyArray<ID<'User'>>, comment: UnsecuredDto<Comment>) {
     await this.notifications.create(CommentViaMentionNotification, mentionees, {
       comment: comment.id,
     });

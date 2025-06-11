@@ -18,11 +18,9 @@ export const IdField = ({
     IsId(validation),
   );
 
-export const isIdLike = (value: unknown): value is ID =>
-  typeof value === 'string';
+export const isIdLike = (value: unknown): value is ID => typeof value === 'string';
 
-export type ID<Kind extends IDKindLike = any> = Tagged<string, 'ID'> &
-  IDTo<IDTag<Kind>>;
+export type ID<Kind extends IDKindLike = any> = Tagged<string, 'ID'> & IDTo<IDTag<Kind>>;
 
 /** @deprecated Use {@link ID} */
 export type IdOf<Kind extends IDKindLike> = ID<Kind>;

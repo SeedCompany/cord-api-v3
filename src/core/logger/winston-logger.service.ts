@@ -15,10 +15,7 @@ export class LoggerOptions {
  * Winston implementation of our Logger with a custom level matcher.
  */
 @Injectable()
-export class WinstonLoggerService
-  extends AbstractLogger
-  implements OnModuleDestroy
-{
+export class WinstonLoggerService extends AbstractLogger implements OnModuleDestroy {
   private readonly logger: WinstonLogger;
   private closing = false;
 
@@ -54,9 +51,7 @@ export class WinstonLoggerService
 
   async onModuleDestroy() {
     const finish = Promise.all(
-      this.logger.transports.map(
-        (t) => new Promise((resolve) => t.on('finish', resolve)),
-      ),
+      this.logger.transports.map((t) => new Promise((resolve) => t.on('finish', resolve))),
     );
     this.closing = true;
     this.logger.end();

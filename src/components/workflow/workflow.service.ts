@@ -5,16 +5,11 @@ import { Identity } from '~/core/authentication';
 import { Privileges } from '../authorization';
 import { MissingContextException } from '../authorization/policy/conditions';
 import { type Workflow } from './define-workflow';
-import {
-  type ExecuteTransitionInput as ExecuteTransitionInputFn,
-  SerializedWorkflow,
-} from './dto';
+import { type ExecuteTransitionInput as ExecuteTransitionInputFn, SerializedWorkflow } from './dto';
 import { transitionPermissionSerializer } from './permission.serializer';
 import { withTransitionKey } from './workflow.granter';
 
-type ExecuteTransitionInput = ReturnType<
-  typeof ExecuteTransitionInputFn
->['prototype'];
+type ExecuteTransitionInput = ReturnType<typeof ExecuteTransitionInputFn>['prototype'];
 
 export const WorkflowService = <W extends Workflow>(workflow: () => W) => {
   @Injectable()
@@ -46,18 +41,14 @@ export const WorkflowService = <W extends Workflow>(workflow: () => W) => {
       let available = this.workflow.transitions;
 
       // Filter out non applicable transitions
-      available = available.filter((t) =>
-        t.from ? t.from.has(currentState) : true,
-      );
+      available = available.filter((t) => (t.from ? t.from.has(currentState) : true));
 
       // Filter out transitions without authorization to execute
       const p = this.privileges.for(this.workflow.eventResource);
       available = available.filter((t) =>
         // I don't have a good way to type this right now.
         // Context usage is still fuzzy when conditions need different shapes.
-        p
-          .forContext(withTransitionKey(privilegeContext, t.key) as any)
-          .can('create'),
+        p.forContext(withTransitionKey(privilegeContext, t.key) as any).can('create'),
       );
 
       // Resolve conditions & filter as needed
@@ -65,8 +56,7 @@ export const WorkflowService = <W extends Workflow>(workflow: () => W) => {
       const resolvedConditions = new Map(
         await Promise.all(
           [...new Set(conditions)].map(
-            async (condition) =>
-              [condition, await condition.resolve(dynamicContext)] as const,
+            async (condition) => [condition, await condition.resolve(dynamicContext)] as const,
           ),
         ),
       );
@@ -89,9 +79,7 @@ export const WorkflowService = <W extends Workflow>(workflow: () => W) => {
       });
 
       // Resolve dynamic to steps
-      const dynamicTos = available.flatMap((t) =>
-        typeof t.to !== 'string' ? t.to : [],
-      );
+      const dynamicTos = available.flatMap((t) => (typeof t.to !== 'string' ? t.to : []));
       const resolvedTos = new Map(
         await Promise.all(
           dynamicTos.map(async (to) => {
@@ -118,9 +106,7 @@ export const WorkflowService = <W extends Workflow>(workflow: () => W) => {
       }
     }
 
-    protected getBypassIfValid(
-      input: ExecuteTransitionInput,
-    ): W['state'] | undefined {
+    protected getBypassIfValid(input: ExecuteTransitionInput): W['state'] | undefined {
       // Verify transition key is valid
       if (input.transition) {
         this.workflow.transitionByKey(input.transition);
@@ -140,11 +126,7 @@ export const WorkflowService = <W extends Workflow>(workflow: () => W) => {
     serialize() {
       return SerializedWorkflow.from(
         this.workflow,
-        transitionPermissionSerializer(
-          this.workflow,
-          this.privileges,
-          this.identity,
-        ),
+        transitionPermissionSerializer(this.workflow, this.privileges, this.identity),
       );
     }
   }

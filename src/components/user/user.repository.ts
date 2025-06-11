@@ -63,9 +63,7 @@ export class UserRepository extends DtoRepository(User) {
   }
 
   private readonly roleProperties = (roles?: readonly Role[]) =>
-    (roles || []).flatMap((role) =>
-      property('roles', role, 'node', `role${role}`),
-    );
+    (roles || []).flatMap((role) => property('roles', role, 'node', `role${role}`));
 
   async create(input: CreatePerson) {
     const initialProps = {
@@ -86,9 +84,7 @@ export class UserRepository extends DtoRepository(User) {
       .query()
       .apply(await createNode(User, { initialProps }))
       .apply((q) =>
-        input.roles && input.roles.length > 0
-          ? q.create([...this.roleProperties(input.roles)])
-          : q,
+        input.roles && input.roles.length > 0 ? q.create([...this.roleProperties(input.roles)]) : q,
       )
       .return<{ id: ID }>('node.id as id');
     let result;
@@ -96,11 +92,7 @@ export class UserRepository extends DtoRepository(User) {
       result = await query.first();
     } catch (e) {
       if (e instanceof UniquenessError && e.label === 'EmailAddress') {
-        throw new DuplicateException(
-          'person.email',
-          'Email address is already in use',
-          e,
-        );
+        throw new DuplicateException('person.email', 'Email address is already in use', e);
       }
       throw new CreationFailed(User, { cause: e });
     }
@@ -129,11 +121,7 @@ export class UserRepository extends DtoRepository(User) {
       query
         .subQuery('node', (sub) =>
           sub
-            .match([
-              node('node'),
-              relation('out', '', 'roles', ACTIVE),
-              node('role', 'Property'),
-            ])
+            .match([node('node'), relation('out', '', 'roles', ACTIVE), node('role', 'Property')])
             .return('collect(role.value) as roles'),
         )
         .apply(matchProps())
@@ -146,31 +134,20 @@ export class UserRepository extends DtoRepository(User) {
         );
   }
 
-  private async updateEmail(
-    id: ID,
-    email: string | null | undefined,
-  ): Promise<void> {
+  private async updateEmail(id: ID, email: string | null | undefined): Promise<void> {
     const query = this.db
       .query()
       .matchNode('node', 'User', { id })
       .apply(deactivateProperty({ resource: User, key: 'email' }))
       .apply((q) =>
-        email
-          ? q.apply(
-              createProperty({ resource: User, key: 'email', value: email }),
-            )
-          : q,
+        email ? q.apply(createProperty({ resource: User, key: 'email', value: email })) : q,
       )
       .return('*');
     try {
       await query.run();
     } catch (e) {
       if (e instanceof UniquenessError && e.label === 'EmailAddress') {
-        throw new DuplicateException(
-          'person.email',
-          'Email address is already in use',
-          e,
-        );
+        throw new DuplicateException('person.email', 'Email address is already in use', e);
       }
       throw e;
     }
@@ -262,25 +239,14 @@ export class UserRepository extends DtoRepository(User) {
     return result?.dto ?? null;
   }
 
-  async assignOrganizationToUser({
-    userId,
-    orgId,
-    primary,
-  }: AssignOrganizationToUser) {
+  async assignOrganizationToUser({ userId, orgId, primary }: AssignOrganizationToUser) {
     await this.db
       .query()
-      .match([
-        [node('user', 'User', { id: userId })],
-        [node('org', 'Organization', { id: orgId })],
-      ])
+      .match([[node('user', 'User', { id: userId })], [node('org', 'Organization', { id: orgId })]])
       .subQuery((sub) =>
         sub
           .with('user, org')
-          .match([
-            node('user'),
-            relation('out', 'oldRel', 'organization', ACTIVE),
-            node('org'),
-          ])
+          .match([node('user'), relation('out', 'oldRel', 'organization', ACTIVE), node('org')])
           .setValues({ 'oldRel.active': false })
           .return('oldRel')
           .union()
@@ -318,14 +284,8 @@ export class UserRepository extends DtoRepository(User) {
     ];
     const result = await this.db
       .query()
-      .match([
-        [node('org', 'Organization', { id: orgId })],
-        [node('user', 'User', { id: userId })],
-      ])
-      .create([
-        userToOrg('organization'),
-        ...(primary ? [userToOrg('primaryOrganization')] : []),
-      ])
+      .match([[node('org', 'Organization', { id: orgId })], [node('user', 'User', { id: userId })]])
+      .create([userToOrg('organization'), ...(primary ? [userToOrg('primaryOrganization')] : [])])
       .return('org.id')
       .first();
     if (!result) {
@@ -394,11 +354,7 @@ export const userFilters = filter.define(() => UserFilters, {
   name: filter.fullText({
     index: () => NameIndex,
     matchToNode: (q) =>
-      q.match([
-        node('node', 'User'),
-        relation('out', '', undefined, ACTIVE),
-        node('match'),
-      ]),
+      q.match([node('node', 'User'), relation('out', '', undefined, ACTIVE), node('match')]),
     // Treat each word as a separate search term
     // Each word could point to a different node
     // i.e. "first last"
@@ -412,16 +368,8 @@ export const userFilters = filter.define(() => UserFilters, {
 export const userSorters = defineSorters(User, {
   fullName: (query) =>
     query
-      .match([
-        node('node'),
-        relation('out', '', 'realFirstName', ACTIVE),
-        node('firstName'),
-      ])
-      .match([
-        node('node'),
-        relation('out', '', 'realLastName', ACTIVE),
-        node('lastName'),
-      ])
+      .match([node('node'), relation('out', '', 'realFirstName', ACTIVE), node('firstName')])
+      .match([node('node'), relation('out', '', 'realLastName', ACTIVE), node('lastName')])
       .return<SortCol>(multiPropsAsSortString('firstName', 'lastName')),
 });
 

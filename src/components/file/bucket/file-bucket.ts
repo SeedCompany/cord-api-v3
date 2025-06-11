@@ -9,27 +9,14 @@ import { type MaybeAsync } from '@seedcompany/common';
 import { type Command } from '@smithy/smithy-client';
 import { type NodeJsRuntimeStreamingBlobPayloadInputTypes } from '@smithy/types/dist-types/streaming-payload/streaming-blob-payload-input-types';
 import { type Readable } from 'stream';
-import type {
-  Except,
-  LiteralUnion,
-  Merge,
-  SetNonNullable,
-  SetRequired,
-} from 'type-fest';
-import {
-  type DurationIn,
-  InputException,
-  type InputExceptionArgs,
-} from '~/common';
+import type { Except, LiteralUnion, Merge, SetNonNullable, SetRequired } from 'type-fest';
+import { type DurationIn, InputException, type InputExceptionArgs } from '~/common';
 
 // Limit body to only `Readable` which is always the case for Nodejs execution.
 export type GetObjectOutput = Merge<AwsGetObjectOutput, { Body: Readable }>;
 
 export type PutObjectInput = Merge<
-  SetNonNullable<
-    SetRequired<Except<AwsPutObjectCommandInput, 'Bucket'>, 'ContentType'>,
-    'Key'
-  >,
+  SetNonNullable<SetRequired<Except<AwsPutObjectCommandInput, 'Bucket'>, 'ContentType'>, 'Key'>,
   {
     Body: NodeJsRuntimeStreamingBlobPayloadInputTypes;
   }

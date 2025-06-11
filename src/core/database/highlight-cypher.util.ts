@@ -28,13 +28,9 @@ const cypher = Prism.languages.insertBefore('cypher', 'keyword', {
   function: /\b[\w.]+\b(?=\()/,
 });
 // Fix matching relationship labels without properties: `[:abc]`
-(cypher['class-name'] as TokenObject).pattern =
-  /(:\s*)(?:\w+|`[^`\\\r\n]*`)(?=\s*[{):]|])/;
+(cypher['class-name'] as TokenObject).pattern = /(:\s*)(?:\w+|`[^`\\\r\n]*`)(?=\s*[{):]|])/;
 // Remove "node" from keywords
-cypher.keyword = RegExp(
-  String(cypher.keyword).slice(1, -2).replace('|NODE', ''),
-  'i',
-);
+cypher.keyword = RegExp(String(cypher.keyword).slice(1, -2).replace('|NODE', ''), 'i');
 
 const theme = {
   keyword: chalk.hex('#af63e5'),

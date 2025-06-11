@@ -22,9 +22,7 @@ export class LuxonDateTimeCodec extends DateTimeCodec {
       return;
     }
     if (!(object instanceof DateTime)) {
-      throw new InvalidArgumentError(
-        `a DateTime instance was expected, got "${String(object)}"`,
-      );
+      throw new InvalidArgumentError(`a DateTime instance was expected, got "${String(object)}"`);
     }
     super.encode(buf, object.toJSDate(), ctx);
   }
@@ -55,11 +53,7 @@ export class LuxonCalendarDateCodec extends LocalDateCodec {
         `a CalendarDate instance was expected, got "${String(object)}"`,
       );
     }
-    super.encode(
-      buf,
-      new LocalDate(object.year, object.month, object.day),
-      ctx,
-    );
+    super.encode(buf, new LocalDate(object.year, object.month, object.day), ctx);
   }
 
   decode(buf: ReadBuffer, ctx: CodecContext): CalendarDate {

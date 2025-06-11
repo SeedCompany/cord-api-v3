@@ -18,9 +18,7 @@ export abstract class OrganizationFilters {
 }
 
 @InputType()
-export class OrganizationListInput extends SortablePaginationInput<
-  keyof Organization
->({
+export class OrganizationListInput extends SortablePaginationInput<keyof Organization>({
   defaultSort: 'name',
 }) {
   @FilterField(() => OrganizationFilters, { internal: true })
@@ -33,6 +31,4 @@ export class OrganizationListOutput extends PaginatedList(Organization) {}
 @ObjectType({
   description: SecuredList.descriptionFor('organizations'),
 })
-export abstract class SecuredOrganizationList extends SecuredList(
-  Organization,
-) {}
+export abstract class SecuredOrganizationList extends SecuredList(Organization) {}

@@ -3,11 +3,7 @@ import { isNotNil, setHas, setOf } from '@seedcompany/common';
 import { uniqBy } from 'lodash';
 import type { ValueOf } from 'type-fest';
 import { type ID, NotFoundException, ServerException } from '~/common';
-import {
-  type ResourceMap,
-  ResourceResolver,
-  ResourcesHost,
-} from '~/core/resources';
+import { type ResourceMap, ResourceResolver, ResourcesHost } from '~/core/resources';
 import { Privileges } from '../authorization';
 import { LanguageService } from '../language';
 import { PartnerService } from '../partner';
@@ -69,13 +65,10 @@ export class SearchService {
           input.type
             .flatMap((type) => {
               const resource = this.resources.enhance(type);
-              const implementations =
-                this.resources.getImplementations(resource);
+              const implementations = this.resources.getImplementations(resource);
               return [resource, ...implementations];
             })
-            .flatMap((type) =>
-              setHas(SearchResultTypes, type.name) ? type.name : [],
-            ),
+            .flatMap((type) => (setHas(SearchResultTypes, type.name) ? type.name : [])),
         )
       : // if a type filter isn't specified default to all types
         SearchResultTypes;
@@ -138,27 +131,22 @@ export class SearchService {
             : [];
         })
         // Do hydration data loading for each identified resource.
-        .map(
-          async ({ type, id, matchedProps }): Promise<SearchResult | null> => {
-            const hydrator = this.hydrate(type);
-            const hydrated = await hydrator(id);
-            if (
-              !hydrated ||
-              !(hydrated.__typename in this.resources.getEnhancedMap())
-            ) {
-              return null;
-            }
+        .map(async ({ type, id, matchedProps }): Promise<SearchResult | null> => {
+          const hydrator = this.hydrate(type);
+          const hydrated = await hydrator(id);
+          if (!hydrated || !(hydrated.__typename in this.resources.getEnhancedMap())) {
+            return null;
+          }
 
-            const resource = this.resources.getByName(hydrated.__typename);
-            const perms = this.privileges.for(resource, hydrated).all;
-            return matchedProps.some((key) =>
-              // @ts-expect-error strict typing is hard for this dynamic use case.
-              key in perms ? perms[key].read : true,
-            )
-              ? hydrated
-              : null;
-          },
-        ),
+          const resource = this.resources.getByName(hydrated.__typename);
+          const perms = this.privileges.for(resource, hydrated).all;
+          return matchedProps.some((key) =>
+            // @ts-expect-error strict typing is hard for this dynamic use case.
+            key in perms ? perms[key].read : true,
+          )
+            ? hydrated
+            : null;
+        }),
     );
     const hydrated = maybeHydrated.filter(isNotNil);
 
@@ -175,11 +163,8 @@ export class SearchService {
   }
 
   private hydrate<K extends keyof SearchableMap>(type: K) {
-    return async (
-      ...args: Parameters<Hydrator<any>>
-    ): Promise<SearchResult | null> => {
-      const hydrator =
-        type in this.customHydrators ? this.customHydrators[type] : undefined;
+    return async (...args: Parameters<Hydrator<any>>): Promise<SearchResult | null> => {
+      const hydrator = type in this.customHydrators ? this.customHydrators[type] : undefined;
       try {
         const obj = hydrator
           ? await hydrator(...args)

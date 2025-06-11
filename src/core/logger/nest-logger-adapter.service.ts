@@ -57,9 +57,7 @@ export class NestLoggerAdapterService implements INestLogger, OnModuleInit {
   }
 
   private mapName(context?: string) {
-    const name = context
-      ? NestLoggerAdapterService.nameMap[context] || context
-      : 'nest';
+    const name = context ? NestLoggerAdapterService.nameMap[context] || context : 'nest';
     return { [LoggerName]: name };
   }
 }

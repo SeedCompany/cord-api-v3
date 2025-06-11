@@ -31,12 +31,9 @@ export class EnvironmentService implements Iterable<[string, string]> {
     // as pairs could be passed in instead of in env files
     this.env = pickBy(process.env) as Record<string, string>;
 
-    const files = [
-      `.env.${env}.local`,
-      `.env.${env}`,
-      `.env.local`,
-      `.env`,
-    ].map((file) => join(rootPath, file));
+    const files = [`.env.${env}.local`, `.env.${env}`, `.env.local`, `.env`].map((file) =>
+      join(rootPath, file),
+    );
 
     for (const file of files) {
       if (!fs.existsSync(file)) {
@@ -120,33 +117,33 @@ export class EnvironmentService implements Iterable<[string, string]> {
       keySeparator?: string;
     },
   ) {
-    return this.wrap<
-      ReadonlyMap<K, V>,
-      string | ReadonlyMap<K, V> | Partial<Record<K, V>>
-    >(key, (raw) => {
-      if (raw instanceof Map) {
-        return raw;
-      }
-      if (typeof raw === 'object') {
-        return new Map(Object.entries(raw));
-      }
-      const { pairSeparator = ';', keySeparator = '=' } = options;
+    return this.wrap<ReadonlyMap<K, V>, string | ReadonlyMap<K, V> | Partial<Record<K, V>>>(
+      key,
+      (raw) => {
+        if (raw instanceof Map) {
+          return raw;
+        }
+        if (typeof raw === 'object') {
+          return new Map(Object.entries(raw));
+        }
+        const { pairSeparator = ';', keySeparator = '=' } = options;
 
-      const parseKey =
-        typeof options.parseKey === 'function'
-          ? options.parseKey
-          : options.parseKey
-          ? verifyInSet(key, options.parseKey)
-          : identity;
-      const parseValue = options.parseValue ?? identity;
+        const parseKey =
+          typeof options.parseKey === 'function'
+            ? options.parseKey
+            : options.parseKey
+            ? verifyInSet(key, options.parseKey)
+            : identity;
+        const parseValue = options.parseValue ?? identity;
 
-      return new Map(
-        (raw ?? '').split(pairSeparator).map((item) => {
-          const [key, value] = item.trim().split(keySeparator);
-          return [parseKey(key), parseValue(value)] as const;
-        }),
-      );
-    });
+        return new Map(
+          (raw ?? '').split(pairSeparator).map((item) => {
+            const [key, value] = item.trim().split(keySeparator);
+            return [parseKey(key), parseValue(value)] as const;
+          }),
+        );
+      },
+    );
   }
 
   *[Symbol.iterator]() {

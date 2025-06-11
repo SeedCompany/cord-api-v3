@@ -7,10 +7,7 @@ import { TransactionRetryInformer } from '../database/transaction-retry.informer
 import { Client } from './reexports';
 
 @Injectable()
-export class TransactionContext
-  extends AsyncLocalStorage<Executor>
-  implements OnModuleDestroy
-{
+export class TransactionContext extends AsyncLocalStorage<Executor> implements OnModuleDestroy {
   constructor(
     private readonly client: Client,
     private readonly retryInformer: TransactionRetryInformer,
@@ -35,8 +32,7 @@ export class TransactionContext
           );
           if (maybeRetryableError) {
             errorMap.set(maybeRetryableError, error);
-            const override =
-              this.retryInformer.shouldRetry(maybeRetryableError);
+            const override = this.retryInformer.shouldRetry(maybeRetryableError);
             if (override != null) {
               patchMethod(maybeRetryableError, 'hasTag', (base) => (tag) => {
                 return tag === SHOULD_RETRY ? override : base(tag);

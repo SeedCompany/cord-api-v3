@@ -2,21 +2,13 @@ import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { stripIndent } from 'common-tags';
-import {
-  DateFilter,
-  type ID,
-  PaginatedList,
-  SecuredList,
-  SortablePaginationInput,
-} from '~/common';
+import { DateFilter, type ID, PaginatedList, SecuredList, SortablePaginationInput } from '~/common';
 import { type PeriodicReport } from './merge-periodic-reports.dto';
 import { IPeriodicReport } from './periodic-report.dto';
 import { ReportType } from './report-type.enum';
 
 @InputType()
-export class PeriodicReportListInput extends SortablePaginationInput<
-  keyof PeriodicReport
->({
+export class PeriodicReportListInput extends SortablePaginationInput<keyof PeriodicReport>({
   defaultSort: 'start',
 }) {
   @Field(() => ReportType, {
@@ -48,12 +40,12 @@ export class PeriodicReportListInput extends SortablePaginationInput<
 }
 
 @ObjectType()
-export class PeriodicReportListOutput extends PaginatedList<
+export class PeriodicReportListOutput extends PaginatedList<IPeriodicReport, PeriodicReport>(
   IPeriodicReport,
-  PeriodicReport
->(IPeriodicReport, {
-  itemsDescription: PaginatedList.itemDescriptionFor('periodic reports'),
-}) {}
+  {
+    itemsDescription: PaginatedList.itemDescriptionFor('periodic reports'),
+  },
+) {}
 
 @ObjectType({
   description: SecuredList.descriptionFor('periodic reports'),

@@ -1,17 +1,10 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import {
-  PaginatedList,
-  SortablePaginationInput,
-  Variant,
-  VariantInputField,
-} from '~/common';
+import { PaginatedList, SortablePaginationInput, Variant, VariantInputField } from '~/common';
 import { type ProgressReport } from '../../dto';
 import { type MediaVariant, ProgressReportMedia } from './media.dto';
 
 @InputType()
-export class ProgressReportMediaListInput extends SortablePaginationInput<
-  'createdAt' | 'variant'
->({
+export class ProgressReportMediaListInput extends SortablePaginationInput<'createdAt' | 'variant'>({
   defaultSort: 'createdAt',
 }) {
   @VariantInputField(ProgressReportMedia, {
@@ -23,9 +16,7 @@ export class ProgressReportMediaListInput extends SortablePaginationInput<
 }
 
 @ObjectType()
-export class ProgressReportMediaList extends PaginatedList(
-  ProgressReportMedia,
-) {
+export class ProgressReportMediaList extends PaginatedList(ProgressReportMedia) {
   readonly report: ProgressReport;
 }
 

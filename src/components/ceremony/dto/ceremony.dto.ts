@@ -18,8 +18,7 @@ import { CeremonyType } from './ceremony-type.enum';
   implements: [Resource],
 })
 export class Ceremony extends Resource {
-  static readonly Parent = () =>
-    import('../../engagement/dto').then((m) => m.IEngagement);
+  static readonly Parent = () => import('../../engagement/dto').then((m) => m.IEngagement);
 
   @Field(() => CeremonyType)
   readonly type: CeremonyType;

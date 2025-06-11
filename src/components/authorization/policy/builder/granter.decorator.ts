@@ -37,9 +37,7 @@ export const Granter = (
   });
 
 export const discover = (discovery: DiscoveryService) =>
-  discovery.providersWithMetaAtKey<GranterMetadata>(
-    GRANTER_FACTORY_METADATA_KEY,
-  );
+  discovery.providersWithMetaAtKey<GranterMetadata>(GRANTER_FACTORY_METADATA_KEY);
 
 const GRANTER_FACTORY_METADATA_KEY = Symbol('GranterFactory');
 

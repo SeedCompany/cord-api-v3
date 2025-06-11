@@ -1,9 +1,4 @@
-import {
-  node,
-  type NodePattern,
-  type Query,
-  relation,
-} from 'cypher-query-builder';
+import { node, type NodePattern, type Query, relation } from 'cypher-query-builder';
 import { uniq } from 'lodash';
 import { DateTime } from 'luxon';
 import { type Tagged } from 'type-fest';
@@ -21,8 +16,7 @@ const makeCurrentUser = (name: string) =>
     ) as Tagged<NodePattern, 'CurrentUser'>,
     {
       as: makeCurrentUser,
-      is: (obj: object): obj is typeof currentUser =>
-        Object.hasOwn(obj, currentUserFlag),
+      is: (obj: object): obj is typeof currentUser => Object.hasOwn(obj, currentUserFlag),
     },
   );
 export const currentUser = makeCurrentUser('');
@@ -78,9 +72,7 @@ export const matchProps = (options: MatchPropsOptions = {}) => {
             ]
           : []),
       ]);
-    const collectProps = collect(
-      apoc.map.fromValues(['type(r)', 'prop.value']),
-    );
+    const collectProps = collect(apoc.map.fromValues(['type(r)', 'prop.value']));
 
     return query.comment`matchProps(${nodeName})`.subQuery(nodeName, (sub) =>
       // If optional match in another sub-query where the return clause's
@@ -90,21 +82,11 @@ export const matchProps = (options: MatchPropsOptions = {}) => {
       // with complex queries.
       // Error is "Tried overwriting already taken variable name" with v4.2.8
       (optional
-        ? sub.subQuery(nodeName, (sub2) =>
-            sub2.apply(lookupProps).return(collectProps.as('props')),
-          )
+        ? sub.subQuery(nodeName, (sub2) => sub2.apply(lookupProps).return(collectProps.as('props')))
         : sub.apply(lookupProps)
       )
-        .with([
-          nodeName,
-          `${optional ? 'props' : collectProps} as collectedProps`,
-        ])
-        .with(
-          listConcat(
-            `[${excludeBaseProps ? '' : nodeName}]`,
-            'collectedProps',
-          ).as('propList'),
-        )
+        .with([nodeName, `${optional ? 'props' : collectProps} as collectedProps`])
+        .with(listConcat(`[${excludeBaseProps ? '' : nodeName}]`, 'collectedProps').as('propList'))
         .return(merge('propList').as(outputVar)),
     );
   };
@@ -129,8 +111,4 @@ export const property = (
   ],
 ];
 
-export const pinned = exists([
-  currentUser,
-  relation('out', '', 'pinned'),
-  node('node'),
-]);
+export const pinned = exists([currentUser, relation('out', '', 'pinned'), node('node')]);

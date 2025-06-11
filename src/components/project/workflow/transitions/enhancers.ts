@@ -11,9 +11,7 @@ export const ImplicitlyNotifyTeamMembers: Enhancer = (transition) => ({
   notifiers: transition.notifiers.concat(TeamMembers),
 });
 
-export const ApprovalFromEarlyConversationsRequiresEngagements: Enhancer = (
-  transition,
-) =>
+export const ApprovalFromEarlyConversationsRequiresEngagements: Enhancer = (transition) =>
   transition.type === 'Approve' && transition.from?.has('EarlyConversations')
     ? {
         ...transition,

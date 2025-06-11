@@ -18,7 +18,4 @@ export const castToEnum = <Expr extends $el<$str>, const TS extends string>(
 
 // eslint-disable-next-line @typescript-eslint/consistent-type-definitions,@typescript-eslint/naming-convention
 type $el<T> = { __element__: T };
-type SetEl<T extends $el<BaseType>, NewType extends BaseType> = Merge<
-  T,
-  $el<NewType>
->;
+type SetEl<T extends $el<BaseType>, NewType extends BaseType> = Merge<T, $el<NewType>>;

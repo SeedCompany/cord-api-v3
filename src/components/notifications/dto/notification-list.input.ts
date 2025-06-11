@@ -1,10 +1,5 @@
 import { Field, InputType, Int, ObjectType } from '@nestjs/graphql';
-import {
-  FilterField,
-  OptionalField,
-  PaginatedList,
-  PaginationInput,
-} from '~/common';
+import { FilterField, OptionalField, PaginatedList, PaginationInput } from '~/common';
 import { Notification } from './notification.dto';
 
 @InputType()

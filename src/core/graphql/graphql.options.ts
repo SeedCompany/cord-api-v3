@@ -4,11 +4,7 @@ import { Injectable } from '@nestjs/common';
 import { type GqlOptionsFactory } from '@nestjs/graphql';
 import { CacheService } from '@seedcompany/cache';
 import { mapKeys } from '@seedcompany/common';
-import {
-  type DocumentNode,
-  GraphQLScalarType,
-  type OperationDefinitionNode,
-} from 'graphql';
+import { type DocumentNode, GraphQLScalarType, type OperationDefinitionNode } from 'graphql';
 import { type Plugin as PluginNoContext } from 'graphql-yoga';
 import { type GqlContextType } from '~/common';
 import { getRegisteredScalars } from '~/common/scalars';
@@ -39,10 +35,8 @@ export class GraphqlOptions implements GqlOptionsFactory {
     }
     const graphRef = process.env.APOLLO_GRAPH_REF;
 
-    const scalars = mapKeys.fromList(
-      getRegisteredScalars(),
-      (scalar, { SKIP }) =>
-        scalar instanceof GraphQLScalarType ? scalar.name : SKIP,
+    const scalars = mapKeys.fromList(getRegisteredScalars(), (scalar, { SKIP }) =>
+      scalar instanceof GraphQLScalarType ? scalar.name : SKIP,
     ).asRecord;
 
     return {

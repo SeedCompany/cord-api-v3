@@ -114,10 +114,8 @@ export default (async function ({ e, db, print }) {
   for (const { type, step, ...project } of newProjects) {
     const insertQ = e.insert(e[`${type}Project`], {
       ...project,
-      ...mapValues.fromList(
-        ['mouStart', 'mouEnd', 'estimatedSubmission'],
-        (key, { SKIP }) =>
-          !project[key] ? SKIP : e.cal.local_date(project[key]!),
+      ...mapValues.fromList(['mouStart', 'mouEnd', 'estimatedSubmission'], (key, { SKIP }) =>
+        !project[key] ? SKIP : e.cal.local_date(project[key]!),
       ).asRecord,
       primaryLocation: project.primaryLocation
         ? e.assert_exists(

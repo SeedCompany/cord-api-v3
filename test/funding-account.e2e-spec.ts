@@ -141,8 +141,6 @@ describe('FundingAccount e2e', () => {
       ),
     );
 
-    expect(fundingAccounts.items.length).toBeGreaterThanOrEqual(
-      numFundingAccounts,
-    );
+    expect(fundingAccounts.items.length).toBeGreaterThanOrEqual(numFundingAccounts);
   });
 });

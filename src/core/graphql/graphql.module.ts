@@ -12,12 +12,7 @@ import './types';
 
 @Module({
   imports: [TracingModule],
-  providers: [
-    GraphqlOptions,
-    GraphqlErrorFormatter,
-    GraphqlLoggingPlugin,
-    GraphqlTracingPlugin,
-  ],
+  providers: [GraphqlOptions, GraphqlErrorFormatter, GraphqlLoggingPlugin, GraphqlTracingPlugin],
   exports: [GraphqlOptions],
 })
 export class GraphqlOptionsModule {}
@@ -30,10 +25,7 @@ export class GraphqlOptionsModule {}
       imports: [GraphqlOptionsModule],
     }),
   ],
-  providers: [
-    GqlContextHostImpl,
-    { provide: GqlContextHost, useExisting: GqlContextHostImpl },
-  ],
+  providers: [GqlContextHostImpl, { provide: GqlContextHost, useExisting: GqlContextHostImpl }],
   exports: [NestGraphqlModule, GqlContextHost],
 })
 export class GraphqlModule {}

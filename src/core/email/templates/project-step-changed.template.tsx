@@ -1,11 +1,5 @@
 import { cleanJoin } from '@seedcompany/common';
-import {
-  Button,
-  Column,
-  HideInText,
-  Section,
-  Text,
-} from '@seedcompany/nestjs-email/templates';
+import { Button, Column, HideInText, Section, Text } from '@seedcompany/nestjs-email/templates';
 import {
   type Project,
   ProjectStep as Step,
@@ -18,10 +12,7 @@ import { useFrontendUrl } from './frontend-url';
 import { UserRef } from './user-ref';
 
 export interface ProjectStepChangedProps {
-  recipient: Pick<
-    User,
-    'email' | 'displayFirstName' | 'displayLastName' | 'timezone'
-  >;
+  recipient: Pick<User, 'email' | 'displayFirstName' | 'displayLastName' | 'timezone'>;
   changedBy: Pick<User, 'id' | 'displayFirstName' | 'displayLastName'>;
   project: Pick<Project, 'id' | 'modifiedAt' | 'name' | 'step' | 'type'>;
   previousStep: Step;
@@ -39,9 +30,7 @@ export function ProjectStepChanged({
   const projectName = project.name.value;
   const projectType = Type.entry(project.type);
   const oldStep = oldStepVal ? Step.entry(oldStepVal).label : undefined;
-  const newStep = project.step.value
-    ? Step.entry(project.step.value).label
-    : undefined;
+  const newStep = project.step.value ? Step.entry(project.step.value).label : undefined;
 
   const isMultiplication = projectType.value === Type.MultiplicationTranslation;
   const title = cleanJoin(' - ', [
@@ -66,8 +55,7 @@ export function ProjectStepChanged({
       <Section>
         <Column>
           <Text paddingBottom={16}>
-            <UserRef {...changedBy} /> has changed{' '}
-            {projectName ? 'project ' : ''}
+            <UserRef {...changedBy} /> has changed {projectName ? 'project ' : ''}
             <a href={projectUrl}>{projectName ?? 'a project'}</a>{' '}
             {newStep ? (
               <>
@@ -79,11 +67,7 @@ export function ProjectStepChanged({
                 to <em>{newStep}</em>{' '}
               </>
             ) : null}
-            at{' '}
-            <FormattedDateTime
-              value={project.modifiedAt}
-              timezone={recipient.timezone.value}
-            />
+            at <FormattedDateTime value={project.modifiedAt} timezone={recipient.timezone.value} />
           </Text>
           <HideInText>
             <Button href={projectUrl} paddingTop={16}>

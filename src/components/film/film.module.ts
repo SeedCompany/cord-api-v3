@@ -10,12 +10,7 @@ import { FilmService } from './film.service';
 
 @Module({
   imports: [forwardRef(() => AuthorizationModule), ScriptureModule],
-  providers: [
-    FilmResolver,
-    FilmService,
-    splitDb(FilmRepository, FilmGelRepository),
-    FilmLoader,
-  ],
+  providers: [FilmResolver, FilmService, splitDb(FilmRepository, FilmGelRepository), FilmLoader],
   exports: [FilmService],
 })
 export class FilmModule {}

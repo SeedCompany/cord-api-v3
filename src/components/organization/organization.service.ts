@@ -1,17 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import {
-  type ID,
-  type ObjectView,
-  ServerException,
-  type UnsecuredDto,
-} from '~/common';
+import { type ID, type ObjectView, ServerException, type UnsecuredDto } from '~/common';
 import { HandleIdLookup } from '~/core';
 import { Privileges } from '../authorization';
 import { LocationService } from '../location';
-import {
-  type LocationListInput,
-  type SecuredLocationList,
-} from '../location/dto';
+import { type LocationListInput, type SecuredLocationList } from '../location/dto';
 import {
   type CreateOrganization,
   Organization,
@@ -106,10 +98,7 @@ export class OrganizationService {
         locationId,
       );
     } catch (e) {
-      throw new ServerException(
-        'Could not remove location from organization',
-        e,
-      );
+      throw new ServerException('Could not remove location from organization', e);
     }
   }
 

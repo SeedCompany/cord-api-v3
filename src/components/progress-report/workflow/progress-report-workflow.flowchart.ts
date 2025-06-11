@@ -8,8 +8,7 @@ import { Transitions } from './transitions';
 export class ProgressReportWorkflowFlowchart {
   /** Generate a flowchart in mermaid markup. */
   generate() {
-    const rgbHexAddAlpha = (rgb: string, alpha: number) =>
-      rgb + alpha.toString(16).slice(2, 4);
+    const rgbHexAddAlpha = (rgb: string, alpha: number) => rgb + alpha.toString(16).slice(2, 4);
     const colorStyle = (color: string) => ({
       fill: color,
       stroke: color.slice(0, 7),
@@ -36,9 +35,7 @@ export class ProgressReportWorkflowFlowchart {
         return str ? `classDef ${type} ${str}` : [];
       }),
       '',
-      ...Status.entries.map(
-        (status) => `${status.value}(${status.label}):::State`,
-      ),
+      ...Status.entries.map((status) => `${status.value}(${status.label}):::State`),
       '',
       ...Object.values(Transitions).flatMap((t) => {
         return [

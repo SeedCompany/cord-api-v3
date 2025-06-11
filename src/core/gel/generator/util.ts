@@ -28,5 +28,4 @@ export function addCustomScalarImports(
   );
 }
 
-export const toFqn = (type: string) =>
-  type.includes(':') ? type : `default::${type}`;
+export const toFqn = (type: string) => (type.includes(':') ? type : `default::${type}`);

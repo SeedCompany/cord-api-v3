@@ -51,9 +51,7 @@ export class PeriodicReportService {
         existing: input.intervals.length - result.length,
         new: result.length,
         parent: input.parent,
-        newIntervals: result.map(({ interval }) =>
-          DateInterval.fromObject(interval).toISO(),
-        ),
+        newIntervals: result.map(({ interval }) => DateInterval.fromObject(interval).toISO()),
       });
     } catch (exception) {
       const Report = resolveReportType({ type: input.type });
@@ -65,25 +63,16 @@ export class PeriodicReportService {
     const currentRaw = await this.repo.readOne(input.id);
     const current = this.secure(currentRaw);
     const changes = this.repo.getActualChanges(current, input);
-    this.privileges
-      .for(resolveReportType(current), currentRaw)
-      .verifyChanges(changes);
+    this.privileges.for(resolveReportType(current), currentRaw).verifyChanges(changes);
 
     const { reportFile, ...simpleChanges } = changes;
 
     const updated = await this.repo.update(current, simpleChanges);
 
     if (reportFile) {
-      const file = await this.files.updateDefinedFile(
-        current.reportFile,
-        'file',
-        reportFile,
-      );
+      const file = await this.files.updateDefinedFile(current.reportFile, 'file', reportFile);
       await this.eventBus.publish(
-        new PeriodicReportUploadedEvent(
-          updated,
-          this.files.asDownloadable(file.newVersion),
-        ),
+        new PeriodicReportUploadedEvent(updated, this.files.asDownloadable(file.newVersion)),
       );
     }
 
@@ -93,10 +82,7 @@ export class PeriodicReportService {
   @HandleIdLookup([FinancialReport, NarrativeReport, ProgressReport])
   async readOne(id: ID, _view?: ObjectView): Promise<PeriodicReport> {
     if (!id) {
-      throw new NotFoundException(
-        'No periodic report id to search for',
-        'periodicReport.id',
-      );
+      throw new NotFoundException('No periodic report id to search for', 'periodicReport.id');
     }
 
     const result = await this.repo.readOne(id);
@@ -112,9 +98,7 @@ export class PeriodicReportService {
     return this.privileges.for(resolveReportType(dto)).secure(dto);
   }
 
-  async list(
-    input: PeriodicReportListInput,
-  ): Promise<SecuredPeriodicReportList> {
+  async list(input: PeriodicReportListInput): Promise<SecuredPeriodicReportList> {
     const results = await this.repo.list(input);
 
     return {
@@ -131,20 +115,18 @@ export class PeriodicReportService {
     reportType: Type & ReportType,
   ): Promise<PeriodicReportTypeMap[Type] | undefined> {
     const report = await this.repo.getByDate(parentId, date, reportType);
-    return report
-      ? (this.secure(report) as PeriodicReportTypeMap[Type])
-      : undefined;
+    return report ? (this.secure(report) as PeriodicReportTypeMap[Type]) : undefined;
   }
 
   async getCurrentReportDue<Type extends keyof PeriodicReportTypeMap>(
     parentId: ID,
     reportType: Type & ReportType,
   ): Promise<PeriodicReportTypeMap[Type] | undefined> {
-    const report: UnsecuredDto<PeriodicReport> | undefined =
-      await this.repo.getCurrentDue(parentId, reportType);
-    return report
-      ? (this.secure(report) as PeriodicReportTypeMap[Type])
-      : undefined;
+    const report: UnsecuredDto<PeriodicReport> | undefined = await this.repo.getCurrentDue(
+      parentId,
+      reportType,
+    );
+    return report ? (this.secure(report) as PeriodicReportTypeMap[Type]) : undefined;
   }
 
   matchCurrentDue(parentId: ID | Variable, reportType: ReportType) {
@@ -156,9 +138,7 @@ export class PeriodicReportService {
     reportType: Type & ReportType,
   ): Promise<PeriodicReportTypeMap[Type] | undefined> {
     const report = await this.repo.getNextDue(parentId, reportType);
-    return report
-      ? (this.secure(report) as PeriodicReportTypeMap[Type])
-      : undefined;
+    return report ? (this.secure(report) as PeriodicReportTypeMap[Type]) : undefined;
   }
 
   async getLatestReportSubmitted<Type extends keyof PeriodicReportTypeMap>(
@@ -166,16 +146,10 @@ export class PeriodicReportService {
     type: Type & ReportType,
   ): Promise<PeriodicReportTypeMap[Type] | undefined> {
     const report = await this.repo.getLatestReportSubmitted(parentId, type);
-    return report
-      ? (this.secure(report) as PeriodicReportTypeMap[Type])
-      : undefined;
+    return report ? (this.secure(report) as PeriodicReportTypeMap[Type]) : undefined;
   }
 
-  async delete(
-    parent: ID,
-    type: ReportType,
-    intervals: ReadonlyArray<Range<CalendarDate | null>>,
-  ) {
+  async delete(parent: ID, type: ReportType, intervals: ReadonlyArray<Range<CalendarDate | null>>) {
     intervals = intervals.filter((i) => i.start || i.end);
     if (intervals.length === 0) {
       return;
@@ -185,19 +159,12 @@ export class PeriodicReportService {
     this.logger.info('Deleted reports', { parent, type, ...result });
   }
 
-  async getFinalReport(
-    parentId: ID,
-    type: ReportType,
-  ): Promise<PeriodicReport | undefined> {
+  async getFinalReport(parentId: ID, type: ReportType): Promise<PeriodicReport | undefined> {
     const report = await this.repo.getFinalReport(parentId, type);
     return report ? this.secure(report) : undefined;
   }
 
-  async mergeFinalReport(
-    parentId: ID,
-    type: ReportType,
-    at: CalendarDate,
-  ): Promise<void> {
+  async mergeFinalReport(parentId: ID, type: ReportType, at: CalendarDate): Promise<void> {
     const report = await this.repo.getFinalReport(parentId, type);
 
     if (report) {

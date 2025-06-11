@@ -8,14 +8,10 @@ export class CalculatedCondition implements Condition {
     return false;
   }
   asCypherCondition(): never {
-    throw new ServerException(
-      'Action is calculated, it should not be going to Cypher',
-    );
+    throw new ServerException('Action is calculated, it should not be going to Cypher');
   }
   asEdgeQLCondition(): never {
-    throw new ServerException(
-      'Action is calculated, it should not be going to EdgeQL',
-    );
+    throw new ServerException('Action is calculated, it should not be going to EdgeQL');
   }
   [inspect.custom]() {
     return 'Calculated';

@@ -35,8 +35,4 @@ export const ChildSingleAction = makeEnum(['read', 'edit']);
  * @internal
  */
 export type AnyAction = EnumType<typeof AnyAction>;
-export const AnyAction = makeEnum([
-  ...ResourceAction,
-  ...PropAction,
-  ...ChildRelationshipAction,
-]);
+export const AnyAction = makeEnum([...ResourceAction, ...PropAction, ...ChildRelationshipAction]);

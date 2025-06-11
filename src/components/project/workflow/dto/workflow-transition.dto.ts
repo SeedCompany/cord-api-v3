@@ -5,6 +5,4 @@ import { ProjectStep } from '../../dto';
 @ObjectType({
   description: WorkflowTransition.descriptionFor('project'),
 })
-export abstract class ProjectWorkflowTransition extends WorkflowTransition(
-  ProjectStep,
-) {}
+export abstract class ProjectWorkflowTransition extends WorkflowTransition(ProjectStep) {}

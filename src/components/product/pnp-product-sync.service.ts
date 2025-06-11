@@ -7,10 +7,7 @@ import { DateTime } from 'luxon';
 import { DateInterval, type ID } from '~/common';
 import { ILogger, Logger, ResourceLoader } from '~/core';
 import { type Downloadable, type FileVersion } from '../file/dto';
-import {
-  type PnpExtractionResult,
-  PnpProblemType,
-} from '../pnp/extraction-result';
+import { type PnpExtractionResult, PnpProblemType } from '../pnp/extraction-result';
 import { StoryService } from '../story';
 import {
   type CreateDerivativeScriptureProduct,
@@ -49,10 +46,7 @@ export class PnpProductSyncService {
     pnp: Downloadable<FileVersion>;
     result: PnpExtractionResult;
   }) {
-    const engagement = await this.resources.load(
-      'LanguageEngagement',
-      engagementId,
-    );
+    const engagement = await this.resources.load('LanguageEngagement', engagementId);
     const engagementRange = DateInterval.tryFrom(
       engagement.startDate.value,
       engagement.endDate.value,
@@ -60,12 +54,7 @@ export class PnpProductSyncService {
 
     let productRows;
     try {
-      productRows = await this.extractor.extract(
-        pnp,
-        engagementRange,
-        availableSteps,
-        result,
-      );
+      productRows = await this.extractor.extract(pnp, engagementRange, availableSteps, result);
     } catch (e) {
       this.logger.error(e.message, {
         id: pnp.id,
@@ -77,11 +66,7 @@ export class PnpProductSyncService {
       return [];
     }
 
-    return await this.matchRowsToProductChanges(
-      engagementId,
-      productRows,
-      result,
-    );
+    return await this.matchRowsToProductChanges(engagementId, productRows, result);
   }
 
   /**
@@ -94,17 +79,11 @@ export class PnpProductSyncService {
     result: PnpExtractionResult,
   ) {
     const scriptureProducts = rows[0].bookName
-      ? await this.products.loadProductIdsForBookAndVerse(
-          engagementId,
-          this.logger,
-        )
+      ? await this.products.loadProductIdsForBookAndVerse(engagementId, this.logger)
       : [];
 
     const storyProducts = rows[0].story
-      ? await this.products.loadProductIdsByPnpIndex(
-          engagementId,
-          DerivativeScriptureProduct.name,
-        )
+      ? await this.products.loadProductIdsByPnpIndex(engagementId, DerivativeScriptureProduct.name)
       : mapOf({});
 
     if (rows[0].story) {
@@ -119,12 +98,9 @@ export class PnpProductSyncService {
       return row.scripture[0]?.start.book ?? row.unspecifiedScripture?.book;
     }).flatMap((rowsOfBook) => {
       const bookName =
-        rowsOfBook[0].scripture[0]?.start.book ??
-        rowsOfBook[0].unspecifiedScripture?.book;
+        rowsOfBook[0].scripture[0]?.start.book ?? rowsOfBook[0].unspecifiedScripture?.book;
       if (!bookName) return [];
-      let existingProductsForBook = scriptureProducts.filter(
-        (ref) => ref.book === bookName,
-      );
+      let existingProductsForBook = scriptureProducts.filter((ref) => ref.book === bookName);
 
       const matches: Array<ExtractedRow & { existingId: ID | undefined }> = [];
       let nonExactMatches: ExtractedRow[] = [];
@@ -135,30 +111,24 @@ export class PnpProductSyncService {
         const withMatches = existingProductsForBook.filter((existingRef) => {
           if (
             existingRef.scriptureRanges.length > 0 &&
-            rowScriptureLabel ===
-              labelOfVerseRanges(existingRef.scriptureRanges)
+            rowScriptureLabel === labelOfVerseRanges(existingRef.scriptureRanges)
           ) {
             return true;
           }
           if (
             existingRef.unspecifiedScripture &&
             row.unspecifiedScripture &&
-            existingRef.unspecifiedScripture.book ===
-              row.unspecifiedScripture.book &&
-            existingRef.unspecifiedScripture.totalVerses ===
-              row.unspecifiedScripture.totalVerses
+            existingRef.unspecifiedScripture.book === row.unspecifiedScripture.book &&
+            existingRef.unspecifiedScripture.totalVerses === row.unspecifiedScripture.totalVerses
           ) {
             return true;
           }
           return false;
         });
-        const existingId =
-          withMatches.length === 1 ? withMatches[0].id : undefined;
+        const existingId = withMatches.length === 1 ? withMatches[0].id : undefined;
         if (existingId) {
           matches.push({ ...row, existingId });
-          existingProductsForBook = existingProductsForBook.filter(
-            (ref) => ref.id !== existingId,
-          );
+          existingProductsForBook = existingProductsForBook.filter((ref) => ref.id !== existingId);
         } else {
           nonExactMatches.push(row);
         }
@@ -166,10 +136,7 @@ export class PnpProductSyncService {
 
       // If there's only one product left for this book that hasn't been matched
       // And there's only one row left that can't be matched to a book & verse count
-      if (
-        existingProductsForBook.length === 1 &&
-        nonExactMatches.length === 1
-      ) {
+      if (existingProductsForBook.length === 1 && nonExactMatches.length === 1) {
         // Assume that ID belongs to this row.
         // Use case: A single row changes total verse count while other rows
         // for this book remain the same or are new.
@@ -220,23 +187,14 @@ export class PnpProductSyncService {
   }: {
     engagementId: ID<'LanguageEngagement'>;
     methodology: ProductMethodology;
-    actionableProductRows: ReadonlyArray<
-      ExtractedRow & { existingId: ID<'Product'> | undefined }
-    >;
+    actionableProductRows: ReadonlyArray<ExtractedRow & { existingId: ID<'Product'> | undefined }>;
   }) {
     const createdAt = DateTime.now();
     const storyIds = await this.getOrCreateStoriesByName(actionableProductRows);
 
     // Create/update products 5 at a time.
     await asyncPool(5, actionableProductRows, async (row) => {
-      const {
-        scripture,
-        unspecifiedScripture,
-        existingId,
-        steps,
-        note,
-        rowIndex: index,
-      } = row;
+      const { scripture, unspecifiedScripture, existingId, steps, note, rowIndex: index } = row;
 
       if (row.bookName) {
         // Populate one of the two product props based on whether it's a known verse range or not.
@@ -269,9 +227,7 @@ export class PnpProductSyncService {
       } else if (row.story) {
         const props = {
           produces: storyIds[row.placeholder ? 'Unknown' : row.story]!,
-          placeholderDescription: row.placeholder
-            ? `#${row.order} ${row.story}`
-            : null,
+          placeholderDescription: row.placeholder ? `#${row.order} ${row.story}` : null,
           methodology,
           steps: steps.map((s) => s.step),
           scriptureReferencesOverride: row.scripture,
@@ -300,17 +256,12 @@ export class PnpProductSyncService {
 
   private async getOrCreateStoriesByName(rows: readonly ExtractedRow[]) {
     const names = uniq(
-      rows.flatMap((row) =>
-        !row.story ? [] : row.placeholder ? 'Unknown' : row.story,
-      ),
+      rows.flatMap((row) => (!row.story ? [] : row.placeholder ? 'Unknown' : row.story)),
     );
     if (names.length === 0) {
       return {};
     }
-    const existingList = await this.repo.getProducibleIdsByNames(
-      names,
-      ProducibleType.Story,
-    );
+    const existingList = await this.repo.getProducibleIdsByNames(names, ProducibleType.Story);
     const existing = mapEntries(existingList, (r) => [r.name, r.id]).asRecord;
     const byName = { ...existing };
     const newNames = difference(names, Object.keys(existing));

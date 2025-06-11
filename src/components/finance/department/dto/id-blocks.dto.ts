@@ -13,9 +13,7 @@ export class FinanceDepartmentIdBlock extends FinanceDepartmentIdBlockInput {
 }
 
 @ObjectType()
-export class SecuredFinanceDepartmentIdBlock extends SecuredProperty(
-  FinanceDepartmentIdBlock,
-) {}
+export class SecuredFinanceDepartmentIdBlock extends SecuredProperty(FinanceDepartmentIdBlock) {}
 @ObjectType()
 export class SecuredFinanceDepartmentIdBlockNullable extends SecuredProperty(
   FinanceDepartmentIdBlock,

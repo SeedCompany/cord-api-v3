@@ -23,13 +23,11 @@ export const EngagementStatus = makeEnum({
     { value: 'Terminated', terminal: true },
     { value: 'Completed', terminal: true },
 
-    ...(['Converted', 'Unapproved', 'Transferred', 'NotRenewed'] as const).map(
-      (value) => ({
-        value,
-        terminal: true,
-        deprecationReason: 'Legacy. Only used in historic data.',
-      }),
-    ),
+    ...(['Converted', 'Unapproved', 'Transferred', 'NotRenewed'] as const).map((value) => ({
+      value,
+      terminal: true,
+      deprecationReason: 'Legacy. Only used in historic data.',
+    })),
   ],
   exposeOrder: true,
   extra: ({ entries }) => ({
@@ -43,9 +41,7 @@ export const EngagementStatus = makeEnum({
 })
 export class SecuredEngagementStatus extends SecuredEnum(EngagementStatus) {}
 
-export type EngagementTransitionType = EnumType<
-  typeof EngagementTransitionType
->;
+export type EngagementTransitionType = EnumType<typeof EngagementTransitionType>;
 export const EngagementTransitionType = makeEnum({
   name: 'EngagementTransitionType',
   values: ['Neutral', 'Approve', 'Reject'],

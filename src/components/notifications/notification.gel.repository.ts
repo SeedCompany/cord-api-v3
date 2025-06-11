@@ -1,18 +1,9 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { mapValues, type Nil, setOf } from '@seedcompany/common';
-import {
-  EnhancedResource,
-  type ID,
-  type PublicOf,
-  type ResourceShape,
-} from '~/common';
+import { EnhancedResource, type ID, type PublicOf, type ResourceShape } from '~/common';
 import { e, RepoFor, type ScopeOf } from '~/core/gel';
 import { mapToSetBlock } from '~/core/gel/query-util/map-to-set-block';
-import {
-  type MarkNotificationReadArgs,
-  Notification,
-  type NotificationListInput,
-} from './dto';
+import { type MarkNotificationReadArgs, Notification, type NotificationListInput } from './dto';
 import { type NotificationRepository as Neo4jRepository } from './notification.repository';
 import { NotificationServiceImpl } from './notification.service';
 
@@ -37,9 +28,7 @@ export class NotificationRepository
   async onModuleInit() {
     await this.service.ready.wait();
 
-    const basePointers = setOf(
-      Object.keys(this.resource.db.__element__.__pointers__),
-    );
+    const basePointers = setOf(Object.keys(this.resource.db.__element__.__pointers__));
     const hydrateConcretes = Object.assign(
       {},
       ...[...this.service.strategyMap].flatMap(([type, strategy]) => {
@@ -50,10 +39,7 @@ export class NotificationRepository
         const ownPointers = Object.keys(dbType.__element__.__pointers__).filter(
           (p) => !p.startsWith('<') && !basePointers.has(p),
         );
-        return e.is(
-          dbType,
-          mapValues.fromList(ownPointers, () => true).asRecord,
-        );
+        return e.is(dbType, mapValues.fromList(ownPointers, () => true).asRecord);
       }),
     );
     (this as any).hydrate = e.shape(e.Notification, (notification) => ({
@@ -72,8 +58,7 @@ export class NotificationRepository
 
     const dbType = EnhancedResource.of(type as typeof Notification).db;
     const created =
-      strategy.insertForGel?.(input) ??
-      e.insert(dbType, mapToSetBlock(dbType, input, false));
+      strategy.insertForGel?.(input) ?? e.insert(dbType, mapToSetBlock(dbType, input, false));
 
     const recipientsQuery = recipients
       ? e.cast(e.User, e.cast(e.uuid, e.set(...recipients)))
@@ -130,8 +115,6 @@ export class NotificationRepository
     notification: ScopeOf<typeof e.Notification>,
     { filter }: NotificationListInput,
   ) {
-    return [
-      filter?.unread != null && e.op(notification.unread, '=', filter.unread),
-    ];
+    return [filter?.unread != null && e.op(notification.unread, '=', filter.unread)];
   }
 }

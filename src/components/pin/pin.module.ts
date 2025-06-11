@@ -6,11 +6,7 @@ import { PinResolver } from './pin.resolver';
 import { PinService } from './pin.service';
 
 @Module({
-  providers: [
-    PinResolver,
-    PinService,
-    splitDb(PinRepository, PinGelRepository),
-  ],
+  providers: [PinResolver, PinService, splitDb(PinRepository, PinGelRepository)],
   exports: [PinService],
 })
 export class PinModule {}

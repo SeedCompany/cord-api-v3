@@ -3,10 +3,7 @@ import { some } from 'lodash';
 import { DateTime, Interval } from 'luxon';
 import { generateId, type ID, Role } from '~/common';
 import { graphql } from '~/graphql';
-import {
-  EngagementStatus,
-  InternshipPosition,
-} from '../src/components/engagement/dto';
+import { EngagementStatus, InternshipPosition } from '../src/components/engagement/dto';
 import { ProductMethodology } from '../src/components/product/dto';
 import { ProjectStep, ProjectType } from '../src/components/project/dto';
 import {
@@ -59,11 +56,7 @@ describe('Engagement e2e', () => {
     await createSession(app);
 
     user = await registerUser(app, {
-      roles: [
-        Role.ProjectManager,
-        Role.FieldOperationsDirector,
-        Role.Consultant,
-      ],
+      roles: [Role.ProjectManager, Role.FieldOperationsDirector, Role.Consultant],
     });
     [language, location] = await runAsAdmin(app, async () => {
       const language = await createLanguage(app);
@@ -95,9 +88,7 @@ describe('Engagement e2e', () => {
       .toDuration()
       .toFormat('S');
     expect(parseInt(difference)).toBeGreaterThan(0);
-    expect(languageEngagement.status.value).toBe(
-      EngagementStatus.InDevelopment,
-    );
+    expect(languageEngagement.status.value).toBe(EngagementStatus.InDevelopment);
   });
 
   it('create a language engagement with only required fields', async () => {
@@ -109,9 +100,7 @@ describe('Engagement e2e', () => {
     const result = await app.graphql.mutate(
       graphql(
         `
-          mutation createLanguageEngagement(
-            $input: CreateLanguageEngagementInput!
-          ) {
+          mutation createLanguageEngagement($input: CreateLanguageEngagementInput!) {
             createLanguageEngagement(input: $input) {
               engagement {
                 ...languageEngagement
@@ -172,9 +161,7 @@ describe('Engagement e2e', () => {
     const result = await app.graphql.mutate(
       graphql(
         `
-          mutation createInternshipEngagement(
-            $input: CreateInternshipEngagement!
-          ) {
+          mutation createInternshipEngagement($input: CreateInternshipEngagement!) {
             createInternshipEngagement(input: { engagement: $input }) {
               engagement {
                 ...internshipEngagement
@@ -237,12 +224,8 @@ describe('Engagement e2e', () => {
 
     expect(actual.id).toBe(languageEngagement.id);
     expect(actual.language).toMatchObject(languageEngagement.language);
-    expect(actual.firstScripture).toMatchObject(
-      languageEngagement.firstScripture,
-    );
-    expect(actual.lukePartnership).toMatchObject(
-      languageEngagement.lukePartnership,
-    );
+    expect(actual.firstScripture).toMatchObject(languageEngagement.firstScripture);
+    expect(actual.lukePartnership).toMatchObject(languageEngagement.lukePartnership);
     expect(actual.ceremony).toBeDefined();
     expect(actual.completeDate).toMatchObject(languageEngagement.completeDate);
     expect(actual.disbursementCompleteDate).toMatchObject(
@@ -251,9 +234,7 @@ describe('Engagement e2e', () => {
     expect(actual.startDate).toMatchObject(languageEngagement.startDate);
     expect(actual.endDate).toMatchObject(languageEngagement.endDate);
     expect(actual.modifiedAt).toBe(languageEngagement.modifiedAt);
-    expect(actual.paratextRegistryId).toMatchObject(
-      languageEngagement.paratextRegistryId,
-    );
+    expect(actual.paratextRegistryId).toMatchObject(languageEngagement.paratextRegistryId);
     expect(actual.pnp).toMatchObject(languageEngagement.pnp);
   });
 
@@ -296,17 +277,11 @@ describe('Engagement e2e', () => {
     expect(actual.id).toBe(internshipEngagement.id);
     expect(actual.intern).toMatchObject(internshipEngagement.intern);
     expect(actual.mentor).toMatchObject(internshipEngagement.mentor);
-    expect(actual.countryOfOrigin).toMatchObject(
-      internshipEngagement.countryOfOrigin,
-    );
-    expect(actual.methodologies).toMatchObject(
-      internshipEngagement.methodologies,
-    );
+    expect(actual.countryOfOrigin).toMatchObject(internshipEngagement.countryOfOrigin);
+    expect(actual.methodologies).toMatchObject(internshipEngagement.methodologies);
     expect(actual.position).toMatchObject(internshipEngagement.position);
     expect(actual.ceremony).toBeDefined();
-    expect(actual.completeDate).toMatchObject(
-      internshipEngagement.completeDate,
-    );
+    expect(actual.completeDate).toMatchObject(internshipEngagement.completeDate);
     expect(actual.disbursementCompleteDate).toMatchObject(
       internshipEngagement.disbursementCompleteDate,
     );
@@ -330,9 +305,7 @@ describe('Engagement e2e', () => {
     const result = await app.graphql.mutate(
       graphql(
         `
-          mutation updateLanguageEngagement(
-            $input: UpdateLanguageEngagementInput!
-          ) {
+          mutation updateLanguageEngagement($input: UpdateLanguageEngagementInput!) {
             updateLanguageEngagement(input: $input) {
               engagement {
                 ...languageEngagement
@@ -370,23 +343,17 @@ describe('Engagement e2e', () => {
       type: ProjectType.Internship,
     });
     const mentor = await createPerson(app);
-    const internshipEngagement =
-      await createInternshipEngagementWithMinimumValues(app, {
-        projectId: internshipProject.id,
-        internId: intern.id,
-      });
+    const internshipEngagement = await createInternshipEngagementWithMinimumValues(app, {
+      projectId: internshipProject.id,
+      internId: intern.id,
+    });
     const updatePosition = InternshipPosition.LanguageProgramManager;
-    const updateMethodologies = [
-      ProductMethodology.Paratext,
-      ProductMethodology.StoryTogether,
-    ];
+    const updateMethodologies = [ProductMethodology.Paratext, ProductMethodology.StoryTogether];
 
     const result = await app.graphql.mutate(
       graphql(
         `
-          mutation updateInternshipEngagement(
-            $input: UpdateInternshipEngagementInput!
-          ) {
+          mutation updateInternshipEngagement($input: UpdateInternshipEngagementInput!) {
             updateInternshipEngagement(input: $input) {
               engagement {
                 ...internshipEngagement
@@ -416,9 +383,7 @@ describe('Engagement e2e', () => {
     expect(updated.mentor.value!.id).toBe(mentor.id);
     expect(updated.countryOfOrigin.value!.id).toBe(location.id);
     expect(updated.position.value).toBe(updatePosition);
-    expect(updated.methodologies.value).toEqual(
-      expect.arrayContaining(updateMethodologies),
-    );
+    expect(updated.methodologies.value).toEqual(expect.arrayContaining(updateMethodologies));
 
     const difference = Interval.fromDateTimes(
       DateTime.fromISO(internshipEngagement.modifiedAt.toString()),
@@ -697,9 +662,7 @@ describe('Engagement e2e', () => {
       },
     );
 
-    expect(
-      languageEngagementRead?.engagement?.ceremony?.value?.id,
-    ).toBeDefined();
+    expect(languageEngagementRead?.engagement?.ceremony?.value?.id).toBeDefined();
 
     const ceremonyId = languageEngagementRead?.engagement?.ceremony?.value?.id;
 
@@ -808,9 +771,7 @@ describe('Engagement e2e', () => {
         internId: intern.id,
         mentorId: mentor.id,
       }),
-    ).rejects.toThrowGqlError(
-      errors.notFound({ message: 'Could not find country of origin' }),
-    );
+    ).rejects.toThrowGqlError(errors.notFound({ message: 'Could not find country of origin' }));
 
     internshipProject = await createProject(app, {
       type: ProjectType.Internship,
@@ -823,9 +784,7 @@ describe('Engagement e2e', () => {
         internId: invalidId,
         mentorId: mentor.id,
       }),
-    ).rejects.toThrowGqlError(
-      errors.notFound({ message: 'Could not find person' }),
-    );
+    ).rejects.toThrowGqlError(errors.notFound({ message: 'Could not find person' }));
 
     internshipProject = await createProject(app, {
       type: ProjectType.Internship,
@@ -838,9 +797,7 @@ describe('Engagement e2e', () => {
         internId: intern.id,
         mentorId: invalidId,
       }),
-    ).rejects.toThrowGqlError(
-      errors.notFound({ message: 'Could not find mentor' }),
-    );
+    ).rejects.toThrowGqlError(errors.notFound({ message: 'Could not find mentor' }));
   });
 
   it('language engagement creation fails and lets you know why if your ids are bad', async () => {
@@ -860,9 +817,7 @@ describe('Engagement e2e', () => {
         projectId: project.id,
         languageId: invalidId,
       }),
-    ).rejects.toThrowGqlError(
-      errors.notFound({ message: 'Could not find language' }),
-    );
+    ).rejects.toThrowGqlError(errors.notFound({ message: 'Could not find language' }));
   });
 
   it('should return empty methodologies array even if it is null', async () => {
@@ -907,8 +862,7 @@ describe('Engagement e2e', () => {
       }),
     ).rejects.toThrowGqlError(
       errors.input({
-        message:
-          'Only Internship Engagements can be created on Internship Projects',
+        message: 'Only Internship Engagements can be created on Internship Projects',
         field: 'engagement.internId',
       }),
     );
@@ -971,8 +925,7 @@ describe('Engagement e2e', () => {
       }),
     ).rejects.toThrowGqlError(
       errors.input({
-        message:
-          'First scripture has already been marked as having been done externally',
+        message: 'First scripture has already been marked as having been done externally',
         field: 'languageEngagement.firstScripture',
       }),
     );
@@ -992,8 +945,7 @@ describe('Engagement e2e', () => {
       }),
     ).rejects.toThrowGqlError(
       errors.input({
-        message:
-          'Another engagement has already been marked as having done the first scripture',
+        message: 'Another engagement has already been marked as having done the first scripture',
         field: 'languageEngagement.firstScripture',
       }),
     );
@@ -1050,33 +1002,13 @@ describe('Engagement e2e', () => {
   });
 
   it.each([
-    [
-      ProjectStep.PendingFinanceConfirmation,
-      ProjectStep.Active,
-      EngagementStatus.Active,
-    ],
-    [
-      ProjectStep.EarlyConversations,
-      ProjectStep.DidNotDevelop,
-      EngagementStatus.DidNotDevelop,
-    ],
-    [
-      ProjectStep.PendingFinanceConfirmation,
-      ProjectStep.Rejected,
-      EngagementStatus.Rejected,
-    ],
-    [
-      ProjectStep.PendingTerminationApproval,
-      ProjectStep.Terminated,
-      EngagementStatus.Terminated,
-    ],
+    [ProjectStep.PendingFinanceConfirmation, ProjectStep.Active, EngagementStatus.Active],
+    [ProjectStep.EarlyConversations, ProjectStep.DidNotDevelop, EngagementStatus.DidNotDevelop],
+    [ProjectStep.PendingFinanceConfirmation, ProjectStep.Rejected, EngagementStatus.Rejected],
+    [ProjectStep.PendingTerminationApproval, ProjectStep.Terminated, EngagementStatus.Terminated],
     // this only happens when an admin overrides to completed
     // this is prohibited if there are non terminal engagements
-    [
-      ProjectStep.FinalizingCompletion,
-      ProjectStep.Completed,
-      EngagementStatus.Completed,
-    ],
+    [ProjectStep.FinalizingCompletion, ProjectStep.Completed, EngagementStatus.Completed],
   ])(
     'should update Engagement status to match Project step when it becomes %s',
     async (
@@ -1156,16 +1088,10 @@ describe('Engagement e2e', () => {
     });
     // Update Project and Engagement status to Active
     await runAsAdmin(app, async () => {
-      const actual = await transitionEngagementToActive(
-        app,
-        project.id,
-        engagement.id,
-      );
+      const actual = await transitionEngagementToActive(app, project.id, engagement.id);
 
       const modAtMillis = DateTime.fromISO(actual.modifiedAt).toMillis();
-      const statusModMillis = DateTime.fromISO(
-        actual.statusModifiedAt.value!,
-      ).toMillis();
+      const statusModMillis = DateTime.fromISO(actual.statusModifiedAt.value!).toMillis();
       expect(modAtMillis).toBe(statusModMillis);
     });
   });
@@ -1191,11 +1117,7 @@ describe('Engagement e2e', () => {
     // Update Project status to Active
     await runAsAdmin(app, async () => {
       await transitionEngagementToActive(app, project.id, engagement.id);
-      await changeProjectStep(
-        app,
-        project.id,
-        ProjectStep.DiscussingChangeToPlan,
-      );
+      await changeProjectStep(app, project.id, ProjectStep.DiscussingChangeToPlan);
       await changeInternshipEngagementStatus(
         app,
         engagement.id,
@@ -1236,21 +1158,13 @@ describe('Engagement e2e', () => {
     // Update Project status to Active
     await runAsAdmin(app, async () => {
       await transitionEngagementToActive(app, project.id, engagement.id);
-      await changeProjectStep(
-        app,
-        project.id,
-        ProjectStep.DiscussingChangeToPlan,
-      );
+      await changeProjectStep(app, project.id, ProjectStep.DiscussingChangeToPlan);
       await changeInternshipEngagementStatus(
         app,
         engagement.id,
         EngagementStatus.DiscussingSuspension,
       );
-      await changeInternshipEngagementStatus(
-        app,
-        engagement.id,
-        EngagementStatus.Suspended,
-      );
+      await changeInternshipEngagementStatus(app, engagement.id, EngagementStatus.Suspended);
       await changeInternshipEngagementStatus(
         app,
         engagement.id,
@@ -1299,8 +1213,7 @@ describe('Engagement e2e', () => {
       }),
     ).rejects.toThrowGqlError(
       errors.unauthorized({
-        message:
-          'You do not have the permission to create engagement for this project',
+        message: 'You do not have the permission to create engagement for this project',
       }),
     );
 
@@ -1319,8 +1232,7 @@ describe('Engagement e2e', () => {
       ),
     ).rejects.toThrowGqlError(
       errors.unauthorized({
-        message:
-          'You do not have the permission to delete this language engagement',
+        message: 'You do not have the permission to delete this language engagement',
       }),
     );
   });

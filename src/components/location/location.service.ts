@@ -22,10 +22,7 @@ import { LocationRepository } from './location.repository';
 
 @Injectable()
 export class LocationService {
-  constructor(
-    private readonly privileges: Privileges,
-    private readonly repo: LocationRepository,
-  ) {}
+  constructor(private readonly privileges: Privileges, private readonly repo: LocationRepository) {}
 
   async create(input: CreateLocation): Promise<Location> {
     this.privileges.for(Location).verifyCan('create');
@@ -92,12 +89,7 @@ export class LocationService {
     }
   }
 
-  async removeLocationFromNode(
-    label: string,
-    id: ID,
-    rel: string,
-    locationId: ID,
-  ) {
+  async removeLocationFromNode(label: string, id: ID, rel: string, locationId: ID) {
     try {
       await this.repo.removeLocationFromNode(label, id, rel, locationId);
     } catch (e) {

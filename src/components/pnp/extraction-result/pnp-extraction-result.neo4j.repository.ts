@@ -43,11 +43,7 @@ export class PnpExtractionResultNeo4jRepository
       .where({ 'file.id': inArray(files) })
       .subQuery('result', (sub) =>
         sub
-          .match([
-            node('result'),
-            relation('out', 'problemRel', 'problem'),
-            node('type'),
-          ])
+          .match([node('result'), relation('out', 'problemRel', 'problem'), node('type')])
           .with(
             merge('problemRel', {
               type: 'type.id',
@@ -55,9 +51,7 @@ export class PnpExtractionResultNeo4jRepository
             }).as('problem'),
           )
           .orderBy(String(sortingForEnumIndex(Severity)('problem.severity')))
-          .return<{ problems: StoredProblem }>(
-            collect('problem').as('problems'),
-          ),
+          .return<{ problems: StoredProblem }>(collect('problem').as('problems')),
       )
       .return<SetNonNullable<PnpExtractionResultLoadResult>>([
         'file.id as id',
@@ -94,11 +88,7 @@ export class PnpExtractionResultNeo4jRepository
       .with('result')
       .subQuery('result', (sub) =>
         sub
-          .match([
-            node('result'),
-            relation('out', 'problem', 'problem'),
-            node(),
-          ])
+          .match([node('result'), relation('out', 'problem', 'problem'), node()])
           .delete('problem')
           .return('count(problem) as count'),
       )
@@ -132,16 +122,13 @@ export class PnpExtractionResultNeo4jRepository
   }
 }
 
-export const pnpExtractionResultFilters = filter.define(
-  () => PnpExtractionResultFilters,
-  {
-    hasError: filter.pathExists([
-      node('node'),
-      relation('out', '', 'problem'),
-      node('', { severity: Severity.Error }),
-    ]),
-  },
-);
+export const pnpExtractionResultFilters = filter.define(() => PnpExtractionResultFilters, {
+  hasError: filter.pathExists([
+    node('node'),
+    relation('out', '', 'problem'),
+    node('', { severity: Severity.Error }),
+  ]),
+});
 
 export const pnpExtractionResultSorters = defineSorters(PnpExtractionResult, {
   totalErrors: (query) =>

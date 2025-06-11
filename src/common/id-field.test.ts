@@ -26,8 +26,7 @@ const UserIncompatibleDifferent: ID<'User'> = '' as ID<'Location'>;
 // @ts-expect-error this should be blocked
 const UserIncompatibleDifferent2: ID<'Location'> = '' as ID<'User'>;
 
-const SubclassesAreCompatible: ID<'Engagement'> =
-  '' as ID<'LanguageEngagement'>;
+const SubclassesAreCompatible: ID<'Engagement'> = '' as ID<'LanguageEngagement'>;
 // @ts-expect-error this should be blocked
 const InterfaceIsNotDirectlyCompatibleWithConcrete: ID<'LanguageEngagement'> =
   '' as ID<'Engagement'>;

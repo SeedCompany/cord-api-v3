@@ -43,9 +43,7 @@ export class FundingAccountRepository extends DtoRepository(FundingAccount) {
         relation('out', '', 'departmentIdBlock', ACTIVE),
         node('', 'DepartmentIdBlock', {
           id: variable(apoc.create.uuid()),
-          blocks: variable(
-            apoc.convert.toJson(blockOfAccount(input.accountNumber)),
-          ),
+          blocks: variable(apoc.convert.toJson(blockOfAccount(input.accountNumber))),
           programs: [Program.MomentumTranslation, Program.Internship],
         }),
       ])

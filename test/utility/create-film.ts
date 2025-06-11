@@ -3,10 +3,7 @@ import { graphql, type InputOf } from '~/graphql';
 import { type TestApp } from './create-app';
 import * as fragments from './fragments';
 
-export async function createFilm(
-  app: TestApp,
-  input: Partial<InputOf<typeof CreateFilmDoc>> = {},
-) {
+export async function createFilm(app: TestApp, input: Partial<InputOf<typeof CreateFilmDoc>> = {}) {
   const name = input.name || faker.hacker.noun() + faker.company.name();
 
   const result = await app.graphql.mutate(CreateFilmDoc, {

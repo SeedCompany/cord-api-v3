@@ -24,9 +24,7 @@ export class SystemAgentNeo4jRepository extends SystemAgentRepository {
           'agent.roles': roles ?? [],
         },
       })
-      .return<{ agent: SystemAgent }>(
-        merge('agent', { __typename: '"SystemAgent"' }).as('agent'),
-      )
+      .return<{ agent: SystemAgent }>(merge('agent', { __typename: '"SystemAgent"' }).as('agent'))
       .first();
     return res!.agent;
   }

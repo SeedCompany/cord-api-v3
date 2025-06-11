@@ -17,15 +17,9 @@ import {
   stepPlanCompleteDate,
   type WrittenScripturePlanningSheet,
 } from '../pnp';
-import {
-  type PnpPlanningExtractionResult,
-  PnpProblemType,
-} from '../pnp/extraction-result';
+import { type PnpPlanningExtractionResult, PnpProblemType } from '../pnp/extraction-result';
 import { verifyEngagementDateRangeMatches } from '../pnp/verifyEngagementDateRangeMatches';
-import {
-  ScriptureRange,
-  type UnspecifiedScripturePortion,
-} from '../scripture/dto';
+import { ScriptureRange, type UnspecifiedScripturePortion } from '../scripture/dto';
 import { type ProductStep, type ProductStep as Step } from './dto';
 
 @Injectable()
@@ -40,11 +34,7 @@ export class ProductExtractor {
     const sheet = pnp.planning;
 
     const stepColumns = findStepColumns(sheet, result, availableSteps);
-    const progressStepColumns = findStepColumns(
-      pnp.progress,
-      undefined,
-      availableSteps,
-    );
+    const progressStepColumns = findStepColumns(pnp.progress, undefined, availableSteps);
 
     if (!verifyEngagementDateRangeMatches(sheet, result, engagementRange)) {
       return [];
@@ -66,9 +56,7 @@ export class ProductExtractor {
       ? sheet.sustainabilityGoals
           .walkDown()
           .map((cell) => ({
-            title: `Train ${
-              sheet.sustainabilityRole(cell.row)?.replace(/:$/, '') ?? ''
-            }`,
+            title: `Train ${sheet.sustainabilityRole(cell.row)?.replace(/:$/, '') ?? ''}`,
             count: sheet.sustainabilityRoleCount(cell.row) ?? 0,
           }))
           .filter((row) => row.count > 0)
@@ -93,10 +81,7 @@ const parseProductRow =
 
     const steps = entries(stepColumns).flatMap(([step, column]) => {
       const plannedCell = sheet.cell(column, row);
-      const progressCell = pnp.progress.cell(
-        progressStepColumns[step],
-        progressRow,
-      );
+      const progressCell = pnp.progress.cell(progressStepColumns[step], progressRow);
 
       if (
         !isGoalStepPlannedInsideProject(pnp, plannedCell, step, result) ||

@@ -1,10 +1,6 @@
 import { node, type Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import {
-  type ID,
-  type MaybeUnsecuredInstance,
-  type ResourceShape,
-} from '~/common';
+import { type ID, type MaybeUnsecuredInstance, type ResourceShape } from '~/common';
 import { type DbChanges } from '../../changes';
 import { prefixNodeLabelsWithDeleted } from '../deletes';
 import { ACTIVE, Variable, variable as varRef } from '../index';
@@ -40,9 +36,7 @@ export const deactivateProperty =
   }: DeactivatePropertyOptions<TResourceStatic, TObject, Key>) =>
   <R>(query: Query<R>) => {
     const imports = [nodeName, key instanceof Variable ? key : '', changeset];
-    const now = (
-      nowIn ?? query.params.addParam(DateTime.now(), 'now')
-    ).toString();
+    const now = (nowIn ?? query.params.addParam(DateTime.now(), 'now')).toString();
 
     const docKey = key instanceof Variable ? `[${key.toString()}]` : `.${key}`;
     const docSignature = `deactivateProperty(${nodeName}${docKey})`;
@@ -55,17 +49,10 @@ export const deactivateProperty =
           }),
           node('oldPropVar', 'Property'),
           ...(changeset
-            ? [
-                relation('in', 'oldChange', 'changeset', ACTIVE),
-                node(changeset.toString()),
-              ]
+            ? [relation('in', 'oldChange', 'changeset', ACTIVE), node(changeset.toString())]
             : []),
         ])
-        .apply(
-          maybeWhereAnd(
-            key instanceof Variable && `type(oldToProp) = ${key.toString()}`,
-          ),
-        )
+        .apply(maybeWhereAnd(key instanceof Variable && `type(oldToProp) = ${key.toString()}`))
         .setValues({
           [`${changeset ? 'oldChange' : 'oldToProp'}.active`]: false,
           'oldPropVar.deletedAt': varRef(now),

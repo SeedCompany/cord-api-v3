@@ -1,22 +1,11 @@
-import {
-  type DataLoaderStrategy,
-  LoaderFactory,
-  type LoaderOptionsOf,
-} from '~/core/data-loader';
-import {
-  type ProgressVariantByReportInput,
-  type ProgressVariantByReportOutput,
-} from './dto';
+import { type DataLoaderStrategy, LoaderFactory, type LoaderOptionsOf } from '~/core/data-loader';
+import { type ProgressVariantByReportInput, type ProgressVariantByReportOutput } from './dto';
 import { ProductProgressService } from './product-progress.service';
 
 @LoaderFactory()
 export class ProductProgressByReportLoader
   implements
-    DataLoaderStrategy<
-      ProgressVariantByReportOutput,
-      ProgressVariantByReportInput,
-      string
-    >
+    DataLoaderStrategy<ProgressVariantByReportOutput, ProgressVariantByReportInput, string>
 {
   constructor(private readonly service: ProductProgressService) {}
 

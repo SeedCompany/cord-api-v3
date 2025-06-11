@@ -2,10 +2,7 @@ import { ProjectWorkflow } from '../../../project/workflow/project-workflow';
 import { member, Policy, Role } from '../util';
 
 export const projectTransitions = () =>
-  ProjectWorkflow.pickNames(
-    'Consultant Endorses Proposal',
-    'Consultant Opposes Proposal',
-  );
+  ProjectWorkflow.pickNames('Consultant Endorses Proposal', 'Consultant Opposes Proposal');
 
 // NOTE: There could be other permissions for this role from other policies
 @Policy([Role.Consultant, Role.ConsultantManager], (r) => [
@@ -29,9 +26,7 @@ export const projectTransitions = () =>
     r.StepProgress,
   ].map((it) => it.when(member).read),
 
-  r.InternshipEngagement.when(member).edit.specifically((p) => [
-    p.ceremony.none,
-  ]),
+  r.InternshipEngagement.when(member).edit.specifically((p) => [p.ceremony.none]),
   r.LanguageEngagement.when(member).read.specifically((p) => [
     p.many('pnp', 'paratextRegistryId').edit,
   ]),

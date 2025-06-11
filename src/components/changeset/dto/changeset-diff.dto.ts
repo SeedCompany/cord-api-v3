@@ -7,8 +7,7 @@ import { type ResourceMap } from '~/core';
 type SomeResource = ValueOf<ResourceMap>['prototype'];
 
 @ObjectType({
-  description:
-    'The resources that have been added/removed/changed in a given changeset',
+  description: 'The resources that have been added/removed/changed in a given changeset',
 })
 export class ChangesetDiff {
   @Field(() => [Resource], {
@@ -17,8 +16,7 @@ export class ChangesetDiff {
   readonly added: readonly SomeResource[];
 
   @Field(() => [Resource], {
-    description:
-      'The list of resources that have been removed in this changeset',
+    description: 'The list of resources that have been removed in this changeset',
   })
   readonly removed: readonly SomeResource[];
 

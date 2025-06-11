@@ -8,9 +8,7 @@ import {
   MissingContextException,
 } from '../../policy/conditions';
 
-class SelfCondition<TResourceStatic extends typeof User>
-  implements Condition<TResourceStatic>
-{
+class SelfCondition<TResourceStatic extends typeof User> implements Condition<TResourceStatic> {
   isAllowed({ object, session }: IsAllowedParams<TResourceStatic>) {
     if (!object) {
       throw new MissingContextException();

@@ -53,18 +53,14 @@ function stringifyValue(value: unknown): string {
       : `'${neo.Integer.toString(value)}'`;
   }
   if (typeof value === 'object') {
-    const pairs = entries<any>(value).map(
-      ([key, el]) => `${quoteKey(key)}: ${stringifyValue(el)}`,
-    );
+    const pairs = entries<any>(value).map(([key, el]) => `${quoteKey(key)}: ${stringifyValue(el)}`);
     const str = pairs.join(', ');
     return `{ ${str} }`;
   }
   return '';
 }
 
-export const quoteKey = (key: string): string =>
-  SAFE_KEY.exec(key) ? key : `\`${key}\``;
+export const quoteKey = (key: string): string => (SAFE_KEY.exec(key) ? key : `\`${key}\``);
 const SAFE_KEY = /^[a-zA-Z][a-zA-Z0-9]*$/;
 
-const isNeoInteger = (value: unknown): value is Integer =>
-  neo.Integer.isInteger(value as any);
+const isNeoInteger = (value: unknown): value is Integer => neo.Integer.isInteger(value as any);

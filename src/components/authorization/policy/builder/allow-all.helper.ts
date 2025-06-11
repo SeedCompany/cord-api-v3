@@ -15,7 +15,5 @@ export const allowAll =
 /**
  * A helper to allow these actions for this resource.
  */
-export const allowActions = (
-  granter: ValueOf<ResourcesGranter>,
-  ...actions: ResourceAction[]
-) => asNormalized(granter, (g) => g[action](...actions));
+export const allowActions = (granter: ValueOf<ResourcesGranter>, ...actions: ResourceAction[]) =>
+  asNormalized(granter, (g) => g[action](...actions));

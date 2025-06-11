@@ -24,16 +24,10 @@ export class MediaRepository extends CommonRepository {
     return media;
   }
 
-  async readMany(
-    input: RequireAtLeastOne<Record<'fvIds' | 'mediaIds', readonly ID[]>>,
-  ) {
+  async readMany(input: RequireAtLeastOne<Record<'fvIds' | 'mediaIds', readonly ID[]>>) {
     return await this.db
       .query()
-      .match([
-        node('fv', 'FileVersion'),
-        relation('out', '', 'media'),
-        node('node', 'Media'),
-      ])
+      .match([node('fv', 'FileVersion'), relation('out', '', 'media'), node('node', 'Media')])
       .where(
         or([
           ...(input.fvIds ? [{ 'fv.id': inArray(input.fvIds) }] : []),
@@ -81,9 +75,7 @@ export class MediaRepository extends CommonRepository {
     input: RequireAtLeastOne<Pick<AnyMedia, 'id' | 'file'>> &
       Partial<Except<AnyMedia, 'attachedTo'>>,
   ) {
-    const res = input.__typename
-      ? EnhancedResource.of(resolveMedia(input as AnyMedia))
-      : undefined;
+    const res = input.__typename ? EnhancedResource.of(resolveMedia(input as AnyMedia)) : undefined;
     const metadata = EnhancedResource.of(MediaUserMetadata);
 
     const tempId = await generateId();
@@ -105,22 +97,14 @@ export class MediaRepository extends CommonRepository {
                 values: { 'node.id': tempId },
                 variables: { 'node.createdAt': 'datetime()' },
               })
-          : q.match([
-              node('fv', 'FileVersion'),
-              relation('out', '', 'media'),
-              node('node'),
-            ]),
+          : q.match([node('fv', 'FileVersion'), relation('out', '', 'media'), node('node')]),
       )
       .setValues({ node: toDbShape(input) }, true)
       .with('node, fv')
       // Update the labels if typename is given, and maybe changed.
       .apply((q) =>
         res
-          ? q.call(
-              apoc.create
-                .setLabels('node', res.dbLabels)
-                .yield({ node: 'labelsAdded' }),
-            )
+          ? q.call(apoc.create.setLabels('node', res.dbLabels).yield({ node: 'labelsAdded' }))
           : q,
       )
       // Grab the previous media node or null
@@ -133,11 +117,7 @@ export class MediaRepository extends CommonRepository {
             relation('in', '', 'parent', ACTIVE),
             node('fvs', 'FileVersion'),
           ])
-          .optionalMatch([
-            node('fvs'),
-            relation('out', '', 'media'),
-            node('prevMedia', 'Media'),
-          ])
+          .optionalMatch([node('fvs'), relation('out', '', 'media'), node('prevMedia', 'Media')])
           .return('prevMedia')
           .orderBy('fvs.createdAt', 'DESC')
           .raw('LIMIT 1'),
@@ -167,9 +147,7 @@ export class MediaRepository extends CommonRepository {
     if (input.file) {
       const exists = await this.getBaseNode(input.file, 'FileVersion');
       if (!exists) {
-        throw new NotFoundException(
-          'Media could not be saved to nonexistent file',
-        );
+        throw new NotFoundException('Media could not be saved to nonexistent file');
       }
     }
     if (input.id) {

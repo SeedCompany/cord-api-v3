@@ -43,9 +43,7 @@ export class StoryResolver {
   @Mutation(() => CreateStoryOutput, {
     description: 'Create a story',
   })
-  async createStory(
-    @Args('input') { story: input }: CreateStoryInput,
-  ): Promise<CreateStoryOutput> {
+  async createStory(@Args('input') { story: input }: CreateStoryInput): Promise<CreateStoryOutput> {
     const story = await this.storyService.create(input);
     return { story };
   }
@@ -53,9 +51,7 @@ export class StoryResolver {
   @Mutation(() => UpdateStoryOutput, {
     description: 'Update a story',
   })
-  async updateStory(
-    @Args('input') { story: input }: UpdateStoryInput,
-  ): Promise<UpdateStoryOutput> {
+  async updateStory(@Args('input') { story: input }: UpdateStoryInput): Promise<UpdateStoryOutput> {
     const story = await this.storyService.update(input);
     return { story };
   }

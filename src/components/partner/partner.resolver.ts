@@ -1,11 +1,4 @@
-import {
-  Args,
-  Mutation,
-  Parent,
-  Query,
-  ResolveField,
-  Resolver,
-} from '@nestjs/graphql';
+import { Args, Mutation, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
 import {
   type ID,
   IdArg,
@@ -77,9 +70,7 @@ export class PartnerResolver {
     @Parent() partner: Partner,
     @Loader(OrganizationLoader) organizations: LoaderOf<OrganizationLoader>,
   ): Promise<SecuredOrganization> {
-    return await mapSecuredValue(partner.organization, ({ id }) =>
-      organizations.load(id),
-    );
+    return await mapSecuredValue(partner.organization, ({ id }) => organizations.load(id));
   }
 
   @ResolveField(() => SecuredUser)
@@ -87,9 +78,7 @@ export class PartnerResolver {
     @Parent() partner: Partner,
     @Loader(UserLoader) users: LoaderOf<UserLoader>,
   ): Promise<SecuredUser> {
-    return await mapSecuredValue(partner.pointOfContact, ({ id }) =>
-      users.load(id),
-    );
+    return await mapSecuredValue(partner.pointOfContact, ({ id }) => users.load(id));
   }
 
   @ResolveField(() => SecuredLanguageNullable)
@@ -97,9 +86,8 @@ export class PartnerResolver {
     @Parent() partner: Partner,
     @Loader(LanguageLoader) languages: LoaderOf<LanguageLoader>,
   ): Promise<SecuredLanguageNullable> {
-    return await mapSecuredValue(
-      partner.languageOfWiderCommunication,
-      ({ id }) => languages.load({ id, view: { active: true } }),
+    return await mapSecuredValue(partner.languageOfWiderCommunication, ({ id }) =>
+      languages.load({ id, view: { active: true } }),
     );
   }
 

@@ -38,9 +38,7 @@ export abstract class BudgetRecordFilters {
 }
 
 @InputType()
-export class BudgetRecordListInput extends SortablePaginationInput<
-  keyof BudgetRecord
->({
+export class BudgetRecordListInput extends SortablePaginationInput<keyof BudgetRecord>({
   defaultSort: 'fiscalYear',
 }) {
   @Type(() => BudgetRecordFilters)
@@ -54,6 +52,4 @@ export class BudgetRecordListOutput extends PaginatedList(BudgetRecord) {}
 @ObjectType({
   description: SecuredList.descriptionFor('budget records'),
 })
-export abstract class SecuredBudgetRecordList extends SecuredList(
-  BudgetRecord,
-) {}
+export abstract class SecuredBudgetRecordList extends SecuredList(BudgetRecord) {}

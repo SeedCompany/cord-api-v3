@@ -55,58 +55,40 @@ export const projectTransitions = () =>
   );
 
 export const momentumProjectsTransitions = () =>
-  ProjectWorkflow.pickNames(
-    'Consultant Endorses Proposal',
-    'Consultant Opposes Proposal',
-  );
+  ProjectWorkflow.pickNames('Consultant Endorses Proposal', 'Consultant Opposes Proposal');
 
 // NOTE: There could be other permissions for this role from other policies
-@Policy(
-  [Role.ProjectManager, Role.RegionalDirector, Role.FieldOperationsDirector],
-  (r) => [
-    Role.assignable(r, [
-      Role.Intern,
-      Role.Liaison,
-      Role.BibleTranslationLiaison,
-      Role.Mentor,
-      Role.RegionalCommunicationsCoordinator,
-      Role.Translator,
-    ]),
+@Policy([Role.ProjectManager, Role.RegionalDirector, Role.FieldOperationsDirector], (r) => [
+  Role.assignable(r, [
+    Role.Intern,
+    Role.Liaison,
+    Role.BibleTranslationLiaison,
+    Role.Mentor,
+    Role.RegionalCommunicationsCoordinator,
+    Role.Translator,
+  ]),
 
-    r.Budget.read.when(member).edit,
-    r.BudgetRecord.read.whenAll(member, field('status', 'Pending')).edit,
-    r.Ceremony.read.when(member).edit,
-    r.Education.read.create,
-    inherit(
-      r.Engagement.when(member).edit.specifically((p) => [
-        p.disbursementCompleteDate.read,
-      ]),
-    ),
-    r.EthnologueLanguage.read,
-    r.FieldRegion.read,
-    r.FieldZone.read,
-    r.FundingAccount.read,
-    r.Language.read,
-    r.Organization.read,
-    r.Partner.read
-      .specifically((p) => p.pmcEntityCode.none)
-      .children((c) => c.posts.read.create),
-    r.Partnership.whenAny(
-      member,
-      sensMediumOrLower,
-    ).read.create.delete.specifically((p) => [
-      p.many('agreement', 'agreementStatus', 'types', 'partner', 'primary')
-        .edit,
-    ]),
-    r.PeriodicReport.read.when(member).edit,
-    r.Producible.edit.create,
-    r.Product.read.when(member).edit.create.delete,
-    r.ProgressReport.when(member).edit,
-    [
-      r.ProgressReportCommunityStory,
-      r.ProgressReportHighlight,
-      r.ProgressReportTeamNews,
-    ].flatMap((it) => [
+  r.Budget.read.when(member).edit,
+  r.BudgetRecord.read.whenAll(member, field('status', 'Pending')).edit,
+  r.Ceremony.read.when(member).edit,
+  r.Education.read.create,
+  inherit(r.Engagement.when(member).edit.specifically((p) => [p.disbursementCompleteDate.read])),
+  r.EthnologueLanguage.read,
+  r.FieldRegion.read,
+  r.FieldZone.read,
+  r.FundingAccount.read,
+  r.Language.read,
+  r.Organization.read,
+  r.Partner.read.specifically((p) => p.pmcEntityCode.none).children((c) => c.posts.read.create),
+  r.Partnership.whenAny(member, sensMediumOrLower).read.create.delete.specifically((p) => [
+    p.many('agreement', 'agreementStatus', 'types', 'partner', 'primary').edit,
+  ]),
+  r.PeriodicReport.read.when(member).edit,
+  r.Producible.edit.create,
+  r.Product.read.when(member).edit.create.delete,
+  r.ProgressReport.when(member).edit,
+  [r.ProgressReportCommunityStory, r.ProgressReportHighlight, r.ProgressReportTeamNews].flatMap(
+    (it) => [
       it.read,
       it.when(member).create,
       it.specifically((p) => [
@@ -114,61 +96,61 @@ export const momentumProjectsTransitions = () =>
         p.responses.when(member).read,
         p.responses.whenAll(member, variant('draft', 'translated', 'fpm')).edit,
       ]),
-    ]),
-    [r.ProgressReportMedia].flatMap((it) => [
-      it.whenAll(sensOnlyLow, variant('fpm', 'published')).read,
-      it.when(member).read,
-      it.whenAll(member, variant('draft', 'translated', 'fpm')).create.edit,
-    ]),
-    r.ProgressReportVarianceExplanation.edit,
-    r.ProgressReportWorkflowEvent.read.transitions(
-      'Start',
-      'In Progress -> In Review',
-      'In Progress -> Pending Translation',
-      'Translation Done',
-      'Translation Reject',
-      'Withdraw Review Request',
-      'In Review -> Needs Translation',
-      'Review Reject',
-      'Review Approve',
-    ).execute,
-    r.ProjectWorkflowEvent.read.whenAll(
-      member,
-      r.ProjectWorkflowEvent.isTransitions(projectTransitions),
-    ).execute,
-    // PMs can also endorse for consultant for momentum projects
-    r.ProjectWorkflowEvent.whenAll(
-      field('project.type', 'MomentumTranslation', 'Momentum'),
-      member,
-      r.ProjectWorkflowEvent.isTransitions(momentumProjectsTransitions),
-    ).execute,
-    r.Project.read.create
-      // eslint-disable-next-line prettier/prettier
+    ],
+  ),
+  [r.ProgressReportMedia].flatMap((it) => [
+    it.whenAll(sensOnlyLow, variant('fpm', 'published')).read,
+    it.when(member).read,
+    it.whenAll(member, variant('draft', 'translated', 'fpm')).create.edit,
+  ]),
+  r.ProgressReportVarianceExplanation.edit,
+  r.ProgressReportWorkflowEvent.read.transitions(
+    'Start',
+    'In Progress -> In Review',
+    'In Progress -> Pending Translation',
+    'Translation Done',
+    'Translation Reject',
+    'Withdraw Review Request',
+    'In Review -> Needs Translation',
+    'Review Reject',
+    'Review Approve',
+  ).execute,
+  r.ProjectWorkflowEvent.read.whenAll(
+    member,
+    r.ProjectWorkflowEvent.isTransitions(projectTransitions),
+  ).execute,
+  // PMs can also endorse for consultant for momentum projects
+  r.ProjectWorkflowEvent.whenAll(
+    field('project.type', 'MomentumTranslation', 'Momentum'),
+    member,
+    r.ProjectWorkflowEvent.isTransitions(momentumProjectsTransitions),
+  ).execute,
+  r.Project.read.create
+    // eslint-disable-next-line prettier/prettier
       .when(member).edit //
-      .or.specifically((p) => [
-        p
-          .many('rootDirectory', 'otherLocations', 'primaryLocation')
-          // eslint-disable-next-line prettier/prettier
+    .or.specifically((p) => [
+      p
+        .many('rootDirectory', 'otherLocations', 'primaryLocation')
+        // eslint-disable-next-line prettier/prettier
           .whenAny(member, sensMediumOrLower).read //
-          .when(member).edit,
-        p
-          .many('mouStart', 'mouEnd')
-          .read //
-          .whenAll(
-            member,
-            field('status', 'InDevelopment'),
-            // Only allow until financial endorsement
-            // field('step', stepsUntilFinancialEndorsement),
-          ).edit,
-      ])
-      .children((c) => c.posts.read.create),
-    r.ProjectMember.read.when(member).edit.create.delete,
-    [r.StepProgress].flatMap((it) => [
-      it.whenAll(member, variant('partner')).read,
-      it.whenAll(member, variant('official')).edit,
-    ]),
-    r.Unavailability.create.read,
-    r.User.create.read,
-  ],
-)
+        .when(member).edit,
+      p
+        .many('mouStart', 'mouEnd')
+        .read //
+        .whenAll(
+          member,
+          field('status', 'InDevelopment'),
+          // Only allow until financial endorsement
+          // field('step', stepsUntilFinancialEndorsement),
+        ).edit,
+    ])
+    .children((c) => c.posts.read.create),
+  r.ProjectMember.read.when(member).edit.create.delete,
+  [r.StepProgress].flatMap((it) => [
+    it.whenAll(member, variant('partner')).read,
+    it.whenAll(member, variant('official')).edit,
+  ]),
+  r.Unavailability.create.read,
+  r.User.create.read,
+])
 export class ProjectManagerPolicy {}

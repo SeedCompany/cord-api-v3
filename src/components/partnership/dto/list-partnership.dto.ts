@@ -28,9 +28,7 @@ export abstract class PartnershipFilters {
 }
 
 @InputType()
-export class PartnershipListInput extends SortablePaginationInput<
-  keyof Partnership
->({
+export class PartnershipListInput extends SortablePaginationInput<keyof Partnership>({
   defaultSort: 'createdAt',
 }) {
   @FilterField(() => PartnershipFilters, { internal: true })

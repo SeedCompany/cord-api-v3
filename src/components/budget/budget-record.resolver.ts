@@ -1,20 +1,10 @@
-import {
-  Args,
-  Mutation,
-  Parent,
-  ResolveField,
-  Resolver,
-} from '@nestjs/graphql';
+import { Args, Mutation, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { mapSecuredValue } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { OrganizationLoader } from '../organization';
 import { SecuredOrganization } from '../organization/dto';
 import { BudgetService } from './budget.service';
-import {
-  BudgetRecord,
-  UpdateBudgetRecordInput,
-  UpdateBudgetRecordOutput,
-} from './dto';
+import { BudgetRecord, UpdateBudgetRecordInput, UpdateBudgetRecordOutput } from './dto';
 
 @Resolver(BudgetRecord)
 export class BudgetRecordResolver {
@@ -25,9 +15,7 @@ export class BudgetRecordResolver {
     @Parent() record: BudgetRecord,
     @Loader(OrganizationLoader) organizations: LoaderOf<OrganizationLoader>,
   ): Promise<SecuredOrganization> {
-    return await mapSecuredValue(record.organization, (id) =>
-      organizations.load(id),
-    );
+    return await mapSecuredValue(record.organization, (id) => organizations.load(id));
   }
 
   @Mutation(() => UpdateBudgetRecordOutput, {

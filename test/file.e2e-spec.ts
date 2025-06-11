@@ -1,21 +1,12 @@
 import { faker } from '@faker-js/faker';
 import got from 'got';
 import { startCase, times } from 'lodash';
-import {
-  DateTime,
-  Duration,
-  type DurationObjectUnits as DurationObject,
-  Settings,
-} from 'luxon';
+import { DateTime, Duration, type DurationObjectUnits as DurationObject, Settings } from 'luxon';
 import { type ID, Role } from '~/common';
 import { DatabaseService } from '~/core/database';
 import { graphql } from '~/graphql';
 import { FileBucket, type LocalBucket } from '../src/components/file/bucket';
-import {
-  type Directory,
-  FileNodeType,
-  type RequestUploadOutput,
-} from '../src/components/file/dto';
+import { type Directory, FileNodeType, type RequestUploadOutput } from '../src/components/file/dto';
 import {
   createFileVersion,
   createSession,
@@ -33,10 +24,7 @@ import {
   type TestUser,
   uploadFileContents,
 } from './utility';
-import {
-  createDirectory,
-  createRootDirectory,
-} from './utility/create-directory';
+import { createDirectory, createRootDirectory } from './utility/create-directory';
 
 export async function uploadFile(
   app: TestApp,
@@ -90,19 +78,14 @@ async function expectNodeNotFound(app: TestApp, id: ID) {
 }
 
 function shiftNow(duration: DurationObject) {
-  Settings.now = () =>
-    Date.now() + Duration.fromObject(duration).as('milliseconds');
+  Settings.now = () => Date.now() + Duration.fromObject(duration).as('milliseconds');
 }
 
 function resetNow() {
   Settings.now = () => Date.now();
 }
 
-const expectEqualContent = async (
-  app: TestApp,
-  url: string,
-  expected: FakeFile,
-) => {
+const expectEqualContent = async (app: TestApp, url: string, expected: FakeFile) => {
   const expectedContents = expected.content;
   const actualContents = await got(url, {
     headers: {
@@ -222,9 +205,7 @@ describe('File e2e', () => {
     expect(updated.size).toEqual(input.size);
     expect(updated.mimeType).toEqual(input.mimeType);
     const createdAt = DateTime.fromISO(updated.createdAt);
-    expect(createdAt.toMillis()).toEqual(
-      DateTime.fromISO(initial.createdAt).toMillis(),
-    );
+    expect(createdAt.toMillis()).toEqual(DateTime.fromISO(initial.createdAt).toMillis());
     const modifiedAt = DateTime.fromISO(updated.modifiedAt);
     expect(modifiedAt.diff(createdAt).as('days')).toBeGreaterThanOrEqual(2);
   }
@@ -357,9 +338,7 @@ describe('File e2e', () => {
       expect(lastPage.hasMore).toBeFalsy();
       expect(lastPage.items.length).toEqual(expectedTotalChildren - count * 2); // partial page
       expect(lastPage.items.map((n) => n.id)).not.toEqual(
-        expect.arrayContaining(
-          firstPage.items.concat(nextPage.items).map((n) => n.id),
-        ),
+        expect.arrayContaining(firstPage.items.concat(nextPage.items).map((n) => n.id)),
       );
     });
 
@@ -372,9 +351,7 @@ describe('File e2e', () => {
       expect(children.total).toEqual(expectedTotalFiles);
       expect(children.hasMore).toBeFalsy();
       expect(children.items.length).toEqual(expectedTotalFiles);
-      expect(
-        children.items.every((n) => n.type === FileNodeType.File),
-      ).toBeTruthy();
+      expect(children.items.every((n) => n.type === FileNodeType.File)).toBeTruthy();
     });
 
     it('filter directories', async () => {
@@ -386,9 +363,7 @@ describe('File e2e', () => {
       expect(children.total).toEqual(expectedTotalDirs);
       expect(children.hasMore).toBeFalsy();
       expect(children.items.length).toEqual(expectedTotalDirs);
-      expect(
-        children.items.every((n) => n.type === FileNodeType.Directory),
-      ).toBeTruthy();
+      expect(children.items.every((n) => n.type === FileNodeType.Directory)).toBeTruthy();
     });
   });
 
@@ -467,12 +442,8 @@ describe('File e2e', () => {
       expect(children.total).toEqual(expectedTotalVersions);
       expect(children.hasMore).toBeFalsy();
       expect(children.items.length).toEqual(expectedTotalVersions);
-      expect(children.items.map((n) => n.id)).toEqual(
-        expect.arrayContaining(expectedVersionIds),
-      );
-      expect(
-        children.items.every((n) => n.type === FileNodeType.FileVersion),
-      ).toBeTruthy();
+      expect(children.items.map((n) => n.id)).toEqual(expect.arrayContaining(expectedVersionIds));
+      expect(children.items.every((n) => n.type === FileNodeType.FileVersion)).toBeTruthy();
     });
   });
 });

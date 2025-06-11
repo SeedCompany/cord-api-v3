@@ -44,22 +44,20 @@ export class FinanceDepartmentIdBlockInput {
 }
 
 const parse = (multiRangeInts: string): Blocks => {
-  const [first, ...rest] = csv(multiRangeInts).map(
-    (rangeInts): Range<number> => {
-      const [start, end = start] = rangeInts.split(/[-–]/);
-      const range = mapRange({ start, end }, (str) => {
-        const point = Number(str);
-        if (!Number.isSafeInteger(point) || point < 1) {
-          throw new Error(`Invalid range: ${rangeInts}`);
-        }
-        return point;
-      });
-      if (range.start > range.end) {
+  const [first, ...rest] = csv(multiRangeInts).map((rangeInts): Range<number> => {
+    const [start, end = start] = rangeInts.split(/[-–]/);
+    const range = mapRange({ start, end }, (str) => {
+      const point = Number(str);
+      if (!Number.isSafeInteger(point) || point < 1) {
         throw new Error(`Invalid range: ${rangeInts}`);
       }
-      return range;
-    },
-  );
+      return point;
+    });
+    if (range.start > range.end) {
+      throw new Error(`Invalid range: ${rangeInts}`);
+    }
+    return range;
+  });
   if (!first) {
     throw new Error('Ranges cannot be empty');
   }

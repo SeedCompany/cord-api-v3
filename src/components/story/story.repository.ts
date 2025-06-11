@@ -10,23 +10,9 @@ import {
   type UnsecuredDto,
 } from '~/common';
 import { type DbTypeOf, DtoRepository } from '~/core/database';
-import {
-  createNode,
-  matchProps,
-  merge,
-  paginate,
-  sorting,
-} from '~/core/database/query';
-import {
-  ScriptureReferenceRepository,
-  ScriptureReferenceService,
-} from '../scripture';
-import {
-  type CreateStory,
-  Story,
-  type StoryListInput,
-  type UpdateStory,
-} from './dto';
+import { createNode, matchProps, merge, paginate, sorting } from '~/core/database/query';
+import { ScriptureReferenceRepository, ScriptureReferenceService } from '../scripture';
+import { type CreateStory, Story, type StoryListInput, type UpdateStory } from './dto';
 
 @Injectable()
 export class StoryRepository extends DtoRepository(Story) {
@@ -39,10 +25,7 @@ export class StoryRepository extends DtoRepository(Story) {
 
   async create(input: CreateStory) {
     if (!(await this.isUnique(input.name))) {
-      throw new DuplicateException(
-        'story.name',
-        'Story with this name already exists.',
-      );
+      throw new DuplicateException('story.name', 'Story with this name already exists.');
     }
 
     const initialProps = {
@@ -59,15 +42,10 @@ export class StoryRepository extends DtoRepository(Story) {
       throw new CreationFailed(Story);
     }
 
-    await this.scriptureRefsService.create(
-      result.id,
-      input.scriptureReferences,
-    );
+    await this.scriptureRefsService.create(result.id, input.scriptureReferences);
 
     return await this.readOne(result.id).catch((e) => {
-      throw e instanceof NotFoundException
-        ? new ReadAfterCreationFailed(Story)
-        : e;
+      throw e instanceof NotFoundException ? new ReadAfterCreationFailed(Story) : e;
     });
   }
 
@@ -84,15 +62,11 @@ export class StoryRepository extends DtoRepository(Story) {
     return (await super.readOne(id)) as UnsecuredDto<Story>;
   }
 
-  async readMany(
-    ids: readonly ID[],
-  ): Promise<ReadonlyArray<UnsecuredDto<Story>>> {
+  async readMany(ids: readonly ID[]): Promise<ReadonlyArray<UnsecuredDto<Story>>> {
     const items = await super.readMany(ids);
     return items.map((r) => ({
       ...r,
-      scriptureReferences: this.scriptureRefsService.parseList(
-        r.scriptureReferences,
-      ),
+      scriptureReferences: this.scriptureRefsService.parseList(r.scriptureReferences),
     }));
   }
 
@@ -110,9 +84,7 @@ export class StoryRepository extends DtoRepository(Story) {
       ...result!,
       items: result!.items.map((r) => ({
         ...r,
-        scriptureReferences: this.scriptureRefsService.parseList(
-          r.scriptureReferences,
-        ),
+        scriptureReferences: this.scriptureRefsService.parseList(r.scriptureReferences),
       })),
     };
   }

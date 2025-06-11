@@ -26,14 +26,9 @@ type Granter = ValueOf<ResourcesGranter>;
  *   r.FooBar.read,
  * ])
  */
-export function inherit(
-  theInterface: Granter,
-  ...implementations: Granter[]
-): Granter[] {
+export function inherit(theInterface: Granter, ...implementations: Granter[]): Granter[] {
   return [
     theInterface,
-    ...implementations.map((granter) =>
-      granter[withOther](theInterface as any),
-    ),
+    ...implementations.map((granter) => granter[withOther](theInterface as any)),
   ];
 }

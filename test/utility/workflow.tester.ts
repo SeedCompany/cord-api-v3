@@ -15,32 +15,22 @@ const filepath = fileURLToPath(import.meta.url);
 
 export abstract class WorkflowTester<
   W extends Workflow,
-  Transition extends InstanceType<
+  Transition extends InstanceType<ReturnType<typeof WorkflowTransition<W['state']>>> = InstanceType<
     ReturnType<typeof WorkflowTransition<W['state']>>
-  > = InstanceType<ReturnType<typeof WorkflowTransition<W['state']>>>,
+  >,
 > {
-  constructor(
-    readonly app: TestApp,
-    readonly id: ID,
-    public state: W['state'],
-  ) {}
+  constructor(readonly app: TestApp, readonly id: ID, public state: W['state']) {}
 
   async executeByState(state: W['state']) {
-    return await this.execute(
-      await this.findTransition((t) => t.to === state && !t.disabled),
-    );
+    return await this.execute(await this.findTransition((t) => t.to === state && !t.disabled));
   }
 
   async executeByLabel(label: string) {
-    return await this.execute(
-      await this.findTransition((t) => t.label === label && !t.disabled),
-    );
+    return await this.execute(await this.findTransition((t) => t.label === label && !t.disabled));
   }
 
   async transitionByLabel(label: string) {
-    return (await this.freshTransitions()).find(
-      (t) => t.label === label && !t.disabled,
-    );
+    return (await this.freshTransitions()).find((t) => t.label === label && !t.disabled);
   }
 
   async findTransition(iteratee: (transition: Transition) => boolean) {
@@ -102,9 +92,7 @@ export abstract class WorkflowTester<
   ): Promise<{ state: W['state']; transitions: Transition[] }>;
 }
 
-export class ProjectWorkflowTester extends WorkflowTester<
-  typeof ProjectWorkflow
-> {
+export class ProjectWorkflowTester extends WorkflowTester<typeof ProjectWorkflow> {
   static async for(app: TestApp, id: ID) {
     const { step: initial } = await getProjectTransitions(app, id);
     return new ProjectWorkflowTester(app, id, initial.value!);

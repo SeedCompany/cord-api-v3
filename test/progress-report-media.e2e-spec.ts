@@ -362,10 +362,7 @@ describe('ProgressReport Media e2e', () => {
   });
 });
 
-async function uploadMedia(
-  app: TestApp,
-  input: InputOf<typeof UploadMediaDoc>,
-) {
+async function uploadMedia(app: TestApp, input: InputOf<typeof UploadMediaDoc>) {
   const { upload } = await app.graphql.mutate(UploadMediaDoc, { input });
   return upload;
 }

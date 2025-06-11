@@ -8,17 +8,8 @@ import { PostService } from './post.service';
 import { PostableResolver } from './postable.resolver';
 
 @Module({
-  imports: [
-    forwardRef(() => UserModule),
-    forwardRef(() => AuthorizationModule),
-  ],
-  providers: [
-    PostResolver,
-    PostService,
-    PostRepository,
-    PostableResolver,
-    PostLoader,
-  ],
+  imports: [forwardRef(() => UserModule), forwardRef(() => AuthorizationModule)],
+  providers: [PostResolver, PostService, PostRepository, PostableResolver, PostLoader],
   exports: [PostService],
 })
 export class PostModule {}

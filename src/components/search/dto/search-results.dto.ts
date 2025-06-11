@@ -89,9 +89,7 @@ export type SearchableMap = {
   >;
 };
 
-export const SearchResultTypes = setOf(
-  entries(publicSearchable).map(([k]) => k),
-);
+export const SearchResultTypes = setOf(entries(publicSearchable).map(([k]) => k));
 
 // __typename is a GQL thing to identify type at runtime
 // It makes sense to use this key to not conflict with actual properties and
@@ -106,13 +104,10 @@ export type SearchResult = SearchResultMap[keyof SearchableMap];
 export const SearchResult = createUnionType({
   name: 'SearchResult',
   types: () => uniq(Object.values(searchable)),
-  resolveType: (value: SearchResult) =>
-    simpleSwitch(value.__typename, searchable),
+  resolveType: (value: SearchResult) => simpleSwitch(value.__typename, searchable),
 });
 
-export type SearchType =
-  | keyof typeof publicSearchable
-  | keyof typeof searchableAbstracts;
+export type SearchType = keyof typeof publicSearchable | keyof typeof searchableAbstracts;
 
 // Don't use outside of defining GQL schema
 export type GqlSearchType = EnumType<typeof GqlSearchType>;

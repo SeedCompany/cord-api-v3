@@ -44,9 +44,7 @@ describe('Field Zone e2e', () => {
     //old test.  now attempting to create a zone with a name that is taken will return the existing zone
     const name = faker.location.country() + ' Zone';
     await createZone(app, { directorId: director.id, name });
-    await expect(
-      createZone(app, { directorId: director.id, name }),
-    ).rejects.toThrowGqlError();
+    await expect(createZone(app, { directorId: director.id, name })).rejects.toThrowGqlError();
   });
 
   it('read one field zone by id', async () => {
@@ -172,11 +170,7 @@ describe('Field Zone e2e', () => {
 
   it('returns a list of zones', async () => {
     // create 2 zones
-    await Promise.all(
-      times(2).map(
-        async () => await createZone(app, { directorId: director.id }),
-      ),
-    );
+    await Promise.all(times(2).map(async () => await createZone(app, { directorId: director.id })));
 
     const { fieldZones } = await app.graphql.query(
       graphql(

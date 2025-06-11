@@ -1,10 +1,4 @@
-import {
-  Args,
-  Mutation,
-  Parent,
-  ResolveField,
-  Resolver,
-} from '@nestjs/graphql';
+import { Args, Mutation, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { clamp } from 'lodash';
 import { Loader, type LoaderOf } from '~/core';
 import { ScheduleStatus } from '../../progress-summary/dto';
@@ -21,9 +15,7 @@ import { ProgressReportVarianceExplanationService } from './variance-explanation
 
 @Resolver(ProgressReport)
 export class ProgressReportVarianceExplanationResolver {
-  constructor(
-    private readonly service: ProgressReportVarianceExplanationService,
-  ) {}
+  constructor(private readonly service: ProgressReportVarianceExplanationService) {}
 
   @ResolveField(() => VarianceExplanation)
   async varianceExplanation(

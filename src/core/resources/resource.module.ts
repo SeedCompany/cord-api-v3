@@ -8,17 +8,7 @@ import { ResourcesHost } from './resources.host';
 @Global()
 @Module({
   imports: [GraphqlModule],
-  providers: [
-    ResourcesHost,
-    ResourceResolver,
-    ResourceLoaderRegistry,
-    ResourceLoader,
-  ],
-  exports: [
-    ResourcesHost,
-    ResourceResolver,
-    ResourceLoaderRegistry,
-    ResourceLoader,
-  ],
+  providers: [ResourcesHost, ResourceResolver, ResourceLoaderRegistry, ResourceLoader],
+  exports: [ResourcesHost, ResourceResolver, ResourceLoaderRegistry, ResourceLoader],
 })
 export class ResourceModule {}

@@ -1,11 +1,4 @@
-import {
-  cacheable,
-  cleanJoin,
-  cmpBy,
-  groupBy,
-  many,
-  simpleSwitch,
-} from '@seedcompany/common';
+import { cacheable, cleanJoin, cmpBy, groupBy, many, simpleSwitch } from '@seedcompany/common';
 import open from 'open';
 import * as uuid from 'uuid';
 import { deflateSync as deflate } from 'zlib';
@@ -21,8 +14,7 @@ export const WorkflowFlowchart = <W extends Workflow>(workflow: () => W) => {
 
     /** Generate a flowchart in mermaid markup. */
     generateMarkup() {
-      const rgbHexAddAlpha = (rgb: string, alpha: number) =>
-        rgb + alpha.toString(16).slice(2, 4);
+      const rgbHexAddAlpha = (rgb: string, alpha: number) => rgb + alpha.toString(16).slice(2, 4);
       const colorStyle = (color: string) => ({
         fill: color,
         stroke: color.slice(0, 7),
@@ -37,9 +29,8 @@ export const WorkflowFlowchart = <W extends Workflow>(workflow: () => W) => {
           stroke: '#ff0000',
         },
       };
-      const dynamicToId = cacheable(
-        new Map<DynamicState<W['state'], W['context']>, string>(),
-        () => uuid.v1().replaceAll(/-/g, ''),
+      const dynamicToId = cacheable(new Map<DynamicState<W['state'], W['context']>, string>(), () =>
+        uuid.v1().replaceAll(/-/g, ''),
       );
       const usedStates = new Set<W['state']>();
       const useState = (state: W['state']) => {
@@ -54,22 +45,18 @@ export const WorkflowFlowchart = <W extends Workflow>(workflow: () => W) => {
       const transitions = this.workflow.transitions
         .toSorted(
           cmpBy((t) => {
-            const endState =
-              typeof t.to === 'string' ? t.to : t.to.relatedStates?.[0];
+            const endState = typeof t.to === 'string' ? t.to : t.to.relatedStates?.[0];
             return this.workflow.states.indexOf(endState!);
           }),
         )
         .map((t) => {
-          const endStateId =
-            typeof t.to === 'string' ? useState(t.to) : dynamicToId(t.to);
+          const endStateId = typeof t.to === 'string' ? useState(t.to) : dynamicToId(t.to);
           const endId = transitionEndIds(t.label + '\0' + endStateId);
           const to =
             typeof t.to === 'string'
               ? `--> ${useState(t.to)}`
               : t.to.relatedStates
-              ? `-."${t.to.description}".-> ${t.to.relatedStates
-                  .map(useState)
-                  .join(' & ')}`
+              ? `-."${t.to.description}".-> ${t.to.relatedStates.map(useState).join(' & ')}`
               : `--> ${dynamicToId(t.to)}`;
           const endHalf = `${endId}{{ ${t.label} }}:::${t.type} ${to}`;
 
@@ -77,20 +64,17 @@ export const WorkflowFlowchart = <W extends Workflow>(workflow: () => W) => {
             t.conditions.length > 0
               ? '--"' + t.conditions.map((c) => c.description).join('\\n') + '"'
               : '';
-          const from = (t.from ? [...t.from].map(useState) : ['*(*)']).join(
-            ' & ',
-          );
+          const from = (t.from ? [...t.from].map(useState) : ['*(*)']).join(' & ');
           const startHalf = `${from} ${conditions}--> ${endId}`;
 
           return { transition: t, startHalf, endHalf };
         });
 
-      const transitionStarts = groupBy(transitions, (t) => t.startHalf).map(
-        (ts) =>
-          ts
-            .map((t) => '%% ' + t.transition.name)
-            .concat(ts[0].startHalf)
-            .join('\n'),
+      const transitionStarts = groupBy(transitions, (t) => t.startHalf).map((ts) =>
+        ts
+          .map((t) => '%% ' + t.transition.name)
+          .concat(ts[0].startHalf)
+          .join('\n'),
       );
       const transitionEnds = groupBy(transitions, (t) => t.endHalf).map((ts) =>
         ts

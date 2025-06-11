@@ -1,11 +1,6 @@
 import { type Query } from 'cypher-query-builder';
 import { inspect, type InspectOptionsStylized } from 'util';
-import {
-  type Many,
-  type ResourceShape,
-  type Variant,
-  type VariantOf,
-} from '~/common';
+import { type Many, type ResourceShape, type Variant, type VariantOf } from '~/common';
 import {
   type AsCypherParams,
   type Condition,
@@ -30,10 +25,7 @@ export class VariantCondition<TResourceStatic extends ResourceShape<any>>
       throw new MissingContextException();
     }
 
-    const current = Reflect.get(
-      object,
-      VariantForCondition,
-    ) as VariantOf<TResourceStatic>;
+    const current = Reflect.get(object, VariantForCondition) as VariantOf<TResourceStatic>;
 
     return this.variants.has(current);
   }
@@ -64,10 +56,7 @@ export class VariantCondition<TResourceStatic extends ResourceShape<any>>
   }
 }
 
-export const withVariant = <T extends object>(
-  obj: T,
-  variant: string | Variant,
-) =>
+export const withVariant = <T extends object>(obj: T, variant: string | Variant) =>
   Object.defineProperty(obj, VariantForCondition, {
     value: typeof variant === 'string' ? variant : variant.key,
     enumerable: false,

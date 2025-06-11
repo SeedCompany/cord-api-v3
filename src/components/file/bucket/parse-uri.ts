@@ -17,8 +17,6 @@ export const parseUri = (uri: string): ParsedBucketUri => {
   const [, type, remainingSrc] = typeMatch;
   const roMatch = /(:ro|:readonly)$/i.exec(remainingSrc);
   const readonly = !!roMatch;
-  const path = roMatch
-    ? remainingSrc.slice(0, -roMatch[0].length)
-    : remainingSrc;
+  const path = roMatch ? remainingSrc.slice(0, -roMatch[0].length) : remainingSrc;
   return { type: type?.toLowerCase() ?? '', path, readonly };
 };

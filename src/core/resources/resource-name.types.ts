@@ -29,16 +29,10 @@ export type ResourceNameLike = LiteralUnion<AllResourceNames, string>;
  * "foo"                -> never
  * Foo                  -> never
  */
-export type ResourceName<
-  T,
-  IncludeSubclasses extends boolean = false,
-> = IsAny<T> extends true
+export type ResourceName<T, IncludeSubclasses extends boolean = false> = IsAny<T> extends true
   ? AllResourceAppNames // short-circuit and prevent many seemly random circular definitions
   : T extends AllResourceDBNames
-  ? ResourceNameFromStatic<
-      ResourceMap[ResourceNameFromDBName<T>],
-      IncludeSubclasses
-    >
+  ? ResourceNameFromStatic<ResourceMap[ResourceNameFromDBName<T>], IncludeSubclasses>
   : T extends AllResourceAppNames
   ? ResourceNameFromStatic<ResourceMap[T], IncludeSubclasses>
   : T extends ResourceShape<any>
@@ -47,10 +41,7 @@ export type ResourceName<
   ? ResourceNameFromInstance<T, IncludeSubclasses> & string
   : never;
 
-type ResourceNameFromInstance<
-  TResource,
-  IncludeSubclasses extends boolean = false,
-> = {
+type ResourceNameFromInstance<TResource, IncludeSubclasses extends boolean = false> = {
   [Name in keyof ResourceMap]: ResourceMap[Name]['prototype'] extends TResource // Only self or subclasses
     ? IncludeSubclasses extends true
       ? Name
@@ -67,9 +58,7 @@ type ResourceNameFromStatic<
   ? string // short-circuit non-specific types
   : InstanceType<TResourceStatic> extends infer TResource
   ? {
-      [Name in keyof ResourceMap]: InstanceType<
-        ResourceMap[Name]
-      > extends infer Other
+      [Name in keyof ResourceMap]: InstanceType<ResourceMap[Name]> extends infer Other
         ? Other extends TResource // Only self or subclasses
           ? IncludeSubclasses extends true
             ? Name

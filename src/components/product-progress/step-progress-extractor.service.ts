@@ -44,10 +44,7 @@ type ExtractedRow = MergeExclusive<
 
 @Injectable()
 export class StepProgressExtractor {
-  async extract(
-    file: Downloadable<unknown>,
-    result: PnpProgressExtractionResult,
-  ) {
+  async extract(file: Downloadable<unknown>, result: PnpProgressExtractionResult) {
     const pnp = await Pnp.fromDownloadable(file);
     const sheet = pnp.progress;
 
@@ -74,28 +71,21 @@ const parseProgressRow =
     const sheet = cell.sheet;
     const row = cell.row;
     const rowIndex = row.a1 - sheet.goals.start.row.a1;
-    const planningRow = pnp.planning.row(
-      pnp.planning.goals.start.row.a1 + rowIndex,
-    );
+    const planningRow = pnp.planning.row(pnp.planning.goals.start.row.a1 + rowIndex);
 
-    const steps = entries(stepColumns).flatMap<StepProgressInput>(
-      ([step, column]) => {
-        const fiscalYear = pnp.planning.cell(
-          planningStepColumns[step],
-          planningRow,
-        );
+    const steps = entries(stepColumns).flatMap<StepProgressInput>(([step, column]) => {
+      const fiscalYear = pnp.planning.cell(planningStepColumns[step], planningRow);
 
-        const cell = sheet.cell(column, row);
-        if (
-          !isGoalStepPlannedInsideProject(pnp, fiscalYear, step, result) ||
-          isProgressCompletedOutsideProject(pnp, cell, step, result)
-        ) {
-          return [];
-        }
+      const cell = sheet.cell(column, row);
+      if (
+        !isGoalStepPlannedInsideProject(pnp, fiscalYear, step, result) ||
+        isProgressCompletedOutsideProject(pnp, cell, step, result)
+      ) {
+        return [];
+      }
 
-        return { step, completed: progress(cell) };
-      },
-    );
+      return { step, completed: progress(cell) };
+    });
 
     const common = {
       rowIndex: rowIndex + 1,
@@ -112,10 +102,7 @@ const parseProgressRow =
     assert(sheet.isWritten());
     return {
       ...common,
-      ...extractScripture(
-        planningRow as Row<WrittenScripturePlanningSheet>,
-        result,
-      ),
+      ...extractScripture(planningRow as Row<WrittenScripturePlanningSheet>, result),
     };
   };
 

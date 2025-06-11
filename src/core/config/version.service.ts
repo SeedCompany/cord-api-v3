@@ -74,16 +74,10 @@ export class VersionService implements OnModuleInit {
 }
 
 export class Version {
-  constructor(
-    readonly hash?: string,
-    readonly branch?: string,
-    readonly packageJson?: string,
-  ) {}
+  constructor(readonly hash?: string, readonly branch?: string, readonly packageJson?: string) {}
 
   get known() {
-    return (
-      Boolean(this.branch) || Boolean(this.hash) || Boolean(this.packageJson)
-    );
+    return Boolean(this.branch) || Boolean(this.hash) || Boolean(this.packageJson);
   }
 
   toString() {

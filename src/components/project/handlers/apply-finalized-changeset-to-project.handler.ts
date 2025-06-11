@@ -12,9 +12,7 @@ import {
 type SubscribedEvent = ChangesetFinalizingEvent;
 
 @EventsHandler(ChangesetFinalizingEvent)
-export class ApplyFinalizedChangesetToProject
-  implements IEventHandler<SubscribedEvent>
-{
+export class ApplyFinalizedChangesetToProject implements IEventHandler<SubscribedEvent> {
   constructor(
     private readonly db: DatabaseService,
     @Logger('project:change-request:finalized')
@@ -32,9 +30,7 @@ export class ApplyFinalizedChangesetToProject
           relation('out', '', 'changeset', ACTIVE),
           node('changeset', 'Changeset', { id: changeset.id }),
         ])
-        .apply(
-          changeset.applied ? commitChangesetProps() : rejectChangesetProps(),
-        )
+        .apply(changeset.applied ? commitChangesetProps() : rejectChangesetProps())
         // Apply pending budget records
         .subQuery((sub) =>
           sub
@@ -68,10 +64,7 @@ export class ApplyFinalizedChangesetToProject
       await query.run();
       // TODO handle relations (locations, etc.)
     } catch (exception) {
-      throw new ServerException(
-        'Failed to apply changeset to project',
-        exception,
-      );
+      throw new ServerException('Failed to apply changeset to project', exception);
     }
   }
 }

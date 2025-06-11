@@ -1,23 +1,8 @@
 import { isNull, node, not, relation } from 'cypher-query-builder';
-import {
-  ClientException,
-  type ID,
-  ServerException,
-  type UnsecuredDto,
-} from '~/common';
+import { ClientException, type ID, ServerException, type UnsecuredDto } from '~/common';
 import { ConfigService, EventsHandler, type IEventHandler } from '~/core';
-import {
-  DatabaseService,
-  TransactionRetryInformer,
-  UniquenessError,
-} from '~/core/database';
-import {
-  ACTIVE,
-  apoc,
-  collect,
-  updateProperty,
-  variable,
-} from '~/core/database/query';
+import { DatabaseService, TransactionRetryInformer, UniquenessError } from '~/core/database';
+import { ACTIVE, apoc, collect, updateProperty, variable } from '~/core/database/query';
 import {
   type Project,
   resolveProjectType,
@@ -55,20 +40,14 @@ export class SetDepartmentId implements IEventHandler<SubscribedEvent> {
 
     const block = await this.getDepartmentIdBlockId(event.project);
 
-    const departmentId = await this.assignDepartmentIdForProject(
-      event.project,
-      block,
-    );
+    const departmentId = await this.assignDepartmentIdForProject(event.project, block);
     event.project = {
       ...event.project,
       departmentId,
     };
   }
 
-  private async assignDepartmentIdForProject(
-    project: UnsecuredDto<Project>,
-    block: { id: ID },
-  ) {
+  private async assignDepartmentIdForProject(project: UnsecuredDto<Project>, block: { id: ID }) {
     const query = this.db
       .query()
       // Enumerate IDs from the department ID block
@@ -77,11 +56,7 @@ export class SetDepartmentId implements IEventHandler<SubscribedEvent> {
           .match(node('block', 'DepartmentIdBlock', { id: block.id }))
           .with(apoc.convert.fromJsonList('block.blocks').as('blocks'))
           // enumerate all ranges
-          .with(
-            apoc.coll
-              .flatten(['block in blocks | range(block.start, block.end)'])
-              .as('ids'),
-          )
+          .with(apoc.coll.flatten(['block in blocks | range(block.start, block.end)']).as('ids'))
           // convert numbers to strings and pad to 5 digits with leading zeros
           .with(
             `[id in ids |
@@ -138,14 +113,10 @@ export class SetDepartmentId implements IEventHandler<SubscribedEvent> {
     const isMultiplication = project.type === 'MultiplicationTranslation';
     if (isMultiplication) {
       if (!project.primaryPartnership) {
-        throw new ClientException(
-          'Project must have a partnership to continue',
-        );
+        throw new ClientException('Project must have a partnership to continue');
       }
     } else if (!project.primaryLocation) {
-      throw new ClientException(
-        'Project must have a primary location to continue',
-      );
+      throw new ClientException('Project must have a primary location to continue');
     }
 
     const block = await this.db
@@ -171,11 +142,7 @@ export class SetDepartmentId implements IEventHandler<SubscribedEvent> {
               node('holder', 'FundingAccount'),
             ],
       )
-      .match([
-        node('holder'),
-        relation('out'),
-        node('block', 'DepartmentIdBlock'),
-      ])
+      .match([node('holder'), relation('out'), node('block', 'DepartmentIdBlock')])
       .return<{ id: ID }>('block.id as id')
       .first();
     if (block) {

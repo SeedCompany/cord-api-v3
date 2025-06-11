@@ -1,17 +1,7 @@
 import { InputType, ObjectType } from '@nestjs/graphql';
-import {
-  FilterField,
-  OptionalField,
-  PaginatedList,
-  SortablePaginationInput,
-} from '~/common';
+import { FilterField, OptionalField, PaginatedList, SortablePaginationInput } from '~/common';
 import { FileNodeType } from './file-node-type.enum';
-import {
-  type Directory,
-  type File,
-  type FileNode,
-  IFileNode,
-} from './file.dto';
+import { type Directory, type File, type FileNode, IFileNode } from './file.dto';
 
 @InputType()
 export abstract class FileFilters {
@@ -27,9 +17,7 @@ export abstract class FileFilters {
 }
 
 @InputType()
-export class FileListInput extends SortablePaginationInput<
-  keyof File | keyof Directory
->({
+export class FileListInput extends SortablePaginationInput<keyof File | keyof Directory>({
   defaultSort: 'name',
 }) {
   @FilterField(() => FileFilters)
@@ -37,9 +25,6 @@ export class FileListInput extends SortablePaginationInput<
 }
 
 @ObjectType()
-export class FileListOutput extends PaginatedList<IFileNode, FileNode>(
-  IFileNode,
-  {
-    itemsDescription: PaginatedList.itemDescriptionFor('file nodes'),
-  },
-) {}
+export class FileListOutput extends PaginatedList<IFileNode, FileNode>(IFileNode, {
+  itemsDescription: PaginatedList.itemDescriptionFor('file nodes'),
+}) {}

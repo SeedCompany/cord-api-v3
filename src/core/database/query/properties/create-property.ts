@@ -48,9 +48,7 @@ export const createProperty =
   <R>(query: Query<R>) => {
     resource = resource ? EnhancedResource.of(resource) : undefined;
 
-    const now = (
-      nowIn ?? query.params.addParam(DateTime.now(), 'now')
-    ).toString();
+    const now = (nowIn ?? query.params.addParam(DateTime.now(), 'now')).toString();
 
     // Grab labels for property if it's statically given.
     // Also, do not give properties unique labels if inside a changeset.
@@ -75,18 +73,12 @@ export const createProperty =
             ? q
                 .optionalMatch([
                   node(nodeName),
-                  relation(
-                    'out',
-                    'existingPropRel',
-                    key instanceof Variable ? [] : key,
-                    ACTIVE,
-                  ),
+                  relation('out', 'existingPropRel', key instanceof Variable ? [] : key, ACTIVE),
                   node('existingProp', 'Property'),
                 ])
                 .apply(
                   maybeWhereAnd(
-                    key instanceof Variable &&
-                      `type(existingPropRel) = ${key.toString()}`,
+                    key instanceof Variable && `type(existingPropRel) = ${key.toString()}`,
                     // Don't create a new "change value" if the value is the same as
                     // the value outside the changeset.
                     `existingProp.value <> ${(
@@ -104,10 +96,7 @@ export const createProperty =
                 value,
               }),
               ...(changeset
-                ? [
-                    relation('in', '', 'changeset', ACTIVE),
-                    node(changeset.toString()),
-                  ]
+                ? [relation('in', '', 'changeset', ACTIVE), node(changeset.toString())]
                 : []),
             ])
             .return(['newPropNode']),

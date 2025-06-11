@@ -2,13 +2,7 @@ import { entries, mapEntries } from '@seedcompany/common';
 import { EmailService } from '@seedcompany/nestjs-email';
 import { type RequireExactlyOne } from 'type-fest';
 import { type ID, Role, type UnsecuredDto } from '~/common';
-import {
-  ConfigService,
-  EventsHandler,
-  type IEventHandler,
-  ILogger,
-  Logger,
-} from '~/core';
+import { ConfigService, EventsHandler, type IEventHandler, ILogger, Logger } from '~/core';
 import { Identity } from '~/core/authentication';
 import {
   type ProgressReportStatusChangedProps as EmailReportStatusNotification,
@@ -49,25 +43,15 @@ export class ProgressReportWorkflowNotificationHandler
     private readonly logger: ILogger,
   ) {}
 
-  async handle({
-    reportId,
-    previousStatus,
-    next,
-    workflowEvent,
-  }: WorkflowUpdatedEvent) {
+  async handle({ reportId, previousStatus, next, workflowEvent }: WorkflowUpdatedEvent) {
     const { enabled } = this.configService.progressReportStatusChange;
     if (!enabled) {
       return;
     }
-    const { projectId, languageId } = await this.repo.getProjectInfoByReportId(
-      reportId,
-    );
+    const { projectId, languageId } = await this.repo.getProjectInfoByReportId(reportId);
 
     const userIdByEmail = mapEntries(
-      [
-        ...(await this.getEnvNotifyees(next)),
-        ...(await this.getProjectNotifyees(reportId, next)),
-      ],
+      [...(await this.getEnvNotifyees(next)), ...(await this.getProjectNotifyees(reportId, next))],
       ({ id, email }) => [email, id],
     ).asMap;
 
@@ -137,9 +121,7 @@ export class ProgressReportWorkflowNotificationHandler
     });
   }
 
-  private fakeUserFromEmailAddress(
-    receiver: string,
-  ): EmailReportStatusNotification['recipient'] {
+  private fakeUserFromEmailAddress(receiver: string): EmailReportStatusNotification['recipient'] {
     return {
       email: { value: receiver, canRead: true, canEdit: false },
       displayFirstName: {
@@ -160,27 +142,20 @@ export class ProgressReportWorkflowNotificationHandler
     const { forTransitions, forBypasses } =
       this.configService.progressReportStatusChange.notifyExtraEmails;
     const envEmailList =
-      typeof next !== 'string'
-        ? forTransitions.get(next.name)
-        : forBypasses.get(next);
+      typeof next !== 'string' ? forTransitions.get(next.name) : forBypasses.get(next);
     return [
       ...(envEmailList?.map((email) => ({ id: undefined, email })) ?? []),
       ...(envEmailList ? await this.repo.getUserIdByEmails(envEmailList) : []),
     ];
   }
 
-  private async getProjectNotifyees(
-    reportId: ID,
-    next: Status | InternalTransition,
-  ) {
+  private async getProjectNotifyees(reportId: ID, next: Status | InternalTransition) {
     const roles = [
       ...rolesToAlwaysNotify,
       ...(typeof next !== 'string' ? next.notify?.membersWithRoles ?? [] : []),
     ];
 
     const members = await this.repo.getProjectMemberInfoByReportId(reportId);
-    return members.filter((mbr) =>
-      mbr.roles.some((role) => roles.includes(role)),
-    );
+    return members.filter((mbr) => mbr.roles.some((role) => roles.includes(role)));
   }
 }

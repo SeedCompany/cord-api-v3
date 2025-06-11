@@ -1,9 +1,7 @@
 import { ObjectType } from '@nestjs/graphql';
 import { type EnumType, makeEnum, SecuredEnum } from '~/common';
 
-export type ProjectChangeRequestStatus = EnumType<
-  typeof ProjectChangeRequestStatus
->;
+export type ProjectChangeRequestStatus = EnumType<typeof ProjectChangeRequestStatus>;
 export const ProjectChangeRequestStatus = makeEnum({
   name: 'ProjectChangeRequestStatus',
   values: ['Pending', 'Approved', 'Rejected'],

@@ -17,9 +17,7 @@ export class RichTextCodec extends JSONCodec {
 
   encode(buf: WriteBuffer, object: unknown, ctx: CodecContext) {
     if (!(object instanceof RichTextDocument)) {
-      throw new InvalidArgumentError(
-        `a RichTextDocument was expected, got "${String(object)}"`,
-      );
+      throw new InvalidArgumentError(`a RichTextDocument was expected, got "${String(object)}"`);
     }
     super.encode(buf, object, ctx);
   }

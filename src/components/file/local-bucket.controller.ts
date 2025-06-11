@@ -12,12 +12,7 @@ import { DateTime } from 'luxon';
 import { URL } from 'node:url';
 import { InputException } from '~/common';
 import { AuthLevel } from '~/core/authentication';
-import {
-  HttpAdapter,
-  type IRequest,
-  type IResponse,
-  RawBody,
-} from '~/core/http';
+import { HttpAdapter, type IRequest, type IResponse, RawBody } from '~/core/http';
 import { FileBucket, InvalidSignedUrlException } from './bucket';
 
 /**
@@ -28,10 +23,7 @@ import { FileBucket, InvalidSignedUrlException } from './bucket';
 export class LocalBucketController {
   static path = '/local-bucket';
 
-  constructor(
-    private readonly bucket: FileBucket,
-    private readonly http: HttpAdapter,
-  ) {}
+  constructor(private readonly bucket: FileBucket, private readonly http: HttpAdapter) {}
 
   @Put()
   @RawBody({ passthrough: true })
@@ -59,10 +51,7 @@ export class LocalBucketController {
   }
 
   @Get()
-  async download(
-    @Request() req: IRequest,
-    @Response({ passthrough: true }) res: IResponse,
-  ) {
+  async download(@Request() req: IRequest, @Response({ passthrough: true }) res: IResponse) {
     const url = new URL(`https://localhost${req.url}`);
     const { Key, operation, ...rest } = await this.bucket.parseSignedUrl(url);
     if (operation !== 'GetObject') {
@@ -83,13 +72,9 @@ export class LocalBucketController {
       'Content-Language': out.ContentLanguage,
       'Content-Length': String(out.ContentLength),
       'Content-Type': out.ContentType,
-      Expires: out.Expires
-        ? DateTime.fromJSDate(out.Expires).toHTTP()
-        : undefined,
+      Expires: out.Expires ? DateTime.fromJSDate(out.Expires).toHTTP() : undefined,
       ETag: out.ETag,
-      LastModified: out.LastModified
-        ? DateTime.fromJSDate(out.LastModified).toHTTP()
-        : undefined,
+      LastModified: out.LastModified ? DateTime.fromJSDate(out.LastModified).toHTTP() : undefined,
     };
     for (const [header, val] of Object.entries(headers)) {
       if (val != null) {

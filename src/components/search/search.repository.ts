@@ -2,11 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { type Merge } from 'type-fest';
 import { CommonRepository, OnIndex, type OnIndexParams } from '~/core/database';
-import {
-  ACTIVE,
-  escapeLuceneSyntax,
-  FullTextIndex,
-} from '~/core/database/query';
+import { ACTIVE, escapeLuceneSyntax, FullTextIndex } from '~/core/database/query';
 import { type BaseNode } from '~/core/database/results';
 import type { ResourceMap } from '~/core/resources';
 import { type SearchInput } from './dto';
@@ -46,11 +42,9 @@ export class SearchRepository extends CommonRepository {
       )
       .apply((q) =>
         input.type
-          ? q
-              .with(['node', 'matchedProps'])
-              .raw('WHERE any(l in labels(node) where l in $types)', {
-                types: input.type,
-              })
+          ? q.with(['node', 'matchedProps']).raw('WHERE any(l in labels(node) where l in $types)', {
+              types: input.type,
+            })
           : q,
       )
       .return<{

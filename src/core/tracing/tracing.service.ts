@@ -8,9 +8,7 @@ export class TracingService implements OnModuleDestroy {
   readonly segmentStorage = new AsyncLocalStorage<XR.Segment | XR.Subsegment>();
 
   capture<R>(name: string, cb: (sub: Segment) => Promise<R>) {
-    const seg =
-      this.segmentStorage.getStore()?.addNewSubsegment(name) ??
-      new XR.Subsegment(name);
+    const seg = this.segmentStorage.getStore()?.addNewSubsegment(name) ?? new XR.Subsegment(name);
     return this.segmentStorage.run(seg, async () => {
       try {
         const res = await cb(seg as any);
@@ -33,9 +31,7 @@ export class TracingService implements OnModuleDestroy {
   get segment() {
     const current = this.segmentStorage.getStore();
     if (!current) {
-      throw new ServerException(
-        'Cannot get segment outside of defined context',
-      );
+      throw new ServerException('Cannot get segment outside of defined context');
     }
     return current as unknown as Segment;
   }

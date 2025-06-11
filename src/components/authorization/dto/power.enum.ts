@@ -45,8 +45,7 @@ export const Power = makeEnum({
     },
     {
       value: 'CreateEthnologueLanguage',
-      deprecationReason:
-        'Just check `CreateLanguage` instead. This is a sub-object ',
+      deprecationReason: 'Just check `CreateLanguage` instead. This is a sub-object ',
     },
     { value: 'CreateFile', deprecationReason: 'Use something else instead' },
     {
@@ -100,8 +99,7 @@ export const Power = makeEnum({
     },
     {
       value: 'GrantRegionalCommunicationsCoordinatorRole',
-      deprecationReason:
-        'Use `AuthorizedRoles.RegionalCommunicationsCoordinator` instead',
+      deprecationReason: 'Use `AuthorizedRoles.RegionalCommunicationsCoordinator` instead',
     },
     {
       value: 'GrantTranslatorRole',

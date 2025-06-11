@@ -39,10 +39,7 @@ export class SetInitialMouEnd implements IEventHandler<SubscribedEvent> {
         event.project = updatedProject;
       }
     } catch (exception) {
-      throw new ServerException(
-        'Could not set initial mou end on project',
-        exception,
-      );
+      throw new ServerException('Could not set initial mou end on project', exception);
     }
   }
 }

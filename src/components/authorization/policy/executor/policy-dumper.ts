@@ -24,12 +24,7 @@ import { searchCamelCase } from '~/common/search-camel-case';
 import { Identity } from '~/core/authentication';
 import { InjectableCommand } from '~/core/cli';
 import { type ResourceLike, ResourcesHost } from '~/core/resources';
-import {
-  ChildListAction,
-  ChildSingleAction,
-  PropAction,
-  ResourceAction,
-} from '../actions';
+import { ChildListAction, ChildSingleAction, PropAction, ResourceAction } from '../actions';
 import { type Permission } from '../builder/perm-granter';
 import { CalculatedCondition } from '../conditions';
 import { PolicyExecutor } from './policy-executor';
@@ -50,9 +45,7 @@ export class PolicyDumper {
     const chalk = new Chalk({ level: 0 });
     const resources = this.selectResources();
     for (const role of Role) {
-      const dumped = resources.flatMap((res) =>
-        this.dumpRes(role, res, { props: true }),
-      );
+      const dumped = resources.flatMap((res) => this.dumpRes(role, res, { props: true }));
       const data = dumped.map((row) => ({
         Resource: startCase(row.resource.name),
         'Property/Relationship': startCase(row.edge),
@@ -69,18 +62,13 @@ export class PolicyDumper {
     await fs.writeFile(filename ?? 'permissions.xlsx', buffer);
   }
 
-  async dump(
-    rolesIn: Many<LiteralUnion<Role, string>>,
-    resourcesIn: Many<ResourceLike & string>,
-  ) {
+  async dump(rolesIn: Many<LiteralUnion<Role, string>>, resourcesIn: Many<ResourceLike & string>) {
     const roles = search(rolesIn, [...Role], 'role');
     const map = this.resources.getEnhancedMap();
     const resources = searchResources(resourcesIn, map);
 
     const data = roles.flatMap((role) =>
-      resources.flatMap((r) =>
-        this.dumpRes(role, r.resource, { props: r.props }),
-      ),
+      resources.flatMap((r) => this.dumpRes(role, r.resource, { props: r.props })),
     );
 
     const table = new Table({
@@ -89,8 +77,7 @@ export class PolicyDumper {
     const chalk = new Chalk();
 
     const showRoleCol = roles.length > 1;
-    const showResCol =
-      !showRoleCol || resources.length > 1 || resources.some((r) => r.props);
+    const showResCol = !showRoleCol || resources.length > 1 || resources.some((r) => r.props);
 
     // Table title
     table.push([
@@ -99,8 +86,7 @@ export class PolicyDumper {
           cleanJoin(' ', [
             'Permissions',
             roles.length === 1 && `for ${chalk.italic(startCase(roles[0]))}`,
-            resources.length === 1 &&
-              `for ${chalk.italic(startCase(resources[0].resource.name))}`,
+            resources.length === 1 && `for ${chalk.italic(startCase(resources[0].resource.name))}`,
           ]),
         ),
         colSpan: 4 + (showRoleCol ? 1 : 0) + (showResCol ? 1 : 0),
@@ -111,12 +97,8 @@ export class PolicyDumper {
     // Table header row
     table.push([
       ...(showRoleCol ? [chalk.magentaBright('Role')] : []),
-      ...(showResCol
-        ? [resources.length === 1 ? undefined : chalk.magentaBright('Resource')]
-        : []),
-      ...['Read', 'Edit', 'Create', 'Delete'].map((k) =>
-        chalk.magentaBright(k),
-      ),
+      ...(showResCol ? [resources.length === 1 ? undefined : chalk.magentaBright('Resource')] : []),
+      ...['Read', 'Edit', 'Create', 'Delete'].map((k) => chalk.magentaBright(k)),
     ]);
 
     // Table data rows
@@ -124,11 +106,7 @@ export class PolicyDumper {
       ...data.map((row) => [
         ...(showRoleCol ? [chalk.cyan(startCase(row.role))] : []),
         ...(showResCol
-          ? [
-              chalk.cyan(
-                row.edge ? ' .' + row.edge : startCase(row.resource.name),
-              ),
-            ]
+          ? [chalk.cyan(row.edge ? ' .' + row.edge : startCase(row.resource.name))]
           : []),
         ...[row.read, row.edit, row.create, row.delete].map((perm) =>
           this.humanizePerm(perm, chalk),
@@ -182,8 +160,7 @@ export class PolicyDumper {
           role,
           resource,
           edge: undefined,
-          ...mapValues.fromList(ResourceAction, (action) => resolve(action))
-            .asRecord,
+          ...mapValues.fromList(ResourceAction, (action) => resolve(action)).asRecord,
         },
         ...(options.props !== false
           ? ([
@@ -194,15 +171,12 @@ export class PolicyDumper {
           : []
         ).flatMap(([set, actions]) =>
           [...set]
-            .filter(
-              (p) => typeof options.props === 'boolean' || options.props.has(p),
-            )
+            .filter((p) => typeof options.props === 'boolean' || options.props.has(p))
             .map((prop) => ({
               role,
               resource,
               edge: prop,
-              ...mapValues.fromList(actions, (action) => resolve(action, prop))
-                .asRecord,
+              ...mapValues.fromList(actions, (action) => resolve(action, prop)).asRecord,
             })),
         ),
       ];
@@ -234,11 +208,7 @@ interface DumpedRow {
   delete?: Permission;
 }
 
-const search = <T extends string>(
-  input: Many<string>,
-  bank: T[],
-  thing: string,
-) => {
+const search = <T extends string>(input: Many<string>, bank: T[], thing: string) => {
   const values = many(input);
   if (values.some(isWildcard)) {
     return bank;
@@ -246,18 +216,12 @@ const search = <T extends string>(
   const results = values
     .flatMap(csv)
     .map((r) =>
-      firstOr(
-        searchCamelCase(bank, r),
-        () => new Error(`Could not find ${thing} from "${r}"`),
-      ),
+      firstOr(searchCamelCase(bank, r), () => new Error(`Could not find ${thing} from "${r}"`)),
     );
   return [...new Set(results)].sort((a, b) => a.localeCompare(b));
 };
 
-const searchResources = (
-  input: Many<string>,
-  map: Record<string, AnyResource>,
-) => {
+const searchResources = (input: Many<string>, map: Record<string, AnyResource>) => {
   const resNames = Object.keys(map);
   const selections = many(input)
     // Split by comma, but not inside curly braces
@@ -298,9 +262,7 @@ const searchResources = (
         return { resource, props: availableProps };
       }
 
-      const found = csv(propsIn).flatMap((p) =>
-        searchCamelCase(availableProps, p),
-      );
+      const found = csv(propsIn).flatMap((p) => searchCamelCase(availableProps, p));
       return { resource, props: setOf(found) };
     });
 
@@ -309,9 +271,7 @@ const searchResources = (
     .map((rows) => {
       const resource = rows[0]!.resource;
       const propList = [
-        ...new Set(
-          ...rows.flatMap((r) => (typeof r.props === 'boolean' ? [] : r.props)),
-        ),
+        ...new Set(...rows.flatMap((r) => (typeof r.props === 'boolean' ? [] : r.props))),
       ].sort((a, b) => a.localeCompare(b));
       const props = propList.length === 0 ? false : setOf(propList);
       return { resource, props };

@@ -16,11 +16,7 @@ expect.extend({
       extensions,
     };
 
-    const {
-      codes: actualCodes,
-      stacktrace: _,
-      ...actualExtensions
-    } = received.raw.extensions;
+    const { codes: actualCodes, stacktrace: _, ...actualExtensions } = received.raw.extensions;
     const actualObj = {
       codes: actualCodes,
       message: received.raw.message,
@@ -31,10 +27,7 @@ expect.extend({
       expect.arrayContaining(expectedObj.codes ?? []),
       actualObj.codes,
     );
-    const messagePassed = this.equals(
-      expectedObj.message ?? expect.anything(),
-      actualObj.message,
-    );
+    const messagePassed = this.equals(expectedObj.message ?? expect.anything(), actualObj.message);
     const extensionsPassed = this.equals(
       expect.objectContaining(expectedObj.extensions),
       expectedObj.extensions,
@@ -44,9 +37,7 @@ expect.extend({
     const genMessage = () => stripIndent`
       ${this.utils.matcherHint(`${this.isNot ? '.not' : ''}.toThrowGqlError`)}
 
-      Expected GraphQL error with${
-        this.isNot ? 'out' : ''
-      } at least the following:
+      Expected GraphQL error with${this.isNot ? 'out' : ''} at least the following:
         ${
           !codesPassed
             ? stripIndent`

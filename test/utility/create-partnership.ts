@@ -7,10 +7,7 @@ import * as fragments from './fragments';
 
 export async function createPartnership(
   app: TestApp,
-  {
-    changeset,
-    ...input
-  }: Partial<InputOf<typeof CreatePartnershipDoc>> & { changeset?: ID } = {},
+  { changeset, ...input }: Partial<InputOf<typeof CreatePartnershipDoc>> & { changeset?: ID } = {},
 ) {
   const partnership = {
     projectId: input.projectId || (await createProject(app)).id,
@@ -35,9 +32,7 @@ export async function createPartnership(
   expect(isValidId(actual.id)).toBe(true);
   expect(actual.agreementStatus.value).toBe(partnership.agreementStatus);
   expect(actual.mouStatus.value).toBe(partnership.mouStatus);
-  expect(actual.types.value).toEqual(
-    expect.arrayContaining(partnership.types!),
-  );
+  expect(actual.types.value).toEqual(expect.arrayContaining(partnership.types!));
 
   return actual;
 }

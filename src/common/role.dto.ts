@@ -56,11 +56,7 @@ export const Role = makeEnum({
        */
       Hierarchies: {
         Finance: ['FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller'],
-        Field: [
-          'ProjectManager',
-          'RegionalDirector',
-          'FieldOperationsDirector',
-        ],
+        Field: ['ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'],
       } satisfies Record<string, Role[]>,
     };
   },

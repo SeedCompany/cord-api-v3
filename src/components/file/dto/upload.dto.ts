@@ -66,8 +66,7 @@ export abstract class CreateDefinedFileVersionInput {
 @InputType()
 export abstract class CreateFileVersionInput extends CreateDefinedFileVersionInput {
   @IdField({
-    description:
-      'The directory ID if creating a new file or the file ID if creating a new version',
+    description: 'The directory ID if creating a new file or the file ID if creating a new version',
   })
   readonly parentId: ID;
 }

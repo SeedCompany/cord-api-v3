@@ -17,40 +17,33 @@ export class ProgressSummaryGelRepository
     return await this.db.run(this.readManyQuery, { ids: reportIds });
   }
 
-  private readonly readManyQuery = e.params(
-    { ids: e.array(e.uuid) },
-    ({ ids }) => {
-      const reports = e.cast(e.ProgressReport, e.array_unpack(ids));
+  private readonly readManyQuery = e.params({ ids: e.array(e.uuid) }, ({ ids }) => {
+    const reports = e.cast(e.ProgressReport, e.array_unpack(ids));
 
-      return e.select(reports, (report) => {
-        const scriptureProducts = e.op(
-          report.engagement['<engagement[is DirectScriptureProduct]'],
-          'union',
-          report.engagement['<engagement[is DerivativeScriptureProduct]'],
-        );
-        return {
-          report,
+    return e.select(reports, (report) => {
+      const scriptureProducts = e.op(
+        report.engagement['<engagement[is DirectScriptureProduct]'],
+        'union',
+        report.engagement['<engagement[is DerivativeScriptureProduct]'],
+      );
+      return {
+        report,
 
-          ...mapEntries(SummaryPeriod, ([period]) => [
-            period,
-            e.select(Summary, (summary) => ({
-              ...summary['*'],
-              filter_single: { report, period: Period[period] },
-            })),
-          ]).asRecord,
+        ...mapEntries(SummaryPeriod, ([period]) => [
+          period,
+          e.select(Summary, (summary) => ({
+            ...summary['*'],
+            filter_single: { report, period: Period[period] },
+          })),
+        ]).asRecord,
 
-          totalVerses: e.sum(scriptureProducts.totalVerses),
-          totalVerseEquivalents: e.sum(scriptureProducts.totalVerseEquivalents),
-        };
-      });
-    },
-  );
+        totalVerses: e.sum(scriptureProducts.totalVerses),
+        totalVerseEquivalents: e.sum(scriptureProducts.totalVerseEquivalents),
+      };
+    });
+  });
 
-  async save(
-    report: ProgressReport,
-    period: SummaryPeriod,
-    data: ProgressSummary,
-  ) {
+  async save(report: ProgressReport, period: SummaryPeriod, data: ProgressSummary) {
     const reportEntity = e.cast(e.ProgressReport, e.uuid(report.id));
 
     const preExists = e.select(Summary, () => ({

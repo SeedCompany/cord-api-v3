@@ -45,8 +45,6 @@ export default async (): Promise<Config.InitialOptions> => {
     testTimeout: Duration.fromObject({ minutes: 1 }).toMillis(),
     // WebStorm doesn't need this as it adds the cli flag automatically.
     // I'm guessing VSCode needs it.
-    ...(debugging
-      ? { testTimeout: Duration.fromObject({ hours: 2 }).toMillis() }
-      : {}),
+    ...(debugging ? { testTimeout: Duration.fromObject({ hours: 2 }).toMillis() } : {}),
   };
 };

@@ -44,14 +44,9 @@ export class ProductListInput extends SortablePaginationInput<keyof Product>({
 }
 
 @ObjectType()
-export class ProductListOutput extends PaginatedList<Product, AnyProduct>(
-  Product,
-) {}
+export class ProductListOutput extends PaginatedList<Product, AnyProduct>(Product) {}
 
 @ObjectType({
   description: SecuredList.descriptionFor('products'),
 })
-export abstract class SecuredProductList extends SecuredList<
-  Product,
-  AnyProduct
->(Product) {}
+export abstract class SecuredProductList extends SecuredList<Product, AnyProduct>(Product) {}

@@ -27,11 +27,7 @@ export class ExtractPnpFileOnUploadHandler {
 
     let extracted;
     try {
-      extracted = await this.extractor.extract(
-        event.file,
-        event.report.start,
-        result,
-      );
+      extracted = await this.extractor.extract(event.file, event.report.start, result);
     } catch (e) {
       this.logger.warning(e.message, {
         name: event.file.name,
@@ -47,25 +43,13 @@ export class ExtractPnpFileOnUploadHandler {
     });
 
     if (extracted?.cumulative) {
-      await this.repo.save(
-        event.report,
-        SummaryPeriod.Cumulative,
-        extracted.cumulative,
-      );
+      await this.repo.save(event.report, SummaryPeriod.Cumulative, extracted.cumulative);
     }
     if (extracted?.reportPeriod) {
-      await this.repo.save(
-        event.report,
-        SummaryPeriod.ReportPeriod,
-        extracted.reportPeriod,
-      );
+      await this.repo.save(event.report, SummaryPeriod.ReportPeriod, extracted.reportPeriod);
     }
     if (extracted?.fiscalYear) {
-      await this.repo.save(
-        event.report,
-        SummaryPeriod.FiscalYearSoFar,
-        extracted.fiscalYear,
-      );
+      await this.repo.save(event.report, SummaryPeriod.FiscalYearSoFar, extracted.fiscalYear);
     }
   }
 }

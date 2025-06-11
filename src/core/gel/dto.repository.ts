@@ -41,10 +41,7 @@ import type {
   SelectModifiers,
 } from './generated-client/select';
 import { type UpdateShape } from './generated-client/update';
-import type {
-  EasyInsertShape,
-  EasyUpdateShape,
-} from './query-util/easy-insert';
+import type { EasyInsertShape, EasyUpdateShape } from './query-util/easy-insert';
 import { mapToSetBlock } from './query-util/map-to-set-block';
 import { type $, e } from './reexports';
 
@@ -93,22 +90,15 @@ export const RepoFor = <
       ) => AbstractClass<Customized> & {
         omit?: readonly OmitKeys[];
       },
-    ): AbstractClass<
-      Customized & Omit<DefaultDtoRepository, keyof Customized | OmitKeys>
-    > {
+    ): AbstractClass<Customized & Omit<DefaultDtoRepository, keyof Customized | OmitKeys>> {
       const customizedClass = customizer(BaseCustomizedRepository, {
         defaults: DefaultMethods,
       });
-      const customMethodNames = setOf(
-        Object.getOwnPropertyNames(customizedClass.prototype),
-      );
+      const customMethodNames = setOf(Object.getOwnPropertyNames(customizedClass.prototype));
       const omitKeys = new Set<string>(customizedClass.omit);
-      const defaultMethods = Object.getOwnPropertyDescriptors(
-        DefaultDtoRepository.prototype,
-      );
+      const defaultMethods = Object.getOwnPropertyDescriptors(DefaultDtoRepository.prototype);
       const nonDeclaredDefaults = mapKeys(defaultMethods, (name, _, { SKIP }) =>
-        typeof name === 'string' &&
-        (customMethodNames.has(name) || omitKeys.has(name))
+        typeof name === 'string' && (customMethodNames.has(name) || omitKeys.has(name))
           ? SKIP
           : name,
       ).asRecord;
@@ -118,10 +108,7 @@ export const RepoFor = <
       // Using this customized class instance, but swap out the customized methods for the default ones.
       Object.defineProperty(customizedClass.prototype, 'defaults', {
         get() {
-          const defaultsInstance = Object.defineProperties(
-            Object.create(this),
-            defaultMethods,
-          );
+          const defaultsInstance = Object.defineProperties(Object.create(this), defaultMethods);
           Object.defineProperty(this, 'defaults', { value: defaultsInstance }); // memoize, only once
           return defaultsInstance;
         },
@@ -156,22 +143,13 @@ export const RepoFor = <
     ): { filter: SelectFilterExpression } | {} {
       const filters = many(this.listFilters(scope, input)).filter(isNotFalsy);
       const filter =
-        filters.length === 0
-          ? null
-          : filters.length === 1
-          ? filters[0]
-          : e.all(e.set(...filters));
+        filters.length === 0 ? null : filters.length === 1 ? filters[0] : e.all(e.set(...filters));
       return filter ? { filter } : {};
     }
 
-    protected orderBy(
-      scope: ScopeOf<Root>,
-      input: SortablePaginationInput,
-    ): OrderByExpression {
+    protected orderBy(scope: ScopeOf<Root>, input: SortablePaginationInput): OrderByExpression {
       if (!(input.sort in scope.__element__.__pointers__)) {
-        throw new ClientException(
-          `'${input.sort}' is not a valid sort key for '${resource.name}'`,
-        );
+        throw new ClientException(`'${input.sort}' is not a valid sort key for '${resource.name}'`);
       }
       return {
         expression: (scope as any)[input.sort],
@@ -183,15 +161,11 @@ export const RepoFor = <
       input: PaginationInput,
       // eslint-disable-next-line @typescript-eslint/naming-convention
     ): { order_by?: OrderByExpression } {
-      return isSortablePaginationInput(input)
-        ? { order_by: this.orderBy(scope, input) }
-        : {};
+      return isSortablePaginationInput(input) ? { order_by: this.orderBy(scope, input) } : {};
     }
 
     protected async paginateAndRun(
-      listOfAllQuery: $expr_Select<
-        $.TypeSet<$.ObjectType<DBName<Root>>, $.Cardinality.Many>
-      >,
+      listOfAllQuery: $expr_Select<$.TypeSet<$.ObjectType<DBName<Root>>, $.Cardinality.Many>>,
       input: PaginationInput,
     ): Promise<PaginatedListType<Dto>> {
       const paginated = this.paginate(listOfAllQuery, input);
@@ -204,9 +178,7 @@ export const RepoFor = <
     }
 
     protected paginate(
-      listOfAllQuery: $expr_Select<
-        $.TypeSet<$.ObjectType<DBName<Root>>, $.Cardinality.Many>
-      >,
+      listOfAllQuery: $expr_Select<$.TypeSet<$.ObjectType<DBName<Root>>, $.Cardinality.Many>>,
       input: PaginationInput,
     ) {
       const thisPage = e.select(listOfAllQuery as any, () => ({
@@ -269,9 +241,7 @@ export const RepoFor = <
     async readOne(id: ID) {
       const rows = await this.readMany([id]);
       if (!rows[0]) {
-        throw new NotFoundException(
-          `Could not find ${lowerCase(this.resource.name)}`,
-        );
+        throw new NotFoundException(`Could not find ${lowerCase(this.resource.name)}`);
       }
       return rows[0];
     }
@@ -314,18 +284,11 @@ export const RepoFor = <
     }
   }
 
-  type DefaultRepoOwnKeys = Exclude<
-    keyof DefaultDtoRepository,
-    keyof Repository
-  > &
-    string;
+  type DefaultRepoOwnKeys = Exclude<keyof DefaultDtoRepository, keyof Repository> & string;
   const DefaultMethods = makeEnum({
-    values: entries(
-      Object.getOwnPropertyDescriptors(DefaultDtoRepository.prototype),
-    ).flatMap(([key]) =>
-      typeof key === 'string' && key !== 'constructor'
-        ? (key as DefaultRepoOwnKeys)
-        : [],
+    values: entries(Object.getOwnPropertyDescriptors(DefaultDtoRepository.prototype)).flatMap(
+      ([key]) =>
+        typeof key === 'string' && key !== 'constructor' ? (key as DefaultRepoOwnKeys) : [],
     ),
   });
 
@@ -335,22 +298,15 @@ export const RepoFor = <
     }
   }
 
-  return Repository.customize<BaseCustomizedRepository, OmitKeys & {}>(
-    (cls) => cls,
-  );
+  return Repository.customize<BaseCustomizedRepository, OmitKeys & {}>((cls) => cls);
 };
 
 type ShapeFn<
   Expr extends $.ObjectTypeExpression,
-  Shape extends objectTypeToSelectShape<Expr['__element__']> &
-    SelectModifiers<Expr['__element__']>,
+  Shape extends objectTypeToSelectShape<Expr['__element__']> & SelectModifiers<Expr['__element__']>,
 > = (scope: ScopeOf<Expr>) => Readonly<Shape>;
 
-export type ScopeOf<Expr extends $.ObjectTypeExpression> = $.$scopify<
-  Expr['__element__']
-> &
+export type ScopeOf<Expr extends $.ObjectTypeExpression> = $.$scopify<Expr['__element__']> &
   $linkPropify<{
-    [k in keyof Expr]: k extends '__cardinality__'
-      ? $.Cardinality.One
-      : Expr[k];
+    [k in keyof Expr]: k extends '__cardinality__' ? $.Cardinality.One : Expr[k];
   }>;

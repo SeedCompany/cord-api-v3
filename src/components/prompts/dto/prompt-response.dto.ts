@@ -47,9 +47,7 @@ export abstract class VariantResponse<Key extends string = string> {
 }
 
 @ObjectType()
-export class PromptVariantResponse<
-  Key extends string = string,
-> extends Resource {
+export class PromptVariantResponse<Key extends string = string> extends Resource {
   static readonly Parent = 'dynamic' as 'dynamic' | (() => Promise<any>);
 
   static Relations = {

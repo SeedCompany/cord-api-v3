@@ -1,19 +1,13 @@
 import { type FieldMiddleware } from '@nestjs/graphql';
 import { createHash } from 'crypto';
-import {
-  type GraphQLResolveInfo as ResolveInfo,
-  type ResponsePath,
-} from 'graphql';
+import { type GraphQLResolveInfo as ResolveInfo, type ResponsePath } from 'graphql';
 import { Identity } from '../authentication';
 import { type Segment, TracingService } from '../tracing';
 import { Plugin } from './plugin.decorator';
 
 @Plugin()
 export class GraphqlTracingPlugin {
-  constructor(
-    private readonly tracing: TracingService,
-    private readonly identity: Identity,
-  ) {}
+  constructor(private readonly tracing: TracingService, private readonly identity: Identity) {}
 
   onExecute: Plugin['onExecute'] = ({ args }) => {
     const { operationName, contextValue } = args;
@@ -28,9 +22,7 @@ export class GraphqlTracingPlugin {
 
     segment.name =
       operationName ??
-      (params.query
-        ? createHash('sha256').update(params.query).digest('hex')
-        : undefined);
+      (params.query ? createHash('sha256').update(params.query).digest('hex') : undefined);
     segment.addAnnotation(operation.operation, true);
 
     // Append operation name to url since all gql requests hit a single http endpoint
@@ -69,8 +61,7 @@ export class GraphqlTracingPlugin {
       return this.tracing.capture(path, async (sub) => {
         // Add info just for queries right now
         if (info.operation.operation === 'query') {
-          const annotations =
-            args.input && Object.keys(args).length === 1 ? args.input : args;
+          const annotations = args.input && Object.keys(args).length === 1 ? args.input : args;
           for (const [key, value] of Object.entries(annotations)) {
             if (['string', 'number', 'boolean'].includes(typeof value)) {
               sub.addAnnotation(key, value as string | number | boolean);

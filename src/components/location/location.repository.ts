@@ -42,10 +42,7 @@ export class LocationRepository extends DtoRepository(Location) {
   async create(input: CreateLocation) {
     const checkName = await this.doesNameExist(input.name);
     if (checkName) {
-      throw new DuplicateException(
-        'location.name',
-        'Location with this name already exists.',
-      );
+      throw new DuplicateException('location.name', 'Location with this name already exists.');
     }
 
     const mapImageId = await generateId<FileId>();
@@ -76,9 +73,7 @@ export class LocationRepository extends DtoRepository(Location) {
     }
 
     const dto = await this.readOne(result.id).catch((e) => {
-      throw e instanceof NotFoundException
-        ? new ReadAfterCreationFailed(Location)
-        : e;
+      throw e instanceof NotFoundException ? new ReadAfterCreationFailed(Location) : e;
     });
 
     await this.files.createDefinedFile(
@@ -107,21 +102,14 @@ export class LocationRepository extends DtoRepository(Location) {
     await this.updateProperties({ id }, simpleChanges);
 
     if (fundingAccountId !== undefined) {
-      await this.updateRelation(
-        'fundingAccount',
-        'FundingAccount',
-        id,
-        fundingAccountId,
-      );
+      await this.updateRelation('fundingAccount', 'FundingAccount', id, fundingAccountId);
     }
 
     if (mapImage !== undefined) {
       const location = await this.readOne(id);
 
       if (!location.mapImage) {
-        throw new ServerException(
-          'Expected map image file to be updated with the location',
-        );
+        throw new ServerException('Expected map image file to be updated with the location');
       }
 
       await this.files.createFileVersion({
@@ -131,21 +119,11 @@ export class LocationRepository extends DtoRepository(Location) {
     }
 
     if (defaultFieldRegionId !== undefined) {
-      await this.updateRelation(
-        'defaultFieldRegion',
-        'FieldRegion',
-        id,
-        defaultFieldRegionId,
-      );
+      await this.updateRelation('defaultFieldRegion', 'FieldRegion', id, defaultFieldRegionId);
     }
 
     if (defaultMarketingRegionId !== undefined) {
-      await this.updateRelation(
-        'defaultMarketingRegion',
-        'Location',
-        id,
-        defaultMarketingRegionId,
-      );
+      await this.updateRelation('defaultMarketingRegion', 'Location', id, defaultMarketingRegionId);
     }
 
     return await this.readOne(id);
@@ -207,21 +185,12 @@ export class LocationRepository extends DtoRepository(Location) {
       .run();
   }
 
-  async removeLocationFromNode(
-    label: string,
-    id: ID,
-    rel: string,
-    locationId: ID,
-  ) {
+  async removeLocationFromNode(label: string, id: ID, rel: string, locationId: ID) {
     await this.db
       .query()
       .matchNode('node', label, { id })
       .matchNode('location', 'Location', { id: locationId })
-      .match([
-        node('node'),
-        relation('out', 'rel', rel, ACTIVE),
-        node('location'),
-      ])
+      .match([node('node'), relation('out', 'rel', rel, ACTIVE), node('location')])
       .setValues({
         'rel.active': false,
       })
@@ -273,11 +242,7 @@ export const locationFilters = filter.define(() => LocationFilters, {
   name: filter.fullText({
     index: () => NameIndex,
     matchToNode: (q) =>
-      q.match([
-        node('node', 'Location'),
-        relation('out', '', undefined, ACTIVE),
-        node('match'),
-      ]),
+      q.match([node('node', 'Location'), relation('out', '', undefined, ACTIVE), node('match')]),
   }),
 });
 

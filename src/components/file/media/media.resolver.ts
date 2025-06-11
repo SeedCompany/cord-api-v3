@@ -1,10 +1,4 @@
-import {
-  Args,
-  Mutation,
-  Parent,
-  ResolveField,
-  Resolver,
-} from '@nestjs/graphql';
+import { Args, Mutation, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { Loader, type LoaderOf } from '@seedcompany/data-loader';
 import { type ID, IdArg } from '~/common';
 import { FileVersion } from '../dto';
@@ -17,10 +11,7 @@ export class MediaResolver {
   constructor(private readonly service: MediaService) {}
 
   @ResolveField(() => FileVersion)
-  async file(
-    @Parent() media: Media,
-    @Loader(FileNodeLoader) files: LoaderOf<FileNodeLoader>,
-  ) {
+  async file(@Parent() media: Media, @Loader(FileNodeLoader) files: LoaderOf<FileNodeLoader>) {
     return await files.load(media.file);
   }
 

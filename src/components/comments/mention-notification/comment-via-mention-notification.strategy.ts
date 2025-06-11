@@ -1,10 +1,6 @@
 import { node, type Query, relation } from 'cypher-query-builder';
 import { createRelationships, exp } from '~/core/database/query';
-import {
-  INotificationStrategy,
-  type InputOf,
-  NotificationStrategy,
-} from '../../notifications';
+import { INotificationStrategy, type InputOf, NotificationStrategy } from '../../notifications';
 import { CommentViaMentionNotification } from './comment-via-mention-notification.dto';
 
 @NotificationStrategy(CommentViaMentionNotification)
@@ -21,11 +17,7 @@ export class CommentViaMentionNotificationStrategy extends INotificationStrategy
   hydrateExtraForNeo4j(outVar: string) {
     return (query: Query) =>
       query
-        .match([
-          node('node'),
-          relation('out', '', 'comment'),
-          node('comment', 'Comment'),
-        ])
+        .match([node('node'), relation('out', '', 'comment'), node('comment', 'Comment')])
         .return(
           exp({
             comment: 'comment { .id }',

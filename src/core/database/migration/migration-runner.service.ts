@@ -4,10 +4,7 @@ import { DateTime } from 'luxon';
 import { ConfigService } from '../../config/config.service';
 import { ILogger, Logger } from '../../logger';
 import { DatabaseService, DbTraceLayer } from '../database.service';
-import {
-  type DiscoveredMigration,
-  MigrationDiscovery,
-} from './migration-discovery.service';
+import { type DiscoveredMigration, MigrationDiscovery } from './migration-discovery.service';
 
 @Injectable()
 @DbTraceLayer.applyToClass()
@@ -61,9 +58,7 @@ export class MigrationRunner {
         await this.setSchemaVersion(current);
       }
       if (current < latest) {
-        this.logger.info(
-          'Schema migration finished incompletely due to error(s)',
-        );
+        this.logger.info('Schema migration finished incompletely due to error(s)');
       } else {
         this.logger.info('Schema is now up to date');
       }

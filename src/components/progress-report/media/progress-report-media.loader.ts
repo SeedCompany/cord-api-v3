@@ -5,9 +5,7 @@ import { ProgressReportMedia as ReportMedia } from './dto';
 import { ProgressReportMediaService } from './progress-report-media.service';
 
 @LoaderFactory(() => ReportMedia)
-export class ProgressReportMediaLoader
-  implements DataLoaderStrategy<ReportMedia, ID<ReportMedia>>
-{
+export class ProgressReportMediaLoader implements DataLoaderStrategy<ReportMedia, ID<ReportMedia>> {
   constructor(
     @Inject(forwardRef(() => ProgressReportMediaService))
     private readonly service: ProgressReportMediaService & {},

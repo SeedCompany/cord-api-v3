@@ -2,11 +2,7 @@ import { runInterfacesGenerator } from '@gel/generate/dist/interfaces.js';
 import { customScalars } from './scalars';
 import { addCustomScalarImports, type GeneratorParams } from './util';
 
-export async function generateSchema({
-  client,
-  root,
-  gelDir,
-}: GeneratorParams) {
+export async function generateSchema({ client, root, gelDir }: GeneratorParams) {
   const schemaFile = gelDir.createSourceFile('schema.ts', undefined, {
     overwrite: true,
   });

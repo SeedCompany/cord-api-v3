@@ -172,9 +172,7 @@ describe('Engagement Changeset Aware e2e', () => {
     const changesetEngagement = await app.graphql.mutate(
       graphql(
         `
-          mutation createLanguageEngagement(
-            $input: CreateLanguageEngagementInput!
-          ) {
+          mutation createLanguageEngagement($input: CreateLanguageEngagementInput!) {
             createLanguageEngagement(input: $input) {
               engagement {
                 ...languageEngagement
@@ -224,9 +222,7 @@ describe('Engagement Changeset Aware e2e', () => {
     await app.graphql.mutate(
       graphql(
         `
-          mutation updateLanguageEngagement(
-            $input: UpdateLanguageEngagementInput!
-          ) {
+          mutation updateLanguageEngagement($input: UpdateLanguageEngagementInput!) {
             updateLanguageEngagement(input: $input) {
               engagement {
                 ...languageEngagement
@@ -251,11 +247,7 @@ describe('Engagement Changeset Aware e2e', () => {
     let result = await readLanguageEngagement(app, languageEngagement.id);
     expect(result.engagement.completeDate.value !== '2100-08-22').toBeTruthy();
     // read engagement with changeset
-    result = await readLanguageEngagement(
-      app,
-      languageEngagement.id,
-      changeset.id,
-    );
+    result = await readLanguageEngagement(app, languageEngagement.id, changeset.id);
     expect(result.engagement.completeDate.value).toBe('2100-08-22');
     await approveProjectChangeRequest(app, changeset.id);
     result = await readLanguageEngagement(app, languageEngagement.id);
@@ -273,9 +265,7 @@ describe('Engagement Changeset Aware e2e', () => {
     const changesetEngagement = await app.graphql.mutate(
       graphql(
         `
-          mutation createLanguageEngagement(
-            $input: CreateLanguageEngagementInput!
-          ) {
+          mutation createLanguageEngagement($input: CreateLanguageEngagementInput!) {
             createLanguageEngagement(input: $input) {
               engagement {
                 ...languageEngagement
@@ -296,19 +286,14 @@ describe('Engagement Changeset Aware e2e', () => {
         },
       },
     );
-    expect(
-      changesetEngagement.createLanguageEngagement.engagement.ceremony,
-    ).toBeDefined();
+    expect(changesetEngagement.createLanguageEngagement.engagement.ceremony).toBeDefined();
 
-    const engagementId =
-      changesetEngagement.createLanguageEngagement.engagement.id;
+    const engagementId = changesetEngagement.createLanguageEngagement.engagement.id;
 
     await app.graphql.mutate(
       graphql(
         `
-          mutation updateLanguageEngagement(
-            $input: UpdateLanguageEngagementInput!
-          ) {
+          mutation updateLanguageEngagement($input: UpdateLanguageEngagementInput!) {
             updateLanguageEngagement(input: $input) {
               engagement {
                 ...languageEngagement
@@ -351,9 +336,7 @@ describe('Engagement Changeset Aware e2e', () => {
     const le = await app.graphql.mutate(
       graphql(
         `
-          mutation createLanguageEngagement(
-            $input: CreateLanguageEngagementInput!
-          ) {
+          mutation createLanguageEngagement($input: CreateLanguageEngagementInput!) {
             createLanguageEngagement(input: $input) {
               engagement {
                 ...languageEngagement
@@ -400,11 +383,7 @@ describe('Engagement Changeset Aware e2e', () => {
     expect(result.project.engagements.items.length).toBe(2);
 
     // Confirm engagement id is added to removed list
-    const projectChangeset = await readProjectChangeset(
-      app,
-      project.id,
-      changeset.id,
-    );
+    const projectChangeset = await readProjectChangeset(app, project.id, changeset.id);
     expect(projectChangeset.project.changeset!.difference.removed[0].id).toBe(
       le.createLanguageEngagement.engagement.id,
     );
@@ -427,9 +406,7 @@ describe('Engagement Changeset Aware e2e', () => {
       .mutate(
         graphql(
           `
-            mutation createLanguageEngagement(
-              $input: CreateLanguageEngagementInput!
-            ) {
+            mutation createLanguageEngagement($input: CreateLanguageEngagementInput!) {
               createLanguageEngagement(input: $input) {
                 engagement {
                   ...languageEngagement

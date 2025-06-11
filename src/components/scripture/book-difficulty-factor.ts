@@ -4,8 +4,7 @@ import { type BookDifficulty } from './dto';
 export const difficultyFactorOfBook = (book: Book): number =>
   factorMap[difficultyOfBook(book)] ?? 0;
 
-export const difficultyOfBook = (book: Book): BookDifficulty =>
-  difficultyMap[book.name];
+export const difficultyOfBook = (book: Book): BookDifficulty => difficultyMap[book.name];
 
 const factorMap: Record<BookDifficulty, number> = {
   Easy: 0.8,

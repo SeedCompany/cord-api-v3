@@ -1,15 +1,7 @@
 import { faker } from '@faker-js/faker';
 import { intersection, times } from 'lodash';
 import { v1 as uuid } from 'uuid';
-import {
-  CalendarDate,
-  generateId,
-  type ID,
-  isIdLike,
-  Order,
-  Role,
-  Sensitivity,
-} from '~/common';
+import { CalendarDate, generateId, type ID, isIdLike, Order, Role, Sensitivity } from '~/common';
 import { graphql, type InputOf } from '~/graphql';
 import { BudgetStatus } from '../src/components/budget/dto';
 import { PartnerType } from '../src/components/partner/dto';
@@ -39,25 +31,21 @@ import {
 } from './utility';
 import { forceProjectTo } from './utility/transition-project';
 
-const deleteProject =
-  (app: TestApp) => async (id: ID | string | { id: ID | string }) =>
-    await app.graphql.mutate(
-      graphql(`
-        mutation DeleteProject($id: ID!) {
-          deleteProject(id: $id) {
-            __typename
-          }
+const deleteProject = (app: TestApp) => async (id: ID | string | { id: ID | string }) =>
+  await app.graphql.mutate(
+    graphql(`
+      mutation DeleteProject($id: ID!) {
+        deleteProject(id: $id) {
+          __typename
         }
-      `),
-      {
-        id: isIdLike(id) || typeof id === 'string' ? (id as ID) : (id.id as ID),
-      },
-    );
+      }
+    `),
+    {
+      id: isIdLike(id) || typeof id === 'string' ? (id as ID) : (id.id as ID),
+    },
+  );
 
-const listProjects = async (
-  app: TestApp,
-  input?: InputOf<typeof ProjectListDoc>,
-) => {
+const listProjects = async (app: TestApp, input?: InputOf<typeof ProjectListDoc>) => {
   const { projects } = await app.graphql.query(ProjectListDoc, { input });
   return projects;
 };
@@ -88,11 +76,7 @@ describe('Project e2e', () => {
     app = await createTestApp();
     await createSession(app);
     director = await registerUser(app, {
-      roles: [
-        Role.ProjectManager,
-        Role.LeadFinancialAnalyst,
-        Role.FieldOperationsDirector,
-      ],
+      roles: [Role.ProjectManager, Role.LeadFinancialAnalyst, Role.FieldOperationsDirector],
     });
 
     [location, fieldRegion] = await runAsAdmin(app, async () => {
@@ -156,9 +140,7 @@ describe('Project e2e', () => {
     expect(actual.status).toBe(project.status);
     expect(actual.mouStart.value).toBe(project.mouStart.value);
     expect(actual.mouEnd.value).toBe(project.mouEnd.value);
-    expect(actual.estimatedSubmission.value).toBe(
-      project.estimatedSubmission.value,
-    );
+    expect(actual.estimatedSubmission.value).toBe(project.estimatedSubmission.value);
     expect(actual.presetInventory.value).toBe(project.presetInventory.value);
   });
 
@@ -273,9 +255,7 @@ describe('Project e2e', () => {
     expect(actual.id).toBe(project.id);
     expect(actual.type).toBe(project.type);
     expect(actual.budget.value!.id).toBe(project.budget.value!.id);
-    expect(actual.fieldRegion.value!.name.value).toBe(
-      project.fieldRegion.value!.name.value,
-    );
+    expect(actual.fieldRegion.value!.name.value).toBe(project.fieldRegion.value!.name.value);
   });
 
   it('update project', async () => {
@@ -452,13 +432,10 @@ describe('Project e2e', () => {
       fieldRegionId: fieldRegion.id,
     });
 
-    const [medSensitivityLanguage, lowSensitivityLanguage] = await runAsAdmin(
-      app,
-      async () => [
-        await createLanguage(app, { sensitivity: Sensitivity.Medium }),
-        await createLanguage(app, { sensitivity: Sensitivity.Low }),
-      ],
-    );
+    const [medSensitivityLanguage, lowSensitivityLanguage] = await runAsAdmin(app, async () => [
+      await createLanguage(app, { sensitivity: Sensitivity.Medium }),
+      await createLanguage(app, { sensitivity: Sensitivity.Low }),
+    ]);
 
     await createLanguageEngagement(app, {
       projectId: translationProjectWithEngagements.id,
@@ -494,9 +471,7 @@ describe('Project e2e', () => {
     const getSortedSensitivities = (projects: typeof ascendingProjects) =>
       projects.items.map((project) => project.sensitivity);
 
-    const { projects: ascendingProjects } = await getSensitivitySortedProjects(
-      'ASC',
-    );
+    const { projects: ascendingProjects } = await getSensitivitySortedProjects('ASC');
 
     expect(ascendingProjects.items.length).toBeGreaterThanOrEqual(5);
 
@@ -510,9 +485,7 @@ describe('Project e2e', () => {
       ]),
     );
 
-    const { projects: descendingProjects } = await getSensitivitySortedProjects(
-      'DESC',
-    );
+    const { projects: descendingProjects } = await getSensitivitySortedProjects('DESC');
 
     expect(getSortedSensitivities(descendingProjects)).toEqual(
       expect.arrayContaining([
@@ -686,9 +659,7 @@ describe('Project e2e', () => {
         id: project.id,
       },
     );
-    expect(
-      queryProject.project.engagements.items.length,
-    ).toBeGreaterThanOrEqual(numEngagements);
+    expect(queryProject.project.engagements.items.length).toBeGreaterThanOrEqual(numEngagements);
 
     expect(queryProject.project.sensitivity).toEqual(language.sensitivity);
   });
@@ -731,9 +702,7 @@ describe('Project e2e', () => {
         id: project.id,
       },
     );
-    expect(
-      queryProject.project.engagements.items.length,
-    ).toBeGreaterThanOrEqual(numEngagements);
+    expect(queryProject.project.engagements.items.length).toBeGreaterThanOrEqual(numEngagements);
   });
 
   it('List view of project members by projectId', async () => {
@@ -823,9 +792,7 @@ describe('Project e2e', () => {
       },
     );
 
-    expect(
-      queryProject.project.partnerships.items.length,
-    ).toBeGreaterThanOrEqual(numPartnerships);
+    expect(queryProject.project.partnerships.items.length).toBeGreaterThanOrEqual(numPartnerships);
     expect(queryProject.project.partnerships.total).toBe(numPartnerships);
   });
 
@@ -970,9 +937,7 @@ describe('Project e2e', () => {
         input: {
           partnership: {
             projectId: proj.id,
-            partnerId: (
-              await createPartner(app, { organizationId: org.id })
-            ).id,
+            partnerId: (await createPartner(app, { organizationId: org.id })).id,
             types: ['Funding'],
           },
         },
@@ -984,11 +949,7 @@ describe('Project e2e', () => {
       graphql(
         `
           mutation updateProject($id: ID!, $mouStart: Date!, $mouEnd: Date!) {
-            updateProject(
-              input: {
-                project: { id: $id, mouStart: $mouStart, mouEnd: $mouEnd }
-              }
-            ) {
+            updateProject(input: { project: { id: $id, mouStart: $mouStart, mouEnd: $mouEnd } }) {
               project {
                 ...project
                 budget {
@@ -1043,9 +1004,7 @@ describe('Project e2e', () => {
         input: {
           partnership: {
             projectId: project.id,
-            partnerId: (
-              await createPartner(app, { organizationId: org.id })
-            ).id,
+            partnerId: (await createPartner(app, { organizationId: org.id })).id,
             types: [PartnerType.Funding],
           },
         },
@@ -1078,8 +1037,7 @@ describe('Project e2e', () => {
       },
     );
     const firstBudgetRecordOrganizationId =
-      projectQueryResult.project.budget.value!.records[0]!.organization.value!
-        .id;
+      projectQueryResult.project.budget.value!.records[0]!.organization.value!.id;
     expect(firstBudgetRecordOrganizationId).toBe(org.id);
   });
 
@@ -1116,9 +1074,7 @@ describe('Project e2e', () => {
         return result.project;
       };
       const [project1, project2] = await runAsAdmin(app, () =>
-        Promise.all(
-          ['1', '2'].map(async (i) => await createAndUpdateProject(i)),
-        ),
+        Promise.all(['1', '2'].map(async (i) => await createAndUpdateProject(i))),
       );
 
       expect(project1.departmentId.value).not.toBe(project2.departmentId.value);

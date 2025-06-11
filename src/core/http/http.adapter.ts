@@ -9,28 +9,17 @@ import {
 } from '@nestjs/common/interfaces/version-options.interface.js';
 // eslint-disable-next-line @seedcompany/no-restricted-imports
 import { HttpAdapterHost as HttpAdapterHostImpl } from '@nestjs/core';
-import {
-  FastifyAdapter,
-  type NestFastifyApplication,
-} from '@nestjs/platform-fastify';
+import { FastifyAdapter, type NestFastifyApplication } from '@nestjs/platform-fastify';
 import type { FastifyInstance, HTTPMethods, RouteOptions } from 'fastify';
 import rawBody from 'fastify-raw-body';
 import * as zlib from 'node:zlib';
 import { uniqueDiscoveredMethods } from '~/common/discovery-unique-methods';
 import { type ConfigService } from '~/core/config/config.service';
-import {
-  GlobalHttpHook,
-  RawBody,
-  RouteConfig,
-  RouteConstraints,
-} from './decorators';
+import { GlobalHttpHook, RawBody, RouteConfig, RouteConstraints } from './decorators';
 import type { CookieOptions, CorsOptions, HttpHooks, IResponse } from './types';
 
 export type NestHttpApplication = NestFastifyApplication & {
-  configure: (
-    app: NestFastifyApplication,
-    config: ConfigService,
-  ) => Promise<void>;
+  configure: (app: NestFastifyApplication, config: ConfigService) => Promise<void>;
 };
 
 export class HttpAdapterHost extends HttpAdapterHostImpl<HttpAdapter> {}
@@ -92,8 +81,7 @@ export class HttpAdapter extends PatchedFastifyAdapter {
   ) {
     // I don't know why NestJS allows url/path parameter to be omitted.
     const url = typeof urlOrHandler === 'function' ? '' : urlOrHandler;
-    const handler =
-      typeof urlOrHandler === 'function' ? urlOrHandler : maybeHandler!;
+    const handler = typeof urlOrHandler === 'function' ? urlOrHandler : maybeHandler!;
 
     const config = RouteConfig.get(handler) ?? {};
     const constraints = RouteConstraints.get(handler) ?? {};
@@ -128,10 +116,8 @@ export class HttpAdapter extends PatchedFastifyAdapter {
         : ((allowContentTypes ?? '*') as string | RegExp);
       return this.instance.register(async (child) => {
         child.removeAllContentTypeParsers();
-        child.addContentTypeParser(
-          contentTypes,
-          { parseAs: 'buffer' },
-          (req, payload, done) => done(null, payload),
+        child.addContentTypeParser(contentTypes, { parseAs: 'buffer' }, (req, payload, done) =>
+          done(null, payload),
         );
         child.route(route);
       });
@@ -146,12 +132,7 @@ export class HttpAdapter extends PatchedFastifyAdapter {
     throw new Error('Express/Connect Middleware should not be used');
   }
 
-  setCookie(
-    response: IResponse,
-    name: string,
-    value: string,
-    options: CookieOptions,
-  ) {
+  setCookie(response: IResponse, name: string, value: string, options: CookieOptions) {
     // Avoid linter wanting us to await sending response.
     // This method just returns the response instance for fluent interface.
     void response.cookie(name, value, options);

@@ -11,9 +11,7 @@ export class PartnershipProducingMedium {
 }
 
 @ObjectType()
-export class SecuredPartnershipsProducingMediums extends SecuredList(
-  PartnershipProducingMedium,
-) {}
+export class SecuredPartnershipsProducingMediums extends SecuredList(PartnershipProducingMedium) {}
 
 @InputType()
 export class PartnershipProducingMediumInput {

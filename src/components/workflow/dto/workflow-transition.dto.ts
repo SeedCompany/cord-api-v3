@@ -1,12 +1,6 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import {
-  type EnumType,
-  type ID,
-  IdField,
-  type MadeEnum,
-  makeEnum,
-} from '~/common';
+import { type EnumType, type ID, IdField, type MadeEnum, makeEnum } from '~/common';
 
 export type TransitionType = EnumType<typeof TransitionType>;
 export const TransitionType = makeEnum({
@@ -14,9 +8,7 @@ export const TransitionType = makeEnum({
   values: ['Neutral', 'Approve', 'Reject'],
 });
 
-export function WorkflowTransition<State extends string>(
-  state: MadeEnum<State>,
-) {
+export function WorkflowTransition<State extends string>(state: MadeEnum<State>) {
   @ObjectType({ isAbstract: true })
   abstract class WorkflowTransitionClass {
     @IdField({

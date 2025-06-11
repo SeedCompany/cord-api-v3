@@ -14,9 +14,7 @@ export class ProgressReportCreateProductConnectionResolver {
   @ResolveField(() => [Variant], {
     description: 'All available progress variants for this product',
   })
-  async availableVariants(
-    @Parent() { product }: CreateProductOutput,
-  ): Promise<readonly Variant[]> {
+  async availableVariants(@Parent() { product }: CreateProductOutput): Promise<readonly Variant[]> {
     // TODO move to auth policy
     if (this.identity.isAnonymous) {
       return [];

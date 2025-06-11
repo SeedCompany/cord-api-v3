@@ -12,10 +12,7 @@ import {
   sorting,
 } from '~/core/database/query';
 import { IProject, type ProjectStep, stepToStatus } from '../dto';
-import {
-  type ExecuteProjectTransitionInput,
-  ProjectWorkflowEvent as WorkflowEvent,
-} from './dto';
+import { type ExecuteProjectTransitionInput, ProjectWorkflowEvent as WorkflowEvent } from './dto';
 import { type ProjectWorkflowRepository } from './project-workflow.repository';
 
 @Injectable()
@@ -66,11 +63,7 @@ export class ProjectWorkflowNeo4jRepository
           relation('out', undefined, 'who'),
           node('who', 'Actor'),
         ])
-        .match([
-          node('project'),
-          relation('out', '', 'step', ACTIVE),
-          node('step', 'Property'),
-        ])
+        .match([node('project'), relation('out', '', 'step', ACTIVE), node('step', 'Property')])
         .return<{
           dto: UnsecuredDto<WorkflowEvent> & {
             project: { previousStep: ProjectStep };
@@ -125,10 +118,7 @@ export class ProjectWorkflowNeo4jRepository
     return event;
   }
 
-  async mostRecentStep(
-    projectId: ID<'Project'>,
-    steps: readonly ProjectStep[],
-  ) {
+  async mostRecentStep(projectId: ID<'Project'>, steps: readonly ProjectStep[]) {
     const result = await this.db
       .query()
       .match([

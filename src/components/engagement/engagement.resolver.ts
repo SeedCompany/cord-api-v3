@@ -1,17 +1,5 @@
-import {
-  Args,
-  Mutation,
-  Parent,
-  Query,
-  ResolveField,
-  Resolver,
-} from '@nestjs/graphql';
-import {
-  InvalidIdForTypeException,
-  ListArg,
-  mapSecuredValue,
-  SecuredDateRange,
-} from '~/common';
+import { Args, Mutation, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
+import { InvalidIdForTypeException, ListArg, mapSecuredValue, SecuredDateRange } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { CeremonyLoader } from '../ceremony';
 import { SecuredCeremony } from '../ceremony/dto';
@@ -96,9 +84,7 @@ export class EngagementResolver {
     @Parent() engagement: Engagement,
     @Loader(CeremonyLoader) ceremonies: LoaderOf<CeremonyLoader>,
   ): Promise<SecuredCeremony> {
-    return await mapSecuredValue(engagement.ceremony, ({ id }) =>
-      ceremonies.load(id),
-    );
+    return await mapSecuredValue(engagement.ceremony, ({ id }) => ceremonies.load(id));
   }
 
   @ResolveField()
@@ -108,10 +94,7 @@ export class EngagementResolver {
 
   @ResolveField()
   dateRangeOverride(@Parent() engagement: Engagement): SecuredDateRange {
-    return SecuredDateRange.fromPair(
-      engagement.startDateOverride,
-      engagement.endDateOverride,
-    );
+    return SecuredDateRange.fromPair(engagement.startDateOverride, engagement.endDateOverride);
   }
 
   @Mutation(() => CreateLanguageEngagementOutput, {
@@ -121,10 +104,7 @@ export class EngagementResolver {
     @Args('input')
     { engagement: input, changeset }: CreateLanguageEngagementInput,
   ): Promise<CreateLanguageEngagementOutput> {
-    const engagement = await this.service.createLanguageEngagement(
-      input,
-      changeset,
-    );
+    const engagement = await this.service.createLanguageEngagement(input, changeset);
     return { engagement };
   }
 
@@ -135,10 +115,7 @@ export class EngagementResolver {
     @Args('input')
     { engagement: input, changeset }: CreateInternshipEngagementInput,
   ): Promise<CreateInternshipEngagementOutput> {
-    const engagement = await this.service.createInternshipEngagement(
-      input,
-      changeset,
-    );
+    const engagement = await this.service.createInternshipEngagement(input, changeset);
     return { engagement };
   }
 
@@ -149,10 +126,7 @@ export class EngagementResolver {
     @Args('input')
     { engagement: input, changeset }: UpdateLanguageEngagementInput,
   ): Promise<UpdateLanguageEngagementOutput> {
-    const engagement = await this.service.updateLanguageEngagement(
-      input,
-      changeset,
-    );
+    const engagement = await this.service.updateLanguageEngagement(input, changeset);
     return { engagement };
   }
 
@@ -163,19 +137,14 @@ export class EngagementResolver {
     @Args('input')
     { engagement: input, changeset }: UpdateInternshipEngagementInput,
   ): Promise<UpdateInternshipEngagementOutput> {
-    const engagement = await this.service.updateInternshipEngagement(
-      input,
-      changeset,
-    );
+    const engagement = await this.service.updateInternshipEngagement(input, changeset);
     return { engagement };
   }
 
   @Mutation(() => DeleteEngagementOutput, {
     description: 'Delete an engagement',
   })
-  async deleteEngagement(
-    @Args() { id, changeset }: ChangesetIds,
-  ): Promise<DeleteEngagementOutput> {
+  async deleteEngagement(@Args() { id, changeset }: ChangesetIds): Promise<DeleteEngagementOutput> {
     await this.service.delete(id, changeset);
     return { success: true };
   }

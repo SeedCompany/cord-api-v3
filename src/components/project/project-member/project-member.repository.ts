@@ -1,11 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import {
-  type Node,
-  node,
-  not,
-  type Query,
-  relation,
-} from 'cypher-query-builder';
+import { type Node, node, not, type Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   CreationFailed,
@@ -63,24 +57,14 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
         relation('out', '', 'user', ACTIVE),
         node('user'),
       ])
-      .return<{ user?: Node; project?: Node; member?: Node }>([
-        'user',
-        'project',
-        'member',
-      ])
+      .return<{ user?: Node; project?: Node; member?: Node }>(['user', 'project', 'member'])
       .first();
 
     if (!result?.project) {
-      throw new NotFoundException(
-        'Could not find project',
-        'projectMember.projectId',
-      );
+      throw new NotFoundException('Could not find project', 'projectMember.projectId');
     }
     if (!result?.user) {
-      throw new NotFoundException(
-        'Could not find person',
-        'projectMember.userId',
-      );
+      throw new NotFoundException('Could not find person', 'projectMember.userId');
     }
     if (result.member) {
       throw new DuplicateException(
@@ -90,11 +74,7 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
     }
   }
 
-  async create({
-    userId,
-    projectId: projectOrId,
-    ...input
-  }: CreateProjectMember) {
+  async create({ userId, projectId: projectOrId, ...input }: CreateProjectMember) {
     const projectId = isIdLike(projectOrId) ? projectOrId : projectOrId.id;
 
     await this.verifyRelationshipEligibility(projectId, userId);
@@ -133,23 +113,11 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
   protected hydrate() {
     return (query: Query) =>
       query
-        .match([
-          node('project', 'Project'),
-          relation('out', '', 'member', ACTIVE),
-          node('node'),
-        ])
+        .match([node('project', 'Project'), relation('out', '', 'member', ACTIVE), node('node')])
         .apply(matchPropsAndProjectSensAndScopedRoles())
-        .match([
-          node('node'),
-          relation('out', '', 'user'),
-          node('user', 'User'),
-        ])
-        .subQuery('user', (sub) =>
-          sub.with('user as node').apply(this.users.hydrateAsNeo4j()),
-        )
-        .return<{ dto: UnsecuredDto<ProjectMember> }>(
-          merge('props', { user: 'dto' }).as('dto'),
-        );
+        .match([node('node'), relation('out', '', 'user'), node('user', 'User')])
+        .subQuery('user', (sub) => sub.with('user as node').apply(this.users.hydrateAsNeo4j()))
+        .return<{ dto: UnsecuredDto<ProjectMember> }>(merge('props', { user: 'dto' }).as('dto'));
   }
 
   async list({ filter, ...input }: ProjectMemberListInput) {
@@ -188,10 +156,7 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
         relation('out', '', 'email', ACTIVE),
         node('email', 'EmailAddress'),
       ])
-      .return<{ id: ID; email: string | null }>([
-        'user.id as id',
-        'email.value as email',
-      ])
+      .return<{ id: ID; email: string | null }>(['user.id as id', 'email.value as email'])
       .run();
   }
 
@@ -319,18 +284,10 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
 
 export const projectMemberFilters = filter.define(() => ProjectMemberFilters, {
   project: filter.sub((): FilterFn<ProjectFilters> => projectFilters)((sub) =>
-    sub.match([
-      node('node', 'Project'),
-      relation('out', '', 'member', ACTIVE),
-      node('outer'),
-    ]),
+    sub.match([node('node', 'Project'), relation('out', '', 'member', ACTIVE), node('outer')]),
   ),
   user: filter.sub(() => userFilters)((sub) =>
-    sub.match([
-      node('outer'),
-      relation('out', '', 'user'),
-      node('node', 'User'),
-    ]),
+    sub.match([node('outer'), relation('out', '', 'user'), node('node', 'User')]),
   ),
   roles: filter.intersectsProp(),
   active: filter.isPropNotNull('inactiveAt'),

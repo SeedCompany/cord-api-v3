@@ -28,10 +28,7 @@ export const generateRequireFieldsRegisterInput = async () =>
     timezone: 'America/Chicago',
   } satisfies RegisterInput);
 
-export async function registerUserWithStrictInput(
-  app: TestApp,
-  input: RegisterInput,
-) {
+export async function registerUserWithStrictInput(app: TestApp, input: RegisterInput) {
   const result = await app.graphql.mutate(RegisterUserDoc, { input });
   const actual = result.register.user;
   expect(actual).toBeTruthy();

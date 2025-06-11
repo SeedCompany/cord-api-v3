@@ -127,9 +127,7 @@ export class CommonRepository {
     if (res.stats.totalCount !== newList.length) {
       const validNodes = await this.getBaseNodes(newList);
       const validIds = setOf(validNodes.map((n) => n.properties.id));
-      throw new InvalidReferencesException(
-        newList.filter((id) => !validIds.has(id)),
-      );
+      throw new InvalidReferencesException(newList.filter((id) => !validIds.has(id)));
     }
     return res.stats;
   }
@@ -139,9 +137,7 @@ export class CommonRepository {
     { changeset, resource }: { changeset?: ID; resource?: ResourceLike } = {},
   ) {
     const id = isIdLike(objectOrId) ? objectOrId : objectOrId.id;
-    const label = resource
-      ? this.resources.enhance(resource).dbLabel
-      : 'BaseNode';
+    const label = resource ? this.resources.enhance(resource).dbLabel : 'BaseNode';
     if (!changeset) {
       await this.db
         .query()
@@ -156,11 +152,7 @@ export class CommonRepository {
         .query()
         .match(node('node', label, { id }))
         .match(node('changeset', 'Changeset', { id: changeset }))
-        .merge([
-          node('changeset'),
-          relation('out', 'rel', 'changeset'),
-          node('node'),
-        ])
+        .merge([node('changeset'), relation('out', 'rel', 'changeset'), node('node')])
         .setValues({ 'rel.active': true, 'rel.deleting': true })
         .run();
     } catch (e) {
@@ -174,9 +166,7 @@ export class CommonRepository {
       ...(props.has('id') ? [createUniqueConstraint(dbLabel, 'id')] : []),
       ...[...props].flatMap((prop) => {
         const label = DbUnique.get(resource, prop);
-        return label
-          ? createUniqueConstraint(label, 'value', `${resource.name}_${prop}`)
-          : [];
+        return label ? createUniqueConstraint(label, 'value', `${resource.name}_${prop}`) : [];
       }),
     ];
   }

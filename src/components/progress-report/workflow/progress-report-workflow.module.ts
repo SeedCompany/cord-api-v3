@@ -17,12 +17,7 @@ import { ProgressReportWorkflowEventResolver } from './resolvers/progress-report
 import { ProgressReportWorkflowEventsResolver } from './resolvers/progress-report-workflow-events.resolver';
 
 @Module({
-  imports: [
-    UserModule,
-    ProjectModule,
-    LanguageModule,
-    forwardRef(() => PeriodicReportModule),
-  ],
+  imports: [UserModule, ProjectModule, LanguageModule, forwardRef(() => PeriodicReportModule)],
   providers: [
     ProgressReportTransitionsResolver,
     ProgressReportExecuteTransitionResolver,
@@ -31,10 +26,7 @@ import { ProgressReportWorkflowEventsResolver } from './resolvers/progress-repor
     ProgressReportWorkflowEventLoader,
     ProgressReportWorkflowService,
     ProgressReportWorkflowEventGranter,
-    splitDb(
-      ProgressReportWorkflowRepository,
-      ProgressReportWorkflowGelRepository,
-    ),
+    splitDb(ProgressReportWorkflowRepository, ProgressReportWorkflowGelRepository),
     ProgressReportWorkflowFlowchart,
     ...Object.values(handlers),
   ],

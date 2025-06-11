@@ -1,8 +1,4 @@
-import {
-  type ArgumentMetadata,
-  Injectable,
-  type PipeTransform,
-} from '@nestjs/common';
+import { type ArgumentMetadata, Injectable, type PipeTransform } from '@nestjs/common';
 import { cached } from '@seedcompany/common';
 import {
   type ValidationArguments,
@@ -17,9 +13,7 @@ import { ValidateBy } from './validateBy';
 
 export const IsId = (validationOptions?: ValidationOptions) =>
   ValidateBy(ValidIdConstraint, {
-    message: validationOptions?.each
-      ? 'Each value in $property must be a valid ID'
-      : 'Invalid ID',
+    message: validationOptions?.each ? 'Each value in $property must be a valid ID' : 'Invalid ID',
     ...validationOptions,
   });
 
@@ -35,10 +29,7 @@ export class IdResolver {
 export class ValidIdConstraint implements ValidatorConstraintInterface {
   constructor(private readonly resolver: IdResolver) {}
 
-  private readonly resolved = new WeakMap<
-    object,
-    Map<string, Promise<boolean>>
-  >();
+  private readonly resolved = new WeakMap<object, Map<string, Promise<boolean>>>();
 
   async validate(_value: unknown, args: ValidationArguments) {
     const value = args.value as unknown;
@@ -64,9 +55,7 @@ export class ValidIdConstraint implements ValidatorConstraintInterface {
       if (!value.every(isValidId)) {
         return false;
       }
-      object[property] = await Promise.all(
-        value.map((id) => this.resolver.resolve(id)),
-      );
+      object[property] = await Promise.all(value.map((id) => this.resolver.resolve(id)));
       return true;
     });
   }

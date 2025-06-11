@@ -1,19 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { oneLine } from 'common-tags';
 import { clamp, round } from 'lodash';
-import {
-  CalendarDate,
-  fiscalQuarter,
-  fiscalQuarterLabel,
-  fiscalYear,
-} from '~/common';
+import { CalendarDate, fiscalQuarter, fiscalQuarterLabel, fiscalYear } from '~/common';
 import { type Column, type Row } from '~/common/xlsx.util';
 import { type Downloadable } from '../file/dto';
 import { Pnp, type ProgressSheet } from '../pnp';
-import {
-  PnpProblemType,
-  type PnpProgressExtractionResult,
-} from '../pnp/extraction-result';
+import { PnpProblemType, type PnpProgressExtractionResult } from '../pnp/extraction-result';
 import { type ProgressSummary as Progress } from './dto';
 
 @Injectable()
@@ -100,9 +92,7 @@ const MismatchedReportingQuarter = PnpProblemType.register({
       message: oneLine`
         The PnP's Reporting Quarter
           (_${
-            ctx.pnpDate
-              ? fiscalQuarterLabel(CalendarDate.fromISO(ctx.pnpDate))
-              : 'undetermined'
+            ctx.pnpDate ? fiscalQuarterLabel(CalendarDate.fromISO(ctx.pnpDate)) : 'undetermined'
           }_ \`${source}\`/\`${ctx.yearRef}\`)
         needs to match the quarter of this CORD report
           (_${fiscalQuarterLabel(CalendarDate.fromISO(ctx.reportDate))}_).

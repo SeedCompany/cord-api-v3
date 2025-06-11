@@ -3,13 +3,7 @@ import { Injectable, SetMetadata } from '@nestjs/common';
 import { GraphQLSchemaHost } from '@nestjs/graphql';
 import { GraphQLObjectType } from 'graphql';
 import type { ValueOf } from 'type-fest';
-import {
-  type ID,
-  many,
-  type Many,
-  type ObjectView,
-  ServerException,
-} from '~/common';
+import { type ID, many, type Many, type ObjectView, ServerException } from '~/common';
 import { type BaseNode } from '../database/results';
 import { ILogger, Logger } from '../logger';
 import { type ResourceMap } from './map';
@@ -93,9 +87,7 @@ export class ResourceResolver {
     view?: ObjectView,
   ): Promise<SomeResource['prototype'] & { __typename: string }> {
     const type = this.resolveType(possibleTypes);
-    const discovered = await this.discover.providerMethodsWithMetaAtKey<Shape>(
-      RESOLVE_BY_ID,
-    );
+    const discovered = await this.discover.providerMethodsWithMetaAtKey<Shape>(RESOLVE_BY_ID);
     const filtered = discovered.filter((f) => f.meta.type.includes(type));
     if (filtered.length === 0) {
       throw new ServerException(`Could find resolver for type: ${type}`);
@@ -104,11 +96,7 @@ export class ResourceResolver {
       this.logger.warning(`Found more than one resolver for ${type}`);
     }
     const method = filtered[0].discoveredMethod;
-    const result = await method.handler.call(
-      method.parentClass.instance,
-      id,
-      view,
-    );
+    const result = await method.handler.call(method.parentClass.instance, id, view);
     return {
       __typename: type,
       ...result,
@@ -121,9 +109,7 @@ export class ResourceResolver {
 
   resolveType(types: Many<string | SomeResource>): keyof ResourceMap {
     // This caching may not improve performance much...
-    const normalized = many(types).map((t) =>
-      typeof t === 'string' ? t : t.name,
-    );
+    const normalized = many(types).map((t) => (typeof t === 'string' ? t : t.name));
     const cacheKey = normalized.join(';');
     const type = this.typeCache.get(cacheKey);
     if (type) {
@@ -164,9 +150,7 @@ export class ResourceResolver {
 
     const namesStr = names.join(', ');
     if (resolved.length === 0) {
-      throw new ServerException(
-        `Could not determine GraphQL object from type: ${namesStr}`,
-      );
+      throw new ServerException(`Could not determine GraphQL object from type: ${namesStr}`);
     }
     throw new ServerException(
       `Could not decide which GraphQL object type to choose from: ${namesStr}`,

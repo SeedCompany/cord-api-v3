@@ -21,9 +21,7 @@ export abstract class PermGranter<
   TResourceStatic extends ResourceShape<any>,
   TAction extends string,
 > {
-  protected constructor(
-    protected stagedCondition?: Condition<TResourceStatic>,
-  ) {}
+  protected constructor(protected stagedCondition?: Condition<TResourceStatic>) {}
 
   /**
    * The requester can do nothing with this prop or object.
@@ -62,15 +60,11 @@ export abstract class PermGranter<
     const cloned = this.clone();
     cloned.stagedCondition = condition;
     if (process.env.NODE_ENV !== 'production') {
-      cloned.trailingCondition = new Error(
-        'Condition applies to nothing. Specify before actions.',
-      );
+      cloned.trailingCondition = new Error('Condition applies to nothing. Specify before actions.');
       // Find first frame that is not from a Granter call.
       let frame = cloned.trailingCondition
         .stack!.split('\n')
-        .find(
-          (line) => line.includes(' at ') && !/\s+at \w+Granter\./.exec(line),
-        );
+        .find((line) => line.includes(' at ') && !/\s+at \w+Granter\./.exec(line));
       // If frame is the function call of Policy decorator, which it probably is,
       // then remove the useless type/function/method name for clarity.
       if (frame?.startsWith('    at Object.def')) {
@@ -126,10 +120,7 @@ export abstract class PermGranter<
   protected trailingCondition?: Error;
 
   protected clone(): this {
-    const cloned = Object.assign(
-      Object.create(Object.getPrototypeOf(this)),
-      this,
-    );
+    const cloned = Object.assign(Object.create(Object.getPrototypeOf(this)), this);
     cloned.perms = [...this.perms];
     return cloned;
   }

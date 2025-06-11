@@ -1,11 +1,4 @@
-import {
-  inherit,
-  member,
-  Policy,
-  Role,
-  sensMediumOrLower,
-  sensOnlyLow,
-} from '../util';
+import { inherit, member, Policy, Role, sensMediumOrLower, sensOnlyLow } from '../util';
 
 // NOTE: There could be other permissions for this role from other policies
 @Policy([Role.Marketing, Role.Fundraising, Role.ExperienceOperations], (r) => [

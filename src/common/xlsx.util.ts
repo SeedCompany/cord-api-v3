@@ -30,8 +30,7 @@ export class WorkBook {
   }
 
   sheet<TSheet extends Sheet>(name: string): TSheet {
-    return (this.sheets[name] ??
-      (this.sheets[name] = new Sheet(this, name))) as TSheet;
+    return (this.sheets[name] ?? (this.sheets[name] = new Sheet(this, name))) as TSheet;
   }
 
   registerCustomSheet(sheet: Sheet) {
@@ -57,8 +56,7 @@ export class WorkBook {
   @Once() private get namedRanges(): Record<string, Range> {
     const rawList = this.book.Workbook?.Names ?? [];
     return mapEntries(rawList, ({ Ref: ref, Name: name }, { SKIP }) => {
-      const matched =
-        /^(?:\[\d+])?'?([^']+)'?!([$\dA-Z]+(?::[$\dA-Z]+)?)$/.exec(ref);
+      const matched = /^(?:\[\d+])?'?([^']+)'?!([$\dA-Z]+(?::[$\dA-Z]+)?)$/.exec(ref);
       if (!matched) {
         return SKIP;
       }
@@ -105,10 +103,7 @@ export class Sheet {
   }
 
   @Once() get hidden() {
-    return (
-      (this.workbook.Workbook?.Sheets?.find((s) => s.name === this.name)
-        ?.Hidden ?? 0) > 0
-    );
+    return (this.workbook.Workbook?.Sheets?.find((s) => s.name === this.name)?.Hidden ?? 0) > 0;
   }
 
   @Once() get sheetRange() {
@@ -174,17 +169,9 @@ export class Sheet {
    */
   // eslint-disable-next-line @typescript-eslint/unified-signatures
   cell(address: string | CellAddress): Cell<this>;
-  cell(
-    column: string | number | CellAddress | Column | Cell,
-    row?: number | Row,
-  ) {
+  cell(column: string | number | CellAddress | Column | Cell, row?: number | Row) {
     if (column instanceof Cell) {
-      return new Cell(
-        this,
-        this.sheet,
-        this.sheet[column.toString()],
-        column.address,
-      );
+      return new Cell(this, this.sheet, this.sheet[column.toString()], column.address);
     }
     if (column instanceof Column) {
       column = column.a1;
@@ -194,9 +181,7 @@ export class Sheet {
     }
     if (row == null || typeof column === 'object') {
       const address =
-        typeof column === 'string'
-          ? utils.decode_cell(column)
-          : (column as CellAddress);
+        typeof column === 'string' ? utils.decode_cell(column) : (column as CellAddress);
       column = utils.encode_col(address.c);
       row = address.r + 1;
     } else if (typeof column === 'number') {
@@ -205,12 +190,7 @@ export class Sheet {
     }
 
     const address = `${column}${row}`;
-    return new Cell(
-      this,
-      this.sheet,
-      this.sheet[address],
-      utils.decode_cell(address),
-    );
+    return new Cell(this, this.sheet, this.sheet[address], utils.decode_cell(address));
   }
 }
 
@@ -323,11 +303,7 @@ abstract class Rangable<TSheet extends Sheet = Sheet> {
 }
 
 export class Range<TSheet extends Sheet = Sheet> extends Rangable<TSheet> {
-  constructor(
-    sheet: TSheet,
-    readonly start: Cell<TSheet>,
-    readonly end: Cell<TSheet>,
-  ) {
+  constructor(sheet: TSheet, readonly start: Cell<TSheet>, readonly end: Cell<TSheet>) {
     super(sheet);
   }
 }

@@ -34,8 +34,7 @@ setInspectOnClass(Interval, (i: Interval) => ({ stylize }) => {
     stylize(`)`, 'special')
   );
 });
-const format = (dt: DateTime) =>
-  dt.toLocaleString(DateTime.DATETIME_SHORT_WITH_SECONDS);
+const format = (dt: DateTime) => dt.toLocaleString(DateTime.DATETIME_SHORT_WITH_SECONDS);
 
 setToStringTag(Interval, 'Interval');
 markSkipClassTransformation(Interval);
@@ -43,10 +42,7 @@ markSkipClassTransformation(Interval);
 Object.defineProperty(Interval.prototype, 'expandToFull', {
   configurable: true,
   value: function expandToFull(this: Interval, unit: DateTimeUnit) {
-    return Interval.fromDateTimes(
-      this.start.startOf(unit),
-      this.end.endOf(unit),
-    );
+    return Interval.fromDateTimes(this.start.startOf(unit), this.end.endOf(unit));
   },
 });
 

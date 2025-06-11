@@ -62,9 +62,7 @@ export class OrganizationRepository extends DtoRepository(Organization) {
     }
 
     return await this.readOne(result.id).catch((e) => {
-      throw e instanceof NotFoundException
-        ? new ReadAfterCreationFailed(Organization)
-        : e;
+      throw e instanceof NotFoundException ? new ReadAfterCreationFailed(Organization) : e;
     });
   }
 
@@ -157,11 +155,7 @@ export const organizationFilters = filter.define(() => OrganizationFilters, {
   name: filter.fullText({
     index: () => OrgNameIndex,
     matchToNode: (q) =>
-      q.match([
-        node('node', 'Organization'),
-        relation('out', '', 'name', ACTIVE),
-        node('match'),
-      ]),
+      q.match([node('node', 'Organization'), relation('out', '', 'name', ACTIVE), node('match')]),
     minScore: 0.8,
   }),
 });

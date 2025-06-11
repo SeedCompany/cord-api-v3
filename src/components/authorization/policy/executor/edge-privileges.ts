@@ -1,19 +1,11 @@
 import { LazyGetter as Once } from 'lazy-get-decorator';
-import {
-  EnhancedResource,
-  type ResourceShape,
-  UnauthorizedException,
-} from '~/common';
+import { EnhancedResource, type ResourceShape, UnauthorizedException } from '~/common';
 import { type ResourceObjectContext } from '../object.type';
 import {
   type AllPermissionsOfEdgeView,
   createAllPermissionsOfEdgeView,
 } from './all-permissions-view';
-import {
-  type FilterOptions,
-  type PolicyExecutor,
-  type ResolveParams,
-} from './policy-executor';
+import { type FilterOptions, type PolicyExecutor, type ResolveParams } from './policy-executor';
 
 export class EdgePrivileges<
   TResourceStatic extends ResourceShape<any>,
@@ -38,12 +30,7 @@ export class EdgePrivileges<
     if (object === this.object) {
       return this;
     }
-    return new EdgePrivileges(
-      this.resource,
-      this.key,
-      object,
-      this.policyExecutor,
-    );
+    return new EdgePrivileges(this.resource, this.key, object, this.policyExecutor);
   }
 
   can(action: TAction) {
@@ -65,12 +52,7 @@ export class EdgePrivileges<
     if (this.can(action)) {
       return;
     }
-    throw UnauthorizedException.fromPrivileges(
-      action,
-      this.object,
-      this.resource,
-      this.key,
-    );
+    throw UnauthorizedException.fromPrivileges(action, this.object, this.resource, this.key);
   }
 
   /**

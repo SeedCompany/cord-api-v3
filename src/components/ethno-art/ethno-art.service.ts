@@ -1,10 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import {
-  type ID,
-  type ObjectView,
-  ServerException,
-  type UnsecuredDto,
-} from '~/common';
+import { type ID, type ObjectView, ServerException, type UnsecuredDto } from '~/common';
 import { HandleIdLookup } from '~/core';
 import { ifDiff } from '~/core/database/changes';
 import { Privileges } from '../authorization';
@@ -20,10 +15,7 @@ import { EthnoArtRepository } from './ethno-art.repository';
 
 @Injectable()
 export class EthnoArtService {
-  constructor(
-    private readonly privileges: Privileges,
-    private readonly repo: EthnoArtRepository,
-  ) {}
+  constructor(private readonly privileges: Privileges, private readonly repo: EthnoArtRepository) {}
 
   async create(input: CreateEthnoArt): Promise<EthnoArt> {
     const dto = await this.repo.create(input);

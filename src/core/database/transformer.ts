@@ -11,8 +11,7 @@ class PatchedTransformer extends Transformer {
   }
 }
 
-export const isNeoDate = (value: unknown): value is Neo.Date =>
-  Neo.isDate(value as any);
+export const isNeoDate = (value: unknown): value is Neo.Date => Neo.isDate(value as any);
 
 export const isNeoDateTime = (value: unknown): value is Neo.DateTime =>
   Neo.isDateTime(value as any);

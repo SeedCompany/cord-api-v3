@@ -31,10 +31,7 @@ import {
 export class FieldZoneRepository extends DtoRepository(FieldZone) {
   async create(input: CreateFieldZone) {
     if (!(await this.isUnique(input.name))) {
-      throw new DuplicateException(
-        'fieldZone.name',
-        'FieldZone with this name already exists.',
-      );
+      throw new DuplicateException('fieldZone.name', 'FieldZone with this name already exists.');
     }
 
     const initialProps = {
@@ -59,9 +56,7 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
     }
 
     return await this.readOne(result.id).catch((e) => {
-      throw e instanceof NotFoundException
-        ? new ReadAfterCreationFailed(FieldZone)
-        : e;
+      throw e instanceof NotFoundException ? new ReadAfterCreationFailed(FieldZone) : e;
     });
   }
 
@@ -101,11 +96,7 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
       .with('fieldZone')
       .limit(1)
       .match([node('director', 'User', { id: directorId })])
-      .optionalMatch([
-        node('fieldZone'),
-        relation('out', 'oldRel', 'director', ACTIVE),
-        node(''),
-      ])
+      .optionalMatch([node('fieldZone'), relation('out', 'oldRel', 'director', ACTIVE), node('')])
       .setValues({ 'oldRel.active': false })
       .with('fieldZone, director')
       .limit(1)

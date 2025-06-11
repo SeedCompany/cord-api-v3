@@ -1,10 +1,4 @@
-import {
-  Args,
-  Mutation,
-  Parent,
-  ResolveField,
-  Resolver,
-} from '@nestjs/graphql';
+import { Args, Mutation, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { Loader, type LoaderOf } from '~/core';
 import { PeriodicReportLoader } from '../periodic-report';
 import { ProductLoader } from '../product';

@@ -38,9 +38,7 @@ type SubscribedEvent =
   PartnershipUpdatedEvent,
   PartnershipWillDeleteEvent,
 )
-export class SyncBudgetRecordsToFundingPartners
-  implements IEventHandler<SubscribedEvent>
-{
+export class SyncBudgetRecordsToFundingPartners implements IEventHandler<SubscribedEvent> {
   constructor(
     private readonly budgets: BudgetService,
     private readonly budgetRepo: BudgetRepository,
@@ -55,17 +53,11 @@ export class SyncBudgetRecordsToFundingPartners
     });
 
     // Get some easy conditions out of the way that don't require DB queries
-    if (
-      event instanceof PartnershipCreatedEvent &&
-      !isFunding(event.partnership)
-    ) {
+    if (event instanceof PartnershipCreatedEvent && !isFunding(event.partnership)) {
       // Partnership is not and never was funding, so do nothing.
       return;
     }
-    if (
-      event instanceof PartnershipWillDeleteEvent &&
-      !isFunding(event.partnership)
-    ) {
+    if (event instanceof PartnershipWillDeleteEvent && !isFunding(event.partnership)) {
       // Partnership was not funding, so do nothing.
       return;
     }
@@ -82,10 +74,7 @@ export class SyncBudgetRecordsToFundingPartners
     const changeset = this.determineChangeset(event);
 
     // Fetch budget & only continue if it is pending
-    const budget = await this.budgetRepo.listRecordsForSync(
-      projectId,
-      changeset,
-    );
+    const budget = await this.budgetRepo.listRecordsForSync(projectId, changeset);
 
     const partnerships = await this.determinePartnerships(event, changeset);
 
@@ -153,9 +142,7 @@ export class SyncBudgetRecordsToFundingPartners
       .filter((record) => record.organization === organizationId)
       .map((record) => record.fiscalYear);
     const updated =
-      event instanceof PartnershipWillDeleteEvent
-        ? []
-        : partnershipFiscalYears(partnership);
+      event instanceof PartnershipWillDeleteEvent ? [] : partnershipFiscalYears(partnership);
 
     const removals = difference(previous, updated);
     const additions = difference(updated, previous);
@@ -200,37 +187,26 @@ export class SyncBudgetRecordsToFundingPartners
     changeset?: ID,
   ) {
     const recordsToDelete = budget.records.filter(
-      (record) =>
-        record.organization === organizationId &&
-        removals.includes(record.fiscalYear),
+      (record) => record.organization === organizationId && removals.includes(record.fiscalYear),
     );
 
     await Promise.all(
-      recordsToDelete.map((record) =>
-        this.budgets.deleteRecord(record.id, changeset),
-      ),
+      recordsToDelete.map((record) => this.budgets.deleteRecord(record.id, changeset)),
     );
   }
 }
 
 const isFunding = (partnership: Partnership) =>
-  readSecured(partnership.types, `partnership's types`).includes(
-    PartnerType.Funding,
-  );
+  readSecured(partnership.types, `partnership's types`).includes(PartnerType.Funding);
 
 type FiscalYear = number;
 
-const partnershipFiscalYears = (
-  partnership: Partnership,
-): readonly FiscalYear[] => {
+const partnershipFiscalYears = (partnership: Partnership): readonly FiscalYear[] => {
   if (!isFunding(partnership)) {
     return [];
   }
 
-  const start = readSecured(
-    partnership.mouStart,
-    `partnership's mouStart date`,
-  );
+  const start = readSecured(partnership.mouStart, `partnership's mouStart date`);
   const end = readSecured(partnership.mouEnd, `partnership's mouEnd date`);
   return start && end ? fiscalYears(start, end) : [];
 };

@@ -22,8 +22,7 @@ export abstract class PartnerFilters {
   readonly userId?: ID;
 
   @OptionalField({
-    description:
-      'Only partners that are pinned/unpinned by the requesting user',
+    description: 'Only partners that are pinned/unpinned by the requesting user',
   })
   readonly pinned?: boolean;
 

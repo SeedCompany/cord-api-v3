@@ -10,10 +10,7 @@ interface RollbackRef {
 
 @Injectable()
 export class RollbackManager {
-  private readonly functionsByContext = new WeakMap<
-    GqlContextHost['context'],
-    Set<RollbackFn>
-  >();
+  private readonly functionsByContext = new WeakMap<GqlContextHost['context'], Set<RollbackFn>>();
 
   constructor(private readonly contextHost: GqlContextHost) {}
 

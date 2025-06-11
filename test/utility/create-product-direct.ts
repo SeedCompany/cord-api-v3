@@ -26,9 +26,7 @@ export async function createDirectProduct(
 
 const CreateDirectScriptureProductDoc = graphql(
   `
-    mutation createDirectScriptureProduct(
-      $input: CreateDirectScriptureProduct!
-    ) {
+    mutation createDirectScriptureProduct($input: CreateDirectScriptureProduct!) {
       createDirectScriptureProduct(input: $input) {
         product {
           ...product

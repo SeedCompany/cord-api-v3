@@ -2,13 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { stripIndent } from 'common-tags';
 import { node, type Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import {
-  EnhancedResource,
-  generateId,
-  type ID,
-  NotFoundException,
-  type Variant,
-} from '~/common';
+import { EnhancedResource, generateId, type ID, NotFoundException, type Variant } from '~/common';
 import { DatabaseService } from '~/core/database';
 import {
   ACTIVE,
@@ -54,9 +48,7 @@ export class ProductProgressRepository {
       .apply(this.hydrateAll())
       .first();
     if (!result) {
-      throw new NotFoundException(
-        'Could not find progress for product and report period',
-      );
+      throw new NotFoundException('Could not find progress for product and report period');
     }
     return result;
   }
@@ -68,17 +60,8 @@ export class ProductProgressRepository {
       .apply(this.withVariant(input.variant))
       .subQuery('product', (sub) =>
         sub
-          .match([
-            node('product'),
-            relation('in', '', 'product'),
-            node('baseNode', 'Engagement'),
-          ])
-          .apply(
-            this.reports.matchCurrentDue(
-              variable('baseNode.id'),
-              ReportType.Progress,
-            ),
-          )
+          .match([node('product'), relation('in', '', 'product'), node('baseNode', 'Engagement')])
+          .apply(this.reports.matchCurrentDue(variable('baseNode.id'), ReportType.Progress))
           .return('node as report'),
       )
       .apply(this.hydrateAll())
@@ -86,9 +69,7 @@ export class ProductProgressRepository {
     return result;
   }
 
-  async readAllProgressReportsForManyProducts(
-    products: readonly ProgressVariantByProductInput[],
-  ) {
+  async readAllProgressReportsForManyProducts(products: readonly ProgressVariantByProductInput[]) {
     const result = await this.db
       .query()
       .unwind(
@@ -125,9 +106,7 @@ export class ProductProgressRepository {
     return result;
   }
 
-  async readAllProgressReportsForManyReports(
-    reports: readonly ProgressVariantByReportInput[],
-  ) {
+  async readAllProgressReportsForManyReports(reports: readonly ProgressVariantByReportInput[]) {
     const result = await this.db
       .query()
       .unwind(
@@ -147,11 +126,7 @@ export class ProductProgressRepository {
       .with('eng, report, input.variant as variant')
       .subQuery(['eng', 'report', 'variant'], (sub) =>
         sub
-          .match([
-            node('eng'),
-            relation('out', '', 'product', ACTIVE),
-            node('product', 'Product'),
-          ])
+          .match([node('eng'), relation('out', '', 'product', ACTIVE), node('product', 'Product')])
           .subQuery(['report', 'product', 'variant'], this.hydrateAll())
           .return(collect('dto').as('progressList')),
       )
@@ -184,47 +159,45 @@ export class ProductProgressRepository {
 
   private hydrateOne() {
     return <R>(query: Query<R>) =>
-      query.comment`hydrateOne()`.subQuery(
-        ['product', 'report', 'progress', 'variant'],
-        (sub1) =>
-          sub1
-            .subQuery(['product', 'report', 'progress'], (sub2) =>
-              sub2
-                .match([
-                  node('progress'),
-                  relation('out', '', 'step', ACTIVE),
-                  node('stepNode', StepProgress.dbLabel),
-                ])
-                .apply(matchProps({ nodeName: 'stepNode', outputVar: 'step' }))
-                .return(collect('step').as('steps')),
-            )
-            .match([
-              node('product'),
-              relation('out', '', 'steps', ACTIVE),
-              node('declaredSteps', 'Property'),
-            ])
-            .with([
-              '*',
-              // Convert StepProgress list to a map keyed by step
-              'apoc.map.fromPairs([sp in steps | [sp.step, sp]]) as progressStepMap',
-            ])
-            .return<{ dto: UnsecuredProductProgress }>(
-              // FYI `progress` is nullable, so this could include its props or not.
-              merge('progress', {
-                productId: 'product.id',
-                reportId: 'report.id',
-                variant: 'variant',
-                // Convert the products step strings into actual StepProgress
-                // or fallback to a placeholder. This ensures that the list is
-                // in the correct order and indicates which steps still need
-                // progress reported.
-                steps: stripIndent`
+      query.comment`hydrateOne()`.subQuery(['product', 'report', 'progress', 'variant'], (sub1) =>
+        sub1
+          .subQuery(['product', 'report', 'progress'], (sub2) =>
+            sub2
+              .match([
+                node('progress'),
+                relation('out', '', 'step', ACTIVE),
+                node('stepNode', StepProgress.dbLabel),
+              ])
+              .apply(matchProps({ nodeName: 'stepNode', outputVar: 'step' }))
+              .return(collect('step').as('steps')),
+          )
+          .match([
+            node('product'),
+            relation('out', '', 'steps', ACTIVE),
+            node('declaredSteps', 'Property'),
+          ])
+          .with([
+            '*',
+            // Convert StepProgress list to a map keyed by step
+            'apoc.map.fromPairs([sp in steps | [sp.step, sp]]) as progressStepMap',
+          ])
+          .return<{ dto: UnsecuredProductProgress }>(
+            // FYI `progress` is nullable, so this could include its props or not.
+            merge('progress', {
+              productId: 'product.id',
+              reportId: 'report.id',
+              variant: 'variant',
+              // Convert the products step strings into actual StepProgress
+              // or fallback to a placeholder. This ensures that the list is
+              // in the correct order and indicates which steps still need
+              // progress reported.
+              steps: stripIndent`
                   [step in declaredSteps.value |
                     apoc.map.get(progressStepMap, step, { step: step, completed: null })
                   ]
                 `,
-              }).as('dto'),
-            ),
+            }).as('dto'),
+          ),
       );
   }
 
@@ -325,17 +298,11 @@ export class ProductProgressRepository {
 
       .comment('Now read back progress node')
       .apply(this.hydrateOne())
-      .return([
-        'dto',
-        'numProgressPercentCreated',
-        'numProgressPercentDeactivated',
-      ]);
+      .return(['dto', 'numProgressPercentCreated', 'numProgressPercentDeactivated']);
 
     const result = await query.first();
     if (!result) {
-      throw new NotFoundException(
-        'Could not find product or report to add progress to',
-      );
+      throw new NotFoundException('Could not find product or report to add progress to');
     }
     return result.dto;
   }

@@ -1,11 +1,4 @@
-import {
-  Args,
-  Context,
-  Parent,
-  Query,
-  ResolveField,
-  Resolver,
-} from '@nestjs/graphql';
+import { Args, Context, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import { type GqlContextType, ServerException } from '~/common';
 import { ConfigService, Loader, type LoaderOf } from '~/core';
@@ -55,15 +48,11 @@ export class SessionResolver {
     if (browser) {
       const { name, expires, ...options } = this.config.sessionCookie(request);
       if (!response) {
-        throw new ServerException(
-          'Cannot use cookie session without a response object',
-        );
+        throw new ServerException('Cannot use cookie session without a response object');
       }
       this.http.setCookie(response, name, session.token, {
         ...options,
-        expires: expires
-          ? DateTime.local().plus(expires).toJSDate()
-          : undefined,
+        expires: expires ? DateTime.local().plus(expires).toJSDate() : undefined,
       });
     }
 
@@ -76,8 +65,7 @@ export class SessionResolver {
 
   @ResolveField(() => User, {
     nullable: true,
-    description:
-      'Only returned if there is a logged-in user tied to the current session.',
+    description: 'Only returned if there is a logged-in user tied to the current session.',
   })
   async user(
     @Parent() output: SessionOutput,
@@ -88,12 +76,9 @@ export class SessionResolver {
 
   @ResolveField(() => User, {
     nullable: true,
-    description:
-      'The impersonator if the user is logged in and impersonating someone else',
+    description: 'The impersonator if the user is logged in and impersonating someone else',
   })
-  async impersonator(
-    @Parent() { session }: SessionOutput,
-  ): Promise<User | null> {
+  async impersonator(@Parent() { session }: SessionOutput): Promise<User | null> {
     const { impersonator } = session;
     if (session.anonymous || !impersonator) {
       return null;

@@ -46,9 +46,7 @@ export class FundingAccountService {
       }
 
       return await this.readOne(result.id).catch((e) => {
-        throw e instanceof NotFoundException
-          ? new ReadAfterCreationFailed(FundingAccount)
-          : e;
+        throw e instanceof NotFoundException ? new ReadAfterCreationFailed(FundingAccount) : e;
       });
     } catch (err) {
       throw new CreationFailed(FundingAccount, { cause: err });
@@ -70,9 +68,7 @@ export class FundingAccountService {
     return await Promise.all(fundingAccounts.map((dto) => this.secure(dto)));
   }
 
-  private async secure(
-    dto: UnsecuredDto<FundingAccount>,
-  ): Promise<FundingAccount> {
+  private async secure(dto: UnsecuredDto<FundingAccount>): Promise<FundingAccount> {
     return this.privileges.for(FundingAccount).secure(dto);
   }
 
@@ -97,9 +93,7 @@ export class FundingAccountService {
     }
   }
 
-  async list(
-    input: FundingAccountListInput,
-  ): Promise<FundingAccountListOutput> {
+  async list(input: FundingAccountListInput): Promise<FundingAccountListOutput> {
     if (this.privileges.for(FundingAccount).can('read')) {
       const results = await this.repo.list(input);
       return await mapListResults(results, (dto) => this.secure(dto));

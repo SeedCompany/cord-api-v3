@@ -4,13 +4,7 @@ import { Connection, node, type Query, relation } from 'cypher-query-builder';
 import { LazyGetter } from 'lazy-get-decorator';
 import { pickBy, startCase } from 'lodash';
 import { DateTime, Duration } from 'luxon';
-import {
-  defer,
-  EmptyError,
-  firstValueFrom,
-  shareReplay,
-  takeUntil,
-} from 'rxjs';
+import { defer, EmptyError, firstValueFrom, shareReplay, takeUntil } from 'rxjs';
 import {
   DuplicateException,
   type ID,
@@ -28,11 +22,7 @@ import { ConfigService } from '../config/config.service';
 import { ILogger, Logger } from '../logger';
 import { ShutdownHook } from '../shutdown.hook';
 import { type DbChanges } from './changes';
-import {
-  createBetterError,
-  ServiceUnavailableError,
-  UniquenessError,
-} from './errors';
+import { createBetterError, ServiceUnavailableError, UniquenessError } from './errors';
 import {
   ACTIVE,
   deleteBaseNode,
@@ -58,10 +48,7 @@ interface DbInfo {
   error?: string;
 }
 
-type PermanentAfterOption = Pick<
-  UpdatePropertyOptions<any, any, any>,
-  'permanentAfter'
->;
+type PermanentAfterOption = Pick<UpdatePropertyOptions<any, any, any>, 'permanentAfter'>;
 
 @Injectable()
 export class DatabaseService {
@@ -85,9 +72,7 @@ export class DatabaseService {
    * If connection to database fails while executing function it will keep
    * retrying (after another successful connection) until the function finishes.
    */
-  async runOnceUntilCompleteAfterConnecting(
-    run: (info: ServerInfo) => Promise<void>,
-  ) {
+  async runOnceUntilCompleteAfterConnecting(run: (info: ServerInfo) => Promise<void>) {
     await this.waitForConnection(
       {
         forever: true,
@@ -102,10 +87,7 @@ export class DatabaseService {
    * Wait for database connection.
    * Optionally run a function in retry context after connecting.
    */
-  async waitForConnection(
-    options?: RetryOptions,
-    then?: (info: ServerInfo) => Promise<void>,
-  ) {
+  async waitForConnection(options?: RetryOptions, then?: (info: ServerInfo) => Promise<void>) {
     await retry(async () => {
       try {
         const info = await this.getServerInfo();
@@ -126,10 +108,7 @@ export class DatabaseService {
    * @example
    * query('match (n) return n').run();
    */
-  query<Result = unknown>(
-    query?: string,
-    parameters?: Record<string, any>,
-  ): Query<Result> {
+  query<Result = unknown>(query?: string, parameters?: Record<string, any>): Query<Result> {
     const q = this.db.query() as Query<Result>;
     q.params.addParam(this.identity.currentIfInCtx?.userId, 'currentUser');
     if (query) {
@@ -170,9 +149,7 @@ export class DatabaseService {
         throw new ServerException('Unable to determine server info');
       }
       // "Administration" command doesn't work with read transactions
-      const dbs = await session.executeWrite((tx) =>
-        tx.run('show databases yield *'),
-      );
+      const dbs = await session.executeWrite((tx) => tx.run('show databases yield *'));
       const versionParts = (info.get('version') as string).split('.');
       const version = versionParts.map(Number) as ServerInfo['version'];
       const versionXY = Number(versionParts.slice(0, 2).join('.'));
@@ -183,8 +160,7 @@ export class DatabaseService {
         databases: dbs.records.map((r) => ({
           name: r.get('name'),
           status: r.get('currentStatus'),
-          error:
-            r.get(version[0] >= 5 ? 'statusMessage' : 'error') || undefined,
+          error: r.get(version[0] >= 5 ? 'statusMessage' : 'error') || undefined,
         })),
       };
     } catch (e) {
@@ -380,11 +356,7 @@ export class DatabaseService {
     const update = this.db
       .query()
       .match(node('node', label, { id }))
-      .apply(
-        changeset
-          ? (q) => q.match(node('changeset', 'Changeset', { id: changeset }))
-          : null,
-      )
+      .apply(changeset ? (q) => q.match(node('changeset', 'Changeset', { id: changeset })) : null)
       .apply(
         updateProperty<TResourceStatic, TObject, Key>({
           resource: type,

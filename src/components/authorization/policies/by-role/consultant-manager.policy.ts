@@ -11,11 +11,7 @@ import * as Consultant from './consultant.policy';
   r.Language.read.specifically(
     (p) =>
       p
-        .many(
-          'registryOfLanguageVarietiesCode',
-          'signLanguageCode',
-          'locations',
-        )
+        .many('registryOfLanguageVarietiesCode', 'signLanguageCode', 'locations')
         .whenAny(member, sensMediumOrLower).read,
   ),
   r.LanguageEngagement.edit.specifically((p) => [
@@ -25,9 +21,7 @@ import * as Consultant from './consultant.policy';
     p.address.none,
     p.locations.when(sensMediumOrLower).read,
   ]),
-  r.Partner.read
-    .specifically((p) => p.pointOfContact.none)
-    .children((r) => r.posts.edit),
+  r.Partner.read.specifically((p) => p.pointOfContact.none).children((r) => r.posts.edit),
   r.Partnership.read.specifically((p) => [
     p.many('partner', 'organization').whenAny(member, sensOnlyLow).read,
   ]),

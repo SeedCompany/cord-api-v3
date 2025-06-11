@@ -31,10 +31,7 @@ import {
   sortWith,
 } from '~/core/database/query';
 import * as departmentIdBlockUtils from '../finance/department/neo4j.utils';
-import {
-  organizationFilters,
-  organizationSorters,
-} from '../organization/organization.repository';
+import { organizationFilters, organizationSorters } from '../organization/organization.repository';
 import {
   type CreatePartner,
   Partner,
@@ -86,10 +83,7 @@ export class PartnerRepository extends DtoRepository(Partner) {
         createRelationships(Partner, 'out', {
           organization: ['Organization', input.organizationId],
           pointOfContact: ['User', input.pointOfContactId],
-          languageOfWiderCommunication: [
-            'Language',
-            input.languageOfWiderCommunicationId,
-          ],
+          languageOfWiderCommunication: ['Language', input.languageOfWiderCommunicationId],
           fieldRegions: ['FieldRegion', input.fieldRegions],
           countries: ['Location', input.countries],
           languagesOfConsulting: ['Language', input.languagesOfConsulting],
@@ -103,9 +97,7 @@ export class PartnerRepository extends DtoRepository(Partner) {
     }
 
     return await this.readOne(result.id).catch((e) => {
-      throw e instanceof NotFoundException
-        ? new ReadAfterCreationFailed(Partner)
-        : e;
+      throw e instanceof NotFoundException ? new ReadAfterCreationFailed(Partner) : e;
     });
   }
 
@@ -124,12 +116,7 @@ export class PartnerRepository extends DtoRepository(Partner) {
     await this.updateProperties({ id }, simpleChanges);
 
     if (pointOfContactId !== undefined) {
-      await this.updateRelation(
-        'pointOfContact',
-        'User',
-        changes.id,
-        pointOfContactId,
-      );
+      await this.updateRelation('pointOfContact', 'User', changes.id, pointOfContactId);
     }
 
     if (languageOfWiderCommunicationId) {
@@ -149,9 +136,7 @@ export class PartnerRepository extends DtoRepository(Partner) {
           newList: countries,
         });
       } catch (e) {
-        throw e instanceof InputException
-          ? e.withField('partner.countries')
-          : e;
+        throw e instanceof InputException ? e.withField('partner.countries') : e;
       }
     }
 
@@ -163,9 +148,7 @@ export class PartnerRepository extends DtoRepository(Partner) {
           newList: fieldRegions,
         });
       } catch (e) {
-        throw e instanceof InputException
-          ? e.withField('partner.fieldRegions')
-          : e;
+        throw e instanceof InputException ? e.withField('partner.fieldRegions') : e;
       }
     }
 
@@ -177,9 +160,7 @@ export class PartnerRepository extends DtoRepository(Partner) {
           newList: languagesOfConsulting,
         });
       } catch (e) {
-        throw e instanceof InputException
-          ? e.withField('partner.languagesOfConsulting')
-          : e;
+        throw e instanceof InputException ? e.withField('partner.languagesOfConsulting') : e;
       }
     }
 
@@ -237,11 +218,7 @@ export class PartnerRepository extends DtoRepository(Partner) {
         )
         .subQuery('node', (sub) =>
           sub
-            .match([
-              node('node'),
-              relation('out', '', 'countries'),
-              node('countries', 'Location'),
-            ])
+            .match([node('node'), relation('out', '', 'countries'), node('countries', 'Location')])
             .return(collect('countries { .id }').as('countries')),
         )
         .subQuery('node', (sub) =>
@@ -251,11 +228,7 @@ export class PartnerRepository extends DtoRepository(Partner) {
               relation('out', '', 'languagesOfConsulting', ACTIVE),
               node('languagesOfConsulting', 'Language'),
             ])
-            .return(
-              collect('languagesOfConsulting { .id }').as(
-                'languagesOfConsulting',
-              ),
-            ),
+            .return(collect('languagesOfConsulting { .id }').as('languagesOfConsulting')),
         )
         .apply(matchProps())
         .optionalMatch([
@@ -280,8 +253,7 @@ export class PartnerRepository extends DtoRepository(Partner) {
             sensitivity: 'sensitivity',
             organization: 'organization { .id }',
             pointOfContact: 'pointOfContact { .id }',
-            languageOfWiderCommunication:
-              'languageOfWiderCommunication { .id }',
+            languageOfWiderCommunication: 'languageOfWiderCommunication { .id }',
             fieldRegions: 'fieldRegions',
             countries: 'countries',
             languagesOfConsulting: 'languagesOfConsulting',
@@ -328,11 +300,7 @@ export const partnerFilters = filters.define(() => PartnerFilters, {
     node('', 'User', { id }),
   ]),
   organization: filter.sub(() => organizationFilters)((sub) =>
-    sub.match([
-      node('outer'),
-      relation('out', '', 'organization'),
-      node('node', 'Organization'),
-    ]),
+    sub.match([node('outer'), relation('out', '', 'organization'), node('node', 'Organization')]),
   ),
   types: filter.intersectsProp(),
   financialReportingTypes: filter.intersectsProp(),
@@ -356,10 +324,6 @@ export const partnerSorters = defineSorters(Partner, {
   'organization.*': (query, input) =>
     query
       .with('node as partner')
-      .match([
-        node('partner'),
-        relation('out', '', 'organization'),
-        node('node', 'Organization'),
-      ])
+      .match([node('partner'), relation('out', '', 'organization'), node('node', 'Organization')])
       .apply(sortWith(organizationSorters, input)),
 });

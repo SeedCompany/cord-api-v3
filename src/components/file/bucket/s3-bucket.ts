@@ -44,10 +44,7 @@ export class S3Bucket extends FileBucket {
   }
 
   async parseSignedUrl(url: URL) {
-    if (
-      !url.hostname.startsWith(this.bucket + '.') ||
-      !url.hostname.endsWith('.amazonaws.com')
-    ) {
+    if (!url.hostname.startsWith(this.bucket + '.') || !url.hostname.endsWith('.amazonaws.com')) {
       throw new InvalidSignedUrlException();
     }
 
@@ -89,9 +86,7 @@ export class S3Bucket extends FileBucket {
     // Since we streams don't have that, and we don't know from file, we need to
     // buffer it. This way we can know the length to send to S3.
     const fixedLengthBody =
-      input.Body instanceof Readable
-        ? await bufferFromStream(input.Body)
-        : input.Body;
+      input.Body instanceof Readable ? await bufferFromStream(input.Body) : input.Body;
     await this.s3.putObject({
       ...input,
       Key: this.fullKey(input.Key),

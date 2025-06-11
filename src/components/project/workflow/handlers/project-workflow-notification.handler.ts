@@ -2,13 +2,7 @@ import { ModuleRef } from '@nestjs/core';
 import { asyncPool } from '@seedcompany/common';
 import { EmailService } from '@seedcompany/nestjs-email';
 import { type UnsecuredDto } from '~/common';
-import {
-  ConfigService,
-  EventsHandler,
-  type IEventHandler,
-  ILogger,
-  Logger,
-} from '~/core';
+import { ConfigService, EventsHandler, type IEventHandler, ILogger, Logger } from '~/core';
 import { Identity } from '~/core/authentication';
 import {
   ProjectStepChanged,
@@ -22,9 +16,7 @@ import { type Project, type ProjectStep } from '../../dto';
 import { ProjectTransitionedEvent } from '../events/project-transitioned.event';
 
 @EventsHandler(ProjectTransitionedEvent)
-export class ProjectWorkflowNotificationHandler
-  implements IEventHandler<ProjectTransitionedEvent>
-{
+export class ProjectWorkflowNotificationHandler implements IEventHandler<ProjectTransitionedEvent> {
   constructor(
     private readonly identity: Identity,
     private readonly config: ConfigService,
@@ -50,9 +42,7 @@ export class ProjectWorkflowNotificationHandler
       previousStep,
       moduleRef: this.moduleRef,
     };
-    const notifyees = (
-      await Promise.all(notifiers.map((notifier) => notifier.resolve(params)))
-    )
+    const notifyees = (await Promise.all(notifiers.map((notifier) => notifier.resolve(params))))
       .flat()
       .filter(
         (n) =>

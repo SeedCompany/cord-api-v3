@@ -83,15 +83,11 @@ export class AdminService implements OnApplicationBootstrap {
       });
       await this.repo.setRootUserLabel(tempId, id);
     } else {
-      const passwordSame = await this.crypto
-        .verify(existing.hash, password)
-        .catch(() => false);
+      const passwordSame = await this.crypto.verify(existing.hash, password).catch(() => false);
       // Neo4j can handle ID changes, because it anchors off the RootUser label.
       if (existing.id !== id || existing.email !== email || !passwordSame) {
         this.logger.notice('Updating root user to match app configuration');
-        const hashedPassword = passwordSame
-          ? undefined
-          : await this.crypto.hash(password);
+        const hashedPassword = passwordSame ? undefined : await this.crypto.hash(password);
         await this.repo.updateRootUser(id, email, hashedPassword);
       }
     }
@@ -109,9 +105,7 @@ export class AdminService implements OnApplicationBootstrap {
       if (doesOrgExist) {
         // add label to org
 
-        const giveOrgDefaultLabel = await this.repo.giveOrgDefaultLabel(
-          defaultOrgName,
-        );
+        const giveOrgDefaultLabel = await this.repo.giveOrgDefaultLabel(defaultOrgName);
 
         if (!giveOrgDefaultLabel) {
           throw new ServerException('could not create default org');

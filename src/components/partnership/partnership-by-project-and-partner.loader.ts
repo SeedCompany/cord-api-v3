@@ -1,9 +1,5 @@
 import { type ID } from '~/common';
-import {
-  type DataLoaderStrategy,
-  LoaderFactory,
-  type LoaderOptionsOf,
-} from '~/core/data-loader';
+import { type DataLoaderStrategy, LoaderFactory, type LoaderOptionsOf } from '~/core/data-loader';
 import { type Partnership } from './dto';
 import { PartnershipService } from './partnership.service';
 

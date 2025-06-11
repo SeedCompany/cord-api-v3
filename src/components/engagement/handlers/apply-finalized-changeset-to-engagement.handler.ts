@@ -14,9 +14,7 @@ import { EngagementService } from '../engagement.service';
 type SubscribedEvent = ChangesetFinalizingEvent;
 
 @EventsHandler(ChangesetFinalizingEvent)
-export class ApplyFinalizedChangesetToEngagement
-  implements IEventHandler<SubscribedEvent>
-{
+export class ApplyFinalizedChangesetToEngagement implements IEventHandler<SubscribedEvent> {
   constructor(
     private readonly db: DatabaseService,
     private readonly engagementService: EngagementService,
@@ -44,16 +42,10 @@ export class ApplyFinalizedChangesetToEngagement
               relation('out', 'engagementRel', 'engagement', ACTIVE),
               node('node', 'Engagement'),
             ])
-            .apply(
-              changeset.applied
-                ? commitChangesetProps()
-                : rejectChangesetProps(),
-            )
+            .apply(changeset.applied ? commitChangesetProps() : rejectChangesetProps())
             .return('node.id as engagementId'),
         )
-        .return<{ engagementIds: ID[] }>(
-          'collect(engagementId) as engagementIds',
-        )
+        .return<{ engagementIds: ID[] }>('collect(engagementId) as engagementIds')
         .first();
 
       const newResult = await this.db
@@ -78,9 +70,7 @@ export class ApplyFinalizedChangesetToEngagement
             })
             .return('node.id as engagementId'),
         )
-        .return<{ engagementIds: ID[] }>(
-          'collect(engagementId) as engagementIds',
-        )
+        .return<{ engagementIds: ID[] }>('collect(engagementId) as engagementIds')
         .first();
 
       /**
@@ -105,9 +95,7 @@ export class ApplyFinalizedChangesetToEngagement
               relation('out', '', 'language', ACTIVE),
               node('node', 'Language'),
             ])
-            .apply(
-              changeset.id ? commitChangesetProps() : rejectChangesetProps(),
-            )
+            .apply(changeset.id ? commitChangesetProps() : rejectChangesetProps())
             .return('1 as one'),
         )
         .return('project')
@@ -124,10 +112,7 @@ export class ApplyFinalizedChangesetToEngagement
       ]);
       await this.triggerUpdateEvent(allEngagementIds);
     } catch (exception) {
-      throw new ServerException(
-        'Failed to apply changeset to project',
-        exception,
-      );
+      throw new ServerException('Failed to apply changeset to project', exception);
     }
   }
 

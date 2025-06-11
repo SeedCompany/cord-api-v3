@@ -28,11 +28,7 @@ export class StepHistoryToWorkflowEventsMigration extends BaseMigration {
       .match(node('ghost', 'Actor', { id: ghost.id }))
       .subQuery('project', (sub) =>
         sub
-          .match([
-            node('project', 'Project'),
-            relation('out', '', 'step'),
-            node('step'),
-          ])
+          .match([node('project', 'Project'), relation('out', '', 'step'), node('step')])
           .with('step')
           .orderBy('step.createdAt', 'asc')
           .return('collect(apoc.convert.toMap(step)) as steps'),
@@ -44,9 +40,7 @@ export class StepHistoryToWorkflowEventsMigration extends BaseMigration {
         steps: ReadonlyArray<{ value: ProjectStep; createdAt: DateTime }>;
       }>('apoc.convert.toMap(project) as project, steps')
       .run();
-    this.logger.notice(
-      `Found ${projects.length} projects to add event history to.`,
-    );
+    this.logger.notice(`Found ${projects.length} projects to add event history to.`);
 
     const events: Array<
       Parameters<ProjectWorkflowRepository['recordEvent']>[0] & { at: DateTime }

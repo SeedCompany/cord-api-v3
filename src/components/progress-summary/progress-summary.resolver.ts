@@ -20,19 +20,13 @@ const formatArg: ArgsOptions = {
 @Resolver(ProgressSummary)
 export class ProgressSummaryResolver {
   @ResolveField()
-  planned(
-    @Parent() summary: ProgressSummary,
-    @Args(formatArg) format: ProgressFormat,
-  ): number {
+  planned(@Parent() summary: ProgressSummary, @Args(formatArg) format: ProgressFormat): number {
     const planned = clamp(summary.planned, 0, 1);
     return planned * this.formatFactor(summary, format);
   }
 
   @ResolveField()
-  actual(
-    @Parent() summary: ProgressSummary,
-    @Args(formatArg) format: ProgressFormat,
-  ): number {
+  actual(@Parent() summary: ProgressSummary, @Args(formatArg) format: ProgressFormat): number {
     const actual = clamp(summary.actual, 0, 1);
     return actual * this.formatFactor(summary, format);
   }
@@ -51,10 +45,7 @@ export class ProgressSummaryResolver {
   @ResolveField(() => Float, {
     description: 'The difference between the actual and planned values',
   })
-  variance(
-    @Parent() summary: ProgressSummary,
-    @Args(formatArg) format: ProgressFormat,
-  ): number {
+  variance(@Parent() summary: ProgressSummary, @Args(formatArg) format: ProgressFormat): number {
     return this.actual(summary, format) - this.planned(summary, format);
   }
 

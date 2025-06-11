@@ -8,12 +8,9 @@ export class AvailableRolesToProjectResolver {
   constructor(private readonly service: ProjectMemberService) {}
 
   @ResolveField(() => [Role], {
-    description:
-      'All of the roles this user could serve in project memberships',
+    description: 'All of the roles this user could serve in project memberships',
   })
-  async availableForProjects(
-    @Grandparent() user: User,
-  ): Promise<readonly Role[]> {
+  async availableForProjects(@Grandparent() user: User): Promise<readonly Role[]> {
     const roles = this.service.getAvailableRoles(user);
     return [...roles];
   }

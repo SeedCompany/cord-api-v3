@@ -55,13 +55,7 @@ type AnyProject = MergeExclusive<
   MergeExclusive<MultiplicationTranslationProject, InternshipProject>
 >;
 
-const Interfaces = IntersectTypes(
-  Resource,
-  ChangesetAware,
-  Pinnable,
-  Postable,
-  Commentable,
-);
+const Interfaces = IntersectTypes(Resource, ChangesetAware, Pinnable, Postable, Commentable);
 
 export const resolveProjectType = (val: Pick<AnyProject, 'type'>) => {
   const type = simpleSwitch(val.type, ProjectConcretes);
@@ -73,8 +67,7 @@ export const resolveProjectType = (val: Pick<AnyProject, 'type'>) => {
 
 const RequiredWhenNotInDev = RequiredWhen(() => Project)({
   description: 'the project is not in development',
-  isEnabled: ({ status }) =>
-    status !== 'InDevelopment' && status !== 'DidNotDevelop',
+  isEnabled: ({ status }) => status !== 'InDevelopment' && status !== 'DidNotDevelop',
 });
 
 @RegisterResource({ db: e.Project })
@@ -83,10 +76,7 @@ const RequiredWhenNotInDev = RequiredWhen(() => Project)({
   implements: Interfaces.members,
 })
 class Project extends Interfaces {
-  static readonly BaseNodeProps = [
-    ...EnhancedResource.of(Resource).props,
-    'type',
-  ];
+  static readonly BaseNodeProps = [...EnhancedResource.of(Resource).props, 'type'];
   static readonly Relations = () =>
     ({
       rootDirectory: Directory,

@@ -40,9 +40,7 @@ export class GqlContextHostImpl implements GqlContextHost, OnModuleDestroy {
     if (context) {
       return context;
     }
-    throw new AsyncLocalStorageNoContextException(
-      'The GraphQL context is not available yet.',
-    );
+    throw new AsyncLocalStorageNoContextException('The GraphQL context is not available yet.');
   }
 
   onExecute: Plugin['onExecute'] = ({ executeFn, setExecuteFn, args }) => {
@@ -52,11 +50,7 @@ export class GqlContextHostImpl implements GqlContextHost, OnModuleDestroy {
     });
   };
 
-  onSubscribe: Plugin['onSubscribe'] = ({
-    subscribeFn,
-    setSubscribeFn,
-    args,
-  }) => {
+  onSubscribe: Plugin['onSubscribe'] = ({ subscribeFn, setSubscribeFn, args }) => {
     const ctx = args.contextValue;
     setSubscribeFn((...args) => {
       return this.als.run(ctx, subscribeFn, ...args);

@@ -21,8 +21,7 @@ export class RoleCondition implements Condition {
   }
 
   asEdgeQLCondition({ namespace }: AsEdgeQLParams<any>) {
-    const currentRoles =
-      'global ' + fqnRelativeTo('default::currentRoles', namespace);
+    const currentRoles = 'global ' + fqnRelativeTo('default::currentRoles', namespace);
     const roleType = fqnRelativeTo('default::Role', namespace);
     return eqlDoesIntersect(currentRoles, this.allowed, roleType);
   }

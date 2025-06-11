@@ -51,30 +51,22 @@ export const updateProperties =
         : [],
     );
 
-    return query
-      .comment(`updateProperties(${resource.dbLabel})`)
-      .subQuery(nodeName, (sub) =>
-        sub
-          .unwind(propEntries, 'prop')
-          .apply(
-            updateProperty({
-              key: variable('prop.key'),
-              value: variable('prop.value'),
-              labels: variable('prop.labels'),
-              changeset,
-              nodeName,
-              now:
-                now instanceof Variable
-                  ? now
-                  : query.params.addParam(now ?? DateTime.local(), 'now'),
-            }),
-          )
-          .return<{
-            stats: { [K in keyof DbChanges<TObject>]?: PropUpdateStat };
-          }>(
-            merge(collect(apoc.map.fromValues(['prop.key', 'stats']))).as(
-              outputStatsVar,
-            ),
-          ),
-      );
+    return query.comment(`updateProperties(${resource.dbLabel})`).subQuery(nodeName, (sub) =>
+      sub
+        .unwind(propEntries, 'prop')
+        .apply(
+          updateProperty({
+            key: variable('prop.key'),
+            value: variable('prop.value'),
+            labels: variable('prop.labels'),
+            changeset,
+            nodeName,
+            now:
+              now instanceof Variable ? now : query.params.addParam(now ?? DateTime.local(), 'now'),
+          }),
+        )
+        .return<{
+          stats: { [K in keyof DbChanges<TObject>]?: PropUpdateStat };
+        }>(merge(collect(apoc.map.fromValues(['prop.key', 'stats']))).as(outputStatsVar)),
+    );
   };

@@ -1,19 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import {
-  CreationFailed,
-  type ID,
-  NotFoundException,
-  ReadAfterCreationFailed,
-} from '~/common';
+import { CreationFailed, type ID, NotFoundException, ReadAfterCreationFailed } from '~/common';
 import { DtoRepository } from '~/core/database';
-import {
-  ACTIVE,
-  createNode,
-  createRelationships,
-  paginate,
-  sorting,
-} from '~/core/database/query';
+import { ACTIVE, createNode, createRelationships, paginate, sorting } from '~/core/database/query';
 import {
   type CreateEducation,
   Education,
@@ -45,9 +34,7 @@ export class EducationRepository extends DtoRepository(Education) {
       throw new CreationFailed(Education);
     }
     return await this.readOne(result.id).catch((e) => {
-      throw e instanceof NotFoundException
-        ? new ReadAfterCreationFailed(Education)
-        : e;
+      throw e instanceof NotFoundException ? new ReadAfterCreationFailed(Education) : e;
     });
   }
 

@@ -1,9 +1,4 @@
-import {
-  Button,
-  Column,
-  Section,
-  Text,
-} from '@seedcompany/nestjs-email/templates';
+import { Button, Column, Section, Text } from '@seedcompany/nestjs-email/templates';
 import { fiscalQuarter, fiscalYear } from '~/common';
 import { type Language } from '../../../components/language/dto';
 import { type PeriodicReport } from '../../../components/periodic-report/dto';
@@ -18,10 +13,7 @@ import { UserRef, type UserRefProps } from './user-ref';
 
 export interface ProgressReportStatusChangedProps {
   changedBy: UserRefProps;
-  recipient: Pick<
-    User,
-    'email' | 'displayFirstName' | 'displayLastName' | 'timezone'
-  >;
+  recipient: Pick<User, 'email' | 'displayFirstName' | 'displayLastName' | 'timezone'>;
   project: Pick<Project, 'id' | 'name'>;
   language: Pick<Language, 'id' | 'name' | 'displayName'>;
   report: Pick<PeriodicReport, 'id' | 'status' | 'start' | 'type'>;
@@ -44,16 +36,14 @@ export function ProgressReportStatusChanged({
   const projectName = project.name.value || '';
   const languageName = language.name.value || '';
   const reportUrl = useFrontendUrl(`/progress-reports/${report.id}`);
-  const reportLabel = `Quarterly Report - Q${fiscalQuarter(
+  const reportLabel = `Quarterly Report - Q${fiscalQuarter(report.start)} FY${fiscalYear(
     report.start,
-  )} FY${fiscalYear(report.start)}`;
+  )}`;
 
   const oldStatus = previousStatusVal
     ? ProgressReportStatus.entry(previousStatusVal).label
     : undefined;
-  const newStatus = newStatusVal
-    ? ProgressReportStatus.entry(newStatusVal).label
-    : undefined;
+  const newStatus = newStatusVal ? ProgressReportStatus.entry(newStatusVal).label : undefined;
 
   return (
     <EmailTemplate
@@ -76,8 +66,7 @@ export function ProgressReportStatusChanged({
       <Section>
         <Column>
           <Text paddingBottom={16}>
-            <UserRef {...changedBy} /> has changed{' '}
-            <a href={reportUrl}>{reportLabel}</a>{' '}
+            <UserRef {...changedBy} /> has changed <a href={reportUrl}>{reportLabel}</a>{' '}
             {newStatus ? (
               <>
                 {oldStatus ? (
@@ -90,10 +79,7 @@ export function ProgressReportStatusChanged({
             ) : null}
             <>
               for {languageName} in <a href={projectUrl}>{projectName}</a> on{' '}
-              <FormattedDateTime
-                value={workflowEvent.at}
-                timezone={recipient.timezone.value}
-              />
+              <FormattedDateTime value={workflowEvent.at} timezone={recipient.timezone.value} />
             </>
           </Text>
           <Button href={reportUrl} paddingTop={16}>

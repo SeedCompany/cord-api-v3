@@ -47,10 +47,7 @@ import { projectFilters } from './project-filters.query';
 
 @Injectable()
 export class ProjectRepository extends CommonRepository {
-  constructor(
-    private readonly config: ConfigService,
-    private readonly privileges: Privileges,
-  ) {
+  constructor(private readonly config: ConfigService, private readonly privileges: Privileges) {
     super();
   }
 
@@ -148,10 +145,7 @@ export class ProjectRepository extends CommonRepository {
         );
   }
 
-  getActualChanges(
-    currentProject: UnsecuredDto<Project>,
-    input: UpdateProject,
-  ) {
+  getActualChanges(currentProject: UnsecuredDto<Project>, input: UpdateProject) {
     return getChanges(IProject)(currentProject, input);
   }
 
@@ -209,10 +203,7 @@ export class ProjectRepository extends CommonRepository {
     } catch (e) {
       if (e instanceof UniquenessError && e.label === 'ProjectName') {
         throw Object.assign(
-          new DuplicateException(
-            'project.name',
-            'Project with this name already exists',
-          ),
+          new DuplicateException('project.name', 'Project with this name already exists'),
           { value: e.value },
         );
       }
@@ -304,9 +295,7 @@ export class ProjectRepository extends CommonRepository {
       );
       result = {
         ...result,
-        marketingLocation: marketingLocationId
-          ? { id: marketingLocationId }
-          : null,
+        marketingLocation: marketingLocationId ? { id: marketingLocationId } : null,
       };
     }
 
@@ -387,9 +376,7 @@ export const ProjectNameIndex = FullTextIndex({
 
 export const projectSorters = defineSorters(IProject, {
   sensitivity: (query) =>
-    query
-      .apply(matchProjectSens('node', 'sortValue'))
-      .return<SortCol>('sortValue'),
+    query.apply(matchProjectSens('node', 'sortValue')).return<SortCol>('sortValue'),
   ...mapValues.fromList(
     [
       'engagements', // probably "deprecated"

@@ -10,8 +10,7 @@ import { SecuredProjectChangeRequestTypes } from './project-change-request-type.
   implements: [Changeset],
 })
 export abstract class ProjectChangeRequest extends Changeset {
-  static readonly Parent = () =>
-    import('../../project/dto').then((m) => m.IProject);
+  static readonly Parent = () => import('../../project/dto').then((m) => m.IProject);
 
   declare __typename: 'ProjectChangeRequest';
 

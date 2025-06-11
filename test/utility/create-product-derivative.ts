@@ -26,9 +26,7 @@ export async function createDerivativeProduct(
 
 const CreateDerivativeScriptureProductDoc = graphql(
   `
-    mutation createDerivativeScriptureProduct(
-      $input: CreateDerivativeScriptureProduct!
-    ) {
+    mutation createDerivativeScriptureProduct($input: CreateDerivativeScriptureProduct!) {
       createDerivativeScriptureProduct(input: $input) {
         product {
           ...product

@@ -2,9 +2,7 @@ import { type ArgumentMetadata, type PipeTransform } from '@nestjs/common';
 import { ServerException } from './exceptions';
 
 const key = Symbol('AugmentedMetadata');
-export const createAugmentedMetadataPipe = <
-  T extends Record<string, any>,
->() => {
+export const createAugmentedMetadataPipe = <T extends Record<string, any>>() => {
   const pipe = (data: T | (() => T)): PipeTransform => ({
     transform: (value, metadata) => {
       const actual = typeof data === 'function' ? data() : data;

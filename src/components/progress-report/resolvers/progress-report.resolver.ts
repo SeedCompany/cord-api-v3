@@ -2,11 +2,7 @@ import { Query, Resolver } from '@nestjs/graphql';
 import { ListArg } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { PeriodicReportLoader as ReportLoader } from '../../periodic-report';
-import {
-  ProgressReport,
-  ProgressReportList,
-  ProgressReportListInput,
-} from '../dto';
+import { ProgressReport, ProgressReportList, ProgressReportListInput } from '../dto';
 import { ProgressReportService } from '../progress-report.service';
 
 @Resolver(ProgressReport)

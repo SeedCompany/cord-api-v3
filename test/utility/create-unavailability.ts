@@ -8,10 +8,7 @@ import * as fragments from './fragments';
 
 export async function createUnavailability(
   app: TestApp,
-  input: SetOptional<
-    InputOf<typeof CreateUnavailabilityDoc>,
-    'description' | 'start' | 'end'
-  >,
+  input: SetOptional<InputOf<typeof CreateUnavailabilityDoc>, 'description' | 'start' | 'end'>,
 ) {
   const result = await app.graphql.mutate(CreateUnavailabilityDoc, {
     input: {

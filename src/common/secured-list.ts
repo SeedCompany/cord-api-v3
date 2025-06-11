@@ -2,11 +2,7 @@ import { Field, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { type GraphQLScalarType } from 'graphql';
 import type { Class } from 'type-fest';
-import {
-  type ListOptions,
-  PaginatedList,
-  type PaginatedListType,
-} from './pagination-list';
+import { type ListOptions, PaginatedList, type PaginatedListType } from './pagination-list';
 import { ISecured } from './secured.interface';
 import { type AbstractClassType } from './types';
 

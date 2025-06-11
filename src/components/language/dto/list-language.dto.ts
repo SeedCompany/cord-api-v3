@@ -48,8 +48,7 @@ export abstract class LanguageFilters {
   readonly presetInventory?: boolean;
 
   @OptionalField({
-    description:
-      'Only languages that are pinned/unpinned by the requesting user',
+    description: 'Only languages that are pinned/unpinned by the requesting user',
   })
   readonly pinned?: boolean;
 

@@ -1,11 +1,6 @@
 import { ObjectType } from '@nestjs/graphql';
 import { invertBy } from 'lodash';
-import {
-  type EnumType,
-  makeEnum,
-  SecuredEnum,
-  SecuredEnumList,
-} from '~/common';
+import { type EnumType, makeEnum, SecuredEnum, SecuredEnumList } from '~/common';
 import { ProductApproach as Approach } from './product-approach.enum';
 
 /**
@@ -71,6 +66,7 @@ export const MethodologyToApproach: Record<ProductMethodology, Approach> = {
   [ProductMethodology.OtherVisual]: Approach.Visual,
 };
 
-export const ApproachToMethodologies = invertBy(
-  MethodologyToApproach,
-) as Record<Approach, ProductMethodology[]>;
+export const ApproachToMethodologies = invertBy(MethodologyToApproach) as Record<
+  Approach,
+  ProductMethodology[]
+>;

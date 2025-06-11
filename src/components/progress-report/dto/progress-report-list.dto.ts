@@ -1,11 +1,5 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import {
-  FilterField,
-  OmitType,
-  PaginatedList,
-  PickType,
-  SecuredList,
-} from '~/common';
+import { FilterField, OmitType, PaginatedList, PickType, SecuredList } from '~/common';
 import { EngagementFilters } from '../../engagement/dto';
 import { PeriodicReportListInput } from '../../periodic-report/dto';
 import { PnpExtractionResultFilters } from '../../pnp/extraction-result';
@@ -14,10 +8,11 @@ import { ProgressReportStatus } from './progress-report-status.enum';
 import { ProgressReport } from './progress-report.dto';
 
 @InputType()
-export abstract class ProgressReportFilters extends PickType(
-  PeriodicReportListInput,
-  ['start', 'end', 'parent'],
-) {
+export abstract class ProgressReportFilters extends PickType(PeriodicReportListInput, [
+  'start',
+  'end',
+  'parent',
+]) {
   @Field(() => [ProgressReportStatus], {
     nullable: true,
   })

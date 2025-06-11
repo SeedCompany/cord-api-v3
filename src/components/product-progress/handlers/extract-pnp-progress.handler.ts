@@ -46,16 +46,10 @@ export class ExtractPnpProgressHandler {
     // Fetch products for report mapped to a book/story name
     const engagementId = event.report.parent.properties.id;
     const storyProducts = progressRows[0].story
-      ? await this.products.loadProductIdsWithProducibleNames(
-          engagementId,
-          ProducibleType.Story,
-        )
+      ? await this.products.loadProductIdsWithProducibleNames(engagementId, ProducibleType.Story)
       : mapOf({});
     const scriptureProducts = progressRows[0].bookName
-      ? await this.products.loadProductIdsForBookAndVerse(
-          engagementId,
-          this.logger,
-        )
+      ? await this.products.loadProductIdsForBookAndVerse(engagementId, this.logger)
       : [];
 
     // Convert row to product ID
@@ -71,16 +65,14 @@ export class ExtractPnpProgressHandler {
       if (row.bookName) {
         const exactScriptureMatch = scriptureProducts.find(
           (ref) =>
-            ref.scriptureRanges.length > 0 &&
-            isScriptureEqual(ref.scriptureRanges, row.scripture),
+            ref.scriptureRanges.length > 0 && isScriptureEqual(ref.scriptureRanges, row.scripture),
         );
         if (exactScriptureMatch) {
           return { extracted: row, productId: exactScriptureMatch.id, steps };
         }
 
         const unspecifiedScriptureMatch = scriptureProducts.find(
-          (ref) =>
-            ref.book === row.bookName && ref.totalVerses === row.totalVerses,
+          (ref) => ref.book === row.bookName && ref.totalVerses === row.totalVerses,
         );
         if (unspecifiedScriptureMatch) {
           return {
@@ -110,12 +102,7 @@ export class ExtractPnpProgressHandler {
             variant: Progress.FallbackVariant,
           });
         } catch (e) {
-          if (
-            !(
-              e instanceof AggregateError &&
-              e.message === 'Invalid Progress Input'
-            )
-          ) {
+          if (!(e instanceof AggregateError && e.message === 'Invalid Progress Input')) {
             throw e;
           }
           for (const error of e.errors) {

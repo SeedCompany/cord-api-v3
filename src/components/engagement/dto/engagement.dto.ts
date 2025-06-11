@@ -30,11 +30,7 @@ import { Commentable } from '../../comments/dto';
 import { SecuredLanguageMilestone } from '../../language/dto';
 import { SecuredAIAssistedTranslation } from '../../language/dto/ai-assisted-translation.enum';
 import { Product, SecuredMethodologies } from '../../product/dto';
-import {
-  InternshipProject,
-  IProject,
-  TranslationProject,
-} from '../../project/dto';
+import { InternshipProject, IProject, TranslationProject } from '../../project/dto';
 import { SecuredInternPosition } from './intern-position.enum';
 import { SecuredEngagementStatus } from './status.enum';
 
@@ -42,22 +38,16 @@ import { SecuredEngagementStatus } from './status.enum';
  * This should be used for TypeScript types as we'll always be passing around
  * concrete engagements.
  */
-export type AnyEngagement = MergeExclusive<
-  LanguageEngagement,
-  InternshipEngagement
->;
+export type AnyEngagement = MergeExclusive<LanguageEngagement, InternshipEngagement>;
 
 const Interfaces = IntersectTypes(Resource, ChangesetAware, Commentable);
 
 export const resolveEngagementType = (val: Pick<AnyEngagement, '__typename'>) =>
-  val.__typename === 'default::LanguageEngagement'
-    ? LanguageEngagement
-    : InternshipEngagement;
+  val.__typename === 'default::LanguageEngagement' ? LanguageEngagement : InternshipEngagement;
 
 const RequiredWhenNotInDev = RequiredWhen(() => Engagement)({
   description: 'the engagement is not in development',
-  isEnabled: ({ status }) =>
-    status !== 'InDevelopment' && status !== 'DidNotDevelop',
+  isEnabled: ({ status }) => status !== 'InDevelopment' && status !== 'DidNotDevelop',
 });
 
 @RegisterResource({ db: e.Engagement })
@@ -72,14 +62,12 @@ class Engagement extends Interfaces {
   static readonly Relations = {
     ...Commentable.Relations,
   } satisfies ResourceRelationsShape;
-  static readonly Parent = () =>
-    import('../../project/dto').then((m) => m.IProject);
+  static readonly Parent = () => import('../../project/dto').then((m) => m.IProject);
   static readonly resolve = resolveEngagementType;
 
   declare readonly __typename: DBNames<typeof e.Engagement>;
 
-  readonly project: LinkTo<'Project'> &
-    Pick<UnsecuredDto<IProject>, 'status' | 'step' | 'type'>;
+  readonly project: LinkTo<'Project'> & Pick<UnsecuredDto<IProject>, 'status' | 'step' | 'type'>;
 
   @Field(() => IProject)
   declare readonly parent: BaseNode;
@@ -168,8 +156,7 @@ export class LanguageEngagement extends Engagement {
     // why is this singular?
     product: [Product],
   } satisfies ResourceRelationsShape;
-  static readonly Parent = () =>
-    import('../../project/dto').then((m) => m.TranslationProject);
+  static readonly Parent = () => import('../../project/dto').then((m) => m.TranslationProject);
 
   declare readonly __typename: DBNames<typeof e.LanguageEngagement>;
 
@@ -212,8 +199,7 @@ export class LanguageEngagement extends Engagement {
   implements: [Engagement],
 })
 export class InternshipEngagement extends Engagement {
-  static readonly Parent = () =>
-    import('../../project/dto').then((m) => m.InternshipProject);
+  static readonly Parent = () => import('../../project/dto').then((m) => m.InternshipProject);
 
   declare readonly __typename: DBNames<typeof e.InternshipEngagement>;
 

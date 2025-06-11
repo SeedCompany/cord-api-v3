@@ -13,12 +13,7 @@ import {
 import { type Direction } from 'cypher-query-builder/dist/typings/clauses/order-by';
 import { type AnyConditions } from 'cypher-query-builder/dist/typings/clauses/where-utils';
 import { DateTime } from 'luxon';
-import {
-  CreationFailed,
-  type ID,
-  NotFoundException,
-  ServerException,
-} from '~/common';
+import { CreationFailed, type ID, NotFoundException, ServerException } from '~/common';
 import { ILogger, type LinkTo, Logger } from '~/core';
 import { CommonRepository, OnIndex } from '~/core/database';
 import {
@@ -120,11 +115,7 @@ export class FileRepository extends CommonRepository {
       .apply((q) => {
         const conditions: AnyConditions = {};
         if (input?.filter?.name) {
-          q.match([
-            node('node'),
-            relation('out', '', 'name', ACTIVE),
-            node('name', 'Property'),
-          ]);
+          q.match([node('node'), relation('out', '', 'name', ACTIVE), node('name', 'Property')]);
           conditions['name.value'] = contains(input.filter.name);
         }
         if (input?.filter?.type) {
@@ -171,16 +162,11 @@ export class FileRepository extends CommonRepository {
             // Need to filter out FileNodes which are children of this dir
             // (the schema was mistakenly pointing these relationships in the wrong direction)
             // Also filter to ACTIVE, if applicable.
-            .raw(
-              'WHERE NOT resource:FileNode AND coalesce(rel.active, true) <> false',
-            )
+            .raw('WHERE NOT resource:FileNode AND coalesce(rel.active, true) <> false')
             .return('[resource, type(rel)] as rootAttachedTo'),
         )
         .return<{ dto: FileNode }>(
-          merge(
-            'dto',
-            mapKeys.fromList(['root', 'rootAttachedTo'], (k) => k).asRecord,
-          ).as('dto'),
+          merge('dto', mapKeys.fromList(['root', 'rootAttachedTo'], (k) => k).asRecord).as('dto'),
         );
   }
 
@@ -190,16 +176,8 @@ export class FileRepository extends CommonRepository {
         .apply(this.matchLatestVersion())
         .apply(matchProps())
         .apply(matchProps({ nodeName: 'version', outputVar: 'versionProps' }))
-        .match([
-          node('node'),
-          relation('out', '', 'createdBy', ACTIVE),
-          node('createdBy'),
-        ])
-        .match([
-          node('version'),
-          relation('out', '', 'createdBy', ACTIVE),
-          node('modifiedBy'),
-        ])
+        .match([node('node'), relation('out', '', 'createdBy', ACTIVE), node('createdBy')])
+        .match([node('version'), relation('out', '', 'createdBy', ACTIVE), node('modifiedBy')])
         .return<{ dto: File }>(
           merge({ public: false }, 'versionProps', 'props', {
             type: `"${FileNodeType.File}"`,
@@ -216,11 +194,7 @@ export class FileRepository extends CommonRepository {
     return (query: Query) =>
       query
         .apply(matchProps())
-        .match([
-          node('node'),
-          relation('out', '', 'createdBy', ACTIVE),
-          node('createdBy'),
-        ])
+        .match([node('node'), relation('out', '', 'createdBy', ACTIVE), node('createdBy')])
         // Fetch directory info determined by children
         .subQuery('node', (sub) =>
           sub
@@ -244,10 +218,7 @@ export class FileRepository extends CommonRepository {
                 .with('version')
                 .orderBy('version.createdAt')
                 .with('collect(version) as versions')
-                .return([
-                  'versions[0] as firstVersion',
-                  'versions[-1] as latestVersion',
-                ]),
+                .return(['versions[0] as firstVersion', 'versions[-1] as latestVersion']),
             )
             // endregion
             // region For each latest file version grab its size
@@ -281,13 +252,7 @@ export class FileRepository extends CommonRepository {
               relation('out', '', 'parent', ACTIVE),
               node('firstFile', 'File'),
             ])
-            .return([
-              'totalFiles',
-              'size',
-              'firstFile',
-              'latestVersion',
-              'modifiedBy',
-            ]),
+            .return(['totalFiles', 'size', 'firstFile', 'latestVersion', 'modifiedBy']),
         )
         .return<{ dto: Directory }>(
           merge({ public: false }, 'props', {
@@ -324,11 +289,7 @@ export class FileRepository extends CommonRepository {
     return (query: Query) =>
       query
         .apply(matchProps())
-        .match([
-          node('node'),
-          relation('out', '', 'createdBy', ACTIVE),
-          node('createdBy'),
-        ])
+        .match([node('node'), relation('out', '', 'createdBy', ACTIVE), node('createdBy')])
         .return<{ dto: FileVersion }>(
           merge({ public: false }, 'props', {
             type: `"${FileNodeType.FileVersion}"`,
@@ -447,9 +408,7 @@ export class FileRepository extends CommonRepository {
 
     const createFile = this.db
       .query()
-      .apply(
-        await createNode(File, { initialProps, baseNodeProps: { id: fileId } }),
-      )
+      .apply(await createNode(File, { initialProps, baseNodeProps: { id: fileId } }))
       .apply(
         createRelationships(File, {
           out: {

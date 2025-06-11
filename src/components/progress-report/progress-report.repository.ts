@@ -17,18 +17,12 @@ import { progressReportSorters } from '../periodic-report/periodic-report.reposi
 import { pnpExtractionResultFilters } from '../pnp/extraction-result/pnp-extraction-result.neo4j.repository';
 import { SummaryPeriod } from '../progress-summary/dto';
 import { progressSummaryFilters } from '../progress-summary/progress-summary.repository';
-import {
-  ProgressReport,
-  ProgressReportFilters,
-  type ProgressReportListInput,
-} from './dto';
+import { ProgressReport, ProgressReportFilters, type ProgressReportListInput } from './dto';
 import { ProgressReportExtraForPeriodicInterfaceRepository } from './progress-report-extra-for-periodic-interface.repository';
 
 @Injectable()
 export class ProgressReportRepository extends DtoRepository(ProgressReport) {
-  constructor(
-    private readonly extraRepo: ProgressReportExtraForPeriodicInterfaceRepository,
-  ) {
+  constructor(private readonly extraRepo: ProgressReportExtraForPeriodicInterfaceRepository) {
     super();
   }
 
@@ -72,44 +66,37 @@ export class ProgressReportRepository extends DtoRepository(ProgressReport) {
   }
 }
 
-export const progressReportFilters = filter.define(
-  () => ProgressReportFilters,
-  {
-    parent: filter.pathExists((id) => [
-      node('', 'BaseNode', { id }),
-      relation('out', '', 'report', ACTIVE),
-      node('node'),
+export const progressReportFilters = filter.define(() => ProgressReportFilters, {
+  parent: filter.pathExists((id) => [
+    node('', 'BaseNode', { id }),
+    relation('out', '', 'report', ACTIVE),
+    node('node'),
+  ]),
+  start: filter.dateTimeProp(),
+  end: filter.dateTimeProp(),
+  status: filter.stringListProp(),
+  cumulativeSummary: filter.sub(() => progressSummaryFilters)((sub) =>
+    sub
+      .optionalMatch([
+        node('outer'),
+        relation('out', '', 'summary', ACTIVE),
+        node('node', 'ProgressSummary', {
+          period: variable(`"${SummaryPeriod.Cumulative}"`),
+        }),
+      ])
+      // needed in conjunction with `optionalMatch`
+      .with('outer, node'),
+  ),
+  engagement: filter.sub(() => engagementFilters)((sub) =>
+    sub.match([node('outer'), relation('in', '', 'report'), node('node', 'Engagement')]),
+  ),
+  pnpExtractionResult: filter.sub(() => pnpExtractionResultFilters)((sub) =>
+    sub.match([
+      node('outer'),
+      relation('out', '', 'reportFileNode'),
+      node('file', 'File'),
+      relation('out', '', 'pnpExtractionResult'),
+      node('node', 'PnpExtractionResult'),
     ]),
-    start: filter.dateTimeProp(),
-    end: filter.dateTimeProp(),
-    status: filter.stringListProp(),
-    cumulativeSummary: filter.sub(() => progressSummaryFilters)((sub) =>
-      sub
-        .optionalMatch([
-          node('outer'),
-          relation('out', '', 'summary', ACTIVE),
-          node('node', 'ProgressSummary', {
-            period: variable(`"${SummaryPeriod.Cumulative}"`),
-          }),
-        ])
-        // needed in conjunction with `optionalMatch`
-        .with('outer, node'),
-    ),
-    engagement: filter.sub(() => engagementFilters)((sub) =>
-      sub.match([
-        node('outer'),
-        relation('in', '', 'report'),
-        node('node', 'Engagement'),
-      ]),
-    ),
-    pnpExtractionResult: filter.sub(() => pnpExtractionResultFilters)((sub) =>
-      sub.match([
-        node('outer'),
-        relation('out', '', 'reportFileNode'),
-        node('file', 'File'),
-        relation('out', '', 'pnpExtractionResult'),
-        node('node', 'PnpExtractionResult'),
-      ]),
-    ),
-  },
-);
+  ),
+});

@@ -64,8 +64,7 @@ const register = (
   const codecs: LRU<string, InstanceType<ScalarCodecClass>> = registry.codecs;
   for (const scalarCodec of scalarCodecs) {
     const typeName = `${scalarCodec.info.module}::${scalarCodec.info.type}`;
-    const uuid =
-      KNOWN_TYPENAMES.get(typeName) ?? scalarIdsByName?.get(typeName);
+    const uuid = KNOWN_TYPENAMES.get(typeName) ?? scalarIdsByName?.get(typeName);
     if (!uuid) {
       continue;
     }

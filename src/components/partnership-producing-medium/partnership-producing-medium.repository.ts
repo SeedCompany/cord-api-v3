@@ -29,9 +29,7 @@ export class PartnershipProducingMediumRepository extends CommonRepository {
             'keys(apoc.coll.frequenciesAsMap(apoc.coll.flatten(collect(mediumsNode.value)))) as mediums',
           )
           .return(
-            merge(
-              '[medium in mediums | apoc.map.fromValues([medium, null])]',
-            ).as('allAvailable'),
+            merge('[medium in mediums | apoc.map.fromValues([medium, null])]').as('allAvailable'),
           ),
       )
       .comment('Grab all the defined producing partnership pairs')
@@ -43,14 +41,10 @@ export class PartnershipProducingMediumRepository extends CommonRepository {
             node('partnership', 'Partnership'),
           ])
           .return(
-            merge(
-              collect(apoc.map.fromValues(['ppm.medium', 'partnership.id'])),
-            ).as('defined'),
+            merge(collect(apoc.map.fromValues(['ppm.medium', 'partnership.id']))).as('defined'),
           ),
       )
-      .return<{ out: Record<ProductMedium, ID | null> }>(
-        merge('allAvailable', 'defined').as('out'),
-      )
+      .return<{ out: Record<ProductMedium, ID | null> }>(merge('allAvailable', 'defined').as('out'))
       .first();
     if (!res) {
       throw new NotFoundException('Engagement not found');
@@ -58,17 +52,12 @@ export class PartnershipProducingMediumRepository extends CommonRepository {
     return res.out;
   }
 
-  async update(
-    engagementId: ID,
-    input: readonly PartnershipProducingMediumInput[],
-  ) {
+  async update(engagementId: ID, input: readonly PartnershipProducingMediumInput[]) {
     const results = await this.db
       .query()
       .matchNode('eng', 'LanguageEngagement', { id: engagementId })
       .unwind(input.slice(), 'input')
-      .comment(
-        "Deactivate all existing PPMs that don't match the current input",
-      )
+      .comment("Deactivate all existing PPMs that don't match the current input")
       .subQuery(['eng', 'input'], (sub) =>
         sub
           .optionalMatch([

@@ -9,11 +9,7 @@ import {
 import { Identity } from '~/core/authentication';
 import type { Power } from '../../dto';
 import { MissingPowerException } from '../../missing-power.exception';
-import {
-  type ChildListAction,
-  type ChildSingleAction,
-  type PropAction,
-} from '../actions';
+import { type ChildListAction, type ChildSingleAction, type PropAction } from '../actions';
 import { type ResourceObjectContext } from '../object.type';
 import { EdgePrivileges } from './edge-privileges';
 import { PolicyExecutor } from './policy-executor';
@@ -39,37 +35,20 @@ export class Privileges {
   forEdge<TResourceStatic extends ResourceShape<any>>(
     resource: TResourceStatic | EnhancedResource<TResourceStatic>,
     key: SecuredPropsPlusExtraKey<TResourceStatic>,
-  ): EdgePrivileges<
-    TResourceStatic,
-    SecuredPropsPlusExtraKey<TResourceStatic>,
-    PropAction
-  >;
+  ): EdgePrivileges<TResourceStatic, SecuredPropsPlusExtraKey<TResourceStatic>, PropAction>;
   forEdge<TResourceStatic extends ResourceShape<any>>(
     resource: TResourceStatic | EnhancedResource<TResourceStatic>,
     key: ChildSinglesKey<TResourceStatic>,
-  ): EdgePrivileges<
-    TResourceStatic,
-    ChildSinglesKey<TResourceStatic>,
-    ChildSingleAction
-  >;
+  ): EdgePrivileges<TResourceStatic, ChildSinglesKey<TResourceStatic>, ChildSingleAction>;
   forEdge<TResourceStatic extends ResourceShape<any>>(
     resource: TResourceStatic | EnhancedResource<TResourceStatic>,
     key: ChildListsKey<TResourceStatic>,
-  ): EdgePrivileges<
-    TResourceStatic,
-    ChildListsKey<TResourceStatic>,
-    ChildListAction
-  >;
+  ): EdgePrivileges<TResourceStatic, ChildListsKey<TResourceStatic>, ChildListAction>;
   forEdge<TResourceStatic extends ResourceShape<any>>(
     resource: TResourceStatic | EnhancedResource<TResourceStatic>,
     key: string,
   ) {
-    return new EdgePrivileges(
-      EnhancedResource.of(resource),
-      key,
-      undefined,
-      this.policyExecutor,
-    );
+    return new EdgePrivileges(EnhancedResource.of(resource), key, undefined, this.policyExecutor);
   }
 
   /**
@@ -79,11 +58,7 @@ export class Privileges {
     resource: TResourceStatic | EnhancedResource<TResourceStatic>,
     object?: NoInfer<ResourceObjectContext<TResourceStatic>>,
   ) {
-    return new ResourcePrivileges<TResourceStatic>(
-      resource,
-      object,
-      this.policyExecutor,
-    );
+    return new ResourcePrivileges<TResourceStatic>(resource, object, this.policyExecutor);
   }
 
   /**

@@ -36,18 +36,11 @@ export class SerializedWorkflowTransitionDynamicTo extends DataObject {
 
 export const SerializedWorkflowTransitionTo = createUnionType({
   name: 'WorkflowTransitionTo',
-  types: () => [
-    SerializedWorkflowTransitionStaticTo,
-    SerializedWorkflowTransitionDynamicTo,
-  ],
+  types: () => [SerializedWorkflowTransitionStaticTo, SerializedWorkflowTransitionDynamicTo],
   resolveType: (
-    value:
-      | SerializedWorkflowTransitionStaticTo
-      | SerializedWorkflowTransitionDynamicTo,
+    value: SerializedWorkflowTransitionStaticTo | SerializedWorkflowTransitionDynamicTo,
   ) =>
-    'state' in value
-      ? SerializedWorkflowTransitionStaticTo
-      : SerializedWorkflowTransitionDynamicTo,
+    'state' in value ? SerializedWorkflowTransitionStaticTo : SerializedWorkflowTransitionDynamicTo,
 });
 
 @ObjectType('WorkflowCondition')
@@ -77,8 +70,7 @@ export class SerializedWorkflowTransitionPermission extends DataObject {
   role: Role;
 
   @Field({
-    description:
-      'The action for this permission is conditional, described by this field.',
+    description: 'The action for this permission is conditional, described by this field.',
     nullable: true,
   })
   condition?: string;
@@ -168,8 +160,7 @@ export class SerializedWorkflow extends DataObject {
             : {
                 id: dynamicToId(transition.to),
                 label: transition.to.description,
-                relatedStates:
-                  transition.to.relatedStates?.map(serializeState) ?? [],
+                relatedStates: transition.to.relatedStates?.map(serializeState) ?? [],
               },
         conditions: transition.conditions.map((condition) => ({
           label: condition.description,

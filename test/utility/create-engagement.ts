@@ -85,8 +85,7 @@ export async function createInternshipEngagementWithMinimumValues(
 ) {
   const currentUserId = (await getUserFromSession(app)).id;
   const projectId = input.projectId || (await createProject(app)).id;
-  const internId =
-    input.internId || currentUserId || (await createPerson(app)).id;
+  const internId = input.internId || currentUserId || (await createPerson(app)).id;
 
   const result = await app.graphql.mutate(UpdateInternshipEngDoc, {
     input: {

@@ -11,6 +11,4 @@ export const ProgressMeasurement = makeEnum({
 @ObjectType({
   description: SecuredEnum.descriptionFor('progress measurement'),
 })
-export class SecuredProgressMeasurement extends SecuredEnum(
-  ProgressMeasurement,
-) {}
+export class SecuredProgressMeasurement extends SecuredEnum(ProgressMeasurement) {}

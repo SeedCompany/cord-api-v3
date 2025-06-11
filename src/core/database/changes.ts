@@ -35,25 +35,18 @@ export interface SetChangeType<Key, Value> {
 }
 
 export type AnyChangesOf<T> = {
-  [Key in keyof T & string as ChangeKey<
-    Exclude<Key, keyof Resource>,
-    T
-  >]?: ChangeOf<T[Key]>;
+  [Key in keyof T & string as ChangeKey<Exclude<Key, keyof Resource>, T>]?: ChangeOf<T[Key]>;
 } & {
   // allow id to be passed in and removed from changes as it's what we are doing
   // all over the app.
   id?: ID;
 };
 
-export type ChangesOf<
-  TResource,
-  Changes extends AnyChangesOf<TResource>,
-> = Partial<Omit<Changes, keyof Resource> & AndModifiedAt<TResource>>;
+export type ChangesOf<TResource, Changes extends AnyChangesOf<TResource>> = Partial<
+  Omit<Changes, keyof Resource> & AndModifiedAt<TResource>
+>;
 
-type ChangeKey<Key extends keyof T & string, T> = T[Key] extends SetChangeType<
-  infer Override,
-  any
->
+type ChangeKey<Key extends keyof T & string, T> = T[Key] extends SetChangeType<infer Override, any>
   ? Override extends string
     ? Override
     : never
@@ -67,9 +60,7 @@ type ChangeKey<Key extends keyof T & string, T> = T[Key] extends SetChangeType<
 
 type ChangeOf<Val> = Val extends SetChangeType<any, infer Override>
   ? Override
-  :
-      | RawChangeOf<UnwrapSecured<Val> & {}>
-      | (null extends UnwrapSecured<Val> ? null : never);
+  : RawChangeOf<UnwrapSecured<Val> & {}> | (null extends UnwrapSecured<Val> ? null : never);
 
 export type RawChangeOf<Val> = IsFileField<Val> extends true
   ? CreateDefinedFileVersionInput
@@ -102,9 +93,7 @@ type DbAllowableChanges<T> = {
   >]?: UnwrapSecured<T[K]> | Variable;
 };
 
-type AndModifiedAt<T> = T extends { modifiedAt: DateTime }
-  ? Pick<T, 'modifiedAt'>
-  : unknown;
+type AndModifiedAt<T> = T extends { modifiedAt: DateTime } ? Pick<T, 'modifiedAt'> : unknown;
 
 /**
  * Given the existing object and proposed changes, return only the changes
@@ -179,10 +168,7 @@ export const getChanges =
 export const isRelation = <TResourceStatic extends ResourceShape<any>>(
   resource: EnhancedResource<TResourceStatic>,
   prop: string,
-) =>
-  !resource.props.has(prop) &&
-  prop.endsWith('Id') &&
-  resource.props.has(prop.slice(0, -2));
+) => !resource.props.has(prop) && prop.endsWith('Id') && resource.props.has(prop.slice(0, -2));
 
 export const compareNullable =
   <T>(fn: (a: T, b: T) => boolean) =>
@@ -201,10 +187,7 @@ export const isSame = compareNullable((a: unknown, b: unknown) => {
     return +(a as number) === +(b as number);
   }
   if (Array.isArray(a) && Array.isArray(b)) {
-    return (
-      entries(difference(a, b)).length === 0 &&
-      entries(difference(b, a)).length === 0
-    );
+    return entries(difference(a, b)).length === 0 && entries(difference(b, a)).length === 0;
   }
   return a === b;
 });

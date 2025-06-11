@@ -1,9 +1,4 @@
-import {
-  type EnhancedResource,
-  many,
-  type Many,
-  type ResourceShape,
-} from '~/common';
+import { type EnhancedResource, many, type Many, type ResourceShape } from '~/common';
 import { type ResourceAction } from '../actions';
 import {
   ChildRelationshipGranter,
@@ -22,13 +17,12 @@ export type ChildrenGranterFn<TResourceStatic extends ResourceShape<any>> = (
   granter: ChildRelationshipsGranter<TResourceStatic>,
 ) => Many<ChildRelationshipGranter<TResourceStatic>>;
 
-export class ResourceGranter<
-  TResourceStatic extends ResourceShape<any>,
-> extends PermGranter<TResourceStatic, ResourceAction> {
+export class ResourceGranter<TResourceStatic extends ResourceShape<any>> extends PermGranter<
+  TResourceStatic,
+  ResourceAction
+> {
   protected propGrants: ReadonlyArray<PropGranter<TResourceStatic>> = [];
-  protected childRelationshipGrants: ReadonlyArray<
-    ChildRelationshipGranter<TResourceStatic>
-  > = [];
+  protected childRelationshipGrants: ReadonlyArray<ChildRelationshipGranter<TResourceStatic>> = [];
 
   constructor(protected resource: EnhancedResource<TResourceStatic>) {
     super();
@@ -44,16 +38,12 @@ export class ResourceGranter<
    * unless the prop defines its own condition.
    */
   protected specifically(grants: PropsGranterFn<TResourceStatic>): this {
-    const propsGranter = PropGranter.forResource(
-      this.resource,
-      this.stagedCondition,
-    );
+    const propsGranter = PropGranter.forResource(this.resource, this.stagedCondition);
 
     const newGrants = many(grants(propsGranter));
 
     const cloned = this.clone();
-    cloned.trailingCondition =
-      newGrants.length > 0 ? undefined : cloned.trailingCondition;
+    cloned.trailingCondition = newGrants.length > 0 ? undefined : cloned.trailingCondition;
     cloned.propGrants = [...this.propGrants, ...newGrants];
     return cloned;
   }
@@ -76,20 +66,13 @@ export class ResourceGranter<
    * unless the relation defines its own condition.
    */
   protected children(relationGrants: ChildrenGranterFn<TResourceStatic>): this {
-    const granter = ChildRelationshipGranter.forResource(
-      this.resource,
-      this.stagedCondition,
-    );
+    const granter = ChildRelationshipGranter.forResource(this.resource, this.stagedCondition);
 
     const newGrants = many(relationGrants(granter));
 
     const cloned = this.clone();
-    cloned.trailingCondition =
-      newGrants.length > 0 ? undefined : cloned.trailingCondition;
-    cloned.childRelationshipGrants = [
-      ...this.childRelationshipGrants,
-      ...newGrants,
-    ];
+    cloned.trailingCondition = newGrants.length > 0 ? undefined : cloned.trailingCondition;
+    cloned.childRelationshipGrants = [...this.childRelationshipGrants, ...newGrants];
     return cloned;
   }
 
@@ -109,9 +92,7 @@ export class ResourceGranter<
       ...super[extract](),
       resource: this.resource,
       props: this.propGrants.map((prop) => prop[extract]()),
-      childRelationships: this.childRelationshipGrants.map((rel) =>
-        rel[extract](),
-      ),
+      childRelationships: this.childRelationshipGrants.map((rel) => rel[extract]()),
     };
   }
 

@@ -34,14 +34,10 @@ export abstract class ChildRelationshipGranter<
     resource: EnhancedResource<TResourceStatic>,
     stagedCondition: Condition<TResourceStatic> | undefined,
   ): ChildRelationshipsGranter<TResourceStatic> {
-    const granter = createLazyRecord<
-      ChildRelationshipsGranter<TResourceStatic>
-    >({
+    const granter = createLazyRecord<ChildRelationshipsGranter<TResourceStatic>>({
       getKeys: () => resource.childKeys,
       calculate: (rel) => {
-        const cls = resource.childSingleKeys.has(rel)
-          ? ChildSingleGranter
-          : ChildListGranter;
+        const cls = resource.childSingleKeys.has(rel) ? ChildSingleGranter : ChildListGranter;
         return new cls(resource, [rel as any], stagedCondition) as any;
       },
     });
@@ -107,13 +103,8 @@ export class ChildListGranter<
   }
 }
 
-export type ChildRelationshipsGranter<
-  TResourceStatic extends ResourceShape<any>,
-> = Record<
+export type ChildRelationshipsGranter<TResourceStatic extends ResourceShape<any>> = Record<
   ChildSinglesKey<TResourceStatic>,
   Omit<ChildSingleGranter<TResourceStatic>, 'extract'>
 > &
-  Record<
-    ChildListsKey<TResourceStatic>,
-    Omit<ChildListGranter<TResourceStatic>, 'extract'>
-  >;
+  Record<ChildListsKey<TResourceStatic>, Omit<ChildListGranter<TResourceStatic>, 'extract'>>;

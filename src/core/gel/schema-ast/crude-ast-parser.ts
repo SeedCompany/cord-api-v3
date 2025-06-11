@@ -17,12 +17,8 @@ export class CrudeAstParser {
 
     const rawBlocks = this.segmentBlocks(parentText);
     const children = rawBlocks.map(({ outer, inner, self }) => {
-      const outerAbsOffset = Position.within(outer, parentText).shift(
-        parentStart,
-      );
-      const innerAbsOffset = inner
-        ? Position.within(inner, outer).shift(outerAbsOffset)
-        : null;
+      const outerAbsOffset = Position.within(outer, parentText).shift(parentStart);
+      const innerAbsOffset = inner ? Position.within(inner, outer).shift(outerAbsOffset) : null;
 
       const rawChild = SchemaNode.from({
         file: input.file,
@@ -50,9 +46,7 @@ export class CrudeAstParser {
 
   private nodeFactory(
     input: SchemaNode,
-  ):
-    | readonly [type: { prototype: SchemaNode }, extra: Record<string, any>]
-    | Nil {
+  ): readonly [type: { prototype: SchemaNode }, extra: Record<string, any>] | Nil {
     const module = /^module\s+(\S+)/i.exec(input.text);
     if (module) {
       return [SchemaModule, { name: module[1] }];
@@ -94,9 +88,7 @@ export class CrudeAstParser {
         return [];
       }
 
-      const body = prefix.endsWith('{}')
-        ? blockBodies[++stubbedBlockIdx]
-        : null;
+      const body = prefix.endsWith('{}') ? blockBodies[++stubbedBlockIdx] : null;
 
       // strip leading empty lines
       let block = prefix.replace(/^\s*\n/, '');

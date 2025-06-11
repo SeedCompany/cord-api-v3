@@ -14,16 +14,9 @@ import { Privileges } from '../authorization';
 import { EngagementService } from '../engagement';
 import { type EngagementListInput, EngagementStatus } from '../engagement/dto';
 import { LocationService } from '../location';
-import {
-  type LocationListInput,
-  type SecuredLocationList,
-} from '../location/dto';
+import { type LocationListInput, type SecuredLocationList } from '../location/dto';
 import { ProjectService } from '../project';
-import {
-  IProject,
-  type ProjectListInput,
-  type SecuredProjectList,
-} from '../project/dto';
+import { IProject, type ProjectListInput, type SecuredProjectList } from '../project/dto';
 import {
   type CreateLanguage,
   Language,
@@ -77,10 +70,7 @@ export class LanguageService {
   }
 
   private secure(dto: UnsecuredDto<Language>) {
-    const ethnologue = this.ethnologueLanguageService.secure(
-      dto.ethnologue,
-      dto.sensitivity,
-    );
+    const ethnologue = this.ethnologueLanguageService.secure(dto.ethnologue, dto.sensitivity);
 
     return {
       ...this.privileges.for(Language).secure(dto),
@@ -112,10 +102,7 @@ export class LanguageService {
       );
     }
 
-    const updated = await this.repo.update(
-      { id: language.id, ...simpleChanges },
-      view?.changeset,
-    );
+    const updated = await this.repo.update({ id: language.id, ...simpleChanges }, view?.changeset);
 
     return this.secure(updated);
   }
@@ -142,10 +129,7 @@ export class LanguageService {
     };
   }
 
-  async listLocations(
-    dto: Language,
-    input: LocationListInput,
-  ): Promise<SecuredLocationList> {
+  async listLocations(dto: Language, input: LocationListInput): Promise<SecuredLocationList> {
     return await this.locationService.listLocationForResource(
       this.privileges.for(Language, dto).forEdge('locations'),
       dto,
@@ -153,10 +137,7 @@ export class LanguageService {
     );
   }
 
-  async listProjects(
-    language: Language,
-    input: ProjectListInput,
-  ): Promise<SecuredProjectList> {
+  async listProjects(language: Language, input: ProjectListInput): Promise<SecuredProjectList> {
     const projectListOutput = await this.projectService.list({
       ...input,
       filter: { ...input.filter, languageId: language.id },
@@ -186,9 +167,7 @@ export class LanguageService {
 
     try {
       const engagements = await Promise.all(
-        engagementIds.map((engagementId) =>
-          this.engagementService.readOne(engagementId),
-        ),
+        engagementIds.map((engagementId) => this.engagementService.readOne(engagementId)),
       );
       const statusesToIgnore = setOf([
         EngagementStatus.InDevelopment,
@@ -199,18 +178,14 @@ export class LanguageService {
       const dates = engagements
         .filter(
           (engagement) =>
-            engagement.status.value &&
-            !setHas(statusesToIgnore, engagement.status.value),
+            engagement.status.value && !setHas(statusesToIgnore, engagement.status.value),
         )
         .map((engagement) => engagement.startDate.value)
         .filter(isNotFalsy);
 
-      const canRead = engagements.every(
-        (engagement) => engagement.startDate.canRead,
-      );
+      const canRead = engagements.every((engagement) => engagement.startDate.canRead);
 
-      const value =
-        dates.length && canRead ? CalendarDate.min(...dates) : undefined;
+      const value = dates.length && canRead ? CalendarDate.min(...dates) : undefined;
 
       return {
         canRead,
@@ -229,12 +204,7 @@ export class LanguageService {
 
   async addLocation(languageId: ID, locationId: ID): Promise<void> {
     try {
-      await this.locationService.addLocationToNode(
-        'Language',
-        languageId,
-        'locations',
-        locationId,
-      );
+      await this.locationService.addLocationToNode('Language', languageId, 'locations', locationId);
     } catch (e) {
       throw new ServerException('Could not add location to language', e);
     }

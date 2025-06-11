@@ -4,9 +4,7 @@ import { member, Policy, Role, sensMediumOrLower } from '../util';
 @Policy(Role.ExperienceOperations, (r) => [
   r.EthnologueLanguage.read,
   r.Language.read,
-  r.Organization.whenAny(sensMediumOrLower).read.specifically((p) => [
-    p.address.none,
-  ]),
+  r.Organization.whenAny(sensMediumOrLower).read.specifically((p) => [p.address.none]),
   r.Partner.when(sensMediumOrLower)
     .read.when(member)
     .read.specifically((p) => p.many('pmcEntityCode', 'pointOfContact').none)

@@ -21,6 +21,4 @@ export type DbTypeOf<Dto> = {
   [K in keyof Dto as Exclude<K, 'canDelete'>]: DbValueOf<Dto[K]>;
 };
 
-type DbValueOf<Val> = Val extends SetDbType<infer Override>
-  ? Override
-  : UnwrapSecured<Val>;
+type DbValueOf<Val> = Val extends SetDbType<infer Override> ? Override : UnwrapSecured<Val>;

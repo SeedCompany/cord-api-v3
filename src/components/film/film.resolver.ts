@@ -21,10 +21,7 @@ export class FilmResolver {
   @Query(() => Film, {
     description: 'Look up a film by its ID',
   })
-  async film(
-    @Loader(FilmLoader) films: LoaderOf<FilmLoader>,
-    @IdArg() id: ID,
-  ): Promise<Film> {
+  async film(@Loader(FilmLoader) films: LoaderOf<FilmLoader>, @IdArg() id: ID): Promise<Film> {
     return await films.load(id);
   }
 
@@ -43,9 +40,7 @@ export class FilmResolver {
   @Mutation(() => CreateFilmOutput, {
     description: 'Create a film',
   })
-  async createFilm(
-    @Args('input') { film: input }: CreateFilmInput,
-  ): Promise<CreateFilmOutput> {
+  async createFilm(@Args('input') { film: input }: CreateFilmInput): Promise<CreateFilmOutput> {
     const film = await this.filmService.create(input);
     return { film };
   }
@@ -53,9 +48,7 @@ export class FilmResolver {
   @Mutation(() => UpdateFilmOutput, {
     description: 'Update a film',
   })
-  async updateFilm(
-    @Args('input') { film: input }: UpdateFilmInput,
-  ): Promise<UpdateFilmOutput> {
+  async updateFilm(@Args('input') { film: input }: UpdateFilmInput): Promise<UpdateFilmOutput> {
     const film = await this.filmService.update(input);
     return { film };
   }

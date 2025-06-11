@@ -1,11 +1,4 @@
-import {
-  Args,
-  Float,
-  Mutation,
-  Parent,
-  ResolveField,
-  Resolver,
-} from '@nestjs/graphql';
+import { Args, Float, Mutation, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { sumBy } from 'lodash';
 import { Loader, type LoaderOf } from '~/core';
 import { BudgetService } from '../budget';

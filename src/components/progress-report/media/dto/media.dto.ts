@@ -1,13 +1,6 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { setOf } from '@seedcompany/common';
-import {
-  EnhancedResource,
-  IdField,
-  type IdOf,
-  Resource,
-  Variant,
-  type VariantOf,
-} from '~/common';
+import { EnhancedResource, IdField, type IdOf, Resource, Variant, type VariantOf } from '~/common';
 import { type LinkTo } from '~/core';
 import { type SetDbType } from '~/core/database';
 import { e } from '~/core/gel';
@@ -24,12 +17,7 @@ export type VariantGroup = IdOf<'ProgressReportMediaVariantGroup'>;
 @InputType({ isAbstract: true })
 @ObjectType()
 export class ProgressReportMedia extends Resource {
-  static BaseNodeProps = [
-    ...EnhancedResource.of(Resource).props,
-    'category',
-    'creator',
-    'variant',
-  ];
+  static BaseNodeProps = [...EnhancedResource.of(Resource).props, 'category', 'creator', 'variant'];
   static readonly Parent = () =>
     import('../../dto/progress-report.dto').then((m) => m.ProgressReport);
   static readonly ConfirmThisClassPassesSensitivityToPolicies = true;
@@ -37,9 +25,7 @@ export class ProgressReportMedia extends Resource {
   static Variants = ProgressReportHighlight.Variants;
   // Only the last variant is publicly visible (accessible by anyone anonymously)
   // Saved in DB, so adjust with caution
-  static PublicVariants = setOf(
-    ProgressReportHighlight.Variants.slice(-1).map((v) => v.key),
-  );
+  static PublicVariants = setOf(ProgressReportHighlight.Variants.slice(-1).map((v) => v.key));
 
   readonly report: IdOf<ProgressReport>;
 

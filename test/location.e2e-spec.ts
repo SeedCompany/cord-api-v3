@@ -201,9 +201,7 @@ describe('Location e2e', () => {
     );
     const updated = result.updateLocation.location;
     expect(updated).toBeTruthy();
-    expect(updated.defaultMarketingRegion.value!.id).toBe(
-      newMarketingRegion.id,
-    );
+    expect(updated.defaultMarketingRegion.value!.id).toBe(newMarketingRegion.id);
   });
 
   it('update location with funding account', async () => {

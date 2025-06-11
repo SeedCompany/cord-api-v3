@@ -13,19 +13,12 @@ import { Privileges } from '../authorization';
 import { EngagementService } from '../engagement';
 import { type EngagementListInput } from '../engagement/dto';
 import { LanguageService } from '../language';
-import {
-  type LanguageListInput,
-  type SecuredLanguageList,
-} from '../language/dto';
+import { type LanguageListInput, type SecuredLanguageList } from '../language/dto';
 import { LocationLoader } from '../location';
 import { type Location, LocationType } from '../location/dto';
 import { type FinancialReportingType } from '../partnership/dto';
 import { ProjectService } from '../project';
-import {
-  IProject,
-  type ProjectListInput,
-  type SecuredProjectList,
-} from '../project/dto';
+import { IProject, type ProjectListInput, type SecuredProjectList } from '../project/dto';
 import {
   type CreatePartner,
   Partner,
@@ -51,10 +44,7 @@ export class PartnerService {
   ) {}
 
   async create(input: CreatePartner): Promise<Partner> {
-    this.verifyFinancialReportingType(
-      input.financialReportingTypes,
-      input.types,
-    );
+    this.verifyFinancialReportingType(input.financialReportingTypes, input.types);
 
     if (input.countries) {
       await this.verifyCountries(input.countries);
@@ -69,8 +59,7 @@ export class PartnerService {
 
   async readOnePartnerByOrgId(id: ID): Promise<Partner> {
     const partnerId = await this.repo.partnerIdByOrg(id);
-    if (!partnerId)
-      throw new NotFoundException('No Partner Exists for this Org Id');
+    if (!partnerId) throw new NotFoundException('No Partner Exists for this Org Id');
 
     return await this.readOne(partnerId);
   }
@@ -156,10 +145,7 @@ export class PartnerService {
     };
   }
 
-  async listProjects(
-    partner: Partner,
-    input: ProjectListInput,
-  ): Promise<SecuredProjectList> {
+  async listProjects(partner: Partner, input: ProjectListInput): Promise<SecuredProjectList> {
     const projectListOutput = await this.projectService.list({
       ...input,
       filter: { ...input.filter, partnerId: partner.id },
@@ -172,10 +158,7 @@ export class PartnerService {
     };
   }
 
-  async listLanguages(
-    partner: Partner,
-    input: LanguageListInput,
-  ): Promise<SecuredLanguageList> {
+  async listLanguages(partner: Partner, input: LanguageListInput): Promise<SecuredLanguageList> {
     const languageListOutput = await this.languageService.list({
       ...input,
       filter: { ...input.filter, partnerId: partner.id },
@@ -210,10 +193,7 @@ export class PartnerService {
     financialReportingTypes: readonly FinancialReportingType[] | undefined,
     types: readonly PartnerType[] | undefined,
   ) {
-    return financialReportingTypes?.length &&
-      !types?.includes(PartnerType.Managing)
-      ? false
-      : true;
+    return financialReportingTypes?.length && !types?.includes(PartnerType.Managing) ? false : true;
   }
 
   private async verifyCountries(ids: ReadonlyArray<ID<Location>>) {
@@ -231,10 +211,7 @@ export class PartnerService {
 }
 
 class LocationTypeException extends InputException {
-  constructor(
-    readonly allowedTypes: readonly LocationType[],
-    readonly invalidIds: ID[],
-  ) {
+  constructor(readonly allowedTypes: readonly LocationType[], readonly invalidIds: ID[]) {
     super('Given locations do not match the expected type');
   }
 }

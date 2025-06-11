@@ -3,9 +3,7 @@ import { graphql, type InputOf } from '~/graphql';
 import { type TestApp } from './create-app';
 import { runAsAdmin } from './login';
 
-export type ExecuteProjectTransitionInput = InputOf<
-  typeof TransitionProjectDoc
->;
+export type ExecuteProjectTransitionInput = InputOf<typeof TransitionProjectDoc>;
 type Step = ExecuteProjectTransitionInput['bypassTo'] & {};
 
 export const stepsFromEarlyConversationToBeforeActive: Step[] = [
@@ -38,19 +36,12 @@ export const changeProjectStep = async (app: TestApp, id: ID, to: Step) => {
   return project.step.transitions;
 };
 
-export const forceProjectTo = async (
-  app: TestApp,
-  project: ID,
-  bypassTo: Step,
-) =>
+export const forceProjectTo = async (app: TestApp, project: ID, bypassTo: Step) =>
   await runAsAdmin(app, async () => {
     return await transitionProject(app, { project, bypassTo });
   });
 
-export const transitionProject = async (
-  app: TestApp,
-  input: ExecuteProjectTransitionInput,
-) => {
+export const transitionProject = async (app: TestApp, input: ExecuteProjectTransitionInput) => {
   const result = await app.graphql.mutate(TransitionProjectDoc, { input });
   return result.transitionProject;
 };

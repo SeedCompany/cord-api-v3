@@ -87,9 +87,7 @@ export class UnauthorizedException extends InputException {
     const scope = object ? 'this' : 'any';
     if (action === 'create') {
       const message = edges
-        ? `${prefix} create ${edges} for ${scope} ${
-            object ? resourceName : resources
-          }`
+        ? `${prefix} create ${edges} for ${scope} ${object ? resourceName : resources}`
         : `${prefix} create ${resources}`;
       return new UnauthorizedException(message);
     }

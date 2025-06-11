@@ -52,13 +52,8 @@ export class ProgressReportVarianceExplanationService {
     // Don't allow changing to a deprecated reason.
     // Here to be nice and allow updating the comments even if the current
     // reason is deprecated.
-    if (
-      changes.reasons?.some((r) => ReasonOptions.instance.deprecated.has(r))
-    ) {
-      throw new InputException(
-        'Reason is deprecated and cannot be used',
-        'reasons',
-      );
+    if (changes.reasons?.some((r) => ReasonOptions.instance.deprecated.has(r))) {
+      throw new InputException('Reason is deprecated and cannot be used', 'reasons');
     }
 
     this.privilegesFor(report).verifyChanges(changes);

@@ -2,13 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CachedByArg, setOf } from '@seedcompany/common';
 import { DateTime } from 'luxon';
 import type { Writable } from 'ts-essentials';
-import {
-  type ID,
-  Poll,
-  type Role,
-  ServerException,
-  UnauthorizedException,
-} from '~/common';
+import { type ID, Poll, type Role, ServerException, UnauthorizedException } from '~/common';
 import { IEventBus } from '~/core/events';
 import { ILogger, Logger } from '~/core/logger';
 import { SystemAgentRepository } from '../../../components/user/system-agent.repository';
@@ -47,10 +41,7 @@ export class SessionManager {
     return newSession;
   }
 
-  async resumeSession(
-    token: string,
-    impersonatee?: Session['impersonatee'],
-  ): Promise<Session> {
+  async resumeSession(token: string, impersonatee?: Session['impersonatee']): Promise<Session> {
     this.logger.debug('Decoding token', { token });
 
     const { iat } = this.jwt.decode(token);
@@ -68,20 +59,14 @@ export class SessionManager {
 
     if (!result) {
       this.logger.debug('Failed to find active token in database', { token });
-      throw new NoSessionException(
-        'Session has not been established',
-        'NoSession',
-      );
+      throw new NoSessionException('Session has not been established', 'NoSession');
     }
 
     impersonatee =
       impersonatee && result.userId
         ? {
             id: impersonatee?.id ?? ghost?.id,
-            roles: setOf([
-              ...(impersonatee.roles ?? []),
-              ...(result.impersonateeRoles ?? []),
-            ]),
+            roles: setOf([...(impersonatee.roles ?? []), ...(result.impersonateeRoles ?? [])]),
           }
         : undefined;
 
@@ -105,18 +90,13 @@ export class SessionManager {
     if (impersonatee) {
       const allowImpersonation = new Poll();
       await this.sessionHost.withSession(requesterSession, async () => {
-        const event = new CanImpersonateEvent(
-          requesterSession,
-          allowImpersonation,
-        );
+        const event = new CanImpersonateEvent(requesterSession, allowImpersonation);
         await this.events.publish(event);
       });
       if (!(allowImpersonation.plurality && !allowImpersonation.vetoed)) {
         // Don't expose what the requester is unable to do as this could leak
         // private information.
-        throw new UnauthorizedException(
-          'You are not authorized to perform this impersonation',
-        );
+        throw new UnauthorizedException('You are not authorized to perform this impersonation');
       }
     }
 
@@ -144,9 +124,7 @@ export class SessionManager {
     return new Proxy(session, {
       get: (target: Session, p: string | symbol, receiver: any) => {
         if (p === 'userId' && target.userId === unresolvedId) {
-          throw new ServerException(
-            'Have not yet connected to database to get root user ID',
-          );
+          throw new ServerException('Have not yet connected to database to get root user ID');
         }
         if (p === 'withRoles') {
           return (...roles: Role[]) =>
@@ -155,8 +133,7 @@ export class SessionManager {
             });
         }
         if (p === 'then') {
-          return (...args: any) =>
-            promiseOfRootId.then(() => session).then(...args);
+          return (...args: any) => promiseOfRootId.then(() => session).then(...args);
         }
         return Reflect.get(target, p, receiver);
       },
@@ -168,12 +145,8 @@ export class SessionManager {
     return this.repo.waitForRootUserId();
   }
 
-  async asUser<R>(
-    user: ID<'User'> | Session,
-    fn: (session: Session) => Promise<R>,
-  ): Promise<R> {
-    const session =
-      typeof user === 'string' ? await this.sessionForUser(user) : user;
+  async asUser<R>(user: ID<'User'> | Session, fn: (session: Session) => Promise<R>): Promise<R> {
+    const session = typeof user === 'string' ? await this.sessionForUser(user) : user;
     return await this.sessionHost.withSession(session, () => fn(session));
   }
 

@@ -1,10 +1,4 @@
-import {
-  Args,
-  Mutation,
-  Parent,
-  ResolveField,
-  Resolver,
-} from '@nestjs/graphql';
+import { Args, Mutation, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { type ID, IdArg } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { ProjectLoader } from '../project';
@@ -59,9 +53,7 @@ export class ProjectChangeRequestResolver {
   @Mutation(() => DeleteProjectChangeRequestOutput, {
     description: 'Delete a project change request',
   })
-  async deleteProjectChangeRequest(
-    @IdArg() id: ID,
-  ): Promise<DeleteProjectChangeRequestOutput> {
+  async deleteProjectChangeRequest(@IdArg() id: ID): Promise<DeleteProjectChangeRequestOutput> {
     await this.service.delete(id);
     return { success: true };
   }

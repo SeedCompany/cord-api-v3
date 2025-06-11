@@ -6,11 +6,7 @@ import { codecs } from '../codecs';
 import { customScalars } from './scalars';
 import { addCustomScalarImports, type GeneratorParams } from './util';
 
-export async function generateQueryBuilder({
-  client,
-  root,
-  gelDir,
-}: GeneratorParams) {
+export async function generateQueryBuilder({ client, root, gelDir }: GeneratorParams) {
   const qbDir = gelDir.createDirectory('generated-client');
   await runQueryBuilderGenerator({
     options: {
@@ -45,10 +41,9 @@ export async function generateQueryBuilder({
 
 function addJsExtensionDeepPathsOfGelLibrary(qbDir: Directory) {
   for (const file of qbDir.addSourceFilesAtPaths('*')) {
-    const declarations = [
-      ...file.getImportDeclarations(),
-      ...file.getExportDeclarations(),
-    ].filter((d) => d.getModuleSpecifierValue()?.startsWith('gel/'));
+    const declarations = [...file.getImportDeclarations(), ...file.getExportDeclarations()].filter(
+      (d) => d.getModuleSpecifierValue()?.startsWith('gel/'),
+    );
     for (const decl of declarations) {
       decl.setModuleSpecifier(decl.getModuleSpecifierValue()! + '.js');
     }
@@ -71,9 +66,7 @@ function changeImplicitIDType(qbDir: Directory) {
   // Change implicit return shapes that are just the id to be ID type.
   const typesystem = qbDir.addSourceFileAtPath(`typesystem.ts`);
   addCustomScalarImports(typesystem, [customScalars.get('ID')!]);
-  replaceText(typesystem, (prev) =>
-    prev.replaceAll('{ id: string }', '{ id: ID }'),
-  );
+  replaceText(typesystem, (prev) => prev.replaceAll('{ id: string }', '{ id: ID }'));
 }
 
 function updateCastMapsForOurCustomScalars(qbDir: Directory) {
@@ -151,8 +144,7 @@ function adjustToImmutableTypes(qbDir: Directory) {
   replaceText(typesystem.getTypeAliasOrThrow('computeObjectShape'), (prev) =>
     !prev.includes('> = typeutil')
       ? prev
-      : prev.replaceAll('> = typeutil', '> = Readonly<typeutil').slice(0, -1) +
-        '>;',
+      : prev.replaceAll('> = typeutil', '> = Readonly<typeutil').slice(0, -1) + '>;',
   );
   replaceText(typesystem.getTypeAliasOrThrow('computeTsTypeCard'), (prev) =>
     prev
@@ -175,10 +167,7 @@ function addTypeNarrowingToStdScalars(qbDir: Directory) {
  * Fixes shapes of types that have overloaded a pointer from an ancestor/grandparent.
  * Currently, the QB only works with overloaded pointers of a direct parent.
  */
-function fixAncestorOverloads(
-  qbDir: Directory,
-  fqnTypePointerMap: Record<string, Many<string>>,
-) {
+function fixAncestorOverloads(qbDir: Directory, fqnTypePointerMap: Record<string, Many<string>>) {
   for (const [fqn, pointers] of Object.entries(fqnTypePointerMap)) {
     const module = qbDir.addSourceFileAtPath(
       `modules/${fqn.split('::').slice(0, -1).join('/')}.ts`,
@@ -189,15 +178,10 @@ function fixAncestorOverloads(
       .join(' | ');
     const shape = module.getTypeAliasOrThrow(`$${type}λShape`);
     replaceText(shape, (prev) =>
-      prev.replaceAll(
-        /(?<==.+)[\w._$]+λShape/g,
-        (parent) => `Omit<${parent}, ${pointerStr}>`,
-      ),
+      prev.replaceAll(/(?<==.+)[\w._$]+λShape/g, (parent) => `Omit<${parent}, ${pointerStr}>`),
     );
   }
 }
 
-const replaceText = <N extends ts.Node>(
-  node: Node<N>,
-  replacer: (prevText: string) => string,
-) => node.replaceWithText(replacer(node.getFullText()));
+const replaceText = <N extends ts.Node>(node: Node<N>, replacer: (prevText: string) => string) =>
+  node.replaceWithText(replacer(node.getFullText()));

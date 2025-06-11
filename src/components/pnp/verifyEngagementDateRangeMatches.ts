@@ -1,10 +1,7 @@
 import { stripIndent } from 'common-tags';
 import { DateTime } from 'luxon';
 import { DateInterval } from '~/common';
-import {
-  type PnpPlanningExtractionResult,
-  PnpProblemType,
-} from './extraction-result';
+import { type PnpPlanningExtractionResult, PnpProblemType } from './extraction-result';
 import { type PlanningSheet } from './planning-sheet';
 
 export function verifyEngagementDateRangeMatches(
@@ -19,21 +16,16 @@ export function verifyEngagementDateRangeMatches(
     // fall
   }
 
-  const matches =
-    engagementRange && pnpRange && engagementRange.equals(pnpRange);
+  const matches = engagementRange && pnpRange && engagementRange.equals(pnpRange);
 
   if (matches) {
     return true;
   }
 
-  result.addProblem(
-    MismatchedEngagementDateRange,
-    sheet.projectDateCells.start,
-    {
-      eng: engagementRange?.toISO(),
-      pnp: pnpRange?.toISO(),
-    },
-  );
+  result.addProblem(MismatchedEngagementDateRange, sheet.projectDateCells.start, {
+    eng: engagementRange?.toISO(),
+    pnp: pnpRange?.toISO(),
+  });
 
   return false;
 }

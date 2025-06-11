@@ -12,8 +12,7 @@ export const determineRootUser = (env: EnvironmentService) => {
   const user = JSON.parse(env.string('ROOT_USER').optional('{}')) as {
     [_ in 'id' | 'email' | 'password']?: string;
   };
-  const email =
-    env.string('ROOT_USER_EMAIL').optional() ?? user.email ?? 'devops@tsco.org';
+  const email = env.string('ROOT_USER_EMAIL').optional() ?? user.email ?? 'devops@tsco.org';
   const password =
     env.string('ROOT_USER_PASSWORD').optional() ??
     user.password ??

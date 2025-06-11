@@ -10,16 +10,11 @@ import { currentUser } from './matching';
 
 type RelationshipDefinition = Record<
   string,
-  | [
-      baseNodeLabel: keyof ResourceMap | 'BaseNode',
-      id: Nullable<ID> | readonly ID[],
-    ]
+  | [baseNodeLabel: keyof ResourceMap | 'BaseNode', id: Nullable<ID> | readonly ID[]]
   | Variable
   | typeof currentUser
 >;
-type AnyDirectionalDefinition = Partial<
-  Record<RelationDirection, RelationshipDefinition>
->;
+type AnyDirectionalDefinition = Partial<Record<RelationDirection, RelationshipDefinition>>;
 
 /**
  * Creates relationships to/from `node` to/from other base nodes.
@@ -95,27 +90,24 @@ export function createRelationships<TResourceStatic extends ResourceShape<any>>(
       ? { [directionOrDefinition]: maybeLabelsToRelationships }
       : directionOrDefinition;
 
-  const flattened = Object.entries(normalizedArgs).flatMap(
-    ([direction, relationships]) =>
-      Object.entries(relationships ?? {}).flatMap(([relLabel, varOrTuple]) =>
-        many(Array.isArray(varOrTuple) ? varOrTuple[1] ?? [] : varOrTuple).map(
-          (id, i) => ({
-            nodeLabel: Array.isArray(varOrTuple) ? varOrTuple[0] : undefined, // no labels for variables
-            id,
-            direction: direction as RelationDirection,
-            relLabel: relLabel,
-            variable: !Array.isArray(varOrTuple)
-              ? varOrTuple instanceof Variable
-                ? varOrTuple.value
-                : currentUser.is(varOrTuple)
-                ? relLabel
-                : undefined
-              : Array.isArray(varOrTuple[1])
-              ? `${relLabel}${i}`
-              : relLabel,
-          }),
-        ),
-      ),
+  const flattened = Object.entries(normalizedArgs).flatMap(([direction, relationships]) =>
+    Object.entries(relationships ?? {}).flatMap(([relLabel, varOrTuple]) =>
+      many(Array.isArray(varOrTuple) ? varOrTuple[1] ?? [] : varOrTuple).map((id, i) => ({
+        nodeLabel: Array.isArray(varOrTuple) ? varOrTuple[0] : undefined, // no labels for variables
+        id,
+        direction: direction as RelationDirection,
+        relLabel: relLabel,
+        variable: !Array.isArray(varOrTuple)
+          ? varOrTuple instanceof Variable
+            ? varOrTuple.value
+            : currentUser.is(varOrTuple)
+            ? relLabel
+            : undefined
+          : Array.isArray(varOrTuple[1])
+          ? `${relLabel}${i}`
+          : relLabel,
+      })),
+    ),
   );
 
   if (flattened.length === 0) {
@@ -130,9 +122,7 @@ export function createRelationships<TResourceStatic extends ResourceShape<any>>(
 
   const createdAt = DateTime.local();
 
-  const returnTerms = flattened.flatMap((f) =>
-    f.id instanceof Variable ? [] : f.variable ?? [],
-  );
+  const returnTerms = flattened.flatMap((f) => (f.id instanceof Variable ? [] : f.variable ?? []));
   if (returnTerms.length === 0) {
     // Create hash based on input to use as a unique return since a return
     // statement is required for sub-queries but not needed here.
@@ -146,12 +136,7 @@ export function createRelationships<TResourceStatic extends ResourceShape<any>>(
     return query.comment`
       createRelationships(${resource.name})
     `.subQuery(
-      [
-        'node',
-        ...flattened.flatMap(({ id }) =>
-          id instanceof Variable ? id.value : [],
-        ),
-      ],
+      ['node', ...flattened.flatMap(({ id }) => (id instanceof Variable ? id.value : []))],
       (sub) =>
         sub
           .match(
@@ -170,11 +155,7 @@ export function createRelationships<TResourceStatic extends ResourceShape<any>>(
                 // When creating inside of changeset, all relationships into the
                 // node (besides changeset relation) are marked as inactive until
                 // changeset is applied
-                active: !(
-                  inChangeset &&
-                  direction === 'in' &&
-                  relLabel !== 'changeset'
-                ),
+                active: !(inChangeset && direction === 'in' && relLabel !== 'changeset'),
                 createdAt,
               }),
               node(variable),

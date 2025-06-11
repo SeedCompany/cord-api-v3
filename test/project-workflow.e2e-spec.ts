@@ -1,11 +1,7 @@
 import { Role } from '~/common';
 import { graphql } from '~/graphql';
 import { PartnerType } from '../src/components/partner/dto';
-import {
-  ProjectStatus,
-  ProjectStep,
-  ProjectType,
-} from '../src/components/project/dto';
+import { ProjectStatus, ProjectStep, ProjectType } from '../src/components/project/dto';
 import {
   createDirectProduct,
   createFundingAccount,
@@ -291,9 +287,7 @@ describe('Project-Workflow e2e', () => {
       expect(project.state).toBe(ProjectStep.PendingChangeToPlanConfirmation);
 
       await projectManager.login();
-      expect(
-        await project.transitionByLabel('Retract Approval Request'),
-      ).toBeTruthy();
+      expect(await project.transitionByLabel('Retract Approval Request')).toBeTruthy();
 
       await controller.login();
       await project.executeByLabel('Approve Change to Plan');
@@ -338,21 +332,20 @@ describe('Project-Workflow e2e', () => {
       expect(project.state).toBe(ProjectStep.ActiveChangedPlan);
     });
 
-    it.each([
-      ProjectStep.Active,
-      ProjectStep.ActiveChangedPlan,
-      ProjectStep.Suspended,
-    ])('Termination from %s', async (startingState) => {
-      await runAsAdmin(app, () => project.bypassTo(startingState));
+    it.each([ProjectStep.Active, ProjectStep.ActiveChangedPlan, ProjectStep.Suspended])(
+      'Termination from %s',
+      async (startingState) => {
+        await runAsAdmin(app, () => project.bypassTo(startingState));
 
-      await project.executeByLabel('Discuss Termination');
-      expect(project.state).toBe(ProjectStep.DiscussingTermination);
-      await project.executeByLabel('Submit for Approval');
-      expect(project.state).toBe(ProjectStep.PendingTerminationApproval);
+        await project.executeByLabel('Discuss Termination');
+        expect(project.state).toBe(ProjectStep.DiscussingTermination);
+        await project.executeByLabel('Submit for Approval');
+        expect(project.state).toBe(ProjectStep.PendingTerminationApproval);
 
-      await fieldOpsDirector.login();
-      await project.executeByLabel('Approve Termination');
-      expect(project.state).toBe(ProjectStep.Terminated);
-    });
+        await fieldOpsDirector.login();
+        await project.executeByLabel('Approve Termination');
+        expect(project.state).toBe(ProjectStep.Terminated);
+      },
+    );
   });
 });

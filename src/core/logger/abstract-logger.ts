@@ -1,9 +1,4 @@
-import {
-  type ILogger,
-  type LogEntry,
-  type LogEntryContext,
-  LogLevel,
-} from './logger.interface';
+import { type ILogger, type LogEntry, type LogEntryContext, LogLevel } from './logger.interface';
 
 type MsgOrContext = string | ({ message: string } & LogEntryContext);
 
@@ -48,9 +43,7 @@ export abstract class AbstractLogger implements ILogger {
   }
 
   log(
-    levelOrEntry:
-      | LogLevel
-      | ({ level: LogLevel; message: string } & LogEntryContext),
+    levelOrEntry: LogLevel | ({ level: LogLevel; message: string } & LogEntryContext),
     msgOrContext?: string | ({ message: string } & LogEntryContext),
     context?: LogEntryContext,
   ): void {
@@ -60,12 +53,8 @@ export abstract class AbstractLogger implements ILogger {
     // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
     this.logEntry({
       ...(context || {}),
-      ...(typeof msgOrContext === 'string'
-        ? { message: msgOrContext }
-        : msgOrContext),
-      ...(typeof levelOrEntry === 'string'
-        ? { level: levelOrEntry }
-        : levelOrEntry),
+      ...(typeof msgOrContext === 'string' ? { message: msgOrContext } : msgOrContext),
+      ...(typeof levelOrEntry === 'string' ? { level: levelOrEntry } : levelOrEntry),
     } as LogEntry);
   }
 
@@ -76,9 +65,7 @@ export abstract class AbstractLogger implements ILogger {
   ): LogEntry {
     return {
       ...(context || {}),
-      ...(typeof msgOrContext === 'string'
-        ? { message: msgOrContext }
-        : msgOrContext),
+      ...(typeof msgOrContext === 'string' ? { message: msgOrContext } : msgOrContext),
       level,
     };
   }
