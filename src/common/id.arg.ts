@@ -5,5 +5,4 @@ import { ValidateIdPipe } from './validators/short-id.validator';
 export const IdArg = (
   opts: Partial<ArgsOptions> = {},
   ...pipes: Array<Type<PipeTransform> | PipeTransform>
-) =>
-  Args({ name: 'id', type: () => IdType, ...opts }, ValidateIdPipe, ...pipes);
+) => Args({ name: 'id', type: () => IdType, ...opts }, ValidateIdPipe, ...pipes);

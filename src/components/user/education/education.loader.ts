@@ -4,9 +4,7 @@ import { Education } from './dto';
 import { EducationService } from './education.service';
 
 @LoaderFactory(() => Education)
-export class EducationLoader
-  implements DataLoaderStrategy<Education, ID<Education>>
-{
+export class EducationLoader implements DataLoaderStrategy<Education, ID<Education>> {
   constructor(private readonly educations: EducationService) {}
 
   async loadMany(ids: ReadonlyArray<ID<Education>>) {

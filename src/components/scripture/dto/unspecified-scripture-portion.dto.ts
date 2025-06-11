@@ -1,18 +1,13 @@
 import { Field, InputType, Int, ObjectType } from '@nestjs/graphql';
 import { IsPositive } from 'class-validator';
 import { SecuredProperty } from '~/common';
-import {
-  IsValidBook,
-  IsValidVerseTotal,
-} from './scripture-reference.validator';
+import { IsValidBook, IsValidVerseTotal } from './scripture-reference.validator';
 
 @InputType({
-  description:
-    'An unspecified range of scripture denoted only by the total number of verses',
+  description: 'An unspecified range of scripture denoted only by the total number of verses',
 })
 @ObjectType({
-  description:
-    'An unspecified range of scripture denoted only by the total number of verses',
+  description: 'An unspecified range of scripture denoted only by the total number of verses',
   isAbstract: true,
 })
 export abstract class UnspecifiedScripturePortionInput {
@@ -32,10 +27,7 @@ export abstract class UnspecifiedScripturePortionInput {
 
 @ObjectType()
 export abstract class UnspecifiedScripturePortion extends UnspecifiedScripturePortionInput {
-  static isEqual(
-    a: UnspecifiedScripturePortion,
-    b: UnspecifiedScripturePortion,
-  ) {
+  static isEqual(a: UnspecifiedScripturePortion, b: UnspecifiedScripturePortion) {
     return a.book === b.book && a.totalVerses === b.totalVerses;
   }
 }

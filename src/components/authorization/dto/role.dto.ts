@@ -12,5 +12,4 @@ export const rolesForScope =
 
 export const withoutScope = (role: ScopedRole): Role => splitScope(role)[1];
 
-export const splitScope = (role: ScopedRole) =>
-  role.split(':') as [AuthScope, Role];
+export const splitScope = (role: ScopedRole) => role.split(':') as [AuthScope, Role];

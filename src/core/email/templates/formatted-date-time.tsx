@@ -16,13 +16,7 @@ export const FormattedDateTime = (props: FormattedDateTimeProps) => {
   return <>{formatted}</>;
 };
 
-const DefaultTimezoneContext = createContext<ZoneLike | undefined>(
-  Settings.defaultZone,
-);
+const DefaultTimezoneContext = createContext<ZoneLike | undefined>(Settings.defaultZone);
 
 export const DefaultTimezoneWrapper = (zone: ZoneLike) => (el: ReactElement) =>
-  (
-    <DefaultTimezoneContext.Provider value={zone}>
-      {el}
-    </DefaultTimezoneContext.Provider>
-  );
+  <DefaultTimezoneContext.Provider value={zone}>{el}</DefaultTimezoneContext.Provider>;

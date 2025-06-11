@@ -8,10 +8,7 @@ import { MediaService } from './media.service';
 
 @Migration('2023-09-06T13:00:00')
 export class DetectExistingMediaMigration extends BaseMigration {
-  constructor(
-    private readonly mediaService: MediaService,
-    private readonly moduleRef: ModuleRef,
-  ) {
+  constructor(private readonly mediaService: MediaService, private readonly moduleRef: ModuleRef) {
     super();
   }
 
@@ -57,15 +54,9 @@ export class DetectExistingMediaMigration extends BaseMigration {
               relation('out', '', 'mimeType', ACTIVE),
               node('mt', 'Property'),
             ])
-            .optionalMatch([
-              node('fv'),
-              relation('out', '', 'media'),
-              node('media', 'Media'),
-            ])
+            .optionalMatch([node('fv'), relation('out', '', 'media'), node('media', 'Media')])
             .with('fv, mt, media')
-            .raw(
-              `where mt.value starts with '${type}/' and (media is null or media.duration = 0)`,
-            )
+            .raw(`where mt.value starts with '${type}/' and (media is null or media.duration = 0)`)
             .return('fv')
             .orderBy('fv.createdAt')
             .skip(page * size)

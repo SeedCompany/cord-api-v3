@@ -104,8 +104,7 @@ export const apoc = {
     /**
      * @see https://neo4j.com/docs/apoc/current/overview/apoc.text/apoc.text.join/
      */
-    join: (list: ExpressionInput, delimiter: string) =>
-      fn('apoc.text.join')(list, delimiter),
+    join: (list: ExpressionInput, delimiter: string) => fn('apoc.text.join')(list, delimiter),
   },
 };
 
@@ -151,11 +150,8 @@ export const reduce = (
 /**
  * @see https://neo4j.com/docs/cypher-manual/current/functions/predicate/#functions-any
  */
-export const any = (
-  variable: string,
-  list: ExpressionInput,
-  predicate: ExpressionInput,
-) => fn('any')(`${variable} IN ${exp(list)} WHERE ${exp(predicate)}`);
+export const any = (variable: string, list: ExpressionInput, predicate: ExpressionInput) =>
+  fn('any')(`${variable} IN ${exp(list)} WHERE ${exp(predicate)}`);
 
 export const db = {
   index: {

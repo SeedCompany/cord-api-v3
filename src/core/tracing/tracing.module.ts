@@ -61,17 +61,13 @@ export class TracingModule implements OnModuleInit {
           return;
         }
         if (msg.startsWith('Segment too large to send')) {
-          const matches = msg.match(
-            /Segment too large to send: (\{.+}) \((\d+) bytes\)./,
-          );
+          const matches = msg.match(/Segment too large to send: (\{.+}) \((\d+) bytes\)./);
           try {
             this.logger.warning(
               'Segment too large to send',
               matches
                 ? {
-                    ...JSON.parse(
-                      matches[1].replace('"trace_id:"', '"trace_id":"'),
-                    ),
+                    ...JSON.parse(matches[1].replace('"trace_id:"', '"trace_id":"')),
                     size: matches[2],
                   }
                 : undefined,

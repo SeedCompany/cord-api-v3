@@ -6,10 +6,6 @@ import {
 } from './prompt-variant-response.resolver';
 
 @Module({
-  providers: [
-    PromptResponseResolver,
-    PromptVariantResponseResolver,
-    VariantResponseResolver,
-  ],
+  providers: [PromptResponseResolver, PromptVariantResponseResolver, VariantResponseResolver],
 })
 export class PromptsModule {}

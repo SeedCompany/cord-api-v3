@@ -30,9 +30,7 @@ export type AsEdgeQLParams<TResourceStatic extends ResourceShape<any>> = Pick<
   'resource'
 > & { namespace: string };
 
-export abstract class Condition<
-  TResourceStatic extends ResourceShape<any> = ResourceShape<any>,
-> {
+export abstract class Condition<TResourceStatic extends ResourceShape<any> = ResourceShape<any>> {
   static id(permission: Condition | boolean) {
     if (typeof permission === 'boolean') {
       return String(permission);
@@ -67,17 +65,12 @@ export abstract class Condition<
   /**
    * DB query where clause fragment that represents the condition.
    */
-  abstract asCypherCondition(
-    query: Query,
-    other: AsCypherParams<TResourceStatic>,
-  ): string;
+  abstract asCypherCondition(query: Query, other: AsCypherParams<TResourceStatic>): string;
 
   /**
    * Add with statement aliases.
    */
-  setupEdgeQLContext?(
-    params: AsEdgeQLParams<TResourceStatic>,
-  ): Record<string, string>;
+  setupEdgeQLContext?(params: AsEdgeQLParams<TResourceStatic>): Record<string, string>;
 
   abstract asEdgeQLCondition(params: AsEdgeQLParams<TResourceStatic>): string;
 
@@ -86,28 +79,19 @@ export abstract class Condition<
    * This should not logically change anything, but rather just simplify unnecessary conditions.
    * Note: The current context, this, should not be used.
    */
-  union?(
-    this: void,
-    conditions: readonly this[],
-  ): Many<Condition<TResourceStatic>>;
+  union?(this: void, conditions: readonly this[]): Many<Condition<TResourceStatic>>;
 
   /**
    * Intersect multiple conditions of this type together to a single one.
    * This should not logically change anything, but rather just simplify unnecessary conditions.
    * Note: The current context, this, should not be used.
    */
-  intersect?(
-    this: void,
-    conditions: readonly this[],
-  ): Many<Condition<TResourceStatic>>;
+  intersect?(this: void, conditions: readonly this[]): Many<Condition<TResourceStatic>>;
 
   /**
    * Stringify the condition.
    * This is used to uniquely identify the condition.
    * And is what is displayed in dumper/debugger.
    */
-  abstract [inspect.custom](
-    depth: number,
-    options: InspectOptionsStylized,
-  ): string;
+  abstract [inspect.custom](depth: number, options: InspectOptionsStylized): string;
 }

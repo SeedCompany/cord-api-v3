@@ -86,10 +86,7 @@ describe('Engagement-Workflow e2e', () => {
         }
         await changeProjectStep(app, transProject.id, ProjectStep.Active);
       });
-      const lEngagementStatus = await getCurrentEngagementStatus(
-        app,
-        langEngagement.id,
-      );
+      const lEngagementStatus = await getCurrentEngagementStatus(app, langEngagement.id);
       expect(lEngagementStatus.status.value).toBe(EngagementStatus.Active);
     });
     it('internship', async function () {
@@ -117,10 +114,7 @@ describe('Engagement-Workflow e2e', () => {
         }
         await changeProjectStep(app, internProject.id, ProjectStep.Active);
       });
-      const lEngagementStatus = await getCurrentEngagementStatus(
-        app,
-        internEngagement.id,
-      );
+      const lEngagementStatus = await getCurrentEngagementStatus(app, internEngagement.id);
       expect(lEngagementStatus.status.value).toBe(EngagementStatus.Active);
     });
   });
@@ -134,17 +128,9 @@ describe('Engagement-Workflow e2e', () => {
       const langEngagement = await createLanguageEngagement(app, {
         projectId: transProject.id,
       });
-      await transitionEngagementToActive(
-        app,
-        transProject.id,
-        langEngagement.id,
-      );
+      await transitionEngagementToActive(app, transProject.id, langEngagement.id);
       await runAsAdmin(app, async function () {
-        await changeProjectStep(
-          app,
-          transProject.id,
-          ProjectStep.DiscussingChangeToPlan,
-        );
+        await changeProjectStep(app, transProject.id, ProjectStep.DiscussingChangeToPlan);
       });
       await changeLanguageEngagementStatus(
         app,
@@ -159,11 +145,7 @@ describe('Engagement-Workflow e2e', () => {
         langEngagement.id,
         EngagementStatus.FinalizingCompletion,
       );
-      await changeLanguageEngagementStatus(
-        app,
-        langEngagement.id,
-        EngagementStatus.Completed,
-      );
+      await changeLanguageEngagementStatus(app, langEngagement.id, EngagementStatus.Completed);
     });
 
     it('engagement terminated', async function () {
@@ -173,18 +155,10 @@ describe('Engagement-Workflow e2e', () => {
       const langEngagement = await createLanguageEngagement(app, {
         projectId: transProject.id,
       });
-      await transitionEngagementToActive(
-        app,
-        transProject.id,
-        langEngagement.id,
-      );
+      await transitionEngagementToActive(app, transProject.id, langEngagement.id);
 
       await runAsAdmin(app, async function () {
-        await changeProjectStep(
-          app,
-          transProject.id,
-          ProjectStep.DiscussingChangeToPlan,
-        );
+        await changeProjectStep(app, transProject.id, ProjectStep.DiscussingChangeToPlan);
       });
 
       await changeLanguageEngagementStatus(
@@ -192,21 +166,13 @@ describe('Engagement-Workflow e2e', () => {
         langEngagement.id,
         EngagementStatus.DiscussingSuspension,
       );
-      await changeLanguageEngagementStatus(
-        app,
-        langEngagement.id,
-        EngagementStatus.Suspended,
-      );
+      await changeLanguageEngagementStatus(app, langEngagement.id, EngagementStatus.Suspended);
       await changeLanguageEngagementStatus(
         app,
         langEngagement.id,
         EngagementStatus.DiscussingTermination,
       );
-      await changeLanguageEngagementStatus(
-        app,
-        langEngagement.id,
-        EngagementStatus.Terminated,
-      );
+      await changeLanguageEngagementStatus(app, langEngagement.id, EngagementStatus.Terminated);
     });
   });
 });

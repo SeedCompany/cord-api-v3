@@ -10,10 +10,7 @@ import { FieldZoneService } from './field-zone.service';
 import { RestrictZoneDirectorRemovalHandler } from './handlers/restrict-zone-director-removal.handler';
 
 @Module({
-  imports: [
-    forwardRef(() => AuthorizationModule),
-    forwardRef(() => UserModule),
-  ],
+  imports: [forwardRef(() => AuthorizationModule), forwardRef(() => UserModule)],
   providers: [
     FieldZoneResolver,
     FieldZoneService,

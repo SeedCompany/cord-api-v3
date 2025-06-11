@@ -55,9 +55,7 @@ describe('Language e2e', () => {
 
     expect(actual.id).toBe(language.id);
     expect(isValidId(actual.id)).toBeTruthy();
-    expect(actual.ethnologue.population.value).toEqual(
-      language.ethnologue.population.value,
-    );
+    expect(actual.ethnologue.population.value).toEqual(language.ethnologue.population.value);
     expect(actual.name.value).toEqual(language.name.value);
   });
 
@@ -84,9 +82,7 @@ describe('Language e2e', () => {
 
     it('a single language ethnologue property when language is minimally defined', async () => {
       const language = await createLanguageMinimal(app);
-      const newEthnologueCode = faker.helpers
-        .replaceSymbols('???')
-        .toLowerCase();
+      const newEthnologueCode = faker.helpers.replaceSymbols('???').toLowerCase();
 
       const updated = await updateLanguage(app, {
         id: language.id,
@@ -167,9 +163,7 @@ describe('Language e2e', () => {
     const project = await createProject(app);
     await app.graphql.mutate(
       graphql(`
-        mutation createLanguageEngagement(
-          $input: CreateLanguageEngagementInput!
-        ) {
+        mutation createLanguageEngagement($input: CreateLanguageEngagementInput!) {
           createLanguageEngagement(input: $input) {
             engagement {
               status {
@@ -263,9 +257,7 @@ describe('Language e2e', () => {
 
   it('should throw error if signLanguageCode is not valid', async () => {
     const signLanguageCode = 'XXX1';
-    await expect(
-      createLanguage(app, { signLanguageCode }),
-    ).rejects.toThrowGqlError(
+    await expect(createLanguage(app, { signLanguageCode })).rejects.toThrowGqlError(
       errors.validation({
         'language.signLanguageCode': {
           matches: 'Must be 2 uppercase letters followed by 2 digits',
@@ -387,10 +379,7 @@ describe('Language e2e', () => {
   });
 });
 
-async function updateLanguage(
-  app: TestApp,
-  input: InputOf<typeof UpdateLanguageDoc>,
-) {
+async function updateLanguage(app: TestApp, input: InputOf<typeof UpdateLanguageDoc>) {
   const result = await app.graphql.mutate(UpdateLanguageDoc, { input });
   const updated = result.updateLanguage.language;
   expect(updated.id).toBe(input.id);

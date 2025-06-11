@@ -1,9 +1,6 @@
 import { isPlainObject, mapValues } from '@seedcompany/common';
 
-export const maskSecrets = (
-  obj: Record<string, any>,
-  depth = 3,
-): Record<string, any> =>
+export const maskSecrets = (obj: Record<string, any>, depth = 3): Record<string, any> =>
   mapValues(obj, (key, val) =>
     isSecret(key, val)
       ? maskSecret(val)
@@ -12,10 +9,7 @@ export const maskSecrets = (
       : val,
   ).asRecord;
 
-export const dropSecrets = (
-  obj: Record<string, any>,
-  depth = 3,
-): Record<string, any> =>
+export const dropSecrets = (obj: Record<string, any>, depth = 3): Record<string, any> =>
   mapValues(obj, (key, val) =>
     isSecret(key, val)
       ? undefined

@@ -35,10 +35,7 @@ export class ValidatePartnershipDateOverridesOnProjectChangeHandler
     );
     if (!conflicts) return;
     const orgLoader = await this.resources.getLoader(OrganizationLoader);
-    const partnershipToOrg = mapEntries(partnerships, (p) => [
-      p.id,
-      p.organization.id,
-    ]).asRecord;
+    const partnershipToOrg = mapEntries(partnerships, (p) => [p.id, p.organization.id]).asRecord;
     const orgs = await orgLoader.loadMany(
       conflicts.map((conflict) => partnershipToOrg[conflict.id]),
     );

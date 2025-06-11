@@ -3,13 +3,7 @@ import { patchMethod } from '@seedcompany/common';
 import { AsyncLocalStorage } from 'async_hooks';
 import { type Client, Options } from 'gel';
 import { BaseRawConnection as Connection } from 'gel/dist/baseConn.js';
-import {
-  BehaviorSubject,
-  combineLatest,
-  identity,
-  map,
-  type Observable,
-} from 'rxjs';
+import { BehaviorSubject, combineLatest, identity, map, type Observable } from 'rxjs';
 import { lazyRef } from '~/common/lazy-ref';
 
 export type OptionsFn = (options: Options) => Options;
@@ -24,10 +18,7 @@ interface OptionsLayer {
 }
 
 @Injectable()
-export class OptionsContext
-  extends AsyncLocalStorage<OptionsLayer>
-  implements OnModuleDestroy
-{
+export class OptionsContext extends AsyncLocalStorage<OptionsLayer> implements OnModuleDestroy {
   private readonly root: OptionsLayer;
 
   constructor(root: Options) {
@@ -47,9 +38,7 @@ export class OptionsContext
    */
   usingOptions<R>(applyOptions: ApplyOptions, runWith: () => R) {
     const mapper$ =
-      applyOptions instanceof BehaviorSubject
-        ? applyOptions
-        : new BehaviorSubject(applyOptions);
+      applyOptions instanceof BehaviorSubject ? applyOptions : new BehaviorSubject(applyOptions);
 
     const parent$ = this.currentLayer.options$;
     // Create options' holder for this new layer

@@ -8,24 +8,16 @@ import {
   unwrapSecured,
 } from '~/common';
 import { IEventBus } from '~/core';
-import {
-  findTransition,
-  WorkflowService,
-} from '../../workflow/workflow.service';
+import { findTransition, WorkflowService } from '../../workflow/workflow.service';
 import { IProject, type Project } from '../dto';
 import { ProjectService } from '../project.service';
-import {
-  type ExecuteProjectTransitionInput,
-  ProjectWorkflowEvent as WorkflowEvent,
-} from './dto';
+import { type ExecuteProjectTransitionInput, ProjectWorkflowEvent as WorkflowEvent } from './dto';
 import { ProjectTransitionedEvent } from './events/project-transitioned.event';
 import { ProjectWorkflow } from './project-workflow';
 import { ProjectWorkflowRepository } from './project-workflow.repository';
 
 @Injectable()
-export class ProjectWorkflowService extends WorkflowService(
-  () => ProjectWorkflow,
-) {
+export class ProjectWorkflowService extends WorkflowService(() => ProjectWorkflow) {
   constructor(
     @Inject(forwardRef(() => ProjectService))
     private readonly projects: ProjectService & {},
@@ -68,16 +60,11 @@ export class ProjectWorkflowService extends WorkflowService(
 
     const next =
       this.getBypassIfValid(input) ??
-      findTransition(
-        await this.getAvailableTransitions(previous),
-        input.transition,
-      );
+      findTransition(await this.getAvailableTransitions(previous), input.transition);
 
     const unsecuredEvent = await this.repo.recordEvent({
       project: projectId,
-      ...(typeof next !== 'string'
-        ? { transition: next.key, to: next.to }
-        : { to: next }),
+      ...(typeof next !== 'string' ? { transition: next.key, to: next.to } : { to: next }),
       notes,
     });
 
@@ -85,12 +72,7 @@ export class ProjectWorkflowService extends WorkflowService(
 
     RequiredWhen.verify(IProject, updated);
 
-    const event = new ProjectTransitionedEvent(
-      updated,
-      previous.step,
-      next,
-      unsecuredEvent,
-    );
+    const event = new ProjectTransitionedEvent(updated, previous.step, next, unsecuredEvent);
     await this.eventBus.publish(event);
 
     return this.projects.secure(event.project);

@@ -7,10 +7,7 @@ import { createLocation } from './create-location';
 import { createRegion } from './create-region';
 import * as fragments from './fragments';
 import { runAsAdmin } from './login';
-import {
-  changeProjectStep,
-  stepsFromEarlyConversationToBeforeActive,
-} from './transition-project';
+import { changeProjectStep, stepsFromEarlyConversationToBeforeActive } from './transition-project';
 import { updateProject } from './update-project';
 
 export const changeInternshipEngagementStatus = async (
@@ -26,13 +23,8 @@ export const changeInternshipEngagementStatus = async (
 };
 const ChangeInternshipEngStatusDoc = graphql(
   `
-    mutation ChangeInternshipEngagementStatus(
-      $id: ID!
-      $status: EngagementStatus!
-    ) {
-      updateInternshipEngagement(
-        input: { engagement: { id: $id, status: $status } }
-      ) {
+    mutation ChangeInternshipEngagementStatus($id: ID!, $status: EngagementStatus!) {
+      updateInternshipEngagement(input: { engagement: { id: $id, status: $status } }) {
         engagement {
           ...internshipEngagement
         }
@@ -56,13 +48,8 @@ export const changeLanguageEngagementStatus = async (
 };
 const ChangeLangEngStatusDoc = graphql(
   `
-    mutation ChangeLanguageEngagementStatus(
-      $id: ID!
-      $status: EngagementStatus!
-    ) {
-      updateLanguageEngagement(
-        input: { engagement: { id: $id, status: $status } }
-      ) {
+    mutation ChangeLanguageEngagementStatus($id: ID!, $status: EngagementStatus!) {
+      updateLanguageEngagement(input: { engagement: { id: $id, status: $status } }) {
         engagement {
           ...languageEngagement
         }
@@ -93,10 +80,7 @@ export const transitionEngagementToActive = async (
     }
     await changeProjectStep(app, projectId, 'Active');
   });
-  const lEngagementStatus = await getCurrentEngagementStatus(
-    app,
-    langEngagementId,
-  );
+  const lEngagementStatus = await getCurrentEngagementStatus(app, langEngagementId);
   expect(lEngagementStatus.status.value).toBe('Active');
   return lEngagementStatus;
 };

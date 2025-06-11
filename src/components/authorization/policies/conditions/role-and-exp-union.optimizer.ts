@@ -52,15 +52,10 @@ export class RoleAndExpUnionOptimizer implements Optimizer {
   }
 
   isRoleAndX(condition: Condition) {
-    if (
-      !(condition instanceof AndConditions) ||
-      condition.conditions.length !== 2
-    ) {
+    if (!(condition instanceof AndConditions) || condition.conditions.length !== 2) {
       return null;
     }
-    const roleIdx = condition.conditions.findIndex(
-      (cc) => cc instanceof RoleCondition,
-    );
+    const roleIdx = condition.conditions.findIndex((cc) => cc instanceof RoleCondition);
     if (roleIdx === -1) {
       return null;
     }

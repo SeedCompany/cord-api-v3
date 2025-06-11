@@ -43,12 +43,7 @@ export class ParameterTransformer {
 
     if (value instanceof Duration) {
       value = value.shiftTo('months', 'days', 'seconds', 'milliseconds');
-      return new Neo.Duration(
-        value.months,
-        value.days,
-        value.seconds,
-        value.milliseconds * 1e6,
-      );
+      return new Neo.Duration(value.months, value.days, value.seconds, value.milliseconds * 1e6);
     }
 
     if (value instanceof RichTextDocument) {
@@ -69,11 +64,6 @@ export class ParameterTransformer {
 
   private isPlainValue(value: any) {
     const type = typeof value;
-    return (
-      value == null ||
-      type === 'string' ||
-      type === 'boolean' ||
-      type === 'number'
-    );
+    return value == null || type === 'string' || type === 'boolean' || type === 'number';
   }
 }

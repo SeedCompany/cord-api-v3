@@ -1,9 +1,4 @@
-import {
-  Field,
-  InterfaceType,
-  ObjectType,
-  registerEnumType,
-} from '@nestjs/graphql';
+import { Field, InterfaceType, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { type MadeEnum } from '@seedcompany/nest';
 import { stripIndent } from 'common-tags';
 import {
@@ -19,10 +14,7 @@ import { type SetChangeType } from '~/core/database/changes';
 import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
 import { type DbScriptureReferences } from '../../scripture';
-import {
-  type ScriptureRangeInput,
-  SecuredScriptureRanges,
-} from '../../scripture/dto';
+import { type ScriptureRangeInput, SecuredScriptureRanges } from '../../scripture/dto';
 
 @RegisterResource({ db: e.Producible })
 @InterfaceType({

@@ -59,9 +59,7 @@ export class FieldRegionRepository extends DtoRepository(FieldRegion) {
     }
 
     return await this.readOne(result.id).catch((e) => {
-      throw e instanceof NotFoundException
-        ? new ReadAfterCreationFailed(FieldRegion)
-        : e;
+      throw e instanceof NotFoundException ? new ReadAfterCreationFailed(FieldRegion) : e;
     });
   }
 

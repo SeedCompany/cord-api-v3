@@ -192,9 +192,7 @@ describe('User e2e', () => {
     await app.graphql.mutate(
       graphql(`
         mutation assignOrganizationToUser($orgId: ID!, $userId: ID!) {
-          assignOrganizationToUser(
-            input: { request: { orgId: $orgId, userId: $userId } }
-          ) {
+          assignOrganizationToUser(input: { request: { orgId: $orgId, userId: $userId } }) {
             __typename
           }
         }
@@ -241,9 +239,7 @@ describe('User e2e', () => {
     await app.graphql.mutate(
       graphql(`
         mutation assignOrganizationToUser($orgId: ID!, $userId: ID!) {
-          assignOrganizationToUser(
-            input: { request: { orgId: $orgId, userId: $userId } }
-          ) {
+          assignOrganizationToUser(input: { request: { orgId: $orgId, userId: $userId } }) {
             __typename
           }
         }
@@ -258,9 +254,7 @@ describe('User e2e', () => {
     await app.graphql.mutate(
       graphql(`
         mutation removeOrganizationFromUser($orgId: ID!, $userId: ID!) {
-          removeOrganizationFromUser(
-            input: { request: { orgId: $orgId, userId: $userId } }
-          ) {
+          removeOrganizationFromUser(input: { request: { orgId: $orgId, userId: $userId } }) {
             __typename
           }
         }
@@ -276,15 +270,9 @@ describe('User e2e', () => {
     const newUser = await createPerson(app);
     await app.graphql.mutate(
       graphql(`
-        mutation assignOrganizationToUser(
-          $orgId: ID!
-          $userId: ID!
-          $primary: Boolean!
-        ) {
+        mutation assignOrganizationToUser($orgId: ID!, $userId: ID!, $primary: Boolean!) {
           assignOrganizationToUser(
-            input: {
-              request: { orgId: $orgId, userId: $userId, primary: $primary }
-            }
+            input: { request: { orgId: $orgId, userId: $userId, primary: $primary } }
           ) {
             __typename
           }
@@ -304,15 +292,9 @@ describe('User e2e', () => {
     // assign primary organization to user
     await app.graphql.mutate(
       graphql(`
-        mutation assignOrganizationToUser(
-          $orgId: ID!
-          $userId: ID!
-          $primary: Boolean!
-        ) {
+        mutation assignOrganizationToUser($orgId: ID!, $userId: ID!, $primary: Boolean!) {
           assignOrganizationToUser(
-            input: {
-              request: { orgId: $orgId, userId: $userId, primary: $primary }
-            }
+            input: { request: { orgId: $orgId, userId: $userId, primary: $primary } }
           ) {
             __typename
           }
@@ -329,9 +311,7 @@ describe('User e2e', () => {
     await app.graphql.mutate(
       graphql(`
         mutation removeOrganizationFromUser($orgId: ID!, $userId: ID!) {
-          removeOrganizationFromUser(
-            input: { request: { orgId: $orgId, userId: $userId } }
-          ) {
+          removeOrganizationFromUser(input: { request: { orgId: $orgId, userId: $userId } }) {
             __typename
           }
         }

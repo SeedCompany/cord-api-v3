@@ -18,11 +18,7 @@ import {
 import { ResourceLoader } from '~/core';
 import { Identity } from '~/core/authentication';
 import { mapListResults } from '~/core/database/results';
-import {
-  Privileges,
-  type UserResourcePrivileges,
-  withVariant,
-} from '../authorization';
+import { Privileges, type UserResourcePrivileges, withVariant } from '../authorization';
 import {
   type ChangePrompt,
   type ChoosePrompt,
@@ -42,11 +38,7 @@ export const PromptVariantResponseListService = <
   TVariant extends string = VariantOf<TResourceStatic>,
 >(
   repo: ReturnType<
-    typeof PromptVariantResponseRepository<
-      TParentResourceStatic,
-      TResourceStatic,
-      TVariant
-    >
+    typeof PromptVariantResponseRepository<TParentResourceStatic, TResourceStatic, TVariant>
   >,
 ) => {
   @Injectable()
@@ -64,14 +56,12 @@ export const PromptVariantResponseListService = <
     }
 
     protected get resourcePrivileges() {
-      return this.privileges.forResource<
-        typeof PromptVariantResponse<TVariant>
-      >(this.resource as any);
+      return this.privileges.forResource<typeof PromptVariantResponse<TVariant>>(
+        this.resource as any,
+      );
     }
 
-    protected abstract getPrivilegeContext(
-      dto: UnsecuredDto<Resource>,
-    ): Promise<any>;
+    protected abstract getPrivilegeContext(dto: UnsecuredDto<Resource>): Promise<any>;
 
     protected abstract getPrompts(): Promise<readonly Prompt[]>;
 
@@ -112,9 +102,7 @@ export const PromptVariantResponseListService = <
     }
 
     protected async getAvailableVariants(
-      privileges: UserResourcePrivileges<
-        typeof PromptVariantResponse<TVariant>
-      >,
+      privileges: UserResourcePrivileges<typeof PromptVariantResponse<TVariant>>,
     ) {
       const variants = this.resource.Variants.filter((variant) =>
         privileges
@@ -133,9 +121,7 @@ export const PromptVariantResponseListService = <
       const secured = privileges.secure(dto);
       return {
         ...secured,
-        prompt: await mapSecuredValue(secured.prompt, (id) =>
-          this.getPromptById(id),
-        ),
+        prompt: await mapSecuredValue(secured.prompt, (id) => this.getPromptById(id)),
         responses: this.resource.Variants.flatMap((variant) => {
           const variantPrivileges = privileges.forContext(
             withVariant(privileges.context!, variant.key),
@@ -162,9 +148,7 @@ export const PromptVariantResponseListService = <
       };
     }
 
-    async create(
-      input: ChoosePrompt,
-    ): Promise<PromptVariantResponse<TVariant>> {
+    async create(input: ChoosePrompt): Promise<PromptVariantResponse<TVariant>> {
       const edge = this.repo.edge;
       const parent = await this.resources.load(
         // @ts-expect-error yeah we are assuming it's registered
@@ -184,9 +168,7 @@ export const PromptVariantResponseListService = <
       return await this.secure(dto);
     }
 
-    async changePrompt(
-      input: ChangePrompt,
-    ): Promise<PromptVariantResponse<TVariant>> {
+    async changePrompt(input: ChangePrompt): Promise<PromptVariantResponse<TVariant>> {
       const response = await this.repo.readOne(input.id);
       const context = await this.getPrivilegeContext(response);
       const privileges = this.resourcePrivileges.forContext(context);
@@ -231,10 +213,7 @@ export const PromptVariantResponseListService = <
       }
 
       const session = this.identity.current;
-      const responses = mapKeys.fromList(
-        response.responses,
-        (response) => response.variant,
-      ).asMap;
+      const responses = mapKeys.fromList(response.responses, (response) => response.variant).asMap;
       const updated: UnsecuredDto<PromptVariantResponse<TVariant>> = {
         ...response,
         responses: this.resource.Variants.map(({ key }) => ({

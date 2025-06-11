@@ -81,17 +81,13 @@ const buildExp = (exp: ExpressionInput): string => {
     }
 
     const list = exp.filter((e) => e !== undefined).map(buildExp);
-    return shouldMultiline(list)
-      ? `[${makeMultiline(list)}]`
-      : `[${list.join(', ')}]`;
+    return shouldMultiline(list) ? `[${makeMultiline(list)}]` : `[${list.join(', ')}]`;
   }
 
   const pairs = Object.entries(exp).flatMap(([key, value]) =>
     value !== undefined ? `${quoteKey(key)}: ${buildExp(value)}` : [],
   );
-  return shouldMultiline(pairs)
-    ? `{${makeMultiline(pairs)}}`
-    : `{ ${pairs.join(', ')} }`;
+  return shouldMultiline(pairs) ? `{${makeMultiline(pairs)}}` : `{ ${pairs.join(', ')} }`;
 };
 
 const shouldMultiline = (list: string[]) => {

@@ -1,9 +1,5 @@
 import { InterfaceType } from '@nestjs/graphql';
-import {
-  resolveByTypename,
-  Resource,
-  type ResourceRelationsShape,
-} from '~/common';
+import { resolveByTypename, Resource, type ResourceRelationsShape } from '~/common';
 import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
 import { CommentThread } from './comment-thread.dto';

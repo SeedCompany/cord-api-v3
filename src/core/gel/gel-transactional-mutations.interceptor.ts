@@ -1,9 +1,4 @@
-import {
-  type CallHandler,
-  type ExecutionContext,
-  Inject,
-  Injectable,
-} from '@nestjs/common';
+import { type CallHandler, type ExecutionContext, Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '../config/config.service';
 import { TransactionalMutationsInterceptor } from '../database/abstract-transactional-mutations.interceptor';
 import { TransactionContext } from './transaction.context';

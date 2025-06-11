@@ -9,8 +9,7 @@ import { RegisterResource } from '~/core/resources';
   implements: [Resource],
 })
 export class Comment extends Resource {
-  static readonly Parent = () =>
-    import('./comment-thread.dto').then((m) => m.CommentThread);
+  static readonly Parent = () => import('./comment-thread.dto').then((m) => m.CommentThread);
 
   readonly thread: ID;
 

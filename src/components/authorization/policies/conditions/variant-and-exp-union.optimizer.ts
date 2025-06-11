@@ -38,15 +38,10 @@ export class VariantAndExpUnionOptimizer implements Optimizer {
   }
 
   isVariantAndX(condition: Condition) {
-    if (
-      !(condition instanceof AndConditions) ||
-      condition.conditions.length !== 2
-    ) {
+    if (!(condition instanceof AndConditions) || condition.conditions.length !== 2) {
       return null;
     }
-    const variantIdx = condition.conditions.findIndex(
-      (cc) => cc instanceof VariantCondition,
-    );
+    const variantIdx = condition.conditions.findIndex((cc) => cc instanceof VariantCondition);
     if (variantIdx === -1) {
       return null;
     }

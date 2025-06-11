@@ -86,16 +86,10 @@ export class Gel {
   /** Run a query from an edgeql string */
   run<R>(query: TypedEdgeQL<null, R>): Promise<R>;
   /** Run a query from an edgeql string */
-  run<Args extends Record<string, any>, R>(
-    query: TypedEdgeQL<Args, R>,
-    args: Args,
-  ): Promise<R>;
+  run<Args extends Record<string, any>, R>(query: TypedEdgeQL<Args, R>, args: Args): Promise<R>;
 
   /** Run a query from an edgeql file */
-  run<Args, R>(
-    query: (client: Executor, args: Args) => Promise<R>,
-    args: Args,
-  ): Promise<R>;
+  run<Args, R>(query: (client: Executor, args: Args) => Promise<R>, args: Args): Promise<R>;
   /** Run a query from an edgeql file */
   run<R>(query: (client: Executor) => Promise<R>): Promise<R>;
 

@@ -69,9 +69,7 @@ export class UnavailabilityResolver {
     description: 'Delete an unavailability',
     deprecationReason: `This is unfinished functionality, don't use`,
   })
-  async deleteUnavailability(
-    @IdArg() id: ID,
-  ): Promise<DeleteUnavailabilityOutput> {
+  async deleteUnavailability(@IdArg() id: ID): Promise<DeleteUnavailabilityOutput> {
     await this.service.delete(id);
     return { success: true };
   }

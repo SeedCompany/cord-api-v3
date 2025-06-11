@@ -1,8 +1,4 @@
-export function eqlDoesIntersect(
-  actual: string,
-  expected: Iterable<string>,
-  castName?: string,
-) {
+export function eqlDoesIntersect(actual: string, expected: Iterable<string>, castName?: string) {
   const list = [...expected];
   if (list.length === 1) {
     const expectedStr = castName ? `${castName}.${list[0]}` : `'${list[0]}'`;
@@ -11,11 +7,7 @@ export function eqlDoesIntersect(
   return `exists (${eqlLiteralSet(list, castName)} intersect ${actual})`;
 }
 
-export const eqlInLiteralSet = (
-  actual: string,
-  items: Iterable<string>,
-  castName?: string,
-) => {
+export const eqlInLiteralSet = (actual: string, items: Iterable<string>, castName?: string) => {
   const list = [...items];
   if (list.length === 1) {
     const isEnum = castName && castName !== castName.toLowerCase();

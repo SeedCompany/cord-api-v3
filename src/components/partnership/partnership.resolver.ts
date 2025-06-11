@@ -1,17 +1,5 @@
-import {
-  Args,
-  Mutation,
-  Parent,
-  Query,
-  ResolveField,
-  Resolver,
-} from '@nestjs/graphql';
-import {
-  ListArg,
-  mapSecuredValue,
-  SecuredDateRange,
-  viewOfChangeset,
-} from '~/common';
+import { Args, Mutation, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
+import { ListArg, mapSecuredValue, SecuredDateRange, viewOfChangeset } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { ChangesetIds, type IdsAndView, IdsAndViewArg } from '../changeset/dto';
 import { FileNodeLoader, resolveDefinedFile } from '../file';
@@ -79,9 +67,7 @@ export class PartnershipResolver {
     @Parent() partnership: Partnership,
     @Loader(PartnerLoader) partners: LoaderOf<PartnerLoader>,
   ): Promise<SecuredPartner> {
-    return await mapSecuredValue(partnership.partner, ({ id }) =>
-      partners.load(id),
-    );
+    return await mapSecuredValue(partnership.partner, ({ id }) => partners.load(id));
   }
 
   @ResolveField()
@@ -91,10 +77,7 @@ export class PartnershipResolver {
 
   @ResolveField()
   mouRangeOverride(@Parent() partnership: Partnership): SecuredDateRange {
-    return SecuredDateRange.fromPair(
-      partnership.mouStartOverride,
-      partnership.mouEndOverride,
-    );
+    return SecuredDateRange.fromPair(partnership.mouStartOverride, partnership.mouEndOverride);
   }
 
   @Query(() => PartnershipListOutput, {
@@ -116,10 +99,7 @@ export class PartnershipResolver {
   async updatePartnership(
     @Args('input') { partnership: input, changeset }: UpdatePartnershipInput,
   ): Promise<UpdatePartnershipOutput> {
-    const partnership = await this.service.update(
-      input,
-      viewOfChangeset(changeset),
-    );
+    const partnership = await this.service.update(input, viewOfChangeset(changeset));
     return { partnership };
   }
 

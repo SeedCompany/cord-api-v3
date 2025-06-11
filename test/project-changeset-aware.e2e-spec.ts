@@ -67,10 +67,7 @@ const activeProject = async (app: TestApp) => {
   });
 
   await runAsAdmin(app, async () => {
-    for (const next of [
-      ...stepsFromEarlyConversationToBeforeActive,
-      ProjectStep.Active,
-    ]) {
+    for (const next of [...stepsFromEarlyConversationToBeforeActive, ProjectStep.Active]) {
       await changeProjectStep(app, project.id, next);
     }
   });
@@ -291,9 +288,7 @@ describe('Project Changeset Aware e2e', () => {
         },
       },
     );
-    expect(mutationResult.updateProject.project.step.value).toBe(
-      ProjectStep.FinalizingCompletion,
-    );
+    expect(mutationResult.updateProject.project.step.value).toBe(ProjectStep.FinalizingCompletion);
 
     // Query project without changeset
     let result = await readProject(app, project.id);

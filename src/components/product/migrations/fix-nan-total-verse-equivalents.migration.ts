@@ -27,9 +27,7 @@ export class FixNaNTotalVerseEquivalentsMigration extends BaseMigration {
     const products = await this.productService.readManyUnsecured(ids);
 
     for (const p of products) {
-      const correctTotalVerseEquivalent = getTotalVerseEquivalents(
-        ...p.scriptureReferences,
-      );
+      const correctTotalVerseEquivalent = getTotalVerseEquivalents(...p.scriptureReferences);
 
       if (p.__typename === 'DirectScriptureProduct') {
         await this.productService.updateDirect({

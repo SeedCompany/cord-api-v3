@@ -5,8 +5,6 @@ import { FinanceDepartmentIdBlock } from './dto/id-blocks.dto';
 export class IdBlockResolver {
   @ResolveField(() => String)
   blocks(@Parent() idBlock: FinanceDepartmentIdBlock) {
-    return idBlock.blocks
-      .map((range) => `${range.start}-${range.end}`)
-      .join(', ');
+    return idBlock.blocks.map((range) => `${range.start}-${range.end}`).join(', ');
   }
 }

@@ -21,10 +21,7 @@ export class ProgressReportMediaFileIsMediaCheckHandler {
     try {
       await mediaByFv.load(file.latestVersionId);
     } catch (e) {
-      throw new InputException(
-        'File does not appear to be a media file',
-        'file',
-      );
+      throw new InputException('File does not appear to be a media file', 'file');
     }
   }
 }

@@ -1,10 +1,5 @@
 import { applyDecorators } from '@nestjs/common';
-import {
-  type CustomScalar,
-  Field,
-  type FieldOptions,
-  Scalar,
-} from '@nestjs/graphql';
+import { type CustomScalar, Field, type FieldOptions, Scalar } from '@nestjs/graphql';
 import { IsUrl } from 'class-validator';
 import { GraphQLError, Kind, type ValueNode } from 'graphql';
 import { URL } from 'url';
@@ -33,9 +28,7 @@ export class UrlScalar implements CustomScalar<string, string | null> {
 
   parseLiteral(ast: ValueNode): string | null {
     if (ast.kind !== Kind.STRING) {
-      throw new GraphQLError(
-        `Can only validate strings as URLs but got a: ${ast.kind}`,
-      );
+      throw new GraphQLError(`Can only validate strings as URLs but got a: ${ast.kind}`);
     }
     return ast.value;
   }

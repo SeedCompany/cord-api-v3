@@ -7,8 +7,5 @@ export abstract class Sampler {
    *
    * Returns a boolean or a specific rule name indicating why true.
    */
-  abstract shouldTrace(
-    context: ExecutionContext,
-    segment: Segment,
-  ): Promise<string | boolean>;
+  abstract shouldTrace(context: ExecutionContext, segment: Segment): Promise<string | boolean>;
 }

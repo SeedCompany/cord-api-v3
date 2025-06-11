@@ -1,17 +1,8 @@
-import {
-  Args,
-  ArgsType,
-  Parent,
-  ResolveField,
-  Resolver,
-} from '@nestjs/graphql';
+import { Args, ArgsType, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { CalendarDate, DateField, ListArg } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { type Engagement, LanguageEngagement } from '../../engagement/dto';
-import {
-  PeriodicReportLoader,
-  PeriodicReportService,
-} from '../../periodic-report';
+import { PeriodicReportLoader, PeriodicReportService } from '../../periodic-report';
 import {
   PeriodicReportListInput,
   ReportType,
@@ -50,11 +41,7 @@ export class ProgressReportEngagementConnectionResolver {
     @Parent() engagement: Engagement,
     @Args() { date }: PeriodicReportArgs,
   ): Promise<SecuredProgressReport> {
-    const value = await this.service.getReportByDate(
-      engagement.id,
-      date,
-      ReportType.Progress,
-    );
+    const value = await this.service.getReportByDate(engagement.id, date, ReportType.Progress);
     return { canEdit: false, canRead: true, value };
   }
 
@@ -62,13 +49,8 @@ export class ProgressReportEngagementConnectionResolver {
     description:
       'The progress report currently due. This is the period that most recently completed.',
   })
-  async currentProgressReportDue(
-    @Parent() engagement: Engagement,
-  ): Promise<SecuredProgressReport> {
-    const value = await this.service.getCurrentReportDue(
-      engagement.id,
-      ReportType.Progress,
-    );
+  async currentProgressReportDue(@Parent() engagement: Engagement): Promise<SecuredProgressReport> {
+    const value = await this.service.getCurrentReportDue(engagement.id, ReportType.Progress);
     return {
       canEdit: false,
       canRead: true,
@@ -82,10 +64,7 @@ export class ProgressReportEngagementConnectionResolver {
   async latestProgressReportSubmitted(
     @Parent() engagement: Engagement,
   ): Promise<SecuredProgressReport> {
-    const value = await this.service.getLatestReportSubmitted(
-      engagement.id,
-      ReportType.Progress,
-    );
+    const value = await this.service.getLatestReportSubmitted(engagement.id, ReportType.Progress);
     return {
       canEdit: false,
       canRead: true,
@@ -94,16 +73,10 @@ export class ProgressReportEngagementConnectionResolver {
   }
 
   @ResolveField(() => SecuredProgressReport, {
-    description:
-      'The progress report due next. This is the period currently in progress.',
+    description: 'The progress report due next. This is the period currently in progress.',
   })
-  async nextProgressReportDue(
-    @Parent() engagement: Engagement,
-  ): Promise<SecuredProgressReport> {
-    const value = await this.service.getNextReportDue(
-      engagement.id,
-      ReportType.Progress,
-    );
+  async nextProgressReportDue(@Parent() engagement: Engagement): Promise<SecuredProgressReport> {
+    const value = await this.service.getNextReportDue(engagement.id, ReportType.Progress);
     return {
       canEdit: false,
       canRead: true,

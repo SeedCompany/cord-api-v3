@@ -1,10 +1,4 @@
-import {
-  Args,
-  Mutation,
-  Parent,
-  ResolveField,
-  Resolver,
-} from '@nestjs/graphql';
+import { Args, Mutation, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { type ID, IdArg } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { PartnershipLoader } from '../partnership';
@@ -42,8 +36,7 @@ export class PartnershipProducingMediumResolver {
     @Args({
       name: 'input',
       type: () => [PartnershipProducingMediumInput],
-      description:
-        'A partial list of changes to the partners producing which mediums',
+      description: 'A partial list of changes to the partners producing which mediums',
     })
     input: readonly PartnershipProducingMediumInput[],
   ): Promise<UpdatePartnershipProducingMediumOutput> {

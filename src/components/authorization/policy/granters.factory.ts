@@ -5,10 +5,7 @@ import { mapValues } from 'lodash';
 import { EnhancedResource } from '~/common';
 import { ResourcesHost } from '~/core/resources';
 import { discover } from './builder/granter.decorator';
-import {
-  DefaultResourceGranter,
-  ResourceGranter,
-} from './builder/resource-granter';
+import { DefaultResourceGranter, ResourceGranter } from './builder/resource-granter';
 import { type ResourcesGranter } from './granters';
 
 @Injectable()
@@ -27,12 +24,9 @@ export class GrantersFactory {
         ({ meta: { resources, factory }, discoveredClass }) =>
           mapEntries(many(resources), (raw) => {
             const res = EnhancedResource.of(raw);
-            const granter =
-              factory?.(res) ?? new discoveredClass.dependencyType(res);
+            const granter = factory?.(res) ?? new discoveredClass.dependencyType(res);
             if (!(granter instanceof ResourceGranter)) {
-              throw new Error(
-                `Granter for ${res.name} must extend ResourceGranter class`,
-              );
+              throw new Error(`Granter for ${res.name} must extend ResourceGranter class`);
             }
             return [res.name, granter];
           }).asRecord,

@@ -16,11 +16,7 @@ export type TransitionInput<State extends string, Context> = Merge<
   }>
 >;
 
-export type InternalTransition<
-  State extends string,
-  Names extends string,
-  Context,
-> = Merge<
+export type InternalTransition<State extends string, Names extends string, Context> = Merge<
   TransitionInput<State, Context>,
   Readonly<{
     name: Names;

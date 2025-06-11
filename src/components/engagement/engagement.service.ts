@@ -12,14 +12,7 @@ import {
   type UnsecuredDto,
   viewOfChangeset,
 } from '~/common';
-import {
-  ConfigService,
-  HandleIdLookup,
-  IEventBus,
-  ILogger,
-  Logger,
-  ResourceLoader,
-} from '~/core';
+import { ConfigService, HandleIdLookup, IEventBus, ILogger, Logger, ResourceLoader } from '~/core';
 import { type AnyChangesOf } from '~/core/database/changes';
 import { Privileges } from '../authorization';
 import { CeremonyService } from '../ceremony';
@@ -73,10 +66,7 @@ export class EngagementService {
     this.verifyCreationStatus(input.status);
     EngagementDateRangeException.throwIfInvalid(input);
 
-    const engagement = await this.repo.createLanguageEngagement(
-      input,
-      changeset,
-    );
+    const engagement = await this.repo.createLanguageEngagement(input, changeset);
 
     RequiredWhen.verify(LanguageEngagement, engagement);
 
@@ -94,10 +84,7 @@ export class EngagementService {
     this.verifyCreationStatus(input.status);
     EngagementDateRangeException.throwIfInvalid(input);
 
-    const engagement = await this.repo.createInternshipEngagement(
-      input,
-      changeset,
-    );
+    const engagement = await this.repo.createInternshipEngagement(input, changeset);
 
     RequiredWhen.verify(InternshipEngagement, engagement);
 
@@ -131,10 +118,7 @@ export class EngagementService {
   }
 
   @HandleIdLookup([LanguageEngagement, InternshipEngagement])
-  async readOne(
-    id: ID,
-    view?: ObjectView,
-  ): Promise<LanguageEngagement | InternshipEngagement> {
+  async readOne(id: ID, view?: ObjectView): Promise<LanguageEngagement | InternshipEngagement> {
     const dto = await this.repo.readOne(id, view);
     return this.secure(dto);
   }
@@ -155,20 +139,13 @@ export class EngagementService {
   ): Promise<LanguageEngagement> {
     const view: ObjectView = viewOfChangeset(changeset);
 
-    const previous = (await this.repo.readOne(
-      input.id,
-      view,
-    )) as UnsecuredDto<LanguageEngagement>;
+    const previous = (await this.repo.readOne(input.id, view)) as UnsecuredDto<LanguageEngagement>;
     const object = this.secure(previous);
 
     const { methodology, ...maybeChanges } = input;
     const changes = this.repo.getActualLanguageChanges(object, maybeChanges);
     if (changes.status) {
-      await this.engagementRules.verifyStatusChange(
-        input.id,
-        changes.status,
-        changeset,
-      );
+      await this.engagementRules.verifyStatusChange(input.id, changes.status, changeset);
     }
     this.privileges.for(LanguageEngagement, object).verifyChanges(changes);
     EngagementDateRangeException.throwIfInvalid(previous, changes);
@@ -183,10 +160,7 @@ export class EngagementService {
 
     const prevMissing = RequiredWhen.calc(LanguageEngagement, previous);
     const nowMissing = RequiredWhen.calc(LanguageEngagement, updated);
-    if (
-      nowMissing &&
-      (!prevMissing || nowMissing.missing.length >= prevMissing.missing.length)
-    ) {
+    if (nowMissing && (!prevMissing || nowMissing.missing.length >= prevMissing.missing.length)) {
       throw nowMissing;
     }
 
@@ -216,28 +190,18 @@ export class EngagementService {
 
     const changes = this.repo.getActualInternshipChanges(object, input);
     if (changes.status) {
-      await this.engagementRules.verifyStatusChange(
-        input.id,
-        changes.status,
-        changeset,
-      );
+      await this.engagementRules.verifyStatusChange(input.id, changes.status, changeset);
     }
     this.privileges
       .for(InternshipEngagement, object)
       .verifyChanges(changes, { pathPrefix: 'engagement' });
     EngagementDateRangeException.throwIfInvalid(previous, changes);
 
-    const updated = await this.repo.updateInternship(
-      { id: object.id, ...changes },
-      changeset,
-    );
+    const updated = await this.repo.updateInternship({ id: object.id, ...changes }, changeset);
 
     const prevMissing = RequiredWhen.calc(InternshipEngagement, previous);
     const nowMissing = RequiredWhen.calc(InternshipEngagement, updated);
-    if (
-      nowMissing &&
-      (!prevMissing || nowMissing.missing.length >= prevMissing.missing.length)
-    ) {
+    if (nowMissing && (!prevMissing || nowMissing.missing.length >= prevMissing.missing.length)) {
       throw nowMissing;
     }
 
@@ -261,18 +225,13 @@ export class EngagementService {
   async delete(id: ID, changeset?: ID): Promise<void> {
     const object = await this.readOne(id);
 
-    this.privileges
-      .for(resolveEngagementType(object), object)
-      .verifyCan('delete');
+    this.privileges.for(resolveEngagementType(object), object).verifyCan('delete');
 
     await this.eventBus.publish(new EngagementWillDeleteEvent(object));
     await this.repo.deleteNode(object, { changeset });
   }
 
-  async list(
-    input: EngagementListInput,
-    view?: ObjectView,
-  ): Promise<EngagementListOutput> {
+  async list(input: EngagementListInput, view?: ObjectView): Promise<EngagementListOutput> {
     // -- don't have to check if canList because all roles can see at least on prop of it
     // if that ever changes, create a limitedScope and add to the list function.
     const results = await this.repo.list(input, view?.changeset);
@@ -291,9 +250,7 @@ export class EngagementService {
     engagement: LanguageEngagement,
     input: ProductListInput,
   ): Promise<SecuredProductList> {
-    const privs = this.privileges
-      .for(LanguageEngagement, engagement)
-      .forEdge('product');
+    const privs = this.privileges.for(LanguageEngagement, engagement).forEdge('product');
 
     if (!privs.can('read')) {
       return SecuredList.Redacted;
@@ -322,9 +279,7 @@ export class EngagementService {
 
 class EngagementDateRangeException extends RangeException {
   static throwIfInvalid(
-    current: Partial<
-      Pick<UnsecuredDto<Engagement>, 'startDateOverride' | 'endDateOverride'>
-    >,
+    current: Partial<Pick<UnsecuredDto<Engagement>, 'startDateOverride' | 'endDateOverride'>>,
     changes: AnyChangesOf<Engagement> = {},
   ) {
     const start =
@@ -332,9 +287,7 @@ class EngagementDateRangeException extends RangeException {
         ? changes.startDateOverride
         : current.startDateOverride;
     const end =
-      changes.endDateOverride !== undefined
-        ? changes.endDateOverride
-        : current.endDateOverride;
+      changes.endDateOverride !== undefined ? changes.endDateOverride : current.endDateOverride;
     if (start && end && start > end) {
       const field =
         changes.endDateOverride !== undefined

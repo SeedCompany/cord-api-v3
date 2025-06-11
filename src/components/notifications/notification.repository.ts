@@ -1,13 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { type Nil } from '@seedcompany/common';
-import {
-  inArray,
-  isNull,
-  node,
-  not,
-  type Query,
-  relation,
-} from 'cypher-query-builder';
+import { inArray, isNull, node, not, type Query, relation } from 'cypher-query-builder';
 import { omit } from 'lodash';
 import { DateTime } from 'luxon';
 import {
@@ -71,21 +64,11 @@ export class NotificationRepository extends CommonRepository {
         sub
           .apply((q) =>
             recipients == null
-              ? q.subQuery(
-                  this.service.getStrategy(type).recipientsForNeo4j(input),
-                )
-              : q
-                  .match(node('recipient', 'User'))
-                  .where({ 'recipient.id': inArray(recipients) }),
+              ? q.subQuery(this.service.getStrategy(type).recipientsForNeo4j(input))
+              : q.match(node('recipient', 'User')).where({ 'recipient.id': inArray(recipients) }),
           )
-          .create([
-            node('node'),
-            relation('out', '', 'recipient'),
-            node('recipient'),
-          ])
-          .return<{ totalRecipients: number }>(
-            'count(recipient) as totalRecipients',
-          ),
+          .create([node('node'), relation('out', '', 'recipient'), node('recipient')])
+          .return<{ totalRecipients: number }>('count(recipient) as totalRecipients'),
       )
       .subQuery('node', this.hydrate())
       .return('dto, totalRecipients')
@@ -164,11 +147,7 @@ export class NotificationRepository extends CommonRepository {
             undefined,
           )!;
         })
-        .optionalMatch([
-          node('node'),
-          relation('out', 'recipient', 'recipient'),
-          currentUser,
-        ])
+        .optionalMatch([node('node'), relation('out', 'recipient', 'recipient'), currentUser])
         .return<{ dto: UnsecuredDto<Notification> }>(
           merge('node', 'extra', {
             __typename: 'node.type + "Notification"',

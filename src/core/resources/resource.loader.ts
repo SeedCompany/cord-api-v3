@@ -1,8 +1,5 @@
 import { Injectable, type Type } from '@nestjs/common';
-import {
-  DataLoaderContext,
-  type DataLoaderStrategy,
-} from '@seedcompany/data-loader';
+import { DataLoaderContext, type DataLoaderStrategy } from '@seedcompany/data-loader';
 import type { ConditionalKeys, Merge, ValueOf } from 'type-fest';
 import { type ID, type Many, type ObjectView, ServerException } from '~/common';
 import { Identity } from '../authentication';
@@ -58,10 +55,7 @@ export class ResourceLoader {
     return await this.load(types, node.properties.id, view);
   }
 
-  async loadByRef<Key extends keyof ResourceMap>(
-    obj: PolymorphicLinkTo<Key>,
-    view?: ObjectView,
-  ) {
+  async loadByRef<Key extends keyof ResourceMap>(obj: PolymorphicLinkTo<Key>, view?: ObjectView) {
     return await this.load(obj.__typename, obj.id, view);
   }
 
@@ -77,12 +71,7 @@ export class ResourceLoader {
     type: TResourceName,
     id: ID,
     view?: ObjectView,
-  ): Promise<
-    Merge<
-      { __typename: TResourceName },
-      ResourceMap[TResourceName]['prototype']
-    >
-  >;
+  ): Promise<Merge<{ __typename: TResourceName }, ResourceMap[TResourceName]['prototype']>>;
   async load(
     type: Many<keyof ResourceMap | SomeResourceType>,
     id: ID,
@@ -93,8 +82,7 @@ export class ResourceLoader {
     id: ID,
     view?: ObjectView,
   ): Promise<SomeResourceType['prototype'] & { __typename: string }> {
-    const { factory, objectViewAware, resolvedType } =
-      this.findLoaderFactory(type);
+    const { factory, objectViewAware, resolvedType } = this.findLoaderFactory(type);
     const loader = await this.getLoader<any, any>(factory);
     const key = objectViewAware ? { id, view: view ?? { active: true } } : id;
     const result = await loader.load(key);
@@ -107,15 +95,11 @@ export class ResourceLoader {
     };
   }
 
-  async getLoader<T, Key, CachedKey = Key>(
-    type: Type<DataLoaderStrategy<T, Key, CachedKey>>,
-  ) {
+  async getLoader<T, Key, CachedKey = Key>(type: Type<DataLoaderStrategy<T, Key, CachedKey>>) {
     if (this.config.isCli) {
       await this.identity.readyForCli();
     }
-    const context = this.config.isCli
-      ? CLI_CONTEXT_ID
-      : this.contextHost.context;
+    const context = this.config.isCli ? CLI_CONTEXT_ID : this.contextHost.context;
     return await this.loaderContext.getLoader<T, Key, CachedKey>(type, context);
   }
 
@@ -123,8 +107,7 @@ export class ResourceLoader {
     // Allow GQL interfaces to be used if referenced directly & have an available
     // loader.
     if (!Array.isArray(type)) {
-      const directType = ((type as SomeResourceType).name ??
-        type) as keyof ResourceMap;
+      const directType = ((type as SomeResourceType).name ?? type) as keyof ResourceMap;
       const direct = this.loaderRegistry.loaders.get(directType);
       if (direct) {
         return { resolvedType: directType, ...direct };
@@ -134,9 +117,7 @@ export class ResourceLoader {
     const resolvedType = this.resourceResolver.resolveType(type);
     const found = this.loaderRegistry.loaders.get(resolvedType);
     if (!found) {
-      throw new ServerException(
-        `Could not find loader for type: ${resolvedType}`,
-      );
+      throw new ServerException(`Could not find loader for type: ${resolvedType}`);
     }
     return { resolvedType, ...found };
   }

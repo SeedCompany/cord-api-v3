@@ -1,10 +1,6 @@
 import { Field, InputType, Int, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import {
-  IsValidBook,
-  IsValidChapter,
-  IsValidVerse,
-} from './scripture-reference.validator';
+import { IsValidBook, IsValidChapter, IsValidVerse } from './scripture-reference.validator';
 
 @InputType({
   description: 'A reference to a scripture verse',

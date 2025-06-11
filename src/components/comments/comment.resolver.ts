@@ -1,10 +1,4 @@
-import {
-  Args,
-  Mutation,
-  Parent,
-  ResolveField,
-  Resolver,
-} from '@nestjs/graphql';
+import { Args, Mutation, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { type ID, IdArg } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { UserLoader } from '../user';
@@ -27,9 +21,7 @@ export class CommentResolver {
   @Mutation(() => UpdateCommentOutput, {
     description: 'Update an existing comment',
   })
-  async updateComment(
-    @Args('input') input: UpdateCommentInput,
-  ): Promise<UpdateCommentOutput> {
+  async updateComment(@Args('input') input: UpdateCommentInput): Promise<UpdateCommentOutput> {
     const comment = await this.service.update(input);
     return { comment };
   }

@@ -1,9 +1,5 @@
 import { type ID } from '~/common';
-import {
-  type DataLoaderStrategy,
-  LoaderFactory,
-  type LoaderOptionsOf,
-} from '~/core/data-loader';
+import { type DataLoaderStrategy, LoaderFactory, type LoaderOptionsOf } from '~/core/data-loader';
 import {
   type AnyProduct,
   DerivativeScriptureProduct,
@@ -13,15 +9,8 @@ import {
 } from './dto';
 import { ProductService } from './product.service';
 
-@LoaderFactory(() => [
-  Product,
-  DirectScriptureProduct,
-  DerivativeScriptureProduct,
-  OtherProduct,
-])
-export class ProductLoader
-  implements DataLoaderStrategy<AnyProduct, ID<'Product'>>
-{
+@LoaderFactory(() => [Product, DirectScriptureProduct, DerivativeScriptureProduct, OtherProduct])
+export class ProductLoader implements DataLoaderStrategy<AnyProduct, ID<'Product'>> {
   constructor(private readonly products: ProductService) {}
 
   async loadMany(ids: ReadonlyArray<ID<'Product'>>) {

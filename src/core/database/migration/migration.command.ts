@@ -6,8 +6,7 @@ import { MigrationRunner } from './migration-runner.service';
 export class DatabaseMigrationCommand extends Command {
   static paths = [['db', 'migrate']];
   static usage = Command.Usage({
-    description:
-      'Run database migrations needed to sync schema to current version',
+    description: 'Run database migrations needed to sync schema to current version',
   });
   constructor(private readonly runner: MigrationRunner) {
     super();

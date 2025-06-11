@@ -27,11 +27,7 @@ declare module 'cypher-query-builder/dist/typings/query' {
   }
 }
 
-Query.prototype.comment = function comment(
-  this: Query,
-  comment: CommentIn,
-  ...args: unknown[]
-) {
+Query.prototype.comment = function comment(this: Query, comment: CommentIn, ...args: unknown[]) {
   return this.continueChainClause(new Comment(comment, ...args));
 };
 
@@ -43,9 +39,7 @@ class Comment extends Clause {
   constructor(comment: CommentIn, ...args: unknown[]) {
     super();
     this.comment =
-      typeof comment === 'string'
-        ? stripIndent(comment)
-        : stripIndent(comment, ...args);
+      typeof comment === 'string' ? stripIndent(comment) : stripIndent(comment, ...args);
   }
 
   build() {

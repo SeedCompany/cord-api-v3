@@ -16,9 +16,7 @@ export class RenameReasonOptionMigration extends BaseMigration {
         old: 'Partner organization issues currently being addressed.',
       })
       .setValues({
-        'reason.value': [
-          'Partner organization issues currently being addressed',
-        ],
+        'reason.value': ['Partner organization issues currently being addressed'],
       })
       .return('count(reason) as count')
       .executeAndLogStats();

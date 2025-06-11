@@ -27,8 +27,7 @@ export class ChangesetResolver {
     @IdArg({
       name: 'resource',
       nullable: true,
-      description:
-        'Optionally limit to only changes of this resource and its (grand)children',
+      description: 'Optionally limit to only changes of this resource and its (grand)children',
     })
     parent?: ID,
   ): Promise<ChangesetDiff> {
@@ -44,16 +43,11 @@ export class ChangesetResolver {
       Promise.all(diff.added.map((node) => load(node))),
       // If the changeset is approved, we read deleted node otherwise read node in changeset
       Promise.all(
-        diff.removed.map((node) =>
-          load(node, changeset.applied ? { deleted: true } : undefined),
-        ),
+        diff.removed.map((node) => load(node, changeset.applied ? { deleted: true } : undefined)),
       ),
       Promise.all(
         diff.changed.map(async (node): Promise<ResourceChange> => {
-          const [previous, updated] = await Promise.all([
-            load(node, { active: true }),
-            load(node),
-          ]);
+          const [previous, updated] = await Promise.all([load(node, { active: true }), load(node)]);
           return { previous, updated };
         }),
       ),

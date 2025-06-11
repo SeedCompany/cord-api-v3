@@ -15,9 +15,7 @@ const CQL_VAR = 'sens';
 
 const EffectiveSensitivity = Symbol('EffectiveSensitivity');
 
-export type HasSensitivity =
-  | { sensitivity: Sensitivity }
-  | { [EffectiveSensitivity]: Sensitivity };
+export type HasSensitivity = { sensitivity: Sensitivity } | { [EffectiveSensitivity]: Sensitivity };
 
 export class SensitivityCondition<
   TResourceStatic extends
@@ -36,8 +34,7 @@ export class SensitivityCondition<
       throw new MissingContextException();
     }
     const actual: Sensitivity | undefined =
-      Reflect.get(object, EffectiveSensitivity) ??
-      Reflect.get(object, 'sensitivity');
+      Reflect.get(object, EffectiveSensitivity) ?? Reflect.get(object, 'sensitivity');
 
     if (!actual) {
       throw new MissingContextException(
@@ -55,9 +52,7 @@ export class SensitivityCondition<
     prevApplied.add('sensitivity');
 
     return query.subQuery('project', (sub) =>
-      sub
-        .apply(matchProjectSens())
-        .return(`${rankSens('sensitivity')} as ${CQL_VAR}`),
+      sub.apply(matchProjectSens()).return(`${rankSens('sensitivity')} as ${CQL_VAR}`),
     );
   }
 
@@ -128,10 +123,7 @@ export const sensOnlyLow = new SensitivityCondition(Sensitivity.Low);
  * This is useful when the object doesn't have a `sensitivity` property or
  * a different/"effective" sensitivity should be used for this logic.
  */
-export const withEffectiveSensitivity = <T extends object>(
-  obj: T,
-  sensitivity: Sensitivity,
-) =>
+export const withEffectiveSensitivity = <T extends object>(obj: T, sensitivity: Sensitivity) =>
   Object.defineProperty(obj, EffectiveSensitivity, {
     value: sensitivity,
     enumerable: false,

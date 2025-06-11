@@ -15,11 +15,7 @@ import { type ILogger, LoggerToken, LogLevel } from '../logger';
 import { AFTER_MESSAGE } from '../logger/formatters';
 import { TracingService } from '../tracing';
 import { DbTraceLayer } from './database.service';
-import {
-  createBetterError,
-  isNeo4jError,
-  ServiceUnavailableError,
-} from './errors';
+import { createBetterError, isNeo4jError, ServiceUnavailableError } from './errors';
 import { highlight } from './highlight-cypher.util';
 import { ParameterTransformer } from './parameter-transformer.service';
 // eslint-disable-next-line import/no-duplicates
@@ -79,24 +75,20 @@ export const CypherFactory: FactoryProvider<Connection> = {
     } = config.neo4j;
 
     const driverLoggerAdapter: LoggerFunction = (neoLevel, message) => {
-      const level =
-        neoLevel === 'warn' ? LogLevel.WARNING : (neoLevel as LogLevel);
+      const level = neoLevel === 'warn' ? LogLevel.WARNING : (neoLevel as LogLevel);
       if (message.startsWith('Updated routing table')) {
         const routingTable = parseRoutingTable(message);
         driverLogger.info('Updated routing table', { routingTable });
       } else if (message.startsWith('Routing table is stale for database')) {
         const routingTable = parseRoutingTable(message);
-        const matched = /for database: "(.*)" and access mode: "(.+)":/.exec(
-          message,
-        );
+        const matched = /for database: "(.*)" and access mode: "(.+)":/.exec(message);
         driverLogger.info('Routing table is stale', {
           database: matched?.[1] || null,
           accessMode: matched?.[2],
           routingTable,
         });
       } else if (
-        (level === LogLevel.WARNING &&
-          message.includes('Failed to connect to server')) ||
+        (level === LogLevel.WARNING && message.includes('Failed to connect to server')) ||
         (level === LogLevel.ERROR && message.includes('"retriable":true'))
       ) {
         // Change retriable failure messages to debug.
@@ -261,18 +253,14 @@ const wrapQueryRun = (
             ...(parameters?.logIt
               ? {
                   statement:
-                    process.env.NODE_ENV !== 'production'
-                      ? highlight(statement)
-                      : statement,
+                    process.env.NODE_ENV !== 'production' ? highlight(statement) : statement,
                 }
               : {}),
             ...parameters,
           },
     );
 
-    const params = parameters
-      ? parameterTransformer.transform(parameters)
-      : undefined;
+    const params = parameters ? parameterTransformer.transform(parameters) : undefined;
     const result = origRun(statement, params);
 
     const tweakError = (e: Error) => {

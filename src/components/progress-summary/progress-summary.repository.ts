@@ -37,21 +37,14 @@ export class ProgressSummaryRepository extends CommonRepository {
               relation('out', '', 'product', ACTIVE),
               node('product', 'Product'),
             ],
-            [
-              node('product'),
-              relation('out', '', 'totalVerses', ACTIVE),
-              node('tv', 'Property'),
-            ],
+            [node('product'), relation('out', '', 'totalVerses', ACTIVE), node('tv', 'Property')],
             [
               node('product'),
               relation('out', '', 'totalVerseEquivalents', ACTIVE),
               node('tve', 'Property'),
             ],
           ])
-          .return([
-            'sum(tv.value) as totalVerses',
-            'sum(tve.value) as totalVerseEquivalents',
-          ]),
+          .return(['sum(tv.value) as totalVerses', 'sum(tve.value) as totalVerseEquivalents']),
       )
       .optionalMatch([
         node('report'),
@@ -77,11 +70,7 @@ export class ProgressSummaryRepository extends CommonRepository {
     return await query.run();
   }
 
-  async save(
-    report: ProgressReport,
-    period: SummaryPeriod,
-    data: ProgressSummary,
-  ) {
+  async save(report: ProgressReport, period: SummaryPeriod, data: ProgressSummary) {
     await this.db
       .query()
       .matchNode('pr', 'ProgressReport', { id: report.id })
@@ -98,36 +87,32 @@ export class ProgressSummaryRepository extends CommonRepository {
 export const progressSummarySorters = defineSorters(ProgressSummary, {
   ...mapValues.fromList(
     ['variance', 'scheduleStatus'],
-    () => (query: Query) =>
-      query.return<SortCol>('(node.actual - node.planned) as sortValue'),
+    () => (query: Query) => query.return<SortCol>('(node.actual - node.planned) as sortValue'),
   ).asRecord,
 });
 
-export const progressSummaryFilters = filter.define(
-  () => ProgressSummaryFilters,
-  {
-    scheduleStatus: ({ value, query }) => {
-      const status = setOf(value);
-      if (status.size === 0) {
-        return undefined;
-      }
-      if (status.size === 1 && status.has(null)) {
-        return query.where(new WhereExp('node IS NULL'));
-      }
+export const progressSummaryFilters = filter.define(() => ProgressSummaryFilters, {
+  scheduleStatus: ({ value, query }) => {
+    const status = setOf(value);
+    if (status.size === 0) {
+      return undefined;
+    }
+    if (status.size === 1 && status.has(null)) {
+      return query.where(new WhereExp('node IS NULL'));
+    }
 
-      const conditions = cleanJoin(' OR ', [
-        status.has(null) && `node IS NULL`,
-        status.has('Ahead') && `node.actual - node.planned > 0.1`,
-        status.has('Behind') && `node.actual - node.planned < -0.1`,
-        status.has('OnTime') &&
-          `node.actual - node.planned <= 0.1 and node.actual - node.planned >= -0.1`,
-      ]);
-      const required = status.has(null) ? undefined : `node IS NOT NULL`;
-      const str = [required, conditions]
-        .filter(isNotFalsy)
-        .map((s) => `(${s})`)
-        .join(' AND ');
-      return str ? query.where(new WhereExp(str)) : query;
-    },
+    const conditions = cleanJoin(' OR ', [
+      status.has(null) && `node IS NULL`,
+      status.has('Ahead') && `node.actual - node.planned > 0.1`,
+      status.has('Behind') && `node.actual - node.planned < -0.1`,
+      status.has('OnTime') &&
+        `node.actual - node.planned <= 0.1 and node.actual - node.planned >= -0.1`,
+    ]);
+    const required = status.has(null) ? undefined : `node IS NOT NULL`;
+    const str = [required, conditions]
+      .filter(isNotFalsy)
+      .map((s) => `(${s})`)
+      .join(' AND ');
+    return str ? query.where(new WhereExp(str)) : query;
   },
-);
+});

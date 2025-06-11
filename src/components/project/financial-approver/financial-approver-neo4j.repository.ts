@@ -23,10 +23,9 @@ export class FinancialApproverNeo4jRepository
       ])
       .apply((q) =>
         types
-          ? q.raw(
-              `WHERE size(apoc.coll.intersection(node.projectTypes, $types)) > 0`,
-              { types: many(types) },
-            )
+          ? q.raw(`WHERE size(apoc.coll.intersection(node.projectTypes, $types)) > 0`, {
+              types: many(types),
+            })
           : q,
       )
       .apply(this.hydrate());
@@ -72,11 +71,7 @@ export class FinancialApproverNeo4jRepository
     return (query: Query) =>
       query
         .with('node, user')
-        .optionalMatch([
-          node('user'),
-          relation('out', '', 'email', ACTIVE),
-          node('email'),
-        ])
+        .optionalMatch([node('user'), relation('out', '', 'email', ACTIVE), node('email')])
         .return<{ dto: FinancialApprover }>(
           merge('node', {
             user: merge('user { .id }', { email: 'email.value' }),

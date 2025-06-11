@@ -111,10 +111,7 @@ export class PolicyExecutor {
     return condition;
   }
 
-  forGel({
-    action,
-    resource,
-  }: Pick<ResolveParams, 'action' | 'resource'>): Permission {
+  forGel({ action, resource }: Pick<ResolveParams, 'action' | 'resource'>): Permission {
     const isDerivedInDB = [...resource.interfaces].some((e) => e.hasDB);
 
     if (action !== 'read' && resource.isCalculated) {
@@ -147,17 +144,13 @@ export class PolicyExecutor {
       }
 
       const roleCondition =
-        policy.roles && policy.roles.size > 0
-          ? new RoleCondition(policy.roles)
-          : undefined;
+        policy.roles && policy.roles.size > 0 ? new RoleCondition(policy.roles) : undefined;
 
       if (!roleCondition && condition === true) {
         // globally allowed
         return true;
       }
-      conditions.push(
-        all(roleCondition, condition !== true ? condition : null),
-      );
+      conditions.push(all(roleCondition, condition !== true ? condition : null));
     }
     if (conditions.length === 0) {
       return false;
@@ -190,11 +183,7 @@ export class PolicyExecutor {
       };
       return query
         .comment("Loading policy condition's context")
-        .apply(
-          wrapContext(
-            (q1) => perm.setupCypherContext?.(q1, new Set(), other) ?? q1,
-          ),
-        )
+        .apply(wrapContext((q1) => perm.setupCypherContext?.(q1, new Set(), other) ?? q1))
         .comment('Filtering by policy conditions')
         .with('*')
         .raw(`WHERE ${perm.asCypherCondition(query, other)}`);
@@ -240,9 +229,7 @@ export class PolicyExecutor {
         if (children.some((perm) => perm === false)) {
           return false;
         }
-        const remainingConditions = children.filter(
-          (perm): perm is Condition => perm !== true,
-        );
+        const remainingConditions = children.filter((perm): perm is Condition => perm !== true);
         // true && true && true = true
         if (remainingConditions.length === 0) {
           // no children were false, no children were conditions
@@ -257,9 +244,7 @@ export class PolicyExecutor {
         if (children.some((perm) => perm === true)) {
           return true;
         }
-        const remainingConditions = children.filter(
-          (perm): perm is Condition => perm !== false,
-        );
+        const remainingConditions = children.filter((perm): perm is Condition => perm !== false);
         // false || false || false = false
         if (remainingConditions.length === 0) {
           // no children were true, no children were conditions
@@ -279,9 +264,7 @@ export class PolicyExecutor {
       if (!policy.roles) {
         return true; // policy doesn't limit roles
       }
-      const rolesSpecifiedByPolicyThatUserHas = policy.roles.intersection(
-        session.roles,
-      );
+      const rolesSpecifiedByPolicyThatUserHas = policy.roles.intersection(session.roles);
       return rolesSpecifiedByPolicyThatUserHas.size > 0;
     });
     return policies;

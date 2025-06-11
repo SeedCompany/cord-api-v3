@@ -1,10 +1,4 @@
-import {
-  Field,
-  ObjectType,
-  Parent,
-  ResolveField,
-  Resolver,
-} from '@nestjs/graphql';
+import { Field, ObjectType, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import {
   InternshipDomain,
   InternshipPosition,
@@ -29,8 +23,7 @@ class InternshipPositionOptions {
 @Resolver(SecuredInternPosition)
 export class InternshipPositionResolver {
   @ResolveField(() => [InternshipPositionOptions], {
-    description:
-      'The available position options for the internship engagement.',
+    description: 'The available position options for the internship engagement.',
   })
   options(): InternshipPositionOptions[] {
     return InternshipPosition.entries
@@ -46,9 +39,7 @@ export class InternshipPositionResolver {
     nullable: true,
     description: 'The InternshipDomain based on the currently selected `value`',
   })
-  domain(
-    @Parent() { value: position }: SecuredInternPosition,
-  ): InternshipDomain | null {
+  domain(@Parent() { value: position }: SecuredInternPosition): InternshipDomain | null {
     if (!position) return null;
     const { domain } = InternshipPosition.entry(position);
     return domain ?? null;
@@ -56,12 +47,9 @@ export class InternshipPositionResolver {
 
   @ResolveField(() => InternshipProgram, {
     nullable: true,
-    description:
-      'The InternshipProgram based on the currently selected `value`',
+    description: 'The InternshipProgram based on the currently selected `value`',
   })
-  program(
-    @Parent() { value: position }: SecuredInternPosition,
-  ): InternshipProgram | null {
+  program(@Parent() { value: position }: SecuredInternPosition): InternshipProgram | null {
     if (!position) return null;
     const { program } = InternshipPosition.entry(position);
     return program ?? null;

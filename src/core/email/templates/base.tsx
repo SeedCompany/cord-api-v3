@@ -20,13 +20,7 @@ import {
 import type { ComponentProps, ReactElement, ReactNode } from 'react';
 import { useFrontendUrl } from './frontend-url';
 
-export const EmailTemplate = ({
-  title,
-  children,
-}: {
-  title: string;
-  children: ReactNode;
-}) => (
+export const EmailTemplate = ({ title, children }: { title: string; children: ReactNode }) => (
   <Mjml lang="en">
     <Head>
       <Title>{`${title} - CORD Field`}</Title>
@@ -50,11 +44,7 @@ export const EmailTemplate = ({
     <Body>
       <Branding />
 
-      <Wrapper
-        cssClass="card-shadow"
-        borderRadius={6}
-        backgroundColor="#ffffff"
-      >
+      <Wrapper cssClass="card-shadow" borderRadius={6} backgroundColor="#ffffff">
         {children}
       </Wrapper>
     </Body>
@@ -71,20 +61,10 @@ export const Theme = () => (
       </Body>
       <Section backgroundColor="#ffffff">{}</Section>
       <Text lineHeight="1.5">{}</Text>
-      <Button
-        color="#ffffff"
-        backgroundColor="#64b145"
-        padding="8px 22px"
-        cssClass="button-shadow"
-      >
+      <Button color="#ffffff" backgroundColor="#64b145" padding="8px 22px" cssClass="button-shadow">
         {[]}
       </Button>
-      <Divider
-        borderWidth={2}
-        borderColor="#e6e6e6"
-        paddingTop={15}
-        paddingBottom={15}
-      />
+      <Divider borderWidth={2} borderColor="#e6e6e6" paddingTop={15} paddingBottom={15} />
     </Attributes>
   </>
 );
@@ -94,13 +74,7 @@ export const Branding = (): ReactElement => {
   return (
     <Section backgroundColor="#fafafa">
       <Column verticalAlign="middle" width="80px">
-        <Image
-          src={iconUrl}
-          height={80}
-          width={80}
-          align="center"
-          padding={0}
-        />
+        <Image src={iconUrl} height={80} width={80} align="center" padding={0} />
       </Column>
       <Column verticalAlign="middle" width="220px">
         <Text fontSize={32} align="center">
@@ -125,13 +99,7 @@ export const Heading = (props: ComponentProps<typeof Text>) => (
   </Section>
 );
 
-export const Link = ({
-  href,
-  children,
-}: {
-  href: string;
-  children?: ReactNode;
-}) => (
+export const Link = ({ href, children }: { href: string; children?: ReactNode }) => (
   <Text>
     <a href={href} style={{ wordBreak: 'break-all' }}>
       {children || href}
@@ -144,8 +112,8 @@ export const ReplyInfoFooter = () => (
     <Column>
       <Divider borderWidth={1} />
       <Text fontWeight="300">
-        If you are having any issues with your account, please don't hesitate to
-        contact us by replying to this email.
+        If you are having any issues with your account, please don't hesitate to contact us by
+        replying to this email.
         <br />
         Thanks!
       </Text>

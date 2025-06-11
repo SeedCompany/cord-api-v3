@@ -1,9 +1,7 @@
 import { ObjectType } from '@nestjs/graphql';
 import { type EnumType, makeEnum, SecuredEnum } from '~/common';
 
-export type PartnershipAgreementStatus = EnumType<
-  typeof PartnershipAgreementStatus
->;
+export type PartnershipAgreementStatus = EnumType<typeof PartnershipAgreementStatus>;
 export const PartnershipAgreementStatus = makeEnum({
   name: 'PartnershipAgreementStatus',
   values: ['NotAttached', 'AwaitingSignature', 'Signed'],

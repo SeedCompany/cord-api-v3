@@ -22,8 +22,7 @@ export function ForgotPassword({ token }: ForgotPasswordProps) {
       <Section>
         <Column>
           <Text>
-            If it was you, confirm the password change{' '}
-            <InText>by clicking this link</InText>
+            If it was you, confirm the password change <InText>by clicking this link</InText>
           </Text>
           <HideInText>
             <Button href={url}>CONFIRM</Button>

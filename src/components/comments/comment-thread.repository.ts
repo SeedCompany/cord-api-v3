@@ -45,11 +45,7 @@ export class CommentThreadRepository extends DtoRepository(CommentThread) {
           relation('in', undefined, 'commentThread'),
           node('parent', 'BaseNode'),
         ])
-        .match([
-          node('node'),
-          relation('out', '', 'creator'),
-          node('creator', 'User'),
-        ])
+        .match([node('node'), relation('out', '', 'creator'), node('creator', 'User')])
         .subQuery('node', (sub) =>
           sub
             .with('node as thread')
@@ -82,10 +78,7 @@ export class CommentThreadRepository extends DtoRepository(CommentThread) {
       .match([
         node('node', 'CommentThread'),
         ...(parent
-          ? [
-              relation('in', '', 'commentThread', ACTIVE),
-              node('', 'BaseNode', { id: parent }),
-            ]
+          ? [relation('in', '', 'commentThread', ACTIVE), node('', 'BaseNode', { id: parent })]
           : []),
       ])
       .apply(sorting(CommentThread, input))

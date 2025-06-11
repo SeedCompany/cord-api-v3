@@ -1,9 +1,4 @@
-import {
-  Book,
-  parseScripture,
-  type Range,
-  type Verse,
-} from '@seedcompany/scripture';
+import { Book, parseScripture, type Range, type Verse } from '@seedcompany/scripture';
 import { type Cell } from '~/common/xlsx.util';
 import { ScriptureRange } from '../scripture/dto';
 import { type PnpExtractionResult, PnpProblemType } from './extraction-result';
@@ -86,21 +81,19 @@ export const isGoalRow = (
 const NoBook = PnpProblemType.register({
   name: 'NoBook',
   severity: 'Error',
-  render:
-    (ctx: { bookRef: string; verseVal: number; verseRef: string }) => () => ({
-      groups: 'No book name given',
-      message: `Ignoring row with no book name \`${ctx.bookRef}\` even though there are **${ctx.verseVal}** verses to translate \`${ctx.verseRef}\``,
-    }),
+  render: (ctx: { bookRef: string; verseVal: number; verseRef: string }) => () => ({
+    groups: 'No book name given',
+    message: `Ignoring row with no book name \`${ctx.bookRef}\` even though there are **${ctx.verseVal}** verses to translate \`${ctx.verseRef}\``,
+  }),
 });
 
 const InvalidVerseCount = PnpProblemType.register({
   name: 'InvalidVerseCount',
   severity: 'Error',
-  render:
-    (ctx: { bookVal: string; verseVal: number; verseRef: string }) => () => ({
-      groups: 'The verses to translate exceeds total verses in book',
-      message: `Ignoring _${ctx.bookVal}_ because **${ctx.verseVal}** \`${ctx.verseRef}\` verses to translate exceeds the total number of verses in the book`,
-    }),
+  render: (ctx: { bookVal: string; verseVal: number; verseRef: string }) => () => ({
+    groups: 'The verses to translate exceeds total verses in book',
+    message: `Ignoring _${ctx.bookVal}_ because **${ctx.verseVal}** \`${ctx.verseRef}\` verses to translate exceeds the total number of verses in the book`,
+  }),
   wiki: 'https://github.com/SeedCompany/cord-docs/wiki/PnP-Extraction-Validation:-Errors-and-Troubleshooting-Steps#4-the-verses-to-translate-exceeds-total-verses-in-book',
 });
 

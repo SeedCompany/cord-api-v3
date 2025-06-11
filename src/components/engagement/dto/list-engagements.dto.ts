@@ -11,11 +11,7 @@ import {
   SecuredList,
   SortablePaginationInput,
 } from '~/common';
-import {
-  AIAssistedTranslation,
-  LanguageFilters,
-  LanguageMilestone,
-} from '../../language/dto';
+import { AIAssistedTranslation, LanguageFilters, LanguageMilestone } from '../../language/dto';
 import { ProjectFilters } from '../../project/dto';
 import { UserFilters } from '../../user/dto';
 import {
@@ -34,8 +30,7 @@ export abstract class EngagementFilters {
   readonly type?: 'language' | 'internship';
 
   @OptionalField({
-    description:
-      'Only engagements whose project or engaged entity (language / user) name match',
+    description: 'Only engagements whose project or engaged entity (language / user) name match',
   })
   readonly name?: string;
 
@@ -49,8 +44,7 @@ export abstract class EngagementFilters {
   readonly project?: ProjectFilters & {};
 
   @OptionalField({
-    description:
-      'Only engagements whose engaged entity (language / user) name match',
+    description: 'Only engagements whose engaged entity (language / user) name match',
   })
   readonly engagedName?: string;
 
@@ -87,9 +81,7 @@ export abstract class EngagementFilters {
 }
 
 @InputType()
-export class EngagementListInput extends SortablePaginationInput<
-  keyof Engagement
->({
+export class EngagementListInput extends SortablePaginationInput<keyof Engagement>({
   defaultSort: 'createdAt',
 }) {
   @FilterField(() => EngagementFilters)
@@ -97,49 +89,35 @@ export class EngagementListInput extends SortablePaginationInput<
 }
 
 @ObjectType()
-export class EngagementListOutput extends PaginatedList<
-  IEngagement,
-  Engagement
->(IEngagement, {
+export class EngagementListOutput extends PaginatedList<IEngagement, Engagement>(IEngagement, {
   itemsDescription: PaginatedList.itemDescriptionFor('engagements'),
 }) {}
 
 @ObjectType()
-export class LanguageEngagementListOutput extends PaginatedList(
-  LanguageEngagement,
-  {
-    itemsDescription: PaginatedList.itemDescriptionFor('language engagements'),
-  },
-) {}
+export class LanguageEngagementListOutput extends PaginatedList(LanguageEngagement, {
+  itemsDescription: PaginatedList.itemDescriptionFor('language engagements'),
+}) {}
 
 @ObjectType({
   description: SecuredList.descriptionFor('engagements'),
 })
-export abstract class SecuredEngagementList extends SecuredList<
+export abstract class SecuredEngagementList extends SecuredList<IEngagement, Engagement>(
   IEngagement,
-  Engagement
->(IEngagement, {
-  itemsDescription: PaginatedList.itemDescriptionFor('engagements'),
-}) {}
+  {
+    itemsDescription: PaginatedList.itemDescriptionFor('engagements'),
+  },
+) {}
 
 @ObjectType({
   description: SecuredList.descriptionFor('language engagements'),
 })
-export abstract class SecuredLanguageEngagementList extends SecuredList(
-  LanguageEngagement,
-  {
-    itemsDescription: PaginatedList.itemDescriptionFor('language engagements'),
-  },
-) {}
+export abstract class SecuredLanguageEngagementList extends SecuredList(LanguageEngagement, {
+  itemsDescription: PaginatedList.itemDescriptionFor('language engagements'),
+}) {}
 
 @ObjectType({
   description: SecuredList.descriptionFor('internship engagements'),
 })
-export abstract class SecuredInternshipEngagementList extends SecuredList(
-  InternshipEngagement,
-  {
-    itemsDescription: PaginatedList.itemDescriptionFor(
-      'internship engagements',
-    ),
-  },
-) {}
+export abstract class SecuredInternshipEngagementList extends SecuredList(InternshipEngagement, {
+  itemsDescription: PaginatedList.itemDescriptionFor('internship engagements'),
+}) {}

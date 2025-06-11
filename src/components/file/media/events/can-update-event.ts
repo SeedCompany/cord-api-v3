@@ -20,9 +20,7 @@ export class CanUpdateMediaUserMetadataEvent {
   ) {}
 
   @Once() getAttachedResource() {
-    const attachedResName = this.resourceResolver.resolveTypeByBaseNode(
-      this.media.attachedTo[0],
-    );
+    const attachedResName = this.resourceResolver.resolveTypeByBaseNode(this.media.attachedTo[0]);
     const attachedResource = this.resourceHost.getByName(attachedResName);
     return attachedResource;
   }

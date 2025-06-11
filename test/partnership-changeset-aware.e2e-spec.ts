@@ -178,19 +178,13 @@ describe('Partnership Changeset Aware e2e', () => {
 
     // read partnership without changeset
     let result = await readPartnership(app, partnership.id);
-    expect(
-      result.partnership.mouStatus.value !== PartnershipAgreementStatus.Signed,
-    );
+    expect(result.partnership.mouStatus.value !== PartnershipAgreementStatus.Signed);
     // read partnership with changeset
     result = await readPartnership(app, partnership.id, changeset.id);
-    expect(result.partnership.mouStatus.value).toBe(
-      PartnershipAgreementStatus.Signed,
-    );
+    expect(result.partnership.mouStatus.value).toBe(PartnershipAgreementStatus.Signed);
     await approveProjectChangeRequest(app, changeset.id);
     result = await readPartnership(app, partnership.id);
-    expect(result.partnership.mouStatus.value).toBe(
-      PartnershipAgreementStatus.Signed,
-    );
+    expect(result.partnership.mouStatus.value).toBe(PartnershipAgreementStatus.Signed);
   });
 
   it('Delete', async () => {

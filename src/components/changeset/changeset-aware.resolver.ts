@@ -17,19 +17,14 @@ export class ChangesetAwareResolver {
 
   @ResolveField()
   async changeset(@Parent() object: ChangesetAware): Promise<Changeset | null> {
-    return object.changeset
-      ? await this.resources.load(Changeset, object.changeset)
-      : null;
+    return object.changeset ? await this.resources.load(Changeset, object.changeset) : null;
   }
 
   @ResolveField(() => Resource, {
     description: 'The parent resource of this resource',
     nullable: true,
   })
-  async parent(
-    @Parent() object: ChangesetAware,
-    @Info(Fields, IsOnlyId) isOnlyId: boolean,
-  ) {
+  async parent(@Parent() object: ChangesetAware, @Info(Fields, IsOnlyId) isOnlyId: boolean) {
     if (!object.parent) {
       return null;
     }
@@ -49,9 +44,7 @@ export class ChangesetAwareResolver {
       The changes made within this changeset limited to this resource's sub-tree
     `,
   })
-  async changesetDiff(
-    @Parent() object: ChangesetAware,
-  ): Promise<ChangesetDiff | null> {
+  async changesetDiff(@Parent() object: ChangesetAware): Promise<ChangesetDiff | null> {
     // TODO move to auth policy
     if (this.identity.isAnonymous) {
       return null;

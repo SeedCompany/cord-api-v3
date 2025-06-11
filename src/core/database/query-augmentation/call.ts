@@ -24,9 +24,7 @@ Query.prototype.call = function call(
   args?: ProcedureArgs,
 ) {
   const call =
-    typeof procedure === 'string'
-      ? { procedureName: procedure, args: args ?? [] }
-      : procedure;
+    typeof procedure === 'string' ? { procedureName: procedure, args: args ?? [] } : procedure;
   const clause = new Procedure(call.procedureName, call.args);
   const next = this.continueChainClause(clause);
   return call.yieldTerms ? next.yield(call.yieldTerms) : next;
@@ -47,9 +45,7 @@ class Procedure extends Clause {
       Array.isArray(args)
         ? args.map((value) => [undefined, value] as const)
         : entries(this.args as Record<string, any>)
-    ).map(([key, value]) =>
-      isExp(value) ? variable(value) : this.addParam(value, key),
-    );
+    ).map(([key, value]) => (isExp(value) ? variable(value) : this.addParam(value, key)));
   }
   build() {
     return `CALL ${this.name}(${this.params.join(', ')})`;
@@ -66,12 +62,9 @@ export const procedure =
     procedureName,
     args,
     yield: (yieldTerms: YieldTerms<Y>) =>
-      Object.assign(
-        (query: Query) => query.call(procedureName, args).yield(yieldTerms),
-        {
-          procedureName,
-          args,
-          yieldTerms,
-        },
-      ),
+      Object.assign((query: Query) => query.call(procedureName, args).yield(yieldTerms), {
+        procedureName,
+        args,
+        yieldTerms,
+      }),
   });

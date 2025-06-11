@@ -1,11 +1,4 @@
-import {
-  Args,
-  Mutation,
-  Parent,
-  Query,
-  ResolveField,
-  Resolver,
-} from '@nestjs/graphql';
+import { Args, Mutation, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { type ID, IdArg, ListArg } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
@@ -68,9 +61,7 @@ export class DirectoryResolver {
     @Parent() node: Directory,
     @Loader(FileNodeLoader) files: LoaderOf<FileNodeLoader>,
   ): Promise<FileNode | null> {
-    return node.firstFileCreated
-      ? await files.load(node.firstFileCreated)
-      : null;
+    return node.firstFileCreated ? await files.load(node.firstFileCreated) : null;
   }
 
   @Mutation(() => Directory)

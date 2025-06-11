@@ -1,11 +1,4 @@
-import {
-  Args,
-  Mutation,
-  Parent,
-  Query,
-  ResolveField,
-  Resolver,
-} from '@nestjs/graphql';
+import { Args, Mutation, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
 import { type ID, IdArg, ListArg, mapSecuredValue } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { FieldZoneLoader } from '../field-zone';
@@ -56,9 +49,7 @@ export class FieldRegionResolver {
     @Parent() fieldRegion: FieldRegion,
     @Loader(UserLoader) users: LoaderOf<UserLoader>,
   ): Promise<SecuredUser> {
-    return await mapSecuredValue(fieldRegion.director, ({ id }) =>
-      users.load(id),
-    );
+    return await mapSecuredValue(fieldRegion.director, ({ id }) => users.load(id));
   }
 
   @ResolveField(() => SecuredFieldZone)
@@ -66,9 +57,7 @@ export class FieldRegionResolver {
     @Parent() fieldRegion: FieldRegion,
     @Loader(FieldZoneLoader) fieldZones: LoaderOf<FieldZoneLoader>,
   ): Promise<SecuredFieldZone> {
-    return await mapSecuredValue(fieldRegion.fieldZone, ({ id }) =>
-      fieldZones.load(id),
-    );
+    return await mapSecuredValue(fieldRegion.fieldZone, ({ id }) => fieldZones.load(id));
   }
 
   @Mutation(() => CreateFieldRegionOutput, {

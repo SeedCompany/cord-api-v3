@@ -1,19 +1,9 @@
-import {
-  mergeVerseRanges,
-  type Range,
-  type Verse,
-} from '@seedcompany/scripture';
+import { mergeVerseRanges, type Range, type Verse } from '@seedcompany/scripture';
 import { differenceWith } from 'lodash';
 import { type ScriptureRange } from './dto';
 
-export const isScriptureEqual = (
-  a: readonly ScriptureRange[],
-  b: readonly ScriptureRange[],
-) => {
-  if (
-    (a.length !== 0 && b.length === 0) ||
-    (a.length === 0 && b.length !== 0)
-  ) {
+export const isScriptureEqual = (a: readonly ScriptureRange[], b: readonly ScriptureRange[]) => {
+  if ((a.length !== 0 && b.length === 0) || (a.length === 0 && b.length !== 0)) {
     // If one is empty and the other is not, then we know they aren't equal
     return false;
   }

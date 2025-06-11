@@ -1,8 +1,5 @@
 import { groupBy } from '@seedcompany/common';
-import {
-  type DataLoaderOptions,
-  type DataLoaderStrategy,
-} from '@seedcompany/data-loader';
+import { type DataLoaderOptions, type DataLoaderStrategy } from '@seedcompany/data-loader';
 import { type ID, type ObjectView, viewOfChangeset } from '~/common';
 import { type ChangesetAware } from '../../components/changeset/dto';
 import type { ResourceNameLike } from '../resources';
@@ -23,10 +20,7 @@ export abstract class ObjectViewAwareLoader<
   Kind extends ResourceNameLike | object = T,
 > implements DataLoaderStrategy<T, Key<Kind>, string>
 {
-  abstract loadManyByView(
-    ids: ReadonlyArray<ID<Kind>>,
-    view: ObjectView,
-  ): Promise<readonly T[]>;
+  abstract loadManyByView(ids: ReadonlyArray<ID<Kind>>, view: ObjectView): Promise<readonly T[]>;
 
   async loadMany(keys: ReadonlyArray<Key<Kind>>): Promise<readonly T[]> {
     const grouped = groupBy(keys, (key) => viewId(key.view));

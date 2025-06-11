@@ -36,16 +36,9 @@ export class ScriptureReferenceService {
       return;
     }
 
-    const rel = options.isOverriding
-      ? 'scriptureReferencesOverride'
-      : 'scriptureReferences';
+    const rel = options.isOverriding ? 'scriptureReferencesOverride' : 'scriptureReferences';
 
-    await this.repo.update(
-      options.isOverriding,
-      producibleId,
-      scriptureRefs,
-      rel,
-    );
+    await this.repo.update(options.isOverriding, producibleId, scriptureRefs, rel);
 
     if (scriptureRefs !== null) {
       for (const sr of scriptureRefs) {

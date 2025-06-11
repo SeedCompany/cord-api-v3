@@ -1,11 +1,4 @@
-import {
-  Args,
-  Mutation,
-  Parent,
-  Query,
-  ResolveField,
-  Resolver,
-} from '@nestjs/graphql';
+import { Args, Mutation, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
 import { all as countries, whereAlpha3 } from 'iso-3166-1';
 import { type ID, IdArg, ListArg, mapSecuredValue } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
@@ -62,9 +55,7 @@ export class LocationResolver {
     @Loader(FundingAccountLoader)
     fundingAccounts: LoaderOf<FundingAccountLoader>,
   ): Promise<SecuredFundingAccount> {
-    return await mapSecuredValue(location.fundingAccount, ({ id }) =>
-      fundingAccounts.load(id),
-    );
+    return await mapSecuredValue(location.fundingAccount, ({ id }) => fundingAccounts.load(id));
   }
 
   @ResolveField(() => SecuredFieldRegion)
@@ -72,9 +63,7 @@ export class LocationResolver {
     @Parent() location: Location,
     @Loader(FieldRegionLoader) fieldRegions: LoaderOf<FieldRegionLoader>,
   ): Promise<SecuredFieldRegion> {
-    return await mapSecuredValue(location.defaultFieldRegion, ({ id }) =>
-      fieldRegions.load(id),
-    );
+    return await mapSecuredValue(location.defaultFieldRegion, ({ id }) => fieldRegions.load(id));
   }
 
   @ResolveField(() => SecuredLocation)
@@ -97,8 +86,7 @@ export class LocationResolver {
 
   @ResolveField(() => IsoCountry, {
     nullable: true,
-    description:
-      "An ISO 3166-1 country, looked up by the `Location`'s `isoAlpha3` code",
+    description: "An ISO 3166-1 country, looked up by the `Location`'s `isoAlpha3` code",
   })
   async isoCountry(@Parent() location: Location): Promise<IsoCountry | null> {
     const { value, canRead } = location.isoAlpha3;

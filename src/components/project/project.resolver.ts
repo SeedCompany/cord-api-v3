@@ -30,17 +30,10 @@ import { SecuredFieldRegion } from '../field-region/dto';
 import { FileNodeLoader } from '../file';
 import { asDirectory, SecuredDirectory } from '../file/dto';
 import { LocationLoader } from '../location';
-import {
-  LocationListInput,
-  SecuredLocation,
-  SecuredLocationList,
-} from '../location/dto';
+import { LocationListInput, SecuredLocation, SecuredLocationList } from '../location/dto';
 import { OrganizationLoader } from '../organization';
 import { SecuredOrganization } from '../organization/dto';
-import {
-  PartnershipByProjectAndPartnerLoader,
-  PartnershipLoader,
-} from '../partnership';
+import { PartnershipByProjectAndPartnerLoader, PartnershipLoader } from '../partnership';
 import {
   Partnership,
   PartnershipListInput,
@@ -67,10 +60,7 @@ import {
   UpdateProjectOutput,
 } from './dto';
 import { ProjectMemberLoader } from './project-member';
-import {
-  ProjectMemberListInput,
-  SecuredProjectMemberList,
-} from './project-member/dto';
+import { ProjectMemberListInput, SecuredProjectMemberList } from './project-member/dto';
 import { ProjectLoader } from './project.loader';
 import { ProjectService } from './project.service';
 
@@ -120,10 +110,7 @@ export class ProjectResolver {
       ...input,
       filter: {
         ...input.filter,
-        type: [
-          ProjectType.MomentumTranslation,
-          ProjectType.MultiplicationTranslation,
-        ],
+        type: [ProjectType.MomentumTranslation, ProjectType.MultiplicationTranslation],
       },
     });
     projects.primeAll(list.items);
@@ -216,11 +203,7 @@ export class ProjectResolver {
     @ListArg(PartnershipListInput) input: PartnershipListInput,
     @Loader(PartnershipLoader) partnerships: LoaderOf<PartnershipLoader>,
   ): Promise<SecuredPartnershipList> {
-    const list = await this.projectService.listPartnerships(
-      project,
-      input,
-      project.changeset,
-    );
+    const list = await this.projectService.listPartnerships(project, input, project.changeset);
     partnerships.primeAll(list.items);
     return list;
   }
@@ -254,9 +237,7 @@ export class ProjectResolver {
       };
     }
     if (!project.rootDirectory.value?.id) {
-      throw new NotFoundException(
-        'Could not find root directory associated to this project',
-      );
+      throw new NotFoundException('Could not find root directory associated to this project');
     }
 
     const dir = asDirectory(await files.load(project.rootDirectory.value.id));
@@ -282,9 +263,7 @@ export class ProjectResolver {
     @Parent() project: Project,
     @Loader(LocationLoader) locations: LoaderOf<LocationLoader>,
   ): Promise<SecuredLocation> {
-    return await mapSecuredValue(project.primaryLocation, ({ id }) =>
-      locations.load(id),
-    );
+    return await mapSecuredValue(project.primaryLocation, ({ id }) => locations.load(id));
   }
 
   @ResolveField(() => SecuredLocationList)
@@ -303,9 +282,7 @@ export class ProjectResolver {
     @Parent() project: Project,
     @Loader(LocationLoader) locations: LoaderOf<LocationLoader>,
   ): Promise<SecuredLocation> {
-    return await mapSecuredValue(project.marketingLocation, ({ id }) =>
-      locations.load(id),
-    );
+    return await mapSecuredValue(project.marketingLocation, ({ id }) => locations.load(id));
   }
 
   @ResolveField(() => SecuredLocation)
@@ -313,9 +290,7 @@ export class ProjectResolver {
     @Parent() project: Project,
     @Loader(LocationLoader) locations: LoaderOf<LocationLoader>,
   ): Promise<SecuredLocation> {
-    return await mapSecuredValue(project.marketingRegionOverride, ({ id }) =>
-      locations.load(id),
-    );
+    return await mapSecuredValue(project.marketingRegionOverride, ({ id }) => locations.load(id));
   }
 
   @ResolveField(() => SecuredFieldRegion)
@@ -323,9 +298,7 @@ export class ProjectResolver {
     @Parent() project: Project,
     @Loader(FieldRegionLoader) fieldRegions: LoaderOf<FieldRegionLoader>,
   ): Promise<SecuredFieldRegion> {
-    return await mapSecuredValue(project.fieldRegion, ({ id }) =>
-      fieldRegions.load(id),
-    );
+    return await mapSecuredValue(project.fieldRegion, ({ id }) => fieldRegions.load(id));
   }
 
   @ResolveField(() => SecuredOrganization)
@@ -333,9 +306,7 @@ export class ProjectResolver {
     @Parent() project: Project,
     @Loader(OrganizationLoader) organizations: LoaderOf<OrganizationLoader>,
   ): Promise<SecuredOrganization> {
-    return await mapSecuredValue(project.owningOrganization, ({ id }) =>
-      organizations.load(id),
-    );
+    return await mapSecuredValue(project.owningOrganization, ({ id }) => organizations.load(id));
   }
 
   @ResolveField()

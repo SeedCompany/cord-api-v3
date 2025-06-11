@@ -1,17 +1,9 @@
-import {
-  Injectable,
-  type OnModuleInit,
-  Scope,
-  type Type,
-} from '@nestjs/common';
+import { Injectable, type OnModuleInit, Scope, type Type } from '@nestjs/common';
 import { ModulesContainer } from '@nestjs/core';
 import { type DataLoaderStrategy } from '@seedcompany/data-loader';
 import { many } from '~/common';
 import { type ResourceMap } from '~/core';
-import {
-  LoaderFactoryMetadata,
-  type LoaderOptions,
-} from '../data-loader/loader-factory.decorator';
+import { LoaderFactoryMetadata, type LoaderOptions } from '../data-loader/loader-factory.decorator';
 
 @Injectable()
 export class ResourceLoaderRegistry implements OnModuleInit {

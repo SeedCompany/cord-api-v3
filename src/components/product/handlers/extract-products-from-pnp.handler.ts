@@ -1,8 +1,5 @@
 import { EventsHandler, type IEventHandler } from '~/core';
-import {
-  EngagementCreatedEvent,
-  EngagementUpdatedEvent,
-} from '../../engagement/events';
+import { EngagementCreatedEvent, EngagementUpdatedEvent } from '../../engagement/events';
 import { FileService } from '../../file';
 import { PnpPlanningExtractionResult } from '../../pnp/extraction-result';
 import { PlanningExtractionResultSaver } from '../../pnp/extraction-result/planning-extraction-result-saver';
@@ -12,9 +9,7 @@ import { PnpProductSyncService } from '../pnp-product-sync.service';
 type SubscribedEvent = EngagementCreatedEvent | EngagementUpdatedEvent;
 
 @EventsHandler(EngagementCreatedEvent, EngagementUpdatedEvent)
-export class ExtractProductsFromPnpHandler
-  implements IEventHandler<SubscribedEvent>
-{
+export class ExtractProductsFromPnpHandler implements IEventHandler<SubscribedEvent> {
   constructor(
     private readonly syncer: PnpProductSyncService,
     private readonly files: FileService,
@@ -25,10 +20,7 @@ export class ExtractProductsFromPnpHandler
     if (!event.isLanguageEngagement()) {
       return;
     }
-    const engagement =
-      event instanceof EngagementCreatedEvent
-        ? event.engagement
-        : event.updated;
+    const engagement = event instanceof EngagementCreatedEvent ? event.engagement : event.updated;
     const { pnp: hasPnpInput, methodology } = event.input;
     if (!engagement.pnp || !hasPnpInput || !methodology) {
       return;

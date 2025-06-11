@@ -3,12 +3,7 @@ import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { type ID, type Role, ServerException } from '~/common';
 import { DatabaseService, DbTraceLayer, OnIndex } from '../database';
-import {
-  ACTIVE,
-  currentUser,
-  matchUserGloballyScopedRoles,
-  variable,
-} from '../database/query';
+import { ACTIVE, currentUser, matchUserGloballyScopedRoles, variable } from '../database/query';
 import { type LoginInput } from './dto';
 import { type Session } from './session/session.dto';
 
@@ -174,26 +169,15 @@ export class AuthenticationRepository {
     const result = await this.db
       .query()
       .raw('MATCH (token:Token { active: true, value: $token })', { token })
-      .optionalMatch([
-        node('token'),
-        relation('in', '', 'token', ACTIVE),
-        node('user', 'User'),
-      ])
+      .optionalMatch([node('token'), relation('in', '', 'token', ACTIVE), node('user', 'User')])
       .apply(matchUserGloballyScopedRoles('user', 'roles'))
       .apply(
         impersonatee
           ? (q) =>
               q.subQuery((sub) =>
                 sub
-                  .optionalMatch(
-                    node('impersonatee', 'User', { id: impersonatee }),
-                  )
-                  .apply(
-                    matchUserGloballyScopedRoles(
-                      'impersonatee',
-                      'impersonateeRoles',
-                    ),
-                  )
+                  .optionalMatch(node('impersonatee', 'User', { id: impersonatee }))
+                  .apply(matchUserGloballyScopedRoles('impersonatee', 'impersonateeRoles'))
                   .return('impersonateeRoles'),
               )
           : null,
@@ -202,11 +186,7 @@ export class AuthenticationRepository {
         userId: ID | null;
         roles: readonly Role[];
         impersonateeRoles: readonly Role[] | null;
-      }>([
-        'user.id as userId',
-        'roles',
-        impersonatee ? 'impersonateeRoles' : '',
-      ])
+      }>(['user.id as userId', 'roles', impersonatee ? 'impersonateeRoles' : ''])
       .first();
 
     return result ?? null;
@@ -225,11 +205,7 @@ export class AuthenticationRepository {
   async getCurrentPasswordHash() {
     const result = await this.db
       .query()
-      .match([
-        currentUser,
-        relation('out', '', 'password', ACTIVE),
-        node('password', 'Property'),
-      ])
+      .match([currentUser, relation('out', '', 'password', ACTIVE), node('password', 'Property')])
       .return('password.value as passwordHash')
       .asResult<{ passwordHash: string }>()
       .first();
@@ -239,11 +215,7 @@ export class AuthenticationRepository {
   async updatePassword(newPasswordHash: string): Promise<void> {
     await this.db
       .query()
-      .match([
-        currentUser,
-        relation('out', '', 'password', ACTIVE),
-        node('password', 'Property'),
-      ])
+      .match([currentUser, relation('out', '', 'password', ACTIVE), node('password', 'Property')])
       .setValues({
         'password.value': newPasswordHash,
       })
@@ -290,10 +262,7 @@ export class AuthenticationRepository {
     return result ?? null;
   }
 
-  async updatePasswordViaEmailToken(
-    { token, email }: EmailToken,
-    pash: string,
-  ): Promise<void> {
+  async updatePasswordViaEmailToken({ token, email }: EmailToken, pash: string): Promise<void> {
     await this.db
       .query()
       .raw(
@@ -327,11 +296,7 @@ export class AuthenticationRepository {
   async deactivateAllOtherSessions(session: Session) {
     await this.db
       .query()
-      .match([
-        currentUser,
-        relation('out', 'oldRel', 'token', ACTIVE),
-        node('token', 'Token'),
-      ])
+      .match([currentUser, relation('out', 'oldRel', 'token', ACTIVE), node('token', 'Token')])
       .raw('WHERE NOT token.value = $token', { token: session.token })
       .setValues({ 'oldRel.active': false })
       .run();

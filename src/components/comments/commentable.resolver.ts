@@ -1,13 +1,5 @@
 import { Info, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
-import {
-  Fields,
-  type ID,
-  IdArg,
-  IsOnly,
-  ListArg,
-  type Resource,
-  SecuredList,
-} from '~/common';
+import { Fields, type ID, IdArg, IsOnly, ListArg, type Resource, SecuredList } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { Identity } from '~/core/authentication';
 import { CommentThreadLoader } from './comment-thread.loader';
@@ -16,10 +8,7 @@ import { Commentable, CommentThreadList, CommentThreadListInput } from './dto';
 
 @Resolver(Commentable)
 export class CommentableResolver {
-  constructor(
-    private readonly service: CommentService,
-    private readonly identity: Identity,
-  ) {}
+  constructor(private readonly service: CommentService, private readonly identity: Identity) {}
 
   @Query(() => Commentable, {
     description: 'Load a commentable resource by ID',

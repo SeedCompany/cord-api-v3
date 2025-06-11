@@ -52,21 +52,15 @@ export class AliasIdResolver implements IdResolver {
     const foundList = await this.db.run(this.query, { aliasList: aliases });
     return ids.map((id) => {
       const found = foundList.find((f) => f.name === id);
-      return found
-        ? found.targetId
-        : !aliases.includes(id)
-        ? id
-        : new NotFoundException();
+      return found ? found.targetId : !aliases.includes(id) ? id : new NotFoundException();
     });
   }
 
-  private readonly query = e.params(
-    { aliasList: e.array(e.str) },
-    ({ aliasList }) =>
-      e.select(e.Alias, (alias) => ({
-        filter: e.op(alias.name, 'in', e.array_unpack(aliasList)),
-        name: true,
-        targetId: alias.target.id,
-      })),
+  private readonly query = e.params({ aliasList: e.array(e.str) }, ({ aliasList }) =>
+    e.select(e.Alias, (alias) => ({
+      filter: e.op(alias.name, 'in', e.array_unpack(aliasList)),
+      name: true,
+      targetId: alias.target.id,
+    })),
   );
 }

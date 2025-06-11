@@ -3,9 +3,7 @@ import { ProjectCreatedEvent } from '../../project/events';
 import { FileService } from '../file.service';
 
 @EventsHandler(ProjectCreatedEvent)
-export class AttachProjectRootDirectoryHandler
-  implements IEventHandler<ProjectCreatedEvent>
-{
+export class AttachProjectRootDirectoryHandler implements IEventHandler<ProjectCreatedEvent> {
   constructor(private readonly files: FileService) {}
 
   async handle(event: ProjectCreatedEvent) {
@@ -22,12 +20,7 @@ export class AttachProjectRootDirectoryHandler
       rootDirectory: { id: rootDirId },
     };
 
-    const folders = [
-      'Approval Documents',
-      'Consultant Reports',
-      'Field Correspondence',
-      'Photos',
-    ];
+    const folders = ['Approval Documents', 'Consultant Reports', 'Field Correspondence', 'Photos'];
     for (const folder of folders) {
       await this.files.createDirectory(rootDirId, folder);
     }

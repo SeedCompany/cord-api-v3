@@ -51,9 +51,6 @@ export class ConditionOptimizer implements OnModuleInit {
       }
     }
 
-    return this.optimizers.reduce(
-      (current, optimizer) => optimizer.optimize(current),
-      condition,
-    );
+    return this.optimizers.reduce((current, optimizer) => optimizer.optimize(current), condition);
   }
 }

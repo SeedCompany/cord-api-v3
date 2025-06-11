@@ -147,9 +147,7 @@ export const defineSorters = <TResourceStatic extends ResourceShape<any>>(
       return { ...common, matcher: subCustom, sort: subField };
     }
 
-    const baseNodeProps = new Set(
-      resource.BaseNodeProps ?? EnhancedResource.of(Resource).props,
-    );
+    const baseNodeProps = new Set(resource.BaseNodeProps ?? EnhancedResource.of(Resource).props);
     const isBaseNodeProp = baseNodeProps.has(sort);
     const matcher = (isBaseNodeProp ? basePropSorter : propSorter)(sort);
     return { ...common, matcher };
@@ -164,11 +162,7 @@ export type DefinedSorters<Field extends string> = ((
 
 export const propSorter = (prop: string) => (query: Query) =>
   query
-    .match([
-      node('node'),
-      relation('out', '', prop, ACTIVE),
-      node('sortProp', 'Property'),
-    ])
+    .match([node('node'), relation('out', '', prop, ACTIVE), node('sortProp', 'Property')])
     .return<SortCol>('sortProp.value as sortValue');
 
 export const basePropSorter = (prop: string) => (query: Query) =>
@@ -179,17 +173,17 @@ export interface SortCol {
 }
 
 // TODO stricter
-export type SortFieldOf<TResourceStatic extends ResourceShape<any>> =
-  LiteralUnion<keyof TResourceStatic['prototype'] & string, string>;
+export type SortFieldOf<TResourceStatic extends ResourceShape<any>> = LiteralUnion<
+  keyof TResourceStatic['prototype'] & string,
+  string
+>;
 
 export type SortMatcher<Field extends string> = (
   query: Query,
   input: Sort<Field> & SortInternals,
 ) => Query<SortCol>;
 
-type SortMatchers<Field extends string> = Partial<
-  Record<Field, SortMatcher<Field>>
->;
+type SortMatchers<Field extends string> = Partial<Record<Field, SortMatcher<Field>>>;
 
 interface Sort<Field extends string> {
   sort: Field;

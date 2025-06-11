@@ -54,10 +54,7 @@ export class ProductProgressService {
     if (reports.length === 0) {
       return [];
     }
-    const reportMap = mapEntries(reports, ({ report }) => [
-      report.id,
-      report,
-    ]).asRecord;
+    const reportMap = mapEntries(reports, ({ report }) => [report.id, report]).asRecord;
     const rows = await this.repo.readAllProgressReportsForManyReports(reports);
     return rows.map((row): ProgressVariantByReportOutput => {
       const report = reportMap[row.reportId];
@@ -78,13 +75,8 @@ export class ProductProgressService {
     if (products.length === 0) {
       return [];
     }
-    const productMap = mapEntries(products, ({ product }) => [
-      product.id,
-      product,
-    ]).asRecord;
-    const rows = await this.repo.readAllProgressReportsForManyProducts(
-      products,
-    );
+    const productMap = mapEntries(products, ({ product }) => [product.id, product]).asRecord;
+    const rows = await this.repo.readAllProgressReportsForManyProducts(products);
     return rows.map((row): ProgressVariantByProductOutput => {
       const product = productMap[row.productId];
       return {
@@ -162,9 +154,7 @@ export class ProductProgressService {
     progress: UnsecuredProductProgress,
     privileges: UserResourcePrivileges<typeof StepProgress>,
   ): ProductProgress | undefined {
-    const vp = privileges.forContext(
-      withVariant(privileges.context!, progress.variant),
-    );
+    const vp = privileges.forContext(withVariant(privileges.context!, progress.variant));
     if (!vp.can('read')) {
       return undefined;
     }

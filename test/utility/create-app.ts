@@ -6,16 +6,12 @@ import { HttpAdapter, type NestHttpApplication } from '~/core/http';
 import { LogLevel } from '~/core/logger';
 import { LevelMatcher } from '~/core/logger/level-matcher';
 import { AppModule } from '../../src/app.module';
-import {
-  createGraphqlClient,
-  type GraphQLTestClient,
-} from './create-graphql-client';
+import { createGraphqlClient, type GraphQLTestClient } from './create-graphql-client';
 import { ephemeralGel } from './gel-setup';
 
 // Patch faker email to be more unique
 const origEmail = faker.internet.email.bind(faker.internet);
-faker.internet.email = (...args) =>
-  origEmail(...(args as any)).replace('@', `.${Date.now()}@`);
+faker.internet.email = (...args) => origEmail(...(args as any)).replace('@', `.${Date.now()}@`);
 
 export interface TestApp extends NestHttpApplication {
   graphql: GraphQLTestClient;

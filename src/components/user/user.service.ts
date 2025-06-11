@@ -15,15 +15,9 @@ import { IEventBus } from '~/core/events';
 import { Privileges } from '../authorization';
 import { AssignableRoles } from '../authorization/dto/assignable-roles.dto';
 import { LocationService } from '../location';
-import {
-  type LocationListInput,
-  type SecuredLocationList,
-} from '../location/dto';
+import { type LocationListInput, type SecuredLocationList } from '../location/dto';
 import { OrganizationService } from '../organization';
-import {
-  type OrganizationListInput,
-  type SecuredOrganizationList,
-} from '../organization/dto';
+import { type OrganizationListInput, type SecuredOrganizationList } from '../organization/dto';
 import { PartnerService } from '../partner';
 import { type PartnerListInput, type SecuredPartnerList } from '../partner/dto';
 import {
@@ -38,17 +32,11 @@ import {
   type UserListOutput,
 } from './dto';
 import { EducationService } from './education';
-import {
-  type EducationListInput,
-  type SecuredEducationList,
-} from './education/dto';
+import { type EducationListInput, type SecuredEducationList } from './education/dto';
 import { UserUpdatedEvent } from './events/user-updated.event';
 import { KnownLanguageRepository } from './known-language.repository';
 import { UnavailabilityService } from './unavailability';
-import {
-  type SecuredUnavailabilityList,
-  type UnavailabilityListInput,
-} from './unavailability/dto';
+import { type SecuredUnavailabilityList, type UnavailabilityListInput } from './unavailability/dto';
 import { UserRepository } from './user.repository';
 
 @Injectable()
@@ -97,9 +85,7 @@ export class UserService {
     return users.map((dto) => this.secure(dto));
   }
 
-  async readManyActors(
-    ids: readonly ID[],
-  ): Promise<ReadonlyArray<User | SystemAgent>> {
+  async readManyActors(ids: readonly ID[]): Promise<ReadonlyArray<User | SystemAgent>> {
     const users = await this.userRepo.readManyActors(ids);
     return users.map((dto) =>
       dto.__typename === 'User' ? this.secure(dto) : (dto as SystemAgent),
@@ -154,9 +140,7 @@ export class UserService {
 
   getAssignableRoles() {
     const privileges = this.privileges.for(AssignableRoles);
-    const assignableRoles = new Set(
-      [...Role].filter((role) => privileges.can('edit', role)),
-    );
+    const assignableRoles = new Set([...Role].filter((role) => privileges.can('edit', role)));
     return assignableRoles;
   }
 
@@ -172,10 +156,7 @@ export class UserService {
     );
   }
 
-  async listEducations(
-    userId: ID,
-    input: EducationListInput,
-  ): Promise<SecuredEducationList> {
+  async listEducations(userId: ID, input: EducationListInput): Promise<SecuredEducationList> {
     const user = await this.userRepo.readOne(userId);
     const perms = this.privileges.for(User, user).all.education;
 
@@ -220,10 +201,7 @@ export class UserService {
     };
   }
 
-  async listPartners(
-    userId: ID,
-    input: PartnerListInput,
-  ): Promise<SecuredPartnerList> {
+  async listPartners(userId: ID, input: PartnerListInput): Promise<SecuredPartnerList> {
     const user = await this.userRepo.readOne(userId);
     const perms = this.privileges.for(User, user).all.partner;
     const result = await this.partners.list({
@@ -267,12 +245,7 @@ export class UserService {
 
   async addLocation(userId: ID, locationId: ID): Promise<void> {
     try {
-      await this.locationService.addLocationToNode(
-        'User',
-        userId,
-        'locations',
-        locationId,
-      );
+      await this.locationService.addLocationToNode('User', userId, 'locations', locationId);
     } catch (e) {
       throw new ServerException('Could not add location to user', e);
     }
@@ -280,21 +253,13 @@ export class UserService {
 
   async removeLocation(userId: ID, locationId: ID): Promise<void> {
     try {
-      await this.locationService.removeLocationFromNode(
-        'User',
-        userId,
-        'locations',
-        locationId,
-      );
+      await this.locationService.removeLocationFromNode('User', userId, 'locations', locationId);
     } catch (e) {
       throw new ServerException('Could not remove location from user', e);
     }
   }
 
-  async listLocations(
-    user: User,
-    input: LocationListInput,
-  ): Promise<SecuredLocationList> {
+  async listLocations(user: User, input: LocationListInput): Promise<SecuredLocationList> {
     return await this.locationService.listLocationForResource(
       this.privileges.for(User, user).forEdge('locations'),
       user,
@@ -333,9 +298,7 @@ export class UserService {
     await this.userRepo.assignOrganizationToUser(request);
   }
 
-  async removeOrganizationFromUser(
-    request: RemoveOrganizationFromUser,
-  ): Promise<void> {
+  async removeOrganizationFromUser(request: RemoveOrganizationFromUser): Promise<void> {
     await this.userRepo.removeOrganizationFromUser(request);
   }
 }

@@ -10,23 +10,9 @@ import {
   type UnsecuredDto,
 } from '~/common';
 import { type DbTypeOf, DtoRepository } from '~/core/database';
-import {
-  createNode,
-  matchProps,
-  merge,
-  paginate,
-  sorting,
-} from '~/core/database/query';
-import {
-  ScriptureReferenceRepository,
-  ScriptureReferenceService,
-} from '../scripture';
-import {
-  type CreateFilm,
-  Film,
-  type FilmListInput,
-  type UpdateFilm,
-} from './dto';
+import { createNode, matchProps, merge, paginate, sorting } from '~/core/database/query';
+import { ScriptureReferenceRepository, ScriptureReferenceService } from '../scripture';
+import { type CreateFilm, Film, type FilmListInput, type UpdateFilm } from './dto';
 
 @Injectable()
 export class FilmRepository extends DtoRepository(Film) {
@@ -39,10 +25,7 @@ export class FilmRepository extends DtoRepository(Film) {
 
   async create(input: CreateFilm) {
     if (!(await this.isUnique(input.name))) {
-      throw new DuplicateException(
-        'film.name',
-        'Film with this name already exists',
-      );
+      throw new DuplicateException('film.name', 'Film with this name already exists');
     }
 
     const initialProps = {
@@ -59,15 +42,10 @@ export class FilmRepository extends DtoRepository(Film) {
       throw new CreationFailed(Film);
     }
 
-    await this.scriptureRefsService.create(
-      result.id,
-      input.scriptureReferences,
-    );
+    await this.scriptureRefsService.create(result.id, input.scriptureReferences);
 
     return await this.readOne(result.id).catch((e) => {
-      throw e instanceof NotFoundException
-        ? new ReadAfterCreationFailed(Film)
-        : e;
+      throw e instanceof NotFoundException ? new ReadAfterCreationFailed(Film) : e;
     });
   }
 
@@ -84,22 +62,15 @@ export class FilmRepository extends DtoRepository(Film) {
     return (await super.readOne(id)) as UnsecuredDto<Film>;
   }
 
-  async readMany(
-    ids: readonly ID[],
-  ): Promise<ReadonlyArray<UnsecuredDto<Film>>> {
+  async readMany(ids: readonly ID[]): Promise<ReadonlyArray<UnsecuredDto<Film>>> {
     const items = await super.readMany(ids);
     return items.map((r) => ({
       ...r,
-      scriptureReferences: this.scriptureRefsService.parseList(
-        r.scriptureReferences,
-      ),
+      scriptureReferences: this.scriptureRefsService.parseList(r.scriptureReferences),
     }));
   }
 
-  async list({
-    filter,
-    ...input
-  }: FilmListInput): Promise<PaginatedListType<UnsecuredDto<Film>>> {
+  async list({ filter, ...input }: FilmListInput): Promise<PaginatedListType<UnsecuredDto<Film>>> {
     const result = await this.db
       .query()
       .matchNode('node', 'Film')
@@ -110,9 +81,7 @@ export class FilmRepository extends DtoRepository(Film) {
       ...result!,
       items: result!.items.map((r) => ({
         ...r,
-        scriptureReferences: this.scriptureRefsService.parseList(
-          r.scriptureReferences,
-        ),
+        scriptureReferences: this.scriptureRefsService.parseList(r.scriptureReferences),
       })),
     };
   }

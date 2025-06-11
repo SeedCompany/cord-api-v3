@@ -7,11 +7,7 @@ import { injectHydrators } from './inject-hydrators';
 import { analyzeQuery } from './query-files';
 import { type GeneratorParams } from './util';
 
-export async function generateInlineQueries({
-  client,
-  root,
-  hydrators,
-}: GeneratorParams) {
+export async function generateInlineQueries({ client, root, hydrators }: GeneratorParams) {
   console.log('Generating queries for edgeql() calls...');
 
   const grepForShortList = await $$({
@@ -42,8 +38,7 @@ export async function generateInlineQueries({
 
         if (
           args.length > 1 ||
-          (!Node.isStringLiteral(args[0]) &&
-            !Node.isNoSubstitutionTemplateLiteral(args[0]))
+          (!Node.isStringLiteral(args[0]) && !Node.isNoSubstitutionTemplateLiteral(args[0]))
         ) {
           return [];
         }
@@ -67,10 +62,7 @@ export async function generateInlineQueries({
   imports.add('gel', '$'); // for Cardinality
 
   const seen = new Set<string>();
-  const queryMap = new Map<
-    string,
-    { query: string; cardinality: $.Cardinality }
-  >();
+  const queryMap = new Map<string, { query: string; cardinality: $.Cardinality }>();
   for (const { query, call } of queries) {
     // Prevent duplicate keys in QueryMap in the off chance that two queries are identical
     if (seen.has(query)) {

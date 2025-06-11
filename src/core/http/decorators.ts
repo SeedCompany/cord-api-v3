@@ -60,5 +60,4 @@ export const GlobalHttpHook = createMetadataDecorator({
   types: ['method'],
   setter: (hook: keyof HttpHooks = 'preHandler') => hook,
 });
-export type GlobalHttpHook<Name extends keyof HttpHooks = 'preHandler'> =
-  HttpHooks[Name];
+export type GlobalHttpHook<Name extends keyof HttpHooks = 'preHandler'> = HttpHooks[Name];

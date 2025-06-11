@@ -1,10 +1,4 @@
-import {
-  isNotFalsy,
-  isPlainObject,
-  many,
-  type Many,
-  type Nil,
-} from '@seedcompany/common';
+import { isNotFalsy, isPlainObject, many, type Many, type Nil } from '@seedcompany/common';
 import { Clause, Query } from 'cypher-query-builder';
 
 declare module 'cypher-query-builder/dist/typings/query' {

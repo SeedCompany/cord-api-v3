@@ -35,10 +35,7 @@ import {
 } from './dto';
 
 @Injectable()
-export class BudgetRepository extends DtoRepository<
-  typeof Budget,
-  [view?: ObjectView]
->(Budget) {
+export class BudgetRepository extends DtoRepository<typeof Budget, [view?: ObjectView]>(Budget) {
   constructor(private readonly records: BudgetRecordRepository) {
     super();
   }
@@ -70,10 +67,7 @@ export class BudgetRepository extends DtoRepository<
 
   async update(
     existing: Budget,
-    simpleChanges: Omit<
-      ChangesOf<Budget, UpdateBudget>,
-      'universalTemplateFile'
-    >,
+    simpleChanges: Omit<ChangesOf<Budget, UpdateBudget>, 'universalTemplateFile'>,
   ) {
     return await this.updateProperties(existing, simpleChanges);
   }

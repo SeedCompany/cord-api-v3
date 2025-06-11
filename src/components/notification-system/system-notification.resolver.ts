@@ -1,11 +1,4 @@
-import {
-  Args,
-  Field,
-  Int,
-  Mutation,
-  ObjectType,
-  Resolver,
-} from '@nestjs/graphql';
+import { Args, Field, Int, Mutation, ObjectType, Resolver } from '@nestjs/graphql';
 import { MarkdownScalar } from '~/common/markdown.scalar';
 import { Privileges } from '../authorization';
 import { NotificationService } from '../notifications';

@@ -38,24 +38,18 @@ export class ProjectChangeRequestService {
     private readonly repo: ProjectChangeRequestRepository,
   ) {}
 
-  async create(
-    input: CreateProjectChangeRequest,
-  ): Promise<ProjectChangeRequest> {
+  async create(input: CreateProjectChangeRequest): Promise<ProjectChangeRequest> {
     this.privileges.for(ProjectChangeRequest).verifyCan('create');
 
     const project = await this.projects.readOne(input.projectId);
     if (project.status !== ProjectStatus.Active) {
-      throw new InputException(
-        'Only active projects can create change requests',
-      );
+      throw new InputException('Only active projects can create change requests');
     }
 
     const id = await this.repo.create(input);
 
     return await this.readOne(id).catch((e) => {
-      throw e instanceof NotFoundException
-        ? new ReadAfterCreationFailed(ProjectChangeRequest)
-        : e;
+      throw e instanceof NotFoundException ? new ReadAfterCreationFailed(ProjectChangeRequest) : e;
     });
   }
 
@@ -67,33 +61,26 @@ export class ProjectChangeRequestService {
 
   async readMany(ids: readonly ID[]) {
     const projectChangeRequests = await this.repo.readMany(ids);
-    return await Promise.all(
-      projectChangeRequests.map((dto) => this.secure(dto)),
-    );
+    return await Promise.all(projectChangeRequests.map((dto) => this.secure(dto)));
   }
 
   async readOneUnsecured(id: ID): Promise<UnsecuredDto<ProjectChangeRequest>> {
     return await this.repo.readOne(id);
   }
 
-  async secure(
-    dto: UnsecuredDto<ProjectChangeRequest>,
-  ): Promise<ProjectChangeRequest> {
+  async secure(dto: UnsecuredDto<ProjectChangeRequest>): Promise<ProjectChangeRequest> {
     return {
       ...this.privileges.for(ProjectChangeRequest).secure(dto),
       __typename: 'ProjectChangeRequest',
     };
   }
 
-  async update(
-    input: UpdateProjectChangeRequest,
-  ): Promise<ProjectChangeRequest> {
+  async update(input: UpdateProjectChangeRequest): Promise<ProjectChangeRequest> {
     const object = await this.readOneUnsecured(input.id);
     const changes = this.repo.getActualChanges(object, input);
     const isStatusChanged =
       object.status === Status.Pending &&
-      (changes.status === Status.Approved ||
-        changes.status === Status.Rejected);
+      (changes.status === Status.Approved || changes.status === Status.Rejected);
 
     await this.db.updateProperties({
       type: ProjectChangeRequest,
@@ -110,9 +97,7 @@ export class ProjectChangeRequestService {
     if (isStatusChanged) {
       await this.eventBus.publish(new ChangesetFinalizingEvent(updated));
       if (changes.status === Status.Approved) {
-        await this.eventBus.publish(
-          new ProjectChangeRequestApprovedEvent(updated),
-        );
+        await this.eventBus.publish(new ProjectChangeRequestApprovedEvent(updated));
       }
     }
 
@@ -134,9 +119,7 @@ export class ProjectChangeRequestService {
     }
   }
 
-  async list(
-    input: ProjectChangeRequestListInput,
-  ): Promise<ProjectChangeRequestListOutput> {
+  async list(input: ProjectChangeRequestListInput): Promise<ProjectChangeRequestListOutput> {
     // no need to check if canList for now, all roles allow for listing.
     const results = await this.repo.list(input);
     return await mapListResults(results, (dto) => this.secure(dto));

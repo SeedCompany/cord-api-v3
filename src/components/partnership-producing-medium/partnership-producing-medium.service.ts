@@ -1,12 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { entries } from '@seedcompany/common';
 import { uniqBy } from 'lodash';
-import {
-  type ID,
-  InputException,
-  SecuredList,
-  UnauthorizedException,
-} from '~/common';
+import { type ID, InputException, SecuredList, UnauthorizedException } from '~/common';
 import { ResourceResolver } from '~/core';
 import { Privileges } from '../authorization';
 import { LanguageEngagement } from '../engagement/dto';
@@ -25,9 +20,7 @@ export class PartnershipProducingMediumService {
     private readonly repo: PartnershipProducingMediumRepository,
   ) {}
 
-  async list(
-    engagement: LanguageEngagement,
-  ): Promise<SecuredPartnershipsProducingMediums> {
+  async list(engagement: LanguageEngagement): Promise<SecuredPartnershipsProducingMediums> {
     const perms = this.privileges.for(IProject, engagement as any);
 
     if (!perms.can('read', 'partnership')) {
@@ -49,18 +42,12 @@ export class PartnershipProducingMediumService {
     };
   }
 
-  async update(
-    engagementId: ID,
-    input: readonly PartnershipProducingMediumInput[],
-  ) {
+  async update(engagementId: ID, input: readonly PartnershipProducingMediumInput[]) {
     if (uniqBy(input, (pair) => pair.medium).length !== input.length) {
       throw new InputException('A medium can only be mentioned once');
     }
 
-    const engagement = await this.resources.lookup(
-      LanguageEngagement,
-      engagementId,
-    );
+    const engagement = await this.resources.lookup(LanguageEngagement, engagementId);
 
     const perms = this.privileges.for(IProject, engagement as any);
 

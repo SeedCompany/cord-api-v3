@@ -8,10 +8,7 @@ import {
 } from '~/common';
 import { IEventBus } from '~/core';
 import { Privileges } from '../../authorization';
-import {
-  type ProgressReport,
-  type ProgressReportStatus as Status,
-} from '../dto';
+import { type ProgressReport, type ProgressReportStatus as Status } from '../dto';
 import { type ExecuteProgressReportTransitionInput } from './dto/execute-progress-report-transition.input';
 import { ProgressReportWorkflowEvent as WorkflowEvent } from './dto/workflow-event.dto';
 import { WorkflowUpdatedEvent } from './events/workflow-updated.event';
@@ -76,12 +73,7 @@ export class ProgressReportWorkflowService {
       this.repo.changeStatus(reportId, isTransition ? next.to : next),
     ]);
 
-    const event = new WorkflowUpdatedEvent(
-      reportId,
-      currentStatus,
-      next,
-      unsecuredEvent,
-    );
+    const event = new WorkflowUpdatedEvent(reportId, currentStatus, next, unsecuredEvent);
     await this.eventBus.publish(event);
   }
 

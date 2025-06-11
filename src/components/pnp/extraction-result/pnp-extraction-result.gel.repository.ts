@@ -6,16 +6,11 @@ import { type PnpExtractionResultLoadResult } from './pnp-extraction-result.load
 
 @Injectable()
 export class PnpExtractionResultRepository extends CommonRepository {
-  async read(
-    files: ReadonlyArray<ID<'File'>>,
-  ): Promise<readonly PnpExtractionResultLoadResult[]> {
+  async read(files: ReadonlyArray<ID<'File'>>): Promise<readonly PnpExtractionResultLoadResult[]> {
     throw new NotImplementedException().with(files);
   }
 
-  async save(
-    file: ID<'FileVersion'>,
-    result: PnpExtractionResult,
-  ): Promise<void> {
+  async save(file: ID<'FileVersion'>, result: PnpExtractionResult): Promise<void> {
     throw new NotImplementedException().with(file, result);
   }
 }

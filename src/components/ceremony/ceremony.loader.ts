@@ -4,9 +4,7 @@ import { CeremonyService } from './ceremony.service';
 import { Ceremony } from './dto';
 
 @LoaderFactory(() => Ceremony)
-export class CeremonyLoader
-  implements DataLoaderStrategy<Ceremony, ID<Ceremony>>
-{
+export class CeremonyLoader implements DataLoaderStrategy<Ceremony, ID<Ceremony>> {
   constructor(private readonly ceremonies: CeremonyService) {}
 
   async loadMany(ids: ReadonlyArray<ID<Ceremony>>) {

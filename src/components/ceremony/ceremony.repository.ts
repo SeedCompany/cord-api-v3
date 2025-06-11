@@ -10,12 +10,7 @@ import {
   paginate,
   sorting,
 } from '~/core/database/query';
-import {
-  Ceremony,
-  type CeremonyListInput,
-  type CreateCeremony,
-  type UpdateCeremony,
-} from './dto';
+import { Ceremony, type CeremonyListInput, type CreateCeremony, type UpdateCeremony } from './dto';
 
 @Injectable()
 export class CeremonyRepository extends DtoRepository(Ceremony) {
@@ -69,10 +64,7 @@ export class CeremonyRepository extends DtoRepository(Ceremony) {
         relation('in', '', 'engagement', ACTIVE),
         node('project', 'Project'),
         ...(filter?.type
-          ? [
-              relation('out', '', 'type', ACTIVE),
-              node('name', 'Property', { value: filter.type }),
-            ]
+          ? [relation('out', '', 'type', ACTIVE), node('name', 'Property', { value: filter.type })]
           : []),
       ])
       .apply(

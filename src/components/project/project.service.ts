@@ -28,20 +28,11 @@ import { Privileges } from '../authorization';
 import { BudgetService } from '../budget';
 import { BudgetStatus, type SecuredBudget } from '../budget/dto';
 import { EngagementService } from '../engagement';
-import {
-  type EngagementListInput,
-  type SecuredEngagementList,
-} from '../engagement/dto';
+import { type EngagementListInput, type SecuredEngagementList } from '../engagement/dto';
 import { LocationService } from '../location';
-import {
-  type LocationListInput,
-  type SecuredLocationList,
-} from '../location/dto';
+import { type LocationListInput, type SecuredLocationList } from '../location/dto';
 import { PartnershipService } from '../partnership';
-import {
-  type PartnershipListInput,
-  type SecuredPartnershipList,
-} from '../partnership/dto';
+import { type PartnershipListInput, type SecuredPartnershipList } from '../partnership/dto';
 import { ProjectChangeRequestService } from '../project-change-request';
 import {
   type ProjectChangeRequestListInput,
@@ -63,16 +54,9 @@ import {
   TranslationProject,
   UpdateProject,
 } from './dto';
-import {
-  ProjectCreatedEvent,
-  ProjectDeletedEvent,
-  ProjectUpdatedEvent,
-} from './events';
+import { ProjectCreatedEvent, ProjectDeletedEvent, ProjectUpdatedEvent } from './events';
 import { ProjectMemberService } from './project-member';
-import {
-  type ProjectMemberListInput,
-  type SecuredProjectMemberList,
-} from './project-member/dto';
+import { type ProjectMemberListInput, type SecuredProjectMemberList } from './project-member/dto';
 import { ProjectRepository } from './project.repository';
 
 @Injectable()
@@ -147,9 +131,7 @@ export class ProjectService {
     try {
       const { id } = await this.repo.create(input);
       const project = await this.readOneUnsecured(id).catch((e) => {
-        throw e instanceof NotFoundException
-          ? new ReadAfterCreationFailed(IProject)
-          : e;
+        throw e instanceof NotFoundException ? new ReadAfterCreationFailed(IProject) : e;
       });
 
       RequiredWhen.verify(IProject, project);
@@ -191,10 +173,7 @@ export class ProjectService {
     MomentumTranslationProject,
     MultiplicationTranslationProject,
   ])
-  async readOneTranslation(
-    id: ID,
-    view?: ObjectView,
-  ): Promise<TranslationProject> {
+  async readOneTranslation(id: ID, view?: ObjectView): Promise<TranslationProject> {
     const project = await this.readOne(id, view?.changeset);
     if (project.type === ProjectType.Internship) {
       throw new Error('Project is not a translation project');
@@ -203,10 +182,7 @@ export class ProjectService {
   }
 
   @HandleIdLookup(InternshipProject)
-  async readOneInternship(
-    id: ID,
-    view?: ObjectView,
-  ): Promise<InternshipProject> {
+  async readOneInternship(id: ID, view?: ObjectView): Promise<InternshipProject> {
     const project = await this.readOne(id, view?.changeset);
     if (project.type !== ProjectType.Internship) {
       throw new Error('Project is not an internship project');
@@ -214,17 +190,11 @@ export class ProjectService {
     return project as InternshipProject;
   }
 
-  async readOneUnsecured(
-    id: ID,
-    changeset?: ID,
-  ): Promise<UnsecuredDto<Project>> {
+  async readOneUnsecured(id: ID, changeset?: ID): Promise<UnsecuredDto<Project>> {
     return await this.repo.readOne(id, changeset);
   }
 
-  async readMany(
-    ids: readonly ID[],
-    view: ObjectView,
-  ): Promise<readonly Project[]> {
+  async readMany(ids: readonly ID[], view: ObjectView): Promise<readonly Project[]> {
     const projects = await this.repo.readMany(ids, view?.changeset);
     return await Promise.all(projects.map((dto) => this.secure(dto)));
   }
@@ -239,10 +209,7 @@ export class ProjectService {
   }
 
   @Transactional()
-  async update(
-    input: UpdateProject,
-    changeset?: ID,
-  ): Promise<UnsecuredDto<Project>> {
+  async update(input: UpdateProject, changeset?: ID): Promise<UnsecuredDto<Project>> {
     const currentProject = await this.readOneUnsecured(input.id, changeset);
     if (input.sensitivity && currentProject.type !== ProjectType.Internship)
       throw new InputException(
@@ -251,10 +218,7 @@ export class ProjectService {
       );
 
     // Only allow admins to specify department IDs
-    if (
-      input.departmentId !== undefined &&
-      !this.identity.isImpersonatorAdmin
-    ) {
+    if (input.departmentId !== undefined && !this.identity.isImpersonatorAdmin) {
       throw UnauthorizedException.fromPrivileges(
         'edit',
         undefined,
@@ -275,9 +239,7 @@ export class ProjectService {
 
     if (changes.primaryLocationId) {
       try {
-        const location = await this.locationService.readOne(
-          changes.primaryLocationId,
-        );
+        const location = await this.locationService.readOne(changes.primaryLocationId);
         if (!location.fundingAccount.value) {
           throw new InputException(
             'Cannot connect location without a funding account',
@@ -286,11 +248,7 @@ export class ProjectService {
         }
       } catch (e) {
         if (e instanceof NotFoundException) {
-          throw new NotFoundException(
-            'Primary location not found',
-            'project.primaryLocationId',
-            e,
-          );
+          throw new NotFoundException('Primary location not found', 'project.primaryLocationId', e);
         }
         throw e;
       }
@@ -307,10 +265,7 @@ export class ProjectService {
 
     const prevMissing = RequiredWhen.calc(IProject, currentProject);
     const nowMissing = RequiredWhen.calc(IProject, updated);
-    if (
-      nowMissing &&
-      (!prevMissing || nowMissing.missing.length >= prevMissing.missing.length)
-    ) {
+    if (nowMissing && (!prevMissing || nowMissing.missing.length >= prevMissing.missing.length)) {
       throw nowMissing;
     }
 
@@ -440,10 +395,7 @@ export class ProjectService {
     };
   }
 
-  async listProjectsByUserId(
-    userId: ID,
-    input: ProjectListInput,
-  ): Promise<SecuredProjectList> {
+  async listProjectsByUserId(userId: ID, input: ProjectListInput): Promise<SecuredProjectList> {
     // Instead of trying to handle which subset of projects should be included,
     // based on doing the work of seeing which project teams they can view,
     // we'll use this course all/nothing check. This, assuming role permissions
@@ -492,10 +444,7 @@ export class ProjectService {
         locationId,
       );
     } catch (e) {
-      throw new ServerException(
-        'Could not remove other location from project',
-        e,
-      );
+      throw new ServerException('Could not remove other location from project', e);
     }
   }
 
@@ -510,10 +459,7 @@ export class ProjectService {
     );
   }
 
-  async currentBudget(
-    project: IProject,
-    changeset?: ID,
-  ): Promise<SecuredBudget> {
+  async currentBudget(project: IProject, changeset?: ID): Promise<SecuredBudget> {
     let budgetToReturn;
     const perms = this.privileges.for(IProject, project).forEdge('budget');
 
@@ -527,9 +473,7 @@ export class ProjectService {
         changeset,
       );
 
-      const current = budgets.items.find(
-        (b) => b.status === BudgetStatus.Current,
-      );
+      const current = budgets.items.find((b) => b.status === BudgetStatus.Current);
 
       // #574 - if no current budget, then fallback to the first pending budget
       budgetToReturn = current ?? budgets.items[0];
@@ -572,8 +516,7 @@ class ProjectDateRangeException extends RangeException {
     current: Partial<Pick<UnsecuredDto<Project>, 'mouStart' | 'mouEnd'>>,
     changes: AnyChangesOf<Project> = {},
   ) {
-    const start =
-      changes.mouStart !== undefined ? changes.mouStart : current.mouStart;
+    const start = changes.mouStart !== undefined ? changes.mouStart : current.mouStart;
     const end = changes.mouEnd !== undefined ? changes.mouEnd : current.mouEnd;
     if (start && end && start > end) {
       const field = changes.mouEnd ? 'project.mouEnd' : 'project.mouStart';

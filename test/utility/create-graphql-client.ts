@@ -1,11 +1,7 @@
 import { type TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/core';
 import { type INestApplication } from '@nestjs/common';
 import got from 'got';
-import {
-  type FormattedExecutionResult,
-  type GraphQLFormattedError,
-  print,
-} from 'graphql';
+import { type FormattedExecutionResult, type GraphQLFormattedError, print } from 'graphql';
 import { type Merge } from 'type-fest';
 import { ConfigService } from '~/core';
 // eslint-disable-next-line import/no-duplicates
@@ -26,9 +22,7 @@ export interface GraphQLTestClient {
   email?: string;
 }
 
-export const createGraphqlClient = async (
-  app: INestApplication,
-): Promise<GraphQLTestClient> => {
+export const createGraphqlClient = async (app: INestApplication): Promise<GraphQLTestClient> => {
   await app.listen(0);
   const url = await app.getUrl();
   app.get(ConfigService).hostUrl$.next(new URL(url) as URL & string);
@@ -96,9 +90,10 @@ class GqlResult<TData> implements PromiseLike<TData> {
   }
 }
 
-function validateResult<TData>(
-  res: ExecutionResult<TData>,
-): asserts res is Omit<ExecutionResult<TData>, 'data' | 'errors'> & {
+function validateResult<TData>(res: ExecutionResult<TData>): asserts res is Omit<
+  ExecutionResult<TData>,
+  'data' | 'errors'
+> & {
   data: TData;
 } {
   if (res.errors && res.errors.length > 0) {
@@ -130,10 +125,7 @@ export class GqlError extends Error {
   }
 }
 
-export type ExecutionResult<TData> = Omit<
-  FormattedExecutionResult<TData>,
-  'errors'
-> & {
+export type ExecutionResult<TData> = Omit<FormattedExecutionResult<TData>, 'errors'> & {
   errors?: readonly RawGqlError[];
 };
 

@@ -1,9 +1,6 @@
 import { DiscoveryService } from '@golevelup/nestjs-discovery';
 import { Injectable } from '@nestjs/common';
-import {
-  AbstractGraphQLDriver as AbstractDriver,
-  type GqlModuleOptions,
-} from '@nestjs/graphql';
+import { AbstractGraphQLDriver as AbstractDriver, type GqlModuleOptions } from '@nestjs/graphql';
 import type { RouteOptions as FastifyRoute } from 'fastify';
 import type { ExecutionArgs } from 'graphql';
 import { makeHandler as makeGqlWSHandler } from 'graphql-ws/use/@fastify/websocket';
@@ -33,10 +30,7 @@ export type DriverConfig = GqlModuleOptions &
 export class Driver extends AbstractDriver<DriverConfig> {
   private yoga: YogaServerInstance<ServerContext, {}>;
 
-  constructor(
-    private readonly discovery: DiscoveryService,
-    private readonly http: HttpAdapter,
-  ) {
+  constructor(private readonly discovery: DiscoveryService, private readonly http: HttpAdapter) {
     super();
   }
 
@@ -44,9 +38,7 @@ export class Driver extends AbstractDriver<DriverConfig> {
     const fastify = this.http.getInstance();
 
     // Do our plugin discovery / registration
-    const discoveredPlugins = await this.discovery.providersWithMetaAtKey(
-      Plugin.KEY,
-    );
+    const discoveredPlugins = await this.discovery.providersWithMetaAtKey(Plugin.KEY);
     options.plugins = [
       ...(options.plugins ?? []),
       ...new Set(discoveredPlugins.map((cls) => cls.discoveredClass.instance)),
@@ -73,9 +65,7 @@ export class Driver extends AbstractDriver<DriverConfig> {
     });
 
     // Setup file upload handling
-    fastify.addContentTypeParser('multipart/form-data', (req, payload, done) =>
-      done(null),
-    );
+    fastify.addContentTypeParser('multipart/form-data', (req, payload, done) => done(null));
   }
 
   httpHandler: FastifyRoute['handler'] = async (req, reply) => {
@@ -83,10 +73,7 @@ export class Driver extends AbstractDriver<DriverConfig> {
       req,
       response: reply,
     });
-    return await reply
-      .headers(Object.fromEntries(res.headers))
-      .status(res.status)
-      .send(res.body);
+    return await reply.headers(Object.fromEntries(res.headers)).status(res.status).send(res.body);
   };
 
   /**
@@ -105,10 +92,7 @@ export class Driver extends AbstractDriver<DriverConfig> {
    *    So this allows our "yoga" plugins to be executed.
    */
   private makeWsHandler(options: DriverConfig) {
-    const asyncContextBySocket = new WeakMap<
-      WebSocket,
-      <R>(fn: () => R) => R
-    >();
+    const asyncContextBySocket = new WeakMap<WebSocket, <R>(fn: () => R) => R>();
     interface WsExecutionArgs extends ExecutionArgs {
       socket: WebSocket;
       envelop: ReturnType<ReturnType<typeof envelop>>;

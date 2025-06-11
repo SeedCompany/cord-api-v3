@@ -22,10 +22,7 @@ export class ProjectLoader extends ObjectViewAwareLoader<Project, IProject> {
     super();
   }
 
-  async loadManyByView(
-    ids: readonly ID[],
-    view: ObjectView,
-  ): Promise<readonly Project[]> {
+  async loadManyByView(ids: readonly ID[], view: ObjectView): Promise<readonly Project[]> {
     return await this.projects.readMany(ids, view);
   }
 }

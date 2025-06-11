@@ -7,9 +7,7 @@ export class MarkdownScalar implements CustomScalar<string, string | null> {
 
   parseLiteral(ast: ValueNode): string | null {
     if (ast.kind !== Kind.STRING) {
-      throw new GraphQLError(
-        `Can only validate strings as InlineMarkdown but got a: ${ast.kind}`,
-      );
+      throw new GraphQLError(`Can only validate strings as InlineMarkdown but got a: ${ast.kind}`);
     }
     return ast.value;
   }

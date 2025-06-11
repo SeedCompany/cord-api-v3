@@ -61,15 +61,11 @@ export class Partner extends Interfaces {
 
   readonly languageOfWiderCommunication: Secured<LinkTo<'Language'> | null>;
 
-  readonly fieldRegions: Required<
-    Secured<ReadonlyArray<LinkTo<'FieldRegion'>>>
-  >;
+  readonly fieldRegions: Required<Secured<ReadonlyArray<LinkTo<'FieldRegion'>>>>;
 
   readonly countries: Required<Secured<ReadonlyArray<LinkTo<'Location'>>>>;
 
-  readonly languagesOfConsulting: Required<
-    Secured<ReadonlyArray<LinkTo<'Language'>>>
-  >;
+  readonly languagesOfConsulting: Required<Secured<ReadonlyArray<LinkTo<'Language'>>>>;
 
   @Field()
   readonly startDate: SecuredDateNullable;

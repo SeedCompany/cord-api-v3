@@ -1,21 +1,10 @@
 import { CLASS_TYPE_METADATA, Field, InterfaceType } from '@nestjs/graphql';
 import { type ClassType as ClassTypeVal } from '@nestjs/graphql/dist/enums/class-type.enum.js';
-import {
-  cached,
-  type FnLike,
-  mapValues,
-  setInspectOnClass,
-  setToJson,
-} from '@seedcompany/common';
+import { cached, type FnLike, mapValues, setInspectOnClass, setToJson } from '@seedcompany/common';
 import { createMetadataDecorator } from '@seedcompany/nest';
 import { LazyGetter as Once } from 'lazy-get-decorator';
 import { DateTime } from 'luxon';
-import type {
-  ResourceDBMap,
-  ResourceLike,
-  ResourceName,
-  ResourcesHost,
-} from '~/core';
+import type { ResourceDBMap, ResourceLike, ResourceName, ResourcesHost } from '~/core';
 import { type $, type e } from '~/core/gel/reexports';
 import { type ScopedRole } from '../components/authorization/dto';
 import { CalculatedSymbol } from './calculated.decorator';
@@ -39,13 +28,12 @@ const hasTypename = (value: unknown): value is { __typename: string } =>
   '__typename' in value &&
   typeof value.__typename === 'string';
 
-export const resolveByTypename =
-  (interfaceName: string) => (value: unknown) => {
-    if (hasTypename(value)) {
-      return EnhancedResource.resolve(value.__typename).name;
-    }
-    throw new ServerException(`Cannot resolve ${interfaceName} type`);
-  };
+export const resolveByTypename = (interfaceName: string) => (value: unknown) => {
+  if (hasTypename(value)) {
+    return EnhancedResource.resolve(value.__typename).name;
+  }
+  throw new ServerException(`Cannot resolve ${interfaceName} type`);
+};
 
 @InterfaceType({
   resolveType: resolveByTypename(Resource.name),
@@ -78,9 +66,7 @@ export type ResourceShape<T> = AbstractClassType<T> & {
   // An optional list of props that exist on the BaseNode in the DB.
   // Default should probably be considered the props on Resource class.
   BaseNodeProps?: string[];
-  Relations?: Thunk<
-    Record<string, ResourceShape<any> | [ResourceShape<any>] | undefined>
-  >;
+  Relations?: Thunk<Record<string, ResourceShape<any> | [ResourceShape<any>] | undefined>>;
   /**
    * Define this resource as being a child of another.
    * This means it's _created_ and scoped under this other resource.
@@ -103,10 +89,7 @@ export class EnhancedResource<T extends ResourceShape<any>> {
   static resourcesHost?: ResourcesHost;
 
   private constructor(readonly type: T) {}
-  private static readonly refs = new WeakMap<
-    ResourceShape<any>,
-    EnhancedResource<any>
-  >();
+  private static readonly refs = new WeakMap<ResourceShape<any>, EnhancedResource<any>>();
 
   static resolve(ref: ResourceLike) {
     if (ref && typeof ref !== 'string') {
@@ -118,9 +101,7 @@ export class EnhancedResource<T extends ResourceShape<any>> {
     return EnhancedResource.resourcesHost.enhance(ref);
   }
 
-  static of<T extends ResourceShape<any>>(
-    resource: T | EnhancedResource<T>,
-  ): EnhancedResource<T> {
+  static of<T extends ResourceShape<any>>(resource: T | EnhancedResource<T>): EnhancedResource<T> {
     if (resource instanceof EnhancedResource) {
       return resource;
     }
@@ -143,9 +124,7 @@ export class EnhancedResource<T extends ResourceShape<any>> {
    * If it is, then this is returned otherwise undefined.
    * This should help to narrow with null coalescing when {@link is} isn't viable.
    */
-  as<S extends ResourceShape<any>>(
-    clsType: S,
-  ): EnhancedResource<S> | undefined {
+  as<S extends ResourceShape<any>>(clsType: S): EnhancedResource<S> | undefined {
     return Object.is(this.type, clsType)
       ? // If check passes then T and S are the same.
         (this as unknown as EnhancedResource<S>)
@@ -218,48 +197,34 @@ export class EnhancedResource<T extends ResourceShape<any>> {
 
   @Once()
   get extraPropsFromRelations() {
-    return this.relNamesIf<ExtraPropsFromRelationsKey<T>>(
-      (rel) => !rel.resource?.hasParent,
-    );
+    return this.relNamesIf<ExtraPropsFromRelationsKey<T>>((rel) => !rel.resource?.hasParent);
   }
 
   @Once()
   get childSingleKeys() {
-    return this.relNamesIf<ChildSinglesKey<T>>(
-      (rel) => !rel.list && !!rel.resource?.hasParent,
-    );
+    return this.relNamesIf<ChildSinglesKey<T>>((rel) => !rel.list && !!rel.resource?.hasParent);
   }
 
   @Once()
   get childListKeys() {
-    return this.relNamesIf<ChildListsKey<T>>(
-      (rel) => rel.list && !!rel.resource?.hasParent,
-    );
+    return this.relNamesIf<ChildListsKey<T>>((rel) => rel.list && !!rel.resource?.hasParent);
   }
 
-  private relNamesIf<K>(
-    predicate: (rel: EnhancedRelation<any>) => boolean,
-  ): ReadonlySet<K> {
+  private relNamesIf<K>(predicate: (rel: EnhancedRelation<any>) => boolean): ReadonlySet<K> {
     return new Set<K>(
-      [...this.relations.values()].flatMap((rel) =>
-        predicate(rel) ? (rel.name as K) : [],
-      ),
+      [...this.relations.values()].flatMap((rel) => (predicate(rel) ? (rel.name as K) : [])),
     );
   }
 
   @Once()
   get relations(): ReadonlyMap<RelKey<T>, EnhancedRelation<T>> {
     const rawRels =
-      typeof this.type.Relations === 'function'
-        ? this.type.Relations()
-        : this.type.Relations ?? {};
+      typeof this.type.Relations === 'function' ? this.type.Relations() : this.type.Relations ?? {};
     return new Map(
       Object.entries(rawRels).map(([rawName, rawType]) => {
         const name = rawName as RelKey<T>;
         const list = Array.isArray(rawType);
-        const type: ResourceShape<any> | undefined = list
-          ? rawType[0]!
-          : rawType;
+        const type: ResourceShape<any> | undefined = list ? rawType[0]! : rawType;
         const resource: EnhancedResource<any> | undefined = type?.prototype
           ? EnhancedResource.of(type)
           : undefined;
@@ -363,11 +328,11 @@ export type DBName<T extends $.TypeSet> = T['__element__']['__name__'];
  * If the type is abstract, then it is a string union of the concrete type's names.
  * If the type is concrete, then it is just the name, just as {@link DBName}.
  */
-export type DBNames<T extends $.ObjectTypeSet> =
-  T['__element__']['__polyTypenames__'];
+export type DBNames<T extends $.ObjectTypeSet> = T['__element__']['__polyTypenames__'];
 
-export type MaybeUnsecuredInstance<TResourceStatic extends ResourceShape<any>> =
-  MaybeSecured<InstanceType<TResourceStatic>>;
+export type MaybeUnsecuredInstance<TResourceStatic extends ResourceShape<any>> = MaybeSecured<
+  InstanceType<TResourceStatic>
+>;
 
 // Get the secured props of the resource
 // merged with all of the relations which are assumed to be secure.
@@ -382,9 +347,7 @@ export type SecuredResourceKey<
   IncludeRelations extends boolean | undefined = true,
 > = keyof SecuredResource<TResourceStatic, IncludeRelations> & string;
 
-export type SecuredPropsPlusExtraKey<
-  TResourceStatic extends ResourceShape<any>,
-> =
+export type SecuredPropsPlusExtraKey<TResourceStatic extends ResourceShape<any>> =
   | (keyof SecuredProps<TResourceStatic['prototype']> & string)
   | ExtraPropsFromRelationsKey<TResourceStatic>;
 

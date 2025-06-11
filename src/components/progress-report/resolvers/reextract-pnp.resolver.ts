@@ -8,10 +8,7 @@ import { PnpProgressExtractionResult } from '../../pnp/extraction-result';
 
 @Resolver()
 export class ReextractPnpResolver {
-  constructor(
-    private readonly files: FileService,
-    private readonly eventBus: IEventBus,
-  ) {}
+  constructor(private readonly files: FileService, private readonly eventBus: IEventBus) {}
 
   @Mutation(() => PnpProgressExtractionResult)
   async reextractPnpProgress(
@@ -25,9 +22,7 @@ export class ReextractPnpResolver {
   ): Promise<PnpProgressExtractionResult> {
     const report = await reportLoader.load(reportId);
     if (report.type !== 'Progress') {
-      throw new InputException(
-        "Only ProgressReports can have PnP's re-extracted",
-      );
+      throw new InputException("Only ProgressReports can have PnP's re-extracted");
     }
     const file = await resolveDefinedFile(fileLoader, report.reportFile);
     if (!file.value) {

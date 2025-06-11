@@ -64,15 +64,12 @@ export abstract class CursorPaginationInput extends DataObject {
   readonly before?: string;
 }
 
-export interface SortablePaginationInput<SortKey extends string = string>
-  extends PaginationInput {
+export interface SortablePaginationInput<SortKey extends string = string> extends PaginationInput {
   sort: SortKey;
   order: Order;
 }
 
-export const isSortablePaginationInput = (
-  input: unknown,
-): input is SortablePaginationInput =>
+export const isSortablePaginationInput = (input: unknown): input is SortablePaginationInput =>
   isPaginationInput(input) &&
   'sort' in input &&
   typeof input.sort === 'string' &&

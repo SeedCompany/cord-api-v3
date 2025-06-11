@@ -1,8 +1,5 @@
 import { EnvironmentService } from '~/core/config/environment.service';
-import {
-  determineRootUser,
-  RootUserAlias,
-} from '~/core/config/root-user.config';
+import { determineRootUser, RootUserAlias } from '~/core/config/root-user.config';
 import type { SeedFn } from '~/core/gel/seeds.run';
 
 export default (async function ({ e, db, print }) {

@@ -3,10 +3,7 @@ import { Observable, Subject } from 'rxjs';
 
 export class ShutdownHook extends Observable<void> {}
 
-class ShutdownHookImpl
-  extends Subject<void>
-  implements OnApplicationShutdown, ShutdownHook
-{
+class ShutdownHookImpl extends Subject<void> implements OnApplicationShutdown, ShutdownHook {
   onApplicationShutdown() {
     this.next();
     this.complete();

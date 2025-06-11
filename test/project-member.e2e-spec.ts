@@ -22,11 +22,7 @@ describe('ProjectMember e2e', () => {
     app = await createTestApp();
     await createSession(app);
     await registerUser(app, {
-      roles: [
-        Role.ProjectManager,
-        Role.Consultant,
-        Role.FieldOperationsDirector,
-      ],
+      roles: [Role.ProjectManager, Role.Consultant, Role.FieldOperationsDirector],
     });
     project = await createProject(app);
   });

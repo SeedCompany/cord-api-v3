@@ -20,13 +20,8 @@ export type OptionalFieldOptions = FieldOptions & {
  * A field that is optional/omissible/can be undefined.
  * Whether it can be explicitly null is based on `nullable`.
  */
-export function OptionalField(
-  typeFn: () => any,
-  options?: OptionalFieldOptions,
-): PropertyDecorator;
-export function OptionalField(
-  options?: OptionalFieldOptions,
-): PropertyDecorator;
+export function OptionalField(typeFn: () => any, options?: OptionalFieldOptions): PropertyDecorator;
+export function OptionalField(options?: OptionalFieldOptions): PropertyDecorator;
 export function OptionalField(...args: any) {
   const typeFn: (() => any) | undefined =
     typeof args[0] === 'function' ? (args[0] as () => any) : undefined;

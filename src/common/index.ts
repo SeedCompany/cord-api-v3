@@ -1,10 +1,4 @@
-export {
-  type Many,
-  many,
-  maybeMany,
-  JsonSet,
-  type ArrayItem,
-} from '@seedcompany/common';
+export { type Many, many, maybeMany, JsonSet, type ArrayItem } from '@seedcompany/common';
 export { makeEnum, type MadeEnum, type EnumType } from '@seedcompany/nest';
 
 export * from './and-call';

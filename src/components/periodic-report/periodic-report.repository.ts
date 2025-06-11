@@ -9,13 +9,7 @@ import {
   type Query,
   relation,
 } from 'cypher-query-builder';
-import {
-  type CalendarDate,
-  generateId,
-  type ID,
-  type Range,
-  type UnsecuredDto,
-} from '~/common';
+import { type CalendarDate, generateId, type ID, type Range, type UnsecuredDto } from '~/common';
 import { DtoRepository } from '~/core/database';
 import { type ChangesOf } from '~/core/database/changes';
 import {
@@ -34,10 +28,7 @@ import {
   type Variable,
 } from '~/core/database/query';
 import { File } from '../file/dto';
-import {
-  ProgressReport,
-  ProgressReportStatus as ProgressStatus,
-} from '../progress-report/dto';
+import { ProgressReport, ProgressReportStatus as ProgressStatus } from '../progress-report/dto';
 import {
   ProgressReportExtraForPeriodicInterfaceRepository,
   progressReportExtrasSorters,
@@ -58,9 +49,7 @@ export class PeriodicReportRepository extends DtoRepository<
   [],
   PeriodicReport
 >(IPeriodicReport) {
-  constructor(
-    private readonly progressRepo: ProgressReportExtraForPeriodicInterfaceRepository,
-  ) {
+  constructor(private readonly progressRepo: ProgressReportExtraForPeriodicInterfaceRepository) {
     super();
   }
 
@@ -79,9 +68,7 @@ export class PeriodicReportRepository extends DtoRepository<
     );
 
     const isProgress = input.type === ReportType.Progress;
-    const extraCreateOptions = isProgress
-      ? this.progressRepo.getCreateOptions(input)
-      : {};
+    const extraCreateOptions = isProgress ? this.progressRepo.getCreateOptions(input) : {};
 
     const query = this.db
       .query()
@@ -164,27 +151,20 @@ export class PeriodicReportRepository extends DtoRepository<
           out: { createdBy: currentUser },
         }),
       )
-      .return<{ id: ID; interval: Range<CalendarDate> }>(
-        'report.id as id, interval',
-      );
+      .return<{ id: ID; interval: Range<CalendarDate> }>('report.id as id, interval');
     return await query.run();
   }
 
   async update<T extends PeriodicReport | UnsecuredDto<PeriodicReport>>(
     existing: T,
-    simpleChanges: Omit<
-      ChangesOf<PeriodicReport, UpdatePeriodicReportInput>,
-      'reportFile'
-    > &
+    simpleChanges: Omit<ChangesOf<PeriodicReport, UpdatePeriodicReportInput>, 'reportFile'> &
       Partial<Pick<PeriodicReport, 'start' | 'end'>>,
   ) {
     return await this.updateProperties(existing, simpleChanges);
   }
 
   async list(input: PeriodicReportListInput) {
-    const resource = input.type
-      ? resolveReportType({ type: input.type })
-      : IPeriodicReport;
+    const resource = input.type ? resolveReportType({ type: input.type }) : IPeriodicReport;
     const { type, parent, start, end } = input;
     const filters = { type, parent, start, end };
     const result = await this.db
@@ -210,16 +190,8 @@ export class PeriodicReportRepository extends DtoRepository<
           relation('out', '', 'report', ACTIVE),
           node('node', `${reportType}Report`),
         ],
-        [
-          node('node'),
-          relation('out', '', 'start', ACTIVE),
-          node('start', 'Property'),
-        ],
-        [
-          node('node'),
-          relation('out', '', 'end', ACTIVE),
-          node('end', 'Property'),
-        ],
+        [node('node'), relation('out', '', 'start', ACTIVE), node('start', 'Property')],
+        [node('node'), relation('out', '', 'end', ACTIVE), node('end', 'Property')],
       ])
       .where(
         and({
@@ -287,16 +259,8 @@ export class PeriodicReportRepository extends DtoRepository<
         relation('out', '', 'report', ACTIVE),
         node('node', `${type}Report`),
       ])
-      .match([
-        node('node'),
-        relation('out', '', 'start', ACTIVE),
-        node('start', 'Property'),
-      ])
-      .match([
-        node('node'),
-        relation('out', '', 'end', ACTIVE),
-        node('end', 'Property'),
-      ])
+      .match([node('node'), relation('out', '', 'start', ACTIVE), node('start', 'Property')])
+      .match([node('node'), relation('out', '', 'end', ACTIVE), node('end', 'Property')])
       .raw(`where start.value = end.value`)
       .apply(this.hydrate())
       .first();
@@ -326,16 +290,8 @@ export class PeriodicReportRepository extends DtoRepository<
           relation('out', '', 'report', ACTIVE),
           node('report', `${type}Report`),
         ],
-        [
-          node('report'),
-          relation('out', '', 'start', ACTIVE),
-          node('start', 'Property'),
-        ],
-        [
-          node('report'),
-          relation('out', '', 'end', ACTIVE),
-          node('end', 'Property'),
-        ],
+        [node('report'), relation('out', '', 'start', ACTIVE), node('start', 'Property')],
+        [node('report'), relation('out', '', 'end', ACTIVE), node('end', 'Property')],
       ])
       .raw(
         `
@@ -359,10 +315,7 @@ export class PeriodicReportRepository extends DtoRepository<
         `,
       )
       .subQuery('report', (sub) =>
-        sub
-          .apply(deleteBaseNode('report'))
-          .return('node as somethingDeleted')
-          .raw('LIMIT 1'),
+        sub.apply(deleteBaseNode('report')).return('node as somethingDeleted').raw('LIMIT 1'),
       )
       .return<{ count: number }>('count(report) as count')
       .first();
@@ -385,11 +338,7 @@ export class PeriodicReportRepository extends DtoRepository<
         )
         .subQuery('node', (sub) =>
           sub
-            .match([
-              node('node'),
-              relation('in', '', 'report', ACTIVE),
-              node('project', 'Project'),
-            ])
+            .match([node('node'), relation('in', '', 'report', ACTIVE), node('project', 'Project')])
             .return('project')
             .union()
             .with('node')
@@ -402,11 +351,7 @@ export class PeriodicReportRepository extends DtoRepository<
             ])
             .return('project'),
         )
-        .match([
-          node('parent', 'BaseNode'),
-          relation('out', '', 'report', ACTIVE),
-          node('node'),
-        ])
+        .match([node('parent', 'BaseNode'), relation('out', '', 'report', ACTIVE), node('node')])
         .apply(matchPropsAndProjectSensAndScopedRoles())
         .return<{ dto: UnsecuredDto<PeriodicReport> }>(
           merge('props', { parent: 'parent' }, 'extra').as('dto'),
@@ -415,8 +360,7 @@ export class PeriodicReportRepository extends DtoRepository<
 }
 
 export const matchCurrentDue =
-  (parentId: ID | Variable | undefined, reportType: ReportType) =>
-  (query: Query) =>
+  (parentId: ID | Variable | undefined, reportType: ReportType) => (query: Query) =>
     query.comment`matchCurrentDue()`
       .match([
         [
@@ -426,11 +370,7 @@ export const matchCurrentDue =
           relation('out', '', 'end', ACTIVE),
           node('end', 'Property'),
         ],
-        [
-          node('node'),
-          relation('out', '', 'start', ACTIVE),
-          node('start', 'Property'),
-        ],
+        [node('node'), relation('out', '', 'start', ACTIVE), node('start', 'Property')],
       ])
       .raw(`WHERE end.value < date()`)
       .with('node, start')

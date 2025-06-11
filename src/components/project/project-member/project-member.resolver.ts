@@ -1,10 +1,4 @@
-import {
-  Args,
-  Mutation,
-  Parent,
-  ResolveField,
-  Resolver,
-} from '@nestjs/graphql';
+import { Args, Mutation, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { type ID, IdArg } from '~/common';
 import { ProjectMemberService } from '../project-member';
 import {
@@ -50,9 +44,7 @@ export class ProjectMemberResolver {
   @Mutation(() => DeleteProjectMemberOutput, {
     description: 'Delete a project member',
   })
-  async deleteProjectMember(
-    @IdArg() id: ID,
-  ): Promise<DeleteProjectMemberOutput> {
+  async deleteProjectMember(@IdArg() id: ID): Promise<DeleteProjectMemberOutput> {
     await this.service.delete(id);
     return { success: true };
   }

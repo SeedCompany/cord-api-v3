@@ -8,13 +8,7 @@ export class DropInternshipProgressReportsMigration extends BaseMigration {
     await this.db
       .query()
       .match(node('report', 'ProgressReport'))
-      .where(
-        path([
-          node('report'),
-          relation('either'),
-          node('', 'InternshipEngagement'),
-        ]),
-      )
+      .where(path([node('report'), relation('either'), node('', 'InternshipEngagement')]))
       .detachDelete('report')
       .executeAndLogStats();
   }

@@ -17,12 +17,7 @@ export class ProgressReportTeamNewsService extends PromptVariantResponseListServ
   }
 
   protected async getPrivilegeContext(dto: UnsecuredDto<TeamNews>) {
-    const report = (await this.resources.loadByBaseNode(
-      dto.parent,
-    )) as ProgressReport;
-    return withEffectiveSensitivity(
-      withScope({}, report.scope),
-      report.sensitivity,
-    );
+    const report = (await this.resources.loadByBaseNode(dto.parent)) as ProgressReport;
+    return withEffectiveSensitivity(withScope({}, report.scope), report.sensitivity);
   }
 }

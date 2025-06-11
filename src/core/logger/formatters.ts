@@ -47,9 +47,7 @@ export const maskSecrets = () =>
   })();
 
 export const timestamp = format((info) => {
-  info.timestamp = DateTime.local().toLocaleString(
-    DateTime.DATETIME_SHORT_WITH_SECONDS,
-  );
+  info.timestamp = DateTime.local().toLocaleString(DateTime.DATETIME_SHORT_WITH_SECONDS);
   return info;
 });
 
@@ -158,17 +156,8 @@ export const formatException = () =>
       .map((ex, index) => {
         const formattedMessage =
           (index > 0 ? '[cause]: ' : '') +
-          formatMessage(
-            ex.type,
-            ex.message,
-            ex.other,
-            bad ? red : yellow,
-            bad && index === 0,
-          );
-        const formattedTrace = ex.trace
-          .map(formatStackFrame)
-          .filter(identity)
-          .join('\n');
+          formatMessage(ex.type, ex.message, ex.other, bad ? red : yellow, bad && index === 0);
+        const formattedTrace = ex.trace.map(formatStackFrame).filter(identity).join('\n');
         return addIndent(formattedMessage + formattedTrace, index * 2);
       })
       .join('\n');

@@ -33,11 +33,7 @@ describe('ScriptureReference', () => {
       chapter: 1,
       verse: 1,
     });
-    expectSingleConstraintFailure(
-      result,
-      'ScriptureBook',
-      'Not a valid Bible book',
-    );
+    expectSingleConstraintFailure(result, 'ScriptureBook', 'Not a valid Bible book');
   });
   it('Invalid chapter', async () => {
     const result = await runValidation({
@@ -45,11 +41,7 @@ describe('ScriptureReference', () => {
       chapter: 40,
       verse: 1,
     });
-    expectSingleConstraintFailure(
-      result,
-      'ScriptureChapter',
-      'Matthew does not have chapter 40',
-    );
+    expectSingleConstraintFailure(result, 'ScriptureChapter', 'Matthew does not have chapter 40');
   });
   it('Invalid verse', async () => {
     const result = await runValidation({
@@ -57,10 +49,6 @@ describe('ScriptureReference', () => {
       chapter: 1,
       verse: 1000,
     });
-    expectSingleConstraintFailure(
-      result,
-      'ScriptureVerse',
-      'Matthew 1 does not have verse 1000',
-    );
+    expectSingleConstraintFailure(result, 'ScriptureVerse', 'Matthew 1 does not have verse 1000');
   });
 });

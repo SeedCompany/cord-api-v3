@@ -4,9 +4,7 @@ import { ExecuteTransitionInput } from '../../../workflow/dto';
 import { ProjectStep } from '../../dto';
 
 @InputType()
-export abstract class ExecuteProjectTransitionInput extends ExecuteTransitionInput(
-  ProjectStep,
-) {
+export abstract class ExecuteProjectTransitionInput extends ExecuteTransitionInput(ProjectStep) {
   @IdField({
     description: 'The project ID to transition',
   })

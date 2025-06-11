@@ -31,9 +31,7 @@ export class GelAccessPolicyWrapCommand extends ApCommand {
     // which is much faster than starting node, everytime.
     const CLIs = await $`which -a gel`;
     const tempDir = await realpath(getTempDir());
-    const foundCli = CLIs.stdout
-      .split('\n')
-      .find((cli) => !cli.startsWith(tempDir));
+    const foundCli = CLIs.stdout.split('\n').find((cli) => !cli.startsWith(tempDir));
     const gel = foundCli ?? 'gel';
 
     try {
@@ -55,8 +53,7 @@ export class GelAccessPolicyInjectCommand extends ApCommand {
   static paths = [['gel', 'ap', 'inject']];
   static usage = Command.Usage({
     category: 'Gel',
-    description:
-      'Inject generated access policies from app policies into schema files',
+    description: 'Inject generated access policies from app policies into schema files',
   });
   async execute() {
     await this.injector.inject();

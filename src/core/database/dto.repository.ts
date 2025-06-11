@@ -69,9 +69,7 @@ export const DtoRepository = <
         (p: string) => DbUnique.get(resource, p) ?? [],
       );
       if (labels.length === 0) {
-        return new ServerException(
-          `No unique properties found in ${resource.name}`,
-        );
+        return new ServerException(`No unique properties found in ${resource.name}`);
       }
       if (labels.length > 1) {
         return new ServerException(
@@ -88,9 +86,7 @@ export const DtoRepository = <
     async readOne(id: ID, ...args: HydrateArgs) {
       const rows = await this.readMany([id], ...args);
       if (!rows[0]) {
-        throw new NotFoundException(
-          `Could not find ${lowerCase(resource.name)}`,
-        );
+        throw new NotFoundException(`Could not find ${lowerCase(resource.name)}`);
       }
       return rows[0];
     }
@@ -134,13 +130,7 @@ export const DtoRepository = <
       id: ID,
       otherId: ID | null,
     ) {
-      await super.updateRelation(
-        relationName,
-        otherLabel,
-        id,
-        otherId,
-        this.resource.dbLabel,
-      );
+      await super.updateRelation(relationName, otherLabel, id, otherId, this.resource.dbLabel);
     }
 
     protected async updateRelationList(
@@ -160,9 +150,7 @@ export const DtoRepository = <
      */
     protected hydrate(..._args: HydrateArgs) {
       return (query: Query) =>
-        query
-          .apply(matchProps())
-          .return<{ dto: DbTypeOf<TResource> }>('props as dto');
+        query.apply(matchProps()).return<{ dto: DbTypeOf<TResource> }>('props as dto');
     }
 
     @OnIndex()

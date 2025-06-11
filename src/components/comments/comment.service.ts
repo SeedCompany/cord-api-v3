@@ -54,14 +54,8 @@ export class CommentService {
       }
       dto = await this.repo.readOne(result.id);
     } catch (exception) {
-      if (
-        input.threadId &&
-        !(await this.repo.threads.getBaseNode(input.threadId))
-      ) {
-        throw new NotFoundException(
-          'Comment thread does not exist',
-          'threadId',
-        );
+      if (input.threadId && !(await this.repo.threads.getBaseNode(input.threadId))) {
+        throw new NotFoundException('Comment thread does not exist', 'threadId');
       }
 
       throw new CreationFailed(Comment, { cause: exception });

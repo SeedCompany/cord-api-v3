@@ -3,10 +3,7 @@ import { node, type Pattern, type Query, relation } from 'cypher-query-builder';
 import { ACTIVE, apoc, collect, merge, variable } from '~/core/database/query';
 import { type FinanceDepartmentIdBlockInput as Input } from './dto/id-blocks.input';
 
-const defaultRel = [
-  node('node'),
-  relation('out', '', 'departmentIdBlock', ACTIVE),
-];
+const defaultRel = [node('node'), relation('out', '', 'departmentIdBlock', ACTIVE)];
 interface Options {
   input?: Pattern[];
   output?: string;
@@ -28,9 +25,8 @@ export const hydrate =
         .return(`departmentIdBlocks[0] as ${output ?? 'departmentIdBlock'}`),
     );
 
-export const createMaybe =
-  (input: Input | Nil, options?: Options) => (query: Query) =>
-    !input ? query : query.apply(create(input, options));
+export const createMaybe = (input: Input | Nil, options?: Options) => (query: Query) =>
+  !input ? query : query.apply(create(input, options));
 
 export const create =
   (input: Input, { input: inputRel = defaultRel, output }: Options = {}) =>
@@ -48,15 +44,11 @@ export const create =
         .return(`block as ${output ?? 'block'}`),
     );
 
-export const setMaybe =
-  (input: Input | Nil, options?: Options) => (query: Query) =>
-    input === undefined ? query : query.apply(set(input, options));
+export const setMaybe = (input: Input | Nil, options?: Options) => (query: Query) =>
+  input === undefined ? query : query.apply(set(input, options));
 
 export const set =
-  (
-    input: Input | null,
-    { input: inputRel = defaultRel, output }: Options = {},
-  ) =>
+  (input: Input | null, { input: inputRel = defaultRel, output }: Options = {}) =>
   (query: Query) =>
     input
       ? query.apply(upsert(input, { input: inputRel, output }))

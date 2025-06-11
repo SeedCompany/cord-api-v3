@@ -3,11 +3,7 @@ import { type Query } from 'cypher-query-builder';
 import { get, startCase } from 'lodash';
 import type { Get, Paths } from 'type-fest';
 import { inspect, type InspectOptionsStylized } from 'util';
-import {
-  type ResourceShape,
-  unwrapSecured,
-  type UnwrapSecured,
-} from '~/common';
+import { type ResourceShape, unwrapSecured, type UnwrapSecured } from '~/common';
 import {
   type Condition,
   eqlInLiteralSet,
@@ -30,18 +26,12 @@ export class EnumFieldCondition<
     // Double check at runtime that object has these, since they are usually
     // declared from DB, which cannot be verified.
     if (!object) {
-      throw new MissingContextException(
-        `Needed object's ${this.path} but object wasn't given`,
-      );
+      throw new MissingContextException(`Needed object's ${this.path} but object wasn't given`);
     }
-    const value = get(object, this.path) as
-      | Get<InstanceType<TResourceStatic>, Path>
-      | undefined;
+    const value = get(object, this.path) as Get<InstanceType<TResourceStatic>, Path> | undefined;
     const actual = unwrapSecured(value);
     if (!actual) {
-      throw new MissingContextException(
-        `Needed object's ${this.path} but it wasn't found`,
-      );
+      throw new MissingContextException(`Needed object's ${this.path} but it wasn't found`);
     }
 
     return this.allowed.has(actual);
@@ -83,9 +73,7 @@ export class EnumFieldCondition<
     if (this.customId) {
       return this.customId;
     }
-    return `${startCase(this.path)} { ${[...this.allowed]
-      .map((s) => startCase(s))
-      .join(', ')} }`;
+    return `${startCase(this.path)} { ${[...this.allowed].map((s) => startCase(s)).join(', ')} }`;
   }
 }
 
@@ -95,27 +83,18 @@ export class EnumFieldCondition<
 export function field<
   TResourceStatic extends ResourceShape<any>,
   Path extends Paths<InstanceType<TResourceStatic>> & string,
->(
-  path: Path,
-  allowed: ManyIn<ValueOfPath<TResourceStatic, Path>>,
-  customId?: string,
-) {
+>(path: Path, allowed: ManyIn<ValueOfPath<TResourceStatic, Path>>, customId?: string) {
   const flattened = new Set(
     // Assume values are strings to normalize cardinality.
     typeof allowed === 'string'
       ? [allowed]
       : [...(allowed as Array<ValueOfPath<TResourceStatic, Path>>)],
   );
-  return new EnumFieldCondition<TResourceStatic, Path>(
-    path,
-    flattened,
-    customId,
-  );
+  return new EnumFieldCondition<TResourceStatic, Path>(path, flattened, customId);
 }
 
 type ManyIn<T extends string> = T | Iterable<T>;
 
-type ValueOfPath<
-  TResourceStatic extends ResourceShape<any>,
-  Path extends string,
-> = UnwrapSecured<Get<InstanceType<TResourceStatic>, Path>>;
+type ValueOfPath<TResourceStatic extends ResourceShape<any>, Path extends string> = UnwrapSecured<
+  Get<InstanceType<TResourceStatic>, Path>
+>;

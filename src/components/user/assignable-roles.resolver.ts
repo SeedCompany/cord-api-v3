@@ -7,8 +7,7 @@ export class AssignableRolesResolver {
   constructor(private readonly service: UserService) {}
 
   @ResolveField(() => [Role], {
-    description:
-      'All of the roles that _you_ have permission to assign to this user',
+    description: 'All of the roles that _you_ have permission to assign to this user',
   })
   async assignableRoles() {
     return [...this.service.getAssignableRoles()];

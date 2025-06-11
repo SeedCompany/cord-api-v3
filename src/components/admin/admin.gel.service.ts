@@ -1,8 +1,4 @@
-import {
-  Inject,
-  Injectable,
-  type OnApplicationBootstrap,
-} from '@nestjs/common';
+import { Inject, Injectable, type OnApplicationBootstrap } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { LazyGetter as Once } from 'lazy-get-decorator';
 import { CryptoService } from '~/core/authentication/crypto.service';
@@ -51,16 +47,12 @@ export class AdminGelService implements OnApplicationBootstrap {
     }
 
     if (root.id !== existing.id) {
-      this.logger.notice(
-        'Stored root user ID differs from config, using stored value',
-      );
+      this.logger.notice('Stored root user ID differs from config, using stored value');
       // TODO hack. Change notification handlers to pull from DB, instead of config
       Object.assign(this.config.rootUser, { id: existing.id });
     }
 
-    const passwordSame = await this.crypto
-      .verify(existing.hash, root.password)
-      .catch(() => false);
+    const passwordSame = await this.crypto.verify(existing.hash, root.password).catch(() => false);
     if (existing.email !== root.email || !passwordSame) {
       this.logger.notice('Updating root user to match app configuration');
       await this.repo.updateEmail(root.id, root.email);

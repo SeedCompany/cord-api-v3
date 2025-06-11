@@ -26,9 +26,7 @@ export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
     ) {
       return;
     }
-    if (
-      engagement.initialEndDate?.toMillis() === engagement.endDate?.toMillis()
-    ) {
+    if (engagement.initialEndDate?.toMillis() === engagement.endDate?.toMillis()) {
       return;
     }
 
@@ -36,9 +34,7 @@ export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
       const initialEndDate = engagement.endDate;
 
       const type =
-        LanguageEngagement.resolve(engagement) === LanguageEngagement
-          ? 'Language'
-          : 'Internship';
+        LanguageEngagement.resolve(engagement) === LanguageEngagement ? 'Language' : 'Internship';
       await this.engagementRepo[`update${type}`](
         {
           id: engagement.id,
@@ -58,10 +54,7 @@ export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
         event.engagement = updatedEngagement;
       }
     } catch (exception) {
-      throw new ServerException(
-        'Could not set initial end date on engagement',
-        exception,
-      );
+      throw new ServerException('Could not set initial end date on engagement', exception);
     }
   }
 }

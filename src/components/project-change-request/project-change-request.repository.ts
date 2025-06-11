@@ -19,9 +19,7 @@ import {
 } from './dto';
 
 @Injectable()
-export class ProjectChangeRequestRepository extends DtoRepository(
-  ProjectChangeRequest,
-) {
+export class ProjectChangeRequestRepository extends DtoRepository(ProjectChangeRequest) {
   async create(input: CreateProjectChangeRequest) {
     const result = await this.db
       .query()
@@ -52,11 +50,7 @@ export class ProjectChangeRequestRepository extends DtoRepository(
   protected hydrate() {
     return (query: Query) =>
       query
-        .match([
-          node('node'),
-          relation('in', '', 'changeset', ACTIVE),
-          node('project', 'Project'),
-        ])
+        .match([node('node'), relation('in', '', 'changeset', ACTIVE), node('project', 'Project')])
         .apply(matchPropsAndProjectSensAndScopedRoles())
         .return<{ dto: UnsecuredDto<ProjectChangeRequest> }>(
           merge('props', {

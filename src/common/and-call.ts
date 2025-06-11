@@ -2,11 +2,7 @@ import { type FnLike } from '@seedcompany/common';
 import { isPromise } from 'node:util/types';
 import { type ConditionalKeys } from 'type-fest';
 
-export const andCall = <
-  T,
-  K extends ConditionalKeys<T, FnLike>,
-  X extends T[K] & FnLike,
->(
+export const andCall = <T, K extends ConditionalKeys<T, FnLike>, X extends T[K] & FnLike>(
   thing: T,
   methodName: K,
   add: X,

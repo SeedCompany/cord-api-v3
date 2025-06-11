@@ -35,9 +35,7 @@ class MemberCondition<TResourceStatic extends ResourceWithScope>
     return 'exists((project)-[:member { active: true }]->(:ProjectMember)-[:user]->(:User { id: $currentUser }))';
   }
 
-  setupEdgeQLContext({
-    resource,
-  }: AsEdgeQLParams<TResourceStatic>): Record<string, string> {
+  setupEdgeQLContext({ resource }: AsEdgeQLParams<TResourceStatic>): Record<string, string> {
     return resource.isEmbedded
       ? { isMember: '(.container[is Project::ContextAware].isMember ?? false)' }
       : {};
@@ -120,8 +118,7 @@ export const member = new MemberCondition();
  * NOTE that the policy roles are filtered before this, so only a subset of the
  * policy's roles can effectively be used here.
  */
-export const memberWith = (...roles: Role[]) =>
-  new MemberWithRolesCondition(roles);
+export const memberWith = (...roles: Role[]) => new MemberWithRolesCondition(roles);
 
 /**
  * Specify roles that should be used for the membership condition.
@@ -142,9 +139,7 @@ export const withScope = <T extends object>(obj: T, roles: ScopedRole[]) =>
 
 export const getScope = (object?: HasScope): ScopedRole[] => {
   if (!object) {
-    throw new MissingContextException(
-      "Needed object's scoped roles but object wasn't given",
-    );
+    throw new MissingContextException("Needed object's scoped roles but object wasn't given");
   }
 
   return Reflect.get(object, ScopedRoles) ?? Reflect.get(object, 'scope') ?? [];

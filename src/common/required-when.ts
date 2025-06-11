@@ -51,8 +51,7 @@ RequiredWhen.calc = <TResourceStatic extends ResourceShape<any>>(
     return condition ? { ...condition, field: prop } : [];
   });
   const missing = conditions.flatMap((condition) => {
-    return condition.isEnabled(obj) &&
-      (condition.isMissing?.(obj) ?? obj[condition.field] == null)
+    return condition.isEnabled(obj) && (condition.isMissing?.(obj) ?? obj[condition.field] == null)
       ? {
           field: condition.field,
           description: condition.description,

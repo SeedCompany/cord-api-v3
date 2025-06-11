@@ -1,8 +1,5 @@
 import { csv } from '@seedcompany/common';
-import type {
-  EmailModuleOptions,
-  EmailOptionsFactory,
-} from '@seedcompany/nestjs-email';
+import type { EmailModuleOptions, EmailOptionsFactory } from '@seedcompany/nestjs-email';
 import type { Server as HttpServer } from 'http';
 import { type LRUCache } from 'lru-cache';
 import { DateTime, Duration, type DurationLike } from 'luxon';
@@ -65,10 +62,7 @@ export const makeConfig = (env: EnvironmentService) =>
       request: env.duration('HTTP_REQUEST_TIMEOUT').optional(0),
     };
 
-    applyTimeouts = (
-      http: HttpServer,
-      timeouts: Partial<HttpTimeoutOptions>,
-    ) => {
+    applyTimeouts = (http: HttpServer, timeouts: Partial<HttpTimeoutOptions>) => {
       if (timeouts.keepAlive != null) {
         http.keepAliveTimeout = timeouts.keepAlive.toMillis();
       }
@@ -98,14 +92,10 @@ export const makeConfig = (env: EnvironmentService) =>
     createEmailOptions = () => {
       const send = env.boolean('EMAIL_SEND').optional(false);
       return {
-        from: env
-          .string('EMAIL_FROM')
-          .optional('CORD Field <noreply@cordfield.com>'),
+        from: env.string('EMAIL_FROM').optional('CORD Field <noreply@cordfield.com>'),
         replyTo: env.string('EMAIL_REPLY_TO').optional() || undefined, // falsy -> undefined
         send,
-        open: this.jest
-          ? false
-          : env.boolean('EMAIL_OPEN').optional(!send && isDev),
+        open: this.jest ? false : env.boolean('EMAIL_OPEN').optional(!send && isDev),
         ses: {
           region: env.string('SES_REGION').optional(),
         },
@@ -117,12 +107,8 @@ export const makeConfig = (env: EnvironmentService) =>
     };
 
     email = {
-      notifyDistributionLists: env
-        .boolean('NOTIFY_DISTRIBUTION_LIST')
-        .optional(false),
-      notifyProjectStepChanges: env
-        .boolean('NOTIFY_PROJECT_STEP_CHANGES')
-        .optional(true),
+      notifyDistributionLists: env.boolean('NOTIFY_DISTRIBUTION_LIST').optional(false),
+      notifyProjectStepChanges: env.boolean('NOTIFY_PROJECT_STEP_CHANGES').optional(true),
     };
 
     progressReportStatusChange = {
@@ -145,9 +131,7 @@ export const makeConfig = (env: EnvironmentService) =>
       },
     };
 
-    defaultTimeZone = env
-      .string('DEFAULT_TIMEZONE')
-      .optional('America/Chicago');
+    defaultTimeZone = env.string('DEFAULT_TIMEZONE').optional('America/Chicago');
 
     frontendUrl = env.string('FRONTEND_URL').optional('http://localhost:3001');
 
@@ -155,15 +139,10 @@ export const makeConfig = (env: EnvironmentService) =>
       const driverConfig: Neo4JDriverConfig = {};
       let url = env.string('NEO4J_URL').optional('bolt://localhost');
       const parsed = new URL(url);
-      const username = env
-        .string('NEO4J_USERNAME')
-        .optional(parsed.username || 'neo4j');
-      const password = env
-        .string('NEO4J_PASSWORD')
-        .optional(parsed.password || 'admin');
+      const username = env.string('NEO4J_USERNAME').optional(parsed.username || 'neo4j');
+      const password = env.string('NEO4J_PASSWORD').optional(parsed.password || 'admin');
       const database =
-        env.string('NEO4J_DBNAME').optional() ??
-        (parsed.pathname.slice(1) || undefined);
+        env.string('NEO4J_DBNAME').optional() ?? (parsed.pathname.slice(1) || undefined);
       if (parsed.username || parsed.password || parsed.pathname) {
         parsed.username = '';
         parsed.password = '';
@@ -175,9 +154,10 @@ export const makeConfig = (env: EnvironmentService) =>
         username,
         password,
         database: this.jest
-          ? `test.${DateTime.now().toFormat(
-              'y-MM-dd.HH-mm-ss',
-            )}.${customAlphabet('abcdefghjkmnpqrstuvwxyz', 7)()}`
+          ? `test.${DateTime.now().toFormat('y-MM-dd.HH-mm-ss')}.${customAlphabet(
+              'abcdefghjkmnpqrstuvwxyz',
+              7,
+            )()}`
           : database,
         ephemeral: this.jest,
         driverConfig,
@@ -188,9 +168,7 @@ export const makeConfig = (env: EnvironmentService) =>
     // Control which database is prioritized, while we migrate.
     databaseEngine = env.string('DATABASE').optional('neo4j').toLowerCase();
 
-    dbIndexesCreate = env
-      .boolean('DB_CREATE_INDEXES')
-      .optional(isDev ? this.neo4j.isLocal : true);
+    dbIndexesCreate = env.boolean('DB_CREATE_INDEXES').optional(isDev ? this.neo4j.isLocal : true);
     dbAutoMigrate = env
       .boolean('DB_AUTO_MIGRATE')
       .optional(isDev && this.neo4j.isLocal && !this.jest);
@@ -243,10 +221,7 @@ export const makeConfig = (env: EnvironmentService) =>
       const rawOrigin = env.string('CORS_ORIGIN').optional('*');
       // Always use regex instead of literal `*` so the current origin is returned
       // instead of `*`. fetch credentials="include" requires specific origin.
-      const origin =
-        rawOrigin === '*'
-          ? /.*/
-          : rawOrigin.split(',').map((o) => new RegExp(o));
+      const origin = rawOrigin === '*' ? /.*/ : rawOrigin.split(',').map((o) => new RegExp(o));
       return {
         origin,
         credentials: true,
@@ -268,8 +243,7 @@ export const makeConfig = (env: EnvironmentService) =>
       }
 
       const userAgent = req.headers['user-agent'];
-      const isSafari =
-        userAgent && /^((?!chrome|android).)*safari/i.test(userAgent);
+      const isSafari = userAgent && /^((?!chrome|android).)*safari/i.test(userAgent);
 
       return {
         name,
@@ -290,9 +264,7 @@ export const makeConfig = (env: EnvironmentService) =>
     };
 
     xray = {
-      daemonAddress: this.jest
-        ? undefined
-        : env.string('AWS_XRAY_DAEMON_ADDRESS').optional(),
+      daemonAddress: this.jest ? undefined : env.string('AWS_XRAY_DAEMON_ADDRESS').optional(),
     };
 
     redis = {

@@ -4,13 +4,7 @@ import { resolve } from 'path';
 import { map } from 'rxjs/operators';
 import { withAddedPath } from '~/common/url.util';
 import { ConfigService } from '~/core';
-import {
-  CompositeBucket,
-  FileBucket,
-  FilesystemBucket,
-  MemoryBucket,
-  S3Bucket,
-} from './bucket';
+import { CompositeBucket, FileBucket, FilesystemBucket, MemoryBucket, S3Bucket } from './bucket';
 import { type ParsedBucketUri } from './bucket/parse-uri';
 import { ReadonlyBucket } from './bucket/readonly-bucket';
 import { LocalBucketController } from './local-bucket.controller';

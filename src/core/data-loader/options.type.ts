@@ -1,12 +1,6 @@
-import {
-  type DataLoaderOptions,
-  type DataLoaderStrategy,
-} from '@seedcompany/data-loader';
+import { type DataLoaderOptions, type DataLoaderStrategy } from '@seedcompany/data-loader';
 
-export type LoaderOptionsOf<
-  Strategy,
-  CachedKey = unknown,
-> = Strategy extends Pick<
+export type LoaderOptionsOf<Strategy, CachedKey = unknown> = Strategy extends Pick<
   DataLoaderStrategy<infer T, infer Key, any>,
   'loadMany'
 >

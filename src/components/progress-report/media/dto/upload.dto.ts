@@ -11,16 +11,10 @@ import {
 import { CreateDefinedFileVersionInput } from '../../../file/dto';
 import { MediaUserMetadata } from '../../../file/media/media.dto';
 import { type ProgressReport } from '../../dto';
-import {
-  type MediaVariant,
-  ProgressReportMedia,
-  type VariantGroup,
-} from './media.dto';
+import { type MediaVariant, ProgressReportMedia, type VariantGroup } from './media.dto';
 
 @InputType()
-export class UploadProgressReportMedia extends PickType(ProgressReportMedia, [
-  'category',
-]) {
+export class UploadProgressReportMedia extends PickType(ProgressReportMedia, ['category']) {
   @IdField()
   readonly reportId: IdOf<ProgressReport>;
 

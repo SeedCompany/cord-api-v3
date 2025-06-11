@@ -71,19 +71,14 @@ export class FieldSelection {
    * to filter out requested but unrelated fields.
    */
   forType<T>(type: AbstractClassType<T>): FieldInfo<T>;
-  forType<K extends keyof ResourceMap>(
-    type: K,
-  ): FieldInfo<ResourceMap[K]['prototype']>;
+  forType<K extends keyof ResourceMap>(type: K): FieldInfo<ResourceMap[K]['prototype']>;
   forType(type: string | AbstractClassType<any>) {
     const typeName = typeof type === 'string' ? type : type.constructor.name;
     const typeObj = this.resolveInfo.schema.getType(typeName);
     if (!typeObj) {
       return {};
     }
-    const { fields } = simplifyParsedResolveInfoFragmentWithType(
-      this.tree,
-      typeObj,
-    );
+    const { fields } = simplifyParsedResolveInfoFragmentWithType(this.tree, typeObj);
     return fields;
   }
 

@@ -4,9 +4,7 @@ import { Location } from './dto';
 import { LocationService } from './location.service';
 
 @LoaderFactory(() => Location)
-export class LocationLoader
-  implements DataLoaderStrategy<Location, ID<Location>>
-{
+export class LocationLoader implements DataLoaderStrategy<Location, ID<Location>> {
   constructor(private readonly locations: LocationService) {}
 
   async loadMany(ids: ReadonlyArray<ID<Location>>) {

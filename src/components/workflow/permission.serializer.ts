@@ -8,11 +8,7 @@ import { type SerializedWorkflowTransitionPermission as SerializedTransitionPerm
 import { TransitionCondition } from './workflow.granter';
 
 export const transitionPermissionSerializer =
-  <W extends Workflow>(
-    workflow: W,
-    privileges: Privileges,
-    identity: Identity,
-  ) =>
+  <W extends Workflow>(workflow: W, privileges: Privileges, identity: Identity) =>
   (transition: W['transition']): readonly SerializedTransitionPermission[] => {
     const all = [...Role].flatMap((role) => {
       return identity.asRole(role, () => {
@@ -35,17 +31,11 @@ export const transitionPermissionSerializer =
     });
 
     // Remove roles that are never applicable.
-    const applicableRoles = setOf(
-      all.flatMap((p) => (p.readEvent || p.execute ? p.role : [])),
-    );
+    const applicableRoles = setOf(all.flatMap((p) => (p.readEvent || p.execute ? p.role : [])));
     return all.filter((p) => applicableRoles.has(p.role));
   };
 
-const resolve = (
-  p: UserResourcePrivileges<any>,
-  action: string,
-  transitionKey: ID,
-) =>
+const resolve = (p: UserResourcePrivileges<any>, action: string, transitionKey: ID) =>
   p.resolve({
     action,
     optimizeConditions: true,

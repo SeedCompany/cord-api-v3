@@ -1,13 +1,7 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import {
-  type ID,
-  IdField,
-  type IdOf,
-  ISO31661Alpha3,
-  NameField,
-} from '~/common';
+import { type ID, IdField, type IdOf, ISO31661Alpha3, NameField } from '~/common';
 import { Transform } from '~/common/transform.decorator';
 import { CreateDefinedFileVersionInput } from '../../file/dto';
 import { LocationType } from './location-type.enum';

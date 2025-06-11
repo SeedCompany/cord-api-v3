@@ -1,16 +1,8 @@
 import { Field, InputType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import {
-  type ID,
-  IdField,
-  type MadeEnum,
-  RichTextDocument,
-  RichTextField,
-} from '~/common';
+import { type ID, IdField, type MadeEnum, RichTextDocument, RichTextField } from '~/common';
 
-export function ExecuteTransitionInput<State extends string>(
-  state: MadeEnum<State>,
-) {
+export function ExecuteTransitionInput<State extends string>(state: MadeEnum<State>) {
   @InputType({ isAbstract: true })
   abstract class ExecuteTransitionInputClass {
     @IdField({

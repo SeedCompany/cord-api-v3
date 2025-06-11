@@ -23,9 +23,7 @@ import { type ExecuteProgressReportTransitionInput } from './dto/execute-progres
 import { ProgressReportWorkflowEvent as WorkflowEvent } from './dto/workflow-event.dto';
 
 @Injectable()
-export class ProgressReportWorkflowRepository extends DtoRepository(
-  WorkflowEvent,
-) {
+export class ProgressReportWorkflowRepository extends DtoRepository(WorkflowEvent) {
   async readMany(ids: readonly ID[]) {
     return await this.db
       .query()
@@ -66,11 +64,7 @@ export class ProgressReportWorkflowRepository extends DtoRepository(
   protected hydrate() {
     return (query: Query) =>
       query
-        .match([
-          node('node'),
-          relation('out', undefined, 'who'),
-          node('who', 'User'),
-        ])
+        .match([node('node'), relation('out', undefined, 'who'), node('who', 'User')])
         .return<{ dto: UnsecuredDto<WorkflowEvent> }>(
           merge('node', {
             at: 'node.createdAt',
@@ -143,25 +137,13 @@ export class ProgressReportWorkflowRepository extends DtoRepository(
         relation('out', '', 'user', ACTIVE),
         node('user', 'User'),
       ])
-      .match([
-        node('user'),
-        relation('out', '', 'email', ACTIVE),
-        node('email', 'EmailAddress'),
-      ])
-      .match([
-        node('member'),
-        relation('out', '', 'roles', ACTIVE),
-        node('role', 'Property'),
-      ])
+      .match([node('user'), relation('out', '', 'email', ACTIVE), node('email', 'EmailAddress')])
+      .match([node('member'), relation('out', '', 'roles', ACTIVE), node('role', 'Property')])
       .return<{
         id: ID;
         email: string;
         roles: readonly Role[];
-      }>([
-        'user.id as id',
-        'email.value as email',
-        'coalesce(role.value, []) as roles',
-      ]);
+      }>(['user.id as id', 'email.value as email', 'coalesce(role.value, []) as roles']);
     return await query.run();
   }
 
@@ -191,11 +173,7 @@ export class ProgressReportWorkflowRepository extends DtoRepository(
         relation('in', '', 'engagement', ACTIVE),
         node('project', 'Project'),
       ])
-      .match([
-        node('engagement'),
-        relation('out', '', ACTIVE),
-        node('language', 'Language'),
-      ])
+      .match([node('engagement'), relation('out', '', ACTIVE), node('language', 'Language')])
       .return<{
         projectId: ID;
         languageId: ID;

@@ -1,12 +1,6 @@
 import { LazyGetter as Once } from 'lazy-get-decorator';
 import { fullFiscalQuarter, isQuarterNumber, isReasonableYear } from '~/common';
-import {
-  type Column,
-  type Range,
-  type Row,
-  Sheet,
-  type WorkBook,
-} from '~/common/xlsx.util';
+import { type Column, type Range, type Row, Sheet, type WorkBook } from '~/common/xlsx.util';
 
 export abstract class ProgressSheet extends Sheet {
   static register(book: WorkBook) {
@@ -34,10 +28,7 @@ export abstract class ProgressSheet extends Sheet {
   }
   protected abstract goalStartColumn: Column;
   @Once() protected get goalsStart() {
-    return this.cell(
-      this.goalStartColumn,
-      this.book.namedRange('ProgDraft').start.row,
-    );
+    return this.cell(this.goalStartColumn, this.book.namedRange('ProgDraft').start.row);
   }
   @Once() protected get goalsEnd() {
     return this.sheetRange.end;
@@ -89,10 +80,7 @@ export class WrittenScriptureProgressSheet extends ProgressSheet {
   @Once() get goalsEnd() {
     const lastRow = super.goalsEnd.row;
     let row = this.goalsStart.row;
-    while (
-      row < lastRow &&
-      this.bookName(row).asString !== 'Other Goals and Milestones'
-    ) {
+    while (row < lastRow && this.bookName(row).asString !== 'Other Goals and Milestones') {
       row = row.move(1);
     }
     return super.goalsEnd.column.cell(row);

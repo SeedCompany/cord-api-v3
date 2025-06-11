@@ -1,9 +1,5 @@
 import { type ID } from '~/common';
-import {
-  type DataLoaderStrategy,
-  LoaderFactory,
-  type LoaderOptionsOf,
-} from '~/core/data-loader';
+import { type DataLoaderStrategy, LoaderFactory, type LoaderOptionsOf } from '~/core/data-loader';
 import { type ProgressReport } from '../dto';
 import { type ProgressReportMedia as ReportMedia } from './dto';
 import { ProgressReportMediaService } from './progress-report-media.service';

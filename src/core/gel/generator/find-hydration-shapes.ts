@@ -17,10 +17,7 @@ interface Hydrator {
 export type HydratorMap = ReadonlyMap<string, Hydrator>;
 
 export async function findHydrationShapes({ root }: GeneratorParams) {
-  const queries = await Promise.all([
-    findInQueryFiles(root),
-    findInInlineQueries(root),
-  ]);
+  const queries = await Promise.all([findInQueryFiles(root), findInInlineQueries(root)]);
 
   const unsorted = mapEntries(queries.flat(), ({ query, source }, { SKIP }) => {
     const matches = query.match(RE_SELECT_NAME_AND_FIELDS);
@@ -58,9 +55,7 @@ function topoSort(map: HydratorMap): HydratorMap {
   const visit = (hydrator: Hydrator) => {
     if (visiting.has(hydrator.fqn)) {
       const last = Array.from(visiting).at(-1)!;
-      throw new Error(
-        `Circular dependency involving ${hydrator.type} and ${last}`,
-      );
+      throw new Error(`Circular dependency involving ${hydrator.type} and ${last}`);
     }
     visiting.add(hydrator.fqn);
     for (const dep of hydrator.dependencies) {
@@ -86,9 +81,7 @@ async function findInQueryFiles(root: Directory) {
     reject: false,
     cwd: root.getPath(),
   })`find src -type f -name hydrate*.edgeql`;
-  const shortList = grepForShortList.stdout
-    ? grepForShortList.stdout.split('\n')
-    : [];
+  const shortList = grepForShortList.stdout ? grepForShortList.stdout.split('\n') : [];
   const all = await Promise.all(
     shortList.map(async (path) => {
       const contents = await readFile(path, 'utf8');
@@ -118,8 +111,7 @@ async function findInInlineQueries(root: Directory) {
 
         if (
           args.length > 1 ||
-          (!Node.isStringLiteral(args[0]) &&
-            !Node.isNoSubstitutionTemplateLiteral(args[0]))
+          (!Node.isStringLiteral(args[0]) && !Node.isNoSubstitutionTemplateLiteral(args[0]))
         ) {
           return [];
         }
@@ -128,10 +120,7 @@ async function findInInlineQueries(root: Directory) {
           return [];
         }
 
-        const path = relative(
-          root.getPath(),
-          call.getSourceFile().getFilePath(),
-        );
+        const path = relative(root.getPath(), call.getSourceFile().getFilePath());
         const lineNumber = call.getStartLineNumber();
         const source = `./${path}:${lineNumber}`;
 

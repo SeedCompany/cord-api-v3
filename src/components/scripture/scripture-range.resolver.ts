@@ -34,8 +34,7 @@ export class ScriptureRangeResolver {
     return verseRange.end - verseRange.start + 1;
   }
   @ResolveField(() => Float, {
-    description:
-      'The total number of verse equivalents in this scripture range',
+    description: 'The total number of verse equivalents in this scripture range',
   })
   totalVerseEquivalents(@Parent() range: ScriptureRange): number {
     return getTotalVerseEquivalents(range);

@@ -58,15 +58,11 @@ describe('Partnership e2e', () => {
     const actual = result.partnership;
 
     expect(actual.id).toBe(partnership.id);
-    expect(actual.agreementStatus.value).toBe(
-      partnership.agreementStatus.value,
-    );
+    expect(actual.agreementStatus.value).toBe(partnership.agreementStatus.value);
     expect(actual.mouStatus.value).toBe(partnership.mouStatus.value);
     expect(actual.mouStart.value).toBe(partnership.mouStart.value);
     expect(actual.mouEnd.value).toBe(partnership.mouEnd.value);
-    expect(actual.types.value).toEqual(
-      expect.arrayContaining(partnership.types.value),
-    );
+    expect(actual.types.value).toEqual(expect.arrayContaining(partnership.types.value));
     expect(actual.partner).toBeTruthy();
     expect(actual.partner).toEqual(partnership.partner);
     expect(actual.agreementStatus.canEdit).toBe(true);
@@ -76,9 +72,7 @@ describe('Partnership e2e', () => {
     const partnership = await createPartnership(app, { projectId: project.id });
 
     // lodash.sample used to grab a random enum value
-    const newAgreementStatus = sample(
-      Object.values(PartnershipAgreementStatus),
-    );
+    const newAgreementStatus = sample(Object.values(PartnershipAgreementStatus));
     const newMouStatus = sample(Object.values(PartnershipAgreementStatus));
     const newTypes = [PartnerType.Managing];
 
@@ -98,9 +92,7 @@ describe('Partnership e2e', () => {
       {
         input: {
           id: partnership.id,
-          agreementStatus: partnership.agreementStatus.canEdit
-            ? newAgreementStatus
-            : undefined,
+          agreementStatus: partnership.agreementStatus.canEdit ? newAgreementStatus : undefined,
           mouStatus: partnership.mouStatus.canEdit ? newMouStatus : undefined,
           types: partnership.types.canEdit ? newTypes : undefined,
         },
@@ -108,13 +100,9 @@ describe('Partnership e2e', () => {
     );
     expect(result.updatePartnership.partnership.id).toBe(partnership.id);
     partnership.agreementStatus.canEdit &&
-      expect(result.updatePartnership.partnership.agreementStatus.value).toBe(
-        newAgreementStatus,
-      );
+      expect(result.updatePartnership.partnership.agreementStatus.value).toBe(newAgreementStatus);
     partnership.mouStatus.canEdit &&
-      expect(result.updatePartnership.partnership.mouStatus.value).toBe(
-        newMouStatus,
-      );
+      expect(result.updatePartnership.partnership.mouStatus.value).toBe(newMouStatus);
     partnership.types.canEdit &&
       expect(result.updatePartnership.partnership.types.value).toEqual(
         expect.arrayContaining(newTypes),
@@ -167,11 +155,7 @@ describe('Partnership e2e', () => {
     const result = await app.graphql.query(
       graphql(
         `
-          mutation updatePartnership(
-            $id: ID!
-            $startOverride: Date!
-            $endOverride: Date!
-          ) {
+          mutation updatePartnership($id: ID!, $startOverride: Date!, $endOverride: Date!) {
             updatePartnership(
               input: {
                 partnership: {
@@ -197,21 +181,15 @@ describe('Partnership e2e', () => {
     );
 
     expect(result.updatePartnership.partnership.id).toBe(partnership.id);
-    expect(result.updatePartnership.partnership.mouStart.value).toBe(
-      mouStartOverride,
-    );
-    expect(result.updatePartnership.partnership.mouEnd.value).toBe(
-      mouEndOverride,
-    );
+    expect(result.updatePartnership.partnership.mouStart.value).toBe(mouStartOverride);
+    expect(result.updatePartnership.partnership.mouEnd.value).toBe(mouEndOverride);
   });
 
   it('List view of partnerships', async () => {
     // create 2 partnerships
     const numPartnerships = 2;
     await Promise.all(
-      times(numPartnerships).map(() =>
-        createPartnership(app, { projectId: project.id }),
-      ),
+      times(numPartnerships).map(() => createPartnership(app, { projectId: project.id })),
     );
 
     const { partnerships } = await app.graphql.query(
@@ -267,9 +245,7 @@ describe('Partnership e2e', () => {
       },
     );
 
-    expect(result.project.partnerships.items.length).toBeGreaterThanOrEqual(
-      numPartnerships,
-    );
+    expect(result.project.partnerships.items.length).toBeGreaterThanOrEqual(numPartnerships);
   });
 
   it('create partnership does not create if organizationId is invalid', async () => {
@@ -325,15 +301,11 @@ describe('Partnership e2e', () => {
     const actual = result.partnership;
 
     expect(actual.id).toBe(partnership.id);
-    expect(actual.agreementStatus.value).toBe(
-      partnership.agreementStatus.value,
-    );
+    expect(actual.agreementStatus.value).toBe(partnership.agreementStatus.value);
     expect(actual.mouStatus.value).toBe(partnership.mouStatus.value);
     expect(actual.mouStart.value).toBe(project.mouStart.value);
     expect(actual.mouEnd.value).toBe(project.mouEnd.value);
-    expect(actual.types.value).toEqual(
-      expect.arrayContaining(partnership.types.value),
-    );
+    expect(actual.types.value).toEqual(expect.arrayContaining(partnership.types.value));
     expect(actual.partner).toBeTruthy();
     expect(actual.partner).toEqual(partnership.partner);
     expect(actual.agreementStatus.canEdit).toBe(true);
@@ -389,8 +361,7 @@ describe('Partnership e2e', () => {
       }),
     ).rejects.toThrowGqlError(
       errors.input({
-        message:
-          'Partner does not have this financial reporting type available',
+        message: 'Partner does not have this financial reporting type available',
         field: 'partnership.financialReportingType',
       }),
     );
@@ -432,8 +403,7 @@ describe('Partnership e2e', () => {
       ),
     ).rejects.toThrowGqlError(
       errors.input({
-        message:
-          'Partner does not have this financial reporting type available',
+        message: 'Partner does not have this financial reporting type available',
         field: 'partnership.financialReportingType',
       }),
     );
@@ -548,8 +518,7 @@ describe('Partnership e2e', () => {
     // delete primary partnership, throw error if it's not the only one
     await expect(deletePartnership(partnership2.id)).rejects.toThrowGqlError(
       errors.input({
-        message:
-          'Primary partnerships cannot be removed. Make another partnership primary first.',
+        message: 'Primary partnerships cannot be removed. Make another partnership primary first.',
         field: 'partnership.id',
       }),
     );
@@ -557,8 +526,7 @@ describe('Partnership e2e', () => {
     await deletePartnership(partnership1.id);
     await expect(deletePartnership(partnership2.id)).rejects.toThrowGqlError(
       errors.input({
-        message:
-          'Primary partnerships cannot be removed. Make another partnership primary first.',
+        message: 'Primary partnerships cannot be removed. Make another partnership primary first.',
         field: 'partnership.id',
       }),
     );

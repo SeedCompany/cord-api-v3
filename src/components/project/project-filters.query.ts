@@ -1,10 +1,4 @@
-import {
-  equals,
-  greaterThan,
-  inArray,
-  node,
-  relation,
-} from 'cypher-query-builder';
+import { equals, greaterThan, inArray, node, relation } from 'cypher-query-builder';
 import {
   ACTIVE,
   currentUser,
@@ -68,11 +62,7 @@ export const projectFilters = filter.define(() => ProjectFilters, {
     ]),
   ),
   members: filter.sub(() => projectMemberFilters)((sub) =>
-    sub.match([
-      node('node', 'ProjectMember'),
-      relation('in', '', 'member', ACTIVE),
-      node('outer'),
-    ]),
+    sub.match([node('node', 'ProjectMember'), relation('in', '', 'member', ACTIVE), node('outer')]),
   ),
   userId: ({ value }) => ({
     userId: [
@@ -107,11 +97,7 @@ export const projectFilters = filter.define(() => ProjectFilters, {
   name: filter.fullText({
     index: () => ProjectNameIndex,
     matchToNode: (q) =>
-      q.match([
-        node('node', 'Project'),
-        relation('out', '', 'name', ACTIVE),
-        node('match'),
-      ]),
+      q.match([node('node', 'Project'), relation('out', '', 'name', ACTIVE), node('match')]),
     minScore: 0.8,
   }),
   primaryLocation: filter.sub(() => locationFilters)((sub) =>

@@ -111,9 +111,7 @@ describe('Education e2e', () => {
   it('List view of educations', async () => {
     // create 2 educations
     const numEducations = 2;
-    await Promise.all(
-      times(numEducations).map(() => createEducation(app, { userId: user.id })),
-    );
+    await Promise.all(times(numEducations).map(() => createEducation(app, { userId: user.id })));
 
     const result = await app.graphql.query(
       graphql(
@@ -137,8 +135,6 @@ describe('Education e2e', () => {
       },
     );
 
-    expect(result.user.education.items.length).toBeGreaterThanOrEqual(
-      numEducations,
-    );
+    expect(result.user.education.items.length).toBeGreaterThanOrEqual(numEducations);
   });
 });

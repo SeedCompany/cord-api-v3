@@ -10,8 +10,7 @@ export abstract class CreateFieldRegion {
   readonly name: string;
 
   @IdField({
-    description:
-      'The field zone ID that the field region will be associated with',
+    description: 'The field zone ID that the field region will be associated with',
   })
   readonly fieldZoneId: ID;
 

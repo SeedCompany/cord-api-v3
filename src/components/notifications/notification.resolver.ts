@@ -28,9 +28,7 @@ export class NotificationResolver {
   }
 
   @Mutation(() => Notification)
-  async readNotification(
-    @Args() input: MarkNotificationReadArgs,
-  ): Promise<Notification> {
+  async readNotification(@Args() input: MarkNotificationReadArgs): Promise<Notification> {
     return await this.service.markRead(input);
   }
 }

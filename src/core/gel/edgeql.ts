@@ -7,11 +7,16 @@ export const edgeql = <const Query extends string>(
   return new TypedEdgeQL(stripIndent(query)) as any;
 };
 
-export type EdgeQLArgsOf<T extends TypedEdgeQL<any, any>> =
-  T extends TypedEdgeQL<infer Args, any> ? Args : never;
+export type EdgeQLArgsOf<T extends TypedEdgeQL<any, any>> = T extends TypedEdgeQL<infer Args, any>
+  ? Args
+  : never;
 
-export type EdgeQLReturnOf<T extends TypedEdgeQL<any, any>> =
-  T extends TypedEdgeQL<any, infer Return> ? Return : never;
+export type EdgeQLReturnOf<T extends TypedEdgeQL<any, any>> = T extends TypedEdgeQL<
+  any,
+  infer Return
+>
+  ? Return
+  : never;
 
 // Internal symbol to mark a query as typed
 const edgeqlTS = Symbol('edgeqlTS');

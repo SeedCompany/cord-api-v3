@@ -1,7 +1,4 @@
-import {
-  GetObjectCommand as GetObject,
-  PutObjectCommand as PutObject,
-} from '@aws-sdk/client-s3';
+import { GetObjectCommand as GetObject, PutObjectCommand as PutObject } from '@aws-sdk/client-s3';
 import { type Type } from '@nestjs/common';
 import { bufferFromStream } from '@seedcompany/common';
 import { type Command } from '@smithy/smithy-client';
@@ -72,9 +69,7 @@ export abstract class LocalBucket<
 
   async putObject(input: PutObjectInput) {
     const buffer =
-      input.Body instanceof Readable
-        ? await bufferFromStream(input.Body)
-        : Buffer.from(input.Body);
+      input.Body instanceof Readable ? await bufferFromStream(input.Body) : Buffer.from(input.Body);
     await this.saveFile(input.Key, {
       LastModified: new Date(),
       ...input,
@@ -92,9 +87,7 @@ export abstract class LocalBucket<
       ...input,
       signing: {
         ...input.signing,
-        expiresIn: DateTime.local()
-          .plus(Duration.from(input.signing.expiresIn))
-          .toMillis(),
+        expiresIn: DateTime.local().plus(Duration.from(input.signing.expiresIn)).toMillis(),
       },
     });
     const baseUrl = await firstValueFrom(this.options.baseUrl);
@@ -122,8 +115,7 @@ export abstract class LocalBucket<
         operation: string;
       };
       assert(
-        parsed.operation === operation.name ||
-          `${parsed.operation}Command` === operation.name,
+        parsed.operation === operation.name || `${parsed.operation}Command` === operation.name,
       );
       return parsed;
     } catch (e) {

@@ -8,12 +8,7 @@ export class RenameTranslationToMomentumMigration extends BaseMigration {
       .matchNode('node', 'TranslationProject')
       .setValues({ 'node.type': 'MomentumTranslation' }, true)
       .setLabels({
-        node: [
-          'MomentumTranslationProject',
-          'TranslationProject',
-          'Project',
-          'BaseNode',
-        ],
+        node: ['MomentumTranslationProject', 'TranslationProject', 'Project', 'BaseNode'],
       })
       .logIt()
       .executeAndLogStats();

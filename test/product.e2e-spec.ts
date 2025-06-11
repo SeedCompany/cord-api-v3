@@ -201,9 +201,7 @@ describe('Product e2e', () => {
       expect.arrayContaining(story.scriptureReferences.value),
     );
     expect(actual.scriptureReferences.value).toEqual(
-      expect.arrayContaining(
-        actual.produces?.value?.scriptureReferences?.value || [],
-      ),
+      expect.arrayContaining(actual.produces?.value?.scriptureReferences?.value || []),
     );
     expect(actual.scriptureReferencesOverride?.value).toBeNull();
   });
@@ -334,9 +332,7 @@ describe('Product e2e', () => {
     const result = await app.graphql.query(
       graphql(
         `
-          mutation updateDirectScriptureProduct(
-            $input: UpdateDirectScriptureProduct!
-          ) {
+          mutation updateDirectScriptureProduct($input: UpdateDirectScriptureProduct!) {
             updateDirectScriptureProduct(input: $input) {
               product {
                 ...product
@@ -390,9 +386,7 @@ describe('Product e2e', () => {
     const result = await app.graphql.query(
       graphql(
         `
-          mutation updateDerivativeScriptureProduct(
-            $input: UpdateDerivativeScriptureProduct!
-          ) {
+          mutation updateDerivativeScriptureProduct($input: UpdateDerivativeScriptureProduct!) {
             updateDerivativeScriptureProduct(input: $input) {
               product {
                 ...product
@@ -476,9 +470,7 @@ describe('Product e2e', () => {
     const result = await app.graphql.query(
       graphql(
         `
-          mutation updateDerivativeScriptureProduct(
-            $input: UpdateDerivativeScriptureProduct!
-          ) {
+          mutation updateDerivativeScriptureProduct($input: UpdateDerivativeScriptureProduct!) {
             updateDerivativeScriptureProduct(input: $input) {
               product {
                 ...product
@@ -541,12 +533,8 @@ describe('Product e2e', () => {
     const actual = result.updateDerivativeScriptureProduct.product;
     if (actual.__typename !== 'DerivativeScriptureProduct') throw new Error();
 
-    expect(actual.scriptureReferencesOverride?.value).toEqual(
-      expect.arrayContaining(override),
-    );
-    expect(actual.scriptureReferences?.value).toEqual(
-      expect.arrayContaining(override),
-    );
+    expect(actual.scriptureReferencesOverride?.value).toEqual(expect.arrayContaining(override));
+    expect(actual.scriptureReferences?.value).toEqual(expect.arrayContaining(override));
     expect(actual.produces?.value?.scriptureReferences?.value).toEqual(
       expect.arrayContaining(story.scriptureReferences.value),
     );
@@ -562,9 +550,7 @@ describe('Product e2e', () => {
     const result = await app.graphql.query(
       graphql(
         `
-          mutation updateDerivativeScriptureProduct(
-            $input: UpdateDerivativeScriptureProduct!
-          ) {
+          mutation updateDerivativeScriptureProduct($input: UpdateDerivativeScriptureProduct!) {
             updateDerivativeScriptureProduct(input: $input) {
               product {
                 ...product

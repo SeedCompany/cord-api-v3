@@ -13,10 +13,7 @@ import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
 import { type Product, ProductStep } from '../../product/dto';
 import { type ProgressReport } from '../../progress-report/dto';
-import {
-  ProgressReportVariantProgress,
-  type ProgressVariant,
-} from './variant-progress.dto';
+import { ProgressReportVariantProgress, type ProgressVariant } from './variant-progress.dto';
 
 export interface ProgressVariantByProductInput {
   product: Product;
@@ -53,8 +50,7 @@ export class ProductProgress {
   readonly reportId: ID;
 
   @Field(() => Variant)
-  readonly variant: Variant<ProgressVariant> &
-    SetUnsecuredType<ProgressVariant>;
+  readonly variant: Variant<ProgressVariant> & SetUnsecuredType<ProgressVariant>;
 
   @Field(() => [StepProgress], {
     description: stripIndent`

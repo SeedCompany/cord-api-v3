@@ -11,8 +11,7 @@ export type IndexMode = 'write' | 'schema';
  * It should be used on a provider method.
  * It's passed a db Connection for convenience.
  */
-export const OnIndex = (mode: IndexMode = 'write') =>
-  SetMetadata(DB_INDEX_KEY, mode);
+export const OnIndex = (mode: IndexMode = 'write') => SetMetadata(DB_INDEX_KEY, mode);
 
 export interface OnIndexParams {
   db: DatabaseService;
@@ -20,9 +19,7 @@ export interface OnIndexParams {
   serverInfo: ServerInfo;
 }
 
-export type Indexer = (
-  params: OnIndexParams,
-) => Promise<string | string[] | void>;
+export type Indexer = (params: OnIndexParams) => Promise<string | string[] | void>;
 
 export const createUniqueConstraint = (
   nodeName: string,

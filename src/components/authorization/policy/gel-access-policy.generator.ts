@@ -35,9 +35,7 @@ export class GelAccessPolicyGenerator {
       this.executor.forGel({ resource, action }),
     ]);
 
-    const policies = groupBy(actionPerms, ([_, perm]) =>
-      Condition.id(perm),
-    ).map((group) => {
+    const policies = groupBy(actionPerms, ([_, perm]) => Condition.id(perm)).map((group) => {
       const actions = group.map(([action]) => action);
       const perm = group[0][1];
       return this.makeSdlForAction(params, actions, perm);
@@ -46,11 +44,7 @@ export class GelAccessPolicyGenerator {
     return cleanJoin('\n\n', policies);
   }
 
-  makeSdlForAction(
-    params: AsEdgeQLParams<any>,
-    stmtTypes: string[],
-    perm: Permission,
-  ) {
+  makeSdlForAction(params: AsEdgeQLParams<any>, stmtTypes: string[], perm: Permission) {
     if (perm === false) {
       // App policies haven't declared any perms for this specific type.
       return null;
@@ -60,14 +54,12 @@ export class GelAccessPolicyGenerator {
       .map((action) => startCase(action).replaceAll(/\s+/g, ''))
       .join('')}GeneratedFromAppPoliciesFor${params.resource.name}`;
 
-    const withAliases =
-      typeof perm === 'boolean' ? {} : perm.setupEdgeQLContext?.(params) ?? {};
+    const withAliases = typeof perm === 'boolean' ? {} : perm.setupEdgeQLContext?.(params) ?? {};
     const withAliasesEql = Object.entries(withAliases)
       .map(([key, value]) => `${key} := ${value}`)
       .join(',\n');
 
-    const conditionEql =
-      typeof perm === 'boolean' ? String(perm) : perm.asEdgeQLCondition(params);
+    const conditionEql = typeof perm === 'boolean' ? String(perm) : perm.asEdgeQLCondition(params);
 
     const usingBodyEql = withAliasesEql
       ? stripIndent`
@@ -80,9 +72,7 @@ ${addIndent(conditionEql, 6, { indent: '  ' })}
       : conditionEql;
 
     const usingEql =
-      perm === true
-        ? ''
-        : ` using (\n${addIndent(usingBodyEql, 1, { indent: '  ' })}\n)`;
+      perm === true ? '' : ` using (\n${addIndent(usingBodyEql, 1, { indent: '  ' })}\n)`;
     const actions = stmtTypes.join(', ');
     const sdl = `access policy ${name}\nallow ${actions}${usingEql};`;
     return sdl;

@@ -11,10 +11,7 @@ import { fileURLToPath } from 'url';
  * It is still a valid path though, so when it is displayed, relative to rootDir,
  * it looks normal.
  */
-export const jestSkipFileInExceptionSource = (
-  e: Error,
-  filepath: string | RegExp,
-) => {
+export const jestSkipFileInExceptionSource = (e: Error, filepath: string | RegExp) => {
   if (!process.env.JEST_WORKER_ID || !(e instanceof Error)) {
     return e;
   }
@@ -34,7 +31,4 @@ export const jestSkipFileInExceptionSource = (
   return e;
 };
 
-const projectRoot = resolve(
-  dirname(fileURLToPath(import.meta.url)),
-  '../../..',
-);
+const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');

@@ -8,8 +8,7 @@ export async function createFundingAccount(
   input: Partial<InputOf<typeof CreateFundingAccountDoc>> = {},
 ) {
   const name = input.name || faker.hacker.noun() + faker.company.name();
-  const accountNumber =
-    input.accountNumber || faker.number.int({ min: 0, max: 9 });
+  const accountNumber = input.accountNumber || faker.number.int({ min: 0, max: 9 });
 
   const result = await app.graphql.mutate(CreateFundingAccountDoc, {
     input: {

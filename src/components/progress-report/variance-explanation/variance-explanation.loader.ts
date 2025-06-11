@@ -1,9 +1,5 @@
 import { type ID } from '~/common';
-import {
-  type DataLoaderStrategy,
-  LoaderFactory,
-  type LoaderOptionsOf,
-} from '~/core/data-loader';
+import { type DataLoaderStrategy, LoaderFactory, type LoaderOptionsOf } from '~/core/data-loader';
 import { type ProgressReport } from '../dto';
 import { type ProgressReportVarianceExplanation as VarianceExplanation } from './variance-explanation.dto';
 import { ProgressReportVarianceExplanationService } from './variance-explanation.service';
@@ -12,9 +8,7 @@ import { ProgressReportVarianceExplanationService } from './variance-explanation
 export class ProgressReportVarianceExplanationLoader
   implements DataLoaderStrategy<VarianceExplanation, ProgressReport, ID>
 {
-  constructor(
-    private readonly service: ProgressReportVarianceExplanationService,
-  ) {}
+  constructor(private readonly service: ProgressReportVarianceExplanationService) {}
 
   getOptions() {
     return {

@@ -37,9 +37,7 @@ const flattenConstraints = (
   e: ValidationError[],
 ): Array<SetRequired<ValidationError, 'constraints'>> =>
   e.flatMap((er) => [
-    ...(er.constraints
-      ? [er as SetRequired<ValidationError, 'constraints'>]
-      : []),
+    ...(er.constraints ? [er as SetRequired<ValidationError, 'constraints'>] : []),
     ...flattenConstraints(er.children ?? []),
   ]);
 

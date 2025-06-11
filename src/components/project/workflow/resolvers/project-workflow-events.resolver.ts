@@ -8,9 +8,7 @@ export class ProjectWorkflowEventsResolver {
   constructor(private readonly service: ProjectWorkflowService) {}
 
   @ResolveField(() => [WorkflowEvent])
-  async workflowEvents(
-    @Parent() report: Project,
-  ): Promise<readonly WorkflowEvent[]> {
+  async workflowEvents(@Parent() report: Project): Promise<readonly WorkflowEvent[]> {
     return await this.service.list(report);
   }
 }

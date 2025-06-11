@@ -1,10 +1,7 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { ListArg } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
-import {
-  PeriodicReportLoader,
-  PeriodicReportService,
-} from '../periodic-report';
+import { PeriodicReportLoader, PeriodicReportService } from '../periodic-report';
 import { IProject, type Project } from '../project/dto';
 import {
   PeriodicReportListInput,
@@ -54,13 +51,8 @@ export class PeriodicReportProjectConnectionResolver {
     description:
       'The financial report currently due. This is the period that most recently completed.',
   })
-  async currentFinancialReportDue(
-    @Parent() project: Project,
-  ): Promise<SecuredPeriodicReport> {
-    const value = await this.service.getCurrentReportDue(
-      project.id,
-      ReportType.Financial,
-    );
+  async currentFinancialReportDue(@Parent() project: Project): Promise<SecuredPeriodicReport> {
+    const value = await this.service.getCurrentReportDue(project.id, ReportType.Financial);
     return {
       canRead: true,
       canEdit: false,
@@ -72,13 +64,8 @@ export class PeriodicReportProjectConnectionResolver {
     description:
       'The narrative report currently due. This is the period that most recently completed.',
   })
-  async currentNarrativeReportDue(
-    @Parent() project: Project,
-  ): Promise<SecuredPeriodicReport> {
-    const value = await this.service.getCurrentReportDue(
-      project.id,
-      ReportType.Narrative,
-    );
+  async currentNarrativeReportDue(@Parent() project: Project): Promise<SecuredPeriodicReport> {
+    const value = await this.service.getCurrentReportDue(project.id, ReportType.Narrative);
     return {
       canRead: true,
       canEdit: false,
@@ -87,16 +74,10 @@ export class PeriodicReportProjectConnectionResolver {
   }
 
   @ResolveField(() => SecuredPeriodicReport, {
-    description:
-      'The financial report due next. This is the period currently in progress.',
+    description: 'The financial report due next. This is the period currently in progress.',
   })
-  async nextFinancialReportDue(
-    @Parent() project: Project,
-  ): Promise<SecuredPeriodicReport> {
-    const value = await this.service.getNextReportDue(
-      project.id,
-      ReportType.Financial,
-    );
+  async nextFinancialReportDue(@Parent() project: Project): Promise<SecuredPeriodicReport> {
+    const value = await this.service.getNextReportDue(project.id, ReportType.Financial);
     return {
       canRead: true,
       canEdit: false,
@@ -105,16 +86,10 @@ export class PeriodicReportProjectConnectionResolver {
   }
 
   @ResolveField(() => SecuredPeriodicReport, {
-    description:
-      'The narrative report due next. This is the period currently in progress.',
+    description: 'The narrative report due next. This is the period currently in progress.',
   })
-  async nextNarrativeReportDue(
-    @Parent() project: Project,
-  ): Promise<SecuredPeriodicReport> {
-    const value = await this.service.getNextReportDue(
-      project.id,
-      ReportType.Narrative,
-    );
+  async nextNarrativeReportDue(@Parent() project: Project): Promise<SecuredPeriodicReport> {
+    const value = await this.service.getNextReportDue(project.id, ReportType.Narrative);
     return {
       canRead: true,
       canEdit: false,

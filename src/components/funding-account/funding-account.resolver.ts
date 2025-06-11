@@ -65,9 +65,7 @@ export class FundingAccountResolver {
   @Mutation(() => DeleteFundingAccountOutput, {
     description: 'Delete a funding account',
   })
-  async deleteFundingAccount(
-    @IdArg() id: ID,
-  ): Promise<DeleteFundingAccountOutput> {
+  async deleteFundingAccount(@IdArg() id: ID): Promise<DeleteFundingAccountOutput> {
     await this.fundingAccountService.delete(id);
     return { success: true };
   }

@@ -21,9 +21,8 @@ import { member, Policy, Role, sensMediumOrLower } from '../util';
     p.many('organization', 'partner').whenAny(member, sensMediumOrLower).read,
   ]),
   r.Project.read.specifically((p) => [
-    p
-      .many('rootDirectory', 'primaryLocation', 'otherLocations')
-      .whenAny(member, sensMediumOrLower).read,
+    p.many('rootDirectory', 'primaryLocation', 'otherLocations').whenAny(member, sensMediumOrLower)
+      .read,
   ]),
 ])
 export class FundraisingPolicy {}

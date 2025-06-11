@@ -13,13 +13,7 @@ import {
   type UnsecuredDto,
   viewOfChangeset,
 } from '~/common';
-import {
-  HandleIdLookup,
-  IEventBus,
-  ILogger,
-  Logger,
-  ResourceLoader,
-} from '~/core';
+import { HandleIdLookup, IEventBus, ILogger, Logger, ResourceLoader } from '~/core';
 import { type AnyChangesOf } from '~/core/database/changes';
 import { Privileges } from '../authorization';
 import { FileService } from '../file';
@@ -62,18 +56,11 @@ export class PartnershipService {
 
     PartnershipDateRangeException.throwIfInvalid(input);
 
-    const isFirstPartnership = await this.repo.isFirstPartnership(
-      projectId,
-      changeset,
-    );
+    const isFirstPartnership = await this.repo.isFirstPartnership(projectId, changeset);
     const primary = isFirstPartnership ? true : input.primary;
 
     const partner = await this.partnerService.readOne(partnerId);
-    this.verifyFinancialReportingType(
-      input.financialReportingType,
-      input.types ?? [],
-      partner,
-    );
+    this.verifyFinancialReportingType(input.financialReportingType, input.types ?? [], partner);
 
     try {
       const result = await this.repo.create(
@@ -88,13 +75,8 @@ export class PartnershipService {
         await this.repo.removePrimaryFromOtherPartnerships(result.id);
       }
 
-      const partnership = await this.readOne(
-        result.id,
-        viewOfChangeset(changeset),
-      ).catch((e) => {
-        throw e instanceof NotFoundException
-          ? new ReadAfterCreationFailed(Partnership)
-          : e;
+      const partnership = await this.readOne(result.id, viewOfChangeset(changeset)).catch((e) => {
+        throw e instanceof NotFoundException ? new ReadAfterCreationFailed(Partnership) : e;
       });
 
       this.privileges.for(Partnership, partnership).verifyCan('create');
@@ -121,9 +103,7 @@ export class PartnershipService {
     return partnerships.map((dto) => this.secure(dto));
   }
 
-  async readManyByProjectAndPartner(
-    input: readonly PartnershipByProjectAndPartnerInput[],
-  ) {
+  async readManyByProjectAndPartner(input: readonly PartnershipByProjectAndPartnerInput[]) {
     const partnerships = await this.repo.readManyByProjectAndPartner(input);
     return partnerships.map((dto) => ({
       id: { project: dto.project.id, partner: dto.partner.id },
@@ -180,10 +160,7 @@ export class PartnershipService {
       await this.repo.removePrimaryFromOtherPartnerships(input.id);
     }
 
-    await this.repo.update(
-      { id: object.id, ...simpleChanges },
-      view?.changeset,
-    );
+    await this.repo.update({ id: object.id, ...simpleChanges }, view?.changeset);
 
     // TODO: remove negation. Temporary fix until file handling is refactored
     if (!object.mou) {
@@ -191,11 +168,7 @@ export class PartnershipService {
     }
     // TODO: remove negation. Temporary fix until file handling is refactored
     if (!object.agreement) {
-      await this.files.updateDefinedFile(
-        object.agreement,
-        'partnership.agreement',
-        agreement,
-      );
+      await this.files.updateDefinedFile(object.agreement, 'partnership.agreement', agreement);
     }
 
     const partnership = await this.readOne(input.id, view);
@@ -234,10 +207,7 @@ export class PartnershipService {
     partialInput: Partial<PartnershipListInput>,
     changeset?: ID,
   ): Promise<PartnershipListOutput> {
-    const input = PartnershipListInput.defaultValue(
-      PartnershipListInput,
-      partialInput,
-    );
+    const input = PartnershipListInput.defaultValue(PartnershipListInput, partialInput);
     const results = await this.repo.list(input, changeset);
     return {
       ...results,
@@ -253,9 +223,7 @@ export class PartnershipService {
     if (!financialReportingType) {
       return;
     }
-    if (
-      !partner.financialReportingTypes.value?.includes(financialReportingType)
-    ) {
+    if (!partner.financialReportingTypes.value?.includes(financialReportingType)) {
       throw new InputException(
         `Partner does not have this financial reporting type available`,
         'partnership.financialReportingType',
@@ -272,19 +240,13 @@ export class PartnershipService {
 
 class PartnershipDateRangeException extends RangeException {
   static throwIfInvalid(
-    current: Partial<
-      Pick<UnsecuredDto<Partnership>, 'mouStartOverride' | 'mouEndOverride'>
-    >,
+    current: Partial<Pick<UnsecuredDto<Partnership>, 'mouStartOverride' | 'mouEndOverride'>>,
     changes: AnyChangesOf<Partnership> = {},
   ) {
     const start =
-      changes.mouStartOverride !== undefined
-        ? changes.mouStartOverride
-        : current.mouStartOverride;
+      changes.mouStartOverride !== undefined ? changes.mouStartOverride : current.mouStartOverride;
     const end =
-      changes.mouEndOverride !== undefined
-        ? changes.mouEndOverride
-        : current.mouEndOverride;
+      changes.mouEndOverride !== undefined ? changes.mouEndOverride : current.mouEndOverride;
     if (start && end && start > end) {
       const field =
         changes.mouEndOverride !== undefined
@@ -295,8 +257,7 @@ class PartnershipDateRangeException extends RangeException {
   }
 
   constructor(readonly value: Range<CalendarDate>, readonly field: string) {
-    const message =
-      "Partnership's MOU start date must be before the MOU end date";
+    const message = "Partnership's MOU start date must be before the MOU end date";
     super({ message, field });
   }
 }

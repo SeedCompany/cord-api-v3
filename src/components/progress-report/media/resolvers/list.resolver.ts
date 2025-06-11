@@ -15,9 +15,7 @@ export class ProgressReportMediaListResolver {
     description: 'The variants the requester has access to upload',
     deprecationReason: 'Use `availableVariants` instead',
   })
-  uploadableVariants(
-    @Parent() { report }: ReportMediaList,
-  ): ReadonlyArray<ReportMedia['variant']> {
+  uploadableVariants(@Parent() { report }: ReportMediaList): ReadonlyArray<ReportMedia['variant']> {
     const context = report as any; // the report is fine for condition context
     const privileges = this.privileges.for(ReportMedia);
     return ReportMedia.Variants.filter((variant) =>
@@ -28,9 +26,7 @@ export class ProgressReportMediaListResolver {
   @ResolveField(() => [AvailableVariant], {
     description: 'The variants available to the requester',
   })
-  availableVariants(
-    @Parent() { report }: ReportMediaList,
-  ): readonly AvailableVariant[] {
+  availableVariants(@Parent() { report }: ReportMediaList): readonly AvailableVariant[] {
     const context = report as any; // the report is fine for condition context
     const privileges = this.privileges.for(ReportMedia);
     return ReportMedia.Variants.filter((variant) =>
@@ -38,9 +34,7 @@ export class ProgressReportMediaListResolver {
     ).map(
       (variant): AvailableVariant => ({
         variant,
-        canCreate: privileges
-          .forContext(withVariant(context, variant))
-          .can('create'),
+        canCreate: privileges.forContext(withVariant(context, variant)).can('create'),
       }),
     );
   }

@@ -64,15 +64,13 @@ export class ConnectionTimeoutError extends Neo4jError {
   static readonly code = defaultCode;
   static [Symbol.hasInstance](object: unknown) {
     return (
-      isNeo4jError(object) &&
-      object.message.startsWith('Connection acquisition timed out in ')
+      isNeo4jError(object) && object.message.startsWith('Connection acquisition timed out in ')
     );
   }
 }
 
 export class ConstraintError extends Neo4jError {
-  static readonly code =
-    'Neo.ClientError.Schema.ConstraintValidationFailed' as const;
+  static readonly code = 'Neo.ClientError.Schema.ConstraintValidationFailed' as const;
   static [Symbol.hasInstance](object: unknown) {
     return isNeo4jError(object) && object.code === ConstraintError.code;
   }
@@ -87,8 +85,7 @@ export class UniquenessError extends ConstraintError {
 
   static [Symbol.hasInstance](object: unknown) {
     return (
-      object instanceof ConstraintError &&
-      object.message.includes('already exists with label')
+      object instanceof ConstraintError && object.message.includes('already exists with label')
     );
   }
 
@@ -163,9 +160,7 @@ const getUniqueFailureInfo = (e: Neo4jError) => {
   // https://github.com/SeedCompany/cord-api-v3/blob/f363f89c278d099cf76a1f7d3f08edd9578bf2be/src/core/database/common.repository.ts#L180
   if (constraint) {
     const constraintNameParts = constraint.name.split('_');
-    uniq.label = uniq.label.startsWith('Label[')
-      ? constraintNameParts[0]
-      : uniq.label;
+    uniq.label = uniq.label.startsWith('Label[') ? constraintNameParts[0] : uniq.label;
     uniq.property = uniq.property.startsWith('PropertyKey[')
       ? constraintNameParts[1]
       : uniq.property;

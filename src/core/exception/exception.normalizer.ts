@@ -120,13 +120,10 @@ export class ExceptionNormalizer {
 
     // Again, dig deep here to find connection errors.
     // These would be the root problem that we'd want to expose.
-    const gelError = exs.find(
-      (e): e is Gel.GelError => e instanceof Gel.GelError,
-    );
+    const gelError = exs.find((e): e is Gel.GelError => e instanceof Gel.GelError);
     if (
       gelError &&
-      (gelError instanceof Gel.AvailabilityError ||
-        gelError instanceof Gel.ClientConnectionError)
+      (gelError instanceof Gel.AvailabilityError || gelError instanceof Gel.ClientConnectionError)
     ) {
       return {
         codes: this.errorToCodes(ex),
@@ -148,9 +145,7 @@ export class ExceptionNormalizer {
       return {
         aggregatees,
         // shrug?
-        codes: [
-          aggregatees.every((e) => e.codes.has('Client')) ? 'Client' : 'Server',
-        ],
+        codes: [aggregatees.every((e) => e.codes.has('Client')) ? 'Client' : 'Server'],
       };
     }
 
@@ -215,19 +210,10 @@ export class ExceptionNormalizer {
     }
 
     // Fastify convention
-    if (
-      'code' in ex &&
-      typeof ex.code === 'string' &&
-      ex.code.startsWith('FST_')
-    ) {
+    if ('code' in ex && typeof ex.code === 'string' && ex.code.startsWith('FST_')) {
       const statusCode =
-        'statusCode' in ex && typeof ex.statusCode === 'number'
-          ? ex.statusCode
-          : undefined;
-      const codes = [
-        ex.code,
-        statusCode && statusCode < 500 ? 'Client' : 'Server',
-      ];
+        'statusCode' in ex && typeof ex.statusCode === 'number' ? ex.statusCode : undefined;
+      const codes = [ex.code, statusCode && statusCode < 500 ? 'Client' : 'Server'];
       return { codes };
     }
 
@@ -277,11 +263,7 @@ export class ExceptionNormalizer {
       return ex;
     }
 
-    const wrapped = new NotFoundException(
-      `${typeName} could not be found`,
-      inputPath,
-      ex,
-    );
+    const wrapped = new NotFoundException(`${typeName} could not be found`, inputPath, ex);
     return Object.assign(wrapped, { idNotFound: id });
   }
 
@@ -291,9 +273,7 @@ export class ExceptionNormalizer {
         (e.stack ?? e.message)
           .split('\n')
           .filter(isSrcFrame)
-          .map((frame: string) =>
-            this.config?.jest ? frame : normalizeFramePath(frame),
-          )
+          .map((frame: string) => (this.config?.jest ? frame : normalizeFramePath(frame)))
           .join('\n'),
       )
       .map((e, i) => addIndent(i > 0 ? `[cause]: ${e}` : e, i * 2))
@@ -306,9 +286,7 @@ export class ExceptionNormalizer {
       message,
       error = undefined,
       ...data
-    } = typeof res === 'string'
-      ? { message: res }
-      : (res as { message: string; error?: string });
+    } = typeof res === 'string' ? { message: res } : (res as { message: string; error?: string });
 
     let codes = this.errorToCodes(ex);
     if (error) {
@@ -361,8 +339,7 @@ export class ExceptionNormalizer {
     if (type === Gel.GelError) {
       const transient =
         ex instanceof Gel.GelError &&
-        (ex.hasTag(GelTags.SHOULD_RECONNECT) ||
-          ex.hasTag(GelTags.SHOULD_RETRY));
+        (ex.hasTag(GelTags.SHOULD_RECONNECT) || ex.hasTag(GelTags.SHOULD_RETRY));
       return [...(transient ? ['Transient'] : []), 'Database', 'Server'];
     }
     if (Neo.isNeo4jError(ex)) {

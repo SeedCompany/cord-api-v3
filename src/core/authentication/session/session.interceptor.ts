@@ -23,16 +23,12 @@ export class SessionInterceptor implements NestInterceptor {
     private readonly identity: Identity,
   ) {}
 
-  private readonly sessionByRequest = new AsyncLocalStorage<
-    SessionHost['current$']
-  >();
+  private readonly sessionByRequest = new AsyncLocalStorage<SessionHost['current$']>();
 
   @GlobalHttpHook()
   onRequest(...[_req, _reply, next]: Parameters<GlobalHttpHook>) {
     // Create a holder to use later to declare the session after it is constructed
-    const sessionForTheRequest = new BehaviorSubject<Session | undefined>(
-      undefined,
-    );
+    const sessionForTheRequest = new BehaviorSubject<Session | undefined>(undefined);
     // Store this as the current holder for the current request.
     // This is our private store, so the code below won't interfere with
     // a different SessionHost context.
@@ -60,9 +56,7 @@ export class SessionInterceptor implements NestInterceptor {
     }
 
     const request = this.getRequest(executionContext);
-    const session = request
-      ? await this.sessionInitiator.resume(request)
-      : undefined;
+    const session = request ? await this.sessionInitiator.resume(request) : undefined;
     if (session) {
       session$.next(session);
       if (authLevel === 'authenticated') {
@@ -76,8 +70,7 @@ export class SessionInterceptor implements NestInterceptor {
   private isMutation(executionContext: ExecutionContext) {
     switch (executionContext.getType()) {
       case 'graphql': {
-        const gqlExecutionContext =
-          GqlExecutionContext.create(executionContext);
+        const gqlExecutionContext = GqlExecutionContext.create(executionContext);
         const op = gqlExecutionContext.getInfo().operation;
         return op.operation === 'mutation';
       }
@@ -93,8 +86,7 @@ export class SessionInterceptor implements NestInterceptor {
   private getRequest(executionContext: ExecutionContext) {
     switch (executionContext.getType()) {
       case 'graphql': {
-        const gqlExecutionContext =
-          GqlExecutionContext.create(executionContext);
+        const gqlExecutionContext = GqlExecutionContext.create(executionContext);
         const ctx = gqlExecutionContext.getContext();
         return ctx.request;
       }

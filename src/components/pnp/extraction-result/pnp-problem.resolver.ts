@@ -5,8 +5,6 @@ import { PnpExtractionResult, PnpProblem } from './extraction-result.dto';
 export class PnpProblemResolver {
   @ResolveField(() => [PnpProblem])
   problems(@Parent() result: PnpExtractionResult) {
-    return [...result.problems.values()].map((problem) =>
-      PnpProblem.render(problem),
-    );
+    return [...result.problems.values()].map((problem) => PnpProblem.render(problem));
   }
 }

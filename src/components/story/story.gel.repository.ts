@@ -17,16 +17,13 @@ export class StoryGelRepository
   implements PublicOf<StoryRepository>
 {
   async create(input: CreateStory): Promise<UnsecuredDto<Story>> {
-    const query = e.params(
-      { name: e.str, scripture: e.optional(scripture.type) },
-      ($) => {
-        const created = e.insert(this.resource.db, {
-          name: $.name,
-          scripture: scripture.insert($.scripture),
-        });
-        return e.select(created, this.hydrate);
-      },
-    );
+    const query = e.params({ name: e.str, scripture: e.optional(scripture.type) }, ($) => {
+      const created = e.insert(this.resource.db, {
+        name: $.name,
+        scripture: scripture.insert($.scripture),
+      });
+      return e.select(created, this.hydrate);
+    });
     return await this.db.run(query, {
       name: input.name,
       scripture: scripture.valueOptional(input.scriptureReferences),

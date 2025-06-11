@@ -1,11 +1,7 @@
 import { promises as fs } from 'fs';
 import { dirname, join } from 'path';
 import { NotFoundException } from '~/common';
-import {
-  type FakeAwsFile,
-  LocalBucket,
-  type LocalBucketOptions,
-} from './local-bucket';
+import { type FakeAwsFile, LocalBucket, type LocalBucketOptions } from './local-bucket';
 
 export interface FilesystemBucketOptions extends LocalBucketOptions {
   rootDirectory: string;
@@ -54,10 +50,7 @@ export class FilesystemBucket extends LocalBucket<FilesystemBucketOptions> {
 
   async copyObject(oldKey: string, newKey: string) {
     await fs.copyFile(this.getPath(oldKey), this.getPath(newKey));
-    await fs.copyFile(
-      this.getPath(oldKey) + '.info',
-      this.getPath(newKey) + '.info',
-    );
+    await fs.copyFile(this.getPath(oldKey) + '.info', this.getPath(newKey) + '.info');
   }
 
   async deleteObject(key: string) {

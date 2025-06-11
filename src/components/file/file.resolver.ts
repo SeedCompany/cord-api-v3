@@ -1,11 +1,4 @@
-import {
-  Args,
-  Mutation,
-  Parent,
-  Query,
-  ResolveField,
-  Resolver,
-} from '@nestjs/graphql';
+import { Args, Mutation, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { type ID, IdArg, ListArg } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
@@ -97,18 +90,14 @@ export class FileResolver {
       the existing file with the same name or create a new file if not found.
     `,
   })
-  createFileVersion(
-    @Args('input') input: CreateFileVersionInput,
-  ): Promise<File> {
+  createFileVersion(@Args('input') input: CreateFileVersionInput): Promise<File> {
     return this.service.createFileVersion(input);
   }
 
   @Mutation(() => IFileNode, {
     description: 'Rename a file or directory',
   })
-  async renameFileNode(
-    @Args('input') input: RenameFileInput,
-  ): Promise<FileNode> {
+  async renameFileNode(@Args('input') input: RenameFileInput): Promise<FileNode> {
     await this.service.rename(input);
     return await this.service.getFileNode(input.id);
   }

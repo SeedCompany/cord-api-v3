@@ -16,9 +16,7 @@ export abstract class AggregateConditions<
   TResourceStatic extends ResourceShape<any> = ResourceShape<any>,
 > implements Condition<TResourceStatic>
 {
-  protected constructor(
-    readonly conditions: Array<Condition<TResourceStatic>>,
-  ) {}
+  protected constructor(readonly conditions: Array<Condition<TResourceStatic>>) {}
 
   attachPolicy(policy: Policy): Condition<TResourceStatic> {
     const newConditions = this.conditions.map(
@@ -34,29 +32,19 @@ export abstract class AggregateConditions<
     return this.conditions[aggFn]((condition) => condition.isAllowed(params));
   }
 
-  setupCypherContext(
-    query: Query,
-    prevApplied: Set<any>,
-    other: AsCypherParams<TResourceStatic>,
-  ) {
+  setupCypherContext(query: Query, prevApplied: Set<any>, other: AsCypherParams<TResourceStatic>) {
     for (const condition of this.conditions) {
-      query =
-        condition.setupCypherContext?.(query, prevApplied, other) ?? query;
+      query = condition.setupCypherContext?.(query, prevApplied, other) ?? query;
     }
     return query;
   }
 
-  asCypherCondition(
-    query: Query,
-    other: AsCypherParams<TResourceStatic>,
-  ): string {
+  asCypherCondition(query: Query, other: AsCypherParams<TResourceStatic>): string {
     if (this.conditions.length === 0) {
       return 'true';
     }
     const separator = this instanceof AndConditions ? ' AND ' : ' OR ';
-    const inner = this.conditions
-      .map((c) => c.asCypherCondition(query, other))
-      .join(separator);
+    const inner = this.conditions.map((c) => c.asCypherCondition(query, other)).join(separator);
     return `(${inner})`;
   }
 
@@ -73,9 +61,7 @@ export abstract class AggregateConditions<
       return 'true';
     }
     const separator = this instanceof AndConditions ? '\nand ' : '\nor ';
-    const inner = this.conditions
-      .map((c) => c.asEdgeQLCondition(params))
-      .join(separator);
+    const inner = this.conditions.map((c) => c.asEdgeQLCondition(params)).join(separator);
     return `(${addIndent('\n' + inner, 2)}\n)`;
   }
 
@@ -92,9 +78,7 @@ export abstract class AggregateConditions<
 export class AndConditions<
   TResourceStatic extends ResourceShape<any> = ResourceShape<any>,
 > extends AggregateConditions<TResourceStatic> {
-  static from<T extends ResourceShape<any>>(
-    ...conditionsIn: Array<Condition<T> | Nil>
-  ) {
+  static from<T extends ResourceShape<any>>(...conditionsIn: Array<Condition<T> | Nil>) {
     const conditions = conditionsIn.filter(isNotNil);
     if (conditions.length === 1) {
       return conditions[0];
@@ -118,9 +102,7 @@ export class AndConditions<
 export class OrConditions<
   TResourceStatic extends ResourceShape<any> = ResourceShape<any>,
 > extends AggregateConditions<TResourceStatic> {
-  static from<T extends ResourceShape<any>>(
-    ...conditions: Array<Condition<T> | Nil>
-  ) {
+  static from<T extends ResourceShape<any>>(...conditions: Array<Condition<T> | Nil>) {
     return OrConditions.fromAll(conditions);
   }
 
@@ -136,9 +118,7 @@ export class OrConditions<
       throw new Error('OrConditions requires at least one condition');
     }
 
-    const flattened = conditions.flatMap((c) =>
-      c instanceof OrConditions ? c.conditions : c,
-    );
+    const flattened = conditions.flatMap((c) => (c instanceof OrConditions ? c.conditions : c));
 
     if (!optimize) {
       return new OrConditions(flattened);
@@ -159,5 +139,4 @@ export class OrConditions<
 export const all = AndConditions.from;
 export const any = OrConditions.from;
 
-const byType = <T extends Class<any>>(item: InstanceType<T>) =>
-  item.constructor as Constructor<T>;
+const byType = <T extends Class<any>>(item: InstanceType<T>) => item.constructor as Constructor<T>;

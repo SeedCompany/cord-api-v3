@@ -55,11 +55,7 @@ const origStringifyTerm = TermListClause.prototype.stringifyTerm;
 // @ts-expect-error private but we are replacing it
 TermListClause.prototype.stringifyTerm = function stringifyTerm(term: Term) {
   const stripped =
-    typeof term === 'string'
-      ? stripIndent(term)
-      : isExp(term)
-      ? term.toString()
-      : term;
+    typeof term === 'string' ? stripIndent(term) : isExp(term) ? term.toString() : term;
   // Remove empty strings, so they don't cause problems with double commas
   if (!stripped) {
     return [];
@@ -94,10 +90,7 @@ for (const Cls of [Match, Create, Merge]) {
   };
 }
 
-ClauseCollection.prototype.addClause = function addClause(
-  this: ClauseCollection,
-  clause: Clause,
-) {
+ClauseCollection.prototype.addClause = function addClause(this: ClauseCollection, clause: Clause) {
   // Merge sibling where clauses into a single where clause
   if (clause instanceof Where && this.clauses.at(-1) instanceof Where) {
     const prev = this.clauses.at(-1) as Where;
@@ -122,9 +115,7 @@ ClauseCollection.prototype.build = function build(this: ClauseCollection) {
 // (:User { id: "" }) -> $userId instead of $id
 // eslint-disable-next-line @typescript-eslint/unbound-method
 const origRebind = NodePattern.prototype.rebindConditionParams;
-NodePattern.prototype.rebindConditionParams = function rebindConditionParams(
-  this: NodePattern,
-) {
+NodePattern.prototype.rebindConditionParams = function rebindConditionParams(this: NodePattern) {
   origRebind.call(this);
   const params = isPlainObject(this.conditionParams)
     ? (this.conditionParams as Record<string, Parameter>)

@@ -3,10 +3,7 @@ import { type CalendarDate, DateInterval, type ID, type Range } from '~/common';
 import { type ReportType } from '../dto';
 import { type PeriodicReportService } from '../periodic-report.service';
 
-export type Intervals = [
-  updated: DateInterval | null,
-  previous: DateInterval | null,
-];
+export type Intervals = [updated: DateInterval | null, previous: DateInterval | null];
 
 export abstract class AbstractPeriodicReportSync {
   constructor(protected readonly periodicReports: PeriodicReportService) {}
@@ -46,17 +43,11 @@ export abstract class AbstractPeriodicReportSync {
     unit: DateTimeUnit,
   ) {
     const fullUpdated = updated?.expandToFull(unit);
-    const diff = DateInterval.compare(
-      previous?.expandToFull(unit),
-      fullUpdated,
-    );
+    const diff = DateInterval.compare(previous?.expandToFull(unit), fullUpdated);
     const splitByUnit = (range: DateInterval) => range.splitBy({ [unit]: 1 });
     return {
       additions: diff.additions.flatMap(splitByUnit),
-      removals: [
-        ...diff.removals.flatMap(splitByUnit),
-        ...this.invertedRange(fullUpdated),
-      ],
+      removals: [...diff.removals.flatMap(splitByUnit), ...this.invertedRange(fullUpdated)],
     };
   }
 

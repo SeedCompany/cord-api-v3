@@ -1,12 +1,4 @@
-import {
-  Args,
-  ArgsType,
-  Mutation,
-  Parent,
-  Query,
-  ResolveField,
-  Resolver,
-} from '@nestjs/graphql';
+import { Args, ArgsType, Mutation, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
 import {
   firstLettersOfWords,
   type ID,
@@ -21,10 +13,7 @@ import { Identity } from '~/core/authentication';
 import { LocationLoader } from '../location';
 import { LocationListInput, SecuredLocationList } from '../location/dto';
 import { OrganizationLoader } from '../organization';
-import {
-  OrganizationListInput,
-  SecuredOrganizationList,
-} from '../organization/dto';
+import { OrganizationListInput, SecuredOrganizationList } from '../organization/dto';
 import { PartnerLoader } from '../partner';
 import { PartnerListInput, SecuredPartnerList } from '../partner/dto';
 import { TimeZoneService } from '../timezone';
@@ -50,10 +39,7 @@ import { EducationLoader } from './education';
 import { EducationListInput, SecuredEducationList } from './education/dto';
 import { fullName } from './fullName';
 import { UnavailabilityLoader } from './unavailability';
-import {
-  SecuredUnavailabilityList,
-  UnavailabilityListInput,
-} from './unavailability/dto';
+import { SecuredUnavailabilityList, UnavailabilityListInput } from './unavailability/dto';
 import { UserLoader } from './user.loader';
 import { UserService } from './user.service';
 
@@ -77,10 +63,7 @@ export class UserResolver {
   @Query(() => User, {
     description: 'Look up a user by its ID',
   })
-  async user(
-    @Loader(UserLoader) users: LoaderOf<UserLoader>,
-    @IdArg() id: ID,
-  ): Promise<User> {
+  async user(@Loader(UserLoader) users: LoaderOf<UserLoader>, @IdArg() id: ID): Promise<User> {
     return await users.load(id);
   }
 
@@ -198,9 +181,7 @@ export class UserResolver {
   }
 
   @ResolveField(() => [KnownLanguage])
-  async knownLanguages(
-    @Parent() { id }: User,
-  ): Promise<readonly KnownLanguage[]> {
+  async knownLanguages(@Parent() { id }: User): Promise<readonly KnownLanguage[]> {
     return await this.userService.listKnownLanguages(id);
   }
 
@@ -212,9 +193,7 @@ export class UserResolver {
   ): Promise<CreatePersonOutput> {
     const userId = await this.userService.create(input);
     const user = await this.userService.readOne(userId).catch((e) => {
-      throw e instanceof NotFoundException
-        ? new ReadAfterCreationFailed(User)
-        : e;
+      throw e instanceof NotFoundException ? new ReadAfterCreationFailed(User) : e;
     });
     return { user };
   }
@@ -222,9 +201,7 @@ export class UserResolver {
   @Mutation(() => UpdateUserOutput, {
     description: 'Update a user',
   })
-  async updateUser(
-    @Args('input') { user: input }: UpdateUserInput,
-  ): Promise<UpdateUserOutput> {
+  async updateUser(@Args('input') { user: input }: UpdateUserInput): Promise<UpdateUserOutput> {
     const user = await this.userService.update(input);
     return { user };
   }
@@ -240,9 +217,7 @@ export class UserResolver {
   @Mutation(() => User, {
     description: 'Add a location to a user',
   })
-  async addLocationToUser(
-    @Args() { userId, locationId }: ModifyLocationArgs,
-  ): Promise<User> {
+  async addLocationToUser(@Args() { userId, locationId }: ModifyLocationArgs): Promise<User> {
     await this.userService.addLocation(userId, locationId);
     return await this.userService.readOne(userId);
   }
@@ -250,9 +225,7 @@ export class UserResolver {
   @Mutation(() => User, {
     description: 'Remove a location from a user',
   })
-  async removeLocationFromUser(
-    @Args() { userId, locationId }: ModifyLocationArgs,
-  ): Promise<User> {
+  async removeLocationFromUser(@Args() { userId, locationId }: ModifyLocationArgs): Promise<User> {
     await this.userService.removeLocation(userId, locationId);
     return await this.userService.readOne(userId);
   }
@@ -280,9 +253,7 @@ export class UserResolver {
   @Mutation(() => User, {
     description: 'Create known language to user',
   })
-  async createKnownLanguage(
-    @Args() args: ModifyKnownLanguageArgs,
-  ): Promise<User> {
+  async createKnownLanguage(@Args() args: ModifyKnownLanguageArgs): Promise<User> {
     await this.userService.createKnownLanguage(args);
     return await this.userService.readOne(args.userId);
   }
@@ -290,9 +261,7 @@ export class UserResolver {
   @Mutation(() => User, {
     description: 'Delete known language from user',
   })
-  async deleteKnownLanguage(
-    @Args() args: ModifyKnownLanguageArgs,
-  ): Promise<User> {
+  async deleteKnownLanguage(@Args() args: ModifyKnownLanguageArgs): Promise<User> {
     await this.userService.deleteKnownLanguage(args);
     return await this.userService.readOne(args.userId);
   }

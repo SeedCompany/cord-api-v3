@@ -8,10 +8,7 @@ export interface RejectChangesetPropsOptions {
 }
 
 export const rejectChangesetProps =
-  ({
-    nodeVar = 'node',
-    changesetVar = 'changeset',
-  }: RejectChangesetPropsOptions = {}) =>
+  ({ nodeVar = 'node', changesetVar = 'changeset' }: RejectChangesetPropsOptions = {}) =>
   (query: Query) => {
     query.subQuery([nodeVar, changesetVar], (body) =>
       body

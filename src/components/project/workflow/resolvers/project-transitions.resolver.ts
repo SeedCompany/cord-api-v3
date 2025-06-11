@@ -16,8 +16,7 @@ export class ProjectTransitionsResolver {
   }
 
   @ResolveField(() => [ProjectWorkflowTransition], {
-    description:
-      'The transitions currently available to execute for this project',
+    description: 'The transitions currently available to execute for this project',
   })
   async transitions(
     @Grandparent() project: Project,

@@ -26,10 +26,7 @@ export type EnhancedResourceMap = {
   [K in keyof ResourceMap]: EnhancedResource<ResourceMap[K]>;
 };
 
-export type ResourceLike =
-  | ResourceShape<any>
-  | EnhancedResource<any>
-  | ResourceNameLike;
+export type ResourceLike = ResourceShape<any> | EnhancedResource<any> | ResourceNameLike;
 
 RegisterResource({ db: e.Resource })(Resource);
 declare module '~/core/resources/map' {
@@ -76,9 +73,7 @@ export class ResourcesHost {
     const map = this.getEnhancedMap();
     const resource = map[name as keyof ResourceMap];
     if (!resource) {
-      throw new ServerException(
-        `Unable to determine resource from ResourceMap for type: ${name}`,
-      );
+      throw new ServerException(`Unable to determine resource from ResourceMap for type: ${name}`);
     }
     return resource as any;
   }
@@ -90,13 +85,9 @@ export class ResourcesHost {
   getByGel<Name extends ResourceNameLike>(
     name: Name,
   ): EnhancedResource<
-    string extends Name
-      ? ResourceShape<any>
-      : ResourceStaticFromName<ResourceName<Name>>
+    string extends Name ? ResourceShape<any> : ResourceStaticFromName<ResourceName<Name>>
   > {
-    const resByFQN = this.byEdgeFQN.get(
-      name.includes('::') ? name : `default::${name}`,
-    );
+    const resByFQN = this.byEdgeFQN.get(name.includes('::') ? name : `default::${name}`);
     if (resByFQN) {
       return resByFQN;
     }
@@ -105,16 +96,13 @@ export class ResourcesHost {
     if (resByName) {
       return resByName as any;
     }
-    throw new ServerException(
-      `Unable to determine resource from ResourceMap for Gel FQN: ${name}`,
-    );
+    throw new ServerException(`Unable to determine resource from ResourceMap for Gel FQN: ${name}`);
   }
 
   @Once() get byEdgeFQN() {
     const map = this.getEnhancedMap();
-    const fqnMap = mapKeys(
-      map as Record<string, EnhancedResource<any>>,
-      (_, r, { SKIP }) => (r.hasDB ? r.dbFQN : SKIP),
+    const fqnMap = mapKeys(map as Record<string, EnhancedResource<any>>, (_, r, { SKIP }) =>
+      r.hasDB ? r.dbFQN : SKIP,
     ).asMap;
     return fqnMap;
   }
@@ -122,9 +110,7 @@ export class ResourcesHost {
   verifyImplements(resource: ResourceLike, theInterface: ResourceLike) {
     const iface = this.enhance(theInterface);
     if (!this.doesImplement(resource, iface)) {
-      throw new InvalidIdForTypeException(
-        `Resource does not implement ${iface.name}`,
-      );
+      throw new InvalidIdForTypeException(`Resource does not implement ${iface.name}`);
     }
   }
 
@@ -139,15 +125,11 @@ export class ResourcesHost {
     if (ref == null) {
       throw new ServerException('Resource reference is actually null');
     }
-    return typeof ref === 'string'
-      ? this.getByDynamicName(ref)
-      : EnhancedResource.of(ref);
+    return typeof ref === 'string' ? this.getByDynamicName(ref) : EnhancedResource.of(ref);
   }
 
   @CachedByArg()
-  getInterfaces(
-    resource: EnhancedResource<any>,
-  ): ReadonlyArray<EnhancedResource<any>> {
+  getInterfaces(resource: EnhancedResource<any>): ReadonlyArray<EnhancedResource<any>> {
     const { schema } = this.gqlSchema;
     const map = this.getEnhancedMap();
 
@@ -155,9 +137,7 @@ export class ResourcesHost {
     if (!type || !isObjectType(type)) {
       return [];
     }
-    return type
-      .getInterfaces()
-      .flatMap((i) => map[i.name as keyof ResourceMap] ?? []);
+    return type.getInterfaces().flatMap((i) => map[i.name as keyof ResourceMap] ?? []);
   }
 
   @CachedByArg()

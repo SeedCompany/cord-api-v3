@@ -30,9 +30,7 @@ describe('Story e2e', () => {
     const scriptureReferences = ScriptureRange.randomList();
     const story = await createStory(app, { name, scriptureReferences });
     expect(story.scriptureReferences.value).toBeDefined();
-    expect(story.scriptureReferences.value).toEqual(
-      expect.arrayContaining(scriptureReferences),
-    );
+    expect(story.scriptureReferences.value).toEqual(expect.arrayContaining(scriptureReferences));
   });
 
   // READ STORY
@@ -96,9 +94,7 @@ describe('Story e2e', () => {
     expect(updated).toBeTruthy();
     expect(updated.name.value).toBe(newName);
     expect(updated.scriptureReferences.value).toBeDefined();
-    expect(updated.scriptureReferences.value).toEqual(
-      expect.arrayContaining(scriptureReferences),
-    );
+    expect(updated.scriptureReferences.value).toEqual(expect.arrayContaining(scriptureReferences));
   });
 
   // DELETE STORY

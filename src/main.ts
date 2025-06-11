@@ -10,24 +10,16 @@ async function bootstrap() {
   const { HttpAdapter } = await import('./core/http');
 
   if (process.argv.includes('--gen-schema')) {
-    const app = await NestFactory.create<NestHttpApplication>(
-      AppModule,
-      new HttpAdapter(),
-      {
-        logger: false,
-      },
-    );
+    const app = await NestFactory.create<NestHttpApplication>(AppModule, new HttpAdapter(), {
+      logger: false,
+    });
     await app.init();
     process.exit(0);
   }
 
-  const app = await NestFactory.create<NestHttpApplication>(
-    AppModule,
-    new HttpAdapter(),
-    {
-      logger: bootstrapLogger,
-    },
-  );
+  const app = await NestFactory.create<NestHttpApplication>(AppModule, new HttpAdapter(), {
+    logger: bootstrapLogger,
+  });
   const config = app.get(ConfigService);
 
   await app.configure(app, config);

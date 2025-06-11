@@ -24,8 +24,7 @@ const variants = Variant.createList({
 
 @RegisterResource({ db: e.ProgressReport.Highlight })
 export class ProgressReportHighlight extends PromptVariantResponse<HighlightVariant> {
-  static readonly Parent = () =>
-    import('./progress-report.dto').then((m) => m.ProgressReport);
+  static readonly Parent = () => import('./progress-report.dto').then((m) => m.ProgressReport);
   static Variants = variants;
   static readonly ConfirmThisClassPassesSensitivityToPolicies = true;
 }

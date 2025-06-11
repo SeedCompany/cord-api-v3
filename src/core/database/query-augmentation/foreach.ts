@@ -26,11 +26,7 @@ declare module 'cypher-query-builder/dist/typings/query' {
      *
      * @see https://neo4j.com/docs/cypher-manual/current/clauses/foreach/
      */
-    forEach(
-      variable: string,
-      list: string,
-      each: string | ((query: Query) => Query),
-    ): this;
+    forEach(variable: string, list: string, each: string | ((query: Query) => Query)): this;
   }
 }
 
@@ -47,18 +43,11 @@ Query.prototype.forEach = function forEach(
 };
 
 class ForEachClause extends SubClauseCollection {
-  constructor(
-    private readonly variable: string,
-    private readonly list: string,
-  ) {
+  constructor(private readonly variable: string, private readonly list: string) {
     super();
   }
 
   build() {
-    return this.wrapBuild(
-      `FOREACH (${this.variable} IN ${this.list} | `,
-      ')',
-      super.build(),
-    );
+    return this.wrapBuild(`FOREACH (${this.variable} IN ${this.list} | `, ')', super.build());
   }
 }

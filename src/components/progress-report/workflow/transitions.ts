@@ -106,9 +106,7 @@ export interface InternalTransition extends PublicTransition {
   };
 }
 
-function defineTransitions<Names extends string>(
-  obj: Record<Names, TransitionInput>,
-) {
+function defineTransitions<Names extends string>(obj: Record<Names, TransitionInput>) {
   return mapValues(
     obj,
     (name, transition): InternalTransition => ({

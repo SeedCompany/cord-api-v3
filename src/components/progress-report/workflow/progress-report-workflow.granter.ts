@@ -18,9 +18,7 @@ import { type TransitionName, Transitions } from './transitions';
 type Status = `${ProgressReportStatus}`;
 
 @Granter(Event)
-export class ProgressReportWorkflowEventGranter extends ResourceGranter<
-  typeof Event
-> {
+export class ProgressReportWorkflowEventGranter extends ResourceGranter<typeof Event> {
   get read() {
     return this[action]('read');
   }
@@ -115,26 +113,18 @@ class TransitionCondition implements Condition<typeof Event> {
     if (!transitionId) {
       return false;
     }
-    return this.allowedTransitionIds.has(
-      isIdLike(transitionId) ? transitionId : transitionId.id,
-    );
+    return this.allowedTransitionIds.has(isIdLike(transitionId) ? transitionId : transitionId.id);
   }
 
   asCypherCondition(query: Query) {
     // TODO bypasses to statuses won't work with this. How should these be filtered?
-    const required = query.params.addParam(
-      this.allowedTransitionIds,
-      'allowedTransitions',
-    );
+    const required = query.params.addParam(this.allowedTransitionIds, 'allowedTransitions');
     return `node.transition IN ${String(required)}`;
   }
 
   asEdgeQLCondition() {
     // TODO bypasses to statuses won't work with this. How should these be filtered?
-    const transitionAllowed = eqlInLiteralSet(
-      '.transitionId',
-      this.allowedTransitionIds,
-    );
+    const transitionAllowed = eqlInLiteralSet('.transitionId', this.allowedTransitionIds);
     // If no transition then false
     return `((${transitionAllowed}) ?? false)`;
   }
@@ -145,9 +135,7 @@ class TransitionCondition implements Condition<typeof Event> {
         conditions
           .flatMap((condition) => condition.checks)
           .map((check) => {
-            const key = check.name
-              ? `name:${check.name}`
-              : `status:${check.endStatus!}`;
+            const key = check.name ? `name:${check.name}` : `status:${check.endStatus!}`;
             return [key, check];
           }),
       ).values(),
@@ -159,9 +147,7 @@ class TransitionCondition implements Condition<typeof Event> {
     const checks = [...conditions[0].checks].filter((check1) =>
       conditions.every((cond) =>
         cond.checks.some(
-          (check2) =>
-            check1.name === check2.name ||
-            check1.endStatus === check2.endStatus,
+          (check2) => check1.name === check2.name || check1.endStatus === check2.endStatus,
         ),
       ),
     );

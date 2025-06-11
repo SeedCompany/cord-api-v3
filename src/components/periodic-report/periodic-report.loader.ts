@@ -1,20 +1,10 @@
 import { type ID } from '~/common';
 import { type DataLoaderStrategy, LoaderFactory } from '~/core/data-loader';
 import { ProgressReport } from '../progress-report/dto';
-import {
-  FinancialReport,
-  IPeriodicReport,
-  NarrativeReport,
-  type PeriodicReport,
-} from './dto';
+import { FinancialReport, IPeriodicReport, NarrativeReport, type PeriodicReport } from './dto';
 import { PeriodicReportService } from './periodic-report.service';
 
-@LoaderFactory(() => [
-  IPeriodicReport,
-  FinancialReport,
-  NarrativeReport,
-  ProgressReport,
-])
+@LoaderFactory(() => [IPeriodicReport, FinancialReport, NarrativeReport, ProgressReport])
 export class PeriodicReportLoader
   implements DataLoaderStrategy<PeriodicReport, ID<IPeriodicReport>>
 {

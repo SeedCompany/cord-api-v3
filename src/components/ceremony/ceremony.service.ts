@@ -13,10 +13,7 @@ import { Ceremony, type CreateCeremony, type UpdateCeremony } from './dto';
 
 @Injectable()
 export class CeremonyService {
-  constructor(
-    private readonly privileges: Privileges,
-    private readonly repo: CeremonyRepository,
-  ) {}
+  constructor(private readonly privileges: Privileges, private readonly repo: CeremonyRepository) {}
 
   async create(input: CreateCeremony): Promise<ID> {
     const { id } = await this.repo.create(input);

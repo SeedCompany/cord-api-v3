@@ -1,13 +1,4 @@
-import {
-  Args,
-  Info,
-  Int,
-  Mutation,
-  Parent,
-  Query,
-  ResolveField,
-  Resolver,
-} from '@nestjs/graphql';
+import { Args, Info, Int, Mutation, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
 import { Book, labelOfVerseRanges } from '@seedcompany/scripture';
 import { stripIndent } from 'common-tags';
 import { startCase } from 'lodash';
@@ -81,9 +72,7 @@ export class ProductResolver {
 
   @ResolveField(() => ProductApproach, { nullable: true })
   approach(@Parent() product: AnyProduct): ProductApproach | null {
-    return product.methodology.value
-      ? MethodologyToApproach[product.methodology.value]
-      : null;
+    return product.methodology.value ? MethodologyToApproach[product.methodology.value] : null;
   }
 
   @ResolveField(() => String, {
@@ -127,22 +116,15 @@ export class ProductResolver {
       return product.title.value ?? null;
     }
     if (!product.produces) {
-      if (
-        !product.scriptureReferences.canRead ||
-        !product.unspecifiedScripture.canRead
-      ) {
+      if (!product.scriptureReferences.canRead || !product.unspecifiedScripture.canRead) {
         return null;
       }
       if (product.unspecifiedScripture.value) {
-        const { book, totalVerses: verses } =
-          product.unspecifiedScripture.value;
+        const { book, totalVerses: verses } = product.unspecifiedScripture.value;
         const totalVerses = Book.named(book).totalVerses;
         return `${book} (${verses} / ${totalVerses} verses)`;
       }
-      return labelOfVerseRanges(
-        product.scriptureReferences.value,
-        collapseAfter,
-      );
+      return labelOfVerseRanges(product.scriptureReferences.value, collapseAfter);
     }
     if (!product.produces.value) {
       return null;
@@ -175,9 +157,7 @@ export class ProductResolver {
       Returns a list of available steps for the given constraints.
     `,
   })
-  availableProductSteps(
-    @Args() options: AvailableStepsOptions,
-  ): readonly Step[] {
+  availableProductSteps(@Args() options: AvailableStepsOptions): readonly Step[] {
     return getAvailableSteps(options);
   }
 
@@ -228,9 +208,7 @@ export class ProductResolver {
   @Mutation(() => CreateProductOutput, {
     description: 'Create an other product entry',
   })
-  async createOtherProduct(
-    @Args('input') input: CreateOtherProduct,
-  ): Promise<CreateProductOutput> {
+  async createOtherProduct(@Args('input') input: CreateOtherProduct): Promise<CreateProductOutput> {
     const product = await this.productService.create(input);
     return { product };
   }
@@ -258,9 +236,7 @@ export class ProductResolver {
   @Mutation(() => UpdateProductOutput, {
     description: 'Update an other product entry',
   })
-  async updateOtherProduct(
-    @Args('input') input: UpdateOtherProduct,
-  ): Promise<UpdateProductOutput> {
+  async updateOtherProduct(@Args('input') input: UpdateOtherProduct): Promise<UpdateProductOutput> {
     const product = await this.productService.updateOther(input);
     return { product };
   }

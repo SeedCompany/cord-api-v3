@@ -14,9 +14,7 @@ export abstract class FieldZoneFilters {
 }
 
 @InputType()
-export class FieldZoneListInput extends SortablePaginationInput<
-  keyof FieldZone
->({
+export class FieldZoneListInput extends SortablePaginationInput<keyof FieldZone>({
   defaultSort: 'name',
 }) {
   @FilterField(() => FieldZoneFilters, { internal: true })

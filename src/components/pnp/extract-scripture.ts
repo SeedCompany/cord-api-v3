@@ -25,9 +25,7 @@ export const extractScripture = (
   let mismatchError = false;
 
   // If scripture from book column matches total count, use it.
-  const totalVersesInBookCol = ScriptureRange.totalVerses(
-    ...scriptureFromBookCol,
-  );
+  const totalVersesInBookCol = ScriptureRange.totalVerses(...scriptureFromBookCol);
   if (totalVersesInBookCol === totalVerses) {
     return {
       ...common,
@@ -52,9 +50,7 @@ export const extractScripture = (
   const noteCell = sheet.myNote(row);
   const scriptureFromNoteCol = tryParseScripture(noteCell.asString);
   if (scriptureFromNoteCol) {
-    const totalVersesFromNoteCol = ScriptureRange.totalVerses(
-      ...scriptureFromNoteCol,
-    );
+    const totalVersesFromNoteCol = ScriptureRange.totalVerses(...scriptureFromNoteCol);
     if (totalVersesFromNoteCol === totalVerses) {
       return {
         ...common,

@@ -1,9 +1,5 @@
 import { type Nil } from '@seedcompany/common';
-import {
-  labelOfVerseRange,
-  labelOfVerseRanges,
-  Verse,
-} from '@seedcompany/scripture';
+import { labelOfVerseRange, labelOfVerseRanges, Verse } from '@seedcompany/scripture';
 import type { Simplify } from 'type-fest';
 import { type $, e } from '~/core/gel';
 import { type $expr_Param } from '~/core/gel/generated-client/params';
@@ -34,11 +30,7 @@ export const type = e.tuple({
 });
 
 export const valueOptional = (input: readonly ScriptureRangeInput[] | Nil) =>
-  input === undefined
-    ? undefined
-    : input && input.length > 0
-    ? value(input)
-    : null;
+  input === undefined ? undefined : input && input.length > 0 ? value(input) : null;
 
 export const value = (input: readonly ScriptureRangeInput[]) => ({
   label: labelOfVerseRanges(input),
@@ -97,9 +89,7 @@ const hydrateVerseRange = e.shape(e.Scripture.VerseRange, () => ({
 }));
 
 export const hydrate = <
-  T extends $expr_PathNode<
-    $.TypeSet<(typeof e.Scripture.Collection)['__element__']>
-  >,
+  T extends $expr_PathNode<$.TypeSet<(typeof e.Scripture.Collection)['__element__']>>,
 >(
   sc: T,
 ) => e.array_agg(e.select(sc.verses, hydrateVerseRange));

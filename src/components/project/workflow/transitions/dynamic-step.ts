@@ -10,9 +10,7 @@ export interface ResolveParams {
   moduleRef: ModuleRef;
 }
 
-export const BackTo = (
-  ...steps: ProjectStep[]
-): DynamicState<Step, ResolveParams> => ({
+export const BackTo = (...steps: ProjectStep[]): DynamicState<Step, ResolveParams> => ({
   description: 'Back',
   relatedStates: steps,
   async resolve({ project, moduleRef }) {

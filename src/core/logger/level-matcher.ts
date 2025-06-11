@@ -101,8 +101,7 @@ export class LevelMatcher {
     for (const matcherGroup of this.matcherGroups) {
       for (const { include, exclude, level } of matcherGroup) {
         const matched =
-          include.some((regex) => regex.exec(name)) &&
-          !exclude.some((regex) => regex.exec(name));
+          include.some((regex) => regex.exec(name)) && !exclude.some((regex) => regex.exec(name));
         if (matched) {
           return level;
         }

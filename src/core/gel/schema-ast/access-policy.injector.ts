@@ -36,9 +36,7 @@ export class GelAccessPolicyInjector {
 
   async discoverFiles() {
     const filenames = await glob('./dbschema/*.gel');
-    const files = filenames.map((filename) =>
-      SchemaFile.of(this.parser, filename),
-    );
+    const files = filenames.map((filename) => SchemaFile.of(this.parser, filename));
     await Promise.all(files.map((file) => file.read()));
     return files;
   }
@@ -76,8 +74,7 @@ export class GelAccessPolicyInjector {
     // num parents determines indent. exclude file. add for inner
     const indentCount = node.ancestors().length - 1 + 1;
 
-    const indentedPolicies =
-      addIndent(policies, indentCount, { indent: '  ' }) + '\n';
+    const indentedPolicies = addIndent(policies, indentCount, { indent: '  ' }) + '\n';
 
     if (node.inner) {
       node.file.insertAfter(node.inner, '\n' + indentedPolicies);
@@ -95,10 +92,7 @@ export class GelAccessPolicyInjector {
   private ejectFile(file: SchemaFile) {
     return file.replaceText((text) =>
       text
-        .replaceAll(
-          /\n? *access policy Can\w+GeneratedFromAppPolicies[^;]+;\n/g,
-          '',
-        )
+        .replaceAll(/\n? *access policy Can\w+GeneratedFromAppPolicies[^;]+;\n/g, '')
         .replaceAll(/ {\s*};/g, ';'),
     );
   }

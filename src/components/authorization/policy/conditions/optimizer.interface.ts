@@ -1,9 +1,4 @@
-import {
-  applyDecorators,
-  Injectable,
-  SetMetadata,
-  type Type,
-} from '@nestjs/common';
+import { applyDecorators, Injectable, SetMetadata, type Type } from '@nestjs/common';
 import { type Condition } from './condition.interface';
 
 export abstract class Optimizer {

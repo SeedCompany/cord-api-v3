@@ -47,7 +47,6 @@ export const LoaderFactory =
     LoaderFactoryMetadata(resource, {
       ...options,
       objectViewAware:
-        options?.objectViewAware ??
-        Object.getPrototypeOf(target) === ObjectViewAwareLoader,
+        options?.objectViewAware ?? Object.getPrototypeOf(target) === ObjectViewAwareLoader,
     })(target);
   };

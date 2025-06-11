@@ -6,10 +6,7 @@ import { PostService } from './post.service';
 
 @LoaderFactory()
 export class PostLoader implements DataLoaderStrategy<Post, ID<Post>> {
-  constructor(
-    private readonly service: PostService,
-    private readonly repo: PostRepository,
-  ) {}
+  constructor(private readonly service: PostService, private readonly repo: PostRepository) {}
 
   async loadMany(ids: ReadonlyArray<ID<Post>>) {
     const posts = await this.repo.readMany(ids);

@@ -1,13 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import {
-  equals,
-  hasLabel,
-  isNull,
-  node,
-  not,
-  or,
-  relation,
-} from 'cypher-query-builder';
+import { equals, hasLabel, isNull, node, not, or, relation } from 'cypher-query-builder';
 import { type ID, NotFoundException } from '~/common';
 import { DtoRepository } from '~/core/database';
 import { ACTIVE, path, variable } from '~/core/database/query';
@@ -78,11 +70,7 @@ export class ChangesetRepository extends DtoRepository(Changeset) {
           })
           .return('collect(distinct node) as added'),
       )
-      .return<Record<keyof ChangesetDiff, readonly BaseNode[]>>([
-        'changed',
-        'removed',
-        'added',
-      ])
+      .return<Record<keyof ChangesetDiff, readonly BaseNode[]>>(['changed', 'removed', 'added'])
       .first();
     if (!result) {
       throw new NotFoundException('Could not find changeset');

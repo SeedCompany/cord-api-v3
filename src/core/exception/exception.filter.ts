@@ -83,10 +83,7 @@ export class ExceptionFilter implements IExceptionFilter {
 
     const out = {
       ...ex,
-      stack:
-        process.env.NODE_ENV === 'production'
-          ? undefined
-          : ex.stack.split('\n'),
+      stack: process.env.NODE_ENV === 'production' ? undefined : ex.stack.split('\n'),
     };
 
     const res = args.switchToHttp().getResponse();

@@ -1,9 +1,5 @@
 import { type Cardinality } from 'gel/dist/reflection';
-import type {
-  ConditionalPick,
-  RequireExactlyOne,
-  StringKeyOf,
-} from 'type-fest';
+import type { ConditionalPick, RequireExactlyOne, StringKeyOf } from 'type-fest';
 import { type ID } from '~/common';
 import { type AllResourceDBNames } from '~/core';
 import type {
@@ -26,17 +22,11 @@ type RawInsertShape<Root extends $.ObjectTypeSet> =
   $.ObjectType extends Root['__element__']
     ? never
     : $.typeutil.stripNever<
-        $.stripNonInsertables<
-          $.stripBacklinks<Root['__element__']['__pointers__']>
-        >
+        $.stripNonInsertables<$.stripBacklinks<Root['__element__']['__pointers__']>>
       > extends infer Shape extends $.ObjectTypePointers
-    ? $.typeutil.addQuestionMarks<
-        InsertPointerValues<ConditionalPick<Shape, $.PropertyDesc>>
-      > &
+    ? $.typeutil.addQuestionMarks<InsertPointerValues<ConditionalPick<Shape, $.PropertyDesc>>> &
         AddIdSuffixOption<
-          $.typeutil.addQuestionMarks<
-            InsertPointerValues<ConditionalPick<Shape, $.LinkDesc>>
-          >
+          $.typeutil.addQuestionMarks<InsertPointerValues<ConditionalPick<Shape, $.LinkDesc>>>
         >
     : never;
 
@@ -45,9 +35,7 @@ type RawUpdateShape<Root extends $.ObjectTypeSet> = $.typeutil.stripNever<
 > extends infer Shape
   ? Shape extends $.ObjectTypePointers
     ? UpdatePointerValues<ConditionalPick<Shape, $.PropertyDesc>> &
-        AddIdSuffixOption<
-          UpdatePointerValues<ConditionalPick<Shape, $.LinkDesc>>
-        >
+        AddIdSuffixOption<UpdatePointerValues<ConditionalPick<Shape, $.LinkDesc>>>
     : never
   : never;
 
@@ -74,23 +62,21 @@ type AddIdSuffixOption<Links extends Record<string, any>> = {
 
 type AddModifyMultiSet<Pointer extends $.LinkDesc | $.PropertyDesc> =
   Pointer['cardinality'] extends Cardinality.Many | Cardinality.AtLeastOne
-    ? RequireExactlyOne<
-        Record<'+=' | '-=', pointerToAssignmentExpression<Pointer, true>>
-      >
+    ? RequireExactlyOne<Record<'+=' | '-=', pointerToAssignmentExpression<Pointer, true>>>
     : never;
 
 type AddNullability<Pointer extends $.LinkDesc | $.PropertyDesc> =
   pointerIsOptional<Pointer> extends true ? undefined | null : never;
 
-type AddIDsForLinks<Pointer extends $.LinkDesc | $.PropertyDesc> =
-  Pointer extends $.LinkDesc<infer TargetType, infer Cardinality>
-    ? AsIDs<
-        TargetType['__name__'] extends AllResourceDBNames
-          ? ID<TargetType['__name__']>
-          : ID,
-        Cardinality
-      >
-    : never;
+type AddIDsForLinks<Pointer extends $.LinkDesc | $.PropertyDesc> = Pointer extends $.LinkDesc<
+  infer TargetType,
+  infer Cardinality
+>
+  ? AsIDs<
+      TargetType['__name__'] extends AllResourceDBNames ? ID<TargetType['__name__']> : ID,
+      Cardinality
+    >
+  : never;
 
 type AsIDs<IDType, Card extends $.Cardinality> = setToAssignmentExpression<
   $.TypeSet<$.ScalarType<string, IDType>, Card>,

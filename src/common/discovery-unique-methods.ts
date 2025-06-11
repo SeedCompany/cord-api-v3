@@ -1,8 +1,6 @@
 import { type DiscoveredMethodWithMeta } from '@golevelup/nestjs-discovery';
 
-export const uniqueDiscoveredMethods = <T>(
-  methods: Array<DiscoveredMethodWithMeta<T>>,
-) => {
+export const uniqueDiscoveredMethods = <T>(methods: Array<DiscoveredMethodWithMeta<T>>) => {
   const seenClasses = new Map<object, Map<string, Set<unknown>>>();
   const uniqueMethods = [] as typeof methods;
   for (const method of methods) {

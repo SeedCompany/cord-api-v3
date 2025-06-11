@@ -29,12 +29,7 @@ export class LocationGelRepository
     await this.db.run(query);
   }
 
-  async removeLocationFromNode(
-    label: string,
-    id: ID,
-    rel: string,
-    locationId: ID,
-  ) {
+  async removeLocationFromNode(label: string, id: ID, rel: string, locationId: ID) {
     const res = this.resources.getByGel(label);
     const node = e.cast(res.db, e.cast(e.uuid, id));
     const location = e.cast(e.Location, e.cast(e.uuid, locationId));
@@ -54,9 +49,7 @@ export class LocationGelRepository
   ) {
     const res = this.resources.getByGel(label);
     const node = e.cast(res.db, e.cast(e.uuid, id));
-    const locations = e.select(node)[
-      rel as keyof typeof node
-    ] as typeof e.Location;
+    const locations = e.select(node)[rel as keyof typeof node] as typeof e.Location;
     if (!locations) {
       throw new ServerException(`${label} does not have a "${rel}" link`);
     }

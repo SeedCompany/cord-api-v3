@@ -7,8 +7,7 @@ export const ISO31661Alpha3 = (validationOptions?: ValidationOptions) =>
     {
       name: 'ISO-3166-1-Alpha-3',
       validator: {
-        validate: (input) =>
-          input != null ? Boolean(whereAlpha3(input)) : true,
+        validate: (input) => (input != null ? Boolean(whereAlpha3(input)) : true),
         defaultMessage: () => 'Invalid ISO-3166-1 alpha-3 country code',
       },
     },

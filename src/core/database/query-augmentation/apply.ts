@@ -33,9 +33,7 @@ declare module 'cypher-query-builder/dist/typings/query' {
   }
 }
 
-export type QueryFragment<In = unknown, Out = In> = (
-  query: Query<In>,
-) => Query<Out>;
+export type QueryFragment<In = unknown, Out = In> = (query: Query<In>) => Query<Out>;
 
 Query.prototype.apply = function apply<R>(
   fn: ((q: Query) => R) | null | undefined,

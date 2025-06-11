@@ -20,12 +20,7 @@ import { ProjectMemberFilters } from '../project-member/dto';
 import { ProjectStatus } from './project-status.enum';
 import { ProjectStep } from './project-step.enum';
 import { ProjectType } from './project-type.enum';
-import {
-  InternshipProject,
-  IProject,
-  type Project,
-  TranslationProject,
-} from './project.dto';
+import { InternshipProject, IProject, type Project, TranslationProject } from './project.dto';
 
 @InputType()
 export abstract class ProjectFilters {
@@ -59,8 +54,7 @@ export abstract class ProjectFilters {
   readonly step?: ProjectStep[];
 
   @OptionalField({
-    description:
-      'Only projects that are pinned/unpinned by the requesting user',
+    description: 'Only projects that are pinned/unpinned by the requesting user',
   })
   readonly pinned?: boolean;
 
@@ -100,8 +94,7 @@ export abstract class ProjectFilters {
   readonly isMember?: boolean;
 
   @FilterField(() => ProjectMemberFilters, {
-    description:
-      "Only projects with the requesting user's membership that matches these filters",
+    description: "Only projects with the requesting user's membership that matches these filters",
   })
   readonly membership?: ProjectMemberFilters & {};
 
@@ -147,55 +140,37 @@ export class ProjectListInput extends SortablePaginationInput<keyof IProject>({
 }
 
 @ObjectType()
-export class ProjectListOutput extends PaginatedList<IProject, Project>(
-  IProject,
-  {
-    itemsDescription: PaginatedList.itemDescriptionFor('projects'),
-  },
-) {}
+export class ProjectListOutput extends PaginatedList<IProject, Project>(IProject, {
+  itemsDescription: PaginatedList.itemDescriptionFor('projects'),
+}) {}
 
 @ObjectType()
-export class TranslationProjectListOutput extends PaginatedList(
-  TranslationProject,
-  {
-    itemsDescription: PaginatedList.itemDescriptionFor('translation projects'),
-  },
-) {}
+export class TranslationProjectListOutput extends PaginatedList(TranslationProject, {
+  itemsDescription: PaginatedList.itemDescriptionFor('translation projects'),
+}) {}
 
 @ObjectType()
-export class InternshipProjectListOutput extends PaginatedList(
-  InternshipProject,
-  {
-    itemsDescription: PaginatedList.itemDescriptionFor('internship projects'),
-  },
-) {}
+export class InternshipProjectListOutput extends PaginatedList(InternshipProject, {
+  itemsDescription: PaginatedList.itemDescriptionFor('internship projects'),
+}) {}
 
 @ObjectType({
   description: SecuredList.descriptionFor('projects'),
 })
-export abstract class SecuredProjectList extends SecuredList<IProject, Project>(
-  IProject,
-  {
-    itemsDescription: PaginatedList.itemDescriptionFor('projects'),
-  },
-) {}
+export abstract class SecuredProjectList extends SecuredList<IProject, Project>(IProject, {
+  itemsDescription: PaginatedList.itemDescriptionFor('projects'),
+}) {}
 
 @ObjectType({
   description: SecuredList.descriptionFor('translation projects'),
 })
-export abstract class SecuredTranslationProjectList extends SecuredList(
-  TranslationProject,
-  {
-    itemsDescription: PaginatedList.itemDescriptionFor('translation projects'),
-  },
-) {}
+export abstract class SecuredTranslationProjectList extends SecuredList(TranslationProject, {
+  itemsDescription: PaginatedList.itemDescriptionFor('translation projects'),
+}) {}
 
 @ObjectType({
   description: SecuredList.descriptionFor('internship projects'),
 })
-export abstract class SecuredInternshipProjectList extends SecuredList(
-  InternshipProject,
-  {
-    itemsDescription: PaginatedList.itemDescriptionFor('internship projects'),
-  },
-) {}
+export abstract class SecuredInternshipProjectList extends SecuredList(InternshipProject, {
+  itemsDescription: PaginatedList.itemDescriptionFor('internship projects'),
+}) {}

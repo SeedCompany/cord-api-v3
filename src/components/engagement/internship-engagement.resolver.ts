@@ -40,8 +40,6 @@ export class InternshipEngagementResolver {
     @Parent() engagement: InternshipEngagement,
     @Loader(LocationLoader) locations: LoaderOf<LocationLoader>,
   ): Promise<SecuredLocation> {
-    return await mapSecuredValue(engagement.countryOfOrigin, ({ id }) =>
-      locations.load(id),
-    );
+    return await mapSecuredValue(engagement.countryOfOrigin, ({ id }) => locations.load(id));
   }
 }

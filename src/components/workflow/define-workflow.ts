@@ -16,9 +16,7 @@ export const defineWorkflow =
   <
     const Name extends string,
     const Context,
-    const EventResource extends ResourceShape<
-      ReturnType<typeof WorkflowEvent>['prototype']
-    >,
+    const EventResource extends ResourceShape<ReturnType<typeof WorkflowEvent>['prototype']>,
     const StateEnum extends MadeEnum<any>,
     const State extends EnumType<StateEnum>,
   >(input: {
@@ -51,21 +49,11 @@ export const defineWorkflow =
         conditions: maybeMany(transition.conditions) ?? [],
         notifiers: maybeMany(transition.notifiers) ?? [],
       };
-      const enhanced = enhancers.reduce(
-        (t, enhancer) => enhancer(t),
-        normalized,
-      );
+      const enhanced = enhancers.reduce((t, enhancer) => enhancer(t), normalized);
       return enhanced;
     });
 
-    const workflow: Workflow<
-      Name,
-      Context,
-      EventResource,
-      State,
-      StateEnum,
-      TransitionNames
-    > = {
+    const workflow: Workflow<Name, Context, EventResource, State, StateEnum, TransitionNames> = {
       ...input,
       id: input.id as ID,
       transitions,
@@ -88,9 +76,8 @@ export const defineWorkflow =
         }
         return transition;
       },
-      pickNames: <Names extends TransitionNames>(
-        ...transitions: Array<Many<Names>>
-      ) => setOf(transitions.flat() as Names[]),
+      pickNames: <Names extends TransitionNames>(...transitions: Array<Many<Names>>) =>
+        setOf(transitions.flat() as Names[]),
       // type-only props
       event: undefined as any,
       state: undefined as any,
@@ -118,11 +105,11 @@ export interface Workflow<
   State extends string = string,
   StateEnum extends MadeEnum<State> = MadeEnum<State>,
   TransitionNames extends string = string,
-  Transition extends InternalTransition<
+  Transition extends InternalTransition<State, TransitionNames, Context> = InternalTransition<
     State,
     TransitionNames,
     Context
-  > = InternalTransition<State, TransitionNames, Context>,
+  >,
   Transitions extends readonly Transition[] = readonly Transition[],
 > {
   readonly name: Name;
@@ -141,9 +128,7 @@ export interface Workflow<
   /** type only */
   readonly resolvedTransition: Omit<Transition, 'to'> & { to: State };
   readonly transitionByKey: (key: ID) => Transition;
-  readonly transitionByName: <Names extends TransitionNames>(
-    name: Names,
-  ) => Transition;
+  readonly transitionByName: <Names extends TransitionNames>(name: Names) => Transition;
   readonly pickNames: <Names extends TransitionNames>(
     ...keys: Array<Many<Names>>
   ) => ReadonlySet<Names>;

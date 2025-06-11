@@ -22,10 +22,7 @@ export type ValidateByOptions =
   | Type<ValidatorConstraintInterface>;
 
 export const ValidateBy =
-  (
-    options: ValidateByOptions,
-    validationOptions?: ValidationOptions,
-  ): PropertyDecorator =>
+  (options: ValidateByOptions, validationOptions?: ValidationOptions): PropertyDecorator =>
   (object: Record<string, any>, propertyName: string | symbol) => {
     registerDecorator({
       target: object.constructor,

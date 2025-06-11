@@ -1,10 +1,4 @@
-import {
-  cleanSplit,
-  entries,
-  many,
-  type Many,
-  type Nil,
-} from '@seedcompany/common';
+import { cleanSplit, entries, many, type Many, type Nil } from '@seedcompany/common';
 import {
   comparisions,
   greaterThan,
@@ -54,9 +48,7 @@ export const define =
   (filters) =>
     builder(filters ?? {}, builders);
 
-export type FilterFn<T extends Record<string, any>> = (
-  filters: T | Nil,
-) => (query: Query) => void;
+export type FilterFn<T extends Record<string, any>> = (filters: T | Nil) => (query: Query) => void;
 
 /**
  * A helper to split filters given and call their respective functions.
@@ -117,9 +109,7 @@ export const baseNodeProp =
   ({ key, value }) => ({ [`node.${prop ?? key}`]: value });
 
 export const propPartialVal =
-  <T, K extends ConditionalKeys<Required<T>, string>>(
-    prop?: string,
-  ): Builder<T, K> =>
+  <T, K extends ConditionalKeys<Required<T>, string>>(prop?: string): Builder<T, K> =>
   ({ key, value: v, query }) => {
     const value = v as string; // don't know why TS can't figure this out
     if (!value.trim()) {
@@ -134,23 +124,15 @@ export const propPartialVal =
   };
 
 export const intersectsProp =
-  <T, K extends ConditionalKeys<Required<T>, readonly string[]>>(
-    prop?: string,
-  ): Builder<T, K> =>
+  <T, K extends ConditionalKeys<Required<T>, readonly string[]>>(prop?: string): Builder<T, K> =>
   ({ key, value, query }) => {
     prop ??= key;
-    query.match([
-      node('node'),
-      relation('out', '', prop, ACTIVE),
-      node(prop, 'Property'),
-    ]);
+    query.match([node('node'), relation('out', '', prop, ACTIVE), node(prop, 'Property')]);
     return { [`${prop}.value`]: intersects(value as readonly string[], prop) };
   };
 
 export const stringListProp =
-  <T, K extends ConditionalKeys<Required<T>, readonly string[]>>(
-    prop?: string,
-  ): Builder<T, K> =>
+  <T, K extends ConditionalKeys<Required<T>, readonly string[]>>(prop?: string): Builder<T, K> =>
   ({ key, value, query }) => {
     query.match([
       node('node'),
@@ -161,9 +143,7 @@ export const stringListProp =
   };
 
 export const stringListBaseNodeProp =
-  <T, K extends ConditionalKeys<Required<T>, readonly string[]>>(
-    prop?: string,
-  ): Builder<T, K> =>
+  <T, K extends ConditionalKeys<Required<T>, readonly string[]>>(prop?: string): Builder<T, K> =>
   ({ key, value }) => ({
     node: { [prop ?? key]: inArray(value as any) },
   });
@@ -188,17 +168,11 @@ export const isPinned = pathExists<{ pinned?: boolean }, 'pinned'>([
   node('node'),
 ]);
 
-export const dateTimeBaseNodeProp = <
-  T,
-  K extends ConditionalKeys<T, DateTimeFilter | undefined>,
->(
+export const dateTimeBaseNodeProp = <T, K extends ConditionalKeys<T, DateTimeFilter | undefined>>(
   prop?: string,
 ): Builder<T, K> => dateTime(({ key }) => `node.${prop ?? key}`);
 
-export const dateTimeProp = <
-  T,
-  K extends ConditionalKeys<T, DateTimeFilter | undefined>,
->(
+export const dateTimeProp = <T, K extends ConditionalKeys<T, DateTimeFilter | undefined>>(
   prop?: string,
 ): Builder<T, K> =>
   dateTime(({ key, query }) => {
@@ -219,9 +193,7 @@ export const dateTime =
     return comparator ? { [getLhs(args)]: comparator } : null;
   };
 
-export const comparisonOfDateTimeFilter = (
-  input: DateTimeFilter,
-): Comparator | undefined => {
+export const comparisonOfDateTimeFilter = (input: DateTimeFilter): Comparator | undefined => {
   const comparatorMap = {
     afterInclusive: comparisions.greaterEqualTo,
     after: comparisions.greaterThan,
@@ -304,9 +276,7 @@ export const fullText =
 
     const normalized = normalizeInput ? normalizeInput(value) : value;
 
-    let input = separateQueryForEachWord
-      ? cleanSplit(normalized, ' ')
-      : [normalized];
+    let input = separateQueryForEachWord ? cleanSplit(normalized, ' ') : [normalized];
 
     input = escapeLucene ? input.map(escapeLuceneSyntax) : input;
 

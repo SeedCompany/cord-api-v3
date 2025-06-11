@@ -2,10 +2,7 @@ import { type ArgumentsHost } from '@nestjs/common';
 import { GqlExecutionContext } from '@nestjs/graphql';
 import { ClientException } from './exception';
 
-export type InputExceptionArgs =
-  | [Error?]
-  | [string, Error?]
-  | [string, string?, Error?];
+export type InputExceptionArgs = [Error?] | [string, Error?] | [string, string?, Error?];
 
 /**
  * Indicate the request cannot be completed because of requester has done
@@ -71,10 +68,7 @@ export class InputException extends ClientException {
   constructor(message: string, field?: string, previous?: Error);
 
   constructor(...args: InputExceptionArgs) {
-    const [message, field, previous] = InputException.parseArgs(
-      'Invalid request',
-      args,
-    );
+    const [message, field, previous] = InputException.parseArgs('Invalid request', args);
     super(message, previous);
     this.field = field;
   }
@@ -84,10 +78,7 @@ export class InputException extends ClientException {
     return this;
   }
 
-  static parseArgs(
-    defaultMessage: string,
-    [one, two, three]: InputExceptionArgs,
-  ) {
+  static parseArgs(defaultMessage: string, [one, two, three]: InputExceptionArgs) {
     let message = defaultMessage;
     let field;
     let previous;
@@ -112,9 +103,7 @@ export class InputException extends ClientException {
       return {};
     }
     const gqlContext =
-      context instanceof GqlExecutionContext
-        ? context
-        : GqlExecutionContext.create(context as any);
+      context instanceof GqlExecutionContext ? context : GqlExecutionContext.create(context as any);
     let gqlArgs = gqlContext.getArgs();
 
     // unwind single `input` argument, based on our own conventions

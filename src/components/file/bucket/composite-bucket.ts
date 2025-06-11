@@ -65,23 +65,17 @@ export class CompositeBucket extends FileBucket {
   }
 
   async putObject(input: PutObjectInput): Promise<void> {
-    await this.doAndThrowAllErrors(
-      this.writableSources.map((bucket) => bucket.putObject(input)),
-    );
+    await this.doAndThrowAllErrors(this.writableSources.map((bucket) => bucket.putObject(input)));
   }
 
   async copyObject(oldKey: string, newKey: string): Promise<void> {
     const [existing] = await this.selectSources(oldKey, this.writableSources);
-    await this.doAndThrowAllErrors(
-      existing.map(([bucket]) => bucket.copyObject(oldKey, newKey)),
-    );
+    await this.doAndThrowAllErrors(existing.map(([bucket]) => bucket.copyObject(oldKey, newKey)));
   }
 
   async deleteObject(key: string): Promise<void> {
     const [existing] = await this.selectSources(key, this.writableSources);
-    await this.doAndThrowAllErrors(
-      existing.map(([bucket]) => bucket.deleteObject(key)),
-    );
+    await this.doAndThrowAllErrors(existing.map(([bucket]) => bucket.deleteObject(key)));
   }
 
   private get writableSources() {
@@ -106,10 +100,7 @@ export class CompositeBucket extends FileBucket {
       const [success] = await this.selectSources(key);
       return success[0];
     } catch (e) {
-      if (
-        e instanceof AggregateError &&
-        e.errors.every((e) => e instanceof NotFoundException)
-      ) {
+      if (e instanceof AggregateError && e.errors.every((e) => e instanceof NotFoundException)) {
         throw e.errors[0];
       }
       throw e;
@@ -125,9 +116,7 @@ export class CompositeBucket extends FileBucket {
     const success = results.flatMap((result) =>
       result.status === 'fulfilled' ? [result.value] : [],
     );
-    const errors = results.flatMap((result) =>
-      result.status === 'rejected' ? result.reason : [],
-    );
+    const errors = results.flatMap((result) => (result.status === 'rejected' ? result.reason : []));
     if (success.length === 0) {
       throw new AggregateError(errors, 'Key does not exist in any source');
     }

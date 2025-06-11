@@ -5,10 +5,7 @@ import { any, field, member, Policy, Role } from '../util';
   r.Engagement.read,
   r.Engagement.whenAll(
     member,
-    any(
-      field('project.status', 'InDevelopment'),
-      field('project.step', 'DiscussingChangeToPlan'),
-    ),
+    any(field('project.status', 'InDevelopment'), field('project.step', 'DiscussingChangeToPlan')),
   ).create,
   r.Engagement.whenAll(member, field('status', 'InDevelopment')).delete,
 ])

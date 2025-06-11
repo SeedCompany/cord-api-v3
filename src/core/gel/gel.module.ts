@@ -23,9 +23,7 @@ import './errors';
       provide: Options,
       inject: [GelWarningHandler],
       useFactory: (warningHandler: GelWarningHandler) =>
-        Options.defaults().withWarningHandler(
-          warningHandler.handle.bind(warningHandler),
-        ),
+        Options.defaults().withWarningHandler(warningHandler.handle.bind(warningHandler)),
     },
     OptionsContext,
     {

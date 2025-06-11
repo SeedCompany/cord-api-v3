@@ -41,10 +41,7 @@ export class CommentRepository extends DtoRepository(Comment) {
       .query()
       .subQuery(
         input.threadId
-          ? (q) =>
-              q
-                .matchNode('thread', 'CommentThread', { id: input.threadId })
-                .return('thread')
+          ? (q) => q.matchNode('thread', 'CommentThread', { id: input.threadId }).return('thread')
           : await this.threads.create(input.resourceId),
       )
       .apply(await createNode(Comment, { initialProps }))
@@ -54,17 +51,11 @@ export class CommentRepository extends DtoRepository(Comment) {
           out: { creator: currentUser },
         }),
       )
-      .return<{ id: ID; threadId: ID }>([
-        'node.id as id',
-        'thread.id as threadId',
-      ])
+      .return<{ id: ID; threadId: ID }>(['node.id as id', 'thread.id as threadId'])
       .first();
   }
 
-  async update(
-    existing: UnsecuredDto<Comment>,
-    changes: ChangesOf<Comment, UpdateCommentInput>,
-  ) {
+  async update(existing: UnsecuredDto<Comment>, changes: ChangesOf<Comment, UpdateCommentInput>) {
     await this.updateProperties(existing, changes);
   }
 
@@ -77,15 +68,9 @@ export class CommentRepository extends DtoRepository(Comment) {
           relation('in', '', 'comment', ACTIVE),
           node('thread', 'CommentThread'),
         ])
-        .match([
-          node('node'),
-          relation('out', '', 'creator'),
-          node('creator', 'User'),
-        ])
+        .match([node('node'), relation('out', '', 'creator'), node('creator', 'User')])
         .return<{ dto: UnsecuredDto<Comment> }>(
-          merge('props', { thread: 'thread.id', creator: 'creator.id' }).as(
-            'dto',
-          ),
+          merge('props', { thread: 'thread.id', creator: 'creator.id' }).as('dto'),
         );
   }
 

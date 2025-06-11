@@ -19,15 +19,9 @@ export class DirectorChangeApplyToProjectMembersHandler {
       return;
     }
     const role: Role =
-      event instanceof FieldZoneUpdatedEvent
-        ? 'FieldOperationsDirector'
-        : 'RegionalDirector';
+      event instanceof FieldZoneUpdatedEvent ? 'FieldOperationsDirector' : 'RegionalDirector';
 
-    const stats = await this.repo.replaceMembershipsOnOpenProjects(
-      oldDirector,
-      newDirector,
-      role,
-    );
+    const stats = await this.repo.replaceMembershipsOnOpenProjects(oldDirector, newDirector, role);
 
     this.logger.notice('Replaced director memberships on open projects', {
       location: event.updated.id,

@@ -1,10 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import {
-  generateId,
-  type IdOf,
-  NotImplementedException,
-  type UnsecuredDto,
-} from '~/common';
+import { generateId, type IdOf, NotImplementedException, type UnsecuredDto } from '~/common';
 import { ResourceLoader } from '~/core';
 import { type DbTypeOf } from '~/core/database';
 import { Privileges, withVariant } from '../../authorization';
@@ -31,10 +26,7 @@ export class ProgressReportMediaService {
     private readonly repo: ProgressReportMediaRepository,
   ) {}
 
-  async listForReport(
-    report: Report,
-    args: ListArgs,
-  ): Promise<ReportMediaList> {
+  async listForReport(report: Report, args: ListArgs): Promise<ReportMediaList> {
     const privileges = this.privileges.for(ReportMedia);
     const rows = await this.repo.listForReport(report, args);
     return {
@@ -51,25 +43,19 @@ export class ProgressReportMediaService {
 
   async readMany(ids: ReadonlyArray<IdOf<ReportMedia>>) {
     const row = await this.repo.readMany(ids);
-    return row.map((row) =>
-      this.privileges.for(ReportMedia).secure(this.dbRowToDto(row)),
-    );
+    return row.map((row) => this.privileges.for(ReportMedia).secure(this.dbRowToDto(row)));
   }
 
   async readFeaturedOfReport(ids: ReadonlyArray<IdOf<Report>>) {
     const rows = await this.repo.readFeaturedOfReport(ids);
-    return rows.map((row) =>
-      this.privileges.for(ReportMedia).secure(this.dbRowToDto(row)),
-    );
+    return rows.map((row) => this.privileges.for(ReportMedia).secure(this.dbRowToDto(row)));
   }
 
   async upload(input: UploadMedia) {
     const report = await this.resources.load(Report, input.reportId);
 
     const context = report as any; // the report is fine for condition context
-    this.privileges
-      .for(ReportMedia, withVariant(context, input.variant))
-      .verifyCan('create');
+    this.privileges.for(ReportMedia, withVariant(context, input.variant)).verifyCan('create');
 
     const initialDto = await this.repo.create(input);
 
@@ -112,9 +98,7 @@ export class ProgressReportMediaService {
 
   async delete(id: IdOf<ReportMedia>) {
     const media = await this.repo.readOne(id);
-    this.privileges
-      .for(ReportMedia, this.dbRowToDto(media))
-      .verifyCan('delete');
+    this.privileges.for(ReportMedia, this.dbRowToDto(media)).verifyCan('delete');
 
     await this.repo.deleteNode(id);
     await this.repo.deleteVariantGroupIfEmpty(media.variantGroup);

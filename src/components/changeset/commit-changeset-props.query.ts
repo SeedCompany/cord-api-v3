@@ -1,10 +1,6 @@
 import { node, type Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import {
-  ACTIVE,
-  INACTIVE,
-  prefixNodeLabelsWithDeleted,
-} from '~/core/database/query';
+import { ACTIVE, INACTIVE, prefixNodeLabelsWithDeleted } from '~/core/database/query';
 
 export interface CommitChangesetPropsOptions {
   nodeVar?: string;
@@ -12,10 +8,7 @@ export interface CommitChangesetPropsOptions {
 }
 
 export const commitChangesetProps =
-  ({
-    nodeVar = 'node',
-    changesetVar = 'changeset',
-  }: CommitChangesetPropsOptions = {}) =>
+  ({ nodeVar = 'node', changesetVar = 'changeset' }: CommitChangesetPropsOptions = {}) =>
   (query: Query) => {
     query.subQuery([nodeVar, changesetVar], (body) =>
       body

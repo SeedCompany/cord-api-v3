@@ -17,24 +17,12 @@ import { startCase } from 'lodash';
  * BTL -> BibleTranslationLiaison
  * rcc -> RegionalCommunicationsCoordinator
  */
-export function searchCamelCase<T extends string>(
-  items: Iterable<T>,
-  needle: string,
-) {
+export function searchCamelCase<T extends string>(items: Iterable<T>, needle: string) {
   const itemArr = [...items];
   const collator = new Intl.Collator('en');
   const fuzzy = new Fuzzy({
     sort: (info, haystack) => {
-      const {
-        idx,
-        chars,
-        terms,
-        interLft2,
-        interLft1,
-        start,
-        intraIns,
-        interIns,
-      } = info;
+      const { idx, chars, terms, interLft2, interLft1, start, intraIns, interIns } = info;
 
       return idx
         .map((v, i) => i)

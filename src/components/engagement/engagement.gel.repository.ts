@@ -99,10 +99,7 @@ const hydrate = e.shape(e.Engagement, (engagement) => {
       project: engagement.project.name,
       language: langEng.language.name,
       intern: e.array_join_maybe(
-        e.array([
-          internEng.intern.displayFirstName,
-          internEng.intern.displayLastName,
-        ]),
+        e.array([internEng.intern.displayFirstName, internEng.intern.displayLastName]),
         ' ',
       ),
     }),

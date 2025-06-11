@@ -52,9 +52,7 @@ export class MediaService {
     );
     await this.eventBus.publish(event);
     if (!(poll.plurality && !poll.vetoed)) {
-      throw new UnauthorizedException(
-        'You do not have permission to update this media metadata',
-      );
+      throw new UnauthorizedException('You do not have permission to update this media metadata');
     }
 
     try {

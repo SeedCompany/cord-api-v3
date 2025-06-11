@@ -21,16 +21,9 @@ import {
   type ResourceAction,
 } from '../actions';
 import { type ResourceObjectContext } from '../object.type';
-import {
-  type AllPermissionsView,
-  createAllPermissionsView,
-} from './all-permissions-view';
+import { type AllPermissionsView, createAllPermissionsView } from './all-permissions-view';
 import { EdgePrivileges } from './edge-privileges';
-import {
-  type FilterOptions,
-  type PolicyExecutor,
-  type ResolveParams,
-} from './policy-executor';
+import { type FilterOptions, type PolicyExecutor, type ResolveParams } from './policy-executor';
 
 export class ResourcePrivileges<TResourceStatic extends ResourceShape<any>> {
   readonly resource: EnhancedResource<TResourceStatic>;
@@ -56,49 +49,23 @@ export class ResourcePrivileges<TResourceStatic extends ResourceShape<any>> {
   forEdge(
     key: SecuredPropsPlusExtraKey<TResourceStatic>,
     object?: ResourceObjectContext<TResourceStatic>,
-  ): EdgePrivileges<
-    TResourceStatic,
-    SecuredPropsPlusExtraKey<TResourceStatic>,
-    PropAction
-  >;
+  ): EdgePrivileges<TResourceStatic, SecuredPropsPlusExtraKey<TResourceStatic>, PropAction>;
   forEdge(
     key: ChildSinglesKey<TResourceStatic>,
     object?: ResourceObjectContext<TResourceStatic>,
-  ): EdgePrivileges<
-    TResourceStatic,
-    ChildSinglesKey<TResourceStatic>,
-    ChildSingleAction
-  >;
+  ): EdgePrivileges<TResourceStatic, ChildSinglesKey<TResourceStatic>, ChildSingleAction>;
   forEdge(
     key: ChildListsKey<TResourceStatic>,
     object?: ResourceObjectContext<TResourceStatic>,
-  ): EdgePrivileges<
-    TResourceStatic,
-    ChildListsKey<TResourceStatic>,
-    ChildListAction
-  >;
+  ): EdgePrivileges<TResourceStatic, ChildListsKey<TResourceStatic>, ChildListAction>;
   forEdge(key: string, object?: any) {
-    return new EdgePrivileges(
-      this.resource,
-      key,
-      object ?? this.object,
-      this.policyExecutor,
-    );
+    return new EdgePrivileges(this.resource, key, object ?? this.object, this.policyExecutor);
   }
 
   can(action: ResourceAction): boolean;
-  can(
-    action: PropAction,
-    prop: SecuredPropsPlusExtraKey<TResourceStatic>,
-  ): boolean;
-  can(
-    action: ChildSingleAction,
-    relation: ChildSinglesKey<TResourceStatic>,
-  ): boolean;
-  can(
-    action: ChildListAction,
-    relation: ChildListsKey<TResourceStatic>,
-  ): boolean;
+  can(action: PropAction, prop: SecuredPropsPlusExtraKey<TResourceStatic>): boolean;
+  can(action: ChildSingleAction, relation: ChildSinglesKey<TResourceStatic>): boolean;
+  can(action: ChildListAction, relation: ChildListsKey<TResourceStatic>): boolean;
   can(action: AnyAction, prop?: SecuredResourceKey<TResourceStatic>) {
     const perm = this.resolve({ action, prop });
     return perm === true || perm === false
@@ -118,29 +85,15 @@ export class ResourcePrivileges<TResourceStatic extends ResourceShape<any>> {
   }
 
   verifyCan(action: ResourceAction): void;
-  verifyCan(
-    action: PropAction,
-    prop: SecuredPropsPlusExtraKey<TResourceStatic>,
-  ): void;
-  verifyCan(
-    action: ChildSingleAction,
-    relation: ChildSinglesKey<TResourceStatic>,
-  ): void;
-  verifyCan(
-    action: ChildListAction,
-    relation: ChildListsKey<TResourceStatic>,
-  ): void;
+  verifyCan(action: PropAction, prop: SecuredPropsPlusExtraKey<TResourceStatic>): void;
+  verifyCan(action: ChildSingleAction, relation: ChildSinglesKey<TResourceStatic>): void;
+  verifyCan(action: ChildListAction, relation: ChildListsKey<TResourceStatic>): void;
   verifyCan(action: AnyAction, prop?: string) {
     // @ts-expect-error yeah IDK why but this is literally the signature.
     if (this.can(action, prop)) {
       return;
     }
-    throw UnauthorizedException.fromPrivileges(
-      action,
-      this.object,
-      this.resource,
-      prop,
-    );
+    throw UnauthorizedException.fromPrivileges(action, this.object, this.resource, prop);
   }
 
   /**
@@ -170,16 +123,11 @@ export class ResourcePrivileges<TResourceStatic extends ResourceShape<any>> {
   ) {
     if (pathPrefix === undefined) {
       // Guess the input field path based on name convention
-      pathPrefix = startCase(this.resource.name)
-        .split(' ')
-        .at(-1)!
-        .toLowerCase();
+      pathPrefix = startCase(this.resource.name).split(' ').at(-1)!.toLowerCase();
     }
 
     for (const prop of Object.keys(changes)) {
-      const dtoPropName: any = isRelation(this.resource, prop)
-        ? prop.slice(0, -2)
-        : prop;
+      const dtoPropName: any = isRelation(this.resource, prop) ? prop.slice(0, -2) : prop;
       if (!this.resource.securedProps.has(dtoPropName)) {
         continue;
       }
@@ -198,23 +146,18 @@ export class ResourcePrivileges<TResourceStatic extends ResourceShape<any>> {
    * Takes the given unsecured dto which has unsecured props and returns the props that
    * are supposed to be secured (unsecured props are omitted) as secured.
    */
-  secure(
-    dto: UnsecuredDto<TResourceStatic['prototype']>,
-  ): TResourceStatic['prototype'] {
+  secure(dto: UnsecuredDto<TResourceStatic['prototype']>): TResourceStatic['prototype'] {
     // Be helpful and allow object param to be skipped upstream.
     // But it still can be used if given possible for use with condition wrapper functions.
     const perms = this.object ? this : this.forContext(dto);
 
-    const securedProps = mapValues.fromList(
-      this.resource.securedProps,
-      (key) => {
-        const canRead = perms.can('read', key);
-        const canEdit = perms.can('edit', key);
-        let value = (dto as any)[key];
-        value = canRead ? value : Array.isArray(value) ? [] : undefined;
-        return { value, canRead, canEdit };
-      },
-    ).asRecord as SecuredResource<TResourceStatic, false>;
+    const securedProps = mapValues.fromList(this.resource.securedProps, (key) => {
+      const canRead = perms.can('read', key);
+      const canEdit = perms.can('edit', key);
+      let value = (dto as any)[key];
+      value = canRead ? value : Array.isArray(value) ? [] : undefined;
+      return { value, canRead, canEdit };
+    }).asRecord as SecuredResource<TResourceStatic, false>;
 
     return {
       ...dto,

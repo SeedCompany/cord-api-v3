@@ -8,11 +8,7 @@ import { KnownLanguage, type ModifyKnownLanguageArgs } from './dto';
 
 @Injectable()
 export class KnownLanguageRepository extends DtoRepository(KnownLanguage) {
-  async create({
-    userId,
-    languageId,
-    languageProficiency,
-  }: ModifyKnownLanguageArgs) {
+  async create({ userId, languageId, languageProficiency }: ModifyKnownLanguageArgs) {
     await this.delete({ userId, languageId, languageProficiency });
 
     await this.db
@@ -31,11 +27,7 @@ export class KnownLanguageRepository extends DtoRepository(KnownLanguage) {
       .run();
   }
 
-  async delete({
-    userId,
-    languageId,
-    languageProficiency,
-  }: ModifyKnownLanguageArgs) {
+  async delete({ userId, languageId, languageProficiency }: ModifyKnownLanguageArgs) {
     await this.db
       .query()
       .matchNode('user', 'User', { id: userId })
@@ -66,10 +58,7 @@ export class KnownLanguageRepository extends DtoRepository(KnownLanguage) {
       ])
       .with('collect(distinct user) as users, node, knownLanguageRel')
       .raw(`unwind users as user`)
-      .return<KnownLanguage>([
-        'knownLanguageRel.value as proficiency',
-        'node.id as language',
-      ])
+      .return<KnownLanguage>(['knownLanguageRel.value as proficiency', 'node.id as language'])
       .run();
     return results;
   }

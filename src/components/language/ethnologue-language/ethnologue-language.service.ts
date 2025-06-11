@@ -29,18 +29,12 @@ export class EthnologueLanguageService {
 
   secure(dto: UnsecuredDto<EthnologueLanguage>, sensitivity: Sensitivity) {
     return {
-      ...this.privileges
-        .for(EthnologueLanguage)
-        .secure(withEffectiveSensitivity(dto, sensitivity)),
+      ...this.privileges.for(EthnologueLanguage).secure(withEffectiveSensitivity(dto, sensitivity)),
       sensitivity,
     };
   }
 
-  async update(
-    id: ID,
-    input: UpdateEthnologueLanguage,
-    sensitivity: Sensitivity,
-  ) {
+  async update(id: ID, input: UpdateEthnologueLanguage, sensitivity: Sensitivity) {
     if (!input) return;
     const ethnologueLanguage = await this.repo.readOne(id);
 

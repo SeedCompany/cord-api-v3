@@ -1,13 +1,7 @@
 import { clc } from '@nestjs/common/utils/cli-colors.util.js';
 import { cleanJoin, many, type MaybeAsync } from '@seedcompany/common';
 import { type BaseContext, Command, runExit } from 'clipanion';
-import {
-  type Client,
-  createClient,
-  type Executor,
-  type GelError,
-  Options,
-} from 'gel';
+import { type Client, createClient, type Executor, type GelError, Options } from 'gel';
 import type { QueryArgs } from 'gel/dist/ifaces';
 import { glob } from 'glob';
 import fs from 'node:fs/promises';
@@ -73,10 +67,7 @@ class SeedCommand extends Command {
 
     const runAndPrint = async (query: Query, args?: QueryArgs) => {
       try {
-        const rows =
-          typeof query === 'string'
-            ? await db.query(query, args)
-            : await query.run(db);
+        const rows = typeof query === 'string' ? await db.query(query, args) : await query.run(db);
         printResult(rows);
       } catch (e) {
         this.context.stderr.write((e as Error).message + '\n');
@@ -100,16 +91,13 @@ class SeedCommand extends Command {
             const query = await fs.readFile(file, 'utf-8');
             await runAndPrint(query);
           } else {
-            const script = await import(
-              '../../../' + file.replace('.ts', '.js')
-            );
+            const script = await import('../../../' + file.replace('.ts', '.js'));
             const queries = await (script.default as SeedFn)(params);
             if (!queries) {
               return;
             }
             const casted =
-              typeof queries === 'string' ||
-              (typeof queries === 'object' && 'run' in queries)
+              typeof queries === 'string' || (typeof queries === 'object' && 'run' in queries)
                 ? [queries]
                 : queries;
             for await (const query of casted) {
@@ -143,24 +131,17 @@ function warningHandler(seedFile: string) {
       const { lineStart, columnStart } = attributesOf(warning);
       const queryOffset = [lineStart, columnStart];
 
-      const tsFrame = warning
-        .stack!.split('\n')
-        .find((frame) => frame.includes(file));
+      const tsFrame = warning.stack!.split('\n').find((frame) => frame.includes(file));
       const tsStartMatches = tsFrame?.match(/(\d+):(\d+)\)$/);
       const tsOffset = [
         Number(tsStartMatches?.[1] ?? 0) || undefined,
         Number(tsStartMatches?.[2] ?? 0) || undefined,
       ] as const;
 
-      const src = cleanJoin(':', [
-        file,
-        ...(file.endsWith('.edgeql') ? queryOffset : tsOffset),
-      ]);
+      const src = cleanJoin(':', [file, ...(file.endsWith('.edgeql') ? queryOffset : tsOffset)]);
 
       // eslint-disable-next-line no-console
-      console.warn(
-        clc.yellow(`Warning: ${warning.message}\n`) + `  at ${src}\n`,
-      );
+      console.warn(clc.yellow(`Warning: ${warning.message}\n`) + `  at ${src}\n`);
     }
   };
 }

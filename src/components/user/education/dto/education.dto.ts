@@ -14,14 +14,7 @@ import { RegisterResource } from '~/core/resources';
 export type Degree = EnumType<typeof Degree>;
 export const Degree = makeEnum({
   name: 'Degree',
-  values: [
-    'Primary',
-    'Secondary',
-    'Associates',
-    'Bachelors',
-    'Masters',
-    'Doctorate',
-  ],
+  values: ['Primary', 'Secondary', 'Associates', 'Bachelors', 'Masters', 'Doctorate'],
 });
 
 @ObjectType({

@@ -70,8 +70,7 @@ export class DefaultMarketingRegionMigration extends BaseMigration {
       .run();
 
     for (const country of countries) {
-      const marketingRegionName =
-        fieldRegionNameToMarketingRegionName[country.fieldRegionName];
+      const marketingRegionName = fieldRegionNameToMarketingRegionName[country.fieldRegionName];
       const marketingRegionId = marketingRegionNameToId[marketingRegionName];
       if (marketingRegionId === undefined) {
         continue;

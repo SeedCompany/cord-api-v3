@@ -66,16 +66,11 @@ export class BudgetService {
     }
   }
 
-  async createRecord(
-    input: CreateBudgetRecord,
-    changeset?: ID,
-  ): Promise<BudgetRecord> {
+  async createRecord(input: CreateBudgetRecord, changeset?: ID): Promise<BudgetRecord> {
     const { organizationId, fiscalYear } = input;
 
     if (!fiscalYear || !organizationId) {
-      throw new InputException(
-        !fiscalYear ? 'budget.fiscalYear' : 'budget.organizationId',
-      );
+      throw new InputException(!fiscalYear ? 'budget.fiscalYear' : 'budget.organizationId');
     }
 
     await this.verifyRecordUniqueness(input);
@@ -83,10 +78,7 @@ export class BudgetService {
     try {
       const recordId = await this.budgetRecordsRepo.create(input, changeset);
 
-      const budgetRecord = await this.readOneRecord(
-        recordId,
-        viewOfChangeset(changeset),
-      );
+      const budgetRecord = await this.readOneRecord(recordId, viewOfChangeset(changeset));
 
       return budgetRecord;
     } catch (exception) {
@@ -139,9 +131,7 @@ export class BudgetService {
 
   async readMany(ids: readonly ID[], view?: ObjectView) {
     const budgets = await this.budgetRepo.readMany(ids, view);
-    return await Promise.all(
-      budgets.map(async (dto) => await this.readOne(dto.id, view)),
-    );
+    return await Promise.all(budgets.map(async (dto) => await this.readOne(dto.id, view)));
   }
 
   @HandleIdLookup(BudgetRecord)
@@ -165,10 +155,7 @@ export class BudgetService {
     return await this.budgetRepo.update(budget, simpleChanges);
   }
 
-  async updateRecord(
-    { id, ...input }: UpdateBudgetRecord,
-    changeset?: ID,
-  ): Promise<BudgetRecord> {
+  async updateRecord({ id, ...input }: UpdateBudgetRecord, changeset?: ID): Promise<BudgetRecord> {
     const br = await this.readOneRecord(id, viewOfChangeset(changeset));
     const changes = this.budgetRecordsRepo.getActualChanges(br, input);
     this.privileges.for(BudgetRecord, br).verifyChanges(changes);
@@ -198,15 +185,10 @@ export class BudgetService {
     }
   }
 
-  async list(
-    partialInput: Partial<BudgetListInput>,
-    changeset?: ID,
-  ): Promise<BudgetListOutput> {
+  async list(partialInput: Partial<BudgetListInput>, changeset?: ID): Promise<BudgetListOutput> {
     const input = BudgetListInput.defaultValue(BudgetListInput, partialInput);
     const results = await this.budgetRepo.list(input);
-    return await mapListResults(results, (id) =>
-      this.readOne(id, viewOfChangeset(changeset)),
-    );
+    return await mapListResults(results, (id) => this.readOne(id, viewOfChangeset(changeset)));
   }
 
   async listUnsecure(
@@ -215,9 +197,7 @@ export class BudgetService {
   ): Promise<BudgetListOutput> {
     const input = BudgetListInput.defaultValue(BudgetListInput, partialInput);
     const results = await this.budgetRepo.listUnsecure(input);
-    return await mapListResults(results, (id) =>
-      this.readOne(id, viewOfChangeset(changeset)),
-    );
+    return await mapListResults(results, (id) => this.readOne(id, viewOfChangeset(changeset)));
   }
 
   async listRecords(

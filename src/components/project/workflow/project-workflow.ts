@@ -8,11 +8,7 @@ import {
   IsMultiplication,
   RequireOngoingEngagementsToBeFinalizingCompletion,
 } from './transitions/conditions';
-import {
-  BackTo,
-  BackToActive,
-  type ResolveParams,
-} from './transitions/dynamic-step';
+import { BackTo, BackToActive, type ResolveParams } from './transitions/dynamic-step';
 import {
   ApprovalFromEarlyConversationsRequiresEngagements,
   ImplicitlyNotifyTeamMembers,
@@ -330,10 +326,7 @@ export const ProjectWorkflow = defineWorkflow({
   },
 
   'Retract Change To Plan Approval Request': {
-    from: [
-      Step.PendingChangeToPlanApproval,
-      Step.PendingChangeToPlanConfirmation,
-    ],
+    from: [Step.PendingChangeToPlanApproval, Step.PendingChangeToPlanConfirmation],
     to: Step.DiscussingChangeToPlan,
     label: 'Retract Approval Request',
     type: Type.Neutral,
@@ -490,12 +483,7 @@ export const ProjectWorkflow = defineWorkflow({
   },
   'End Termination Discussion': {
     from: Step.DiscussingTermination,
-    to: BackTo(
-      Step.Active,
-      Step.ActiveChangedPlan,
-      Step.DiscussingReactivation,
-      Step.Suspended,
-    ),
+    to: BackTo(Step.Active, Step.ActiveChangedPlan, Step.DiscussingReactivation, Step.Suspended),
     label: 'Will Not Terminate',
     type: Type.Neutral,
     notifiers: Distros.Termination,
@@ -517,12 +505,7 @@ export const ProjectWorkflow = defineWorkflow({
   },
   'End Termination Discussion By Approver': {
     from: Step.PendingTerminationApproval,
-    to: BackTo(
-      Step.Active,
-      Step.ActiveChangedPlan,
-      Step.DiscussingReactivation,
-      Step.Suspended,
-    ),
+    to: BackTo(Step.Active, Step.ActiveChangedPlan, Step.DiscussingReactivation, Step.Suspended),
     label: 'Will Not Terminate',
     type: Type.Neutral,
     notifiers: Distros.Termination,

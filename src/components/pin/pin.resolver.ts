@@ -6,14 +6,10 @@ import { PinService } from './pin.service';
 
 @Resolver()
 export class PinResolver {
-  constructor(
-    private readonly pins: PinService,
-    private readonly identity: Identity,
-  ) {}
+  constructor(private readonly pins: PinService, private readonly identity: Identity) {}
 
   @Query(() => Boolean, {
-    description:
-      'Returns whether or not the requesting user has pinned the resource ID',
+    description: 'Returns whether or not the requesting user has pinned the resource ID',
   })
   async isPinned(
     @IdArg({
@@ -29,8 +25,7 @@ export class PinResolver {
   }
 
   @Mutation(() => Boolean, {
-    description:
-      'Toggles the pinned state for the resource ID for the requesting user',
+    description: 'Toggles the pinned state for the resource ID for the requesting user',
   })
   async togglePinned(
     @IdArg({
@@ -39,8 +34,7 @@ export class PinResolver {
     id: ID,
     @Args('pinned', {
       nullable: true,
-      description:
-        'Whether the item should be pinned or not. Omit to toggle the current state.',
+      description: 'Whether the item should be pinned or not. Omit to toggle the current state.',
     })
     pinned?: boolean,
   ): Promise<boolean> {
@@ -51,9 +45,7 @@ export class PinResolver {
   //   name: 'pins',
   //   description: "A list of the requesting user's pinned items",
   // })
-  async list(
-    @ListArg(PinnedListInput) _input: PinnedListInput,
-  ): Promise<PinnedListOutput> {
+  async list(@ListArg(PinnedListInput) _input: PinnedListInput): Promise<PinnedListOutput> {
     throw new NotImplementedException();
   }
 }

@@ -1,18 +1,9 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import {
-  type AbstractClassType,
-  type ID,
-  IdArg,
-  NotFoundException,
-} from '~/common';
+import { type AbstractClassType, type ID, IdArg, NotFoundException } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { Privileges } from '../authorization';
 import { EngagementLoader } from '../engagement';
-import {
-  IEngagement,
-  InternshipEngagement,
-  LanguageEngagement,
-} from '../engagement/dto';
+import { IEngagement, InternshipEngagement, LanguageEngagement } from '../engagement/dto';
 import {
   InternshipProject,
   IProject,

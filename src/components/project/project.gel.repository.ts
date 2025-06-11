@@ -1,12 +1,7 @@
 import { Injectable, type Type } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { LazyGetter } from 'lazy-get-decorator';
-import {
-  type ID,
-  type PublicOf,
-  type SortablePaginationInput,
-  type UnsecuredDto,
-} from '~/common';
+import { type ID, type PublicOf, type SortablePaginationInput, type UnsecuredDto } from '~/common';
 import { grabInstances } from '~/common/instance-maps';
 import { type ChangesOf } from '~/core/database/changes';
 import {
@@ -63,10 +58,9 @@ export const ConcreteRepos = {
     { hydrate },
   ) {},
 
-  Internship: class InternshipProjectRepository extends RepoFor(
-    ConcreteTypes.Internship,
-    { hydrate },
-  ) {},
+  Internship: class InternshipProjectRepository extends RepoFor(ConcreteTypes.Internship, {
+    hydrate,
+  }) {},
 } satisfies Record<keyof typeof ConcreteTypes, Type>;
 
 @Injectable()
@@ -86,8 +80,7 @@ export class ProjectGelRepository
   }
 
   async create(input: CreateProject) {
-    const { type, sensitivity, otherLocationIds, presetInventory, ...props } =
-      input;
+    const { type, sensitivity, otherLocationIds, presetInventory, ...props } = input;
     return await this.concretes[input.type].create({
       ...props,
       ownSensitivity: sensitivity,
@@ -95,10 +88,7 @@ export class ProjectGelRepository
     });
   }
 
-  async update(
-    existing: UnsecuredDto<Project>,
-    changes: ChangesOf<Project, UpdateProject>,
-  ) {
+  async update(existing: UnsecuredDto<Project>, changes: ChangesOf<Project, UpdateProject>) {
     try {
       return await this.defaults.update({
         id: existing.id,
@@ -127,10 +117,7 @@ export class ProjectGelRepository
     return await this.db.run(query);
   }
 
-  protected listFilters(
-    project: ScopeOf<typeof e.Project>,
-    { filter: input }: ProjectListInput,
-  ) {
+  protected listFilters(project: ScopeOf<typeof e.Project>, { filter: input }: ProjectListInput) {
     if (!input) return [];
     return [
       (input.type?.length ?? 0) > 0 &&
@@ -140,34 +127,26 @@ export class ProjectGelRepository
           e.set(...input.type!.map((type) => `default::${type}Project`)),
         ),
       (input.status?.length ?? 0) > 0 &&
-        e.op(
-          project.status,
-          'in',
-          e.cast(e.Project.Status, e.set(...input.status!)),
-        ),
+        e.op(project.status, 'in', e.cast(e.Project.Status, e.set(...input.status!))),
       (input.step?.length ?? 0) > 0 &&
         e.op(project.step, 'in', e.cast(e.Project.Step, e.set(...input.step!))),
       input.onlyMultipleEngagements && e.op(project.engagementTotal, '>', 1),
       ...(input.createdAt
         ? [
-            input.createdAt.after &&
-              e.op(project.createdAt, '>', input.createdAt.after),
+            input.createdAt.after && e.op(project.createdAt, '>', input.createdAt.after),
             input.createdAt.afterInclusive &&
               e.op(project.createdAt, '>=', input.createdAt.afterInclusive),
-            input.createdAt.before &&
-              e.op(project.createdAt, '<', input.createdAt.before),
+            input.createdAt.before && e.op(project.createdAt, '<', input.createdAt.before),
             input.createdAt.beforeInclusive &&
               e.op(project.createdAt, '<=', input.createdAt.beforeInclusive),
           ]
         : []),
       ...(input.modifiedAt
         ? [
-            input.modifiedAt.after &&
-              e.op(project.modifiedAt, '>', input.modifiedAt.after),
+            input.modifiedAt.after && e.op(project.modifiedAt, '>', input.modifiedAt.after),
             input.modifiedAt.afterInclusive &&
               e.op(project.modifiedAt, '>=', input.modifiedAt.afterInclusive),
-            input.modifiedAt.before &&
-              e.op(project.modifiedAt, '<', input.modifiedAt.before),
+            input.modifiedAt.before && e.op(project.modifiedAt, '<', input.modifiedAt.before),
             input.modifiedAt.beforeInclusive &&
               e.op(project.modifiedAt, '<=', input.modifiedAt.beforeInclusive),
           ]
@@ -175,13 +154,8 @@ export class ProjectGelRepository
       input.isMember != null && e.op(project.isMember, '=', input.isMember),
       input.pinned != null && e.op(project.pinned, '=', input.pinned),
       input.languageId &&
-        e.op(
-          e.uuid(input.languageId),
-          'in',
-          project.is(e.TranslationProject).languages.id,
-        ),
-      input.partnerId &&
-        e.op(e.uuid(input.partnerId), 'in', project.partnerships.partner.id),
+        e.op(e.uuid(input.languageId), 'in', project.is(e.TranslationProject).languages.id),
+      input.partnerId && e.op(e.uuid(input.partnerId), 'in', project.partnerships.partner.id),
       input.userId &&
         e.op(
           e.uuid(input.userId),
@@ -195,18 +169,11 @@ export class ProjectGelRepository
           ),
         ),
       (input.sensitivity?.length ?? 0) > 0 &&
-        e.op(
-          project.sensitivity,
-          'in',
-          e.cast(e.Sensitivity, e.set(...input.sensitivity!)),
-        ),
+        e.op(project.sensitivity, 'in', e.cast(e.Sensitivity, e.set(...input.sensitivity!))),
     ];
   }
 
-  protected orderBy(
-    scope: ScopeOf<typeof e.Project>,
-    input: SortablePaginationInput,
-  ) {
+  protected orderBy(scope: ScopeOf<typeof e.Project>, input: SortablePaginationInput) {
     if (input.sort === 'type') {
       return {
         expression: scope.__type__,

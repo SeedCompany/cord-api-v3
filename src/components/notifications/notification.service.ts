@@ -1,18 +1,8 @@
 import { DiscoveryService } from '@golevelup/nestjs-discovery';
-import {
-  forwardRef,
-  Inject,
-  Injectable,
-  type OnModuleInit,
-} from '@nestjs/common';
+import { forwardRef, Inject, Injectable, type OnModuleInit } from '@nestjs/common';
 import { mapEntries, type Nil } from '@seedcompany/common';
 import Event from 'gel/dist/primitives/event.js';
-import {
-  type ID,
-  type ResourceShape,
-  ServerException,
-  type UnsecuredDto,
-} from '~/common';
+import { type ID, type ResourceShape, ServerException, type UnsecuredDto } from '~/common';
 import {
   type MarkNotificationReadArgs,
   type Notification,
@@ -20,11 +10,7 @@ import {
   type NotificationListInput,
 } from './dto';
 import { NotificationRepository } from './notification.repository';
-import {
-  INotificationStrategy,
-  type InputOf,
-  NotificationStrategy,
-} from './notification.strategy';
+import { INotificationStrategy, type InputOf, NotificationStrategy } from './notification.strategy';
 
 @Injectable()
 export abstract class NotificationService {
@@ -52,14 +38,8 @@ export abstract class NotificationService {
 }
 
 @Injectable()
-export class NotificationServiceImpl
-  extends NotificationService
-  implements OnModuleInit
-{
-  strategyMap: ReadonlyMap<
-    ResourceShape<Notification>,
-    INotificationStrategy<Notification>
-  >;
+export class NotificationServiceImpl extends NotificationService implements OnModuleInit {
+  strategyMap: ReadonlyMap<ResourceShape<Notification>, INotificationStrategy<Notification>>;
   readonly ready = new ((Event as any).default as typeof Event)();
 
   constructor(private readonly discovery: DiscoveryService) {
@@ -88,9 +68,9 @@ export class NotificationServiceImpl
   }
 
   async onModuleInit() {
-    const discovered = await this.discovery.providersWithMetaAtKey<
-      ResourceShape<Notification>
-    >(NotificationStrategy.KEY);
+    const discovered = await this.discovery.providersWithMetaAtKey<ResourceShape<Notification>>(
+      NotificationStrategy.KEY,
+    );
     this.strategyMap = mapEntries(discovered, ({ meta, discoveredClass }) => {
       const { instance } = discoveredClass;
       if (!(instance instanceof INotificationStrategy)) {

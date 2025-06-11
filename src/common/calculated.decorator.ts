@@ -5,8 +5,7 @@ export const CalculatedSymbol = Symbol('Calculated');
  * This means the resource/property is managed by the API, instead of the user.
  */
 export const Calculated =
-  (): PropertyDecorator & ClassDecorator =>
-  (target: any, key?: string | symbol) => {
+  (): PropertyDecorator & ClassDecorator => (target: any, key?: string | symbol) => {
     if (!key) {
       Reflect.defineMetadata(CalculatedSymbol, true, target);
       return target;

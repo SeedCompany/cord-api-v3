@@ -23,9 +23,7 @@ import { ProgressReport, ProgressReportStatus as Status } from './dto';
 
 @Injectable()
 export class ProgressReportExtraForPeriodicInterfaceRepository {
-  getCreateOptions(
-    _input: MergePeriodicReports,
-  ): CreateNodeOptions<typeof ProgressReport> {
+  getCreateOptions(_input: MergePeriodicReports): CreateNodeOptions<typeof ProgressReport> {
     return {
       initialProps: {
         status: Status.NotStarted,
@@ -47,62 +45,57 @@ export class ProgressReportExtraForPeriodicInterfaceRepository {
   }
 }
 
-export const progressReportExtrasSorters: DefinedSorters<
-  SortFieldOf<typeof ProgressReport>
-> = defineSorters(ProgressReport, {
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  'pnpExtractionResult.*': (query, input) =>
-    query
-      .with('node as report')
-      .match([
-        node('report'),
-        relation('out', '', 'reportFileNode'),
-        node('file', 'File'),
-        relation('out', '', 'pnpExtractionResult'),
-        node('node', 'PnpExtractionResult'),
-      ])
-      .apply(sortWith(pnpExtractionResultSorters, input)),
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  'engagement.*': (query, input) =>
-    query
-      .with('node as report')
-      .match([
-        node('report'),
-        relation('in', '', 'report'),
-        node('node', 'LanguageEngagement'),
-      ])
-      .apply(sortWith(engagementSorters, input)),
-  ...mapEntries(
-    [
-      { field: 'cumulativeSummary', period: SummaryPeriod.Cumulative },
-      { field: 'fiscalYearSummary', period: SummaryPeriod.FiscalYearSoFar },
-      { field: 'periodSummary', period: SummaryPeriod.ReportPeriod },
-    ],
-    ({ field, period }) => {
-      const periodVar = { period: variable(`"${period}"`) };
-      const matcher: SortMatcher<string> = (query, input) =>
-        query
-          .with('node as report')
-          .match([
-            node('report'),
-            relation('out', '', 'summary'),
-            node('node', 'ProgressSummary', periodVar),
-          ])
-          .apply(sortWith(progressSummarySorters, input))
-          .union()
-          .with('node')
-          .with('node as report')
-          .where(
-            not(
-              path([
-                node('report'),
-                relation('out', '', 'summary'),
-                node('', 'ProgressSummary', periodVar),
-              ]),
-            ),
-          )
-          .return<SortCol>('null as sortValue');
-      return [`${field}.*`, matcher];
-    },
-  ).asRecord,
-});
+export const progressReportExtrasSorters: DefinedSorters<SortFieldOf<typeof ProgressReport>> =
+  defineSorters(ProgressReport, {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    'pnpExtractionResult.*': (query, input) =>
+      query
+        .with('node as report')
+        .match([
+          node('report'),
+          relation('out', '', 'reportFileNode'),
+          node('file', 'File'),
+          relation('out', '', 'pnpExtractionResult'),
+          node('node', 'PnpExtractionResult'),
+        ])
+        .apply(sortWith(pnpExtractionResultSorters, input)),
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    'engagement.*': (query, input) =>
+      query
+        .with('node as report')
+        .match([node('report'), relation('in', '', 'report'), node('node', 'LanguageEngagement')])
+        .apply(sortWith(engagementSorters, input)),
+    ...mapEntries(
+      [
+        { field: 'cumulativeSummary', period: SummaryPeriod.Cumulative },
+        { field: 'fiscalYearSummary', period: SummaryPeriod.FiscalYearSoFar },
+        { field: 'periodSummary', period: SummaryPeriod.ReportPeriod },
+      ],
+      ({ field, period }) => {
+        const periodVar = { period: variable(`"${period}"`) };
+        const matcher: SortMatcher<string> = (query, input) =>
+          query
+            .with('node as report')
+            .match([
+              node('report'),
+              relation('out', '', 'summary'),
+              node('node', 'ProgressSummary', periodVar),
+            ])
+            .apply(sortWith(progressSummarySorters, input))
+            .union()
+            .with('node')
+            .with('node as report')
+            .where(
+              not(
+                path([
+                  node('report'),
+                  relation('out', '', 'summary'),
+                  node('', 'ProgressSummary', periodVar),
+                ]),
+              ),
+            )
+            .return<SortCol>('null as sortValue');
+        return [`${field}.*`, matcher];
+      },
+    ).asRecord,
+  });

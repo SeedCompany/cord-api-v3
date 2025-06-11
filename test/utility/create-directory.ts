@@ -10,9 +10,7 @@ import { fileNode } from './fragments';
 
 export async function createRootDirectory(app: TestApp, name?: string) {
   name = name ?? startCase(faker.lorem.words());
-  const session = await app
-    .get(SessionManager)
-    .resumeSession(app.graphql.authToken);
+  const session = await app.get(SessionManager).resumeSession(app.graphql.authToken);
   return await app.get(SessionHost).withSession(session, async () => {
     const id = await app.get(FileService).createRootDirectory({
       // An attachment point is required, so just use the current user.
@@ -24,11 +22,7 @@ export async function createRootDirectory(app: TestApp, name?: string) {
   });
 }
 
-export async function createDirectory(
-  app: TestApp,
-  parentId: ID,
-  name?: string,
-) {
+export async function createDirectory(app: TestApp, parentId: ID, name?: string) {
   const input = {
     parentId,
     name: name ?? startCase(faker.lorem.words()),

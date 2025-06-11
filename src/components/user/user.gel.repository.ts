@@ -27,16 +27,13 @@ export class UserGelRepository
     const res = await this.db.run(this.readManyActorsQuery, { ids });
     return [...res.users, ...res.agents];
   }
-  private readonly readManyActorsQuery = e.params(
-    { ids: e.array(e.uuid) },
-    ({ ids }) => {
-      const actors = e.cast(e.Actor, e.array_unpack(ids));
-      return e.select({
-        users: e.select(actors.is(e.User), hydrateUser),
-        agents: e.select(actors.is(e.SystemAgent), hydrateSystemAgent),
-      });
-    },
-  );
+  private readonly readManyActorsQuery = e.params({ ids: e.array(e.uuid) }, ({ ids }) => {
+    const actors = e.cast(e.Actor, e.array_unpack(ids));
+    return e.select({
+      users: e.select(actors.is(e.User), hydrateUser),
+      agents: e.select(actors.is(e.SystemAgent), hydrateSystemAgent),
+    });
+  });
 
   async doesEmailAddressExist(email: string) {
     const query = e.select(e.User, () => ({
@@ -58,16 +55,11 @@ export class UserGelRepository
   protected listFilters(user: ScopeOf<typeof e.User>, input: UserListInput) {
     if (!input.filter) return [];
     return [
-      input.filter.pinned != null &&
-        e.op(user.pinned, '=', input.filter.pinned),
+      input.filter.pinned != null && e.op(user.pinned, '=', input.filter.pinned),
       (input.filter.roles?.length ?? 0) > 0 &&
         e.op(
           'exists',
-          e.op(
-            user.roles,
-            'intersect',
-            e.cast(e.Role, e.set(...input.filter.roles!)),
-          ),
+          e.op(user.roles, 'intersect', e.cast(e.Role, e.set(...input.filter.roles!))),
         ),
       // TODO: title fuzzy search
       // More filters here when needed...

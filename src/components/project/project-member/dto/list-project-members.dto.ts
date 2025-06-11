@@ -32,9 +32,7 @@ export abstract class ProjectMemberFilters {
 }
 
 @InputType()
-export class ProjectMemberListInput extends SortablePaginationInput<
-  keyof ProjectMember
->({
+export class ProjectMemberListInput extends SortablePaginationInput<keyof ProjectMember>({
   defaultSort: 'createdAt',
 }) {
   @FilterField(() => ProjectMemberFilters)
@@ -47,6 +45,4 @@ export class ProjectMemberListOutput extends PaginatedList(ProjectMember) {}
 @ObjectType({
   description: SecuredList.descriptionFor('project members'),
 })
-export abstract class SecuredProjectMemberList extends SecuredList(
-  ProjectMember,
-) {}
+export abstract class SecuredProjectMemberList extends SecuredList(ProjectMember) {}

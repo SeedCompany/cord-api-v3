@@ -1,10 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { EnhancedResource, type ID, isIdLike, type PublicOf } from '~/common';
 import type { CommonRepository as Neo4jCommonRepository } from '~/core/database';
-import {
-  type ResourceLike,
-  ResourcesHost,
-} from '~/core/resources/resources.host';
+import { type ResourceLike, ResourcesHost } from '~/core/resources/resources.host';
 import type { BaseNode } from '../database/results';
 import { DbTraceLayer, Gel } from './gel.service';
 import { e } from './reexports';
@@ -36,10 +33,7 @@ export class CommonRepository implements PublicOf<Neo4jCommonRepository> {
    * @deprecated this should be replaced with a different output shape,
    * after we finish migration.
    */
-  async getBaseNodes(
-    ids: readonly ID[],
-    fqn?: ResourceLike,
-  ): Promise<readonly BaseNode[]> {
+  async getBaseNodes(ids: readonly ID[], fqn?: ResourceLike): Promise<readonly BaseNode[]> {
     const res = fqn
       ? typeof fqn === 'string'
         ? this.resources.getByGel(fqn)

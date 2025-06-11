@@ -1,9 +1,4 @@
-import {
-  type ArgumentMetadata,
-  Injectable,
-  type PipeTransform,
-  Scope,
-} from '@nestjs/common';
+import { type ArgumentMetadata, Injectable, type PipeTransform, Scope } from '@nestjs/common';
 import { Args, type ArgsOptions, ID as IDType } from '@nestjs/graphql';
 import { Resolver } from '@nestjs/graphql/dist/enums/resolver.enum.js';
 import { RESOLVER_TYPE_METADATA as TypeKey } from '@nestjs/graphql/dist/graphql.constants.js';
@@ -17,9 +12,7 @@ const pipeMetadata = createAugmentedMetadataPipe<{
   fieldName: string;
 }>();
 
-export const ChangesetArg = (
-  options?: Omit<ArgsOptions, 'type'>,
-): ParameterDecorator => {
+export const ChangesetArg = (options?: Omit<ArgsOptions, 'type'>): ParameterDecorator => {
   return (target, methodName, argIndex) => {
     let type: Resolver;
     const resolved: ArgsOptions = {
@@ -43,9 +36,7 @@ export const ChangesetArg = (
     process.nextTick(() => {
       type = Reflect.getMetadata(TypeKey, (target as any)[methodName!]);
       if (!type) {
-        throw new ServerException(
-          'Something went wrong trying to determine operation type',
-        );
+        throw new ServerException('Something went wrong trying to determine operation type');
       }
       if (resolved.description) {
         return;

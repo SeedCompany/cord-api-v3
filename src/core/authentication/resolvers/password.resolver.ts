@@ -32,9 +32,7 @@ export class PasswordResolver {
     description: 'Forgot password; send password reset email',
   })
   @AuthLevel('anonymous')
-  async forgotPassword(
-    @Args() { email }: ForgotPasswordArgs,
-  ): Promise<ForgotPasswordOutput> {
+  async forgotPassword(@Args() { email }: ForgotPasswordArgs): Promise<ForgotPasswordOutput> {
     await this.authentication.forgotPassword(email);
     return { success: true };
   }
@@ -46,9 +44,7 @@ export class PasswordResolver {
     `,
   })
   @AuthLevel('anonymous')
-  async resetPassword(
-    @Args('input') input: ResetPasswordInput,
-  ): Promise<ResetPasswordOutput> {
+  async resetPassword(@Args('input') input: ResetPasswordInput): Promise<ResetPasswordOutput> {
     await this.authentication.resetPassword(input);
     return { success: true };
   }

@@ -88,9 +88,7 @@ Connection.prototype.runInTransaction = async function withTransaction<R>(
     // @ts-expect-error not typed, but js is there.
     const isExistingRead = outer._connectionHolder._mode === 'READ';
     if (isExistingRead && options?.mode !== 'read') {
-      throw new ServerException(
-        'A write transaction cannot be started within a read transaction',
-      );
+      throw new ServerException('A write transaction cannot be started within a read transaction');
     }
 
     return await inner();
@@ -123,8 +121,7 @@ Connection.prototype.runInTransaction = async function withTransaction<R>(
           const maybeRetryableError = getCauseList(error).find(isNeo4jError);
           if (maybeRetryableError) {
             errorMap.set(maybeRetryableError, error);
-            const override =
-              this.retryInformer.shouldRetry(maybeRetryableError);
+            const override = this.retryInformer.shouldRetry(maybeRetryableError);
             if (override != null) {
               maybeRetryableError.retriable = override;
             }
@@ -134,9 +131,7 @@ Connection.prototype.runInTransaction = async function withTransaction<R>(
         }
       },
       {
-        timeout: options?.timeout
-          ? Duration.from(options.timeout).toMillis()
-          : undefined,
+        timeout: options?.timeout ? Duration.from(options.timeout).toMillis() : undefined,
         metadata: options?.metadata,
       },
     );

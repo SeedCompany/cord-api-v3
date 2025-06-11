@@ -6,13 +6,7 @@ export type ProjectStatus = EnumType<typeof ProjectStatus>;
 export const ProjectStatus = makeEnum({
   name: 'ProjectStatus',
   description: 'A alias for a group of project steps',
-  values: [
-    'InDevelopment',
-    'Active',
-    'Terminated',
-    'Completed',
-    'DidNotDevelop',
-  ],
+  values: ['InDevelopment', 'Active', 'Terminated', 'Completed', 'DidNotDevelop'],
   exposeOrder: true,
 });
 

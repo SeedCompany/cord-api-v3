@@ -25,8 +25,5 @@ export abstract class SystemAgentRepository {
     return await this.upsertAgent('External Mailing Group', ['Leadership']);
   }
 
-  protected abstract upsertAgent(
-    name: string,
-    roles?: readonly Role[],
-  ): Promise<SystemAgent>;
+  protected abstract upsertAgent(name: string, roles?: readonly Role[]): Promise<SystemAgent>;
 }

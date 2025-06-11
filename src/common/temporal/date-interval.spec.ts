@@ -23,9 +23,7 @@ expect.extend({
         promise: this.promise,
       })}\n\nExpected:${this.isNot ? ' not' : ''} ${this.utils.EXPECTED_COLOR(
         expected.toString(),
-      )}\nReceived:${this.isNot ? '    ' : ''} ${this.utils.RECEIVED_COLOR(
-        received.toString(),
-      )}`;
+      )}\nReceived:${this.isNot ? '    ' : ''} ${this.utils.RECEIVED_COLOR(received.toString())}`;
     return { pass, message };
   },
   toBeDateIntervals(received: DateInterval[], expected: DateInterval[]) {
@@ -91,9 +89,11 @@ describe('DateInterval', () => {
   it('toDuration', () => {
     const interval = DateInterval.fromISO('2020-03-04/2021-05-22');
     expect(interval.toDuration().toObject()).toEqual({ days: 445 });
-    expect(interval.toDuration(['years', 'months', 'days']).toObject()).toEqual(
-      { years: 1, months: 2, days: 19 },
-    );
+    expect(interval.toDuration(['years', 'months', 'days']).toObject()).toEqual({
+      years: 1,
+      months: 2,
+      days: 19,
+    });
   });
   it('fromInterval', () => {
     const dtInterval = Interval.fromISO('2020-03-04T04/2021-05-22T05');
@@ -207,16 +207,12 @@ describe('DateInterval', () => {
   describe('xor', () => {
     it('non-overlapping', () => {
       const nonOverlapping = [days(5, 6), days(8, 9)];
-      expect(DateInterval.xor(nonOverlapping)).toBeDateIntervals(
-        nonOverlapping,
-      );
+      expect(DateInterval.xor(nonOverlapping)).toBeDateIntervals(nonOverlapping);
     });
 
     it('empty for fully overlapping', () => {
       expect(DateInterval.xor([days(5, 8), days(5, 8)])).toBeDateIntervals([]);
-      expect(
-        DateInterval.xor([days(5, 8), days(5, 6), days(6, 8)]),
-      ).toBeDateIntervals([]);
+      expect(DateInterval.xor([days(5, 8), days(5, 6), days(6, 8)])).toBeDateIntervals([]);
     });
 
     it('non-overlapping parts', () => {
@@ -233,59 +229,45 @@ describe('DateInterval', () => {
       ]);
 
       // adjacent
-      expect(DateInterval.xor([days(5, 6), days(7, 8)])).toBeDateIntervals([
-        days(5, 8),
-      ]);
+      expect(DateInterval.xor([days(5, 6), days(7, 8)])).toBeDateIntervals([days(5, 8)]);
 
       // three intervals
-      expect(
-        DateInterval.xor([days(10, 13), days(8, 10), days(12, 14)]),
-      ).toBeDateIntervals([days(8, 9), days(11, 11), days(14, 14)]);
+      expect(DateInterval.xor([days(10, 13), days(8, 10), days(12, 14)])).toBeDateIntervals([
+        days(8, 9),
+        days(11, 11),
+        days(14, 14),
+      ]);
     });
   });
   describe('difference', () => {
     it('non-overlapping', () => {
-      expect(days(7, 8).difference(days(10, 11))).toBeDateIntervals([
-        days(7, 8),
-      ]);
+      expect(days(7, 8).difference(days(10, 11))).toBeDateIntervals([days(7, 8)]);
       expect(days(7, 8).difference(days(5, 6))).toBeDateIntervals([days(7, 8)]);
     });
     it('non-overlapping parts', () => {
-      expect(days(8, 10).difference(days(10, 11))).toBeDateIntervals([
-        days(8, 9),
-      ]);
-      expect(days(9, 11).difference(days(8, 9))).toBeDateIntervals([
-        days(10, 11),
-      ]);
-      expect(
-        days(8, 11).difference(days(7, 8), days(11, 12)),
-      ).toBeDateIntervals([days(9, 10)]);
-      expect(
-        days(9, 11).difference(days(8, 9), days(11, 11)),
-      ).toBeDateIntervals([days(10, 10)]);
+      expect(days(8, 10).difference(days(10, 11))).toBeDateIntervals([days(8, 9)]);
+      expect(days(9, 11).difference(days(8, 9))).toBeDateIntervals([days(10, 11)]);
+      expect(days(8, 11).difference(days(7, 8), days(11, 12))).toBeDateIntervals([days(9, 10)]);
+      expect(days(9, 11).difference(days(8, 9), days(11, 11))).toBeDateIntervals([days(10, 10)]);
     });
     it('empty for fully subtracted', () => {
       expect(days(8, 10).difference(days(7, 11))).toBeDateIntervals([]);
-      expect(
-        days(8, 11).difference(days(8, 9), days(10, 11)),
-      ).toBeDateIntervals([]);
-      expect(
-        days(6, 12).difference(days(6, 9), days(8, 11), days(10, 13)),
-      ).toBeDateIntervals([]);
+      expect(days(8, 11).difference(days(8, 9), days(10, 11))).toBeDateIntervals([]);
+      expect(days(6, 12).difference(days(6, 9), days(8, 11), days(10, 13))).toBeDateIntervals([]);
     });
     it('returns outside parts when engulfing another interval', () => {
-      expect(days(8, 13).difference(days(10, 11))).toBeDateIntervals([
+      expect(days(8, 13).difference(days(10, 11))).toBeDateIntervals([days(8, 9), days(12, 13)]);
+      expect(days(8, 14).difference(days(10, 11), days(11, 12))).toBeDateIntervals([
         days(8, 9),
-        days(12, 13),
+        days(13, 14),
       ]);
-      expect(
-        days(8, 14).difference(days(10, 11), days(11, 12)),
-      ).toBeDateIntervals([days(8, 9), days(13, 14)]);
     });
     it('allows holes', () => {
-      expect(
-        days(8, 14).difference(days(10, 10), days(12, 12)),
-      ).toBeDateIntervals([days(8, 9), days(11, 11), days(13, 14)]);
+      expect(days(8, 14).difference(days(10, 10), days(12, 12))).toBeDateIntervals([
+        days(8, 9),
+        days(11, 11),
+        days(13, 14),
+      ]);
     });
   });
   it('overlaps', () => {

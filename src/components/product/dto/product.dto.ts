@@ -37,9 +37,7 @@ import { SecuredProductPurposes } from './product-purpose.enum';
 import { SecuredProductSteps } from './product-step.enum';
 import { SecuredProgressMeasurement } from './progress-measurement.enum';
 
-export const resolveProductType = (
-  product: AnyProduct | UnsecuredDto<AnyProduct>,
-) =>
+export const resolveProductType = (product: AnyProduct | UnsecuredDto<AnyProduct>) =>
   product.produces
     ? DerivativeScriptureProduct
     : product.title
@@ -52,8 +50,7 @@ export const resolveProductType = (
   implements: [Producible],
 })
 export class Product extends Producible {
-  static readonly Parent = () =>
-    import('../../engagement/dto').then((m) => m.LanguageEngagement);
+  static readonly Parent = () => import('../../engagement/dto').then((m) => m.LanguageEngagement);
 
   readonly engagement: ID;
   readonly project: ID;
@@ -138,8 +135,7 @@ export class DirectScriptureProduct extends Product {
   unspecifiedScripture: SecuredUnspecifiedScripturePortion;
 
   @Field(() => Int, {
-    description:
-      'The total number of verses of the selected scripture in this product',
+    description: 'The total number of verses of the selected scripture in this product',
   })
   totalVerses: number;
 
@@ -183,10 +179,7 @@ export class DerivativeScriptureProduct extends Product {
   })
   readonly scriptureReferencesOverride: SecuredScriptureRangesOverride &
     SetDbType<DbScriptureReferences | null> &
-    SetChangeType<
-      'scriptureReferencesOverride',
-      readonly ScriptureRangeInput[] | null
-    >;
+    SetChangeType<'scriptureReferencesOverride', readonly ScriptureRangeInput[] | null>;
 
   @Field({
     description: stripIndent`
@@ -196,8 +189,7 @@ export class DerivativeScriptureProduct extends Product {
   readonly composite: SecuredBoolean;
 
   @Field(() => Int, {
-    description:
-      'The total number of verses of the selected scripture in this product',
+    description: 'The total number of verses of the selected scripture in this product',
   })
   totalVerses: number;
 
@@ -213,8 +205,7 @@ export class DerivativeScriptureProduct extends Product {
 @RegisterResource({ db: e.Product })
 @ObjectType({
   implements: [Product],
-  description:
-    'A product which does not fit into the other two types of products',
+  description: 'A product which does not fit into the other two types of products',
 })
 export class OtherProduct extends Product {
   static readonly Parent = Product.Parent;
@@ -238,14 +229,10 @@ export type AnyProduct = MergeExclusive<
  * we just want to narrow the type in a safe way.
  */
 export const asProductType =
-  <Concrete extends ReturnType<typeof resolveProductType>>(
-    expected: Concrete,
-  ) =>
+  <Concrete extends ReturnType<typeof resolveProductType>>(expected: Concrete) =>
   <Given extends AnyProduct | UnsecuredDto<AnyProduct>>(
     product: Given,
-  ): Given extends AnyProduct
-    ? Concrete['prototype']
-    : UnsecuredDto<Concrete['prototype']> => {
+  ): Given extends AnyProduct ? Concrete['prototype'] : UnsecuredDto<Concrete['prototype']> => {
     if (resolveProductType(product) !== expected) {
       const type = startCase(expected.name.replace(/Product$/, ''));
       throw new ServerException(`Product was not the ${type} type`);

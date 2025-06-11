@@ -1,12 +1,4 @@
-import {
-  Args,
-  ArgsType,
-  Mutation,
-  Parent,
-  Query,
-  ResolveField,
-  Resolver,
-} from '@nestjs/graphql';
+import { Args, ArgsType, Mutation, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import {
   firstLettersOfWords,
@@ -91,9 +83,7 @@ export class LanguageResolver {
     return {
       canEdit: false, // this is a computed field
       canRead,
-      value: canRead
-        ? value ?? language.ethnologue.population.value
-        : undefined,
+      value: canRead ? value ?? language.ethnologue.population.value : undefined,
     };
   }
 
@@ -192,10 +182,7 @@ export class LanguageResolver {
   async updateLanguage(
     @Args('input') { language: input, changeset }: UpdateLanguageInput,
   ): Promise<UpdateLanguageOutput> {
-    const language = await this.langService.update(
-      input,
-      viewOfChangeset(changeset),
-    );
+    const language = await this.langService.update(input, viewOfChangeset(changeset));
     return { language };
   }
 

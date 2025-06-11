@@ -11,11 +11,7 @@ import { FieldRegionService } from './field-region.service';
 import { RestrictRegionDirectorRemovalHandler } from './handlers/restrict-region-director-removal.handler';
 
 @Module({
-  imports: [
-    forwardRef(() => AuthorizationModule),
-    FieldZoneModule,
-    forwardRef(() => UserModule),
-  ],
+  imports: [forwardRef(() => AuthorizationModule), FieldZoneModule, forwardRef(() => UserModule)],
   providers: [
     FieldRegionResolver,
     FieldRegionService,

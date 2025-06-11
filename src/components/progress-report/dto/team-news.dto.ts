@@ -6,8 +6,7 @@ import { ProgressReportHighlight } from './highlights.dto';
 
 @RegisterResource({ db: e.ProgressReport.TeamNews })
 export class ProgressReportTeamNews extends PromptVariantResponse<TeamNewsVariant> {
-  static readonly Parent = () =>
-    import('./progress-report.dto').then((m) => m.ProgressReport);
+  static readonly Parent = () => import('./progress-report.dto').then((m) => m.ProgressReport);
   static Variants = ProgressReportHighlight.Variants;
   static readonly ConfirmThisClassPassesSensitivityToPolicies = true;
 }

@@ -1,19 +1,10 @@
 import { DiscoveryService } from '@golevelup/nestjs-discovery';
 import { Injectable, type OnApplicationBootstrap } from '@nestjs/common';
-import {
-  type FnLike,
-  groupToMapBy,
-  mapValues,
-  sortBy,
-} from '@seedcompany/common';
+import { type FnLike, groupToMapBy, mapValues, sortBy } from '@seedcompany/common';
 import { stripIndent } from 'common-tags';
 import { type ID, ServerException } from '~/common';
 import { ILogger, Logger } from '../logger';
-import {
-  EVENT_METADATA,
-  type EventHandlerMetadata,
-  EVENTS_HANDLER_METADATA,
-} from './constants';
+import { EVENT_METADATA, type EventHandlerMetadata, EVENTS_HANDLER_METADATA } from './constants';
 import { type IEventHandler } from './event-handler.decorator';
 
 /**
@@ -59,10 +50,9 @@ export class SyncEventBus implements IEventBus, OnApplicationBootstrap {
   }
 
   async onApplicationBootstrap() {
-    const discovered =
-      await this.discovery.providersWithMetaAtKey<EventHandlerMetadata>(
-        EVENTS_HANDLER_METADATA,
-      );
+    const discovered = await this.discovery.providersWithMetaAtKey<EventHandlerMetadata>(
+      EVENTS_HANDLER_METADATA,
+    );
 
     if (process.env.NODE_ENV !== 'production') {
       const defined = new Set<string>();
@@ -89,9 +79,7 @@ export class SyncEventBus implements IEventBus, OnApplicationBootstrap {
     });
     const grouped = groupToMapBy(flat, (entry) => entry.id);
     this.listenerMap = mapValues(grouped, (_, entries) =>
-      sortBy(entries, [(entry) => entry.priority, 'desc']).map(
-        (e) => e.handler,
-      ),
+      sortBy(entries, [(entry) => entry.priority, 'desc']).map((e) => e.handler),
     ).asRecord;
   }
 }

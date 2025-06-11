@@ -13,8 +13,7 @@ export class WhereAndList extends WhereOp {
 
   evaluate(params: ParameterBag, precedence = Precedence.None, name = '') {
     // If this operator will not be used, precedence should not be altered
-    const newPrecedence =
-      this.conditions.length < 2 ? precedence : Precedence.And;
+    const newPrecedence = this.conditions.length < 2 ? precedence : Precedence.And;
     const strings = this.conditions.map((condition) =>
       stringCons(params, condition, newPrecedence, name),
     );

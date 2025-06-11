@@ -7,10 +7,7 @@ import * as fragments from './fragments';
 
 export async function createProjectChangeRequest(
   app: TestApp,
-  input: SetOptional<
-    InputOf<typeof CreateChangeRequestDoc>,
-    'types' | 'summary'
-  >,
+  input: SetOptional<InputOf<typeof CreateChangeRequestDoc>, 'types' | 'summary'>,
 ) {
   const result = await app.graphql.mutate(CreateChangeRequestDoc, {
     input: {
@@ -53,9 +50,7 @@ export async function approveProjectChangeRequest(app: TestApp, id: ID) {
 const ApproveProjectChangeRequestDoc = graphql(
   `
     mutation ApproveProjectChangeRequest($id: ID!) {
-      updateProjectChangeRequest(
-        input: { projectChangeRequest: { id: $id, status: Approved } }
-      ) {
+      updateProjectChangeRequest(input: { projectChangeRequest: { id: $id, status: Approved } }) {
         projectChangeRequest {
           ...projectChangeRequest
         }

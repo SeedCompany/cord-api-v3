@@ -9,9 +9,7 @@ import { type Session } from './session/session.dto';
 
 @Injectable()
 @DbTraceLayer.applyToClass()
-export class AuthenticationGelRepository
-  implements PublicOf<AuthenticationRepository>
-{
+export class AuthenticationGelRepository implements PublicOf<AuthenticationRepository> {
   private readonly db: Gel;
   constructor(db: Gel) {
     this.db = db.withOptions(disableAccessPolicies);
@@ -37,9 +35,8 @@ export class AuthenticationGelRepository
   async saveSessionToken(token: string) {
     await this.db.run(this.saveSessionTokenQuery, { token });
   }
-  private readonly saveSessionTokenQuery = e.params(
-    { token: e.str },
-    ({ token }) => e.insert(e.Auth.Session, { token }),
+  private readonly saveSessionTokenQuery = e.params({ token: e.str }, ({ token }) =>
+    e.insert(e.Auth.Session, { token }),
   );
 
   async savePasswordHashOnUser(userId: ID, passwordHash: string) {
@@ -52,30 +49,25 @@ export class AuthenticationGelRepository
     { userId: e.uuid, passwordHash: e.str },
     ({ userId, passwordHash }) => {
       const user = e.cast(e.User, userId);
-      return e
-        .insert(e.Auth.Identity, { user, passwordHash })
-        .unlessConflict((identity) => ({
-          on: identity.user,
-          else: e.update(e.Auth.Identity, () => ({
-            filter_single: { user },
-            set: { passwordHash },
-          })),
-        }));
+      return e.insert(e.Auth.Identity, { user, passwordHash }).unlessConflict((identity) => ({
+        on: identity.user,
+        else: e.update(e.Auth.Identity, () => ({
+          filter_single: { user },
+          set: { passwordHash },
+        })),
+      }));
     },
   );
 
   async getPasswordHash({ email }: LoginInput) {
     return await this.db.run(this.getPasswordHashQuery, { email });
   }
-  private readonly getPasswordHashQuery = e.params(
-    { email: e.str },
-    ({ email }) => {
-      const identity = e.select(e.Auth.Identity, (identity) => ({
-        filter_single: e.op(identity.user.email, '=', email),
-      }));
-      return identity.passwordHash;
-    },
-  );
+  private readonly getPasswordHashQuery = e.params({ email: e.str }, ({ email }) => {
+    const identity = e.select(e.Auth.Identity, (identity) => ({
+      filter_single: e.op(identity.user.email, '=', email),
+    }));
+    return identity.passwordHash;
+  });
 
   async connectSessionToUser(input: LoginInput, session: Session): Promise<ID> {
     try {
@@ -113,13 +105,11 @@ export class AuthenticationGelRepository
   async disconnectUserFromSession(token: string): Promise<void> {
     await this.db.run(this.disconnectUserFromSessionQuery, { token });
   }
-  private readonly disconnectUserFromSessionQuery = e.params(
-    { token: e.str },
-    ({ token }) =>
-      e.update(e.Auth.Session, () => ({
-        filter_single: { token },
-        set: { user: null },
-      })),
+  private readonly disconnectUserFromSessionQuery = e.params({ token: e.str }, ({ token }) =>
+    e.update(e.Auth.Session, () => ({
+      filter_single: { token },
+      set: { user: null },
+    })),
   );
 
   async resumeSession(token: string, impersonateeId?: ID) {
@@ -147,13 +137,10 @@ export class AuthenticationGelRepository
   async rolesForUser(userId: ID) {
     return await this.db.run(this.rolesForUserQuery, { userId });
   }
-  private readonly rolesForUserQuery = e.params(
-    { userId: e.uuid },
-    ({ userId }) => {
-      const user = e.cast(e.User, userId);
-      return user.roles;
-    },
-  );
+  private readonly rolesForUserQuery = e.params({ userId: e.uuid }, ({ userId }) => {
+    const user = e.cast(e.User, userId);
+    return user.roles;
+  });
 
   async getCurrentPasswordHash() {
     return await this.db.run(this.getCurrentPasswordHashQuery, {});
@@ -171,33 +158,27 @@ export class AuthenticationGelRepository
       passwordHash: newPasswordHash,
     });
   }
-  private readonly updatePasswordQuery = e.params(
-    { passwordHash: e.str },
-    ({ passwordHash }) => {
-      const user = e.global.currentUser;
-      const identity = e.assert_exists(
-        e.select(e.Auth.Identity, () => ({
-          filter_single: { user },
-        })),
-      );
-      return e.update(identity, () => ({
-        set: { passwordHash },
-      }));
-    },
-  );
+  private readonly updatePasswordQuery = e.params({ passwordHash: e.str }, ({ passwordHash }) => {
+    const user = e.global.currentUser;
+    const identity = e.assert_exists(
+      e.select(e.Auth.Identity, () => ({
+        filter_single: { user },
+      })),
+    );
+    return e.update(identity, () => ({
+      set: { passwordHash },
+    }));
+  });
 
   async userByEmail(email: string) {
     return await this.db.run(this.userByEmailQuery, { email });
   }
-  private readonly userByEmailQuery = e.params(
-    { email: e.str },
-    ({ email }) => {
-      const user = e.select(e.User, () => ({
-        filter_single: { email },
-      }));
-      return user.id;
-    },
-  );
+  private readonly userByEmailQuery = e.params({ email: e.str }, ({ email }) => {
+    const user = e.select(e.User, () => ({
+      filter_single: { email },
+    }));
+    return user.id;
+  });
 
   async doesEmailAddressExist(email: string) {
     return !!(await this.userByEmail(email));
@@ -214,20 +195,15 @@ export class AuthenticationGelRepository
   async findEmailToken(token: string) {
     return await this.db.run(this.findEmailTokenQuery, { token });
   }
-  private readonly findEmailTokenQuery = e.params(
-    { token: e.str },
-    ({ token }) =>
-      e.select(e.Auth.EmailToken, (et) => ({
-        ...et['*'],
-        createdOn: et.createdAt, // backwards compatibility
-        filter_single: { token },
-      })),
+  private readonly findEmailTokenQuery = e.params({ token: e.str }, ({ token }) =>
+    e.select(e.Auth.EmailToken, (et) => ({
+      ...et['*'],
+      createdOn: et.createdAt, // backwards compatibility
+      filter_single: { token },
+    })),
   );
 
-  async updatePasswordViaEmailToken(
-    { email }: { email: string },
-    passwordHash: string,
-  ) {
+  async updatePasswordViaEmailToken({ email }: { email: string }, passwordHash: string) {
     const userId = await this.userByEmail(email);
     await this.savePasswordHashOnUser(userId!, passwordHash);
   }
@@ -235,12 +211,10 @@ export class AuthenticationGelRepository
   async removeAllEmailTokensForEmail(email: string) {
     await this.db.run(this.removeAllEmailTokensForEmailQuery, { email });
   }
-  private readonly removeAllEmailTokensForEmailQuery = e.params(
-    { email: e.str },
-    ({ email }) =>
-      e.delete(e.Auth.EmailToken, (et) => ({
-        filter: e.op(et.email, '=', email),
-      })),
+  private readonly removeAllEmailTokensForEmailQuery = e.params({ email: e.str }, ({ email }) =>
+    e.delete(e.Auth.EmailToken, (et) => ({
+      filter: e.op(et.email, '=', email),
+    })),
   );
 
   async deactivateAllOtherSessions(session: Session) {
@@ -253,11 +227,7 @@ export class AuthenticationGelRepository
     { userId: e.uuid, token: e.str },
     ({ userId, token }) =>
       e.update(e.Auth.Session, (s) => ({
-        filter: e.op(
-          e.op(s.user.id, '=', userId),
-          'and',
-          e.op(s.token, '!=', token),
-        ),
+        filter: e.op(e.op(s.user.id, '=', userId), 'and', e.op(s.token, '!=', token)),
         set: { user: null },
       })),
   );
@@ -272,11 +242,7 @@ export class AuthenticationGelRepository
     { email: e.str, token: e.str },
     ({ email, token }) =>
       e.update(e.Auth.Session, (s) => ({
-        filter: e.op(
-          e.op(s.user.email, '=', email),
-          'and',
-          e.op(s.token, '!=', token),
-        ),
+        filter: e.op(e.op(s.user.email, '=', email), 'and', e.op(s.token, '!=', token)),
         set: { user: null },
       })),
   );

@@ -48,26 +48,18 @@ export class RichTextDocument {
   private static readonly serializedPrefix = '\0RichText\0';
 
   static isSerialized(value: any): value is string {
-    return (
-      typeof value === 'string' &&
-      value.startsWith(RichTextDocument.serializedPrefix)
-    );
+    return typeof value === 'string' && value.startsWith(RichTextDocument.serializedPrefix);
   }
 
   static fromSerialized(value: string) {
-    return RichTextDocument.from(
-      JSON.parse(value.slice(RichTextDocument.serializedPrefix.length)),
-    );
+    return RichTextDocument.from(JSON.parse(value.slice(RichTextDocument.serializedPrefix.length)));
   }
 
   static serialize(doc: RichTextDocument) {
     return RichTextDocument.serializedPrefix + JSON.stringify(doc);
   }
 
-  static isEqual(
-    a: RichTextDocument | null | undefined,
-    b: RichTextDocument | null | undefined,
-  ) {
+  static isEqual(a: RichTextDocument | null | undefined, b: RichTextDocument | null | undefined) {
     // This is crude but it's better than nothing.
     const aBlocks = a?.blocks ?? [];
     const bBlocks = b?.blocks ?? [];

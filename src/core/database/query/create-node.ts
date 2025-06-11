@@ -15,16 +15,13 @@ import { Variable } from '../query-augmentation/condition-variables';
 
 export interface CreateNodeOptions<TResourceStatic extends ResourceShape<any>> {
   initialProps?: InitialPropsOf<
-    UnsecuredDto<InstanceType<TResourceStatic>> &
-      Partial<Pick<Resource, 'id' | 'createdAt'>>
+    UnsecuredDto<InstanceType<TResourceStatic>> & Partial<Pick<Resource, 'id' | 'createdAt'>>
   >;
   baseNodeProps?: Record<string, any>;
 }
 
 type InitialPropsOf<T> = {
-  [K in keyof T & string]?:
-    | Variable
-    | (T[K] & {} extends FileId | LinkTo<'File'> ? ID : T[K]);
+  [K in keyof T & string]?: Variable | (T[K] & {} extends FileId | LinkTo<'File'> ? ID : T[K]);
 };
 
 /**

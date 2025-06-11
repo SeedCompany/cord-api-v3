@@ -5,10 +5,7 @@ import { projectRange } from '../../project/dto';
 import { ProjectUpdatedEvent } from '../../project/events';
 import { ReportPeriod, ReportType } from '../dto';
 import { PeriodicReportService } from '../periodic-report.service';
-import {
-  AbstractPeriodicReportSync,
-  type Intervals,
-} from './abstract-periodic-report-sync';
+import { AbstractPeriodicReportSync, type Intervals } from './abstract-periodic-report-sync';
 
 type SubscribedEvent = ProjectUpdatedEvent;
 
@@ -31,10 +28,7 @@ export class SyncPeriodicReportsToProjectDateRange
     });
 
     const project = event.updated;
-    const intervals: Intervals = [
-      projectRange(project),
-      projectRange(event.previous),
-    ];
+    const intervals: Intervals = [projectRange(project), projectRange(event.previous)];
 
     const narrativeDiff = this.diffBy(...intervals, 'quarter');
     await this.sync(
@@ -60,9 +54,7 @@ export class SyncPeriodicReportsToProjectDateRange
     const { updated, previous } = event;
 
     const newInterval: DateTimeUnit =
-      updated.financialReportPeriod === ReportPeriod.Monthly
-        ? 'month'
-        : 'quarter';
+      updated.financialReportPeriod === ReportPeriod.Monthly ? 'month' : 'quarter';
 
     if (updated.financialReportPeriod === previous.financialReportPeriod) {
       const diff = this.diffBy(...intervals, newInterval);

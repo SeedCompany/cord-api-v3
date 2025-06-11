@@ -1,9 +1,5 @@
 import { type Query } from 'cypher-query-builder';
-import {
-  type ID,
-  type PaginatedListType,
-  type PaginationInput,
-} from '~/common';
+import { type ID, type PaginatedListType, type PaginationInput } from '~/common';
 import { collect } from './cypher-functions';
 
 /**
@@ -18,10 +14,7 @@ import { collect } from './cypher-functions';
  * Note that only `node` is available in this function.
  */
 export const paginate =
-  <R = ID>(
-    { count, page }: PaginationInput,
-    hydrate?: (query: Query) => Query<{ dto: R }>,
-  ) =>
+  <R = ID>({ count, page }: PaginationInput, hydrate?: (query: Query) => Query<{ dto: R }>) =>
   (query: Query) => {
     let list = 'list';
     const params: Record<string, any> = {

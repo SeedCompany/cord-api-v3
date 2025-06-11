@@ -56,10 +56,10 @@ export class TraceLayer {
     readonly [layer in string]?: readonly TraceNames[];
   }>();
   private static readonly instances = new Map<string, TraceLayer>();
-  private static readonly getNameCacheForInstance = cacheable<
-    object,
-    Map<string, TraceNames>
-  >(new WeakMap(), () => new Map());
+  private static readonly getNameCacheForInstance = cacheable<object, Map<string, TraceNames>>(
+    new WeakMap(),
+    () => new Map(),
+  );
 
   private readonly seenClasses = new WeakSet<AbstractClass<unknown>>();
 
@@ -116,9 +116,7 @@ export class TraceLayer {
     const proto = cls.prototype;
     const descriptors = Object.getOwnPropertyDescriptors(proto);
     const methods = Object.entries(descriptors).flatMap(([key, descriptor]) => {
-      return key !== 'constructor' && typeof descriptor.value === 'function'
-        ? [key]
-        : [];
+      return key !== 'constructor' && typeof descriptor.value === 'function' ? [key] : [];
     });
 
     const layer = this.layer;

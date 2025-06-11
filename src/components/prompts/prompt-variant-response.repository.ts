@@ -70,9 +70,7 @@ export const PromptVariantResponseRepository = <
 
     async list(
       parentId: ID,
-    ): Promise<
-      PaginatedListType<UnsecuredDto<PromptVariantResponse<TVariant>>>
-    > {
+    ): Promise<PaginatedListType<UnsecuredDto<PromptVariantResponse<TVariant>>>> {
       const result = await this.db
         .query()
         .match([
@@ -80,9 +78,7 @@ export const PromptVariantResponseRepository = <
           relation('out', undefined, 'child', ACTIVE),
           node('node', this.resource.dbLabel),
         ])
-        .apply(
-          sorting(this.resource.type, { sort: 'createdAt', order: Order.ASC }),
-        )
+        .apply(sorting(this.resource.type, { sort: 'createdAt', order: Order.ASC }))
         .apply(paginate({ count: 25, page: 1 }, this.hydrate()))
         .first();
       return result!; // the result from paginate() will always have 1 row.
@@ -92,21 +88,9 @@ export const PromptVariantResponseRepository = <
       return (query: Query) =>
         query
           .apply(this.filterToReadable())
-          .match([
-            node('parent', 'BaseNode'),
-            relation('out', undefined, 'child'),
-            node('node'),
-          ])
-          .match([
-            node('node'),
-            relation('out', undefined, 'creator'),
-            node('creator', 'User'),
-          ])
-          .match([
-            node('node'),
-            relation('out', undefined, 'prompt'),
-            node('prompt', 'Property'),
-          ])
+          .match([node('parent', 'BaseNode'), relation('out', undefined, 'child'), node('node')])
+          .match([node('node'), relation('out', undefined, 'creator'), node('creator', 'User')])
+          .match([node('node'), relation('out', undefined, 'prompt'), node('prompt', 'Property')])
           .subQuery('node', (sub) =>
             sub
               .match([
@@ -116,8 +100,7 @@ export const PromptVariantResponseRepository = <
               ])
               .with(
                 merge('response', {
-                  modifiedAt:
-                    'coalesce(response.modifiedAt, response.createdAt)',
+                  modifiedAt: 'coalesce(response.modifiedAt, response.createdAt)',
                 }).as('response'),
               )
               .return('collect(response) as responses'),
@@ -134,9 +117,7 @@ export const PromptVariantResponseRepository = <
 
     protected abstract filterToReadable(): QueryFragment;
 
-    async create(
-      input: ChoosePrompt,
-    ): Promise<UnsecuredDto<PromptVariantResponse<TVariant>>> {
+    async create(input: ChoosePrompt): Promise<UnsecuredDto<PromptVariantResponse<TVariant>>> {
       // @ts-expect-error uhhhh yolo ¯\_(ツ)_/¯
       const resource: typeof PromptVariantResponse = this.resource.type;
 

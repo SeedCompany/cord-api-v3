@@ -11,9 +11,6 @@ export const AIAssistedTranslation = makeEnum({
 @ObjectType({
   description: SecuredEnum.descriptionFor('using AI assisted translation'),
 })
-export class SecuredAIAssistedTranslation extends SecuredEnum(
-  AIAssistedTranslation,
-  {
-    nullable: true,
-  },
-) {}
+export class SecuredAIAssistedTranslation extends SecuredEnum(AIAssistedTranslation, {
+  nullable: true,
+}) {}

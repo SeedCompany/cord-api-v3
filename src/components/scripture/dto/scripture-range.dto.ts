@@ -1,10 +1,5 @@
 import { applyDecorators } from '@nestjs/common';
-import {
-  Field,
-  type FieldOptions,
-  InputType,
-  ObjectType,
-} from '@nestjs/graphql';
+import { Field, type FieldOptions, InputType, ObjectType } from '@nestjs/graphql';
 import { Book, mergeVerseRanges, Verse } from '@seedcompany/scripture';
 import { Transform, Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
@@ -12,24 +7,15 @@ import { stripIndent } from 'common-tags';
 import { random, sumBy, times } from 'lodash';
 import { type Range, SecuredPropertyList } from '~/common';
 import { IsValidOrder } from './scripture-range.validator';
-import {
-  ScriptureReference,
-  ScriptureReferenceInput,
-} from './scripture-reference.dto';
-import {
-  ScriptureEnd,
-  ScriptureStart,
-} from './scripture-reference.transformer';
+import { ScriptureReference, ScriptureReferenceInput } from './scripture-reference.dto';
+import { ScriptureEnd, ScriptureStart } from './scripture-reference.transformer';
 
 const description = stripIndent`
   A range of scripture.
   i.e. Matthew 1:1-2:10
 `;
 
-export const mapRange = <T, U = T>(
-  input: Range<T>,
-  mapper: (point: T) => U,
-): Range<U> => ({
+export const mapRange = <T, U = T>(input: Range<T>, mapper: (point: T) => U): Range<U> => ({
   start: mapper(input.start),
   end: mapper(input.end),
 });
@@ -41,9 +27,7 @@ export const ScriptureField = (options: FieldOptions) =>
     Type(() => ScriptureRangeInput),
     Transform(({ value }) => {
       try {
-        return value
-          ? mergeVerseRanges(value).map(ScriptureRange.fromVerses)
-          : value;
+        return value ? mergeVerseRanges(value).map(ScriptureRange.fromVerses) : value;
       } catch (e) {
         return value;
       }
@@ -98,24 +82,14 @@ export abstract class ScriptureRange implements Range<ScriptureReference> {
 
   static random() {
     const startBook = Book.at(random(1, Book.at(-1).index));
-    const startChapter = startBook.chapter(
-      random(1, startBook.lastChapter.index),
-    );
-    const startVerse = startChapter.verse(
-      random(1, startChapter.lastVerse.index),
-    );
+    const startChapter = startBook.chapter(random(1, startBook.lastChapter.index));
+    const startVerse = startChapter.verse(random(1, startChapter.lastVerse.index));
     const endBook = Book.at(random(startBook.index, Book.at(-1).index));
     const endChapter = endBook.chapter(
-      random(
-        endBook.equals(startBook) ? startChapter.index : 1,
-        endBook.lastChapter.index,
-      ),
+      random(endBook.equals(startBook) ? startChapter.index : 1, endBook.lastChapter.index),
     );
     const endVerse = endChapter.verse(
-      random(
-        endChapter.equals(startChapter) ? startVerse.index : 1,
-        endChapter.lastVerse.index,
-      ),
+      random(endChapter.equals(startChapter) ? startVerse.index : 1, endChapter.lastVerse.index),
     );
     return {
       start: startVerse.reference,
@@ -124,23 +98,20 @@ export abstract class ScriptureRange implements Range<ScriptureReference> {
   }
 
   static randomList(min = 2, max = 4) {
-    return mergeVerseRanges(
-      times(random(min, max)).map(ScriptureRange.random),
-    ).map(ScriptureRange.fromVerses);
+    return mergeVerseRanges(times(random(min, max)).map(ScriptureRange.random)).map(
+      ScriptureRange.fromVerses,
+    );
   }
 }
 
 @ObjectType({
   description: SecuredPropertyList.descriptionFor('scripture ranges'),
 })
-export class SecuredScriptureRanges extends SecuredPropertyList(
-  ScriptureRange,
-) {}
+export class SecuredScriptureRanges extends SecuredPropertyList(ScriptureRange) {}
 
 @ObjectType({
   description: SecuredPropertyList.descriptionFor('scripture ranges override'),
 })
-export class SecuredScriptureRangesOverride extends SecuredPropertyList(
-  ScriptureRange,
-  { nullable: true },
-) {}
+export class SecuredScriptureRangesOverride extends SecuredPropertyList(ScriptureRange, {
+  nullable: true,
+}) {}

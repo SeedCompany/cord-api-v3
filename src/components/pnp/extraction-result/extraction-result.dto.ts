@@ -4,13 +4,7 @@ import { stripIndent } from 'common-tags';
 import { type UUID } from 'node:crypto';
 import { type Merge } from 'type-fest';
 import * as uuid from 'uuid';
-import {
-  type EnumType,
-  type ID,
-  IdField,
-  makeEnum,
-  OptionalField,
-} from '~/common';
+import { type EnumType, type ID, IdField, makeEnum, OptionalField } from '~/common';
 import { InlineMarkdownScalar } from '~/common/markdown.scalar';
 import { type Cell } from '~/common/xlsx.util';
 
@@ -29,13 +23,8 @@ export class PnpProblemType<Context> {
     severity,
     render,
     wiki,
-  }: Merge<
-    PnpProblemType<Context>,
-    { id?: UUID | string }
-  >): PnpProblemType<Context> {
-    const id = (
-      idIn && uuid.validate(idIn) ? idIn : uuid.v5(name, ID_NS)
-    ) as UUID;
+  }: Merge<PnpProblemType<Context>, { id?: UUID | string }>): PnpProblemType<Context> {
+    const id = (idIn && uuid.validate(idIn) ? idIn : uuid.v5(name, ID_NS)) as UUID;
 
     const type = Object.assign(new PnpProblemType<Context>(), {
       id,
@@ -57,10 +46,7 @@ export class PnpProblemType<Context> {
 
   render: (
     context: Context,
-  ) => (baseCtx: {
-    source: string;
-    sheet: string;
-  }) => Pick<PnpProblemInput, 'message' | 'groups'>;
+  ) => (baseCtx: { source: string; sheet: string }) => Pick<PnpProblemInput, 'message' | 'groups'>;
 }
 
 @ObjectType()
@@ -138,15 +124,8 @@ export abstract class PnpExtractionResult {
 
   readonly problems = new Map<ID, StoredProblem>();
 
-  addProblem<Ctx>(
-    type: PnpProblemType<Ctx>,
-    source: Cell,
-    context: Omit<Ctx, 'source'>,
-  ) {
-    const id = uuid.v5(
-      [this.fileVersionId, type.id, source.fqn].join('\0'),
-      ID_NS,
-    ) as ID & UUID;
+  addProblem<Ctx>(type: PnpProblemType<Ctx>, source: Cell, context: Omit<Ctx, 'source'>) {
+    const id = uuid.v5([this.fileVersionId, type.id, source.fqn].join('\0'), ID_NS) as ID & UUID;
     this.problems.set(id, {
       id,
       type: type.id,

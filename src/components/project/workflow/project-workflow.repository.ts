@@ -3,10 +3,7 @@ import { type ID } from '~/common';
 import { e, edgeql, RepoFor } from '~/core/gel';
 import { type ProjectStep } from '../dto';
 import { projectRefShape } from '../project.gel.repository';
-import {
-  type ExecuteProjectTransitionInput,
-  ProjectWorkflowEvent,
-} from './dto';
+import { type ExecuteProjectTransitionInput, ProjectWorkflowEvent } from './dto';
 
 @Injectable()
 export class ProjectWorkflowRepository extends RepoFor(ProjectWorkflowEvent, {
@@ -48,10 +45,7 @@ export class ProjectWorkflowRepository extends RepoFor(ProjectWorkflowEvent, {
     return await this.db.run(query);
   }
 
-  async mostRecentStep(
-    projectId: ID<'Project'>,
-    steps: readonly ProjectStep[],
-  ) {
+  async mostRecentStep(projectId: ID<'Project'>, steps: readonly ProjectStep[]) {
     const query = edgeql(`
       with
        project := <Project><uuid>$projectId,

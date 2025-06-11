@@ -17,8 +17,7 @@ export class ChangesetIds {
 
 export type IdsAndView = ChangesetIds & { view: ObjectView };
 
-export const IdsAndViewArg = () =>
-  Args({ type: () => ChangesetIds }, ObjectViewPipe);
+export const IdsAndViewArg = () => Args({ type: () => ChangesetIds }, ObjectViewPipe);
 
 @Injectable()
 export class ObjectViewPipe implements PipeTransform {

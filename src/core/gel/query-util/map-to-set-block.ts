@@ -12,10 +12,7 @@ export const mapToSetBlock = (
 
   return mapEntries(changes, ([key, value], { SKIP }) => {
     // If some kind of EdgeQL expression, use as-is
-    if (
-      typeof value === 'object' &&
-      ('toEdgeQL' in value || '+=' in value || '-=' in value)
-    ) {
+    if (typeof value === 'object' && ('toEdgeQL' in value || '+=' in value || '-=' in value)) {
       return [key, value];
     }
 
@@ -30,9 +27,7 @@ export const mapToSetBlock = (
       throw new ServerException(`Cannot find ${el.__name__}.${pointerKey}`);
     }
     if (pointer.computed) {
-      throw new ServerException(
-        `Cannot set computed pointer ${el.__name__}.${pointerKey}`,
-      );
+      throw new ServerException(`Cannot set computed pointer ${el.__name__}.${pointerKey}`);
     }
     if (enforceReadonly && pointer.readonly) {
       throw new ServerException(`Cannot update ${el.__name__}.${pointerKey}`);

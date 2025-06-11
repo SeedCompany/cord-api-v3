@@ -16,8 +16,7 @@ export const isGoalStepPlannedInsideProject = (
   result: PnpExtractionResult,
 ) => {
   const fullFY = stepPlanCompleteDate(cell);
-  const isPlanned =
-    !!fullFY && pnp.planning.projectFiscalYears.contains(fullFY);
+  const isPlanned = !!fullFY && pnp.planning.projectFiscalYears.contains(fullFY);
   if (isPlanned) {
     return true;
   }
@@ -39,8 +38,7 @@ export const isGoalStepPlannedInsideProject = (
 };
 
 export const stepPlanCompleteDate = (cell: Cell<PlanningSheet>) => {
-  const fiscalYear =
-    cell.asNumber ?? (Number(trimStart(cell.asString ?? '', `'`)) || undefined);
+  const fiscalYear = cell.asNumber ?? (Number(trimStart(cell.asString ?? '', `'`)) || undefined);
   const fullFY = fiscalYear ? fullFiscalYear(fiscalYear) : undefined;
   return fullFY?.end;
 };
@@ -80,11 +78,7 @@ const GoalPlannedCompleteAfterProject = PnpProblemType.register({
   wiki: 'https://github.com/SeedCompany/cord-docs/wiki/PnP-Extraction-Validation:-Errors-and-Troubleshooting-Steps#5-steps-of-goals-are-planned-to-be-complete-after-this-projects-fiscal-years',
 });
 
-const renderCtx = (ctx: {
-  goal: string;
-  step: ProductStep;
-  fiscalYear: number;
-}) => {
+const renderCtx = (ctx: { goal: string; step: ProductStep; fiscalYear: number }) => {
   const step = ProductStep.entry(ctx.step).label;
   return { ...ctx, step, fiscalYear: `FY${ctx.fiscalYear}` };
 };

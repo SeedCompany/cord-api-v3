@@ -3,22 +3,13 @@ import { Injectable } from '@nestjs/common';
 import { setOf } from '@seedcompany/common';
 import { node, relation } from 'cypher-query-builder';
 import { first, intersection } from 'lodash';
-import {
-  type ID,
-  Role,
-  ServerException,
-  UnauthorizedException,
-} from '~/common';
+import { type ID, Role, ServerException, UnauthorizedException } from '~/common';
 import { ILogger, Logger } from '~/core';
 import { Identity } from '~/core/authentication';
 import { DatabaseService } from '~/core/database';
 import { ACTIVE, INACTIVE } from '~/core/database/query';
 import { ProjectStep } from '../project/dto';
-import {
-  EngagementStatus,
-  type EngagementStatusTransition,
-  EngagementTransitionType,
-} from './dto';
+import { EngagementStatus, type EngagementStatusTransition, EngagementTransitionType } from './dto';
 
 interface Transition extends EngagementStatusTransition {
   projectStepRequirements?: ProjectStep[];
@@ -40,10 +31,7 @@ export class EngagementRules {
     @Logger('engagement:rules') private readonly logger: ILogger,
   ) {}
 
-  private async getStatusRule(
-    status: EngagementStatus,
-    id: ID,
-  ): Promise<StatusRule> {
+  private async getStatusRule(status: EngagementStatus, id: ID): Promise<StatusRule> {
     const mostRecentPreviousStatus = (steps: EngagementStatus[]) =>
       this.getMostRecentPreviousStatus(id, steps);
 
@@ -323,10 +311,7 @@ export class EngagementRules {
 
     const currentStatus = await this.getCurrentStatus(engagementId, changeset);
     // get roles that can approve the current status
-    const { approvers, transitions } = await this.getStatusRule(
-      currentStatus,
-      engagementId,
-    );
+    const { approvers, transitions } = await this.getStatusRule(currentStatus, engagementId);
 
     // If current user is not an approver (based on roles) then don't allow any transitions
     if (session.roles.intersection(setOf(approvers)).size === 0) {
@@ -334,18 +319,11 @@ export class EngagementRules {
     }
 
     // If transitions don't need project's step then dont fetch or filter it.
-    if (
-      !transitions.some(
-        (transition) => transition.projectStepRequirements?.length,
-      )
-    ) {
+    if (!transitions.some((transition) => transition.projectStepRequirements?.length)) {
       return transitions;
     }
 
-    const currentStep = await this.getCurrentProjectStep(
-      engagementId,
-      changeset,
-    );
+    const currentStep = await this.getCurrentProjectStep(engagementId, changeset);
     const availableTransitionsAccordingToProject = transitions.filter(
       (transition) =>
         !transition.projectStepRequirements?.length ||
@@ -359,23 +337,14 @@ export class EngagementRules {
     return roles.intersection(rolesThatCanBypassWorkflow).size > 0;
   }
 
-  async verifyStatusChange(
-    engagementId: ID,
-    nextStatus: EngagementStatus,
-    changeset?: ID,
-  ) {
+  async verifyStatusChange(engagementId: ID, nextStatus: EngagementStatus, changeset?: ID) {
     if (this.canBypassWorkflow()) {
       return;
     }
 
-    const transitions = await this.getAvailableTransitions(
-      engagementId,
-      changeset,
-    );
+    const transitions = await this.getAvailableTransitions(engagementId, changeset);
 
-    const validNextStatus = transitions.some(
-      (transition) => transition.to === nextStatus,
-    );
+    const validNextStatus = transitions.some((transition) => transition.to === nextStatus);
     if (!validNextStatus) {
       throw new UnauthorizedException(
         `One or more engagements cannot be changed to ${
@@ -503,9 +472,7 @@ export class EngagementRules {
       .asResult<{ status: EngagementStatus[] }>()
       .first();
     if (!result) {
-      throw new ServerException(
-        "Failed to determine engagement's previous status",
-      );
+      throw new ServerException("Failed to determine engagement's previous status");
     }
     return result.status;
   }

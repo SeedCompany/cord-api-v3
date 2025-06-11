@@ -13,9 +13,7 @@ export async function createLanguage(
     isDialect: faker.datatype.boolean(),
     // this represents the largest number that is less than the 32-bit max for GraphQL
     populationOverride: faker.number.int({ max: 2147483647 }),
-    registryOfLanguageVarietiesCode: faker.number
-      .int({ min: 10000, max: 99999 })
-      .toString(),
+    registryOfLanguageVarietiesCode: faker.number.int({ min: 10000, max: 99999 }).toString(),
     leastOfThese: faker.datatype.boolean(),
     leastOfTheseReason: faker.lorem.sentence(),
     ethnologue: {
@@ -39,8 +37,7 @@ export async function createLanguageMinimal(
   app: TestApp,
   input: Partial<InputOf<typeof CreateLanguageDoc>> = {},
 ) {
-  const name =
-    input.name ?? faker.location.country() + '' + (await generateId());
+  const name = input.name ?? faker.location.country() + '' + (await generateId());
   const result = await app.graphql.mutate(CreateLanguageDoc, {
     input: {
       displayName: faker.company.name() + '' + (await generateId()),

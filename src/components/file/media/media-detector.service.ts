@@ -75,15 +75,7 @@ export class MediaDetector {
         async () => {
           const probe = await execa(
             binaryPath,
-            [
-              '-v',
-              'error',
-              '-print_format',
-              'json',
-              '-show_format',
-              '-show_streams',
-              url,
-            ],
+            ['-v', 'error', '-print_format', 'json', '-show_format', '-show_streams', url],
             {
               timeout: 10_000,
             },

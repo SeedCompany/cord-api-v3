@@ -5,13 +5,8 @@ import { CommentService } from './comment.service';
 import { CommentThread } from './dto';
 
 @LoaderFactory(() => CommentThread)
-export class CommentThreadLoader
-  implements DataLoaderStrategy<CommentThread, ID<CommentThread>>
-{
-  constructor(
-    private readonly service: CommentService,
-    private readonly repo: CommentRepository,
-  ) {}
+export class CommentThreadLoader implements DataLoaderStrategy<CommentThread, ID<CommentThread>> {
+  constructor(private readonly service: CommentService, private readonly repo: CommentRepository) {}
 
   async loadMany(ids: ReadonlyArray<ID<CommentThread>>) {
     const threads = await this.repo.threads.readMany(ids);

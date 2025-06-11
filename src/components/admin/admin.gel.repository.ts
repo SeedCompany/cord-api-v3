@@ -74,8 +74,6 @@ export class AdminGelRepository {
     const ghost = await this.agents.getGhost();
     const u = e.cast(e.User, e.uuid(id));
     const query = e.update(u, () => ({ set: { email } }));
-    await this.db
-      .withOptions((o) => o.withGlobals({ currentActorId: ghost.id }))
-      .run(query);
+    await this.db.withOptions((o) => o.withGlobals({ currentActorId: ghost.id })).run(query);
   }
 }

@@ -30,15 +30,9 @@ export type RetryOptions = Merge<
 
 const parseOptions = (options: RetryOptions = {}): Options => ({
   ...options,
-  maxRetryTime: options?.maxRetryTime
-    ? Duration.from(options.maxRetryTime).toMillis()
-    : undefined,
-  minTimeout: options?.minTimeout
-    ? Duration.from(options.minTimeout).toMillis()
-    : undefined,
-  maxTimeout: options?.maxTimeout
-    ? Duration.from(options.maxTimeout).toMillis()
-    : undefined,
+  maxRetryTime: options?.maxRetryTime ? Duration.from(options.maxRetryTime).toMillis() : undefined,
+  minTimeout: options?.minTimeout ? Duration.from(options.minTimeout).toMillis() : undefined,
+  maxTimeout: options?.maxTimeout ? Duration.from(options.maxTimeout).toMillis() : undefined,
 });
 
 export const retry = <T>(
@@ -48,11 +42,7 @@ export const retry = <T>(
 
 export const Retry =
   (options?: RetryOptions) =>
-  (
-    target: unknown,
-    key: string | symbol,
-    descriptor: TypedPropertyDescriptor<AsyncFn>,
-  ) => {
+  (target: unknown, key: string | symbol, descriptor: TypedPropertyDescriptor<AsyncFn>) => {
     const parsed = parseOptions(options);
     const orig = descriptor.value!;
     const next: Record<typeof key, AsyncFn> = {

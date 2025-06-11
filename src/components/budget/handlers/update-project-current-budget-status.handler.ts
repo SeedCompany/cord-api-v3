@@ -5,9 +5,7 @@ import { BudgetService } from '../budget.service';
 import { BudgetStatus } from '../dto';
 
 @EventsHandler(ProjectTransitionedEvent)
-export class UpdateProjectBudgetStatusHandler
-  implements IEventHandler<ProjectTransitionedEvent>
-{
+export class UpdateProjectBudgetStatusHandler implements IEventHandler<ProjectTransitionedEvent> {
   constructor(private readonly budgets: BudgetService) {}
 
   async handle(event: ProjectTransitionedEvent) {
@@ -17,15 +15,9 @@ export class UpdateProjectBudgetStatusHandler
     const nextStatus = stepToStatus(event.workflowEvent.to);
 
     let change: [from: BudgetStatus, to: BudgetStatus] | undefined;
-    if (
-      prevStatus === ProjectStatus.InDevelopment &&
-      nextStatus === ProjectStatus.Active
-    ) {
+    if (prevStatus === ProjectStatus.InDevelopment && nextStatus === ProjectStatus.Active) {
       change = [BudgetStatus.Pending, BudgetStatus.Current];
-    } else if (
-      prevStatus === ProjectStatus.Active &&
-      nextStatus === ProjectStatus.InDevelopment
-    ) {
+    } else if (prevStatus === ProjectStatus.Active && nextStatus === ProjectStatus.InDevelopment) {
       change = [BudgetStatus.Current, BudgetStatus.Pending];
     }
     if (!change) {

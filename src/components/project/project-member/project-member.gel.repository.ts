@@ -2,11 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { type ID, isIdLike, type PublicOf, type Role } from '~/common';
 import { e, RepoFor, type ScopeOf } from '~/core/gel';
 import { hydrateUser } from '../../user/user.gel.repository';
-import {
-  type CreateProjectMember,
-  ProjectMember,
-  type ProjectMemberListInput,
-} from './dto';
+import { type CreateProjectMember, ProjectMember, type ProjectMemberListInput } from './dto';
 import { type ProjectMemberRepository as Neo4jRepository } from './project-member.repository';
 
 @Injectable()
@@ -20,11 +16,7 @@ export class ProjectMemberGelRepository
   })
   implements PublicOf<Neo4jRepository>
 {
-  async create({
-    projectId: projectOrId,
-    userId,
-    ...rest
-  }: CreateProjectMember) {
+  async create({ projectId: projectOrId, userId, ...rest }: CreateProjectMember) {
     const projectId = isIdLike(projectOrId) ? projectOrId : projectOrId.id;
     const project = e.cast(e.Project, e.uuid(projectId));
 
@@ -42,10 +34,7 @@ export class ProjectMemberGelRepository
     const project = e.cast(e.Project, e.uuid(projectId));
     const members = e.select(project.members, (member) => ({
       filter: roles
-        ? e.op(
-            'exists',
-            e.op(member.roles, 'intersect', e.cast(e.Role, e.set(...roles))),
-          )
+        ? e.op('exists', e.op(member.roles, 'intersect', e.cast(e.Role, e.set(...roles))))
         : undefined,
     }));
     const query = e.select(members.user, () => ({
@@ -62,14 +51,7 @@ export class ProjectMemberGelRepository
     if (!input) return [];
     return [
       (input.roles?.length ?? 0) > 0 &&
-        e.op(
-          'exists',
-          e.op(
-            member.roles,
-            'intersect',
-            e.cast(e.Role, e.set(...input.roles!)),
-          ),
-        ),
+        e.op('exists', e.op(member.roles, 'intersect', e.cast(e.Role, e.set(...input.roles!)))),
     ];
   }
 

@@ -1,11 +1,4 @@
-import {
-  Field,
-  Float,
-  InputType,
-  Int,
-  InterfaceType,
-  ObjectType,
-} from '@nestjs/graphql';
+import { Field, Float, InputType, Int, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { simpleSwitch } from '@seedcompany/common';
 import { stripIndent } from 'common-tags';
 import {

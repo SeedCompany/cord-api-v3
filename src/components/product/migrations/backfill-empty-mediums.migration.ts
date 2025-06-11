@@ -24,9 +24,7 @@ export class BackfillEmptyMediumsMigration extends BaseMigration {
       where any(product in products where size(product.mediums) > 0)
       return products
     `.run();
-    this.logger.notice(
-      `Found ${engagements.length} engagements with some empty mediums`,
-    );
+    this.logger.notice(`Found ${engagements.length} engagements with some empty mediums`);
 
     const updates = engagements.flatMap(({ products }) => {
       const grouped = groupBy(products, (p) =>
@@ -43,9 +41,7 @@ export class BackfillEmptyMediumsMigration extends BaseMigration {
       const mediums = nonEmpties[0].mediums;
       return empties.map((p) => ({ id: p.id, mediums }));
     });
-    this.logger.notice(
-      `Resolves to ${updates.length} products to assign mediums to`,
-    );
+    this.logger.notice(`Resolves to ${updates.length} products to assign mediums to`);
 
     await this.db
       .query()

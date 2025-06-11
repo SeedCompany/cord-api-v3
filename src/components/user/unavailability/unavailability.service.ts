@@ -47,9 +47,7 @@ export class UnavailabilityService {
     const changes = this.repo.getActualChanges(unavailability, input);
     // TODO move this condition into policies
     if (!this.identity.isSelf(result.id)) {
-      this.privileges
-        .for(Unavailability, unavailability)
-        .verifyChanges(changes);
+      this.privileges.for(Unavailability, unavailability).verifyChanges(changes);
     }
     const updated = await this.repo.update({ id: input.id, ...changes });
     return this.secure(updated);
@@ -60,9 +58,7 @@ export class UnavailabilityService {
     await this.repo.deleteNode(ua);
   }
 
-  async list(
-    input: UnavailabilityListInput,
-  ): Promise<UnavailabilityListOutput> {
+  async list(input: UnavailabilityListInput): Promise<UnavailabilityListOutput> {
     const results = await this.repo.list(input);
     return {
       ...results,

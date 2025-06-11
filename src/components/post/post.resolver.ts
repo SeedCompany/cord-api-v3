@@ -1,11 +1,4 @@
-import {
-  Args,
-  Mutation,
-  Parent,
-  Query,
-  ResolveField,
-  Resolver,
-} from '@nestjs/graphql';
+import { Args, Mutation, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
 import { type ID, IdArg, mapSecuredValue } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { PostLoader, PostService } from '../post';
@@ -27,9 +20,7 @@ export class PostResolver {
   @Mutation(() => CreatePostOutput, {
     description: 'Create a discussion post',
   })
-  async createPost(
-    @Args('input') { post: input }: CreatePostInput,
-  ): Promise<CreatePostOutput> {
+  async createPost(@Args('input') { post: input }: CreatePostInput): Promise<CreatePostOutput> {
     const post = await this.service.create(input);
     return { post };
   }
@@ -37,10 +28,7 @@ export class PostResolver {
   @Query(() => Post, {
     description: 'Look up a post by ID',
   })
-  async post(
-    @IdArg() id: ID,
-    @Loader(PostLoader) posts: LoaderOf<PostLoader>,
-  ): Promise<Post> {
+  async post(@IdArg() id: ID, @Loader(PostLoader) posts: LoaderOf<PostLoader>): Promise<Post> {
     return await posts.load(id);
   }
 
@@ -55,9 +43,7 @@ export class PostResolver {
   @Mutation(() => UpdatePostOutput, {
     description: 'Update an existing Post',
   })
-  async updatePost(
-    @Args('input') { post: input }: UpdatePostInput,
-  ): Promise<UpdatePostOutput> {
+  async updatePost(@Args('input') { post: input }: UpdatePostInput): Promise<UpdatePostOutput> {
     const post = await this.service.update(input);
     return { post };
   }
