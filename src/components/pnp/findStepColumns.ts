@@ -20,7 +20,11 @@ export function findStepColumns(
   const possibleSteps = sheet.stepLabels
     .walkRight()
     .filter((cell) => !!cell.asString)
-    .map((cell) => ({ label: cell.asString!, column: cell.column, cell }))
+    .map((cell) => ({
+      label: cell.asString!.trim(),
+      column: cell.column,
+      cell,
+    }))
     .toArray();
   possibleSteps.forEach(({ label, column, cell }, index) => {
     if (index === possibleSteps.length - 1) {
