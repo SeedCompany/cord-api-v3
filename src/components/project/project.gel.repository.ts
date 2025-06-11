@@ -38,6 +38,11 @@ const hydrate = e.shape(e.Project, (project) => ({
   __typename: project.__type__.name.slice(9, null),
 
   rootDirectory: true,
+  membership: {
+    id: true,
+    roles: true,
+    inactiveAt: true,
+  },
   primaryPartnership: e
     .select(project.partnerships, (p) => ({
       filter: e.op(p.primary, '=', true),
@@ -172,7 +177,8 @@ export class ProjectGelRepository
               e.op(project.modifiedAt, '<=', input.modifiedAt.beforeInclusive),
           ]
         : []),
-      input.isMember != null && e.op(project.isMember, '=', input.isMember),
+      input.membership != null && e.op('exists', project.membership),
+      input.membership?.active && e.op(project.membership.active, '?=', true),
       input.pinned != null && e.op(project.pinned, '=', input.pinned),
       input.languageId &&
         e.op(

@@ -181,7 +181,13 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
         relation('out', '', 'user', ACTIVE),
         node('user', 'User'),
       ])
-      .apply(projectMemberFilters({ project: { id: project }, roles }))
+      .apply(
+        projectMemberFilters({
+          project: { id: project },
+          roles,
+          active: true,
+        }),
+      )
       .with('user')
       .optionalMatch([
         node('user'),

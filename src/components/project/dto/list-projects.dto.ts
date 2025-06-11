@@ -1,6 +1,7 @@
 import { InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
+import { set } from 'lodash';
 import {
   DateFilter,
   DateTimeFilter,
@@ -14,6 +15,7 @@ import {
   type Sensitivity,
   SortablePaginationInput,
 } from '~/common';
+import { Transform } from '~/common/transform.decorator';
 import { LocationFilters } from '../../location/dto';
 import { PartnershipFilters } from '../../partnership/dto';
 import { ProjectMemberFilters } from '../project-member/dto';
@@ -88,20 +90,16 @@ export abstract class ProjectFilters {
   @ValidateNested()
   readonly mouEnd?: DateFilter;
 
-  @OptionalField({
-    description: 'only mine',
-    deprecationReason: 'Use `isMember` instead.',
-  })
-  readonly mine?: boolean;
-
-  @OptionalField({
-    description: 'Only projects that the requesting user is a member of',
-  })
-  readonly isMember?: boolean;
-
   @FilterField(() => ProjectMemberFilters, {
     description:
       "Only projects with the requesting user's membership that matches these filters",
+  })
+  @Transform(({ value, obj }) => {
+    // Only ran when GQL specifies membership
+    if (value.active == null && (obj.mine || obj.isMember)) {
+      value.active = true;
+    }
+    return value;
   })
   readonly membership?: ProjectMemberFilters & {};
 
@@ -137,6 +135,28 @@ export abstract class ProjectFilters {
   @FilterField(() => LocationFilters)
   readonly primaryLocation?: LocationFilters & {};
 }
+
+Object.defineProperty(ProjectFilters.prototype, 'mine', {
+  set(value: boolean) {
+    // Ensure this is set when membership has not been declared
+    value && !this.membership && set(this, 'membership.active', true);
+  },
+});
+OptionalField(() => Boolean, {
+  description: 'only mine',
+  deprecationReason: 'Use `isMember` instead.',
+})(ProjectFilters.prototype, 'mine');
+
+Object.defineProperty(ProjectFilters.prototype, 'isMember', {
+  set(value: boolean) {
+    // Ensure this is set when membership has not been declared
+    value && !this.membership && set(this, 'membership.active', true);
+  },
+});
+OptionalField(() => Boolean, {
+  description:
+    'Only projects that the requesting user is an active member of. false does nothing.',
+})(ProjectFilters.prototype, 'isMember');
 
 @InputType()
 export class ProjectListInput extends SortablePaginationInput<keyof IProject>({

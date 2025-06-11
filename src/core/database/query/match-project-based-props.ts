@@ -58,7 +58,7 @@ export const matchProjectScopedRoles =
         .match([
           [
             node(projectVar),
-            relation('out', '', 'member'),
+            relation('out', '', 'member', ACTIVE),
             node('projectMember'),
             relation('out', '', 'user'),
             currentUser,
