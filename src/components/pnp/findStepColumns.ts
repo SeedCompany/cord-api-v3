@@ -69,7 +69,7 @@ const chooseStep = (
 ): Step | undefined => {
   const alias = ApprovedAliases.get(label.toLowerCase());
   if (alias) {
-    return alias;
+    return available.has(alias) ? alias : undefined;
   }
 
   const distances = available.values().map((step) => {
