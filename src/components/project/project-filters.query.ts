@@ -30,13 +30,6 @@ export const projectFilters = filter.define(() => ProjectFilters, {
   modifiedAt: filter.dateTimeProp(),
   mouStart: filter.dateTimeProp(),
   mouEnd: filter.dateTimeProp(),
-  mine: filter.pathExistsWhenTrue([
-    currentUser,
-    relation('in', '', 'user'),
-    node('', 'ProjectMember'),
-    relation('in', '', 'member', ACTIVE),
-    node('node'),
-  ]),
   languageId: filter.pathExists((id) => [
     node('node'),
     relation('out', '', 'engagement', ACTIVE),
@@ -50,13 +43,6 @@ export const projectFilters = filter.define(() => ProjectFilters, {
     node('', 'Partnership'),
     relation('out', '', 'partner', ACTIVE),
     node('', 'Partner', { id }),
-  ]),
-  isMember: filter.pathExistsWhenTrue([
-    currentUser,
-    relation('in', '', 'user'),
-    node('', 'ProjectMember'),
-    relation('in', '', 'member', ACTIVE),
-    node('node'),
   ]),
   membership: filter.sub(() => projectMemberFilters)((sub) =>
     sub.match([

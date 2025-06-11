@@ -177,10 +177,11 @@ class Project extends Interfaces {
 
   readonly rootDirectory: Secured<LinkTo<'Directory'> | null>;
 
-  @Field({
-    description: 'Is the requesting user a member of this project?',
-  })
-  readonly isMember: boolean;
+  /** The current user's membership, if any. */
+  readonly membership:
+    | (LinkTo<'ProjectMember'> &
+        Pick<UnsecuredDto<ProjectMember>, 'roles' | 'inactiveAt'>)
+    | null;
 
   @Field({
     description: stripIndent`
