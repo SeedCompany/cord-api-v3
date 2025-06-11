@@ -5,6 +5,7 @@ import { UserModule } from '../../user/user.module';
 import { ProjectModule } from '../project.module';
 import { AvailableRolesToProjectResolver } from './available-roles-to-project.resolver';
 import { DirectorChangeApplyToProjectMembersHandler } from './handlers/director-change-apply-to-project-members.handler';
+import { RegionsZoneChangesAppliesDirectorChangeToProjectMembersHandler } from './handlers/regions-zone-changes-applies-director-change-to-project-members.handler';
 import { AddInactiveAtMigration } from './migrations/add-inactive-at.migration';
 import { ProjectMemberGelRepository } from './project-member.gel.repository';
 import { ProjectMemberLoader } from './project-member.loader';
@@ -26,6 +27,7 @@ import { ProjectMemberService } from './project-member.service';
     ProjectMemberLoader,
     AddInactiveAtMigration,
     DirectorChangeApplyToProjectMembersHandler,
+    RegionsZoneChangesAppliesDirectorChangeToProjectMembersHandler,
   ],
   exports: [ProjectMemberService],
 })
