@@ -81,8 +81,8 @@ export class ProductExtractor {
 const parseProductRow =
   (
     pnp: Pnp,
-    stepColumns: Record<Step, Column>,
-    progressStepColumns: Record<Step, Column>,
+    stepColumns: ReadonlyMap<Step, Column>,
+    progressStepColumns: ReadonlyMap<Step, Column>,
     result: PnpPlanningExtractionResult,
   ) =>
   (cell: Cell<PlanningSheet>, index: number): ExtractedRow => {
@@ -94,7 +94,7 @@ const parseProductRow =
     const steps = entries(stepColumns).flatMap(([step, column]) => {
       const plannedCell = sheet.cell(column, row);
       const progressCell = pnp.progress.cell(
-        progressStepColumns[step],
+        progressStepColumns.get(step)!,
         progressRow,
       );
 
