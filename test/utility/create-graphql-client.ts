@@ -1,10 +1,11 @@
-import { type INestApplication } from '@nestjs/common';
 import { ConfigService } from '~/core';
+import { type TestApp } from '../setup';
 import {
   createExecute,
   type GqlExecute,
 } from '../setup/gql-client/gql-execute';
 
+/** @deprecated */
 export interface GraphQLTestClient {
   query: GqlExecute;
   mutate: GqlExecute;
@@ -12,9 +13,8 @@ export interface GraphQLTestClient {
   email?: string;
 }
 
-export const createGraphqlClient = (
-  app: INestApplication,
-): GraphQLTestClient => {
+/** @deprecated */
+export const createGraphqlClient = (app: TestApp): GraphQLTestClient => {
   const url = app.get(ConfigService).hostUrl$.value + 'graphql';
   let authToken = '';
   let email: string | undefined = undefined;

@@ -3,6 +3,7 @@ import { graphql, type InputOf } from '~/graphql';
 import { type TestApp } from './create-app';
 import { createSession } from './create-session';
 
+/** @deprecated use multiple {@link import('../setup').Tester} instead  */
 export async function login(app: TestApp, input: InputOf<typeof LoginDoc>) {
   const res = await app.graphql.mutate(LoginDoc, { input });
   app.graphql.email = input.email;
@@ -18,11 +19,13 @@ export const LoginDoc = graphql(`
   }
 `);
 
+/** @deprecated use an admin tester instead  */
 export const loginAsAdmin = async (app: TestApp) => {
   const { email, password } = app.get(ConfigService).rootUser;
   await login(app, { email, password });
 };
 
+/** @deprecated use an admin tester instead  */
 export const runAsAdmin = async <R>(
   app: TestApp,
   adminExecution: (app: TestApp) => Promise<R> | R,
@@ -32,6 +35,7 @@ export const runAsAdmin = async <R>(
     return await adminExecution(app);
   });
 
+/** @deprecated use multiple {@link import('../setup').Tester} instead  */
 export const runInIsolatedSession = async <R>(
   app: TestApp,
   execution: () => Promise<R> | R,
