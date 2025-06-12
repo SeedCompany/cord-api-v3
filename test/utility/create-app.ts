@@ -1,4 +1,3 @@
-import { faker } from '@faker-js/faker';
 import { afterAll } from '@jest/globals';
 import { Test } from '@nestjs/testing';
 import { andCall } from '~/common';
@@ -7,16 +6,11 @@ import { HttpAdapter, type NestHttpApplication } from '~/core/http';
 import { LogLevel } from '~/core/logger';
 import { LevelMatcher } from '~/core/logger/level-matcher';
 import { AppModule } from '../../src/app.module';
+import { ephemeralGel } from '../setup/gel-setup';
 import {
   createGraphqlClient,
   type GraphQLTestClient,
 } from './create-graphql-client';
-import { ephemeralGel } from './gel-setup';
-
-// Patch faker email to be more unique
-const origEmail = faker.internet.email.bind(faker.internet);
-faker.internet.email = (...args) =>
-  origEmail(...(args as any)).replace('@', `.${Date.now()}@`);
 
 export interface TestApp extends NestHttpApplication {
   graphql: GraphQLTestClient;
