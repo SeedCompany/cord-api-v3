@@ -1,7 +1,7 @@
 import { type TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/core';
 import { expect } from '@jest/globals';
 import { asNonEmptyArray } from '@seedcompany/common';
-import got, { type StrictOptions } from 'got';
+import got, { type PromiseCookieJar, type StrictOptions } from 'got';
 import { print } from 'graphql';
 import type { HasRequiredKeys } from 'type-fest';
 import { type ExecutionResult, GqlError, GqlResult } from './gql-result';
@@ -63,4 +63,14 @@ function validateResult<TData>(
     throw GqlError.from(errors[0]);
   }
   expect(res.data).toBeTruthy();
+}
+
+export class CookieJar implements PromiseCookieJar {
+  private readonly cookies = new Map<string, string>();
+  async getCookieString(url: string) {
+    return this.cookies.get(url) ?? '';
+  }
+  async setCookie(rawCookie: string, url: string) {
+    this.cookies.set(url, rawCookie);
+  }
 }
