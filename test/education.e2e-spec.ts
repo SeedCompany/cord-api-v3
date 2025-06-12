@@ -3,34 +3,29 @@ import { beforeAll, describe, expect, it } from '@jest/globals';
 import { times } from 'lodash';
 import { isValidId } from '~/common';
 import { graphql } from '~/graphql';
+import { createEducation } from './operations/education';
 import {
   createApp,
   createTesterWithRole,
   type IdentifiedTester,
-  type TestApp,
 } from './setup';
-import { createEducation, fragments } from './utility';
+import { fragments } from './utility';
 
 describe('Education e2e', () => {
-  let app: TestApp;
   let user: IdentifiedTester;
 
   beforeAll(async () => {
-    app = await createApp();
+    const app = await createApp();
     user = await createTesterWithRole(app, 'FieldOperationsDirector');
   });
 
   it('create a education', async () => {
-    const education = await createEducation(user.legacyApp, {
-      user: user.identity.id,
-    });
+    const education = await user.apply(createEducation());
     expect(education.id).toBeDefined();
   });
 
   it('read one education by id', async () => {
-    const education = await createEducation(user.legacyApp, {
-      user: user.identity.id,
-    });
+    const education = await user.apply(createEducation());
 
     const { education: actual } = await user.run(
       graphql(
@@ -55,9 +50,7 @@ describe('Education e2e', () => {
 
   // UPDATE EDUCATION
   it('update education', async () => {
-    const education = await createEducation(user.legacyApp, {
-      user: user.identity.id,
-    });
+    const education = await user.apply(createEducation());
     const newInstitution = faker.company.name();
 
     const result = await user.run(
@@ -88,9 +81,7 @@ describe('Education e2e', () => {
 
   // DELETE EDUCATION
   it.skip('delete education', async () => {
-    const education = await createEducation(user.legacyApp, {
-      user: user.identity.id,
-    });
+    const education = await user.apply(createEducation());
 
     const result = await user.run(
       graphql(`
@@ -113,9 +104,7 @@ describe('Education e2e', () => {
     // create 2 educations
     const numEducations = 2;
     await Promise.all(
-      times(numEducations).map(() =>
-        createEducation(user.legacyApp, { user: user.identity.id }),
-      ),
+      times(numEducations).map(() => user.apply(createEducation())),
     );
 
     const result = await user.run(
