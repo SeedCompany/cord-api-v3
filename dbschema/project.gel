@@ -23,34 +23,34 @@ module default {
     departmentId: str {
       constraint exclusive;
       constraint expression on (<int32>__subject__ > 0 and len(__subject__) = 5);
-      rewrite insert, update using (
-        if (
-          not exists .departmentId and
-          .status <= Project::Status.Active and
-          .step >= Project::Step.PendingFinanceConfirmation
-        ) then ((
-          with block := (
-            if __subject__ is MultiplicationTranslationProject then (
-              assert_exists(
-                assert_exists(
-                  (select __subject__.partnerships filter .primary).partner,
-                  message := "Project must have a primary partnership"
-                ).departmentIdBlock,
-                message := "Available Department IDs have not been declared"
-              )
-            ) else (
-              assert_exists(
-                assert_exists(
-                  __subject__.primaryLocation,
-                  message := "Project must have a primary location"
-                ).fundingAccount,
-                message := "Project's primary location must have a funding account"
-              ).departmentIdBlock
-            )
-          )
-          select assert_exists(block.nextAvailable, message := "No department ID is available")
-        )) else .departmentId
-      );
+      # rewrite insert, update using (
+      #   if (
+      #     not exists .departmentId and
+      #     .status <= Project::Status.Active and
+      #     .step >= Project::Step.PendingFinanceConfirmation
+      #   ) then ((
+      #     with block := (
+      #       if __subject__ is MultiplicationTranslationProject then (
+      #         assert_exists(
+      #           assert_exists(
+      #             (select __subject__.partnerships filter .primary).partner,
+      #             message := "Project must have a primary partnership"
+      #           ).departmentIdBlock,
+      #           message := "Available Department IDs have not been declared"
+      #         )
+      #       ) else (
+      #         assert_exists(
+      #           assert_exists(
+      #             __subject__.primaryLocation,
+      #             message := "Project must have a primary location"
+      #           ).fundingAccount,
+      #           message := "Project's primary location must have a funding account"
+      #         ).departmentIdBlock
+      #       )
+      #     )
+      #     select assert_exists(block.nextAvailable, message := "No department ID is available")
+      #   )) else .departmentId
+      # );
     };
 
     required step: Project::Step {
@@ -127,29 +127,12 @@ module default {
     when (exists __new__.mouStart and exists __new__.mouEnd)  
     do (
       with
-        reportRanges := Project::create_periodic_report_ranges(
-          __new__.mouStart,
-          __new__.mouEnd,
-          '3'
-        ),
-        insertedFinancialReports := (
-          select 
-          if __new__.financialReportPeriod = default::ReportPeriod.Monthly then (
-            with
-              financialReportRanges := Project::create_periodic_report_ranges(
-                __new__.mouStart,
-                __new__.mouEnd,
-                '1'
-              ),
-              financialReports := Project::insert_financial_reports(array_agg(financialReportRanges), __new__)
-            select financialReports
-          ) else if __new__.financialReportPeriod = default::ReportPeriod.Quarterly then (
-              select Project::insert_financial_reports(array_agg(reportRanges), __new__)
-            ) else (
-              select <default::FinancialReport>{}
-            )
-        ),
-        insertedNarrativeAndProgressReports := Project::insert_narrative_and_progress_reports(array_agg(reportRanges), __new__)
+        insertedFinancialReports := Project::insert_financial_reports(__new__, 
+          <array<default::FinancialReport>>{}),
+        insertedNarrativeAndProgressReports := Project::insert_narrative_and_progress_reports(__new__,
+          <array<default::PeriodicReport>>{}),
+        debug := log_it("In createPeriodicReports - fr", <json>array_agg(insertedFinancialReports)),
+        debug := log_it("In createPeriodicReports - nr", <json>array_agg(insertedNarrativeAndProgressReports))
       select insertedFinancialReports union insertedNarrativeAndProgressReports
     );
 
@@ -165,15 +148,29 @@ module default {
         oldMouStart := __old__.mouStart,
         newMouEnd := __new__.mouEnd,
         oldMouEnd := __old__.mouEnd,
-        monthlyReportRanges := Project::create_periodic_report_ranges(
-          __new__.mouStart,
-          __new__.mouEnd,
-          '1'
+        monthlyReportRanges := (
+          select
+          if not exists __new__.mouStart or not exists __new__.mouEnd then (
+            select <range<cal::local_date>>{}
+          ) else (
+            Project::create_periodic_report_ranges(
+              assert_exists(__new__.mouStart),
+              assert_exists(__new__.mouEnd),
+              '1'
+            )
+          )
         ),        
-        quarterlyReportRanges := Project::create_periodic_report_ranges(
-          __new__.mouStart,
-          __new__.mouEnd,
-          '3'
+        quarterlyReportRanges := (
+          select
+          if not exists __new__.mouStart or not exists __new__.mouEnd then (
+            select <range<cal::local_date>>{}
+          ) else ( 
+            Project::create_periodic_report_ranges(
+              assert_exists(__new__.mouStart),
+              assert_exists(__new__.mouEnd),
+              '3'
+            )
+          )
         ),
         financialReports := (
           select default::FinancialReport
@@ -184,7 +181,7 @@ module default {
             filter not exists .reportFile
         ),                 
         narrativeAndProgressReports := (
-          select NarrativeReport union ProgressReport
+          select PeriodicReport
           filter .container.id = __old__.id
         ),
         narrativeAndProgressReportsForDeletion := (
@@ -199,36 +196,33 @@ module default {
           delete report
         )
       # financial report period was deleted - delete financial reports
-      ) else if not exists __new__.financialReportPeriod then (
-        for report in financialReportsForDeletion 
-        union (
-          delete report
-        )
-      # start date is moved forward or end date is moved backward (contraction) - delete all
-      # reports that are not in the new range
-      ) else if (__new__.mouStart > __old__.mouStart) ?? false or (__new__.mouEnd < __old__.mouEnd) ?? false then (
-          for report in financialReportsForDeletion union narrativeAndProgressReportsForDeletion  
-          union (
-            delete report
-            filter report.period not in monthlyReportRanges union quarterlyReportRanges
-          )
-      # financial report period changes - delete all financial reports and insert new ones
-      ) else if __old__.financialReportPeriod ?!= __new__.financialReportPeriod then (
-        with
-        insertedFinancialReports := Project::insert_financial_reports(__new__, array_agg(financialReports),
-          array_agg(monthlyReportRanges), array_agg(quarterlyReportRanges))
-        for report in financialReportsForDeletion 
-        union (
-          delete report
-        )
-      # start or end dates otherwise change (expansion) - insert all new reports
+      # ) else if not exists __new__.financialReportPeriod then (
+      #   for report in financialReportsForDeletion 
+      #   union (
+      #     delete report
+      #   )
+      # # start date is moved forward or end date is moved backward (contraction) - delete all
+      # # reports that are not in the new range
+      # ) else if (__new__.mouStart > __old__.mouStart) ?? false or (__new__.mouEnd < __old__.mouEnd) ?? false then (
+      #     for report in financialReportsForDeletion union narrativeAndProgressReportsForDeletion  
+      #     union (
+      #       delete report
+      #       filter report.period not in (monthlyReportRanges union quarterlyReportRanges)
+      #     )
+      # # financial report period changes - delete all financial reports and insert new ones
+      # ) else if __old__.financialReportPeriod ?!= __new__.financialReportPeriod then (
+      #   with
+      #   insertedFinancialReports := Project::insert_financial_reports(__new__, array_agg(financialReports))
+      #   for report in financialReportsForDeletion 
+      #   union (
+      #     delete report
+      #   )
+      # # start or end dates otherwise change (expansion) - insert all new reports
       ) else if newMouStart ?!= oldMouStart or newMouEnd ?!= oldMouEnd then (
         with
-          insertedFinancialReports := Project::insert_financial_reports(__new__, array_agg(financialReports),
-            array_agg(monthlyReportRanges), array_agg(quarterlyReportRanges))
-        select Project::insert_narrative_and_progress_reports(__new__, array_agg(quarterlyReportRanges),
-          array_agg(narrativeAndProgressReports))
-      # nothing changes
+          insertedFinancialReports := Project::insert_financial_reports(__new__, array_agg(financialReports))
+        select Project::insert_narrative_and_progress_reports(__new__, array_agg(narrativeAndProgressReports))
+      # # nothing changes
       ) else (
         select <PeriodicReport>{}
       )
@@ -327,6 +321,7 @@ module Project {
     monthInterval: str) -> set of range<cal::local_date>
     using (
       with
+        # debug := default::log_it("In create_periodic_report_ranges", <json>array_agg({<str>startDate, <str>endDate, monthInterval})),      
         reportingPeriod := range(<cal::local_date>startDate, <cal::local_date>endDate),
         reportPeriodStartDates := range_unpack(reportingPeriod, <cal::date_duration>(monthInterval ++ ' month')),
         reportPeriodRanges := (
@@ -343,91 +338,126 @@ module Project {
       select reportPeriodRanges union additionalReportPeriodRange
   );
 
-  function determine_requested_report_periods(requestedReportPeriods: array<range<cal::local_date>>,
-    existingReports: array<default::PeriodicReport>) -> set of range<cal::local_date>
+  function determine_requested_report_periods(monthInterval: str, newProject: default::Project,
+    existingReports: optional array<default::PeriodicReport>) -> set of range<cal::local_date>
     using (
-      with
-        distinctRequestedReportPeriods := distinct array_unpack(requestedReportPeriods),
-        periodsForInsertion := (
+      select
+      if not exists newProject.mouStart or not exists newProject.mouEnd or not exists monthInterval then (
+        select <range<cal::local_date>>{}
+      ) else (
+        with
+          requestedReportPeriods := Project::create_periodic_report_ranges(
+              assert_exists(newProject.mouStart), assert_exists(newProject.mouEnd), monthInterval
+          ),
+          distinctRequestedReportPeriods := distinct requestedReportPeriods,
+          # If you take these two lines out below no reports are created; with them in it works as expected 
+          debug := default::log_it("In determine_requested_report_periods - interval", <json>monthInterval),
+          debugTwo := default::log_it("In determine_requested_report_periods - range", <json>array_agg(distinctRequestedReportPeriods)),
+        select
+        if exists existingReports then (
           select distinctRequestedReportPeriods
+          # filter out report periods that already exist in current reports
           filter distinctRequestedReportPeriods not in (
             for report in array_unpack(existingReports)
             select report.period
           )
+        ) else (
+          select distinctRequestedReportPeriods
         )
-      select periodsForInsertion
-  );
-
-  function insert_narrative_and_progress_reports(newProject: default::Project,
-    quarterlyReportRanges: array<range<cal::local_date>>,
-    narrativeAndProgressReports: array<default::PeriodicReport>) -> set of default::PeriodicReport
-    using (
-      with
-        periodsForInsertion := Project::determine_requested_report_periods(
-          quarterlyReportRanges, 
-          narrativeAndProgressReports
-        ),
-        narrativeReports := (for reportPeriod in periodsForInsertion
-        union (
-          insert default::NarrativeReport {
-            createdAt := datetime_of_statement(),
-            modifiedAt := datetime_of_statement(),
-            createdBy := assert_exists(global default::currentActor),
-            modifiedBy := assert_exists(global default::currentActor),
-            project := newProject,
-            projectContext := newProject.projectContext,
-            container := newProject,
-            period := reportPeriod,
-          }
-        )),
-        progressReports := (for reportPeriod in periodsForInsertion
-        union (
-          insert default::ProgressReport {
-            createdAt := datetime_of_statement(),
-            modifiedAt := datetime_of_statement(),
-            createdBy := assert_exists(global default::currentActor),
-            modifiedBy := assert_exists(global default::currentActor),
-            project := newProject,
-            projectContext := newProject.projectContext,
-            container := newProject,
-            period := reportPeriod,
-          }
-        ))
-      select narrativeReports union progressReports
+      )
     );
 
-  function insert_financial_reports(newProject: default::Project,
-    financialReports: array<default::FinancialReport>,    
-    monthlyReportRanges: array<range<cal::local_date>>,
-    quarterlyReportRanges: array<range<cal::local_date>>) -> set of default::PeriodicReport
+  function insert_narrative_and_progress_reports(newProject: default::Project,
+    narrativeAndProgressReports: optional array<default::PeriodicReport>) -> set of default::PeriodicReport
     using (
       with
-        periodsForInsertion := (
-          select
-          if newProject.financialReportPeriod = default::ReportPeriod.Monthly then (
-            select Project::determine_requested_report_periods(
-                monthlyReportRanges,
-                financialReports
-              )
-          ) else (
-              select Project::determine_requested_report_periods(
-                quarterlyReportRanges,
-                financialReports
-              ) 
-          ) 
-        )
-        select (for reportPeriod in periodsForInsertion
-        union (
-          insert default::FinancialReport {
-            createdAt := datetime_of_statement(),
-            modifiedAt := datetime_of_statement(),
-            createdBy := assert_exists(global default::currentActor),
-            modifiedBy := assert_exists(global default::currentActor),
-            project := newProject,
-            projectContext := newProject.projectContext,
-            container := newProject,
-            period := reportPeriod,
+        # debug := default::log_it("In insert_narrative_and_progress_reports", <json>{}),
+        periodsForInsertion := Project::determine_requested_report_periods(
+          '3',
+          newProject, 
+          narrativeAndProgressReports
+        ),
+        narrativeReports := (
+          for reportPeriod in periodsForInsertion
+          union (
+            insert default::NarrativeReport {
+              createdAt := datetime_of_statement(),
+              modifiedAt := datetime_of_statement(),
+              createdBy := assert_exists(global default::currentActor),
+              modifiedBy := assert_exists(global default::currentActor),
+              project := newProject,
+              projectContext := newProject.projectContext,
+              container := newProject,
+              period := reportPeriod,
+            }
+          )
+        ),
+        projectWithEngagements := (
+          select newProject {
+            engagements := .<project[is default::LanguageEngagement]
           }
-        ))
-    );    
+        ),
+        progressReports := (
+          for reportPeriod in periodsForInsertion
+          union (
+            for engagement in projectWithEngagements.engagements
+            union (
+              insert default::ProgressReport {
+                createdAt := datetime_of_statement(),
+                modifiedAt := datetime_of_statement(),
+                createdBy := assert_exists(global default::currentActor),
+                modifiedBy := assert_exists(global default::currentActor),
+                project := newProject,
+                projectContext := newProject.projectContext,
+                engagement := engagement,
+                container := engagement,
+                period := reportPeriod,
+              }
+            )
+          )
+        )
+      select narrativeReports
+    );
+
+  function insert_financial_reports(newProject: default::Project,    
+    financialReports: optional array<default::FinancialReport>) -> set of default::FinancialReport
+    using (
+      select
+      if exists newProject.financialReportPeriod then (
+        with
+          periodsForInsertion := (
+            select
+            if newProject.financialReportPeriod ?= default::ReportPeriod.Monthly then (
+              select Project::determine_requested_report_periods(
+                 '1',
+                  newProject,
+                  financialReports
+                )
+            ) else (
+                select Project::determine_requested_report_periods(
+                  '3',
+                  newProject,
+                  financialReports
+                ) 
+            )
+          )
+        select (
+          for reportPeriod in periodsForInsertion
+          union (
+            insert default::FinancialReport {
+              createdAt := datetime_of_statement(),
+              modifiedAt := datetime_of_statement(),
+              createdBy := assert_exists(global default::currentActor),
+              modifiedBy := assert_exists(global default::currentActor),
+              project := newProject,
+              projectContext := newProject.projectContext,
+              container := newProject,
+              period := reportPeriod,
+            }
+          )
+        )
+      ) else (
+        select <default::FinancialReport>{}
+      )
+    );
 }
