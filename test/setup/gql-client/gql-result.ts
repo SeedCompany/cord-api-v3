@@ -1,10 +1,60 @@
-// noinspection JSUnusedGlobalSymbols
-
 import { expect } from '@jest/globals';
 import { stripIndent } from 'common-tags';
 import { type AsymmetricMatchers, type MatcherFunction } from 'expect';
+import type { FormattedExecutionResult, GraphQLFormattedError } from 'graphql';
+import type { Merge } from 'type-fest';
 import { many, type Many } from '~/common';
-import { GqlError } from './create-graphql-client';
+
+export class GqlResult<TData> implements PromiseLike<TData> {
+  constructor(private readonly result: Promise<TData>) {}
+
+  then: PromiseLike<TData>['then'] = (onFulfilled, onRejected) => {
+    return this.result.then(onFulfilled, onRejected);
+  };
+
+  expectError(expectations: ErrorExpectations = {}): Promise<void> {
+    return expect(this).rejects.toThrowGqlError(expectations);
+  }
+}
+
+export type ExecutionResult<TData> = Omit<
+  FormattedExecutionResult<TData>,
+  'errors'
+> & {
+  errors?: readonly RawGqlError[];
+};
+
+/**
+ * An error class consuming the JSON formatted GraphQL error.
+ */
+export class GqlError extends Error {
+  constructor(readonly raw: RawGqlError) {
+    super();
+  }
+
+  static from(raw: RawGqlError) {
+    const err = new GqlError(raw);
+    err.name = raw.extensions.codes[0]!;
+    // must be after err constructor finishes to capture correctly.
+    let frames = err.stack!.split('\n').slice(5);
+    if (raw.extensions.stacktrace) {
+      frames = [...raw.extensions.stacktrace, ...frames];
+    }
+    err.message = raw.message;
+    const codes = raw.extensions.codes.join(', ');
+    err.stack = `[${codes}]: ${err.message}\n\n` + frames.join('\n');
+    return err;
+  }
+}
+export type RawGqlError = Merge<
+  GraphQLFormattedError,
+  {
+    extensions: {
+      codes: readonly string[];
+      stacktrace?: readonly string[];
+    };
+  }
+>;
 
 // Consider replacing with Jest 29.4+ feature: https://jestjs.io/docs/expect#expectaddequalitytesterstesters
 
