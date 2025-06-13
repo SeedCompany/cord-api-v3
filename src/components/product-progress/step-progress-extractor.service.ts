@@ -66,8 +66,8 @@ export class StepProgressExtractor {
 const parseProgressRow =
   (
     pnp: Pnp,
-    stepColumns: Record<Step, Column>,
-    planningStepColumns: Record<Step, Column>,
+    stepColumns: ReadonlyMap<Step, Column>,
+    planningStepColumns: ReadonlyMap<Step, Column>,
     result: PnpProgressExtractionResult,
   ) =>
   (cell: Cell<ProgressSheet>, index: number): ExtractedRow => {
@@ -81,7 +81,7 @@ const parseProgressRow =
     const steps = entries(stepColumns).flatMap<StepProgressInput>(
       ([step, column]) => {
         const fiscalYear = pnp.planning.cell(
-          planningStepColumns[step],
+          planningStepColumns.get(step)!,
           planningRow,
         );
 
