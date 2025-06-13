@@ -355,8 +355,8 @@ export class ProjectService {
         filter: {
           ...input.filter,
           project: {
-            id: project.id,
             ...input.filter?.project,
+            id: project.id,
           },
         },
       },
@@ -383,8 +383,8 @@ export class ProjectService {
       filter: {
         ...input.filter,
         project: {
-          id: project.id,
           ...input.filter?.project,
+          id: project.id,
         },
       },
     });
