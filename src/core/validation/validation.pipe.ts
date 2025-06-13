@@ -11,7 +11,7 @@ export class ValidationPipe extends BaseValidationPipe {
   constructor(private readonly moduleRef: ModuleRef) {
     super({
       transform: true,
-      skipMissingProperties: true,
+      skipUndefinedProperties: true,
       exceptionFactory: (es) => new ValidationException(es),
     });
   }
