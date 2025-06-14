@@ -83,6 +83,8 @@ export class LanguageRepository extends DtoRepository<
       sponsorEstimatedEndDate: input.sponsorEstimatedEndDate,
       hasExternalFirstScripture: input.hasExternalFirstScripture,
       tags: input.tags,
+      isAvailableForReporting: input.isAvailableForReporting,
+      isWiderComm: input.isWiderComm,
       canDelete: true,
     };
 
@@ -305,6 +307,8 @@ export const languageFilters = filter.define(() => LanguageFilters, {
     'registryOfLanguageVarietiesCode',
   ),
   registryOfLanguageVarietiesCode: filter.propPartialVal(),
+  isAvailableForReporting: filter.propVal(),
+  isWiderComm: filter.propVal(),
   partnerId: filter.pathExists((id) => [
     node('node'),
     relation('in', '', 'language', ACTIVE),

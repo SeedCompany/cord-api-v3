@@ -1,4 +1,4 @@
-import { InputType, ObjectType } from '@nestjs/graphql';
+import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import {
   FilterField,
   type ID,
@@ -65,6 +65,16 @@ export abstract class LanguageFilters {
 
   @FilterField(() => EthnologueLanguageFilters)
   readonly ethnologue?: EthnologueLanguageFilters & {};
+
+  @Field({
+    nullable: true,
+  })
+  readonly isWiderComm?: boolean;
+
+  @Field({
+    nullable: true,
+  })
+  readonly isAvailableForReporting?: boolean;
 }
 
 @InputType()
