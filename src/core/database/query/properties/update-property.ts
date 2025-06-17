@@ -206,7 +206,7 @@ export const conditionalOn = <R>(
   trueQuery: QueryFragment<unknown, R>,
   falseQuery: QueryFragment<unknown, R>,
 ): QueryFragment<unknown, R> => {
-  const imports = [...new Set([conditionVar, ...scope])];
+  const imports = [...new Set([varInExp(conditionVar), ...scope])];
   return (query) =>
     query.subQuery((sub) =>
       sub

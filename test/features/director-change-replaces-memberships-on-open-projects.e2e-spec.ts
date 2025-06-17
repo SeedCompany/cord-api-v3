@@ -1,3 +1,4 @@
+import { entries, mapEntries } from '@seedcompany/common';
 import { DateTime } from 'luxon';
 import { type ID, Role } from '~/common';
 import { graphql } from '~/graphql';
@@ -63,6 +64,15 @@ it('director change replaces memberships on open projects', async () => {
         userId: directors.old.id,
         roles: [Role.RegionalDirector],
         inactiveAt: DateTime.now().plus({ minute: 1 }).toISO(),
+      });
+      return project;
+    })(),
+    hasMemberIncludingOtherRoles: await (async () => {
+      const project = await createProject(app);
+      await createProjectMember(app, {
+        projectId: project.id,
+        userId: directors.old.id,
+        roles: [Role.RegionalDirector, Role.ProjectManager],
       });
       return project;
     })(),
@@ -138,33 +148,13 @@ it('director change replaces memberships on open projects', async () => {
   };
 
   const getResults = async () => {
-    const results = {
-      needsSwapA: await fetchMembers(app, projects.needsSwapA.id),
-      needsSwapB: await fetchMembers(app, projects.needsSwapB.id),
-      doesNotHaveMember: await fetchMembers(app, projects.doesNotHaveMember.id),
-      hasMemberButInactive: await fetchMembers(
-        app,
-        projects.hasMemberButInactive.id,
-      ),
-      alreadyHasRoleFilled: await fetchMembers(
-        app,
-        projects.alreadyHasRoleFilled.id,
-      ),
-      alreadyHasNewDirectorActive: await fetchMembers(
-        app,
-        projects.alreadyHasNewDirectorActive.id,
-      ),
-      alreadyHasNewDirectorInactive: await fetchMembers(
-        app,
-        projects.alreadyHasNewDirectorInactive.id,
-      ),
-      alreadyHasNewDirectorWithoutRole: await fetchMembers(
-        app,
-        projects.alreadyHasNewDirectorWithoutRole.id,
-      ),
-      closed: await fetchMembers(app, projects.closed.id),
-    };
-
+    const resultList = await Promise.all(
+      entries(projects).map(async ([key, project]) => {
+        const results = await fetchMembers(app, project.id);
+        return [key, results] as const;
+      }),
+    );
+    const results = mapEntries(resultList, (i) => i).asRecord;
     return {
       get: (project: keyof typeof results, key: keyof typeof directors) => {
         const member = results[project].find(
@@ -200,6 +190,14 @@ it('director change replaces memberships on open projects', async () => {
   expect(before.get('hasMemberButInactive', 'old')).toEqual(InactiveRD);
   expect(before.get('hasMemberButInactive', 'new')).toBeUndefined();
   expect(before.get('hasMemberButInactive', 'unrelated')).toBeUndefined();
+  expect(before.get('hasMemberIncludingOtherRoles', 'old')).toEqual({
+    active: true,
+    roles: [Role.RegionalDirector, Role.ProjectManager],
+  });
+  expect(before.get('hasMemberIncludingOtherRoles', 'new')).toBeUndefined();
+  expect(
+    before.get('hasMemberIncludingOtherRoles', 'unrelated'),
+  ).toBeUndefined();
   expect(before.get('alreadyHasRoleFilled', 'old')).toBeUndefined();
   expect(before.get('alreadyHasRoleFilled', 'new')).toBeUndefined();
   expect(before.get('alreadyHasRoleFilled', 'unrelated')).toEqual(ActiveRD);
@@ -264,6 +262,14 @@ it('director change replaces memberships on open projects', async () => {
   expect(after.get('hasMemberButInactive', 'old')).toEqual(InactiveRD);
   expect(after.get('hasMemberButInactive', 'new')).toBeUndefined();
   expect(after.get('hasMemberButInactive', 'unrelated')).toBeUndefined();
+  expect(after.get('hasMemberIncludingOtherRoles', 'old')).toEqual({
+    active: true, // still active
+    roles: [Role.ProjectManager], // but without RD
+  });
+  expect(after.get('hasMemberIncludingOtherRoles', 'new')).toEqual(ActiveRD);
+  expect(
+    after.get('hasMemberIncludingOtherRoles', 'unrelated'),
+  ).toBeUndefined();
   expect(after.get('alreadyHasRoleFilled', 'old')).toBeUndefined();
   expect(after.get('alreadyHasRoleFilled', 'new')).toBeUndefined();
   expect(after.get('alreadyHasRoleFilled', 'unrelated')).toEqual(ActiveRD);
