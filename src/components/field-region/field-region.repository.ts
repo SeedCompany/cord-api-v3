@@ -14,14 +14,17 @@ import {
   ACTIVE,
   createNode,
   createRelationships,
+  filter,
   matchProps,
   merge,
   paginate,
   sorting,
 } from '~/core/database/query';
+import { fieldZoneFilters } from '../field-zone/field-zone.repository';
 import {
   type CreateFieldRegion,
   FieldRegion,
+  FieldRegionFilters,
   type FieldRegionListInput,
   type UpdateFieldRegion,
 } from './dto';
@@ -102,13 +105,14 @@ export class FieldRegionRepository extends DtoRepository(FieldRegion) {
         );
   }
 
-  async list({ filter, ...input }: FieldRegionListInput) {
+  async list(input: FieldRegionListInput) {
     if (!this.privileges.can('read')) {
       return SecuredList.Redacted;
     }
     const result = await this.db
       .query()
       .match(node('node', 'FieldRegion'))
+      .apply(fieldRegionFilters(input.filter))
       .apply(sorting(FieldRegion, input))
       .apply(paginate(input, this.hydrate()))
       .first();
@@ -128,3 +132,14 @@ export class FieldRegionRepository extends DtoRepository(FieldRegion) {
       .run();
   }
 }
+
+export const fieldRegionFilters = filter.define(() => FieldRegionFilters, {
+  id: filter.baseNodeProp(),
+  fieldZone: filter.sub(() => fieldZoneFilters)((sub) =>
+    sub.match([
+      node('outer'),
+      relation('out', '', 'zone', ACTIVE),
+      node('node', 'FieldZone'),
+    ]),
+  ),
+});

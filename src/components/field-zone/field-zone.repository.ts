@@ -15,6 +15,7 @@ import {
   ACTIVE,
   createNode,
   createRelationships,
+  filter,
   matchProps,
   merge,
   paginate,
@@ -23,6 +24,7 @@ import {
 import {
   type CreateFieldZone,
   FieldZone,
+  FieldZoneFilters,
   type FieldZoneListInput,
   type UpdateFieldZone,
 } from './dto';
@@ -121,13 +123,14 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
     await query.run();
   }
 
-  async list({ filter, ...input }: FieldZoneListInput) {
+  async list(input: FieldZoneListInput) {
     if (!this.privileges.can('read')) {
       return SecuredList.Redacted;
     }
     const result = await this.db
       .query()
       .match(node('node', 'FieldZone'))
+      .apply(fieldZoneFilters(input.filter))
       .apply(sorting(FieldZone, input))
       .apply(paginate(input, this.hydrate()))
       .first();
@@ -147,3 +150,7 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
       .run();
   }
 }
+
+export const fieldZoneFilters = filter.define(() => FieldZoneFilters, {
+  id: filter.baseNodeProp(),
+});
