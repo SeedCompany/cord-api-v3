@@ -13,6 +13,7 @@ import {
   path,
   variable,
 } from '~/core/database/query';
+import { fieldRegionFilters } from '../field-region/field-region.repository';
 import { locationFilters } from '../location/location.repository';
 import { partnershipFilters } from '../partnership/partnership.repository';
 import { ProjectFilters } from './dto';
@@ -105,6 +106,13 @@ export const projectFilters = filter.define(() => ProjectFilters, {
       node('outer'),
       relation('out', '', 'primaryLocation', ACTIVE),
       node('node', 'Location'),
+    ]),
+  ),
+  fieldRegion: filter.sub(() => fieldRegionFilters)((sub) =>
+    sub.match([
+      node('outer'),
+      relation('out', '', 'fieldRegion', ACTIVE),
+      node('node', 'FieldRegion'),
     ]),
   ),
   sensitivity: ({ value, query }) =>
