@@ -33,6 +33,7 @@ export class RegionsZoneChangesAppliesDirectorChangeToProjectMembersHandler {
       oldDirector.id,
       newDirector.id,
       'FieldOperationsDirector',
+      event.updated.id,
     );
 
     this.logger.notice(

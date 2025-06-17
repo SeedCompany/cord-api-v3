@@ -77,11 +77,13 @@ export class ProjectMemberGelRepository
     oldDirector: ID<'User'>,
     newDirector: ID<'User'>,
     role: Role,
+    region?: ID<'FieldRegion'>,
   ) {
     return await this.db.run(this.replaceMembershipsOnOpenProjectsQuery, {
       oldDirector,
       newDirector,
       role,
+      region,
     });
   }
   private readonly replaceMembershipsOnOpenProjectsQuery = e.params(
@@ -89,10 +91,12 @@ export class ProjectMemberGelRepository
       oldDirector: e.uuid,
       newDirector: e.uuid,
       role: e.Role,
+      region: e.optional(e.uuid),
     },
     ($) => {
       const oldDirector = e.cast(e.User, $.oldDirector);
       const newDirector = e.cast(e.User, $.newDirector);
+      const region = e.cast(e.FieldRegion, $.region);
 
       const members = e.select(e.Project.members, (member) => ({
         filter: e.all(
@@ -101,6 +105,14 @@ export class ProjectMemberGelRepository
             e.op(member.active, '=', true),
             e.op($.role, 'in', member.roles),
             e.op(member.project.status, 'in', e.set('Active', 'InDevelopment')),
+            e.op(
+              'if',
+              e.op('exists', region),
+              'then',
+              e.op(member.project.fieldRegion, '=', region),
+              'else',
+              true,
+            ),
           ),
         ),
       }));
