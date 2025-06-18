@@ -15,11 +15,12 @@ import {
   ACTIVE,
   createNode,
   createRelationships,
+  defineSorters,
   filter,
   matchProps,
   merge,
   paginate,
-  sorting,
+  sortWith,
 } from '~/core/database/query';
 import {
   type CreateFieldZone,
@@ -131,7 +132,7 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
       .query()
       .match(node('node', 'FieldZone'))
       .apply(fieldZoneFilters(input.filter))
-      .apply(sorting(FieldZone, input))
+      .apply(sortWith(fieldZoneSorters, input))
       .apply(paginate(input, this.hydrate()))
       .first();
     return result!; // result from paginate() will always have 1 row.
@@ -154,3 +155,5 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
 export const fieldZoneFilters = filter.define(() => FieldZoneFilters, {
   id: filter.baseNodeProp(),
 });
+
+export const fieldZoneSorters = defineSorters(FieldZone, {});

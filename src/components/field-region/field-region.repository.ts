@@ -14,13 +14,17 @@ import {
   ACTIVE,
   createNode,
   createRelationships,
+  defineSorters,
   filter,
   matchProps,
   merge,
   paginate,
-  sorting,
+  sortWith,
 } from '~/core/database/query';
-import { fieldZoneFilters } from '../field-zone/field-zone.repository';
+import {
+  fieldZoneFilters,
+  fieldZoneSorters,
+} from '../field-zone/field-zone.repository';
 import {
   type CreateFieldRegion,
   FieldRegion,
@@ -113,7 +117,7 @@ export class FieldRegionRepository extends DtoRepository(FieldRegion) {
       .query()
       .match(node('node', 'FieldRegion'))
       .apply(fieldRegionFilters(input.filter))
-      .apply(sorting(FieldRegion, input))
+      .apply(sortWith(fieldRegionSorters, input))
       .apply(paginate(input, this.hydrate()))
       .first();
     return result!; // result from paginate() will always have 1 row.
@@ -142,4 +146,17 @@ export const fieldRegionFilters = filter.define(() => FieldRegionFilters, {
       node('node', 'FieldZone'),
     ]),
   ),
+});
+
+export const fieldRegionSorters = defineSorters(FieldRegion, {
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  'fieldZone.*': (query, input) =>
+    query
+      .with('node as region')
+      .match([
+        node('region'),
+        relation('out', '', 'zone', ACTIVE),
+        node('node', 'FieldZone'),
+      ])
+      .apply(sortWith(fieldZoneSorters, input)),
 });
