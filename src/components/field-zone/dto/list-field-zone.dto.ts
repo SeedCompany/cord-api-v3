@@ -7,12 +7,16 @@ import {
   SecuredList,
   SortablePaginationInput,
 } from '~/common';
+import { UserFilters } from '../../user/dto';
 import { FieldZone } from './field-zone.dto';
 
 @InputType()
 export abstract class FieldZoneFilters {
   @IdField({ optional: true })
   readonly id?: ID<'FieldZone'>;
+
+  @FilterField(() => UserFilters)
+  readonly director?: UserFilters & {};
 }
 
 @InputType()

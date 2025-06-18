@@ -22,6 +22,7 @@ import {
   paginate,
   sortWith,
 } from '~/core/database/query';
+import { userFilters, userSorters } from '../user/user.repository';
 import {
   type CreateFieldZone,
   FieldZone,
@@ -154,6 +155,24 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
 
 export const fieldZoneFilters = filter.define(() => FieldZoneFilters, {
   id: filter.baseNodeProp(),
+  director: filter.sub(() => userFilters)((sub) =>
+    sub.match([
+      node('outer'),
+      relation('out', '', 'director', ACTIVE),
+      node('node', 'User'),
+    ]),
+  ),
 });
 
-export const fieldZoneSorters = defineSorters(FieldZone, {});
+export const fieldZoneSorters = defineSorters(FieldZone, {
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  'director.*': (query, input) =>
+    query
+      .with('node as zone')
+      .match([
+        node('zone'),
+        relation('out', '', 'director', ACTIVE),
+        node('node', 'User'),
+      ])
+      .apply(sortWith(userSorters, input)),
+});

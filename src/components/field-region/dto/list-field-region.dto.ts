@@ -8,12 +8,16 @@ import {
   SortablePaginationInput,
 } from '~/common';
 import { FieldZoneFilters } from '../../field-zone/dto';
+import { UserFilters } from '../../user/dto';
 import { FieldRegion } from './field-region.dto';
 
 @InputType()
 export abstract class FieldRegionFilters {
   @IdField({ optional: true })
   readonly id?: ID<'FieldRegion'>;
+
+  @FilterField(() => UserFilters)
+  readonly director?: UserFilters & {};
 
   @FilterField(() => FieldZoneFilters)
   readonly fieldZone?: FieldZoneFilters & {};

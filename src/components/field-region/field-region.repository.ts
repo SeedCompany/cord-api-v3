@@ -25,6 +25,7 @@ import {
   fieldZoneFilters,
   fieldZoneSorters,
 } from '../field-zone/field-zone.repository';
+import { userFilters, userSorters } from '../user/user.repository';
 import {
   type CreateFieldRegion,
   FieldRegion,
@@ -139,6 +140,13 @@ export class FieldRegionRepository extends DtoRepository(FieldRegion) {
 
 export const fieldRegionFilters = filter.define(() => FieldRegionFilters, {
   id: filter.baseNodeProp(),
+  director: filter.sub(() => userFilters)((sub) =>
+    sub.match([
+      node('outer'),
+      relation('out', '', 'director', ACTIVE),
+      node('node', 'User'),
+    ]),
+  ),
   fieldZone: filter.sub(() => fieldZoneFilters)((sub) =>
     sub.match([
       node('outer'),
@@ -149,6 +157,16 @@ export const fieldRegionFilters = filter.define(() => FieldRegionFilters, {
 });
 
 export const fieldRegionSorters = defineSorters(FieldRegion, {
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  'director.*': (query, input) =>
+    query
+      .with('node as region')
+      .match([
+        node('region'),
+        relation('out', '', 'director', ACTIVE),
+        node('node', 'User'),
+      ])
+      .apply(sortWith(userSorters, input)),
   // eslint-disable-next-line @typescript-eslint/naming-convention
   'fieldZone.*': (query, input) =>
     query
