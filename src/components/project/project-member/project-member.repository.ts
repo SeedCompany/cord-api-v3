@@ -34,6 +34,7 @@ import {
   variable,
   Variable,
 } from '~/core/database/query';
+import { varInExp } from '~/core/database/query-augmentation/subquery';
 import { type FilterFn } from '~/core/database/query/filters';
 import { conditionalOn } from '~/core/database/query/properties/update-property';
 import { userFilters, UserRepository } from '../../user/user.repository';
@@ -332,8 +333,13 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
         modifiedAt: now,
       },
     });
+    const scope = ['project', user instanceof Variable ? varInExp(user) : ''];
+    const userNode =
+      user instanceof Variable
+        ? node(String(user))
+        : node('', 'User', { id: user });
     return (query: Query) =>
-      query.subQuery('project', (sub) =>
+      query.subQuery(scope, (sub) =>
         sub
           .match([
             [
@@ -341,7 +347,7 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
               relation('out', '', 'member', ACTIVE),
               node('node', 'ProjectMember'),
               relation('out', '', 'user', ACTIVE),
-              node('', 'User', { id: user }),
+              userNode,
             ],
             [
               node('node', 'ProjectMember'),
@@ -356,7 +362,7 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
               value: variable(apoc.coll.union('roles.value', [`"${role}"`])),
               now,
               permanentAfter: 0,
-              outputStatsVar: 'inactiveStats',
+              outputStatsVar: 'rolesStats',
             }),
           )
           .apply(
@@ -366,7 +372,7 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
               value: null,
               now,
               permanentAfter: 0,
-              outputStatsVar: 'rolesStats',
+              outputStatsVar: 'inactiveStats',
             }),
           )
           .apply(
@@ -381,8 +387,8 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
           )
           .return('node as member')
           .union()
-          .with('project')
-          .with('project')
+          .with(scope)
+          .with(scope)
           .where(
             not(
               path([
@@ -390,7 +396,7 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
                 relation('out', '', 'member', ACTIVE),
                 node('', 'ProjectMember'),
                 relation('out', '', 'user', ACTIVE),
-                node('', 'User', { id: user }),
+                userNode,
               ]),
             ),
           )
