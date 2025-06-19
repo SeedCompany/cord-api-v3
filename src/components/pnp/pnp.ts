@@ -1,4 +1,5 @@
-import { WorkBook } from '~/common/xlsx.util';
+import { InputException, NotFoundException } from '~/common';
+import { type Sheet, WorkBook } from '~/common/xlsx.util';
 import { type Downloadable, type FileVersion } from '../file/dto';
 import { PlanningSheet } from './planning-sheet';
 import { ProgressSheet } from './progress-sheet';
@@ -28,10 +29,26 @@ export class Pnp {
   }
 
   get planning() {
-    return this.workbook.sheet<PlanningSheet>('Planning');
+    return this.sheet<PlanningSheet>('Planning');
   }
 
   get progress() {
-    return this.workbook.sheet<ProgressSheet>('Progress');
+    return this.sheet<ProgressSheet>('Progress');
+  }
+
+  protected sheet<TSheet extends Sheet>(name: string): TSheet {
+    try {
+      return this.workbook.sheet(name);
+    } catch (e) {
+      if (e instanceof NotFoundException && this.fileName?.match(/\bUBT\b/)) {
+        throw new NotPnPFile(
+          `It appears you are uploading a _budget_ excel file, not a _PnP_ file.`,
+          e,
+        );
+      }
+      throw e;
+    }
   }
 }
+
+export class NotPnPFile extends InputException {}
