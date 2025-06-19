@@ -6,6 +6,7 @@ import * as fs from 'fs/promises';
 // eslint-disable-next-line no-restricted-imports
 import * as lodash from 'lodash';
 import { DateTime, Duration, Interval } from 'luxon';
+import { basename } from 'node:path';
 import { CalendarDate, DateInterval } from '~/common';
 import * as common from '~/common';
 import './polyfills';
@@ -46,7 +47,8 @@ runRepl({
       session,
       sessionFor: session.withRoles,
       Resources,
-      loadPnp: (filepath: string) => Pnp.fromBuffer(readFileSync(filepath)),
+      loadPnp: (filepath: string) =>
+        Pnp.fromBuffer(readFileSync(filepath), basename(filepath)),
     };
   },
 });
