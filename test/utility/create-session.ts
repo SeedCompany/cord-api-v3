@@ -18,18 +18,17 @@ export async function createSession(app: TestApp) {
 }
 
 export async function getUserFromSession(app: TestApp) {
-  const result = await app.graphql.query(
-    graphql(`
-      query SessionUser {
-        session {
-          user {
-            id
-          }
-        }
-      }
-    `),
-  );
+  const result = await app.graphql.query(CurrentUserDoc);
   const user = result.session.user;
   expect(user).toBeTruthy();
   return user!;
 }
+export const CurrentUserDoc = graphql(`
+  query SessionUser {
+    session {
+      user {
+        id
+      }
+    }
+  }
+`);

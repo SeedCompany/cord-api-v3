@@ -7,9 +7,11 @@ import { graphql } from '~/graphql';
 import {
   createSession,
   createTestApp,
+  CurrentUserDoc,
   fragments,
   generateRegisterInput,
   login,
+  LoginDoc,
   logout,
   registerUser,
   type TestApp,
@@ -115,11 +117,50 @@ describe('Authentication e2e', () => {
     expect(actual.phone.value).toBe(fakeUser.phone);
     expect(actual.timezone.value?.name).toBe(fakeUser.timezone);
     expect(actual.about.value).toBe(fakeUser.about);
-
-    return true;
   });
 
-  it('should return true after password changed', async () => {
+  it('disabled users are logged out & cannot login', async () => {
+    const input = await generateRegisterInput();
+    const user = await registerUser(app, input);
+
+    // confirm they're logged in
+    const before = await app.graphql.query(CurrentUserDoc);
+    expect(before.session.user).toBeTruthy();
+
+    await app.graphql.query(
+      graphql(
+        `
+          mutation DisableUser($id: ID!) {
+            updateUser(input: { user: { id: $id, status: Disabled } }) {
+              __typename
+            }
+          }
+        `,
+      ),
+      {
+        id: user.id,
+      },
+    );
+
+    // Confirm mutation logged them out
+    const after = await app.graphql.query(CurrentUserDoc);
+    expect(after.session.user).toBeNull();
+
+    // Confirm they can't log back in
+    await app.graphql
+      .query(LoginDoc, {
+        input: {
+          email: input.email,
+          password: input.password,
+        },
+      })
+      .expectError({
+        message: 'User is disabled',
+        code: ['UserDisabled', 'Authentication', 'Client'],
+      });
+  });
+
+  it('Password changed', async () => {
     const fakeUser = await generateRegisterInput();
 
     const user = await registerUser(app, fakeUser);
