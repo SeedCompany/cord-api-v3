@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { type ID, type Role, ServerException } from '~/common';
+import { type UserStatus } from '../../components/user/dto';
 import { DatabaseService, DbTraceLayer, OnIndex } from '../database';
 import {
   ACTIVE,
@@ -97,27 +98,34 @@ export class AuthenticationRepository {
       .run();
   }
 
-  async getPasswordHash(input: LoginInput) {
+  async getInfoForLogin(input: LoginInput) {
     const result = await this.db
       .query()
-      .raw(
-        `
-    MATCH
-      (:EmailAddress {value: $email})
-      <-[:email {active: true}]-
-      (user:User)
-      -[:password {active: true}]->
-      (password:Property)
-    RETURN
-      password.value as pash
-    `,
-        {
-          email: input.email,
-        },
-      )
-      .asResult<{ pash: string }>()
+      .match([
+        [
+          node('email', 'EmailAddress', {
+            value: input.email,
+          }),
+          relation('in', '', 'email', ACTIVE),
+          node('user', 'User'),
+        ],
+        [
+          node('user'),
+          relation('out', '', 'password', ACTIVE),
+          node('password', 'Property'),
+        ],
+        [
+          node('user'),
+          relation('out', '', 'status', ACTIVE),
+          node('status', 'Property'),
+        ],
+      ])
+      .return<{ passwordHash: string; status: UserStatus }>([
+        'password.value as passwordHash',
+        'status.value as status',
+      ])
       .first();
-    return result?.pash ?? null;
+    return result ?? null;
   }
 
   async connectSessionToUser(input: LoginInput, session: Session) {

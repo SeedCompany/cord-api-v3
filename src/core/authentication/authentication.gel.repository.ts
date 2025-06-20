@@ -64,17 +64,17 @@ export class AuthenticationGelRepository
     },
   );
 
-  async getPasswordHash({ email }: LoginInput) {
-    return await this.db.run(this.getPasswordHashQuery, { email });
+  async getInfoForLogin({ email }: LoginInput) {
+    return await this.db.run(this.getInfoForLoginQuery, { email });
   }
-  private readonly getPasswordHashQuery = e.params(
+  private readonly getInfoForLoginQuery = e.params(
     { email: e.str },
-    ({ email }) => {
-      const identity = e.select(e.Auth.Identity, (identity) => ({
+    ({ email }) =>
+      e.select(e.Auth.Identity, (identity) => ({
         filter_single: e.op(identity.user.email, '=', email),
-      }));
-      return identity.passwordHash;
-    },
+        passwordHash: true,
+        status: identity.user.status,
+      })),
   );
 
   async connectSessionToUser(input: LoginInput, session: Session): Promise<ID> {
