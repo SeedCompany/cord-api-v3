@@ -30,15 +30,16 @@ module default {
           .step >= Project::Step.PendingFinanceConfirmation
         ) then ((
           with block := (
-            if __subject__ is MultiplicationTranslationProject then (
-              assert_exists(
-                assert_exists(
-                  (select __subject__.partnerships filter .primary).partner,
-                  message := "Project must have a primary partnership"
-                ).departmentIdBlock,
+            if __subject__ is MultiplicationTranslationProject then ((
+              with primaryPartnership := assert_exists(
+                __subject__.primaryPartnership,
+                message := "Project must have a primary partnership"
+              )
+              select assert_exists(
+                primaryPartnership.partner.departmentIdBlock,
                 message := "Available Department IDs have not been declared"
               )
-            ) else (
+            )) else (
               assert_exists(
                 assert_exists(
                   __subject__.primaryLocation,
@@ -102,6 +103,13 @@ module default {
     link rootDirectory: Directory;
     
     partnerships := .<project[is Partnership];
+    primaryPartnership := (
+      # avoiding backlink here because of partial path resolution bug
+      # https://github.com/geldata/gel/issues/8633
+      select Partnership
+      filter Partnership.primary and Partnership.project = __source__
+      limit 1
+    );
     
     overloaded link projectContext: Project::Context {
       default := (insert Project::Context {
