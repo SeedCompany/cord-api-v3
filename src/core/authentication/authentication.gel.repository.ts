@@ -280,4 +280,18 @@ export class AuthenticationGelRepository
         set: { user: null },
       })),
   );
+
+  async deactivateAllSessions(user: ID<'User'>) {
+    await this.db.run(this.deactivateAllSessionsQuery, { user });
+  }
+  private readonly deactivateAllSessionsQuery = e.params(
+    { user: e.uuid },
+    ($) => {
+      const user = e.cast(e.User, $.user);
+      return e.update(e.Auth.Session, (s) => ({
+        filter: e.op(s.user, '=', user),
+        set: { user: null },
+      }));
+    },
+  );
 }

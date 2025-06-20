@@ -102,6 +102,10 @@ export class AuthenticationService {
     refresh && (await this.sessionManager.refreshCurrentSession());
   }
 
+  async logoutByUser(user: ID<'User'>) {
+    await this.repo.deactivateAllSessions(user);
+  }
+
   async changePassword(
     oldPassword: string,
     newPassword: string,

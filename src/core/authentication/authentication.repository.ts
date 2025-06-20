@@ -360,6 +360,18 @@ export class AuthenticationRepository {
       .run();
   }
 
+  async deactivateAllSessions(user: ID<'User'>) {
+    await this.db
+      .query()
+      .match([
+        node('user', 'User', { id: user }),
+        relation('out', 'oldRel', 'token', ACTIVE),
+        node('token', 'Token'),
+      ])
+      .setValues({ 'oldRel.active': false })
+      .run();
+  }
+
   @OnIndex()
   private createIndexes() {
     return [
