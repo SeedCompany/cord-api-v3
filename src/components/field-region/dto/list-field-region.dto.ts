@@ -2,15 +2,25 @@ import { InputType, ObjectType } from '@nestjs/graphql';
 import {
   FilterField,
   type ID,
+  IdField,
   PaginatedList,
   SecuredList,
   SortablePaginationInput,
 } from '~/common';
+import { FieldZoneFilters } from '../../field-zone/dto';
+import { UserFilters } from '../../user/dto';
 import { FieldRegion } from './field-region.dto';
 
 @InputType()
 export abstract class FieldRegionFilters {
-  readonly fieldZoneId?: ID;
+  @IdField({ optional: true })
+  readonly id?: ID<'FieldRegion'>;
+
+  @FilterField(() => UserFilters)
+  readonly director?: UserFilters & {};
+
+  @FilterField(() => FieldZoneFilters)
+  readonly fieldZone?: FieldZoneFilters & {};
 }
 
 @InputType()
@@ -19,7 +29,7 @@ export class FieldRegionListInput extends SortablePaginationInput<
 >({
   defaultSort: 'name',
 }) {
-  @FilterField(() => FieldRegionFilters, { internal: true })
+  @FilterField(() => FieldRegionFilters)
   readonly filter?: FieldRegionFilters;
 }
 

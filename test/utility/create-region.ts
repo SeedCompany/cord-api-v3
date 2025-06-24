@@ -47,23 +47,9 @@ const CreateFieldRegionDoc = graphql(
       createFieldRegion(input: { fieldRegion: $input }) {
         fieldRegion {
           ...fieldRegion
-          fieldZone {
-            value {
-              ...fieldZone
-            }
-            canRead
-            canEdit
-          }
-          director {
-            value {
-              ...user
-            }
-            canRead
-            canEdit
-          }
         }
       }
     }
   `,
-  [fragments.fieldRegion, fragments.fieldZone, fragments.user],
+  [fragments.fieldRegion],
 );

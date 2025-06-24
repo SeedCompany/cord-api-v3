@@ -32,8 +32,11 @@ import {
   sorting,
   updateProperty,
   variable,
+  Variable,
 } from '~/core/database/query';
+import { varInExp } from '~/core/database/query-augmentation/subquery';
 import { type FilterFn } from '~/core/database/query/filters';
+import { conditionalOn } from '~/core/database/query/properties/update-property';
 import { userFilters, UserRepository } from '../../user/user.repository';
 import { type ProjectFilters } from '../dto';
 import { projectFilters } from '../project-filters.query';
@@ -44,6 +47,7 @@ import {
   type ProjectMemberListInput,
   type UpdateProjectMember,
 } from './dto';
+import { type MembershipByProjectAndUserInput } from './membership-by-project-and-user.loader';
 
 @Injectable()
 export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
@@ -148,8 +152,29 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
           sub.with('user as node').apply(this.users.hydrateAsNeo4j()),
         )
         .return<{ dto: UnsecuredDto<ProjectMember> }>(
-          merge('props', { user: 'dto' }).as('dto'),
+          merge('props', {
+            project: 'project { .id }',
+            user: 'dto',
+          }).as('dto'),
         );
+  }
+
+  async readManyByProjectAndUser(
+    input: readonly MembershipByProjectAndUserInput[],
+  ) {
+    return await this.db
+      .query()
+      .unwind([...input], 'input')
+      .match([
+        node('project', 'Project', { id: variable('input.project') }),
+        relation('out', '', 'member', ACTIVE),
+        node('node', 'ProjectMember'),
+        relation('out', '', 'user', ACTIVE),
+        node('user', 'User', { id: variable('input.user') }),
+      ])
+      .apply(this.hydrate())
+      .map('dto')
+      .run();
   }
 
   async list({ filter, ...input }: ProjectMemberListInput) {
@@ -201,12 +226,123 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
       .run();
   }
 
+  async addDefaultForRole(
+    role: Role,
+    project: ID<'Project'>,
+    user: ID<'User'>,
+  ) {
+    const now = DateTime.now();
+    await this.db
+      .query()
+      .apply((q) => {
+        q.params.addParam(now, 'now');
+      })
+      .match(node('project', 'Project', { id: project }))
+      .subQuery('project', (sub) =>
+        sub
+          .match([
+            node('project'),
+            relation('out', '', 'member', ACTIVE),
+            node('node', 'ProjectMember'),
+          ])
+          .apply(
+            projectMemberFilters({
+              active: true,
+              roles: [role],
+            }),
+          )
+          .with('count(node) as members')
+          .raw('WHERE members = 0')
+          .return('true as filtered'),
+      )
+      .with('*')
+      .apply(await this.upsertMember(user, role))
+      .return<{ id: ID<'ProjectMember'> }>('project.id as id')
+      .executeAndLogStats();
+  }
+
   async replaceMembershipsOnOpenProjects(
     oldDirector: ID<'User'>,
     newDirector: ID<'User'>,
     role: Role,
+    // This could be replaced with Filters once those are abstracted for Gel.
+    region?: ID<'FieldRegion'>,
   ) {
     const nowVal = DateTime.now();
+    const now = variable('$now');
+    const result = await this.db
+      .query()
+      .apply((q) => {
+        q.params.addParam(nowVal, 'now');
+      })
+      .match([
+        node('project', 'Project'),
+        relation('out', '', 'member', ACTIVE),
+        node('node', 'ProjectMember'),
+      ])
+      .apply(
+        projectMemberFilters({
+          user: { id: oldDirector },
+          active: true,
+          roles: [role],
+          project: {
+            status: ['Active', 'InDevelopment'],
+            ...(region ? { fieldRegion: { id: region } } : {}),
+          },
+        }),
+      )
+      .subQuery('node', (sub) =>
+        sub
+          .match([
+            node('node'),
+            relation('out', '', 'roles', ACTIVE),
+            node('roles', 'Property'),
+          ])
+          .apply(
+            conditionalOn(
+              'size(roles.value) > 1',
+              ['node'],
+              // If there are other roles, remove this role from the membership & keep it active
+              (q) =>
+                q
+                  .apply(
+                    updateProperty({
+                      resource: ProjectMember,
+                      key: 'roles',
+                      value: variable(
+                        apoc.coll.disjunction('roles.value', [`"${role}"`]),
+                      ),
+                      permanentAfter: 0,
+                    }),
+                  )
+                  .return('stats'),
+              // Else then mark the membership inactive & maintain the role
+              (q) =>
+                q
+                  .apply(
+                    updateProperty({
+                      resource: ProjectMember,
+                      key: 'inactiveAt',
+                      value: now,
+                      permanentAfter: 0,
+                    }),
+                  )
+                  .return('stats'),
+            ),
+          )
+          .return('stats as oldMemberStats'),
+      )
+      .with('project')
+      .apply(await this.upsertMember(newDirector, role))
+      .return<{ id: ID }>('project.id as id')
+      .run();
+    return {
+      projects: result.map(({ id }) => id) as readonly ID[],
+      timestampId: nowVal,
+    };
+  }
+
+  protected async upsertMember(user: ID<'User'> | Variable, role: Role) {
     const now = variable('$now');
     const createMember = await createNode(ProjectMember, {
       baseNodeProps: {
@@ -219,32 +355,13 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
         modifiedAt: now,
       },
     });
-    const result = await this.db
-      .query()
-      .raw('', { now: nowVal })
-      .match([
-        node('project', 'Project'),
-        relation('out', '', 'member', ACTIVE),
-        node('node', 'ProjectMember'),
-      ])
-      .apply(
-        projectMemberFilters({
-          user: { id: oldDirector },
-          active: true,
-          roles: [role],
-          project: { status: ['Active', 'InDevelopment'] },
-        }),
-      )
-      .apply(
-        updateProperty({
-          resource: ProjectMember,
-          key: 'inactiveAt',
-          value: now,
-          permanentAfter: 0,
-        }),
-      )
-      .with('project')
-      .subQuery('project', (sub) =>
+    const scope = ['project', user instanceof Variable ? varInExp(user) : ''];
+    const userNode =
+      user instanceof Variable
+        ? node(String(user))
+        : node('', 'User', { id: user });
+    return (query: Query) =>
+      query.subQuery(scope, (sub) =>
         sub
           .match([
             [
@@ -252,7 +369,7 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
               relation('out', '', 'member', ACTIVE),
               node('node', 'ProjectMember'),
               relation('out', '', 'user', ACTIVE),
-              node('', 'User', { id: newDirector }),
+              userNode,
             ],
             [
               node('node', 'ProjectMember'),
@@ -267,7 +384,7 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
               value: variable(apoc.coll.union('roles.value', [`"${role}"`])),
               now,
               permanentAfter: 0,
-              outputStatsVar: 'inactiveStats',
+              outputStatsVar: 'rolesStats',
             }),
           )
           .apply(
@@ -277,7 +394,7 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
               value: null,
               now,
               permanentAfter: 0,
-              outputStatsVar: 'rolesStats',
+              outputStatsVar: 'inactiveStats',
             }),
           )
           .apply(
@@ -292,8 +409,8 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
           )
           .return('node as member')
           .union()
-          .with('project')
-          .with('project')
+          .with(scope)
+          .with(scope)
           .where(
             not(
               path([
@@ -301,7 +418,7 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
                 relation('out', '', 'member', ACTIVE),
                 node('', 'ProjectMember'),
                 relation('out', '', 'user', ACTIVE),
-                node('', 'User', { id: newDirector }),
+                userNode,
               ]),
             ),
           )
@@ -309,17 +426,11 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
           .apply(
             createRelationships(ProjectMember, {
               in: { member: variable('project') },
-              out: { user: ['User', newDirector] },
+              out: { user: user instanceof Variable ? user : ['User', user] },
             }),
           )
           .return('node as member'),
-      )
-      .return<{ id: ID }>('project.id as id')
-      .run();
-    return {
-      projects: result.map(({ id }) => id) as readonly ID[],
-      timestampId: nowVal,
-    };
+      );
   }
 }
 

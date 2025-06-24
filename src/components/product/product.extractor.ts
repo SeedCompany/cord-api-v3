@@ -5,7 +5,7 @@ import { assert } from 'ts-essentials';
 import { type MergeExclusive } from 'type-fest';
 import { type CalendarDate, type DateInterval } from '~/common';
 import { type Cell, type Column, type Row } from '~/common/xlsx.util';
-import { type Downloadable } from '../file/dto';
+import { type Downloadable, type FileVersion } from '../file/dto';
 import {
   extractScripture,
   findStepColumns,
@@ -31,7 +31,7 @@ import { type ProductStep, type ProductStep as Step } from './dto';
 @Injectable()
 export class ProductExtractor {
   async extract(
-    file: Downloadable<unknown>,
+    file: Downloadable<FileVersion>,
     engagementRange: DateInterval | null,
     availableSteps: readonly ProductStep[],
     result: PnpPlanningExtractionResult,
@@ -81,8 +81,8 @@ export class ProductExtractor {
 const parseProductRow =
   (
     pnp: Pnp,
-    stepColumns: Record<Step, Column>,
-    progressStepColumns: Record<Step, Column>,
+    stepColumns: ReadonlyMap<Step, Column>,
+    progressStepColumns: ReadonlyMap<Step, Column>,
     result: PnpPlanningExtractionResult,
   ) =>
   (cell: Cell<PlanningSheet>, index: number): ExtractedRow => {
@@ -94,7 +94,7 @@ const parseProductRow =
     const steps = entries(stepColumns).flatMap(([step, column]) => {
       const plannedCell = sheet.cell(column, row);
       const progressCell = pnp.progress.cell(
-        progressStepColumns[step],
+        progressStepColumns.get(step)!,
         progressRow,
       );
 

@@ -6,6 +6,7 @@ import { AuthenticationGelRepository } from './authentication.gel.repository';
 import { AuthenticationRepository } from './authentication.repository';
 import { AuthenticationService } from './authentication.service';
 import { CryptoService } from './crypto.service';
+import { DisablingUserLogsThemOutHandler } from './handlers/disabling-user-logs-them-out.handler';
 import { Identity } from './identity.service';
 import { JwtService } from './jwt.service';
 import { LoginResolver } from './resolvers/login.resolver';
@@ -38,6 +39,8 @@ import { SessionManager } from './session/session.manager';
     splitDb(AuthenticationRepository, AuthenticationGelRepository),
     JwtService,
     CryptoService,
+
+    DisablingUserLogsThemOutHandler,
   ],
   exports: [Identity],
 })

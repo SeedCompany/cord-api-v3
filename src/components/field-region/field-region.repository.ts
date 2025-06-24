@@ -14,14 +14,22 @@ import {
   ACTIVE,
   createNode,
   createRelationships,
+  defineSorters,
+  filter,
   matchProps,
   merge,
   paginate,
-  sorting,
+  sortWith,
 } from '~/core/database/query';
+import {
+  fieldZoneFilters,
+  fieldZoneSorters,
+} from '../field-zone/field-zone.repository';
+import { userFilters, userSorters } from '../user/user.repository';
 import {
   type CreateFieldRegion,
   FieldRegion,
+  FieldRegionFilters,
   type FieldRegionListInput,
   type UpdateFieldRegion,
 } from './dto';
@@ -102,14 +110,15 @@ export class FieldRegionRepository extends DtoRepository(FieldRegion) {
         );
   }
 
-  async list({ filter, ...input }: FieldRegionListInput) {
+  async list(input: FieldRegionListInput) {
     if (!this.privileges.can('read')) {
       return SecuredList.Redacted;
     }
     const result = await this.db
       .query()
       .match(node('node', 'FieldRegion'))
-      .apply(sorting(FieldRegion, input))
+      .apply(fieldRegionFilters(input.filter))
+      .apply(sortWith(fieldRegionSorters, input))
       .apply(paginate(input, this.hydrate()))
       .first();
     return result!; // result from paginate() will always have 1 row.
@@ -128,3 +137,44 @@ export class FieldRegionRepository extends DtoRepository(FieldRegion) {
       .run();
   }
 }
+
+export const fieldRegionFilters = filter.define(() => FieldRegionFilters, {
+  id: filter.baseNodeProp(),
+  director: filter.sub(() => userFilters)((sub) =>
+    sub.match([
+      node('outer'),
+      relation('out', '', 'director', ACTIVE),
+      node('node', 'User'),
+    ]),
+  ),
+  fieldZone: filter.sub(() => fieldZoneFilters)((sub) =>
+    sub.match([
+      node('outer'),
+      relation('out', '', 'zone', ACTIVE),
+      node('node', 'FieldZone'),
+    ]),
+  ),
+});
+
+export const fieldRegionSorters = defineSorters(FieldRegion, {
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  'director.*': (query, input) =>
+    query
+      .with('node as region')
+      .match([
+        node('region'),
+        relation('out', '', 'director', ACTIVE),
+        node('node', 'User'),
+      ])
+      .apply(sortWith(userSorters, input)),
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  'fieldZone.*': (query, input) =>
+    query
+      .with('node as region')
+      .match([
+        node('region'),
+        relation('out', '', 'zone', ACTIVE),
+        node('node', 'FieldZone'),
+      ])
+      .apply(sortWith(fieldZoneSorters, input)),
+});

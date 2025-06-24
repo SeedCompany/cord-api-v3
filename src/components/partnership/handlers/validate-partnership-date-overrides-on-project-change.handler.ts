@@ -5,7 +5,7 @@ import { OrganizationLoader } from '../../organization';
 import { ProjectUpdatedEvent } from '../../project/events';
 import { PartnershipService } from '../partnership.service';
 
-@EventsHandler(ProjectUpdatedEvent)
+@EventsHandler([ProjectUpdatedEvent, 10])
 export class ValidatePartnershipDateOverridesOnProjectChangeHandler
   implements IEventHandler<ProjectUpdatedEvent>
 {

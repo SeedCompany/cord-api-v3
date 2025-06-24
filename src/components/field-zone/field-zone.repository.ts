@@ -15,14 +15,18 @@ import {
   ACTIVE,
   createNode,
   createRelationships,
+  defineSorters,
+  filter,
   matchProps,
   merge,
   paginate,
-  sorting,
+  sortWith,
 } from '~/core/database/query';
+import { userFilters, userSorters } from '../user/user.repository';
 import {
   type CreateFieldZone,
   FieldZone,
+  FieldZoneFilters,
   type FieldZoneListInput,
   type UpdateFieldZone,
 } from './dto';
@@ -121,14 +125,15 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
     await query.run();
   }
 
-  async list({ filter, ...input }: FieldZoneListInput) {
+  async list(input: FieldZoneListInput) {
     if (!this.privileges.can('read')) {
       return SecuredList.Redacted;
     }
     const result = await this.db
       .query()
       .match(node('node', 'FieldZone'))
-      .apply(sorting(FieldZone, input))
+      .apply(fieldZoneFilters(input.filter))
+      .apply(sortWith(fieldZoneSorters, input))
       .apply(paginate(input, this.hydrate()))
       .first();
     return result!; // result from paginate() will always have 1 row.
@@ -147,3 +152,27 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
       .run();
   }
 }
+
+export const fieldZoneFilters = filter.define(() => FieldZoneFilters, {
+  id: filter.baseNodeProp(),
+  director: filter.sub(() => userFilters)((sub) =>
+    sub.match([
+      node('outer'),
+      relation('out', '', 'director', ACTIVE),
+      node('node', 'User'),
+    ]),
+  ),
+});
+
+export const fieldZoneSorters = defineSorters(FieldZone, {
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  'director.*': (query, input) =>
+    query
+      .with('node as zone')
+      .match([
+        node('zone'),
+        relation('out', '', 'director', ACTIVE),
+        node('node', 'User'),
+      ])
+      .apply(sortWith(userSorters, input)),
+});

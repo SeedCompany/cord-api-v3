@@ -3,7 +3,7 @@ import { EventsHandler, type IEventHandler } from '~/core';
 import { ProjectUpdatedEvent } from '../../project/events';
 import { EngagementService } from '../engagement.service';
 
-@EventsHandler(ProjectUpdatedEvent)
+@EventsHandler([ProjectUpdatedEvent, 10])
 export class ValidateEngDateOverridesOnProjectChangeHandler
   implements IEventHandler<ProjectUpdatedEvent>
 {

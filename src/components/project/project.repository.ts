@@ -34,6 +34,7 @@ import {
   variable,
 } from '~/core/database/query';
 import { Privileges } from '../authorization';
+import { fieldRegionSorters } from '../field-region/field-region.repository';
 import { locationSorters } from '../location/location.repository';
 import { partnershipSorters } from '../partnership/partnership.repository';
 import {
@@ -450,6 +451,23 @@ export const projectSorters = defineSorters(IProject, {
       .with('node as project')
       .match(getPath())
       .apply(sortWith(partnershipSorters, input))
+      .union()
+      .with('node')
+      .with('node as project')
+      .where(not(path(getPath(true))))
+      .return<SortCol>('null as sortValue');
+  },
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  'fieldRegion.*': (query, input) => {
+    const getPath = (anon = false) => [
+      node('project'),
+      relation('out', '', 'fieldRegion', ACTIVE),
+      node(anon ? '' : 'node', 'FieldRegion'),
+    ];
+    return query
+      .with('node as project')
+      .match(getPath())
+      .apply(sortWith(fieldRegionSorters, input))
       .union()
       .with('node')
       .with('node as project')
