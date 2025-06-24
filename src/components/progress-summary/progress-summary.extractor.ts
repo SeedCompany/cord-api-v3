@@ -8,7 +8,7 @@ import {
   fiscalYear,
 } from '~/common';
 import { type Column, type Row } from '~/common/xlsx.util';
-import { type Downloadable } from '../file/dto';
+import { type Downloadable, type FileVersion } from '../file/dto';
 import { Pnp, type ProgressSheet } from '../pnp';
 import {
   PnpProblemType,
@@ -19,7 +19,7 @@ import { type ProgressSummary as Progress } from './dto';
 @Injectable()
 export class ProgressSummaryExtractor {
   async extract(
-    file: Downloadable<unknown>,
+    file: Downloadable<FileVersion>,
     date: CalendarDate,
     result: PnpProgressExtractionResult,
   ) {

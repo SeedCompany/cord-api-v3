@@ -7,6 +7,7 @@ import { DateTime } from 'luxon';
 import { DateInterval, type ID } from '~/common';
 import { ILogger, Logger, ResourceLoader } from '~/core';
 import { type Downloadable, type FileVersion } from '../file/dto';
+import { NotPnPFile } from '../pnp';
 import {
   type PnpExtractionResult,
   PnpProblemType,
@@ -67,10 +68,12 @@ export class PnpProductSyncService {
         result,
       );
     } catch (e) {
-      this.logger.error(e.message, {
-        id: pnp.id,
-        exception: e,
-      });
+      if (!(e instanceof NotPnPFile)) {
+        this.logger.error(e.message, {
+          id: pnp.id,
+          exception: e,
+        });
+      }
       return [];
     }
     if (productRows.length === 0) {

@@ -3,7 +3,7 @@ import { entries } from '@seedcompany/common';
 import { assert } from 'ts-essentials';
 import type { MergeExclusive } from 'type-fest';
 import type { Cell, Column, Row } from '~/common/xlsx.util';
-import type { Downloadable } from '../file/dto';
+import type { Downloadable, FileVersion } from '../file/dto';
 import {
   extractScripture,
   findStepColumns,
@@ -45,7 +45,7 @@ type ExtractedRow = MergeExclusive<
 @Injectable()
 export class StepProgressExtractor {
   async extract(
-    file: Downloadable<unknown>,
+    file: Downloadable<FileVersion>,
     result: PnpProgressExtractionResult,
   ) {
     const pnp = await Pnp.fromDownloadable(file);
