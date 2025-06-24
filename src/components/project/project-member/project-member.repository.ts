@@ -205,6 +205,8 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
     oldDirector: ID<'User'>,
     newDirector: ID<'User'>,
     role: Role,
+    // This could be replaced with Filters once those are abstracted for Gel.
+    region?: ID<'FieldRegion'>,
   ) {
     const nowVal = DateTime.now();
     const now = variable('$now');
@@ -232,7 +234,10 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
           user: { id: oldDirector },
           active: true,
           roles: [role],
-          project: { status: ['Active', 'InDevelopment'] },
+          project: {
+            status: ['Active', 'InDevelopment'],
+            ...(region ? { fieldRegion: { id: region } } : {}),
+          },
         }),
       )
       .apply(
