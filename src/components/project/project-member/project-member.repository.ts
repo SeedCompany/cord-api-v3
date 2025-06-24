@@ -45,6 +45,7 @@ import {
   type ProjectMemberListInput,
   type UpdateProjectMember,
 } from './dto';
+import { type MembershipByProjectAndUserInput } from './membership-by-project-and-user.loader';
 
 @Injectable()
 export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
@@ -149,8 +150,29 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
           sub.with('user as node').apply(this.users.hydrateAsNeo4j()),
         )
         .return<{ dto: UnsecuredDto<ProjectMember> }>(
-          merge('props', { user: 'dto' }).as('dto'),
+          merge('props', {
+            project: 'project { .id }',
+            user: 'dto',
+          }).as('dto'),
         );
+  }
+
+  async readManyByProjectAndUser(
+    input: readonly MembershipByProjectAndUserInput[],
+  ) {
+    return await this.db
+      .query()
+      .unwind([...input], 'input')
+      .match([
+        node('project', 'Project', { id: variable('input.project') }),
+        relation('out', '', 'member', ACTIVE),
+        node('node', 'ProjectMember'),
+        relation('out', '', 'user', ACTIVE),
+        node('user', 'User', { id: variable('input.user') }),
+      ])
+      .apply(this.hydrate())
+      .map('dto')
+      .run();
   }
 
   async list({ filter, ...input }: ProjectMemberListInput) {

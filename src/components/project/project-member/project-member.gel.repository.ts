@@ -7,6 +7,7 @@ import {
   ProjectMember,
   type ProjectMemberListInput,
 } from './dto';
+import type { MembershipByProjectAndUserInput } from './membership-by-project-and-user.loader';
 import { type ProjectMemberRepository as Neo4jRepository } from './project-member.repository';
 
 @Injectable()
@@ -14,6 +15,7 @@ export class ProjectMemberGelRepository
   extends RepoFor(ProjectMember, {
     hydrate: (member) => ({
       ...member['*'],
+      project: true,
       user: hydrateUser(member.user),
     }),
     omit: ['create'],
@@ -37,6 +39,29 @@ export class ProjectMemberGelRepository
     const query = e.select(created, this.hydrate);
     return await this.db.run(query);
   }
+
+  async readManyByProjectAndUser(
+    input: readonly MembershipByProjectAndUserInput[],
+  ) {
+    return await this.db.run(this.readManyByProjectAndUserQuery, { input });
+  }
+  private readonly readManyByProjectAndUserQuery = e.params(
+    {
+      input: e.array(e.tuple({ project: e.uuid, user: e.uuid })),
+    },
+    ({ input }) =>
+      e.select(e.Project.Member, (member) => ({
+        ...this.hydrate(member),
+        filter: e.op(
+          e.tuple({
+            project: member.project.id,
+            user: member.user.id,
+          }),
+          'in',
+          e.array_unpack(input),
+        ),
+      })),
+  );
 
   async listAsNotifiers(projectId: ID, roles?: Role[]) {
     const project = e.cast(e.Project, e.uuid(projectId));

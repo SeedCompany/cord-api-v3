@@ -2,6 +2,7 @@ import { InputType, ObjectType } from '@nestjs/graphql';
 import {
   FilterField,
   type ID,
+  IdField,
   ListField,
   OptionalField,
   PaginatedList,
@@ -12,6 +13,7 @@ import { User } from './user.dto';
 
 @InputType()
 export abstract class UserFilters {
+  @IdField({ optional: true })
   readonly id?: ID<'User'>;
 
   @OptionalField()

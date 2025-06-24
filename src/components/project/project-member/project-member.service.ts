@@ -21,6 +21,7 @@ import {
   type ProjectMemberListOutput,
   type UpdateProjectMember,
 } from './dto';
+import { type MembershipByProjectAndUserInput } from './membership-by-project-and-user.loader';
 import { ProjectMemberRepository } from './project-member.repository';
 
 @Injectable()
@@ -73,6 +74,16 @@ export class ProjectMemberService {
   async readMany(ids: readonly ID[]) {
     const projectMembers = await this.repo.readMany(ids);
     return projectMembers.map((dto) => this.secure(dto));
+  }
+
+  async readManyByProjectAndUser(
+    input: readonly MembershipByProjectAndUserInput[],
+  ) {
+    const dtos = await this.repo.readManyByProjectAndUser(input);
+    return dtos.map((dto) => ({
+      id: { project: dto.project.id, user: dto.user.id },
+      membership: this.secure(dto),
+    }));
   }
 
   private secure(dto: UnsecuredDto<ProjectMember>): ProjectMember {

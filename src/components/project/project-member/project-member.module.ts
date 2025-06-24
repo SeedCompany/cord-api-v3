@@ -6,6 +6,7 @@ import { ProjectModule } from '../project.module';
 import { AvailableRolesToProjectResolver } from './available-roles-to-project.resolver';
 import { DirectorChangeApplyToProjectMembersHandler } from './handlers/director-change-apply-to-project-members.handler';
 import { RegionsZoneChangesAppliesDirectorChangeToProjectMembersHandler } from './handlers/regions-zone-changes-applies-director-change-to-project-members.handler';
+import { MemberProjectConnectionResolver } from './member-project-connection.resolver';
 import { AddInactiveAtMigration } from './migrations/add-inactive-at.migration';
 import { ProjectMemberGelRepository } from './project-member.gel.repository';
 import { ProjectMemberLoader } from './project-member.loader';
@@ -22,6 +23,7 @@ import { ProjectMemberService } from './project-member.service';
   providers: [
     ProjectMemberResolver,
     AvailableRolesToProjectResolver,
+    MemberProjectConnectionResolver,
     ProjectMemberService,
     splitDb(ProjectMemberRepository, ProjectMemberGelRepository),
     ProjectMemberLoader,
