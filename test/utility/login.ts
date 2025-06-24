@@ -8,7 +8,7 @@ export async function login(app: TestApp, input: InputOf<typeof LoginDoc>) {
   app.graphql.email = input.email;
   return res;
 }
-const LoginDoc = graphql(`
+export const LoginDoc = graphql(`
   mutation login($input: LoginInput!) {
     login(input: $input) {
       user {

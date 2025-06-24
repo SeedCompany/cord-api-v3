@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { EmailService } from '@seedcompany/nestjs-email';
 import {
+  AuthenticationException,
   DuplicateException,
   type ID,
   InputException,
@@ -73,10 +74,13 @@ export class AuthenticationService {
   }
 
   async login(input: LoginInput): Promise<ID> {
-    const hash = await this.repo.getPasswordHash(input);
+    const info = await this.repo.getInfoForLogin(input);
 
-    if (!(await this.crypto.verify(hash, input.password))) {
+    if (!(await this.crypto.verify(info?.passwordHash, input.password))) {
       throw new UnauthenticatedException('Invalid credentials');
+    }
+    if (info!.status === 'Disabled') {
+      throw new UserDisabledException();
     }
 
     const userId = await this.repo.connectSessionToUser(
@@ -96,6 +100,10 @@ export class AuthenticationService {
   async logout(token: string, refresh = true): Promise<void> {
     await this.repo.disconnectUserFromSession(token);
     refresh && (await this.sessionManager.refreshCurrentSession());
+  }
+
+  async logoutByUser(user: ID<'User'>) {
+    await this.repo.deactivateAllSessions(user);
   }
 
   async changePassword(
@@ -150,5 +158,11 @@ export class AuthenticationService {
       this.sessionHost.current,
     );
     await this.repo.removeAllEmailTokensForEmail(emailToken.email);
+  }
+}
+
+export class UserDisabledException extends AuthenticationException {
+  constructor() {
+    super('User is disabled');
   }
 }
