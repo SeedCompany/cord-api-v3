@@ -1,3 +1,4 @@
+import { Settings } from 'luxon';
 import { DateInterval, type UnsecuredDto } from '~/common';
 import { EventsHandler, type IEventHandler, ILogger, Logger } from '~/core';
 import { EngagementService } from '../../engagement';
@@ -89,12 +90,33 @@ export class SyncProgressReportToEngagementDateRange
         : [event.engagement];
 
     for (const engagement of engagements) {
+      Settings.throwOnInvalid = false;
       const [updated, prev] =
         event instanceof ProjectUpdatedEvent
           ? this.intervalsFromProjectChange(engagement, event)
           : event instanceof EngagementCreatedEvent
           ? [engagementRange(event.engagement), null]
-          : [engagementRange(event.updated), engagementRange(event.previous)];
+          : [
+              engagementRange(event.updated), //
+              engagementRange(event.previous),
+            ];
+      Settings.throwOnInvalid = true;
+      if (prev && !prev.isValid) {
+        this.logger.error('Found invalid date range for event', {
+          eventType: event.constructor.name,
+          diffSide: 'before',
+          event,
+        });
+        throw new Error('Invalid engagement date range');
+      }
+      if (updated && !updated.isValid) {
+        this.logger.error('Found invalid date range for event', {
+          eventType: event.constructor.name,
+          diffSide: 'after',
+          event,
+        });
+        throw new Error('Invalid engagement date range');
+      }
 
       const diff = this.diffBy(updated, prev, 'quarter');
 
