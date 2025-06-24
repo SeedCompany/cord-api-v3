@@ -83,6 +83,11 @@ export const apoc = {
     flatten: fn1('apoc.coll.flatten'),
     indexOf: fn('apoc.coll.indexOf'),
     /**
+     * Returns the items in the first list that aren't in the second list.
+     * @see https://neo4j.com/docs/apoc/current/overview/apoc.coll/apoc.coll.disjunction/
+     */
+    disjunction: fn2('apoc.coll.disjunction'),
+    /**
      * Returns the distinct union of the two given LIST<ANY> values.
      * @see https://neo4j.com/docs/apoc/current/overview/apoc.coll/apoc.coll.union/
      */

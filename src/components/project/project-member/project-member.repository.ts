@@ -34,6 +34,7 @@ import {
   variable,
 } from '~/core/database/query';
 import { type FilterFn } from '~/core/database/query/filters';
+import { conditionalOn } from '~/core/database/query/properties/update-property';
 import { userFilters, UserRepository } from '../../user/user.repository';
 import { type ProjectFilters } from '../dto';
 import { projectFilters } from '../project-filters.query';
@@ -240,15 +241,47 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
           },
         }),
       )
-      .apply(
-        updateProperty({
-          resource: ProjectMember,
-          key: 'inactiveAt',
-          value: now,
-          permanentAfter: 0,
-        }),
+      .subQuery('node', (sub) =>
+        sub
+          .match([
+            node('node'),
+            relation('out', '', 'roles', ACTIVE),
+            node('roles', 'Property'),
+          ])
+          .apply(
+            conditionalOn(
+              'size(roles.value) > 1',
+              ['node'],
+              // If there are other roles, remove this role from the membership & keep it active
+              (q) =>
+                q
+                  .apply(
+                    updateProperty({
+                      resource: ProjectMember,
+                      key: 'roles',
+                      value: variable(
+                        apoc.coll.disjunction('roles.value', [`"${role}"`]),
+                      ),
+                      permanentAfter: 0,
+                    }),
+                  )
+                  .return('stats'),
+              // Else then mark the membership inactive & maintain the role
+              (q) =>
+                q
+                  .apply(
+                    updateProperty({
+                      resource: ProjectMember,
+                      key: 'inactiveAt',
+                      value: now,
+                      permanentAfter: 0,
+                    }),
+                  )
+                  .return('stats'),
+            ),
+          )
+          .return('stats as oldMemberStats'),
       )
-      .with('project')
       .subQuery('project', (sub) =>
         sub
           .match([

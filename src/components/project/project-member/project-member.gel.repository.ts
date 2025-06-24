@@ -116,12 +116,20 @@ export class ProjectMemberGelRepository
           ),
         ),
       }));
-      const inactivated = e.update(members, () => ({
+      const inactivated = e.update(members, (member) => ({
+        filter: e.op(e.count(member.roles), '=', 1),
         set: {
           inactiveAt: e.datetime_of_transaction(),
         },
       }));
-      const replacements = e.for(inactivated.project, (project) =>
+      const fillingOtherRoles = e.update(members, (member) => ({
+        filter: e.op(e.count(member.roles), '>', 1),
+        set: {
+          roles: { '-=': $.role },
+        },
+      }));
+      const projects = e.op(inactivated, 'union', fillingOtherRoles).project;
+      const replacements = e.for(projects, (project) =>
         e
           .insert(e.Project.Member, {
             project,
