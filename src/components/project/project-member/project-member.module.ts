@@ -5,9 +5,11 @@ import { UserModule } from '../../user/user.module';
 import { ProjectModule } from '../project.module';
 import { AvailableRolesToProjectResolver } from './available-roles-to-project.resolver';
 import { DirectorChangeApplyToProjectMembersHandler } from './handlers/director-change-apply-to-project-members.handler';
+import { ProjectRegionDefaultsDirectorMembershipHandler } from './handlers/project-region-defaults-director-membership.handler';
 import { RegionsZoneChangesAppliesDirectorChangeToProjectMembersHandler } from './handlers/regions-zone-changes-applies-director-change-to-project-members.handler';
 import { MemberProjectConnectionResolver } from './member-project-connection.resolver';
 import { AddInactiveAtMigration } from './migrations/add-inactive-at.migration';
+import { BackfillMissingDirectorsMigration } from './migrations/backfill-missing-directors.migration';
 import { ProjectMemberGelRepository } from './project-member.gel.repository';
 import { ProjectMemberLoader } from './project-member.loader';
 import { ProjectMemberRepository } from './project-member.repository';
@@ -30,6 +32,8 @@ import { ProjectMemberService } from './project-member.service';
     AddInactiveAtMigration,
     DirectorChangeApplyToProjectMembersHandler,
     RegionsZoneChangesAppliesDirectorChangeToProjectMembersHandler,
+    ProjectRegionDefaultsDirectorMembershipHandler,
+    BackfillMissingDirectorsMigration,
   ],
   exports: [ProjectMemberService],
 })

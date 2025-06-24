@@ -903,6 +903,9 @@ export const fieldZone = graphql(`
     director {
       canRead
       canEdit
+      value {
+        id
+      }
     }
     name {
       value
@@ -913,25 +916,34 @@ export const fieldZone = graphql(`
 `);
 export type fieldZone = FragmentOf<typeof fieldZone>;
 
-export const fieldRegion = graphql(`
-  fragment fieldRegion on FieldRegion {
-    id
-    createdAt
-    name {
-      value
-      canEdit
-      canRead
+export const fieldRegion = graphql(
+  `
+    fragment fieldRegion on FieldRegion {
+      id
+      createdAt
+      name {
+        value
+        canEdit
+        canRead
+      }
+      fieldZone {
+        canRead
+        canEdit
+        value {
+          ...fieldZone
+        }
+      }
+      director {
+        canRead
+        canEdit
+        value {
+          id
+        }
+      }
     }
-    fieldZone {
-      canRead
-      canEdit
-    }
-    director {
-      canRead
-      canEdit
-    }
-  }
-`);
+  `,
+  [fieldZone],
+);
 export type fieldRegion = FragmentOf<typeof fieldRegion>;
 
 export const budgetRecord = graphql(
