@@ -16,6 +16,7 @@ import {
   SortablePaginationInput,
 } from '~/common';
 import { Transform } from '~/common/transform.decorator';
+import { FieldRegionFilters } from '../../field-region/dto';
 import { LocationFilters } from '../../location/dto';
 import { PartnershipFilters } from '../../partnership/dto';
 import { ProjectMemberFilters } from '../project-member/dto';
@@ -134,6 +135,9 @@ export abstract class ProjectFilters {
 
   @FilterField(() => LocationFilters)
   readonly primaryLocation?: LocationFilters & {};
+
+  @FilterField(() => FieldRegionFilters)
+  readonly fieldRegion?: FieldRegionFilters & {};
 }
 
 Object.defineProperty(ProjectFilters.prototype, 'mine', {
