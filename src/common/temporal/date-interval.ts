@@ -13,11 +13,37 @@ import {
 import { CalendarDate } from './calendar-date';
 import '@seedcompany/common/temporal/luxon';
 
-const toSuper = (int: DateInterval): Interval =>
-  Interval.fromDateTimes(int.start, int.end.plus({ days: 1 }));
+const toSuper = (int: DateInterval): Interval => {
+  // For Sunday month-end dates, use more explicit date arithmetic to avoid edge cases
+  const endDate = int.end;
+  if (endDate.weekday === 7 && endDate.equals(endDate.endOf('month'))) {
+    // Create the next day more explicitly for Sunday month-end dates
+    const nextDay = CalendarDate.local(
+      endDate.month === 12 ? endDate.year + 1 : endDate.year,
+      endDate.month === 12 ? 1 : endDate.month + 1,
+      1
+    );
+    return Interval.fromDateTimes(int.start, nextDay);
+  }
+  
+  return Interval.fromDateTimes(int.start, int.end.plus({ days: 1 }));
+};
 
-const fromSuper = (int: Interval): DateInterval =>
-  DateInterval.fromDateTimes(int.start, int.end.minus({ days: 1 }));
+const fromSuper = (int: Interval): DateInterval => {
+  // Handle the reverse conversion with similar care for month boundaries
+  const endDateTime = int.end;
+  if (endDateTime) {
+    const endCalendarDate = CalendarDate.fromDateTime(endDateTime);
+    const previousDay = endCalendarDate.minus({ days: 1 });
+    
+    // If the previous day is a Sunday and the last day of the month, ensure proper handling
+    if (previousDay.weekday === 7 && previousDay.equals(previousDay.endOf('month'))) {
+      return DateInterval.fromDateTimes(int.start, previousDay);
+    }
+  }
+  
+  return DateInterval.fromDateTimes(int.start, int.end.minus({ days: 1 }));
+};
 
 /**
  * An Interval for dates.
