@@ -7,7 +7,12 @@ import { type OrganizationRepository } from './organization.repository';
 @Injectable()
 export class OrganizationGelRepository
   extends RepoFor(Organization, {
-    hydrate: (organization) => organization['*'],
+    hydrate: (organization) => ({
+      ...organization['*'],
+      allianceMembers: true,
+      joinedAlliances: true,
+      parent: true,
+    }),
     omit: ['create'],
   })
   implements PublicOf<OrganizationRepository>
@@ -16,6 +21,9 @@ export class OrganizationGelRepository
     return await this.defaults.create({
       ...input,
       projectContext: e.insert(e.Project.Context, {}),
+      allianceMembers: input.allianceMembers ?? [],
+      joinedAlliances: input.joinedAlliances ?? [],
+      parent: input.parentId,
     });
   }
 }

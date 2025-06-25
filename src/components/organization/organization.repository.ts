@@ -4,6 +4,7 @@ import {
   CreationFailed,
   DuplicateException,
   type ID,
+  InputException,
   NotFoundException,
   ReadAfterCreationFailed,
   type UnsecuredDto,
@@ -11,6 +12,7 @@ import {
 import { DtoRepository, OnIndex } from '~/core/database';
 import {
   ACTIVE,
+  collect,
   createNode,
   defineSorters,
   filter,
@@ -69,8 +71,42 @@ export class OrganizationRepository extends DtoRepository(Organization) {
   }
 
   async update(changes: UpdateOrganization) {
-    const { id, ...simpleChanges } = changes;
+    const { id, joinedAlliances, allianceMembers, parentId, ...simpleChanges } =
+      changes;
     await this.updateProperties({ id }, simpleChanges);
+
+    if (joinedAlliances) {
+      try {
+        await this.updateRelationList({
+          id: changes.id,
+          relation: 'joinedAlliances',
+          newList: joinedAlliances,
+        });
+      } catch (e) {
+        throw e instanceof InputException
+          ? e.withField('organization.joinedAlliances')
+          : e;
+      }
+    }
+
+    if (allianceMembers) {
+      try {
+        await this.updateRelationList({
+          id: changes.id,
+          relation: 'allianceMembers',
+          newList: allianceMembers,
+        });
+      } catch (e) {
+        throw e instanceof InputException
+          ? e.withField('organization.allianceMembers')
+          : e;
+      }
+    }
+
+    if (parentId !== undefined) {
+      await this.updateRelation('parent', 'Organization', changes.id, parentId);
+    }
+
     return await this.readOne(id);
   }
 
@@ -107,11 +143,37 @@ export class OrganizationRepository extends DtoRepository(Organization) {
             .raw('WHERE size(projList) = 0')
             .return(`'High' as sensitivity`),
         )
+        .subQuery('node', (sub) =>
+          sub
+            .match([
+              node('node'),
+              relation('out', '', 'alliance'),
+              node('alliance', 'Organization'),
+            ])
+            .return(collect('alliance { .id }').as('alliance')),
+        )
+        .subQuery('node', (sub) =>
+          sub
+            .match([
+              node('node'),
+              relation('out', '', 'member'),
+              node('member', 'Organization'),
+            ])
+            .return(collect('member { .id }').as('member')),
+        )
+        .optionalMatch([
+          node('node'),
+          relation('out', '', 'parent', ACTIVE),
+          node('parent', 'Organization'),
+        ])
         .apply(matchProps())
         .return<{ dto: UnsecuredDto<Organization> }>(
           merge('props', {
             scope: 'scopedRoles',
             sensitivity: 'sensitivity',
+            parent: 'parent { .id }',
+            joinedAlliances: 'alliance',
+            allianceMembers: 'member',
           }).as('dto'),
         );
   }

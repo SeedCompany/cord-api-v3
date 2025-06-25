@@ -1,5 +1,6 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { splitDb } from '~/core';
+import { AllianceMembershipModule } from '../alliance-membership/alliance-membership.module';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { LocationModule } from '../location/location.module';
 import { AddOrganizationReachMigration } from './migrations/add-reach.migration';
@@ -11,7 +12,11 @@ import { OrganizationResolver } from './organization.resolver';
 import { OrganizationService } from './organization.service';
 
 @Module({
-  imports: [forwardRef(() => AuthorizationModule), LocationModule],
+  imports: [
+    forwardRef(() => AuthorizationModule),
+    LocationModule,
+    AllianceMembershipModule,
+  ],
   providers: [
     OrganizationResolver,
     OrganizationService,

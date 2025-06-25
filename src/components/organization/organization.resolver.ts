@@ -13,8 +13,12 @@ import {
   IdArg,
   IdField,
   ListArg,
+  loadSecuredIds,
+  mapSecuredValue,
 } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
+import { AllianceMembershipLoader } from '../alliance-membership/alliance-membership.loader';
+import { SecuredAllianceMemberships } from '../alliance-membership/dto';
 import { LocationLoader } from '../location';
 import { LocationListInput, SecuredLocationList } from '../location/dto';
 import { OrganizationLoader, OrganizationService } from '../organization';
@@ -25,6 +29,7 @@ import {
   Organization,
   OrganizationListInput,
   OrganizationListOutput,
+  SecuredOrganization,
   UpdateOrganizationInput,
   UpdateOrganizationOutput,
 } from './dto';
@@ -128,5 +133,43 @@ export class OrganizationResolver {
   ): Promise<Organization> {
     await this.orgs.removeLocation(organizationId, locationId);
     return await this.orgs.readOne(organizationId);
+  }
+
+  @ResolveField(() => SecuredOrganization)
+  async parent(
+    @Parent() organization: Organization,
+    @Loader(OrganizationLoader) organizations: LoaderOf<OrganizationLoader>,
+  ): Promise<SecuredOrganization> {
+    return await mapSecuredValue(organization.parent, ({ id }) =>
+      organizations.load(id),
+    );
+  }
+
+  @ResolveField(() => SecuredAllianceMemberships)
+  async allianceMembers(
+    @Parent() organization: Organization,
+    @Loader(AllianceMembershipLoader)
+    loader: LoaderOf<AllianceMembershipLoader>,
+  ): Promise<SecuredAllianceMemberships> {
+    return await loadSecuredIds(loader, {
+      ...organization.allianceMembers,
+      value: organization.allianceMembers.value.map(
+        (membership) => membership.id,
+      ),
+    });
+  }
+
+  @ResolveField(() => SecuredAllianceMemberships)
+  async joinedAlliances(
+    @Parent() organization: Organization,
+    @Loader(AllianceMembershipLoader)
+    loader: LoaderOf<AllianceMembershipLoader>,
+  ): Promise<SecuredAllianceMemberships> {
+    return await loadSecuredIds(loader, {
+      ...organization.joinedAlliances,
+      value: organization.joinedAlliances.value.map(
+        (membership) => membership.id,
+      ),
+    });
   }
 }
