@@ -169,6 +169,68 @@ export const PromptVariantResponseRepository = <
       return result!.dto;
     }
 
+    async createWithResponse(
+      input: ChoosePrompt & {
+        variant: TVariant;
+        response: any;
+      },
+    ): Promise<UnsecuredDto<PromptVariantResponse<TVariant>>> {
+      // @ts-expect-error uhhhh yolo ¯\_(ツ)_/¯
+      const resource: typeof PromptVariantResponse = this.resource.type;
+
+      const createdAt = DateTime.now();
+      const query = this.db.query();
+      const responseVar = query.params.addParam(input.response, 'response');
+
+      // Create the main PromptVariantResponse node
+      const result = await query
+        .apply(
+          await createNode(resource, {
+            baseNodeProps: {
+              createdAt,
+              modifiedAt: createdAt,
+            },
+            initialProps: {
+              prompt: input.prompt,
+            },
+          }),
+        )
+        .apply(
+          createRelationships(resource, {
+            in: {
+              child: ['BaseNode', input.resource],
+            },
+            out: {
+              creator: currentUser,
+            },
+          }),
+        )
+        // Create the variant response node
+        .apply(
+          await createNode(VariantResponse, {
+            baseNodeProps: {
+              variant: input.variant,
+              response: variable(responseVar.toString()),
+              createdAt,
+              modifiedAt: createdAt,
+            },
+          }),
+        )
+        .apply(
+          createRelationships(VariantResponse, {
+            in: {
+              child: variable('node'),
+            },
+            out: {
+              creator: currentUser,
+            },
+          }),
+        )
+        .apply(this.hydrate())
+        .first();
+      return result!.dto;
+    }
+
     async submitResponse(input: UpdatePromptVariantResponse<TVariant>) {
       const query = this.db.query();
       const permanentAfter = permanentAfterAsVar(defaultPermanentAfter, query)!;

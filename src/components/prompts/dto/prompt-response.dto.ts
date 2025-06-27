@@ -101,3 +101,18 @@ export abstract class UpdatePromptVariantResponse<Key extends string = ID> {
   @RichTextField({ nullable: true })
   readonly response: RichTextDocument | null;
 }
+
+@InputType()
+export abstract class CreatePromptWithExternalContent<Key extends string = ID> {
+  @IdField()
+  readonly resource: ID;
+
+  @IdField()
+  readonly prompt: IdOf<Prompt>;
+
+  @IdField()
+  readonly variant: Key;
+
+  @Field()
+  readonly externalText: string;
+}

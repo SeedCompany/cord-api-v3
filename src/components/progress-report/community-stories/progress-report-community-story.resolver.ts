@@ -12,6 +12,7 @@ import { type PeriodicReport } from '../../periodic-report/dto';
 import {
   ChangePrompt,
   ChoosePrompt,
+  CreatePromptWithExternalContent,
   PromptVariantResponse,
   PromptVariantResponseList,
   UpdatePromptVariantResponse,
@@ -36,6 +37,14 @@ export class ProgressReportCommunityStoryResolver {
     @Args({ name: 'input' }) input: ChoosePrompt,
   ): Promise<PromptVariantResponse> {
     return await this.service.create(input);
+  }
+
+  @Mutation(() => PromptVariantResponse)
+  async createProgressReportCommunityStoryWithContent(
+    @Args({ name: 'input' })
+    input: CreatePromptWithExternalContent<CommunityStoryVariant>,
+  ): Promise<PromptVariantResponse> {
+    return await this.service.createWithResponse(input);
   }
 
   @Mutation(() => PromptVariantResponse)

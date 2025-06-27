@@ -184,6 +184,39 @@ export const PromptVariantResponseListService = <
       return await this.secure(dto);
     }
 
+    async createWithResponse(
+      input: ChoosePrompt & {
+        variant: TVariant;
+        externalText: string;
+      },
+    ): Promise<PromptVariantResponse<TVariant>> {
+      const edge = this.repo.edge;
+      const parent = await this.resources.load(
+        // @ts-expect-error yeah we are assuming it's registered
+        edge.resource,
+        input.resource,
+      );
+      const privileges = edge.forContext(
+        // @ts-expect-error yeah it's not unsecured, but none of our conditions actually needs that.
+        parent,
+      );
+      privileges.verifyCan('create');
+
+      await this.getPromptById(input.prompt);
+
+      // Convert external text to RichText
+      const richTextResponse = RichTextDocument.fromText(input.externalText);
+
+      const dto = await this.repo.createWithResponse({
+        resource: input.resource,
+        prompt: input.prompt,
+        variant: input.variant,
+        response: richTextResponse,
+      });
+
+      return await this.secure(dto);
+    }
+
     async changePrompt(
       input: ChangePrompt,
     ): Promise<PromptVariantResponse<TVariant>> {
