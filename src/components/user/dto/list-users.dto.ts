@@ -9,6 +9,7 @@ import {
   Role,
   SortablePaginationInput,
 } from '~/common';
+import { UserStatus } from './user-status.enum';
 import { User } from './user.dto';
 
 @InputType()
@@ -21,6 +22,9 @@ export abstract class UserFilters {
 
   @OptionalField()
   readonly title?: string;
+
+  @OptionalField(() => UserStatus)
+  readonly status?: UserStatus;
 
   @ListField(() => Role, {
     optional: true,
