@@ -158,7 +158,7 @@ describe('File e2e', () => {
       const createdAt = DateTime.fromISO(file.createdAt);
       expect(createdAt.diffNow().as('seconds')).toBeGreaterThan(-30);
       await expectEqualContent(app, file.url, fakeFile);
-      expect(file.parents[0].id).toEqual(root.id);
+      expect(file.parents[0]!.id).toEqual(root.id);
     }
   });
 
@@ -180,7 +180,7 @@ describe('File e2e', () => {
     const createdAt = DateTime.fromISO(version.createdAt);
     expect(createdAt.diffNow().as('seconds')).toBeGreaterThan(-30);
     await expectEqualContent(app, file.url, fakeFile);
-    expect(version.parents[0].id).toEqual(file.id);
+    expect(version.parents[0]!.id).toEqual(file.id);
   });
 
   it('update file using file id', async () => {
@@ -240,7 +240,7 @@ describe('File e2e', () => {
       expect(dir.createdBy.id).toEqual(me.id);
       const createdAt = DateTime.fromISO(dir.createdAt);
       expect(createdAt.diffNow().as('seconds')).toBeGreaterThan(-30);
-      expect(dir.parents[0].id).toEqual(root.id);
+      expect(dir.parents[0]!.id).toEqual(root.id);
     }
   });
 

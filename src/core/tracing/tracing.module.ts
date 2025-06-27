@@ -70,9 +70,9 @@ export class TracingModule implements OnModuleInit {
               matches
                 ? {
                     ...JSON.parse(
-                      matches[1].replace('"trace_id:"', '"trace_id":"'),
+                      matches[1]!.replace('"trace_id:"', '"trace_id":"'),
                     ),
-                    size: matches[2],
+                    size: matches[2]!,
                   }
                 : undefined,
             );

@@ -40,10 +40,10 @@ export class ValidatePartnershipDateOverridesOnProjectChangeHandler
       p.organization.id,
     ]).asRecord;
     const orgs = await orgLoader.loadMany(
-      conflicts.map((conflict) => partnershipToOrg[conflict.id]),
+      conflicts.map((conflict) => partnershipToOrg[conflict.id]!),
     );
     const conflictsWithLabels = conflicts.map((conflict, index) => {
-      const org = orgs[index];
+      const org = orgs[index]!;
       if (org instanceof Error) {
         // Shouldn't happen
         return conflict;

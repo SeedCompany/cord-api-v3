@@ -1,6 +1,7 @@
 import { CLASS_TYPE_METADATA, Field, InterfaceType } from '@nestjs/graphql';
 import { type ClassType as ClassTypeVal } from '@nestjs/graphql/dist/enums/class-type.enum.js';
 import {
+  asNonEmptyArray,
   cached,
   type FnLike,
   mapValues,
@@ -316,7 +317,7 @@ export class EnhancedResource<T extends ResourceShape<any>> {
       const declared = DbLabel.getOwn(cls);
       return declared ? [...declared] : [cls.name];
     });
-    return [...new Set([...labels, 'BaseNode'])];
+    return asNonEmptyArray([...new Set([...labels, 'BaseNode'])])!;
   }
   get dbLabel() {
     return this.dbLabels[0];

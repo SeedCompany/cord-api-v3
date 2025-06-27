@@ -60,7 +60,7 @@ export class ProductProgressService {
     ]).asRecord;
     const rows = await this.repo.readAllProgressReportsForManyReports(reports);
     return rows.map((row): ProgressVariantByReportOutput => {
-      const report = reportMap[row.reportId];
+      const report = reportMap[row.reportId]!;
       return {
         report,
         variant: Progress.Variants.byKey(row.variant),
@@ -86,7 +86,7 @@ export class ProductProgressService {
       products,
     );
     return rows.map((row): ProgressVariantByProductOutput => {
-      const product = productMap[row.productId];
+      const product = productMap[row.productId]!;
       return {
         product,
         variant: Progress.Variants.byKey(row.variant),

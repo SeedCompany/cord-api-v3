@@ -24,13 +24,13 @@ export const fixWarningQuerySnippet = (e: GelError) => {
   let emptyLinesUntilStart = 0;
   // eslint-disable-next-line no-restricted-syntax
   for (let i = 0; i < lineStart + emptyLinesUntilStart; i++) {
-    if (queryLines[i].trim() === '') {
+    if (queryLines[i]?.trim() === '') {
       ++emptyLinesUntilStart;
     }
   }
   const fixedStart = lineStart + emptyLinesUntilStart;
 
-  const char = queryLines[fixedStart - 1].charAt(columnStart - 1);
+  const char = queryLines[fixedStart - 1]?.charAt(columnStart - 1);
   if (!char) {
     attrs.delete(Attr.lineStart);
     attrs.delete(Attr.columnStart);

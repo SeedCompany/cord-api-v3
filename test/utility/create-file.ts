@@ -9,7 +9,7 @@ import * as fragments from './fragments';
 
 export const generateFakeFile = () => {
   const content = Buffer.from(
-    faker.image.dataUri({ width: 200, height: 200 }).split(',')[1],
+    faker.image.dataUri({ width: 200, height: 200 }).split(',')[1]!,
     'base64',
   );
   return {

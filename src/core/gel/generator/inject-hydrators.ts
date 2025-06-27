@@ -15,7 +15,8 @@ export const injectHydrators = (query: string, map: HydratorMap) => {
       if (!matches) {
         return fakeFn;
       }
-      const [, key, variable] = matches;
+      const key = matches[1]!;
+      const variable = matches[2]!;
       const hydration = map.get(toFqn(key));
       if (!hydration) {
         return fakeFn;
@@ -40,7 +41,7 @@ export const hydratorsNeeded = (query: string) => {
       if (!matches) {
         return fakeFn;
       }
-      needed.add(toFqn(matches[1]));
+      needed.add(toFqn(matches[1]!));
       return fakeFn;
     });
   return needed;

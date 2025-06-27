@@ -592,7 +592,7 @@ describe('Project e2e', () => {
     );
 
     expect(pinnedProjects.items.length).toBe(1);
-    expect(pinnedProjects.items[0].id).toBe(project.id);
+    expect(pinnedProjects.items[0]!.id).toBe(project.id);
 
     // filter unpinned projects
     const { projects: unpinnedProjects } = await app.graphql.query(
@@ -1121,7 +1121,9 @@ describe('Project e2e', () => {
         ),
       );
 
-      expect(project1.departmentId.value).not.toBe(project2.departmentId.value);
+      expect(project1!.departmentId.value).not.toBe(
+        project2!.departmentId.value,
+      );
     });
   });
 });

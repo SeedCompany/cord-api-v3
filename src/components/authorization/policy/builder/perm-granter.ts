@@ -75,7 +75,7 @@ export abstract class PermGranter<
       // then remove the useless type/function/method name for clarity.
       if (frame?.startsWith('    at Object.def')) {
         const match = frame.match(/^\s+at .+\((.+)\)$/)!;
-        frame = `    at ${match[1]}`;
+        frame = `    at ${match[1]!}`;
       }
       cloned.trailingCondition.stack = [
         `Error: ${cloned.trailingCondition.message}`,

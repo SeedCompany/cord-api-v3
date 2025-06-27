@@ -1,4 +1,5 @@
 import { Logger } from '@nestjs/common';
+import { type NonEmptyArray } from '@seedcompany/common';
 import { inspect, type InspectOptionsStylized } from 'util';
 import {
   type ID,
@@ -58,11 +59,11 @@ class CreatorCondition<TResourceStatic extends ResourceShape<HasCreator>>
     return '.isCreator';
   }
 
-  union(this: void, conditions: this[]) {
+  union(this: void, conditions: NonEmptyArray<this>) {
     return conditions[0];
   }
 
-  intersect(this: void, conditions: this[]) {
+  intersect(this: void, conditions: NonEmptyArray<this>) {
     return conditions[0];
   }
 

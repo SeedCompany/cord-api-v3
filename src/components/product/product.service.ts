@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { mapEntries, simpleSwitch } from '@seedcompany/common';
+import { asNonEmptyArray, mapEntries, simpleSwitch } from '@seedcompany/common';
 import { intersection, sumBy, uniq } from 'lodash';
 import {
   type ID,
@@ -578,12 +578,13 @@ export class ProductService {
       const refs = productRef.scriptureRanges.map((raw) =>
         ScriptureRange.fromIds(raw),
       );
-      const books = uniq([
+      const bookList = uniq([
         ...refs.flatMap((ref) => [ref.start.book, ref.end.book]),
         ...(productRef.unspecifiedScripture
           ? [productRef.unspecifiedScripture.book]
           : []),
       ]);
+      const books = asNonEmptyArray(bookList);
       const totalVerses =
         productRef.unspecifiedScripture?.totalVerses ??
         sumBy(productRef.scriptureRanges, (raw) => raw.end - raw.start + 1);
@@ -593,7 +594,7 @@ export class ProductService {
           product: productRef.id,
         });
 
-      if (books.length === 0) {
+      if (!books) {
         warn('Product has not defined any scripture ranges');
         return [];
       }
@@ -601,7 +602,7 @@ export class ProductService {
         warn('Product scripture range spans multiple books');
         return [];
       }
-      const book: string = books[0];
+      const book = books[0];
 
       return {
         id: productRef.id,

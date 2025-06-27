@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/method-signature-style */
-import { type Many } from '@seedcompany/common';
+import { type Many, type NonEmptyArray } from '@seedcompany/common';
 import { type Query } from 'cypher-query-builder';
 import { inspect, type InspectOptionsStylized } from 'util';
 import { type EnhancedResource, type ResourceShape } from '~/common';
@@ -88,7 +88,7 @@ export abstract class Condition<
    */
   union?(
     this: void,
-    conditions: readonly this[],
+    conditions: NonEmptyArray<this>,
   ): Many<Condition<TResourceStatic>>;
 
   /**
@@ -98,7 +98,7 @@ export abstract class Condition<
    */
   intersect?(
     this: void,
-    conditions: readonly this[],
+    conditions: NonEmptyArray<this>,
   ): Many<Condition<TResourceStatic>>;
 
   /**

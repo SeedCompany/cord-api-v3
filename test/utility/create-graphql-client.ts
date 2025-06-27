@@ -102,7 +102,7 @@ function validateResult<TData>(
   data: TData;
 } {
   if (res.errors && res.errors.length > 0) {
-    throw GqlError.from(res.errors[0]);
+    throw GqlError.from(res.errors[0]!);
   }
   expect(res.data).toBeTruthy();
 }
@@ -117,7 +117,7 @@ export class GqlError extends Error {
 
   static from(raw: RawGqlError) {
     const err = new GqlError(raw);
-    err.name = raw.extensions.codes[0];
+    err.name = raw.extensions.codes[0]!;
     // must be after err constructor finishes to capture correctly.
     let frames = err.stack!.split('\n').slice(5);
     if (raw.extensions.stacktrace) {

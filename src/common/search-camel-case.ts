@@ -20,7 +20,7 @@ import { startCase } from 'lodash';
 export function searchCamelCase<T extends string>(
   items: Iterable<T>,
   needle: string,
-) {
+): readonly T[] {
   const itemArr = [...items];
   const collator = new Intl.Collator('en');
   const fuzzy = new Fuzzy({
@@ -41,22 +41,22 @@ export function searchCamelCase<T extends string>(
         .sort(
           (ia, ib) =>
             // most contiguous chars matched
-            chars[ib] - chars[ia] ||
+            chars[ib]! - chars[ia]! ||
             // least char intra-fuzz (most contiguous)
-            intraIns[ia] - intraIns[ib] ||
+            intraIns[ia]! - intraIns[ib]! ||
             // earliest start of match
-            start[ia] - start[ib] ||
+            start[ia]! - start[ib]! ||
             // shortest match first
-            haystack[idx[ia]].length - haystack[idx[ib]].length ||
+            haystack[idx[ia]!]!.length - haystack[idx[ib]!]!.length ||
             // most prefix bounds, boosted by full term matches
-            terms[ib] +
-              interLft2[ib] +
-              0.5 * interLft1[ib] -
-              (terms[ia] + interLft2[ia] + 0.5 * interLft1[ia]) ||
+            terms[ib]! +
+              interLft2[ib]! +
+              0.5 * interLft1[ib]! -
+              (terms[ia]! + interLft2[ia]! + 0.5 * interLft1[ia]!) ||
             // the highest density of match (the least term inter-fuzz)
-            interIns[ia] - interIns[ib] ||
+            interIns[ia]! - interIns[ib]! ||
             // alphabetic
-            collator.compare(haystack[idx[ia]], haystack[idx[ib]]),
+            collator.compare(haystack[idx[ia]!]!, haystack[idx[ib]!]!),
         );
     },
   });
@@ -74,6 +74,6 @@ export function searchCamelCase<T extends string>(
     return [];
   }
 
-  const results = order.map((idx) => itemArr[indexes[idx]]);
+  const results = order.map((idx) => itemArr[indexes[idx]!]!);
   return results;
 }

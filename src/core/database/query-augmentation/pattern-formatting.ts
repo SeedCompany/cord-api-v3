@@ -130,6 +130,6 @@ NodePattern.prototype.rebindConditionParams = function rebindConditionParams(
     ? (this.conditionParams as Record<string, Parameter>)
     : {};
   if (params.id?.name.startsWith('id') && this.labels.length > 0) {
-    params.id.name = camelCase(`${this.labels[0]} ${params.id.name}`);
+    params.id.name = camelCase(`${this.labels[0]!} ${params.id.name}`);
   }
 };

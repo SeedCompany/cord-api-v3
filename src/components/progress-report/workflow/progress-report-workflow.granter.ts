@@ -1,4 +1,4 @@
-import { entries } from '@seedcompany/common';
+import { entries, type NonEmptyArray } from '@seedcompany/common';
 import { type Query } from 'cypher-query-builder';
 import { inspect, type InspectOptionsStylized } from 'util';
 import { type ID, isIdLike, type Many } from '~/common';
@@ -139,7 +139,7 @@ class TransitionCondition implements Condition<typeof Event> {
     return `((${transitionAllowed}) ?? false)`;
   }
 
-  union(this: void, conditions: this[]) {
+  union(this: void, conditions: NonEmptyArray<this>) {
     const checks = [
       ...new Map(
         conditions
@@ -155,7 +155,7 @@ class TransitionCondition implements Condition<typeof Event> {
     return new TransitionCondition(checks);
   }
 
-  intersect(this: void, conditions: this[]) {
+  intersect(this: void, conditions: NonEmptyArray<this>) {
     const checks = [...conditions[0].checks].filter((check1) =>
       conditions.every((cond) =>
         cond.checks.some(

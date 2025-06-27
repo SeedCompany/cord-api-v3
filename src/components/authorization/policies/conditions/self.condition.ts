@@ -1,3 +1,4 @@
+import { type NonEmptyArray } from '@seedcompany/common';
 import { inspect, type InspectOptionsStylized } from 'util';
 import { type User } from '../../../user/dto';
 import {
@@ -27,11 +28,11 @@ class SelfCondition<TResourceStatic extends typeof User>
     return `.id ?= global ${currentId}`;
   }
 
-  union(this: void, conditions: this[]) {
+  union(this: void, conditions: NonEmptyArray<this>) {
     return conditions[0];
   }
 
-  intersect(this: void, conditions: this[]) {
+  intersect(this: void, conditions: NonEmptyArray<this>) {
     return conditions[0];
   }
 

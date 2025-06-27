@@ -69,7 +69,7 @@ const builder =
     const type = filters.constructor === Object ? null : filters.constructor;
     query.comment(type?.name ?? 'Filters');
 
-    for (const key of Object.keys(builders)) {
+    for (const key of Object.keys(builders) as Array<keyof T & string>) {
       const value = filters[key];
       if (value == null) {
         continue;

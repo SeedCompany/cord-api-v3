@@ -225,7 +225,7 @@ export class DatabaseService {
       if (!match) {
         return false;
       }
-      const dt = DateTime.fromFormat(match[1], 'y-MM-dd.HH-mm-ss');
+      const dt = DateTime.fromFormat(match[1]!, 'y-MM-dd.HH-mm-ss');
       return dt.diffNow().as('hours') < -1;
     });
     for (const staleTestDb of staleTestDbs) {

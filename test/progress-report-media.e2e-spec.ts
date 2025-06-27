@@ -74,7 +74,7 @@ describe('ProgressReport Media e2e', () => {
         } satisfies CreateLanguageEngagement,
       },
     );
-    reportId = createEng.engagement.progressReports.items[0].id;
+    reportId = createEng.engagement.progressReports.items[0]!.id;
   });
 
   afterAll(async () => {
@@ -129,7 +129,7 @@ describe('ProgressReport Media e2e', () => {
     expect(upload.media.hasMore).toBeFalsy();
     expect(upload.media.total).toBe(1);
 
-    const reportMedia = upload.media.items[0];
+    const reportMedia = upload.media.items[0]!;
     expect(reportMedia.category).toBe(input.category);
     expect(reportMedia.variant.key).toBe(input.variant);
     expect(isIdLike(reportMedia.variantGroup)).toBeTruthy();
@@ -207,7 +207,7 @@ describe('ProgressReport Media e2e', () => {
     expect(reportUpdated.media.total).toBe(2);
 
     const [m1, m2] = reportUpdated.media.items;
-    expect(m1.variantGroup).toBe(m2.variantGroup);
+    expect(m1!.variantGroup).toBe(m2!.variantGroup);
   });
 
   it('Only one variant per group', async () => {
@@ -303,7 +303,7 @@ describe('ProgressReport Media e2e', () => {
 
       const after = await getFeaturedMedia(app, reportId);
       expect(after).not.toBeNull();
-      expect(after?.id).toEqual(upload.media.items[0].id);
+      expect(after?.id).toEqual(upload.media.items[0]!.id);
     });
 
     it('Latest Wins', async () => {

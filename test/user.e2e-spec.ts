@@ -231,7 +231,7 @@ describe('User e2e', () => {
     );
     const actual = result1.user;
     expect(actual).toBeTruthy();
-    expect(actual.organizations.items[0].id).toBe(org.id);
+    expect(actual.organizations.items[0]!.id).toBe(org.id);
   });
 
   it('remove organization from user', async () => {
@@ -375,7 +375,7 @@ describe('User e2e', () => {
     );
     const actual = result.user;
     expect(actual).toBeTruthy();
-    expect(actual.education.items[0].id).toBe(edu.id);
+    expect(actual.education.items[0]!.id).toBe(edu.id);
     return true;
   });
 
@@ -409,7 +409,7 @@ describe('User e2e', () => {
     );
     const actual = result.user;
     expect(actual).toBeTruthy();
-    expect(actual.unavailabilities.items[0].id).toBe(unavail.id);
+    expect(actual.unavailabilities.items[0]!.id).toBe(unavail.id);
     return true;
   });
 

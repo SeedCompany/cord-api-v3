@@ -14,7 +14,8 @@ export const parseUri = (uri: string): ParsedBucketUri => {
     // Shouldn't ever happen
     throw new Error('Failed to parse Bucket URI');
   }
-  const [, type, remainingSrc] = typeMatch;
+  const type = typeMatch[1]!;
+  const remainingSrc = typeMatch[2]!;
   const roMatch = /(:ro|:readonly)$/i.exec(remainingSrc);
   const readonly = !!roMatch;
   const path = roMatch

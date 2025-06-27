@@ -1,3 +1,4 @@
+import { asNonEmptyArray } from '@seedcompany/common';
 import { parseScripture, tryParseScripture } from '@seedcompany/scripture';
 import { type Row } from '~/common/xlsx.util';
 import { ScriptureRange } from '../scripture/dto';
@@ -15,7 +16,9 @@ export const extractScripture = (
   const totalVerses = totalVersesCell.asNumber!;
 
   const bookCell = sheet.bookName(row);
-  const scriptureFromBookCol = parseScripture(bookCell.asString);
+  const scriptureFromBookCol = asNonEmptyArray(
+    parseScripture(bookCell.asString),
+  )!; // empty list only when input is empty, which we've confirmed not.
   const book = scriptureFromBookCol[0].start.book;
 
   const common = {

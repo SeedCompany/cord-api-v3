@@ -27,7 +27,7 @@ export async function findHydrationShapes({ root }: GeneratorParams) {
     if (!matches) {
       return SKIP;
     }
-    const [_, type] = matches;
+    const type = matches[1]!;
     const fqn = toFqn(type);
     const dependencies = hydratorsNeeded(query);
     const hydrator: Hydrator = {
@@ -45,7 +45,7 @@ export async function findHydrationShapes({ root }: GeneratorParams) {
 
   for (const hydrator of hydrators.values()) {
     hydrator.query = injectHydrators(hydrator.query, hydrators);
-    hydrator.fields = hydrator.query.match(RE_SELECT_NAME_AND_FIELDS)![2];
+    hydrator.fields = hydrator.query.match(RE_SELECT_NAME_AND_FIELDS)![2]!;
   }
 
   return hydrators;

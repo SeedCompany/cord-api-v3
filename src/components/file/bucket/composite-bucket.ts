@@ -1,5 +1,6 @@
 import { type HeadObjectOutput } from '@aws-sdk/client-s3';
 import { type Type } from '@nestjs/common';
+import { asNonEmptyArray, type NonEmptyArray } from '@seedcompany/common';
 import { type Command } from '@smithy/smithy-client';
 import { NotFoundException } from '~/common';
 import {
@@ -20,7 +21,7 @@ import {
  * If any fail, an error is thrown.
  */
 export class CompositeBucket extends FileBucket {
-  constructor(private readonly sources: readonly FileBucket[]) {
+  constructor(private readonly sources: NonEmptyArray<FileBucket>) {
     super();
   }
 
@@ -85,7 +86,14 @@ export class CompositeBucket extends FileBucket {
   }
 
   private get writableSources() {
-    return this.sources.flatMap((source) => (source.isReadonly ? [] : source));
+    const writableList = this.sources.flatMap((source) =>
+      source.isReadonly ? [] : source,
+    );
+    const writable = asNonEmptyArray(writableList);
+    if (!writable) {
+      throw new Error('No writable sources');
+    }
+    return writable;
   }
 
   private async doAndThrowAllErrors(actions: Array<Promise<void>>) {
@@ -104,13 +112,13 @@ export class CompositeBucket extends FileBucket {
   private async selectSource(key: string) {
     try {
       const [success] = await this.selectSources(key);
-      return success[0];
+      return success[0]!;
     } catch (e) {
       if (
         e instanceof AggregateError &&
         e.errors.every((e) => e instanceof NotFoundException)
       ) {
-        throw e.errors[0];
+        throw e.errors[0]!;
       }
       throw e;
     }

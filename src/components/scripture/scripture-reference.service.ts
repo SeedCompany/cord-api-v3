@@ -58,7 +58,7 @@ export class ScriptureReferenceService {
     if (nodes.length === 0) {
       return [] as const;
     }
-    if (!('properties' in nodes[0])) {
+    if (!('properties' in nodes[0]!)) {
       return nodes as readonly ScriptureRange[];
     }
     return sortBy(
