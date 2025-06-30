@@ -206,8 +206,6 @@ const config = {
       'error',
       { fixMixedExportsWithInlineTypeSpecifier: true },
     ],
-    // TODO Enable this and fix errors (both types & logic changes will be needed)
-    '@typescript-eslint/no-unnecessary-condition': 'off',
 
     // Allow unused session while we migrate
     '@seedcompany/no-unused-vars': [
