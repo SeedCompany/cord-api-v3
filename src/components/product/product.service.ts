@@ -128,10 +128,9 @@ export class ProductService {
           );
     }
 
-    const type =
-      'title' in input && input.title !== undefined
-        ? ProducibleType.OtherProduct
-        : producibleType ?? ProducibleType.DirectScriptureProduct;
+    const type = otherInput
+      ? ProducibleType.OtherProduct
+      : producibleType ?? ProducibleType.DirectScriptureProduct;
     const availableSteps = getAvailableSteps({
       type,
       methodology: input.methodology,
@@ -144,16 +143,15 @@ export class ProductService {
       Number: input.progressTarget ?? 1,
     });
 
-    const id =
-      'title' in input && input.title !== undefined
-        ? await this.repo.createOther({ ...input, progressTarget, steps })
-        : await this.repo.create({
-            ...input,
-            progressTarget,
-            steps,
-            totalVerses,
-            totalVerseEquivalents,
-          });
+    const id = otherInput
+      ? await this.repo.createOther({ ...otherInput, progressTarget, steps })
+      : await this.repo.create({
+          ...input,
+          progressTarget,
+          steps,
+          totalVerses,
+          totalVerseEquivalents,
+        });
 
     this.logger.debug(`product created`, { id });
     const created = await this.readOne(id).catch((e) => {

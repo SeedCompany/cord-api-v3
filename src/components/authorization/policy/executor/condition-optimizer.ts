@@ -34,7 +34,7 @@ export class ConditionOptimizer implements OnModuleInit {
     // Optimize leaves first, walking up to root.
     // This means smaller expressions are optimized before tackling larger ones.
     if (condition instanceof AggregateConditions) {
-      let changed = false;
+      let changed = Boolean(false);
       const newSubs = condition.conditions.map((sub) => {
         const next = this.doOptimize(sub);
         if (next !== sub) {

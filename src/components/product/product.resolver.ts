@@ -149,9 +149,9 @@ export class ProductResolver {
     }
     const produces = product.produces.value;
     // All of our producibles have a name field, so instead of enumerating
-    // through them just fake the type and grab it directly.
+    // through them, just fake the type and grab it directly.
     // This also assumes the user can read the name, which is completely unvalidated.
-    return (produces as unknown as { name: string }).name ?? null;
+    return (produces as unknown as { name?: string }).name ?? null;
   }
 
   @ResolveField(() => String, {

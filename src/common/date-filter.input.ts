@@ -1,7 +1,7 @@
 import { Field, InputType } from '@nestjs/graphql';
-import { DateTime } from 'luxon';
+import { type DateTime } from 'luxon';
 import { DateField, DateTimeField } from './luxon.graphql';
-import { CalendarDate } from './temporal';
+import { type CalendarDate } from './temporal';
 
 @InputType({
   description: 'A filter range designed for date fields',
@@ -11,25 +11,25 @@ export abstract class DateFilter {
     description: 'After this day',
     nullable: true,
   })
-  after?: CalendarDate;
+  after?: CalendarDate | null;
 
   @DateField({
     description: 'After or equal to this day',
     nullable: true,
   })
-  afterInclusive?: CalendarDate;
+  afterInclusive?: CalendarDate | null;
 
   @DateField({
     description: 'Before this day',
     nullable: true,
   })
-  before?: CalendarDate;
+  before?: CalendarDate | null;
 
   @DateField({
     description: 'Before or equal to this day',
     nullable: true,
   })
-  beforeInclusive?: CalendarDate;
+  beforeInclusive?: CalendarDate | null;
 
   @Field({ description: 'Whether the field is null or not', nullable: true })
   isNull?: boolean;
@@ -43,25 +43,25 @@ export abstract class DateTimeFilter {
     description: 'After this time',
     nullable: true,
   })
-  after?: DateTime;
+  after?: DateTime | null;
 
   @DateTimeField({
     description: 'After or equal to this time',
     nullable: true,
   })
-  afterInclusive?: DateTime;
+  afterInclusive?: DateTime | null;
 
   @DateTimeField({
     description: 'Before this time',
     nullable: true,
   })
-  before?: DateTime;
+  before?: DateTime | null;
 
   @DateTimeField({
     description: 'Before or equal to this time',
     nullable: true,
   })
-  beforeInclusive?: DateTime;
+  beforeInclusive?: DateTime | null;
 
   @Field({ description: 'Whether the field is null or not', nullable: true })
   isNull?: boolean;

@@ -90,7 +90,7 @@ export const VariantInputField = <
       ? resource.Variants.find((v) => v.key === value)
       : value;
   const defaultVariant = many
-    ? (defaultValue as any[])?.map(resolveVariant)
+    ? (defaultValue as any[] | undefined)?.map(resolveVariant)
     : resolveVariant(defaultValue as VariantOf<Res>);
 
   return applyDecorators(

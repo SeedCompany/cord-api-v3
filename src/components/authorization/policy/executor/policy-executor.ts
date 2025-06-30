@@ -222,7 +222,7 @@ export class PolicyExecutor {
         return c;
       }
 
-      let changed = false;
+      let changed = Boolean(false);
       const children = c.conditions.map((sub) => {
         const next = walkAndReform(sub);
         if (next !== sub) {

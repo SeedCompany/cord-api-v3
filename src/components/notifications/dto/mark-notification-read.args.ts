@@ -7,5 +7,5 @@ export abstract class MarkNotificationReadArgs {
   readonly id: ID<'Notification'>;
 
   @Field(() => Boolean, { nullable: true })
-  readonly unread = false;
+  readonly unread: boolean = false;
 }
