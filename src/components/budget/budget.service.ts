@@ -4,7 +4,6 @@ import {
   DuplicateException,
   generateId,
   type ID,
-  InputException,
   type ObjectView,
   Order,
   ServerException,
@@ -70,14 +69,6 @@ export class BudgetService {
     input: CreateBudgetRecord,
     changeset?: ID,
   ): Promise<BudgetRecord> {
-    const { organizationId, fiscalYear } = input;
-
-    if (!fiscalYear || !organizationId) {
-      throw new InputException(
-        !fiscalYear ? 'budget.fiscalYear' : 'budget.organizationId',
-      );
-    }
-
     await this.verifyRecordUniqueness(input);
 
     try {

@@ -3,7 +3,6 @@ import { type MaybeAsync, setOf } from '@seedcompany/common';
 import {
   type ID,
   InputException,
-  NotFoundException,
   type ObjectView,
   Role,
   ServerException,
@@ -60,13 +59,6 @@ export class ProjectMemberService {
 
   @HandleIdLookup(ProjectMember)
   async readOne(id: ID, _view?: ObjectView): Promise<ProjectMember> {
-    if (!id) {
-      throw new NotFoundException(
-        'No project member id to search for',
-        'projectMember.id',
-      );
-    }
-
     const dto = await this.repo.readOne(id);
     return this.secure(dto);
   }

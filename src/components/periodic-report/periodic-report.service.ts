@@ -4,7 +4,6 @@ import {
   CreationFailed,
   DateInterval,
   type ID,
-  NotFoundException,
   type ObjectView,
   type Range,
   type UnsecuredDto,
@@ -92,13 +91,6 @@ export class PeriodicReportService {
 
   @HandleIdLookup([FinancialReport, NarrativeReport, ProgressReport])
   async readOne(id: ID, _view?: ObjectView): Promise<PeriodicReport> {
-    if (!id) {
-      throw new NotFoundException(
-        'No periodic report id to search for',
-        'periodicReport.id',
-      );
-    }
-
     const result = await this.repo.readOne(id);
     return this.secure(result);
   }
