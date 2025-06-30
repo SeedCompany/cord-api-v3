@@ -57,12 +57,15 @@ export class LocationGelRepository
     const locations = e.select(node)[
       rel as keyof typeof node
     ] as typeof e.Location;
+    // Types may be misleading, confirm at runtime.
+    /* eslint-disable @typescript-eslint/no-unnecessary-condition */
     if (!locations) {
       throw new ServerException(`${label} does not have a "${rel}" link`);
     }
     if (locations.__element__.__name__ !== 'default::Location') {
       throw new ServerException(`${label}.${rel} is not a link to Locations`);
     }
+    /* eslint-enable  @typescript-eslint/no-unnecessary-condition */
     const all = e.select(locations, (obj) => ({
       ...this.applyFilter(obj, input),
       ...this.applyOrderBy(obj, input),

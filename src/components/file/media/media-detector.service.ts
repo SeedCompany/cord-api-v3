@@ -36,8 +36,11 @@ export class MediaDetector {
       return {
         __typename: 'Image',
         dimensions: {
+          // Guarding against library lies
+          /* eslint-disable @typescript-eslint/no-unnecessary-condition */
           width: size.width ?? 0,
           height: size.height ?? 0,
+          /* eslint-enable  @typescript-eslint/no-unnecessary-condition */
         },
       };
     }

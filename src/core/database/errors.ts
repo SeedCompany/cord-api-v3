@@ -112,6 +112,7 @@ export const createBetterError = (e: Error) => {
   if (!isNeo4jError(e)) {
     return e;
   }
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   e.message ??= ''; // I've seen the message be null
 
   const better = cast(e);

@@ -134,6 +134,8 @@ export class FileService {
       }
       throw new ServerException('Failed to retrieve file contents', e);
     }
+    // I think this is a safety check for our S3 mocks
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (!data) {
       throw new NotFoundException('Could not find file contents');
     }

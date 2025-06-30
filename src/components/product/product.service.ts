@@ -81,8 +81,12 @@ export class ProductService {
     }
 
     const otherInput: CreateOtherProduct | undefined =
+      // Double-checking not undefined seems safer here since a union type
+      // could have this field declared as undefined.
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       'title' in input && input.title !== undefined ? input : undefined;
     const derivativeInput: CreateDerivativeScriptureProduct | undefined =
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       'produces' in input && input.produces !== undefined ? input : undefined;
     const scriptureInput: CreateDirectScriptureProduct | undefined =
       !otherInput && !derivativeInput ? input : undefined;
