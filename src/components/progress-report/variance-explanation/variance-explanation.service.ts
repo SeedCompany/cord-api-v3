@@ -37,12 +37,7 @@ export class ProgressReportVarianceExplanationService {
     }
 
     const changes = this.repo.getActualChanges(existing, {
-      reasons:
-        input.reasons === undefined
-          ? existing.reasons.value
-          : input.reasons === null
-          ? []
-          : input.reasons,
+      reasons: input.reasons,
       comments: input.comments,
     });
     if (Object.keys(changes).length === 0) {
