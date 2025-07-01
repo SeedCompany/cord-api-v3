@@ -1,5 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { csv, setOf } from '@seedcompany/common';
+import { asNonEmptyArray, csv, setOf } from '@seedcompany/common';
 import {
   type ID,
   InputException,
@@ -111,10 +111,10 @@ const assertValidRole = (role: string): Role => {
   );
 };
 
-function csvHeader(headerVal: Many<string> | undefined) {
+function csvHeader(headerVal: Many<string | undefined> | undefined) {
   if (!headerVal) {
     return undefined;
   }
   const items = many(headerVal).flatMap((itemCsv) => csv(itemCsv ?? ''));
-  return items && items.length > 0 ? items : undefined;
+  return asNonEmptyArray(items);
 }

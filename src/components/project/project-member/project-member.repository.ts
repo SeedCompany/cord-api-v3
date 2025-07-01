@@ -14,6 +14,7 @@ import {
   isIdLike,
   NotFoundException,
   type Role,
+  ServerException,
   type UnsecuredDto,
 } from '~/common';
 import { DtoRepository } from '~/core/database';
@@ -73,7 +74,11 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
         'member',
       ])
       .first();
-
+    if (!result) {
+      throw new ServerException(
+        'Failed to gather info for relationship verification',
+      );
+    }
     if (!result?.project) {
       throw new NotFoundException(
         'Could not find project',

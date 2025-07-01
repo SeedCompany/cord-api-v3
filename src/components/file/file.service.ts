@@ -327,13 +327,10 @@ export class FileService {
       tempUpload.status === 'fulfilled' &&
       existingUpload.status === 'fulfilled'
     ) {
-      if (tempUpload.value && existingUpload.value) {
-        throw new InputException(
-          'Upload request has already been used',
-          'uploadId',
-        );
-      }
-      throw new CreationFailed(FileVersion);
+      throw new InputException(
+        'Upload request has already been used',
+        'uploadId',
+      );
     } else if (
       tempUpload.status === 'rejected' &&
       existingUpload.status === 'fulfilled'

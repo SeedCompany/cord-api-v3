@@ -1,3 +1,4 @@
+import { entries } from '@seedcompany/common';
 import { createHash } from 'crypto';
 import { node, type Query, relation } from 'cypher-query-builder';
 import { type RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
@@ -90,20 +91,20 @@ export function createRelationships<TResourceStatic extends ResourceShape<any>>(
   maybeLabelsToRelationships?: RelationshipDefinition,
 ) {
   resource = EnhancedResource.of(resource);
-  const normalizedArgs =
+  const normalizedArgs: AnyDirectionalDefinition =
     typeof directionOrDefinition === 'string'
       ? { [directionOrDefinition]: maybeLabelsToRelationships }
       : directionOrDefinition;
 
-  const flattened = Object.entries(normalizedArgs).flatMap(
+  const flattened = entries(normalizedArgs).flatMap(
     ([direction, relationships]) =>
-      Object.entries(relationships ?? {}).flatMap(([relLabel, varOrTuple]) =>
+      Object.entries(relationships).flatMap(([relLabel, varOrTuple]) =>
         many(Array.isArray(varOrTuple) ? varOrTuple[1] ?? [] : varOrTuple).map(
           (id, i) => ({
             nodeLabel: Array.isArray(varOrTuple) ? varOrTuple[0] : undefined, // no labels for variables
             id,
-            direction: direction as RelationDirection,
-            relLabel: relLabel,
+            direction,
+            relLabel,
             variable: !Array.isArray(varOrTuple)
               ? varOrTuple instanceof Variable
                 ? varOrTuple.value
@@ -123,9 +124,9 @@ export function createRelationships<TResourceStatic extends ResourceShape<any>>(
     return (query: Query) => query;
   }
 
-  // We are creating inside of changeset if there's a changeset relation into the node.
+  // We're creating inside a changeset if there is a changeset relation into the node.
   const inChangeset = flattened.some(
-    (f) => f.direction === 'in' && f.relLabel === 'changeset' && f.id,
+    (f) => f.direction === 'in' && f.relLabel === 'changeset',
   );
 
   const createdAt = DateTime.local();

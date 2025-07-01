@@ -110,7 +110,12 @@ export class EnhancedResource<T extends ResourceShape<any>> {
   >();
 
   static resolve(ref: ResourceLike) {
-    if (ref && typeof ref !== 'string') {
+    // Safety check; since this very dynamic code, it is very possible the types are lying.
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    if (ref == null) {
+      throw new ServerException('Resource reference is actually null');
+    }
+    if (typeof ref !== 'string') {
       return EnhancedResource.of(ref);
     }
     if (!EnhancedResource.resourcesHost) {

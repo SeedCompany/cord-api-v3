@@ -176,11 +176,11 @@ export const pathExists =
   ): Builder<T, K> =>
   ({ key, value }) => {
     const cond = pathPattern(isFunction(pattern) ? pattern(value) : pattern);
-    return { [key]: value ? cond : not(cond) };
+    return { [key]: value !== false ? cond : not(cond) };
   };
 
 export const pathExistsWhenTrue: typeof pathExists = (pattern) => (args) =>
-  args.value ? pathExists(pattern)(args) : null;
+  args.value !== false ? pathExists(pattern)(args) : null;
 
 export const isPinned = pathExists<{ pinned?: boolean }, 'pinned'>([
   currentUser,
