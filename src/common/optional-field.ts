@@ -30,19 +30,21 @@ export function OptionalField(
 export function OptionalField(...args: any) {
   const typeFn: (() => any) | undefined =
     typeof args[0] === 'function' ? (args[0] as () => any) : undefined;
-  const options: OptionalFieldOptions | undefined =
-    typeof args[0] === 'function' ? args[1] : args[0];
-  const opts = {
+  const options: OptionalFieldOptions =
+    (typeof args[0] === 'function' ? args[1] : args[0]) ?? {};
+  const nilIn = options.nullable ?? options.optional ?? true;
+  const nullOut = !!options.nullable;
+  const schemaOptions = {
     ...options,
-    nullable: options?.nullable ?? options?.optional ?? true,
+    nullable: nilIn,
   };
   return applyDecorators(
-    typeFn ? Field(typeFn, opts) : Field(opts),
+    typeFn ? Field(typeFn, schemaOptions) : Field(schemaOptions),
     Transform(({ value }) => {
-      if (!options?.nullable && (options?.optional ?? true) && value == null) {
+      if (value === null && !nullOut) {
         return undefined;
       }
-      return options?.transform ? options.transform(value) : value;
+      return options.transform ? options.transform(value) : value;
     }),
   );
 }
