@@ -42,8 +42,11 @@ export function OptionalField(...args: any) {
     typeof args[0] === 'function' ? (args[0] as () => any) : undefined;
   const options: OptionalFieldOptions =
     (typeof args[0] === 'function' ? args[1] : args[0]) ?? {};
-  const nilIn = options.nullable ?? options.optional ?? true;
-  const nullOut = !!options.nullable;
+  const nilIn =
+    options.nullable === 'items' && options.optional
+      ? 'itemsAndList'
+      : options.nullable ?? options.optional ?? true;
+  const nullOut = !!options.nullable && options.nullable !== 'items';
   const schemaOptions = {
     ...options,
     nullable: nilIn,
