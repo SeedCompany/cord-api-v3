@@ -106,7 +106,9 @@ export class ApplyFinalizedChangesetToEngagement
               node('node', 'Language'),
             ])
             .apply(
-              changeset.id ? commitChangesetProps() : rejectChangesetProps(),
+              changeset.applied
+                ? commitChangesetProps()
+                : rejectChangesetProps(),
             )
             .return('1 as one'),
         )

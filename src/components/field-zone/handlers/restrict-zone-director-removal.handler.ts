@@ -8,7 +8,7 @@ export class RestrictZoneDirectorRemovalHandler {
   constructor(private readonly repo: FieldZoneRepository) {}
 
   async handle(event: UserUpdatedEvent) {
-    if (!event.updated.roles) {
+    if (!event.input.roles) {
       return;
     }
     const roleRemoved =
