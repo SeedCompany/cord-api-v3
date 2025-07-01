@@ -44,15 +44,10 @@ export class SearchRepository extends CommonRepository {
           // number, so we don't choke things without a limit.
           .raw('LIMIT 100'),
       )
-      .apply((q) =>
-        input.type
-          ? q
-              .with(['node', 'matchedProps'])
-              .raw('WHERE any(l in labels(node) where l in $types)', {
-                types: input.type,
-              })
-          : q,
-      )
+      .with(['node', 'matchedProps'])
+      .raw('WHERE any(l in labels(node) where l in $types)', {
+        types: input.type,
+      })
       .return<{
         node: BaseNode;
         matchedProps: readonly string[];

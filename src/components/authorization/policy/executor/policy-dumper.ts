@@ -275,7 +275,7 @@ const searchResources = (
       if (isWildcard(r)) {
         return resNames.map((n) => [n, propsIn] as const);
       }
-      r = r?.replace(/[{}]/g, '');
+      r = r.replace(/[{}]/g, '');
       return csv(r).map((n) => [n, propsIn] as const);
     })
     .flatMap(([r, propsIn]) => {

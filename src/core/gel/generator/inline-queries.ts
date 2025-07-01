@@ -22,36 +22,35 @@ export async function generateInlineQueries({
     ? root.addSourceFilesAtPaths(grepForShortList.stdout.split('\n'))
     : [];
 
-  const queries =
-    shortList.flatMap((file) =>
-      file.getDescendantsOfKind(SyntaxKind.CallExpression).flatMap((call) => {
-        if (call.getExpression().getText() !== 'edgeql') {
-          return [];
-        }
-        const args = call.getArguments();
+  const queries = shortList.flatMap((file) =>
+    file.getDescendantsOfKind(SyntaxKind.CallExpression).flatMap((call) => {
+      if (call.getExpression().getText() !== 'edgeql') {
+        return [];
+      }
+      const args = call.getArguments();
 
-        // // 1000x slower to confirm edgeql import
-        // const defs = call
-        //   .getExpressionIfKindOrThrow(SyntaxKind.Identifier)
-        //   .getDefinitionNodes();
-        // if (
-        //   !defs[0].getSourceFile().getFilePath().endsWith('gel/edgeql.ts')
-        // ) {
-        //   return [];
-        // }
+      // // 1000x slower to confirm edgeql import
+      // const defs = call
+      //   .getExpressionIfKindOrThrow(SyntaxKind.Identifier)
+      //   .getDefinitionNodes();
+      // if (
+      //   !defs[0].getSourceFile().getFilePath().endsWith('gel/edgeql.ts')
+      // ) {
+      //   return [];
+      // }
 
-        if (
-          args.length > 1 ||
-          (!Node.isStringLiteral(args[0]) &&
-            !Node.isNoSubstitutionTemplateLiteral(args[0]))
-        ) {
-          return [];
-        }
+      if (
+        args.length > 1 ||
+        (!Node.isStringLiteral(args[0]) &&
+          !Node.isNoSubstitutionTemplateLiteral(args[0]))
+      ) {
+        return [];
+      }
 
-        const query = args[0].getText().slice(1, -1);
-        return { query, call };
-      }),
-    ) ?? [];
+      const query = args[0].getText().slice(1, -1);
+      return { query, call };
+    }),
+  );
 
   const inlineQueriesFile = root.createSourceFile(
     'src/core/gel/generated-client/inline-queries.ts',

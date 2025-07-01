@@ -52,7 +52,7 @@ expect.extend({
             ? stripIndent`
                 Codes:
                   ${this.utils.EXPECTED_COLOR(expectedObj.codes?.join(', '))}
-                  ${this.utils.RECEIVED_COLOR(actualObj.codes?.join(', '))}
+                  ${this.utils.RECEIVED_COLOR(actualObj.codes.join(', '))}
               `.replace(/\n/g, '\n        ')
             : ''
         }

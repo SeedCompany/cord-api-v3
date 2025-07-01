@@ -46,21 +46,21 @@ export class ExtractPnpFileOnUploadHandler {
       fileId: event.file.id,
     });
 
-    if (extracted?.cumulative) {
+    if (extracted.cumulative) {
       await this.repo.save(
         event.report,
         SummaryPeriod.Cumulative,
         extracted.cumulative,
       );
     }
-    if (extracted?.reportPeriod) {
+    if (extracted.reportPeriod) {
       await this.repo.save(
         event.report,
         SummaryPeriod.ReportPeriod,
         extracted.reportPeriod,
       );
     }
-    if (extracted?.fiscalYear) {
+    if (extracted.fiscalYear) {
       await this.repo.save(
         event.report,
         SummaryPeriod.FiscalYearSoFar,

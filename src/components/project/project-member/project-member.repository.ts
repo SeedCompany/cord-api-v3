@@ -79,13 +79,13 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
         'Failed to gather info for relationship verification',
       );
     }
-    if (!result?.project) {
+    if (!result.project) {
       throw new NotFoundException(
         'Could not find project',
         'projectMember.projectId',
       );
     }
-    if (!result?.user) {
+    if (!result.user) {
       throw new NotFoundException(
         'Could not find person',
         'projectMember.userId',

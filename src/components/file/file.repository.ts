@@ -119,7 +119,7 @@ export class FileRepository extends CommonRepository {
       ])
       .apply((q) => {
         const conditions: AnyConditions = {};
-        if (input?.filter?.name) {
+        if (input.filter?.name) {
           q.match([
             node('node'),
             relation('out', '', 'name', ACTIVE),
@@ -127,7 +127,7 @@ export class FileRepository extends CommonRepository {
           ]);
           conditions['name.value'] = contains(input.filter.name);
         }
-        if (input?.filter?.type) {
+        if (input.filter?.type) {
           conditions.node = hasLabel(input.filter.type);
         }
         return entries(conditions).length === 0 ? q : q.where(conditions);

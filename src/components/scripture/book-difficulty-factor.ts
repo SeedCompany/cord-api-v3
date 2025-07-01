@@ -2,7 +2,7 @@ import { type Book, type BookName } from '@seedcompany/scripture';
 import { type BookDifficulty } from './dto';
 
 export const difficultyFactorOfBook = (book: Book): number =>
-  factorMap[difficultyOfBook(book)] ?? 0;
+  factorMap[difficultyOfBook(book)];
 
 export const difficultyOfBook = (book: Book): BookDifficulty =>
   difficultyMap[book.name];

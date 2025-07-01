@@ -55,7 +55,7 @@ const flattenValidationErrors = (
       obj[path.join('.')] = constraints;
     }
     if (children && entries(children).length > 0) {
-      flattenValidationErrors(children ?? [], obj, path);
+      flattenValidationErrors(children, obj, path);
     }
     return obj;
   }, out);

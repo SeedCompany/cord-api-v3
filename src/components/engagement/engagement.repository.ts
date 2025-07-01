@@ -512,7 +512,7 @@ export class EngagementRepository extends CommonRepository {
                   .union()
                   .match([
                     node('project', 'Project', {
-                      id: input.filter.project?.id,
+                      id: input.filter.project.id,
                     }),
                     relation('out', '', 'engagement', INACTIVE),
                     node('node', 'Engagement'),
@@ -635,7 +635,7 @@ export class EngagementRepository extends CommonRepository {
     }
 
     const label = isInternship ? 'person' : 'language';
-    if (!result?.other) {
+    if (!result.other) {
       throw new NotFoundException(
         `Could not find ${label}`,
         `engagement.${property}Id`,

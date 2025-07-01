@@ -30,13 +30,13 @@ export type RetryOptions = Merge<
 
 const parseOptions = (options: RetryOptions = {}): Options => ({
   ...options,
-  maxRetryTime: options?.maxRetryTime
+  maxRetryTime: options.maxRetryTime
     ? Duration.from(options.maxRetryTime).toMillis()
     : undefined,
-  minTimeout: options?.minTimeout
+  minTimeout: options.minTimeout
     ? Duration.from(options.minTimeout).toMillis()
     : undefined,
-  maxTimeout: options?.maxTimeout
+  maxTimeout: options.maxTimeout
     ? Duration.from(options.maxTimeout).toMillis()
     : undefined,
 });

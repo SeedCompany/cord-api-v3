@@ -43,7 +43,7 @@ export const extractScripture = (
     // TODO I think this is a redundant check.
     // I don't think we will ever get here because the row is filtered out with
     // the isGoalRow function.
-    result?.addProblem(MismatchScriptureAndVerseCount, bookCell, {
+    result.addProblem(MismatchScriptureAndVerseCount, bookCell, {
       bookVal: bookCell.asString!,
       actualVerseCount: totalVersesInBookCol,
       declVerseCount: totalVersesCell.asNumber!,

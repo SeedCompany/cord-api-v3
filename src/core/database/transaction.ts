@@ -111,7 +111,7 @@ Connection.prototype.runInTransaction = async function withTransaction<R>(
     return await runTransaction(
       async (tx) => {
         if (options?.queryLogger) {
-          (tx as Neo4jTransaction).queryLogger = options?.queryLogger;
+          (tx as Neo4jTransaction).queryLogger = options.queryLogger;
         }
         try {
           return await this.transactionStorage.run(tx, inner);

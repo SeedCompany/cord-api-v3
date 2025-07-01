@@ -108,7 +108,7 @@ describe('Product e2e', () => {
     const actual = result.product;
     if (actual.__typename !== 'DirectScriptureProduct') throw new Error();
 
-    expect(actual?.unspecifiedScripture?.value).toMatchObject({
+    expect(actual.unspecifiedScripture.value).toMatchObject({
       book: 'Matthew',
       totalVerses: 10,
     });
@@ -194,18 +194,18 @@ describe('Product e2e', () => {
     if (actual.__typename !== 'DerivativeScriptureProduct') throw new Error();
 
     expect(actual.produces).toBeDefined();
-    expect(actual.produces?.value).toBeDefined();
-    expect(actual.produces?.value?.id).toBe(story.id);
-    expect(actual.produces?.value?.__typename).toBe(ProducibleType.Story);
-    expect(actual.produces?.value?.scriptureReferences?.value).toEqual(
+    expect(actual.produces.value).toBeDefined();
+    expect(actual.produces.value?.id).toBe(story.id);
+    expect(actual.produces.value?.__typename).toBe(ProducibleType.Story);
+    expect(actual.produces.value?.scriptureReferences.value).toEqual(
       expect.arrayContaining(story.scriptureReferences.value),
     );
     expect(actual.scriptureReferences.value).toEqual(
       expect.arrayContaining(
-        actual.produces?.value?.scriptureReferences?.value || [],
+        actual.produces.value?.scriptureReferences.value || [],
       ),
     );
-    expect(actual.scriptureReferencesOverride?.value).toBeNull();
+    expect(actual.scriptureReferencesOverride.value).toBeNull();
   });
 
   it('create DerivativeScriptureProduct with scriptureReferencesOverride', async () => {
@@ -276,14 +276,14 @@ describe('Product e2e', () => {
     const actual = result.product;
     if (actual.__typename !== 'DerivativeScriptureProduct') throw new Error();
 
-    expect(actual.scriptureReferencesOverride?.value).toBeDefined();
-    expect(actual.scriptureReferencesOverride?.value).toEqual(
+    expect(actual.scriptureReferencesOverride.value).toBeDefined();
+    expect(actual.scriptureReferencesOverride.value).toEqual(
       expect.arrayContaining(randomScriptureReferences),
     );
     expect(actual.scriptureReferences.value).toEqual(
       expect.arrayContaining(randomScriptureReferences),
     );
-    expect(actual.produces?.value?.scriptureReferences?.value).toEqual(
+    expect(actual.produces.value?.scriptureReferences.value).toEqual(
       expect.arrayContaining(story.scriptureReferences.value),
     );
   });
@@ -373,7 +373,7 @@ describe('Product e2e', () => {
     expect(actual.scriptureReferences.value).toEqual(
       expect.arrayContaining(updateProduct.scriptureReferences),
     );
-    expect(actual?.unspecifiedScripture?.value).toMatchObject({
+    expect(actual.unspecifiedScripture.value).toMatchObject({
       book: 'Matthew',
       totalVerses: 10,
     });
@@ -455,13 +455,13 @@ describe('Product e2e', () => {
     if (actual.__typename !== 'DerivativeScriptureProduct') throw new Error();
 
     expect(actual.produces).toBeDefined();
-    expect(actual.produces?.value).toBeDefined();
-    expect(actual.produces?.value?.id).toBe(film.id);
-    expect(actual.produces?.value?.__typename).toBe(ProducibleType.Film);
-    expect(actual.produces?.value?.scriptureReferences).toEqual(
+    expect(actual.produces.value).toBeDefined();
+    expect(actual.produces.value?.id).toBe(film.id);
+    expect(actual.produces.value?.__typename).toBe(ProducibleType.Film);
+    expect(actual.produces.value?.scriptureReferences).toEqual(
       expect.arrayContaining(film.scriptureReferences.value),
     );
-    expect(actual.scriptureReferencesOverride?.value).toBeNull();
+    expect(actual.scriptureReferencesOverride.value).toBeNull();
   });
 
   it('update DerivativeScriptureProduct with scriptureReferencesOverride', async () => {
@@ -541,13 +541,13 @@ describe('Product e2e', () => {
     const actual = result.updateDerivativeScriptureProduct.product;
     if (actual.__typename !== 'DerivativeScriptureProduct') throw new Error();
 
-    expect(actual.scriptureReferencesOverride?.value).toEqual(
+    expect(actual.scriptureReferencesOverride.value).toEqual(
       expect.arrayContaining(override),
     );
-    expect(actual.scriptureReferences?.value).toEqual(
+    expect(actual.scriptureReferences.value).toEqual(
       expect.arrayContaining(override),
     );
-    expect(actual.produces?.value?.scriptureReferences?.value).toEqual(
+    expect(actual.produces.value?.scriptureReferences.value).toEqual(
       expect.arrayContaining(story.scriptureReferences.value),
     );
   });
@@ -627,8 +627,8 @@ describe('Product e2e', () => {
     const actual = result.updateDerivativeScriptureProduct.product;
     if (actual.__typename !== 'DerivativeScriptureProduct') throw new Error();
 
-    expect(actual.scriptureReferencesOverride?.value).toBeNull();
-    expect(actual.produces?.value?.scriptureReferences?.value).toEqual(
+    expect(actual.scriptureReferencesOverride.value).toBeNull();
+    expect(actual.produces.value?.scriptureReferences.value).toEqual(
       actual.scriptureReferences.value,
     );
   });

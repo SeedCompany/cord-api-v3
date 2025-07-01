@@ -87,7 +87,7 @@ export class LanguageRepository extends DtoRepository<
     };
 
     const ethnologueId = await this.ethnologueLanguageService.create(
-      input?.ethnologue,
+      input.ethnologue,
     );
 
     const createLanguage = this.db

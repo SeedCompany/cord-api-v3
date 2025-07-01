@@ -141,7 +141,7 @@ export class EnvironmentService implements Iterable<[string, string]> {
       const parseValue = options.parseValue ?? identity;
 
       return new Map(
-        (raw ?? '').split(pairSeparator).map((item) => {
+        raw.split(pairSeparator).map((item) => {
           const [key, value] = item.trim().split(keySeparator);
           return [parseKey(key!), parseValue(value!)] as const;
         }),

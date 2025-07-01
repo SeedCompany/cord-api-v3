@@ -66,7 +66,7 @@ export class SessionInitiator {
   }
 
   private getTokenFromAuthHeader(req: IRequest): string | null {
-    const header = req.headers?.authorization;
+    const header = req.headers.authorization;
 
     if (!header) {
       return null;
@@ -79,18 +79,18 @@ export class SessionInitiator {
   }
 
   private getTokenFromCookie(req: IRequest): string | null {
-    return req.cookies?.[this.config.sessionCookie(req).name] || null;
+    return req.cookies[this.config.sessionCookie(req).name] || null;
   }
 
   private getImpersonatee(request: IRequest): Session['impersonatee'] {
-    const user = request.headers?.['x-cord-impersonate-user'] as ID | undefined;
+    const user = request.headers['x-cord-impersonate-user'] as ID | undefined;
     if (user && !isIdLike(user)) {
       throw new InputException(
         `Invalid user ID given in "X-CORD-Impersonate-User" header`,
       );
     }
 
-    const rawRoles = csvHeader(request?.headers?.['x-cord-impersonate-role']);
+    const rawRoles = csvHeader(request.headers['x-cord-impersonate-role']);
 
     if (!rawRoles && !user) {
       return undefined;

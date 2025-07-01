@@ -28,7 +28,7 @@ export const paginate =
       limit: count,
     };
     if (page !== 1) {
-      params.offset = ((page ?? 1) - 1) * count;
+      params.offset = (page - 1) * count;
       list = `list[$offset..]`;
     }
 
