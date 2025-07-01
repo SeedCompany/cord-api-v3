@@ -108,9 +108,6 @@ export const progressSummaryFilters = filter.define(
   {
     scheduleStatus: ({ value, query }) => {
       const status = setOf(value);
-      if (status.size === 0) {
-        return undefined;
-      }
       if (status.size === 1 && status.has(null)) {
         return query.where(new WhereExp('node IS NULL'));
       }

@@ -15,6 +15,7 @@ export abstract class ProgressSummaryFilters {
       - \`[null]\` will filter to only missing summaries.
       - \`null\` and \`[]\` will be ignored.
     `,
+    empty: 'omit',
   })
   readonly scheduleStatus?: ReadonlyArray<ScheduleStatus | null>;
 }
