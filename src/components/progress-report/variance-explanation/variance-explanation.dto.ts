@@ -3,6 +3,7 @@ import { ArrayMaxSize, IsIn } from 'class-validator';
 import {
   type ID,
   IdField,
+  ListField,
   type RichTextDocument,
   RichTextField,
   SecuredRichTextNullable,
@@ -36,7 +37,10 @@ export abstract class ProgressReportVarianceExplanationInput {
   })
   readonly report: ID;
 
-  @Field(() => [String], { nullable: true })
+  @ListField(() => String, {
+    optional: true,
+    transform: (prev) => (value) => value === null ? [] : prev(value),
+  })
   @IsIn([...ReasonOptions.instance.all], {
     each: true,
     message: 'Reason is not one of our available choices',

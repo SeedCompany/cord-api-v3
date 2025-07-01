@@ -6,7 +6,8 @@ import { ScheduleStatus } from './schedule-status.enum';
 @InputType()
 export abstract class ProgressSummaryFilters {
   @ListField(() => ScheduleStatus, {
-    nullable: 'itemsAndList',
+    optional: true,
+    nullable: 'items',
     description: stripIndent`
       Filter by schedule status.
       - \`[X, Y]\` will allow summaries with either X or Y status.
@@ -14,6 +15,7 @@ export abstract class ProgressSummaryFilters {
       - \`[null]\` will filter to only missing summaries.
       - \`null\` and \`[]\` will be ignored.
     `,
+    empty: 'omit',
   })
   readonly scheduleStatus?: ReadonlyArray<ScheduleStatus | null>;
 }
