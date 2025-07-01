@@ -13,8 +13,18 @@ export type OptionalFieldOptions = FieldOptions & {
    * If true, values can be omitted/undefined but not null.
    */
   optional?: boolean;
-  transform?: (value: any) => unknown;
+  transform?: TransformerLink;
 };
+
+type TransformerLink = (prev: Transformer) => Transformer;
+type Transformer<I = any, O = any> = (value: I) => O;
+export const withDefaultTransform =
+  (
+    input: TransformerLink | undefined,
+    wrapping: TransformerLink,
+  ): TransformerLink =>
+  (base) =>
+    input?.(wrapping(base)) ?? wrapping(base);
 
 /**
  * A field that is optional/omissible/can be undefined.
@@ -38,13 +48,16 @@ export function OptionalField(...args: any) {
     ...options,
     nullable: nilIn,
   };
+  const defaultTransformer: Transformer = (value) => {
+    if (value === null && !nullOut) {
+      return undefined;
+    }
+    return value;
+  };
+  const finalTransformer =
+    options.transform?.(defaultTransformer) ?? defaultTransformer;
   return applyDecorators(
     typeFn ? Field(typeFn, schemaOptions) : Field(schemaOptions),
-    Transform(({ value }) => {
-      if (value === null && !nullOut) {
-        return undefined;
-      }
-      return options.transform ? options.transform(value) : value;
-    }),
+    Transform(({ value }) => finalTransformer(value)),
   );
 }

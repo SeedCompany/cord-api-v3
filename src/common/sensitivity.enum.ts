@@ -27,7 +27,11 @@ export const SensitivitiesFilterField = (options?: ListFieldOptions) =>
     ...options,
     optional: true,
     empty: 'omit',
-    transform: (value) =>
+    transform: (prev) => (raw) => {
+      const value = prev(raw);
       // If given all options, there is no need to filter
-      !value || value.length === Sensitivity.values.size ? undefined : value,
+      return !value || value.length === Sensitivity.values.size
+        ? undefined
+        : value;
+    },
   });

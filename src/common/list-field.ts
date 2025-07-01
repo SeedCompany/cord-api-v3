@@ -1,6 +1,10 @@
 import { applyDecorators } from '@nestjs/common';
 import { ArrayNotEmpty } from 'class-validator';
-import { OptionalField, type OptionalFieldOptions } from './optional-field';
+import {
+  OptionalField,
+  type OptionalFieldOptions,
+  withDefaultTransform,
+} from './optional-field';
 
 export type ListFieldOptions = OptionalFieldOptions & {
   /**
@@ -14,11 +18,12 @@ export const ListField = (typeFn: () => any, options: ListFieldOptions) =>
     OptionalField(() => [typeFn()], {
       optional: false,
       ...options,
-      transform: (value) => {
+      transform: withDefaultTransform(options.transform, (prev) => (raw) => {
+        const value = prev(raw);
         let out = value ? [...new Set(value)] : value;
         out = options.empty === 'omit' && out.length === 0 ? undefined : out;
-        return options.transform ? options.transform(out) : out;
-      },
+        return out;
+      }),
     }),
     ...(options.empty === 'deny' ? [ArrayNotEmpty()] : []),
   );

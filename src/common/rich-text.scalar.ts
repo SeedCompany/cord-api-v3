@@ -1,6 +1,6 @@
 import { applyDecorators } from '@nestjs/common';
 import { ObjectType } from '@nestjs/graphql';
-import { setToStringTag } from '@seedcompany/common';
+import { type Nil, setToStringTag } from '@seedcompany/common';
 import { markSkipClassTransformation } from '@seedcompany/nest';
 import { IsObject } from 'class-validator';
 import { createHash } from 'crypto';
@@ -82,23 +82,19 @@ export const RichTextField = (options?: OptionalFieldOptions) =>
     OptionalField(() => RichTextScalar, {
       optional: false,
       ...options,
-      transform: (value) => {
-        const doc = RichTextDocument.fromMaybe(value);
-        if (doc) {
-          return doc;
+      transform: (prev) => (value) => {
+        const doc: RichTextDocument | Nil = prev(
+          RichTextDocument.fromMaybe(value),
+        );
+        if (doc == null && !options?.nullable && !options?.optional) {
+          // Should never _really_ get here.
+          // UI should understand & send null instead of an empty document.
+          // Would prefer this to be done with validators.
+          // But I believe this needs `null`s to be validated.
+          // skipMissingProperties -> skipUndefinedProperties
+          throw new InputException('RichText must be given');
         }
-        if (options?.nullable) {
-          return null;
-        }
-        if (options?.optional) {
-          return undefined;
-        }
-        // Should never _really_ get here.
-        // UI should understand & send null instead of an empty document.
-        // Would prefer this to be done with validators.
-        // But I believe this needs to `null`s to be validated.
-        // skipMissingProperties -> skipUndefinedProperties
-        throw new InputException('RichText must be given');
+        return doc;
       },
     }),
     IsObject(),
