@@ -8,13 +8,7 @@ export type OrganizationType = EnumType<typeof OrganizationType>;
 export const OrganizationType = makeEnum({
   name: 'OrganizationType',
   description: 'The type of organization',
-  values: [
-    'Church',
-    'Parachurch',
-    'Mission',
-    'TranslationOrganization',
-    'Alliance',
-  ],
+  values: ['Church', 'Parachurch', 'Mission', 'Translation', 'Alliance'],
 });
 
 @ObjectType({
