@@ -13,6 +13,7 @@ import { KnownLanguageRepository } from './known-language.repository';
 import { KnownLanguageResolver } from './known-language.resolver';
 import { AddActorLabelMigration } from './migrations/add-actor-label.migration';
 import { AddUserNameLabelMigration } from './migrations/add-user-name-label.migration';
+import { DefaultUserStatusMigration } from './migrations/default-user-status.migration';
 import { SystemAgentGelRepository } from './system-agent.gel.repository';
 import { SystemAgentNeo4jRepository } from './system-agent.neo4j.repository';
 import { SystemAgentRepository } from './system-agent.repository';
@@ -49,6 +50,7 @@ import { UserService } from './user.service';
     },
     AddActorLabelMigration,
     AddUserNameLabelMigration,
+    DefaultUserStatusMigration,
   ],
   exports: [
     UserService,
