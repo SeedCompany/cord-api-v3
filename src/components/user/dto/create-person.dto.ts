@@ -33,7 +33,7 @@ export abstract class CreatePerson {
   readonly about?: string | null;
 
   @Field(() => UserStatus, { nullable: true })
-  readonly status?: UserStatus;
+  readonly status?: UserStatus = 'Active';
 
   @Field(() => [Role], { nullable: true })
   @Transform(({ value }) => uniq(value))
