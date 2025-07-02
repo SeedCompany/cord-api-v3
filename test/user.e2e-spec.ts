@@ -2,6 +2,7 @@ import { faker } from '@faker-js/faker';
 import { times } from 'lodash';
 import { firstLettersOfWords, isValidId } from '~/common';
 import { graphql, type InputOf } from '~/graphql';
+import { UserStatus } from '../src/components/user/dto';
 import {
   createEducation,
   createOrganization,
@@ -87,7 +88,7 @@ describe('User e2e', () => {
     expect(actual.displayLastName.value).toBe(user.displayLastName);
     expect(actual.phone.value).toBeNull();
     expect(actual.about.value).toBeNull();
-    expect(actual.status.value).toBeNull();
+    expect(actual.status.value).toBe(UserStatus.Active);
     expect(actual.timezone.value?.name).toBe(user.timezone);
   });
 
