@@ -25,14 +25,14 @@ with
       "name": "Rhun For Zero",
       "address": "975 1st Street, Jacksonville, FL 98765",
       "acronym": "RFZ",
-      "types": ["TranslationOrganization", "Mission"],
+      "types": ["Translation", "Mission"],
       "reach": ["Global"]
     },
     {
       "name": "Gondor Foundation",
       "address": "4567 2nd Street, Jeffersonville, IN 47130",
       "acronym": "GF",
-      "types": ["Church", "TranslationOrganization"],
+      "types": ["Church", "Translation"],
       "reach": ["Local"]
     },
     {

@@ -24,7 +24,7 @@ module Organization {
     Church,
     Parachurch,
     Mission,
-    TranslationOrganization,
+    Translation,
     Alliance
   >;
   
