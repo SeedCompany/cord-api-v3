@@ -9,6 +9,7 @@ export const OrganizationReach = makeEnum({
   name: 'OrganizationReach',
   description: 'The reach of the organization',
   values: ['Local', 'Regional', 'National', 'Global'],
+  exposeOrder: true,
 });
 
 @ObjectType({
