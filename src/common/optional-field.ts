@@ -13,8 +13,18 @@ export type OptionalFieldOptions = FieldOptions & {
    * If true, values can be omitted/undefined but not null.
    */
   optional?: boolean;
-  transform?: (value: any) => unknown;
+  transform?: TransformerLink;
 };
+
+type TransformerLink = (prev: Transformer) => Transformer;
+type Transformer<I = any, O = any> = (value: I) => O;
+export const withDefaultTransform =
+  (
+    input: TransformerLink | undefined,
+    wrapping: TransformerLink,
+  ): TransformerLink =>
+  (base) =>
+    input?.(wrapping(base)) ?? wrapping(base);
 
 /**
  * A field that is optional/omissible/can be undefined.
@@ -30,19 +40,27 @@ export function OptionalField(
 export function OptionalField(...args: any) {
   const typeFn: (() => any) | undefined =
     typeof args[0] === 'function' ? (args[0] as () => any) : undefined;
-  const options: OptionalFieldOptions | undefined =
-    typeof args[0] === 'function' ? args[1] : args[0];
-  const opts = {
+  const options: OptionalFieldOptions =
+    (typeof args[0] === 'function' ? args[1] : args[0]) ?? {};
+  const nilIn =
+    options.nullable === 'items' && options.optional
+      ? 'itemsAndList'
+      : options.nullable ?? options.optional ?? true;
+  const nullOut = !!options.nullable && options.nullable !== 'items';
+  const schemaOptions = {
     ...options,
-    nullable: options?.nullable ?? options?.optional ?? true,
+    nullable: nilIn,
   };
+  const defaultTransformer: Transformer = (value) => {
+    if (value === null && !nullOut) {
+      return undefined;
+    }
+    return value;
+  };
+  const finalTransformer =
+    options.transform?.(defaultTransformer) ?? defaultTransformer;
   return applyDecorators(
-    typeFn ? Field(typeFn, opts) : Field(opts),
-    Transform(({ value }) => {
-      if (!options?.nullable && (options?.optional ?? true) && value == null) {
-        return undefined;
-      }
-      return options?.transform ? options.transform(value) : value;
-    }),
+    typeFn ? Field(typeFn, schemaOptions) : Field(schemaOptions),
+    Transform(({ value }) => finalTransformer(value)),
   );
 }

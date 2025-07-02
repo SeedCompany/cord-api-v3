@@ -20,9 +20,13 @@ export abstract class PartnershipFilters {
   @ListField(() => PartnerType, {
     optional: true,
     empty: 'omit',
-    transform: (value) =>
+    transform: (prev) => (raw) => {
+      const value = prev(raw);
       // If given all options, there is no need to filter
-      !value || value.length === PartnerType.values.size ? undefined : value,
+      return !value || value.length === PartnerType.values.size
+        ? undefined
+        : value;
+    },
   })
   readonly types?: readonly PartnerType[];
 }
