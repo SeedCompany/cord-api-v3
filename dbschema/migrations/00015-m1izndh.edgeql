@@ -1,4 +1,4 @@
-CREATE MIGRATION m1izndhxu7mkhaey6hvgllg24v4u5et3kpkbuouot3kig4q7cfwwha
+CREATE MIGRATION m1eqfizwp63742gam4tmqiqopxwcwchwoupbt4iqf4o533myyvcypq
     ONTO m1l7uuqm3my5klng3a2m6wqoswaq63h6jb63gvioafpj2t5yffxduq
 {
   CREATE MODULE Finance IF NOT EXISTS;
@@ -13,7 +13,7 @@ CREATE MIGRATION m1izndhxu7mkhaey6hvgllg24v4u5et3kpkbuouot3kig4q7cfwwha
       CREATE ANNOTATION std::description := 'Effectively static, but here to to facilitate metrics.';
     };
     CREATE TRIGGER assertValidBlocks AFTER UPDATE, INSERT FOR EACH DO (
-      WITH 
+      WITH
         blocksMultirange := std::assert_exists(__new__.range, message := 'Finance::Department::IdBlock.range should be declared'),
         blocks := std::assert_exists(std::multirange_unpack(blocksMultirange), message := 'Finance::Department::IdBlock.range should have some ranges declared')
       FOR block IN blocks
@@ -66,6 +66,11 @@ CREATE MIGRATION m1izndhxu7mkhaey6hvgllg24v4u5et3kpkbuouot3kig4q7cfwwha
     };
   };
   ALTER TYPE default::Project {
+    CREATE LINK primaryPartnership := (
+      select Partnership
+      filter Partnership.primary and Partnership.project = __source__
+      limit 1
+    );
     ALTER PROPERTY departmentId {
       DROP REWRITE INSERT, UPDATE;
       CREATE REWRITE INSERT, UPDATE USING ((
@@ -76,7 +81,10 @@ CREATE MIGRATION m1izndhxu7mkhaey6hvgllg24v4u5et3kpkbuouot3kig4q7cfwwha
         ) THEN (
           WITH block := (
             IF (__subject__ IS default::MultiplicationTranslationProject)
-            THEN std::assert_exists((std::assert_exists(((SELECT __subject__.partnerships FILTER .primary)).partner, message := 'Project must have a primary partnership')).departmentIdBlock, message := 'Available Department IDs have not been declared')
+            THEN (
+              WITH primaryPartnership := std::assert_exists(__subject__.primaryPartnership, message := 'Project must have a primary partnership'),
+              SELECT std::assert_exists(primaryPartnership.partner.departmentIdBlock, message := 'Available Department IDs have not been declared')
+            )
             ELSE (std::assert_exists((std::assert_exists(__subject__.primaryLocation, message := 'Project must have a primary location')).fundingAccount, message := "Project's primary location must have a funding account")).departmentIdBlock)
           SELECT std::assert_exists(block.nextAvailable, message := 'No department ID is available')
         ) ELSE .departmentId

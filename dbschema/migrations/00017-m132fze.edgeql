@@ -1,5 +1,5 @@
-CREATE MIGRATION m132fzeektqf342ie6nwpmz4blp3ewrncp72ysjtngs32wybs3rkza
-    ONTO m1jf7p43qsddgdjn2fues62z6hemf2eshuiedx64dod5nkgrrssaaq
+CREATE MIGRATION m1xzmkyesmqv2ivg4gjj6zmh5kdalfwgndnst356xk4i524hvyibtq
+    ONTO m1hnb27oqqkof3lnba4yzfccxjq5ca55g3jz7dsacix6cafqhqrvcq
 {
   ALTER TYPE Mixin::Timestamped {
     ALTER PROPERTY createdAt {
