@@ -51,10 +51,16 @@ export const EmailTemplate = ({
       <Style
         inline
         children={`
+.body {
+  /* prevents card shadow being cut off */
+  padding: 8px;
+  /* add more just to look more symmetrical with branding header */
+  padding-bottom: 48px;
+}
 .card-shadow {
-  -webkit-box-shadow: 0px 5px 5px -3px rgba(0,0,0,0.2), 0px 8px 10px 1px rgba(0,0,0,0.14), 0px 3px 14px 2px rgba(0,0,0,0.12);
-  -moz-box-shadow: 0px 5px 5px -3px rgba(0,0,0,0.2), 0px 8px 10px 1px rgba(0,0,0,0.14), 0px 3px 14px 2px rgba(0,0,0,0.12);
-  box-shadow: 0px 5px 5px -3px rgba(0,0,0,0.2), 0px 8px 10px 1px rgba(0,0,0,0.14), 0px 3px 14px 2px rgba(0,0,0,0.12);
+  -webkit-box-shadow: rgba(0, 0, 0, 0.2) 0px 3px 1px -2px, rgba(0, 0, 0, 0.14) 0px 2px 2px 0px, rgba(0, 0, 0, 0.12) 0px 1px 5px 0px;
+  -moz-box-shadow: rgba(0, 0, 0, 0.2) 0px 3px 1px -2px, rgba(0, 0, 0, 0.14) 0px 2px 2px 0px, rgba(0, 0, 0, 0.12) 0px 1px 5px 0px;
+  box-shadow: rgba(0, 0, 0, 0.2) 0px 3px 1px -2px, rgba(0, 0, 0, 0.14) 0px 2px 2px 0px, rgba(0, 0, 0, 0.12) 0px 1px 5px 0px;
 }
 .button-shadow td {
   -webkit-box-shadow: 0px 3px 1px -2px rgba(0,0,0,0.2), 0px 2px 2px 0px rgba(0,0,0,0.14), 0px 1px 5px 0px rgba(0,0,0,0.12);
@@ -83,7 +89,7 @@ export const Theme = () => (
     <Font name="sofia-pro" href="https://use.typekit.net/qrd6jxb.css" />
     <Attributes>
       <All fontFamily="sofia-pro, sans-serif" fontSize="16px" />
-      <Body width={600} backgroundColor="#fafafa">
+      <Body width={600} backgroundColor="#fafafa" cssClass="body">
         {[]}
       </Body>
       <Section backgroundColor="#ffffff">{}</Section>
