@@ -104,7 +104,7 @@ export const Branding = (): ReactElement => {
       </Column>
       <Column verticalAlign="middle" width="220px">
         <Text fontSize={32} align="center">
-          CORD Field
+          <span style={{ whiteSpace: 'nowrap !important' }}>CORD Field</span>
         </Text>
       </Column>
       <TextBreak />
