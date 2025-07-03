@@ -149,7 +149,7 @@ export const makeConfig = (env: EnvironmentService) =>
       .string('DEFAULT_TIMEZONE')
       .optional('America/Chicago');
 
-    frontendUrl = env.string('FRONTEND_URL').optional('http://localhost:3001');
+    frontendUrl = env.url('FRONTEND_URL').optional('http://localhost:3001');
 
     neo4j = (() => {
       const driverConfig: Neo4JDriverConfig = {};
