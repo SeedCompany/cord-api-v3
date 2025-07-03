@@ -90,7 +90,7 @@ export const Theme = () => (
 );
 
 export const Branding = (): ReactElement => {
-  const iconUrl = useFrontendUrl('/images/web-app-manifest-192x192.png');
+  const iconUrl = useFrontendUrl('/images/cord-icon.png');
   return (
     <Section backgroundColor="#fafafa">
       <Column verticalAlign="middle" width="80px">
