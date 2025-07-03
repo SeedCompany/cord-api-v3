@@ -10,6 +10,7 @@ import {
   Image,
   InText,
   Mjml,
+  Preview,
   Raw,
   Section,
   Style,
@@ -17,19 +18,35 @@ import {
   Title,
   Wrapper,
 } from '@seedcompany/nestjs-email/templates';
-import type { ComponentProps, ReactElement, ReactNode } from 'react';
+import {
+  type ComponentProps,
+  Fragment,
+  type ReactElement,
+  type ReactNode,
+} from 'react';
 import { useFrontendUrl } from './frontend-url';
 
 export const EmailTemplate = ({
   title,
+  preview,
   children,
 }: {
   title: string;
+  preview?: ReactNode;
   children: ReactNode;
 }) => (
   <Mjml lang="en">
     <Head>
       <Title>{`${title} - CORD Field`}</Title>
+      {preview != null && (
+        <Preview>
+          {preview}
+          {/* Fill the remaining space with nothing-ness so the email context is avoided */}
+          {[...Array(140).keys()].map((i) => (
+            <Fragment key={i}>&#847;&zwnj;&nbsp;</Fragment>
+          ))}
+        </Preview>
+      )}
       <Theme />
       <Style
         inline
