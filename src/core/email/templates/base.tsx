@@ -73,7 +73,7 @@ export const Theme = () => (
       <Text lineHeight="1.5">{}</Text>
       <Button
         color="#ffffff"
-        backgroundColor="#64b145"
+        backgroundColor="#1ea973"
         padding="8px 22px"
         cssClass="button-shadow"
       >
