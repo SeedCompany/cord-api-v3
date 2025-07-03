@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { mapEntries, simpleSwitch } from '@seedcompany/common';
+import { asNonEmptyArray, mapEntries, simpleSwitch } from '@seedcompany/common';
 import { intersection, sumBy, uniq } from 'lodash';
 import {
   type ID,
@@ -81,8 +81,12 @@ export class ProductService {
     }
 
     const otherInput: CreateOtherProduct | undefined =
+      // Double-checking not undefined seems safer here since a union type
+      // could have this field declared as undefined.
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       'title' in input && input.title !== undefined ? input : undefined;
     const derivativeInput: CreateDerivativeScriptureProduct | undefined =
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       'produces' in input && input.produces !== undefined ? input : undefined;
     const scriptureInput: CreateDirectScriptureProduct | undefined =
       !otherInput && !derivativeInput ? input : undefined;
@@ -128,10 +132,9 @@ export class ProductService {
           );
     }
 
-    const type =
-      'title' in input && input.title !== undefined
-        ? ProducibleType.OtherProduct
-        : producibleType ?? ProducibleType.DirectScriptureProduct;
+    const type = otherInput
+      ? ProducibleType.OtherProduct
+      : producibleType ?? ProducibleType.DirectScriptureProduct;
     const availableSteps = getAvailableSteps({
       type,
       methodology: input.methodology,
@@ -144,16 +147,15 @@ export class ProductService {
       Number: input.progressTarget ?? 1,
     });
 
-    const id =
-      'title' in input && input.title !== undefined
-        ? await this.repo.createOther({ ...input, progressTarget, steps })
-        : await this.repo.create({
-            ...input,
-            progressTarget,
-            steps,
-            totalVerses,
-            totalVerseEquivalents,
-          });
+    const id = otherInput
+      ? await this.repo.createOther({ ...otherInput, progressTarget, steps })
+      : await this.repo.create({
+          ...input,
+          progressTarget,
+          steps,
+          totalVerses,
+          totalVerseEquivalents,
+        });
 
     this.logger.debug(`product created`, { id });
     const created = await this.readOne(id).catch((e) => {
@@ -578,12 +580,13 @@ export class ProductService {
       const refs = productRef.scriptureRanges.map((raw) =>
         ScriptureRange.fromIds(raw),
       );
-      const books = uniq([
+      const bookList = uniq([
         ...refs.flatMap((ref) => [ref.start.book, ref.end.book]),
         ...(productRef.unspecifiedScripture
           ? [productRef.unspecifiedScripture.book]
           : []),
       ]);
+      const books = asNonEmptyArray(bookList);
       const totalVerses =
         productRef.unspecifiedScripture?.totalVerses ??
         sumBy(productRef.scriptureRanges, (raw) => raw.end - raw.start + 1);
@@ -593,7 +596,7 @@ export class ProductService {
           product: productRef.id,
         });
 
-      if (books.length === 0) {
+      if (!books) {
         warn('Product has not defined any scripture ranges');
         return [];
       }
@@ -601,7 +604,7 @@ export class ProductService {
         warn('Product scripture range spans multiple books');
         return [];
       }
-      const book: string = books[0];
+      const book = books[0];
 
       return {
         id: productRef.id,

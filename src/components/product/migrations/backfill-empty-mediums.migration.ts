@@ -38,10 +38,10 @@ export class BackfillEmptyMediumsMigration extends BaseMigration {
         return [];
       }
       const [nonEmpties, empties] =
-        grouped[0][0].mediums.length > 0 ? grouped : grouped.toReversed();
+        grouped[0]![0].mediums.length > 0 ? grouped : grouped.toReversed();
 
-      const mediums = nonEmpties[0].mediums;
-      return empties.map((p) => ({ id: p.id, mediums }));
+      const mediums = nonEmpties![0].mediums;
+      return empties!.map((p) => ({ id: p.id, mediums }));
     });
     this.logger.notice(
       `Resolves to ${updates.length} products to assign mediums to`,

@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import {
   type ID,
-  InputException,
   type ObjectView,
   ServerException,
   type UnsecuredDto,
@@ -26,10 +25,6 @@ export class CeremonyService {
 
   @HandleIdLookup(Ceremony)
   async readOne(id: ID, _view?: ObjectView): Promise<Ceremony> {
-    if (!id) {
-      throw new InputException('No ceremony id to search for', 'ceremony.id');
-    }
-
     const dto = await this.repo.readOne(id);
     return this.secure(dto);
   }

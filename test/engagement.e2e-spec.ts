@@ -697,11 +697,9 @@ describe('Engagement e2e', () => {
       },
     );
 
-    expect(
-      languageEngagementRead?.engagement?.ceremony?.value?.id,
-    ).toBeDefined();
+    expect(languageEngagementRead.engagement.ceremony.value?.id).toBeDefined();
 
-    const ceremonyId = languageEngagementRead?.engagement?.ceremony?.value?.id;
+    const ceremonyId = languageEngagementRead.engagement.ceremony.value?.id;
 
     await app.graphql.mutate(
       graphql(`

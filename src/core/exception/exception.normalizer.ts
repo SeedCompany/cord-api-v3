@@ -251,7 +251,8 @@ export class ExceptionNormalizer {
     if (!matched) {
       return ex;
     }
-    const [_, type, id] = matched;
+    const type = matched[1]!;
+    const id = matched[2]!;
     const typeName = this.resources ? this.resources.getByGel(type).name : type;
 
     if (gql?.path && gql.path.length > 1) {

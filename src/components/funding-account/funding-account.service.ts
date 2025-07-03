@@ -57,10 +57,6 @@ export class FundingAccountService {
 
   @HandleIdLookup(FundingAccount)
   async readOne(id: ID, _view?: ObjectView): Promise<FundingAccount> {
-    if (!id) {
-      throw new NotFoundException('Invalid: Blank ID');
-    }
-
     const result = await this.repo.readOne(id);
     return await this.secure(result);
   }

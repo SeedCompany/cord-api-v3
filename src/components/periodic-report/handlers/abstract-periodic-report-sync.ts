@@ -20,9 +20,6 @@ export abstract class AbstractPeriodicReportSync {
     },
     finalAt?: CalendarDate,
   ) {
-    if (!diff) {
-      return;
-    }
     await this.periodicReports.delete(parent, type, diff.removals);
 
     await this.periodicReports.merge({

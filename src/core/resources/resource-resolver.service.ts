@@ -1,6 +1,7 @@
 import { DiscoveryService } from '@golevelup/nestjs-discovery';
 import { Injectable, SetMetadata } from '@nestjs/common';
 import { GraphQLSchemaHost } from '@nestjs/graphql';
+import { asNonEmptyArray } from '@seedcompany/common';
 import { GraphQLObjectType } from 'graphql';
 import type { ValueOf } from 'type-fest';
 import {
@@ -96,8 +97,10 @@ export class ResourceResolver {
     const discovered = await this.discover.providerMethodsWithMetaAtKey<Shape>(
       RESOLVE_BY_ID,
     );
-    const filtered = discovered.filter((f) => f.meta.type.includes(type));
-    if (filtered.length === 0) {
+    const filtered = asNonEmptyArray(
+      discovered.filter((f) => f.meta.type.includes(type)),
+    );
+    if (!filtered) {
       throw new ServerException(`Could find resolver for type: ${type}`);
     }
     if (filtered.length > 1) {
@@ -147,23 +150,25 @@ export class ResourceResolver {
     const names = many(types).map((t) => t.replace(/^Deleted_/, ''));
 
     const schema = this.schemaHost.schema;
-    const resolved = names
-      .flatMap((name) => {
-        try {
-          return this.resourcesHost.getByDynamicName(name).name;
-        } catch (e) {
-          // Ignore names/`labels` that don't have corresponding resources.
-          return [];
-        }
-      })
-      .filter((name) => schema.getType(name) instanceof GraphQLObjectType);
+    const resolved = asNonEmptyArray(
+      names
+        .flatMap((name) => {
+          try {
+            return this.resourcesHost.getByDynamicName(name).name;
+          } catch (e) {
+            // Ignore names/`labels` that don't have corresponding resources.
+            return [];
+          }
+        })
+        .filter((name) => schema.getType(name) instanceof GraphQLObjectType),
+    );
 
-    if (resolved.length === 1) {
+    if (resolved?.length === 1) {
       return resolved[0];
     }
 
     const namesStr = names.join(', ');
-    if (resolved.length === 0) {
+    if (!resolved) {
       throw new ServerException(
         `Could not determine GraphQL object from type: ${namesStr}`,
       );

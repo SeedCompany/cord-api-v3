@@ -101,6 +101,8 @@ export class SyncProgressReportToEngagementDateRange
               engagementRange(event.previous),
             ];
       Settings.throwOnInvalid = true;
+      // I turned off throw on invalid above for this, so it is necessary despite the type inconsistency
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       if (prev && !prev.isValid) {
         this.logger.error('Found invalid date range for event', {
           eventType: event.constructor.name,
@@ -109,6 +111,7 @@ export class SyncProgressReportToEngagementDateRange
         });
         throw new Error('Invalid engagement date range');
       }
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       if (updated && !updated.isValid) {
         this.logger.error('Found invalid date range for event', {
           eventType: event.constructor.name,

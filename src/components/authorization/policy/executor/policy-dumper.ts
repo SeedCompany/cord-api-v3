@@ -100,7 +100,7 @@ export class PolicyDumper {
             'Permissions',
             roles.length === 1 && `for ${chalk.italic(startCase(roles[0]))}`,
             resources.length === 1 &&
-              `for ${chalk.italic(startCase(resources[0].resource.name))}`,
+              `for ${chalk.italic(startCase(resources[0]!.resource.name))}`,
           ]),
         ),
         colSpan: 4 + (showRoleCol ? 1 : 0) + (showResCol ? 1 : 0),
@@ -270,12 +270,12 @@ const searchResources = (
     // Expand resource wildcards/multi-selects, split out props into tuple
     .flatMap((r) => {
       let propsIn: string | undefined;
-      [r, propsIn] = r.split('.');
+      [r, propsIn] = r.split('.') as [string, string | undefined];
       propsIn = propsIn?.replace(/[{}]/g, '');
       if (isWildcard(r)) {
         return resNames.map((n) => [n, propsIn] as const);
       }
-      r = r?.replace(/[{}]/g, '');
+      r = r.replace(/[{}]/g, '');
       return csv(r).map((n) => [n, propsIn] as const);
     })
     .flatMap(([r, propsIn]) => {
@@ -283,7 +283,7 @@ const searchResources = (
         searchCamelCase(resNames, r),
         () => new Error(`Could not find resource from "${r}"`),
       );
-      const resource = map[resName];
+      const resource = map[resName]!;
 
       if (!propsIn) {
         return { resource, props: false };

@@ -225,7 +225,7 @@ export class ProjectService {
     ids: readonly ID[],
     view: ObjectView,
   ): Promise<readonly Project[]> {
-    const projects = await this.repo.readMany(ids, view?.changeset);
+    const projects = await this.repo.readMany(ids, view.changeset);
     return await Promise.all(projects.map((dto) => this.secure(dto)));
   }
 

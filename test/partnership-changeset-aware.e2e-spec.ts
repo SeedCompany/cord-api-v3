@@ -134,7 +134,7 @@ describe('Partnership Changeset Aware e2e', () => {
     // list partnerships with changeset
     result = await readPartnerships(app, project.id, changeset.id);
     expect(result.project.partnerships.items.length).toBe(2);
-    expect(result.project.partnerships.items[1].id).toBe(
+    expect(result.project.partnerships.items[1]!.id).toBe(
       changesetPartnership.createPartnership.partnership.id,
     );
     await approveProjectChangeRequest(app, changeset.id);

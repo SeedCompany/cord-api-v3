@@ -38,10 +38,11 @@ export const ChangesetArg = (
       ValidateChangesetEditablePipe,
     )(target, methodName, argIndex);
 
-    // method metadata is set after parameter metadata, so wait until next tick
-    // to determine if method is query or mutation to set default description.
+    // method metadata is set after parameter metadata, so wait until the next tick
+    // to determine if method is query or mutation to set the default description.
     process.nextTick(() => {
       type = Reflect.getMetadata(TypeKey, (target as any)[methodName!]);
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- double-checking at runtime
       if (!type) {
         throw new ServerException(
           'Something went wrong trying to determine operation type',

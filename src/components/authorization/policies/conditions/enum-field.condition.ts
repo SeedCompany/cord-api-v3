@@ -1,4 +1,4 @@
-import { groupBy } from '@seedcompany/common';
+import { groupBy, type NonEmptyArray } from '@seedcompany/common';
 import { type Query } from 'cypher-query-builder';
 import { get, startCase } from 'lodash';
 import type { Get, Paths } from 'type-fest';
@@ -55,7 +55,7 @@ export class EnumFieldCondition<
     return '<str>' + eqlInLiteralSet(`.${this.path}`, this.allowed);
   }
 
-  union(conditions: this[]): Array<Condition<TResourceStatic>> {
+  union(this: void, conditions: NonEmptyArray<this>) {
     return groupBy(conditions, (c) => c.path).map((conditionsForField) => {
       const unioned = conditionsForField.flatMap((c) => [...c.allowed]);
       return new EnumFieldCondition(
@@ -66,7 +66,7 @@ export class EnumFieldCondition<
     });
   }
 
-  intersect(conditions: this[]): Array<Condition<TResourceStatic>> {
+  intersect(this: void, conditions: NonEmptyArray<this>) {
     return groupBy(conditions, (c) => c.path).map((conditionsForField) => {
       const intersected = [...conditionsForField[0].allowed].filter((v) =>
         conditionsForField.every((condition) => condition.allowed.has(v)),

@@ -1,3 +1,4 @@
+import { type NonEmptyArray } from '@seedcompany/common';
 import { type Query } from 'cypher-query-builder';
 import { intersection } from 'lodash';
 import { inspect, type InspectOptionsStylized } from 'util';
@@ -50,11 +51,11 @@ class MemberCondition<TResourceStatic extends ResourceWithScope>
     return resource.isEmbedded ? 'isMember' : '.isMember';
   }
 
-  union(this: void, conditions: this[]) {
+  union(this: void, conditions: NonEmptyArray<this>) {
     return conditions[0];
   }
 
-  intersect(this: void, conditions: this[]) {
+  intersect(this: void, conditions: NonEmptyArray<this>) {
     return conditions[0];
   }
 

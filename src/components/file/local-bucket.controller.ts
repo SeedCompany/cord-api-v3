@@ -40,7 +40,7 @@ export class LocalBucketController {
     @Request() req: IRequest,
     @Body() contents: Buffer,
   ) {
-    if (!contents || !Buffer.isBuffer(contents)) {
+    if (!Buffer.isBuffer(contents)) {
       throw new InputException();
     }
 

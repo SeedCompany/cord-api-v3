@@ -1,4 +1,4 @@
-import { groupBy } from '@seedcompany/common';
+import { asNonEmptyArray, groupBy } from '@seedcompany/common';
 import { mapOrElse } from '~/common';
 import {
   all,
@@ -43,8 +43,8 @@ export class RoleAndExpUnionOptimizer implements Optimizer {
     }
 
     const merged = groupedByX.map((group) => {
-      const { role, x } = group[0]!;
-      const roles = role.union(group.map((c) => c.role));
+      const { role, x } = group[0];
+      const roles = role.union(asNonEmptyArray(group.map((c) => c.role))!);
       return all(roles, x);
     });
 
@@ -65,7 +65,7 @@ export class RoleAndExpUnionOptimizer implements Optimizer {
       return null;
     }
     const role = condition.conditions[roleIdx] as RoleCondition;
-    const x = condition.conditions[roleIdx === 0 ? 1 : 0];
+    const x = condition.conditions[roleIdx === 0 ? 1 : 0]!;
     const xId = Condition.id(x);
     return { role, x, xId };
   }

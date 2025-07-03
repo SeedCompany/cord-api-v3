@@ -1,14 +1,16 @@
+import { asNonEmptyArray } from '@seedcompany/common';
+
 export function eqlDoesIntersect(
   actual: string,
   expected: Iterable<string>,
   castName?: string,
 ) {
-  const list = [...expected];
-  if (list.length === 1) {
+  const list = asNonEmptyArray([...expected]);
+  if (list?.length === 1) {
     const expectedStr = castName ? `${castName}.${list[0]}` : `'${list[0]}'`;
     return `${expectedStr} in ${actual}`;
   }
-  return `exists (${eqlLiteralSet(list, castName)} intersect ${actual})`;
+  return `exists (${eqlLiteralSet(list ?? [], castName)} intersect ${actual})`;
 }
 
 export const eqlInLiteralSet = (
@@ -16,8 +18,8 @@ export const eqlInLiteralSet = (
   items: Iterable<string>,
   castName?: string,
 ) => {
-  const list = [...items];
-  if (list.length === 1) {
+  const list = asNonEmptyArray([...items]);
+  if (list?.length === 1) {
     const isEnum = castName && castName !== castName.toLowerCase();
     const expectedStr = isEnum
       ? `${castName}.${list[0]}`
@@ -26,7 +28,7 @@ export const eqlInLiteralSet = (
       : `'${list[0]}'`;
     return `${actual} = ${expectedStr}`;
   }
-  return `${actual} in ${eqlLiteralSet(list, castName)}`;
+  return `${actual} in ${eqlLiteralSet(list ?? [], castName)}`;
 };
 
 export const eqlLiteralSet = (items: Iterable<string>, castName?: string) => {

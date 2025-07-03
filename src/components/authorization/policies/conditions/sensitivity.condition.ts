@@ -1,3 +1,4 @@
+import { type NonEmptyArray } from '@seedcompany/common';
 import { type Query } from 'cypher-query-builder';
 import { inspect, type InspectOptionsStylized } from 'util';
 import { type ResourceShape, Sensitivity } from '~/common';
@@ -86,16 +87,19 @@ export class SensitivityCondition<
     return `${lhs} <= ${rhs}`;
   }
 
-  union(conditions: this[]) {
+  union(conditions: NonEmptyArray<this>) {
     return this.pickSens(conditions, 'highest');
   }
 
-  intersect(conditions: this[]) {
+  intersect(conditions: NonEmptyArray<this>) {
     return this.pickSens(conditions, 'lowest');
   }
 
-  private pickSens(conditions: this[], sort: 'highest' | 'lowest') {
-    const ranked = conditions.sort(
+  private pickSens(
+    conditions: NonEmptyArray<this>,
+    sort: 'highest' | 'lowest',
+  ) {
+    const ranked = conditions.toSorted(
       sort === 'highest'
         ? (a, b) => sensitivityRank[b.access] - sensitivityRank[a.access]
         : (a, b) => sensitivityRank[a.access] - sensitivityRank[b.access],

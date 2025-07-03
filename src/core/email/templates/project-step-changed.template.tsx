@@ -38,7 +38,7 @@ export function ProjectStepChanged({
   const projectUrl = useFrontendUrl(`/projects/${project.id}`);
   const projectName = project.name.value;
   const projectType = Type.entry(project.type);
-  const oldStep = oldStepVal ? Step.entry(oldStepVal).label : undefined;
+  const oldStep = Step.entry(oldStepVal).label;
   const newStep = project.step.value
     ? Step.entry(project.step.value).label
     : undefined;

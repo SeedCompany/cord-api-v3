@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { entries } from '@seedcompany/common';
+import { asNonEmptyArray, entries } from '@seedcompany/common';
 import { assert } from 'ts-essentials';
 import type { MergeExclusive } from 'type-fest';
 import type { Cell, Column, Row } from '~/common/xlsx.util';
@@ -54,12 +54,13 @@ export class StepProgressExtractor {
     const stepColumns = findStepColumns(sheet);
     const planningStepColumns = findStepColumns(pnp.planning, result);
 
-    return sheet.goals
+    const list = sheet.goals
       .walkDown()
       .filter((cell) => isGoalRow(cell))
       .map(parseProgressRow(pnp, stepColumns, planningStepColumns, result))
       .filter((row) => row.steps.length > 0)
       .toArray();
+    return asNonEmptyArray(list);
   }
 }
 

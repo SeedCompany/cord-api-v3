@@ -75,6 +75,8 @@ export class ResourcesHost {
     }
     const map = this.getEnhancedMap();
     const resource = map[name as keyof ResourceMap];
+    // double-check at runtime
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (!resource) {
       throw new ServerException(
         `Unable to determine resource from ResourceMap for type: ${name}`,
@@ -102,12 +104,14 @@ export class ResourcesHost {
     }
     const nameMap = this.getEnhancedMap();
     const resByName = nameMap[name as keyof ResourceMap];
-    if (resByName) {
-      return resByName as any;
+    // double-check at runtime
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    if (!resByName) {
+      throw new ServerException(
+        `Unable to determine resource from ResourceMap for Gel FQN: ${name}`,
+      );
     }
-    throw new ServerException(
-      `Unable to determine resource from ResourceMap for Gel FQN: ${name}`,
-    );
+    return resByName as any;
   }
 
   @Once() get byEdgeFQN() {
@@ -134,8 +138,8 @@ export class ResourcesHost {
   }
 
   enhance(ref: ResourceLike) {
-    // Safety check, since this very dynamic code, it's very possible the types are lying.
-    // @eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    // Safety check; since this very dynamic code, it is very possible the types are lying.
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (ref == null) {
       throw new ServerException('Resource reference is actually null');
     }
@@ -155,9 +159,13 @@ export class ResourcesHost {
     if (!type || !isObjectType(type)) {
       return [];
     }
-    return type
-      .getInterfaces()
-      .flatMap((i) => map[i.name as keyof ResourceMap] ?? []);
+    return (
+      type
+        .getInterfaces()
+        // double-check at runtime
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+        .flatMap((i) => map[i.name as keyof ResourceMap] ?? [])
+    );
   }
 
   @CachedByArg()

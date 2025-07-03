@@ -1,4 +1,4 @@
-import { type Nil } from '@seedcompany/common';
+import { type Nil, type NonEmptyArray } from '@seedcompany/common';
 import { node, type Pattern, type Query, relation } from 'cypher-query-builder';
 import { ACTIVE, apoc, collect, merge, variable } from '~/core/database/query';
 import { type FinanceDepartmentIdBlockInput as Input } from './dto/id-blocks.input';
@@ -6,16 +6,16 @@ import { type FinanceDepartmentIdBlockInput as Input } from './dto/id-blocks.inp
 const defaultRel = [
   node('node'),
   relation('out', '', 'departmentIdBlock', ACTIVE),
-];
+] as const;
 interface Options {
-  input?: Pattern[];
+  input?: NonEmptyArray<Pattern>;
   output?: string;
 }
 
 export const hydrate =
   ({ input = defaultRel, output }: Options = {}) =>
   (query: Query) =>
-    query.subQuery(input[0]!.getNameString(), (sub) =>
+    query.subQuery(input[0].getNameString(), (sub) =>
       sub
         .match([...input, node('block', 'DepartmentIdBlock')])
         .with(
@@ -35,7 +35,7 @@ export const createMaybe =
 export const create =
   (input: Input, { input: inputRel = defaultRel, output }: Options = {}) =>
   (query: Query) =>
-    query.subQuery(inputRel[0]!.getNameString(), (sub) =>
+    query.subQuery(inputRel[0].getNameString(), (sub) =>
       sub
         .create([
           ...inputRel,

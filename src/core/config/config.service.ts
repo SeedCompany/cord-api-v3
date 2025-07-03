@@ -203,7 +203,7 @@ export const makeConfig = (env: EnvironmentService) =>
       const sources = env
         .string('FILES_SOURCE')
         .optional(legacyBucket ? `s3://${legacyBucket}` : '.files')
-        ?.split(',')
+        .split(',')
         .flatMap((src) => parseUri(src.trim()));
       return {
         sources: this.jest ? [] : sources,

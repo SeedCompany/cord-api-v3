@@ -1,4 +1,9 @@
-import { groupBy, isNotNil, type Nil } from '@seedcompany/common';
+import {
+  asNonEmptyArray,
+  groupBy,
+  isNotNil,
+  type Nil,
+} from '@seedcompany/common';
 import { type Query } from 'cypher-query-builder';
 import addIndent from 'indent-string';
 import { type Class, type Constructor } from 'type-fest';
@@ -95,17 +100,16 @@ export class AndConditions<
   static from<T extends ResourceShape<any>>(
     ...conditionsIn: Array<Condition<T> | Nil>
   ) {
-    const conditions = conditionsIn.filter(isNotNil);
+    const conditions = asNonEmptyArray(conditionsIn.filter(isNotNil));
+    if (!conditions) {
+      throw new Error('AndConditions requires at least one condition');
+    }
     if (conditions.length === 1) {
       return conditions[0];
     }
-    if (conditions.length === 0) {
-      throw new Error('AndConditions requires at least one condition');
-    }
 
     const merged = groupBy(conditions, byType).flatMap((sames) => {
-      const same = sames[0]!;
-      return same.intersect ? same.intersect(sames) : sames;
+      return sames[0].intersect?.(sames) ?? sames;
     });
 
     if (merged.length === 1) {
@@ -130,7 +134,7 @@ export class OrConditions<
   ) {
     const conditions = conditionsIn.filter(isNotNil);
     if (conditions.length === 1) {
-      return conditions[0];
+      return conditions[0]!;
     }
     if (conditions.length === 0) {
       throw new Error('OrConditions requires at least one condition');
@@ -145,8 +149,7 @@ export class OrConditions<
     }
 
     const merged = groupBy(flattened, byType).flatMap((sames) => {
-      const same = sames[0]!;
-      return same.union ? same.union(sames) : sames;
+      return sames[0].union?.(sames) ?? sames;
     });
 
     if (merged.length === 1) {

@@ -1,4 +1,4 @@
-import { groupBy } from '@seedcompany/common';
+import { asNonEmptyArray, groupBy } from '@seedcompany/common';
 import { mapOrElse } from '~/common';
 import {
   all,
@@ -30,7 +30,9 @@ export class VariantAndExpUnionOptimizer implements Optimizer {
 
     const merged = groupedByX.map((group) => {
       const { variant, x } = group[0]!;
-      const variants = variant.union(group.map((c) => c.variant));
+      const variants = variant.union(
+        asNonEmptyArray(group.map((c) => c.variant))!,
+      );
       return all(x, variants);
     });
 
@@ -51,7 +53,7 @@ export class VariantAndExpUnionOptimizer implements Optimizer {
       return null;
     }
     const variant = condition.conditions[variantIdx] as VariantCondition<any>;
-    const x = condition.conditions[variantIdx === 0 ? 1 : 0];
+    const x = condition.conditions[variantIdx === 0 ? 1 : 0]!;
     const xId = Condition.id(x);
     return { variant, x, xId };
   }

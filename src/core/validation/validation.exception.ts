@@ -18,7 +18,7 @@ export class ValidationException extends ClientException {
     });
     const errorsAsString = flattenConstraints(errors)
       .map((e) => {
-        const constraint = Object.values(e.constraints)[0];
+        const constraint = Object.values(e.constraints)[0]!;
         const target = e.target?.constructor.name ?? 'Object';
         const source = `${target}.${e.property}`;
         // eslint-disable-next-line @typescript-eslint/restrict-template-expressions -- I'm ok with string conversion here
@@ -55,7 +55,7 @@ const flattenValidationErrors = (
       obj[path.join('.')] = constraints;
     }
     if (children && entries(children).length > 0) {
-      flattenValidationErrors(children ?? [], obj, path);
+      flattenValidationErrors(children, obj, path);
     }
     return obj;
   }, out);

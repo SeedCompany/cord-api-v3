@@ -141,9 +141,9 @@ export class EnvironmentService implements Iterable<[string, string]> {
       const parseValue = options.parseValue ?? identity;
 
       return new Map(
-        (raw ?? '').split(pairSeparator).map((item) => {
+        raw.split(pairSeparator).map((item) => {
           const [key, value] = item.trim().split(keySeparator);
-          return [parseKey(key), parseValue(value)] as const;
+          return [parseKey(key!), parseValue(value!)] as const;
         }),
       );
     });
@@ -155,7 +155,7 @@ export class EnvironmentService implements Iterable<[string, string]> {
 
   private wrap<Out, In>(key: string, parse: (raw: In | string) => Out) {
     key = key.toUpperCase();
-    return new ConfigValue(key in this.env, key, this.env[key], parse);
+    return new ConfigValue(key in this.env, key, this.env[key]!, parse);
   }
 }
 

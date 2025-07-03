@@ -1,6 +1,6 @@
 /* eslint-disable no-case-declarations */
 import { Injectable } from '@nestjs/common';
-import { setOf } from '@seedcompany/common';
+import { type NonEmptyArray, setOf } from '@seedcompany/common';
 import { node, relation } from 'cypher-query-builder';
 import { first, intersection } from 'lodash';
 import {
@@ -44,7 +44,7 @@ export class EngagementRules {
     status: EngagementStatus,
     id: ID,
   ): Promise<StatusRule> {
-    const mostRecentPreviousStatus = (steps: EngagementStatus[]) =>
+    const mostRecentPreviousStatus = (steps: NonEmptyArray<EngagementStatus>) =>
       this.getMostRecentPreviousStatus(id, steps);
 
     switch (status) {
@@ -482,14 +482,14 @@ export class EngagementRules {
   /** Of the given status which one was the most recent previous status */
   private async getMostRecentPreviousStatus(
     id: ID,
-    statuses: EngagementStatus[],
+    statuses: NonEmptyArray<EngagementStatus>,
   ): Promise<EngagementStatus> {
     const prevStatus = await this.getPreviousStatus(id);
     return first(intersection(prevStatus, statuses)) ?? statuses[0];
   }
 
   /** A list of the engagement's previous status ordered most recent to furthest in the past */
-  private async getPreviousStatus(id: ID): Promise<EngagementStatus[]> {
+  private async getPreviousStatus(id: ID) {
     const result = await this.db
       .query()
       .match([
@@ -499,8 +499,9 @@ export class EngagementRules {
       ])
       .with('prop')
       .orderBy('prop.createdAt', 'DESC')
-      .raw(`RETURN collect(prop.value) as status`)
-      .asResult<{ status: EngagementStatus[] }>()
+      .return<{ status: NonEmptyArray<EngagementStatus> }>(
+        'collect(prop.value) as status',
+      )
       .first();
     if (!result) {
       throw new ServerException(

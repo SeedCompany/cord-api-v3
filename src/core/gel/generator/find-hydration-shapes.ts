@@ -27,7 +27,7 @@ export async function findHydrationShapes({ root }: GeneratorParams) {
     if (!matches) {
       return SKIP;
     }
-    const [_, type] = matches;
+    const type = matches[1]!;
     const fqn = toFqn(type);
     const dependencies = hydratorsNeeded(query);
     const hydrator: Hydrator = {
@@ -45,7 +45,7 @@ export async function findHydrationShapes({ root }: GeneratorParams) {
 
   for (const hydrator of hydrators.values()) {
     hydrator.query = injectHydrators(hydrator.query, hydrators);
-    hydrator.fields = hydrator.query.match(RE_SELECT_NAME_AND_FIELDS)![2];
+    hydrator.fields = hydrator.query.match(RE_SELECT_NAME_AND_FIELDS)![2]!;
   }
 
   return hydrators;
@@ -108,37 +108,32 @@ async function findInInlineQueries(root: Directory) {
   const shortList = grepForShortList.stdout
     ? root.addSourceFilesAtPaths(grepForShortList.stdout.split('\n'))
     : [];
-  return (
-    shortList.flatMap((file) =>
-      file.getDescendantsOfKind(SyntaxKind.CallExpression).flatMap((call) => {
-        if (call.getExpression().getText() !== 'edgeql') {
-          return [];
-        }
-        const args = call.getArguments();
+  return shortList.flatMap((file) =>
+    file.getDescendantsOfKind(SyntaxKind.CallExpression).flatMap((call) => {
+      if (call.getExpression().getText() !== 'edgeql') {
+        return [];
+      }
+      const args = call.getArguments();
 
-        if (
-          args.length > 1 ||
-          (!Node.isStringLiteral(args[0]) &&
-            !Node.isNoSubstitutionTemplateLiteral(args[0]))
-        ) {
-          return [];
-        }
-        // Too hard to find parent types that have name
-        if (!(call as any).getParent()?.getName()?.includes('hydrate')) {
-          return [];
-        }
+      if (
+        args.length > 1 ||
+        (!Node.isStringLiteral(args[0]) &&
+          !Node.isNoSubstitutionTemplateLiteral(args[0]))
+      ) {
+        return [];
+      }
+      // Too hard to find parent types that have name
+      if (!(call as any).getParent()?.getName()?.includes('hydrate')) {
+        return [];
+      }
 
-        const path = relative(
-          root.getPath(),
-          call.getSourceFile().getFilePath(),
-        );
-        const lineNumber = call.getStartLineNumber();
-        const source = `./${path}:${lineNumber}`;
+      const path = relative(root.getPath(), call.getSourceFile().getFilePath());
+      const lineNumber = call.getStartLineNumber();
+      const source = `./${path}:${lineNumber}`;
 
-        const query = args[0].getText().slice(1, -1);
-        return { query, source };
-      }),
-    ) ?? []
+      const query = args[0].getText().slice(1, -1);
+      return { query, source };
+    }),
   );
 }
 

@@ -209,7 +209,7 @@ export class AuthenticationRepository {
       .return<{
         userId: ID | null;
         roles: readonly Role[];
-        impersonateeRoles: readonly Role[] | null;
+        impersonateeRoles?: readonly Role[] | null;
       }>([
         'user.id as userId',
         'roles',

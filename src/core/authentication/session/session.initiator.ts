@@ -1,5 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { csv, setOf } from '@seedcompany/common';
+import { asNonEmptyArray, csv, setOf } from '@seedcompany/common';
 import {
   type ID,
   InputException,
@@ -66,7 +66,7 @@ export class SessionInitiator {
   }
 
   private getTokenFromAuthHeader(req: IRequest): string | null {
-    const header = req.headers?.authorization;
+    const header = req.headers.authorization;
 
     if (!header) {
       return null;
@@ -79,18 +79,18 @@ export class SessionInitiator {
   }
 
   private getTokenFromCookie(req: IRequest): string | null {
-    return req.cookies?.[this.config.sessionCookie(req).name] || null;
+    return req.cookies[this.config.sessionCookie(req).name] || null;
   }
 
   private getImpersonatee(request: IRequest): Session['impersonatee'] {
-    const user = request.headers?.['x-cord-impersonate-user'] as ID | undefined;
+    const user = request.headers['x-cord-impersonate-user'] as ID | undefined;
     if (user && !isIdLike(user)) {
       throw new InputException(
         `Invalid user ID given in "X-CORD-Impersonate-User" header`,
       );
     }
 
-    const rawRoles = csvHeader(request?.headers?.['x-cord-impersonate-role']);
+    const rawRoles = csvHeader(request.headers['x-cord-impersonate-role']);
 
     if (!rawRoles && !user) {
       return undefined;
@@ -111,10 +111,10 @@ const assertValidRole = (role: string): Role => {
   );
 };
 
-function csvHeader(headerVal: Many<string> | undefined) {
+function csvHeader(headerVal: Many<string | undefined> | undefined) {
   if (!headerVal) {
     return undefined;
   }
   const items = many(headerVal).flatMap((itemCsv) => csv(itemCsv ?? ''));
-  return items && items.length > 0 ? items : undefined;
+  return asNonEmptyArray(items);
 }

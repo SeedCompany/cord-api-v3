@@ -69,7 +69,7 @@ const builder =
     const type = filters.constructor === Object ? null : filters.constructor;
     query.comment(type?.name ?? 'Filters');
 
-    for (const key of Object.keys(builders)) {
+    for (const key of Object.keys(builders) as Array<keyof T & string>) {
       const value = filters[key];
       if (value == null) {
         continue;
@@ -176,11 +176,11 @@ export const pathExists =
   ): Builder<T, K> =>
   ({ key, value }) => {
     const cond = pathPattern(isFunction(pattern) ? pattern(value) : pattern);
-    return { [key]: value ? cond : not(cond) };
+    return { [key]: value !== false ? cond : not(cond) };
   };
 
 export const pathExistsWhenTrue: typeof pathExists = (pattern) => (args) =>
-  args.value ? pathExists(pattern)(args) : null;
+  args.value !== false ? pathExists(pattern)(args) : null;
 
 export const isPinned = pathExists<{ pinned?: boolean }, 'pinned'>([
   currentUser,

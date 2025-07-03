@@ -88,7 +88,7 @@ export abstract class WorkflowTester<
     };
     return transitions;
   }
-  private cachedTransitions: {
+  private cachedTransitions?: {
     state: W['state'];
     actorSession: string;
     actorEmail?: string;
