@@ -65,7 +65,7 @@ export const Theme = () => (
   <>
     <Font name="sofia-pro" href="https://use.typekit.net/qrd6jxb.css" />
     <Attributes>
-      <All fontFamily="sofia-pro" fontSize="16px" />
+      <All fontFamily="sofia-pro, sans-serif" fontSize="16px" />
       <Body width={600} backgroundColor="#fafafa">
         {[]}
       </Body>
