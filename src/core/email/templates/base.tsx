@@ -37,7 +37,7 @@ export const EmailTemplate = ({
 }) => (
   <Mjml lang="en">
     <Head>
-      <Title>{`${title} - CORD Field`}</Title>
+      <Title>{title}</Title>
       {preview != null && (
         <Preview>
           {preview}
