@@ -7,6 +7,7 @@ import {
   Divider,
   Font,
   Head,
+  HideInText,
   Image,
   InText,
   Mjml,
@@ -39,13 +40,15 @@ export const EmailTemplate = ({
     <Head>
       <Title>{title}</Title>
       {preview != null && (
-        <Preview>
-          {preview}
-          {/* Fill the remaining space with nothing-ness so the email context is avoided */}
-          {[...Array(140).keys()].map((i) => (
-            <Fragment key={i}>&#847;&zwnj;&nbsp;</Fragment>
-          ))}
-        </Preview>
+        <HideInText>
+          <Preview>
+            {preview}
+            {/* Fill the remaining space with nothing-ness so the email context is avoided */}
+            {[...Array(140).keys()].map((i) => (
+              <Fragment key={i}>&#847;&zwnj;&nbsp;</Fragment>
+            ))}
+          </Preview>
+        </HideInText>
       )}
       <Theme />
       <Style
@@ -71,7 +74,9 @@ export const EmailTemplate = ({
       />
     </Head>
     <Body>
-      <Branding />
+      <HideInText>
+        <Branding />
+      </HideInText>
 
       <Wrapper
         cssClass="card-shadow"
