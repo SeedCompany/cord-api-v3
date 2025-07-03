@@ -7,9 +7,11 @@ import {
   Divider,
   Font,
   Head,
+  HideInText,
   Image,
   InText,
   Mjml,
+  Preview,
   Raw,
   Section,
   Style,
@@ -17,27 +19,51 @@ import {
   Title,
   Wrapper,
 } from '@seedcompany/nestjs-email/templates';
-import type { ComponentProps, ReactElement, ReactNode } from 'react';
+import {
+  type ComponentProps,
+  Fragment,
+  type ReactElement,
+  type ReactNode,
+} from 'react';
 import { useFrontendUrl } from './frontend-url';
 
 export const EmailTemplate = ({
   title,
+  preview,
   children,
 }: {
   title: string;
+  preview?: ReactNode;
   children: ReactNode;
 }) => (
   <Mjml lang="en">
     <Head>
-      <Title>{`${title} - CORD Field`}</Title>
+      <Title>{title}</Title>
+      {preview != null && (
+        <HideInText>
+          <Preview>
+            {preview}
+            {/* Fill the remaining space with nothing-ness so the email context is avoided */}
+            {[...Array(140).keys()].map((i) => (
+              <Fragment key={i}>&#847;&zwnj;&nbsp;</Fragment>
+            ))}
+          </Preview>
+        </HideInText>
+      )}
       <Theme />
       <Style
         inline
         children={`
+.body {
+  /* prevents card shadow being cut off */
+  padding: 8px;
+  /* add more just to look more symmetrical with branding header */
+  padding-bottom: 48px;
+}
 .card-shadow {
-  -webkit-box-shadow: 0px 5px 5px -3px rgba(0,0,0,0.2), 0px 8px 10px 1px rgba(0,0,0,0.14), 0px 3px 14px 2px rgba(0,0,0,0.12);
-  -moz-box-shadow: 0px 5px 5px -3px rgba(0,0,0,0.2), 0px 8px 10px 1px rgba(0,0,0,0.14), 0px 3px 14px 2px rgba(0,0,0,0.12);
-  box-shadow: 0px 5px 5px -3px rgba(0,0,0,0.2), 0px 8px 10px 1px rgba(0,0,0,0.14), 0px 3px 14px 2px rgba(0,0,0,0.12);
+  -webkit-box-shadow: rgba(0, 0, 0, 0.2) 0px 3px 1px -2px, rgba(0, 0, 0, 0.14) 0px 2px 2px 0px, rgba(0, 0, 0, 0.12) 0px 1px 5px 0px;
+  -moz-box-shadow: rgba(0, 0, 0, 0.2) 0px 3px 1px -2px, rgba(0, 0, 0, 0.14) 0px 2px 2px 0px, rgba(0, 0, 0, 0.12) 0px 1px 5px 0px;
+  box-shadow: rgba(0, 0, 0, 0.2) 0px 3px 1px -2px, rgba(0, 0, 0, 0.14) 0px 2px 2px 0px, rgba(0, 0, 0, 0.12) 0px 1px 5px 0px;
 }
 .button-shadow td {
   -webkit-box-shadow: 0px 3px 1px -2px rgba(0,0,0,0.2), 0px 2px 2px 0px rgba(0,0,0,0.14), 0px 1px 5px 0px rgba(0,0,0,0.12);
@@ -48,7 +74,9 @@ export const EmailTemplate = ({
       />
     </Head>
     <Body>
-      <Branding />
+      <HideInText>
+        <Branding />
+      </HideInText>
 
       <Wrapper
         cssClass="card-shadow"
@@ -65,15 +93,15 @@ export const Theme = () => (
   <>
     <Font name="sofia-pro" href="https://use.typekit.net/qrd6jxb.css" />
     <Attributes>
-      <All fontFamily="sofia-pro" fontSize="16px" />
-      <Body width={600} backgroundColor="#fafafa">
+      <All fontFamily="sofia-pro, sans-serif" fontSize="16px" />
+      <Body width={600} backgroundColor="#fafafa" cssClass="body">
         {[]}
       </Body>
       <Section backgroundColor="#ffffff">{}</Section>
       <Text lineHeight="1.5">{}</Text>
       <Button
         color="#ffffff"
-        backgroundColor="#64b145"
+        backgroundColor="#1ea973"
         padding="8px 22px"
         cssClass="button-shadow"
       >
@@ -90,7 +118,7 @@ export const Theme = () => (
 );
 
 export const Branding = (): ReactElement => {
-  const iconUrl = useFrontendUrl('/images/web-app-manifest-192x192.png');
+  const iconUrl = useFrontendUrl('/images/cord-icon.png');
   return (
     <Section backgroundColor="#fafafa">
       <Column verticalAlign="middle" width="80px">
@@ -104,7 +132,7 @@ export const Branding = (): ReactElement => {
       </Column>
       <Column verticalAlign="middle" width="220px">
         <Text fontSize={32} align="center">
-          CORD Field
+          <span style={{ whiteSpace: 'nowrap !important' }}>CORD Field</span>
         </Text>
       </Column>
       <TextBreak />

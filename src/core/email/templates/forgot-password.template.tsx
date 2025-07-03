@@ -16,15 +16,12 @@ export interface ForgotPasswordProps {
 export function ForgotPassword({ token }: ForgotPasswordProps) {
   const url = useFrontendUrl(`/reset-password/${token}`);
   return (
-    <EmailTemplate title="Forgot Password">
-      <Heading>You have submitted a password change request!</Heading>
+    <EmailTemplate title="Reset Password" preview={null}>
+      <Heading>We received your password reset request</Heading>
 
       <Section>
         <Column>
-          <Text>
-            If it was you, confirm the password change{' '}
-            <InText>by clicking this link</InText>
-          </Text>
+          <Text align="center">If it was you, create a new password here</Text>
           <HideInText>
             <Button href={url}>CONFIRM</Button>
           </HideInText>
