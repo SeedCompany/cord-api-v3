@@ -93,6 +93,7 @@ export class PartnerRepository extends DtoRepository(Partner) {
           fieldRegions: ['FieldRegion', input.fieldRegions],
           countries: ['Location', input.countries],
           languagesOfConsulting: ['Language', input.languagesOfConsulting],
+          languageOfReporting: ['Language', input.languageOfReportingId],
         }),
       )
       .apply(departmentIdBlockUtils.createMaybe(input.departmentIdBlock))
@@ -114,6 +115,7 @@ export class PartnerRepository extends DtoRepository(Partner) {
       id,
       pointOfContactId,
       languageOfWiderCommunicationId,
+      languageOfReportingId,
       fieldRegions,
       countries,
       languagesOfConsulting,
@@ -138,6 +140,15 @@ export class PartnerRepository extends DtoRepository(Partner) {
         'Language',
         changes.id,
         languageOfWiderCommunicationId,
+      );
+    }
+
+    if (languageOfReportingId) {
+      await this.updateRelation(
+        'languageOfReporting',
+        'Language',
+        changes.id,
+        languageOfReportingId,
       );
     }
 
@@ -273,6 +284,11 @@ export class PartnerRepository extends DtoRepository(Partner) {
           relation('out', '', 'languageOfWiderCommunication', ACTIVE),
           node('languageOfWiderCommunication', 'Language'),
         ])
+        .optionalMatch([
+          node('node'),
+          relation('out', '', 'languageOfReporting', ACTIVE),
+          node('languageOfReporting', 'Language'),
+        ])
         .apply(departmentIdBlockUtils.hydrate())
         .return<{ dto: UnsecuredDto<Partner> }>(
           merge('props', {
@@ -282,6 +298,7 @@ export class PartnerRepository extends DtoRepository(Partner) {
             pointOfContact: 'pointOfContact { .id }',
             languageOfWiderCommunication:
               'languageOfWiderCommunication { .id }',
+            languageOfReporting: 'languageOfReporting { .id }',
             fieldRegions: 'fieldRegions',
             countries: 'countries',
             languagesOfConsulting: 'languagesOfConsulting',

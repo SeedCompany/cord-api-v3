@@ -110,6 +110,12 @@ export abstract class UpdateLanguage {
 
   @ListField(() => String, { optional: true })
   readonly tags?: readonly string[];
+
+  @OptionalField()
+  readonly isWiderComm?: boolean;
+
+  @OptionalField()
+  readonly isAvailableForReporting?: boolean;
 }
 
 @InputType()
