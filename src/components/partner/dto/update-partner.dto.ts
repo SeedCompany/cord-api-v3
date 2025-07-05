@@ -48,6 +48,13 @@ export abstract class UpdatePartner {
   @IdField({ nullable: true })
   readonly languageOfWiderCommunicationId?: ID<'Language'> | null;
 
+  @IdField({ nullable: true })
+  readonly parentId?: ID<'Partner'> | null;
+
+  @ListField(() => IDType, { optional: true })
+  @IsId({ each: true })
+  readonly strategicAlliances?: ReadonlyArray<ID<'Partner'>>;
+
   @ListField(() => IDType, { optional: true })
   @IsId({ each: true })
   readonly countries?: ReadonlyArray<ID<'Location'>>;

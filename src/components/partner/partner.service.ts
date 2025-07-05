@@ -111,6 +111,19 @@ export class PartnerService {
       };
     }
 
+    if (input.strategicAlliances?.includes(input.id)) {
+      throw new InputException(
+        'A partner cannot be its own strategic ally',
+        'partner.strategicAlliances',
+      );
+    }
+    if (input.parentId && input.parentId === input.id) {
+      throw new InputException(
+        'A partner cannot be its own parent organization',
+        'partner.parent',
+      );
+    }
+
     const { departmentIdBlock, ...simpleInput } = input;
     const simpleChanges = this.repo.getActualChanges(partner, simpleInput);
     const changes = {
