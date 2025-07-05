@@ -4,14 +4,16 @@ import {
   NameField,
   Resource,
   type ResourceRelationsShape,
+  type Secured,
   SecuredProperty,
+  SecuredPropertyList,
   SecuredString,
   SecuredStringNullable,
   Sensitivity,
   SensitivityField,
 } from '~/common';
 import { e } from '~/core/gel';
-import { RegisterResource } from '~/core/resources';
+import { type LinkTo, RegisterResource } from '~/core/resources';
 import { Location } from '../../location/dto';
 import { SecuredOrganizationReach } from './organization-reach.dto';
 import { SecuredOrganizationTypes } from './organization-type.dto';
@@ -46,12 +48,27 @@ export class Organization extends Resource {
 
   @Field()
   readonly reach: SecuredOrganizationReach;
+
+  readonly joinedAlliances: Required<
+    Secured<ReadonlyArray<LinkTo<'AllianceMembership'>>>
+  >;
+
+  readonly allianceMembers: Required<
+    Secured<ReadonlyArray<LinkTo<'AllianceMembership'>>>
+  >;
+
+  readonly parent: Secured<LinkTo<'Organization'> | null>;
 }
 
 @ObjectType({
   description: SecuredProperty.descriptionFor('an organization'),
 })
 export class SecuredOrganization extends SecuredProperty(Organization) {}
+
+@ObjectType({
+  description: SecuredPropertyList.descriptionFor('a list of organizations'),
+})
+export class SecuredOrganizations extends SecuredPropertyList(Organization) {}
 
 declare module '~/core/resources/map' {
   interface ResourceMap {

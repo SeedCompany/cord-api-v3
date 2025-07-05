@@ -30,6 +30,9 @@ export class OrganizationService {
   ) {}
 
   async create(input: CreateOrganization): Promise<Organization> {
+    // if (input.joinedAlliances && input.joinedAlliances.length > 0) {
+
+    // }
     const created = await this.repo.create(input);
 
     this.privileges.for(Organization, created).verifyCan('create');

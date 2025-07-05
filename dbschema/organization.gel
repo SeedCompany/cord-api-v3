@@ -9,8 +9,11 @@ module default {
     address: str;
     multi types: Organization::Type;
     multi reach: Organization::Reach;
+    multi joinedAlliances: Organization::AllianceMembership;
+    multi allianceMembers: Organization::AllianceMembership;
 
     multi locations: Location;
+    parent: Organization;
 
     overloaded link projectContext: Project::Context {
       default := (insert Project::Context);
@@ -34,4 +37,11 @@ module Organization {
     National,
     `Global`
   >;
+
+  type AllianceMembership {
+    required link member: default::Organization;
+    required link alliance: default::Organization;
+    required joinedAt: cal::local_date;
+    constraint exclusive on ((.member, .alliance));
+  }
 }
