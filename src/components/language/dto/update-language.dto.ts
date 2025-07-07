@@ -112,9 +112,6 @@ export abstract class UpdateLanguage {
   readonly tags?: readonly string[];
 
   @OptionalField()
-  readonly isWiderComm?: boolean;
-
-  @OptionalField()
   readonly isAvailableForReporting?: boolean;
 }
 

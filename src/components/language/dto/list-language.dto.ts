@@ -67,9 +67,6 @@ export abstract class LanguageFilters {
   readonly ethnologue?: EthnologueLanguageFilters & {};
 
   @OptionalField()
-  readonly isWiderComm?: boolean;
-
-  @OptionalField()
   readonly isAvailableForReporting?: boolean;
 }
 

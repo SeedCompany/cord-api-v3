@@ -107,9 +107,6 @@ export abstract class CreateLanguage {
   readonly tags?: string[] = [];
 
   @OptionalField()
-  readonly isWiderComm?: boolean = false;
-
-  @OptionalField()
   readonly isAvailableForReporting?: boolean = false;
 }
 

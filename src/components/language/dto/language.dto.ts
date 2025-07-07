@@ -170,9 +170,6 @@ export class Language extends Interfaces {
   readonly tags: SecuredTags;
 
   @Field()
-  readonly isWiderComm: SecuredBoolean;
-
-  @Field()
   readonly isAvailableForReporting: SecuredBoolean;
 
   @Calculated()

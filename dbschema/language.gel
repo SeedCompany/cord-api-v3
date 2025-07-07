@@ -52,10 +52,6 @@ module default {
       default := false;
     };
 
-    required isWiderComm: bool {
-      default := false;
-    };
-
     registryOfLanguageVarietiesCode: str {
       constraint exclusive;
       constraint regexp(r'^[0-9]{5}$');
