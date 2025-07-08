@@ -1,3 +1,4 @@
+import { type NonEmptyArray } from '@seedcompany/common';
 import { inspect } from 'util';
 import { type Role } from '~/common';
 import {
@@ -27,12 +28,12 @@ export class RoleCondition implements Condition {
     return eqlDoesIntersect(currentRoles, this.allowed, roleType);
   }
 
-  union(this: void, conditions: this[]) {
+  union(this: void, conditions: NonEmptyArray<this>) {
     const roles = conditions.flatMap((cond) => [...cond.allowed]);
     return new RoleCondition(new Set(roles));
   }
 
-  intersect(this: void, conditions: this[]) {
+  intersect(this: void, conditions: NonEmptyArray<this>) {
     const intersected = [...conditions[0].allowed].filter((v) =>
       conditions.every((cond) => cond.allowed.has(v)),
     );

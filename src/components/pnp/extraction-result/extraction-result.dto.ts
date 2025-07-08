@@ -98,7 +98,7 @@ export class PnpProblem {
     if (!type) {
       throw new Error(`Unknown problem type ${stored.type}`);
     }
-    const [sheet, source] = stored.source.split('!');
+    const [sheet, source] = stored.source.split('!') as [string, string];
     const rendered = type.render(stored.context)({ sheet, source });
     const props: PnpProblem = {
       id: stored.id,

@@ -254,7 +254,7 @@ export class PartnershipService {
       return;
     }
     if (
-      !partner.financialReportingTypes.value?.includes(financialReportingType)
+      !partner.financialReportingTypes.value.includes(financialReportingType)
     ) {
       throw new InputException(
         `Partner does not have this financial reporting type available`,

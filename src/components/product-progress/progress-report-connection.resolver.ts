@@ -1,5 +1,5 @@
 import { Args, Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { sortBy } from '@seedcompany/common';
+import { asNonEmptyArray, sortBy } from '@seedcompany/common';
 import { loadManyIgnoreMissingThrowAny } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { ProgressReport } from '../progress-report/dto';
@@ -35,10 +35,8 @@ export class ProgressReportConnectionResolver {
       Progress.Variants.map((variant) => ({ report, variant })),
     );
     const details = detailsOrErrors.flatMap((entry) => {
-      if (entry.details.length === 0) {
-        return [];
-      }
-      return [entry.details];
+      const detail = asNonEmptyArray(entry.details);
+      return detail ? [detail] : [];
     });
     const orderMap = Object.fromEntries(
       Progress.Variants.map((variant, index) => [variant.key, index]),

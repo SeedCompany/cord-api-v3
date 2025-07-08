@@ -47,7 +47,7 @@ export class DefaultMarketingRegionMigration extends BaseMigration {
     const marketingRegionNameToId = mapEntries(marketingRegionList, (loc) => [
       loc.name,
       loc.id,
-    ]).asRecord;
+    ]).asMap;
 
     const countries = await this.db
       .query()
@@ -72,7 +72,8 @@ export class DefaultMarketingRegionMigration extends BaseMigration {
     for (const country of countries) {
       const marketingRegionName =
         fieldRegionNameToMarketingRegionName[country.fieldRegionName];
-      const marketingRegionId = marketingRegionNameToId[marketingRegionName];
+      const marketingRegionId =
+        marketingRegionNameToId.get(marketingRegionName);
       if (marketingRegionId === undefined) {
         continue;
       }

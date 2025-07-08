@@ -83,11 +83,12 @@ export class LanguageRepository extends DtoRepository<
       sponsorEstimatedEndDate: input.sponsorEstimatedEndDate,
       hasExternalFirstScripture: input.hasExternalFirstScripture,
       tags: input.tags,
+      isAvailableForReporting: input.isAvailableForReporting,
       canDelete: true,
     };
 
     const ethnologueId = await this.ethnologueLanguageService.create(
-      input?.ethnologue,
+      input.ethnologue,
     );
 
     const createLanguage = this.db
@@ -301,6 +302,7 @@ export const languageFilters = filter.define(() => LanguageFilters, {
   leastOfThese: filter.propVal(),
   isSignLanguage: filter.propVal(),
   isDialect: filter.propVal(),
+  isAvailableForReporting: filter.propVal(),
   registryOfDialectsCode: filter.propPartialVal(
     'registryOfLanguageVarietiesCode',
   ),

@@ -5,7 +5,6 @@ import { graphql, type InputOf } from '~/graphql';
 import { type TestApp } from './create-app';
 import { createLanguage } from './create-language';
 import { createLocation } from './create-location';
-import { createPerson } from './create-person';
 import { createProject } from './create-project';
 import { getUserFromSession } from './create-session';
 import * as fragments from './fragments';
@@ -68,7 +67,7 @@ export async function createInternshipEngagement(
       (await runAsAdmin(app, async () => {
         return (await createLocation(app)).id;
       })),
-    mentorId: input.mentorId || currentUserId || (await createPerson(app)).id,
+    mentorId: input.mentorId || currentUserId,
     position: 'Administration',
     methodologies: ['Film'],
     disbursementCompleteDate: now,
@@ -85,8 +84,7 @@ export async function createInternshipEngagementWithMinimumValues(
 ) {
   const currentUserId = (await getUserFromSession(app)).id;
   const projectId = input.projectId || (await createProject(app)).id;
-  const internId =
-    input.internId || currentUserId || (await createPerson(app)).id;
+  const internId = input.internId || currentUserId;
 
   const result = await app.graphql.mutate(UpdateInternshipEngDoc, {
     input: {

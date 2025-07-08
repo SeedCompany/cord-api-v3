@@ -207,6 +207,9 @@ const config = {
       { fixMixedExportsWithInlineTypeSpecifier: true },
     ],
     // TODO Enable this and fix errors (both types & logic changes will be needed)
+    // Remaining errors probably need individual thought.
+    // ESLint 9.24 allows bulk suppression,
+    // which we can use to enable this, and handle those cases one by one.
     '@typescript-eslint/no-unnecessary-condition': 'off',
 
     // Allow unused session while we migrate

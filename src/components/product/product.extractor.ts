@@ -1,5 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { entries } from '@seedcompany/common';
+import {
+  asNonEmptyArray,
+  entries,
+  type NonEmptyArray,
+} from '@seedcompany/common';
 import { parseScripture } from '@seedcompany/scripture';
 import { assert } from 'ts-essentials';
 import { type MergeExclusive } from 'type-fest';
@@ -35,7 +39,7 @@ export class ProductExtractor {
     engagementRange: DateInterval | null,
     availableSteps: readonly ProductStep[],
     result: PnpPlanningExtractionResult,
-  ): Promise<readonly ExtractedRow[]> {
+  ): Promise<NonEmptyArray<ExtractedRow> | undefined> {
     const pnp = await Pnp.fromDownloadable(file);
     const sheet = pnp.planning;
 
@@ -47,17 +51,18 @@ export class ProductExtractor {
     );
 
     if (!verifyEngagementDateRangeMatches(sheet, result, engagementRange)) {
-      return [];
+      return undefined;
     }
 
-    const productRows = sheet.goals
+    const productRowList = sheet.goals
       .walkDown()
       .filter((cell) => isGoalRow(cell, result))
       .map(parseProductRow(pnp, stepColumns, progressStepColumns, result))
       .filter((row) => row.steps.length > 0)
       .toArray();
+    const productRows = asNonEmptyArray(productRowList);
 
-    if (productRows.length === 0) {
+    if (!productRows) {
       result.addProblem(NoGoals, pnp.planning.goals.start, {});
     }
 

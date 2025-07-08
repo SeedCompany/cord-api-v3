@@ -1,5 +1,6 @@
 import { headerComment } from '@gel/generate/dist/genutil.js';
 import { generateFiles, stringifyImports } from '@gel/generate/dist/queries.js';
+import { asNonEmptyArray } from '@seedcompany/common';
 import { readFile, writeFile } from 'fs/promises';
 import { $, type Client, systemUtils } from 'gel';
 import { join, relative } from 'node:path/posix';
@@ -26,11 +27,13 @@ const generateFilesForQuery =
       const injectedQuery = injectHydrators(query, hydrators);
 
       const types = await analyzeQuery(client, injectedQuery);
-      const [{ imports, contents }] = generateFiles({
-        target: 'ts',
-        path,
-        types,
-      });
+      const [{ imports, contents }] = asNonEmptyArray(
+        generateFiles({
+          target: 'ts',
+          path,
+          types,
+        }),
+      )!;
       console.log(`   ${prettyPath}`);
       await writeFile(
         path + '.ts',

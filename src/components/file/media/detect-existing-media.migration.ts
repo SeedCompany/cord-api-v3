@@ -81,7 +81,7 @@ export class DetectExistingMediaMigration extends BaseMigration {
       }
       yield* currentPage;
       page++;
-      // eslint-disable-next-line no-constant-condition
+      // eslint-disable-next-line no-constant-condition,@typescript-eslint/no-unnecessary-condition
     } while (true);
   }
 

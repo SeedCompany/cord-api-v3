@@ -1,3 +1,4 @@
+import { type NonEmptyArray } from '@seedcompany/common';
 import { type Query } from 'cypher-query-builder';
 import { inspect, type InspectOptionsStylized } from 'util';
 import {
@@ -47,12 +48,12 @@ export class VariantCondition<TResourceStatic extends ResourceShape<any>>
     return '<str>' + eqlInLiteralSet('.variant', this.variants);
   }
 
-  union(this: void, conditions: this[]) {
+  union(this: void, conditions: NonEmptyArray<this>) {
     const variants = conditions.flatMap((cond) => [...cond.variants]);
     return new VariantCondition(new Set(variants));
   }
 
-  intersect(this: void, conditions: this[]) {
+  intersect(this: void, conditions: NonEmptyArray<this>) {
     const variants = [...conditions[0].variants].filter((v) =>
       conditions.every((cond) => cond.variants.has(v)),
     );

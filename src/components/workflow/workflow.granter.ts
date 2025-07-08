@@ -1,3 +1,4 @@
+import { type NonEmptyArray } from '@seedcompany/common';
 import { type Query } from 'cypher-query-builder';
 import { inspect, type InspectOptionsStylized } from 'util';
 import { type ID, type Many } from '~/common';
@@ -156,7 +157,7 @@ export class TransitionCondition<W extends Workflow>
     return `((${transitionAllowed}) ?? false)`;
   }
 
-  union(this: void, conditions: readonly this[]) {
+  union(this: void, conditions: NonEmptyArray<this>) {
     const checks = [
       ...new Map(
         conditions
@@ -172,7 +173,7 @@ export class TransitionCondition<W extends Workflow>
     return new TransitionCondition(checks);
   }
 
-  intersect(this: void, conditions: readonly this[]) {
+  intersect(this: void, conditions: NonEmptyArray<this>) {
     const checks = [...conditions[0].checks].filter((check1) =>
       conditions.every((cond) =>
         cond.checks.some(

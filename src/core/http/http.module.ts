@@ -30,6 +30,8 @@ import { HttpAdapter, HttpAdapterHost } from './http.adapter';
             if (!availableKeys.has(key)) {
               return undefined;
             }
+            // Yes, it is nullable, before the server is set up
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
             if (!httpAdapter) {
               throw new Error('HttpAdapter is not yet available');
             }

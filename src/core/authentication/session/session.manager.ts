@@ -77,9 +77,9 @@ export class SessionManager {
     impersonatee =
       impersonatee && result.userId
         ? {
-            id: impersonatee?.id ?? ghost?.id,
+            id: impersonatee.id ?? ghost?.id,
             roles: setOf([
-              ...(impersonatee.roles ?? []),
+              ...impersonatee.roles,
               ...(result.impersonateeRoles ?? []),
             ]),
           }
@@ -95,7 +95,7 @@ export class SessionManager {
 
     const session = impersonatee
       ? requesterSession.with({
-          userId: impersonatee?.id ?? requesterSession.userId,
+          userId: impersonatee.id ?? requesterSession.userId,
           roles: impersonatee.roles,
           impersonator: requesterSession,
           impersonatee,

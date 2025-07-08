@@ -13,7 +13,7 @@ import { fileURLToPath } from 'url';
 import { config, format, type LogEntry } from 'winston';
 import { getCauseList } from '~/common';
 import { maskSecrets as maskSecretsOfObj } from '~/common/mask-secrets';
-import { getNameFromEntry } from './logger.interface';
+import { getNameFromEntry, type LogLevel } from './logger.interface';
 
 const colorsEnabled = !process.env.NO_COLOR;
 const { red, yellow } = clc;
@@ -152,7 +152,9 @@ export const formatException = () =>
     }
     const exs: ParsedError[] = info.exceptions;
 
-    const bad = config.syslog.levels[info.level] < config.syslog.levels.warning;
+    const bad =
+      config.syslog.levels[info.level as LogLevel] <
+      config.syslog.levels.warning;
 
     info[MESSAGE] = exs
       .map((ex, index) => {

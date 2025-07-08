@@ -1,8 +1,8 @@
-import { type Book } from '@seedcompany/scripture';
+import { type Book, type BookName } from '@seedcompany/scripture';
 import { type BookDifficulty } from './dto';
 
 export const difficultyFactorOfBook = (book: Book): number =>
-  factorMap[difficultyOfBook(book)] ?? 0;
+  factorMap[difficultyOfBook(book)];
 
 export const difficultyOfBook = (book: Book): BookDifficulty =>
   difficultyMap[book.name];
@@ -14,7 +14,7 @@ const factorMap: Record<BookDifficulty, number> = {
   Hardest: 1.5625,
 };
 
-const difficultyMap: Record<string, BookDifficulty> = {
+const difficultyMap: Record<BookName, BookDifficulty> = {
   Genesis: 'Normal',
   Exodus: 'Normal',
   Leviticus: 'Hard',

@@ -65,6 +65,9 @@ export abstract class LanguageFilters {
 
   @FilterField(() => EthnologueLanguageFilters)
   readonly ethnologue?: EthnologueLanguageFilters & {};
+
+  @OptionalField()
+  readonly isAvailableForReporting?: boolean;
 }
 
 @InputType()

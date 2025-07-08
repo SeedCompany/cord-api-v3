@@ -12,7 +12,7 @@ const expectSingleConstraintFailure = (
   expectedCode: string,
   message: string,
 ) => {
-  const constraints = errors[0].constraints ?? {};
+  const constraints = errors[0]?.constraints ?? {};
   const actualCode = Object.keys(constraints)[0];
   expect(actualCode).toEqual(expectedCode);
   expect(constraints[expectedCode]).toEqual(message);

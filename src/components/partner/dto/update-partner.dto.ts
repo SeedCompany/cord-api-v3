@@ -48,6 +48,9 @@ export abstract class UpdatePartner {
   @IdField({ nullable: true })
   readonly languageOfWiderCommunicationId?: ID<'Language'> | null;
 
+  @IdField({ nullable: true })
+  readonly languageOfReportingId?: ID<'Language'> | null;
+
   @ListField(() => IDType, { optional: true })
   @IsId({ each: true })
   readonly countries?: ReadonlyArray<ID<'Location'>>;

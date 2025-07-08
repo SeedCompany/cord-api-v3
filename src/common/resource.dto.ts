@@ -1,6 +1,7 @@
 import { CLASS_TYPE_METADATA, Field, InterfaceType } from '@nestjs/graphql';
 import { type ClassType as ClassTypeVal } from '@nestjs/graphql/dist/enums/class-type.enum.js';
 import {
+  asNonEmptyArray,
   cached,
   type FnLike,
   mapValues,
@@ -109,7 +110,12 @@ export class EnhancedResource<T extends ResourceShape<any>> {
   >();
 
   static resolve(ref: ResourceLike) {
-    if (ref && typeof ref !== 'string') {
+    // Safety check; since this very dynamic code, it is very possible the types are lying.
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    if (ref == null) {
+      throw new ServerException('Resource reference is actually null');
+    }
+    if (typeof ref !== 'string') {
       return EnhancedResource.of(ref);
     }
     if (!EnhancedResource.resourcesHost) {
@@ -316,7 +322,7 @@ export class EnhancedResource<T extends ResourceShape<any>> {
       const declared = DbLabel.getOwn(cls);
       return declared ? [...declared] : [cls.name];
     });
-    return [...new Set([...labels, 'BaseNode'])];
+    return asNonEmptyArray([...new Set([...labels, 'BaseNode'])])!;
   }
   get dbLabel() {
     return this.dbLabels[0];

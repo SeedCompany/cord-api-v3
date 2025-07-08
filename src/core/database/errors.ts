@@ -112,6 +112,7 @@ export const createBetterError = (e: Error) => {
   if (!isNeo4jError(e)) {
     return e;
   }
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   e.message ??= ''; // I've seen the message be null
 
   const better = cast(e);
@@ -164,10 +165,10 @@ const getUniqueFailureInfo = (e: Neo4jError) => {
   if (constraint) {
     const constraintNameParts = constraint.name.split('_');
     uniq.label = uniq.label.startsWith('Label[')
-      ? constraintNameParts[0]
+      ? constraintNameParts[0]!
       : uniq.label;
     uniq.property = uniq.property.startsWith('PropertyKey[')
-      ? constraintNameParts[1]
+      ? constraintNameParts[1]!
       : uniq.property;
   }
 
@@ -183,9 +184,9 @@ const parseUniquenessMessage = (e: Neo4jError) => {
   }
   return {
     node: Number(matches.node),
-    label: matches.label,
-    property: matches.prop,
-    value: matches.value,
+    label: matches.label!,
+    property: matches.prop!,
+    value: matches.value!,
   };
 };
 
@@ -198,9 +199,9 @@ const parseConstraint = (e: Neo4jError) => {
   }
   return {
     id: Number(matches.id),
-    name: matches.name,
-    type: matches.type,
-    schema: matches.schema,
+    name: matches.name!,
+    type: matches.type!,
+    schema: matches.schema!,
     ownedIndex: Number(matches.ownedIndex),
   };
 };

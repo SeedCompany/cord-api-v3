@@ -34,11 +34,6 @@ export class PostService {
   ) {}
 
   async create(input: CreatePost): Promise<Post> {
-    if (!input.parentId) {
-      throw new ServerException(
-        'A post must be associated with a parent node.',
-      );
-    }
     const perms = await this.getPermissionsFromPostable(input.parentId);
     perms.verifyCan('create');
 

@@ -62,7 +62,8 @@ export class WorkBook {
       if (!matched) {
         return SKIP;
       }
-      const [_, sheetName, rangeStr] = matched;
+      const sheetName = matched[1]!;
+      const rangeStr = matched[2]!;
       try {
         const range = this.sheet(sheetName).range(rangeStr);
         return [name, range];
@@ -96,10 +97,11 @@ export class Sheet {
       this.book = arg;
       // @ts-expect-error yeah it's private this seems like the easiest way though
       this.workbook = this.book.book;
-      this.sheet = this.workbook.Sheets[this.name];
-      if (!this.sheet) {
+      const sheet = this.workbook.Sheets[this.name];
+      if (!sheet) {
         throw new NotFoundException(`Cannot find ${this.name} sheet`);
       }
+      this.sheet = sheet;
     }
     nonEnumerable(this, 'workbook' as any, 'sheet' as any);
   }
@@ -233,8 +235,8 @@ export class Cell<TSheet extends Sheet = Sheet> {
   }
 
   @Once() get hidden() {
-    const colHidden = this.libSheet['!cols']?.[this.address.c].hidden ?? false;
-    const rowHidden = this.libSheet['!rows']?.[this.address.r].hidden ?? false;
+    const colHidden = this.libSheet['!cols']?.[this.address.c]?.hidden ?? false;
+    const rowHidden = this.libSheet['!rows']?.[this.address.r]?.hidden ?? false;
     return colHidden || rowHidden;
   }
 

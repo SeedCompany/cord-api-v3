@@ -41,7 +41,6 @@ export class EthnologueLanguageService {
     input: UpdateEthnologueLanguage,
     sensitivity: Sensitivity,
   ) {
-    if (!input) return;
     const ethnologueLanguage = await this.repo.readOne(id);
 
     const changes = this.repo.getActualChanges(ethnologueLanguage, input);

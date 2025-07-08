@@ -201,7 +201,7 @@ describe('Engagement Changeset Aware e2e', () => {
     // list engagements with changeset
     result = await readEngagements(app, project.id, changeset.id);
     expect(result.project.engagements.items.length).toBe(2);
-    expect(result.project.engagements.items[1].id).toBe(
+    expect(result.project.engagements.items[1]!.id).toBe(
       changesetEngagement.createLanguageEngagement.engagement.id,
     );
     await approveProjectChangeRequest(app, changeset.id);
@@ -405,7 +405,7 @@ describe('Engagement Changeset Aware e2e', () => {
       project.id,
       changeset.id,
     );
-    expect(projectChangeset.project.changeset!.difference.removed[0].id).toBe(
+    expect(projectChangeset.project.changeset!.difference.removed[0]!.id).toBe(
       le.createLanguageEngagement.engagement.id,
     );
   });

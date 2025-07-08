@@ -134,6 +134,8 @@ export class FileService {
       }
       throw new ServerException('Failed to retrieve file contents', e);
     }
+    // I think this is a safety check for our S3 mocks
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (!data) {
       throw new NotFoundException('Could not find file contents');
     }
@@ -327,13 +329,10 @@ export class FileService {
       tempUpload.status === 'fulfilled' &&
       existingUpload.status === 'fulfilled'
     ) {
-      if (tempUpload.value && existingUpload.value) {
-        throw new InputException(
-          'Upload request has already been used',
-          'uploadId',
-        );
-      }
-      throw new CreationFailed(FileVersion);
+      throw new InputException(
+        'Upload request has already been used',
+        'uploadId',
+      );
     } else if (
       tempUpload.status === 'rejected' &&
       existingUpload.status === 'fulfilled'

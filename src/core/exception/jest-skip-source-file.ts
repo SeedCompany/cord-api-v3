@@ -22,7 +22,9 @@ export const jestSkipFileInExceptionSource = (
   const all = filepath instanceof RegExp ? filepath.global : true;
   e.stack = e.stack?.[all ? 'replaceAll' : 'replace'](filepath, (substr) => {
     const path = substr.match(/\s+at /)
-      ? stacktrace.parse({ stack: 'Error \n' + substr } as any)[0].getFileName()
+      ? stacktrace
+          .parse({ stack: 'Error \n' + substr } as any)[0]!
+          .getFileName()
       : substr;
 
     const relativePath = relative(projectRoot, path);

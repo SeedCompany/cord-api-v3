@@ -48,7 +48,7 @@ export class PollResults<T> {
   /** Returns the unanimous vote, if there was one */
   get unanimous() {
     const all = this.sorted;
-    return all.length === 1 ? all[0][0] : undefined;
+    return all.length === 1 ? all[0]![0] : undefined;
   }
 
   /** Returns all votes sorted by most voted first (ties are unaccounted for) */

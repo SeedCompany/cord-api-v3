@@ -1,4 +1,8 @@
-import { groupBy } from '@seedcompany/common';
+import {
+  asNonEmptyArray,
+  groupBy,
+  type NonEmptyArray,
+} from '@seedcompany/common';
 import { createMetadataDecorator } from '@seedcompany/nest';
 import { InputException } from './exceptions';
 import { type ID } from './id-field';
@@ -50,7 +54,7 @@ RequiredWhen.calc = <TResourceStatic extends ResourceShape<any>>(
     const condition = RequiredWhenMetadata.get(resource, prop);
     return condition ? { ...condition, field: prop } : [];
   });
-  const missing = conditions.flatMap((condition) => {
+  const missingList = conditions.flatMap((condition) => {
     return condition.isEnabled(obj) &&
       (condition.isMissing?.(obj) ?? obj[condition.field] == null)
       ? {
@@ -59,8 +63,10 @@ RequiredWhen.calc = <TResourceStatic extends ResourceShape<any>>(
         }
       : [];
   });
-  if (missing.length > 0) {
-    return new MissingRequiredFieldsException(res, { id: obj.id }, missing);
+  const missing = asNonEmptyArray(missingList);
+  if (missing) {
+    const id = obj.id as ID;
+    return new MissingRequiredFieldsException(res, { id }, missing);
   }
   return undefined;
 };
@@ -79,7 +85,7 @@ export class MissingRequiredFieldsException extends InputException {
   constructor(
     readonly resource: EnhancedResource<any>,
     readonly object: { id: ID },
-    readonly missing: ReadonlyArray<{
+    readonly missing: NonEmptyArray<{
       readonly field: string;
       readonly description: string;
     }>,

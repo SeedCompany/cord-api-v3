@@ -1,5 +1,6 @@
 import { S3 } from '@aws-sdk/client-s3';
 import { type FactoryProvider } from '@nestjs/common';
+import { asNonEmptyArray } from '@seedcompany/common';
 import { resolve } from 'path';
 import { map } from 'rxjs/operators';
 import { withAddedPath } from '~/common/url.util';
@@ -34,7 +35,7 @@ export const FilesBucketFactory: FactoryProvider = {
     const factories = {
       s3: ({ path }) => {
         const [bucket, ...prefix] = path.split('/');
-        return new S3Bucket(s3, bucket, prefix.join('/'));
+        return new S3Bucket(s3, bucket!, prefix.join('/'));
       },
       '': files,
       file: files,
@@ -43,7 +44,7 @@ export const FilesBucketFactory: FactoryProvider = {
       memory: () => new MemoryBucket({ baseUrl }),
     } satisfies Record<string, FileFactory>;
 
-    const built = sources.flatMap((uri) => {
+    const builtList = sources.flatMap((uri) => {
       const type = uri.type as keyof typeof factories;
       if (!(type in factories)) {
         return [];
@@ -51,11 +52,12 @@ export const FilesBucketFactory: FactoryProvider = {
       const bucket = factories[type](uri);
       return uri.readonly ? new ReadonlyBucket(bucket) : bucket;
     });
+    const built = asNonEmptyArray(builtList);
+    if (!built) {
+      return factories.memory();
+    }
     if (built.length === 1) {
       return built[0];
-    }
-    if (built.length === 0) {
-      return factories.memory();
     }
     return new CompositeBucket(built);
   },

@@ -127,6 +127,18 @@ export class PartnerService {
     if (changes.countries) {
       await this.verifyCountries(changes.countries);
     }
+    if (changes.languageOfReportingId) {
+      const lang = await this.resourceLoader.load(
+        'Language',
+        changes.languageOfReportingId,
+      );
+      if (!lang.isAvailableForReporting.value) {
+        throw new InputException(
+          'Language is not marked as available for reporting',
+          'partner.languageOfReportingId',
+        );
+      }
+    }
 
     const updated = await this.repo.update({
       id: partner.id,

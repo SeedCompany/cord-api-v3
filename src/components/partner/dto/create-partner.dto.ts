@@ -50,6 +50,9 @@ export abstract class CreatePartner {
   @IdField({ nullable: true })
   readonly languageOfWiderCommunicationId?: ID<'Language'> | null;
 
+  @IdField({ nullable: true })
+  readonly languageOfReportingId?: ID<'Language'> | null;
+
   @Field(() => [IDType], { nullable: true })
   @IsId({ each: true })
   @Transform(({ value }) => uniq(value))

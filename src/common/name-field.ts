@@ -51,9 +51,13 @@ export const NameField = (options: NameFieldParams = {}) =>
  */
 const InferredTypeOrStringField =
   (options: FieldOptions): PropertyDecorator | MethodDecorator =>
-  (prototype, property, descriptor) => {
+  (prototype, property, descriptorRaw) => {
     const propertyKey = property as string;
     const applyMetadataFn = () => {
+      // fix linter false positive thinking it always exists, property decorators don't have it
+      const descriptor = descriptorRaw as
+        | TypedPropertyDescriptor<unknown>
+        | undefined;
       const isResolver = !!descriptor;
       const isResolverMethod = !!descriptor?.value;
       const resolveType = (typeFn?: ReturnTypeFunc) =>

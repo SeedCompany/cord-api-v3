@@ -39,7 +39,7 @@ export class ExtractPnpProgressHandler {
       });
       return;
     }
-    if (progressRows.length === 0) {
+    if (!progressRows) {
       return;
     }
 

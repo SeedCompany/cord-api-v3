@@ -40,11 +40,11 @@ const parseRoutingTable = (routingTableStr: string) => {
   }
   return {
     database: matched[1] === 'default database' ? null : matched[1],
-    expirationTime: parseInt(matched[2], 10),
-    currentTime: parseInt(matched[3], 10),
-    routers: csv(matched[4]),
-    readers: csv(matched[5]),
-    writers: csv(matched[6]),
+    expirationTime: parseInt(matched[2]!, 10),
+    currentTime: parseInt(matched[3]!, 10),
+    routers: csv(matched[4]!),
+    readers: csv(matched[5]!),
+    writers: csv(matched[6]!),
   };
 };
 

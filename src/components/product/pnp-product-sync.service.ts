@@ -1,5 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { asyncPool, groupBy, mapEntries, mapOf } from '@seedcompany/common';
+import {
+  asyncPool,
+  groupBy,
+  mapEntries,
+  mapOf,
+  type NonEmptyArray,
+} from '@seedcompany/common';
 import { labelOfVerseRanges } from '@seedcompany/scripture';
 import { stripIndent } from 'common-tags';
 import { difference, uniq } from 'lodash';
@@ -76,7 +82,7 @@ export class PnpProductSyncService {
       }
       return [];
     }
-    if (productRows.length === 0) {
+    if (!productRows) {
       return [];
     }
 
@@ -93,7 +99,7 @@ export class PnpProductSyncService {
    */
   private async matchRowsToProductChanges(
     engagementId: ID<'LanguageEngagement'>,
-    rows: readonly ExtractedRow[],
+    rows: NonEmptyArray<ExtractedRow>,
     result: PnpExtractionResult,
   ) {
     const scriptureProducts = rows[0].bookName
@@ -156,7 +162,7 @@ export class PnpProductSyncService {
           return false;
         });
         const existingId =
-          withMatches.length === 1 ? withMatches[0].id : undefined;
+          withMatches.length === 1 ? withMatches[0]!.id : undefined;
         if (existingId) {
           matches.push({ ...row, existingId });
           existingProductsForBook = existingProductsForBook.filter(
@@ -178,7 +184,7 @@ export class PnpProductSyncService {
         // for this book remain the same or are new.
         const oldVerseCountRef = existingProductsForBook[0]!;
         matches.push({
-          ...nonExactMatches[0],
+          ...nonExactMatches[0]!,
           existingId: oldVerseCountRef.id,
         });
         existingProductsForBook = [];

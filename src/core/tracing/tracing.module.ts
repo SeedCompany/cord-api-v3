@@ -1,6 +1,7 @@
 import { Module, type OnModuleInit } from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import XRay from 'aws-xray-sdk-core';
+import * as process from 'node:process';
 import { ConfigService } from '../config/config.service';
 import { VersionService } from '../config/version.service';
 import { ILogger, Logger, LoggerModule, LogLevel } from '../logger';
@@ -43,7 +44,7 @@ export class TracingModule implements OnModuleInit {
       XRay.SegmentUtils.setServiceData({
         name: hostUrl.toString(),
         version: version.toString(),
-        runtime: process.release?.name ?? 'unknown',
+        runtime: process.release.name,
         // eslint-disable-next-line @typescript-eslint/naming-convention
         runtime_version: process.version,
       });
@@ -70,9 +71,9 @@ export class TracingModule implements OnModuleInit {
               matches
                 ? {
                     ...JSON.parse(
-                      matches[1].replace('"trace_id:"', '"trace_id":"'),
+                      matches[1]!.replace('"trace_id:"', '"trace_id":"'),
                     ),
-                    size: matches[2],
+                    size: matches[2]!,
                   }
                 : undefined,
             );
