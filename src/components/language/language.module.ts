@@ -13,6 +13,7 @@ import { LanguageLoader } from './language.loader';
 import { LanguageRepository } from './language.repository';
 import { LanguageResolver } from './language.resolver';
 import { LanguageService } from './language.service';
+import { AddLanguageFlagsMigration } from './migrations/add-flags.migration';
 import { RegistryOfDialectToRegistryOfLanguageVarietiesMigration } from './migrations/rename-rod-to-rolv.migration';
 
 @Module({
@@ -31,6 +32,7 @@ import { RegistryOfDialectToRegistryOfLanguageVarietiesMigration } from './migra
     LanguageLoader,
     InternalFirstScriptureResolver,
     RegistryOfDialectToRegistryOfLanguageVarietiesMigration,
+    AddLanguageFlagsMigration,
   ],
   exports: [LanguageService],
 })
