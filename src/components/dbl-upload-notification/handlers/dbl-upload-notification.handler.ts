@@ -15,6 +15,7 @@ import {
 import { type ComponentProps as PropsOf } from 'react';
 import { type ID, type Range } from '~/common';
 import {
+  ConfigService,
   EventsHandler,
   type IEventHandler,
   ILogger,
@@ -46,8 +47,9 @@ export class DBLUploadNotificationHandler
   constructor(
     private readonly identity: Identity,
     private readonly moduleRef: ModuleRef,
-    private readonly emailService: EmailService,
     private readonly resources: ResourceLoader,
+    private readonly config: ConfigService,
+    private readonly mailer: EmailService,
     @Logger('progress-report:dbl-upload-notifier')
     private readonly logger: ILogger,
   ) {}
@@ -117,12 +119,18 @@ export class DBLUploadNotificationHandler
     });
 
     for (const props of notifyeesProps) {
-      await this.emailService.send(
-        props.recipient.email.value!, // members without an email address are already omitted
-        DBLUpload,
-        props,
-        // TODO reply to Darcie
-      );
+      // members without an email address are already omitted
+      const to = props.recipient.email.value!;
+      await this.mailer
+        .withOptions({ send: !!this.config.email.notifyDblUpload })
+        .render(DBLUpload, props)
+        .with({
+          to,
+          ...(this.config.email.notifyDblUpload && {
+            'reply-to': this.config.email.notifyDblUpload.replyTo,
+          }),
+        })
+        .send();
     }
   }
 

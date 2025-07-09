@@ -123,6 +123,11 @@ export const makeConfig = (env: EnvironmentService) =>
       notifyProjectStepChanges: env
         .boolean('NOTIFY_PROJECT_STEP_CHANGES')
         .optional(true),
+      notifyDblUpload: env.boolean('NOTIFY_DBL_UPLOAD').optional(false)
+        ? {
+            replyTo: env.string('DBL_UPLOAD_REPLY_TO').optional(),
+          }
+        : undefined,
     };
 
     progressReportStatusChange = {
