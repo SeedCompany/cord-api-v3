@@ -1,0 +1,16 @@
+module default {
+    type DebugLog {
+        message: str;
+        created_at: datetime;
+        multi data: json;
+    };
+
+    function log_it(message: str, data: optional json) -> optional DebugLog
+    using (
+      insert default::DebugLog {
+        message := message,
+        created_at := datetime_of_statement(),
+        data := data
+      }
+    )
+}
