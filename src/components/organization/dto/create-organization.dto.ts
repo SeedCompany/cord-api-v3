@@ -1,7 +1,8 @@
-import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import { Type } from 'class-transformer';
+import { Field, ID as IDType, InputType, ObjectType } from '@nestjs/graphql';
+import { Transform, Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { NameField } from '~/common';
+import { uniq } from 'lodash';
+import { type ID, IdField, IsId, NameField } from '~/common';
 import { OrganizationReach } from './organization-reach.dto';
 import { OrganizationType } from './organization-type.dto';
 import { Organization } from './organization.dto';
@@ -22,6 +23,19 @@ export abstract class CreateOrganization {
 
   @Field(() => [OrganizationReach], { nullable: true })
   readonly reach?: readonly OrganizationReach[];
+
+  @Field(() => [IDType], { nullable: true })
+  @IsId({ each: true })
+  @Transform(({ value }) => uniq(value))
+  readonly joinedAlliances?: ReadonlyArray<ID<'AllianceMembership'>> = [];
+
+  @Field(() => [IDType], { nullable: true })
+  @IsId({ each: true })
+  @Transform(({ value }) => uniq(value))
+  readonly allianceMembers?: ReadonlyArray<ID<'AllianceMembership'>> = [];
+
+  @IdField({ nullable: true })
+  readonly parentId?: ID<'Organization'> | null;
 }
 
 @InputType()
