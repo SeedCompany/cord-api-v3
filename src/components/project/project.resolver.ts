@@ -14,6 +14,7 @@ import {
   type ID,
   IdArg,
   IdField,
+  InputException,
   IsOnly,
   ListArg,
   mapSecuredValue,
@@ -63,6 +64,7 @@ import {
   ProjectListInput,
   ProjectListOutput,
   ProjectType,
+  TranslationProject,
   TranslationProjectListOutput,
   UpdateProjectInput,
   UpdateProjectOutput,
@@ -104,6 +106,20 @@ export class ProjectResolver {
     @IdsAndViewArg() key: IdsAndView,
   ): Promise<Project> {
     return await projects.load(key);
+  }
+
+  @Query(() => TranslationProject, {
+    description: 'Look up a translation project by its ID',
+  })
+  async translationProject(
+    @Loader(ProjectLoader) projects: LoaderOf<ProjectLoader>,
+    @IdsAndViewArg() key: IdsAndView,
+  ): Promise<TranslationProject> {
+    const project = await projects.load(key);
+    if (project.type === ProjectType.Internship) {
+      throw new InputException('Project is not a translation project');
+    }
+    return project;
   }
 
   @Query(() => ProjectListOutput, {
