@@ -1,3 +1,4 @@
+import { type NonEmptyArray } from '@seedcompany/common';
 import {
   Column,
   Text as Head,
@@ -14,20 +15,16 @@ import { type Language } from '../../../components/language/dto';
 import { type Project } from '../../../components/project/dto';
 import { type User } from '../../../components/user/dto';
 
-export interface DBLUploadProps {
+interface Props {
   recipient: User;
   project: Pick<Project, 'id' | 'name'>;
   engagement: Pick<Engagement, 'id'>;
   language: Pick<Language, 'id' | 'name' | 'ethnologue'>;
-  completedBooks: ReadonlyArray<Range<Verse>>;
+  completedBooks: NonEmptyArray<Range<Verse>>;
 }
 
-export function DBLUpload({
-  language,
-  project,
-  completedBooks,
-  engagement,
-}: DBLUploadProps) {
+export function DBLUpload(props: Props) {
+  const { language, project, completedBooks, engagement } = props;
   const languageName = language.name.value;
   return (
     <EmailTemplate title={`${languageName || 'Language'} needs a DBL upload`}>

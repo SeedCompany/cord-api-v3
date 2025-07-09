@@ -1,5 +1,10 @@
 import { ModuleRef } from '@nestjs/core';
-import { groupBy, setOf } from '@seedcompany/common';
+import {
+  asNonEmptyArray,
+  groupBy,
+  type NonEmptyArray,
+  setOf,
+} from '@seedcompany/common';
 import { EmailService } from '@seedcompany/nestjs-email';
 import {
   Book,
@@ -7,21 +12,21 @@ import {
   splitRangeByBook,
   type Verse,
 } from '@seedcompany/scripture';
-import { type ID, type Range, Role } from '~/common';
+import { type ComponentProps as PropsOf } from 'react';
+import { type ID, type Range } from '~/common';
 import {
-  ConfigService,
   EventsHandler,
   type IEventHandler,
   ILogger,
   Logger,
   ResourceLoader,
 } from '~/core';
-import { ProgressReportStatus as Status } from '../../../components/progress-report/dto';
+import { Identity } from '~/core/authentication';
+import {
+  type ProgressReport,
+  ProgressReportStatus as Status,
+} from '../../../components/progress-report/dto';
 import { WorkflowUpdatedEvent } from '../../../components/progress-report/workflow/events/workflow-updated.event';
-import { ProgressReportWorkflowRepository } from '../../../components/progress-report/workflow/progress-report-workflow.repository';
-import { AuthenticationService } from '../../authentication';
-import { EngagementService } from '../../engagement';
-import { LanguageService } from '../../language';
 import { ProductService } from '../../product';
 import { ProgressReportVariantProgress } from '../../product-progress/dto';
 import { ProductProgressByReportLoader } from '../../product-progress/product-progress-by-report.loader';
@@ -31,22 +36,15 @@ import {
   ProductListInput,
   resolveProductType,
 } from '../../product/dto';
-import { ProjectService } from '../../project';
-import { UserService } from '../../user';
-import { DBLUpload, type DBLUploadProps } from '../templates';
-
-const projectMemberRolesToNotify = setOf<Role>([Role.ProjectManager]);
+import { ProjectMemberRepository } from '../../project/project-member/project-member.repository';
+import { DBLUpload } from '../templates/dbl-upload-email.template';
 
 @EventsHandler(WorkflowUpdatedEvent)
 export class DBLUploadNotificationHandler
   implements IEventHandler<WorkflowUpdatedEvent>
 {
   constructor(
-    private readonly auth: AuthenticationService,
-    private readonly repo: ProgressReportWorkflowRepository,
-    private readonly userService: UserService,
-    private readonly configService: ConfigService,
-    private readonly languageService: LanguageService,
+    private readonly identity: Identity,
     private readonly moduleRef: ModuleRef,
     private readonly emailService: EmailService,
     private readonly resources: ResourceLoader,
@@ -55,11 +53,6 @@ export class DBLUploadNotificationHandler
   ) {}
 
   async handle({ reportId, previousStatus, next }: WorkflowUpdatedEvent) {
-    const { enabled } = this.configService.progressReportStatusChange;
-    if (!enabled) {
-      return;
-    }
-
     const nextStatus = typeof next === 'string' ? next : next.to;
     // Continue if the report is at least Approved, and wasn't before.
     if (
@@ -71,44 +64,99 @@ export class DBLUploadNotificationHandler
       return;
     }
 
-    const progressReport = await this.resources.load(
-      'ProgressReport',
-      reportId,
-    );
-    const productProgressByReportLoader = await this.resources.getLoader(
-      ProductProgressByReportLoader,
-    );
-    const { details: productProgress } =
-      await productProgressByReportLoader.load({
-        report: progressReport,
-        variant: ProgressReportVariantProgress.FallbackVariant,
-      });
+    const report = await this.resources.load('ProgressReport', reportId);
 
-    const completedProductIds = setOf(
-      productProgress.flatMap(({ steps, productId }) => {
-        const completed = steps.some(
-          (step) =>
-            step.step === 'ConsultantCheck' && step.completed?.value === 100,
-        );
-        return completed ? productId : [];
-      }),
-    );
-
-    if (completedProductIds.size === 0) {
+    const completedProducts = await this.determineCompletedProducts(report);
+    if (completedProducts.size === 0) {
       return;
     }
 
-    const engagementId = progressReport.parent.properties.id;
-    const [ids, { items: products }, notifyees] = await Promise.all([
-      this.repo.getProjectInfoByReportId(reportId),
-      this.moduleRef.get(ProductService, { strict: false }).list(
+    const completedBooks = await this.determineCompletedBooks(
+      report.parent.properties.id,
+      completedProducts,
+    );
+    if (!completedBooks) {
+      return;
+    }
+
+    await this.notifyProjectManagersOfUploadNeeded(report, completedBooks);
+  }
+
+  private async notifyProjectManagersOfUploadNeeded(
+    report: ProgressReport,
+    completedBooks: NonEmptyArray<Range<Verse>>,
+  ) {
+    const engagement = await this.resources.load(
+      'LanguageEngagement',
+      report.parent.properties.id,
+    );
+    const notifyees = await this.moduleRef
+      .get(ProjectMemberRepository, { strict: false })
+      .listAsNotifiers(engagement.project.id, ['ProjectManager']);
+
+    const notifyeesProps = await Promise.all(
+      notifyees
+        .filter((n) => n.email)
+        .map(({ id: userId }) =>
+          this.gatherTemplateProps(
+            userId,
+            engagement.id,
+            engagement.language.value!.id,
+            engagement.project.id,
+            completedBooks,
+          ),
+        ),
+    );
+
+    this.logger.info('Notifying', {
+      engagement: notifyeesProps[0]?.engagement.id ?? undefined,
+      reportId: report.id,
+      reportDate: report.start,
+      books: completedBooks.map((r) => r.start.book.name),
+      emails: notifyeesProps.map((r) => r.recipient.email.value),
+    });
+
+    for (const props of notifyeesProps) {
+      await this.emailService.send(
+        props.recipient.email.value!, // members without an email address are already omitted
+        DBLUpload,
+        props,
+        // TODO reply to Darcie
+      );
+    }
+  }
+
+  private async determineCompletedProducts(report: ProgressReport) {
+    const loader = await this.resources.getLoader(
+      ProductProgressByReportLoader,
+    );
+    const { details: productProgress } = await loader.load({
+      report,
+      variant: ProgressReportVariantProgress.Variants.byKey('official'),
+    });
+
+    const completed = productProgress.flatMap(({ steps, productId }) => {
+      const completed = steps.some(
+        (step) =>
+          step.step === 'ConsultantCheck' && step.completed?.value === 100,
+      );
+      return completed ? productId : [];
+    });
+    return setOf(completed);
+  }
+
+  private async determineCompletedBooks(
+    engagementId: ID<'Engagement'>,
+    completedProductIds: ReadonlySet<ID<'Product'>>,
+  ) {
+    const { items: products } = await this.moduleRef
+      .get(ProductService, { strict: false })
+      .list(
         ProductListInput.defaultValue(ProductListInput, {
           filter: { engagementId },
           count: 1_000, // no pagination
         }),
-      ),
-      this.getProjectNotifyees(reportId),
-    ]);
+      );
 
     const completedProducts = products.flatMap((product) => {
       if (!completedProductIds.has(product.id)) {
@@ -155,58 +203,22 @@ export class DBLUploadNotificationHandler
           ? range
           : [];
       });
-
-    if (completedBooks.length === 0) {
-      return;
-    }
-
-    const notifications = await Promise.all(
-      notifyees.map(({ id: userId }) =>
-        this.prepareNotificationObject(
-          userId,
-          engagementId,
-          ids.languageId,
-          ids.projectId,
-          completedBooks,
-        ),
-      ),
-    );
-
-    this.logger.info('Notifying', {
-      engagement: notifications[0]?.engagement.id ?? undefined,
-      reportId: progressReport.id,
-      reportDate: progressReport.start,
-      books: completedBooks.map((r) => r.start.book.name),
-      emails: notifications.map((r) => r.recipient.email.value),
-    });
-
-    for (const notification of notifications) {
-      await this.emailService.send(
-        notification.recipient.email.value!, // members without an email address are already omitted
-        DBLUpload,
-        notification,
-        // TODO reply to Darcie
-      );
-    }
+    return asNonEmptyArray(completedBooks);
   }
 
-  private async prepareNotificationObject(
+  private async gatherTemplateProps(
     recipientId: ID<'User'>,
     engagementId: ID,
     languageId: ID,
     projectId: ID,
-    completedBooks: ReadonlyArray<Range<Verse>>,
-  ): Promise<DBLUploadProps> {
-    return await this.auth.asUser(recipientId, async () => {
+    completedBooks: NonEmptyArray<Range<Verse>>,
+  ) {
+    return await this.identity.asUser(recipientId, async () => {
       const [recipient, language, engagement, project] = await Promise.all([
-        this.userService.readOne(recipientId),
-        this.languageService.readOne(languageId),
-        this.moduleRef
-          .get(EngagementService, { strict: false })
-          .readOne(engagementId),
-        this.moduleRef
-          .get(ProjectService, { strict: false })
-          .readOne(projectId),
+        this.resources.load('User', recipientId),
+        this.resources.load('Language', languageId),
+        this.resources.load('Engagement', engagementId),
+        this.resources.load('Project', projectId),
       ]);
 
       return {
@@ -215,14 +227,7 @@ export class DBLUploadNotificationHandler
         project,
         engagement,
         completedBooks,
-      } satisfies DBLUploadProps;
+      } satisfies PropsOf<typeof DBLUpload>;
     });
-  }
-
-  private async getProjectNotifyees(reportId: ID) {
-    const members = await this.repo.getProjectMemberInfoByReportId(reportId);
-    return members.filter(({ roles }) =>
-      roles.some((role) => projectMemberRolesToNotify.has(role)),
-    );
   }
 }
