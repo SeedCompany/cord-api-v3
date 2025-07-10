@@ -7,10 +7,10 @@ import { AwsS3Factory } from './aws-s3.factory';
 import { CacheModule } from './cache/cache.module';
 import { CliModule } from './cli/cli.module';
 import { ConfigModule } from './config/config.module';
-import { ConfigService } from './config/config.service';
 import { CoreController } from './core.controller';
 import { DataLoaderConfig } from './data-loader/data-loader.config';
 import { DatabaseModule } from './database/database.module';
+import { EmailConfig } from './email/email.config';
 import { EventsModule } from './events';
 import { ExceptionFilter } from './exception/exception.filter';
 import { ExceptionNormalizer } from './exception/exception.normalizer';
@@ -35,7 +35,7 @@ import { WaitResolver } from './wait.resolver';
     DatabaseModule,
     DataLoaderModule.registerAsync({ useClass: DataLoaderConfig }),
     GelModule,
-    EmailModule.forRootAsync({ useExisting: ConfigService }),
+    EmailModule.registerAsync({ useClass: EmailConfig }),
     GraphqlModule,
     EventsModule,
     TracingModule,

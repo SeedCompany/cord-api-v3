@@ -1,9 +1,4 @@
-import {
-  Button,
-  Column,
-  Section,
-  Text,
-} from '@seedcompany/nestjs-email/templates';
+import * as Mjml from '@seedcompany/nestjs-email/templates/mjml';
 import { fiscalQuarter, fiscalYear } from '~/common';
 import { type Language } from '../../../components/language/dto';
 import { type PeriodicReport } from '../../../components/periodic-report/dto';
@@ -73,9 +68,9 @@ export function ProgressReportStatusChanged({
         )}
       </Heading>
 
-      <Section>
-        <Column>
-          <Text paddingBottom={16}>
+      <Mjml.Section>
+        <Mjml.Column>
+          <Mjml.Text paddingBottom={16}>
             <UserRef {...changedBy} /> has changed{' '}
             <a href={reportUrl}>{reportLabel}</a>{' '}
             {newStatus ? (
@@ -95,12 +90,12 @@ export function ProgressReportStatusChanged({
                 timezone={recipient.timezone.value}
               />
             </>
-          </Text>
-          <Button href={reportUrl} paddingTop={16}>
+          </Mjml.Text>
+          <Mjml.Button href={reportUrl} paddingTop={16}>
             View {reportLabel}
-          </Button>
-        </Column>
-      </Section>
+          </Mjml.Button>
+        </Mjml.Column>
+      </Mjml.Section>
     </EmailTemplate>
   );
 }
