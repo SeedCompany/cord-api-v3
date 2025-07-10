@@ -17,7 +17,7 @@ export abstract class RemoveOrganizationFromUserInput {
   @Field()
   @Type(() => RemoveOrganizationFromUser)
   @ValidateNested()
-  readonly request: RemoveOrganizationFromUser;
+  readonly assignment: RemoveOrganizationFromUser;
 }
 
 @ObjectType()

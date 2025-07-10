@@ -31,7 +31,6 @@ import { TimeZoneService } from '../timezone';
 import { SecuredTimeZone } from '../timezone/timezone.dto';
 import {
   AssignOrganizationToUserInput,
-  AssignOrganizationToUserOutput,
   CheckEmailArgs,
   CreatePersonInput,
   CreatePersonOutput,
@@ -39,7 +38,6 @@ import {
   KnownLanguage,
   ModifyKnownLanguageArgs,
   RemoveOrganizationFromUserInput,
-  RemoveOrganizationFromUserOutput,
   UpdateUserInput,
   UpdateUserOutput,
   User,
@@ -257,24 +255,24 @@ export class UserResolver {
     return await this.userService.readOne(userId);
   }
 
-  @Mutation(() => AssignOrganizationToUserOutput, {
+  @Mutation(() => User, {
     description: 'Assign organization OR primaryOrganization to user',
   })
   async assignOrganizationToUser(
     @Args('input') input: AssignOrganizationToUserInput,
-  ): Promise<AssignOrganizationToUserOutput> {
-    await this.userService.assignOrganizationToUser(input.request);
-    return { success: true };
+  ): Promise<User> {
+    await this.userService.assignOrganizationToUser(input.assignment);
+    return await this.userService.readOne(input.assignment.userId);
   }
 
-  @Mutation(() => RemoveOrganizationFromUserOutput, {
+  @Mutation(() => User, {
     description: 'Remove organization OR primaryOrganization from user',
   })
   async removeOrganizationFromUser(
     @Args('input') input: RemoveOrganizationFromUserInput,
-  ): Promise<RemoveOrganizationFromUserOutput> {
-    await this.userService.removeOrganizationFromUser(input.request);
-    return { success: true };
+  ): Promise<User> {
+    await this.userService.removeOrganizationFromUser(input.assignment);
+    return await this.userService.readOne(input.assignment.userId);
   }
 
   @Mutation(() => User, {
