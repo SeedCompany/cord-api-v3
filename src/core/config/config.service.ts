@@ -1,8 +1,5 @@
 import { csv } from '@seedcompany/common';
-import type {
-  EmailModuleOptions,
-  EmailOptionsFactory,
-} from '@seedcompany/nestjs-email';
+import type { EmailModuleOptions as EmailOptions } from '@seedcompany/nestjs-email';
 import type { Server as HttpServer } from 'http';
 import { type LRUCache } from 'lru-cache';
 import { DateTime, Duration, type DurationLike } from 'luxon';
@@ -14,8 +11,6 @@ import { type ID } from '~/common';
 import { parseUri } from '../../components/file/bucket/parse-uri';
 import { ProgressReportStatus } from '../../components/progress-report/dto/progress-report-status.enum';
 import { TransitionName as ProgressReportTransitionName } from '../../components/progress-report/workflow/transitions';
-import { DefaultTimezoneWrapper } from '../email/templates/formatted-date-time';
-import { FrontendUrlWrapper } from '../email/templates/frontend-url';
 import type { CookieOptions, CorsOptions, IRequest } from '../http';
 import { LogLevel } from '../logger/logger.interface';
 import { type EnvironmentService } from './environment.service';
@@ -30,7 +25,7 @@ type HttpTimeoutOptions = AppConfig['httpTimeouts'];
 const isDev = process.env.NODE_ENV === 'development';
 
 export const makeConfig = (env: EnvironmentService) =>
-  class ConfigService implements EmailOptionsFactory {
+  class ConfigService {
     port = env.number('port').optional(3000);
     // The port where the app is being hosted. i.e. a docker bound port
     publicPort = env.number('public_port').optional(this.port);
@@ -95,13 +90,17 @@ export const makeConfig = (env: EnvironmentService) =>
 
     jwtKey = env.string('JWT_AUTH_KEY').optional('cord-field');
 
-    createEmailOptions = () => {
+    emailDriver = (() => {
       const send = env.boolean('EMAIL_SEND').optional(false);
+      const from = env
+        .string('EMAIL_FROM')
+        .optional('CORD Field <noreply@cordfield.com>');
+      const replyTo = env.string('EMAIL_REPLY_TO').optional() || undefined; // falsy -> undefined
       return {
-        from: env
-          .string('EMAIL_FROM')
-          .optional('CORD Field <noreply@cordfield.com>'),
-        replyTo: env.string('EMAIL_REPLY_TO').optional() || undefined, // falsy -> undefined
+        defaultHeaders: {
+          from,
+          ...(replyTo && { replyTo }),
+        },
         send,
         open: this.jest
           ? false
@@ -109,12 +108,8 @@ export const makeConfig = (env: EnvironmentService) =>
         ses: {
           region: env.string('SES_REGION').optional(),
         },
-        wrappers: [
-          FrontendUrlWrapper(this.frontendUrl),
-          DefaultTimezoneWrapper(this.defaultTimeZone),
-        ],
-      } satisfies EmailModuleOptions;
-    };
+      } satisfies EmailOptions;
+    })();
 
     email = {
       notifyDistributionLists: env
@@ -134,7 +129,7 @@ export const makeConfig = (env: EnvironmentService) =>
     progressReportStatusChange = {
       enabled: env
         .boolean('NOTIFY_PROGRESS_REPORT_STATUS_CHANGES')
-        .optional(this.createEmailOptions().send),
+        .optional(this.emailDriver.send),
       notifyExtraEmails: {
         forTransitions: env
           .map('PROGRESS_REPORT_EMAILS_FOR_TRANSITIONS', {

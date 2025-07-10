@@ -1,5 +1,4 @@
 import { entries, mapEntries } from '@seedcompany/common';
-import { EmailService } from '@seedcompany/nestjs-email';
 import { type RequireExactlyOne } from 'type-fest';
 import { type ID, Role, type UnsecuredDto } from '~/common';
 import {
@@ -10,6 +9,7 @@ import {
   Logger,
 } from '~/core';
 import { Identity } from '~/core/authentication';
+import { MailerService } from '~/core/email';
 import {
   type ProgressReportStatusChangedProps as EmailReportStatusNotification,
   ProgressReportStatusChanged,
@@ -43,7 +43,7 @@ export class ProgressReportWorkflowNotificationHandler
     private readonly projectService: ProjectService,
     private readonly languageService: LanguageService,
     private readonly reportService: PeriodicReportService,
-    private readonly emailService: EmailService,
+    private readonly mailer: MailerService,
     private readonly workflowService: ProgressReportWorkflowService,
     @Logger('progress-report:status-change-notifier')
     private readonly logger: ILogger,
@@ -95,11 +95,12 @@ export class ProgressReportWorkflowNotificationHandler
 
     for (const notification of notifications) {
       if (notification.recipient.email.value) {
-        await this.emailService.send(
-          notification.recipient.email.value,
-          ProgressReportStatusChanged,
-          notification,
-        );
+        await this.mailer
+          .compose(
+            notification.recipient.email.value,
+            <ProgressReportStatusChanged {...notification} />,
+          )
+          .send();
       }
     }
   }

@@ -1,24 +1,5 @@
-import {
-  All,
-  Attributes,
-  Body,
-  Button,
-  Column,
-  Divider,
-  Font,
-  Head,
-  HideInText,
-  Image,
-  InText,
-  Mjml,
-  Preview,
-  Raw,
-  Section,
-  Style,
-  Text,
-  Title,
-  Wrapper,
-} from '@seedcompany/nestjs-email/templates';
+import * as Meta from '@seedcompany/nestjs-email/templates';
+import * as Mjml from '@seedcompany/nestjs-email/templates/mjml';
 import {
   type ComponentProps,
   Fragment,
@@ -36,22 +17,23 @@ export const EmailTemplate = ({
   preview?: ReactNode;
   children: ReactNode;
 }) => (
-  <Mjml lang="en">
-    <Head>
-      <Title>{title}</Title>
+  <Mjml.Doc lang="en">
+    <Mjml.Head>
+      <Meta.Headers subject={title} />
+      <Mjml.Title>{title}</Mjml.Title>
       {preview != null && (
-        <HideInText>
-          <Preview>
+        <Meta.InHtml>
+          <Mjml.Preview>
             {preview}
             {/* Fill the remaining space with nothing-ness so the email context is avoided */}
             {[...Array(140).keys()].map((i) => (
               <Fragment key={i}>&#847;&zwnj;&nbsp;</Fragment>
             ))}
-          </Preview>
-        </HideInText>
+          </Mjml.Preview>
+        </Meta.InHtml>
       )}
       <Theme />
-      <Style
+      <Mjml.Style
         inline
         children={`
 .body {
@@ -72,85 +54,85 @@ export const EmailTemplate = ({
 }
         `}
       />
-    </Head>
-    <Body>
-      <HideInText>
+    </Mjml.Head>
+    <Mjml.Body>
+      <Meta.InHtml>
         <Branding />
-      </HideInText>
+      </Meta.InHtml>
 
-      <Wrapper
+      <Mjml.Wrapper
         cssClass="card-shadow"
         borderRadius={6}
         backgroundColor="#ffffff"
       >
         {children}
-      </Wrapper>
-    </Body>
-  </Mjml>
+      </Mjml.Wrapper>
+    </Mjml.Body>
+  </Mjml.Doc>
 );
 
-export const Theme = () => (
+const Theme = () => (
   <>
-    <Font name="sofia-pro" href="https://use.typekit.net/qrd6jxb.css" />
-    <Attributes>
-      <All fontFamily="sofia-pro, sans-serif" fontSize="16px" />
-      <Body width={600} backgroundColor="#fafafa" cssClass="body">
+    <Mjml.Font name="sofia-pro" href="https://use.typekit.net/qrd6jxb.css" />
+    <Mjml.Attributes>
+      <Mjml.All fontFamily="sofia-pro, sans-serif" fontSize="16px" />
+      <Mjml.Body width={600} backgroundColor="#fafafa" cssClass="body">
         {[]}
-      </Body>
-      <Section backgroundColor="#ffffff">{}</Section>
-      <Text lineHeight="1.5">{}</Text>
-      <Button
+      </Mjml.Body>
+      <Mjml.Section backgroundColor="#ffffff">{}</Mjml.Section>
+      <Mjml.Text lineHeight="1.5">{}</Mjml.Text>
+      <Mjml.Button
         color="#ffffff"
         backgroundColor="#1ea973"
         padding="8px 22px"
         cssClass="button-shadow"
       >
         {[]}
-      </Button>
-      <Divider
+      </Mjml.Button>
+      <Mjml.Divider
         borderWidth={2}
         borderColor="#e6e6e6"
         paddingTop={15}
         paddingBottom={15}
       />
-    </Attributes>
+    </Mjml.Attributes>
   </>
 );
 
-export const Branding = (): ReactElement => {
+const Branding = (): ReactElement => {
   const iconUrl = useFrontendUrl('/images/cord-icon.png');
   return (
-    <Section backgroundColor="#fafafa">
-      <Column verticalAlign="middle" width="80px">
-        <Image
+    <Mjml.Section backgroundColor="#fafafa">
+      <Mjml.Column verticalAlign="middle" width="80px">
+        <Mjml.Image
           src={iconUrl}
           height={80}
           width={80}
           align="center"
           padding={0}
         />
-      </Column>
-      <Column verticalAlign="middle" width="220px">
-        <Text fontSize={32} align="center">
+      </Mjml.Column>
+      <Mjml.Column verticalAlign="middle" width="220px">
+        <Mjml.Text fontSize={32} align="center">
           <span style={{ whiteSpace: 'nowrap !important' }}>CORD Field</span>
-        </Text>
-      </Column>
+        </Mjml.Text>
+      </Mjml.Column>
       <TextBreak />
       <TextBreak />
-    </Section>
+    </Mjml.Section>
   );
 };
 
-export const Heading = (props: ComponentProps<typeof Text>) => (
-  <Section>
-    <Column padding={0}>
-      <Text fontSize={24} paddingTop={0} paddingBottom={0} {...props}>
+export const Heading = (props: ComponentProps<typeof Mjml.Text>) => (
+  <Mjml.Section>
+    <Mjml.Column padding={0}>
+      <Mjml.Text fontSize={24} paddingTop={0} paddingBottom={0} {...props}>
         {props.children}
-      </Text>
+      </Mjml.Text>
       <TextBreak />
       <TextBreak />
-    </Column>
-  </Section>
+    </Mjml.Column>
+  </Mjml.Section>
 );
 
 export const Link = ({
@@ -160,34 +142,34 @@ export const Link = ({
   href: string;
   children?: ReactNode;
 }) => (
-  <Text>
+  <Mjml.Text>
     <a href={href} style={{ wordBreak: 'break-all' }}>
       {children || href}
     </a>
-  </Text>
+  </Mjml.Text>
 );
 
 export const ReplyInfoFooter = () => (
-  <Section>
-    <Column>
-      <Divider borderWidth={1} />
-      <Text fontWeight="300">
+  <Mjml.Section>
+    <Mjml.Column>
+      <Mjml.Divider borderWidth={1} />
+      <Mjml.Text fontWeight="300">
         If you are having any issues with your account, please don't hesitate to
         contact us by replying to this email.
         <br />
         Thanks!
-      </Text>
-    </Column>
-  </Section>
+      </Mjml.Text>
+    </Mjml.Column>
+  </Mjml.Section>
 );
 
 /**
  * Render a line break for text
  */
 export const TextBreak = () => (
-  <InText>
-    <Raw>
+  <Meta.InText>
+    <Mjml.Raw>
       <br />
-    </Raw>
-  </InText>
+    </Mjml.Raw>
+  </Meta.InText>
 );

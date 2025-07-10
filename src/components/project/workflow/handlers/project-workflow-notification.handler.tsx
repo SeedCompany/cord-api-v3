@@ -1,6 +1,5 @@
 import { ModuleRef } from '@nestjs/core';
 import { asyncPool } from '@seedcompany/common';
-import { EmailService } from '@seedcompany/nestjs-email';
 import { type UnsecuredDto } from '~/common';
 import {
   ConfigService,
@@ -10,6 +9,7 @@ import {
   Logger,
 } from '~/core';
 import { Identity } from '~/core/authentication';
+import { MailerService } from '~/core/email';
 import {
   ProjectStepChanged,
   type ProjectStepChangedProps,
@@ -30,7 +30,7 @@ export class ProjectWorkflowNotificationHandler
     private readonly config: ConfigService,
     private readonly users: UserService,
     private readonly projects: ProjectService,
-    private readonly emailService: EmailService,
+    private readonly mailer: MailerService,
     private readonly moduleRef: ModuleRef,
     @Logger('progress-report:status-change-notifier')
     private readonly logger: ILogger,
@@ -95,7 +95,9 @@ export class ProjectWorkflowNotificationHandler
         previousStep,
         primaryPartnerName,
       );
-      await this.emailService.send(notifier.email, ProjectStepChanged, props);
+      await this.mailer
+        .compose(notifier.email, <ProjectStepChanged {...props} />)
+        .send();
     });
   }
 

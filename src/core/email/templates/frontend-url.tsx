@@ -1,16 +1,8 @@
-import { createContext, type ReactElement, useContext } from 'react';
-import { ServerException } from '~/common/exceptions';
-
-const FrontendUrlContext = createContext<Readonly<URL> | undefined>(undefined);
+import { useModuleRef } from '@seedcompany/nestjs-email/templates';
+import { ConfigService } from '~/core/config/config.service';
 
 export const useFrontendUrl = (path: string) => {
-  const base = useContext(FrontendUrlContext);
-  if (!base) {
-    throw new ServerException('Frontend url has not been provided');
-  }
   path = path.startsWith('/') ? path.slice(1) : path;
-  return new URL(path, base).toString();
+  const config = useModuleRef().get(ConfigService);
+  return new URL(path, config.frontendUrl).toString();
 };
-
-export const FrontendUrlWrapper = (url: Readonly<URL>) => (el: ReactElement) =>
-  <FrontendUrlContext.Provider value={url}>{el}</FrontendUrlContext.Provider>;

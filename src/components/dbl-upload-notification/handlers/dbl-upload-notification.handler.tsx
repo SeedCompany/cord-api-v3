@@ -5,7 +5,6 @@ import {
   type NonEmptyArray,
   setOf,
 } from '@seedcompany/common';
-import { EmailService } from '@seedcompany/nestjs-email';
 import {
   Book,
   mergeVerseRanges,
@@ -23,6 +22,7 @@ import {
   ResourceLoader,
 } from '~/core';
 import { Identity } from '~/core/authentication';
+import { MailerService } from '~/core/email';
 import {
   type ProgressReport,
   ProgressReportStatus as Status,
@@ -49,7 +49,7 @@ export class DBLUploadNotificationHandler
     private readonly moduleRef: ModuleRef,
     private readonly resources: ResourceLoader,
     private readonly config: ConfigService,
-    private readonly mailer: EmailService,
+    private readonly mailer: MailerService,
     @Logger('progress-report:dbl-upload-notifier')
     private readonly logger: ILogger,
   ) {}
@@ -123,13 +123,15 @@ export class DBLUploadNotificationHandler
       const to = props.recipient.email.value!;
       await this.mailer
         .withOptions({ send: !!this.config.email.notifyDblUpload })
-        .render(DBLUpload, props)
-        .with({
-          to,
-          ...(this.config.email.notifyDblUpload?.replyTo && {
-            'reply-to': this.config.email.notifyDblUpload.replyTo,
-          }),
-        })
+        .compose(
+          {
+            to,
+            ...(this.config.email.notifyDblUpload?.replyTo && {
+              'reply-to': this.config.email.notifyDblUpload.replyTo,
+            }),
+          },
+          <DBLUpload {...props} />,
+        )
         .send();
     }
   }

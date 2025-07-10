@@ -1,8 +1,8 @@
 import { faker } from '@faker-js/faker';
 import { jest } from '@jest/globals';
-import { EmailService } from '@seedcompany/nestjs-email';
 import { Connection } from 'cypher-query-builder';
 import { isValidId } from '~/common';
+import { MailerService } from '~/core/email';
 import { graphql } from '~/graphql';
 import {
   createSession,
@@ -32,7 +32,7 @@ describe('Authentication e2e', () => {
   });
 
   it('Check Email Existence and Reset Password', async () => {
-    const sendEmail = jest.spyOn(app.get(EmailService), 'send');
+    const sendEmail = jest.spyOn(app.get(MailerService), 'send');
 
     const fakeUser = await generateRegisterInput();
     const email = fakeUser.email;
