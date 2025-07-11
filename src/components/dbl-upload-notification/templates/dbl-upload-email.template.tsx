@@ -21,10 +21,11 @@ interface Props {
   engagement: Pick<Engagement, 'id'>;
   language: Pick<Language, 'id' | 'name' | 'ethnologue'>;
   completedBooks: NonEmptyArray<Range<Verse>>;
+  dblFormUrl: string;
 }
 
 export function DBLUpload(props: Props) {
-  const { language, project, completedBooks, engagement } = props;
+  const { language, project, completedBooks, engagement, dblFormUrl } = props;
   const languageName = language.name.value;
   return (
     <EmailTemplate title={`${languageName || 'Language'} needs a DBL upload`}>
@@ -139,9 +140,7 @@ export function DBLUpload(props: Props) {
         <Column>
           <Head>
             🔗{' '}
-            <a href="https://forms.monday.com/forms/7c34605cdaedd9f47918540a0761d821?r=use1">
-              Seed Company DBL Publication Request Form
-            </a>
+            <a href={dblFormUrl}>Seed Company DBL Publication Request Form</a>
           </Head>
         </Column>
       </Section>
@@ -149,9 +148,7 @@ export function DBLUpload(props: Props) {
         <Column>
           <Text>
             All of this information can be entered in the form linked above
-            (with yellow highlight). Please review the attached information
-            sheet for additional details about the DBL, the process, and
-            licensing options.
+            (with yellow highlight).
           </Text>
           <Text>
             Let me know if you have any questions—I’m happy to assist!

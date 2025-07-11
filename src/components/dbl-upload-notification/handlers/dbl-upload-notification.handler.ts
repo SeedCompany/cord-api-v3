@@ -235,6 +235,7 @@ export class DBLUploadNotificationHandler
         project,
         engagement,
         completedBooks,
+        dblFormUrl: this.config.email.notifyDblUpload?.formUrl ?? '',
       } satisfies PropsOf<typeof DBLUpload>;
     });
   }

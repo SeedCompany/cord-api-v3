@@ -126,6 +126,7 @@ export const makeConfig = (env: EnvironmentService) =>
       notifyDblUpload: env.boolean('NOTIFY_DBL_UPLOAD').optional(false)
         ? {
             replyTo: env.string('DBL_UPLOAD_REPLY_TO').optional(),
+            formUrl: env.string('DBL_REQUEST_FORM_URL').optional(),
           }
         : undefined,
     };
