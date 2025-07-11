@@ -40,6 +40,10 @@ export class ProjectWorkflowNotificationHandler
     const { previousStep, next, workflowEvent } = event;
     const transition = typeof next !== 'string' ? next : undefined;
 
+    if (event.project.type === 'MultiplicationTranslation') {
+      return;
+    }
+
     const session = this.identity.current;
 
     // TODO on bypass: keep notifying members? add anyone else?
