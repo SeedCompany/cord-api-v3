@@ -26,7 +26,7 @@ import { ProgressReportWorkflowModule } from './workflow/progress-report-workflo
 @Module({
   imports: [
     forwardRef(() => PeriodicReportModule),
-    ProgressReportWorkflowModule,
+    forwardRef(() => ProgressReportWorkflowModule),
     ProgressReportVarianceExplanationModule,
     ProgressReportMediaModule,
     FileModule,

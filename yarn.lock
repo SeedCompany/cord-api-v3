@@ -3230,13 +3230,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@seedcompany/nestjs-email@npm:^4.1.1":
-  version: 4.2.1
-  resolution: "@seedcompany/nestjs-email@npm:4.2.1"
+"@seedcompany/nestjs-email@npm:^4.3.0":
+  version: 4.3.0
+  resolution: "@seedcompany/nestjs-email@npm:4.3.0"
   dependencies:
     "@aws-sdk/client-sesv2": "npm:^3.658.1"
     "@faire/mjml-react": "npm:^3.3.0"
     "@nestjs/common": "npm:>=7.6.4"
+    "@seedcompany/common": "npm:>=0.3.0 <1.0.0"
     emailjs: "npm:^4.0.3"
     html-to-text: "npm:^9.0.5"
     mjml: "npm:^4.15.3"
@@ -3248,7 +3249,7 @@ __metadata:
     react: ">=17.0.0"
     react-dom: ">=17.0.0"
     reflect-metadata: ^0.1.12 || ^0.2.0
-  checksum: 10c0/db3536b4ba56875992a2b566798357c0a7599c926b4baae634242f0f8a65bac77819b07d7272bd29599858673b0e4aa46b191b5782740f9a4ca49b0d56ccaffa
+  checksum: 10c0/8e9d446e3b0b0d60ce6ab1dae2db09518435bed699e78826a4b4e72dfcc80024f0ff83e30edf64c45116283041551eb11bb0604f4e53f9121c70c3b033ed2257
   languageName: node
   linkType: hard
 
@@ -5901,7 +5902,7 @@ __metadata:
     "@seedcompany/data-loader": "npm:^2.0.1"
     "@seedcompany/eslint-plugin": "npm:^3.4.1"
     "@seedcompany/nest": "npm:^1.8.0"
-    "@seedcompany/nestjs-email": "npm:^4.1.1"
+    "@seedcompany/nestjs-email": "npm:^4.3.0"
     "@seedcompany/scripture": "npm:>=0.8.0"
     "@tsconfig/strictest": "npm:^2.0.2"
     "@types/common-tags": "npm:^1.8.3"
