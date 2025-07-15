@@ -140,16 +140,32 @@ export function DBLUpload(props: Props) {
         <Column>
           <Head>
             🔗{' '}
-            <a href={dblFormUrl}>Seed Company DBL Publication Request Form</a>
+            <a href={dblFormUrl} style={{ backgroundColor: 'yellow' }}>
+              Seed Company DBL Publication Request Form
+            </a>
           </Head>
-        </Column>
-      </Section>
-      <Section>
-        <Column>
           <Text>
             All of this information can be entered in the form linked above
             (with yellow highlight).
           </Text>
+        </Column>
+      </Section>
+      <Section>
+        <Column>
+          <Head>
+            🔗{' '}
+            <a href={useFrontendUrl('/pdfs/dbl-uploads.pdf')}>
+              Seed Company DBL Information Sheet
+            </a>
+          </Head>
+          <Text>
+            Please review the linked information sheet for additional details
+            about the DBL, the process, and licensing options.
+          </Text>
+        </Column>
+      </Section>
+      <Section>
+        <Column>
           <Text>
             Let me know if you have any questions—I’m happy to assist!
           </Text>
