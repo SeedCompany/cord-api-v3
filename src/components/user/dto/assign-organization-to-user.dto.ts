@@ -2,7 +2,7 @@ import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { type ID, IdField } from '~/common';
-import { User } from './user.dto';
+import { Partner } from '../../../components/partner/dto';
 
 @InputType()
 export class AssignOrganizationToUser {
@@ -27,5 +27,5 @@ export abstract class AssignOrganizationToUserInput {
 @ObjectType()
 export abstract class AssignOrganizationToUserOutput {
   @Field()
-  readonly assignment: User;
+  readonly partner: Partner;
 }
