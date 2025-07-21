@@ -11,7 +11,10 @@ import { OrganizationResolver } from './organization.resolver';
 import { OrganizationService } from './organization.service';
 
 @Module({
-  imports: [forwardRef(() => AuthorizationModule), LocationModule],
+  imports: [
+    forwardRef(() => AuthorizationModule),
+    forwardRef(() => LocationModule),
+  ],
   providers: [
     OrganizationResolver,
     OrganizationService,
