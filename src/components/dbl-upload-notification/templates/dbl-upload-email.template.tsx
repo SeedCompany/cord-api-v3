@@ -164,14 +164,6 @@ export function DBLUpload(props: Props) {
           </Text>
         </Column>
       </Section>
-      <Section>
-        <Column>
-          <Text>
-            Let me know if you have any questions—I’m happy to assist!
-          </Text>
-          <Text>Best regards, Darcie</Text>
-        </Column>
-      </Section>
     </EmailTemplate>
   );
 }
