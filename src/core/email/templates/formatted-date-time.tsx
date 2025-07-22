@@ -1,6 +1,5 @@
-import { useModuleRef } from '@seedcompany/nestjs-email/templates';
 import { DateTime, type Zone } from 'luxon';
-import { ConfigService } from '~/core';
+import { useConfig } from './useConfig';
 
 type ZoneLike = string | Zone;
 
@@ -10,7 +9,7 @@ export interface FormattedDateTimeProps {
 }
 
 export const FormattedDateTime = (props: FormattedDateTimeProps) => {
-  const config = useModuleRef().get(ConfigService);
+  const config = useConfig();
   const formatted = props.value
     .setZone(props.timezone ?? config.defaultTimeZone)
     .toLocaleString(DateTime.DATETIME_FULL);
