@@ -126,7 +126,7 @@ export class DBLUploadNotificationHandler
         .render(DBLUpload, props)
         .with({
           to,
-          ...(this.config.email.notifyDblUpload && {
+          ...(this.config.email.notifyDblUpload?.replyTo && {
             'reply-to': this.config.email.notifyDblUpload.replyTo,
           }),
         })
