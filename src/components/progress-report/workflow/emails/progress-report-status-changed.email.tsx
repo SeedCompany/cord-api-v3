@@ -1,15 +1,19 @@
-import * as Mjml from '@seedcompany/nestjs-email/templates/mjml';
 import { fiscalQuarter, fiscalYear } from '~/common';
-import { type Language } from '../../../components/language/dto';
-import { type PeriodicReport } from '../../../components/periodic-report/dto';
-import { ProgressReportStatus } from '../../../components/progress-report/dto';
-import { type ProgressReportWorkflowEvent } from '../../../components/progress-report/workflow/dto/workflow-event.dto';
-import { type Project } from '../../../components/project/dto';
-import { type User } from '../../../components/user/dto';
-import { EmailTemplate, Heading } from './base';
-import { FormattedDateTime } from './formatted-date-time';
-import { useFrontendUrl } from './frontend-url';
-import { UserRef, type UserRefProps } from './user-ref';
+import {
+  EmailTemplate,
+  FormattedDateTime,
+  Heading,
+  Mjml,
+  useFrontendUrl,
+  UserRef,
+  type UserRefProps,
+} from '~/core/email';
+import { type Language } from '../../../language/dto';
+import { type PeriodicReport } from '../../../periodic-report/dto';
+import { type Project } from '../../../project/dto';
+import { type User } from '../../../user/dto';
+import { ProgressReportStatus } from '../../dto';
+import { type ProgressReportWorkflowEvent } from '../dto/workflow-event.dto';
 
 export interface ProgressReportStatusChangedProps {
   changedBy: UserRefProps;

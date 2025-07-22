@@ -10,15 +10,15 @@ import {
 } from '~/core';
 import { Identity } from '~/core/authentication';
 import { MailerService } from '~/core/email';
-import {
-  ProjectStepChanged,
-  type ProjectStepChangedProps,
-} from '~/core/email/templates/project-step-changed.template';
 import { ProjectService } from '../../../project';
 import { UserService } from '../../../user';
 import { type User } from '../../../user/dto';
 import { type Notifier } from '../../../workflow/transitions/notifiers';
 import { type Project, type ProjectStep } from '../../dto';
+import {
+  ProjectStepChanged,
+  type ProjectStepChangedProps,
+} from '../emails/project-step-changed.email';
 import { ProjectTransitionedEvent } from '../events/project-transitioned.event';
 
 @EventsHandler(ProjectTransitionedEvent)

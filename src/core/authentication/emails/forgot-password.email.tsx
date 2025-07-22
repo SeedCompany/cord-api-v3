@@ -1,7 +1,13 @@
-import { InHtml, InText } from '@seedcompany/nestjs-email/templates';
-import * as Mjml from '@seedcompany/nestjs-email/templates/mjml';
-import { EmailTemplate, Heading, Link, ReplyInfoFooter } from './base';
-import { useFrontendUrl } from './frontend-url';
+import {
+  EmailTemplate,
+  Heading,
+  InHtml,
+  InText,
+  Link,
+  Mjml,
+  ReplyInfoFooter,
+  useFrontendUrl,
+} from '../../email';
 
 export interface ForgotPasswordProps {
   token: string;

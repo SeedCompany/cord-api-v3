@@ -10,11 +10,11 @@ import {
 } from '~/common';
 import { MailerService } from '~/core/email';
 import { ILogger, Logger } from '~/core/logger';
-import { ForgotPassword } from '../email/templates';
 import { disableAccessPolicies, Gel } from '../gel';
 import { AuthenticationRepository } from './authentication.repository';
 import { CryptoService } from './crypto.service';
 import type { LoginInput, RegisterInput, ResetPasswordInput } from './dto';
+import { ForgotPassword } from './emails/forgot-password.email';
 import { JwtService } from './jwt.service';
 import { SessionHost } from './session/session.host';
 import { SessionManager } from './session/session.manager';

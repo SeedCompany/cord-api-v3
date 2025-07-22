@@ -1,16 +1,19 @@
 import { cleanJoin } from '@seedcompany/common';
-import { InHtml } from '@seedcompany/nestjs-email/templates';
-import * as Mjml from '@seedcompany/nestjs-email/templates/mjml';
+import {
+  EmailTemplate,
+  FormattedDateTime,
+  Heading,
+  InHtml,
+  Mjml,
+  useFrontendUrl,
+  UserRef,
+} from '~/core/email';
+import { type User } from '../../../user/dto';
 import {
   type Project,
   ProjectStep as Step,
   ProjectType as Type,
-} from '../../../components/project/dto';
-import { type User } from '../../../components/user/dto';
-import { EmailTemplate, Heading } from './base';
-import { FormattedDateTime } from './formatted-date-time';
-import { useFrontendUrl } from './frontend-url';
-import { UserRef } from './user-ref';
+} from '../../dto';
 
 export interface ProjectStepChangedProps {
   recipient: Pick<

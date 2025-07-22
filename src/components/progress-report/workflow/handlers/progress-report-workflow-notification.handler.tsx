@@ -10,16 +10,16 @@ import {
 } from '~/core';
 import { Identity } from '~/core/authentication';
 import { MailerService } from '~/core/email';
-import {
-  type ProgressReportStatusChangedProps as EmailReportStatusNotification,
-  ProgressReportStatusChanged,
-} from '~/core/email/templates/progress-report-status-changed.template';
 import { LanguageService } from '../../../language';
 import { PeriodicReportService } from '../../../periodic-report';
 import { ProjectService } from '../../../project';
 import { UserService } from '../../../user';
 import { type ProgressReportStatus as Status } from '../../dto';
 import { type ProgressReportWorkflowEvent } from '../dto/workflow-event.dto';
+import {
+  type ProgressReportStatusChangedProps as EmailReportStatusNotification,
+  ProgressReportStatusChanged,
+} from '../emails/progress-report-status-changed.email';
 import { WorkflowUpdatedEvent } from '../events/workflow-updated.event';
 import { ProgressReportWorkflowRepository } from '../progress-report-workflow.repository';
 import { ProgressReportWorkflowService } from '../progress-report-workflow.service';
