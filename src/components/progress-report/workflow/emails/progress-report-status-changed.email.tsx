@@ -1,20 +1,19 @@
-import {
-  Button,
-  Column,
-  Section,
-  Text,
-} from '@seedcompany/nestjs-email/templates';
 import { fiscalQuarter, fiscalYear } from '~/common';
-import { type Language } from '../../../components/language/dto';
-import { type PeriodicReport } from '../../../components/periodic-report/dto';
-import { ProgressReportStatus } from '../../../components/progress-report/dto';
-import { type ProgressReportWorkflowEvent } from '../../../components/progress-report/workflow/dto/workflow-event.dto';
-import { type Project } from '../../../components/project/dto';
-import { type User } from '../../../components/user/dto';
-import { EmailTemplate, Heading } from './base';
-import { FormattedDateTime } from './formatted-date-time';
-import { useFrontendUrl } from './frontend-url';
-import { UserRef, type UserRefProps } from './user-ref';
+import {
+  EmailTemplate,
+  FormattedDateTime,
+  Heading,
+  Mjml,
+  useFrontendUrl,
+  UserRef,
+  type UserRefProps,
+} from '~/core/email';
+import { type Language } from '../../../language/dto';
+import { type PeriodicReport } from '../../../periodic-report/dto';
+import { type Project } from '../../../project/dto';
+import { type User } from '../../../user/dto';
+import { ProgressReportStatus } from '../../dto';
+import { type ProgressReportWorkflowEvent } from '../dto/workflow-event.dto';
 
 export interface ProgressReportStatusChangedProps {
   changedBy: UserRefProps;
@@ -73,9 +72,9 @@ export function ProgressReportStatusChanged({
         )}
       </Heading>
 
-      <Section>
-        <Column>
-          <Text paddingBottom={16}>
+      <Mjml.Section>
+        <Mjml.Column>
+          <Mjml.Text paddingBottom={16}>
             <UserRef {...changedBy} /> has changed{' '}
             <a href={reportUrl}>{reportLabel}</a>{' '}
             {newStatus ? (
@@ -95,12 +94,12 @@ export function ProgressReportStatusChanged({
                 timezone={recipient.timezone.value}
               />
             </>
-          </Text>
-          <Button href={reportUrl} paddingTop={16}>
+          </Mjml.Text>
+          <Mjml.Button href={reportUrl} paddingTop={16}>
             View {reportLabel}
-          </Button>
-        </Column>
-      </Section>
+          </Mjml.Button>
+        </Mjml.Column>
+      </Mjml.Section>
     </EmailTemplate>
   );
 }
