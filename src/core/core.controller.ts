@@ -1,12 +1,12 @@
-import { Controller, Get, HttpStatus, Redirect } from '@nestjs/common';
+import { Controller, Get, Header, StreamableFile } from '@nestjs/common';
+import { createReadStream } from 'node:fs';
+import { join } from 'node:path';
+import process from 'node:process';
 import { AuthLevel } from '~/core/authentication';
-import { ConfigService } from './config/config.service';
 
 @Controller()
 @AuthLevel('sessionless')
 export class CoreController {
-  constructor(private readonly config: ConfigService) {}
-
   @Get()
   welcome() {
     // Welcome info but mostly for health checks
@@ -14,10 +14,11 @@ export class CoreController {
   }
 
   @Get('favicon.ico')
-  @Redirect('', HttpStatus.FOUND)
+  @Header('cache-control', `public, max-age=${2.628e6}, immutable`)
   favicon() {
-    return {
-      url: this.config.frontendUrl + '/favicon.ico',
-    };
+    const icon = createReadStream(join(process.cwd(), './icon.svg'));
+    return new StreamableFile(icon, {
+      type: 'image/svg+xml',
+    });
   }
 }

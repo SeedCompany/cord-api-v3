@@ -8,6 +8,7 @@ import { DirectorChangeApplyToProjectMembersHandler } from './handlers/director-
 import { ProjectRegionDefaultsDirectorMembershipHandler } from './handlers/project-region-defaults-director-membership.handler';
 import { RegionsZoneChangesAppliesDirectorChangeToProjectMembersHandler } from './handlers/regions-zone-changes-applies-director-change-to-project-members.handler';
 import { MemberProjectConnectionResolver } from './member-project-connection.resolver';
+import { MembershipByProjectAndUserLoader } from './membership-by-project-and-user.loader';
 import { AddInactiveAtMigration } from './migrations/add-inactive-at.migration';
 import { BackfillMissingDirectorsMigration } from './migrations/backfill-missing-directors.migration';
 import { ProjectMemberGelRepository } from './project-member.gel.repository';
@@ -29,6 +30,7 @@ import { ProjectMemberService } from './project-member.service';
     ProjectMemberService,
     splitDb(ProjectMemberRepository, ProjectMemberGelRepository),
     ProjectMemberLoader,
+    MembershipByProjectAndUserLoader,
     AddInactiveAtMigration,
     DirectorChangeApplyToProjectMembersHandler,
     RegionsZoneChangesAppliesDirectorChangeToProjectMembersHandler,
