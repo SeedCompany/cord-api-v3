@@ -38,7 +38,7 @@ import {
   resolveProductType,
 } from '../../product/dto';
 import { ProjectMemberRepository } from '../../project/project-member/project-member.repository';
-import { DBLUpload } from '../templates/dbl-upload-email.template';
+import { DBLUpload } from '../emails/dbl-upload.email';
 
 @EventsHandler(WorkflowUpdatedEvent)
 export class DBLUploadNotificationHandler
