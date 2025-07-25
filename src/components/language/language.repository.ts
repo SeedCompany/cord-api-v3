@@ -307,6 +307,7 @@ export const languageFilters = filter.define(() => LanguageFilters, {
     'registryOfLanguageVarietiesCode',
   ),
   registryOfLanguageVarietiesCode: filter.propPartialVal(),
+  signLanguageCode: filter.propPartialVal(),
   partnerId: filter.pathExists((id) => [
     node('node'),
     relation('in', '', 'language', ACTIVE),
