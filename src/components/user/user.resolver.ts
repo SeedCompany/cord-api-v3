@@ -25,8 +25,8 @@ import {
   OrganizationListInput,
   SecuredOrganizationList,
 } from '../organization/dto';
-import { PartnerLoader } from '../partner';
-import { PartnerListInput, SecuredPartnerList } from '../partner/dto';
+import { PartnerLoader, PartnerService } from '../partner';
+import { Partner, PartnerListInput, SecuredPartnerList } from '../partner/dto';
 import { TimeZoneService } from '../timezone';
 import { SecuredTimeZone } from '../timezone/timezone.dto';
 import {
@@ -70,6 +70,7 @@ class ModifyLocationArgs {
 export class UserResolver {
   constructor(
     private readonly userService: UserService,
+    private readonly partnerService: PartnerService,
     private readonly timeZoneService: TimeZoneService,
     private readonly identity: Identity,
   ) {}
@@ -162,6 +163,14 @@ export class UserResolver {
     const list = await this.userService.listOrganizations(id, input);
     organizations.primeAll(list.items);
     return list;
+  }
+
+  @ResolveField(() => Partner, { nullable: true })
+  async primaryOrganization(@Parent() { id }: User): Promise<Partner | null> {
+    const primaryOrgId = await this.userService.getPrimaryOrganizationId(id);
+    return primaryOrgId
+      ? await this.partnerService.readOnePartnerByOrgId(primaryOrgId)
+      : null;
   }
 
   @ResolveField(() => SecuredPartnerList)
@@ -263,8 +272,12 @@ export class UserResolver {
   async assignOrganizationToUser(
     @Args('input') input: AssignOrganizationToUserInput,
   ): Promise<AssignOrganizationToUserOutput> {
-    await this.userService.assignOrganizationToUser(input.request);
-    return { success: true };
+    await this.userService.assignOrganizationToUser(input.assignment);
+    const partner = await this.partnerService.readOnePartnerByOrgId(
+      input.assignment.orgId,
+    );
+
+    return { partner };
   }
 
   @Mutation(() => RemoveOrganizationFromUserOutput, {
@@ -273,8 +286,11 @@ export class UserResolver {
   async removeOrganizationFromUser(
     @Args('input') input: RemoveOrganizationFromUserInput,
   ): Promise<RemoveOrganizationFromUserOutput> {
-    await this.userService.removeOrganizationFromUser(input.request);
-    return { success: true };
+    await this.userService.removeOrganizationFromUser(input.assignment);
+    const partner = await this.partnerService.readOnePartnerByOrgId(
+      input.assignment.orgId,
+    );
+    return { partner };
   }
 
   @Mutation(() => User, {

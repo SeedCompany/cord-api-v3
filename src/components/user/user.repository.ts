@@ -290,13 +290,13 @@ export class UserRepository extends DtoRepository(User) {
         if (primary) {
           q.subQuery((sub) =>
             sub
-              .with('user, org')
+              .with('user')
               .match([
                 node('user'),
                 relation('out', 'oldRel', 'primaryOrganization', {
                   active: true,
                 }),
-                node('org'),
+                node('anyOrg', 'Organization'),
               ])
               .setValues({ 'oldRel.active': false })
               .return('oldRel as oldPrimaryRel')
@@ -331,6 +331,20 @@ export class UserRepository extends DtoRepository(User) {
     if (!result) {
       throw new ServerException('Failed to assign organization to user');
     }
+  }
+
+  async getPrimaryOrganizationId(userId: ID): Promise<ID | null> {
+    const result = await this.db
+      .query()
+      .match([
+        node('user', 'User', { id: userId }),
+        relation('out', '', 'primaryOrganization', ACTIVE),
+        node('org', 'Organization'),
+      ])
+      .return<{ orgId: ID }>('org.id as orgId')
+      .first();
+
+    return result?.orgId ?? null;
   }
 
   async removeOrganizationFromUser(request: RemoveOrganizationFromUser) {
