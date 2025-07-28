@@ -1,7 +1,8 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { type ID, IdField, MutationPlaceholderOutput } from '~/common';
+import { type ID, IdField } from '~/common';
+import { Partner } from '../../../components/partner/dto';
 
 @InputType()
 export class AssignOrganizationToUser {
@@ -20,8 +21,11 @@ export abstract class AssignOrganizationToUserInput {
   @Field()
   @Type(() => AssignOrganizationToUser)
   @ValidateNested()
-  readonly request: AssignOrganizationToUser;
+  readonly assignment: AssignOrganizationToUser;
 }
 
 @ObjectType()
-export abstract class AssignOrganizationToUserOutput extends MutationPlaceholderOutput {}
+export abstract class AssignOrganizationToUserOutput {
+  @Field()
+  readonly partner: Partner;
+}
