@@ -10,6 +10,8 @@ import {
 import { HandleIdLookup } from '~/core';
 import { IEventBus } from '~/core/events';
 import { Privileges } from '../authorization';
+import { type ProjectListInput, type SecuredProjectList } from '../project/dto';
+import { ProjectService } from '../project/project.service';
 import { UserService } from '../user';
 import {
   type CreateFieldZone,
@@ -28,6 +30,7 @@ export class FieldZoneService {
     private readonly events: IEventBus,
     private readonly users: UserService,
     private readonly repo: FieldZoneRepository,
+    private readonly projectService: ProjectService,
   ) {}
 
   async create(input: CreateFieldZone): Promise<FieldZone> {
@@ -113,6 +116,31 @@ export class FieldZoneService {
     return {
       ...results,
       items: results.items.map((dto) => this.secure(dto)),
+    };
+  }
+
+  async listProjects(
+    fieldZone: FieldZone,
+    input: ProjectListInput,
+  ): Promise<SecuredProjectList> {
+    const projectListOutput = await this.projectService.list({
+      ...input,
+      filter: {
+        ...input.filter,
+        fieldRegion: {
+          ...(input.filter?.fieldRegion ?? {}),
+          fieldZone: {
+            ...(input.filter?.fieldRegion?.fieldZone ?? {}),
+            id: fieldZone.id,
+          },
+        },
+      },
+    });
+
+    return {
+      ...projectListOutput,
+      canRead: true,
+      canCreate: false, // Field zone doesn't own project creation
     };
   }
 }
