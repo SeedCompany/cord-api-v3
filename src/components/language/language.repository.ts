@@ -209,6 +209,7 @@ export class LanguageRepository extends DtoRepository<
         ])
         .apply(matchProps({ nodeName: 'eth', outputVar: 'ethProps' }))
         .apply(isPresetInventory)
+        .apply(usingAIAssistance)
         .optionalMatch([
           node('node'),
           relation('in', '', 'language', ACTIVE),
@@ -222,6 +223,7 @@ export class LanguageRepository extends DtoRepository<
             ethnologue: 'ethProps',
             pinned,
             presetInventory: 'presetInventory',
+            usesAIAssistance: 'coalesce(usesAIAssistance, false)',
             firstScriptureEngagement: 'firstScriptureEngagement { .id }',
             scope: 'scopedRoles',
             changeset: 'changeset.id',
@@ -339,6 +341,10 @@ export const languageFilters = filter.define(() => LanguageFilters, {
     const condition = equals('true', true);
     return { presetInventory: value ? condition : not(condition) };
   },
+  usesAIAssistance: ({ value, query }) => {
+    query.apply(usingAIAssistance).with(['node', 'usesAIAssistance']);
+    return { usesAIAssistance: value };
+  },
 });
 
 const ethnologueFilters = filter.define(() => EthnologueLanguageFilters, {
@@ -374,6 +380,25 @@ const isPresetInventory = (query: Query) =>
       ),
   );
 
+const usingAIAssistance = (query: Query) =>
+  query.subQuery('node', (sub) =>
+    sub
+      .optionalMatch([
+        node('node'),
+        relation('in', '', 'language', ACTIVE),
+        node('eng', 'LanguageEngagement'),
+      ])
+      .optionalMatch([
+        node('eng'),
+        relation('out', '', 'usingAIAssistedTranslation', ACTIVE),
+        node('prop', 'Property'),
+      ])
+      .with([
+        `any(val in collect(prop.value) WHERE val IS NOT NULL AND val <> 'None' AND val <> 'Unknown') as usesAIAssistance`,
+      ])
+      .return(['usesAIAssistance']),
+  );
+
 export const languageSorters = defineSorters(Language, {
   // eslint-disable-next-line @typescript-eslint/naming-convention
   'ethnologue.*': (query, input) =>
@@ -405,6 +430,11 @@ export const languageSorters = defineSorters(Language, {
       .return<{ sortValue: unknown }>(
         coalesce('override.value', 'canonical.value').as('sortValue'),
       ),
+  usesAIAssistance: (query) =>
+    query
+      .apply(usingAIAssistance)
+      .with(['node', 'usesAIAssistance as sortValue'])
+      .return<{ sortValue: unknown }>('sortValue'),
 });
 
 const ethnologueSorters = defineSorters(EthnologueLanguage, {});

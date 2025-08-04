@@ -48,6 +48,11 @@ export abstract class LanguageFilters {
   readonly presetInventory?: boolean;
 
   @OptionalField({
+    description: 'Only languages that are (not) in the "Preset Inventory"',
+  })
+  readonly usesAIAssistance?: boolean;
+
+  @OptionalField({
     description:
       'Only languages that are pinned/unpinned by the requesting user',
   })
