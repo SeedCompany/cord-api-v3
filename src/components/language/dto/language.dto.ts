@@ -184,6 +184,17 @@ export class Language extends Interfaces {
   })
   readonly presetInventory: SecuredBoolean;
 
+  @Calculated()
+  @Field({
+    description: stripIndent`
+      Whether any engagement for this language is using AI-assisted translation.
+
+      This is true if any engagement's "usingAIAssistedTranslation" property is not "None" or "Unknown".
+      Used to track and filter languages that have AI assistance in their translation process.
+    `,
+  })
+  readonly usesAIAssistance: SecuredBoolean;
+
   // Not returned, only used to cache the sensitivity for determining permissions
   readonly effectiveSensitivity: Sensitivity;
 }
