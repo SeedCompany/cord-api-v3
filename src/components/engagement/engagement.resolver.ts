@@ -17,6 +17,8 @@ import { CeremonyLoader } from '../ceremony';
 import { SecuredCeremony } from '../ceremony/dto';
 import { ChangesetIds, type IdsAndView, IdsAndViewArg } from '../changeset/dto';
 import { EngagementLoader, EngagementService } from '../engagement';
+import { SecuredToolList } from '../tool/dto';
+import { ToolUsageService } from '../tool/tool-usage/tool-usage.service';
 import {
   CreateInternshipEngagementInput,
   CreateInternshipEngagementOutput,
@@ -37,7 +39,10 @@ import {
 
 @Resolver(IEngagement)
 export class EngagementResolver {
-  constructor(private readonly service: EngagementService) {}
+  constructor(
+    private readonly service: EngagementService,
+    private readonly toolUsageService: ToolUsageService,
+  ) {}
 
   @Query(() => IEngagement, {
     description: 'Lookup an engagement by ID',
@@ -112,6 +117,13 @@ export class EngagementResolver {
       engagement.startDateOverride,
       engagement.endDateOverride,
     );
+  }
+
+  @ResolveField(() => SecuredToolList, {
+    description: 'All tool usages connected to this engagement',
+  })
+  async toolUsages(@Parent() engagement: Engagement) {
+    return await this.toolUsageService.listAllByEngagementId(engagement.id);
   }
 
   @Mutation(() => CreateLanguageEngagementOutput, {
