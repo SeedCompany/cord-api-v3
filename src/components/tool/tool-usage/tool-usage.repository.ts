@@ -70,37 +70,40 @@ export class ToolUsageRepository extends DtoRepository(ToolUsage) {
     return result;
   }
 
-  async listAllByEngagementId(engagementId: ID<'Engagement'>) {
-    return await this.db
+  async findByContainerId(
+    containerId: ID,
+  ): Promise<ReadonlyArray<UnsecuredDto<ToolUsage>>> {
+    const result = await this.db
       .query()
       .match([
-        node('engagement', 'Engagement', { id: engagementId }),
+        node('container', 'BaseNode', { id: containerId }),
         relation('in', '', 'container', ACTIVE),
         node('node', 'ToolUsage'),
       ])
       .apply(this.hydrate())
       .map('dto')
       .run();
+    return result;
   }
 
   protected hydrate() {
     return (query: Query) =>
       query
         .apply(matchProps())
-        .optionalMatch([
+        .match([
           node('node'),
-          relation('out', '', 'container', ACTIVE),
+          relation('out', '', 'container'),
           node('container', 'BaseNode'),
         ])
-        .optionalMatch([
+        .match([
           node('node'),
-          relation('out', '', 'tool', ACTIVE),
+          relation('out', '', 'tool'),
           node('tool', 'Tool'),
         ])
         .return<{ dto: UnsecuredDto<ToolUsage> }>(
-          merge('props', {
-            container: 'container { .id }',
-            tool: 'tool { .id }',
+          merge('node', {
+            container: 'container',
+            tool: 'tool { .id}',
           }).as('dto'),
         );
   }

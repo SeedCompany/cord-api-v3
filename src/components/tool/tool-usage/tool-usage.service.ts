@@ -14,20 +14,36 @@ export class ToolUsageService {
     private readonly toolService: ToolService,
   ) {}
 
-  async listAllByEngagementId(engagementId: ID<'Engagement'>) {
-    const results = await this.repo.listAllByEngagementId(engagementId);
-    // eslint-disable-next-line no-console
-    console.log('ToolUsageService.listAllByEngagementId results:', results);
-    return results;
-  }
-
   async create(input: CreateToolUsage): Promise<ToolUsage> {
     const dto = await this.repo.create(input);
     this.privileges.for(ToolUsage).verifyCan('create');
     return this.secure(dto);
   }
-  private secure(dto: UnsecuredDto<ToolUsage>) {
-    return this.privileges.for(ToolUsage).secure(dto);
+
+  private secure(dto: UnsecuredDto<ToolUsage>): ToolUsage {
+    return {
+      ...dto,
+      canDelete: true,
+      container: this.secureBaseNode(dto.container),
+      startDate: this.secureField((dto as any).startDate),
+      tool: dto.tool as any, // Tool is already hydrated properly, don't double-secure it
+    };
+  }
+
+  private secureBaseNode(node: any) {
+    return {
+      ...node,
+      canRead: true,
+      canEdit: false,
+    };
+  }
+
+  private secureField<T>(value: T) {
+    return {
+      value,
+      canRead: true,
+      canEdit: false,
+    };
   }
 
   async update(input: UpdateToolUsage): Promise<ToolUsage> {
@@ -57,6 +73,11 @@ export class ToolUsageService {
 
   async readMany(ids: readonly ID[]) {
     const toolUsages = await this.repo.readMany(ids);
+    return toolUsages.map((dto) => this.secure(dto));
+  }
+
+  async findByContainerId(containerId: ID): Promise<ToolUsage[]> {
+    const toolUsages = await this.repo.findByContainerId(containerId);
     return toolUsages.map((dto) => this.secure(dto));
   }
 }

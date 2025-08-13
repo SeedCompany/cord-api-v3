@@ -4,9 +4,13 @@ import {
   type Secured,
   SecuredDateNullable,
   SecuredProperty,
+  type SetUnsecuredType,
+  type UnsecuredDto,
 } from '~/common';
+import { type BaseNode } from '~/core/database/results';
 import { e } from '~/core/gel';
 import { type LinkTo, RegisterResource } from '~/core/resources';
+import { Tool } from '../../dto';
 
 @RegisterResource({ db: e.Tool.Usage })
 @ObjectType({
@@ -15,11 +19,15 @@ import { type LinkTo, RegisterResource } from '~/core/resources';
 export class ToolUsage extends Resource {
   static readonly Parent = 'dynamic';
 
-  readonly container: Secured<LinkTo<'Resource'>>;
-  readonly tool: Secured<LinkTo<'Tool'>>;
+  readonly container: Secured<BaseNode>;
+
+  @Field(() => Tool)
+  readonly tool: Tool & SetUnsecuredType<UnsecuredDto<Tool>>;
 
   @Field()
   readonly startDate: SecuredDateNullable;
+
+  readonly creator: LinkTo<'User'>;
 }
 
 @ObjectType()

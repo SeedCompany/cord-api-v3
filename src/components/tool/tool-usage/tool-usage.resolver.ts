@@ -6,9 +6,11 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { Disabled, type ID, IdArg } from '~/common';
+import { Disabled, type ID, IdArg, mapSecuredValue, Resource } from '~/common';
 import { Loader, LoaderOf, ResourceLoader } from '~/core';
-import { SecuredTool, type Tool } from '../dto';
+import { ActorLoader } from '../../../components/user/actor.loader';
+import { Actor } from '../../../components/user/dto';
+import { Tool } from '../dto';
 import { ToolLoader } from '../tool.loader';
 import {
   CreateToolUsage,
@@ -25,11 +27,11 @@ import { ToolUsageService } from './tool-usage.service';
 export class ToolUsageResolver {
   constructor(
     private readonly service: ToolUsageService,
-    private readonly resourceService: ResourceLoader,
+    private readonly resources: ResourceLoader,
   ) {}
 
   @Query(() => ToolUsage, {
-    description: 'Read one field region by id',
+    description: 'Read one tool usage by id',
   })
   async toolUsage(
     @Loader(ToolUsageLoader) toolUsages: LoaderOf<ToolUsageLoader>,
@@ -38,20 +40,27 @@ export class ToolUsageResolver {
     return await toolUsages.load(id);
   }
 
-  @ResolveField(() => SecuredTool)
+  @ResolveField(() => Resource)
+  async container(@Parent() toolUsage: ToolUsage) {
+    return await mapSecuredValue(toolUsage.container, (node) =>
+      this.resources.loadByBaseNode(node),
+    );
+  }
+
+  @ResolveField(() => Tool)
   async tool(
     @Parent() toolUsage: ToolUsage,
     @Loader(ToolLoader) tools: LoaderOf<ToolLoader>,
-  ): Promise<Tool> {
-    // eslint-disable-next-line no-console
-    console.log('toolUsage.tool:', toolUsage.tool);
-    // const result = await mapSecuredValue(toolUsage.tool, ({ id }) =>
-    //   tools.load(id),
-    // );
-    const result = await tools.load(toolUsage.tool.value!.id);
-    // eslint-disable-next-line no-console
-    console.log('Result', result);
-    return result;
+  ) {
+    return await tools.load(toolUsage.tool.id);
+  }
+
+  @ResolveField(() => Actor)
+  async creator(
+    @Parent() toolUsage: ToolUsage,
+    @Loader(ActorLoader) actors: LoaderOf<ActorLoader>,
+  ) {
+    return await actors.load(toolUsage.creator.id);
   }
 
   @Mutation(() => CreateToolUsageOutput, {
