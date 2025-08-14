@@ -1,5 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { ID, ObjectView, ServerException, type UnsecuredDto } from '~/common';
+import {
+  type ID,
+  type ObjectView,
+  ServerException,
+  type UnsecuredDto,
+} from '~/common';
 import { HandleIdLookup } from '~/core';
 import { Privileges } from '../../../components/authorization';
 import { ToolService } from '../tool/tool.service';

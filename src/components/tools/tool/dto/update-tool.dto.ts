@@ -1,11 +1,11 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import { ID, NameField, OptionalField } from '~/common';
+import { type ID, IdField, NameField, OptionalField } from '~/common';
 import { Tool } from './tool.dto';
 
 @InputType()
 export abstract class UpdateTool {
-  @Field()
-  readonly id: ID;
+  @IdField()
+  readonly id: ID<Tool>;
 
   @NameField({ optional: true })
   readonly name?: string;

@@ -7,7 +7,7 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import { Disabled, type ID, IdArg, mapSecuredValue, Resource } from '~/common';
-import { Loader, LoaderOf, ResourceLoader } from '~/core';
+import { Loader, type LoaderOf, ResourceLoader } from '~/core';
 import { ActorLoader } from '../../../components/user/actor.loader';
 import { Actor } from '../../../components/user/dto';
 import { Tool } from '../tool/dto';

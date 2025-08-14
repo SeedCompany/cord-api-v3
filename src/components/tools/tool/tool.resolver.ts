@@ -1,6 +1,6 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { ID, IdArg, ListArg } from '~/common';
-import { Loader, LoaderOf } from '~/core';
+import { type ID, IdArg, ListArg } from '~/common';
+import { Loader, type LoaderOf } from '~/core';
 import {
   CreateTool,
   CreateToolOutput,
@@ -23,7 +23,7 @@ export class ToolResolver {
   })
   async tool(
     @Loader(ToolLoader) tools: LoaderOf<ToolLoader>,
-    @IdArg() id: ID,
+    @IdArg() id: ID<Tool>,
   ): Promise<Tool> {
     return await tools.load(id);
   }
