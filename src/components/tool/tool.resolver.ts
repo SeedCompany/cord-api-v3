@@ -8,7 +8,7 @@ import {
   Tool,
   ToolListInput,
   ToolListOutput,
-  UpdateToolInput,
+  UpdateTool,
   UpdateToolOutput,
 } from './dto';
 import { ToolLoader } from './tool.loader';
@@ -54,7 +54,7 @@ export class ToolResolver {
     description: 'Update a tool',
   })
   async updateTool(
-    @Args('input') { tool: input }: UpdateToolInput,
+    @Args('input') input: UpdateTool,
   ): Promise<UpdateToolOutput> {
     const tool = await this.toolService.update(input);
     return { tool };

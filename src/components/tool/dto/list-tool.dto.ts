@@ -3,7 +3,6 @@ import {
   FilterField,
   OptionalField,
   PaginatedList,
-  SecuredList,
   SortablePaginationInput,
 } from '~/common';
 import { Tool } from './tool.dto';
@@ -18,14 +17,9 @@ export abstract class ToolFilters {
 export class ToolListInput extends SortablePaginationInput<keyof Tool>({
   defaultSort: 'name',
 }) {
-  @FilterField(() => ToolFilters, { internal: true })
+  @FilterField(() => ToolFilters)
   readonly filter?: ToolFilters;
 }
 
 @ObjectType()
 export class ToolListOutput extends PaginatedList(Tool) {}
-
-@ObjectType({
-  description: SecuredList.descriptionFor('tools'),
-})
-export abstract class SecuredToolList extends SecuredList(Tool) {}

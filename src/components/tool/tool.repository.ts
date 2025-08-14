@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { node, type Query, relation } from 'cypher-query-builder';
+import { node, relation } from 'cypher-query-builder';
 import {
   CreationFailed,
   DuplicateException,
@@ -15,7 +15,6 @@ import {
   createNode,
   filter,
   FullTextIndex,
-  matchProps,
   paginate,
   sorting,
 } from '~/core/database/query';
@@ -39,13 +38,11 @@ export class ToolRepository extends DtoRepository(Tool) {
 
     const initialProps = {
       name: input.name,
-      aiBased: input.aiBased ?? false,
-      canDelete: true,
+      aiBased: input.aiBased,
     };
     const result = await this.db
       .query()
       .apply(await createNode(Tool, { initialProps }))
-
       .return<{ id: ID }>('node.id as id')
       .first();
 
@@ -66,22 +63,14 @@ export class ToolRepository extends DtoRepository(Tool) {
     return await this.readOne(id);
   }
 
-  async list({ filter, ...input }: ToolListInput) {
+  async list(input: ToolListInput) {
     const query = this.db
       .query()
       .matchNode('node', 'Tool')
-      .apply(toolFilters(filter))
-
+      .apply(toolFilters(input.filter))
       .apply(sorting(Tool, input))
       .apply(paginate(input, this.hydrate()));
     return (await query.first())!;
-  }
-
-  protected hydrate() {
-    return (query: Query) =>
-      query
-        .apply(matchProps())
-        .return<{ dto: UnsecuredDto<Tool> }>('props as dto');
   }
 
   @OnIndex('schema')

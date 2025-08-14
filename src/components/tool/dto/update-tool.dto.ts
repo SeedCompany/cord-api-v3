@@ -1,7 +1,5 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import { Type } from 'class-transformer';
-import { ValidateNested } from 'class-validator';
-import { ID, NameField } from '~/common';
+import { ID, NameField, OptionalField } from '~/common';
 import { Tool } from './tool.dto';
 
 @InputType()
@@ -12,16 +10,8 @@ export abstract class UpdateTool {
   @NameField({ optional: true })
   readonly name?: string;
 
-  @Field({ nullable: true })
+  @OptionalField()
   readonly aiBased?: boolean;
-}
-
-@InputType()
-export abstract class UpdateToolInput {
-  @Field()
-  @Type(() => UpdateTool)
-  @ValidateNested()
-  readonly tool: UpdateTool;
 }
 
 @ObjectType()

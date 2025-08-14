@@ -8,7 +8,7 @@ export abstract class CreateTool {
   readonly name: string;
 
   @Field()
-  readonly aiBased?: boolean;
+  readonly aiBased: boolean = false;
 }
 
 @ObjectType()

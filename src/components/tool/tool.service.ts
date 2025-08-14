@@ -1,10 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import {
-  type ID,
-  type ObjectView,
-  ServerException,
-  type UnsecuredDto,
-} from '~/common';
+import { type ID, ServerException, type UnsecuredDto } from '~/common';
 import { HandleIdLookup } from '~/core';
 import { Privileges } from '../authorization';
 import {
@@ -30,12 +25,12 @@ export class ToolService {
   }
 
   @HandleIdLookup(Tool)
-  async readOne(id: ID, _view?: ObjectView): Promise<Tool> {
+  async readOne(id: ID<Tool>): Promise<Tool> {
     const result = await this.repo.readOne(id);
     return this.secure(result);
   }
 
-  async readMany(ids: readonly ID[]) {
+  async readMany(ids: ReadonlyArray<ID<Tool>>) {
     const tools = await this.repo.readMany(ids);
     return tools.map((dto) => this.secure(dto));
   }
@@ -53,7 +48,7 @@ export class ToolService {
     return this.secure(updated);
   }
 
-  async delete(id: ID): Promise<void> {
+  async delete(id: ID<Tool>): Promise<void> {
     const tool = await this.repo.readOne(id);
     this.privileges.for(Tool, tool).verifyCan('delete');
     try {

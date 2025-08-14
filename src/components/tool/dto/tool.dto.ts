@@ -4,7 +4,6 @@ import {
   NameField,
   Resource,
   SecuredBoolean,
-  SecuredProperty,
   SecuredString,
 } from '~/common';
 import { e } from '~/core/gel';
@@ -22,10 +21,6 @@ export class Tool extends Resource {
   @Field()
   readonly aiBased: SecuredBoolean;
 }
-@ObjectType({
-  description: SecuredProperty.descriptionFor('a tool'),
-})
-export class SecuredTool extends SecuredProperty(Tool) {}
 
 declare module '~/core/resources/map' {
   interface ResourceMap {
