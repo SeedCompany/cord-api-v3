@@ -1,0 +1,11 @@
+module default {
+  type Tool extending Resource, Mixin::Named {
+    overloaded name {
+      constraint exclusive;
+    }
+
+    required aiBased: bool {
+      default := false;
+    };
+  }
+}
