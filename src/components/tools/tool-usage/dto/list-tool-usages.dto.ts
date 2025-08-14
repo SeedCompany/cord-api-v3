@@ -5,7 +5,7 @@ import {
   SecuredList,
   SortablePaginationInput,
 } from '~/common';
-import { ToolFilters } from '../../dto';
+import { ToolFilters } from '../../tool/dto';
 import { ToolUsage } from './tool-usage.dto';
 
 @InputType()

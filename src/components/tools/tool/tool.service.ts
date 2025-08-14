@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { type ID, ServerException, type UnsecuredDto } from '~/common';
 import { HandleIdLookup } from '~/core';
-import { Privileges } from '../authorization';
+import { Privileges } from '../../authorization';
 import {
   type CreateTool,
   Tool,

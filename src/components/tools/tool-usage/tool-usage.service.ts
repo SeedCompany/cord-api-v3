@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ID, ObjectView, ServerException, type UnsecuredDto } from '~/common';
 import { HandleIdLookup } from '~/core';
 import { Privileges } from '../../../components/authorization';
-import { ToolService } from '../tool.service';
+import { ToolService } from '../tool/tool.service';
 import { type CreateToolUsage, ToolUsage, type UpdateToolUsage } from './dto';
 import { ToolUsageRepository } from './tool-usage.repository';
 

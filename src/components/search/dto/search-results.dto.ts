@@ -32,7 +32,7 @@ import {
   TranslationProject,
 } from '../../project/dto';
 import { Story } from '../../story/dto';
-import { Tool } from '../../tool/dto';
+import { Tool } from '../../tools/tool/dto';
 import { User } from '../../user/dto';
 
 // A mapping of searchable types to their results. Expand as needed.

@@ -12,8 +12,8 @@ import {
   merge,
   variable,
 } from '~/core/database/query';
-import { type Tool } from '../dto';
-import { toolFilters } from '../tool.repository';
+import { type Tool } from '../tool/dto';
+import { toolFilters } from '../tool/tool.repository';
 import {
   type CreateToolUsage,
   ToolUsage,

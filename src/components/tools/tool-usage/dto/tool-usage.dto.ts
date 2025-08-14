@@ -10,7 +10,7 @@ import {
 import { type BaseNode } from '~/core/database/results';
 import { e } from '~/core/gel';
 import { type LinkTo, RegisterResource } from '~/core/resources';
-import { Tool } from '../../dto';
+import { Tool } from '../../tool/dto';
 
 @RegisterResource({ db: e.Tool.Usage })
 @ObjectType({

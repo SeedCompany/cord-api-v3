@@ -10,8 +10,8 @@ import { Disabled, type ID, IdArg, mapSecuredValue, Resource } from '~/common';
 import { Loader, LoaderOf, ResourceLoader } from '~/core';
 import { ActorLoader } from '../../../components/user/actor.loader';
 import { Actor } from '../../../components/user/dto';
-import { Tool } from '../dto';
-import { ToolLoader } from '../tool.loader';
+import { Tool } from '../tool/dto';
+import { ToolLoader } from '../tool/tool.loader';
 import {
   CreateToolUsage,
   CreateToolUsageOutput,
