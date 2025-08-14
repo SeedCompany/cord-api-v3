@@ -7,7 +7,6 @@ import { LanguageModule } from '../language/language.module';
 import { LocationModule } from '../location/location.module';
 import { ProductModule } from '../product/product.module';
 import { ProjectModule } from '../project/project.module';
-import { ToolModule } from '../tool/tool.module';
 import { EngagementStatusResolver } from './engagement-status.resolver';
 import { EngagementGelRepository } from './engagement.gel.repository';
 import { EngagementLoader } from './engagement.loader';
@@ -33,7 +32,6 @@ import { EngagementProductConnectionResolver } from './product-connection.resolv
     forwardRef(() => LanguageModule),
     forwardRef(() => LocationModule),
     forwardRef(() => ProjectModule),
-    forwardRef(() => ToolModule),
   ],
   providers: [
     EngagementResolver,
