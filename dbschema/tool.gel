@@ -7,5 +7,19 @@ module default {
     required aiBased: bool {
       default := false;
     };
+
+    usages := .<tool[is Tool::Usage];
+  }
+}
+
+module Tool {
+  type Usage extending default::Resource, Mixin::Embedded {
+    required tool: default::Tool;
+    
+    overloaded required container: default::Resource {
+      on target delete delete source;
+    }
+
+    startDate: cal::local_date;
   }
 }
