@@ -28,6 +28,16 @@ import {
 
 @Injectable()
 export class ToolRepository extends DtoRepository(Tool) {
+  async list(input: ToolListInput) {
+    const query = this.db
+      .query()
+      .matchNode('node', 'Tool')
+      .apply(toolFilters(input.filter))
+      .apply(sorting(Tool, input))
+      .apply(paginate(input, this.hydrate()));
+    return (await query.first())!;
+  }
+
   async create(input: CreateTool): Promise<UnsecuredDto<Tool>> {
     if (!(await this.isUnique(input.name))) {
       throw new DuplicateException(
@@ -61,16 +71,6 @@ export class ToolRepository extends DtoRepository(Tool) {
     const { id, ...simpleChanges } = changes;
     await this.updateProperties({ id }, simpleChanges);
     return await this.readOne(id);
-  }
-
-  async list(input: ToolListInput) {
-    const query = this.db
-      .query()
-      .matchNode('node', 'Tool')
-      .apply(toolFilters(input.filter))
-      .apply(sorting(Tool, input))
-      .apply(paginate(input, this.hydrate()));
-    return (await query.first())!;
   }
 
   @OnIndex('schema')
