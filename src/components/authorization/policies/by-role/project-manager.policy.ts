@@ -163,6 +163,7 @@ export const momentumProjectsTransitions = () =>
       ])
       .children((c) => c.posts.read.create),
     r.ProjectMember.read.when(member).edit.create.delete,
+    r.ToolUsage.read.when(member).edit.create.delete,
     [r.StepProgress].flatMap((it) => [
       it.whenAll(member, variant('partner')).read,
       it.whenAll(member, variant('official')).edit,

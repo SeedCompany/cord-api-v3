@@ -21,6 +21,7 @@ import { Policy, Role } from '../util';
     'Field Ops Rejects Proposal',
   ).execute,
   r.PeriodicReport.edit,
+  r.ToolUsage.edit.create.delete,
   r.StepProgress.edit,
 ])
 export class FieldOperationsDirectorPolicy {}

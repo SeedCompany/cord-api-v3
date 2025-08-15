@@ -3,7 +3,6 @@ import {
   Resource,
   type Secured,
   SecuredDateNullable,
-  SecuredProperty,
   type SetUnsecuredType,
   type UnsecuredDto,
 } from '~/common';
@@ -27,11 +26,8 @@ export class ToolUsage extends Resource {
   @Field()
   readonly startDate: SecuredDateNullable;
 
-  readonly creator: LinkTo<'User'>;
+  readonly creator: LinkTo<'Actor'>;
 }
-
-@ObjectType()
-export class SecuredToolUsage extends SecuredProperty(ToolUsage) {}
 
 declare module '~/core/resources/map' {
   interface ResourceMap {

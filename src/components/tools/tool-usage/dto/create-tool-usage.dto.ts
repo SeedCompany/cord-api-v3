@@ -1,5 +1,5 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import { CalendarDate, DateField, type ID, IdField } from '~/common';
+import { type CalendarDate, DateField, type ID, IdField } from '~/common';
 import { ToolUsage } from './tool-usage.dto';
 
 @InputType()
@@ -15,7 +15,7 @@ export abstract class CreateToolUsage {
   readonly tool: ID<'Tool'>;
 
   @DateField({ nullable: true })
-  readonly startDate?: CalendarDate;
+  readonly startDate?: CalendarDate | null;
 }
 
 @ObjectType()

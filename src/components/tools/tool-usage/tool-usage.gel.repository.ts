@@ -1,0 +1,38 @@
+import { Injectable } from '@nestjs/common';
+import { type ID, type PublicOf } from '~/common';
+import { e, RepoFor } from '~/core/gel';
+import { ToolUsage } from './dto';
+import { type ToolUsageRepository as Neo4jRepository } from './tool-usage.neo4j.repository';
+
+const resAsBaseNode = e.shape(e.Resource, (res) => ({
+  identity: res.id,
+  labels: e.array_agg(e.set(res.__type__.name)),
+  properties: e.select({
+    id: res.id,
+    createdAt: res.createdAt,
+  }),
+}));
+
+@Injectable()
+export class ToolUsageRepository
+  extends RepoFor(ToolUsage, {
+    hydrate: (usage) => ({
+      ...usage['*'],
+      container: resAsBaseNode(usage.container),
+      tool: usage.tool['*'],
+      creator: usage.createdBy,
+    }),
+  })
+  implements PublicOf<Neo4jRepository>
+{
+  async listForContainer(container: ID) {
+    return await this.db.run(this.listForContainerQuery, { container });
+  }
+  private readonly listForContainerQuery = e.params(
+    { container: e.uuid },
+    ($) => {
+      const container = e.cast(e.Resource, $.container);
+      return e.select(container.tools, this.hydrate);
+    },
+  );
+}

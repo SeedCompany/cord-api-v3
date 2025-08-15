@@ -5,16 +5,10 @@ import { ToolUsage } from './tool-usage.dto';
 @InputType()
 export abstract class UpdateToolUsage {
   @IdField()
-  readonly id: ID;
+  readonly id: ID<ToolUsage>;
 
   @DateField({ nullable: true })
   readonly startDate?: CalendarDate | null;
-}
-
-@InputType()
-export abstract class UpdateToolUsageInput {
-  @Field()
-  readonly usage: UpdateToolUsage;
 }
 
 @ObjectType()

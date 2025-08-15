@@ -2,16 +2,13 @@ import {
   Args,
   Mutation,
   Parent,
-  Query,
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { Disabled, type ID, IdArg, mapSecuredValue, Resource } from '~/common';
+import { type ID, IdArg, mapSecuredValue, Resource } from '~/common';
 import { Loader, type LoaderOf, ResourceLoader } from '~/core';
-import { ActorLoader } from '../../../components/user/actor.loader';
-import { Actor } from '../../../components/user/dto';
-import { Tool } from '../tool/dto';
-import { ToolLoader } from '../tool/tool.loader';
+import { ActorLoader } from '../../user/actor.loader';
+import { Actor } from '../../user/dto';
 import {
   CreateToolUsage,
   CreateToolUsageOutput,
@@ -20,7 +17,6 @@ import {
   UpdateToolUsage,
   UpdateToolUsageOutput,
 } from './dto';
-import { ToolUsageLoader } from './tool-usage.loader';
 import { ToolUsageService } from './tool-usage.service';
 
 @Resolver(ToolUsage)
@@ -30,29 +26,11 @@ export class ToolUsageResolver {
     private readonly resources: ResourceLoader,
   ) {}
 
-  @Query(() => ToolUsage, {
-    description: 'Read one tool usage by id',
-  })
-  async toolUsage(
-    @Loader(ToolUsageLoader) toolUsages: LoaderOf<ToolUsageLoader>,
-    @IdArg() id: ID,
-  ): Promise<ToolUsage> {
-    return await toolUsages.load(id);
-  }
-
   @ResolveField(() => Resource)
   async container(@Parent() toolUsage: ToolUsage) {
     return await mapSecuredValue(toolUsage.container, (node) =>
       this.resources.loadByBaseNode(node),
     );
-  }
-
-  @ResolveField(() => Tool)
-  async tool(
-    @Parent() toolUsage: ToolUsage,
-    @Loader(ToolLoader) tools: LoaderOf<ToolLoader>,
-  ) {
-    return await tools.load(toolUsage.tool.id);
   }
 
   @ResolveField(() => Actor)
@@ -63,9 +41,7 @@ export class ToolUsageResolver {
     return await actors.load(toolUsage.creator.id);
   }
 
-  @Mutation(() => CreateToolUsageOutput, {
-    description: 'Create a tool usage',
-  })
+  @Mutation(() => CreateToolUsageOutput)
   async createToolUsage(
     @Args('input') input: CreateToolUsage,
   ): Promise<CreateToolUsageOutput> {
@@ -73,10 +49,7 @@ export class ToolUsageResolver {
     return { toolUsage: toolUsage };
   }
 
-  @Disabled(`Stubbing this here for future implementation`)
-  @Mutation(() => UpdateToolUsageOutput, {
-    description: 'Update a tool usage',
-  })
+  @Mutation(() => UpdateToolUsageOutput)
   async updateToolUsage(
     @Args('input') input: UpdateToolUsage,
   ): Promise<UpdateToolUsageOutput> {
@@ -84,10 +57,10 @@ export class ToolUsageResolver {
     return { toolUsage };
   }
 
-  @Mutation(() => DeleteToolUsageOutput, {
-    description: 'Delete a tool usage',
-  })
-  async deleteToolUsage(@IdArg() id: ID): Promise<DeleteToolUsageOutput> {
+  @Mutation(() => DeleteToolUsageOutput)
+  async deleteToolUsage(
+    @IdArg() id: ID<ToolUsage>,
+  ): Promise<DeleteToolUsageOutput> {
     await this.service.delete(id);
     return { success: true };
   }
