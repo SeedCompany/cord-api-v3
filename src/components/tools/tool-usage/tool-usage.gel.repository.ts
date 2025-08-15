@@ -25,14 +25,17 @@ export class ToolUsageRepository
   })
   implements PublicOf<Neo4jRepository>
 {
-  async listForContainer(container: ID) {
-    return await this.db.run(this.listForContainerQuery, { container });
+  async listForContainers(containers: readonly ID[]) {
+    return await this.db.run(this.listForContainersQuery, { containers });
   }
-  private readonly listForContainerQuery = e.params(
-    { container: e.uuid },
+  private readonly listForContainersQuery = e.params(
+    { containers: e.array(e.uuid) },
     ($) => {
-      const container = e.cast(e.Resource, $.container);
-      return e.select(container.tools, this.hydrate);
+      const containers = e.cast(e.Resource, e.array_unpack($.containers));
+      return e.select(containers, (container) => ({
+        container: e.select(container, (c) => ({ id: c.id })),
+        usages: e.select(container.tools, this.hydrate),
+      }));
     },
   );
 }

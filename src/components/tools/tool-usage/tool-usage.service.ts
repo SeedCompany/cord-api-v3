@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { mapKeys } from '@seedcompany/common';
 import {
   type ID,
   InputException,
@@ -13,6 +14,7 @@ import { type BaseNode, isBaseNode } from '~/core/database/results';
 import { Privileges } from '../../authorization';
 import { Tool } from '../tool/dto';
 import { type CreateToolUsage, ToolUsage, type UpdateToolUsage } from './dto';
+import { type UsagesByContainer } from './tool-usage-by-container.loader';
 import { ToolUsageRepository } from './tool-usage.neo4j.repository';
 
 type TypedResource = Resource & { __typename: string };
@@ -48,9 +50,16 @@ export class ToolUsageService {
     return secured.flat();
   }
 
-  async readByContainer(container: Resource): Promise<readonly ToolUsage[]> {
-    const dtos = await this.repo.listForContainer(container.id);
-    return dtos.flatMap((dto) => this.secure(dto, container) ?? []);
+  async readManyForContainers(containers: readonly Resource[]) {
+    const containersById = mapKeys.fromList(containers, (r) => r.id).asMap;
+    const rows = await this.repo.listForContainers(containers.map((r) => r.id));
+    return rows.map((row): UsagesByContainer => {
+      const container = containersById.get(row.container.id)!;
+      return {
+        container,
+        usages: row.usages.flatMap((dto) => this.secure(dto, container) ?? []),
+      };
+    });
   }
 
   private secure(

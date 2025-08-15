@@ -4,12 +4,14 @@ import { CreationFailed, type ID, type UnsecuredDto } from '~/common';
 import { DtoRepository } from '~/core/database';
 import {
   ACTIVE,
+  collect,
   createNode,
   createRelationships,
   currentUser,
   filter,
   matchProps,
   merge,
+  variable,
 } from '~/core/database/query';
 import { toolFilters } from '../tool/tool.neo4j.repository';
 import {
@@ -44,16 +46,25 @@ export class ToolUsageRepository extends DtoRepository(ToolUsage) {
         );
   }
 
-  async listForContainer(containerId: ID) {
+  async listForContainers(containers: readonly ID[]) {
     const result = await this.db
       .query()
-      .match([
-        node('', 'BaseNode', { id: containerId }),
-        relation('out', '', 'uses', ACTIVE),
-        node('node', 'ToolUsage'),
-      ])
-      .apply(this.hydrate())
-      .map('dto')
+      .unwind([...containers], 'containerId')
+      .match(node('container', 'BaseNode', { id: variable('containerId') }))
+      .subQuery('container', (sub) =>
+        sub
+          .match([
+            node('container'),
+            relation('out', '', 'uses', ACTIVE),
+            node('node', 'ToolUsage'),
+          ])
+          .subQuery('node', this.hydrate())
+          .return(collect('dto').as('usages')),
+      )
+      .return<{
+        container: { id: ID };
+        usages: ReadonlyArray<UnsecuredDto<ToolUsage>>;
+      }>(['container { .id }', 'usages'])
       .run();
     return result;
   }
