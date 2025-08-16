@@ -37,11 +37,17 @@ export class ToolUsageRepository extends DtoRepository(ToolUsage) {
           relation('out', '', 'tool'),
           node('tool', 'Tool'),
         ])
+        .match([
+          node('node'),
+          relation('out', '', 'creator'),
+          node('creator', 'Actor'),
+        ])
         .apply(matchProps({ nodeName: 'tool', outputVar: 'toolProps' }))
         .return<{ dto: UnsecuredDto<ToolUsage> }>(
           merge('node', {
             container: 'container',
             tool: 'toolProps',
+            creator: 'creator { .id }',
           }).as('dto'),
         );
   }
