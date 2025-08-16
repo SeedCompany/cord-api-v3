@@ -1,10 +1,13 @@
+import { type LoaderContextType } from '@seedcompany/data-loader';
 import { type ID, type Resource } from '~/common';
 import {
   type DataLoaderStrategy,
   LoaderFactory,
   type LoaderOptionsOf,
 } from '~/core/data-loader';
+import { ToolLoader } from '../tool/tool.loader';
 import { type ToolUsage } from './dto';
+import { ToolUsageLoader } from './tool-usage.loader';
 import { ToolUsageService } from './tool-usage.service';
 
 export interface UsagesByContainer {
@@ -27,7 +30,17 @@ export class ToolUsageByContainerLoader
 
   async loadMany(
     ids: readonly Resource[],
+    ctx: LoaderContextType,
   ): Promise<readonly UsagesByContainer[]> {
-    return await this.usages.readManyForContainers(ids);
+    const res = await this.usages.readManyForContainers(ids);
+
+    const canonicalUsages = await ctx.getLoader(ToolUsageLoader);
+    const usages = res.flatMap((u) => u.usages);
+    canonicalUsages.primeAll(usages);
+
+    const canonicalTools = await ctx.getLoader(ToolLoader);
+    canonicalTools.primeAll(usages.map((x) => x.tool));
+
+    return res;
   }
 }
