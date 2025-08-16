@@ -5,7 +5,7 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { type ID, IdArg, mapSecuredValue, Resource } from '~/common';
+import { type ID, IdArg, Resource, ServerException } from '~/common';
 import { Loader, type LoaderOf, ResourceLoader } from '~/core';
 import { ActorLoader } from '../../user/actor.loader';
 import { Actor } from '../../user/dto';
@@ -27,10 +27,14 @@ export class ToolUsageResolver {
   ) {}
 
   @ResolveField(() => Resource)
-  async container(@Parent() toolUsage: ToolUsage) {
-    return await mapSecuredValue(toolUsage.container, (node) =>
-      this.resources.loadByBaseNode(node),
-    );
+  async container(@Parent() toolUsage: ToolUsage): Promise<Resource> {
+    const container = toolUsage.container.value;
+    // Service should have hidden this ToolUsage if the container cannot be read.
+    // So we should always have a container when we get here.
+    if (!container) {
+      throw new ServerException('Container resolution failure');
+    }
+    return (await this.resources.loadByBaseNode(container)) as Resource;
   }
 
   @ResolveField(() => Actor)
