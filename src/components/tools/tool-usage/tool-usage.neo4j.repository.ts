@@ -69,6 +69,29 @@ export class ToolUsageRepository extends DtoRepository(ToolUsage) {
     return result;
   }
 
+  async listForTools(tools: readonly ID[]) {
+    const result = await this.db
+      .query()
+      .unwind([...tools], 'toolId')
+      .match(node('tool', 'Tool', { id: variable('toolId') }))
+      .subQuery('tool', (sub) =>
+        sub
+          .match([
+            node('node', 'ToolUsage'),
+            relation('out', '', 'tool', ACTIVE),
+            node('tool'),
+          ])
+          .subQuery('node', this.hydrate())
+          .return(collect('dto').as('usages')),
+      )
+      .return<{
+        tool: { id: ID };
+        usages: ReadonlyArray<UnsecuredDto<ToolUsage>>;
+      }>(['tool { .id }', 'usages'])
+      .run();
+    return result;
+  }
+
   async create(input: CreateToolUsage) {
     const initialProps = {
       startDate: input.startDate,

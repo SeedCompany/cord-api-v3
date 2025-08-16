@@ -38,4 +38,18 @@ export class ToolUsageRepository
       }));
     },
   );
+
+  async listForTools(tools: readonly ID[]) {
+    return await this.db.run(this.listForToolsQuery, { tools });
+  }
+  private readonly listForToolsQuery = e.params(
+    { tools: e.array(e.uuid) },
+    ($) => {
+      const tools = e.cast(e.Tool, e.array_unpack($.tools));
+      return e.select(tools, (tool) => ({
+        tool: e.select(tool, (c) => ({ id: c.id })),
+        usages: e.select(tool.usages, this.hydrate),
+      }));
+    },
+  );
 }

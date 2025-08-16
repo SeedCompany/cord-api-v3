@@ -15,6 +15,7 @@ import { Privileges } from '../../authorization';
 import { Tool } from '../tool/dto';
 import { type CreateToolUsage, ToolUsage, type UpdateToolUsage } from './dto';
 import { type UsagesByContainer } from './tool-usage-by-container.loader';
+import { type UsagesByTool } from './tool-usage-by-tool.loader';
 import { ToolUsageRepository } from './tool-usage.neo4j.repository';
 
 type TypedResource = Resource & { __typename: string };
@@ -60,6 +61,23 @@ export class ToolUsageService {
         usages: row.usages.flatMap((dto) => this.secure(dto, container) ?? []),
       };
     });
+  }
+
+  async readManyForTools(tools: readonly Tool[]) {
+    const toolsById = mapKeys.fromList(tools, (t) => t.id).asMap;
+    const rows = await this.repo.listForTools(tools.map((t) => t.id));
+    return await Promise.all(
+      rows.map(async (row): Promise<UsagesByTool> => {
+        const tool = toolsById.get(row.tool.id)!;
+        const usages = await Promise.all(
+          row.usages.map(async (dto) => {
+            const container = await this.loadContainer(dto.container);
+            return this.secure(dto, container) ?? [];
+          }),
+        );
+        return { tool, usages: usages.flat() };
+      }),
+    );
   }
 
   private secure(
