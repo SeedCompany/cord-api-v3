@@ -52,4 +52,19 @@ export class ToolUsageRepository
       }));
     },
   );
+
+  async usageFor(container: ID<'Resource'>, tool: ID<'Tool'>) {
+    return await this.db.run(this.usageForQuery, { container, tool });
+  }
+  private readonly usageForQuery = e.params(
+    { container: e.uuid, tool: e.uuid },
+    ($) =>
+      e.select(e.Tool.Usage, (usage) => ({
+        ...this.hydrate(usage),
+        filter_single: {
+          tool: e.cast(e.Tool, $.tool),
+          container: e.cast(e.Resource, $.container),
+        },
+      })),
+  );
 }

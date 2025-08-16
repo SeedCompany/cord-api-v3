@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { mapKeys } from '@seedcompany/common';
 import {
+  DuplicateException,
   type ID,
   InputException,
   isIdLike,
@@ -111,6 +112,13 @@ export class ToolUsageService {
       container.__typename === 'ToolUsage'
     ) {
       throw new InputException('No recursion');
+    }
+    const prev = await this.repo.usageFor(input.container, input.tool);
+    if (prev) {
+      throw new DuplicateException(
+        'tool',
+        'This resource already uses this tool',
+      );
     }
 
     const dto = await this.repo.create(input);

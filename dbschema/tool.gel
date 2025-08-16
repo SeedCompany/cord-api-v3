@@ -19,6 +19,7 @@ module Tool {
     overloaded required container: default::Resource {
       on target delete delete source;
     }
+    constraint exclusive on ((.tool, .container));
 
     startDate: cal::local_date;
   }

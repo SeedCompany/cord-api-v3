@@ -92,6 +92,21 @@ export class ToolUsageRepository extends DtoRepository(ToolUsage) {
     return result;
   }
 
+  async usageFor(container: ID<'Resource'>, tool: ID<'Tool'>) {
+    const res = await this.db
+      .query()
+      .match([
+        node('container', 'BaseNode', { id: container }),
+        relation('out', '', 'uses', ACTIVE),
+        node('node', 'ToolUsage'),
+        relation('out', '', 'tool', ACTIVE),
+        node('tool', 'Tool', { id: tool }),
+      ])
+      .apply(this.hydrate())
+      .first();
+    return res?.dto ?? null;
+  }
+
   async create(input: CreateToolUsage) {
     const initialProps = {
       startDate: input.startDate,
