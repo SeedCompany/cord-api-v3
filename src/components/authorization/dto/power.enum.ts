@@ -19,6 +19,7 @@ export const Power = makeEnum({
     'CreateSong',
     'CreateStory',
     'CreateUser',
+    'CreateTool',
     {
       value: 'CreateBudget',
       deprecationReason: 'Use `Project.budget` instead',
