@@ -44,7 +44,7 @@ export class ToolUsageRepository extends DtoRepository(ToolUsage) {
         ])
         .apply(matchProps({ nodeName: 'tool', outputVar: 'toolProps' }))
         .return<{ dto: UnsecuredDto<ToolUsage> }>(
-          merge('node', {
+          merge('props', {
             container: 'container',
             tool: 'toolProps',
             creator: 'creator { .id }',
