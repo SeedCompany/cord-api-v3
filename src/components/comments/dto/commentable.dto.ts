@@ -15,9 +15,10 @@ import { CommentThread } from './comment-thread.dto';
   resolveType: resolveByTypename(Commentable.name),
 })
 export abstract class Commentable extends Resource {
-  static readonly Relations = {
+  static readonly Relations = (() => ({
+    ...Resource.Relations(),
     commentThreads: [CommentThread],
-  } satisfies ResourceRelationsShape;
+  })) satisfies ResourceRelationsShape;
 
   declare __typename: string;
 }

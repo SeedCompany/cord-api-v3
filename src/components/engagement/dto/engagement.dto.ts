@@ -69,9 +69,10 @@ const RequiredWhenNotInDev = RequiredWhen(() => Engagement)({
  * This should be used for GraphQL but never for TypeScript types.
  */
 class Engagement extends Interfaces {
-  static readonly Relations = {
-    ...Commentable.Relations,
-  } satisfies ResourceRelationsShape;
+  static readonly Relations = (() => ({
+    ...Resource.Relations(),
+    ...Commentable.Relations(),
+  })) satisfies ResourceRelationsShape;
   static readonly Parent = () =>
     import('../../project/dto').then((m) => m.IProject);
   static readonly resolve = resolveEngagementType;
@@ -163,11 +164,11 @@ export { Engagement as IEngagement, type AnyEngagement as Engagement };
   implements: [Engagement],
 })
 export class LanguageEngagement extends Engagement {
-  static readonly Relations = {
-    ...Engagement.Relations,
+  static readonly Relations = (() => ({
+    ...Engagement.Relations(),
     // why is this singular?
     product: [Product],
-  } satisfies ResourceRelationsShape;
+  })) satisfies ResourceRelationsShape;
   static readonly Parent = () =>
     import('../../project/dto').then((m) => m.TranslationProject);
 

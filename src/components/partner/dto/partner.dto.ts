@@ -30,12 +30,12 @@ const Interfaces = IntersectTypes(Resource, Pinnable, Postable, Commentable);
   implements: Interfaces.members,
 })
 export class Partner extends Interfaces {
-  static readonly Relations = () =>
-    ({
-      projects: [IProject],
-      ...Postable.Relations,
-      ...Commentable.Relations,
-    } satisfies ResourceRelationsShape);
+  static readonly Relations = (() => ({
+    ...Resource.Relations(),
+    projects: [IProject],
+    ...Postable.Relations(),
+    ...Commentable.Relations(),
+  })) satisfies ResourceRelationsShape;
 
   readonly organization: Secured<LinkTo<'Organization'>>;
 

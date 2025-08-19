@@ -52,10 +52,11 @@ export class PromptVariantResponse<
 > extends Resource {
   static readonly Parent = 'dynamic' as 'dynamic' | (() => Promise<any>);
 
-  static Relations = {
+  static readonly Relations = (() => ({
+    ...Resource.Relations(),
     // So the policies can specify
     responses: [VariantResponse],
-  } satisfies ResourceRelationsShape;
+  })) satisfies ResourceRelationsShape;
 
   readonly creator: Secured<LinkTo<'User'>>;
 

@@ -11,6 +11,7 @@ import {
 import { createMetadataDecorator } from '@seedcompany/nest';
 import { LazyGetter as Once } from 'lazy-get-decorator';
 import { DateTime } from 'luxon';
+import { type OmitIndexSignature } from 'type-fest';
 import type {
   ResourceDBMap,
   ResourceLike,
@@ -28,6 +29,12 @@ import { DateTimeField } from './luxon.graphql';
 import { getParentTypes } from './parent-types';
 import { type MaybeSecured, type SecuredProps } from './secured-property';
 import { type AbstractClassType } from './types';
+
+// Merge with this to declare Relations types for Resources.
+// Be sure to patch at runtime too.
+// Don't reference this type directly, other than to declaration merge.
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface DeclareResourceRelations {}
 
 const GqlClassType = createMetadataDecorator({
   key: CLASS_TYPE_METADATA,
@@ -53,6 +60,14 @@ export const resolveByTypename =
 })
 @DbLabel('BaseNode')
 export abstract class Resource extends DataObject {
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  static readonly Relations =
+    (): OmitIndexSignature<DeclareResourceRelations> => {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore -- runtime needs to be patched in.
+      return {};
+    };
+
   readonly __typename?: string;
 
   @IdField()
@@ -80,7 +95,10 @@ export type ResourceShape<T> = AbstractClassType<T> & {
   // Default should probably be considered the props on Resource class.
   BaseNodeProps?: string[];
   Relations?: Thunk<
-    Record<string, ResourceShape<any> | [ResourceShape<any>] | undefined>
+    Record<
+      string,
+      ResourceShape<any> | readonly [ResourceShape<any>] | undefined
+    >
   >;
   /**
    * Define this resource as being a child of another.
@@ -397,7 +415,7 @@ export type SecuredPropsPlusExtraKey<
 /* eslint-disable @typescript-eslint/ban-types -- {} is used to mean non-nullable, it's not an empty interface */
 
 export type ExtraPropsFromRelationsKey<T extends ResourceShape<any>> = {
-  [R in RelKey<T>]: RelOf<T>[R] extends Array<infer U>
+  [R in RelKey<T>]: RelOf<T>[R] extends ReadonlyArray<infer U>
     ? U extends ResourceShape<any>
       ? U['Parent'] extends {}
         ? never
@@ -411,7 +429,7 @@ export type ExtraPropsFromRelationsKey<T extends ResourceShape<any>> = {
 }[RelKey<T>];
 
 export type ChildSinglesKey<T extends ResourceShape<any>> = {
-  [R in RelKey<T>]: RelOf<T>[R] extends any[]
+  [R in RelKey<T>]: RelOf<T>[R] extends readonly any[]
     ? never
     : RelOf<T>[R] extends ResourceShape<any>
     ? RelOf<T>[R]['Parent'] extends {}
@@ -421,7 +439,7 @@ export type ChildSinglesKey<T extends ResourceShape<any>> = {
 }[RelKey<T>];
 
 export type ChildListsKey<T extends ResourceShape<any>> = {
-  [R in RelKey<T>]: RelOf<T>[R] extends Array<infer U>
+  [R in RelKey<T>]: RelOf<T>[R] extends ReadonlyArray<infer U>
     ? U extends ResourceShape<any>
       ? U['Parent'] extends {}
         ? R
