@@ -1,0 +1,26 @@
+module default {
+  type Tool extending Resource, Mixin::Named {
+    overloaded name {
+      constraint exclusive;
+    }
+
+    required aiBased: bool {
+      default := false;
+    };
+
+    usages := .<tool[is Tool::Usage];
+  }
+}
+
+module Tool {
+  type Usage extending default::Resource, Mixin::Embedded {
+    required tool: default::Tool;
+    
+    overloaded required container: default::Resource {
+      on target delete delete source;
+    }
+    constraint exclusive on ((.tool, .container));
+
+    startDate: cal::local_date;
+  }
+}

@@ -1,3 +1,5 @@
 module default {
-  abstract type Resource extending Mixin::Audited;
+  abstract type Resource extending Mixin::Audited {
+    tools := .<container[is Tool::Usage];
+  }
 }
