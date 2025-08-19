@@ -6,13 +6,13 @@ import {
   type LoaderOptionsOf,
 } from '~/core/data-loader';
 import { ToolLoader } from '../tool/tool.loader';
-import { type ToolUsage } from './dto';
+import { type SecuredToolUsageList } from './dto';
 import { ToolUsageLoader } from './tool-usage.loader';
 import { ToolUsageService } from './tool-usage.service';
 
 export interface UsagesByContainer {
   container: Resource;
-  usages: readonly ToolUsage[];
+  usages: SecuredToolUsageList;
 }
 
 @LoaderFactory()
@@ -35,7 +35,7 @@ export class ToolUsageByContainerLoader
     const res = await this.usages.readManyForContainers(ids);
 
     const canonicalUsages = await ctx.getLoader(ToolUsageLoader);
-    const usages = res.flatMap((u) => u.usages);
+    const usages = res.flatMap((u) => u.usages.items);
     canonicalUsages.primeAll(usages);
 
     const canonicalTools = await ctx.getLoader(ToolLoader);

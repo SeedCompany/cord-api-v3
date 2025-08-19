@@ -33,7 +33,7 @@ export class ToolUsageRepository
     ($) => {
       const containers = e.cast(e.Resource, e.array_unpack($.containers));
       return e.select(containers, (container) => ({
-        container: e.select(container, (c) => ({ id: c.id })),
+        container: e.select(container, resAsBaseNode),
         usages: e.select(container.tools, this.hydrate),
       }));
     },

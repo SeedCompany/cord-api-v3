@@ -13,6 +13,7 @@ import {
   merge,
   variable,
 } from '~/core/database/query';
+import { type BaseNode } from '~/core/database/results';
 import { toolFilters } from '../tool/tool.neo4j.repository';
 import {
   type CreateToolUsage,
@@ -68,9 +69,9 @@ export class ToolUsageRepository extends DtoRepository(ToolUsage) {
           .return(collect('dto').as('usages')),
       )
       .return<{
-        container: { id: ID };
+        container: BaseNode;
         usages: ReadonlyArray<UnsecuredDto<ToolUsage>>;
-      }>(['container { .id }', 'usages'])
+      }>(['container', 'usages'])
       .run();
     return result;
   }

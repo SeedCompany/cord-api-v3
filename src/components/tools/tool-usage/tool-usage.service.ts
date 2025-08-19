@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { mapKeys } from '@seedcompany/common';
 import {
   DuplicateException,
+  EnhancedResource,
   type ID,
   InputException,
   isIdLike,
@@ -10,7 +11,7 @@ import {
   ServerException,
   type UnsecuredDto,
 } from '~/common';
-import { HandleIdLookup, ResourceLoader } from '~/core';
+import { HandleIdLookup, ResourceLoader, ResourceResolver } from '~/core';
 import { type BaseNode, isBaseNode } from '~/core/database/results';
 import { Privileges } from '../../authorization';
 import { Tool } from '../tool/dto';
@@ -27,6 +28,7 @@ export class ToolUsageService {
   constructor(
     private readonly privileges: Privileges,
     private readonly resources: ResourceLoader,
+    private readonly resourceResolver: ResourceResolver,
     private readonly repo: ToolUsageRepository,
   ) {}
 
@@ -56,10 +58,30 @@ export class ToolUsageService {
     const containersById = mapKeys.fromList(containers, (r) => r.id).asMap;
     const rows = await this.repo.listForContainers(containers.map((r) => r.id));
     return rows.map((row): UsagesByContainer => {
-      const container = containersById.get(row.container.id)!;
+      const container = containersById.get(row.container.properties.id)!;
+
+      const typeName =
+        container.__typename ??
+        this.resourceResolver.resolveTypeByBaseNode(row.container);
+      const containerType = EnhancedResource.resolve(
+        typeName,
+      ) as EnhancedResource<typeof Resource>;
+
+      const usages = row.usages.flatMap(
+        (dto) => this.secure(dto, container) ?? [],
+      );
       return {
         container,
-        usages: row.usages.flatMap((dto) => this.secure(dto, container) ?? []),
+        usages: {
+          items: usages,
+          total: usages.length,
+          hasMore: false,
+
+          canRead: true,
+          canCreate: this.privileges
+            .for(containerType, container)
+            .can('create', 'tools'),
+        },
       };
     });
   }
