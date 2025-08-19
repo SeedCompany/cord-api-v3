@@ -53,6 +53,9 @@ export const resolveByTypename =
 })
 @DbLabel('BaseNode')
 export abstract class Resource extends DataObject {
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  static readonly Relations = () => ({} satisfies ResourceRelationsShape);
+
   readonly __typename?: string;
 
   @IdField()

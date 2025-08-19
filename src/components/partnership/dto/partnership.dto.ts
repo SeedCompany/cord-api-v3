@@ -28,10 +28,11 @@ const Interfaces = IntersectTypes(Resource, ChangesetAware);
   implements: Interfaces.members,
 })
 export class Partnership extends Interfaces {
-  static readonly Relations = {
+  static readonly Relations = (() => ({
+    ...Resource.Relations(),
     // why is this here? We have a relation to partner, not org...
     organization: Organization,
-  } satisfies ResourceRelationsShape;
+  })) satisfies ResourceRelationsShape;
   static readonly Parent = () =>
     import('../../project/dto').then((m) => m.IProject);
 

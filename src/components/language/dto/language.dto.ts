@@ -82,12 +82,13 @@ const Interfaces = IntersectTypes(Resource, Pinnable, Postable, Commentable);
   implements: Interfaces.members,
 })
 export class Language extends Interfaces {
-  static readonly Relations = {
+  static readonly Relations = (() => ({
+    ...Resource.Relations(),
     ethnologue: EthnologueLanguage,
     locations: [Location], // a child list but not creating deleting...does it still count?
-    ...Postable.Relations,
-    ...Commentable.Relations,
-  } satisfies ResourceRelationsShape;
+    ...Postable.Relations(),
+    ...Commentable.Relations(),
+  })) satisfies ResourceRelationsShape;
 
   @NameField({
     description: `The real language name`,

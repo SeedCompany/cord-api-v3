@@ -34,17 +34,17 @@ const Interfaces = IntersectTypes(Resource, Actor, Pinnable, Commentable);
 })
 @DbLabel('User', 'Actor')
 export class User extends Interfaces {
-  static readonly Relations = () =>
-    ({
-      education: [Education],
-      organization: Organization,
-      partner: Partner,
-      unavailability: [Unavailability],
-      locations: [Location],
-      knownLanguage: [KnownLanguage],
-      projects: [Project],
-      ...Commentable.Relations,
-    } satisfies ResourceRelationsShape);
+  static readonly Relations = (() => ({
+    ...Resource.Relations(),
+    education: [Education],
+    organization: Organization,
+    partner: Partner,
+    unavailability: [Unavailability],
+    locations: [Location],
+    knownLanguage: [KnownLanguage],
+    projects: [Project],
+    ...Commentable.Relations(),
+  })) satisfies ResourceRelationsShape;
 
   declare readonly __typename: 'User';
 
