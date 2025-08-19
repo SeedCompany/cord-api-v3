@@ -1,4 +1,5 @@
 import { Field, ObjectType } from '@nestjs/graphql';
+import { patchMethod } from '@seedcompany/common';
 import {
   Resource,
   type Secured,
@@ -37,3 +38,13 @@ declare module '~/core/resources/map' {
     ToolUsage: typeof e.Tool.Usage;
   }
 }
+
+declare module '~/common/resource.dto' {
+  export interface DeclareResourceRelations {
+    readonly tools: readonly [typeof ToolUsage];
+  }
+}
+patchMethod(Resource, 'Relations', (orig) => () => ({
+  ...orig(),
+  tools: [ToolUsage] as const,
+}));
