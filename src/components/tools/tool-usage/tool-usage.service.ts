@@ -92,13 +92,23 @@ export class ToolUsageService {
     return await Promise.all(
       rows.map(async (row): Promise<UsagesByTool> => {
         const tool = toolsById.get(row.tool.id)!;
-        const usages = await Promise.all(
+        const usagesRaw = await Promise.all(
           row.usages.map(async (dto) => {
             const container = await this.loadContainer(dto.container);
             return this.secure(dto, container) ?? [];
           }),
         );
-        return { tool, usages: usages.flat() };
+        const usages = usagesRaw.flat();
+        return {
+          tool,
+          usages: {
+            items: usages,
+            total: usages.length,
+            hasMore: false,
+            canRead: true,
+            canCreate: false,
+          },
+        };
       }),
     );
   }
