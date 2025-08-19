@@ -16,9 +16,10 @@ import { Comment } from './comment.dto';
   implements: [Resource],
 })
 export class CommentThread extends Resource {
-  static readonly Relations = {
+  static readonly Relations = (() => ({
+    ...Resource.Relations(),
     comments: [Comment],
-  } satisfies ResourceRelationsShape;
+  })) satisfies ResourceRelationsShape;
   static readonly Parent = 'dynamic';
 
   @Field(() => Comment)

@@ -27,6 +27,7 @@ const Interfaces = IntersectTypes(Resource, ChangesetAware);
 })
 export class Budget extends Interfaces {
   static readonly Relations = (() => ({
+    ...Resource.Relations(),
     records: [BudgetRecord],
   })) satisfies ResourceRelationsShape;
   static readonly Parent = () =>

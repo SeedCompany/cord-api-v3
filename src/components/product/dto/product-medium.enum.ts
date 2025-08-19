@@ -18,9 +18,9 @@ export const ProductMedium = makeEnum({
   values: [
     'Print',
     'Web',
-    { value: 'EBook', label: 'E-Book' },
+    { value: 'EBook', label: 'Ebook' },
     'App',
-    'TrainedStoryTellers',
+    { value: 'TrainedStoryTellers', label: 'Trained Storytellers' },
     'Audio',
     'Video',
     'Other',

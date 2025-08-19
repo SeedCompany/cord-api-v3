@@ -87,20 +87,20 @@ class Project extends Interfaces {
     ...EnhancedResource.of(Resource).props,
     'type',
   ];
-  static readonly Relations = () =>
-    ({
-      rootDirectory: Directory,
-      member: [ProjectMember], // why singular
-      otherLocations: [Location],
-      partnership: [Partnership], // why singular
-      budget: Budget, // currentBudget
-      engagement: [Engagement], // why singular
-      // edge case because it's writable for internships but not secured
-      sensitivity: undefined,
-      ...Postable.Relations,
-      changeRequests: [ProjectChangeRequest],
-      ...Commentable.Relations,
-    } satisfies ResourceRelationsShape);
+  static readonly Relations = (() => ({
+    ...Resource.Relations(),
+    rootDirectory: Directory,
+    member: [ProjectMember], // why singular
+    otherLocations: [Location],
+    partnership: [Partnership], // why singular
+    budget: Budget, // currentBudget
+    engagement: [Engagement], // why singular
+    // edge case because it's writable for internships but not secured
+    sensitivity: undefined,
+    ...Postable.Relations(),
+    changeRequests: [ProjectChangeRequest],
+    ...Commentable.Relations(),
+  })) satisfies ResourceRelationsShape;
 
   @Field(() => ProjectType)
   readonly type: ProjectType;

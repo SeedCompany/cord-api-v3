@@ -61,6 +61,9 @@ export abstract class LanguageFilters {
   @OptionalField()
   readonly registryOfLanguageVarietiesCode?: string;
 
+  @OptionalField()
+  readonly signLanguageCode?: string;
+
   readonly partnerId?: ID;
 
   @FilterField(() => EthnologueLanguageFilters)

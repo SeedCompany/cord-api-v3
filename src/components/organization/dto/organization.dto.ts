@@ -21,9 +21,10 @@ import { SecuredOrganizationTypes } from './organization-type.dto';
   implements: Resource,
 })
 export class Organization extends Resource {
-  static readonly Relations = {
+  static readonly Relations = (() => ({
+    ...Resource.Relations(),
     locations: [Location],
-  } satisfies ResourceRelationsShape;
+  })) satisfies ResourceRelationsShape;
 
   @NameField()
   @DbUnique('OrgName')

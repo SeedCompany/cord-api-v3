@@ -1,6 +1,11 @@
 import { InterfaceType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { type ID, IdField, type ResourceRelationsShape } from '~/common';
+import {
+  type ID,
+  IdField,
+  Resource,
+  type ResourceRelationsShape,
+} from '~/common';
 import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
 import { Post } from './post.dto';
@@ -12,9 +17,10 @@ import { Post } from './post.dto';
   `,
 })
 export abstract class Postable {
-  static readonly Relations = {
+  static readonly Relations = (() => ({
+    ...Resource.Relations(),
     posts: [Post],
-  } satisfies ResourceRelationsShape;
+  })) satisfies ResourceRelationsShape;
   static readonly Parent = 'dynamic';
 
   @IdField({

@@ -26,6 +26,7 @@ export const projectTransitions = () =>
     r.ProgressReportTeamNews,
     r.ProgressReportMedia,
     r.ProgressReportVarianceExplanation,
+    r.ToolUsage,
     r.StepProgress,
   ].map((it) => it.when(member).read),
 
