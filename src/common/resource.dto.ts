@@ -11,6 +11,7 @@ import {
 import { createMetadataDecorator } from '@seedcompany/nest';
 import { LazyGetter as Once } from 'lazy-get-decorator';
 import { DateTime } from 'luxon';
+import { type OmitIndexSignature } from 'type-fest';
 import type {
   ResourceDBMap,
   ResourceLike,
@@ -28,6 +29,12 @@ import { DateTimeField } from './luxon.graphql';
 import { getParentTypes } from './parent-types';
 import { type MaybeSecured, type SecuredProps } from './secured-property';
 import { type AbstractClassType } from './types';
+
+// Merge with this to declare Relations types for Resources.
+// Be sure to patch at runtime too.
+// Don't reference this type directly, other than to declaration merge.
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface DeclareResourceRelations {}
 
 const GqlClassType = createMetadataDecorator({
   key: CLASS_TYPE_METADATA,
@@ -54,7 +61,12 @@ export const resolveByTypename =
 @DbLabel('BaseNode')
 export abstract class Resource extends DataObject {
   // eslint-disable-next-line @typescript-eslint/naming-convention
-  static readonly Relations = () => ({} satisfies ResourceRelationsShape);
+  static readonly Relations =
+    (): OmitIndexSignature<DeclareResourceRelations> => {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore -- runtime needs to be patched in.
+      return {};
+    };
 
   readonly __typename?: string;
 
