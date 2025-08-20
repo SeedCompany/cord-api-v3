@@ -1,22 +1,25 @@
-import { DiscoveryService } from '@golevelup/nestjs-discovery';
 import { Injectable, type OnModuleInit } from '@nestjs/common';
+import { MetadataDiscovery } from '~/core/discovery';
 import {
   AggregateConditions,
   AndConditions,
   type Condition,
-  Optimizer,
+  type Optimizer,
   OrConditions,
 } from '../conditions';
+import { OptimizerWatermark } from '../conditions/optimizer.interface';
 
 @Injectable()
 export class ConditionOptimizer implements OnModuleInit {
   private optimizers: Optimizer[];
 
-  constructor(private readonly discovery: DiscoveryService) {}
+  constructor(private readonly discovery: MetadataDiscovery) {}
 
   async onModuleInit() {
-    const found = await this.discovery.providersWithMetaAtKey(Optimizer as any);
-    this.optimizers = found.map((p) => p.discoveredClass.instance as Optimizer);
+    this.optimizers = this.discovery
+      .discover(OptimizerWatermark)
+      .classes<Optimizer>()
+      .map((discovery) => discovery.instance);
   }
 
   optimize(condition: Condition) {
