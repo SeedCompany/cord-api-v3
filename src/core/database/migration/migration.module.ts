@@ -1,4 +1,3 @@
-import { DiscoveryModule } from '@golevelup/nestjs-discovery';
 import { Module, type OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '../../config/config.service';
 import { DatabaseService } from '../database.service';
@@ -7,7 +6,6 @@ import { MigrationRunner } from './migration-runner.service';
 import { DatabaseMigrationCommand } from './migration.command';
 
 @Module({
-  imports: [DiscoveryModule],
   providers: [MigrationRunner, MigrationDiscovery, DatabaseMigrationCommand],
 })
 export class MigrationModule implements OnModuleInit {
