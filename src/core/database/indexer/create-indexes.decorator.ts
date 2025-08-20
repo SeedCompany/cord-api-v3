@@ -1,7 +1,6 @@
-import { SetMetadata } from '@nestjs/common';
+import { createMetadataDecorator } from '@seedcompany/nest';
 import { type ILogger } from '../../logger';
 import { type DatabaseService, type ServerInfo } from '../database.service';
-import { DB_INDEX_KEY } from './indexer.constants';
 
 export type IndexMode = 'write' | 'schema';
 
@@ -11,8 +10,10 @@ export type IndexMode = 'write' | 'schema';
  * It should be used on a provider method.
  * It's passed a db Connection for convenience.
  */
-export const OnIndex = (mode: IndexMode = 'write') =>
-  SetMetadata(DB_INDEX_KEY, mode);
+export const OnIndex = createMetadataDecorator({
+  setter: (mode: IndexMode = 'write') => mode,
+  types: ['method'],
+});
 
 export interface OnIndexParams {
   db: DatabaseService;

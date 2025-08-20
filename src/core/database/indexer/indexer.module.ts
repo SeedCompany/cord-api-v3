@@ -9,8 +9,7 @@ import { many } from '~/common';
 import { ConfigService } from '../../config/config.service';
 import { ILogger, Logger } from '../../logger';
 import { DatabaseService, type ServerInfo } from '../database.service';
-import { type IndexMode } from './create-indexes.decorator';
-import { DB_INDEX_KEY } from './indexer.constants';
+import { OnIndex } from './create-indexes.decorator';
 
 @Module({
   imports: [DiscoveryModule],
@@ -28,8 +27,9 @@ export class IndexerModule implements OnModuleInit {
       return;
     }
 
-    const discovered =
-      await this.discover.providerMethodsWithMetaAtKey<IndexMode>(DB_INDEX_KEY);
+    const discovered = await this.discover.providerMethodsWithMetaAtKey<
+      (typeof OnIndex)['$value']
+    >(OnIndex.KEY);
     this.logger.debug('Discovered indexers', { count: discovered.length });
     const groupedByMode = groupToMapBy(discovered, (d) => d.meta);
 
