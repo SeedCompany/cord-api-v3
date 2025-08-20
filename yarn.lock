@@ -3142,9 +3142,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@seedcompany/common@npm:>0.3 <1, @seedcompany/common@npm:>=0.17 <1, @seedcompany/common@npm:>=0.17 <1.0.0, @seedcompany/common@npm:>=0.19.1 <1, @seedcompany/common@npm:>=0.3.0 <1.0.0":
-  version: 0.20.0
-  resolution: "@seedcompany/common@npm:0.20.0"
+"@seedcompany/common@npm:>0.3 <1, @seedcompany/common@npm:>=0.17 <1.0.0, @seedcompany/common@npm:>=0.19.1 <1, @seedcompany/common@npm:>=0.21 <1, @seedcompany/common@npm:>=0.3.0 <1.0.0":
+  version: 0.21.0
+  resolution: "@seedcompany/common@npm:0.21.0"
   dependencies:
     type-fest: "npm:^4.37.0"
   peerDependencies:
@@ -3152,7 +3152,7 @@ __metadata:
   peerDependenciesMeta:
     luxon:
       optional: true
-  checksum: 10c0/4423fd7e5f824b7cf8781ead6e00f5a9e523c86eab5c8b29fcdb67c4823abb8ac39c88cca900433f98cbd0eb21ff043c8a6587332e4b3622914bdfbb34c70cda
+  checksum: 10c0/74ee21ed9ff6033deced57ca43a1d1617fb5ff4c66fc949a03327c154218e9786bba0d981a55aab1b00d67b5c7929d45794e93f25f3329d9ac1e2e69eda5e806
   languageName: node
   linkType: hard
 
@@ -3207,16 +3207,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@seedcompany/nest@npm:^1.8.0":
-  version: 1.8.0
-  resolution: "@seedcompany/nest@npm:1.8.0"
+"@seedcompany/nest@npm:^1.12.0":
+  version: 1.12.0
+  resolution: "@seedcompany/nest@npm:1.12.0"
   dependencies:
     "@nestjs/common": "npm:^10 || ^11"
     "@nestjs/core": "npm:^10 || ^11"
     "@nestjs/graphql": "npm:^12 || ^13"
-    "@seedcompany/common": "npm:>=0.17 <1"
+    "@seedcompany/common": "npm:>=0.21 <1"
     change-case: "npm:^5.4.4"
     class-transformer: "npm:^0.5.1"
+    class-validator: "npm:^0.14.2"
     title-case: "npm:^4.3.1"
     type-fest: "npm:^4.26.1"
     uuid: "npm:^11.0.0-0"
@@ -3225,8 +3226,9 @@ __metadata:
     "@nestjs/core": ^10 || ^11
     "@nestjs/graphql": ^12 || ^13
     class-transformer: ^0.5.1
+    class-validator: ^0.14.0
     reflect-metadata: ^0.1.12 || ^0.2.0
-  checksum: 10c0/89869ca09f16602d920bc1c2303e479116d87f04da61034042ddcf1d6a5b456d7e824b393fb752693cf04a73f87bf707f371da14cdf5134b9075aacb9154b3b5
+  checksum: 10c0/2c86ef7643963663e2a6481adc690662e0495eed31ff84a7409e8c1761bbb03e547cb25812b9260fccaed399a02bc3f0627e35a50b78225bf03a0e27239e5f8e
   languageName: node
   linkType: hard
 
@@ -5505,14 +5507,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"class-validator@npm:^0.14.0":
-  version: 0.14.1
-  resolution: "class-validator@npm:0.14.1"
+"class-validator@npm:^0.14.0, class-validator@npm:^0.14.2":
+  version: 0.14.2
+  resolution: "class-validator@npm:0.14.2"
   dependencies:
     "@types/validator": "npm:^13.11.8"
-    libphonenumber-js: "npm:^1.10.53"
+    libphonenumber-js: "npm:^1.11.1"
     validator: "npm:^13.9.0"
-  checksum: 10c0/946e914e47548b5081449c720ea6a4877bac63dc960e14fca4b990b56e64efe3802d12f07ec22d6420c290245b72ea2d646939239f2a3b597794e6c4c2a4f2ae
+  checksum: 10c0/5bb67389d38fa23d342dffdd8e2dcee8235e1906e59799df5b2050278a6d89292fcaa88167f0215e3ddd684f47dcd51b004efa7be32d8aded91ee06cb317b3b8
   languageName: node
   linkType: hard
 
@@ -5901,7 +5903,7 @@ __metadata:
     "@seedcompany/common": "npm:>=0.19.1 <1"
     "@seedcompany/data-loader": "npm:^2.0.1"
     "@seedcompany/eslint-plugin": "npm:^3.4.1"
-    "@seedcompany/nest": "npm:^1.8.0"
+    "@seedcompany/nest": "npm:^1.12.0"
     "@seedcompany/nestjs-email": "npm:^4.3.0"
     "@seedcompany/scripture": "npm:>=0.8.0"
     "@tsconfig/strictest": "npm:^2.0.2"
@@ -9927,10 +9929,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"libphonenumber-js@npm:^1.10.53":
-  version: 1.12.7
-  resolution: "libphonenumber-js@npm:1.12.7"
-  checksum: 10c0/ac732b5e8bfe093b4c2aa470a69f52304ebe7cfefebe3ef902ba0cbbf2c159da00993cae0425c7e497961ca015d46082925f37a6c8626b07e98e1bb9e45414cb
+"libphonenumber-js@npm:^1.11.1":
+  version: 1.12.12
+  resolution: "libphonenumber-js@npm:1.12.12"
+  checksum: 10c0/67b1e3f2e13d516860727a6837cdbe9cf94497a390ee7304f2666747798f534368f0772c5b5afe904188c86f243c713f55e9338f2c164a1a75d39bca110cb2b2
   languageName: node
   linkType: hard
 
