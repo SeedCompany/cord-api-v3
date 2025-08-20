@@ -1,3 +1,4 @@
+import { Injectable } from '@nestjs/common';
 import { Command, Option } from 'clipanion';
 import { $, execa } from 'execa';
 import { realpath } from 'node:fs/promises';
@@ -5,13 +6,14 @@ import { tmpdir as getTempDir } from 'node:os';
 import { InjectableCommand } from '~/core';
 import { GelAccessPolicyInjector } from './access-policy.injector';
 
-@InjectableCommand()
+@Injectable()
 abstract class ApCommand extends Command {
   constructor(protected readonly injector: GelAccessPolicyInjector) {
     super();
   }
 }
 
+@InjectableCommand()
 export class GelAccessPolicyWrapCommand extends ApCommand {
   static paths = [['gel']];
   static usage = Command.Usage({
@@ -51,6 +53,7 @@ export class GelAccessPolicyWrapCommand extends ApCommand {
   }
 }
 
+@InjectableCommand()
 export class GelAccessPolicyInjectCommand extends ApCommand {
   static paths = [['gel', 'ap', 'inject']];
   static usage = Command.Usage({
@@ -63,6 +66,7 @@ export class GelAccessPolicyInjectCommand extends ApCommand {
   }
 }
 
+@InjectableCommand()
 export class GelAccessPolicyEjectCommand extends ApCommand {
   static paths = [['gel', 'ap', 'eject']];
   static usage = Command.Usage({
