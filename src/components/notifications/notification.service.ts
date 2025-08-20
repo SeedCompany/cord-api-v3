@@ -1,4 +1,3 @@
-import { DiscoveryService } from '@golevelup/nestjs-discovery';
 import {
   forwardRef,
   Inject,
@@ -13,6 +12,7 @@ import {
   ServerException,
   type UnsecuredDto,
 } from '~/common';
+import { MetadataDiscovery } from '~/core/discovery';
 import {
   type MarkNotificationReadArgs,
   type Notification,
@@ -62,7 +62,7 @@ export class NotificationServiceImpl
   >;
   readonly ready = new ((Event as any).default as typeof Event)();
 
-  constructor(private readonly discovery: DiscoveryService) {
+  constructor(private readonly discovery: MetadataDiscovery) {
     super();
   }
 
@@ -88,11 +88,8 @@ export class NotificationServiceImpl
   }
 
   async onModuleInit() {
-    const discovered = await this.discovery.providersWithMetaAtKey<
-      ResourceShape<Notification>
-    >(NotificationStrategy.KEY);
-    this.strategyMap = mapEntries(discovered, ({ meta, discoveredClass }) => {
-      const { instance } = discoveredClass;
+    const discovered = this.discovery.discover(NotificationStrategy).classes();
+    this.strategyMap = mapEntries(discovered, ({ meta, instance }) => {
       if (!(instance instanceof INotificationStrategy)) {
         throw new ServerException(
           `Strategy for ${meta.name} does not implement INotificationStrategy`,
