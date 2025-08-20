@@ -1,12 +1,9 @@
-import {
-  type DiscoveredClassWithMeta,
-  DiscoveryService,
-} from '@golevelup/nestjs-discovery';
 import { Injectable, type OnModuleInit } from '@nestjs/common';
 import { entries, mapEntries, mapValues, setOf } from '@seedcompany/common';
 import { pick, startCase } from 'lodash';
 import { type DeepWritable, type Writable } from 'ts-essentials';
 import { type EnhancedResource, many, type Role } from '~/common';
+import { type DiscoveredClass, MetadataDiscovery } from '~/core/discovery';
 import { ResourcesHost } from '~/core/resources';
 import { Power } from '../dto';
 import { ChildListAction, ChildSingleAction } from './actions';
@@ -15,10 +12,7 @@ import {
   type Permission,
   type Permissions,
 } from './builder/perm-granter';
-import {
-  POLICY_METADATA_KEY,
-  type PolicyMetadata,
-} from './builder/policy.decorator';
+import { Policy as PolicyMetadata } from './builder/policy.decorator';
 import { all, any, Condition } from './conditions';
 import { type ResourcesGranter } from './granters';
 import { GrantersFactory } from './granters.factory';
@@ -53,7 +47,7 @@ export class PolicyFactory implements OnModuleInit {
 
   constructor(
     private readonly grantersFactory: GrantersFactory,
-    private readonly discovery: DiscoveryService,
+    private readonly discovery: MetadataDiscovery,
     private readonly resourcesHost: ResourcesHost,
   ) {}
 
@@ -72,10 +66,9 @@ export class PolicyFactory implements OnModuleInit {
   }
 
   async onModuleInit() {
-    const discoveredPolicies =
-      await this.discovery.providersWithMetaAtKey<PolicyMetadata>(
-        POLICY_METADATA_KEY,
-      );
+    const discoveredPolicies = this.discovery
+      .discover(PolicyMetadata)
+      .classes();
 
     const resGranter = await this.grantersFactory.makeGranters();
 
@@ -99,9 +92,9 @@ export class PolicyFactory implements OnModuleInit {
 
   private buildPlainPolicy(
     resGranter: ResourcesGranter,
-    { meta, discoveredClass }: DiscoveredClassWithMeta<PolicyMetadata>,
+    { meta, instance }: DiscoveredClass<(typeof PolicyMetadata)['$value']>,
   ): PlainPolicy {
-    const name = startCase(discoveredClass.name.replace(/Policy$/, ''));
+    const name = startCase(instance.constructor.name.replace(/Policy$/, ''));
 
     const roles = meta.role === 'all' ? undefined : setOf(many(meta.role));
 
