@@ -160,6 +160,7 @@ export const momentumProjectsTransitions = () =>
             // Only allow until financial endorsement
             // field('step', stepsUntilFinancialEndorsement),
           ).edit,
+        p.departmentId.read,
       ])
       .children((c) => c.posts.read.create),
     r.ProjectMember.read.when(member).edit.create.delete,
