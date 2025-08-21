@@ -6,9 +6,10 @@ import * as PM from './project-manager.policy';
   Role.assignable(r, [Role.ProjectManager]),
 
   r.Partnership.read,
-  r.Project.when(member).edit.specifically(
-    (p) => p.rootDirectory.edit.when(sensMediumOrLower).read,
-  ),
+  r.Project.when(member).edit.specifically((p) => [
+    p.rootDirectory.edit.when(sensMediumOrLower).read,
+    p.departmentId.read,
+  ]),
   r.ProjectWorkflowEvent.transitions(
     PM.projectTransitions,
     PM.momentumProjectsTransitions,

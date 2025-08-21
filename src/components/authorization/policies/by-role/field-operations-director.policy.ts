@@ -13,7 +13,7 @@ import { Policy, Role } from '../util';
   ]),
   r.Producible.edit.create,
   r.Product.edit.create.delete,
-  r.Project.edit,
+  r.Project.edit.specifically((p) => [p.departmentId.read]),
   r.ProjectMember.edit.create.delete,
   r.ProjectWorkflowEvent.read.transitions(
     'Field Ops Approves Proposal',
