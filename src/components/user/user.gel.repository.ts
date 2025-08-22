@@ -84,4 +84,8 @@ export class UserGelRepository
   hydrateAsNeo4j(): never {
     throw new NotImplementedException();
   }
+
+  getPrimaryOrganizationId(userId: ID): Promise<ID | null> {
+    throw new NotImplementedException().with({ userId });
+  }
 }
