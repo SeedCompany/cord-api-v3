@@ -8,5 +8,7 @@ export const CommandWatermark = createMetadataDecorator({
   additionalDecorators: [Injectable()],
 });
 
-export const InjectableCommand = () => (cls: AbstractClass<Command>) =>
-  CommandWatermark()(cls);
+export const InjectableCommand =
+  () =>
+  <Cls extends AbstractClass<Command>>(cls: Cls) =>
+    CommandWatermark()(cls);

@@ -8,7 +8,10 @@ export const OptimizerWatermark = createMetadataDecorator({
 });
 
 export abstract class Optimizer {
-  static register = () => (cls: Type<Optimizer>) => OptimizerWatermark()(cls);
+  static register =
+    () =>
+    <Cls extends Type<Optimizer>>(cls: Cls) =>
+      OptimizerWatermark()(cls);
 
   abstract optimize(condition: Condition): Condition;
 }

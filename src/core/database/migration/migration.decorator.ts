@@ -14,5 +14,6 @@ export const MigrationVersion = createMetadataDecorator({
 });
 
 export const Migration =
-  (isoTime: string) => (cls: AbstractClass<BaseMigration>) =>
+  (isoTime: string) =>
+  <Cls extends AbstractClass<BaseMigration>>(cls: Cls) =>
     MigrationVersion(isoTime)(cls);
