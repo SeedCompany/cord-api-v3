@@ -1,13 +1,13 @@
 import {
-  Button,
-  Column,
-  HideInText,
+  EmailTemplate,
+  Heading,
+  InHtml,
   InText,
-  Section,
-  Text,
-} from '@seedcompany/nestjs-email/templates';
-import { EmailTemplate, Heading, Link, ReplyInfoFooter } from './base';
-import { useFrontendUrl } from './frontend-url';
+  Link,
+  Mjml,
+  ReplyInfoFooter,
+  useFrontendUrl,
+} from '../../email';
 
 export interface ForgotPasswordProps {
   token: string;
@@ -19,17 +19,19 @@ export function ForgotPassword({ token }: ForgotPasswordProps) {
     <EmailTemplate title="Reset Password" preview={null}>
       <Heading>We received your password reset request</Heading>
 
-      <Section>
-        <Column>
-          <Text align="center">If it was you, create a new password here</Text>
-          <HideInText>
-            <Button href={url}>CONFIRM</Button>
-          </HideInText>
+      <Mjml.Section>
+        <Mjml.Column>
+          <Mjml.Text align="center">
+            If it was you, create a new password here
+          </Mjml.Text>
+          <InHtml>
+            <Mjml.Button href={url}>CONFIRM</Mjml.Button>
+          </InHtml>
           <InText>
             <Link href={url} />
           </InText>
-        </Column>
-      </Section>
+        </Mjml.Column>
+      </Mjml.Section>
 
       <ReplyInfoFooter />
     </EmailTemplate>

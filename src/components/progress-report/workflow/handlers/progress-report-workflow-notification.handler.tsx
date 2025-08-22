@@ -1,5 +1,4 @@
 import { entries, mapEntries } from '@seedcompany/common';
-import { EmailService } from '@seedcompany/nestjs-email';
 import { type RequireExactlyOne } from 'type-fest';
 import { type ID, Role, type UnsecuredDto } from '~/common';
 import {
@@ -10,16 +9,17 @@ import {
   Logger,
 } from '~/core';
 import { Identity } from '~/core/authentication';
-import {
-  type ProgressReportStatusChangedProps as EmailReportStatusNotification,
-  ProgressReportStatusChanged,
-} from '~/core/email/templates/progress-report-status-changed.template';
+import { MailerService } from '~/core/email';
 import { LanguageService } from '../../../language';
 import { PeriodicReportService } from '../../../periodic-report';
 import { ProjectService } from '../../../project';
 import { UserService } from '../../../user';
 import { type ProgressReportStatus as Status } from '../../dto';
 import { type ProgressReportWorkflowEvent } from '../dto/workflow-event.dto';
+import {
+  type ProgressReportStatusChangedProps as EmailReportStatusNotification,
+  ProgressReportStatusChanged,
+} from '../emails/progress-report-status-changed.email';
 import { WorkflowUpdatedEvent } from '../events/workflow-updated.event';
 import { ProgressReportWorkflowRepository } from '../progress-report-workflow.repository';
 import { ProgressReportWorkflowService } from '../progress-report-workflow.service';
@@ -43,7 +43,7 @@ export class ProgressReportWorkflowNotificationHandler
     private readonly projectService: ProjectService,
     private readonly languageService: LanguageService,
     private readonly reportService: PeriodicReportService,
-    private readonly emailService: EmailService,
+    private readonly mailer: MailerService,
     private readonly workflowService: ProgressReportWorkflowService,
     @Logger('progress-report:status-change-notifier')
     private readonly logger: ILogger,
@@ -95,11 +95,12 @@ export class ProgressReportWorkflowNotificationHandler
 
     for (const notification of notifications) {
       if (notification.recipient.email.value) {
-        await this.emailService.send(
-          notification.recipient.email.value,
-          ProgressReportStatusChanged,
-          notification,
-        );
+        await this.mailer
+          .compose(
+            notification.recipient.email.value,
+            <ProgressReportStatusChanged {...notification} />,
+          )
+          .send();
       }
     }
   }
