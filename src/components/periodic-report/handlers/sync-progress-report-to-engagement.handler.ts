@@ -1,6 +1,8 @@
+import { Injectable } from '@nestjs/common';
 import { Settings } from 'luxon';
 import { DateInterval, type UnsecuredDto } from '~/common';
-import { EventsHandler, type IEventHandler, ILogger, Logger } from '~/core';
+import { ILogger, Logger } from '~/core';
+import { OnHook } from '~/core/hooks';
 import { EngagementService } from '../../engagement';
 import { type Engagement, engagementRange } from '../../engagement/dto';
 import {
@@ -15,20 +17,8 @@ import {
   type Intervals,
 } from './abstract-periodic-report-sync';
 
-type SubscribedEvent =
-  | EngagementCreatedEvent
-  | EngagementUpdatedEvent
-  | ProjectUpdatedEvent;
-
-@EventsHandler(
-  EngagementCreatedEvent,
-  EngagementUpdatedEvent,
-  ProjectUpdatedEvent,
-)
-export class SyncProgressReportToEngagementDateRange
-  extends AbstractPeriodicReportSync
-  implements IEventHandler<SubscribedEvent>
-{
+@Injectable()
+export class SyncProgressReportToEngagementDateRange extends AbstractPeriodicReportSync {
   constructor(
     periodicReports: PeriodicReportService,
     private readonly engagements: EngagementService,
@@ -37,7 +27,15 @@ export class SyncProgressReportToEngagementDateRange
     super(periodicReports);
   }
 
-  async handle(event: SubscribedEvent) {
+  @OnHook(EngagementCreatedEvent)
+  @OnHook(EngagementUpdatedEvent)
+  @OnHook(ProjectUpdatedEvent)
+  async handle(
+    event:
+      | EngagementCreatedEvent
+      | EngagementUpdatedEvent
+      | ProjectUpdatedEvent,
+  ) {
     // Only LanguageEngagements
     if (
       !(
