@@ -1,9 +1,19 @@
-import { applyDecorators, Injectable, SetMetadata } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { createMetadataDecorator } from '@seedcompany/nest';
 import { DateTime } from 'luxon';
+import type { AbstractClass } from 'type-fest';
+import { type BaseMigration } from './base-migration.service';
 
 export const DB_MIGRATION_KEY = 'ON_DB_INDEX';
 
-export const Migration = (isoTime: string) => {
-  const dt = DateTime.fromISO(isoTime); // TODO validate, better error
-  return applyDecorators(Injectable(), SetMetadata(DB_MIGRATION_KEY, dt));
-};
+export const MigrationVersion = createMetadataDecorator({
+  key: DB_MIGRATION_KEY,
+  setter: (isoTime: string) => DateTime.fromISO(isoTime),
+  types: ['class'],
+  additionalDecorators: [Injectable()],
+});
+
+export const Migration =
+  (isoTime: string) =>
+  <Cls extends AbstractClass<BaseMigration>>(cls: Cls) =>
+    MigrationVersion(isoTime)(cls);

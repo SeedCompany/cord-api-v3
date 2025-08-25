@@ -1,4 +1,3 @@
-import { DiscoveryService } from '@golevelup/nestjs-discovery';
 import { Injectable, type OnApplicationBootstrap } from '@nestjs/common';
 import {
   type FnLike,
@@ -8,13 +7,10 @@ import {
 } from '@seedcompany/common';
 import { stripIndent } from 'common-tags';
 import { type ID, ServerException } from '~/common';
+import { MetadataDiscovery } from '~/core/discovery';
 import { ILogger, Logger } from '../logger';
-import {
-  EVENT_METADATA,
-  type EventHandlerMetadata,
-  EVENTS_HANDLER_METADATA,
-} from './constants';
-import { type IEventHandler } from './event-handler.decorator';
+import { EVENT_METADATA } from './constants';
+import { EventsHandler, type IEventHandler } from './event-handler.decorator';
 
 /**
  * An event bus for internal use.
@@ -30,7 +26,7 @@ export class SyncEventBus implements IEventBus, OnApplicationBootstrap {
   private listenerMap: Record<ID, FnLike[]> = {};
 
   constructor(
-    private readonly discovery: DiscoveryService,
+    private readonly discovery: MetadataDiscovery,
     @Logger('event-bus') private readonly logger: ILogger,
   ) {}
 
@@ -59,15 +55,14 @@ export class SyncEventBus implements IEventBus, OnApplicationBootstrap {
   }
 
   async onApplicationBootstrap() {
-    const discovered =
-      await this.discovery.providersWithMetaAtKey<EventHandlerMetadata>(
-        EVENTS_HANDLER_METADATA,
-      );
+    const discovered = this.discovery
+      .discover(EventsHandler)
+      .classes<IEventHandler<any>>();
 
     if (process.env.NODE_ENV !== 'production') {
       const defined = new Set<string>();
       for (const entry of discovered) {
-        const name = entry.discoveredClass.name;
+        const name = entry.instance.constructor.name;
         if (defined.has(name)) {
           throw new ServerException(stripIndent`
             Event handler "${name}" has already been defined.
@@ -78,10 +73,9 @@ export class SyncEventBus implements IEventBus, OnApplicationBootstrap {
       }
     }
 
-    const flat = discovered.flatMap((entry) => {
-      const instance = entry.discoveredClass.instance as IEventHandler<any>;
+    const flat = discovered.flatMap(({ instance, meta }) => {
       const handler = instance.handle.bind(instance);
-      return [...entry.meta].map(([id, priority]) => ({
+      return [...meta].map(([id, priority]) => ({
         id,
         priority,
         handler,

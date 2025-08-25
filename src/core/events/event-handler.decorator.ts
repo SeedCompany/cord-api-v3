@@ -1,12 +1,8 @@
 import { type Type } from '@nestjs/common';
+import { createMetadataDecorator } from '@seedcompany/nest';
 import { nanoid } from 'nanoid';
 import { type ID } from '~/common';
-import {
-  EVENT_METADATA,
-  type EventHandlerMetadata,
-  EVENTS_HANDLER_METADATA,
-  type Priority,
-} from './constants';
+import { EVENT_METADATA, type Priority } from './constants';
 
 /**
  * Subscribe to these given events.
@@ -25,10 +21,10 @@ import {
  * )
  * ```
  */
-export const EventsHandler =
-  (...events: Array<Type | [...Type[], Priority]>): ClassDecorator =>
-  (target) => {
-    const metadata: EventHandlerMetadata = new Map<ID, Priority>();
+export const EventsHandler = createMetadataDecorator({
+  types: ['class'],
+  setter: (...events: Array<Type | [...Type[], Priority]>) => {
+    const metadata = new Map<ID, Priority>();
 
     for (const arg of events) {
       let priority: Priority = 0;
@@ -45,8 +41,9 @@ export const EventsHandler =
       }
     }
 
-    Reflect.defineMetadata(EVENTS_HANDLER_METADATA, metadata, target);
-  };
+    return metadata;
+  },
+});
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export interface IEventHandler<T> {

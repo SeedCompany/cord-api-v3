@@ -1,10 +1,10 @@
-import { DiscoveryService } from '@golevelup/nestjs-discovery';
-import { Injectable } from '@nestjs/common';
+import { Injectable, type Type } from '@nestjs/common';
 import { many, mapEntries } from '@seedcompany/common';
 import { mapValues } from 'lodash';
-import { EnhancedResource } from '~/common';
+import { EnhancedResource, type ResourceShape } from '~/common';
+import { MetadataDiscovery } from '~/core/discovery';
 import { ResourcesHost } from '~/core/resources';
-import { discover } from './builder/granter.decorator';
+import { Granter } from './builder/granter.decorator';
 import {
   DefaultResourceGranter,
   ResourceGranter,
@@ -14,21 +14,23 @@ import { type ResourcesGranter } from './granters';
 @Injectable()
 export class GrantersFactory {
   constructor(
-    private readonly discovery: DiscoveryService,
+    private readonly discovery: MetadataDiscovery,
     private readonly resourcesHost: ResourcesHost,
   ) {}
 
   async makeGranters() {
-    const discoveredGranters = await discover(this.discovery);
+    const discoveredGranters = this.discovery
+      .discover(Granter)
+      .classes<ResourceGranter<ResourceShape<any>>>();
 
     const custom = Object.assign(
       {},
       ...discoveredGranters.map(
-        ({ meta: { resources, factory }, discoveredClass }) =>
+        ({ meta: { resources, factory }, instance }) =>
           mapEntries(many(resources), (raw) => {
             const res = EnhancedResource.of(raw);
-            const granter =
-              factory?.(res) ?? new discoveredClass.dependencyType(res);
+            const GranterImpl = instance.constructor as Type<ResourcesGranter>;
+            const granter = factory?.(res) ?? new GranterImpl(res);
             if (!(granter instanceof ResourceGranter)) {
               throw new Error(
                 `Granter for ${res.name} must extend ResourceGranter class`,

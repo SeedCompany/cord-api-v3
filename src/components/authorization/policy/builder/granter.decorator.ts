@@ -1,5 +1,4 @@
-import { type DiscoveryService } from '@golevelup/nestjs-discovery';
-import { SetMetadata } from '@nestjs/common';
+import { createMetadataDecorator } from '@seedcompany/nest';
 import { type EnhancedResource, type Many, type ResourceShape } from '~/common';
 import { type ResourceGranter } from './resource-granter';
 
@@ -27,25 +26,12 @@ import { type ResourceGranter } from './resource-granter';
  *   }
  * }
  */
-export const Granter = (
-  resources: GranterMetadata['resources'],
-  factory?: GranterMetadata['factory'],
-): ClassDecorator =>
-  SetMetadata<any, GranterMetadata>(GRANTER_FACTORY_METADATA_KEY, {
-    resources,
-    factory,
-  });
-
-export const discover = (discovery: DiscoveryService) =>
-  discovery.providersWithMetaAtKey<GranterMetadata>(
-    GRANTER_FACTORY_METADATA_KEY,
-  );
-
-const GRANTER_FACTORY_METADATA_KEY = Symbol('GranterFactory');
-
-interface GranterMetadata {
-  resources: Many<ResourceShape<any>>;
-  factory?: <TResourceStatic extends ResourceShape<any>>(
-    resource: EnhancedResource<TResourceStatic>,
-  ) => ResourceGranter<TResourceStatic>;
-}
+export const Granter = createMetadataDecorator({
+  setter: (
+    resources: Many<ResourceShape<any>>,
+    factory?: <TResourceStatic extends ResourceShape<any>>(
+      resource: EnhancedResource<TResourceStatic>,
+    ) => ResourceGranter<TResourceStatic>,
+  ) => ({ resources, factory }),
+  types: ['class'],
+});

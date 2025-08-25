@@ -1,4 +1,3 @@
-import { DiscoveryService } from '@golevelup/nestjs-discovery';
 import { Injectable } from '@nestjs/common';
 import {
   AbstractGraphQLDriver as AbstractDriver,
@@ -16,6 +15,7 @@ import {
 import { AsyncLocalStorage } from 'node:async_hooks';
 import type { WebSocket } from 'ws';
 import { type GqlContextType } from '~/common';
+import { MetadataDiscovery } from '~/core/discovery';
 import { HttpAdapter, type IRequest } from '../http';
 import { type IResponse } from '../http/types';
 import { Plugin } from './plugin.decorator';
@@ -34,7 +34,7 @@ export class Driver extends AbstractDriver<DriverConfig> {
   private yoga: YogaServerInstance<ServerContext, {}>;
 
   constructor(
-    private readonly discovery: DiscoveryService,
+    private readonly discovery: MetadataDiscovery,
     private readonly http: HttpAdapter,
   ) {
     super();
@@ -44,12 +44,10 @@ export class Driver extends AbstractDriver<DriverConfig> {
     const fastify = this.http.getInstance();
 
     // Do our plugin discovery / registration
-    const discoveredPlugins = await this.discovery.providersWithMetaAtKey(
-      Plugin.KEY,
-    );
+    const discoveredPlugins = this.discovery.discover(Plugin).classes<Plugin>();
     options.plugins = [
       ...(options.plugins ?? []),
-      ...new Set(discoveredPlugins.map((cls) => cls.discoveredClass.instance)),
+      ...discoveredPlugins.map((cls) => cls.instance),
     ];
 
     this.yoga = createYoga({
