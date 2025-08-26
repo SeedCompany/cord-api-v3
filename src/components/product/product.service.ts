@@ -28,15 +28,12 @@ import {
   DerivativeScriptureProduct,
   DirectScriptureProduct,
   getAvailableSteps,
-  MethodologyToApproach,
   OtherProduct,
   ProducibleType,
   Product,
-  type ProductApproach,
   type ProductCompletionDescriptionSuggestionsInput,
   type ProductListInput,
   type ProductListOutput,
-  type ProductMethodology,
   resolveProductType,
   type UpdateDerivativeScriptureProduct,
   type UpdateDirectScriptureProduct,
@@ -499,14 +496,6 @@ export class ProductService {
   ) {
     const refs = await this.repo.listIdsWithProducibleNames(engagementId, type);
     return mapEntries(refs, ({ id, name }) => [name, id]).asMap;
-  }
-
-  protected getMethodologiesByApproach(
-    approach: ProductApproach,
-  ): ProductMethodology[] {
-    return Object.keys(MethodologyToApproach).filter(
-      (key) => MethodologyToApproach[key as ProductMethodology] === approach,
-    ) as ProductMethodology[];
   }
 
   async suggestCompletionDescriptions(
