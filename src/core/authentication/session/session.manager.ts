@@ -9,11 +9,11 @@ import {
   ServerException,
   UnauthorizedException,
 } from '~/common';
-import { IEventBus } from '~/core/events';
+import { Hooks } from '~/core/hooks';
 import { ILogger, Logger } from '~/core/logger';
 import { SystemAgentRepository } from '../../../components/user/system-agent.repository';
 import { AuthenticationRepository } from '../authentication.repository';
-import { CanImpersonateEvent } from '../events/can-impersonate.event';
+import { CanImpersonateHook } from '../hooks/can-impersonate.hook';
 import { JwtService } from '../jwt.service';
 import { NoSessionException } from './no-session.exception';
 import { Session } from './session.dto';
@@ -26,7 +26,7 @@ import { SessionHost } from './session.host';
 export class SessionManager {
   constructor(
     private readonly agents: SystemAgentRepository,
-    private readonly events: IEventBus,
+    private readonly hooks: Hooks,
     private readonly jwt: JwtService,
     private readonly sessionHost: SessionHost,
     private readonly repo: AuthenticationRepository,
@@ -105,11 +105,11 @@ export class SessionManager {
     if (impersonatee) {
       const allowImpersonation = new Poll();
       await this.sessionHost.withSession(requesterSession, async () => {
-        const event = new CanImpersonateEvent(
+        const event = new CanImpersonateHook(
           requesterSession,
           allowImpersonation,
         );
-        await this.events.publish(event);
+        await this.hooks.run(event);
       });
       if (!(allowImpersonation.plurality && !allowImpersonation.vetoed)) {
         // Don't expose what the requester is unable to do as this could leak

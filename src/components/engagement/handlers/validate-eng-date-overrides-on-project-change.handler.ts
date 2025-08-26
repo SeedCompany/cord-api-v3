@@ -1,14 +1,14 @@
+import { Injectable } from '@nestjs/common';
 import { DateOverrideConflictException, EnhancedResource } from '~/common';
-import { EventsHandler, type IEventHandler } from '~/core';
+import { OnHook } from '~/core/hooks';
 import { ProjectUpdatedEvent } from '../../project/events';
 import { EngagementService } from '../engagement.service';
 
-@EventsHandler([ProjectUpdatedEvent, 10])
-export class ValidateEngDateOverridesOnProjectChangeHandler
-  implements IEventHandler<ProjectUpdatedEvent>
-{
+@Injectable()
+export class ValidateEngDateOverridesOnProjectChangeHandler {
   constructor(private readonly engagements: EngagementService) {}
 
+  @OnHook(ProjectUpdatedEvent, -10)
   async handle(event: ProjectUpdatedEvent) {
     const { updated: project, changes } = event;
 

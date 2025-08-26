@@ -103,6 +103,11 @@ const restrictedImports = [
     path: 'gql.tada',
     replacement: { path: '~/graphql' },
   },
+  {
+    path: '@seedcompany/nest/hooks',
+    replacement: { path: '~/core/hooks' },
+    message: 'Reference from core instead to keep loose coupling',
+  },
 ];
 
 const namingConvention = [

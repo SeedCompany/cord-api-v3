@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
-import { IEventBus, SyncEventBus } from './event-bus.service';
+import { IEventBus } from './event-bus.service';
 
 @Module({
-  providers: [SyncEventBus, { provide: IEventBus, useExisting: SyncEventBus }],
+  providers: [IEventBus],
   exports: [IEventBus],
 })
 export class EventsModule {}

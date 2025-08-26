@@ -7,7 +7,7 @@ import {
   SessionExtraInfoResolver,
 } from './authorization.resolver';
 import { BetaFeaturesGranter } from './dto/beta-features.dto';
-import { CanImpersonateHandler } from './handler/can-impersonate.handler';
+import { CanImpersonateViaPrivilegesHandler } from './handler/can-impersonate-via-privileges.handler';
 import * as Policies from './policies';
 import { PolicyModule } from './policy/policy.module';
 
@@ -19,7 +19,7 @@ import { PolicyModule } from './policy/policy.module';
     LoginExtraInfoResolver,
     RegisterExtraInfoResolver,
     SessionExtraInfoResolver,
-    CanImpersonateHandler,
+    CanImpersonateViaPrivilegesHandler,
     ...Object.values(Policies),
     AssignableRolesGranter,
     BetaFeaturesGranter,
