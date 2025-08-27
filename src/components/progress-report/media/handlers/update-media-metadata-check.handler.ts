@@ -20,6 +20,6 @@ export class ProgressReportUpdateMediaMetadataCheckHandler {
     const reportMedia = await this.resources.load(ReportMedia, reportMediaId);
     const allowed = this.privileges.for(ReportMedia, reportMedia).can('edit');
 
-    event.allowUpdate.vote(allowed);
+    event.allowUpdate.vote(this, allowed);
   }
 }

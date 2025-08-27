@@ -4,7 +4,7 @@ import { DateTime } from 'luxon';
 import type { Writable } from 'ts-essentials';
 import {
   type ID,
-  Poll,
+  Polls,
   type Role,
   ServerException,
   UnauthorizedException,
@@ -103,15 +103,16 @@ export class SessionManager {
       : requesterSession;
 
     if (impersonatee) {
-      const allowImpersonation = new Poll();
+      const allowImpersonationPoll = new Polls.Poll<boolean>();
       await this.sessionHost.withSession(requesterSession, async () => {
         const event = new CanImpersonateHook(
           requesterSession,
-          allowImpersonation,
+          allowImpersonationPoll.ballotBox,
         );
         await this.hooks.run(event);
       });
-      if (!(allowImpersonation.plurality && !allowImpersonation.vetoed)) {
+      const allow = allowImpersonationPoll.close().winner ?? false;
+      if (!allow) {
         // Don't expose what the requester is unable to do as this could leak
         // private information.
         throw new UnauthorizedException(
