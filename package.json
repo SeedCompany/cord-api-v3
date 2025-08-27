@@ -48,7 +48,7 @@
     "@nestjs/platform-fastify": "^11.1.0",
     "@patarapolw/prettyprint": "^1.0.3",
     "@seedcompany/cache": "^3.0.2",
-    "@seedcompany/common": ">=0.19.1 <1",
+    "@seedcompany/common": ">=0.22 <1",
     "@seedcompany/data-loader": "^2.0.1",
     "@seedcompany/nest": "^1.12.0",
     "@seedcompany/nestjs-email": "^4.3.0",

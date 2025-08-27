@@ -3142,9 +3142,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@seedcompany/common@npm:>0.3 <1, @seedcompany/common@npm:>=0.17 <1.0.0, @seedcompany/common@npm:>=0.19.1 <1, @seedcompany/common@npm:>=0.21 <1, @seedcompany/common@npm:>=0.3.0 <1.0.0":
-  version: 0.21.0
-  resolution: "@seedcompany/common@npm:0.21.0"
+"@seedcompany/common@npm:>0.3 <1, @seedcompany/common@npm:>=0.17 <1.0.0, @seedcompany/common@npm:>=0.21 <1, @seedcompany/common@npm:>=0.22 <1, @seedcompany/common@npm:>=0.3.0 <1.0.0":
+  version: 0.22.0
+  resolution: "@seedcompany/common@npm:0.22.0"
   dependencies:
     type-fest: "npm:^4.37.0"
   peerDependencies:
@@ -3152,7 +3152,7 @@ __metadata:
   peerDependenciesMeta:
     luxon:
       optional: true
-  checksum: 10c0/74ee21ed9ff6033deced57ca43a1d1617fb5ff4c66fc949a03327c154218e9786bba0d981a55aab1b00d67b5c7929d45794e93f25f3329d9ac1e2e69eda5e806
+  checksum: 10c0/90c39719add1cdc2c1615efb8cd1bcc2637adae6d02d0dab7025e8043257581932799865912e32596816a02d7226ce04732d4ef8cba27b8fb0fc2d104fd3aae3
   languageName: node
   linkType: hard
 
@@ -5900,7 +5900,7 @@ __metadata:
     "@nestjs/testing": "npm:^11.1.0"
     "@patarapolw/prettyprint": "npm:^1.0.3"
     "@seedcompany/cache": "npm:^3.0.2"
-    "@seedcompany/common": "npm:>=0.19.1 <1"
+    "@seedcompany/common": "npm:>=0.22 <1"
     "@seedcompany/data-loader": "npm:^2.0.1"
     "@seedcompany/eslint-plugin": "npm:^3.4.1"
     "@seedcompany/nest": "npm:^1.12.0"
