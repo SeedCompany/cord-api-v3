@@ -39,7 +39,7 @@ export * from './pagination.input';
 export * from './pagination-list';
 export * from './grandparent.middleware';
 export * from './parent-types';
-export * from './poll';
+export { Polls } from '@seedcompany/common';
 export * from './resource.dto';
 export * from './role.dto';
 export * from './secured-list';

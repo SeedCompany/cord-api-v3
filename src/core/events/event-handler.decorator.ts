@@ -1,12 +1,5 @@
 import { type Type } from '@nestjs/common';
-import { nanoid } from 'nanoid';
-import { type ID } from '~/common';
-import {
-  EVENT_METADATA,
-  type EventHandlerMetadata,
-  EVENTS_HANDLER_METADATA,
-  type Priority,
-} from './constants';
+import { OnHook } from '../hooks';
 
 /**
  * Subscribe to these given events.
@@ -24,40 +17,33 @@ import {
  *   Event2
  * )
  * ```
+ *
+ * @deprecated use {@link OnHook} instead.
  */
 export const EventsHandler =
-  (...events: Array<Type | [...Type[], Priority]>): ClassDecorator =>
+  (...events: Array<Type | [...Type[], priority: number]>): ClassDecorator =>
   (target) => {
-    const metadata: EventHandlerMetadata = new Map<ID, Priority>();
-
     for (const arg of events) {
-      let priority: Priority = 0;
+      let priority = 0;
       let eventTypes: Type[] = [];
       if (!Array.isArray(arg)) {
         eventTypes = [arg];
       } else {
-        priority = arg.pop() as Priority;
+        priority = arg.pop() as number;
         eventTypes = arg as Type[];
       }
 
       for (const event of eventTypes) {
-        metadata.set(getOrDefineEventId(event), priority);
+        OnHook(event, priority * -1)(target);
       }
     }
-
-    Reflect.defineMetadata(EVENTS_HANDLER_METADATA, metadata, target);
   };
 
+/**
+ * @deprecated IMO this adds little value. It is just a small hint
+ * that "hey this class's handle() method is called indirectly".
+ */
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export interface IEventHandler<T> {
   handle: (event: T) => Promise<void>;
 }
-
-const getOrDefineEventId = (event: Type): ID => {
-  if (!Reflect.hasMetadata(EVENT_METADATA, event)) {
-    const id: ID = nanoid();
-    Reflect.defineMetadata(EVENT_METADATA, { id }, event);
-    return id;
-  }
-  return Reflect.getMetadata(EVENT_METADATA, event).id;
-};

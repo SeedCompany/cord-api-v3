@@ -1,6 +1,6 @@
 import { Inject, Injectable, Optional, Scope } from '@nestjs/common';
 import { CachedByArg as Once } from '@seedcompany/common';
-import { PollVoter } from '~/common';
+import { Polls } from '~/common';
 import { ResourceResolver, ResourcesHost } from '~/core';
 import { type AnyMedia, MediaUserMetadata } from '../media.dto';
 
@@ -16,7 +16,7 @@ export class CanUpdateMediaUserMetadataEvent {
   constructor(
     @Optional() readonly media: AnyMedia,
     @Optional() readonly input: MediaUserMetadata,
-    @Optional() readonly allowUpdate: PollVoter<boolean>,
+    @Optional() readonly allowUpdate: Polls.BallotBox<boolean>,
   ) {}
 
   @Once() getAttachedResource() {

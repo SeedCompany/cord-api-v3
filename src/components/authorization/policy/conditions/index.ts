@@ -3,4 +3,4 @@ export * from './missing-context.exception';
 export * from './aggregate.condition';
 export * from './calculated.condition';
 export * from './eql.util';
-export * from './optimizer.interface';
+export { Optimizer } from './optimizer.interface';

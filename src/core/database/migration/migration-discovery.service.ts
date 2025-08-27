@@ -1,31 +1,30 @@
-import { DiscoveryService } from '@golevelup/nestjs-discovery';
 import { Injectable } from '@nestjs/common';
-import { sortBy } from '@seedcompany/common';
+import { cmpBy } from '@seedcompany/common';
 import { startCase } from 'lodash';
 import { type DateTime } from 'luxon';
+import { MetadataDiscovery } from '~/core/discovery';
 import { type BaseMigration } from './base-migration.service';
-import { DB_MIGRATION_KEY } from './migration.decorator';
+import { MigrationVersion } from './migration.decorator';
 
 @Injectable()
 export class MigrationDiscovery {
-  constructor(private readonly discover: DiscoveryService) {}
+  constructor(private readonly discovery: MetadataDiscovery) {}
 
   async getMigrations() {
-    const discovered = await this.discover.providersWithMetaAtKey<DateTime>(
-      DB_MIGRATION_KEY,
-    );
-    const mapped = discovered.map((d): DiscoveredMigration => {
-      const instance = d.discoveredClass.instance as BaseMigration;
-      const name = instance.constructor.name.replace('Migration', '');
-      instance.version = d.meta;
-      return {
-        version: d.meta,
-        instance: instance,
-        name: name,
-        humanName: startCase(name),
-      };
-    });
-    return sortBy(mapped, (d) => d.version);
+    return this.discovery
+      .discover(MigrationVersion)
+      .classes<BaseMigration>()
+      .map(({ meta: version, instance }): DiscoveredMigration => {
+        const name = instance.constructor.name.replace('Migration', '');
+        instance.version = version;
+        return {
+          version,
+          instance,
+          name,
+          humanName: startCase(name),
+        };
+      })
+      .toSorted(cmpBy((d) => d.version));
   }
 }
 

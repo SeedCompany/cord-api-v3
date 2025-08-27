@@ -1,7 +1,7 @@
-import { DiscoveryService } from '@golevelup/nestjs-discovery';
-import { Injectable, SetMetadata } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { GraphQLSchemaHost } from '@nestjs/graphql';
-import { asNonEmptyArray } from '@seedcompany/common';
+import { asNonEmptyArray, setOf } from '@seedcompany/common';
+import { createMetadataDecorator } from '@seedcompany/nest';
 import { GraphQLObjectType } from 'graphql';
 import type { ValueOf } from 'type-fest';
 import {
@@ -11,15 +11,11 @@ import {
   type ObjectView,
   ServerException,
 } from '~/common';
+import { MetadataDiscovery } from '~/core/discovery';
 import { type BaseNode } from '../database/results';
 import { ILogger, Logger } from '../logger';
 import { type ResourceMap } from './map';
 import { ResourcesHost } from './resources.host';
-
-const RESOLVE_BY_ID = 'RESOLVE_BY_ID';
-interface Shape {
-  type: ReadonlyArray<keyof ResourceMap>;
-}
 
 type SomeResource = ValueOf<ResourceMap>;
 
@@ -33,10 +29,12 @@ type SomeResource = ValueOf<ResourceMap>;
  *
  * {@link ResourceResolver} can be used to invoke this function.
  */
-export const HandleIdLookup = (type: Many<SomeResource>) =>
-  SetMetadata<string, Shape>(RESOLVE_BY_ID, {
-    type: many(type).map((cls) => cls.name as keyof ResourceMap),
-  });
+export const HandleIdLookup = createMetadataDecorator({
+  setter: (type: Many<SomeResource>) => ({
+    types: setOf(many(type).map((cls) => cls.name as keyof ResourceMap)),
+  }),
+  types: ['method'],
+});
 
 /**
  * Allows looking up GraphQL objects from DB Nodes.
@@ -55,7 +53,7 @@ export class ResourceResolver {
   private readonly typeCache = new Map<string, keyof ResourceMap | Error>();
 
   constructor(
-    private readonly discover: DiscoveryService,
+    private readonly discovery: MetadataDiscovery,
     private readonly resourcesHost: ResourcesHost,
     private readonly schemaHost: GraphQLSchemaHost,
     @Logger('resource-resolver') private readonly logger: ILogger,
@@ -94,28 +92,23 @@ export class ResourceResolver {
     view?: ObjectView,
   ): Promise<SomeResource['prototype'] & { __typename: string }> {
     const type = this.resolveType(possibleTypes);
-    const discovered = await this.discover.providerMethodsWithMetaAtKey<Shape>(
-      RESOLVE_BY_ID,
-    );
+    const discovered = this.discovery
+      .discover(HandleIdLookup)
+      .methods<
+        (id: ID, view?: ObjectView) => Promise<SomeResource['prototype']>
+      >();
     const filtered = asNonEmptyArray(
-      discovered.filter((f) => f.meta.type.includes(type)),
+      discovered.filter((f) => f.meta.types.has(type)),
     );
     if (!filtered) {
-      throw new ServerException(`Could find resolver for type: ${type}`);
+      throw new ServerException(`Could not find resolver for type: ${type}`);
     }
     if (filtered.length > 1) {
       this.logger.warning(`Found more than one resolver for ${type}`);
     }
-    const method = filtered[0].discoveredMethod;
-    const result = await method.handler.call(
-      method.parentClass.instance,
-      id,
-      view,
-    );
-    return {
-      __typename: type,
-      ...result,
-    };
+    const { method } = filtered[0];
+    const result = await method(id, view);
+    return Object.assign({ __typename: type }, result);
   }
 
   resolveTypeByBaseNode(node: BaseNode) {
