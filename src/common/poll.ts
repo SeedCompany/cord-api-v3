@@ -36,8 +36,15 @@ class VoteTally<Choice, Voter> {
     return this.state.votes.size;
   }
 
+  protected get vetoed() {
+    return this.state.vetoers.size > 0;
+  }
+
   /** Returns the largest minority vote (could be majority too), if there was one */
   get plurality() {
+    if (this.vetoed) {
+      return undefined;
+    }
     const [highest, second] = this.tallies;
     if (!highest) {
       return undefined;
@@ -47,6 +54,9 @@ class VoteTally<Choice, Voter> {
 
   /** Returns the majority vote (>50%) if there was one */
   get majority() {
+    if (this.vetoed) {
+      return undefined;
+    }
     const [first] = this.tallies;
     if (!first) {
       return undefined;
@@ -56,6 +66,9 @@ class VoteTally<Choice, Voter> {
 
   /** Returns the unanimous vote if there was one */
   get unanimous() {
+    if (this.vetoed) {
+      return undefined;
+    }
     const all = this.tallies;
     return all.length === 1 ? all[0]! : undefined;
   }
@@ -94,7 +107,7 @@ export class PollResult<Choice, Voter = unknown> extends VoteTally<
   }
 
   get vetoed() {
-    return this.state.vetoers.size > 0;
+    return super.vetoed;
   }
 
   get vetoers(): ReadonlySet<Voter> {
