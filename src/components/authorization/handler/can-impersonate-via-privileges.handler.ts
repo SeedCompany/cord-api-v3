@@ -12,6 +12,6 @@ export class CanImpersonateViaPrivilegesHandler {
   canImpersonate({ session, allow }: CanImpersonateHook) {
     const p = this.privileges.for(AssignableRoles);
     const granted = session.roles.values().every((role) => p.can('edit', role));
-    allow.vote(granted);
+    allow.vote(this, granted);
   }
 }

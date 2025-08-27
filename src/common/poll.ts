@@ -1,63 +1,166 @@
-import { setOf } from '@seedcompany/common';
+import { cmpBy, groupBy, setOf } from '@seedcompany/common';
+import { type Simplify } from 'type-fest';
 
-export class PollResults<T> {
-  constructor(protected readonly data: PollData<T>) {}
+class PollState<Choice, Voter> {
+  closed = false;
+  voters = new Set<Voter>();
+  votes = new Map<Voter, Choice>();
+  vetoers = new Set<Voter>();
+}
 
-  /** Returns true if there were any votes */
-  get anyVotes() {
-    return this.numberOfVotes > 0;
+class VoteTally<Choice, Voter> {
+  protected readonly state: PollState<Choice, Voter>;
+  protected readonly tallies: ReadonlyArray<
+    Readonly<{
+      choice: Choice;
+      count: number;
+      voters: ReadonlySet<Voter>;
+    }>
+  >;
+
+  constructor(state: PollState<Choice, Voter>) {
+    this.state = state;
+    this.tallies = groupBy(state.votes, ([, vote]) => vote)
+      .map((entries) => {
+        const voters = setOf(entries.map(([voter]) => voter));
+        return {
+          choice: entries[0][1],
+          voters,
+          count: voters.size,
+        };
+      })
+      .sort(cmpBy([(c) => c.count, 'desc']));
   }
 
-  /** Returns true if there were no votes */
-  get noVotes() {
-    return this.numberOfVotes === 0;
-  }
-
-  get numberOfVotes() {
-    return [...this.data.votes.values()].reduce((total, cur) => total + cur, 0);
-  }
-
-  get vetoed() {
-    return this.data.vetoed;
-  }
-
-  /** Returns if there was a tie for the highest votes */
-  get tie() {
-    const [highest, second] = this.sorted;
-    return highest && second ? highest[1] === second[1] : false;
+  protected get totalVotes() {
+    return this.state.votes.size;
   }
 
   /** Returns the largest minority vote (could be majority too), if there was one */
   get plurality() {
-    const [highest, second] = this.sorted;
+    const [highest, second] = this.tallies;
     if (!highest) {
       return undefined;
     }
-    return highest[1] > (second?.[1] ?? 0) ? highest[0] : undefined;
+    return highest.count > (second?.count ?? 0) ? highest : undefined;
   }
 
-  /** Returns the majority vote (>50%), if there was one */
+  /** Returns the majority vote (>50%) if there was one */
   get majority() {
-    const [first] = this.sorted;
+    const [first] = this.tallies;
     if (!first) {
       return undefined;
     }
-    return first[1] > this.numberOfVotes / 2 ? first[0] : undefined;
+    return first.count > this.totalVotes / 2 ? first : undefined;
   }
 
-  /** Returns the unanimous vote, if there was one */
+  /** Returns the unanimous vote if there was one */
   get unanimous() {
-    const all = this.sorted;
-    return all.length === 1 ? all[0]![0] : undefined;
+    const all = this.tallies;
+    return all.length === 1 ? all[0]! : undefined;
+  }
+}
+
+export type WinnerStrategy = keyof Simplify<VoteTally<any, any>>;
+
+export class PollResult<Choice, Voter = unknown> extends VoteTally<
+  Choice,
+  Voter
+> {
+  constructor(
+    state: PollState<Choice, Voter>,
+    readonly winnerStrategy: WinnerStrategy,
+  ) {
+    super(state);
   }
 
-  /** Returns all votes sorted by most voted first (ties are unaccounted for) */
-  get allVotes() {
-    return setOf(this.sorted.map(([vote]) => vote));
+  /** Returns the winner if there is one, based on the chosen strategy */
+  get winner() {
+    return this[this.winnerStrategy];
   }
 
-  private get sorted() {
-    return [...this.data.votes].sort((a, b) => b[1] - a[1]);
+  /** Returns true if there were any votes */
+  get anyVotes() {
+    return this.totalVotes > 0;
+  }
+
+  /** Returns true if there were no votes */
+  get noVotes() {
+    return this.totalVotes === 0;
+  }
+
+  get totalVotes() {
+    return super.totalVotes;
+  }
+
+  get vetoed() {
+    return this.state.vetoers.size > 0;
+  }
+
+  get vetoers(): ReadonlySet<Voter> {
+    return this.state.vetoers;
+  }
+
+  /** Returns if there was a tie in the tally of the top choices */
+  get tie() {
+    const [highest, second] = this.tallies;
+    return highest && second ? highest.count === second.count : false;
+  }
+
+  /** Returns all tallies sorted by the highest choice first (ties are unaccounted for) */
+  get allTallies() {
+    return this.tallies;
+  }
+}
+
+/**
+ * A collection of ballots.
+ */
+export class BallotBox<Choice, Voter = unknown> {
+  /** @internal */
+  constructor(protected readonly state: PollState<Choice, Voter>) {}
+
+  get isClosed() {
+    return this.state.closed;
+  }
+
+  /**
+   * Register a new voter.
+   * Voters can only be registered once.
+   */
+  registerVoter(voter: Voter) {
+    if (this.state.closed) {
+      throw new Error('Poll is closed');
+    }
+    if (this.state.voters.has(voter)) {
+      throw new Error('Voter already exists');
+    }
+    this.state.voters.add(voter);
+    return new Ballot(voter, this.state);
+  }
+
+  /**
+   * Cast a vote as a certain voter.
+   *
+   * This can only be done once, per voter, even if the voter identity is the same.
+   * If you need to redo a vote, you can use {@link registerVoter} to hold the ballot handle,
+   * and call its {@link vote} multiple times (as long as the {@link Poll} is not closed).
+   *
+   * @see Ballot.vote
+   */
+  vote(voter: Voter, choice: Choice) {
+    this.registerVoter(voter).vote(choice);
+  }
+
+  /**
+   * Veto the poll as a certain voter.
+   *
+   * This can only be done once, per voter, even if the voter identity is the same.
+   *
+   * @see Ballot.veto
+   */
+  veto(voter: Voter) {
+    this.registerVoter(voter).veto();
   }
 }
 
@@ -65,46 +168,75 @@ export class PollResults<T> {
  * @example
  * const poll = new Poll();
  *
- * poll.noVotes; // true
- * poll.vote(true);
- * poll.unanimous; // true
- * poll.anyVotes; // true
+ * poll.vote('Bilbo', true);
+ * poll.vote('Frodo', true);
+ * poll.vote('Samwise', false);
  *
- * poll.vote(false);
- * poll.unanimous; // undefined
- * poll.tie; // true
- * poll.majority; // undefined
- * poll.plurality; // undefined
- *
- * poll.vote(true);
- * poll.majority; // true
- * poll.plurality; // true
+ * const result = poll.close();
+ * result.winner.choice; // true
+ * result.winner.voters; // {Bilbo, Frodo}
  */
-export class Poll<T = boolean> extends PollResults<T> implements PollVoter<T> {
-  // Get a view of this poll, with results hidden.
-  readonly voter: PollVoter<T> = this;
-  // Get a readonly view of this poll's results.
-  readonly results: PollResults<T> = this;
+export class Poll<Choice, Voter = unknown> extends BallotBox<Choice, Voter> {
+  /**
+   * Configures a poll type, returning a creation handle, and pre-configured types
+   * for the polling system.
+   *
+   * @template Choice - The type representing the choices available in the poll.
+   * @template Voter - The type representing the voter, defaults to unknown if not specified.
+   */
+  static configured<Choice, Voter = unknown>() {
+    return {
+      create: () => new Poll<Choice, Voter>(),
+    } as unknown as {
+      create: () => Poll<Choice, Voter>;
+      $Poll: Poll<Choice, Voter>;
+      $BallotBox: BallotBox<Choice, Voter>;
+      $Ballot: Ballot<Choice, Voter>;
+      $Result: PollResult<Choice, Voter>;
+    };
+  }
 
   constructor() {
-    super(new PollData<T>());
+    super(new PollState<Choice, Voter>());
   }
 
-  vote(vote: T) {
-    this.data.votes.set(vote, (this.data.votes.get(vote) ?? 0) + 1);
+  readonly ballotBox = new BallotBox(this.state);
+
+  get voters(): ReadonlySet<Voter> {
+    return this.state.voters;
   }
 
-  veto() {
-    this.data.vetoed = true;
+  /**
+   * Close the poll and return the result.
+   * This can only be done once.
+   */
+  close(winnerStrategy: WinnerStrategy = 'plurality') {
+    if (this.state.closed) {
+      throw new Error('Poll is already closed');
+    }
+    this.state.closed = true;
+    const result = new PollResult(this.state, winnerStrategy);
+    return result;
   }
 }
 
 /**
- * The mutations available for a poll.
+ * A handle for a certain poll voter to cast their vote.
  */
-export abstract class PollVoter<T> {
+export class Ballot<Choice, Voter = unknown> {
+  /** @internal */
+  constructor(
+    readonly voter: Voter,
+    protected readonly state: PollState<Choice, Voter>,
+  ) {}
+
   /** Cast a vote. */
-  abstract vote(vote: T): void;
+  vote(choice: Choice) {
+    if (this.state.closed) {
+      throw new Error('Poll is closed');
+    }
+    this.state.votes.set(this.voter, choice);
+  }
 
   /**
    * Veto the poll all together.
@@ -113,12 +245,12 @@ export abstract class PollVoter<T> {
    * "cancel" the poll / override all other votes.
    * Exceptions are for unexpected errors, where this veto would be a logical
    * expectation, so throwing is not the best way to handle it.
-   * This could be enhanced in future to allow a reason for the veto.
+   * This could be enhanced in the future to allow a reason for the veto.
    */
-  abstract veto(): void;
-}
-
-class PollData<T> {
-  votes = new Map<T, number>();
-  vetoed = false;
+  veto() {
+    if (this.state.closed) {
+      throw new Error('Poll is closed');
+    }
+    this.state.vetoers.add(this.voter);
+  }
 }

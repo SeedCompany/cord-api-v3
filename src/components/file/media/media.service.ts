@@ -5,7 +5,7 @@ import {
   createAndInject,
   type IdOf,
   NotFoundException,
-  Poll,
+  Polls,
   ServerException,
   UnauthorizedException,
 } from '~/common';
@@ -42,16 +42,17 @@ export class MediaService {
     input: RequireAtLeastOne<Pick<AnyMedia, 'id' | 'file'>> & MediaUserMetadata,
   ) {
     const media = await this.repo.readOne(input);
-    const poll = new Poll();
+    const canUpdatePoll = new Polls.Poll<boolean>();
     const event = await createAndInject(
       this.moduleRef,
       CanUpdateMediaUserMetadataEvent,
       media,
       input,
-      poll,
+      canUpdatePoll,
     );
     await this.eventBus.publish(event);
-    if (!(poll.plurality && !poll.vetoed)) {
+    const canUpdate = canUpdatePoll.close();
+    if (!(canUpdate.winner?.choice && !canUpdate.vetoed)) {
       throw new UnauthorizedException(
         'You do not have permission to update this media metadata',
       );
