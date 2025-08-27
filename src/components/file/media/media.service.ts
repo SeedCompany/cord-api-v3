@@ -48,11 +48,11 @@ export class MediaService {
       CanUpdateMediaUserMetadataEvent,
       media,
       input,
-      canUpdatePoll,
+      canUpdatePoll.ballotBox,
     );
     await this.eventBus.publish(event);
-    const canUpdate = canUpdatePoll.close();
-    if (!(canUpdate.winner?.choice && !canUpdate.vetoed)) {
+    const canUpdate = canUpdatePoll.close().winner?.choice ?? false;
+    if (!canUpdate) {
       throw new UnauthorizedException(
         'You do not have permission to update this media metadata',
       );

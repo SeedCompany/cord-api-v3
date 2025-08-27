@@ -103,16 +103,16 @@ export class SessionManager {
       : requesterSession;
 
     if (impersonatee) {
-      const allowImpersonation = new Polls.Poll<boolean>();
+      const allowImpersonationPoll = new Polls.Poll<boolean>();
       await this.sessionHost.withSession(requesterSession, async () => {
         const event = new CanImpersonateHook(
           requesterSession,
-          allowImpersonation,
+          allowImpersonationPoll.ballotBox,
         );
         await this.hooks.run(event);
       });
-      const res = allowImpersonation.close();
-      if (!(res.winner?.choice && !res.vetoed)) {
+      const allow = allowImpersonationPoll.close().winner?.choice ?? false;
+      if (!allow) {
         // Don't expose what the requester is unable to do as this could leak
         // private information.
         throw new UnauthorizedException(
