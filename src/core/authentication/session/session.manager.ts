@@ -111,7 +111,7 @@ export class SessionManager {
         );
         await this.hooks.run(event);
       });
-      const allow = allowImpersonationPoll.close().winner?.choice ?? false;
+      const allow = allowImpersonationPoll.close().winner ?? false;
       if (!allow) {
         // Don't expose what the requester is unable to do as this could leak
         // private information.

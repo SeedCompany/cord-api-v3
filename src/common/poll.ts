@@ -87,8 +87,13 @@ export class PollResult<Choice, Voter = unknown> extends VoteTally<
     super(state);
   }
 
-  /** Returns the winner if there is one, based on the chosen strategy */
+  /** Returns the winning choice (if there is one), based on the chosen strategy */
   get winner() {
+    return this.winnerTally?.choice;
+  }
+
+  /** Returns the winner tally (if there is one), based on the chosen strategy */
+  get winnerTally() {
     return this[this.winnerStrategy];
   }
 
