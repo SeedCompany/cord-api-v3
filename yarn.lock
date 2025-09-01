@@ -3207,9 +3207,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@seedcompany/nest@npm:^1.12.0":
-  version: 1.12.0
-  resolution: "@seedcompany/nest@npm:1.12.0"
+"@seedcompany/nest@npm:^1.13.0":
+  version: 1.13.0
+  resolution: "@seedcompany/nest@npm:1.13.0"
   dependencies:
     "@nestjs/common": "npm:^10 || ^11"
     "@nestjs/core": "npm:^10 || ^11"
@@ -3228,7 +3228,7 @@ __metadata:
     class-transformer: ^0.5.1
     class-validator: ^0.14.0
     reflect-metadata: ^0.1.12 || ^0.2.0
-  checksum: 10c0/2c86ef7643963663e2a6481adc690662e0495eed31ff84a7409e8c1761bbb03e547cb25812b9260fccaed399a02bc3f0627e35a50b78225bf03a0e27239e5f8e
+  checksum: 10c0/d98a79408d4597d8d5dd6aba54850f6d28a05a73e18118955e5d082733dfcd5775988eb9af415abd50174ec3241b248e4db51fa0590a25a5a565cb06c1d66f9e
   languageName: node
   linkType: hard
 
@@ -5903,7 +5903,7 @@ __metadata:
     "@seedcompany/common": "npm:>=0.22 <1"
     "@seedcompany/data-loader": "npm:^2.0.1"
     "@seedcompany/eslint-plugin": "npm:^3.4.1"
-    "@seedcompany/nest": "npm:^1.12.0"
+    "@seedcompany/nest": "npm:^1.13.0"
     "@seedcompany/nestjs-email": "npm:^4.3.0"
     "@seedcompany/scripture": "npm:>=0.8.0"
     "@tsconfig/strictest": "npm:^2.0.2"
