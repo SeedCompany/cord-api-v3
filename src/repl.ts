@@ -17,6 +17,7 @@ runRepl({
     const { bootstrapLogger: logger } = await import('~/core');
     return { logger };
   },
+  import: { import: (name) => import(name) },
   extraContext: async (app) => {
     const { ResourcesHost } = await import('~/core');
     const { e } = await import('~/core/gel');
