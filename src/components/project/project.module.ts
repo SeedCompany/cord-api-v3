@@ -14,6 +14,7 @@ import { ProjectEngagementConnectionResolver } from './engagement-connection.res
 import { FinancialApproverModule } from './financial-approver/financial-approver.module';
 import * as handlers from './handlers';
 import { InternshipProjectResolver } from './internship-project.resolver';
+import { CreateUsedDeptIdListMigration } from './migrations/create-used-dept-id-list.migration';
 import { FixDeptIdLabelMigration } from './migrations/fix-dept-id-label.migration';
 import { RenameTranslationToMomentumMigration } from './migrations/rename-translation-to-momentum.migration';
 import { ProjectEngagementIdResolvers } from './project-engagement-id.resolver';
@@ -55,6 +56,7 @@ import { ProjectWorkflowModule } from './workflow/project-workflow.module';
     ...Object.values(ConcreteRepos),
     ProjectLoader,
     ...Object.values(handlers),
+    CreateUsedDeptIdListMigration,
     RenameTranslationToMomentumMigration,
     FixDeptIdLabelMigration,
   ],
