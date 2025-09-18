@@ -97,13 +97,20 @@ export class SetDepartmentId implements IEventHandler<SubscribedEvent> {
       // Get used IDs
       .subQuery((sub) =>
         sub
-          .match([
-            node('', 'Project'),
-            relation('out', '', 'departmentId', ACTIVE),
-            node('deptIdNode', 'Property'),
-          ])
-          .where({ 'deptIdNode.value': not(isNull()) })
-          .return(collect('deptIdNode.value').as('used')),
+          .subQuery((sub2) =>
+            sub2
+              .match([
+                node('', 'Project'),
+                relation('out', '', 'departmentId', ACTIVE),
+                node('deptIdNode', 'Property'),
+              ])
+              .where({ 'deptIdNode.value': not(isNull()) })
+              .return('deptIdNode.value as id')
+              .union()
+              .match(node('external', 'ExternalDepartmentId'))
+              .return('external.departmentId as id'),
+          )
+          .return(collect('id').as('used')),
       )
       // Distill to available
       .with('[id in enumerated where not id in used][0] as next')
