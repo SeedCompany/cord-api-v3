@@ -105,8 +105,16 @@ export class SetDepartmentId implements IEventHandler<SubscribedEvent> {
           .where({ 'deptIdNode.value': not(isNull()) })
           .return(collect('deptIdNode.value').as('used')),
       )
-      // Distill to available
-      .with('[id in enumerated where not id in used][0] as next')
+      // Get blacklisted IDs
+      .subQuery((sub) =>
+        sub
+          .match(node('blacklist', 'BlacklistDepartmentId'))
+          .return(collect('blacklist.departmentId').as('blacklisted')),
+      )
+      // Distill to available (excluding both used AND blacklisted)
+      .with(
+        '[id in enumerated where not id in used and not id in blacklisted][0] as next',
+      )
       // collapse cardinality to zero if none available
       .raw('unwind next as nextId')
 

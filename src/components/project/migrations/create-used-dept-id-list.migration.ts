@@ -28,10 +28,7 @@ export class CreateUsedDeptIdListMigration extends BaseMigration {
 
     const intaactList: ExternalDepartmentId[] = intaactRows.flatMap((row) => {
       const [id, name] = row.split(',');
-      if (id) {
-        return { id, name };
-      }
-      return [];
+      return id ? { id, name } : [];
     });
 
     const prunedIntaactList = intaactList.flatMap((row) =>
@@ -41,15 +38,14 @@ export class CreateUsedDeptIdListMigration extends BaseMigration {
     await this.db
       .query()
       .unwind(prunedIntaactList, 'dept')
-      .create(node('blacklist', 'BlacklistDepartmentId'))
+      .create(node('external', 'ExternalDepartmentId'))
       .setValues({
-        'blacklist.id': variable(apoc.create.uuid()),
-        'blacklist.departmentId': variable('dept.id'),
-        'blacklist.departmentName': variable('dept.name'),
-        'blacklist.createdAt': Date.now(),
-        'blacklist.createdBy': 'bulk_import',
+        'external.id': variable(apoc.create.uuid()),
+        'external.departmentId': variable('dept.id'),
+        'external.name': variable('dept.name'),
+        'external.createdAt': variable('datetime()'),
       })
-      .return('count(blacklist) as created')
+      .return('count(external) as created')
       .executeAndLogStats();
   }
 }
