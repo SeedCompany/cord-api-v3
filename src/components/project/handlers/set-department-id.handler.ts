@@ -97,24 +97,22 @@ export class SetDepartmentId implements IEventHandler<SubscribedEvent> {
       // Get used IDs
       .subQuery((sub) =>
         sub
-          .match([
-            node('', 'Project'),
-            relation('out', '', 'departmentId', ACTIVE),
-            node('deptIdNode', 'Property'),
-          ])
-          .where({ 'deptIdNode.value': not(isNull()) })
-          .return(collect('deptIdNode.value').as('used')),
+          .subQuery((sub2) =>
+            sub2
+              .match([
+                node('', 'Project'),
+                relation('out', '', 'departmentId', ACTIVE),
+                node('deptIdNode', 'Property'),
+              ])
+              .where({ 'deptIdNode.value': not(isNull()) })
+              .return('deptIdNode.value as id')
+              .union()
+              .match(node('external', 'ExternalDepartmentId'))
+              .return('external.departmentId as id'),
+          )
+          .return(collect('id').as('used')),
       )
-      // Get blacklisted IDs
-      .subQuery((sub) =>
-        sub
-          .match(node('blacklist', 'BlacklistDepartmentId'))
-          .return(collect('blacklist.departmentId').as('blacklisted')),
-      )
-      // Distill to available (excluding both used AND blacklisted)
-      .with(
-        '[id in enumerated where not id in used and not id in blacklisted][0] as next',
-      )
+      .with('[id in enumerated where not id in used][0] as next')
       // collapse cardinality to zero if none available
       .raw('unwind next as nextId')
 
