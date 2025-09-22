@@ -112,6 +112,16 @@ export class LanguageEngagementListOutput extends PaginatedList(
   },
 ) {}
 
+@ObjectType()
+export class InternshipEngagementListOutput extends PaginatedList(
+  InternshipEngagement,
+  {
+    itemsDescription: PaginatedList.itemDescriptionFor(
+      'internship engagements',
+    ),
+  },
+) {}
+
 @ObjectType({
   description: SecuredList.descriptionFor('engagements'),
 })
