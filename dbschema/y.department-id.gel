@@ -9,6 +9,7 @@ module Finance::Department {
     nextAvailable := min((
       select enumerateIds(.range)
       except default::Project.departmentId
+      except ExternalId.departmentId
     ));
 
     total := totalIds([__source__]);
@@ -35,6 +36,14 @@ module Finance::Department {
         )
       )
     );
+  }
+
+  type ExternalId extending Mixin::Named {
+    annotation description := "A department ID used outside of this system.";
+    required departmentId: str {
+      constraint exclusive;
+      constraint expression on (<int32>__subject__ > 0 and len(__subject__) = 5);
+    };
   }
 
   function totalIds(blocks: array<IdBlock>) -> int64 using (
