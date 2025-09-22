@@ -27,6 +27,8 @@ import {
   EngagementListInput,
   EngagementListOutput,
   IEngagement,
+  InternshipEngagement,
+  InternshipEngagementListOutput,
   LanguageEngagement,
   LanguageEngagementListOutput,
   UpdateInternshipEngagementInput,
@@ -63,6 +65,20 @@ export class EngagementResolver {
     return engagement;
   }
 
+  @Query(() => InternshipEngagement, {
+    description: 'Lookup an InternshipEngagement by ID',
+  })
+  async internshipEngagement(
+    @IdsAndViewArg() key: IdsAndView,
+    @Loader(EngagementLoader) engagements: LoaderOf<EngagementLoader>,
+  ): Promise<Engagement> {
+    const engagement = await engagements.load(key);
+    if (InternshipEngagement.resolve(engagement) !== InternshipEngagement) {
+      throw new InvalidIdForTypeException();
+    }
+    return engagement;
+  }
+
   @Query(() => EngagementListOutput, {
     description: 'Look up engagements',
   })
@@ -85,6 +101,22 @@ export class EngagementResolver {
     const list = await this.service.list({
       ...input,
       filter: { ...input.filter, type: 'language' },
+    });
+    engagements.primeAll(list.items);
+
+    return list;
+  }
+
+  @Query(() => InternshipEngagementListOutput, {
+    description: 'Look up internship engagements',
+  })
+  async internshipEngagements(
+    @ListArg(EngagementListInput) input: EngagementListInput,
+    @Loader(EngagementLoader) engagements: LoaderOf<EngagementLoader>,
+  ): Promise<EngagementListOutput> {
+    const list = await this.service.list({
+      ...input,
+      filter: { ...input.filter, type: 'internship' },
     });
     engagements.primeAll(list.items);
 
