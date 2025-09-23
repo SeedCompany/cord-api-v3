@@ -146,6 +146,8 @@ module default {
     multi methodologies: Product::Methodology;
     countryOfOrigin: Location;
     growthPlan: File;
+    marketable: bool;
+    gtlId: str;
     
     trigger connectCertificationCeremony after insert for each do (
       insert Engagement::CertificationCeremony {
