@@ -1,3 +1,4 @@
+import { Injectable } from '@nestjs/common';
 import { isNull, node, not, relation } from 'cypher-query-builder';
 import {
   ClientException,
@@ -5,7 +6,7 @@ import {
   ServerException,
   type UnsecuredDto,
 } from '~/common';
-import { ConfigService, EventsHandler, type IEventHandler } from '~/core';
+import { ConfigService } from '~/core';
 import {
   DatabaseService,
   TransactionRetryInformer,
@@ -18,51 +19,57 @@ import {
   updateProperty,
   variable,
 } from '~/core/database/query';
+import { OnHook } from '~/core/hooks';
 import {
   type Project,
   resolveProjectType,
   ProjectStatus as Status,
   ProjectStep as Step,
-  stepToStatus,
 } from '../dto';
+import { ProjectUpdatedEvent } from '../events';
 import { ProjectTransitionedEvent } from '../workflow/events/project-transitioned.event';
 
-type SubscribedEvent = ProjectTransitionedEvent;
-
-@EventsHandler(ProjectTransitionedEvent)
-export class SetDepartmentId implements IEventHandler<SubscribedEvent> {
+@Injectable()
+export class SetDepartmentId {
   constructor(
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
     private readonly retryInformer: TransactionRetryInformer,
   ) {}
 
-  async handle(event: SubscribedEvent) {
+  @OnHook(ProjectTransitionedEvent)
+  @OnHook(ProjectUpdatedEvent)
+  async handle(event: ProjectTransitionedEvent | ProjectUpdatedEvent) {
     if (this.config.databaseEngine === 'gel') {
       return;
     }
 
-    const step = event.workflowEvent.to;
-    const status = stepToStatus(step);
+    const project =
+      event instanceof ProjectTransitionedEvent ? event.project : event.updated;
+
+    const { status, step } = project;
 
     const shouldSetDepartmentId =
-      !event.project.departmentId &&
+      !project.departmentId &&
       Status.indexOf(status) <= Status.indexOf('Active') &&
       Step.indexOf(step) >= Step.indexOf('PendingFinanceConfirmation');
     if (!shouldSetDepartmentId) {
       return;
     }
 
-    const block = await this.getDepartmentIdBlockId(event.project);
+    const block = await this.getDepartmentIdBlockId(project);
 
     const departmentId = await this.assignDepartmentIdForProject(
-      event.project,
+      project,
       block,
     );
-    event.project = {
-      ...event.project,
-      departmentId,
-    };
+    const changed = { ...project, departmentId };
+
+    if (event instanceof ProjectTransitionedEvent) {
+      event.project = changed;
+    } else {
+      event.updated = changed;
+    }
   }
 
   private async assignDepartmentIdForProject(
