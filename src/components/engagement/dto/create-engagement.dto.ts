@@ -115,6 +115,12 @@ export class CreateInternshipEngagement extends CreateEngagement {
   @Type(() => CreateDefinedFileVersionInput)
   @ValidateNested()
   readonly growthPlan?: CreateDefinedFileVersionInput;
+
+  @Field(() => Boolean, { nullable: true })
+  readonly marketable?: boolean;
+
+  @Field(() => String, { nullable: true })
+  readonly gtlId?: string;
 }
 
 @InputType()

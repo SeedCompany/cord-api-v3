@@ -14,6 +14,7 @@ import {
   type ResourceRelationsShape,
   type Secured,
   SecuredBoolean,
+  SecuredBooleanNullable,
   SecuredDateNullable,
   SecuredDateTimeNullable,
   SecuredRichTextNullable,
@@ -239,6 +240,12 @@ export class InternshipEngagement extends Engagement {
   readonly methodologies: SecuredMethodologies;
 
   readonly growthPlan: Secured<LinkTo<'File'> | null>;
+
+  @Field()
+  readonly marketable: SecuredBooleanNullable;
+
+  @Field()
+  readonly gtlId: SecuredStringNullable;
 }
 
 export const engagementRange = (engagement: UnsecuredDto<Engagement>) =>
