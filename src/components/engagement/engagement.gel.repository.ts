@@ -57,6 +57,7 @@ const internshipExtraHydrate = {
   position: true,
   methodologies: true,
   growthPlan: true,
+  marketable: true,
 } as const;
 
 const languageHydrate = e.shape(e.LanguageEngagement, (le) => ({

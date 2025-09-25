@@ -238,6 +238,9 @@ export class InternshipEngagement extends Engagement {
   @DbLabel('ProductMethodology')
   readonly methodologies: SecuredMethodologies;
 
+  @Field()
+  readonly marketable: SecuredBoolean;
+
   readonly growthPlan: Secured<LinkTo<'File'> | null>;
 }
 
