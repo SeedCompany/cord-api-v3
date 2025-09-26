@@ -105,6 +105,9 @@ export abstract class UpdateInternshipEngagement extends UpdateEngagement {
   @Type(() => CreateDefinedFileVersionInput)
   @ValidateNested()
   readonly growthPlan?: CreateDefinedFileVersionInput;
+
+  @OptionalField(() => Boolean)
+  readonly marketable?: boolean;
 }
 
 @InputType()

@@ -19,6 +19,7 @@ import { InternshipEngagementResolver } from './internship-engagement.resolver';
 import { InternshipPositionResolver } from './internship-position.resolver';
 import { LanguageEngagementResolver } from './language-engagement.resolver';
 import { AddAiAssistFlagMigration } from './migrations/add-ai-assist-flag.migration';
+import { AddMarketableMigration } from './migrations/add-marketable.migration';
 import { AddMilestoneReachedMigration } from './migrations/add-milestone-reached.migration';
 import { FixNullMethodologiesMigration } from './migrations/fix-null-methodologies.migration';
 import { EngagementProductConnectionResolver } from './product-connection.resolver';
@@ -48,6 +49,7 @@ import { EngagementProductConnectionResolver } from './product-connection.resolv
     FixNullMethodologiesMigration,
     AddMilestoneReachedMigration,
     AddAiAssistFlagMigration,
+    AddMarketableMigration,
   ],
   exports: [EngagementService, EngagementRepository],
 })
