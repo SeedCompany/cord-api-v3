@@ -36,6 +36,8 @@ module default {
       on source delete delete target;
     }
     multi locations: Location;
+    gender: User::Gender;
+    photo: File;
   }
 
   type SystemAgent extending Actor, Mixin::Named {
@@ -58,6 +60,7 @@ module User {
   }
   
   scalar type Status extending enum<Active, Disabled>;
+  scalar type Gender extending enum<Male, Female>;
   
   scalar type Degree extending enum<
     Primary,
