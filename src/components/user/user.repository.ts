@@ -5,7 +5,10 @@ import { DateTime } from 'luxon';
 import {
   CreationFailed,
   DuplicateException,
+  generateId,
   type ID,
+  NotFoundException,
+  ReadAfterCreationFailed,
   type Role,
   ServerException,
   type UnsecuredDto,
@@ -29,6 +32,8 @@ import {
   type SortCol,
   sortWith,
 } from '~/core/database/query';
+import { FileService } from '../file';
+import { type FileId } from '../file/dto';
 import {
   type AssignOrganizationToUser,
   type CreatePerson,
@@ -42,6 +47,9 @@ import {
 
 @Injectable()
 export class UserRepository extends DtoRepository(User) {
+  constructor(private readonly files: FileService) {
+    super();
+  }
   async readManyActors(ids: readonly ID[]) {
     return await this.db
       .query()
@@ -68,6 +76,8 @@ export class UserRepository extends DtoRepository(User) {
     );
 
   async create(input: CreatePerson) {
+    const photoId = await generateId<FileId>();
+
     const initialProps = {
       ...(input.email ? { email: input.email } : {}), // omit email prop/relation if it's undefined
       realFirstName: input.realFirstName,
@@ -79,6 +89,8 @@ export class UserRepository extends DtoRepository(User) {
       about: input.about,
       status: input.status,
       title: input.title,
+      gender: input.gender,
+      photo: photoId,
       canDelete: true,
     };
 
@@ -107,11 +119,28 @@ export class UserRepository extends DtoRepository(User) {
     if (!result) {
       throw new CreationFailed(User);
     }
+
+    const dto = await this.readOne(result.id).catch((e) => {
+      throw e instanceof NotFoundException
+        ? new ReadAfterCreationFailed(User)
+        : e;
+    });
+
+    await this.files.createDefinedFile(
+      photoId,
+      `${input.realFirstName}${input.realLastName}Photo`,
+      dto.id,
+      'photo',
+      input.photo,
+      'user.photo',
+      true,
+    );
+
     return result;
   }
 
   async update(changes: UpdateUser) {
-    const { id, roles, email, ...simpleChanges } = changes;
+    const { id, roles, email, photo, ...simpleChanges } = changes;
 
     await this.updateProperties({ id }, simpleChanges);
     if (email !== undefined) {
@@ -119,6 +148,21 @@ export class UserRepository extends DtoRepository(User) {
     }
     if (roles) {
       await this.updateRoles(id, roles);
+    }
+
+    if (photo !== undefined) {
+      const person = await this.readOne(id);
+
+      if (!person.photo) {
+        throw new ServerException(
+          'Expected photo file to be updated with this person',
+        );
+      }
+
+      await this.files.createFileVersion({
+        ...photo,
+        parentId: person.photo.id,
+      });
     }
 
     return await this.readOne(id);
@@ -140,6 +184,7 @@ export class UserRepository extends DtoRepository(User) {
         .return<{ dto: UnsecuredDto<User> }>(
           merge({ email: null }, 'props', {
             __typename: '"User"',
+            photo: { id: 'props.photo' },
             roles: 'roles',
             pinned,
           }).as('dto'),

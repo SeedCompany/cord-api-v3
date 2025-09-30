@@ -12,6 +12,7 @@ import type { UserRepository } from './user.repository';
 export const hydrateUser = e.shape(e.User, (user) => ({
   ...user['*'],
   __typename: e.str('User'),
+  photo: true,
 }));
 const hydrateSystemAgent = e.shape(e.SystemAgent, (agent) => ({
   ...agent['*'],

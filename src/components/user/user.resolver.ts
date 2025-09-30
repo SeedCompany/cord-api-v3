@@ -18,6 +18,8 @@ import {
 } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { Identity } from '~/core/authentication';
+import { FileNodeLoader, resolveDefinedFile } from '../file';
+import { SecuredFile } from '../file/dto';
 import { LocationLoader } from '../location';
 import { LocationListInput, SecuredLocationList } from '../location/dto';
 import { OrganizationLoader } from '../organization';
@@ -108,6 +110,16 @@ export class UserResolver {
       ...user.timezone,
       value: tz ? zones[tz] : undefined,
     };
+  }
+
+  @ResolveField(() => SecuredFile, {
+    description: 'User profile photo',
+  })
+  async photo(
+    @Parent() user: User,
+    @Loader(FileNodeLoader) files: LoaderOf<FileNodeLoader>,
+  ): Promise<SecuredFile> {
+    return await resolveDefinedFile(files, user.photo);
   }
 
   @Query(() => UserListOutput, {
