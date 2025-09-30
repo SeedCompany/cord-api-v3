@@ -13,7 +13,7 @@ export const Gender = makeEnum({
 });
 
 @ObjectType({
-  description: SecuredProperty.descriptionFor('a user gender'),
+  description: SecuredProperty.descriptionFor('a gender'),
 })
 export abstract class SecuredGenderNullable extends SecuredEnum(Gender, {
   nullable: true,
