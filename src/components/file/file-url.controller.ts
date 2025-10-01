@@ -29,6 +29,7 @@ export class FileUrlController {
   @Get([':fileId', ':fileId/*'])
   async download(
     @Param('fileId') fileId: ID,
+    @Param('*') fileName: string | undefined,
     @Query('download') download: '' | undefined,
     @Request() request: IRequest,
     @Response() res: IResponse,
@@ -42,7 +43,10 @@ export class FileUrlController {
 
     // TODO authorization using session
 
-    const url = await this.files.getDownloadUrl(node, download != null);
+    const url = await this.files.getDownloadUrl(node, {
+      name: fileName || undefined,
+      download: download != null,
+    });
     const cacheControl = this.files.determineCacheHeader(node);
 
     this.http.setHeader(res, 'Cache-Control', cacheControl);
