@@ -128,7 +128,7 @@ export class UserRepository extends DtoRepository(User) {
 
     await this.files.createDefinedFile(
       photoId,
-      `${input.realFirstName}${input.realLastName}Photo`,
+      'Photo',
       dto.id,
       'photo',
       input.photo,
