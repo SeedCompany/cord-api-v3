@@ -1,4 +1,5 @@
 import { ArgsType, Field, Args as IArgs, ResolveField } from '@nestjs/graphql';
+import { type EnumType, makeEnum } from '@seedcompany/nest';
 import { stripIndent } from 'common-tags';
 import { URL } from 'url';
 
@@ -11,6 +12,20 @@ export const Resolver = () =>
     `,
   });
 
+const FileUrlKind = makeEnum({
+  name: 'FileUrlKind',
+  values: [
+    {
+      value: 'Permanent',
+      description: 'A permanent url whose underlying file will not change',
+    },
+    {
+      value: 'Evergreen',
+      description: 'A url whose underlying file could be updated',
+    },
+  ],
+});
+
 @ArgsType()
 export class FileUrlArgs {
   @Field({
@@ -22,6 +37,13 @@ export class FileUrlArgs {
     `,
   })
   download?: boolean = false;
+
+  @Field(() => FileUrlKind, {
+    description: stripIndent`
+      The kind of url to generate.
+    `,
+  })
+  kind?: EnumType<typeof FileUrlKind> = 'Permanent';
 }
 
 export const Args = () => IArgs({ type: () => FileUrlArgs });

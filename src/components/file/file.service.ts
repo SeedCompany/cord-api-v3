@@ -148,7 +148,9 @@ export class FileService {
     const url = withAddedPath(
       this.config.hostUrl$.value,
       FileUrl.path,
-      isFile(node) ? node.latestVersionId : node.id,
+      options.kind === 'Permanent' && isFile(node)
+        ? node.latestVersionId
+        : node.id,
       encodeURIComponent(node.name),
     );
     return url.toString() + (options.download ? '?download' : '');
