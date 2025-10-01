@@ -7,8 +7,6 @@ import {
   DuplicateException,
   generateId,
   type ID,
-  NotFoundException,
-  ReadAfterCreationFailed,
   type Role,
   ServerException,
   type UnsecuredDto,
@@ -120,16 +118,10 @@ export class UserRepository extends DtoRepository(User) {
       throw new CreationFailed(User);
     }
 
-    const dto = await this.readOne(result.id).catch((e) => {
-      throw e instanceof NotFoundException
-        ? new ReadAfterCreationFailed(User)
-        : e;
-    });
-
     await this.files.createDefinedFile(
       photoId,
       'Photo',
-      dto.id,
+      result.id,
       'photo',
       input.photo,
       'user.photo',
