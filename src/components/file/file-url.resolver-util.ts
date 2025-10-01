@@ -2,6 +2,7 @@ import { ArgsType, Field, Args as IArgs, ResolveField } from '@nestjs/graphql';
 import { type EnumType, makeEnum } from '@seedcompany/nest';
 import { stripIndent } from 'common-tags';
 import { URL } from 'url';
+import { OptionalField } from '~/common';
 
 export const Resolver = () =>
   ResolveField(() => URL, {
@@ -44,6 +45,15 @@ export class FileUrlArgs {
     `,
   })
   kind?: EnumType<typeof FileUrlKind> = 'Permanent';
+
+  @OptionalField({
+    description: stripIndent`
+      Override the name of the file.
+
+      The file extension is appended to this.
+    `,
+  })
+  name?: string;
 }
 
 export const Args = () => IArgs({ type: () => FileUrlArgs });

@@ -8,6 +8,7 @@ import { fileTypeFromBuffer } from 'file-type';
 import { intersection } from 'lodash';
 import { Duration } from 'luxon';
 import mime from 'mime';
+import { extname } from 'node:path';
 import sanitizeFilename from 'sanitize-filename';
 import { Readable } from 'stream';
 import {
@@ -145,13 +146,25 @@ export class FileService {
   }
 
   async getUrl(node: FileNode, options: FileUrlArgs) {
+    const id =
+      options.kind === 'Permanent' && isFile(node)
+        ? node.latestVersionId
+        : node.id;
+
+    const overrideName = options.name
+      ? sanitizeFilename(options.name) || null
+      : null;
+    const ext =
+      overrideName && !isDirectory(node)
+        ? extname(node.name) || mime.getExtension(node.mimeType)
+        : null;
+    const name = overrideName ? cleanJoin('', [overrideName, ext]) : node.name;
+
     const url = withAddedPath(
       this.config.hostUrl$.value,
       FileUrl.path,
-      options.kind === 'Permanent' && isFile(node)
-        ? node.latestVersionId
-        : node.id,
-      encodeURIComponent(node.name),
+      id,
+      encodeURIComponent(name),
     );
     return url.toString() + (options.download ? '?download' : '');
   }
