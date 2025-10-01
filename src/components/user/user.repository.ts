@@ -11,6 +11,7 @@ import {
   ServerException,
   type UnsecuredDto,
 } from '~/common';
+import { Identity } from '~/core/authentication';
 import { DtoRepository, OnIndex, UniquenessError } from '~/core/database';
 import {
   ACTIVE,
@@ -45,7 +46,10 @@ import {
 
 @Injectable()
 export class UserRepository extends DtoRepository(User) {
-  constructor(private readonly files: FileService) {
+  constructor(
+    private readonly files: FileService,
+    private readonly identity: Identity,
+  ) {
     super();
   }
   async readManyActors(ids: readonly ID[]) {
@@ -118,15 +122,18 @@ export class UserRepository extends DtoRepository(User) {
       throw new CreationFailed(User);
     }
 
-    await this.files.createDefinedFile(
-      photoId,
-      'Photo',
-      result.id,
-      'photo',
-      input.photo,
-      'user.photo',
-      true,
-    );
+    // User creates their own photo file.
+    await this.identity.asUser(result.id, async () => {
+      await this.files.createDefinedFile(
+        photoId,
+        'Photo',
+        result.id,
+        'photo',
+        input.photo,
+        'user.photo',
+        true,
+      );
+    });
 
     return result;
   }

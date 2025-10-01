@@ -17,7 +17,6 @@ export class AddGenderAndPhotoMigration extends BaseMigration {
 
     await this.db
       .query()
-      .matchNode('creator', 'RootUser')
       .matchNode('user', 'User')
       .raw('WHERE NOT (user)-[:photo { active: true }]->(:Property)')
       .create([
@@ -32,7 +31,7 @@ export class AddGenderAndPhotoMigration extends BaseMigration {
           value: variable(randomUUID()),
         }),
       ])
-      .with('creator, user, idHolder')
+      .with('user, idHolder')
       .apply(
         await createNode(File, {
           baseNodeProps: {
@@ -46,7 +45,7 @@ export class AddGenderAndPhotoMigration extends BaseMigration {
       .apply(
         createRelationships(File, {
           in: { photoNode: variable('user') },
-          out: { createdBy: variable('creator') },
+          out: { createdBy: variable('user') },
         }),
       )
       .return('count(user)')
