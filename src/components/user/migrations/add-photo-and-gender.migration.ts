@@ -4,6 +4,7 @@ import {
   ACTIVE,
   createNode,
   createRelationships,
+  randomUUID,
   variable,
 } from '~/core/database/query';
 import { File } from '../../file/dto';
@@ -16,7 +17,7 @@ export class AddGenderAndPhotoMigration extends BaseMigration {
 
     await this.db
       .query()
-      .matchNode('rootUser', 'RootUser')
+      .matchNode('creator', 'RootUser')
       .matchNode('user', 'User')
       .raw('WHERE NOT (user)-[:photo { active: true }]->(:Property)')
       .create([
@@ -28,10 +29,10 @@ export class AddGenderAndPhotoMigration extends BaseMigration {
         node('idHolder', 'Property', {
           createdAt: this.version,
           migration: this.version,
-          value: variable('apoc.create.uuid()'),
+          value: variable(randomUUID()),
         }),
       ])
-      .with('rootUser, user, idHolder')
+      .with('creator, user, idHolder')
       .apply(
         await createNode(File, {
           baseNodeProps: {
@@ -45,7 +46,7 @@ export class AddGenderAndPhotoMigration extends BaseMigration {
       .apply(
         createRelationships(File, {
           in: { photoNode: variable('user') },
-          out: { createdBy: variable('rootUser') },
+          out: { createdBy: variable('creator') },
         }),
       )
       .return('count(user)')
