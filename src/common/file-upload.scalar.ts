@@ -1,3 +1,4 @@
+import { File } from '@whatwg-node/fetch';
 import { GraphQLError, GraphQLScalarType } from 'graphql';
 
 export const FileUploadScalar = new GraphQLScalarType({

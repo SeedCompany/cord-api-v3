@@ -10,8 +10,8 @@ export class FileVersionResolver {
   @FileUrl.Resolver()
   async url(
     @Parent() node: FileVersion,
-    @FileUrl.DownloadArg() download: boolean,
+    @FileUrl.Args() options: FileUrl.Options,
   ) {
-    return await this.service.getUrl(node, download);
+    return await this.service.getUrl(node, options);
   }
 }
