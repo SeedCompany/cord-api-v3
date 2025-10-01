@@ -48,6 +48,7 @@ import {
 } from './dto';
 import { AfterFileUploadEvent } from './events/after-file-upload.event';
 import { FileUrlController as FileUrl } from './file-url.controller';
+import { type FileUrlArgs } from './file-url.resolver-util';
 import { FileRepository } from './file.repository';
 import { MediaService } from './media/media.service';
 
@@ -143,14 +144,14 @@ export class FileService {
     return data;
   }
 
-  async getUrl(node: FileNode, download: boolean) {
+  async getUrl(node: FileNode, options: FileUrlArgs) {
     const url = withAddedPath(
       this.config.hostUrl$.value,
       FileUrl.path,
       isFile(node) ? node.latestVersionId : node.id,
       encodeURIComponent(node.name),
     );
-    return url.toString() + (download ? '?download' : '');
+    return url.toString() + (options.download ? '?download' : '');
   }
 
   async getDownloadUrl(node: FileNode, download = true): Promise<string> {
