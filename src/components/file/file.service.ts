@@ -173,9 +173,9 @@ export class FileService {
         ResponseContentType: node.mimeType,
         ResponseCacheControl: this.determineCacheHeader(node),
         signing: {
-          expiresIn: this.config.files.cacheTtl.version[
-            node.public ? 'public' : 'private'
-          ].plus({ seconds: 10 }), // buffer to ensure validity while cached is fresh
+          expiresIn: this.getCacheTtl(node)
+            // buffer to ensure validity while cached is fresh
+            .plus({ seconds: 10 }),
         },
       });
     } catch (e) {
@@ -188,14 +188,19 @@ export class FileService {
     const duration = (name: string, d: DurationIn) =>
       `${name}=${Duration.from(d).as('seconds')}`;
 
-    const { cacheTtl } = this.config.files;
     const publicStr = node.public ? 'public' : 'private';
     const isVersion = isFileVersion(node);
     return cleanJoin(', ', [
       isVersion && 'immutable',
       publicStr,
-      duration('max-age', cacheTtl[isVersion ? 'version' : 'file'][publicStr]),
+      duration('max-age', this.getCacheTtl(node)),
     ]);
+  }
+
+  private getCacheTtl(node: FileNode) {
+    const type = isFileVersion(node) ? 'version' : 'file';
+    const visibility = node.public ? 'public' : 'private';
+    return this.config.files.cacheTtl[type][visibility];
   }
 
   async getParents(nodeId: ID): Promise<readonly FileNode[]> {
