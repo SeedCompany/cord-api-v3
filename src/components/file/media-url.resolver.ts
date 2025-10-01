@@ -12,10 +12,10 @@ export class MediaUrlResolver {
   @FileUrl.Resolver()
   async url(
     @Parent() media: Media,
-    @FileUrl.DownloadArg() download: boolean,
+    @FileUrl.Args() options: FileUrl.Options,
     @Loader(FileNodeLoader) files: LoaderOf<FileNodeLoader>,
   ) {
     const node = await files.load(media.file);
-    return await this.service.getUrl(node, download);
+    return await this.service.getUrl(node, options);
   }
 }

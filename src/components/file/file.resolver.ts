@@ -69,8 +69,8 @@ export class FileResolver {
   }
 
   @FileUrl.Resolver()
-  async url(@Parent() node: File, @FileUrl.DownloadArg() download: boolean) {
-    return await this.service.getUrl(node, download);
+  async url(@Parent() node: File, @FileUrl.Args() options: FileUrl.Options) {
+    return await this.service.getUrl(node, options);
   }
 
   @Mutation(() => DeleteFileNodeOutput, {

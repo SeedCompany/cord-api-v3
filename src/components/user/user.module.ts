@@ -1,6 +1,7 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { splitDb } from '~/core/database';
 import { AuthorizationModule } from '../authorization/authorization.module';
+import { FileModule } from '../file/file.module';
 import { LanguageModule } from '../language/language.module';
 import { LocationModule } from '../location/location.module';
 import { OrganizationModule } from '../organization/organization.module';
@@ -12,6 +13,7 @@ import { EducationModule } from './education/education.module';
 import { KnownLanguageRepository } from './known-language.repository';
 import { KnownLanguageResolver } from './known-language.resolver';
 import { AddActorLabelMigration } from './migrations/add-actor-label.migration';
+import { AddGenderAndPhotoMigration } from './migrations/add-photo-and-gender.migration';
 import { AddUserNameLabelMigration } from './migrations/add-user-name-label.migration';
 import { DefaultUserStatusMigration } from './migrations/default-user-status.migration';
 import { SystemAgentGelRepository } from './system-agent.gel.repository';
@@ -28,6 +30,7 @@ import { UserService } from './user.service';
   imports: [
     forwardRef(() => AuthorizationModule),
     EducationModule,
+    FileModule,
     forwardRef(() => OrganizationModule),
     forwardRef(() => PartnerModule),
     UnavailabilityModule,
@@ -51,6 +54,7 @@ import { UserService } from './user.service';
     AddActorLabelMigration,
     AddUserNameLabelMigration,
     DefaultUserStatusMigration,
+    AddGenderAndPhotoMigration,
   ],
   exports: [
     UserService,
@@ -58,6 +62,7 @@ import { UserService } from './user.service';
     SystemAgentRepository,
     EducationModule,
     UnavailabilityModule,
+    AddGenderAndPhotoMigration,
   ],
 })
 export class UserModule {}

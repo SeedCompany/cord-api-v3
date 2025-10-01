@@ -8,6 +8,7 @@ import { fileTypeFromBuffer } from 'file-type';
 import { intersection } from 'lodash';
 import { Duration } from 'luxon';
 import mime from 'mime';
+import { extname } from 'node:path';
 import sanitizeFilename from 'sanitize-filename';
 import { Readable } from 'stream';
 import {
@@ -48,6 +49,7 @@ import {
 } from './dto';
 import { AfterFileUploadEvent } from './events/after-file-upload.event';
 import { FileUrlController as FileUrl } from './file-url.controller';
+import { type FileUrlArgs } from './file-url.resolver-util';
 import { FileRepository } from './file.repository';
 import { MediaService } from './media/media.service';
 
@@ -143,36 +145,53 @@ export class FileService {
     return data;
   }
 
-  async getUrl(node: FileNode, download: boolean) {
+  async getUrl(node: FileNode, options: FileUrlArgs) {
+    const id =
+      options.kind === 'Permanent' && isFile(node)
+        ? node.latestVersionId
+        : node.id;
+
+    const overrideName = options.name
+      ? sanitizeFilename(options.name) || null
+      : null;
+    const ext =
+      overrideName && !isDirectory(node)
+        ? extname(node.name) || mime.getExtension(node.mimeType)
+        : null;
+    const name = overrideName ? cleanJoin('', [overrideName, ext]) : node.name;
+
     const url = withAddedPath(
       this.config.hostUrl$.value,
       FileUrl.path,
-      isFile(node) ? node.latestVersionId : node.id,
-      encodeURIComponent(node.name),
+      id,
+      encodeURIComponent(name),
     );
-    return url.toString() + (download ? '?download' : '');
+    return url.toString() + (options.download ? '?download' : '');
   }
 
-  async getDownloadUrl(node: FileNode, download = true): Promise<string> {
+  async getDownloadUrl(node: FileNode, options?: FileUrlArgs): Promise<string> {
     if (isDirectory(node)) {
       throw new InputException('View directories via GraphQL API');
     }
     const id = isFile(node) ? node.latestVersionId : node.id;
-    const disposition = download ? 'attachment' : 'inline';
+    const disposition = options?.download ? 'attachment' : 'inline';
+    const fileName =
+      (options?.name ? sanitizeFilename(options.name) || null : null) ??
+      node.name;
     try {
       // before sending link, first check if object exists in s3
       await this.bucket.headObject(id);
       return await this.bucket.getSignedUrl(GetObject, {
         Key: id,
         ResponseContentDisposition: `${disposition}; filename="${encodeURIComponent(
-          node.name,
+          fileName,
         )}"`,
         ResponseContentType: node.mimeType,
         ResponseCacheControl: this.determineCacheHeader(node),
         signing: {
-          expiresIn: this.config.files.cacheTtl.version[
-            node.public ? 'public' : 'private'
-          ].plus({ seconds: 10 }), // buffer to ensure validity while cached is fresh
+          expiresIn: this.getCacheTtl(node)
+            // buffer to ensure validity while cached is fresh
+            .plus({ seconds: 10 }),
         },
       });
     } catch (e) {
@@ -185,14 +204,19 @@ export class FileService {
     const duration = (name: string, d: DurationIn) =>
       `${name}=${Duration.from(d).as('seconds')}`;
 
-    const { cacheTtl } = this.config.files;
     const publicStr = node.public ? 'public' : 'private';
     const isVersion = isFileVersion(node);
     return cleanJoin(', ', [
       isVersion && 'immutable',
       publicStr,
-      duration('max-age', cacheTtl[isVersion ? 'version' : 'file'][publicStr]),
+      duration('max-age', this.getCacheTtl(node)),
     ]);
+  }
+
+  private getCacheTtl(node: FileNode) {
+    const type = isFileVersion(node) ? 'version' : 'file';
+    const visibility = node.public ? 'public' : 'private';
+    return this.config.files.cacheTtl[type][visibility];
   }
 
   async getParents(nodeId: ID): Promise<readonly FileNode[]> {
