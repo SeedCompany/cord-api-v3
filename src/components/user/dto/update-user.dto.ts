@@ -11,6 +11,8 @@ import {
   OptionalField,
   Role,
 } from '~/common';
+import { CreateDefinedFileVersionInput } from '../../../components/file/dto';
+import { Gender } from './gender.enum';
 import { UserStatus } from './user-status.enum';
 import { User } from './user.dto';
 
@@ -52,6 +54,14 @@ export abstract class UpdateUser {
 
   @Field(() => String, { nullable: true })
   readonly title?: string | null;
+
+  @OptionalField(() => Gender)
+  readonly gender?: Gender;
+
+  @Field({ nullable: true })
+  @Type(() => CreateDefinedFileVersionInput)
+  @ValidateNested()
+  readonly photo?: CreateDefinedFileVersionInput;
 }
 
 @InputType()

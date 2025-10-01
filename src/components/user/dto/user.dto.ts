@@ -7,13 +7,14 @@ import {
   NameField,
   Resource,
   type ResourceRelationsShape,
+  type Secured,
   SecuredProperty,
   SecuredRoles,
   SecuredString,
   SecuredStringNullable,
 } from '~/common';
 import { e } from '~/core/gel';
-import { RegisterResource } from '~/core/resources';
+import { type LinkTo, RegisterResource } from '~/core/resources';
 import { Commentable } from '../../comments/dto';
 import { Location } from '../../location/dto';
 import { Organization } from '../../organization/dto';
@@ -23,6 +24,7 @@ import { IProject as Project } from '../../project/dto';
 import { Education } from '../education/dto';
 import { Unavailability } from '../unavailability/dto';
 import { Actor } from './actor.dto';
+import { SecuredGenderNullable } from './gender.enum';
 import { KnownLanguage } from './known-language.dto';
 import { SecuredUserStatus } from './user-status.enum';
 
@@ -86,6 +88,11 @@ export class User extends Interfaces {
 
   @Field()
   title: SecuredStringNullable;
+
+  @Field()
+  gender: SecuredGenderNullable;
+
+  readonly photo: Secured<LinkTo<'File'> | null>;
 }
 
 @ObjectType({
