@@ -49,7 +49,7 @@ export const PartialType = BasePartialType as <T, Args extends unknown[]>(
  */
 export const PickType = BasePickType as <
   T,
-  K extends keyof T,
+  const K extends keyof T,
   Args extends unknown[],
 >(
   classRef: AbstractClass<T, Args>,
@@ -67,7 +67,7 @@ export const PickType = BasePickType as <
  */
 export const OmitType = BaseOmitType as <
   T,
-  K extends keyof T,
+  const K extends keyof T,
   Args extends unknown[],
 >(
   classRef: AbstractClass<T, Args>,
