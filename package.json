@@ -2,7 +2,7 @@
   "name": "cord-api-v3",
   "version": "3.0.0",
   "license": "MIT",
-  "packageManager": "yarn@4.9.1",
+  "packageManager": "yarn@4.10.3",
   "engines": {
     "node": ">= 22"
   },
@@ -147,7 +147,7 @@
     "ts-node": "^10.9.1",
     "ts-patch": "^3.0.2",
     "type-fest": "^4.15.0",
-    "typescript": "~5.8.3",
+    "typescript": "~5.9.3",
     "typescript-transform-paths": "^3.4.6"
   },
   "resolutions": {
@@ -157,7 +157,7 @@
     "@nestjs/cli/fork-ts-checker-webpack-plugin": "npm:empty-npm-package@*",
     "@nestjs/cli/glob": "^11",
     "@nestjs/cli/webpack": "npm:empty-npm-package@*",
-    "@nestjs/cli/typescript": "~5.8.3",
+    "@nestjs/cli/typescript": "~5.9.3",
     "@whatwg-node/fetch@npm:^0.10.0": "patch:@whatwg-node/fetch@npm%3A0.10.6#~/.yarn/patches/@whatwg-node-fetch-npm-0.10.6-bca79028fb.patch",
     "@whatwg-node/fetch@npm:^0.10.1": "patch:@whatwg-node/fetch@npm%3A0.10.6#~/.yarn/patches/@whatwg-node-fetch-npm-0.10.6-bca79028fb.patch",
     "@whatwg-node/fetch@npm:^0.10.4": "patch:@whatwg-node/fetch@npm%3A0.10.6#~/.yarn/patches/@whatwg-node-fetch-npm-0.10.6-bca79028fb.patch",
