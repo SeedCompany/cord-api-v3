@@ -1,18 +1,17 @@
 import { ModuleRef } from '@nestjs/core';
 import {
   asNonEmptyArray,
+  asyncPool,
   groupBy,
   type NonEmptyArray,
   setOf,
 } from '@seedcompany/common';
-import { EmailService } from '@seedcompany/nestjs-email';
 import {
   Book,
   mergeVerseRanges,
   splitRangeByBook,
   type Verse,
 } from '@seedcompany/scripture';
-import { type ComponentProps as PropsOf } from 'react';
 import { type ID, type Range } from '~/common';
 import {
   ConfigService,
@@ -23,6 +22,7 @@ import {
   ResourceLoader,
 } from '~/core';
 import { Identity } from '~/core/authentication';
+import { MailerService } from '~/core/email';
 import {
   type ProgressReport,
   ProgressReportStatus as Status,
@@ -38,7 +38,7 @@ import {
   resolveProductType,
 } from '../../product/dto';
 import { ProjectMemberRepository } from '../../project/project-member/project-member.repository';
-import { DBLUpload } from '../templates/dbl-upload-email.template';
+import { DBLUpload } from '../emails/dbl-upload.email';
 
 @EventsHandler(WorkflowUpdatedEvent)
 export class DBLUploadNotificationHandler
@@ -49,7 +49,7 @@ export class DBLUploadNotificationHandler
     private readonly moduleRef: ModuleRef,
     private readonly resources: ResourceLoader,
     private readonly config: ConfigService,
-    private readonly mailer: EmailService,
+    private readonly mailer: MailerService,
     @Logger('progress-report:dbl-upload-notifier')
     private readonly logger: ILogger,
   ) {}
@@ -96,42 +96,23 @@ export class DBLUploadNotificationHandler
       .get(ProjectMemberRepository, { strict: false })
       .listAsNotifiers(engagement.project.id, ['ProjectManager']);
 
-    const notifyeesProps = await Promise.all(
-      notifyees
-        .filter((n) => n.email)
-        .map(({ id: userId }) =>
-          this.gatherTemplateProps(
-            userId,
-            engagement.id,
-            engagement.language.value!.id,
-            engagement.project.id,
-            completedBooks,
-          ),
-        ),
-    );
-
     this.logger.info('Notifying', {
-      engagement: notifyeesProps[0]?.engagement.id ?? undefined,
-      reportId: report.id,
-      reportDate: report.start,
+      language: engagement.language.value!.id,
       books: completedBooks.map((r) => r.start.book.name),
-      emails: notifyeesProps.map((r) => r.recipient.email.value),
+      emails: notifyees.flatMap((r) => r.email ?? []),
     });
 
-    for (const props of notifyeesProps) {
-      // members without an email address are already omitted
-      const to = props.recipient.email.value!;
-      await this.mailer
-        .withOptions({ send: !!this.config.email.notifyDblUpload })
-        .render(DBLUpload, props)
-        .with({
-          to,
-          ...(this.config.email.notifyDblUpload?.replyTo && {
-            'reply-to': this.config.email.notifyDblUpload.replyTo,
-          }),
-        })
-        .send();
-    }
+    await asyncPool(Infinity, notifyees, async ({ id: user, email }) => {
+      if (!email) {
+        return;
+      }
+      const msg = await this.identity.asUser(user, async () =>
+        this.mailer
+          .withOptions({ send: !!this.config.email.notifyDblUpload })
+          .compose(email, [DBLUpload, { engagement, completedBooks }]),
+      );
+      await msg.send();
+    });
   }
 
   private async determineCompletedProducts(report: ProgressReport) {
@@ -212,31 +193,5 @@ export class DBLUploadNotificationHandler
           : [];
       });
     return asNonEmptyArray(completedBooks);
-  }
-
-  private async gatherTemplateProps(
-    recipientId: ID<'User'>,
-    engagementId: ID,
-    languageId: ID,
-    projectId: ID,
-    completedBooks: NonEmptyArray<Range<Verse>>,
-  ) {
-    return await this.identity.asUser(recipientId, async () => {
-      const [recipient, language, engagement, project] = await Promise.all([
-        this.resources.load('User', recipientId),
-        this.resources.load('Language', languageId),
-        this.resources.load('Engagement', engagementId),
-        this.resources.load('Project', projectId),
-      ]);
-
-      return {
-        recipient,
-        language,
-        project,
-        engagement,
-        completedBooks,
-        dblFormUrl: this.config.email.notifyDblUpload?.formUrl ?? '',
-      } satisfies PropsOf<typeof DBLUpload>;
-    });
   }
 }
