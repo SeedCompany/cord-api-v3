@@ -2,7 +2,7 @@ import { type Cardinality } from 'gel/dist/reflection';
 import type {
   ConditionalPick,
   RequireExactlyOne,
-  StringKeyOf,
+  KeyAsString as StringKeyOf,
 } from 'type-fest';
 import { type ID } from '~/common';
 import { type AllResourceDBNames } from '~/core';
