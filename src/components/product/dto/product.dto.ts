@@ -18,7 +18,7 @@ import {
 import { type SetDbType } from '~/core/database';
 import { type SetChangeType } from '~/core/database/changes';
 import { e } from '~/core/gel';
-import { RegisterResource } from '~/core/resources';
+import { type LinkTo, RegisterResource } from '~/core/resources';
 import { type DbScriptureReferences } from '../../scripture';
 import {
   type ScriptureRangeInput,
@@ -55,8 +55,8 @@ export class Product extends Producible {
   static readonly Parent = () =>
     import('../../engagement/dto').then((m) => m.LanguageEngagement);
 
-  readonly engagement: ID;
-  readonly project: ID;
+  readonly engagement: LinkTo<'LanguageEngagement'>;
+  readonly project: LinkTo<'Project'>;
 
   @Field()
   @DbLabel('ProductMedium')
@@ -265,6 +265,12 @@ declare module '../dto/producible.dto' {
     OtherProduct: true;
   }
 }
+
+export const ProductConcretes = {
+  DirectScriptureProduct,
+  DerivativeScriptureProduct,
+  OtherProduct,
+};
 
 declare module '~/core/resources/map' {
   interface ResourceMap {
