@@ -3554,16 +3554,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@seedcompany/cache@npm:^3.0.2":
-  version: 3.1.0
-  resolution: "@seedcompany/cache@npm:3.1.0"
+"@seedcompany/cache@npm:^4.0.0":
+  version: 4.0.0
+  resolution: "@seedcompany/cache@npm:4.0.0"
   dependencies:
     "@nestjs/common": "npm:^10 || ^11"
     "@nestjs/core": "npm:^10 || ^11"
-    "@seedcompany/common": "npm:>0.3 <1"
+    "@seedcompany/common": "npm:^1.0.0"
     "@types/luxon": "npm:^3.2.0"
     luxon: "npm:^3.3.0"
-    type-fest: "npm:^4.26.1"
+    type-fest: "npm:^5.0.1"
   peerDependencies:
     "@nestjs/cache-manager": ^3
     "@nestjs/common": ^9 || ^10 || ^11
@@ -3581,38 +3581,40 @@ __metadata:
       optional: true
     lru-cache:
       optional: true
-  checksum: 10c0/3c3f43419b666f2aa1be1098e9137424e0e2548c4ef73869c0aa61396caba5bd3b5fccca4167708abfa36c5929a82f8f885ac4f9b95ffc7d8f15e35e70238632
+  checksum: 10c0/900959b140fcfcb4d8c9c574a239bf7d29e35d6e691d4d1dc2591ebcc1daf4bea80f944347a8d566667a1df89bee6ba137ace635f99e5f222e0825b597a72633
   languageName: node
   linkType: hard
 
-"@seedcompany/common@npm:>0.3 <1, @seedcompany/common@npm:>=0.17 <1.0.0, @seedcompany/common@npm:>=0.21 <1, @seedcompany/common@npm:>=0.22 <1, @seedcompany/common@npm:>=0.3.0 <1.0.0":
-  version: 0.22.0
-  resolution: "@seedcompany/common@npm:0.22.0"
+"@seedcompany/common@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "@seedcompany/common@npm:1.0.0"
   dependencies:
-    type-fest: "npm:^4.37.0"
+    change-case: "npm:^5.4.4"
+    title-case: "npm:^4.3.2"
+    type-fest: "npm:^5.0.1"
   peerDependencies:
     luxon: ^3.3.0
   peerDependenciesMeta:
     luxon:
       optional: true
-  checksum: 10c0/90c39719add1cdc2c1615efb8cd1bcc2637adae6d02d0dab7025e8043257581932799865912e32596816a02d7226ce04732d4ef8cba27b8fb0fc2d104fd3aae3
+  checksum: 10c0/c35138f101901c57e88e22cbced3169389052942e6c12699d1699a556b5d1de259fa0d4ac86976af94827d64e09ba0c920b63d709fc98d08474cebee3a588e9a
   languageName: node
   linkType: hard
 
-"@seedcompany/data-loader@npm:^2.0.1":
-  version: 2.1.0
-  resolution: "@seedcompany/data-loader@npm:2.1.0"
+"@seedcompany/data-loader@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "@seedcompany/data-loader@npm:3.0.0"
   dependencies:
     "@nestjs/common": "npm:^9 || ^10 || ^11"
     "@nestjs/core": "npm:^9 || ^10 || ^11"
-    "@seedcompany/common": "npm:>=0.3.0 <1.0.0"
+    "@seedcompany/common": "npm:^1.0.0"
     dataloader: "npm:^2.2.2"
   peerDependencies:
     "@nestjs/common": ^10 || ^11
     "@nestjs/core": ^10 || ^11
     "@nestjs/graphql": ">=7"
     reflect-metadata: ^0.1.12 || ^0.2.0
-  checksum: 10c0/fd9a884fa5bdbfa7692abd867a010370993008c2c33f79a026d879a3240fcae2f2ba5885a3b67b6ccda977b396ffe42cd91055cfb247dc8f4df23d958edacece
+  checksum: 10c0/e7ce2cf2cd63bd8589462db7ddbf79573b48855a7eb14fa4156450528ad9a7cd6a1042f50af37cea51f99130b8ea6fb7fbfaa06c6870b9eaab5309f6376c062b
   languageName: node
   linkType: hard
 
@@ -3650,20 +3652,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@seedcompany/nest@npm:^1.13.0":
-  version: 1.13.0
-  resolution: "@seedcompany/nest@npm:1.13.0"
+"@seedcompany/nest@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "@seedcompany/nest@npm:2.0.0"
   dependencies:
     "@nestjs/common": "npm:^10 || ^11"
     "@nestjs/core": "npm:^10 || ^11"
     "@nestjs/graphql": "npm:^12 || ^13"
-    "@seedcompany/common": "npm:>=0.21 <1"
-    change-case: "npm:^5.4.4"
+    "@seedcompany/common": "npm:^1.0.0"
     class-transformer: "npm:^0.5.1"
     class-validator: "npm:^0.14.2"
-    title-case: "npm:^4.3.1"
-    type-fest: "npm:^4.26.1"
-    uuid: "npm:^11.0.0-0"
+    type-fest: "npm:^5.0.1"
   peerDependencies:
     "@nestjs/common": ^10 || ^11
     "@nestjs/core": ^10 || ^11
@@ -3671,18 +3670,18 @@ __metadata:
     class-transformer: ^0.5.1
     class-validator: ^0.14.0
     reflect-metadata: ^0.1.12 || ^0.2.0
-  checksum: 10c0/d98a79408d4597d8d5dd6aba54850f6d28a05a73e18118955e5d082733dfcd5775988eb9af415abd50174ec3241b248e4db51fa0590a25a5a565cb06c1d66f9e
+  checksum: 10c0/ebd57d337512aec0fbe20dc01b97d6bbc8b720db532b4780976680714f9f52213b37f45f4018851efb1bc274fcc45c44a4559fe6ff35a88af88326d5506f5400
   languageName: node
   linkType: hard
 
-"@seedcompany/nestjs-email@npm:^5.0.0":
-  version: 5.0.0
-  resolution: "@seedcompany/nestjs-email@npm:5.0.0"
+"@seedcompany/nestjs-email@npm:^6.0.0":
+  version: 6.0.0
+  resolution: "@seedcompany/nestjs-email@npm:6.0.0"
   dependencies:
     "@aws-sdk/client-sesv2": "npm:^3.658.1"
     "@nestjs/common": "npm:>=7.6.4"
     "@react-email/render": "npm:^1.1.3"
-    "@seedcompany/common": "npm:>=0.3.0 <1.0.0"
+    "@seedcompany/common": "npm:^1.0.0"
     "@types/nodemailer": "npm:^6.4.17"
     dom-serializer: "npm:^2.0.0"
     domhandler: "npm:^5.0.3"
@@ -3693,7 +3692,7 @@ __metadata:
     open: "npm:^10.1.0"
     reflect-metadata: "npm:^0.2.2"
     tempy: "npm:^3.1.0"
-    type-fest: "npm:^4.37.0"
+    type-fest: "npm:^5.0.1"
   peerDependencies:
     "@faire/mjml-react": ^3.5.0
     "@nestjs/common": ">=7"
@@ -3707,17 +3706,17 @@ __metadata:
       optional: true
     mjml:
       optional: true
-  checksum: 10c0/50f25f92dcfd8a8f938b2fb33b73af1bd46679cd80c9ae618de7eede645a16bcea5c07b7a63d0a10cb0e8787431a167fc8b33519d17cc09bdc8098e6bbedf632
+  checksum: 10c0/4fafebdcc33f107556c461333fb982a8dc1bbe097461081ae94a809cd56ac8abd99680e8ff6b227f0382bd837239c992ab1c91319a87ce814bb0f39433009bb6
   languageName: node
   linkType: hard
 
-"@seedcompany/scripture@npm:>=0.8.0":
-  version: 0.9.1
-  resolution: "@seedcompany/scripture@npm:0.9.1"
+"@seedcompany/scripture@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "@seedcompany/scripture@npm:1.0.0"
   dependencies:
-    "@seedcompany/common": "npm:>=0.17 <1.0.0"
-    type-fest: "npm:^4.37.0"
-  checksum: 10c0/04a55612fbf1c2c075acdf7c5812357b48da8dc60bc93a8635aeaa6dacbb89c7112761c5be975250c841c1b42ce44d21e5925e3b4c765e24d9601af335323348
+    "@seedcompany/common": "npm:^1.0.0"
+    type-fest: "npm:^5.0.1"
+  checksum: 10c0/597b1a228fddbcfd937c6a5936a8a554aa6768e681791aa8786753a0ec85dc6ec2f3551eed303b44157ac7e517f6de2d1411ba4594813c9e79fd5cf3870c6d31
   languageName: node
   linkType: hard
 
@@ -6370,13 +6369,13 @@ __metadata:
     "@nestjs/schematics": "npm:^11.0.5"
     "@nestjs/testing": "npm:^11.1.0"
     "@patarapolw/prettyprint": "npm:^1.0.3"
-    "@seedcompany/cache": "npm:^3.0.2"
-    "@seedcompany/common": "npm:>=0.22 <1"
-    "@seedcompany/data-loader": "npm:^2.0.1"
+    "@seedcompany/cache": "npm:^4.0.0"
+    "@seedcompany/common": "npm:^1.0.0"
+    "@seedcompany/data-loader": "npm:^3.0.0"
     "@seedcompany/eslint-plugin": "npm:^3.4.1"
-    "@seedcompany/nest": "npm:^1.13.0"
-    "@seedcompany/nestjs-email": "npm:^5.0.0"
-    "@seedcompany/scripture": "npm:>=0.8.0"
+    "@seedcompany/nest": "npm:^2.0.0"
+    "@seedcompany/nestjs-email": "npm:^6.0.0"
+    "@seedcompany/scripture": "npm:^1.0.0"
     "@tsconfig/strictest": "npm:^2.0.2"
     "@types/common-tags": "npm:^1.8.3"
     "@types/ffprobe": "npm:^1.1.7"
@@ -6456,7 +6455,7 @@ __metadata:
     ts-morph: "npm:^25.0.1"
     ts-node: "npm:^10.9.1"
     ts-patch: "npm:^3.0.2"
-    type-fest: "npm:^4.15.0"
+    type-fest: "npm:^5.0.1"
     typescript: "npm:~5.9.3"
     typescript-transform-paths: "npm:^3.4.6"
     urlpattern-polyfill: "npm:^10.0.0"
@@ -13807,6 +13806,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"tagged-tag@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "tagged-tag@npm:1.0.0"
+  checksum: 10c0/91d25c9ffb86a91f20522cefb2cbec9b64caa1febe27ad0df52f08993ff60888022d771e868e6416cf2e72dab68449d2139e8709ba009b74c6c7ecd4000048d1
+  languageName: node
+  linkType: hard
+
 "tapable@npm:^2.2.0, tapable@npm:^2.2.1":
   version: 2.2.1
   resolution: "tapable@npm:2.2.1"
@@ -13954,7 +13960,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"title-case@npm:^4.3.1":
+"title-case@npm:^4.3.1, title-case@npm:^4.3.2":
   version: 4.3.2
   resolution: "title-case@npm:4.3.2"
   checksum: 10c0/f040c5b0586e3a4ac5881e59ac060ebfa56dae611b0d513ad211fa7f92597d418395fa902fe9d7ee49f98e557e88421e274680b22a3b04dd1ce1c577225444d3
@@ -14275,10 +14281,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"type-fest@npm:^4.15.0, type-fest@npm:^4.26.1, type-fest@npm:^4.37.0, type-fest@npm:^4.39.1, type-fest@npm:^4.6.0":
+"type-fest@npm:^4.26.1, type-fest@npm:^4.39.1, type-fest@npm:^4.6.0":
   version: 4.40.1
   resolution: "type-fest@npm:4.40.1"
   checksum: 10c0/590cb7d4dcd3da83efe49b5b52cd041661f6fa29f18cb76650fe1fdeb4090688e92955656e9d981e606abb13d25c0418be8c6c6504d80e87fe18dc9ca0888392
+  languageName: node
+  linkType: hard
+
+"type-fest@npm:^5.0.1":
+  version: 5.0.1
+  resolution: "type-fest@npm:5.0.1"
+  dependencies:
+    tagged-tag: "npm:^1.0.0"
+  checksum: 10c0/8d248edd9705e0da3cc14f4f4ca7fb40a6c5b2c822fe4ba8fc226743578bc229f66fa4ff66e7d4070806ab8312adc64199ce0f0836d20ede13922ced2ff36118
   languageName: node
   linkType: hard
 
@@ -14511,7 +14526,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"uuid@npm:^11.0.0-0, uuid@npm:^11.1.0":
+"uuid@npm:^11.1.0":
   version: 11.1.0
   resolution: "uuid@npm:11.1.0"
   bin:
