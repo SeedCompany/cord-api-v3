@@ -188,6 +188,9 @@ export class LanguageEngagement extends Engagement {
   @Field()
   readonly openToInvestorVisit: SecuredBoolean;
 
+  @Field()
+  readonly completedMilestone: SecuredBoolean;
+
   @Field({
     description: 'Not used anymore, but exposing for legacy data.',
   })

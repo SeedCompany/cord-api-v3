@@ -59,6 +59,9 @@ export class CreateLanguageEngagement extends CreateEngagement {
   readonly lukePartnership?: boolean;
 
   @Field({ nullable: true })
+  readonly completedMilestone?: boolean;
+
+  @Field({ nullable: true })
   readonly openToInvestorVisit?: boolean;
 
   @Field({ nullable: true })

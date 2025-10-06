@@ -57,6 +57,9 @@ export abstract class UpdateLanguageEngagement extends UpdateEngagement {
   readonly lukePartnership?: boolean;
 
   @Field({ nullable: true })
+  readonly completedMilestone?: boolean;
+
+  @Field({ nullable: true })
   readonly openToInvestorVisit?: boolean;
 
   @Field(() => String, { nullable: true })

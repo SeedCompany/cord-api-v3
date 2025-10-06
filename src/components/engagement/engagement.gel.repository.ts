@@ -41,6 +41,7 @@ const languageExtraHydrate = {
   language: true,
   firstScripture: true,
   lukePartnership: true,
+  completedMilestone: true,
   openToInvestorVisit: true,
   sentPrintingDate: true,
   paratextRegistryId: true,
