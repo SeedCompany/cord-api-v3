@@ -68,6 +68,9 @@ module default {
     required lukePartnership: bool {
       default := false;
     };
+    required completedMilestone: bool {
+      default := false;
+    };
     required openToInvestorVisit: bool {
       default := false;
     };
