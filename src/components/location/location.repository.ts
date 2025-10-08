@@ -270,6 +270,7 @@ export const locationFilters = filter.define(() => LocationFilters, {
     relation('out', '', 'fundingAccount', ACTIVE),
     node('', 'FundingAccount', { id }),
   ]),
+  type: filter.stringListProp(),
   name: filter.fullText({
     index: () => NameIndex,
     matchToNode: (q) =>

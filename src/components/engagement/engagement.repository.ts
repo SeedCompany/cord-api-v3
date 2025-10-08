@@ -744,6 +744,7 @@ export const engagementFilters = filter.define(() => EngagementFilters, {
       })!,
     ),
   }),
+  marketable: filter.propVal(),
   status: filter.stringListProp(),
   partnerId: filter.pathExists((id) => [
     node('node'),
