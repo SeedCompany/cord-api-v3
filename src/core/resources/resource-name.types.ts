@@ -81,9 +81,13 @@ type ResourceNameFromStatic<
     }[keyof ResourceMap]
   : never;
 
-type ResourceNameFromDBName<Name extends AllResourceDBNames> =
+type ResourceNameFromDBName<Name extends AllResourceDBNames> = ConditionalKeys<
+  ResourceDBMap,
   // eslint-disable-next-line @typescript-eslint/naming-convention
-  ConditionalKeys<ResourceDBMap, { __element__: { __name__: Name } }>;
+  { __element__: { __name__: Name } }
+> extends infer AppName extends AllResourceAppNames
+  ? AppName
+  : never;
 //endregion
 
 export type ResourceStaticFromName<Name> = string extends Name

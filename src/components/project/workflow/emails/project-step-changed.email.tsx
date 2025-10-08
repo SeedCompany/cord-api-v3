@@ -1,21 +1,19 @@
 import { cleanJoin } from '@seedcompany/common';
 import {
-  Button,
-  Column,
-  HideInText,
-  Section,
-  Text,
-} from '@seedcompany/nestjs-email/templates';
+  EmailTemplate,
+  FormattedDateTime,
+  Heading,
+  InHtml,
+  Mjml,
+  useFrontendUrl,
+  UserRef,
+} from '~/core/email';
+import { type User } from '../../../user/dto';
 import {
   type Project,
   ProjectStep as Step,
   ProjectType as Type,
-} from '../../../components/project/dto';
-import { type User } from '../../../components/user/dto';
-import { EmailTemplate, Heading } from './base';
-import { FormattedDateTime } from './formatted-date-time';
-import { useFrontendUrl } from './frontend-url';
-import { UserRef } from './user-ref';
+} from '../../dto';
 
 export interface ProjectStepChangedProps {
   recipient: Pick<
@@ -63,9 +61,9 @@ export function ProjectStepChanged({
         )}
       </Heading>
 
-      <Section>
-        <Column>
-          <Text paddingBottom={16}>
+      <Mjml.Section>
+        <Mjml.Column>
+          <Mjml.Text paddingBottom={16}>
             <UserRef {...changedBy} /> has changed{' '}
             {projectName ? 'project ' : ''}
             <a href={projectUrl}>{projectName ?? 'a project'}</a>{' '}
@@ -84,14 +82,14 @@ export function ProjectStepChanged({
               value={project.modifiedAt}
               timezone={recipient.timezone.value}
             />
-          </Text>
-          <HideInText>
-            <Button href={projectUrl} paddingTop={16}>
+          </Mjml.Text>
+          <InHtml>
+            <Mjml.Button href={projectUrl} paddingTop={16}>
               View {projectName ?? 'Project'}
-            </Button>
-          </HideInText>
-        </Column>
-      </Section>
+            </Mjml.Button>
+          </InHtml>
+        </Mjml.Column>
+      </Mjml.Section>
     </EmailTemplate>
   );
 }

@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
-import { EmailService } from '@seedcompany/nestjs-email';
 import {
   AuthenticationException,
   DuplicateException,
@@ -9,12 +8,13 @@ import {
   ServerException,
   UnauthenticatedException,
 } from '~/common';
+import { MailerService } from '~/core/email';
 import { ILogger, Logger } from '~/core/logger';
-import { ForgotPassword } from '../email/templates';
 import { disableAccessPolicies, Gel } from '../gel';
 import { AuthenticationRepository } from './authentication.repository';
 import { CryptoService } from './crypto.service';
 import type { LoginInput, RegisterInput, ResetPasswordInput } from './dto';
+import { ForgotPassword } from './emails/forgot-password.email';
 import { JwtService } from './jwt.service';
 import { SessionHost } from './session/session.host';
 import { SessionManager } from './session/session.manager';
@@ -26,7 +26,7 @@ import { SessionManager } from './session/session.manager';
 export class AuthenticationService {
   constructor(
     private readonly crypto: CryptoService,
-    private readonly email: EmailService,
+    private readonly mailer: MailerService,
     @Logger('authentication:service') private readonly logger: ILogger,
     private readonly repo: AuthenticationRepository,
     private readonly gel: Gel,
@@ -135,9 +135,7 @@ export class AuthenticationService {
     const token = this.jwt.encode();
 
     await this.repo.saveEmailToken(email, token);
-    await this.email.send(email, ForgotPassword, {
-      token,
-    });
+    await this.mailer.compose(email, [ForgotPassword, { token }]).send();
   }
 
   async resetPassword({ token, password }: ResetPasswordInput): Promise<void> {

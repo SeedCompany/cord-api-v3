@@ -144,7 +144,7 @@ export const intersectsProp =
       relation('out', '', prop, ACTIVE),
       node(prop, 'Property'),
     ]);
-    return { [`${prop}.value`]: intersects(value as readonly string[], prop) };
+    return { [`${prop!}.value`]: intersects(value as readonly string[], prop) };
   };
 
 export const stringListProp =
@@ -291,9 +291,10 @@ export const fullText =
   }) =>
   <T, K extends ConditionalKeys<T, string | undefined>>({
     value: raw,
-    key: field,
+    key,
     query,
   }: BuilderArgs<T, K>) => {
+    const field: string = key;
     if (!raw || typeof raw !== 'string') {
       return null;
     }
