@@ -39,6 +39,9 @@ export abstract class EngagementFilters {
   })
   readonly name?: string;
 
+  @OptionalField()
+  readonly marketable?: boolean;
+
   @ListField(() => EngagementStatus, {
     optional: true,
     empty: 'omit',
