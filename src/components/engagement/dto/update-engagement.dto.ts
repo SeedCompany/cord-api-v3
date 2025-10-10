@@ -81,7 +81,10 @@ export abstract class UpdateLanguageEngagement extends UpdateEngagement {
   readonly historicGoal?: string | null;
 
   @OptionalField(() => LanguageMilestone)
-  readonly milestoneReached?: LanguageMilestone;
+  readonly milestonePlanned?: LanguageMilestone;
+
+  @OptionalField(() => Boolean, { nullable: true })
+  readonly milestoneReached?: boolean | null;
 
   @OptionalField(() => AIAssistedTranslation)
   readonly usingAIAssistedTranslation?: AIAssistedTranslation;

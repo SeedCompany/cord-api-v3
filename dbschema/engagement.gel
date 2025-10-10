@@ -81,9 +81,10 @@ module default {
       annotation deprecated := "Legacy data";
     }
 
-    required milestoneReached: Language::Milestone {
+    required milestonePlanned: Language::Milestone {
       default := Language::Milestone.Unknown;
     };
+    milestoneReached: bool;
 
     required usingAIAssistedTranslation: Engagement::AIAssistedTranslation {
       default := Engagement::AIAssistedTranslation.Unknown;
