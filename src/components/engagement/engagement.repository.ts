@@ -240,8 +240,8 @@ export class EngagementRepository extends CommonRepository {
       statusModifiedAt: undefined,
       lastSuspendedAt: undefined,
       lastReactivatedAt: undefined,
-      milestoneReached: undefined,
       milestonePlanned: input.milestonePlanned || LanguageMilestone.Unknown,
+      milestoneReached: undefined,
       usingAIAssistedTranslation:
         input.usingAIAssistedTranslation || AIAssistedTranslation.Unknown,
       modifiedAt: DateTime.local(),

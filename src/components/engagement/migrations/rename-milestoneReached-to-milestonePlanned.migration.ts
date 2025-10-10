@@ -23,13 +23,6 @@ export class RenameMilestoneReachedToMilestonePlannedMigration extends BaseMigra
       .return('total')
       .executeAndLogStats();
 
-    await this.db
-      .query()
-      .match(node('node', 'MilestoneReached'))
-      .setLabels({ node: 'MilestonePlanned' })
-      .removeLabels({ node: 'MilestoneReached' })
-      .executeAndLogStats();
-
     await this.addProperty(LanguageEngagement, 'milestoneReached', null);
   }
 }
