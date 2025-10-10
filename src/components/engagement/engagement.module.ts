@@ -20,8 +20,8 @@ import { InternshipPositionResolver } from './internship-position.resolver';
 import { LanguageEngagementResolver } from './language-engagement.resolver';
 import { AddAiAssistFlagMigration } from './migrations/add-ai-assist-flag.migration';
 import { AddMarketableMigration } from './migrations/add-marketable.migration';
-import { AddMilestoneReachedMigration } from './migrations/add-milestone-reached.migration';
 import { FixNullMethodologiesMigration } from './migrations/fix-null-methodologies.migration';
+import { RenameMilestoneReachedToMilestonePlannedMigration } from './migrations/rename-milestoneReached-to-milestonePlanned.migration';
 import { EngagementProductConnectionResolver } from './product-connection.resolver';
 
 @Module({
@@ -47,9 +47,9 @@ import { EngagementProductConnectionResolver } from './product-connection.resolv
     EngagementLoader,
     ...Object.values(handlers),
     FixNullMethodologiesMigration,
-    AddMilestoneReachedMigration,
     AddAiAssistFlagMigration,
     AddMarketableMigration,
+    RenameMilestoneReachedToMilestonePlannedMigration,
   ],
   exports: [EngagementService, EngagementRepository],
 })

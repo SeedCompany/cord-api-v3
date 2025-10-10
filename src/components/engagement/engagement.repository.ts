@@ -240,7 +240,8 @@ export class EngagementRepository extends CommonRepository {
       statusModifiedAt: undefined,
       lastSuspendedAt: undefined,
       lastReactivatedAt: undefined,
-      milestoneReached: input.milestoneReached || LanguageMilestone.Unknown,
+      milestoneReached: undefined,
+      milestonePlanned: input.milestonePlanned || LanguageMilestone.Unknown,
       usingAIAssistedTranslation:
         input.usingAIAssistedTranslation || AIAssistedTranslation.Unknown,
       modifiedAt: DateTime.local(),
@@ -850,7 +851,8 @@ export const engagementFilters = filter.define(() => EngagementFilters, {
       node('node', 'User'),
     ]),
   ),
-  milestoneReached: filter.stringListProp(),
+  milestonePlanned: filter.stringListProp(),
+  milestoneReached: filter.propVal(),
   usingAIAssistedTranslation: filter.stringListProp(),
 });
 

@@ -83,7 +83,10 @@ export class CreateLanguageEngagement extends CreateEngagement {
   readonly historicGoal?: string;
 
   @Field(() => LanguageMilestone, { nullable: true })
-  readonly milestoneReached?: LanguageMilestone;
+  readonly milestonePlanned?: LanguageMilestone;
+
+  @Field({ nullable: true })
+  readonly milestoneReached?: boolean;
 
   @Field(() => AIAssistedTranslation, { nullable: true })
   readonly usingAIAssistedTranslation?: AIAssistedTranslation;

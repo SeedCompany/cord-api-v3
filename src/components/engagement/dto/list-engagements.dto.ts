@@ -76,11 +76,17 @@ export abstract class EngagementFilters {
   @ValidateNested()
   readonly endDate?: DateFilter;
 
+  @OptionalField({
+    description:
+      'Filter for engagements that have reached a milestone within it',
+  })
+  readonly milestoneReached?: boolean;
+
   @ListField(() => LanguageMilestone, {
     optional: true,
     empty: 'omit',
   })
-  readonly milestoneReached?: readonly LanguageMilestone[];
+  readonly milestonePlanned?: readonly LanguageMilestone[];
 
   @ListField(() => AIAssistedTranslation, {
     optional: true,
