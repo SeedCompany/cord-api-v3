@@ -81,7 +81,9 @@ module default {
       annotation deprecated := "Legacy data";
     }
 
-    required milestoneReached: Language::Milestone {
+    milestoneReached: bool;
+    
+    required milestonePlanned: Language::Milestone {
       default := Language::Milestone.Unknown;
     };
 
