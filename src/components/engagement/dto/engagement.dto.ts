@@ -14,6 +14,7 @@ import {
   type ResourceRelationsShape,
   type Secured,
   SecuredBoolean,
+  SecuredBooleanNullable,
   SecuredDateNullable,
   SecuredDateTimeNullable,
   SecuredRichTextNullable,
@@ -201,8 +202,16 @@ export class LanguageEngagement extends Engagement {
   @Field()
   readonly historicGoal: SecuredStringNullable;
 
-  @Field()
-  readonly milestoneReached: SecuredLanguageMilestone;
+  @Field({
+    description:
+      'The language milestone that this engagement plans to reach/complete by the end of this engagement',
+  })
+  readonly milestonePlanned: SecuredLanguageMilestone;
+
+  @Field({
+    description: 'Was the planned milestone actually reached/completed?',
+  })
+  readonly milestoneReached: SecuredBooleanNullable;
 
   @Field()
   readonly usingAIAssistedTranslation: SecuredAIAssistedTranslation;

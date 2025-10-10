@@ -46,6 +46,7 @@ const languageExtraHydrate = {
   paratextRegistryId: true,
   pnp: true,
   historicGoal: true,
+  milestonePlanned: true,
   milestoneReached: true,
   usingAIAssistedTranslation: true,
 } as const;
