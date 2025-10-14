@@ -22,7 +22,6 @@ import {
 } from '~/common';
 import { HandleIdLookup, IEventBus } from '~/core';
 import { Identity } from '~/core/authentication';
-import { Transactional } from '~/core/database';
 import { type AnyChangesOf } from '~/core/database/changes';
 import { Privileges } from '../authorization';
 import { BudgetService } from '../budget';
@@ -61,7 +60,7 @@ import {
   resolveProjectType,
   type SecuredProjectList,
   TranslationProject,
-  UpdateProject,
+  type UpdateProject,
 } from './dto';
 import {
   ProjectCreatedEvent,
@@ -238,7 +237,6 @@ export class ProjectService {
     return this.secure(unsecured);
   }
 
-  @Transactional()
   async update(
     input: UpdateProject,
     changeset?: ID,

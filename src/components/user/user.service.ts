@@ -10,7 +10,6 @@ import {
 } from '~/common';
 import { HandleIdLookup, ILogger, Logger } from '~/core';
 import { Identity } from '~/core/authentication';
-import { Transactional } from '~/core/database';
 import { IEventBus } from '~/core/events';
 import { Privileges } from '../authorization';
 import { AssignableRoles } from '../authorization/dto/assignable-roles.dto';
@@ -32,7 +31,7 @@ import {
   type ModifyKnownLanguageArgs,
   type RemoveOrganizationFromUser,
   type SystemAgent,
-  UpdateUser,
+  type UpdateUser,
   User,
   type UserListInput,
   type UserListOutput,
@@ -110,7 +109,6 @@ export class UserService {
     return this.privileges.for(User).secure(user);
   }
 
-  @Transactional()
   async update(input: UpdateUser): Promise<User> {
     this.logger.debug('mutation update User', { input });
     const user = await this.userRepo.readOne(input.id);
