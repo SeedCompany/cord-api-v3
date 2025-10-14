@@ -3,6 +3,7 @@ import {
   AbstractGraphQLDriver as AbstractDriver,
   type GqlModuleOptions,
 } from '@nestjs/graphql';
+import { cmpBy } from '@seedcompany/common';
 import type { RouteOptions as FastifyRoute } from 'fastify';
 import type { ExecutionArgs } from 'graphql';
 import { makeHandler as makeGqlWSHandler } from 'graphql-ws/use/@fastify/websocket';
@@ -47,7 +48,9 @@ export class Driver extends AbstractDriver<DriverConfig> {
     const discoveredPlugins = this.discovery.discover(Plugin).classes<Plugin>();
     options.plugins = [
       ...(options.plugins ?? []),
-      ...discoveredPlugins.map((cls) => cls.instance),
+      ...discoveredPlugins
+        .toSorted(cmpBy(({ meta }) => meta.priority))
+        .map((cls) => cls.instance),
     ];
 
     this.yoga = createYoga({
