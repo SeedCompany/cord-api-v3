@@ -26,7 +26,7 @@ import {
 } from '~/common';
 import { withAddedPath } from '~/common/url.util';
 import { ConfigService, IEventBus, ILogger, type LinkTo, Logger } from '~/core';
-import { RollbackManager } from '~/core/database';
+import { TransactionHooks } from '~/core/database';
 import { FileBucket } from './bucket';
 import {
   type CreateDefinedFileVersionInput,
@@ -60,7 +60,7 @@ export class FileService {
   constructor(
     private readonly bucket: FileBucket,
     private readonly repo: FileRepository,
-    private readonly rollbacks: RollbackManager,
+    private readonly txHooks: TransactionHooks,
     private readonly config: ConfigService,
     @Inject(forwardRef(() => MediaService))
     private readonly mediaService: MediaService,
@@ -403,7 +403,7 @@ export class FileService {
       await this.bucket.moveObject(`temp/${uploadId}`, uploadId);
 
       // Undo the above operation by moving it back to temp folder.
-      this.rollbacks.add(async () => {
+      this.txHooks.afterRollback.add(async () => {
         await this.bucket
           .moveObject(uploadId, `temp/${uploadId}`)
           .catch((e) => {
