@@ -21,6 +21,7 @@ import { ExceptionNormalizer } from './exception/exception.normalizer';
 import { GelModule } from './gel/gel.module';
 import { GraphqlModule } from './graphql';
 import { HttpModule } from './http';
+import { LiveQueryModule } from './live-query/live-query.module';
 import { ResourceModule } from './resources/resource.module';
 import { ScalarProviders } from './scalars.resolver';
 import { ShutdownHookProvider } from './shutdown.hook';
@@ -44,6 +45,7 @@ import { WaitResolver } from './wait.resolver';
     DiscoveryModule,
     HooksModule,
     GraphqlModule,
+    LiveQueryModule,
     EventsModule,
     TracingModule,
     ResourceModule,
@@ -68,6 +70,7 @@ import { WaitResolver } from './wait.resolver';
     CacheModule,
     BroadcasterModule,
     GraphqlModule,
+    LiveQueryModule,
     DatabaseModule,
     DataLoaderModule,
     DiscoveryModule,

@@ -1,5 +1,6 @@
 import { useHive } from '@graphql-hive/yoga';
 import { useAPQ } from '@graphql-yoga/plugin-apq';
+import { GraphQLLiveDirective as LiveDirective } from '@n1ru4l/graphql-live-query';
 import { Injectable } from '@nestjs/common';
 import { type GqlOptionsFactory } from '@nestjs/graphql';
 import { CacheService } from '@seedcompany/cache';
@@ -68,6 +69,7 @@ export class GraphqlOptions implements GqlOptionsFactory {
       sortSchema: true,
       buildSchemaOptions: {
         fieldMiddleware: [this.tracing.fieldMiddleware()],
+        directives: [LiveDirective],
       },
       resolvers: {
         ...scalars,
