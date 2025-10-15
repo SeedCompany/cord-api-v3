@@ -37,6 +37,9 @@ export abstract class TransactionalMutationsInterceptor
           await this.txHooks.afterRollback.runAndClear();
           throw e;
         }
+      }).then(async (res) => {
+        await this.txHooks.afterCommit.runAndClear();
+        return res;
       }),
     );
   }

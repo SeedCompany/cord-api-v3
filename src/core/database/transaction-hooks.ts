@@ -15,6 +15,10 @@ export class TransactionHooks {
     return this.managerFor('afterRollback');
   }
 
+  get afterCommit() {
+    return this.managerFor('afterCommit');
+  }
+
   private managerFor(event: string) {
     const contextId = this.contextHost.context;
     return cached(
