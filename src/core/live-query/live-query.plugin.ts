@@ -2,6 +2,7 @@ import { GraphQLLiveDirective } from '@n1ru4l/graphql-live-query';
 import { applyLiveQueryJSONDiffPatchGenerator } from '@n1ru4l/graphql-live-query-patch-jsondiffpatch';
 import { InMemoryLiveQueryStore } from '@n1ru4l/in-memory-live-query-store';
 import { GraphQLSchema } from 'graphql';
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { Plugin } from '../graphql/plugin.decorator';
 import { NoLiveMixedWithDeferStreamRule } from './no-live-mixed-with-defer-stream.rule';
 
@@ -35,7 +36,13 @@ export class LiveQueryPlugin {
   };
 
   onExecute: Plugin['onExecute'] = ({ executeFn, setExecuteFn }) => {
-    const wrapped = this.store.makeExecute(executeFn);
+    const runInAsyncScope = AsyncLocalStorage.snapshot();
+    const wrapped = this.store.makeExecute((...args) =>
+      // IMLQStore must call the original executeFn with the original async scope.
+      // Since invalidations (from a sub message of a redis socket) trigger
+      // this `executeFn` subsequently to feed the live data to the client.
+      runInAsyncScope(executeFn, ...args),
+    );
     setExecuteFn((...args) =>
       applyLiveQueryJSONDiffPatchGenerator(wrapped(...args)),
     );
