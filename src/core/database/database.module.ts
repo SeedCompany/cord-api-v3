@@ -9,7 +9,7 @@ import { DatabaseService } from './database.service';
 import { IndexerModule } from './indexer/indexer.module';
 import { MigrationModule } from './migration/migration.module';
 import { ParameterTransformer } from './parameter-transformer.service';
-import { RollbackManager } from './rollback-manager';
+import { TransactionHooks } from './transaction-hooks';
 import { TransactionRetryInformer } from './transaction-retry.informer';
 import { Neo4jTransactionalMutationsInterceptor as TransactionalMutationsInterceptor } from './transactional-mutations.interceptor';
 
@@ -20,14 +20,14 @@ import { Neo4jTransactionalMutationsInterceptor as TransactionalMutationsInterce
     DatabaseService,
     ParameterTransformer,
     { provide: APP_INTERCEPTOR, useClass: TransactionalMutationsInterceptor },
-    RollbackManager,
+    TransactionHooks,
     TransactionRetryInformer,
   ],
   exports: [
     CypherFactory,
     DatabaseService,
     IndexerModule,
-    RollbackManager,
+    TransactionHooks,
     TransactionRetryInformer,
   ],
 })
