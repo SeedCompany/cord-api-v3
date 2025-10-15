@@ -299,6 +299,9 @@ export const RepoFor = <
 
     async update(input: { id: ID } & EasyUpdateShape<Root>): Promise<Dto> {
       const { id, ...changes } = input;
+
+      this.liveQueryStore.invalidate([resource, id]);
+
       const object = e.cast(dbType, e.cast(e.uuid, id));
       const updated = e.update(object, () => ({
         set: mapToSetBlock(dbType, changes, true) as UpdateShape<Root>,
@@ -308,6 +311,8 @@ export const RepoFor = <
     }
 
     async delete(id: ID): Promise<void> {
+      this.liveQueryStore.invalidate([resource, id]);
+
       const existing = e.cast(dbType, e.cast(e.uuid, id));
       const query = e.delete(existing);
       await this.db.run(query);

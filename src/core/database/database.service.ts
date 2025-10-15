@@ -24,6 +24,7 @@ import {
 import { AbortError, retry, type RetryOptions } from '~/common/retry';
 import { Identity } from '../authentication';
 import { ConfigService } from '../config/config.service';
+import { LiveQueryStore } from '../live-query';
 import { ILogger, Logger } from '../logger';
 import { ShutdownHook } from '../shutdown.hook';
 import { type DbChanges } from './changes';
@@ -70,6 +71,7 @@ export class DatabaseService {
     private readonly config: ConfigService,
     @Inject(forwardRef(() => Identity))
     private readonly identity: Identity,
+    private readonly liveQueryStore: LiveQueryStore,
     private readonly shutdown$: ShutdownHook,
     @Logger('database:service') private readonly logger: ILogger,
   ) {}
@@ -332,6 +334,8 @@ export class DatabaseService {
             change,
       };
     }
+
+    this.liveQueryStore.invalidate([type, object.id]);
 
     return updated;
   }
