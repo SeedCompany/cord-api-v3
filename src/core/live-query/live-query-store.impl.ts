@@ -1,6 +1,5 @@
 import { InMemoryLiveQueryStore } from '@n1ru4l/in-memory-live-query-store';
 import { Injectable } from '@nestjs/common';
-import type { Many } from '@seedcompany/common';
 import { TransactionHooks } from '../database';
 import { LiveQueryStore } from './live-query-store.interface';
 
@@ -26,7 +25,7 @@ export class LiveQueryStoreImpl extends LiveQueryStore {
    * It would be nice to confirm this and warn if not.
    * Currently, if this case is hit, it is highly likely the invalidation will just be dropped.
    */
-  invalidate(identifiers: Many<string>) {
+  protected doInvalidate(identifiers: string[]) {
     this.txHooks.afterCommit.add(async () => {
       await this.store.invalidate(identifiers as string | string[]);
     });
