@@ -6,27 +6,27 @@ import {
   Headers,
   LanguageRef,
   Mjml,
-  useConfig,
   useFrontendUrl,
-  useResources,
 } from '~/core/email';
+import { type Language } from '../../../components/language/dto';
+import { type Project } from '../../../components/project/dto';
 import { type LanguageEngagement } from '../../engagement/dto';
+
+interface EmailConfig {
+  replyTo?: string;
+  formUrl?: string;
+}
 
 interface Props {
   engagement: LanguageEngagement;
   completedBooks: NonEmptyArray<Range<Verse>>;
+  language: Language;
+  project: Project;
+  config: EmailConfig;
 }
 
 export async function DBLUpload(props: Props) {
-  const { engagement, completedBooks } = props;
-
-  const resources = useResources();
-  const [language, project] = await Promise.all([
-    resources.load('Language', props.engagement.language.value!.id),
-    resources.load('Project', props.engagement.project.id),
-  ]);
-
-  const config = useConfig().email.notifyDblUpload!;
+  const { engagement, completedBooks, language, project, config } = props;
 
   const languageName = language.name.value;
   return (

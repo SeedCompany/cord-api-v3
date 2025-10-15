@@ -92,6 +92,7 @@ export class DBLUploadNotificationHandler
       'LanguageEngagement',
       report.parent.properties.id,
     );
+
     const notifyees = await this.moduleRef
       .get(ProjectMemberRepository, { strict: false })
       .listAsNotifiers(engagement.project.id, ['ProjectManager']);
@@ -102,6 +103,13 @@ export class DBLUploadNotificationHandler
       emails: notifyees.flatMap((r) => r.email ?? []),
     });
 
+    const [language, project] = await Promise.all([
+      this.resources.load('Language', engagement.language.value!.id),
+      this.resources.load('Project', engagement.project.id),
+    ]);
+
+    const config = this.config.email.notifyDblUpload!;
+
     await asyncPool(Infinity, notifyees, async ({ id: user, email }) => {
       if (!email) {
         return;
@@ -109,7 +117,10 @@ export class DBLUploadNotificationHandler
       const msg = await this.identity.asUser(user, async () =>
         this.mailer
           .withOptions({ send: !!this.config.email.notifyDblUpload })
-          .compose(email, [DBLUpload, { engagement, completedBooks }]),
+          .compose(email, [
+            DBLUpload,
+            { engagement, completedBooks, language, project, config },
+          ]),
       );
       await msg.send();
     });
