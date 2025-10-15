@@ -14,7 +14,9 @@ import './polyfills';
 runRepl({
   module: () => import('./app.module').then((m) => m.AppModule),
   options: async () => {
-    const { bootstrapLogger: logger } = await import('~/core');
+    const { bootstrapLogger: logger } = await import(
+      '~/core/logger/logger.module'
+    );
     return { logger };
   },
   import: { import: (name) => import(name) },
