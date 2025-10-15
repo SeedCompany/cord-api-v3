@@ -553,7 +553,9 @@ export class FileRepository extends CommonRepository {
 
   async delete(fileNode: FileNode): Promise<void> {
     try {
-      await this.db.deleteNode(fileNode);
+      await this.deleteNode(fileNode, {
+        resource: resolveFileNode(fileNode),
+      });
     } catch (exception) {
       this.logger.error('Failed to delete', { id: fileNode.id, exception });
       throw new ServerException('Failed to delete', exception);
