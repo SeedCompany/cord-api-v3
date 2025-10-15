@@ -51,7 +51,7 @@
     "@seedcompany/cache": "^4.0.1",
     "@seedcompany/common": "^1.3.0",
     "@seedcompany/data-loader": "^3.0.0",
-    "@seedcompany/nest": "^2.0.0",
+    "@seedcompany/nest": "^2.1.1",
     "@seedcompany/nestjs-email": "^6.0.0",
     "@seedcompany/scripture": "^1.0.0",
     "argon2": "^0.43.0",

@@ -7,6 +7,7 @@ import { HooksModule } from '@seedcompany/nest/hooks';
 import { EmailModule } from '@seedcompany/nestjs-email';
 import { AuthenticationModule } from './authentication/authentication.module';
 import { AwsS3Factory } from './aws-s3.factory';
+import { BroadcasterModule } from './broadcast/broadcast.module';
 import { CacheModule } from './cache/cache.module';
 import { CliModule } from './cli/cli.module';
 import { ConfigModule } from './config/config.module';
@@ -34,6 +35,7 @@ import { WaitResolver } from './wait.resolver';
     HttpModule,
     ConfigModule,
     CacheModule,
+    BroadcasterModule,
     CliModule,
     DatabaseModule,
     DataLoaderModule.registerAsync({ useClass: DataLoaderConfig }),
@@ -64,6 +66,7 @@ import { WaitResolver } from './wait.resolver';
     AwsS3Factory,
     ConfigModule,
     CacheModule,
+    BroadcasterModule,
     GraphqlModule,
     DatabaseModule,
     DataLoaderModule,
