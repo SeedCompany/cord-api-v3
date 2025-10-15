@@ -1,5 +1,6 @@
 import { InMemoryLiveQueryStore } from '@n1ru4l/in-memory-live-query-store';
 import { Injectable } from '@nestjs/common';
+import { cached } from '@seedcompany/common';
 import { TransactionHooks } from '../database';
 import { LiveQueryStore } from './live-query-store.interface';
 
@@ -15,6 +16,7 @@ export class LiveQueryStoreImpl extends LiveQueryStore {
   ) {
     super();
   }
+  private readonly pendingInvalidations = new WeakMap<object, Set<string>>();
 
   /**
    * Wait to do invalidation until after the transaction is committed.
@@ -26,8 +28,16 @@ export class LiveQueryStoreImpl extends LiveQueryStore {
    * Currently, if this case is hit, it is highly likely the invalidation will just be dropped.
    */
   protected doInvalidate(identifiers: string[]) {
-    this.txHooks.afterCommit.add(async () => {
-      await this.store.invalidate(identifiers as string | string[]);
+    const { afterCommit } = this.txHooks;
+    const idList = cached(this.pendingInvalidations, afterCommit, () => {
+      const idList = new Set<string>();
+      afterCommit.add(async () => {
+        await this.store.invalidate([...idList]);
+      });
+      return idList;
     });
+    for (const id of identifiers) {
+      idList.add(id);
+    }
   }
 }
