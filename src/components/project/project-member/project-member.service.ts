@@ -3,13 +3,15 @@ import { type MaybeAsync, setOf } from '@seedcompany/common';
 import {
   type ID,
   InputException,
+  isIdLike,
   type ObjectView,
   Role,
   ServerException,
   UnauthorizedException,
   type UnsecuredDto,
 } from '~/common';
-import { HandleIdLookup, ResourceLoader } from '~/core';
+import { HandleIdLookup, ResourceLoader, ResourceResolver } from '~/core';
+import { LiveQueryStore } from '~/core/live-query';
 import { Privileges } from '../../authorization';
 import { UserService } from '../../user';
 import { type User } from '../../user/dto';
@@ -29,6 +31,8 @@ export class ProjectMemberService {
     @Inject(forwardRef(() => UserService))
     private readonly userService: UserService & {},
     private readonly resources: ResourceLoader,
+    private readonly resourceResolver: ResourceResolver,
+    private readonly liveQueryStore: LiveQueryStore,
     private readonly privileges: Privileges,
     private readonly repo: ProjectMemberRepository,
   ) {}
@@ -42,7 +46,12 @@ export class ProjectMemberService {
         this.resources.load('User', input.userId),
       ));
 
+    const projectId = isIdLike(input.projectId)
+      ? input.projectId
+      : input.projectId.id;
+    const invalidating = this.invalidateProject(projectId);
     const created = await this.repo.create(input);
+    await invalidating;
 
     if (input.inactiveAt && input.inactiveAt < created.createdAt) {
       throw new InputException(
@@ -162,6 +171,12 @@ export class ProjectMemberService {
     } catch (exception) {
       throw new ServerException('Failed to delete project member', exception);
     }
+  }
+
+  private async invalidateProject(id: ID<'Project'>) {
+    const node = await this.repo.getBaseNode(id, 'Project');
+    const projectType = this.resourceResolver.resolveTypeByBaseNode(node!);
+    this.liveQueryStore.invalidate([projectType, id]);
   }
 
   async list(input: ProjectMemberListInput): Promise<ProjectMemberListOutput> {
