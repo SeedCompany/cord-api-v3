@@ -1,6 +1,8 @@
 import { InMemoryLiveQueryStore } from '@n1ru4l/in-memory-live-query-store';
-import { Injectable } from '@nestjs/common';
-import { cached } from '@seedcompany/common';
+import { Injectable, type OnModuleInit } from '@nestjs/common';
+import { cached, CachedGetter } from '@seedcompany/common';
+import { mergeMap } from 'rxjs';
+import { Broadcaster } from '~/core/broadcast';
 import { TransactionHooks } from '../database';
 import { LiveQueryStore } from './live-query-store.interface';
 
@@ -9,14 +11,19 @@ import { LiveQueryStore } from './live-query-store.interface';
  * and I don't want to couple those imports to the database & graphql module/folder.
  */
 @Injectable()
-export class LiveQueryStoreImpl extends LiveQueryStore {
+export class LiveQueryStoreImpl extends LiveQueryStore implements OnModuleInit {
   constructor(
     private readonly store: InMemoryLiveQueryStore,
     private readonly txHooks: TransactionHooks,
+    private readonly broadcaster: Broadcaster,
   ) {
     super();
   }
   private readonly pendingInvalidations = new WeakMap<object, Set<string>>();
+
+  @CachedGetter() get invalidations() {
+    return this.broadcaster.channel<string[]>('live-query-invalidations');
+  }
 
   /**
    * Wait to do invalidation until after the transaction is committed.
@@ -31,13 +38,23 @@ export class LiveQueryStoreImpl extends LiveQueryStore {
     const { afterCommit } = this.txHooks;
     const idList = cached(this.pendingInvalidations, afterCommit, () => {
       const idList = new Set<string>();
-      afterCommit.add(async () => {
-        await this.store.invalidate([...idList]);
+      afterCommit.add(() => {
+        this.invalidations.publish([...idList]);
       });
       return idList;
     });
     for (const id of identifiers) {
       idList.add(id);
     }
+  }
+
+  onModuleInit() {
+    this.invalidations
+      .pipe(
+        mergeMap(async (ids) => {
+          await this.store.invalidate(ids);
+        }),
+      )
+      .subscribe();
   }
 }
