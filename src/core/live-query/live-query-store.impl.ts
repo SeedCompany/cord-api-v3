@@ -3,6 +3,7 @@ import { Injectable, type OnModuleInit } from '@nestjs/common';
 import { cached, CachedGetter } from '@seedcompany/common';
 import { mergeMap } from 'rxjs';
 import { Broadcaster } from '~/core/broadcast';
+import { ILogger, Logger } from '~/core/logger';
 import { TransactionHooks } from '../database';
 import { LiveQueryStore } from './live-query-store.interface';
 
@@ -16,6 +17,7 @@ export class LiveQueryStoreImpl extends LiveQueryStore implements OnModuleInit {
     private readonly store: InMemoryLiveQueryStore,
     private readonly txHooks: TransactionHooks,
     private readonly broadcaster: Broadcaster,
+    @Logger('live-query') private readonly logger: ILogger,
   ) {
     super();
   }
@@ -52,6 +54,7 @@ export class LiveQueryStoreImpl extends LiveQueryStore implements OnModuleInit {
     this.invalidations
       .pipe(
         mergeMap(async (ids) => {
+          this.logger.notice('Invalidating', { ids });
           await this.store.invalidate(ids);
         }),
       )
