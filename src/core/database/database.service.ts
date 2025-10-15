@@ -338,7 +338,7 @@ export class DatabaseService {
     return updated;
   }
 
-  async updateProperty<
+  private async updateProperty<
     TResourceStatic extends ResourceShape<any>,
     TObject extends Partial<MaybeUnsecuredInstance<TResourceStatic>> & {
       id: ID;

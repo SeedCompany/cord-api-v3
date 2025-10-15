@@ -512,11 +512,10 @@ export class FileRepository extends CommonRepository {
   async rename(fileNode: FileNode, newName: string): Promise<void> {
     // TODO Do you have permission to rename the file?
     try {
-      await this.db.updateProperty({
+      await this.db.updateProperties({
         type: IFileNode,
         object: fileNode,
-        key: 'name',
-        value: newName,
+        changes: { name: newName },
       });
     } catch (e) {
       this.logger.error('Could not rename', { id: fileNode.id, newName });
