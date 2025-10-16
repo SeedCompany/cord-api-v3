@@ -262,10 +262,12 @@ export class ProjectRepository extends CommonRepository {
       ...simpleChanges
     } = changes;
 
+    const type = resolveProjectType({ type: existing.type });
+
     let result;
     try {
       result = await this.db.updateProperties({
-        type: resolveProjectType({ type: existing.type }),
+        type,
         object: existing,
         changes: simpleChanges,
         changeset,
@@ -289,7 +291,7 @@ export class ProjectRepository extends CommonRepository {
         'Location',
         existing.id,
         primaryLocationId,
-        'Project',
+        type,
       );
       result = {
         ...result,
@@ -303,7 +305,7 @@ export class ProjectRepository extends CommonRepository {
         'FieldRegion',
         existing.id,
         fieldRegionId,
-        'Project',
+        type,
       );
       result = {
         ...result,
@@ -317,7 +319,7 @@ export class ProjectRepository extends CommonRepository {
         'Location',
         existing.id,
         marketingLocationId,
-        'Project',
+        type,
       );
       result = {
         ...result,
@@ -333,7 +335,7 @@ export class ProjectRepository extends CommonRepository {
         'Location',
         existing.id,
         marketingRegionOverrideId,
-        'Project',
+        type,
       );
       result = {
         ...result,

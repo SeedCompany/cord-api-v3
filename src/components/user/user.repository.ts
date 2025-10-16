@@ -259,7 +259,7 @@ export class UserRepository extends DtoRepository(User) {
     const user = await this.readOne(id);
     this.privileges.forContext(user).verifyCan('delete');
     try {
-      await this.db.deleteNode(object);
+      await this.deleteNode(object, { resource: User });
     } catch (exception) {
       throw new ServerException('Failed to delete', exception);
     }

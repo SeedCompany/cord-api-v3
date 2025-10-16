@@ -139,7 +139,7 @@ export const DtoRepository = <
         otherLabel,
         id,
         otherId,
-        this.resource.dbLabel,
+        this.resource,
       );
     }
 

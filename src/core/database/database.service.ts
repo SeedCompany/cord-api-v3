@@ -14,7 +14,6 @@ import {
 import {
   DuplicateException,
   type ID,
-  isIdLike,
   isSecured,
   type MaybeUnsecuredInstance,
   type ResourceShape,
@@ -35,7 +34,6 @@ import {
 } from './errors';
 import {
   ACTIVE,
-  deleteBaseNode,
   exp,
   updateProperty,
   type UpdatePropertyOptions,
@@ -338,7 +336,7 @@ export class DatabaseService {
     return updated;
   }
 
-  async updateProperty<
+  private async updateProperty<
     TResourceStatic extends ResourceShape<any>,
     TObject extends Partial<MaybeUnsecuredInstance<TResourceStatic>> & {
       id: ID;
@@ -418,15 +416,5 @@ export class DatabaseService {
     ) {
       throw new ServerException(`Could not find ${label}.${key} to update`);
     }
-  }
-
-  async deleteNode(objectOrId: { id: ID } | ID) {
-    const id = isIdLike(objectOrId) ? objectOrId : objectOrId.id;
-    const query = this.db
-      .query()
-      .matchNode('baseNode', { id })
-      .apply(deleteBaseNode('baseNode'))
-      .return('*');
-    await query.run();
   }
 }
