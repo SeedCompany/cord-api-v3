@@ -1,11 +1,9 @@
-import {
-  GraphQLLiveDirective,
-  NoLiveMixedWithDeferStreamRule,
-} from '@n1ru4l/graphql-live-query';
+import { GraphQLLiveDirective } from '@n1ru4l/graphql-live-query';
 import { applyLiveQueryJSONDiffPatchGenerator } from '@n1ru4l/graphql-live-query-patch-jsondiffpatch';
 import { InMemoryLiveQueryStore } from '@n1ru4l/in-memory-live-query-store';
 import { GraphQLSchema } from 'graphql';
 import { Plugin } from '../graphql/plugin.decorator';
+import { NoLiveMixedWithDeferStreamRule } from './no-live-mixed-with-defer-stream.rule';
 
 @Plugin(
   // Later, so wrapping is at the outer layer, so that this execute() handles
