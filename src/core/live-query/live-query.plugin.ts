@@ -1,6 +1,7 @@
-import { NoLiveMixedWithDeferStreamRule } from '@n1ru4l/graphql-live-query';
+import { getLiveDirectiveNode } from '@n1ru4l/graphql-live-query';
 import { applyLiveQueryJSONDiffPatchGenerator } from '@n1ru4l/graphql-live-query-patch-jsondiffpatch';
 import { InMemoryLiveQueryStore } from '@n1ru4l/in-memory-live-query-store';
+import { GraphQLError, type ValidationRule } from 'graphql';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { Plugin } from '../graphql/plugin.decorator';
 
@@ -15,10 +16,7 @@ export class LiveQueryPlugin {
   constructor(private readonly store: InMemoryLiveQueryStore) {}
 
   onValidate: Plugin['onValidate'] = ({ addValidationRule }) => {
-    // false positive currently, so disabling for now.
-    // https://github.com/n1ru4l/graphql-live-query/issues/1031
-    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-    () => addValidationRule(NoLiveMixedWithDeferStreamRule);
+    addValidationRule(LiveMixedWithDeferStreamRule);
   };
 
   onExecute: Plugin['onExecute'] = ({ executeFn, setExecuteFn }) => {
@@ -34,3 +32,40 @@ export class LiveQueryPlugin {
     );
   };
 }
+
+/**
+ * Upstream has an issue, so this is my version that is fixed.
+ * @see https://github.com/n1ru4l/graphql-live-query/issues/1031
+ */
+const LiveMixedWithDeferStreamRule: ValidationRule = (context) => ({
+  // Changed from upstream to check at doc level, then go down manually to
+  // Operation to check @live directive.
+  // This allows skipping the entire document, including all flat fragment definitions.
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  Document(doc) {
+    const op = doc.definitions.find(
+      (def) => def.kind === 'OperationDefinition',
+    );
+    if (op == null) {
+      return false;
+    }
+    if (getLiveDirectiveNode(op) == null) {
+      return false;
+    }
+    return;
+  },
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  Directive(directiveNode) {
+    if (
+      directiveNode.name.value === 'defer' ||
+      directiveNode.name.value === 'stream'
+    ) {
+      context.reportError(
+        new GraphQLError(
+          `Cannot mix "@${directiveNode.name.value}" with "@live".`,
+          directiveNode.name,
+        ),
+      );
+    }
+  },
+});
