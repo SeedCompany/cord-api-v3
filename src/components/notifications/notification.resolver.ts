@@ -1,5 +1,6 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { ListArg } from '~/common';
+import { stripIndent } from 'common-tags';
+import { ListArg, Subscription } from '~/common';
 import { Identity } from '~/core/authentication';
 import {
   MarkNotificationReadArgs,
@@ -7,6 +8,7 @@ import {
   NotificationList,
   NotificationListInput,
 } from './dto';
+import { NotificationAdded } from './dto/notification-added.event';
 import { NotificationServiceImpl } from './notification.service';
 
 @Resolver()
@@ -32,5 +34,15 @@ export class NotificationResolver {
     @Args() input: MarkNotificationReadArgs,
   ): Promise<Notification> {
     return await this.service.markRead(input);
+  }
+
+  @Subscription<NotificationAdded>(() => NotificationAdded, {
+    description: stripIndent`
+      Subscribe to new notifications that are added/created
+      for the current user
+    `,
+  })
+  notificationAdded() {
+    return this.service.added$(this.identity.current.userId);
   }
 }

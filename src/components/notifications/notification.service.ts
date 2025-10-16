@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { mapEntries, type Nil } from '@seedcompany/common';
 import Event from 'gel/dist/primitives/event.js';
+import { from, mergeMap } from 'rxjs';
 import {
   type ID,
   type ResourceShape,
@@ -106,6 +107,22 @@ export class NotificationServiceImpl
       ...result,
       items: result.items.map((dto) => this.secure(dto)),
     };
+  }
+
+  /**
+   * Listen for notifications added for the user.
+   */
+  added$(user: ID<'User'>) {
+    // Merge user's broadcast channel with static ones defined by strategies.
+    const strategies = this.strategyMap.values().toArray();
+    return from([
+      user,
+      ...strategies.flatMap((strategy) => strategy.broadcastTo()),
+    ]).pipe(
+      mergeMap((id) => {
+        return this.broadcaster.channel(NotificationAdded, id);
+      }),
+    );
   }
 
   async markRead(input: MarkNotificationReadArgs) {
