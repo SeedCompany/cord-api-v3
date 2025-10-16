@@ -1,5 +1,13 @@
-import { type Notification } from './notification.dto';
+import { Field, ObjectType } from '@nestjs/graphql';
+import { Notification } from './notification.dto';
 
+/**
+ * The broadcast event & GQL don't have to share the same type/shape.
+ * But it makes sense here.
+ * Normally data would need to be re-loaded with the receiver's permissions.
+ */
+@ObjectType()
 export class NotificationAdded {
-  constructor(readonly notification: Notification) {}
+  @Field()
+  readonly notification: Notification;
 }
