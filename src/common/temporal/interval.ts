@@ -4,7 +4,7 @@ import { DateTime, type DateTimeUnit, Interval } from 'luxon';
 import type { Writable as Mutable } from 'type-fest';
 
 /* eslint-disable @typescript-eslint/method-signature-style */
-declare module 'luxon/src/interval' {
+declare module 'luxon' {
   interface Interval {
     /**
      * Expand this interval to the full duration unit given
