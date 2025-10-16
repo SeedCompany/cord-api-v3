@@ -23,6 +23,15 @@ export abstract class INotificationStrategy<
   TInput = InputOf<TNotification>,
 > {
   /**
+   * Should recipients be returned from the database?
+   * Useful if the strategy can dynamically select a small-ish set of users
+   * from specific data in the database.
+   */
+  returnRecipientsFromDB(): boolean {
+    return false;
+  }
+
+  /**
    * Expected to return rows with a user as `recipient`
    */
   // eslint-disable-next-line @seedcompany/no-unused-vars

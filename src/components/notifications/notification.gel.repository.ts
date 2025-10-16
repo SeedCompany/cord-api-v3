@@ -89,6 +89,9 @@ export class NotificationRepository
     const query = e.select({
       dto: e.select(created, this.hydrate),
       totalRecipients: e.count(insertedRecipients),
+      recipients: strategy.returnRecipientsFromDB()
+        ? e.array_agg(insertedRecipients.user.id)
+        : e.cast(e.uuid, e.set()),
     });
 
     return await this.db.run(query);
