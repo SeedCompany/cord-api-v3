@@ -4,14 +4,13 @@ import XRay from 'aws-xray-sdk-core';
 import * as process from 'node:process';
 import { ConfigService } from '../config/config.service';
 import { VersionService } from '../config/version.service';
-import { ILogger, Logger, LoggerModule, LogLevel } from '../logger';
+import { ILogger, Logger, LogLevel } from '../logger';
 import { Sampler } from './sampler';
 import { TracingService } from './tracing.service';
 import { XraySampler } from './xray-sampler';
 import { XRayMiddleware } from './xray.middleware';
 
 @Module({
-  imports: [LoggerModule],
   providers: [
     TracingService,
     { provide: Sampler, useClass: XraySampler },
