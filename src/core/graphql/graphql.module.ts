@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { GraphQLModule as NestGraphqlModule } from '@nestjs/graphql';
 import { TracingModule } from '../tracing';
+import { DataLoadersInSubscriptionPlugin } from './data-loaders-in-subscription.plugin';
 import { Driver } from './driver';
 import { GqlContextHost, GqlContextHostImpl } from './gql-context.host';
 import { GraphqlErrorFormatter } from './graphql-error-formatter';
@@ -17,6 +18,7 @@ import './types';
     GraphqlErrorFormatter,
     GraphqlLoggingPlugin,
     GraphqlTracingPlugin,
+    DataLoadersInSubscriptionPlugin,
   ],
   exports: [GraphqlOptions],
 })
