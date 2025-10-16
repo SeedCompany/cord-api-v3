@@ -1,4 +1,8 @@
 import { useHive } from '@graphql-hive/yoga';
+import {
+  GraphQLDeferDirective as DeferDirective,
+  GraphQLStreamDirective as StreamDirective,
+} from '@graphql-tools/utils';
 import { useAPQ } from '@graphql-yoga/plugin-apq';
 import { GraphQLLiveDirective as LiveDirective } from '@n1ru4l/graphql-live-query';
 import { Injectable } from '@nestjs/common';
@@ -69,7 +73,7 @@ export class GraphqlOptions implements GqlOptionsFactory {
       sortSchema: true,
       buildSchemaOptions: {
         fieldMiddleware: [this.tracing.fieldMiddleware()],
-        directives: [LiveDirective],
+        directives: [LiveDirective, DeferDirective, StreamDirective],
       },
       resolvers: {
         ...scalars,
