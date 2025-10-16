@@ -15,7 +15,10 @@ export class LiveQueryPlugin {
   constructor(private readonly store: InMemoryLiveQueryStore) {}
 
   onValidate: Plugin['onValidate'] = ({ addValidationRule }) => {
-    addValidationRule(NoLiveMixedWithDeferStreamRule);
+    // false positive currently, so disabling for now.
+    // https://github.com/n1ru4l/graphql-live-query/issues/1031
+    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+    () => addValidationRule(NoLiveMixedWithDeferStreamRule);
   };
 
   onExecute: Plugin['onExecute'] = ({ executeFn, setExecuteFn }) => {
