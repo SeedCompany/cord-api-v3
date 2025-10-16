@@ -13,4 +13,8 @@ export class SystemNotificationStrategy extends INotificationStrategy<SystemNoti
   recipientsForGel() {
     return e.User; // all users
   }
+
+  broadcastTo() {
+    return ['system'];
+  }
 }

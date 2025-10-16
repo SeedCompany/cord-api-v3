@@ -6,12 +6,14 @@ import {
 } from '@nestjs/common';
 import { mapEntries, type Nil } from '@seedcompany/common';
 import Event from 'gel/dist/primitives/event.js';
+import { from, mergeMap } from 'rxjs';
 import {
   type ID,
   type ResourceShape,
   ServerException,
   type UnsecuredDto,
 } from '~/common';
+import { Broadcaster } from '~/core/broadcast';
 import { MetadataDiscovery } from '~/core/discovery';
 import {
   type MarkNotificationReadArgs,
@@ -19,6 +21,7 @@ import {
   type NotificationList,
   type NotificationListInput,
 } from './dto';
+import { NotificationAdded } from './dto/notification-added.event';
 import { NotificationRepository } from './notification.repository';
 import {
   INotificationStrategy,
@@ -62,8 +65,32 @@ export class NotificationServiceImpl
   >;
   readonly ready = new ((Event as any).default as typeof Event)();
 
-  constructor(private readonly discovery: MetadataDiscovery) {
+  constructor(
+    private readonly discovery: MetadataDiscovery,
+    @Inject(forwardRef(() => Broadcaster))
+    private readonly broadcaster: Broadcaster & {},
+  ) {
     super();
+  }
+
+  async create<T extends ResourceShape<Notification>>(
+    type: T,
+    recipients: ReadonlyArray<ID<'User'>> | Nil,
+    input: T extends { Input: infer Input } ? Input : InputOf<T['prototype']>,
+  ) {
+    const out = await super.create(type, recipients, input);
+    const { notification } = out;
+
+    // from app, or dynamic db, or static by strategy
+    const broadcastTo =
+      recipients ?? out.recipients ?? this.getStrategy(type).broadcastTo();
+    for (const recipient of broadcastTo) {
+      this.broadcaster.channel(NotificationAdded, recipient).publish({
+        notification,
+      });
+    }
+
+    return out;
   }
 
   getStrategy(type: ResourceShape<Notification>) {
@@ -80,6 +107,22 @@ export class NotificationServiceImpl
       ...result,
       items: result.items.map((dto) => this.secure(dto)),
     };
+  }
+
+  /**
+   * Listen for notifications added for the user.
+   */
+  added$(user: ID<'User'>) {
+    // Merge user's broadcast channel with static ones defined by strategies.
+    const strategies = this.strategyMap.values().toArray();
+    return from([
+      user,
+      ...strategies.flatMap((strategy) => strategy.broadcastTo()),
+    ]).pipe(
+      mergeMap((id) => {
+        return this.broadcaster.channel(NotificationAdded, id);
+      }),
+    );
   }
 
   async markRead(input: MarkNotificationReadArgs) {
