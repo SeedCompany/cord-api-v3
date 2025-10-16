@@ -32,6 +32,14 @@ export abstract class INotificationStrategy<
   }
 
   /**
+   * If no recipients are attempted from app code or db {@link returnRecipientsFromDB},
+   * then this can be used to specify specific, static broadcast channels.
+   */
+  broadcastTo(): readonly string[] {
+    return [];
+  }
+
+  /**
    * Expected to return rows with a user as `recipient`
    */
   // eslint-disable-next-line @seedcompany/no-unused-vars
