@@ -4,7 +4,7 @@ import { DateTime } from 'luxon';
 import * as Neo from 'neo4j-driver';
 
 /* eslint-disable @typescript-eslint/method-signature-style */
-declare module 'luxon/src/datetime' {
+declare module 'luxon' {
   interface DateTime {
     toNeo4JDate(this: DateTime): Neo.Date<number>;
     toNeo4JDateTime(this: DateTime): Neo.DateTime<number>;
