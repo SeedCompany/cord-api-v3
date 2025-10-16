@@ -99,7 +99,16 @@ export class GraphqlOptions implements GqlOptionsFactory {
     }
 
     const store = this.cache.namespace('apq:', { ttl, refreshTtlOnGet: true });
-    return useAPQ({ store });
+    return useAPQ({
+      store,
+      responseConfig: {
+        // SSE needs a 200 status code to receive & process the GQL error.
+        // 404 just closes unexpectedly.
+        // IMO this is better anyway - 404 should be a network error, not an
+        // GQL operational workflow problem.
+        forceStatusCodeOk: true,
+      },
+    });
   }
 
   private useAddOperationToContext(): Plugin {

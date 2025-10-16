@@ -47,6 +47,7 @@ export * from './secured-property';
 export * from './secured-date';
 export * from './secured-mapper';
 export * from './sensitivity.enum';
+export * from './subscription.decorator';
 export * from './trace-layer';
 export * from './util';
 export * from './types';
