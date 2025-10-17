@@ -50,13 +50,27 @@ export const makeConfig = (env: EnvironmentService) =>
     } satisfies LRUCache.Options<string, unknown, unknown>;
 
     httpTimeouts = {
-      /** @see HttpServer.keepAliveTimeout */
+      /**
+       * @see HttpServer.keepAliveTimeout
+       * @default 72 seconds (fastify) / 5 seconds (node)
+       */
       keepAlive: env.duration('HTTP_KEEP_ALIVE_TIMEOUT').optional('5s'),
-      /** @see HttpServer.headersTimeout */
+      /**
+       * @see HttpServer.headersTimeout
+       * @default 1 minute (node) / fastify doesn't touch
+       */
       headers: env.duration('HTTP_HEADERS_TIMEOUT').optional('1m'),
-      /** @see HttpServer.timeout */
-      socket: env.duration('HTTP_SOCKET_TIMEOUT').optional(0),
-      /** @see HttpServer.requestTimeout */
+      /**
+       * @see HttpServer.timeout
+       * @default 0 (fastify & node)
+       */
+      connection:
+        env.duration('HTTP_SOCKET_TIMEOUT').optional() ??
+        env.duration('HTTP_CONNECTION_TIMEOUT').optional(0),
+      /**
+       * @see HttpServer.requestTimeout
+       * @default 0 (fastify) / 5 minutes (node)
+       */
       request: env.duration('HTTP_REQUEST_TIMEOUT').optional(0),
     };
 
@@ -70,8 +84,8 @@ export const makeConfig = (env: EnvironmentService) =>
       if (timeouts.headers != null) {
         http.headersTimeout = timeouts.headers.toMillis();
       }
-      if (timeouts.socket != null) {
-        http.timeout = timeouts.socket.toMillis();
+      if (timeouts.connection != null) {
+        http.timeout = timeouts.connection.toMillis();
       }
       if (timeouts.request != null) {
         http.requestTimeout = timeouts.request.toMillis();
