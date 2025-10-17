@@ -32,7 +32,7 @@ export type DriverConfig = GqlModuleOptions &
 
 @Injectable()
 export class Driver extends AbstractDriver<DriverConfig> {
-  private yoga: YogaServerInstance<ServerContext, {}>;
+  private yoga?: YogaServerInstance<ServerContext, {}>;
 
   constructor(
     private readonly discovery: MetadataDiscovery,
@@ -80,7 +80,7 @@ export class Driver extends AbstractDriver<DriverConfig> {
   }
 
   httpHandler: FastifyRoute['handler'] = async (req, reply) => {
-    const res = await this.yoga.handleNodeRequestAndResponse(req, reply, {
+    const res = await this.yoga!.handleNodeRequestAndResponse(req, reply, {
       req,
       response: reply,
     });
@@ -149,7 +149,7 @@ export class Driver extends AbstractDriver<DriverConfig> {
         const {
           extra: { request, socket },
         } = ctx;
-        const envelop = this.yoga.getEnveloped({
+        const envelop = this.yoga!.getEnveloped({
           req: request,
           socket,
           params: payload, // Same(ish?) shape as YogaInitialContext.params
@@ -185,6 +185,6 @@ export class Driver extends AbstractDriver<DriverConfig> {
   }
 
   async stop() {
-    // noop
+    await this.yoga?.dispose();
   }
 }
