@@ -6,6 +6,7 @@ import {
   ResourcesHost,
 } from '~/core/resources/resources.host';
 import type { BaseNode } from '../database/results';
+import { LiveQueryStore } from '../live-query';
 import { DbTraceLayer, Gel } from './gel.service';
 import { e } from './reexports';
 
@@ -16,6 +17,7 @@ import { e } from './reexports';
 export class CommonRepository implements PublicOf<Neo4jCommonRepository> {
   @Inject() protected readonly db: Gel;
   @Inject() protected readonly resources: ResourcesHost;
+  @Inject() protected readonly liveQueryStore: LiveQueryStore;
 
   constructor() {
     DbTraceLayer.applyToInstance(this);
@@ -76,8 +78,11 @@ export class CommonRepository implements PublicOf<Neo4jCommonRepository> {
     { resource }: { changeset?: ID; resource?: ResourceLike } = {},
   ) {
     const id = isIdLike(objectOrId) ? objectOrId : objectOrId.id;
-    const type = resource ? this.resources.enhance(resource).db : e.Object;
-    const query = e.delete(type, () => ({
+    const res = resource ? this.resources.enhance(resource) : undefined;
+
+    res && this.liveQueryStore.invalidate([res, id]);
+
+    const query = e.delete(res?.db ?? e.Object, () => ({
       filter_single: { id },
     }));
     await this.db.run(query);
