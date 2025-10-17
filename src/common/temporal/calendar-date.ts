@@ -13,11 +13,24 @@ import {
   FixedOffsetZone,
   type LocaleOptions,
   type ToISOTimeOptions,
+  type TSSettings,
   type Zone,
   type ZoneOptions,
 } from 'luxon';
-import type { DefaultValidity, IfValid } from 'luxon/src/_util';
 import { DateInterval } from './date-interval';
+
+type CanBeInvalid = TSSettings extends { throwOnInvalid: true } ? false : true;
+type IfValid<
+  ValidType,
+  InvalidType,
+  ThisIsValid extends boolean | undefined,
+> = ThisIsValid extends true
+  ? ValidType
+  : ThisIsValid extends false
+  ? InvalidType
+  : CanBeInvalid extends true
+  ? ValidType | InvalidType
+  : ValidType;
 
 /**
  * Calendar Dates have no times or timezones.
@@ -27,7 +40,7 @@ import { DateInterval } from './date-interval';
  * Whether or not we need/want it to be type compatible with DateTime has yet to
  * be determined - currently it is.
  */
-export class CalendarDate<IsValid extends boolean = DefaultValidity>
+export class CalendarDate<IsValid extends boolean = true>
   // @ts-expect-error library doesn't explicitly support extension
   extends DateTime<IsValid>
 {

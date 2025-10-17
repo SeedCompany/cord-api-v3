@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { GqlExecutionContext } from '@nestjs/graphql';
 import { from, lastValueFrom } from 'rxjs';
-import { RollbackManager } from './rollback-manager';
+import { TransactionHooks } from './transaction-hooks';
 
 /**
  * Run all mutations in a transaction.
@@ -16,7 +16,7 @@ import { RollbackManager } from './rollback-manager';
 export abstract class TransactionalMutationsInterceptor
   implements NestInterceptor
 {
-  constructor(private readonly rollbacks: RollbackManager) {}
+  constructor(private readonly txHooks: TransactionHooks) {}
 
   async intercept(context: ExecutionContext, next: CallHandler) {
     if (context.getType() !== 'graphql') {
@@ -34,9 +34,12 @@ export abstract class TransactionalMutationsInterceptor
         try {
           return await lastValueFrom(next.handle());
         } catch (e) {
-          await this.rollbacks.runAndClear();
+          await this.txHooks.afterRollback.runAndClear();
           throw e;
         }
+      }).then(async (res) => {
+        await this.txHooks.afterCommit.runAndClear();
+        return res;
       }),
     );
   }

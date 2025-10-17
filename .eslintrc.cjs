@@ -108,6 +108,12 @@ const restrictedImports = [
     replacement: { path: '~/core/hooks' },
     message: 'Reference from core instead to keep loose coupling',
   },
+  {
+    path: '@seedcompany/nest/broadcast',
+    importNames: ['Broadcaster', 'BroadcastChannel', 'BroadcastEvents'],
+    replacement: { path: '~/core/broadcast' },
+    message: 'Reference from core instead to keep loose coupling',
+  },
 ];
 
 const namingConvention = [

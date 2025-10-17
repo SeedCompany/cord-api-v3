@@ -459,7 +459,13 @@ export class EngagementRepository extends CommonRepository {
     }
 
     if (mentorId !== undefined) {
-      await this.updateRelation('mentor', 'User', id, mentorId);
+      await this.updateRelation(
+        'mentor',
+        'User',
+        id,
+        mentorId,
+        InternshipEngagement,
+      );
     }
 
     if (countryOfOriginId !== undefined) {
@@ -468,6 +474,7 @@ export class EngagementRepository extends CommonRepository {
         'Location',
         id,
         countryOfOriginId,
+        InternshipEngagement,
       );
     }
 

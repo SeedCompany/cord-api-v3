@@ -61,12 +61,14 @@ export class CommonRepository {
     otherLabel: string,
     id: ID,
     otherId: ID | null,
-    label?: string,
+    label?: ResourceLike,
   ) {
+    const resource = label ? this.resources.enhance(label) : undefined;
+
     await this.db
       .query()
       .match([
-        [node('node', label ?? 'BaseNode', { id })],
+        [node('node', resource?.dbLabel ?? 'BaseNode', { id })],
         otherId ? [node('other', otherLabel, { id: otherId })] : [],
       ])
       .subQuery('node', (sub) =>
@@ -106,32 +108,29 @@ export class CommonRepository {
     newList,
   }: {
     id: ID;
-    label?: string | EnhancedResource<any> | ResourceShape<any>;
+    label?: ResourceLike;
     relation: string;
     newList: readonly ID[];
   }) {
-    const resolvedLabel = !label
-      ? 'BaseNode'
-      : typeof label === 'string'
-      ? label
-      : EnhancedResource.of(label).dbLabel;
-    const res = await this.db
+    const resource = label ? this.resources.enhance(label) : undefined;
+
+    const result = await this.db
       .query()
-      .matchNode('node', resolvedLabel, { id })
+      .matchNode('node', resource?.dbLabel ?? 'BaseNode', { id })
       .apply(updateRelationList({ relation, newList }))
       .return('node, stats')
       .first();
-    if (!res) {
+    if (!result) {
       throw new NotFoundException();
     }
-    if (res.stats.totalCount !== newList.length) {
+    if (result.stats.totalCount !== newList.length) {
       const validNodes = await this.getBaseNodes(newList);
       const validIds = setOf(validNodes.map((n) => n.properties.id));
       throw new InvalidReferencesException(
         newList.filter((id) => !validIds.has(id)),
       );
     }
-    return res.stats;
+    return result.stats;
   }
 
   async deleteNode(
@@ -139,9 +138,9 @@ export class CommonRepository {
     { changeset, resource }: { changeset?: ID; resource?: ResourceLike } = {},
   ) {
     const id = isIdLike(objectOrId) ? objectOrId : objectOrId.id;
-    const label = resource
-      ? this.resources.enhance(resource).dbLabel
-      : 'BaseNode';
+    const res = resource ? this.resources.enhance(resource) : undefined;
+    const label = res?.dbLabel ?? 'BaseNode';
+
     if (!changeset) {
       await this.db
         .query()
