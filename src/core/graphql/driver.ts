@@ -185,6 +185,6 @@ export class Driver extends AbstractDriver<DriverConfig> {
   }
 
   async stop() {
-    // noop
+    await this.yoga.dispose();
   }
 }
