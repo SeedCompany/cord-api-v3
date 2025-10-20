@@ -1,5 +1,6 @@
 import { useHive } from '@graphql-hive/yoga';
 import { useAPQ } from '@graphql-yoga/plugin-apq';
+import { useDeferStream } from '@graphql-yoga/plugin-defer-stream';
 import { Injectable } from '@nestjs/common';
 import { type GqlOptionsFactory } from '@nestjs/graphql';
 import { CacheService } from '@seedcompany/cache';
@@ -81,6 +82,7 @@ export class GraphqlOptions implements GqlOptionsFactory {
           : false,
         this.useAutomaticPersistedQueries(),
         this.useAddOperationToContext(),
+        useDeferStream(),
       ],
     };
   }
