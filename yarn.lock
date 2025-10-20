@@ -2392,6 +2392,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@graphql-tools/utils@npm:^8.5.2":
+  version: 8.13.1
+  resolution: "@graphql-tools/utils@npm:8.13.1"
+  dependencies:
+    tslib: "npm:^2.4.0"
+  peerDependencies:
+    graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
+  checksum: 10c0/f9bab1370aa91e706abec4c8ea980e15293cb78bd4effba53ad2365dc39d81148db7667b3ef89b35f0a0b0ad58081ffdac4264b7125c69fa8393590ae5025745
+  languageName: node
+  linkType: hard
+
 "@graphql-tools/wrap@npm:^10.0.16":
   version: 10.0.35
   resolution: "@graphql-tools/wrap@npm:10.0.35"
@@ -3166,6 +3177,58 @@ __metadata:
   version: 1.1.0
   resolution: "@lukeed/csprng@npm:1.1.0"
   checksum: 10c0/5d6dcf478af732972083ab2889c294b57f1028fa13c2c240d7a4aaa079c2c75df7ef0dcbdda5419147fc6704b4adf96b2de92f1a9a72ac21c6350c4014fffe6c
+  languageName: node
+  linkType: hard
+
+"@n1ru4l/graphql-live-query-patch-jsondiffpatch@npm:^0.8.0":
+  version: 0.8.0
+  resolution: "@n1ru4l/graphql-live-query-patch-jsondiffpatch@npm:0.8.0"
+  dependencies:
+    "@n1ru4l/graphql-live-query-patch": "npm:^0.7.0"
+    "@n1ru4l/json-patch-plus": "npm:^0.2.0"
+  peerDependencies:
+    graphql: ^15.4.0 || ^16.0.0
+  checksum: 10c0/412ab8fdcdf6c40c0a7456912c0d02efe26937da5c810ad330aca7387d5a0fd12ab77e7d3ec9f2680208218596c3faf558d7fbf257ba54633c2684a1265871e9
+  languageName: node
+  linkType: hard
+
+"@n1ru4l/graphql-live-query-patch@npm:^0.7.0":
+  version: 0.7.0
+  resolution: "@n1ru4l/graphql-live-query-patch@npm:0.7.0"
+  dependencies:
+    "@repeaterjs/repeater": "npm:^3.0.4"
+  peerDependencies:
+    graphql: ^15.4.0 || ^16.0.0
+  checksum: 10c0/a7ee5825a277e5240a1908cf830c3d55f114a6d8fec520dc155081f170241c50b92309169a6cc79f66087b97f0aaad8895573b2c346fd7671402c6ce3dd81452
+  languageName: node
+  linkType: hard
+
+"@n1ru4l/graphql-live-query@npm:0.10.0, @n1ru4l/graphql-live-query@npm:^0.10.0":
+  version: 0.10.0
+  resolution: "@n1ru4l/graphql-live-query@npm:0.10.0"
+  peerDependencies:
+    graphql: ^15.4.0 || ^16.0.0
+  checksum: 10c0/972bea6d6e4dcc443e15c19f2da373fc01f7e6c8d366569075dc89dc94e55da5a4029d0e8cff289d208c43edcca5e112fe286c6601717ab42d428fc3d5c2dfae
+  languageName: node
+  linkType: hard
+
+"@n1ru4l/in-memory-live-query-store@npm:^0.10.0":
+  version: 0.10.0
+  resolution: "@n1ru4l/in-memory-live-query-store@npm:0.10.0"
+  dependencies:
+    "@graphql-tools/utils": "npm:^8.5.2"
+    "@n1ru4l/graphql-live-query": "npm:0.10.0"
+    "@repeaterjs/repeater": "npm:^3.0.4"
+  peerDependencies:
+    graphql: ^15.4.0 || ^16.0.0
+  checksum: 10c0/c2b4c1c09fa68ac7bd776166a86d361ac6e2659028391e7c3cca25943e966d1d035271141e28d0a519d50409cc07728df163d01ee26cacf403f59a6dcf2d4243
+  languageName: node
+  linkType: hard
+
+"@n1ru4l/json-patch-plus@npm:^0.2.0":
+  version: 0.2.0
+  resolution: "@n1ru4l/json-patch-plus@npm:0.2.0"
+  checksum: 10c0/bc58bca91265988cde367bb9cd497365d49a9b94a57e46687214e24ab1dee2c70e566bb0686d30cf32e5d0dba4c0de79809b971d32dfc05797c3e163074ebdc8
   languageName: node
   linkType: hard
 
@@ -6378,6 +6441,9 @@ __metadata:
     "@graphql-tools/utils": "npm:^10.5.4"
     "@graphql-yoga/plugin-apq": "npm:^3.7.0"
     "@leeoniya/ufuzzy": "npm:^1.0.11"
+    "@n1ru4l/graphql-live-query": "npm:^0.10.0"
+    "@n1ru4l/graphql-live-query-patch-jsondiffpatch": "npm:^0.8.0"
+    "@n1ru4l/in-memory-live-query-store": "npm:^0.10.0"
     "@nestjs/cli": "npm:^11.0.7"
     "@nestjs/common": "npm:^11.1.0"
     "@nestjs/core": "npm:^11.1.0"
