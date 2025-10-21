@@ -2,6 +2,7 @@ import { Module, type Provider } from '@nestjs/common';
 import { GraphQLModule as NestGraphqlModule } from '@nestjs/graphql';
 import { mapValues } from '@seedcompany/common';
 import { TracingModule } from '../tracing';
+import { BetterIntrospectionPlugin } from './better-introspection.plugin';
 import { CleanUpLongLivedConnectionsOnShutdownPlugin } from './clean-up-long-lived-connections-on-shutdown.plugin';
 import { DataLoadersInSubscriptionPlugin } from './data-loaders-in-subscription.plugin';
 import { Driver } from './driver';
@@ -32,6 +33,7 @@ class SharedPluginsModule {}
     GraphqlLoggingPlugin,
     GraphqlTracingPlugin,
     DataLoadersInSubscriptionPlugin,
+    BetterIntrospectionPlugin,
   ],
   exports: [GraphqlOptions],
 })
