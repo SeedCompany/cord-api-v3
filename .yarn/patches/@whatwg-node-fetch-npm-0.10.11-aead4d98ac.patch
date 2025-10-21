@@ -1,10 +1,11 @@
 diff --git a/dist/index.d.ts b/dist/index.d.ts
-index f55c0838ebf3aee24ec547d21ec67dc709ab7c8f..b6606e35b73f3c985f18fe66e924ec2218e35a7b 100644
+index eba84980615b309226865d71c8b3b8ea5d9649a4..5bcf8fa1f4e8c386d08116f21080115a4fa1d5e4 100644
 --- a/dist/index.d.ts
 +++ b/dist/index.d.ts
-@@ -1,5 +1,3 @@
+@@ -1,6 +1,3 @@
 -/// <reference lib="dom" />
 -/// <reference lib="dom.iterable" />
- /// <reference types="urlpattern-polyfill" />
- 
+-
  declare type _URLPattern = typeof URLPattern
+ 
+ declare module '@whatwg-node/fetch' {
