@@ -55,6 +55,7 @@ jobs:
           curl -sSL https://graphql-hive.com/install.sh | sh
           hive schema:check head/schema.graphql \
             --registry.accessToken '${{ secrets.HIVE_TOKEN }}' \
+            ${{ contains(github.event.pull_request.labels.*.name, '💥 Breaking Change') && '--forceSafe' || '' }} \
             --github
 
       - name: Show diff in PR comment
