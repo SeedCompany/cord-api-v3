@@ -13,7 +13,10 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        ref: [base, head]
+        ref:
+#          not used ATM
+#          - base
+          - head
     steps:
       - uses: actions/checkout@v4
         with:
@@ -41,10 +44,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/download-artifact@v4
-        with:
-          name: base-gql-schema
-          path: base
+#      - uses: actions/download-artifact@v4
+#        with:
+#          name: base-gql-schema
+#          path: base
       - uses: actions/download-artifact@v4
         with:
           name: head-gql-schema
@@ -55,18 +58,5 @@ jobs:
           curl -sSL https://graphql-hive.com/install.sh | sh
           hive schema:check head/schema.graphql \
             --registry.accessToken '${{ secrets.HIVE_TOKEN }}' \
+            ${{ contains(github.event.pull_request.labels.*.name, '💥 Breaking Change') && '--forceSafe' || '' }} \
             --github
-
-      - name: Show diff in PR comment
-        uses: agu-z/gql-diff-action@v2
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          old-schema: ./base/schema.graphql
-          new-schema: ./head/schema.graphql
-
-      - name: Enforce compatibility
-        run: |
-          corepack enable && yarn dlx graphql-schema-diff \
-            --use-colors --fail-on-breaking-changes \
-            ./base/schema.graphql ./head/schema.graphql
-        if: ${{ !contains(github.event.pull_request.labels.*.name, '💥 Breaking Change') }}
