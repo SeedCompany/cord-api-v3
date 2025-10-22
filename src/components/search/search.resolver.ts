@@ -1,5 +1,4 @@
-import { Query, Resolver } from '@nestjs/graphql';
-import { ListArg } from '~/common';
+import { Args, Query, Resolver } from '@nestjs/graphql';
 import { SearchInput, SearchOutput } from './dto';
 import { SearchService } from './search.service';
 
@@ -11,7 +10,7 @@ export class SearchResolver {
     description: 'Perform a search across resources',
   })
   async search(
-    @ListArg(SearchInput, { nullable: false })
+    @Args({ name: 'input', type: () => SearchInput })
     input: SearchInput,
   ): Promise<SearchOutput> {
     return await this.service.search(input);

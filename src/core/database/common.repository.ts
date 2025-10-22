@@ -12,6 +12,7 @@ import {
   type ResourceShape,
   ServerException,
 } from '~/common';
+import { LiveQueryStore } from '../live-query';
 import { type ResourceLike, ResourcesHost } from '../resources';
 import { DatabaseService, DbTraceLayer } from './database.service';
 import { createUniqueConstraint } from './indexer';
@@ -25,6 +26,7 @@ import { type BaseNode } from './results';
 export class CommonRepository {
   @Inject() protected db: DatabaseService;
   @Inject() protected readonly resources: ResourcesHost;
+  @Inject() protected readonly liveQueryStore: LiveQueryStore;
 
   constructor() {
     DbTraceLayer.applyToInstance(this);
@@ -64,6 +66,8 @@ export class CommonRepository {
     label?: ResourceLike,
   ) {
     const resource = label ? this.resources.enhance(label) : undefined;
+
+    resource && this.liveQueryStore.invalidate([resource, id]);
 
     await this.db
       .query()
@@ -114,6 +118,8 @@ export class CommonRepository {
   }) {
     const resource = label ? this.resources.enhance(label) : undefined;
 
+    resource && this.liveQueryStore.invalidate([resource, id]);
+
     const result = await this.db
       .query()
       .matchNode('node', resource?.dbLabel ?? 'BaseNode', { id })
@@ -139,7 +145,9 @@ export class CommonRepository {
   ) {
     const id = isIdLike(objectOrId) ? objectOrId : objectOrId.id;
     const res = resource ? this.resources.enhance(resource) : undefined;
-    const label = res?.dbLabel ?? 'BaseNode';
+    const label = res ? res.dbLabel : 'BaseNode';
+
+    res && this.liveQueryStore.invalidate([res, id]);
 
     if (!changeset) {
       await this.db

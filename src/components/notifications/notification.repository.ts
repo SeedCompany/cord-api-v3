@@ -50,6 +50,7 @@ export class NotificationRepository extends CommonRepository {
     input: Record<string, any>,
   ) {
     const extra = omit(input, [...EnhancedResource.of(Notification).props]);
+    const strategy = this.service.getStrategy(type);
     const res = await this.db
       .query()
       .create(
@@ -60,7 +61,7 @@ export class NotificationRepository extends CommonRepository {
         }),
       )
       .with('node')
-      .apply(this.service.getStrategy(type).saveForNeo4j(extra))
+      .apply(strategy.saveForNeo4j(extra))
       .with('*')
       .apply(
         createRelationships(Notification, 'out', {
@@ -71,9 +72,7 @@ export class NotificationRepository extends CommonRepository {
         sub
           .apply((q) =>
             recipients == null
-              ? q.subQuery(
-                  this.service.getStrategy(type).recipientsForNeo4j(input),
-                )
+              ? q.subQuery(strategy.recipientsForNeo4j(input))
               : q
                   .match(node('recipient', 'User'))
                   .where({ 'recipient.id': inArray(recipients) }),
@@ -83,12 +82,18 @@ export class NotificationRepository extends CommonRepository {
             relation('out', '', 'recipient'),
             node('recipient'),
           ])
-          .return<{ totalRecipients: number }>(
+          .return<{
+            totalRecipients: number;
+            recipients: readonly ID[] | null;
+          }>([
             'count(recipient) as totalRecipients',
-          ),
+            strategy.returnRecipientsFromDB()
+              ? 'collect(recipient.id) as recipients'
+              : 'null as recipients',
+          ]),
       )
       .subQuery('node', this.hydrate())
-      .return('dto, totalRecipients')
+      .return('dto, totalRecipients, recipients')
       .first();
     return res!;
   }

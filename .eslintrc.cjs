@@ -74,6 +74,12 @@ const restrictedImports = [
     message: 'Use our wrapper that allows for varargs & provides members array',
   },
   {
+    importNames: 'Subscription',
+    path: '@nestjs/graphql',
+    message: 'Use our wrapper that provides sanity',
+    replacement: { path: '~/common' },
+  },
+  {
     importNames: 'HttpAdapterHost',
     path: '@nestjs/core',
     replacement: { path: '~/core/http' },

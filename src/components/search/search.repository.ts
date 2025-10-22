@@ -38,11 +38,7 @@ export class SearchRepository extends CommonRepository {
 
           .call(GlobalIndex.search(lucene).yield({ node: 'property' }))
           .match([node('node'), relation('out', 'r', ACTIVE), node('property')])
-          .return(['node', 'collect(type(r)) as matchedProps'])
-          // The input.count is going to be applied once the results are 'filtered'
-          // according to what the user can read. This limit is just set to a bigger
-          // number, so we don't choke things without a limit.
-          .raw('LIMIT 100'),
+          .return(['node', 'collect(type(r)) as matchedProps']),
       )
       .with(['node', 'matchedProps'])
       .raw('WHERE any(l in labels(node) where l in $types)', {
@@ -51,7 +47,11 @@ export class SearchRepository extends CommonRepository {
       .return<{
         node: BaseNode;
         matchedProps: readonly string[];
-      }>(['node', 'matchedProps']);
+      }>(['node', 'matchedProps'])
+      // The input.count is going to be applied once the results are 'filtered'
+      // according to what the user can read. This limit is just set to a bigger
+      // number, so we don't choke things without a limit.
+      .raw('LIMIT 100');
 
     return await query.run();
   }
