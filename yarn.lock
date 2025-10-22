@@ -2377,7 +2377,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-tools/utils@npm:10.9.1, @graphql-tools/utils@npm:^10.0.0, @graphql-tools/utils@npm:^10.6.2, @graphql-tools/utils@npm:^10.8.1, @graphql-tools/utils@npm:^10.9.1":
+"@graphql-tools/utils@npm:10.9.1, @graphql-tools/utils@npm:^10.0.0, @graphql-tools/utils@npm:^10.6.1, @graphql-tools/utils@npm:^10.6.2, @graphql-tools/utils@npm:^10.8.1, @graphql-tools/utils@npm:^10.9.1":
   version: 10.9.1
   resolution: "@graphql-tools/utils@npm:10.9.1"
   dependencies:
@@ -2444,6 +2444,18 @@ __metadata:
   peerDependencies:
     graphql-yoga: ^5.16.0
   checksum: 10c0/e055ef9b684a4bba082ac4c7293c02ee385f9335525d79d54ba058de2ef6dce8e7c42a8483e2d9d51396e30111f8e9ace004b85cbed60c1fd777944ef31bc32d
+  languageName: node
+  linkType: hard
+
+"@graphql-yoga/plugin-defer-stream@npm:^3.16.0":
+  version: 3.16.0
+  resolution: "@graphql-yoga/plugin-defer-stream@npm:3.16.0"
+  dependencies:
+    "@graphql-tools/utils": "npm:^10.6.1"
+  peerDependencies:
+    graphql: ^15.2.0 || ^16.0.0
+    graphql-yoga: ^5.16.0
+  checksum: 10c0/524e36dcbbea170b2b422ce5851785e0e5bc21ec62e8821bbf283929fa7b4bb1f8ce3fcacbe6a3aedbe5d5b50de13027280f4ee30721f13a60875350b9fbcccd
   languageName: node
   linkType: hard
 
@@ -6440,6 +6452,7 @@ __metadata:
     "@graphql-hive/yoga": "npm:>=0.42.2"
     "@graphql-tools/utils": "npm:^10.9.1"
     "@graphql-yoga/plugin-apq": "npm:^3.16.0"
+    "@graphql-yoga/plugin-defer-stream": "npm:^3.16.0"
     "@leeoniya/ufuzzy": "npm:^1.0.11"
     "@n1ru4l/graphql-live-query": "npm:^0.10.0"
     "@n1ru4l/graphql-live-query-patch-jsondiffpatch": "npm:^0.8.0"
