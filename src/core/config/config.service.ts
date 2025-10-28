@@ -230,6 +230,8 @@ export const makeConfig = (env: EnvironmentService) =>
       };
     })();
 
+    registrationEnabled = env.boolean('REGISTRATION_ENABLED').optional(true);
+
     rootUser = determineRootUser(env);
 
     passwordSecret = env.string('PASSWORD_SECRET').optional();
