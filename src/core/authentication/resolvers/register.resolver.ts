@@ -6,7 +6,8 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { Loader, type LoaderOf } from '~/core';
+import { UnauthorizedException } from '~/common/exceptions/unauthorized.exception';
+import { ConfigService, Loader, type LoaderOf } from '~/core';
 import { UserLoader } from '../../../components/user';
 import { User } from '../../../components/user/dto';
 import { AuthenticationService } from '../authentication.service';
@@ -16,7 +17,10 @@ import { AuthLevel } from '../session/auth-level.decorator';
 @Resolver(RegisterOutput)
 @AuthLevel('anonymous')
 export class RegisterResolver {
-  constructor(private readonly authentication: AuthenticationService) {}
+  constructor(
+    private readonly authentication: AuthenticationService,
+    private readonly config: ConfigService,
+  ) {}
 
   @Mutation(() => RegisterOutput, {
     description: stripIndent`
@@ -25,6 +29,12 @@ export class RegisterResolver {
     `,
   })
   async register(@Args('input') input: RegisterInput): Promise<RegisterOutput> {
+    if (!this.config.registrationEnabled) {
+      throw new UnauthorizedException(
+        'User registration is currently disabled',
+      );
+    }
+
     const user = await this.authentication.register(input);
     return { user };
   }
