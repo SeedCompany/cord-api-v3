@@ -6,8 +6,9 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { UnauthorizedException } from '~/common/exceptions/unauthorized.exception';
-import { ConfigService, Loader, type LoaderOf } from '~/core';
+import { UnauthorizedException } from '~/common';
+import { ConfigService } from '~/core/config';
+import { Loader, type LoaderOf } from '~/core/data-loader';
 import { UserLoader } from '../../../components/user';
 import { User } from '../../../components/user/dto';
 import { AuthenticationService } from '../authentication.service';
