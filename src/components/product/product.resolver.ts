@@ -75,8 +75,8 @@ export class ProductResolver {
     @Info(Fields, IsOnlyId) onlyId: boolean,
   ) {
     return onlyId
-      ? { id: product.project }
-      : await projects.load({ id: product.project, view: { active: true } });
+      ? { id: product.project.id }
+      : await projects.load({ id: product.project.id, view: { active: true } });
   }
 
   @ResolveField(() => ProductApproach, { nullable: true })
