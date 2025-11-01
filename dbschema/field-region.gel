@@ -6,5 +6,7 @@ module default {
     
     required fieldZone: FieldZone;
     required director: User;
+
+    multi projects := .<fieldRegion[is Project];
   }
 }
