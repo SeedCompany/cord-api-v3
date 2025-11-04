@@ -121,6 +121,9 @@ export class CreateInternshipEngagement extends CreateEngagement {
 
   @Field(() => Boolean)
   readonly marketable: boolean = false;
+
+  @Field({ nullable: true })
+  readonly webId?: string;
 }
 
 @InputType()

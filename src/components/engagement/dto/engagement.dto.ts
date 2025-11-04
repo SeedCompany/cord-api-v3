@@ -250,6 +250,9 @@ export class InternshipEngagement extends Engagement {
   @Field()
   readonly marketable: SecuredBoolean;
 
+  @Field()
+  readonly webId: SecuredStringNullable;
+
   readonly growthPlan: Secured<LinkTo<'File'> | null>;
 }
 
