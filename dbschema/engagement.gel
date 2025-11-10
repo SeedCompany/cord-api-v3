@@ -150,6 +150,7 @@ module default {
     required marketable: bool {
       default := false;
     };
+    webId: str;
     
     trigger connectCertificationCeremony after insert for each do (
       insert Engagement::CertificationCeremony {
