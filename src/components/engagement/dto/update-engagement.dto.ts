@@ -111,6 +111,9 @@ export abstract class UpdateInternshipEngagement extends UpdateEngagement {
 
   @OptionalField(() => Boolean)
   readonly marketable?: boolean;
+
+  @Field(() => String, { nullable: true })
+  readonly webId?: string | null;
 }
 
 @InputType()
