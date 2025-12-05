@@ -17,6 +17,7 @@ import {
   LanguageMilestone,
 } from '../../language/dto';
 import { ProjectFilters } from '../../project/dto';
+import { ToolFilters } from '../../tools/tool/dto';
 import { UserFilters } from '../../user/dto';
 import {
   type Engagement,
@@ -90,6 +91,9 @@ export abstract class EngagementFilters {
     empty: 'omit',
   })
   readonly usingAIAssistedTranslation?: readonly AIAssistedTranslation[];
+
+  @FilterField(() => ToolFilters)
+  readonly tools?: ToolFilters & {};
 }
 
 @InputType()

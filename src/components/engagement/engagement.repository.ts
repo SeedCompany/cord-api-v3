@@ -67,6 +67,7 @@ import {
 import { ProjectType } from '../project/dto';
 import { projectFilters } from '../project/project-filters.query';
 import { projectSorters } from '../project/project.repository';
+import { toolFilters } from '../tools/tool/tool.neo4j.repository';
 import { userFilters } from '../user';
 import { User } from '../user/dto';
 import {
@@ -861,6 +862,15 @@ export const engagementFilters = filter.define(() => EngagementFilters, {
   milestonePlanned: filter.stringListProp(),
   milestoneReached: filter.propVal(),
   usingAIAssistedTranslation: filter.stringListProp(),
+  tools: filter.sub(() => toolFilters)((sub) =>
+    sub.match([
+      node('outer'),
+      relation('out', '', 'uses', ACTIVE),
+      node('', 'ToolUsage'),
+      relation('out', '', 'tool', ACTIVE),
+      node('node', 'Tool'),
+    ]),
+  ),
 });
 
 export const engagementSorters = defineSorters(IEngagement, {
