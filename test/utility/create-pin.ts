@@ -1,3 +1,4 @@
+import { expect } from '@jest/globals';
 import { type ID } from '~/common';
 import { graphql } from '~/graphql';
 import { type TestApp } from './create-app';

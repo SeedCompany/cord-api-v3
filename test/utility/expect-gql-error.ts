@@ -1,5 +1,6 @@
 // noinspection JSUnusedGlobalSymbols
 
+import { expect } from '@jest/globals';
 import { stripIndent } from 'common-tags';
 import { many, type Many } from '~/common';
 import { GqlError } from './create-graphql-client';
@@ -37,7 +38,7 @@ expect.extend({
     );
     const extensionsPassed = this.equals(
       expect.objectContaining(expectedObj.extensions),
-      expectedObj.extensions,
+      actualObj.extensions,
     );
     const pass = codesPassed && messagePassed && extensionsPassed;
 

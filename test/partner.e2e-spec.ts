@@ -1,4 +1,5 @@
 import { faker } from '@faker-js/faker';
+import { afterAll, beforeAll, describe, expect, it } from '@jest/globals';
 import { Role } from '~/common';
 import { graphql } from '~/graphql';
 import { PartnerType } from '../src/components/partner/dto';
