@@ -1,9 +1,9 @@
-import type { Config } from '@jest/types';
 import { debuggerIsAttached } from 'debugger-is-attached';
+import { type Config } from 'jest';
 import { Duration } from 'luxon';
 
 // eslint-disable-next-line import/no-default-export
-export default async (): Promise<Config.InitialOptions> => {
+export default async (): Promise<Config> => {
   const debugging = await debuggerIsAttached();
 
   const base = {
@@ -15,7 +15,7 @@ export default async (): Promise<Config.InitialOptions> => {
       // Imports for *.edgeql files are really *.edgeql.ts files
       [`(.+)\\.edgeql$`]: '$1.edgeql.ts',
     },
-  } satisfies Config.InitialProjectOptions;
+  } satisfies Config;
 
   const e2e = {
     ...base,
@@ -30,7 +30,7 @@ export default async (): Promise<Config.InitialOptions> => {
       ...(debugging ? [] : ['./test/jest-setup.ts']),
     ],
     slowTestThreshold: 60_000,
-  } satisfies Config.InitialProjectOptions;
+  } satisfies Config;
 
   return {
     ...base,
