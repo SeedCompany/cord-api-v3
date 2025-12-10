@@ -1,13 +1,11 @@
+import { describe, it } from '@jest/globals';
+
 describe('stepCompleteDate', () => {
-  it('should return null when fiscal quarter is nullish', () => {
-    //TODO
-  });
+  it.todo('should return null when fiscal quarter is nullish');
 
-  it('should return null when fiscal year is nullish', () => {
-    //TODO
-  });
+  it.todo('should return null when fiscal year is nullish');
 
-  it('should return end of full fiscal quarter when valid cell is passed in', () => {
-    //TODO
-  });
+  it.todo(
+    'should return end of full fiscal quarter when valid cell is passed in',
+  );
 });

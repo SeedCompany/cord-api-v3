@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@jest/globals';
 // eslint-disable-next-line no-restricted-imports,@seedcompany/no-restricted-imports
 import * as Nest from '@nestjs/common';
 import * as Fastify from 'fastify';

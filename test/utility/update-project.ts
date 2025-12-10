@@ -1,3 +1,4 @@
+import { expect } from '@jest/globals';
 import { graphql, type InputOf } from '~/graphql';
 import { type TestApp } from './create-app';
 import * as fragments from './fragments';

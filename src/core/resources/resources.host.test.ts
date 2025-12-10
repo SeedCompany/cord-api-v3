@@ -1,3 +1,4 @@
+import { beforeAll, describe, expect, it } from '@jest/globals';
 import { GraphQLSchemaHost } from '@nestjs/graphql';
 import { type EnhancedResourceMap } from '~/core';
 import { ResourcesHost } from './resources.host';
