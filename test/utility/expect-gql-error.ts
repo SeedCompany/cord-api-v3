@@ -48,7 +48,7 @@ const toThrowGqlError: MatcherFunction<[expected?: ErrorExpectations]> =
     );
     const extensionsPassed = this.equals(
       expect.objectContaining(expectedObj.extensions),
-      expectedObj.extensions,
+      actualObj.extensions,
     );
     const pass = codesPassed && messagePassed && extensionsPassed;
 
