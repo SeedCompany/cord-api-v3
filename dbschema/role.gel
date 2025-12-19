@@ -23,5 +23,6 @@ module default {
     StaffMember,
     Translator,
     MultiplicationFinanceApprover,
+    FieldServices
   >;
 }
