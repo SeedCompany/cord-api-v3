@@ -1,5 +1,9 @@
-import { Module, type Provider } from '@nestjs/common';
-import { GraphQLModule as NestGraphqlModule } from '@nestjs/graphql';
+import { Module, type OnModuleInit, type Provider } from '@nestjs/common';
+import { ModuleRef } from '@nestjs/core';
+import {
+  AbstractGraphQLDriver,
+  GraphQLModule as NestGraphqlModule,
+} from '@nestjs/graphql';
 import { mapValues } from '@seedcompany/common';
 import { TracingModule } from '../tracing';
 import { CleanUpLongLivedConnectionsOnShutdownPlugin } from './clean-up-long-lived-connections-on-shutdown.plugin';
@@ -53,4 +57,25 @@ export class GraphqlOptionsModule {}
   ],
   exports: [NestGraphqlModule, GqlContextHost, SharedPluginsModule],
 })
-export class GraphqlModule {}
+export class GraphqlModule implements OnModuleInit {
+  constructor(private readonly moduleRef: ModuleRef) {}
+
+  onModuleInit() {
+    const driver = this.moduleRef.get<Driver>(AbstractGraphQLDriver, {
+      strict: false,
+    });
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+      driver.yoga;
+      return;
+    } catch {
+      //
+    }
+    // No HTTP server, so the driver wasn't started.
+    // Create the Yoga instance now, so it can be accessed outside webserver processes.
+    const gqlModule = this.moduleRef.get(NestGraphqlModule, {
+      strict: false,
+    });
+    driver.createYoga(gqlModule.completeOptions!);
+  }
+}

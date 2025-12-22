@@ -34,7 +34,7 @@ export type DriverConfig = GqlModuleOptions &
 
 @Injectable()
 export class Driver extends AbstractDriver<DriverConfig> {
-  private yoga?: YogaServerInstance<ServerContext, {}>;
+  #yoga?: YogaServerInstance<ServerContext, {}>;
 
   constructor(
     private readonly discovery: MetadataDiscovery,
@@ -43,9 +43,14 @@ export class Driver extends AbstractDriver<DriverConfig> {
     super();
   }
 
-  async start(options: DriverConfig) {
-    const fastify = this.http.getInstance();
+  get yoga() {
+    if (!this.#yoga) {
+      throw new Error('Yoga not initialized yet.');
+    }
+    return this.#yoga;
+  }
 
+  createYoga(options: DriverConfig) {
     // Do our plugin discovery / registration
     const discoveredPlugins = this.discovery.discover(Plugin).classes<Plugin>();
     options.plugins = [
@@ -56,12 +61,18 @@ export class Driver extends AbstractDriver<DriverConfig> {
         .map((cls) => cls.instance),
     ];
 
-    this.yoga = createYoga({
+    this.#yoga = createYoga({
       ...options,
       graphqlEndpoint: options.path,
       logging: false,
       batching: { limit: 25 },
     });
+  }
+
+  async start(options: DriverConfig) {
+    this.createYoga(options);
+
+    const fastify = this.http.getInstance();
 
     fastify.route({
       method: 'GET',
@@ -83,7 +94,7 @@ export class Driver extends AbstractDriver<DriverConfig> {
   }
 
   httpHandler: FastifyRoute['handler'] = async (req, reply) => {
-    const res = await this.yoga!.handleNodeRequestAndResponse(req, reply, {
+    const res = await this.yoga.handleNodeRequestAndResponse(req, reply, {
       req,
       response: reply,
     });
@@ -141,7 +152,7 @@ export class Driver extends AbstractDriver<DriverConfig> {
         const {
           extra: { request, socket },
         } = ctx;
-        const envelop = this.yoga!.getEnveloped({
+        const envelop = this.yoga.getEnveloped({
           req: request,
           socket,
           params: payload, // Same(ish?) shape as YogaInitialContext.params
@@ -213,7 +224,7 @@ export class Driver extends AbstractDriver<DriverConfig> {
   }
 
   async stop() {
-    await this.yoga?.dispose();
+    await this.#yoga?.dispose();
   }
 }
 
