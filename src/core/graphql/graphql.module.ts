@@ -14,6 +14,7 @@ import { GraphqlErrorFormatter } from './graphql-error-formatter';
 import { GraphqlLoggingPlugin } from './graphql-logging.plugin';
 import { GraphqlTracingPlugin } from './graphql-tracing.plugin';
 import { GraphqlOptions } from './graphql.options';
+import { Yoga } from './yoga.facade';
 
 import './normalize-subscription-output';
 import './types';
@@ -54,8 +55,9 @@ export class GraphqlOptionsModule {}
   providers: [
     GqlContextHostImpl,
     { provide: GqlContextHost, useExisting: GqlContextHostImpl },
+    Yoga,
   ],
-  exports: [NestGraphqlModule, GqlContextHost, SharedPluginsModule],
+  exports: [NestGraphqlModule, GqlContextHost, SharedPluginsModule, Yoga],
 })
 export class GraphqlModule implements OnModuleInit {
   constructor(private readonly moduleRef: ModuleRef) {}
