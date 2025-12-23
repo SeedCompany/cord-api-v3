@@ -87,6 +87,7 @@ export class WebhookExecutor {
       schema: envelop.schema,
       rootValue: {},
       contextValue: await envelop.contextFactory({
+        webhook,
         operation: getOperationAST(document, webhook.name)!,
       } satisfies GqlContextType),
     };
