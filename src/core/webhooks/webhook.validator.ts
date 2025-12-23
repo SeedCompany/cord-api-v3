@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { type DocumentNode, type GraphQLError } from 'graphql';
 import { InputException } from '~/common';
+import { SkipLogging } from '../exception/skip-logging.symbol';
 import { Yoga } from '../graphql';
 
 @Injectable()
@@ -12,10 +13,7 @@ export class WebhookValidator {
     const doc: DocumentNode = parse(documentStr);
     const errors: readonly GraphQLError[] = validate(schema, doc);
     if (errors.length > 0) {
-      const ex = new InputException('Given operation is invalid', 'operation');
-      // @ts-expect-error TODO create specific error
-      ex.errors = errors;
-      throw ex;
+      throw Object.assign(new AggregateError(errors), { [SkipLogging]: true });
     }
     if (doc.definitions[0]?.kind !== 'OperationDefinition') {
       throw new InputException('Given operation is invalid', 'operation');
