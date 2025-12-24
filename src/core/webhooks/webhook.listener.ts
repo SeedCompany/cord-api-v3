@@ -1,5 +1,6 @@
 import { Injectable, type OnModuleDestroy } from '@nestjs/common';
 import { asyncPool } from '@seedcompany/common';
+import { internal } from '../broadcast';
 import { BroadcastPublishedHook } from '../broadcast/hooks';
 import { OnHook } from '../hooks';
 import { ILogger, Logger } from '../logger';
@@ -30,6 +31,10 @@ export class WebhookListener implements OnModuleDestroy {
   // FYI this hook is not awaited, so all of this happens in the background.
   @OnHook(BroadcastPublishedHook)
   onEventPublished(event: BroadcastPublishedHook) {
+    if (internal.is(event.channel)) {
+      return;
+    }
+
     // A simple promise chain as a placeholder for a real job queue.
     this.draining = this.draining.then(() =>
       this.handleJob(event).catch((error) => {
