@@ -4,6 +4,7 @@ import {
   type GqlModuleOptions,
 } from '@nestjs/graphql';
 import { cmpBy } from '@seedcompany/common';
+import { withAsyncContextIterator } from '@seedcompany/nest';
 import type { RouteOptions as FastifyRoute } from 'fastify';
 import type { ExecutionArgs } from 'graphql';
 import { makeHandler as makeGqlWSHandler } from 'graphql-ws/use/@fastify/websocket';
@@ -47,6 +48,7 @@ export class Driver extends AbstractDriver<DriverConfig> {
     // Do our plugin discovery / registration
     const discoveredPlugins = this.discovery.discover(Plugin).classes<Plugin>();
     options.plugins = [
+      MaintainAsyncContextInSubscriptionEvents,
       ...(options.plugins ?? []),
       ...discoveredPlugins
         .toSorted(cmpBy(({ meta }) => meta.priority))
@@ -188,3 +190,12 @@ export class Driver extends AbstractDriver<DriverConfig> {
     await this.yoga?.dispose();
   }
 }
+
+const MaintainAsyncContextInSubscriptionEvents: Plugin = {
+  onSubscribe: ({ subscribeFn, setSubscribeFn }) => {
+    setSubscribeFn(async (...args) => {
+      const iterator: AsyncIterator<unknown> = await subscribeFn(...args);
+      return withAsyncContextIterator(iterator);
+    });
+  },
+};
