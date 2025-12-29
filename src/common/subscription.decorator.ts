@@ -13,6 +13,7 @@ import {
 import { toAsyncIterable } from '@seedcompany/nest';
 import { isPromise } from 'node:util/types';
 import type { Observable, Subscribable } from 'rxjs';
+import type { AbstractClass } from 'type-fest';
 
 // Despite rxjs typing this, it is not a native symbol yet.
 const observable: typeof Symbol.observable = '@@observable' as any;
@@ -21,8 +22,8 @@ const observable: typeof Symbol.observable = '@@observable' as any;
  * Subscription handler (method) Decorator. Routes subscriptions to this method.
  */
 export const Subscription =
-  <T>(
-    typeFunc: ReturnTypeFunc,
+  <Cls extends AbstractClass<any>, T = InstanceType<Cls>>(
+    typeFunc: ReturnTypeFunc<Cls>,
     // Hide filter & resolve, do all of that in the method body.
     options?: Omit<SubscriptionOptions, 'filter' | 'resolve'>,
   ) =>
