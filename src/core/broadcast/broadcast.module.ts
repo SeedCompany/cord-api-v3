@@ -10,7 +10,10 @@ import {
 } from '@seedcompany/nest/broadcast';
 import Redis from 'ioredis';
 import { ConfigService } from '~/core/config';
+import { TransactionHooks } from '~/core/database';
+import { GqlContextHost } from '~/core/graphql';
 import { type ILogger, LoggerToken, NestLoggerAdapter } from '~/core/logger';
+import { TransactionDeferredTransport } from './transaction-deferred.transport';
 
 @Module({
   providers: [
@@ -32,6 +35,23 @@ import { type ILogger, LoggerToken, NestLoggerAdapter } from '~/core/logger';
     },
     {
       provide: Transport,
+      inject: ['RealTransport', TransactionHooks, GqlContextHost],
+      useFactory: (
+        transport: Transport,
+        txHooks: TransactionHooks,
+        gqlContextHost: GqlContextHost,
+      ) => {
+        let composed = transport;
+        composed = new TransactionDeferredTransport(
+          composed,
+          txHooks,
+          gqlContextHost,
+        );
+        return composed;
+      },
+    },
+    {
+      provide: 'RealTransport',
       inject: [ConfigService, LoggerToken('broadcaster')],
       useFactory: (config: ConfigService, logger: ILogger): Transport => {
         const connStr = config.redis.url;
