@@ -72,6 +72,7 @@ import {
   type ProjectMemberListInput,
   type SecuredProjectMemberList,
 } from './project-member/dto';
+import { ProjectChannels } from './project.channels';
 import { ProjectRepository } from './project.repository';
 
 @Injectable()
@@ -88,6 +89,7 @@ export class ProjectService {
     private readonly privileges: Privileges,
     private readonly identity: Identity,
     private readonly eventBus: IEventBus,
+    private readonly channels: ProjectChannels,
     private readonly repo: ProjectRepository,
     private readonly projectChangeRequests: ProjectChangeRequestService,
   ) {}
@@ -175,6 +177,8 @@ export class ProjectService {
 
       const event = new ProjectCreatedEvent(project);
       await this.eventBus.publish(event);
+
+      this.channels.publishToAll('created', project.id);
 
       return event.project;
     } catch (e) {
@@ -304,6 +308,9 @@ export class ProjectService {
       ...changes,
     });
     await this.eventBus.publish(event);
+
+    this.channels.publishToAll('updated', updated.id);
+
     return event.updated;
   }
 
@@ -319,6 +326,8 @@ export class ProjectService {
     }
 
     await this.eventBus.publish(new ProjectDeletedEvent(object));
+
+    this.channels.publishToAll('deleted', object.id);
   }
 
   async list(input: ProjectListInput) {
