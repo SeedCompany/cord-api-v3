@@ -3,7 +3,7 @@ import {
   AbstractGraphQLDriver as AbstractDriver,
   type GqlModuleOptions,
 } from '@nestjs/graphql';
-import { cmpBy } from '@seedcompany/common';
+import { cmpBy, patchMethod } from '@seedcompany/common';
 import { withAsyncContextIterator } from '@seedcompany/nest';
 import type { RouteOptions as FastifyRoute } from 'fastify';
 import type { ExecutionArgs } from 'graphql';
@@ -109,10 +109,6 @@ export class Driver extends AbstractDriver<DriverConfig> {
    *    So this allows our "yoga" plugins to be executed.
    */
   private makeWsHandler(options: DriverConfig) {
-    const asyncContextBySocket = new WeakMap<
-      WebSocket,
-      <R>(fn: () => R) => R
-    >();
     interface WsExecutionArgs extends ExecutionArgs {
       socket: WebSocket;
       envelop: ReturnType<ReturnType<typeof envelop>>;
@@ -132,18 +128,11 @@ export class Driver extends AbstractDriver<DriverConfig> {
       // unique envelop (yoga) instance per request.
       execute: (wsArgs) => {
         const { envelop, socket, ...args } = wsArgs as WsExecutionArgs;
-        return asyncContextBySocket.get(socket)!(() => {
-          return envelop.execute(args);
-        });
+        return envelop.execute(args);
       },
       subscribe: (wsArgs) => {
         const { envelop, socket, ...args } = wsArgs as WsExecutionArgs;
-        // Because this is called via socket.onmessage, we don't have
-        // the same async context we started with.
-        // Grab and resume it.
-        return asyncContextBySocket.get(socket)!(() => {
-          return envelop.subscribe(args);
-        });
+        return envelop.subscribe(args);
       },
       // Create a unique envelop/yoga instance for each subscription.
       // This allows "yoga" plugins that are really just envelop hooks
@@ -205,8 +194,19 @@ export class Driver extends AbstractDriver<DriverConfig> {
         });
       }
 
-      // Save a reference to the current async context, so we can resume it.
-      asyncContextBySocket.set(socket, AsyncLocalStorage.snapshot());
+      // Patch socket.on('message') to resume the current async context.
+      // All the subscription logic happens under a "subscribe" message.
+      // So this fully encapsulates the subscription logic within the async context.
+      const scoped = AsyncLocalStorage.snapshot();
+      patchMethod(socket, 'on', (base) => (eventName, listener) => {
+        if (eventName !== 'message') {
+          return base(eventName, listener);
+        }
+        return base(eventName, (...args) => {
+          scoped(listener, ...args);
+        });
+      });
+
       return fastifyWsHandler.call(this, socket, req);
     };
     return wsHandler;
