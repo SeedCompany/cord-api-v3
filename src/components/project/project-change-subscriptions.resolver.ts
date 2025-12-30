@@ -2,6 +2,7 @@ import { Args, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { Loader, type LoaderOf } from '@seedcompany/data-loader';
 import { from, map, merge, mergeMap, type ObservableInput } from 'rxjs';
 import { omitNotFound$, Subscription } from '~/common';
+import { Hooks } from '~/core/hooks';
 import { ResourceLoader } from '~/core/resources';
 import {
   AnyProjectChange,
@@ -11,6 +12,7 @@ import {
   ProjectDeleted,
   ProjectUpdated,
 } from './dto';
+import { ObserveProjectChangeHook } from './events';
 import {
   ProjectChangedArgs,
   type ProjectChangedPayload,
@@ -23,6 +25,7 @@ export class ProjectChangeSubscriptionsResolver {
   constructor(
     private readonly channels: ProjectChannels,
     private readonly loaders: ResourceLoader,
+    private readonly hooks: Hooks,
   ) {}
 
   private verifyReadPermission$() {
@@ -88,6 +91,7 @@ export class ProjectChangeSubscriptionsResolver {
       this.projectUpdated(args),
       this.projectDeleted(args),
     ]);
+    await this.hooks.run(new ObserveProjectChangeHook(args, channels));
     return merge(...channels);
   }
 
