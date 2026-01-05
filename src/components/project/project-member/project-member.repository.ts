@@ -164,6 +164,22 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
         );
   }
 
+  protected filterManyToReadable() {
+    return this.privileges.filterToReadable({
+      wrapContext: (conditions) => (q) =>
+        q
+          .match([
+            node('project', 'Project'),
+            relation('out', '', 'member', ACTIVE),
+            node('node'),
+          ])
+          .apply(oncePerProject(conditions)),
+    });
+  }
+
+  /**
+   * Only used for `Project.membership` so we assume read permission.
+   */
   async readManyByProjectAndUser(
     input: readonly MembershipByProjectAndUserInput[],
   ) {
