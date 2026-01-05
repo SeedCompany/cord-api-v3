@@ -11,6 +11,7 @@ import {
   setOf,
   sortBy,
 } from '@seedcompany/common';
+import { Case } from '@seedcompany/common/case';
 import { Chalk, type ChalkInstance } from 'chalk';
 import Table from 'cli-table3';
 import { Command, Option } from 'clipanion';
@@ -72,10 +73,14 @@ export class PolicyDumper {
   async dump(
     rolesIn: Many<LiteralUnion<Role, string>>,
     resourcesIn: Many<ResourceLike & string>,
+    actionsIn?: Many<LiteralUnion<ResourceAction, string>>,
   ) {
     const roles = search(rolesIn, [...Role], 'role');
     const map = this.resources.getEnhancedMap();
     const resources = searchResources(resourcesIn, map);
+    const actions = actionsIn
+      ? search(actionsIn, [...ResourceAction], 'action')
+      : [...ResourceAction];
 
     const data = roles.flatMap((role) =>
       resources.flatMap((r) =>
@@ -103,7 +108,7 @@ export class PolicyDumper {
               `for ${chalk.italic(startCase(resources[0]!.resource.name))}`,
           ]),
         ),
-        colSpan: 4 + (showRoleCol ? 1 : 0) + (showResCol ? 1 : 0),
+        colSpan: actions.length + (showRoleCol ? 1 : 0) + (showResCol ? 1 : 0),
         hAlign: 'center',
       },
     ]);
@@ -114,9 +119,7 @@ export class PolicyDumper {
       ...(showResCol
         ? [resources.length === 1 ? undefined : chalk.magentaBright('Resource')]
         : []),
-      ...['Read', 'Edit', 'Create', 'Delete'].map((k) =>
-        chalk.magentaBright(k),
-      ),
+      ...actions.map((k) => chalk.magentaBright(Case.capital(k))),
     ]);
 
     // Table data rows
@@ -130,9 +133,7 @@ export class PolicyDumper {
               ),
             ]
           : []),
-        ...[row.read, row.edit, row.create, row.delete].map((perm) =>
-          this.humanizePerm(perm, chalk),
-        ),
+        ...actions.map((action) => this.humanizePerm(row[action], chalk)),
       ]),
     );
 
