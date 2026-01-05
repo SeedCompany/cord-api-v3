@@ -17,6 +17,7 @@ export const Role = makeEnum({
     'ExperienceOperations',
     'FieldOperationsDirector',
     'FieldPartner',
+    'FieldServices',
     'FinancialAnalyst',
     'Fundraising',
     'Intern',
