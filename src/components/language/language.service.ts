@@ -4,14 +4,16 @@ import {
   CalendarDate,
   type ID,
   InputException,
+  NotFoundException,
   type ObjectView,
   type SecuredDate,
   ServerException,
   type UnsecuredDto,
 } from '~/common';
-import { HandleIdLookup, ILogger, Logger } from '~/core';
+import { ILogger, Logger } from '~/core/logger';
+import { HandleIdLookup, ResourceLoader } from '~/core/resources';
 import { Privileges } from '../authorization';
-import { EngagementService } from '../engagement';
+import { EngagementLoader, EngagementService } from '../engagement';
 import { type EngagementListInput, EngagementStatus } from '../engagement/dto';
 import { LocationService } from '../location';
 import {
@@ -44,6 +46,7 @@ export class LanguageService {
     @Inject(forwardRef(() => EngagementService))
     private readonly engagementService: EngagementService & {},
     private readonly privileges: Privileges,
+    private readonly loaders: ResourceLoader,
     private readonly repo: LanguageRepository,
     @Logger('language:service') private readonly logger: ILogger,
   ) {}
@@ -184,47 +187,53 @@ export class LanguageService {
   async sponsorStartDate(language: Language): Promise<SecuredDate> {
     const engagementIds = await this.repo.getEngagementIdsForLanguage(language);
 
-    try {
-      const engagements = await Promise.all(
-        engagementIds.map((engagementId) =>
-          this.engagementService.readOne(engagementId),
-        ),
-      );
-      const statusesToIgnore = setOf([
-        EngagementStatus.InDevelopment,
-        EngagementStatus.DidNotDevelop,
-        EngagementStatus.Unapproved,
-        EngagementStatus.Rejected,
-      ]);
-      const dates = engagements
-        .filter(
-          (engagement) =>
-            engagement.status.value &&
-            !setHas(statusesToIgnore, engagement.status.value),
-        )
-        .map((engagement) => engagement.startDate.value)
-        .filter(isNotFalsy);
-
-      const canRead = engagements.every(
-        (engagement) => engagement.startDate.canRead,
-      );
-
-      const value =
-        dates.length && canRead ? CalendarDate.min(...dates) : undefined;
-
-      return {
-        canRead,
-        canEdit: false,
-        value,
-      };
-    } catch {
-      //if engagement readOne returns a not found exception, then don't have read permissions on the engagement
+    const engagementResults = await (
+      await this.loaders.getLoader(EngagementLoader)
+    ).loadMany(engagementIds.map((id) => ({ id, view: { active: true } })));
+    if (
+      engagementResults.some((result) => result instanceof NotFoundException)
+    ) {
       return {
         canRead: false,
         canEdit: false,
         value: undefined,
       };
     }
+    const engagements = engagementResults.map((result) => {
+      if (result instanceof Error) {
+        throw result;
+      } else {
+        return result;
+      }
+    });
+
+    const statusesToIgnore = setOf([
+      EngagementStatus.InDevelopment,
+      EngagementStatus.DidNotDevelop,
+      EngagementStatus.Unapproved,
+      EngagementStatus.Rejected,
+    ]);
+    const dates = engagements
+      .filter(
+        (engagement) =>
+          engagement.status.value &&
+          !setHas(statusesToIgnore, engagement.status.value),
+      )
+      .map((engagement) => engagement.startDate.value)
+      .filter(isNotFalsy);
+
+    const canRead = engagements.every(
+      (engagement) => engagement.startDate.canRead,
+    );
+
+    const value =
+      dates.length && canRead ? CalendarDate.min(...dates) : undefined;
+
+    return {
+      canRead,
+      canEdit: false,
+      value,
+    };
   }
 
   async addLocation(languageId: ID, locationId: ID): Promise<void> {
