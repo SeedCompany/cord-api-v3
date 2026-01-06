@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ArgsType } from '@nestjs/graphql';
+import { type DateTime } from 'luxon';
 import type { SetRequired } from 'type-fest';
 import { type ID, IdField } from '~/common';
 import { type BroadcastChannel, Broadcaster } from '~/core/broadcast';
@@ -14,7 +15,9 @@ export class ProjectChangedArgs {
 export type ProjectChangedPayload = SetRequired<
   ProjectChangedArgs,
   keyof ProjectChangedArgs
->;
+> & {
+  at: DateTime;
+};
 
 /**
  * Typed channels for project events.

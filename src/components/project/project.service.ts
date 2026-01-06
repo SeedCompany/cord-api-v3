@@ -179,7 +179,10 @@ export class ProjectService {
       const event = new ProjectCreatedEvent(project);
       await this.eventBus.publish(event);
 
-      this.channels.publishToAll('created', { project: project.id });
+      this.channels.publishToAll('created', {
+        project: project.id,
+        at: project.createdAt,
+      });
 
       return event.project;
     } catch (e) {
@@ -312,6 +315,7 @@ export class ProjectService {
 
     this.channels.publishToAll('updated', {
       project: updated.id,
+      at: changes.modifiedAt!,
       changes: omit(changes, ['modifiedAt']),
     });
 
@@ -323,15 +327,16 @@ export class ProjectService {
 
     this.privileges.for(IProject, object).verifyCan('delete');
 
-    try {
-      await this.repo.deleteNode(object);
-    } catch (e) {
+    const { at } = await this.repo.deleteNode(object).catch((e) => {
       throw new ServerException('Failed to delete project', e);
-    }
+    });
 
     await this.eventBus.publish(new ProjectDeletedEvent(object));
 
-    this.channels.publishToAll('deleted', { project: object.id });
+    this.channels.publishToAll('deleted', {
+      project: object.id,
+      at,
+    });
   }
 
   async list(input: ProjectListInput) {

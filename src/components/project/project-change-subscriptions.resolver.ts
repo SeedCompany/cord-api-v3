@@ -42,9 +42,10 @@ export class ProjectChangeSubscriptionsResolver {
     return this.channels.created().pipe(
       this.verifyReadPermission$(),
       map(
-        ({ project }): ProjectCreated => ({
+        ({ project, at }): ProjectCreated => ({
           __typename: 'ProjectCreated',
           projectId: project,
+          at,
         }),
       ),
     );
@@ -55,10 +56,11 @@ export class ProjectChangeSubscriptionsResolver {
     return this.channels.updated(args).pipe(
       this.verifyReadPermission$(),
       map(
-        ({ project, changes }): ProjectUpdated => ({
+        ({ project, changes, at }): ProjectUpdated => ({
           __typename: 'ProjectUpdated',
           projectId: project,
           changes,
+          at,
         }),
       ),
     );
@@ -68,9 +70,10 @@ export class ProjectChangeSubscriptionsResolver {
   projectDeleted(@Args() args: ProjectChangedArgs) {
     return this.channels.deleted(args).pipe(
       map(
-        ({ project: id }): ProjectDeleted => ({
+        ({ project: id, at }): ProjectDeleted => ({
           __typename: 'ProjectDeleted',
           projectId: id,
+          at,
         }),
       ),
     );
