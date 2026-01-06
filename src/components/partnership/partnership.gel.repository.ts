@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { type ID, type PublicOf } from '~/common';
 import { e, RepoFor } from '~/core/gel';
-import { Partnership } from './dto';
+import { type CreatePartnership, Partnership } from './dto';
 import type { PartnershipByProjectAndPartnerInput } from './partnership-by-project-and-partner.loader';
 import { type PartnershipRepository } from './partnership.repository';
 
@@ -26,9 +26,21 @@ export class PartnershipGelRepository
         }),
       }),
     }),
+    omit: ['create'],
   })
   implements PublicOf<PartnershipRepository>
 {
+  async create(input: CreatePartnership) {
+    const project = e.cast(e.Project, e.uuid(input.project));
+    return await this.defaults.create({
+      ...input,
+      project,
+      projectContext: project.projectContext,
+      mou: undefined, // TODO
+      agreement: undefined, // TODO
+    });
+  }
+
   async readManyByProjectAndPartner(
     input: readonly PartnershipByProjectAndPartnerInput[],
   ) {
