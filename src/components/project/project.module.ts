@@ -17,6 +17,7 @@ import { InternshipProjectResolver } from './internship-project.resolver';
 import { FixDeptIdLabelMigration } from './migrations/fix-dept-id-label.migration';
 import { RenameTranslationToMomentumMigration } from './migrations/rename-translation-to-momentum.migration';
 import { ProjectChangeSubscriptionsResolver } from './project-change-subscriptions.resolver';
+import { ProjectChangesLinksResolver } from './project-changes-links.resolver';
 import { ProjectEngagementIdResolvers } from './project-engagement-id.resolver';
 import { ProjectMemberModule } from './project-member/project-member.module';
 import { ProjectChannels } from './project.channels';
@@ -50,6 +51,7 @@ import { ProjectWorkflowModule } from './workflow/project-workflow.module';
     TranslationProjectResolver,
     InternshipProjectResolver,
     ProjectChangeSubscriptionsResolver,
+    ProjectChangesLinksResolver,
     ProjectEngagementConnectionResolver,
     ProjectUserConnectionResolver,
     ...ProjectEngagementIdResolvers,

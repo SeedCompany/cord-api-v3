@@ -16,6 +16,7 @@ import { ChangesetIdField } from '../../changeset';
 import { ReportPeriod } from '../../periodic-report/dto';
 import { IProject, type Project } from './project.dto';
 
+@ObjectType({ isAbstract: true })
 @InputType()
 export abstract class UpdateProject {
   @IdField()

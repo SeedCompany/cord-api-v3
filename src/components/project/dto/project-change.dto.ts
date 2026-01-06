@@ -1,8 +1,10 @@
 import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
+import { stripIndent } from 'common-tags';
 import { DateTime } from 'luxon';
 import {
   DataObject,
   DateTimeField,
+  Grandparent,
   type ID,
   IdField,
   OmitType,
@@ -45,14 +47,45 @@ export class ProjectCreated extends AnyProjectChange {
 }
 
 @ObjectType()
-export class ProjectChanges extends OmitType(UpdateProject, ['id']) {}
+export class ProjectChanges extends OmitType(UpdateProject, [
+  'id',
+  // Annoying omit from schema, re-add for TS, so that the resolver
+  // can resolve the fields to their objects instead of presenting IDs
+  'primaryLocation',
+  'marketingLocation',
+  'marketingRegionOverride',
+  'fieldRegion',
+]) {
+  readonly primaryLocation?: ID<'Location'> | null;
+  readonly marketingLocation?: ID<'Location'> | null;
+  readonly marketingRegionOverride?: ID<'Location'> | null;
+  readonly fieldRegion?: ID<'FieldRegion'> | null;
+}
 
 @ObjectType({ implements: [AnyProjectChange] })
 export class ProjectUpdated extends AnyProjectChange {
   declare readonly __typename: 'ProjectUpdated';
 
-  // @Field() private for now as links need resolvers
-  changes: ProjectChanges;
+  // TODO maybe updates: ProjectUpdates
+  //  avoid ambiguity with AnyProjectChange
+  //  and it is only project's own properties that change, not nested.
+  @Field({ middleware: [Grandparent.store] })
+  readonly changes: ProjectChanges;
+
+  // TODO should this be here or in ProjectChanges.
+  //   ProjectUpdated.changeKeys
+  //                 .changes
+  //      or
+  //   ProjectUpdated.changes.changeKeys
+  @Field(() => [String], {
+    description: stripIndent`
+      A list of keys of this object which have changed.
+
+      If your GQL usage cannot distinguish between omitted fields and explicit nulls,
+      this can be used to determine which fields have changed.
+    `,
+  })
+  readonly changedKeys: ReadonlyArray<keyof ProjectChanges>;
 }
 
 @ObjectType({ implements: [AnyProjectChangeOrDeletion] })
