@@ -134,7 +134,7 @@ export class PartnerRepository extends DtoRepository(Partner) {
       );
     }
 
-    if (languageOfWiderCommunication) {
+    if (languageOfWiderCommunication !== undefined) {
       await this.updateRelation(
         'languageOfWiderCommunication',
         'Language',
@@ -143,7 +143,7 @@ export class PartnerRepository extends DtoRepository(Partner) {
       );
     }
 
-    if (languageOfReporting) {
+    if (languageOfReporting !== undefined) {
       await this.updateRelation(
         'languageOfReporting',
         'Language',
