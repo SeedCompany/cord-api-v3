@@ -121,7 +121,9 @@ export class Language extends Interfaces {
     SetUnsecuredType<
       UnsecuredDto<EthnologueLanguage> &
         SetChangeType<'ethnologue', UpdateEthnologueLanguage>
-    >;
+    > &
+    // TODO resolve having to declare this override twice on secured & unsecured variant
+    SetChangeType<'ethnologue', UpdateEthnologueLanguage>;
 
   @Field({
     description: `An override for the ethnologue's population`,
