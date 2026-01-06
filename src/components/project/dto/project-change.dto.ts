@@ -1,5 +1,12 @@
 import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
-import { DataObject, type ID, IdField, OmitType } from '~/common';
+import { DateTime } from 'luxon';
+import {
+  DataObject,
+  DateTimeField,
+  type ID,
+  IdField,
+  OmitType,
+} from '~/common';
 import { UpdateProject } from './update-project.dto';
 
 @InterfaceType({
@@ -10,6 +17,9 @@ export class AnyProjectChangeOrDeletion extends DataObject {
 
   @IdField()
   readonly projectId: ID<'Project'>;
+
+  @DateTimeField()
+  at: DateTime;
 }
 
 @InterfaceType({
