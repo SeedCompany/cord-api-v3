@@ -1,7 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { type ID, type PublicOf, ServerException } from '~/common';
 import { e, RepoFor } from '~/core/gel';
-import { Location, type LocationListInput } from './dto';
+import {
+  type CreateLocation,
+  Location,
+  type LocationListInput,
+  type UpdateLocation,
+} from './dto';
 import { type LocationRepository } from './location.repository';
 
 @Injectable()
@@ -14,9 +19,24 @@ export class LocationGelRepository
       mapImage: true,
       defaultMarketingRegion: true,
     }),
+    omit: ['create', 'update'],
   })
   implements PublicOf<LocationRepository>
 {
+  async create(input: CreateLocation) {
+    return await this.defaults.create({
+      ...input,
+      mapImage: undefined, // TODO
+    });
+  }
+
+  async update(input: UpdateLocation) {
+    return await this.defaults.update({
+      ...input,
+      mapImage: undefined, // TODO
+    });
+  }
+
   async addLocationToNode(label: string, id: ID, rel: string, locationId: ID) {
     const res = this.resources.getByGel(label);
     const node = e.cast(res.db, e.cast(e.uuid, id));

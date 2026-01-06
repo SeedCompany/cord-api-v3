@@ -3,7 +3,9 @@ import { type ID, NotImplementedException, type PublicOf } from '~/common';
 import { disableAccessPolicies, e, RepoFor, type ScopeOf } from '~/core/gel';
 import {
   type AssignOrganizationToUser,
+  type CreatePerson,
   type RemoveOrganizationFromUser,
+  type UpdateUser,
   User,
   type UserListInput,
 } from './dto';
@@ -21,9 +23,26 @@ const hydrateSystemAgent = e.shape(e.SystemAgent, (agent) => ({
 
 @Injectable()
 export class UserGelRepository
-  extends RepoFor(User, { hydrate: hydrateUser })
+  extends RepoFor(User, {
+    hydrate: hydrateUser,
+    omit: ['create', 'update'],
+  })
   implements PublicOf<UserRepository>
 {
+  async create(input: CreatePerson) {
+    return await this.defaults.create({
+      ...input,
+      photo: undefined, // TODO
+    });
+  }
+
+  async update(input: UpdateUser) {
+    return await this.defaults.update({
+      ...input,
+      photo: undefined, // TODO
+    });
+  }
+
   async readManyActors(ids: readonly ID[]) {
     const res = await this.db.run(this.readManyActorsQuery, { ids });
     return [...res.users, ...res.agents];
