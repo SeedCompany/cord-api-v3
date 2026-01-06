@@ -69,8 +69,8 @@ describe('ProgressReport Media e2e', () => {
       ),
       {
         input: {
-          projectId: project.id,
-          languageId: language.id,
+          project: project.id,
+          language: language.id,
         } satisfies CreateLanguageEngagement,
       },
     );
@@ -114,7 +114,7 @@ describe('ProgressReport Media e2e', () => {
       variant: 'draft' as any,
       category: 'CommunityEngagement',
       file: {
-        uploadId,
+        upload: uploadId,
         name: 'A picture',
         media: {
           altText: 'A fake pic',

@@ -98,7 +98,7 @@ module default {
     marketingLocation: Location;
     multi otherLocations: Location;
     fieldRegion: FieldRegion;
-    marketingRegionOverride: FieldRegion;
+    marketingRegionOverride: Location;
     
     link rootDirectory: Directory;
     
