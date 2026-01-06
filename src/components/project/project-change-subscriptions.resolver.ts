@@ -1,8 +1,7 @@
-import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
+import { Args, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { Loader, type LoaderOf } from '@seedcompany/data-loader';
 import { from, map, merge, mergeMap, type ObservableInput } from 'rxjs';
-import { type ID, IdArg, Subscription } from '~/common';
-import { omitNotFound$ } from '~/common';
+import { omitNotFound$, Subscription } from '~/common';
 import { ResourceLoader } from '~/core/resources';
 import {
   AnyProjectChange,
@@ -12,7 +11,11 @@ import {
   ProjectDeleted,
   ProjectUpdated,
 } from './dto';
-import { ProjectChannels } from './project.channels';
+import {
+  ProjectChangedArgs,
+  type ProjectChangedPayload,
+  ProjectChannels,
+} from './project.channels';
 import { ProjectLoader } from './project.loader';
 
 @Resolver(AnyProjectChange)
@@ -23,9 +26,9 @@ export class ProjectChangeSubscriptionsResolver {
   ) {}
 
   private verifyReadPermission$() {
-    return mergeMap((id: ID<'Project'>) => {
+    return mergeMap(({ project }: ProjectChangedPayload) => {
       // Omit event if the user watching doesn't have permission to view the project
-      return from(this.loaders.load('Project', id)).pipe(omitNotFound$());
+      return from(this.loaders.load('Project', project)).pipe(omitNotFound$());
     });
   }
 
@@ -43,8 +46,8 @@ export class ProjectChangeSubscriptionsResolver {
   }
 
   @Subscription(() => ProjectUpdated)
-  projectUpdated(@IdArg({ nullable: true }) id?: ID) {
-    return this.channels.updated(id).pipe(
+  projectUpdated(@Args() args: ProjectChangedArgs) {
+    return this.channels.updated(args).pipe(
       this.verifyReadPermission$(),
       map(
         (project): ProjectUpdated => ({
@@ -56,10 +59,10 @@ export class ProjectChangeSubscriptionsResolver {
   }
 
   @Subscription(() => ProjectDeleted)
-  projectDeleted(@IdArg({ nullable: true }) id?: ID) {
-    return this.channels.deleted(id).pipe(
+  projectDeleted(@Args() args: ProjectChangedArgs) {
+    return this.channels.deleted(args).pipe(
       map(
-        (id): ProjectDeleted => ({
+        ({ project: id }): ProjectDeleted => ({
           __typename: 'ProjectDeleted',
           projectId: id,
         }),
@@ -70,13 +73,11 @@ export class ProjectChangeSubscriptionsResolver {
   @Subscription(() => AnyProjectChangeOrDeletion, {
     description: 'Subscribe to any changes of project(s)',
   })
-  async projectChanges(
-    @IdArg({ nullable: true }) id: ID<'Project'> | undefined,
-  ) {
+  async projectChanges(@Args() args: ProjectChangedArgs) {
     const channels = new Set<ObservableInput<AnyProjectChange>>([
       this.projectCreated(),
-      this.projectUpdated(id),
-      this.projectDeleted(id),
+      this.projectUpdated(args),
+      this.projectDeleted(args),
     ]);
     return merge(...channels);
   }

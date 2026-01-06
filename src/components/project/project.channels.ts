@@ -1,6 +1,19 @@
 import { Injectable } from '@nestjs/common';
-import { type ID } from '~/common';
+import { ArgsType } from '@nestjs/graphql';
+import type { SetRequired } from 'type-fest';
+import { type ID, IdField } from '~/common';
 import { Broadcaster } from '~/core/broadcast';
+
+@ArgsType()
+export class ProjectChangedArgs {
+  @IdField({ nullable: true })
+  project?: ID<'Project'>;
+}
+
+export type ProjectChangedPayload = SetRequired<
+  ProjectChangedArgs,
+  keyof ProjectChangedArgs
+>;
 
 /**
  * Typed channels for project events.
@@ -14,19 +27,25 @@ export class ProjectChannels {
    */
   publishToAll(
     action: Exclude<keyof ProjectChannels, 'publishToAll'>,
-    id: ID<'Project'>,
+    payload: ProjectChangedPayload,
   ) {
-    this[action](id).publish(id);
-    this[action]().publish(id);
+    this[action](payload).publish(payload);
+    this[action]().publish(payload);
   }
 
   created() {
-    return this.broadcaster.channel<ID<'Project'>>('project:created');
+    return this.broadcaster.channel<ProjectChangedPayload>('project:created');
   }
-  deleted(id?: ID<'Project'>) {
-    return this.broadcaster.channel<ID<'Project'>>('project:deleted', id);
+  deleted({ project }: ProjectChangedArgs = {}) {
+    return this.broadcaster.channel<ProjectChangedPayload>(
+      'project:deleted',
+      project,
+    );
   }
-  updated(id?: ID<'Project'>) {
-    return this.broadcaster.channel<ID<'Project'>>('project:updated', id);
+  updated({ project }: ProjectChangedArgs = {}) {
+    return this.broadcaster.channel<ProjectChangedPayload>(
+      'project:updated',
+      project,
+    );
   }
 }
