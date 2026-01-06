@@ -6,10 +6,10 @@ import { type ID, IdField, MutationPlaceholderOutput } from '~/common';
 @InputType()
 export class AssignOrganizationToUser {
   @IdField()
-  readonly orgId: ID;
+  readonly org: ID<'Organization'>;
 
   @IdField()
-  readonly userId: ID;
+  readonly user: ID<'User'>;
 
   @Field(() => Boolean, { nullable: true })
   readonly primary?: boolean;

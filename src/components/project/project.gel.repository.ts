@@ -91,12 +91,10 @@ export class ProjectGelRepository
   }
 
   async create(input: CreateProject) {
-    const { type, sensitivity, otherLocationIds, presetInventory, ...props } =
-      input;
+    const { type, sensitivity, presetInventory, ...props } = input;
     return await this.concretes[input.type].create({
       ...props,
       ownSensitivity: sensitivity,
-      otherLocations: otherLocationIds,
     });
   }
 

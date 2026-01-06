@@ -12,7 +12,7 @@ export class RegionsZoneChangesAppliesDirectorChangeToProjectMembersHandler {
 
   async handle(event: FieldRegionUpdatedEvent) {
     const oldZoneId = event.previous.fieldZone.id;
-    const newZoneId = event.input.fieldZoneId;
+    const newZoneId = event.input.fieldZone;
     if (!newZoneId) {
       return;
     }

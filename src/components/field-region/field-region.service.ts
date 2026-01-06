@@ -32,7 +32,7 @@ export class FieldRegionService {
 
   async create(input: CreateFieldRegion): Promise<FieldRegion> {
     this.privileges.for(FieldRegion).verifyCan('create');
-    await this.validateDirectorRole(input.directorId);
+    await this.validateDirectorRole(input.director);
     const dto = await this.repo.create(input);
     return this.secure(dto);
   }
@@ -58,8 +58,8 @@ export class FieldRegionService {
     const changes = this.repo.getActualChanges(fieldRegion, input);
     this.privileges.for(FieldRegion, fieldRegion).verifyChanges(changes);
 
-    if (changes.directorId) {
-      await this.validateDirectorRole(changes.directorId);
+    if (changes.director) {
+      await this.validateDirectorRole(changes.director);
     }
 
     if (Object.keys(changes).length === 0) {
@@ -83,14 +83,14 @@ export class FieldRegionService {
       director = await this.users.readOneUnsecured(directorId);
     } catch (e) {
       if (e instanceof NotFoundException) {
-        throw e.withField('fieldRegion.directorId');
+        throw e.withField('fieldRegion.director');
       }
       throw e;
     }
     if (!director.roles.includes('RegionalDirector')) {
       throw new InputException(
         'User does not have the Regional Director role',
-        'fieldRegion.directorId',
+        'fieldRegion.director',
       );
     }
     return director;

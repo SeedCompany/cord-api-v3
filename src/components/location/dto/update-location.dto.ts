@@ -33,13 +33,13 @@ export abstract class UpdateLocation {
   readonly isoAlpha3?: string | null;
 
   @IdField({ nullable: true })
-  readonly fundingAccountId?: ID | null;
+  readonly fundingAccount?: ID<'FundingAccount'> | null;
 
   @IdField({ nullable: true })
-  readonly defaultFieldRegionId?: ID | null;
+  readonly defaultFieldRegion?: ID<'FieldRegion'> | null;
 
   @IdField({ nullable: true })
-  readonly defaultMarketingRegionId?: ID<Location> | null;
+  readonly defaultMarketingRegion?: ID<Location> | null;
 
   @Field({ nullable: true })
   @Type(() => CreateDefinedFileVersionInput)

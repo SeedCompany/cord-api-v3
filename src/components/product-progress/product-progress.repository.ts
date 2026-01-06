@@ -241,8 +241,8 @@ export class ProductProgressRepository {
 
     const query = this.db
       .query()
-      .match([node('product', 'Product', { id: input.productId })])
-      .match([node('report', 'PeriodicReport', { id: input.reportId })])
+      .match([node('product', 'Product', { id: input.product })])
+      .match([node('report', 'PeriodicReport', { id: input.report })])
       .apply(this.withVariant(input.variant))
 
       .comment('Create ProductProgress if needed')

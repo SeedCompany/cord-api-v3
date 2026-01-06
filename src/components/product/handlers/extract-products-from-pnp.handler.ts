@@ -47,7 +47,7 @@ export class ExtractProductsFromPnpHandler implements IEventHandler<SubscribedEv
     });
 
     await this.syncer.save({
-      engagementId: engagement.id,
+      engagement: engagement.id,
       methodology,
       actionableProductRows,
     });

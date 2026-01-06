@@ -11,7 +11,7 @@ export abstract class CreateProjectChangeRequest {
   @IdField({
     description: 'A project ID',
   })
-  readonly projectId: ID;
+  readonly project: ID<'Project'>;
 
   @ListField(() => ProjectChangeRequestType, { empty: 'deny' })
   readonly types: NonEmptyArray<ProjectChangeRequestType>;

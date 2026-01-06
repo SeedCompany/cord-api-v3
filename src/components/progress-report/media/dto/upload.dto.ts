@@ -1,8 +1,8 @@
 import { Field, InputType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import {
+  type ID,
   IdField,
-  type IdOf,
   IntersectTypes as Merge,
   PickType,
   Variant,
@@ -22,7 +22,7 @@ export class UploadProgressReportMedia extends PickType(ProgressReportMedia, [
   'category',
 ]) {
   @IdField()
-  readonly reportId: IdOf<ProgressReport>;
+  readonly report: ID<ProgressReport>;
 
   @Field()
   readonly file: CreateDefinedFileVersionInput;
@@ -49,5 +49,5 @@ export class UpdateProgressReportMedia extends Merge(
   MediaUserMetadata,
 ) {
   @IdField()
-  readonly id: IdOf<ProgressReportMedia>;
+  readonly id: ID<ProgressReportMedia>;
 }

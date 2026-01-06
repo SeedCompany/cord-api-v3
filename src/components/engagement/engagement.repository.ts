@@ -233,8 +233,8 @@ export class EngagementRepository extends CommonRepository {
     const pnpId = await generateId<FileId>();
 
     const {
-      projectId,
-      languageId,
+      project,
+      language,
       methodology: _,
       ...initialProps
     } = {
@@ -256,14 +256,14 @@ export class EngagementRepository extends CommonRepository {
     };
 
     await this.verifyRelationshipEligibility(
-      projectId,
-      languageId,
+      project,
+      language,
       false,
       changeset,
     );
 
     if (input.firstScripture) {
-      await this.verifyFirstScripture({ languageId });
+      await this.verifyFirstScripture({ languageId: language });
     }
 
     const query = this.db
@@ -272,10 +272,10 @@ export class EngagementRepository extends CommonRepository {
       .apply(
         createRelationships(LanguageEngagement, {
           in: {
-            engagement: ['Project', projectId],
+            engagement: ['Project', project],
             changeset: ['Changeset', changeset],
           },
-          out: { language: ['Language', languageId] },
+          out: { language: ['Language', language] },
         }),
       )
       .return<{ id: ID }>('node.id as id');
@@ -309,13 +309,7 @@ export class EngagementRepository extends CommonRepository {
   ) {
     const growthPlanId = await generateId<FileId>();
 
-    const {
-      projectId,
-      internId,
-      mentorId,
-      countryOfOriginId,
-      ...initialProps
-    } = {
+    const { project, intern, mentor, countryOfOrigin, ...initialProps } = {
       ...mapValues.fromList(CreateInternshipEngagement.Props, () => undefined)
         .asRecord,
       ...input,
@@ -330,12 +324,7 @@ export class EngagementRepository extends CommonRepository {
       canDelete: true,
     };
 
-    await this.verifyRelationshipEligibility(
-      projectId,
-      internId,
-      true,
-      changeset,
-    );
+    await this.verifyRelationshipEligibility(project, intern, true, changeset);
 
     const query = this.db
       .query()
@@ -343,33 +332,33 @@ export class EngagementRepository extends CommonRepository {
       .apply(
         createRelationships(InternshipEngagement, {
           in: {
-            engagement: ['Project', projectId],
+            engagement: ['Project', project],
             changeset: ['Changeset', changeset],
           },
           out: {
-            intern: ['User', internId],
-            mentor: ['User', mentorId],
-            countryOfOrigin: ['Location', countryOfOriginId],
+            intern: ['User', intern],
+            mentor: ['User', mentor],
+            countryOfOrigin: ['Location', countryOfOrigin],
           },
         }),
       )
       .return<{ id: ID }>('node.id as id');
     const result = await query.first();
     if (!result) {
-      if (mentorId && !(await this.getBaseNode(mentorId, User))) {
+      if (mentor && !(await this.getBaseNode(mentor, User))) {
         throw new NotFoundException(
           'Could not find mentor',
-          'engagement.mentorId',
+          'engagement.mentor',
         );
       }
 
       if (
-        countryOfOriginId &&
-        !(await this.getBaseNode(countryOfOriginId, Location))
+        countryOfOrigin &&
+        !(await this.getBaseNode(countryOfOrigin, Location))
       ) {
         throw new NotFoundException(
           'Could not find country of origin',
-          'engagement.countryOfOriginId',
+          'engagement.countryOfOrigin',
         );
       }
 
@@ -410,7 +399,7 @@ export class EngagementRepository extends CommonRepository {
 
       await this.files.createFileVersion({
         ...pnp,
-        parentId: engagement.pnp.id,
+        parent: engagement.pnp.id,
       });
     }
 
@@ -443,8 +432,8 @@ export class EngagementRepository extends CommonRepository {
   async updateInternship(changes: UpdateInternshipEngagement, changeset?: ID) {
     const {
       id,
-      mentorId,
-      countryOfOriginId,
+      mentor,
+      countryOfOrigin,
       growthPlan,
       status,
       ...simpleChanges
@@ -461,26 +450,26 @@ export class EngagementRepository extends CommonRepository {
 
       await this.files.createFileVersion({
         ...growthPlan,
-        parentId: engagement.growthPlan.id,
+        parent: engagement.growthPlan.id,
       });
     }
 
-    if (mentorId !== undefined) {
+    if (mentor !== undefined) {
       await this.updateRelation(
         'mentor',
         'User',
         id,
-        mentorId,
+        mentor,
         InternshipEngagement,
       );
     }
 
-    if (countryOfOriginId !== undefined) {
+    if (countryOfOrigin !== undefined) {
       await this.updateRelation(
         'countryOfOrigin',
         'Location',
         id,
-        countryOfOriginId,
+        countryOfOrigin,
         InternshipEngagement,
       );
     }
@@ -633,7 +622,7 @@ export class EngagementRepository extends CommonRepository {
     if (!result?.project) {
       throw new NotFoundException(
         'Could not find project',
-        'engagement.projectId',
+        'engagement.project',
       );
     }
 
@@ -646,7 +635,7 @@ export class EngagementRepository extends CommonRepository {
         } Engagements can be created on ${
           isInternship ? 'Internship' : 'Translation'
         } Projects`,
-        `engagement.${property}Id`,
+        `engagement.${property}`,
       );
     }
 
@@ -654,13 +643,13 @@ export class EngagementRepository extends CommonRepository {
     if (!result.other) {
       throw new NotFoundException(
         `Could not find ${label}`,
-        `engagement.${property}Id`,
+        `engagement.${property}`,
       );
     }
 
     if (result.engagement) {
       throw new DuplicateException(
-        `engagement.${property}Id`,
+        `engagement.${property}`,
         `Engagement for this project and ${label} already exists`,
       );
     }

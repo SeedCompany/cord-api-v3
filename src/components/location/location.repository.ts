@@ -63,9 +63,9 @@ export class LocationRepository extends DtoRepository(Location) {
       .apply(await createNode(Location, { initialProps }))
       .apply(
         createRelationships(Location, 'out', {
-          fundingAccount: ['FundingAccount', input.fundingAccountId],
-          defaultFieldRegion: ['FieldRegion', input.defaultFieldRegionId],
-          defaultMarketingRegion: ['Location', input.defaultMarketingRegionId],
+          fundingAccount: ['FundingAccount', input.fundingAccount],
+          defaultFieldRegion: ['FieldRegion', input.defaultFieldRegion],
+          defaultMarketingRegion: ['Location', input.defaultMarketingRegion],
         }),
       )
       .return<{ id: ID }>('node.id as id');
@@ -97,21 +97,21 @@ export class LocationRepository extends DtoRepository(Location) {
   async update(changes: UpdateLocation) {
     const {
       id,
-      fundingAccountId,
-      defaultFieldRegionId,
-      defaultMarketingRegionId,
+      fundingAccount,
+      defaultFieldRegion,
+      defaultMarketingRegion,
       mapImage,
       ...simpleChanges
     } = changes;
 
     await this.updateProperties({ id }, simpleChanges);
 
-    if (fundingAccountId !== undefined) {
+    if (fundingAccount !== undefined) {
       await this.updateRelation(
         'fundingAccount',
         'FundingAccount',
         id,
-        fundingAccountId,
+        fundingAccount,
       );
     }
 
@@ -126,25 +126,25 @@ export class LocationRepository extends DtoRepository(Location) {
 
       await this.files.createFileVersion({
         ...mapImage,
-        parentId: location.mapImage.id,
+        parent: location.mapImage.id,
       });
     }
 
-    if (defaultFieldRegionId !== undefined) {
+    if (defaultFieldRegion !== undefined) {
       await this.updateRelation(
         'defaultFieldRegion',
         'FieldRegion',
         id,
-        defaultFieldRegionId,
+        defaultFieldRegion,
       );
     }
 
-    if (defaultMarketingRegionId !== undefined) {
+    if (defaultMarketingRegion !== undefined) {
       await this.updateRelation(
         'defaultMarketingRegion',
         'Location',
         id,
-        defaultMarketingRegionId,
+        defaultMarketingRegion,
       );
     }
 

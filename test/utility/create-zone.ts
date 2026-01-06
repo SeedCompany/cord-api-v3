@@ -13,8 +13,8 @@ export async function createZone(
   const name = input.name ?? 'Zone' + (await generateId());
   const result = await app.graphql.mutate(CreateFieldZoneDoc, {
     input: {
-      directorId:
-        input.directorId ||
+      director:
+        input.director ||
         // don't want to have to declare the role at the top level. The person part doesn't really matter here.
         (await runAsAdmin(app, async () => {
           const director = await createPerson(app, {

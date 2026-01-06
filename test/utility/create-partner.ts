@@ -19,9 +19,8 @@ export async function createPartner(
       active: false,
       address: faker.location.city(),
       ...input,
-      organizationId:
-        input.organizationId || (await createOrganization(app)).id,
-      pointOfContactId: input.pointOfContactId || (await createPerson(app)).id,
+      organization: input.organization || (await createOrganization(app)).id,
+      pointOfContact: input.pointOfContact || (await createPerson(app)).id,
     },
   });
   const createdPartner = result.createPartner.partner;

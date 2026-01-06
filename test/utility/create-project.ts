@@ -18,8 +18,8 @@ export async function createProject(
       mouStart: CalendarDate.fromISO('1991-01-01').toISO(),
       mouEnd: CalendarDate.fromISO('1992-01-01').toISO(),
       tags: ['tag1', 'tag2'],
-      fieldRegionId:
-        input.fieldRegionId ||
+      fieldRegion:
+        input.fieldRegion ||
         (await runAsAdmin(app, async () => {
           return (await createRegion(app)).id;
         })),

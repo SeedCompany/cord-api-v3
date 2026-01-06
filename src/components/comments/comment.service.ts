@@ -43,7 +43,7 @@ export class CommentService {
   ) {}
 
   async create(input: CreateCommentInput) {
-    const perms = await this.getPermissionsFromResource(input.resourceId);
+    const perms = await this.getPermissionsFromResource(input.resource);
     perms.verifyCan('create');
 
     let dto;
@@ -55,13 +55,10 @@ export class CommentService {
       dto = await this.repo.readOne(result.id);
     } catch (exception) {
       if (
-        input.threadId &&
-        !(await this.repo.threads.getBaseNode(input.threadId))
+        input.thread &&
+        !(await this.repo.threads.getBaseNode(input.thread))
       ) {
-        throw new NotFoundException(
-          'Comment thread does not exist',
-          'threadId',
-        );
+        throw new NotFoundException('Comment thread does not exist', 'thread');
       }
 
       throw new CreationFailed(Comment, { cause: exception });
@@ -92,7 +89,7 @@ export class CommentService {
       ? await this.repo.getBaseNode(resource, Resource)
       : resource;
     if (!parentNode) {
-      throw new NotFoundException('Resource does not exist', 'resourceId');
+      throw new NotFoundException('Resource does not exist', 'resource');
     }
     const parent = isBaseNode(parentNode)
       ? await this.resources.loadByBaseNode(parentNode)

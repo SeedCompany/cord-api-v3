@@ -164,7 +164,7 @@ export class SyncBudgetRecordsToFundingPartners implements IEventHandler<Subscri
 
   private async addRecords(
     budget: PartialBudget,
-    organizationId: ID,
+    organization: ID<'Organization'>,
     additions: readonly FiscalYear[],
     changeset?: ID,
   ) {
@@ -173,9 +173,9 @@ export class SyncBudgetRecordsToFundingPartners implements IEventHandler<Subscri
         this.budgets
           .createRecord(
             {
-              budgetId: budget.id,
+              budget: budget.id,
               fiscalYear,
-              organizationId,
+              organization,
             },
             changeset,
           )

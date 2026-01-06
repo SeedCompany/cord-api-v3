@@ -7,7 +7,7 @@ import { CreateDefinedFileVersionInput } from '../../file/dto';
 @InputType()
 export abstract class UploadPeriodicReportInput {
   @IdField()
-  readonly reportId: ID;
+  readonly report: ID<'PeriodicReport'>;
 
   @Field({
     description: 'New version of the report file',

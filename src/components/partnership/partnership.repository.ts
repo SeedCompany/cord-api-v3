@@ -54,8 +54,8 @@ export class PartnershipRepository extends DtoRepository<
     super();
   }
   async create(input: CreatePartnership, changeset?: ID) {
-    const { projectId, partnerId } = input;
-    await this.verifyRelationshipEligibility(projectId, partnerId, changeset);
+    const { project, partner } = input;
+    await this.verifyRelationshipEligibility(project, partner, changeset);
 
     const mouId = await generateId<FileId>();
     const agreementId = await generateId<FileId>();
@@ -80,11 +80,11 @@ export class PartnershipRepository extends DtoRepository<
       .apply(
         createRelationships(Partnership, {
           in: {
-            partnership: ['Project', input.projectId],
+            partnership: ['Project', input.project],
             changeset: ['Changeset', changeset],
           },
           out: {
-            partner: ['Partner', input.partnerId],
+            partner: ['Partner', input.partner],
           },
         }),
       )
@@ -328,20 +328,20 @@ export class PartnershipRepository extends DtoRepository<
     if (!result.project) {
       throw new NotFoundException(
         'Could not find project',
-        'partnership.projectId',
+        'partnership.project',
       );
     }
 
     if (!result.partner) {
       throw new NotFoundException(
         'Could not find partner',
-        'partnership.partnerId',
+        'partnership.partner',
       );
     }
 
     if (result.partnership) {
       throw new DuplicateException(
-        'partnership.projectId',
+        'partnership.project',
         'Partnership for this project and partner already exists',
       );
     }

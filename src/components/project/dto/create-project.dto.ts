@@ -9,13 +9,11 @@ import {
   DateTimeField,
   type ID,
   IdField,
-  type IdOf,
   IsId,
   NameField,
   Sensitivity,
   SensitivityField,
 } from '~/common';
-import { type Location } from '../../location/dto';
 import { ReportPeriod } from '../../periodic-report/dto';
 import { ProjectType } from './project-type.enum';
 import { IProject, type Project } from './project.dto';
@@ -32,32 +30,32 @@ export abstract class CreateProject {
     description: 'A primary location ID',
     nullable: true,
   })
-  readonly primaryLocationId?: ID;
+  readonly primaryLocation?: ID<'Location'>;
 
   @Field(() => [IDType], {
     description: 'Other location IDs',
     nullable: true,
   })
   @IsId({ each: true })
-  readonly otherLocationIds?: ReadonlyArray<ID<'Location'>>;
+  readonly otherLocations?: ReadonlyArray<ID<'Location'>>;
 
   @IdField({
     description: 'A marketing primary location ID',
     nullable: true,
   })
-  readonly marketingLocationId?: ID;
+  readonly marketingLocation?: ID<'Location'>;
 
   @IdField({
     description: 'A marketing region override location ID',
     nullable: true,
   })
-  readonly marketingRegionOverrideId?: IdOf<Location> | null;
+  readonly marketingRegionOverride?: ID<'Location'> | null;
 
   @IdField({
     description: 'A field region ID',
     nullable: true,
   })
-  readonly fieldRegionId?: ID;
+  readonly fieldRegion?: ID<'FieldRegion'>;
 
   @DateField({ nullable: true })
   readonly mouStart?: CalendarDate;

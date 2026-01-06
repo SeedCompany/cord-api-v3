@@ -124,7 +124,7 @@ const activeProject = async (app: TestApp, projectId: ID) => {
   const { location, region } = await runAsAdmin(app, async () => {
     const fundingAccount = await createFundingAccount(app);
     const location = await createLocation(app, {
-      fundingAccountId: fundingAccount.id,
+      fundingAccount: fundingAccount.id,
     });
     const region = await createRegion(app);
     return { location, region };
@@ -132,8 +132,8 @@ const activeProject = async (app: TestApp, projectId: ID) => {
 
   await updateProject(app, {
     id: projectId,
-    primaryLocationId: location.id,
-    fieldRegionId: region.id,
+    primaryLocation: location.id,
+    fieldRegion: region.id,
   });
   await forceProjectTo(app, projectId, 'Active');
 };
@@ -160,12 +160,12 @@ describe('Engagement Changeset Aware e2e', () => {
   it('Create', async () => {
     const project = await createProject(app);
     await createLanguageEngagement(app, {
-      projectId: project.id,
-      languageId: language.id,
+      project: project.id,
+      language: language.id,
     });
     await activeProject(app, project.id);
     const changeset = await createProjectChangeRequest(app, {
-      projectId: project.id,
+      project: project.id,
     });
     const newLang = await runAsAdmin(app, createLanguage);
 
@@ -188,8 +188,8 @@ describe('Engagement Changeset Aware e2e', () => {
       {
         input: {
           engagement: {
-            languageId: newLang.id,
-            projectId: project.id,
+            language: newLang.id,
+            project: project.id,
             status: EngagementStatus.InDevelopment,
           },
           changeset: changeset.id,
@@ -213,13 +213,13 @@ describe('Engagement Changeset Aware e2e', () => {
   it('Update', async () => {
     const project = await createProject(app);
     const languageEngagement = await createLanguageEngagement(app, {
-      languageId: language.id,
-      projectId: project.id,
+      language: language.id,
+      project: project.id,
       status: EngagementStatus.InDevelopment,
     });
     await activeProject(app, project.id);
     const changeset = await createProjectChangeRequest(app, {
-      projectId: project.id,
+      project: project.id,
     });
     // Update engagement prop with changeset
     await app.graphql.mutate(
@@ -267,7 +267,7 @@ describe('Engagement Changeset Aware e2e', () => {
     const project = await createProject(app);
     await activeProject(app, project.id);
     const changeset = await createProjectChangeRequest(app, {
-      projectId: project.id,
+      project: project.id,
     });
 
     // Create new engagement with changeset
@@ -289,8 +289,8 @@ describe('Engagement Changeset Aware e2e', () => {
       {
         input: {
           engagement: {
-            languageId: language.id,
-            projectId: project.id,
+            language: language.id,
+            project: project.id,
             completeDate: '2021-09-22',
           },
           changeset: changeset.id,
@@ -342,11 +342,11 @@ describe('Engagement Changeset Aware e2e', () => {
   it('Delete', async () => {
     const project = await createProject(app);
     await createLanguageEngagement(app, {
-      projectId: project.id,
+      project: project.id,
     });
     await activeProject(app, project.id);
     const changeset = await createProjectChangeRequest(app, {
-      projectId: project.id,
+      project: project.id,
     });
 
     const le = await app.graphql.mutate(
@@ -367,8 +367,8 @@ describe('Engagement Changeset Aware e2e', () => {
       {
         input: {
           engagement: {
-            languageId: language.id,
-            projectId: project.id,
+            language: language.id,
+            project: project.id,
             completeDate: '2021-09-22',
           },
           changeset: changeset.id,
@@ -414,12 +414,12 @@ describe('Engagement Changeset Aware e2e', () => {
   it('Cannot create duplicate language engagements in a changeset', async () => {
     const project = await createProject(app);
     await createLanguageEngagement(app, {
-      projectId: project.id,
-      languageId: language.id,
+      project: project.id,
+      language: language.id,
     });
     await activeProject(app, project.id);
     const changeset = await createProjectChangeRequest(app, {
-      projectId: project.id,
+      project: project.id,
       types: [ProjectChangeRequestType.Engagement],
     });
 
@@ -443,8 +443,8 @@ describe('Engagement Changeset Aware e2e', () => {
         {
           input: {
             engagement: {
-              languageId: language.id,
-              projectId: project.id,
+              language: language.id,
+              project: project.id,
             },
             changeset: changeset.id,
           },

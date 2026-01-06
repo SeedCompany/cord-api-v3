@@ -17,7 +17,7 @@ import { type AnyProduct, Product } from './product.dto';
 
 @InputType()
 export abstract class UpdateBaseProduct extends OmitType(CreateBaseProduct, [
-  'engagementId',
+  'engagement',
   'createdAt',
   'pnpIndex',
 ]) {

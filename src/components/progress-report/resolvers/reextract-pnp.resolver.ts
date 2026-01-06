@@ -16,10 +16,10 @@ export class ReextractPnpResolver {
   @Mutation(() => PnpProgressExtractionResult)
   async reextractPnpProgress(
     @IdArg({
-      name: 'reportId',
+      name: 'report',
       description: 'An ID of a ProgressReport that has a reportFile uploaded',
     })
-    reportId: ID,
+    reportId: ID<'ProgressReport'>,
     @Loader(PeriodicReportLoader) reportLoader: LoaderOf<PeriodicReportLoader>,
     @Loader(FileNodeLoader) fileLoader: LoaderOf<FileNodeLoader>,
   ): Promise<PnpProgressExtractionResult> {

@@ -185,8 +185,8 @@ describe('Language e2e', () => {
       {
         input: {
           engagement: {
-            languageId: lang.id,
-            projectId: project.id,
+            language: lang.id,
+            project: project.id,
           },
         },
       },
@@ -224,14 +224,12 @@ describe('Language e2e', () => {
     const numProjects = 1;
     const language = await createLanguage(app);
     const project = await createProject(app);
-    const languageId = language.id;
-    const projectId = project.id;
 
     await Promise.all(
       times(numProjects).map(() =>
         createLanguageEngagement(app, {
-          projectId,
-          languageId,
+          project: project.id,
+          language: language.id,
         }),
       ),
     );
@@ -278,7 +276,7 @@ describe('Language e2e', () => {
   it('should throw error if trying to set hasExternalFirstScripture=true while language has engagements that have firstScripture=true', async () => {
     const language = await createLanguage(app);
     await createLanguageEngagement(app, {
-      languageId: language.id,
+      language: language.id,
       firstScripture: true,
     });
 
@@ -317,7 +315,7 @@ describe('Language e2e', () => {
   it('can set hasExternalFirstScripture=true if language has no engagements that have firstScripture=true', async () => {
     const language = await createLanguage(app);
     await createLanguageEngagement(app, {
-      languageId: language.id,
+      language: language.id,
       firstScripture: false,
     });
 
@@ -332,8 +330,8 @@ describe('Language e2e', () => {
     const project = await createProject(app, { presetInventory: true });
     const language = await createLanguage(app);
     await createLanguageEngagement(app, {
-      projectId: project.id,
-      languageId: language.id,
+      project: project.id,
+      language: language.id,
     });
 
     const { language: actual } = await app.graphql.query(
@@ -363,8 +361,8 @@ describe('Language e2e', () => {
     const project = await createProject(app, { presetInventory: true });
     const language = await createLanguage(app);
     await createLanguageEngagement(app, {
-      projectId: project.id,
-      languageId: language.id,
+      project: project.id,
+      language: language.id,
     });
 
     const { languages } = await app.graphql.query(

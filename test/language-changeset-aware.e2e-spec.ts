@@ -40,13 +40,13 @@ const readLanguage = (app: TestApp, id: ID, changeset?: ID) =>
 const activeProject = async (app: TestApp) => {
   const fundingAccount = await createFundingAccount(app);
   const location = await createLocation(app, {
-    fundingAccountId: fundingAccount.id,
+    fundingAccount: fundingAccount.id,
   });
   const fieldRegion = await createRegion(app);
 
   const project = await createProject(app, {
-    primaryLocationId: location.id,
-    fieldRegionId: fieldRegion.id,
+    primaryLocation: location.id,
+    fieldRegion: fieldRegion.id,
   });
   await forceProjectTo(app, project.id, 'Active');
 
@@ -72,12 +72,12 @@ describe.skip('Language Changeset Aware e2e', () => {
   it('Update', async () => {
     const project = await activeProject(app);
     const changeset = await createProjectChangeRequest(app, {
-      projectId: project.id,
+      project: project.id,
     });
     const language = await createLanguage(app);
     await createLanguageEngagement(app, {
-      projectId: project.id,
-      languageId: language.id,
+      project: project.id,
+      language: language.id,
     });
     const newLanguageName = faker.company.name();
     // Update language name with changeset
