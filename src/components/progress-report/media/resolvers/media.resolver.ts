@@ -52,7 +52,7 @@ export class ProgressReportMediaResolver {
     @Loader(() => PeriodicReportLoader) reports: LoaderOf<PeriodicReportLoader>,
   ) {
     await this.service.upload(input);
-    return await reports.load(input.reportId);
+    return await reports.load(input.report);
   }
 
   @Mutation(() => ReportMedia)

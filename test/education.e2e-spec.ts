@@ -26,12 +26,12 @@ describe('Education e2e', () => {
   });
 
   it('create a education', async () => {
-    const education = await createEducation(app, { userId: user.id });
+    const education = await createEducation(app, { user: user.id });
     expect(education.id).toBeDefined();
   });
 
   it('read one education by id', async () => {
-    const education = await createEducation(app, { userId: user.id });
+    const education = await createEducation(app, { user: user.id });
 
     const { education: actual } = await app.graphql.query(
       graphql(
@@ -56,7 +56,7 @@ describe('Education e2e', () => {
 
   // UPDATE EDUCATION
   it('update education', async () => {
-    const education = await createEducation(app, { userId: user.id });
+    const education = await createEducation(app, { user: user.id });
     const newInstitution = faker.company.name();
 
     const result = await app.graphql.mutate(
@@ -89,7 +89,7 @@ describe('Education e2e', () => {
 
   // DELETE EDUCATION
   it.skip('delete education', async () => {
-    const education = await createEducation(app, { userId: user.id });
+    const education = await createEducation(app, { user: user.id });
 
     const result = await app.graphql.mutate(
       graphql(`
@@ -112,7 +112,7 @@ describe('Education e2e', () => {
     // create 2 educations
     const numEducations = 2;
     await Promise.all(
-      times(numEducations).map(() => createEducation(app, { userId: user.id })),
+      times(numEducations).map(() => createEducation(app, { user: user.id })),
     );
 
     const result = await app.graphql.query(

@@ -64,7 +64,7 @@ const activeProject = async (app: TestApp) => {
   const [location, fieldRegion] = await runAsAdmin(app, async () => {
     const fundingAccount = await createFundingAccount(app);
     const location = await createLocation(app, {
-      fundingAccountId: fundingAccount.id,
+      fundingAccount: fundingAccount.id,
     });
     const fieldRegion = await createRegion(app);
 
@@ -72,8 +72,8 @@ const activeProject = async (app: TestApp) => {
   });
 
   const project = await createProject(app, {
-    primaryLocationId: location.id,
-    fieldRegionId: fieldRegion.id,
+    primaryLocation: location.id,
+    fieldRegion: fieldRegion.id,
   });
   await forceProjectTo(app, project.id, 'Active');
 
@@ -98,11 +98,11 @@ describe('Partnership Changeset Aware e2e', () => {
   it('Create', async () => {
     const project = await activeProject(app);
     const changeset = await createProjectChangeRequest(app, {
-      projectId: project.id,
+      project: project.id,
     });
 
     await createPartnership(app, {
-      projectId: project.id,
+      project: project.id,
     });
     // Create new partnership with changeset
     const changesetPartnership = await app.graphql.mutate(
@@ -121,8 +121,8 @@ describe('Partnership Changeset Aware e2e', () => {
       {
         input: {
           partnership: {
-            partnerId: (await createPartner(app)).id,
-            projectId: project.id,
+            partner: (await createPartner(app)).id,
+            project: project.id,
           },
           changeset: changeset.id,
         },
@@ -145,10 +145,10 @@ describe('Partnership Changeset Aware e2e', () => {
   it('Update', async () => {
     const project = await activeProject(app);
     const changeset = await createProjectChangeRequest(app, {
-      projectId: project.id,
+      project: project.id,
     });
     const partnership = await createPartnership(app, {
-      projectId: project.id,
+      project: project.id,
       mouStatus: PartnershipAgreementStatus.AwaitingSignature,
     });
     // Update partnership prop with changeset
@@ -196,15 +196,15 @@ describe('Partnership Changeset Aware e2e', () => {
   it('Delete', async () => {
     const project = await activeProject(app);
     const changeset = await createProjectChangeRequest(app, {
-      projectId: project.id,
+      project: project.id,
     });
 
     await createPartnership(app, {
-      projectId: project.id,
+      project: project.id,
     });
 
     const partnership = await createPartnership(app, {
-      projectId: project.id,
+      project: project.id,
     });
 
     // Delete partnership in changeset

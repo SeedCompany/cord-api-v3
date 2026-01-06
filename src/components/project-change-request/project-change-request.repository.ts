@@ -38,7 +38,7 @@ export class ProjectChangeRequestRepository extends DtoRepository(
       )
       .apply(
         createRelationships(ProjectChangeRequest, 'in', {
-          changeset: ['Project', input.projectId],
+          changeset: ['Project', input.project],
         }),
       )
       .return<{ id: ID }>('node.id as id')

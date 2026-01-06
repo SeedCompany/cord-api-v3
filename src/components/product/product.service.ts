@@ -67,16 +67,16 @@ export class ProductService {
       | CreateOtherProduct,
   ): Promise<AnyProduct> {
     const engagement = await this.repo.getBaseNode(
-      input.engagementId,
+      input.engagement,
       'Engagement',
     );
     if (!engagement) {
       this.logger.warning(`Could not find engagement`, {
-        id: input.engagementId,
+        id: input.engagement,
       });
       throw new NotFoundException(
         'Could not find engagement',
-        'product.engagementId',
+        'product.engagement',
       );
     }
 

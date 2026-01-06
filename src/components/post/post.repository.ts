@@ -33,7 +33,7 @@ export class PostRepository extends DtoRepository(Post) {
       .apply(
         createRelationships(Post, {
           in: {
-            post: ['BaseNode', input.parentId],
+            post: ['BaseNode', input.parent],
           },
           out: {
             creator: currentUser,

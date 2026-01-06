@@ -7,7 +7,7 @@ import { Degree, Education } from './education.dto';
 @InputType()
 export class CreateEducation {
   @IdField()
-  readonly userId: ID;
+  readonly user: ID<'User'>;
 
   @Field(() => Degree)
   readonly degree: Degree;

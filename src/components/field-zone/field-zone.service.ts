@@ -32,7 +32,7 @@ export class FieldZoneService {
 
   async create(input: CreateFieldZone): Promise<FieldZone> {
     this.privileges.for(FieldZone).verifyCan('create');
-    await this.validateDirectorRole(input.directorId);
+    await this.validateDirectorRole(input.director);
     const dto = await this.repo.create(input);
     return this.secure(dto);
   }
@@ -58,8 +58,8 @@ export class FieldZoneService {
     const changes = this.repo.getActualChanges(fieldZone, input);
     this.privileges.for(FieldZone, fieldZone).verifyChanges(changes);
 
-    if (changes.directorId) {
-      await this.validateDirectorRole(changes.directorId);
+    if (changes.director) {
+      await this.validateDirectorRole(changes.director);
     }
 
     if (Object.keys(changes).length === 0) {
@@ -83,14 +83,14 @@ export class FieldZoneService {
       director = await this.users.readOneUnsecured(directorId);
     } catch (e) {
       if (e instanceof NotFoundException) {
-        throw e.withField('fieldZone.directorId');
+        throw e.withField('fieldZone.director');
       }
       throw e;
     }
     if (!director.roles.includes('FieldOperationsDirector')) {
       throw new InputException(
         'User does not have the Field Operations Director role',
-        'fieldZone.directorId',
+        'fieldZone.director',
       );
     }
     return director;

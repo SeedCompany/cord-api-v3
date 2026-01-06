@@ -37,8 +37,8 @@ describe('ProjectMember e2e', () => {
   it('create projectMember', async () => {
     const member = await createPerson(app);
     const projectMember = await createProjectMember(app, {
-      userId: member.id,
-      projectId: project.id,
+      user: member.id,
+      project: project.id,
     });
     expect(projectMember.id).toBeDefined();
     expect(projectMember.modifiedAt).toBeDefined();
@@ -55,8 +55,8 @@ describe('ProjectMember e2e', () => {
     const member = await createPerson(app);
     await expect(
       createProjectMember(app, {
-        userId: member.id,
-        projectId: project.id,
+        user: member.id,
+        project: project.id,
         roles: [Role.Controller],
       }),
     ).rejects.toThrowGqlError(
@@ -70,8 +70,8 @@ describe('ProjectMember e2e', () => {
   it.skip('delete projectMember', async () => {
     const member = await createPerson(app);
     const projectMember = await createProjectMember(app, {
-      userId: member.id,
-      projectId: project.id,
+      user: member.id,
+      project: project.id,
     });
 
     const result = await app.graphql.mutate(
@@ -117,8 +117,8 @@ describe('ProjectMember e2e', () => {
   it('Can create the same projectMember after deletion', async () => {
     const member = await createPerson(app);
     const projectMember = await createProjectMember(app, {
-      userId: member.id,
-      projectId: project.id,
+      user: member.id,
+      project: project.id,
     });
 
     await app.graphql.mutate(
@@ -135,8 +135,8 @@ describe('ProjectMember e2e', () => {
     );
 
     const newProjectMember = await createProjectMember(app, {
-      userId: member.id,
-      projectId: project.id,
+      user: member.id,
+      project: project.id,
     });
 
     expect(newProjectMember.id).toBeTruthy();
@@ -149,8 +149,8 @@ describe('ProjectMember e2e', () => {
       });
 
       const projectMember = await createProjectMember(app, {
-        userId: member.id,
-        projectId: project.id,
+        user: member.id,
+        project: project.id,
       });
 
       const result = await app.graphql.query(
@@ -191,8 +191,8 @@ describe('ProjectMember e2e', () => {
   it('should throw error with invalid roles when update', async () => {
     const member = await createPerson(app);
     const projectMember = await createProjectMember(app, {
-      userId: member.id,
-      projectId: project.id,
+      user: member.id,
+      project: project.id,
     });
 
     await expect(

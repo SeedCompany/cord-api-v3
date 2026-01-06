@@ -9,16 +9,16 @@ import { KnownLanguage, type ModifyKnownLanguageArgs } from './dto';
 @Injectable()
 export class KnownLanguageRepository extends DtoRepository(KnownLanguage) {
   async create({
-    userId,
-    languageId,
+    user,
+    language,
     languageProficiency,
   }: ModifyKnownLanguageArgs) {
-    await this.delete({ userId, languageId, languageProficiency });
+    await this.delete({ user, language, languageProficiency });
 
     await this.db
       .query()
-      .matchNode('user', 'User', { id: userId })
-      .matchNode('language', 'Language', { id: languageId })
+      .matchNode('user', 'User', { id: user })
+      .matchNode('language', 'Language', { id: language })
       .create([
         node('user'),
         relation('out', '', 'knownLanguage', {
@@ -32,14 +32,14 @@ export class KnownLanguageRepository extends DtoRepository(KnownLanguage) {
   }
 
   async delete({
-    userId,
-    languageId,
+    user,
+    language,
     languageProficiency,
   }: ModifyKnownLanguageArgs) {
     await this.db
       .query()
-      .matchNode('user', 'User', { id: userId })
-      .matchNode('language', 'Language', { id: languageId })
+      .matchNode('user', 'User', { id: user })
+      .matchNode('language', 'Language', { id: language })
       .match([
         [
           node('user'),

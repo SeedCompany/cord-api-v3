@@ -59,10 +59,10 @@ export class PartnerRepository extends DtoRepository(Partner) {
   }
 
   async create(input: CreatePartner) {
-    const partnerExists = await this.partnerIdByOrg(input.organizationId);
+    const partnerExists = await this.partnerIdByOrg(input.organization);
     if (partnerExists) {
       throw new DuplicateException(
-        'partner.organizationId',
+        'partner.organization',
         'Partner for organization already exists.',
       );
     }
@@ -84,16 +84,16 @@ export class PartnerRepository extends DtoRepository(Partner) {
       .apply(await createNode(Partner, { initialProps }))
       .apply(
         createRelationships(Partner, 'out', {
-          organization: ['Organization', input.organizationId],
-          pointOfContact: ['User', input.pointOfContactId],
+          organization: ['Organization', input.organization],
+          pointOfContact: ['User', input.pointOfContact],
           languageOfWiderCommunication: [
             'Language',
-            input.languageOfWiderCommunicationId,
+            input.languageOfWiderCommunication,
           ],
           fieldRegions: ['FieldRegion', input.fieldRegions],
           countries: ['Location', input.countries],
           languagesOfConsulting: ['Language', input.languagesOfConsulting],
-          languageOfReporting: ['Language', input.languageOfReportingId],
+          languageOfReporting: ['Language', input.languageOfReporting],
         }),
       )
       .apply(departmentIdBlockUtils.createMaybe(input.departmentIdBlock))
@@ -113,9 +113,9 @@ export class PartnerRepository extends DtoRepository(Partner) {
   async update(changes: UpdatePartner) {
     const {
       id,
-      pointOfContactId,
-      languageOfWiderCommunicationId,
-      languageOfReportingId,
+      pointOfContact,
+      languageOfWiderCommunication,
+      languageOfReporting,
       fieldRegions,
       countries,
       languagesOfConsulting,
@@ -125,30 +125,30 @@ export class PartnerRepository extends DtoRepository(Partner) {
 
     await this.updateProperties({ id }, simpleChanges);
 
-    if (pointOfContactId !== undefined) {
+    if (pointOfContact !== undefined) {
       await this.updateRelation(
         'pointOfContact',
         'User',
         changes.id,
-        pointOfContactId,
+        pointOfContact,
       );
     }
 
-    if (languageOfWiderCommunicationId) {
+    if (languageOfWiderCommunication) {
       await this.updateRelation(
         'languageOfWiderCommunication',
         'Language',
         changes.id,
-        languageOfWiderCommunicationId,
+        languageOfWiderCommunication,
       );
     }
 
-    if (languageOfReportingId) {
+    if (languageOfReporting) {
       await this.updateRelation(
         'languageOfReporting',
         'Language',
         changes.id,
-        languageOfReportingId,
+        languageOfReporting,
       );
     }
 

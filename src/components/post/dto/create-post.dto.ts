@@ -9,7 +9,7 @@ import { PostShareability } from './shareability.dto';
 @InputType()
 export class CreatePost {
   @IdField()
-  readonly parentId: ID;
+  readonly parent: ID;
 
   @Field(() => PostType)
   readonly type: PostType;

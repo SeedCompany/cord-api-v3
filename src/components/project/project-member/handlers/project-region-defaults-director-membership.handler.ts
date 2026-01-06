@@ -11,12 +11,15 @@ export class ProjectRegionDefaultsDirectorMembershipHandler {
   ) {}
 
   async handle(event: ProjectUpdatedEvent) {
-    const { fieldRegionId } = event.changes;
-    if (!fieldRegionId) {
+    const { changes } = event;
+    if (!changes.fieldRegion) {
       return;
     }
 
-    const fieldRegion = await this.resources.load('FieldRegion', fieldRegionId);
+    const fieldRegion = await this.resources.load(
+      'FieldRegion',
+      changes.fieldRegion,
+    );
     if (fieldRegion.director.value) {
       await this.repo.addDefaultForRole(
         'RegionalDirector',

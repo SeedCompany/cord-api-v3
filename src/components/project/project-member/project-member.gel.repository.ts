@@ -22,19 +22,15 @@ export class ProjectMemberGelRepository
   })
   implements PublicOf<Neo4jRepository>
 {
-  async create({
-    projectId: projectOrId,
-    userId,
-    ...rest
-  }: CreateProjectMember) {
+  async create({ project: projectOrId, ...input }: CreateProjectMember) {
     const projectId = isIdLike(projectOrId) ? projectOrId : projectOrId.id;
     const project = e.cast(e.Project, e.uuid(projectId));
 
     const created = e.insert(this.resource.db, {
-      user: e.cast(e.User, e.uuid(userId)),
+      ...input,
+      user: e.cast(e.User, e.uuid(input.user)),
       project,
       projectContext: project.projectContext,
-      ...rest,
     });
     const query = e.select(created, this.hydrate);
     return await this.db.run(query);

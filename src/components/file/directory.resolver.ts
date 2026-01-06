@@ -75,8 +75,8 @@ export class DirectoryResolver {
 
   @Mutation(() => Directory)
   async createDirectory(
-    @Args('input') { parentId, name }: CreateDirectoryInput,
+    @Args('input') { parent, name }: CreateDirectoryInput,
   ): Promise<Directory> {
-    return await this.service.createDirectory(parentId, name);
+    return await this.service.createDirectory(parent, name);
   }
 }

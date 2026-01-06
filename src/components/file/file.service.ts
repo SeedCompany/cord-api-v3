@@ -286,20 +286,20 @@ export class FileService {
     input: CreateFileVersionInput,
   ): Promise<FileWithNewVersion> {
     const {
-      parentId,
+      parent,
       file: uploadingFile,
-      uploadId: uploadIdInput,
+      upload: uploadIdInput,
       mimeType: mimeTypeOverride,
       media,
     } = input;
     if (!uploadIdInput && !uploadingFile) {
-      throw new InputException('Upload ID is required', 'uploadId');
+      throw new InputException('Upload ID is required', 'upload');
     }
 
     const uploadId = uploadIdInput ?? (await generateId());
 
     const parentType = await this.validateParentNode(
-      parentId,
+      parent,
       (type) => type !== FileNodeType.FileVersion,
       'Only files and directories can be parents of a file version',
     );
@@ -346,7 +346,7 @@ export class FileService {
       existingUpload.status === 'rejected'
     ) {
       if (tempUpload.reason instanceof NotFoundException) {
-        throw new NotFoundException('Could not find upload', 'uploadId');
+        throw new NotFoundException('Could not find upload', 'upload');
       }
       throw new CreationFailed(FileVersion);
     } else if (
@@ -355,7 +355,7 @@ export class FileService {
     ) {
       throw new InputException(
         'Upload request has already been used',
-        'uploadId',
+        'upload',
       );
     } else if (
       tempUpload.status === 'rejected' &&
@@ -363,7 +363,7 @@ export class FileService {
     ) {
       try {
         await this.getFileNode(uploadId);
-        throw new InputException('Already uploaded', 'uploadId');
+        throw new InputException('Already uploaded', 'upload');
       } catch (e) {
         if (!(e instanceof NotFoundException)) {
           throw e;
@@ -373,8 +373,8 @@ export class FileService {
 
     const fileId =
       parentType === FileNodeType.File
-        ? parentId
-        : await this.getOrCreateFileByName(parentId, name);
+        ? parent
+        : await this.getOrCreateFileByName(parent, name);
     this.logger.debug('Creating file version', {
       parentId: fileId,
       fileName: name,
@@ -434,14 +434,14 @@ export class FileService {
   ) {
     const node = await this.repo.getBaseNode(id);
     if (!node) {
-      throw new NotFoundException('Could not find parent', 'parentId');
+      throw new NotFoundException('Could not find parent', 'parent');
     }
     const type = intersection(
       node.labels,
       Object.keys(FileNodeType),
     )[0] as FileNodeType;
     if (!isType(type)) {
-      throw new InputException(typeMismatchError, 'parentId');
+      throw new InputException(typeMismatchError, 'parent');
     }
     return type;
   }
@@ -514,13 +514,13 @@ export class FileService {
     if (initialVersion) {
       try {
         await this.createFileVersion({
-          parentId: fileId,
+          parent: fileId,
           ...initialVersion,
           name: initialVersion.name ?? name,
         });
       } catch (e) {
-        if (e instanceof InputException && e.field === 'uploadId' && field) {
-          throw e.withField(field + '.uploadId');
+        if (e instanceof InputException && e.field === 'upload' && field) {
+          throw e.withField(field + '.upload');
         }
         throw e;
       }
@@ -549,12 +549,12 @@ export class FileService {
     const fileId = isIdLike(file.value) ? file.value : file.value.id;
     try {
       return await this.createFileVersion({
-        parentId: fileId,
+        parent: fileId,
         ...input,
       });
     } catch (e) {
-      if (e instanceof InputException && e.field === 'uploadId' && field) {
-        throw e.withField(field + '.uploadId');
+      if (e instanceof InputException && e.field === 'upload' && field) {
+        throw e.withField(field + '.upload');
       }
       throw e;
     }
@@ -574,7 +574,7 @@ export class FileService {
       await this.repo.rename(fileNode, input.name);
     }
 
-    await this.repo.move(input.id, input.parentId);
+    await this.repo.move(input.id, input.parent);
 
     return await this.getFileNode(input.id);
   }

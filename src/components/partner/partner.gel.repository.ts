@@ -25,10 +25,9 @@ export class PartnerGelRepository
   implements PublicOf<PartnerRepository>
 {
   async create(input: CreatePartner) {
-    const { organizationId, ...rest } = input;
-    const organization = e.cast(e.Organization, e.uuid(organizationId));
+    const organization = e.cast(e.Organization, e.uuid(input.organization));
     return await this.defaults.create({
-      ...rest,
+      ...input,
       departmentIdBlock: departmentIdBlock.insertMaybe(input.departmentIdBlock),
       organization,
       name: organization.name,

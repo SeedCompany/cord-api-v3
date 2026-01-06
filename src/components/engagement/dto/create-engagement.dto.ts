@@ -24,7 +24,7 @@ import { EngagementStatus } from './status.enum';
 })
 export abstract class CreateEngagement extends DataObject {
   @IdField()
-  readonly projectId: ID;
+  readonly project: ID<'Project'>;
 
   @DateField({ nullable: true })
   readonly completeDate?: CalendarDate;
@@ -50,7 +50,7 @@ export class CreateLanguageEngagement extends CreateEngagement {
   ).map(([k]) => k);
 
   @IdField()
-  readonly languageId: ID;
+  readonly language: ID<'Language'>;
 
   @Field({ nullable: true })
   readonly firstScripture?: boolean;
@@ -100,13 +100,13 @@ export class CreateInternshipEngagement extends CreateEngagement {
   ).map(([k]) => k);
 
   @IdField()
-  readonly internId: ID;
+  readonly intern: ID<'User'>;
 
   @IdField({ nullable: true })
-  readonly mentorId?: ID;
+  readonly mentor?: ID<'User'>;
 
   @IdField({ nullable: true })
-  readonly countryOfOriginId?: ID;
+  readonly countryOfOrigin?: ID<'Location'>;
 
   @Field(() => InternshipPosition, { nullable: true })
   readonly position?: InternshipPosition;

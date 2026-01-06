@@ -41,12 +41,12 @@ export class BudgetService {
     private readonly resources: ResourceResolver,
   ) {}
 
-  async create({ projectId, ...input }: CreateBudget): Promise<Budget> {
+  async create(input: CreateBudget): Promise<Budget> {
     const universalTemplateFileId = await generateId<FileId>();
 
     try {
       const budgetId = await this.budgetRepo.create(
-        { projectId, ...input },
+        input,
         universalTemplateFileId,
       );
 

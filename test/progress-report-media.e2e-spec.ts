@@ -27,7 +27,7 @@ describe('ProgressReport Media e2e', () => {
   let app: TestApp;
   let project: fragments.project;
   let language: fragments.language;
-  let reportId: IdOf<ProgressReport>;
+  let reportId: ID<'ProgressReport'>;
   let image: ReturnType<typeof generateFakeFile>;
 
   beforeAll(async () => {
@@ -110,7 +110,7 @@ describe('ProgressReport Media e2e', () => {
     await uploadFileContents(app, url, image);
 
     const input = {
-      reportId,
+      report: reportId,
       variant: 'draft' as any,
       category: 'CommunityEngagement',
       file: {
@@ -142,14 +142,14 @@ describe('ProgressReport Media e2e', () => {
   });
 
   it('Update', async () => {
-    const { id: uploadId, url } = await requestFileUpload(app);
-    await uploadFileContents(app, url, image);
+    const upload = await requestFileUpload(app);
+    await uploadFileContents(app, upload.url, image);
     const report = await uploadMedia(app, {
-      reportId,
+      report: reportId,
       variant: 'draft' as ID,
       category: 'CommunityEngagement',
       file: {
-        uploadId,
+        upload: upload.id,
         name: 'A picture',
         media: {
           altText: 'A fake pic',
@@ -188,19 +188,19 @@ describe('ProgressReport Media e2e', () => {
     const upload1 = await requestFileUpload(app);
     await uploadFileContents(app, upload1.url, image);
     const report = await uploadMedia(app, {
-      reportId,
+      report: reportId,
       variant: 'draft' as ID,
-      file: { uploadId: upload1.id, name: 'asdf' },
+      file: { upload: upload1.id, name: 'asdf' },
     });
     const media1 = report.media.items[0]!;
 
     const upload2 = await requestFileUpload(app);
     await uploadFileContents(app, upload2.url, image);
     const reportUpdated = await uploadMedia(app, {
-      reportId,
+      report: reportId,
       variant: 'fpm' as ID,
       variantGroup: media1.variantGroup,
-      file: { uploadId: upload2.id, name: 'asdf' },
+      file: { upload: upload2.id, name: 'asdf' },
     });
 
     expect(reportUpdated.media.items).toHaveLength(2);
@@ -214,9 +214,9 @@ describe('ProgressReport Media e2e', () => {
     const upload1 = await requestFileUpload(app);
     await uploadFileContents(app, upload1.url, image);
     const report = await uploadMedia(app, {
-      reportId,
+      report: reportId,
       variant: 'draft' as ID,
-      file: { uploadId: upload1.id, name: 'asdf' },
+      file: { upload: upload1.id, name: 'asdf' },
     });
     const media1 = report.media.items[0]!;
 
@@ -224,10 +224,10 @@ describe('ProgressReport Media e2e', () => {
     await uploadFileContents(app, upload2.url, image);
     await expect(
       uploadMedia(app, {
-        reportId,
+        report: reportId,
         variant: 'draft' as ID,
         variantGroup: media1.variantGroup,
-        file: { uploadId: upload2.id, name: 'asdf' },
+        file: { upload: upload2.id, name: 'asdf' },
       }),
     ).rejects.toThrowGqlError({
       code: 'Input',
@@ -236,14 +236,14 @@ describe('ProgressReport Media e2e', () => {
   });
 
   it('Delete', async () => {
-    const { id: uploadId, url } = await requestFileUpload(app);
-    await uploadFileContents(app, url, image);
+    const upload = await requestFileUpload(app);
+    await uploadFileContents(app, upload.url, image);
 
     const report = await uploadMedia(app, {
-      reportId,
+      report: reportId,
       variant: 'draft' as ID,
       file: {
-        uploadId,
+        upload: upload.id,
         name: 'A picture',
       },
     });
@@ -289,13 +289,13 @@ describe('ProgressReport Media e2e', () => {
       const upload = await runInIsolatedSession(app, async () => {
         await marketing.login();
 
-        const { id: uploadId, url } = await requestFileUpload(app);
-        await uploadFileContents(app, url, image);
+        const upload = await requestFileUpload(app);
+        await uploadFileContents(app, upload.url, image);
         return await uploadMedia(app, {
-          reportId,
+          report: reportId,
           variant: 'published' as any,
           file: {
-            uploadId,
+            upload: upload.id,
             name: 'A picture',
           },
         });
@@ -316,10 +316,10 @@ describe('ProgressReport Media e2e', () => {
         const upload1 = await requestFileUpload(app);
         await uploadFileContents(app, upload1.url, image);
         await uploadMedia(app, {
-          reportId,
+          report: reportId,
           variant: 'published' as any,
           file: {
-            uploadId: upload1.id,
+            upload: upload1.id,
             name: 'The picture',
           },
         });
@@ -327,10 +327,10 @@ describe('ProgressReport Media e2e', () => {
         const upload2 = await requestFileUpload(app);
         await uploadFileContents(app, upload2.url, image);
         await uploadMedia(app, {
-          reportId,
+          report: reportId,
           variant: 'published' as any,
           file: {
-            uploadId: upload2.id,
+            upload: upload2.id,
             name: 'The picture',
             media: {
               caption: 'The latest picture',
@@ -345,13 +345,13 @@ describe('ProgressReport Media e2e', () => {
     });
 
     it('None if not published variant', async () => {
-      const { id: uploadId, url } = await requestFileUpload(app);
-      await uploadFileContents(app, url, image);
+      const upload = await requestFileUpload(app);
+      await uploadFileContents(app, upload.url, image);
       await uploadMedia(app, {
-        reportId,
+        report: reportId,
         variant: 'draft' as any,
         file: {
-          uploadId,
+          upload: upload.id,
           name: 'A picture',
         },
       });

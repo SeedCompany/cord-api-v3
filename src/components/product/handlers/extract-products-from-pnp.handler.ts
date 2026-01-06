@@ -49,7 +49,7 @@ export class ExtractProductsFromPnpHandler
     });
 
     await this.syncer.save({
-      engagementId: engagement.id,
+      engagement: engagement.id,
       methodology,
       actionableProductRows,
     });

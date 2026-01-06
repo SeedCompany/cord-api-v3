@@ -70,7 +70,7 @@ export class PeriodicReportResolver {
   })
   async uploadPeriodicReport(
     @Args('input')
-    { reportId: id, file: reportFile }: UploadPeriodicReportInput,
+    { report: id, file: reportFile }: UploadPeriodicReportInput,
   ): Promise<IPeriodicReport> {
     return await this.service.update({ id, reportFile });
   }

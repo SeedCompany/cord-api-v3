@@ -192,17 +192,17 @@ describe('User e2e', () => {
     const newUser = await createPerson(app);
     await app.graphql.mutate(
       graphql(`
-        mutation assignOrganizationToUser($orgId: ID!, $userId: ID!) {
+        mutation assignOrganizationToUser($org: ID!, $user: ID!) {
           assignOrganizationToUser(
-            input: { request: { orgId: $orgId, userId: $userId } }
+            input: { request: { org: $org, user: $user } }
           ) {
             __typename
           }
         }
       `),
       {
-        orgId: org.id,
-        userId: newUser.id,
+        org: org.id,
+        user: newUser.id,
       },
     );
 
@@ -241,34 +241,34 @@ describe('User e2e', () => {
     // assign organization to user
     await app.graphql.mutate(
       graphql(`
-        mutation assignOrganizationToUser($orgId: ID!, $userId: ID!) {
+        mutation assignOrganizationToUser($org: ID!, $user: ID!) {
           assignOrganizationToUser(
-            input: { request: { orgId: $orgId, userId: $userId } }
+            input: { request: { org: $org, user: $user } }
           ) {
             __typename
           }
         }
       `),
       {
-        orgId: org.id,
-        userId: newUser.id,
+        org: org.id,
+        user: newUser.id,
       },
     );
 
     // remove organization from user
     await app.graphql.mutate(
       graphql(`
-        mutation removeOrganizationFromUser($orgId: ID!, $userId: ID!) {
+        mutation removeOrganizationFromUser($org: ID!, $user: ID!) {
           removeOrganizationFromUser(
-            input: { request: { orgId: $orgId, userId: $userId } }
+            input: { request: { org: $org, user: $user } }
           ) {
             __typename
           }
         }
       `),
       {
-        orgId: org.id,
-        userId: newUser.id,
+        org: org.id,
+        user: newUser.id,
       },
     );
   });
@@ -278,22 +278,20 @@ describe('User e2e', () => {
     await app.graphql.mutate(
       graphql(`
         mutation assignOrganizationToUser(
-          $orgId: ID!
-          $userId: ID!
+          $org: ID!
+          $user: ID!
           $primary: Boolean!
         ) {
           assignOrganizationToUser(
-            input: {
-              request: { orgId: $orgId, userId: $userId, primary: $primary }
-            }
+            input: { request: { org: $org, user: $user, primary: $primary } }
           ) {
             __typename
           }
         }
       `),
       {
-        orgId: org.id,
-        userId: newUser.id,
+        org: org.id,
+        user: newUser.id,
         primary: true,
       },
     );
@@ -306,22 +304,20 @@ describe('User e2e', () => {
     await app.graphql.mutate(
       graphql(`
         mutation assignOrganizationToUser(
-          $orgId: ID!
-          $userId: ID!
+          $org: ID!
+          $user: ID!
           $primary: Boolean!
         ) {
           assignOrganizationToUser(
-            input: {
-              request: { orgId: $orgId, userId: $userId, primary: $primary }
-            }
+            input: { request: { org: $org, user: $user, primary: $primary } }
           ) {
             __typename
           }
         }
       `),
       {
-        orgId: org.id,
-        userId: newUser.id,
+        org: org.id,
+        user: newUser.id,
         primary: true,
       },
     );
@@ -329,17 +325,17 @@ describe('User e2e', () => {
     // remove primary organization from user
     await app.graphql.mutate(
       graphql(`
-        mutation removeOrganizationFromUser($orgId: ID!, $userId: ID!) {
+        mutation removeOrganizationFromUser($org: ID!, $user: ID!) {
           removeOrganizationFromUser(
-            input: { request: { orgId: $orgId, userId: $userId } }
+            input: { request: { org: $org, user: $user } }
           ) {
             __typename
           }
         }
       `),
       {
-        orgId: org.id,
-        userId: newUser.id,
+        org: org.id,
+        user: newUser.id,
       },
     );
 
@@ -348,7 +344,7 @@ describe('User e2e', () => {
 
   it('read one users education', async () => {
     const newUser = await createPerson(app);
-    const edu = await createEducation(app, { userId: newUser.id });
+    const edu = await createEducation(app, { user: newUser.id });
 
     const result = await app.graphql.query(
       graphql(
@@ -382,7 +378,7 @@ describe('User e2e', () => {
 
   it('read one users unavailability', async () => {
     const newUser = await createPerson(app);
-    const unavail = await createUnavailability(app, { userId: newUser.id });
+    const unavail = await createUnavailability(app, { user: newUser.id });
 
     const result = await app.graphql.query(
       graphql(

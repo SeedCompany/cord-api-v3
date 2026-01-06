@@ -31,7 +31,7 @@ describe('Partner e2e', () => {
 
   it('create & read partner by id', async () => {
     const org = await createOrganization(app);
-    const partner = await createPartner(app, { organizationId: org.id });
+    const partner = await createPartner(app, { organization: org.id });
     expect(partner.id).toBeDefined();
     expect(partner.organization).toBeDefined();
     expect(partner.pointOfContact).toBeDefined();
@@ -40,7 +40,7 @@ describe('Partner e2e', () => {
 
   it('update partner', async () => {
     const org = await createOrganization(app);
-    const pt = await createPartner(app, { organizationId: org.id });
+    const pt = await createPartner(app, { organization: org.id });
     const person = await createPerson(app);
     const types = [PartnerType.Funding, PartnerType.Managing];
     const financialReportingTypes = [FinancialReportingType.FieldEngaged];
@@ -66,7 +66,7 @@ describe('Partner e2e', () => {
         input: {
           partner: {
             id: pt.id,
-            pointOfContactId: person.id,
+            pointOfContact: person.id,
             types,
             financialReportingTypes,
             pmcEntityCode,
@@ -94,7 +94,7 @@ describe('Partner e2e', () => {
 
   it('delete partner', async () => {
     const org = await createOrganization(app);
-    const pt = await createPartner(app, { organizationId: org.id });
+    const pt = await createPartner(app, { organization: org.id });
 
     await runAsAdmin(app, async () => {
       await app.graphql.mutate(
@@ -115,8 +115,8 @@ describe('Partner e2e', () => {
   it('list view of partners', async () => {
     const org1 = await createOrganization(app);
     const org2 = await createOrganization(app);
-    await createPartner(app, { organizationId: org1.id });
-    await createPartner(app, { organizationId: org2.id });
+    await createPartner(app, { organization: org1.id });
+    await createPartner(app, { organization: org2.id });
     const numPartners = 2;
     const { partners } = await app.graphql.query(
       graphql(
@@ -140,13 +140,13 @@ describe('Partner e2e', () => {
 
   it('should throw error if try to create duplicate partners for organization', async () => {
     const org = await createOrganization(app);
-    await createPartner(app, { organizationId: org.id });
+    await createPartner(app, { organization: org.id });
     await expect(
-      createPartner(app, { organizationId: org.id }),
+      createPartner(app, { organization: org.id }),
     ).rejects.toThrowGqlError(
       errors.duplicate({
         message: 'Partner for organization already exists.',
-        field: 'partner.organizationId',
+        field: 'partner.organization',
       }),
     );
   });
@@ -157,7 +157,7 @@ describe('Partner e2e', () => {
       await expect(
         createPartner(app, {
           pmcEntityCode: pmc,
-          organizationId: org.id,
+          organization: org.id,
         }),
       ).rejects.toThrowGqlError(
         errors.validation({
@@ -173,7 +173,7 @@ describe('Partner e2e', () => {
     const org = await createOrganization(app);
     await expect(
       createPartner(app, {
-        organizationId: org.id,
+        organization: org.id,
         types: [PartnerType.Funding],
         financialReportingTypes: [FinancialReportingType.Funded],
       }),

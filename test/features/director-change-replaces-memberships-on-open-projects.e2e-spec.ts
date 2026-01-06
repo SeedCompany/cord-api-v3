@@ -35,14 +35,14 @@ it('director change replaces memberships on open projects', async () => {
   };
   const region = await createRegion(app, {
     name: 'Region',
-    directorId: directors.old.id,
+    director: directors.old.id,
   });
   const projects = {
     needsSwapA: await (async () => {
       const project = await createProject(app);
       await createProjectMember(app, {
-        projectId: project.id,
-        userId: directors.old.id,
+        project: project.id,
+        user: directors.old.id,
         roles: [Role.RegionalDirector],
       });
       return project;
@@ -50,8 +50,8 @@ it('director change replaces memberships on open projects', async () => {
     needsSwapB: await (async () => {
       const project = await createProject(app);
       await createProjectMember(app, {
-        projectId: project.id,
-        userId: directors.old.id,
+        project: project.id,
+        user: directors.old.id,
         roles: [Role.RegionalDirector],
       });
       return project;
@@ -60,8 +60,8 @@ it('director change replaces memberships on open projects', async () => {
     hasMemberButInactive: await (async () => {
       const project = await createProject(app);
       await createProjectMember(app, {
-        projectId: project.id,
-        userId: directors.old.id,
+        project: project.id,
+        user: directors.old.id,
         roles: [Role.RegionalDirector],
         inactiveAt: DateTime.now().plus({ minute: 1 }).toISO(),
       });
@@ -70,8 +70,8 @@ it('director change replaces memberships on open projects', async () => {
     hasMemberIncludingOtherRoles: await (async () => {
       const project = await createProject(app);
       await createProjectMember(app, {
-        projectId: project.id,
-        userId: directors.old.id,
+        project: project.id,
+        user: directors.old.id,
         roles: [Role.RegionalDirector, Role.ProjectManager],
       });
       return project;
@@ -79,8 +79,8 @@ it('director change replaces memberships on open projects', async () => {
     alreadyHasRoleFilled: await (async () => {
       const project = await createProject(app);
       await createProjectMember(app, {
-        projectId: project.id,
-        userId: directors.unrelated.id,
+        project: project.id,
+        user: directors.unrelated.id,
         roles: [Role.RegionalDirector],
       });
       return project;
@@ -88,13 +88,13 @@ it('director change replaces memberships on open projects', async () => {
     alreadyHasNewDirectorActive: await (async () => {
       const project = await createProject(app);
       await createProjectMember(app, {
-        projectId: project.id,
-        userId: directors.old.id,
+        project: project.id,
+        user: directors.old.id,
         roles: [Role.RegionalDirector],
       });
       await createProjectMember(app, {
-        projectId: project.id,
-        userId: directors.new.id,
+        project: project.id,
+        user: directors.new.id,
         roles: [Role.RegionalDirector],
       });
       return project;
@@ -102,13 +102,13 @@ it('director change replaces memberships on open projects', async () => {
     alreadyHasNewDirectorInactive: await (async () => {
       const project = await createProject(app);
       await createProjectMember(app, {
-        projectId: project.id,
-        userId: directors.old.id,
+        project: project.id,
+        user: directors.old.id,
         roles: [Role.RegionalDirector],
       });
       await createProjectMember(app, {
-        projectId: project.id,
-        userId: directors.new.id,
+        project: project.id,
+        user: directors.new.id,
         roles: [Role.RegionalDirector],
         inactiveAt: DateTime.now().plus({ minute: 1 }).toISO(),
       });
@@ -117,13 +117,13 @@ it('director change replaces memberships on open projects', async () => {
     alreadyHasNewDirectorWithoutRole: await (async () => {
       const project = await createProject(app);
       await createProjectMember(app, {
-        projectId: project.id,
-        userId: directors.old.id,
+        project: project.id,
+        user: directors.old.id,
         roles: [Role.RegionalDirector],
       });
       await createProjectMember(app, {
-        projectId: project.id,
-        userId: directors.new.id,
+        project: project.id,
+        user: directors.new.id,
         roles: [Role.ProjectManager],
       });
       return project;
@@ -132,11 +132,11 @@ it('director change replaces memberships on open projects', async () => {
       const project = await createProject(app, {
         mouStart: '2025-06-05',
         mouEnd: '2025-06-05',
-        primaryLocationId: await createLocation(app).then(({ id }) => id),
+        primaryLocation: await createLocation(app).then(({ id }) => id),
       });
       await createProjectMember(app, {
-        projectId: project.id,
-        userId: directors.old.id,
+        project: project.id,
+        user: directors.old.id,
         roles: [Role.RegionalDirector],
       });
       await transitionProject(app, {
@@ -233,7 +233,7 @@ it('director change replaces memberships on open projects', async () => {
     graphql(`
       mutation ChangeDirector($region: ID!, $director: ID!) {
         updateFieldRegion(
-          input: { fieldRegion: { id: $region, directorId: $director } }
+          input: { fieldRegion: { id: $region, director: $director } }
         ) {
           __typename
         }

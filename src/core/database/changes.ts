@@ -57,13 +57,7 @@ type ChangeKey<Key extends keyof T & string, T> = T[Key] extends SetChangeType<
   ? Override extends string
     ? Override
     : never
-  : UnwrapSecured<T[Key]> & {} extends infer Value
-  ? IsFileField<Value> extends true
-    ? Key // our file input fields don't add id suffix, because they are objects.
-    : Value extends ID | LinkTo<any>
-    ? `${Key}Id` // our convention for single relationships
-    : Key
-  : never;
+  : Key;
 
 type ChangeOf<Val> = Val extends SetChangeType<any, infer Override>
   ? Override

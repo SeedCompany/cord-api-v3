@@ -24,7 +24,7 @@ export abstract class CreateBaseProduct {
   @IdField({
     description: 'An ID of a `LanguageEngagement` to create this product for',
   })
-  readonly engagementId: ID;
+  readonly engagement: ID<'LanguageEngagement'>;
 
   @Field(() => [ProductMedium], { nullable: true })
   @Transform(({ value }) => uniq(value))

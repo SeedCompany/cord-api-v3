@@ -37,8 +37,8 @@ export class PartnershipProducingMediumResolver {
 
   @Mutation(() => UpdatePartnershipProducingMediumOutput)
   async updatePartnershipsProducingMediums(
-    @IdArg({ name: 'engagementId', description: 'A LanguageEngagement ID' })
-    engagementId: ID,
+    @IdArg({ name: 'engagement', description: 'A LanguageEngagement ID' })
+    engagementId: ID<'LanguageEngagement'>,
     @Args({
       name: 'input',
       type: () => [PartnershipProducingMediumInput],

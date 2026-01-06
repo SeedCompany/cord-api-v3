@@ -58,17 +58,15 @@ export class PartnershipService {
   ) {}
 
   async create(input: CreatePartnership, changeset?: ID): Promise<Partnership> {
-    const { projectId, partnerId } = input;
-
     PartnershipDateRangeException.throwIfInvalid(input);
 
     const isFirstPartnership = await this.repo.isFirstPartnership(
-      projectId,
+      input.project,
       changeset,
     );
     const primary = isFirstPartnership ? true : input.primary;
 
-    const partner = await this.partnerService.readOne(partnerId);
+    const partner = await this.partnerService.readOne(input.partner);
     this.verifyFinancialReportingType(
       input.financialReportingType,
       input.types ?? [],

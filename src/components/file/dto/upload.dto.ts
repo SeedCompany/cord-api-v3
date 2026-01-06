@@ -27,7 +27,7 @@ export abstract class CreateDefinedFileVersionInput {
     `,
     nullable: true,
   })
-  readonly uploadId?: ID;
+  readonly upload?: ID;
 
   @Field(() => FileUploadScalar, {
     description: stripIndent`
@@ -69,7 +69,7 @@ export abstract class CreateFileVersionInput extends CreateDefinedFileVersionInp
     description:
       'The directory ID if creating a new file or the file ID if creating a new version',
   })
-  readonly parentId: ID;
+  readonly parent: ID<'Directory' | 'File'>;
 }
 
 @InputType()
@@ -77,7 +77,7 @@ export abstract class CreateDirectoryInput {
   @IdField({
     description: 'The ID for the parent directory',
   })
-  readonly parentId: ID;
+  readonly parent: ID<'Directory'>;
 
   @Field({
     description: 'The directory name',

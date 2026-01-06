@@ -32,10 +32,10 @@ import {
 @ArgsType()
 class ModifyLocationArgs {
   @IdField()
-  organizationId: ID;
+  organization: ID<'Organization'>;
 
   @IdField()
-  locationId: ID;
+  location: ID<'Location'>;
 }
 
 @Resolver(Organization)
@@ -114,19 +114,19 @@ export class OrganizationResolver {
     description: 'Add a location to a organization',
   })
   async addLocationToOrganization(
-    @Args() { organizationId, locationId }: ModifyLocationArgs,
+    @Args() { organization, location }: ModifyLocationArgs,
   ): Promise<Organization> {
-    await this.orgs.addLocation(organizationId, locationId);
-    return await this.orgs.readOne(organizationId);
+    await this.orgs.addLocation(organization, location);
+    return await this.orgs.readOne(organization);
   }
 
   @Mutation(() => Organization, {
     description: 'Remove a location from a organization',
   })
   async removeLocationFromOrganization(
-    @Args() { organizationId, locationId }: ModifyLocationArgs,
+    @Args() { organization, location }: ModifyLocationArgs,
   ): Promise<Organization> {
-    await this.orgs.removeLocation(organizationId, locationId);
-    return await this.orgs.readOne(organizationId);
+    await this.orgs.removeLocation(organization, location);
+    return await this.orgs.readOne(organization);
   }
 }

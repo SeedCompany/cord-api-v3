@@ -121,7 +121,7 @@ export const ConcreteRepos = {
     },
   ) {
     async create(input: CreateLanguageEngagement) {
-      const project = e.cast(e.TranslationProject, e.uuid(input.projectId));
+      const project = e.cast(e.TranslationProject, e.uuid(input.project));
       return await this.defaults.create({
         ...input,
         projectContext: project.projectContext,
@@ -137,7 +137,7 @@ export const ConcreteRepos = {
     },
   ) {
     async create(input: CreateInternshipEngagement) {
-      const project = e.cast(e.InternshipProject, e.uuid(input.projectId));
+      const project = e.cast(e.InternshipProject, e.uuid(input.project));
       return await this.defaults.create({
         ...input,
         projectContext: project.projectContext,
