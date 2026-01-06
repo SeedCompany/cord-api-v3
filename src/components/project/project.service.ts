@@ -1,5 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { type Many } from '@seedcompany/common';
+import { omit } from 'lodash';
 import {
   type CalendarDate,
   ClientException,
@@ -309,7 +310,10 @@ export class ProjectService {
     });
     await this.eventBus.publish(event);
 
-    this.channels.publishToAll('updated', { project: updated.id });
+    this.channels.publishToAll('updated', {
+      project: updated.id,
+      changes: omit(changes, ['modifiedAt']),
+    });
 
     return event.updated;
   }

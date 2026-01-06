@@ -2,7 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { ArgsType } from '@nestjs/graphql';
 import type { SetRequired } from 'type-fest';
 import { type ID, IdField } from '~/common';
-import { Broadcaster } from '~/core/broadcast';
+import { type BroadcastChannel, Broadcaster } from '~/core/broadcast';
+import { type ProjectChanges } from './dto';
 
 @ArgsType()
 export class ProjectChangedArgs {
@@ -25,9 +26,13 @@ export class ProjectChannels {
   /**
    * Call publish() on the channel action for all arg/filter variations.
    */
-  publishToAll(
-    action: Exclude<keyof ProjectChannels, 'publishToAll'>,
-    payload: ProjectChangedPayload,
+  publishToAll<Action extends Exclude<keyof ProjectChannels, 'publishToAll'>>(
+    action: Action,
+    payload: ReturnType<ProjectChannels[Action]> extends BroadcastChannel<
+      infer T extends ProjectChangedPayload
+    >
+      ? T
+      : never,
   ) {
     this[action](payload).publish(payload);
     this[action]().publish(payload);
@@ -36,16 +41,17 @@ export class ProjectChannels {
   created() {
     return this.broadcaster.channel<ProjectChangedPayload>('project:created');
   }
+
   deleted({ project }: ProjectChangedArgs = {}) {
     return this.broadcaster.channel<ProjectChangedPayload>(
       'project:deleted',
       project,
     );
   }
+
   updated({ project }: ProjectChangedArgs = {}) {
-    return this.broadcaster.channel<ProjectChangedPayload>(
-      'project:updated',
-      project,
-    );
+    return this.broadcaster.channel<
+      ProjectChangedPayload & { changes: ProjectChanges }
+    >('project:updated', project);
   }
 }

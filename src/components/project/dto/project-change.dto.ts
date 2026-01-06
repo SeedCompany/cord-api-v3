@@ -1,5 +1,6 @@
-import { InterfaceType, ObjectType } from '@nestjs/graphql';
-import { DataObject, type ID, IdField } from '~/common';
+import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
+import { DataObject, type ID, IdField, OmitType } from '~/common';
+import { UpdateProject } from './update-project.dto';
 
 @InterfaceType({
   resolveType: (x) => x.__typename,
@@ -21,9 +22,15 @@ export class ProjectCreated extends AnyProjectChange {
   declare readonly __typename: 'ProjectCreated';
 }
 
+@ObjectType()
+export class ProjectChanges extends OmitType(UpdateProject, ['id']) {}
+
 @ObjectType({ implements: [AnyProjectChange] })
 export class ProjectUpdated extends AnyProjectChange {
   declare readonly __typename: 'ProjectUpdated';
+
+  // @Field() private for now as links need resolvers
+  changes: ProjectChanges;
 }
 
 @ObjectType({ implements: [AnyProjectChangeOrDeletion] })

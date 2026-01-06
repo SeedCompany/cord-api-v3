@@ -26,10 +26,15 @@ export class ProjectChangeSubscriptionsResolver {
   ) {}
 
   private verifyReadPermission$() {
-    return mergeMap(({ project }: ProjectChangedPayload) => {
-      // Omit event if the user watching doesn't have permission to view the project
-      return from(this.loaders.load('Project', project)).pipe(omitNotFound$());
-    });
+    return mergeMap(
+      <Payload extends ProjectChangedPayload>(payload: Payload) => {
+        // Omit event if the user watching doesn't have permission to view the project
+        return from(this.loaders.load('Project', payload.project)).pipe(
+          omitNotFound$(),
+          map(() => payload),
+        );
+      },
+    );
   }
 
   @Subscription(() => ProjectCreated)
@@ -37,9 +42,9 @@ export class ProjectChangeSubscriptionsResolver {
     return this.channels.created().pipe(
       this.verifyReadPermission$(),
       map(
-        (project): ProjectCreated => ({
+        ({ project }): ProjectCreated => ({
           __typename: 'ProjectCreated',
-          projectId: project.id,
+          projectId: project,
         }),
       ),
     );
@@ -50,9 +55,10 @@ export class ProjectChangeSubscriptionsResolver {
     return this.channels.updated(args).pipe(
       this.verifyReadPermission$(),
       map(
-        (project): ProjectUpdated => ({
+        ({ project, changes }): ProjectUpdated => ({
           __typename: 'ProjectUpdated',
-          projectId: project.id,
+          projectId: project,
+          changes,
         }),
       ),
     );
