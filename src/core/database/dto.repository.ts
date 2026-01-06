@@ -117,7 +117,7 @@ export const DtoRepository = <
       objectOrId: { id: ID } | ID,
       options: { changeset?: ID; resource?: ResourceLike } = {},
     ) {
-      await super.deleteNode(objectOrId, {
+      return await super.deleteNode(objectOrId, {
         resource: this.resource,
         ...options,
       });
