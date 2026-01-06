@@ -178,7 +178,7 @@ export class ProjectService {
       const event = new ProjectCreatedEvent(project);
       await this.eventBus.publish(event);
 
-      this.channels.publishToAll('created', project.id);
+      this.channels.publishToAll('created', { project: project.id });
 
       return event.project;
     } catch (e) {
@@ -309,7 +309,7 @@ export class ProjectService {
     });
     await this.eventBus.publish(event);
 
-    this.channels.publishToAll('updated', updated.id);
+    this.channels.publishToAll('updated', { project: updated.id });
 
     return event.updated;
   }
@@ -327,7 +327,7 @@ export class ProjectService {
 
     await this.eventBus.publish(new ProjectDeletedEvent(object));
 
-    this.channels.publishToAll('deleted', object.id);
+    this.channels.publishToAll('deleted', { project: object.id });
   }
 
   async list(input: ProjectListInput) {
