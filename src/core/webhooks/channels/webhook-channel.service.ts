@@ -1,13 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { type Webhook } from '../dto';
+import { WebhookExecutor } from '../executor/webhook.executor';
 import { WebhookChannelRepository } from './webhook-channel.repository';
 
 @Injectable()
 export class WebhookChannelService {
-  constructor(private readonly repo: WebhookChannelRepository) {}
+  constructor(
+    private readonly repo: WebhookChannelRepository,
+    private readonly executor: WebhookExecutor,
+  ) {}
 
   async calculate(webhook: Webhook) {
-    const channels: string[] = []; // TODO compute channels
+    const channels = await this.executor.collectChannels(webhook);
     await this.repo.save(webhook.id, channels);
   }
 
