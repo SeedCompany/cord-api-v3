@@ -36,7 +36,7 @@ export class NotificationResolver {
     return await this.service.markRead(input);
   }
 
-  @Subscription<NotificationAdded>(() => NotificationAdded, {
+  @Subscription(() => NotificationAdded, {
     description: stripIndent`
       Subscribe to new notifications that are added/created
       for the current user

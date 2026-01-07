@@ -3,9 +3,11 @@ import {
   AbstractGraphQLDriver as AbstractDriver,
   type GqlModuleOptions,
 } from '@nestjs/graphql';
-import { cmpBy } from '@seedcompany/common';
+import { cmpBy, patchMethod } from '@seedcompany/common';
+import { withAsyncContextIterator } from '@seedcompany/nest';
 import type { RouteOptions as FastifyRoute } from 'fastify';
 import type { ExecutionArgs } from 'graphql';
+import { CloseCode, DEPRECATED_GRAPHQL_WS_PROTOCOL } from 'graphql-ws';
 import { makeHandler as makeGqlWSHandler } from 'graphql-ws/use/@fastify/websocket';
 import {
   createYoga,
@@ -47,6 +49,7 @@ export class Driver extends AbstractDriver<DriverConfig> {
     // Do our plugin discovery / registration
     const discoveredPlugins = this.discovery.discover(Plugin).classes<Plugin>();
     options.plugins = [
+      MaintainAsyncContextInSubscriptionEvents,
       ...(options.plugins ?? []),
       ...discoveredPlugins
         .toSorted(cmpBy(({ meta }) => meta.priority))
@@ -106,10 +109,6 @@ export class Driver extends AbstractDriver<DriverConfig> {
    *    So this allows our "yoga" plugins to be executed.
    */
   private makeWsHandler(options: DriverConfig) {
-    const asyncContextBySocket = new WeakMap<
-      WebSocket,
-      <R>(fn: () => R) => R
-    >();
     interface WsExecutionArgs extends ExecutionArgs {
       socket: WebSocket;
       envelop: ReturnType<ReturnType<typeof envelop>>;
@@ -129,18 +128,11 @@ export class Driver extends AbstractDriver<DriverConfig> {
       // unique envelop (yoga) instance per request.
       execute: (wsArgs) => {
         const { envelop, socket, ...args } = wsArgs as WsExecutionArgs;
-        return asyncContextBySocket.get(socket)!(() => {
-          return envelop.execute(args);
-        });
+        return envelop.execute(args);
       },
       subscribe: (wsArgs) => {
         const { envelop, socket, ...args } = wsArgs as WsExecutionArgs;
-        // Because this is called via socket.onmessage, we don't have
-        // the same async context we started with.
-        // Grab and resume it.
-        return asyncContextBySocket.get(socket)!(() => {
-          return envelop.subscribe(args);
-        });
+        return envelop.subscribe(args);
       },
       // Create a unique envelop/yoga instance for each subscription.
       // This allows "yoga" plugins that are really just envelop hooks
@@ -177,8 +169,44 @@ export class Driver extends AbstractDriver<DriverConfig> {
     });
 
     const wsHandler: FastifyRoute['wsHandler'] = function (socket, req) {
-      // Save a reference to the current async context, so we can resume it.
-      asyncContextBySocket.set(socket, AsyncLocalStorage.snapshot());
+      /**
+       * Suppress warning for deprecated protocol.
+       * Apollo Studio attempts this protocol in its WS negotiation,
+       * and we can't explicitly state we use the new one.
+       * In practice, only legacy systems use this protocol,
+       * and this acts as a false positive in our setup.
+       * I think it gets triggered a lot too as our API process restarts
+       * as we make code changes.
+       * @see https://github.com/enisdenjo/graphql-ws/blob/0c0eb499c3a0278c6d9cc799064f22c5d24d2f60/src/use/%40fastify/websocket.ts#L179-L187
+       */
+      if (process.env.NODE_ENV !== 'production') {
+        socket.once('close', (code) => {
+          if (
+            code === CloseCode.SubprotocolNotAcceptable &&
+            socket.protocol === DEPRECATED_GRAPHQL_WS_PROTOCOL
+          ) {
+            // At this point, it should be fine to mutate the protocol
+            // to suppress the warning.
+            Object.defineProperty(socket, 'protocol', {
+              value: `${DEPRECATED_GRAPHQL_WS_PROTOCOL}--suppress-warning`,
+            });
+          }
+        });
+      }
+
+      // Patch socket.on('message') to resume the current async context.
+      // All the subscription logic happens under a "subscribe" message.
+      // So this fully encapsulates the subscription logic within the async context.
+      const scoped = AsyncLocalStorage.snapshot();
+      patchMethod(socket, 'on', (base) => (eventName, listener) => {
+        if (eventName !== 'message') {
+          return base(eventName, listener);
+        }
+        return base(eventName, (...args) => {
+          scoped(listener, ...args);
+        });
+      });
+
       return fastifyWsHandler.call(this, socket, req);
     };
     return wsHandler;
@@ -188,3 +216,12 @@ export class Driver extends AbstractDriver<DriverConfig> {
     await this.yoga?.dispose();
   }
 }
+
+const MaintainAsyncContextInSubscriptionEvents: Plugin = {
+  onSubscribe: ({ subscribeFn, setSubscribeFn }) => {
+    setSubscribeFn(async (...args) => {
+      const iterator: AsyncIterator<unknown> = await subscribeFn(...args);
+      return withAsyncContextIterator(iterator);
+    });
+  },
+};
