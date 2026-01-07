@@ -10,12 +10,14 @@ import {
   type FormattedExecutionResult,
   getOperationAST,
 } from 'graphql';
+import type { ObservableInput } from 'rxjs';
 import { type GqlContextType } from '~/common';
 import { Identity } from '../../authentication';
 import { Broadcaster } from '../../broadcast';
 import { Yoga } from '../../graphql';
 import { type Webhook } from '../dto';
 import { WebhookCollectChannelsTransport } from './webhook-collect-channels.transport';
+import { WebhookStaticEventsTransport } from './webhook-static-events.transport';
 
 @Injectable()
 export class WebhookExecutor {
@@ -42,6 +44,14 @@ export class WebhookExecutor {
     const broadcaster = new WebhookCollectChannelsTransport();
     await this.executeWith(webhook, broadcaster);
     return [...broadcaster.channels];
+  }
+
+  async executeWithEvents(
+    webhook: Webhook,
+    events: ReadonlyMap<string, ObservableInput<unknown>>,
+  ) {
+    const broadcaster = new WebhookStaticEventsTransport(events);
+    return await this.executeWith(webhook, broadcaster);
   }
 
   async executeWith(webhook: Webhook, transport: BroadcasterTransport) {
