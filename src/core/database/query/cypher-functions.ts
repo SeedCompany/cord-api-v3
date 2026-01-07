@@ -94,7 +94,10 @@ export const apoc = {
     union: fn2('apoc.coll.union'),
   },
   convert: {
-    /** Converts Neo4j node to object/map of the node's properties */
+    /**
+     * Converts Neo4j node to object/map of the node's properties
+     * @deprecated Just do `node {.*}`
+     */
     toMap: fn1('apoc.convert.toMap'),
     toJson: fn1('apoc.convert.toJson'),
     fromJsonList: fn1('apoc.convert.fromJsonList'),
