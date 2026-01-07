@@ -34,6 +34,7 @@ export interface ResolveParams {
 
 export interface FilterOptions {
   wrapContext?: (next: QueryFragment) => QueryFragment;
+  wrapConditions?: (next: QueryFragment) => QueryFragment;
 }
 
 @Injectable()
@@ -167,6 +168,7 @@ export class PolicyExecutor {
 
   cypherFilter({
     wrapContext = identity,
+    wrapConditions = identity,
     ...params
   }: FilterOptions & ResolveParams): QueryFragment {
     const perm = this.resolve(params);
@@ -197,7 +199,11 @@ export class PolicyExecutor {
         )
         .comment('Filtering by policy conditions')
         .with('*')
-        .raw(`WHERE ${perm.asCypherCondition(query, other)}`);
+        .apply(
+          wrapConditions((q2) =>
+            q2.raw(`WHERE ${perm.asCypherCondition(query, other)}`),
+          ),
+        );
     };
   }
 

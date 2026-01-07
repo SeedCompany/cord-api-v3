@@ -59,16 +59,11 @@ export class ProjectRepository extends CommonRepository {
   }
 
   async readOne(id: ID, changeset?: ID) {
-    const query = this.db
-      .query()
-      .match([node('node', 'Project', { id })])
-      .apply(this.hydrate(changeset));
-    const result = await query.first();
-    if (!result) {
+    const [dto] = await this.readMany([id], changeset);
+    if (!dto) {
       throw new NotFoundException('Could not find project');
     }
-
-    return result.dto;
+    return dto;
   }
 
   async readMany(ids: readonly ID[], changeset?: ID) {
@@ -76,6 +71,12 @@ export class ProjectRepository extends CommonRepository {
       .query()
       .matchNode('node', 'Project')
       .where({ 'node.id': inArray(ids) })
+      .apply(
+        this.privileges.for(IProject).filterToReadable({
+          wrapContext: (conditions) => (q) =>
+            q.with('node, node as project').apply(conditions),
+        }),
+      )
       .apply(this.hydrate(changeset))
       .map('dto')
       .run();
