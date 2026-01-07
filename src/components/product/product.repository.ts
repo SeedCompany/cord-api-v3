@@ -9,15 +9,18 @@ import {
   relation,
 } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { type Except, type Merge } from 'type-fest';
+import { type Merge } from 'type-fest';
 import {
   CreationFailed,
   EnhancedResource,
   type ID,
+  NotFoundException,
   type Range,
+  ServerException,
+  type UnsecuredDto,
 } from '~/common';
 import { CommonRepository, type DbTypeOf, OnIndex } from '~/core/database';
-import { type DbChanges, getChanges } from '~/core/database/changes';
+import { getChanges } from '~/core/database/changes';
 import {
   ACTIVE,
   collect,
@@ -33,7 +36,12 @@ import {
   paginate,
   sorting,
 } from '~/core/database/query';
-import { ScriptureReferenceRepository } from '../scripture';
+import { ResourceResolver } from '../../core';
+import { type BaseNode } from '../../core/database/results';
+import {
+  ScriptureReferenceRepository,
+  ScriptureReferenceService,
+} from '../scripture';
 import {
   ScriptureRange as RawScriptureRange,
   type ScriptureRangeInput,
@@ -41,6 +49,7 @@ import {
   type UnspecifiedScripturePortionInput,
 } from '../scripture/dto';
 import {
+  type AnyProduct,
   ApproachToMethodologies,
   type CreateDerivativeScriptureProduct,
   type CreateDirectScriptureProduct,
@@ -56,7 +65,9 @@ import {
   type ProductFilters,
   type ProductListInput,
   ProgressMeasurement,
+  type UpdateDerivativeScriptureProduct,
   type UpdateDirectScriptureProduct,
+  type UpdateOtherProduct,
 } from './dto';
 
 const ScriptureRange = EnhancedResource.of(RawScriptureRange);
@@ -77,8 +88,30 @@ export type HydratedProductRow = Merge<
 
 @Injectable()
 export class ProductRepository extends CommonRepository {
-  constructor(private readonly scriptureRefs: ScriptureReferenceRepository) {
+  constructor(
+    private readonly scriptureRefs: ScriptureReferenceRepository,
+    private readonly scriptureRefService: ScriptureReferenceService,
+    private readonly resourceResolver: ResourceResolver,
+  ) {
     super();
+  }
+
+  async readOne(id: ID) {
+    const query = this.db
+      .query()
+      .matchNode('node', 'Product', { id })
+      .apply(this.hydrate());
+    const result = await query.first();
+    if (!result) {
+      throw new NotFoundException('Could not find Product');
+    }
+
+    return result.dto;
+  }
+
+  async readOneUnsecured(id: ID) {
+    const result = await this.readOne(id);
+    return this.mapDbRowToDto(result);
   }
 
   async readMany(ids: readonly ID[]) {
@@ -89,6 +122,13 @@ export class ProductRepository extends CommonRepository {
       .apply(this.hydrate())
       .map('dto');
     return await query.run();
+  }
+
+  async readManyUnsecured(
+    ids: readonly ID[],
+  ): Promise<ReadonlyArray<UnsecuredDto<AnyProduct>>> {
+    const rows = await this.readMany(ids);
+    return rows.map((row) => this.mapDbRowToDto(row));
   }
 
   async listIdsAndScriptureRefs(engagementId: ID) {
@@ -233,8 +273,8 @@ export class ProductRepository extends CommonRepository {
         )
         .return<{ dto: HydratedProductRow }>(
           merge('props', {
-            engagement: 'engagement.id',
-            project: 'project.id',
+            engagement: 'engagement { .id }',
+            project: 'project { .id }',
             produces: 'produces',
             unspecifiedScripture:
               'unspecifiedScripture { .book, .totalVerses }',
@@ -245,33 +285,70 @@ export class ProductRepository extends CommonRepository {
 
   getActualDirectChanges = getChanges(DirectScriptureProduct);
 
-  async updateProperties(
-    object: DirectScriptureProduct,
-    changes: DbChanges<DirectScriptureProduct>,
-  ) {
-    return await this.db.updateProperties({
+  async updateDirectProperties(changes: UpdateDirectScriptureProduct) {
+    const { id, scriptureReferences, unspecifiedScripture, ...simpleChanges } =
+      changes;
+
+    await this.scriptureRefService.update(id, scriptureReferences);
+
+    if (unspecifiedScripture !== undefined) {
+      await this.updateUnspecifiedScripture(id, unspecifiedScripture);
+    }
+
+    await this.db.updateProperties({
       type: DirectScriptureProduct,
-      object,
-      changes,
+      object: { id },
+      changes: simpleChanges,
     });
+
+    return this.mapDbRowToDto(await this.readOne(id));
   }
 
   getActualDerivativeChanges = getChanges(DerivativeScriptureProduct);
   getActualOtherChanges = getChanges(OtherProduct);
 
   async findProducible(produces: ID | undefined) {
-    return await this.db
+    const result = await this.db
       .query()
       .match([
         node('producible', 'Producible', {
           id: produces,
         }),
       ])
-      .return('producible')
+      .return<{ producible: BaseNode }>('producible')
       .first();
+
+    if (!result) {
+      throw new NotFoundException(
+        'Could not find producible node',
+        'product.produces',
+      );
+    }
+
+    return result.producible;
   }
 
-  async create(
+  async createDerivative(
+    input: CreateDerivativeScriptureProduct & {
+      totalVerses: number;
+      totalVerseEquivalents: number;
+    },
+  ) {
+    return (await this.create(
+      input,
+    )) as UnsecuredDto<DerivativeScriptureProduct>;
+  }
+
+  async createDirect(
+    input: CreateDirectScriptureProduct & {
+      totalVerses: number;
+      totalVerseEquivalents: number;
+    },
+  ) {
+    return (await this.create(input)) as UnsecuredDto<DirectScriptureProduct>;
+  }
+
+  private async create(
     input: (CreateDerivativeScriptureProduct | CreateDirectScriptureProduct) & {
       totalVerses: number;
       totalVerseEquivalents: number;
@@ -362,7 +439,8 @@ export class ProductRepository extends CommonRepository {
     if (!result) {
       throw new CreationFailed(Product);
     }
-    return result.id;
+
+    return this.mapDbRowToDto(await this.readOne(result.id));
   }
 
   async createOther(input: CreateOtherProduct) {
@@ -398,17 +476,17 @@ export class ProductRepository extends CommonRepository {
     if (!result) {
       throw new CreationFailed(OtherProduct);
     }
-    return result.id;
+
+    return this.mapDbRowToDto(
+      await this.readOne(result.id),
+    ) as UnsecuredDto<OtherProduct>;
   }
 
-  async updateProducible(
-    input: Except<UpdateDirectScriptureProduct, 'scriptureReferences'>,
-    produces: ID,
-  ) {
+  async updateProducible(id: ID, produces: ID) {
     await this.db
       .query()
       .match([
-        node('product', 'Product', { id: input.id }),
+        node('product', 'Product', { id }),
         relation('out', 'rel', 'produces', ACTIVE),
         node('', 'Producible'),
       ])
@@ -420,7 +498,7 @@ export class ProductRepository extends CommonRepository {
 
     await this.db
       .query()
-      .match([node('product', 'Product', { id: input.id })])
+      .match([node('product', 'Product', { id })])
       .match([
         node('producible', 'Producible', {
           id: produces,
@@ -467,23 +545,38 @@ export class ProductRepository extends CommonRepository {
       .first();
   }
 
-  async updateDerivativeProperties(
-    object: DerivativeScriptureProduct,
-    changes: DbChanges<DerivativeScriptureProduct>,
-  ) {
-    return await this.db.updateProperties({
-      type: DerivativeScriptureProduct,
-      object,
-      changes,
+  async updateDerivativeProperties(changes: UpdateDerivativeScriptureProduct) {
+    const { id, produces, scriptureReferencesOverride, ...simpleChanges } =
+      changes;
+
+    if (produces) {
+      await this.findProducible(produces);
+      await this.updateProducible(id, produces);
+    }
+
+    await this.scriptureRefService.update(id, scriptureReferencesOverride, {
+      isOverriding: true,
     });
+
+    await this.db.updateProperties({
+      type: DerivativeScriptureProduct,
+      object: { id },
+      changes: simpleChanges,
+    });
+
+    return this.mapDbRowToDto(await this.readOne(id));
   }
 
-  async updateOther(object: OtherProduct, changes: DbChanges<OtherProduct>) {
-    return await this.db.updateProperties({
+  async updateOther(changes: UpdateOtherProduct) {
+    const { id, ...simpleChanges } = changes;
+
+    await this.db.updateProperties({
       type: OtherProduct,
-      object,
-      changes,
+      object: { id },
+      changes: simpleChanges,
     });
+
+    return this.mapDbRowToDto(await this.readOne(id));
   }
 
   async list(input: ProductListInput) {
@@ -515,7 +608,12 @@ export class ProductRepository extends CommonRepository {
       .apply(sorting(Product, input))
       .apply(paginate(input, this.hydrate()))
       .first();
-    return result!; // result from paginate() will always have 1 row.
+
+    return {
+      // result from paginate() will always have 1 row
+      ...result!,
+      items: result!.items.map((row) => this.mapDbRowToDto(row)),
+    };
   }
 
   async mergeCompletionDescription(
@@ -538,6 +636,17 @@ export class ProductRepository extends CommonRepository {
         'node.lastUsedAt': 'datetime()',
       })
       .run();
+  }
+
+  async delete(object: UnsecuredDto<AnyProduct>) {
+    try {
+      await this.deleteNode(object);
+    } catch (exception) {
+      throw new ServerException(
+        `Failed to delete product ${object.id}`,
+        exception,
+      );
+    }
   }
 
   async suggestCompletionDescriptions({
@@ -565,6 +674,69 @@ export class ProductRepository extends CommonRepository {
       .apply(paginate(input, (q) => q.return<{ dto: string }>('node as dto')))
       .first();
     return result!;
+  }
+
+  private mapDbRowToDto(row: HydratedProductRow): UnsecuredDto<AnyProduct> {
+    const {
+      isOverriding,
+      produces: rawProducible,
+      title,
+      description,
+      ...rawProps
+    } = row;
+    const props = {
+      ...rawProps,
+      mediums: rawProps.mediums ?? [],
+      purposes: rawProps.purposes ?? [],
+      steps: rawProps.steps ?? [],
+      scriptureReferences: this.scriptureRefService.parseList(
+        rawProps.scriptureReferences,
+      ),
+    };
+
+    if (title) {
+      const dto: UnsecuredDto<OtherProduct> = {
+        ...props,
+        title,
+        description,
+        __typename: 'OtherProduct',
+      };
+      return dto;
+    }
+
+    if (!rawProducible) {
+      const dto: UnsecuredDto<DirectScriptureProduct> = {
+        ...props,
+        totalVerses: props.totalVerses ?? 0,
+        totalVerseEquivalents: props.totalVerseEquivalents ?? 0,
+        __typename: 'DirectScriptureProduct',
+      };
+      return dto;
+    }
+
+    const producible = {
+      ...rawProducible,
+      scriptureReferences: this.scriptureRefService.parseList(
+        rawProducible.scriptureReferences,
+      ),
+    };
+
+    const producibleType = this.resourceResolver.resolveType(
+      producible.__typename,
+    ) as ProducibleType;
+
+    const dto: UnsecuredDto<DerivativeScriptureProduct> = {
+      ...props,
+      produces: { ...producible, __typename: producibleType },
+      scriptureReferences: !isOverriding
+        ? producible.scriptureReferences
+        : props.scriptureReferences,
+      scriptureReferencesOverride: !isOverriding
+        ? null
+        : props.scriptureReferences,
+      __typename: 'DerivativeScriptureProduct',
+    };
+    return dto;
   }
 
   @OnIndex('schema')
