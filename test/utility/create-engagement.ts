@@ -1,4 +1,5 @@
 import { faker } from '@faker-js/faker';
+import { expect } from '@jest/globals';
 import { DateTime } from 'luxon';
 import { type ID, isValidId } from '~/common';
 import { graphql, type InputOf } from '~/graphql';

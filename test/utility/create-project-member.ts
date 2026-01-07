@@ -1,3 +1,4 @@
+import { expect } from '@jest/globals';
 import { isValidId } from '~/common';
 import { graphql, type InputOf } from '~/graphql';
 import { createProject, fragments, type TestApp } from '../utility';

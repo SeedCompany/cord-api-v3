@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@jest/globals';
 import { differenceWith } from 'lodash';
 import { DateTime, Interval } from 'luxon';
 import { CalendarDate } from './calendar-date';
@@ -18,13 +19,15 @@ expect.extend({
   toBeDateInterval(received: DateInterval, expected: DateInterval) {
     const pass = received.equals(expected);
     const message = () =>
-      `${this.utils.matcherHint('toBeDateInterval', undefined, undefined, {
-        isNot: this.isNot,
-        promise: this.promise,
-      })}\n\nExpected:${this.isNot ? ' not' : ''} ${this.utils.EXPECTED_COLOR(
-        expected.toString(),
-      )}\nReceived:${this.isNot ? '    ' : ''} ${this.utils.RECEIVED_COLOR(
-        received.toString(),
+      `${String(
+        this.utils.matcherHint('toBeDateInterval', undefined, undefined, {
+          isNot: this.isNot,
+          promise: this.promise,
+        }),
+      )}\n\nExpected:${this.isNot ? ' not' : ''} ${String(
+        this.utils.EXPECTED_COLOR(expected.toString()),
+      )}\nReceived:${this.isNot ? '    ' : ''} ${String(
+        this.utils.RECEIVED_COLOR(received.toString()),
       )}`;
     return { pass, message };
   },
@@ -38,18 +41,20 @@ expect.extend({
     const expectedStrs = expected.map((e) => e.toString());
     const receivedStrs = received.map((e) => e.toString());
     const message = () =>
-      `${this.utils.matcherHint(matcherName, undefined, undefined, {
-        isNot: this.isNot,
-        promise: this.promise,
-      })}\n\n${this.utils
-        .printDiffOrStringify(
+      `${String(
+        this.utils.matcherHint(matcherName, undefined, undefined, {
+          isNot: this.isNot,
+          promise: this.promise,
+        }),
+      )}\n\n${String(
+        this.utils.printDiffOrStringify(
           expectedStrs,
           receivedStrs,
           'Expected',
           'Received',
           this.expand ?? true,
-        )
-        .replace(/"/g, '')}`;
+        ),
+      ).replace(/"/g, '')}`;
     return {
       pass,
       message,
@@ -76,7 +81,7 @@ describe('DateInterval', () => {
     expectInstances(interval);
     expect(interval.toISO()).toBe(iso);
     expect(interval.toISODate()).toBe(iso);
-    expect(() => interval.toISOTime()).toThrowError();
+    expect(() => interval.toISOTime()).toThrow();
   });
   it('toString', () => {
     const interval = DateInterval.fromISO('2020-03-04/2021-05-22');

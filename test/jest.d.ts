@@ -1,4 +1,4 @@
-declare namespace jest {
+declare module '@jest/expect' {
   interface Expect {
     // Fix this method mistakenly requiring a mutable array
     // eslint-disable-next-line @typescript-eslint/method-signature-style

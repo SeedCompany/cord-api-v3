@@ -1,4 +1,5 @@
 import { faker } from '@faker-js/faker';
+import { expect } from '@jest/globals';
 import { all as countries } from 'iso-3166-1';
 import { isValidId } from '~/common';
 import { graphql, type InputOf } from '~/graphql';

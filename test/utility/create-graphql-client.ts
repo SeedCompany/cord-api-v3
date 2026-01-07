@@ -1,4 +1,5 @@
 import { type TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/core';
+import { expect } from '@jest/globals';
 import { type INestApplication } from '@nestjs/common';
 import got from 'got';
 import {

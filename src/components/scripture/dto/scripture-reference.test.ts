@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@jest/globals';
 import { validate, type ValidationError } from 'class-validator';
 import { ScriptureReferenceInput } from './scripture-reference.dto';
 import 'reflect-metadata';
