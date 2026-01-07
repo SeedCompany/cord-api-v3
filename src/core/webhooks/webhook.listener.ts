@@ -6,6 +6,7 @@ import { OnHook } from '../hooks';
 import { ILogger, Logger } from '../logger';
 import { WebhookChannelService } from './channels/webhook-channel.service';
 import { WebhookExecutor } from './executor/webhook.executor';
+import { WebhookSender } from './webhook.sender';
 
 type WebhookJob = BroadcastPublishedHook;
 
@@ -20,6 +21,7 @@ export class WebhookListener implements OnModuleDestroy {
   constructor(
     private readonly channels: WebhookChannelService,
     private readonly executor: WebhookExecutor,
+    private readonly sender: WebhookSender,
     @Logger('webhooks') private readonly logger: ILogger,
   ) {}
 
@@ -66,8 +68,7 @@ export class WebhookListener implements OnModuleDestroy {
 
     for await (const { webhook, payloads } of payloadsByHook) {
       for (const payload of payloads) {
-        // TODO send
-        const _send = { webhook, payload };
+        await this.sender.push({ webhook, payload });
       }
     }
   }

@@ -8,6 +8,7 @@ import { WebhookManagementResolver } from './management/webhook-management.resol
 import { WebhookManagementService } from './management/webhook-management.service';
 import { WebhooksRepository } from './management/webhooks.repository';
 import { WebhookListener } from './webhook.listener';
+import { WebhookSender } from './webhook.sender';
 import { WebhookValidator } from './webhook.validator';
 
 @Module({
@@ -19,6 +20,7 @@ import { WebhookValidator } from './webhook.validator';
     WebhookListener,
     WebhookExecutor,
     WebhookChannelService,
+    WebhookSender,
     WebhooksRepository,
     WebhookChannelRepository,
     WebhookChannelSyncMigration,

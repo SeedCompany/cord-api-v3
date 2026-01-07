@@ -78,7 +78,7 @@
     "file-type": "^20.5.0",
     "gel": "^2.1.0-canary.20250319T143140",
     "glob": "^11.0.2",
-    "got": "^14.3.0",
+    "got": "^14.6.6",
     "gql.tada": "^1.8.10",
     "graphql": "^16.11.0",
     "graphql-parse-resolve-info": "^4.14.1",
