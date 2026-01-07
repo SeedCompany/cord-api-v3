@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { isEqual, omit, pick } from 'lodash';
 import type { RequireExactlyOne } from 'type-fest';
 import { type ID } from '~/common';
+import { WebhookValidator } from '../webhook.validator';
 import {
   type UpsertWebhookInput,
   type Webhook,
@@ -14,12 +15,14 @@ import { WebhooksRepository } from './webhooks.repository';
  */
 @Injectable()
 export class WebhookManagementService {
-  constructor(private readonly repo: WebhooksRepository) {}
+  constructor(
+    private readonly repo: WebhooksRepository,
+    private readonly validator: WebhookValidator,
+  ) {}
 
   async upsert(input: UpsertWebhookInput) {
-    // TODO validate document
-    const name = '' as ID<'Webhook'>; // TODO get name from document
-    const key = input.key ?? name;
+    const { name } = await this.validator.validate(input.document);
+    const key = input.key ?? (name as ID<'Webhook'>);
 
     const existing = await this.repo.readByUserKey(key);
     if (
