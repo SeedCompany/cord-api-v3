@@ -11,11 +11,12 @@ import { type FormattedExecutionResult } from 'graphql';
 import { Duration } from 'luxon';
 import { createHmac } from 'node:crypto';
 import { ILogger, Logger, LogLevel } from '../logger';
-import { type Webhook } from './dto';
+import { type Webhook, type WebhookTrigger } from './dto';
 
 export interface WebhookExecution {
   webhook: Webhook;
   payload: FormattedExecutionResult;
+  trigger: WebhookTrigger;
 }
 
 /**
@@ -35,7 +36,7 @@ export class WebhookSender {
     },
   } satisfies ExtendOptions);
 
-  async push({ webhook, payload }: WebhookExecution) {
+  async push({ webhook, payload, trigger }: WebhookExecution) {
     const body = {
       ...payload,
       extensions: {
@@ -43,6 +44,7 @@ export class WebhookSender {
         webhook: {
           id: webhook.id,
           key: webhook.key,
+          trigger,
           // attempt: 1,
         },
         userMetadata: webhook.metadata,
