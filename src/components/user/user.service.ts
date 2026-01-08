@@ -331,6 +331,11 @@ export class UserService {
     await this.userRepo.assignOrganizationToUser(request);
   }
 
+  async getPrimaryOrganizationId(userId: ID) {
+    const org = await this.userRepo.getPrimaryOrganizationId(userId);
+    return org ?? null;
+  }
+
   async removeOrganizationFromUser(
     request: RemoveOrganizationFromUser,
   ): Promise<void> {
