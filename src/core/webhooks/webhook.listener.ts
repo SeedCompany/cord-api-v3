@@ -5,10 +5,13 @@ import { BroadcastPublishedHook } from '../broadcast/hooks';
 import { OnHook } from '../hooks';
 import { ILogger, Logger } from '../logger';
 import { WebhookChannelService } from './channels/webhook-channel.service';
+import { WebhookTrigger } from './dto';
 import { WebhookExecutor } from './executor/webhook.executor';
 import { WebhookSender } from './webhook.sender';
 
-type WebhookJob = BroadcastPublishedHook;
+type WebhookJob = BroadcastPublishedHook & {
+  trigger: WebhookTrigger;
+};
 
 /**
  * Holds logic to listen for published broadcast events,
@@ -37,9 +40,11 @@ export class WebhookListener implements OnModuleDestroy {
       return;
     }
 
+    const trigger = new WebhookTrigger();
+
     // A simple promise chain as a placeholder for a real job queue.
     this.draining = this.draining.then(() =>
-      this.handleJob(event).catch((error) => {
+      this.handleJob({ ...event, trigger }).catch((error) => {
         this.logger.error('Failed to process webhook event', {
           channel: event.channel.name,
           data: event.data,
@@ -49,7 +54,7 @@ export class WebhookListener implements OnModuleDestroy {
     );
   }
 
-  private async handleJob({ channel, data }: WebhookJob) {
+  private async handleJob({ channel, data, trigger }: WebhookJob) {
     const webhooks = await this.channels.listFor(channel.name);
     if (!webhooks.length) {
       return;
@@ -68,7 +73,7 @@ export class WebhookListener implements OnModuleDestroy {
 
     for await (const { webhook, payloads } of payloadsByHook) {
       for (const payload of payloads) {
-        await this.sender.push({ webhook, payload });
+        await this.sender.push({ webhook, payload, trigger });
       }
     }
   }
