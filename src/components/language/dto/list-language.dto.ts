@@ -49,6 +49,12 @@ export abstract class LanguageFilters {
 
   @OptionalField({
     description:
+      'Only languages that have an AI-assisted translation engagement',
+  })
+  readonly usesAIAssistance?: boolean;
+
+  @OptionalField({
+    description:
       'Only languages that are pinned/unpinned by the requesting user',
   })
   readonly pinned?: boolean;
