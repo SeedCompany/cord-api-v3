@@ -11,7 +11,13 @@ import { type FormattedExecutionResult } from 'graphql';
 import { Duration } from 'luxon';
 import { createHmac } from 'node:crypto';
 import { ILogger, Logger, LogLevel } from '../logger';
-import { type Webhook, type WebhookTrigger } from './dto';
+import { type Webhook as FullWebhook, type WebhookTrigger } from './dto';
+
+// Strip out large, unneeded properties to save on storage in a future queue.
+type Webhook = Omit<
+  FullWebhook,
+  'document' | 'variables' | 'channels' | 'createdAt' | 'modifiedAt'
+>;
 
 export interface WebhookExecution {
   webhook: Webhook;
@@ -36,6 +42,7 @@ export class WebhookSender {
     },
   } satisfies ExtendOptions);
 
+  // TODO use job queue to decouple flight attempts & retries
   async push({ webhook, payload, trigger }: WebhookExecution) {
     const body = {
       ...payload,
