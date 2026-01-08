@@ -52,7 +52,7 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
       .apply(await createNode(FieldZone, { initialProps }))
       .apply(
         createRelationships(FieldZone, 'out', {
-          director: ['User', input.directorId],
+          director: ['User', input.director],
         }),
       )
       .return<{ id: ID }>('node.id as id');
@@ -86,10 +86,10 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
   }
 
   async update(input: UpdateFieldZone) {
-    const { id, directorId, ...simpleChanges } = input;
+    const { id, director, ...simpleChanges } = input;
 
-    if (directorId) {
-      await this.updateDirector(directorId, id);
+    if (director) {
+      await this.updateDirector(director, id);
     }
 
     await this.updateProperties({ id }, simpleChanges);

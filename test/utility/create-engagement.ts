@@ -18,12 +18,12 @@ export async function createLanguageEngagement(
 
   const result = await app.graphql.mutate(UpdateLangEngDoc, {
     input: {
-      languageId:
-        input.languageId ??
+      language:
+        input.language ??
         (await runAsAdmin(app, async () => {
           return (await createLanguage(app)).id;
         })),
-      projectId: input.projectId ?? (await createProject(app)).id,
+      project: input.project ?? (await createProject(app)).id,
       lukePartnership: true,
       disbursementCompleteDate: now,
       startDateOverride: now,
@@ -62,12 +62,12 @@ export async function createInternshipEngagement(
   const now = DateTime.now().toISO();
 
   return await createInternshipEngagementWithMinimumValues(app, {
-    countryOfOriginId:
-      input.countryOfOriginId ||
+    countryOfOrigin:
+      input.countryOfOrigin ||
       (await runAsAdmin(app, async () => {
         return (await createLocation(app)).id;
       })),
-    mentorId: input.mentorId || currentUserId,
+    mentor: input.mentor || currentUserId,
     position: 'Administration',
     methodologies: ['Film'],
     disbursementCompleteDate: now,
@@ -83,14 +83,14 @@ export async function createInternshipEngagementWithMinimumValues(
   input: Partial<InputOf<typeof UpdateInternshipEngDoc>> = {},
 ) {
   const currentUserId = (await getUserFromSession(app)).id;
-  const projectId = input.projectId || (await createProject(app)).id;
-  const internId = input.internId || currentUserId;
+  const project = input.project || (await createProject(app)).id;
+  const intern = input.intern || currentUserId;
 
   const result = await app.graphql.mutate(UpdateInternshipEngDoc, {
     input: {
       ...input,
-      projectId,
-      internId,
+      project,
+      intern,
     },
   });
 

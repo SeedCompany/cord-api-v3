@@ -11,7 +11,7 @@ export async function createEducation(
 ) {
   const result = await app.graphql.mutate(CreateEducationDoc, {
     input: {
-      userId: input.userId!,
+      user: input.user!,
       degree: 'Associates',
       major: upperFirst(faker.hacker.adjective()) + ' Degree',
       institution: faker.company.name(),

@@ -93,10 +93,10 @@ export abstract class UpdateLanguageEngagement extends UpdateEngagement {
 @InputType()
 export abstract class UpdateInternshipEngagement extends UpdateEngagement {
   @IdField({ nullable: true })
-  readonly mentorId?: ID | null;
+  readonly mentor?: ID<'User'> | null;
 
   @IdField({ nullable: true })
-  readonly countryOfOriginId?: ID | null;
+  readonly countryOfOrigin?: ID<'Location'> | null;
 
   @Field(() => InternshipPosition, { nullable: true })
   readonly position?: InternshipPosition | null;

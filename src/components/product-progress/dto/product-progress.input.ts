@@ -11,7 +11,7 @@ export abstract class ProductProgressInput extends VariantProgressArg {
   @IdField({
     description: 'Which product are you reporting on?',
   })
-  readonly productId: ID;
+  readonly product: ID<'Product'>;
 
   @IdField({
     description: stripIndent`
@@ -19,7 +19,7 @@ export abstract class ProductProgressInput extends VariantProgressArg {
       This describes what timeframe is this data for.
     `,
   })
-  readonly reportId: ID;
+  readonly report: ID<'ProgressReport'>;
 
   @Field(() => [StepProgressInput], {
     description: stripIndent`

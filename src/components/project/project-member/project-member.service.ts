@@ -43,12 +43,12 @@ export class ProjectMemberService {
   ): Promise<ProjectMember> {
     enforcePerms &&
       (await this.assertValidRoles(input.roles, () =>
-        this.resources.load('User', input.userId),
+        this.resources.load('User', input.user),
       ));
 
-    const projectId = isIdLike(input.projectId)
-      ? input.projectId
-      : input.projectId.id;
+    const projectId = isIdLike(input.project)
+      ? input.project
+      : input.project.id;
     const invalidating = this.invalidateProject(projectId);
     const created = await this.repo.create(input);
     await invalidating;

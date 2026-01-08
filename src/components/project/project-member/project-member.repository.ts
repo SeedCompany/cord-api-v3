@@ -82,31 +82,27 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
     if (!result.project) {
       throw new NotFoundException(
         'Could not find project',
-        'projectMember.projectId',
+        'projectMember.project',
       );
     }
     if (!result.user) {
       throw new NotFoundException(
         'Could not find person',
-        'projectMember.userId',
+        'projectMember.user',
       );
     }
     if (result.member) {
       throw new DuplicateException(
-        'projectMember.userId',
+        'projectMember.user',
         'Person is already a member of this project',
       );
     }
   }
 
-  async create({
-    userId,
-    projectId: projectOrId,
-    ...input
-  }: CreateProjectMember) {
+  async create({ user, project: projectOrId, ...input }: CreateProjectMember) {
     const projectId = isIdLike(projectOrId) ? projectOrId : projectOrId.id;
 
-    await this.verifyRelationshipEligibility(projectId, userId);
+    await this.verifyRelationshipEligibility(projectId, user);
 
     const created = await this.db
       .query()
@@ -122,7 +118,7 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
       .apply(
         createRelationships(ProjectMember, {
           in: { member: ['Project', projectId] },
-          out: { user: ['User', userId] },
+          out: { user: ['User', user] },
         }),
       )
       .apply(this.hydrate())

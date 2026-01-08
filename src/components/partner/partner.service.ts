@@ -127,15 +127,15 @@ export class PartnerService {
     if (changes.countries) {
       await this.verifyCountries(changes.countries);
     }
-    if (changes.languageOfReportingId) {
+    if (changes.languageOfReporting) {
       const lang = await this.resourceLoader.load(
         'Language',
-        changes.languageOfReportingId,
+        changes.languageOfReporting,
       );
       if (!lang.isAvailableForReporting.value) {
         throw new InputException(
           'Language is not marked as available for reporting',
-          'partner.languageOfReportingId',
+          'partner.languageOfReporting',
         );
       }
     }

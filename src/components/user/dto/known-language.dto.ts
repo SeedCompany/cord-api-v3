@@ -13,10 +13,10 @@ export abstract class KnownLanguage {
 @ArgsType()
 export abstract class ModifyKnownLanguageArgs {
   @IdField()
-  userId: ID;
+  user: ID<'User'>;
 
   @IdField()
-  languageId: ID;
+  language: ID<'Language'>;
 
   @Field(() => LanguageProficiency)
   languageProficiency: LanguageProficiency;

@@ -36,21 +36,21 @@ describe('Field Zone e2e', () => {
   });
 
   it('create a field zone', async () => {
-    const fieldZone = await createZone(app, { directorId: director.id });
+    const fieldZone = await createZone(app, { director: director.id });
     expect(fieldZone.id).toBeDefined();
   });
 
   it('should have unique name', async () => {
     //old test.  now attempting to create a zone with a name that is taken will return the existing zone
     const name = faker.location.country() + ' Zone';
-    await createZone(app, { directorId: director.id, name });
+    await createZone(app, { director: director.id, name });
     await expect(
-      createZone(app, { directorId: director.id, name }),
+      createZone(app, { director: director.id, name }),
     ).rejects.toThrowGqlError();
   });
 
   it('read one field zone by id', async () => {
-    const fieldZone = await createZone(app, { directorId: director.id });
+    const fieldZone = await createZone(app, { director: director.id });
 
     const { fieldZone: actual } = await app.graphql.query(
       graphql(
@@ -82,7 +82,7 @@ describe('Field Zone e2e', () => {
   });
 
   it('update field zone', async () => {
-    const fieldZone = await createZone(app, { directorId: director.id });
+    const fieldZone = await createZone(app, { director: director.id });
     const newName = faker.company.name();
 
     const result = await app.graphql.mutate(
@@ -115,7 +115,7 @@ describe('Field Zone e2e', () => {
 
   // This function in location service should be updated because one session couldn't be connected to several users at a time.
   it("update field zone's director", async () => {
-    const fieldZone = await createZone(app, { directorId: director.id });
+    const fieldZone = await createZone(app, { director: director.id });
 
     const result = await app.graphql.mutate(
       graphql(
@@ -139,7 +139,7 @@ describe('Field Zone e2e', () => {
         input: {
           fieldZone: {
             id: fieldZone.id,
-            directorId: newDirector.id,
+            director: newDirector.id,
           },
         },
       },
@@ -151,7 +151,7 @@ describe('Field Zone e2e', () => {
   });
 
   it('delete field zone', async () => {
-    const fieldZone = await createZone(app, { directorId: director.id });
+    const fieldZone = await createZone(app, { director: director.id });
 
     const result = await app.graphql.mutate(
       graphql(`
@@ -174,7 +174,7 @@ describe('Field Zone e2e', () => {
     // create 2 zones
     await Promise.all(
       times(2).map(
-        async () => await createZone(app, { directorId: director.id }),
+        async () => await createZone(app, { director: director.id }),
       ),
     );
 

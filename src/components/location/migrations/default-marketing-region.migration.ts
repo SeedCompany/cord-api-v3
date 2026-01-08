@@ -80,7 +80,7 @@ export class DefaultMarketingRegionMigration extends BaseMigration {
 
       await this.locationService.update({
         id: country.id,
-        defaultMarketingRegionId: marketingRegionId,
+        defaultMarketingRegion: marketingRegionId,
       });
     }
   }

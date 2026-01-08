@@ -40,12 +40,12 @@ export class CommentRepository extends DtoRepository(Comment) {
     return await this.db
       .query()
       .subQuery(
-        input.threadId
+        input.thread
           ? (q) =>
               q
-                .matchNode('thread', 'CommentThread', { id: input.threadId })
+                .matchNode('thread', 'CommentThread', { id: input.thread })
                 .return('thread')
-          : await this.threads.create(input.resourceId),
+          : await this.threads.create(input.resource),
       )
       .apply(await createNode(Comment, { initialProps }))
       .apply(

@@ -40,7 +40,7 @@ import {
 
 export async function uploadFile(
   app: TestApp,
-  parentId: ID,
+  parent: ID,
   input: Partial<FakeFile> = {},
   uploadRequest?: RequestUploadOutput,
 ) {
@@ -49,8 +49,8 @@ export async function uploadFile(
   const fakeFile = await uploadFileContents(app, url, input);
 
   const fileNode = await createFileVersion(app, {
-    uploadId: id,
-    parentId,
+    upload: id,
+    parent,
     name: fakeFile.name,
   });
 

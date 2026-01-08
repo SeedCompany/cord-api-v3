@@ -103,33 +103,33 @@ export class ProjectService {
     this.privileges.for(IProject).verifyCan('create');
 
     await this.validateOtherResourceId(
-      input.fieldRegionId,
+      input.fieldRegion,
       'FieldRegion',
-      'fieldRegionId',
+      'fieldRegion',
       'Field region not found',
     );
     await this.validateOtherResourceId(
-      input.primaryLocationId,
+      input.primaryLocation,
       'Location',
-      'primaryLocationId',
+      'primaryLocation',
       'Primary location not found',
     );
     await this.validateOtherResourceId(
-      input.otherLocationIds,
+      input.otherLocations,
       'Location',
-      'otherLocationIds',
+      'otherLocations',
       'One of the other locations was not found',
     );
     await this.validateOtherResourceId(
-      input.marketingLocationId,
+      input.marketingLocation,
       'Location',
-      'marketingLocationId',
+      'marketingLocation',
       'Marketing location not found',
     );
     await this.validateOtherResourceId(
-      input.marketingRegionOverrideId,
+      input.marketingRegionOverride,
       'Location',
-      'marketingRegionOverrideId',
+      'marketingRegionOverride',
       'Marketing Region Override not found',
     );
 
@@ -157,12 +157,12 @@ export class ProjectService {
       const session = this.identity.current;
       await this.projectMembers.create(
         {
-          userId: session.userId,
+          user: session.userId,
           roles: session.roles
             .values()
             .filter((role) => Role.applicableToProjectMembership.has(role))
             .toArray(),
-          projectId: project,
+          project,
         },
         false,
       );
@@ -258,22 +258,22 @@ export class ProjectService {
 
     ProjectDateRangeException.throwIfInvalid(currentProject, changes);
 
-    if (changes.primaryLocationId) {
+    if (changes.primaryLocation) {
       try {
         const location = await this.locationService.readOne(
-          changes.primaryLocationId,
+          changes.primaryLocation,
         );
         if (!location.fundingAccount.value) {
           throw new InputException(
             'Cannot connect location without a funding account',
-            'project.primaryLocationId',
+            'project.primaryLocation',
           );
         }
       } catch (e) {
         if (e instanceof NotFoundException) {
           throw new NotFoundException(
             'Primary location not found',
-            'project.primaryLocationId',
+            'project.primaryLocation',
             e,
           );
         }
@@ -282,9 +282,9 @@ export class ProjectService {
     }
 
     await this.validateOtherResourceId(
-      changes.fieldRegionId,
+      changes.fieldRegion,
       'FieldRegion',
-      'fieldRegionId',
+      'fieldRegion',
       'Field region not found',
     );
 

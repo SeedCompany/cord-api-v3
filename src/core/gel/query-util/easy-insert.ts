@@ -1,9 +1,5 @@
 import { type Cardinality } from 'gel/dist/reflection';
-import type {
-  ConditionalPick,
-  RequireExactlyOne,
-  KeyAsString as StringKeyOf,
-} from 'type-fest';
+import type { RequireExactlyOne } from 'type-fest';
 import { type ID } from '~/common';
 import { type AllResourceDBNames } from '~/core';
 import type {
@@ -30,24 +26,14 @@ type RawInsertShape<Root extends $.ObjectTypeSet> =
           $.stripBacklinks<Root['__element__']['__pointers__']>
         >
       > extends infer Shape extends $.ObjectTypePointers
-    ? $.typeutil.addQuestionMarks<
-        InsertPointerValues<ConditionalPick<Shape, $.PropertyDesc>>
-      > &
-        AddIdSuffixOption<
-          $.typeutil.addQuestionMarks<
-            InsertPointerValues<ConditionalPick<Shape, $.LinkDesc>>
-          >
-        >
+    ? $.typeutil.addQuestionMarks<InsertPointerValues<Shape>>
     : never;
 
 type RawUpdateShape<Root extends $.ObjectTypeSet> = $.typeutil.stripNever<
   $.stripNonUpdateables<$.stripBacklinks<Root['__element__']['__pointers__']>>
 > extends infer Shape
   ? Shape extends $.ObjectTypePointers
-    ? UpdatePointerValues<ConditionalPick<Shape, $.PropertyDesc>> &
-        AddIdSuffixOption<
-          UpdatePointerValues<ConditionalPick<Shape, $.LinkDesc>>
-        >
+    ? UpdatePointerValues<Shape>
     : never
   : never;
 
@@ -66,11 +52,6 @@ type UpdatePointerValues<Shape extends $.ObjectTypePointers> = {
     | AddIDsForLinks<Shape[k]>
     | AddNullability<Shape[k]>;
 };
-
-type AddIdSuffixOption<Links extends Record<string, any>> = {
-  // cannot figure out how to get exclusive keys here to work.
-  [K in StringKeyOf<Links>]: Partial<Record<K | `${K}Id`, Links[K]>>;
-}[StringKeyOf<Links>];
 
 type AddModifyMultiSet<Pointer extends $.LinkDesc | $.PropertyDesc> =
   Pointer['cardinality'] extends Cardinality.Many | Cardinality.AtLeastOne

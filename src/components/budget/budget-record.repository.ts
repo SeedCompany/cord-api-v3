@@ -56,11 +56,11 @@ export class BudgetRecordRepository extends DtoRepository<
       .apply(
         createRelationships(BudgetRecord, {
           in: {
-            record: ['Budget', input.budgetId],
+            record: ['Budget', input.budget],
             changeset: ['Changeset', changeset],
           },
           out: {
-            organization: ['Organization', input.organizationId],
+            organization: ['Organization', input.organization],
           },
         }),
       )
@@ -84,11 +84,11 @@ export class BudgetRecordRepository extends DtoRepository<
     const result = await this.db
       .query()
       .match([
-        node('budget', 'Budget', { id: input.budgetId }),
+        node('budget', 'Budget', { id: input.budget }),
         relation('out', '', 'record', ACTIVE),
         node('br', 'BudgetRecord'),
         relation('out', '', 'organization', ACTIVE),
-        node('', 'Organization', { id: input.organizationId }),
+        node('', 'Organization', { id: input.organization }),
       ])
       .match([
         node('br'),
@@ -118,7 +118,7 @@ export class BudgetRecordRepository extends DtoRepository<
     if (!result) {
       throw new NotFoundException(
         'Could not find BudgetRecord',
-        'budgetRecord.budgetId',
+        'budgetRecord.budget',
       );
     }
 

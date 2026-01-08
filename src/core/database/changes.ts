@@ -57,13 +57,7 @@ type ChangeKey<Key extends keyof T & string, T> = T[Key] extends SetChangeType<
   ? Override extends string
     ? Override
     : never
-  : UnwrapSecured<T[Key]> & {} extends infer Value
-  ? IsFileField<Value> extends true
-    ? Key // our file input fields don't add id suffix, because they are objects.
-    : Value extends ID | LinkTo<any>
-    ? `${Key}Id` // our convention for single relationships
-    : Key
-  : never;
+  : Key;
 
 type ChangeOf<Val> = Val extends SetChangeType<any, infer Override>
   ? Override
@@ -134,8 +128,7 @@ export const getChanges =
       if (change === undefined) {
         return false;
       }
-      const key = isRelation(res, prop) ? prop.slice(0, -2) : prop;
-      let existing = unwrapSecured(existingObject[key]);
+      let existing = unwrapSecured(existingObject[prop]);
       // Unwrap existing LinkTo to input ID.
       if (
         typeof change === 'string' &&
@@ -170,19 +163,6 @@ export const getChanges =
     }
     return actual as any;
   };
-
-/**
- * If prop ends with `Id` and resource has `x` instead of `xId`, assume
- * it is a relation and the current value is the ID of the relation.
- * This is our convention in order to lazily hydrate them.
- */
-export const isRelation = <TResourceStatic extends ResourceShape<any>>(
-  resource: EnhancedResource<TResourceStatic>,
-  prop: string,
-) =>
-  !resource.props.has(prop) &&
-  prop.endsWith('Id') &&
-  resource.props.has(prop.slice(0, -2));
 
 export const compareNullable =
   <T>(fn: (a: T, b: T) => boolean) =>

@@ -80,10 +80,10 @@ import { ProjectService } from './project.service';
 @ArgsType()
 class ModifyOtherLocationArgs {
   @IdField()
-  projectId: ID;
+  project: ID<'Project'>;
 
   @IdField()
-  locationId: ID;
+  location: ID<'Location'>;
 }
 
 @ArgsType()
@@ -415,19 +415,19 @@ export class ProjectResolver {
     description: 'Add a location to a project',
   })
   async addOtherLocationToProject(
-    @Args() { projectId, locationId }: ModifyOtherLocationArgs,
+    @Args() { project, location }: ModifyOtherLocationArgs,
   ): Promise<Project> {
-    await this.projectService.addOtherLocation(projectId, locationId);
-    return await this.projectService.readOne(projectId);
+    await this.projectService.addOtherLocation(project, location);
+    return await this.projectService.readOne(project);
   }
 
   @Mutation(() => IProject, {
     description: 'Remove a location from a project',
   })
   async removeOtherLocationFromProject(
-    @Args() { projectId, locationId }: ModifyOtherLocationArgs,
+    @Args() { project, location }: ModifyOtherLocationArgs,
   ): Promise<Project> {
-    await this.projectService.removeOtherLocation(projectId, locationId);
-    return await this.projectService.readOne(projectId);
+    await this.projectService.removeOtherLocation(project, location);
+    return await this.projectService.readOne(project);
   }
 }

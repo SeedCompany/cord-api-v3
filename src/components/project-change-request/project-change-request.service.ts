@@ -43,7 +43,7 @@ export class ProjectChangeRequestService {
   ): Promise<ProjectChangeRequest> {
     this.privileges.for(ProjectChangeRequest).verifyCan('create');
 
-    const project = await this.projects.readOne(input.projectId);
+    const project = await this.projects.readOne(input.project);
     if (project.status !== ProjectStatus.Active) {
       throw new InputException(
         'Only active projects can create change requests',

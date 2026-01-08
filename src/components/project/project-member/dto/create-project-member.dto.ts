@@ -17,12 +17,12 @@ export class CreateProjectMember {
   @IdField({
     description: 'A user ID',
   })
-  readonly userId: ID;
+  readonly user: ID<'User'>;
 
   @IdField({
     description: 'A project ID',
   })
-  readonly projectId: ID | UnsecuredDto<Project>;
+  readonly project: ID<'Project'> | UnsecuredDto<Project>;
 
   @Field(() => [Role], { nullable: true })
   readonly roles?: readonly Role[];

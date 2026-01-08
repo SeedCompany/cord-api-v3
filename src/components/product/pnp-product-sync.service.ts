@@ -223,11 +223,11 @@ export class PnpProductSyncService {
   }
 
   async save({
-    engagementId,
+    engagement,
     methodology,
     actionableProductRows,
   }: {
-    engagementId: ID<'LanguageEngagement'>;
+    engagement: ID<'LanguageEngagement'>;
     methodology: ProductMethodology;
     actionableProductRows: ReadonlyArray<
       ExtractedRow & { existingId: ID<'Product'> | undefined }
@@ -265,7 +265,7 @@ export class PnpProductSyncService {
         } else {
           const create: CreateDirectScriptureProduct = {
             ...props,
-            engagementId,
+            engagement,
             progressStepMeasurement: ProgressMeasurement.Percent,
             pnpIndex: index,
             // Attempt to order products in the same order as specified in the PnP
@@ -296,7 +296,7 @@ export class PnpProductSyncService {
         } else {
           const create: CreateDerivativeScriptureProduct = {
             ...props,
-            engagementId,
+            engagement,
             progressStepMeasurement: ProgressMeasurement.Percent,
             pnpIndex: index,
             createdAt: createdAt.plus({ milliseconds: index }),

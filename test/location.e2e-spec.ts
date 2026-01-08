@@ -139,7 +139,7 @@ describe('Location e2e', () => {
   it('update location with defaultFieldRegion', async () => {
     const defaultFieldRegion = await createRegion(app);
     const l = await createLocation(app, {
-      defaultFieldRegionId: defaultFieldRegion.id,
+      defaultFieldRegion: defaultFieldRegion.id,
     });
     const newFieldRegion = await createRegion(app);
 
@@ -160,7 +160,7 @@ describe('Location e2e', () => {
         input: {
           location: {
             id: l.id,
-            defaultFieldRegionId: newFieldRegion.id,
+            defaultFieldRegion: newFieldRegion.id,
           },
         },
       },
@@ -173,7 +173,7 @@ describe('Location e2e', () => {
   it('update location with defaultMarketingRegion', async () => {
     const defaultMarketingRegion = await createLocation(app);
     const l = await createLocation(app, {
-      defaultMarketingRegionId: defaultMarketingRegion.id as IdOf<Location>,
+      defaultMarketingRegion: defaultMarketingRegion.id as IdOf<Location>,
     });
     const newMarketingRegion = await createLocation(app);
 
@@ -194,7 +194,7 @@ describe('Location e2e', () => {
         input: {
           location: {
             id: l.id,
-            defaultMarketingRegionId: newMarketingRegion.id,
+            defaultMarketingRegion: newMarketingRegion.id,
           },
         },
       },
@@ -209,7 +209,7 @@ describe('Location e2e', () => {
   it('update location with funding account', async () => {
     const fundingAccount = await createFundingAccount(app);
     const st = await createLocation(app, {
-      fundingAccountId: fundingAccount.id,
+      fundingAccount: fundingAccount.id,
     });
     const newFundingAccount = await createFundingAccount(app);
 
@@ -230,7 +230,7 @@ describe('Location e2e', () => {
         input: {
           location: {
             id: st.id,
-            fundingAccountId: newFundingAccount.id,
+            fundingAccount: newFundingAccount.id,
           },
         },
       },

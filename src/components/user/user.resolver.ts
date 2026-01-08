@@ -62,10 +62,10 @@ import { UserService } from './user.service';
 @ArgsType()
 class ModifyLocationArgs {
   @IdField()
-  userId: ID;
+  user: ID<'User'>;
 
   @IdField()
-  locationId: ID;
+  location: ID<'Location'>;
 }
 
 @Resolver(User)
@@ -253,20 +253,20 @@ export class UserResolver {
     description: 'Add a location to a user',
   })
   async addLocationToUser(
-    @Args() { userId, locationId }: ModifyLocationArgs,
+    @Args() { user, location }: ModifyLocationArgs,
   ): Promise<User> {
-    await this.userService.addLocation(userId, locationId);
-    return await this.userService.readOne(userId);
+    await this.userService.addLocation(user, location);
+    return await this.userService.readOne(user);
   }
 
   @Mutation(() => User, {
     description: 'Remove a location from a user',
   })
   async removeLocationFromUser(
-    @Args() { userId, locationId }: ModifyLocationArgs,
+    @Args() { user, location }: ModifyLocationArgs,
   ): Promise<User> {
-    await this.userService.removeLocation(userId, locationId);
-    return await this.userService.readOne(userId);
+    await this.userService.removeLocation(user, location);
+    return await this.userService.readOne(user);
   }
 
   @Mutation(() => AssignOrganizationToUserOutput, {
@@ -296,7 +296,7 @@ export class UserResolver {
     @Args() args: ModifyKnownLanguageArgs,
   ): Promise<User> {
     await this.userService.createKnownLanguage(args);
-    return await this.userService.readOne(args.userId);
+    return await this.userService.readOne(args.user);
   }
 
   @Mutation(() => User, {
@@ -306,6 +306,6 @@ export class UserResolver {
     @Args() args: ModifyKnownLanguageArgs,
   ): Promise<User> {
     await this.userService.deleteKnownLanguage(args);
-    return await this.userService.readOne(args.userId);
+    return await this.userService.readOne(args.user);
   }
 }

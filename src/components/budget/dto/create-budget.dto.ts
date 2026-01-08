@@ -7,7 +7,7 @@ import { CreateDefinedFileVersionInput } from '../../file/dto';
 @InputType()
 export abstract class CreateBudget {
   @IdField()
-  readonly projectId: ID;
+  readonly project: ID<'Project'>;
 
   @Field({
     description: 'Initial version of the universal budget template',
@@ -19,9 +19,9 @@ export abstract class CreateBudget {
 }
 
 export abstract class CreateBudgetRecord {
-  readonly budgetId: ID;
+  readonly budget: ID<'Budget'>;
 
-  readonly organizationId: ID;
+  readonly organization: ID<'Organization'>;
 
   readonly fiscalYear: number;
 }
