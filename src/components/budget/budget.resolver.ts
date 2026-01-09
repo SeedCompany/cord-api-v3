@@ -11,7 +11,12 @@ import { Loader, type LoaderOf } from '~/core';
 import { BudgetService } from '../budget';
 import { FileNodeLoader, resolveDefinedFile } from '../file';
 import { SecuredFile } from '../file/dto';
-import { Budget, UpdateBudgetInput, UpdateBudgetOutput } from './dto';
+import {
+  Budget,
+  RecordRollup,
+  UpdateBudgetInput,
+  UpdateBudgetOutput,
+} from './dto';
 
 @Resolver(Budget)
 export class BudgetResolver {
@@ -19,7 +24,7 @@ export class BudgetResolver {
 
   @ResolveField(() => Float)
   async total(@Parent() budget: Budget): Promise<number> {
-    return sumBy(budget.records, (record) => record.amount.value ?? 0);
+    return sumBy(budget.records, (record) => record.adjustedAmount.value ?? 0);
   }
 
   @ResolveField(() => SecuredFile, {
@@ -40,5 +45,25 @@ export class BudgetResolver {
   ): Promise<UpdateBudgetOutput> {
     const budget = await this.service.update(input);
     return { budget };
+  }
+
+  @ResolveField(() => RecordRollup)
+  recordRollup(@Parent() budget: Budget): RecordRollup {
+    const recordsWithPreApproved = budget.records.filter(
+      (record) =>
+        record.preApprovedAmount.value !== null &&
+        record.preApprovedAmount.value !== undefined,
+    );
+
+    const recordsExceedingPreApproved = budget.records.filter((record) => {
+      const amount = record.amount.value;
+      const preApproved = record.preApprovedAmount.value;
+      return amount != null && preApproved != null && amount > preApproved;
+    });
+
+    return {
+      hasPreApproved: recordsWithPreApproved.length > 0,
+      preApprovedExceeded: recordsExceedingPreApproved.length > 0,
+    };
   }
 }
