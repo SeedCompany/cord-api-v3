@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { GraphqlModule } from '../graphql';
+import { WebhookChannelSyncMigration } from './channels/channel-sync.migration';
 import { WebhookChannelRepository } from './channels/webhook-channel.repository';
 import { WebhookChannelService } from './channels/webhook-channel.service';
 import { WebhookExecutor } from './executor/webhook.executor';
@@ -18,6 +19,7 @@ import { WebhookValidator } from './webhook.validator';
     WebhookChannelService,
     WebhooksRepository,
     WebhookChannelRepository,
+    WebhookChannelSyncMigration,
   ],
 })
 export class WebhooksModule {}

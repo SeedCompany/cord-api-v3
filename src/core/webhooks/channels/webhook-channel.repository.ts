@@ -1,5 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { inArray, node, not, relation } from 'cypher-query-builder';
+import {
+  inArray,
+  lessEqualTo,
+  node,
+  not,
+  relation,
+} from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { type ID, NotFoundException } from '~/common';
 import { CommonRepository } from '~/core/database';
@@ -94,6 +100,21 @@ export class WebhookChannelRepository extends CommonRepository {
           node('', 'BroadcastChannel', { name: channel }),
         ]),
       )
+      .apply(this.webhooks.hydrate())
+      .map((row) => row.dto)
+      .run();
+  }
+
+  async getStale(evaluatedAt: DateTime) {
+    return await this.db
+      .query()
+      .match([
+        node('node', 'Webhook'),
+        relation('out', 'observes', 'observes'),
+        node('', 'BroadcastChannel'),
+      ])
+      .where({ 'observes.evaluatedAt': lessEqualTo(evaluatedAt) })
+      .with('distinct node')
       .apply(this.webhooks.hydrate())
       .map((row) => row.dto)
       .run();
