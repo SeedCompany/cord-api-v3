@@ -26,7 +26,7 @@ export class WebhooksRepository extends DtoRepository(Webhook) {
       ]);
   }
 
-  protected hydrate() {
+  hydrate() {
     return (query: Query) =>
       query
         .match([

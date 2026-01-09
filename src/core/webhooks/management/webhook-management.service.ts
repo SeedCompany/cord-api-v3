@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { isEqual, omit, pick } from 'lodash';
 import type { RequireExactlyOne } from 'type-fest';
 import { type ID } from '~/common';
+import { WebhookChannelService } from '../channels/webhook-channel.service';
 import { WebhookValidator } from '../webhook.validator';
 import {
   type UpsertWebhookInput,
@@ -18,6 +19,7 @@ export class WebhookManagementService {
   constructor(
     private readonly repo: WebhooksRepository,
     private readonly validator: WebhookValidator,
+    private readonly channels: WebhookChannelService,
   ) {}
 
   async upsert(input: UpsertWebhookInput) {
@@ -42,7 +44,7 @@ export class WebhookManagementService {
       name,
     });
 
-    // TODO compute channels
+    await this.channels.calculate(webhook);
 
     return webhook;
   }
