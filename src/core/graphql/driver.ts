@@ -12,6 +12,7 @@ import { makeHandler as makeGqlWSHandler } from 'graphql-ws/use/@fastify/websock
 import {
   createYoga,
   type envelop,
+  isAsyncIterable,
   type YogaServerInstance,
   type YogaServerOptions,
 } from 'graphql-yoga';
@@ -220,8 +221,8 @@ export class Driver extends AbstractDriver<DriverConfig> {
 const MaintainAsyncContextInSubscriptionEvents: Plugin = {
   onSubscribe: ({ subscribeFn, setSubscribeFn }) => {
     setSubscribeFn(async (...args) => {
-      const iterator: AsyncIterator<unknown> = await subscribeFn(...args);
-      return withAsyncContextIterator(iterator);
+      const res = await subscribeFn(...args);
+      return isAsyncIterable(res) ? withAsyncContextIterator(res) : res;
     });
   },
 };
