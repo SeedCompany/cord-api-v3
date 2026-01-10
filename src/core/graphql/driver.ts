@@ -167,6 +167,24 @@ export class Driver extends AbstractDriver<DriverConfig> {
         }
         return args;
       },
+      onError: (ctx, id, payload, errors) => {
+        // When a subscription iterable throws/emits an error,
+        // 1. Our GraphqlErrorFormatter plugin formats it & flattens aggregate errors.
+        // 2. It wraps it back into a new AggregateError
+        // 3. Yoga throws this error
+        // 3. graphql-ws catches this and wraps it a GraphQLError and
+        //    puts that in a single array and calls onError.
+        // 4. We unwrap all of this so that our array from our formatting plugin
+        //    is what is emitted over the wire.
+        if (
+          errors.length === 1 &&
+          errors[0]!.originalError instanceof AggregateError
+        ) {
+          errors = errors[0]!.originalError.errors;
+        }
+        // default logic:
+        return errors.map((e) => e.toJSON());
+      },
     });
 
     const wsHandler: FastifyRoute['wsHandler'] = function (socket, req) {
