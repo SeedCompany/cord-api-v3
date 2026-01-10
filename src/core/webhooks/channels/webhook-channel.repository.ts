@@ -89,10 +89,18 @@ export class WebhookChannelRepository extends CommonRepository {
     this.logger.debug(`Saved webhook channels`, { webhook, ...result });
   }
 
+  async markInvalid(webhook: ID<'Webhook'>) {
+    await this.db
+      .query()
+      .match(node('webhook', 'Webhook', { id: webhook }))
+      .setValues({ 'webhook.valid': false })
+      .executeAndLogStats();
+  }
+
   async listForChannel(channel: string) {
     return await this.db
       .query()
-      .match(node('node', 'Webhook'))
+      .match(node('node', 'Webhook', { valid: true }))
       .where(
         path([
           node('node'),
@@ -109,7 +117,12 @@ export class WebhookChannelRepository extends CommonRepository {
     return await this.db
       .query()
       .match([
-        node('node', 'Webhook'),
+        node('node', 'Webhook', {
+          // If we've already confirmed the webhook is invalid, we don't need
+          // to reevaluate channels.
+          // That will happen again when the consumer upserts with an updated operation.
+          valid: true,
+        }),
         relation('out', 'observes', 'observes'),
         node('', 'BroadcastChannel'),
       ])

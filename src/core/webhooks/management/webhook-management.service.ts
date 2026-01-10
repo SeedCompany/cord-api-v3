@@ -44,7 +44,7 @@ export class WebhookManagementService {
       name,
     });
 
-    await this.channels.calculate(webhook);
+    await this.channels.calculateOnUpsert(webhook);
 
     return webhook;
   }

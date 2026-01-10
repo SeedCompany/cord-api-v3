@@ -1,12 +1,17 @@
 import { Injectable, type OnModuleDestroy } from '@nestjs/common';
 import { asyncPool } from '@seedcompany/common';
+import { type ExecutionResult } from 'graphql';
 import { internal } from '../broadcast';
 import { BroadcastPublishedHook } from '../broadcast/hooks';
 import { OnHook } from '../hooks';
 import { ILogger, Logger } from '../logger';
 import { WebhookChannelService } from './channels/webhook-channel.service';
 import { WebhookTrigger } from './dto';
-import { WebhookExecutor } from './executor/webhook.executor';
+import {
+  WebhookError,
+  WebhookEventEmissionError,
+  WebhookExecutor,
+} from './executor/webhook.executor';
 import { WebhookSender } from './webhook.sender';
 
 type WebhookJob = BroadcastPublishedHook & {
@@ -67,7 +72,24 @@ export class WebhookListener implements OnModuleDestroy {
     const events = new Map([[channel.name, [data]]]);
 
     const payloadsByHook = asyncPool(Infinity, webhooks, async (webhook) => {
-      const payloads = await this.executor.executeWithEvents(webhook, events);
+      const payloads = await this.executor
+        .executeWithEvents(webhook, events)
+        .catch(async (e: Error): Promise<ExecutionResult[]> => {
+          if (!(e instanceof WebhookError)) {
+            throw e;
+          }
+          if (e instanceof WebhookEventEmissionError) {
+            // since this error happened from a specific event,
+            // we'll keep the webhook valid, as other emissions may be fine.
+          } else {
+            // This is validation or an initialization failure,
+            // so the webhook will never be valid.
+            // Stop trying to execute it until the owner makes a change to it.
+            await this.channels.markInvalid(webhook, e);
+          }
+          // emit an error payload to the webhook, so it is notified
+          return [{ errors: e.errors }];
+        });
       return { webhook, payloads };
     });
 
