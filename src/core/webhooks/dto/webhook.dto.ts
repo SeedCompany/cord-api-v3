@@ -79,6 +79,22 @@ export class Webhook {
 
   @Field()
   modifiedAt: DateTime;
+
+  @Field({
+    description: stripIndent`
+      Whether the webhook is currently valid.
+
+      This is enforced when upserting a webhook, but if our schema changes it
+      could cause the webhook document to become invalid.
+      We'll POST this validation error to the webhook URL, with the same
+      extensions normally sent (to identity the webhook), and with the same
+      \`error\` info you'd get back from \`upsertWebhook\`.
+      After this happens we'll no longer consider this webhook valid, and it
+      won't receive any further events.
+      This can be reset with another upsert mutation providing a updated operation.
+    `,
+  })
+  valid: boolean;
 }
 
 declare module '~/core/resources/map' {

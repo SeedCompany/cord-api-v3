@@ -1,5 +1,6 @@
 import { SubscriptionChannelVersion } from '../../../subscription-channel-version';
 import { BaseMigration, Migration } from '../../database';
+import { WebhookTrigger } from '../dto';
 import { WebhookChannelRepository } from './webhook-channel.repository';
 import { WebhookChannelService } from './webhook-channel.service';
 
@@ -18,6 +19,7 @@ export class WebhookChannelSyncMigration extends BaseMigration {
     this.logger.notice('Found webhooks needing channels reevaluated', {
       count: webhooks.length,
     });
+    const trigger = new WebhookTrigger();
     const logProgressPercentage = 0.25;
     for (const [i, webhook] of webhooks.entries()) {
       if (i % Math.floor(1 / logProgressPercentage) === 0) {
@@ -25,7 +27,7 @@ export class WebhookChannelSyncMigration extends BaseMigration {
           `Reevaluating channels for webhook ${i + 1}/${webhooks.length}`,
         );
       }
-      await this.service.calculate(webhook);
+      await this.service.recalculate(webhook, trigger);
     }
   }
 }

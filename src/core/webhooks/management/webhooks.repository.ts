@@ -88,7 +88,16 @@ export class WebhooksRepository extends DtoRepository(Webhook) {
           'node.createdAt': 'datetime()',
         },
       })
-      .setValues({ node: { ...input, modifiedAt: DateTime.now() } }, true)
+      .setValues(
+        {
+          node: {
+            ...input,
+            valid: true,
+            modifiedAt: DateTime.now(),
+          },
+        },
+        true,
+      )
       .with('node')
       .apply(this.hydrate())
       .map((row) => row.dto);

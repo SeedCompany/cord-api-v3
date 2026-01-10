@@ -7,9 +7,11 @@ import {
 import {
   type DocumentNode,
   type ExecutionArgs,
-  type FormattedExecutionResult,
+  type ExecutionResult,
   getOperationAST,
+  type GraphQLError,
 } from 'graphql';
+import { errorAsyncIterator, isAsyncIterable } from 'graphql-yoga';
 import type { ObservableInput } from 'rxjs';
 import { type GqlContextType } from '~/common';
 import { Identity } from '../../authentication';
@@ -59,11 +61,6 @@ export class WebhookExecutor {
     return await this.broadcaster.runUsing(broadcaster, async () => {
       // Give the correct auth scope for the subscription resolver execution.
       return await this.identity.asUser(webhook.owner.id, async () => {
-        // todo what to do with errors?
-        //  are they thrown here? emitted?
-        //  can more than one be emitted or does it error and close (i think the latter)
-        //  should the webhook be disabled?
-
         // Execute the subscription resolver.
         const subscribed = await this.subscribe(webhook);
 
@@ -83,10 +80,9 @@ export class WebhookExecutor {
     const document: DocumentNode = envelop.parse(webhook.document);
 
     // Webhook could become invalid with schema changes.
-    // todo valid on-demand here, or proactively re-validate when schema changes?
     const errors = envelop.validate(envelop.schema, document);
     if (errors.length > 0) {
-      throw new AggregateError(errors, 'Webhook operation is now invalid');
+      throw new WebhookValidationError(errors);
     }
 
     const args: ExecutionArgs = {
@@ -102,11 +98,29 @@ export class WebhookExecutor {
       } satisfies GqlContextType),
     };
 
-    // This await is just awaiting the establishing of the
-    // "connection listening"/AsyncIterable
-    const subscribed: AsyncIterable<FormattedExecutionResult, void, void> =
+    const subscribed:
+      | AsyncIterable<ExecutionResult, void, void>
+      | { errors: readonly GraphQLError[] } =
+      // This await is just awaiting the establishing of the
+      // "connection listening"/AsyncIterable
       await envelop.subscribe(args);
-
-    return subscribed;
+    if (isAsyncIterable(subscribed)) {
+      return errorAsyncIterator(subscribed, (error) => {
+        // Error(s) thrown during event item emission
+        // This should always be an AggregateError due to our formatting plugin
+        // https://github.com/SeedCompany/cord-api-v3/blob/webhooks/src/core/graphql/graphql-error-formatter.ts#L78-L78
+        throw new WebhookEventEmissionError(
+          error instanceof AggregateError ? error.errors : [],
+        );
+      });
+    } else {
+      // Error(s) thrown while establishing connection
+      throw new WebhookSubscriptionInitializationError(subscribed.errors);
+    }
   }
 }
+
+export class WebhookError extends AggregateError {}
+export class WebhookValidationError extends WebhookError {}
+export class WebhookEventEmissionError extends WebhookError {}
+export class WebhookSubscriptionInitializationError extends WebhookError {}
