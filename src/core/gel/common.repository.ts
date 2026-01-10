@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { DateTime } from 'luxon';
 import { EnhancedResource, type ID, isIdLike, type PublicOf } from '~/common';
 import type { CommonRepository as Neo4jCommonRepository } from '~/core/database';
 import {
@@ -79,6 +80,7 @@ export class CommonRepository implements PublicOf<Neo4jCommonRepository> {
   ) {
     const id = isIdLike(objectOrId) ? objectOrId : objectOrId.id;
     const res = resource ? this.resources.enhance(resource) : undefined;
+    const at = DateTime.now();
 
     res && this.liveQueryStore.invalidate([res, id]);
 
@@ -86,5 +88,7 @@ export class CommonRepository implements PublicOf<Neo4jCommonRepository> {
       filter_single: { id },
     }));
     await this.db.run(query);
+
+    return { at };
   }
 }
