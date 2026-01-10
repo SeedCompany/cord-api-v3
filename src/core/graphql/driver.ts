@@ -12,6 +12,7 @@ import { makeHandler as makeGqlWSHandler } from 'graphql-ws/use/@fastify/websock
 import {
   createYoga,
   type envelop,
+  isAsyncIterable,
   type YogaServerInstance,
   type YogaServerOptions,
 } from 'graphql-yoga';
@@ -34,7 +35,7 @@ export type DriverConfig = GqlModuleOptions &
 
 @Injectable()
 export class Driver extends AbstractDriver<DriverConfig> {
-  private yoga?: YogaServerInstance<ServerContext, {}>;
+  #yoga?: YogaServerInstance<ServerContext, {}>;
 
   constructor(
     private readonly discovery: MetadataDiscovery,
@@ -43,9 +44,14 @@ export class Driver extends AbstractDriver<DriverConfig> {
     super();
   }
 
-  async start(options: DriverConfig) {
-    const fastify = this.http.getInstance();
+  get yoga() {
+    if (!this.#yoga) {
+      throw new Error('Yoga not initialized yet.');
+    }
+    return this.#yoga;
+  }
 
+  createYoga(options: DriverConfig) {
     // Do our plugin discovery / registration
     const discoveredPlugins = this.discovery.discover(Plugin).classes<Plugin>();
     options.plugins = [
@@ -56,12 +62,18 @@ export class Driver extends AbstractDriver<DriverConfig> {
         .map((cls) => cls.instance),
     ];
 
-    this.yoga = createYoga({
+    this.#yoga = createYoga({
       ...options,
       graphqlEndpoint: options.path,
       logging: false,
       batching: { limit: 25 },
     });
+  }
+
+  async start(options: DriverConfig) {
+    this.createYoga(options);
+
+    const fastify = this.http.getInstance();
 
     fastify.route({
       method: 'GET',
@@ -83,7 +95,7 @@ export class Driver extends AbstractDriver<DriverConfig> {
   }
 
   httpHandler: FastifyRoute['handler'] = async (req, reply) => {
-    const res = await this.yoga!.handleNodeRequestAndResponse(req, reply, {
+    const res = await this.yoga.handleNodeRequestAndResponse(req, reply, {
       req,
       response: reply,
     });
@@ -141,7 +153,7 @@ export class Driver extends AbstractDriver<DriverConfig> {
         const {
           extra: { request, socket },
         } = ctx;
-        const envelop = this.yoga!.getEnveloped({
+        const envelop = this.yoga.getEnveloped({
           req: request,
           socket,
           params: payload, // Same(ish?) shape as YogaInitialContext.params
@@ -165,6 +177,24 @@ export class Driver extends AbstractDriver<DriverConfig> {
           return errors;
         }
         return args;
+      },
+      onError: (ctx, id, payload, errors) => {
+        // When a subscription iterable throws/emits an error,
+        // 1. Our GraphqlErrorFormatter plugin formats it & flattens aggregate errors.
+        // 2. It wraps it back into a new AggregateError
+        // 3. Yoga throws this error
+        // 3. graphql-ws catches this and wraps it a GraphQLError and
+        //    puts that in a single array and calls onError.
+        // 4. We unwrap all of this so that our array from our formatting plugin
+        //    is what is emitted over the wire.
+        if (
+          errors.length === 1 &&
+          errors[0]!.originalError instanceof AggregateError
+        ) {
+          errors = errors[0]!.originalError.errors;
+        }
+        // default logic:
+        return errors.map((e) => e.toJSON());
       },
     });
 
@@ -213,15 +243,15 @@ export class Driver extends AbstractDriver<DriverConfig> {
   }
 
   async stop() {
-    await this.yoga?.dispose();
+    await this.#yoga?.dispose();
   }
 }
 
 const MaintainAsyncContextInSubscriptionEvents: Plugin = {
   onSubscribe: ({ subscribeFn, setSubscribeFn }) => {
     setSubscribeFn(async (...args) => {
-      const iterator: AsyncIterator<unknown> = await subscribeFn(...args);
-      return withAsyncContextIterator(iterator);
+      const res = await subscribeFn(...args);
+      return isAsyncIterable(res) ? withAsyncContextIterator(res) : res;
     });
   },
 };

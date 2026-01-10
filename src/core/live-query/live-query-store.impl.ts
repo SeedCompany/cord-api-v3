@@ -2,7 +2,7 @@ import { InMemoryLiveQueryStore } from '@n1ru4l/in-memory-live-query-store';
 import { Injectable, type OnModuleInit } from '@nestjs/common';
 import { cached, CachedGetter } from '@seedcompany/common';
 import { mergeMap } from 'rxjs';
-import { Broadcaster } from '~/core/broadcast';
+import { Broadcaster, internal } from '~/core/broadcast';
 import { ILogger, Logger } from '~/core/logger';
 import { TransactionHooks } from '../database';
 import { LiveQueryStore } from './live-query-store.interface';
@@ -24,7 +24,9 @@ export class LiveQueryStoreImpl extends LiveQueryStore implements OnModuleInit {
   private readonly pendingInvalidations = new WeakMap<object, Set<string>>();
 
   @CachedGetter() get invalidations() {
-    return this.broadcaster.channel<string[]>('live-query-invalidations');
+    return internal(
+      this.broadcaster.channel<string[]>('live-query-invalidations'),
+    );
   }
 
   /**

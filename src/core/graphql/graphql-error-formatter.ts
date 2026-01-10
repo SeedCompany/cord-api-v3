@@ -1,7 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
+import { many } from '@seedcompany/common';
 import { GraphQLError } from 'graphql';
-import { handleStreamOrSingleExecutionResult } from 'graphql-yoga';
+import {
+  handleStreamOrSingleExecutionResult,
+  isAsyncIterable,
+} from 'graphql-yoga';
 import { LazyGetter } from 'lazy-get-decorator';
 import { ExceptionFilter } from '../exception/exception.filter';
 import {
@@ -52,9 +56,26 @@ export class GraphqlErrorFormatter {
   });
 
   onSubscribe: Plugin['onSubscribe'] = () => ({
+    onSubscribeResult: ({ result, setResult }) => {
+      if (isAsyncIterable(result)) {
+        return;
+      }
+      // This happens when the subscription resolver throws an error
+      if (result.errors) {
+        const errors = result.errors.flatMap((error) =>
+          this.formatError(error),
+        );
+        setResult({ ...result, errors });
+      }
+    },
+    // This is called when the iterable stream emits an error
     onSubscribeError: ({ error, setError }) => {
       const formatted = this.formatError(error);
-      setError(formatted);
+      // Wrap the many errors into a single aggregate that can be thrown.
+      // Yoga throws this.
+      // Individual transport protocols should understand to unwrap this
+      // into the error array of the FormattedExecutionResult.
+      setError(new AggregateError(many(formatted)));
     },
   });
 
