@@ -16,6 +16,7 @@ import * as handlers from './handlers';
 import { InternshipProjectResolver } from './internship-project.resolver';
 import { FixDeptIdLabelMigration } from './migrations/fix-dept-id-label.migration';
 import { RenameTranslationToMomentumMigration } from './migrations/rename-translation-to-momentum.migration';
+import { ProjectChangeActorResolver } from './project-change-actor.resolver';
 import { ProjectChangeSubscriptionsResolver } from './project-change-subscriptions.resolver';
 import { ProjectChangesLinksResolver } from './project-changes-links.resolver';
 import { ProjectEngagementIdResolvers } from './project-engagement-id.resolver';
@@ -52,6 +53,7 @@ import { ProjectWorkflowModule } from './workflow/project-workflow.module';
     InternshipProjectResolver,
     ProjectChangeSubscriptionsResolver,
     ProjectChangesLinksResolver,
+    ProjectChangeActorResolver,
     ProjectEngagementConnectionResolver,
     ProjectUserConnectionResolver,
     ...ProjectEngagementIdResolvers,

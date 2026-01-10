@@ -3,6 +3,7 @@ import { ArgsType } from '@nestjs/graphql';
 import { type DateTime } from 'luxon';
 import type { SetRequired } from 'type-fest';
 import { type ID, IdField } from '~/common';
+import { Identity } from '~/core/authentication';
 import { type BroadcastChannel, Broadcaster } from '~/core/broadcast';
 import { type ProjectChanges } from './dto';
 
@@ -17,6 +18,7 @@ export type ProjectChangedPayload = SetRequired<
   keyof ProjectChangedArgs
 > & {
   at: DateTime;
+  by: ID<'User'>;
 };
 
 /**
@@ -24,7 +26,10 @@ export type ProjectChangedPayload = SetRequired<
  */
 @Injectable()
 export class ProjectChannels {
-  constructor(private readonly broadcaster: Broadcaster) {}
+  constructor(
+    private readonly identity: Identity,
+    private readonly broadcaster: Broadcaster,
+  ) {}
 
   /**
    * Call publish() on the channel action for all arg/filter variations.
@@ -34,11 +39,13 @@ export class ProjectChannels {
     payload: ReturnType<ProjectChannels[Action]> extends BroadcastChannel<
       infer T extends ProjectChangedPayload
     >
-      ? T
+      ? Omit<T, 'by'>
       : never,
   ) {
-    this[action](payload).publish(payload);
-    this[action]().publish(payload);
+    const by = this.identity.current.userId;
+    const payloadWithBy = { ...payload, by };
+    this[action](payload).publish(payloadWithBy);
+    this[action]().publish(payloadWithBy);
   }
 
   created() {

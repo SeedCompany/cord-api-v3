@@ -34,6 +34,8 @@ export class AnyProjectChangeOrDeletion extends DataObject {
 
   @DateTimeField()
   at: DateTime;
+
+  by: ID<'Actor'>;
 }
 
 @InterfaceType({
