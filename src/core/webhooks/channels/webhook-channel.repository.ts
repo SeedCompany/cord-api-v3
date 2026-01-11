@@ -113,6 +113,19 @@ export class WebhookChannelRepository extends CommonRepository {
       .run();
   }
 
+  async listForWebhook(webhook: ID<'Webhook'>) {
+    return await this.db
+      .query()
+      .match([
+        node('node', 'Webhook', { id: webhook }),
+        relation('out', '', 'observes'),
+        node('channel', 'BroadcastChannel'),
+      ])
+      .return<{ channel: string }>('channel.name as channel')
+      .map((row) => row.channel)
+      .run();
+  }
+
   async getStale(evaluatedAt: DateTime) {
     return await this.db
       .query()
