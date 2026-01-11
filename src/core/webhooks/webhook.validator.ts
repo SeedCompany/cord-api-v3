@@ -1,6 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { type DocumentNode, type GraphQLError } from 'graphql';
-import { InputException } from '~/common';
+import {
+  type DocumentNode,
+  type GraphQLError,
+  Kind,
+  type OperationDefinitionNode,
+} from 'graphql';
+import { type ID, InputException } from '~/common';
 import { SkipLogging } from '../exception/skip-logging.symbol';
 import { Yoga } from '../graphql';
 
@@ -8,7 +13,7 @@ import { Yoga } from '../graphql';
 export class WebhookValidator {
   constructor(private readonly yoga: Yoga) {}
 
-  async validate(documentStr: string) {
+  async validate(documentStr: string, key?: ID) {
     const { schema, parse, validate } = this.yoga.getEnveloped();
     const doc: DocumentNode = parse(documentStr);
     const errors: readonly GraphQLError[] = validate(schema, doc);
@@ -25,12 +30,18 @@ export class WebhookValidator {
       );
     }
 
-    const name = doc.definitions[0].name?.value;
+    let name = doc.definitions[0].name?.value;
     if (!name) {
-      throw new InputException(
-        'Webhooks are identified by their operation name. Please provide one.',
-        'operation',
-      );
+      if (!key) {
+        throw new InputException(
+          'Webhooks are identified by their operation name or a key. Please provide one.',
+          'document',
+        );
+      }
+      name = key;
+      Object.assign(doc.definitions[0], {
+        name: { kind: Kind.NAME, value: key },
+      } satisfies Pick<OperationDefinitionNode, 'name'>);
     }
 
     return { name, document: doc };

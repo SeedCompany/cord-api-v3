@@ -26,6 +26,7 @@ export class WebhookManagementService {
   async upsert({ document: rawDocStr, ...input }: UpsertWebhookInput) {
     const { name, document: docNode } = await this.validator.validate(
       rawDocStr,
+      input.key,
     );
     const normalizedDoc = printExecutableGraphQLDocument(docNode);
 

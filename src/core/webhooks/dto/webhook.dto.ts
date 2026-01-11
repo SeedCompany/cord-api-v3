@@ -31,7 +31,8 @@ export class Webhook {
   owner: LinkTo<'User'>;
 
   @Field({
-    description: 'The name of the webhook. Defined from the operation.',
+    description:
+      'The name of the webhook. Defined from the operation or the given key.',
   })
   name: string;
 
