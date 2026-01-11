@@ -2190,6 +2190,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@graphql-tools/documents@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "@graphql-tools/documents@npm:1.0.1"
+  dependencies:
+    lodash.sortby: "npm:^4.7.0"
+    tslib: "npm:^2.4.0"
+  peerDependencies:
+    graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
+  checksum: 10c0/df24738f8ffd844a4727884f7825d7009456d7dcb24fa91169efdc061bb72a29527abeb2e23ccf9effed195104485fa286919c33452d8744cb659ad721f17586
+  languageName: node
+  linkType: hard
+
 "@graphql-tools/executor-common@npm:^0.0.4":
   version: 0.0.4
   resolution: "@graphql-tools/executor-common@npm:0.0.4"
@@ -6667,6 +6679,7 @@ __metadata:
     "@golevelup/nestjs-discovery": "npm:^5.0.0"
     "@graphql-hive/cli": "npm:>=0.51"
     "@graphql-hive/yoga": "npm:>=0.42.2"
+    "@graphql-tools/documents": "npm:^1.0.1"
     "@graphql-tools/utils": "npm:^10.9.1"
     "@graphql-yoga/plugin-apq": "npm:^3.16.0"
     "@graphql-yoga/plugin-defer-stream": "npm:^3.16.0"

@@ -40,6 +40,7 @@
     "@ffprobe-installer/ffprobe": "^2.1.2",
     "@golevelup/nestjs-discovery": "^5.0.0",
     "@graphql-hive/yoga": ">=0.42.2",
+    "@graphql-tools/documents": "^1.0.1",
     "@graphql-tools/utils": "^10.9.1",
     "@graphql-yoga/plugin-apq": "^3.16.0",
     "@graphql-yoga/plugin-defer-stream": "^3.16.0",

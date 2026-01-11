@@ -1,3 +1,4 @@
+import { printExecutableGraphQLDocument } from '@graphql-tools/documents';
 import { Injectable } from '@nestjs/common';
 import { isEqual, omit, pick } from 'lodash';
 import type { RequireExactlyOne } from 'type-fest';
@@ -22,16 +23,21 @@ export class WebhookManagementService {
     private readonly channels: WebhookChannelService,
   ) {}
 
-  async upsert(input: UpsertWebhookInput) {
-    const { name } = await this.validator.validate(input.document);
+  async upsert({ document: rawDocStr, ...input }: UpsertWebhookInput) {
+    const { name, document: docNode } = await this.validator.validate(
+      rawDocStr,
+    );
+    const normalizedDoc = printExecutableGraphQLDocument(docNode);
+
     const key = input.key ?? (name as ID<'Webhook'>);
 
     const existing = await this.repo.readByUserKey(key);
     if (
       existing &&
+      normalizedDoc === existing.document &&
       isEqual(
         omit(input, ['key']),
-        pick(existing, 'document', 'variables', 'url', 'metadata'),
+        pick(existing, 'variables', 'url', 'metadata'),
       )
     ) {
       // No change, just return existing.
@@ -40,6 +46,7 @@ export class WebhookManagementService {
 
     const webhook = await this.repo.save({
       ...input,
+      document: normalizedDoc,
       key,
       name,
     });
