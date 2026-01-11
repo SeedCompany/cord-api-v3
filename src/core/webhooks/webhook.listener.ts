@@ -33,7 +33,7 @@ export class WebhookListener implements OnModuleDestroy {
     @Logger('webhooks') private readonly logger: ILogger,
   ) {}
 
-  private draining = Promise.resolve();
+  draining = Promise.resolve();
   async onModuleDestroy() {
     await this.draining;
   }

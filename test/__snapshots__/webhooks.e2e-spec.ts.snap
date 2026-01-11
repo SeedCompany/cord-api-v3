@@ -1,0 +1,134 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`Webhooks Execution Producer Error Handling handles error thrown while processing event 1`] = `
+{
+  "extensions": {
+    "codes": [
+      "Server",
+    ],
+  },
+  "message": "Simulated error during event processing",
+}
+`;
+
+exports[`Webhooks Execution Producer Error Handling handles subscription resolver throwing 1`] = `
+{
+  "extensions": {
+    "codes": [
+      "Server",
+    ],
+  },
+  "message": "Simulated invalid subscription resolution",
+  "path": [
+    "projectCreated",
+  ],
+}
+`;
+
+exports[`Webhooks Execution Producer Error Handling handles webhook subscription becoming stale from schema breaking change 1`] = `
+{
+  "extensions": {
+    "code": "GRAPHQL_VALIDATION_FAILED",
+    "codes": [
+      "GraphQL",
+      "Client",
+    ],
+    "http": {
+      "spec": true,
+      "status": 400,
+    },
+  },
+  "message": "Cannot query field "oldFieldThatDoesNotExistAnymore" on type "Project".",
+}
+`;
+
+exports[`Webhooks Management Saving / Creation Subscription Validation should return input error variables are not provided for operation 1`] = `
+{
+  "extensions": {
+    "codes": [
+      "GraphQL",
+      "Client",
+    ],
+  },
+  "message": "Variable "$project" of required type "ID!" was not provided.",
+  "path": [
+    "saveWebhook",
+  ],
+}
+`;
+
+exports[`Webhooks Management Saving / Creation Subscription Validation should return validation error for invalid GraphQL syntax 1`] = `
+{
+  "extensions": {
+    "codes": [
+      "GraphQL",
+      "Client",
+    ],
+  },
+  "message": "Syntax Error: Unexpected Name "this".",
+  "path": [
+    "saveWebhook",
+  ],
+}
+`;
+
+exports[`Webhooks Management Saving / Creation Subscription Validation should return validation error for non-subscription operation 1`] = `
+{
+  "extensions": {
+    "codes": [
+      "Input",
+      "Client",
+    ],
+    "field": "subscription",
+  },
+  "message": "Only subscription operations are valid here",
+  "path": [
+    "saveWebhook",
+  ],
+}
+`;
+
+exports[`Webhooks Management Saving / Creation Subscription Validation should return validation error for undefined subscription field 1`] = `
+{
+  "extensions": {
+    "codes": [
+      "GraphQL",
+      "Client",
+    ],
+  },
+  "message": "Cannot query field "nonExistentSubscription" on type "Subscription".",
+  "path": [
+    "saveWebhook",
+  ],
+}
+`;
+
+exports[`Webhooks Management Saving / Creation Subscription Validation should return validation error for unnamed operation when key is not provided 1`] = `
+{
+  "extensions": {
+    "codes": [
+      "Input",
+      "Client",
+    ],
+    "field": "subscription",
+  },
+  "message": "Webhooks are identified by their subscription operation name or a key. Please provide one.",
+  "path": [
+    "saveWebhook",
+  ],
+}
+`;
+
+exports[`Webhooks SubscriptionChannelVersion Increments -> app will recalculate subscriptions invalid webhook will be marked invalid & error payload sent 1`] = `
+{
+  "extensions": {
+    "codes": [
+      "Server",
+    ],
+  },
+  "message": "Simulated invalid subscription resolution",
+  "path": [
+    "projectCreated",
+  ],
+}
+`;
