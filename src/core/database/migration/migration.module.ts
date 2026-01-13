@@ -1,21 +1,22 @@
-import { Module, type OnModuleInit } from '@nestjs/common';
+import { Module, type OnApplicationBootstrap } from '@nestjs/common';
 import { ConfigService } from '../../config/config.service';
 import { DatabaseService } from '../database.service';
-import { MigrationDiscovery } from './migration-discovery.service';
 import { MigrationRunner } from './migration-runner.service';
 import { DatabaseMigrationCommand } from './migration.command';
+import { MigrationRegistry } from './migration.registry';
 
 @Module({
-  providers: [MigrationRunner, MigrationDiscovery, DatabaseMigrationCommand],
+  providers: [MigrationRunner, MigrationRegistry, DatabaseMigrationCommand],
+  exports: [MigrationRegistry],
 })
-export class MigrationModule implements OnModuleInit {
+export class MigrationModule implements OnApplicationBootstrap {
   constructor(
     private readonly db: DatabaseService,
     private readonly runner: MigrationRunner,
     private readonly config: ConfigService,
   ) {}
 
-  async onModuleInit() {
+  async onApplicationBootstrap() {
     const entryCmd = process.argv.join('');
     if (
       !this.config.dbAutoMigrate ||
