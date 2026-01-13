@@ -1,10 +1,10 @@
-import { SubscriptionChannelVersion } from '../../../subscription-channel-version';
-import { BaseMigration, Migration } from '../../database';
+import { Injectable } from '@nestjs/common';
+import { BaseMigration } from '../../database';
 import { WebhookTrigger } from '../dto';
 import { WebhookChannelRepository } from './webhook-channel.repository';
 import { WebhookChannelService } from './webhook-channel.service';
 
-@Migration(SubscriptionChannelVersion)
+@Injectable()
 export class WebhookChannelSyncMigration extends BaseMigration {
   constructor(
     private readonly service: WebhookChannelService,

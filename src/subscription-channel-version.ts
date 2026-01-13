@@ -11,4 +11,7 @@ import { DateTime } from 'luxon';
  * Updating this version signals the system to re-evaluate and re-bind
  * subscriptions to their appropriate channels.
  */
-export const SubscriptionChannelVersion = DateTime.fromSQL('2021-09-01 00:00');
+export const SubscriptionChannelVersion = Object.assign(
+  DateTime.fromSQL('2021-09-01 00:00'),
+  { TOKEN: Symbol('SUBSCRIPTION_CHANNEL_VERSION') },
+);
