@@ -64,7 +64,7 @@ import {
   matchCurrentDue,
   progressReportSorters,
 } from '../periodic-report/periodic-report.repository';
-import { ProjectType } from '../project/dto';
+import { IProject, ProjectType } from '../project/dto';
 import { projectFilters } from '../project/project-filters.query';
 import { projectSorters } from '../project/project.repository';
 import { userFilters } from '../user';
@@ -98,16 +98,11 @@ export class EngagementRepository extends CommonRepository {
   }
 
   async readOne(id: ID, view?: ObjectView) {
-    const query = this.db
-      .query()
-      .matchNode('node', labelForView('Engagement', view), { id })
-      .apply(this.hydrate(view));
-    const result = await query.first();
-    if (!result) {
+    const [dto] = await this.readMany([id], view);
+    if (!dto) {
       throw new NotFoundException('Could not find Engagement');
     }
-
-    return result.dto;
+    return dto;
   }
 
   async readMany(ids: readonly ID[], view?: ObjectView) {
@@ -115,6 +110,18 @@ export class EngagementRepository extends CommonRepository {
       .query()
       .matchNode('node', labelForView('Engagement', view))
       .where({ 'node.id': inArray(ids) })
+      .apply(
+        this.privileges.for(IProject).filterToReadable({
+          wrapContext: (conditions) => (q) =>
+            q
+              .match([
+                node('project'),
+                relation('out', '', 'engagement'),
+                node('node'),
+              ])
+              .apply(conditions),
+        }),
+      )
       .apply(this.hydrate(view))
       .map('dto')
       .run();
@@ -544,6 +551,7 @@ export class EngagementRepository extends CommonRepository {
     return result!; // result from paginate() will always have 1 row.
   }
 
+  /** Assumed internal and unsecured */
   async listAllByProjectId(projectId: ID) {
     return await this.db
       .query()

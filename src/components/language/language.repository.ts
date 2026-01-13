@@ -39,6 +39,7 @@ import {
   paginate,
   pinned,
   propSorter,
+  type QueryFragment,
   rankSens,
   sortWith,
   variable,
@@ -146,6 +147,7 @@ export class LanguageRepository extends DtoRepository<
       .query()
       .matchNode('node', labelForView('Language', view))
       .where({ 'node.id': inArray(ids) })
+      .apply(this.filterManyToReadable())
       .apply(this.hydrate(view))
       .map('dto')
       .run();
@@ -159,6 +161,7 @@ export class LanguageRepository extends DtoRepository<
         relation('in', '', 'ethnologue', ACTIVE),
         node('node', 'Language'),
       ])
+      .apply(this.filterManyToReadable())
       .apply(this.hydrate())
       .map('dto')
       .first();
@@ -166,6 +169,23 @@ export class LanguageRepository extends DtoRepository<
       throw new NotFoundException('No Language exists for this Ethnologue id');
     }
     return dto;
+  }
+
+  protected filterManyToReadable(): QueryFragment {
+    return this.privileges.filterToReadable({
+      wrapContext: (conditions) => (q) =>
+        q
+          .optionalMatch([
+            node('project', 'Project'),
+            relation('out', '', 'engagement', ACTIVE),
+            node('', 'LanguageEngagement'),
+            relation('out', '', 'language'),
+            node('node'),
+          ])
+          .apply(oncePerProject(conditions)),
+      wrapConditions: (conditions) => (q) =>
+        q.apply(conditions).with('distinct node as node'),
+    });
   }
 
   protected hydrate(view?: ObjectView) {

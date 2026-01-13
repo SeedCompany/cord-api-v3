@@ -11,6 +11,7 @@ import { GraphqlLoggingPlugin } from './graphql-logging.plugin';
 import { GraphqlTracingPlugin } from './graphql-tracing.plugin';
 import { GraphqlOptions } from './graphql.options';
 
+import './normalize-subscription-output';
 import './types';
 
 /**

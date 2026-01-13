@@ -114,10 +114,10 @@ export const progressSummaryFilters = filter.define(
 
       const conditions = cleanJoin(' OR ', [
         status.has(null) && `node IS NULL`,
-        status.has('Ahead') && `node.actual - node.planned > 0.1`,
+        status.has('Ahead') && `node.actual - node.planned > 0.3`,
         status.has('Behind') && `node.actual - node.planned < -0.1`,
         status.has('OnTime') &&
-          `node.actual - node.planned <= 0.1 and node.actual - node.planned >= -0.1`,
+          `node.actual - node.planned <= 0.3 and node.actual - node.planned >= -0.1`,
       ]);
       const required = status.has(null) ? undefined : `node IS NOT NULL`;
       const str = [required, conditions]

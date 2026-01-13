@@ -17,7 +17,7 @@ import { type DbChanges, getChanges } from './changes';
 import { CommonRepository } from './common.repository';
 import { type DbTypeOf } from './db-type';
 import { OnIndex } from './indexer';
-import { matchProps } from './query';
+import { matchProps, type QueryFragment } from './query';
 
 export const privileges = Symbol.for('DtoRepository.privileges');
 
@@ -100,9 +100,16 @@ export const DtoRepository = <
         .query()
         .matchNode('node', this.resource.dbLabel)
         .where({ 'node.id': inArray(ids) })
+        .apply(this.filterManyToReadable())
         .apply(this.hydrate(...args))
         .map('dto')
         .run();
+    }
+
+    protected filterManyToReadable(): QueryFragment {
+      // A bit worried about query breakage here. So opt in for now.
+      // return this.privileges.filterToReadable();
+      return (q) => q;
     }
 
     async deleteNode(
