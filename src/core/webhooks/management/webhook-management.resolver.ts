@@ -1,12 +1,13 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { type ID, IdArg, ListArg } from '~/common';
+import { ListArg } from '~/common';
 import {
-  DeleteWebhookOutput,
+  DeleteWebhookArgs,
   RotateWebhookSecretOutput,
   UpsertWebhookInput,
   UpsertWebhookOutput,
   WebhookList,
   WebhookListInput,
+  WebhooksDeleted,
 } from './dto';
 import { WebhookManagementService } from './webhook-management.service';
 
@@ -39,19 +40,16 @@ export class WebhookManagementResolver {
     return await this.service.list(input);
   }
 
-  @Mutation(() => DeleteWebhookOutput)
+  @Mutation(() => WebhooksDeleted)
   async deleteWebhook(
-    @IdArg({ nullable: true }) id?: ID<'Webhook'>,
-    @IdArg({ name: 'key', nullable: true }) key?: ID<'Webhook'>,
-    @Args('name', { nullable: true }) name?: string,
-  ): Promise<DeleteWebhookOutput> {
-    if (id) {
-      await this.service.deleteBy({ id });
-    } else if (key) {
-      await this.service.deleteBy({ key });
-    } else if (name) {
-      await this.service.deleteBy({ name });
+    @Args({ type: () => DeleteWebhookArgs })
+    { id, key, name, all }: DeleteWebhookArgs,
+  ): Promise<WebhooksDeleted> {
+    const filters = id ? { id } : key ? { key } : name ? { name } : null;
+    if (!filters && !all) {
+      return { deleted: [] };
     }
-    return { success: true };
+    const deleted = await this.service.deleteBy(filters ?? {});
+    return { deleted };
   }
 }

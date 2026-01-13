@@ -1,13 +1,12 @@
 import { printExecutableGraphQLDocument } from '@graphql-tools/documents';
 import { Injectable } from '@nestjs/common';
 import { isEqual, omit, pick } from 'lodash';
-import type { RequireExactlyOne } from 'type-fest';
 import { type ID } from '~/common';
 import { WebhookChannelService } from '../channels/webhook-channel.service';
 import { WebhookValidator } from '../webhook.validator';
 import {
+  type DeleteWebhookArgs,
   type UpsertWebhookInput,
-  type Webhook,
   type WebhookListInput,
 } from './dto';
 import { WebhooksRepository } from './webhooks.repository';
@@ -61,10 +60,8 @@ export class WebhookManagementService {
     return await this.repo.rotateSecret();
   }
 
-  async deleteBy(
-    filters: RequireExactlyOne<Pick<Webhook, 'id' | 'key' | 'name'>>,
-  ) {
-    await this.repo.deleteBy(filters);
+  async deleteBy(filters: Omit<DeleteWebhookArgs, 'all'>) {
+    return await this.repo.deleteBy(filters);
   }
 
   async list(_input: WebhookListInput) {

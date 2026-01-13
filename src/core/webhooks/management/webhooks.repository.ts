@@ -2,11 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { node, type Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { nanoid } from 'nanoid';
-import { type RequireExactlyOne } from 'type-fest';
 import { EnhancedResource, type ID } from '~/common';
 import { DtoRepository } from '~/core/database';
 import { currentUser, merge, randomUUID } from '~/core/database/query';
-import { type UpsertWebhookInput, Webhook } from './dto';
+import {
+  type DeleteWebhookArgs,
+  type UpsertWebhookInput,
+  Webhook,
+} from './dto';
 
 /**
  * Each `User` can have multiple `Webhooks`.
@@ -104,15 +107,15 @@ export class WebhooksRepository extends DtoRepository(Webhook) {
     return (await query.first())!;
   }
 
-  async deleteBy(
-    filters: RequireExactlyOne<Pick<Webhook, 'id' | 'key' | 'name'>>,
-  ) {
-    await this.db
+  async deleteBy(filters: Omit<DeleteWebhookArgs, 'all'>) {
+    return await this.db
       .query()
       .apply(this.matchWebhook(filters))
+      .subQuery('node', this.hydrate())
       .detachDelete('node')
-      .return('node')
-      .executeAndLogStats();
+      .return('dto')
+      .map('dto')
+      .run();
   }
 
   async rotateSecret() {

@@ -2,7 +2,7 @@ import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { GraphQLJSONObject } from 'graphql-scalars';
 import { DateTime } from 'luxon';
-import { type ID, IdField, UrlField } from '~/common';
+import { type ID, IdField, NameField, UrlField } from '~/common';
 import { type LinkTo, RegisterResource } from '~/core/resources';
 
 @RegisterResource()
@@ -30,7 +30,7 @@ export class Webhook {
 
   owner: LinkTo<'User'>;
 
-  @Field({
+  @NameField({
     description:
       'The name of the webhook. Defined from the operation or the given key.',
   })
