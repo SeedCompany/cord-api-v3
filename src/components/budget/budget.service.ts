@@ -161,7 +161,13 @@ export class BudgetService {
   ): Promise<BudgetRecord> {
     const br = await this.readOneRecord(id, viewOfChangeset(changeset));
     const changes = this.budgetRecordsRepo.getActualChanges(br, input);
+
     this.privileges.for(BudgetRecord, br).verifyChanges(changes);
+
+    // Auto-sync amount with initialAmount when status is Pending
+    if (br.status === BudgetStatus.Pending && 'initialAmount' in changes) {
+      changes.amount = changes.initialAmount;
+    }
 
     const result = await this.budgetRecordsRepo.update(br, changes, changeset);
     return result;

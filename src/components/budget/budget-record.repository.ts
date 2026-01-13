@@ -50,6 +50,7 @@ export class BudgetRecordRepository extends DtoRepository<
           initialProps: {
             fiscalYear: input.fiscalYear,
             amount: null,
+            initialAmount: null,
           },
         }),
       )
