@@ -18,8 +18,8 @@ export interface TestApp extends NestHttpApplication {
 /**
  * @deprecated use {@link createApp} instead
  */
-export const createTestApp = async () => {
-  const app = (await createApp()) as TestApp;
+export const createTestApp = async (...args: Parameters<typeof createApp>) => {
+  const app = (await createApp(...args)) as TestApp;
 
   return Object.assign(Object.create(app) as TestApp, {
     graphql: createGraphqlClient(app),

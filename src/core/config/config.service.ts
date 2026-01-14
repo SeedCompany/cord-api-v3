@@ -1,3 +1,4 @@
+import { type Provider } from '@nestjs/common';
 import { csv } from '@seedcompany/common';
 import type { EmailModuleOptions as EmailOptions } from '@seedcompany/nestjs-email';
 import type { Server as HttpServer } from 'http';
@@ -6,6 +7,7 @@ import { DateTime, Duration, type DurationLike } from 'luxon';
 import { customAlphabet } from 'nanoid';
 import { type Config as Neo4JDriverConfig } from 'neo4j-driver';
 import { BehaviorSubject } from 'rxjs';
+import type { DeepPartial } from 'ts-essentials';
 import type { Class, Merge, ReadonlyDeep } from 'type-fest';
 import { type ID } from '~/common';
 import { parseUri } from '../../components/file/bucket/parse-uri';
@@ -353,4 +355,11 @@ export class ConfigService extends ConfigShape {
       version: LogLevel.DEBUG,
     },
   };
+
+  static providePart(overrides: DeepPartial<ConfigService>) {
+    return {
+      provide: 'CONFIG_PART',
+      useValue: overrides,
+    } satisfies Provider;
+  }
 }
