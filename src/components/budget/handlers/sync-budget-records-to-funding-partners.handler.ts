@@ -38,9 +38,7 @@ type SubscribedEvent =
   PartnershipUpdatedEvent,
   PartnershipWillDeleteEvent,
 )
-export class SyncBudgetRecordsToFundingPartners
-  implements IEventHandler<SubscribedEvent>
-{
+export class SyncBudgetRecordsToFundingPartners implements IEventHandler<SubscribedEvent> {
   constructor(
     private readonly budgets: BudgetService,
     private readonly budgetRepo: BudgetRepository,

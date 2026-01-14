@@ -84,8 +84,8 @@ export class SyncProgressReportToEngagementDateRange extends AbstractPeriodicRep
       event instanceof ProjectUpdatedEvent
         ? await this.engagements.listAllByProjectId(event.updated.id)
         : event instanceof EngagementUpdatedEvent
-        ? [event.updated]
-        : [event.engagement];
+          ? [event.updated]
+          : [event.engagement];
 
     for (const engagement of engagements) {
       Settings.throwOnInvalid = false;
@@ -93,11 +93,11 @@ export class SyncProgressReportToEngagementDateRange extends AbstractPeriodicRep
         event instanceof ProjectUpdatedEvent
           ? this.intervalsFromProjectChange(engagement, event)
           : event instanceof EngagementCreatedEvent
-          ? [engagementRange(event.engagement), null]
-          : [
-              engagementRange(event.updated), //
-              engagementRange(event.previous),
-            ];
+            ? [engagementRange(event.engagement), null]
+            : [
+                engagementRange(event.updated), //
+                engagementRange(event.previous),
+              ];
       Settings.throwOnInvalid = true;
       // I turned off throw on invalid above for this, so it is necessary despite the type inconsistency
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition

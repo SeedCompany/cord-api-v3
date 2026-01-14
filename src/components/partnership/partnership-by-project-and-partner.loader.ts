@@ -13,14 +13,11 @@ export interface PartnershipByProjectAndPartnerInput {
 }
 
 @LoaderFactory()
-export class PartnershipByProjectAndPartnerLoader
-  implements
-    DataLoaderStrategy<
-      { id: PartnershipByProjectAndPartnerInput; partnership: Partnership },
-      PartnershipByProjectAndPartnerInput,
-      string
-    >
-{
+export class PartnershipByProjectAndPartnerLoader implements DataLoaderStrategy<
+  { id: PartnershipByProjectAndPartnerInput; partnership: Partnership },
+  PartnershipByProjectAndPartnerInput,
+  string
+> {
   constructor(private readonly service: PartnershipService) {}
 
   getOptions() {

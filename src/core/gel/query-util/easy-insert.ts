@@ -26,30 +26,31 @@ type RawInsertShape<Root extends $.ObjectTypeSet> =
   $.ObjectType extends Root['__element__']
     ? never
     : $.typeutil.stripNever<
-        $.stripNonInsertables<
-          $.stripBacklinks<Root['__element__']['__pointers__']>
-        >
-      > extends infer Shape extends $.ObjectTypePointers
-    ? $.typeutil.addQuestionMarks<
-        InsertPointerValues<ConditionalPick<Shape, $.PropertyDesc>>
-      > &
-        AddIdSuffixOption<
-          $.typeutil.addQuestionMarks<
-            InsertPointerValues<ConditionalPick<Shape, $.LinkDesc>>
+          $.stripNonInsertables<
+            $.stripBacklinks<Root['__element__']['__pointers__']>
           >
-        >
-    : never;
+        > extends infer Shape extends $.ObjectTypePointers
+      ? $.typeutil.addQuestionMarks<
+          InsertPointerValues<ConditionalPick<Shape, $.PropertyDesc>>
+        > &
+          AddIdSuffixOption<
+            $.typeutil.addQuestionMarks<
+              InsertPointerValues<ConditionalPick<Shape, $.LinkDesc>>
+            >
+          >
+      : never;
 
-type RawUpdateShape<Root extends $.ObjectTypeSet> = $.typeutil.stripNever<
-  $.stripNonUpdateables<$.stripBacklinks<Root['__element__']['__pointers__']>>
-> extends infer Shape
-  ? Shape extends $.ObjectTypePointers
-    ? UpdatePointerValues<ConditionalPick<Shape, $.PropertyDesc>> &
-        AddIdSuffixOption<
-          UpdatePointerValues<ConditionalPick<Shape, $.LinkDesc>>
-        >
-    : never
-  : never;
+type RawUpdateShape<Root extends $.ObjectTypeSet> =
+  $.typeutil.stripNever<
+    $.stripNonUpdateables<$.stripBacklinks<Root['__element__']['__pointers__']>>
+  > extends infer Shape
+    ? Shape extends $.ObjectTypePointers
+      ? UpdatePointerValues<ConditionalPick<Shape, $.PropertyDesc>> &
+          AddIdSuffixOption<
+            UpdatePointerValues<ConditionalPick<Shape, $.LinkDesc>>
+          >
+      : never
+    : never;
 
 type InsertPointerValues<Shape extends $.ObjectTypePointers> = {
   [k in keyof Shape]:

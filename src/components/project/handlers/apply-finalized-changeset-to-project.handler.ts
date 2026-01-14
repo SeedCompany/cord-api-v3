@@ -12,9 +12,7 @@ import {
 type SubscribedEvent = ChangesetFinalizingEvent;
 
 @EventsHandler(ChangesetFinalizingEvent)
-export class ApplyFinalizedChangesetToProject
-  implements IEventHandler<SubscribedEvent>
-{
+export class ApplyFinalizedChangesetToProject implements IEventHandler<SubscribedEvent> {
   constructor(
     private readonly db: DatabaseService,
     @Logger('project:change-request:finalized')

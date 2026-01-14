@@ -109,9 +109,8 @@ export class AdminService implements OnApplicationBootstrap {
       if (doesOrgExist) {
         // add label to org
 
-        const giveOrgDefaultLabel = await this.repo.giveOrgDefaultLabel(
-          defaultOrgName,
-        );
+        const giveOrgDefaultLabel =
+          await this.repo.giveOrgDefaultLabel(defaultOrgName);
 
         if (!giveOrgDefaultLabel) {
           throw new ServerException('could not create default org');

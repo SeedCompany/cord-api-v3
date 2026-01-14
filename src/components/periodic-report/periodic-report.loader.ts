@@ -15,9 +15,10 @@ import { PeriodicReportService } from './periodic-report.service';
   NarrativeReport,
   ProgressReport,
 ])
-export class PeriodicReportLoader
-  implements DataLoaderStrategy<PeriodicReport, ID<IPeriodicReport>>
-{
+export class PeriodicReportLoader implements DataLoaderStrategy<
+  PeriodicReport,
+  ID<IPeriodicReport>
+> {
   constructor(private readonly periodicReports: PeriodicReportService) {}
 
   async loadMany(ids: ReadonlyArray<ID<IPeriodicReport>>) {

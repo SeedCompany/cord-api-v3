@@ -45,8 +45,8 @@ export const mapToSetBlock = (
       value === null
         ? null
         : pointer.__kind__ === 'property'
-        ? value
-        : e.cast(pointer.target, e.cast(e.uuid, e.set(...many(value))));
+          ? value
+          : e.cast(pointer.target, e.cast(e.uuid, e.set(...many(value))));
 
     return [pointerKey, eqlValue];
   }).asRecord;

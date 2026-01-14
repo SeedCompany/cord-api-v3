@@ -4,9 +4,10 @@ import { ProjectWorkflowEvent as WorkflowEvent } from './dto';
 import { ProjectWorkflowService } from './project-workflow.service';
 
 @LoaderFactory(() => WorkflowEvent)
-export class ProjectWorkflowEventLoader
-  implements DataLoaderStrategy<WorkflowEvent, ID<WorkflowEvent>>
-{
+export class ProjectWorkflowEventLoader implements DataLoaderStrategy<
+  WorkflowEvent,
+  ID<WorkflowEvent>
+> {
   constructor(private readonly service: ProjectWorkflowService) {}
 
   async loadMany(ids: ReadonlyArray<ID<WorkflowEvent>>) {

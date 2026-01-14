@@ -58,8 +58,8 @@ export const createProperty =
     const propLabels = Array.isArray(labels)
       ? labels
       : !changeset && resource && typeof key === 'string'
-      ? resource.dbPropLabels[key]
-      : ['Property'];
+        ? resource.dbPropLabels[key]
+        : ['Property'];
 
     const variable = value instanceof Variable ? value : undefined;
 

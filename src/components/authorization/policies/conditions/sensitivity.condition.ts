@@ -26,8 +26,7 @@ export class SensitivityCondition<
     | (ResourceShape<any> & {
         ConfirmThisClassPassesSensitivityToPolicies: true;
       }),
-> implements Condition<TResourceStatic>
-{
+> implements Condition<TResourceStatic> {
   constructor(private readonly access: Sensitivity) {}
 
   isAllowed({ object }: IsAllowedParams<TResourceStatic>) {

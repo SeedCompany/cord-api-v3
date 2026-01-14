@@ -65,7 +65,7 @@ function readAttrStr(value: unknown) {
   return value instanceof Uint8Array
     ? utf8Decoder.decode(value)
     : value
-    ? String(value)
-    : '';
+      ? String(value)
+      : '';
 }
 const utf8Decoder = new TextDecoder('utf8');

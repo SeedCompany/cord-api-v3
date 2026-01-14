@@ -39,7 +39,7 @@ export abstract class ProgressReportVarianceExplanationInput {
 
   @ListField(() => String, {
     optional: true,
-    transform: (prev) => (value) => value === null ? [] : prev(value),
+    transform: (prev) => (value) => (value === null ? [] : prev(value)),
   })
   @IsIn([...ReasonOptions.instance.all], {
     each: true,

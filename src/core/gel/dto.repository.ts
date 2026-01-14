@@ -106,11 +106,13 @@ export const RepoFor = <
       const defaultMethods = Object.getOwnPropertyDescriptors(
         DefaultDtoRepository.prototype,
       );
-      const nonDeclaredDefaults = mapKeys(defaultMethods, (name, _, { SKIP }) =>
-        typeof name === 'string' &&
-        (customMethodNames.has(name) || omitKeys.has(name))
-          ? SKIP
-          : name,
+      const nonDeclaredDefaults = mapKeys(
+        defaultMethods,
+        (name, _, { SKIP }) =>
+          typeof name === 'string' &&
+          (customMethodNames.has(name) || omitKeys.has(name))
+            ? SKIP
+            : name,
       ).asRecord;
       Object.defineProperties(customizedClass.prototype, nonDeclaredDefaults);
 
@@ -159,8 +161,8 @@ export const RepoFor = <
         filters.length === 0
           ? null
           : filters.length === 1
-          ? filters[0]
-          : e.all(e.set(...filters));
+            ? filters[0]
+            : e.all(e.set(...filters));
       return filter ? { filter } : {};
     }
 

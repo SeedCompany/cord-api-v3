@@ -16,7 +16,7 @@ export const generateRegisterInput = async () =>
     status: 'Active',
     roles: [Role.ProjectManager, Role.Consultant],
     title: faker.person.jobTitle(),
-  } satisfies RegisterInput);
+  }) satisfies RegisterInput;
 
 export const generateRequireFieldsRegisterInput = async () =>
   ({
@@ -27,7 +27,7 @@ export const generateRequireFieldsRegisterInput = async () =>
     displayLastName: faker.person.lastName() + (await generateId()),
     password: faker.internet.password(),
     timezone: 'America/Chicago',
-  } satisfies RegisterInput);
+  }) satisfies RegisterInput;
 
 export async function registerUserWithStrictInput(
   app: TestApp,

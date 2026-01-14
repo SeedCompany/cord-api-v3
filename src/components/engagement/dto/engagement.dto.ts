@@ -50,7 +50,9 @@ export type AnyEngagement = MergeExclusive<
 
 const Interfaces = IntersectTypes(Resource, ChangesetAware, Commentable);
 
-export const resolveEngagementType = (val: Pick<AnyEngagement, '__typename'>) =>
+export const resolveEngagementType = (
+  val: Pick<AnyEngagement, '__typename'>,
+) =>
   val.__typename === 'default::LanguageEngagement'
     ? LanguageEngagement
     : InternshipEngagement;

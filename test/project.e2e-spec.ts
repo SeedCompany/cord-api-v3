@@ -495,9 +495,8 @@ describe('Project e2e', () => {
     const getSortedSensitivities = (projects: typeof ascendingProjects) =>
       projects.items.map((project) => project.sensitivity);
 
-    const { projects: ascendingProjects } = await getSensitivitySortedProjects(
-      'ASC',
-    );
+    const { projects: ascendingProjects } =
+      await getSensitivitySortedProjects('ASC');
 
     expect(ascendingProjects.items.length).toBeGreaterThanOrEqual(5);
 
@@ -511,9 +510,8 @@ describe('Project e2e', () => {
       ]),
     );
 
-    const { projects: descendingProjects } = await getSensitivitySortedProjects(
-      'DESC',
-    );
+    const { projects: descendingProjects } =
+      await getSensitivitySortedProjects('DESC');
 
     expect(getSortedSensitivities(descendingProjects)).toEqual(
       expect.arrayContaining([
@@ -971,9 +969,8 @@ describe('Project e2e', () => {
         input: {
           partnership: {
             projectId: proj.id,
-            partnerId: (
-              await createPartner(app, { organizationId: org.id })
-            ).id,
+            partnerId: (await createPartner(app, { organizationId: org.id }))
+              .id,
             types: ['Funding'],
           },
         },
@@ -1044,9 +1041,8 @@ describe('Project e2e', () => {
         input: {
           partnership: {
             projectId: project.id,
-            partnerId: (
-              await createPartner(app, { organizationId: org.id })
-            ).id,
+            partnerId: (await createPartner(app, { organizationId: org.id }))
+              .id,
             types: [PartnerType.Funding],
           },
         },

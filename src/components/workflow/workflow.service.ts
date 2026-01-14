@@ -79,7 +79,7 @@ export const WorkflowService = <W extends Workflow>(workflow: () => W) => {
           return t;
         }
         const disabledReasons = conditions.flatMap((c) =>
-          c.status === 'DISABLED' ? c.disabledReason ?? [] : [],
+          c.status === 'DISABLED' ? (c.disabledReason ?? []) : [],
         );
         return {
           ...t,

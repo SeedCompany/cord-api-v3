@@ -8,9 +8,7 @@ import { CeremonyService } from '../ceremony.service';
 import { CeremonyType } from '../dto';
 
 @EventsHandler(EngagementCreatedEvent)
-export class CreateEngagementDefaultCeremonyHandler
-  implements IEventHandler<EngagementCreatedEvent>
-{
+export class CreateEngagementDefaultCeremonyHandler implements IEventHandler<EngagementCreatedEvent> {
   constructor(
     private readonly ceremonies: CeremonyService,
     private readonly config: ConfigService,

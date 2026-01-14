@@ -99,9 +99,7 @@ const matches = (cond: Condition, p: ProjectState) =>
   cond.step ? cond.step === p.step : cond.status === p.status;
 
 @EventsHandler(ProjectTransitionedEvent)
-export class UpdateEngagementStatusHandler
-  implements IEventHandler<ProjectTransitionedEvent>
-{
+export class UpdateEngagementStatusHandler implements IEventHandler<ProjectTransitionedEvent> {
   constructor(
     private readonly repo: EngagementRepository,
     private readonly engagementService: EngagementService,

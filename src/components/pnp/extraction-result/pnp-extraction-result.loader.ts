@@ -9,9 +9,10 @@ export interface PnpExtractionResultLoadResult {
 }
 
 @LoaderFactory()
-export class PnpExtractionResultLoader
-  implements DataLoaderStrategy<PnpExtractionResultLoadResult, ID<'File'>>
-{
+export class PnpExtractionResultLoader implements DataLoaderStrategy<
+  PnpExtractionResultLoadResult,
+  ID<'File'>
+> {
   constructor(private readonly repo: PnpExtractionResultRepository) {}
 
   async loadMany(files: ReadonlyArray<ID<'File'>>) {

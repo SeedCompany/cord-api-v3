@@ -5,5 +5,8 @@ import type { File, FileVersion } from '../dto';
  * Feel free to throw to abort mutation.
  */
 export class AfterFileUploadEvent {
-  constructor(readonly file: File, readonly newVersion: FileVersion) {}
+  constructor(
+    readonly file: File,
+    readonly newVersion: FileVersion,
+  ) {}
 }

@@ -70,9 +70,10 @@ export const DateField = (options?: OptionalFieldOptions) =>
   );
 
 @Scalar('DateTime', () => DateTime)
-export class DateTimeScalar
-  implements CustomScalar<string, DateTime | string | null>
-{
+export class DateTimeScalar implements CustomScalar<
+  string,
+  DateTime | string | null
+> {
   description = 'An ISO-8601 date time string';
 
   parseValue(value: unknown): string {

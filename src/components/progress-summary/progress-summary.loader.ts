@@ -8,9 +8,10 @@ import { type FetchedSummaries } from './dto';
 import { ProgressSummaryRepository } from './progress-summary.repository';
 
 @LoaderFactory()
-export class ProgressSummaryLoader
-  implements DataLoaderStrategy<FetchedSummaries, ID<'ProgressReport'>>
-{
+export class ProgressSummaryLoader implements DataLoaderStrategy<
+  FetchedSummaries,
+  ID<'ProgressReport'>
+> {
   constructor(private readonly repo: ProgressSummaryRepository) {}
 
   getOptions() {

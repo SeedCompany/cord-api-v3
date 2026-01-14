@@ -55,8 +55,8 @@ export class AliasIdResolver implements IdResolver {
       return found
         ? found.targetId
         : !aliases.includes(id)
-        ? id
-        : new NotFoundException();
+          ? id
+          : new NotFoundException();
     });
   }
 

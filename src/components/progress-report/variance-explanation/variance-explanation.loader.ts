@@ -9,9 +9,11 @@ import { type ProgressReportVarianceExplanation as VarianceExplanation } from '.
 import { ProgressReportVarianceExplanationService } from './variance-explanation.service';
 
 @LoaderFactory()
-export class ProgressReportVarianceExplanationLoader
-  implements DataLoaderStrategy<VarianceExplanation, ProgressReport, ID>
-{
+export class ProgressReportVarianceExplanationLoader implements DataLoaderStrategy<
+  VarianceExplanation,
+  ProgressReport,
+  ID
+> {
   constructor(
     private readonly service: ProgressReportVarianceExplanationService,
   ) {}

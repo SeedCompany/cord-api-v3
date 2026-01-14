@@ -25,9 +25,9 @@ export type HasScope =
 // TODO-ing any here as this hasn't been implemented in some cases yet. #2566
 type ResourceWithScope = ResourceShape<HasScope | any>;
 
-class MemberCondition<TResourceStatic extends ResourceWithScope>
-  implements Condition<TResourceStatic>
-{
+class MemberCondition<
+  TResourceStatic extends ResourceWithScope,
+> implements Condition<TResourceStatic> {
   isAllowed({ object }: IsAllowedParams<TResourceStatic>): boolean {
     return getScope(object).includes('member:true');
   }
@@ -64,9 +64,9 @@ class MemberCondition<TResourceStatic extends ResourceWithScope>
   }
 }
 
-class MemberWithRolesCondition<TResourceStatic extends ResourceWithScope>
-  implements Condition<TResourceStatic>
-{
+class MemberWithRolesCondition<
+  TResourceStatic extends ResourceWithScope,
+> implements Condition<TResourceStatic> {
   constructor(private readonly roles: readonly Role[]) {}
 
   isAllowed({ object }: IsAllowedParams<TResourceStatic>): boolean {

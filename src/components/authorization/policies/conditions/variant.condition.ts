@@ -21,9 +21,9 @@ export interface HasVariant {
   [VariantForCondition]: string;
 }
 
-export class VariantCondition<TResourceStatic extends ResourceShape<any>>
-  implements Condition<TResourceStatic>
-{
+export class VariantCondition<
+  TResourceStatic extends ResourceShape<any>,
+> implements Condition<TResourceStatic> {
   constructor(readonly variants: ReadonlySet<VariantOf<TResourceStatic>>) {}
 
   isAllowed({ object }: IsAllowedParams<TResourceStatic>) {

@@ -50,44 +50,45 @@ export type ChangesOf<
   Changes extends AnyChangesOf<TResource>,
 > = Partial<Omit<Changes, keyof Resource> & AndModifiedAt<TResource>>;
 
-type ChangeKey<Key extends keyof T & string, T> = T[Key] extends SetChangeType<
-  infer Override,
-  any
->
-  ? Override extends string
+type ChangeKey<Key extends keyof T & string, T> =
+  T[Key] extends SetChangeType<infer Override, any>
+    ? Override extends string
+      ? Override
+      : never
+    : UnwrapSecured<T[Key]> & {} extends infer Value
+      ? IsFileField<Value> extends true
+        ? Key // our file input fields don't add id suffix, because they are objects.
+        : Value extends ID | LinkTo<any>
+          ? `${Key}Id` // our convention for single relationships
+          : Key
+      : never;
+
+type ChangeOf<Val> =
+  Val extends SetChangeType<any, infer Override>
     ? Override
-    : never
-  : UnwrapSecured<T[Key]> & {} extends infer Value
-  ? IsFileField<Value> extends true
-    ? Key // our file input fields don't add id suffix, because they are objects.
-    : Value extends ID | LinkTo<any>
-    ? `${Key}Id` // our convention for single relationships
-    : Key
-  : never;
+    :
+        | RawChangeOf<UnwrapSecured<Val> & {}>
+        | (null extends UnwrapSecured<Val> ? null : never);
 
-type ChangeOf<Val> = Val extends SetChangeType<any, infer Override>
-  ? Override
-  :
-      | RawChangeOf<UnwrapSecured<Val> & {}>
-      | (null extends UnwrapSecured<Val> ? null : never);
+export type RawChangeOf<Val> =
+  IsFileField<Val> extends true
+    ? CreateDefinedFileVersionInput
+    : Val extends LinkTo<infer X>
+      ? ID<X>
+      : Val extends ReadonlyArray<LinkTo<infer X>>
+        ? ReadonlyArray<ID<X>>
+        : Val;
 
-export type RawChangeOf<Val> = IsFileField<Val> extends true
-  ? CreateDefinedFileVersionInput
-  : Val extends LinkTo<infer X>
-  ? ID<X>
-  : Val extends ReadonlyArray<LinkTo<infer X>>
-  ? ReadonlyArray<ID<X>>
-  : Val;
-
-type IsFileField<Val> = Val extends LinkTo<'File'>
-  ? true
-  : Val extends ID<infer IDType>
-  ? IsAny<IDType> extends true
-    ? false // ID == ID<any> != ID<'File'>
-    : IDType extends 'File'
+type IsFileField<Val> =
+  Val extends LinkTo<'File'>
     ? true
-    : false
-  : false;
+    : Val extends ID<infer IDType>
+      ? IsAny<IDType> extends true
+        ? false // ID == ID<any> != ID<'File'>
+        : IDType extends 'File'
+          ? true
+          : false
+      : false;
 
 /**
  * Only props of T that can be written directly to DB

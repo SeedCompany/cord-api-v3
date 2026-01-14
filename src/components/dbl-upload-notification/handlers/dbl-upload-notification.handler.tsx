@@ -41,9 +41,7 @@ import { ProjectMemberRepository } from '../../project/project-member/project-me
 import { DBLUpload } from '../emails/dbl-upload.email';
 
 @EventsHandler(WorkflowUpdatedEvent)
-export class DBLUploadNotificationHandler
-  implements IEventHandler<WorkflowUpdatedEvent>
-{
+export class DBLUploadNotificationHandler implements IEventHandler<WorkflowUpdatedEvent> {
   constructor(
     private readonly identity: Identity,
     private readonly moduleRef: ModuleRef,

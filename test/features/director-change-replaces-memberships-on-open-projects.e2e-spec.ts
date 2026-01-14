@@ -300,31 +300,29 @@ it('director change replaces memberships on open projects', async () => {
 
 async function fetchMembers(app: TestApp, projectId: ID) {
   const res = await app.graphql.query(
-    graphql(
-      `
-        query ProjectMembers($projectId: ID!) {
-          project(id: $projectId) {
-            id
-            team {
-              items {
-                user {
-                  value {
-                    id
-                  }
+    graphql(`
+      query ProjectMembers($projectId: ID!) {
+        project(id: $projectId) {
+          id
+          team {
+            items {
+              user {
+                value {
+                  id
                 }
-                active
-                inactiveAt {
-                  value
-                }
-                roles {
-                  value
-                }
+              }
+              active
+              inactiveAt {
+                value
+              }
+              roles {
+                value
               }
             }
           }
         }
-      `,
-    ),
+      }
+    `),
     { projectId },
   );
   const members = res.project.team.items;

@@ -27,10 +27,10 @@ type IfValid<
 > = ThisIsValid extends true
   ? ValidType
   : ThisIsValid extends false
-  ? InvalidType
-  : CanBeInvalid extends true
-  ? ValidType | InvalidType
-  : ValidType;
+    ? InvalidType
+    : CanBeInvalid extends true
+      ? ValidType | InvalidType
+      : ValidType;
 
 /**
  * Calendar Dates have no times or timezones.

@@ -28,7 +28,8 @@ export const DtoRepository = <
   TResourceStatic extends ResourceShape<any>,
   HydrateArgs extends unknown[] = [],
   // Specify this if the repo is for an interface, but works with all the concretes.
-  TResource extends InstanceType<TResourceStatic> = InstanceType<TResourceStatic>,
+  TResource extends InstanceType<TResourceStatic> =
+    InstanceType<TResourceStatic>,
 >(
   resource: TResourceStatic,
 ) => {

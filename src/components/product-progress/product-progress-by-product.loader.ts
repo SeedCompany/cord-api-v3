@@ -10,14 +10,11 @@ import {
 import { ProductProgressService } from './product-progress.service';
 
 @LoaderFactory()
-export class ProductProgressByProductLoader
-  implements
-    DataLoaderStrategy<
-      ProgressVariantByProductOutput,
-      ProgressVariantByProductInput,
-      string
-    >
-{
+export class ProductProgressByProductLoader implements DataLoaderStrategy<
+  ProgressVariantByProductOutput,
+  ProgressVariantByProductInput,
+  string
+> {
   constructor(private readonly service: ProductProgressService) {}
 
   getOptions() {

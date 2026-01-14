@@ -128,15 +128,13 @@ describe('Authentication e2e', () => {
     expect(before.session.user).toBeTruthy();
 
     await app.graphql.query(
-      graphql(
-        `
-          mutation DisableUser($id: ID!) {
-            updateUser(input: { user: { id: $id, status: Disabled } }) {
-              __typename
-            }
+      graphql(`
+        mutation DisableUser($id: ID!) {
+          updateUser(input: { user: { id: $id, status: Disabled } }) {
+            __typename
           }
-        `,
-      ),
+        }
+      `),
       {
         id: user.id,
       },

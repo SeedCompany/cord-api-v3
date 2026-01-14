@@ -15,7 +15,7 @@ export const splitDb = <T>(
         config.databaseEngine === 'gel' ? gelRepository : neo4jRepository;
       return await moduleRef.create<T>(cls);
     },
-  } satisfies Provider);
+  }) satisfies Provider;
 
 export const splitDb2 = <T>(
   token: Type<T>,
@@ -28,4 +28,4 @@ export const splitDb2 = <T>(
       const cls = config.databaseEngine === 'gel' ? repos.gel : repos.neo4j;
       return await moduleRef.create<T>(cls);
     },
-  } satisfies Provider);
+  }) satisfies Provider;

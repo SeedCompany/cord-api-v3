@@ -99,23 +99,23 @@ export function createRelationships<TResourceStatic extends ResourceShape<any>>(
   const flattened = entries(normalizedArgs).flatMap(
     ([direction, relationships]) =>
       Object.entries(relationships).flatMap(([relLabel, varOrTuple]) =>
-        many(Array.isArray(varOrTuple) ? varOrTuple[1] ?? [] : varOrTuple).map(
-          (id, i) => ({
-            nodeLabel: Array.isArray(varOrTuple) ? varOrTuple[0] : undefined, // no labels for variables
-            id,
-            direction,
-            relLabel,
-            variable: !Array.isArray(varOrTuple)
-              ? varOrTuple instanceof Variable
-                ? varOrTuple.value
-                : currentUser.is(varOrTuple)
+        many(
+          Array.isArray(varOrTuple) ? (varOrTuple[1] ?? []) : varOrTuple,
+        ).map((id, i) => ({
+          nodeLabel: Array.isArray(varOrTuple) ? varOrTuple[0] : undefined, // no labels for variables
+          id,
+          direction,
+          relLabel,
+          variable: !Array.isArray(varOrTuple)
+            ? varOrTuple instanceof Variable
+              ? varOrTuple.value
+              : currentUser.is(varOrTuple)
                 ? relLabel
                 : undefined
-              : Array.isArray(varOrTuple[1])
+            : Array.isArray(varOrTuple[1])
               ? `${relLabel}${i}`
               : relLabel,
-          }),
-        ),
+        })),
       ),
   );
 
@@ -132,7 +132,7 @@ export function createRelationships<TResourceStatic extends ResourceShape<any>>(
   const createdAt = DateTime.local();
 
   const returnTerms = flattened.flatMap((f) =>
-    f.id instanceof Variable ? [] : f.variable ?? [],
+    f.id instanceof Variable ? [] : (f.variable ?? []),
   );
   if (returnTerms.length === 0) {
     // Create hash based on input to use as a unique return since a return
@@ -160,8 +160,8 @@ export function createRelationships<TResourceStatic extends ResourceShape<any>>(
               id instanceof Variable
                 ? []
                 : currentUser.is(id)
-                ? [id.as(variable!)]
-                : [node(variable, nodeLabel, { id })],
+                  ? [id.as(variable!)]
+                  : [node(variable, nodeLabel, { id })],
             ),
           )
           .create(
