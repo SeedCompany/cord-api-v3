@@ -62,13 +62,33 @@ export class PartnershipService {
 
     PartnershipDateRangeException.throwIfInvalid(input);
 
+    const [_project, partner] = await Promise.all([
+      this.resourceLoader.load('Project', projectId).catch((e) => {
+        throw e instanceof NotFoundException
+          ? new NotFoundException(
+              'Could not find project',
+              'partnership.projectId',
+              e,
+            )
+          : e;
+      }),
+      this.resourceLoader.load('Partner', partnerId).catch((e) => {
+        throw e instanceof NotFoundException
+          ? new NotFoundException(
+              'Could not find partner',
+              'partnership.partnerId',
+              e,
+            )
+          : e;
+      }),
+    ]);
+
     const isFirstPartnership = await this.repo.isFirstPartnership(
       projectId,
       changeset,
     );
     const primary = isFirstPartnership ? true : input.primary;
 
-    const partner = await this.partnerService.readOne(partnerId);
     this.verifyFinancialReportingType(
       input.financialReportingType,
       input.types ?? [],
