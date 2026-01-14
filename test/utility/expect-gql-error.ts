@@ -80,11 +80,22 @@ const toThrowGqlError: MatcherFunction<[expected?: ErrorExpectations]> =
           !extensionsPassed
             ? stripIndent`
                 Extensions:
-                  ${this.utils
-                    .diff(expectedObj.extensions, actualObj.extensions)
-                    ?.replace(/\n/g, '\n                  ')
-                    .split('\n')
-                    .slice(4, -1)
+                  ${(() => {
+                    const lines = this.utils
+                      .diff(expectedObj.extensions, actualObj.extensions)
+                      ?.replace(/\n/g, '\n                  ')
+                      .split('\n');
+                    if (!lines) {
+                      return [];
+                    } else if (Object.keys(actualObj.extensions).length > 0) {
+                      return lines.slice(4, -1);
+                    } else {
+                      return [
+                        ...lines.slice(4, -2),
+                        lines.at(-1)!.replace('Object {}', '  <empty>'),
+                      ];
+                    }
+                  })()
                     .join('\n')
                     .trim()}
               `.replace(/\n/g, '\n        ')
