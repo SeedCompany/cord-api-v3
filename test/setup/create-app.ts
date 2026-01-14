@@ -1,5 +1,6 @@
 import { afterAll } from '@jest/globals';
 import { Test } from '@nestjs/testing';
+import type { DeepPartial } from 'ts-essentials';
 import { andCall } from '~/common';
 import { ConfigService } from '~/core';
 import { HttpAdapter, type NestHttpApplication } from '~/core/http';
@@ -17,7 +18,11 @@ afterAll(async () => {
   }
 });
 
-export const createApp = async (): Promise<TestApp> => {
+export const createApp = async ({
+  config,
+}: {
+  config?: DeepPartial<ConfigService>;
+} = {}): Promise<TestApp> => {
   const db = await ephemeralGel();
 
   let app;
@@ -29,6 +34,8 @@ export const createApp = async (): Promise<TestApp> => {
       .useValue(new LevelMatcher([], LogLevel.ERROR))
       .overrideProvider('GEL_CONNECT')
       .useValue(db?.options)
+      .overrideProvider('CONFIG_PART')
+      .useValue(config)
       .compile();
 
     app = moduleFixture.createNestApplication<NestHttpApplication>(
