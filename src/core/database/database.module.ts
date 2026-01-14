@@ -29,6 +29,7 @@ import { Neo4jTransactionalMutationsInterceptor as TransactionalMutationsInterce
     IndexerModule,
     TransactionHooks,
     TransactionRetryInformer,
+    MigrationModule,
   ],
 })
 export class DatabaseModule implements OnApplicationShutdown {

@@ -1,30 +1,28 @@
 import { Injectable } from '@nestjs/common';
 import { node } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { ConfigService } from '../../config/config.service';
 import { ILogger, Logger } from '../../logger';
 import { DatabaseService, DbTraceLayer } from '../database.service';
 import {
-  type DiscoveredMigration,
-  MigrationDiscovery,
-} from './migration-discovery.service';
+  MigrationRegistry,
+  type RegisteredMigration,
+} from './migration.registry';
 
 @Injectable()
 @DbTraceLayer.applyToClass()
 export class MigrationRunner {
   constructor(
     private readonly db: DatabaseService,
-    private readonly discover: MigrationDiscovery,
-    private readonly config: ConfigService,
+    private readonly registry: MigrationRegistry,
     @Logger('database:migration') private readonly logger: ILogger,
   ) {}
 
   async syncUp() {
-    const discovered = await this.discover.getMigrations();
-    await this.runMigrations(discovered);
+    const migrations = await this.registry.getMigrations();
+    await this.runMigrations(migrations);
   }
 
-  async runMigrations(discovered: readonly DiscoveredMigration[]) {
+  async runMigrations(migrations: readonly RegisteredMigration[]) {
     const existing = await this.currentSchemaVersion();
 
     if (!existing) {
@@ -33,14 +31,14 @@ export class MigrationRunner {
       return;
     }
 
-    const migratorsToRun = discovered.filter((d) => d.version > existing);
+    const migratorsToRun = migrations.filter((d) => d.version > existing);
 
     if (migratorsToRun.length === 0) {
       this.logger.debug('Schema is already up to date');
       return;
     }
 
-    const latest = discovered.at(-1)?.version ?? DateTime.local();
+    const latest = migrations.at(-1)?.version ?? DateTime.local();
     let current = existing;
     try {
       for (const migrator of migratorsToRun) {
