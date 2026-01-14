@@ -693,7 +693,6 @@ describe('Product e2e', () => {
           }
         }
       `),
-      {},
     );
 
     expect(products.items.length).toBeGreaterThanOrEqual(numProducts);
@@ -733,7 +732,6 @@ describe('Product e2e', () => {
           }
         }
       `),
-      {},
     );
 
     expect(products.items.length).toBeGreaterThanOrEqual(numProducts);
@@ -792,7 +790,6 @@ describe('Product e2e', () => {
           }
         }
       `),
-      {},
     );
 
     expect(products.items.length).toBeGreaterThanOrEqual(numProducts);
