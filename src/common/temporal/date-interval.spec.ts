@@ -1,17 +1,18 @@
+import { describe, expect, it } from '@jest/globals';
 import { differenceWith } from 'lodash';
 import { DateTime, Interval } from 'luxon';
 import { CalendarDate } from './calendar-date';
 import { DateInterval } from './date-interval';
 
-declare global {
-  // eslint-disable-next-line @typescript-eslint/no-namespace -- it's fine for module augmentation
-  namespace jest {
-    // eslint-disable-next-line @seedcompany/no-unused-vars,@typescript-eslint/ban-types
-    interface Matchers<R, T = {}> {
-      toBeDateInterval: (expected: DateInterval) => R;
-      toBeDateIntervals: (expected: DateInterval[]) => R;
-    }
-  }
+declare module 'expect' {
+  // eslint-disable-next-line @typescript-eslint/no-empty-interface
+  interface Matchers<R> extends CustomMatchers<R> {}
+  // eslint-disable-next-line @typescript-eslint/no-empty-interface
+  interface AsymmetricMatchers extends CustomMatchers<unknown> {}
+}
+interface CustomMatchers<R> {
+  toBeDateInterval: (expected: DateInterval) => R;
+  toBeDateIntervals: (expected: DateInterval[]) => R;
 }
 
 expect.extend({
@@ -76,7 +77,7 @@ describe('DateInterval', () => {
     expectInstances(interval);
     expect(interval.toISO()).toBe(iso);
     expect(interval.toISODate()).toBe(iso);
-    expect(() => interval.toISOTime()).toThrowError();
+    expect(() => interval.toISOTime()).toThrow();
   });
   it('toString', () => {
     const interval = DateInterval.fromISO('2020-03-04/2021-05-22');

@@ -1,14 +1,25 @@
 // noinspection JSUnusedGlobalSymbols
 
+import { expect } from '@jest/globals';
 import { stripIndent } from 'common-tags';
+import { type AsymmetricMatchers, type MatcherFunction } from 'expect';
 import { many, type Many } from '~/common';
 import { GqlError } from './create-graphql-client';
 
 // Consider replacing with Jest 29.4+ feature: https://jestjs.io/docs/expect#expectaddequalitytesterstesters
 
-expect.extend({
-  toThrowGqlError(received: GqlError, expected?: ErrorExpectations) {
-    expect(received).toBeInstanceOf(GqlError);
+type AsymmetricMatcher = ReturnType<AsymmetricMatchers['anything']>;
+
+export type ErrorExpectations = {
+  code?: Many<string>;
+  message?: string | AsymmetricMatcher;
+} & Partial<Record<string, any>>;
+
+const toThrowGqlError: MatcherFunction<[expected?: ErrorExpectations]> =
+  function toThrowGqlError(actual, expected) {
+    expect(actual).toBeInstanceOf(GqlError);
+    const received = actual as GqlError;
+
     const { code, message, ...extensions } = expected ?? {};
     const expectedObj = {
       ...(code ? { codes: many(code) } : {}),
@@ -82,22 +93,19 @@ expect.extend({
       `;
 
     return { pass, message: genMessage };
-  },
-});
+  };
 
-export type ErrorExpectations = {
-  code?: Many<string>;
-  message?: string;
-} & Partial<Record<string, any>>;
+expect.extend({
+  toThrowGqlError,
+});
 
 interface CustomMatchers<R = unknown> {
   toThrowGqlError: (expectations?: ErrorExpectations) => R;
 }
 
-declare global {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
-  namespace jest {
-    // eslint-disable-next-line @typescript-eslint/no-empty-interface
-    interface Matchers<R> extends CustomMatchers<R> {}
-  }
+declare module 'expect' {
+  // eslint-disable-next-line @typescript-eslint/no-empty-interface
+  interface Matchers<R> extends CustomMatchers<R> {}
+  // eslint-disable-next-line @typescript-eslint/no-empty-interface
+  interface AsymmetricMatchers extends CustomMatchers {}
 }
