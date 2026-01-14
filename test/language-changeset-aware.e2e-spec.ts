@@ -107,7 +107,7 @@ describe.skip('Language Changeset Aware e2e', () => {
 
     // read language without changeset
     let result = await readLanguage(app, language.id);
-    expect(result.language.name.value === language.name.value);
+    expect(result.language.name.value).toBe(language.name.value);
     // read language with changeset
     result = await readLanguage(app, language.id, changeset.id);
     expect(result.language.name.value).toBe(newLanguageName);
