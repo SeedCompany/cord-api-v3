@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker';
-import { afterAll, beforeAll, describe, expect, it } from '@jest/globals';
+import { beforeAll, describe, expect, it } from '@jest/globals';
 import { times } from 'lodash';
 import { isValidId } from '~/common';
 import { graphql, type InputOf } from '~/graphql';
@@ -24,10 +24,6 @@ describe('Language e2e', () => {
     await createSession(app);
     // Only admins can modify languages
     await loginAsAdmin(app);
-  });
-
-  afterAll(async () => {
-    await app.close();
   });
 
   it('create a language', async () => {

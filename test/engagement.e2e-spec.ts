@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker';
-import { afterAll, beforeAll, describe, expect, it } from '@jest/globals';
+import { beforeAll, describe, expect, it } from '@jest/globals';
 import { some } from 'lodash';
 import { DateTime, Interval } from 'luxon';
 import { generateId, type ID, Role } from '~/common';
@@ -74,10 +74,6 @@ describe('Engagement e2e', () => {
 
     intern = await getUserFromSession(app);
     mentor = await getUserFromSession(app);
-  });
-
-  afterAll(async () => {
-    await app.close();
   });
 
   it('creates a language engagement', async () => {

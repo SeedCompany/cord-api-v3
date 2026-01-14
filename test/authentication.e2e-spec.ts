@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker';
-import { afterAll, beforeAll, describe, expect, it, jest } from '@jest/globals';
+import { beforeAll, describe, expect, it, jest } from '@jest/globals';
 import { Connection } from 'cypher-query-builder';
 import { isValidId } from '~/common';
 import { MailerService } from '~/core/email';
@@ -25,10 +25,6 @@ describe('Authentication e2e', () => {
     app = await createTestApp();
     await createSession(app);
     db = app.get(Connection);
-  });
-
-  afterAll(async () => {
-    await app.close();
   });
 
   it('Check Email Existence and Reset Password', async () => {

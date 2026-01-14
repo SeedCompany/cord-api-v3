@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker';
-import { afterAll, beforeAll, describe, expect, it } from '@jest/globals';
+import { beforeAll, describe, expect, it } from '@jest/globals';
 import { times } from 'lodash';
 import { isValidId, Role } from '~/common';
 import { graphql } from '~/graphql';
@@ -20,10 +20,6 @@ describe('Film e2e', () => {
     app = await createTestApp();
     await createSession(app);
     await registerUser(app, { roles: [Role.Consultant, Role.ProjectManager] });
-  });
-
-  afterAll(async () => {
-    await app.close();
   });
 
   // Create FILM

@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from '@jest/globals';
+import { beforeAll, describe, expect, it } from '@jest/globals';
 import { times } from 'lodash';
 import { Role } from '~/common';
 import { graphql } from '~/graphql';
@@ -39,9 +39,6 @@ describe('Product e2e', () => {
     film = await createFilm(app);
 
     engagement = await createLanguageEngagement(app);
-  });
-  afterAll(async () => {
-    await app.close();
   });
 
   it('create & read product by id', async () => {

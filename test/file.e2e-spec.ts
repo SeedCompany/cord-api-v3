@@ -137,10 +137,6 @@ describe('File e2e', () => {
     });
   });
 
-  afterAll(async () => {
-    await app.close();
-  });
-
   beforeEach(async () => {
     await bucket.clear();
     root = await createRootDirectory(app);

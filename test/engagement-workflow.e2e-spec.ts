@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from '@jest/globals';
+import { beforeAll, describe, expect, it } from '@jest/globals';
 import { Role } from '~/common';
 import { EngagementStatus } from '../src/components/engagement/dto';
 import { ProjectStep, ProjectType } from '../src/components/project/dto';
@@ -36,9 +36,6 @@ describe('Engagement-Workflow e2e', () => {
     await registerUser(app, {
       roles: [Role.ProjectManager, Role.Controller],
     });
-  });
-  afterAll(async () => {
-    await app.close();
   });
 
   it("should have engagement status 'InDevelopment' when add language or internship engagement", async () => {

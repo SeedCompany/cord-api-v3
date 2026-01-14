@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker';
-import { afterAll, beforeAll, describe, expect, it } from '@jest/globals';
+import { beforeAll, describe, expect, it } from '@jest/globals';
 import { times } from 'lodash';
 import { firstLettersOfWords, isValidId } from '~/common';
 import { graphql, type InputOf } from '~/graphql';
@@ -30,10 +30,6 @@ describe('User e2e', () => {
     await createSession(app);
     await loginAsAdmin(app);
     org = await createOrganization(app);
-  });
-
-  afterAll(async () => {
-    await app.close();
   });
 
   it('read one user by id', async () => {

@@ -1,11 +1,4 @@
-import {
-  afterAll,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  it,
-} from '@jest/globals';
+import { beforeAll, beforeEach, describe, expect, it } from '@jest/globals';
 import { CalendarDate, type ID, type IdOf, isIdLike } from '~/common';
 import { graphql, type InputOf } from '~/graphql';
 import { type CreateLanguageEngagement } from '../src/components/engagement/dto';
@@ -83,10 +76,6 @@ describe('ProgressReport Media e2e', () => {
       },
     );
     reportId = createEng.engagement.progressReports.items[0]!.id;
-  });
-
-  afterAll(async () => {
-    await app.close();
   });
 
   it('View uploadable options', async () => {

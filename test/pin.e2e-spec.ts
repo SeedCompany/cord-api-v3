@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from '@jest/globals';
+import { beforeAll, describe, expect, it } from '@jest/globals';
 import { Role } from '~/common';
 import { graphql } from '~/graphql';
 import {
@@ -18,10 +18,6 @@ describe('Pin e2e', () => {
     app = await createTestApp();
     await createSession(app);
     await registerUser(app, { roles: [Role.FieldOperationsDirector] });
-  });
-
-  afterAll(async () => {
-    await app.close();
   });
 
   it('should pin project', async () => {
