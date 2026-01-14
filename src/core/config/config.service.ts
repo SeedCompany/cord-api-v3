@@ -214,10 +214,9 @@ export const makeConfig = (env: EnvironmentService) =>
       .optional(isDev ? this.neo4j.isLocal : true);
 
     files = (() => {
-      const legacyBucket = env.string('FILES_S3_BUCKET').optional();
       const sources = env
         .string('FILES_SOURCE')
-        .optional(legacyBucket ? `s3://${legacyBucket}` : '.files')
+        .optional('.files')
         .split(',')
         .flatMap((src) => parseUri(src.trim()));
       return {
