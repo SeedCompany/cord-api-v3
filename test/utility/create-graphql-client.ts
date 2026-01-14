@@ -12,13 +12,10 @@ export interface GraphQLTestClient {
   email?: string;
 }
 
-export const createGraphqlClient = async (
+export const createGraphqlClient = (
   app: INestApplication,
-): Promise<GraphQLTestClient> => {
-  await app.listen(0);
-  const url = await app.getUrl();
-  app.get(ConfigService).hostUrl$.next(new URL(url) as URL & string);
-
+): GraphQLTestClient => {
+  const url = app.get(ConfigService).hostUrl$.value + 'graphql';
   let authToken = '';
   let email: string | undefined = undefined;
 

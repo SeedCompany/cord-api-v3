@@ -38,9 +38,13 @@ export const createTestApp = async () => {
       .compile();
 
     app = moduleFixture.createNestApplication<TestApp>(new HttpAdapter());
-    await app.configure(app, app.get(ConfigService));
+    const config = app.get(ConfigService);
+    await app.configure(app, config);
     await app.init();
-    app.graphql = await createGraphqlClient(app);
+
+    await app.listen(0);
+    const url = await app.getUrl();
+    config.hostUrl$.next(new URL(url) as URL & string);
   } catch (e) {
     await db?.cleanup();
     throw e;
@@ -52,5 +56,7 @@ export const createTestApp = async () => {
 
   appsToClose.add(app);
 
-  return app;
+  return Object.assign(Object.create(app) as TestApp, {
+    graphql: createGraphqlClient(app),
+  });
 };
