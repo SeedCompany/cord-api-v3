@@ -25,13 +25,9 @@ export async function createRootDirectory(app: TestApp, name?: string) {
   });
 }
 
-export async function createDirectory(
-  app: TestApp,
-  parentId: ID,
-  name?: string,
-) {
+export async function createDirectory(app: TestApp, parent: ID, name?: string) {
   const input = {
-    parentId,
+    parent,
     name: name ?? startCase(faker.lorem.words()),
   };
 

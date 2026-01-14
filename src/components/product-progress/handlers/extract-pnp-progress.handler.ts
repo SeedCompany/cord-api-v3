@@ -62,9 +62,9 @@ export class ExtractPnpProgressHandler {
     const updates = progressRows.flatMap((row) => {
       const { steps, ...rest } = row;
       if (row.story) {
-        const productId = storyProducts.get(row.story);
-        if (productId) {
-          return { extracted: row, productId, steps };
+        const product = storyProducts.get(row.story);
+        if (product) {
+          return { extracted: row, product, steps };
         }
       }
 
@@ -75,7 +75,7 @@ export class ExtractPnpProgressHandler {
             isScriptureEqual(ref.scriptureRanges, row.scripture),
         );
         if (exactScriptureMatch) {
-          return { extracted: row, productId: exactScriptureMatch.id, steps };
+          return { extracted: row, product: exactScriptureMatch.id, steps };
         }
 
         const unspecifiedScriptureMatch = scriptureProducts.find(
@@ -85,7 +85,7 @@ export class ExtractPnpProgressHandler {
         if (unspecifiedScriptureMatch) {
           return {
             extracted: row,
-            productId: unspecifiedScriptureMatch.id,
+            product: unspecifiedScriptureMatch.id,
             steps,
           };
         }
@@ -105,7 +105,7 @@ export class ExtractPnpProgressHandler {
         try {
           await this.progress.update({
             ...input,
-            reportId: event.report.id,
+            report: event.report.id,
             // TODO this seems fine for now as only this variant will upload PnPs.
             variant: Progress.FallbackVariant,
           });

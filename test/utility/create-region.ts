@@ -14,14 +14,14 @@ export async function createRegion(
   const name = input.name ?? 'Region' + (await generateId());
   const result = await app.graphql.mutate(CreateFieldRegionDoc, {
     input: {
-      fieldZoneId:
-        input.fieldZoneId ||
+      fieldZone:
+        input.fieldZone ||
         (await runAsAdmin(app, async () => {
           return (await createZone(app)).id;
         })),
 
-      directorId:
-        input.directorId ||
+      director:
+        input.director ||
         (await runAsAdmin(app, async () => {
           const director = await createPerson(app, {
             roles: ['RegionalDirector'],

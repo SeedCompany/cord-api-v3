@@ -81,13 +81,13 @@ export const transitionEngagementToActive = async (
   await runAsAdmin(app, async () => {
     const fundingAccount = await createFundingAccount(app);
     const location = await createLocation(app, {
-      fundingAccountId: fundingAccount.id,
+      fundingAccount: fundingAccount.id,
     });
     const fieldRegion = await createRegion(app);
     await updateProject(app, {
       id: projectId,
-      primaryLocationId: location.id,
-      fieldRegionId: fieldRegion.id,
+      primaryLocation: location.id,
+      fieldRegion: fieldRegion.id,
     });
     for (const next of stepsFromEarlyConversationToBeforeActive) {
       await changeProjectStep(app, projectId, next);

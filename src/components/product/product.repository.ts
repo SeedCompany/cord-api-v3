@@ -316,7 +316,7 @@ export class ProductRepository extends CommonRepository {
       .apply(
         createRelationships(Product, {
           in: {
-            product: ['LanguageEngagement', input.engagementId],
+            product: ['LanguageEngagement', input.engagement],
           },
           out: isDerivative
             ? {
@@ -390,7 +390,7 @@ export class ProductRepository extends CommonRepository {
       )
       .apply(
         createRelationships(OtherProduct, 'in', {
-          product: ['LanguageEngagement', input.engagementId],
+          product: ['LanguageEngagement', input.engagement],
         }),
       )
       .return<{ id: ID }>('node.id as id');

@@ -69,7 +69,7 @@ export class EngagementService {
     input: CreateLanguageEngagement,
     changeset?: ID,
   ): Promise<LanguageEngagement> {
-    await this.verifyCreateEngagement(input.projectId);
+    await this.verifyCreateEngagement(input.project);
     this.verifyCreationStatus(input.status);
     EngagementDateRangeException.throwIfInvalid(input);
 
@@ -90,7 +90,7 @@ export class EngagementService {
     input: CreateInternshipEngagement,
     changeset?: ID,
   ): Promise<InternshipEngagement> {
-    await this.verifyCreateEngagement(input.projectId);
+    await this.verifyCreateEngagement(input.project);
     this.verifyCreationStatus(input.status);
     EngagementDateRangeException.throwIfInvalid(input);
 

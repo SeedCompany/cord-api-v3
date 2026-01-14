@@ -8,7 +8,7 @@ import { Unavailability } from './unavailability.dto';
 @InputType()
 export class CreateUnavailability {
   @IdField()
-  readonly userId: ID;
+  readonly user: ID<'User'>;
 
   @Field()
   readonly description: string;

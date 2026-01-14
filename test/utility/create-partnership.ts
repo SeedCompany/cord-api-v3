@@ -14,12 +14,12 @@ export async function createPartnership(
   }: Partial<InputOf<typeof CreatePartnershipDoc>> & { changeset?: ID } = {},
 ) {
   const partnership = {
-    projectId: input.projectId || (await createProject(app)).id,
+    project: input.project || (await createProject(app)).id,
     agreementStatus: 'AwaitingSignature',
     mouStatus: 'AwaitingSignature',
     types: ['Managing'],
     financialReportingType: 'Funded',
-    partnerId: input.partnerId || (await createPartner(app)).id,
+    partner: input.partner || (await createPartner(app)).id,
     mouStartOverride: CalendarDate.local().toISO(),
     mouEndOverride: CalendarDate.local().toISO(),
     ...input,

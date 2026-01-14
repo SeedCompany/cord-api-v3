@@ -117,7 +117,7 @@ export class ProgressReportMediaRepository extends DtoRepository(ReportMedia) {
     const newVariantGroupId = await generateId();
     const query = this.db
       .query()
-      .matchNode('report', 'ProgressReport', { id: input.reportId })
+      .matchNode('report', 'ProgressReport', { id: input.report })
       .apply((q) => {
         // Create a new variant group if one isn't provided
         if (!input.variantGroup) {

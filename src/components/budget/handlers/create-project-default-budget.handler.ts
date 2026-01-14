@@ -7,6 +7,6 @@ export class CreateProjectDefaultBudgetHandler implements IEventHandler<ProjectC
   constructor(private readonly budgets: BudgetService) {}
 
   async handle({ project }: ProjectCreatedEvent) {
-    await this.budgets.create({ projectId: project.id });
+    await this.budgets.create({ project: project.id });
   }
 }

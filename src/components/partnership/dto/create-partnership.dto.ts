@@ -13,10 +13,10 @@ import { Partnership } from './partnership.dto';
 @InputType()
 export class CreatePartnership {
   @IdField()
-  readonly partnerId: ID;
+  readonly partner: ID<'Partner'>;
 
   @IdField()
-  readonly projectId: ID;
+  readonly project: ID<'Project'>;
 
   @Field(() => PartnershipAgreementStatus, { nullable: true })
   readonly agreementStatus?: PartnershipAgreementStatus;

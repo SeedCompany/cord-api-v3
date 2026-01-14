@@ -99,11 +99,11 @@ describe('Project e2e', () => {
     [location, fieldRegion] = await runAsAdmin(app, async () => {
       const fundingAccount = await createFundingAccount(app);
       const location = await createLocation(app, {
-        fundingAccountId: fundingAccount.id,
+        fundingAccount: fundingAccount.id,
       });
       const fieldRegion = await createRegion(app);
 
-      await createZone(app, { directorId: director.id });
+      await createZone(app, { director: director.id });
 
       return [location, fieldRegion];
     });
@@ -117,9 +117,9 @@ describe('Project e2e', () => {
 
   it('should have unique name', async () => {
     const name = faker.lorem.word() + ' testProject';
-    await createProject(app, { name, fieldRegionId: fieldRegion.id });
+    await createProject(app, { name, fieldRegion: fieldRegion.id });
     await expect(
-      createProject(app, { name, fieldRegionId: fieldRegion.id }),
+      createProject(app, { name, fieldRegion: fieldRegion.id }),
     ).rejects.toThrowGqlError(
       errors.duplicate({
         message: 'Project with this name already exists',
@@ -129,7 +129,7 @@ describe('Project e2e', () => {
   });
 
   it('create & read project by id', async () => {
-    const project = await createProject(app, { fieldRegionId: fieldRegion.id });
+    const project = await createProject(app, { fieldRegion: fieldRegion.id });
 
     const result = await app.graphql.query(
       graphql(
@@ -192,12 +192,12 @@ describe('Project e2e', () => {
       createProject(app, {
         name: faker.string.uuid(),
         type: ProjectType.MomentumTranslation,
-        fieldRegionId: uuid() as ID,
+        fieldRegion: uuid() as ID,
       }),
     ).rejects.toThrowGqlError(
       errors.notFound({
         message: 'Field region not found',
-        field: 'project.fieldRegionId',
+        field: 'project.fieldRegion',
       }),
     );
   });
@@ -234,7 +234,7 @@ describe('Project e2e', () => {
           project: {
             name: faker.string.uuid(),
             type: ProjectType.MomentumTranslation,
-            fieldRegionId: fieldRegion.id,
+            fieldRegion: fieldRegion.id,
           },
         },
       },
@@ -280,7 +280,7 @@ describe('Project e2e', () => {
   });
 
   it('update project', async () => {
-    const project = await createProject(app, { fieldRegionId: fieldRegion.id });
+    const project = await createProject(app, { fieldRegion: fieldRegion.id });
     const namenew = faker.lorem.word() + ' Project';
 
     const result = await app.graphql.query(
@@ -307,7 +307,7 @@ describe('Project e2e', () => {
   });
 
   it('delete project', async () => {
-    const project = await createProject(app, { fieldRegionId: fieldRegion.id });
+    const project = await createProject(app, { fieldRegion: fieldRegion.id });
     expect(project.id).toBeTruthy();
 
     // Only for admins, but we'll just run it as one to test functionality.
@@ -359,7 +359,7 @@ describe('Project e2e', () => {
         return await createProject(app, {
           name,
           type: ProjectType.MomentumTranslation,
-          fieldRegionId: fieldRegion.id,
+          fieldRegion: fieldRegion.id,
         });
       }),
     );
@@ -394,7 +394,7 @@ describe('Project e2e', () => {
         async () =>
           await createProject(app, {
             type,
-            fieldRegionId: fieldRegion.id,
+            fieldRegion: fieldRegion.id,
           }),
       ),
     );
@@ -427,30 +427,30 @@ describe('Project e2e', () => {
       name: 'High Sensitivity Proj ' + (await generateId()),
       type: ProjectType.Internship,
       sensitivity: Sensitivity.High,
-      fieldRegionId: fieldRegion.id,
+      fieldRegion: fieldRegion.id,
     });
 
     await createProject(app, {
       name: 'Low Sensitivity Proj ' + (await generateId()),
       type: ProjectType.Internship,
       sensitivity: Sensitivity.Low,
-      fieldRegionId: fieldRegion.id,
+      fieldRegion: fieldRegion.id,
     });
 
     await createProject(app, {
       name: 'Med Sensitivity Proj ' + (await generateId()),
       type: ProjectType.Internship,
       sensitivity: Sensitivity.Medium,
-      fieldRegionId: fieldRegion.id,
+      fieldRegion: fieldRegion.id,
     });
 
     // Create two translation projects, one without language engagements and
     // one with 1 med and 1 low sensitivity eng translation project without engagements
-    await createProject(app, { fieldRegionId: fieldRegion.id });
+    await createProject(app, { fieldRegion: fieldRegion.id });
 
     //with engagements, low and med sensitivity, project should eval to med
     const translationProjectWithEngagements = await createProject(app, {
-      fieldRegionId: fieldRegion.id,
+      fieldRegion: fieldRegion.id,
     });
 
     const [medSensitivityLanguage, lowSensitivityLanguage] = await runAsAdmin(
@@ -462,13 +462,13 @@ describe('Project e2e', () => {
     );
 
     await createLanguageEngagement(app, {
-      projectId: translationProjectWithEngagements.id,
-      languageId: lowSensitivityLanguage.id,
+      project: translationProjectWithEngagements.id,
+      language: lowSensitivityLanguage.id,
     });
 
     await createLanguageEngagement(app, {
-      projectId: translationProjectWithEngagements.id,
-      languageId: medSensitivityLanguage.id,
+      project: translationProjectWithEngagements.id,
+      language: medSensitivityLanguage.id,
     });
 
     const getSensitivitySortedProjects = async (order: 'ASC' | 'DESC') =>
@@ -532,7 +532,7 @@ describe('Project e2e', () => {
         async () =>
           await createProject(app, {
             type,
-            fieldRegionId: fieldRegion.id,
+            fieldRegion: fieldRegion.id,
           }),
       ),
     );
@@ -565,11 +565,11 @@ describe('Project e2e', () => {
         async () =>
           await createProject(app, {
             type,
-            fieldRegionId: fieldRegion.id,
+            fieldRegion: fieldRegion.id,
           }),
       ),
     );
-    const project = await createProject(app, { fieldRegionId: fieldRegion.id });
+    const project = await createProject(app, { fieldRegion: fieldRegion.id });
     await createPin(app, project.id, true);
 
     // filter pinned projects
@@ -626,7 +626,7 @@ describe('Project e2e', () => {
           await createProject(app, {
             type,
             presetInventory: true,
-            fieldRegionId: fieldRegion.id,
+            fieldRegion: fieldRegion.id,
           }),
       ),
     );
@@ -654,13 +654,13 @@ describe('Project e2e', () => {
   it('Project engagement and sensitivity connected to language engagements', async () => {
     // create 1 engagements in a project
     const numEngagements = 1;
-    const project = await createProject(app, { fieldRegionId: fieldRegion.id });
+    const project = await createProject(app, { fieldRegion: fieldRegion.id });
     const language = await runAsAdmin(app, async () => {
       return await createLanguage(app, { sensitivity: Sensitivity.Medium });
     });
     await createLanguageEngagement(app, {
-      projectId: project.id,
-      languageId: language.id,
+      project: project.id,
+      language: language.id,
     });
 
     const queryProject = await app.graphql.query(
@@ -699,14 +699,14 @@ describe('Project e2e', () => {
 
     const project = await createProject(app, {
       type,
-      fieldRegionId: fieldRegion.id,
+      fieldRegion: fieldRegion.id,
     });
 
     await createInternshipEngagement(app, {
-      mentorId: mentor.id,
-      projectId: project.id,
-      internId: intern.id,
-      countryOfOriginId: location.id,
+      mentor: mentor.id,
+      project: project.id,
+      intern: intern.id,
+      countryOfOrigin: location.id,
     });
     const queryProject = await app.graphql.query(
       graphql(
@@ -738,16 +738,15 @@ describe('Project e2e', () => {
   it('List view of project members by projectId', async () => {
     //create 2 Project member
     const numProjectMembers = 2;
-    const project = await createProject(app, { fieldRegionId: fieldRegion.id });
-    const projectId = project.id;
+    const project = await createProject(app, { fieldRegion: fieldRegion.id });
 
     await runAsAdmin(app, async () => {
       await Promise.all(
         times(numProjectMembers, async () => {
           const user = await createPerson(app, { roles: [Role.Consultant] });
           await createProjectMember(app, {
-            userId: user.id,
-            projectId,
+            user: user.id,
+            project: project.id,
             roles: [Role.Consultant],
           });
         }),
@@ -788,13 +787,13 @@ describe('Project e2e', () => {
     const type = ProjectType.MomentumTranslation;
     const project = await createProject(app, {
       type,
-      fieldRegionId: fieldRegion.id,
+      fieldRegion: fieldRegion.id,
     });
 
     await Promise.all(
       times(numPartnerships).map(() =>
         createPartnership(app, {
-          projectId: project.id,
+          project: project.id,
         }),
       ),
     );
@@ -832,11 +831,11 @@ describe('Project e2e', () => {
     await runAsAdmin(app, async () => {
       const fundingAccount = await createFundingAccount(app);
       const location = await createLocation(app, {
-        fundingAccountId: fundingAccount.id,
+        fundingAccount: fundingAccount.id,
       });
       const project = await createProject(app, {
-        primaryLocationId: location.id,
-        fieldRegionId: fieldRegion.id,
+        primaryLocation: location.id,
+        fieldRegion: fieldRegion.id,
       });
 
       const {
@@ -900,7 +899,7 @@ describe('Project e2e', () => {
           project: {
             name: faker.string.uuid(),
             type: ProjectType.MomentumTranslation,
-            fieldRegionId: fieldRegion.id,
+            fieldRegion: fieldRegion.id,
           },
         },
       },
@@ -929,7 +928,7 @@ describe('Project e2e', () => {
             type: 'MomentumTranslation',
             mouEnd: '1992-11-01',
             estimatedSubmission: '1993-11-01',
-            fieldRegionId: fieldRegion.id,
+            fieldRegion: fieldRegion.id,
           },
         },
       },
@@ -948,7 +947,7 @@ describe('Project e2e', () => {
       name: faker.string.uuid() + ' project',
       mouStart: undefined,
       mouEnd: undefined,
-      fieldRegionId: fieldRegion.id,
+      fieldRegion: fieldRegion.id,
     });
 
     // Create Partnership with Funding type
@@ -968,9 +967,8 @@ describe('Project e2e', () => {
       {
         input: {
           partnership: {
-            projectId: proj.id,
-            partnerId: (await createPartner(app, { organizationId: org.id }))
-              .id,
+            project: proj.id,
+            partner: (await createPartner(app, { organization: org.id })).id,
             types: ['Funding'],
           },
         },
@@ -1022,7 +1020,7 @@ describe('Project e2e', () => {
     const org = await createOrganization(app);
     const project = await createProject(app, {
       name: faker.string.uuid() + ' project',
-      fieldRegionId: fieldRegion.id,
+      fieldRegion: fieldRegion.id,
     });
     await app.graphql.mutate(
       graphql(
@@ -1040,9 +1038,8 @@ describe('Project e2e', () => {
       {
         input: {
           partnership: {
-            projectId: project.id,
-            partnerId: (await createPartner(app, { organizationId: org.id }))
-              .id,
+            project: project.id,
+            partner: (await createPartner(app, { organization: org.id })).id,
             types: [PartnerType.Funding],
           },
         },
@@ -1084,14 +1081,14 @@ describe('Project e2e', () => {
     await runAsAdmin(app, async () => {
       const fundingAccount = await createFundingAccount(app);
       const location = await createLocation(app, {
-        fundingAccountId: fundingAccount.id,
+        fundingAccount: fundingAccount.id,
       });
 
       const createAndUpdateProject = async (name: string) => {
         const project = await createProject(app, {
           name,
-          primaryLocationId: location.id,
-          fieldRegionId: fieldRegion.id,
+          primaryLocation: location.id,
+          fieldRegion: fieldRegion.id,
         });
         const result = await app.graphql.mutate(
           graphql(`

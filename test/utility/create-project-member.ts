@@ -8,11 +8,11 @@ export async function createProjectMember(
   app: TestApp,
   input: Partial<InputOf<typeof CreateProjectMemberDoc>> = {},
 ) {
-  const userId = input.userId || (await getUserFromSession(app)).id;
+  const user = input.user || (await getUserFromSession(app)).id;
   const result = await app.graphql.mutate(CreateProjectMemberDoc, {
     input: {
-      userId,
-      projectId: input.projectId ?? (await createProject(app)).id,
+      user,
+      project: input.project ?? (await createProject(app)).id,
       ...input,
     },
   });

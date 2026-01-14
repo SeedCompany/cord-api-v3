@@ -27,12 +27,12 @@ describe('Unavailability e2e', () => {
   });
 
   it('create a unavailability', async () => {
-    const unavailability = await createUnavailability(app, { userId: user.id });
+    const unavailability = await createUnavailability(app, { user: user.id });
     expect(unavailability.id).toBeDefined();
   });
 
   it('read one unavailability by id', async () => {
-    const unavailability = await createUnavailability(app, { userId: user.id });
+    const unavailability = await createUnavailability(app, { user: user.id });
 
     const { unavailability: actual } = await app.graphql.query(
       graphql(
@@ -57,7 +57,7 @@ describe('Unavailability e2e', () => {
 
   // UPDATE UNAVAILABILITY
   it('update unavailability', async () => {
-    const unavailability = await createUnavailability(app, { userId: user.id });
+    const unavailability = await createUnavailability(app, { user: user.id });
     const newDesc = faker.company.name();
 
     const result = await app.graphql.mutate(
@@ -90,7 +90,7 @@ describe('Unavailability e2e', () => {
 
   // DELETE UNAVAILABILITY
   it.skip('delete unavailability', async () => {
-    const unavailability = await createUnavailability(app, { userId: user.id });
+    const unavailability = await createUnavailability(app, { user: user.id });
 
     const result = await app.graphql.mutate(
       graphql(`
@@ -112,9 +112,7 @@ describe('Unavailability e2e', () => {
     // create 2 unavailabilities
     const numUnavail = 2;
     await Promise.all(
-      times(numUnavail).map(() =>
-        createUnavailability(app, { userId: user.id }),
-      ),
+      times(numUnavail).map(() => createUnavailability(app, { user: user.id })),
     );
 
     const result = await app.graphql.query(

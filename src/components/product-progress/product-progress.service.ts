@@ -129,7 +129,7 @@ export class ProductProgressService {
   }
 
   async update(input: ProductProgressInput) {
-    const scope = await this.repo.getScope(input.productId);
+    const scope = await this.repo.getScope(input.product);
     const privileges = this.privilegesFor(withVariant(scope, input.variant));
     if (!privileges.can('read') || !privileges.can('edit', 'completed')) {
       throw new UnauthorizedException(
@@ -139,7 +139,7 @@ export class ProductProgressService {
 
     const errors = input.steps.flatMap((step, index) => {
       if (!scope.steps.includes(step.step)) {
-        return new StepNotPlannedException(input.productId, step.step, index);
+        return new StepNotPlannedException(input.product, step.step, index);
       }
       if (step.completed && step.completed > scope.progressTarget) {
         return new InputException(

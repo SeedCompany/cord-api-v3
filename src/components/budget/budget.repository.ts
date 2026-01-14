@@ -55,7 +55,7 @@ export class BudgetRepository extends DtoRepository<
       .apply(await createNode(Budget, { initialProps }))
       .apply(
         createRelationships(Budget, 'in', {
-          budget: ['Project', input.projectId],
+          budget: ['Project', input.project],
         }),
       )
       .return<{ id: ID }>('node.id as id')

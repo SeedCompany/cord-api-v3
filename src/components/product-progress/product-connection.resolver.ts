@@ -26,7 +26,7 @@ export class ProductConnectionResolver {
     description: 'The progress of this product from a specific report',
   })
   async progressReport(
-    @IdArg({ name: 'reportId' }) reportId: ID,
+    @IdArg({ name: 'report' }) reportId: ID,
     @Parent() product: Product,
     @Args() { variant }: VariantProgressArg,
   ): Promise<ProductProgress> {

@@ -25,7 +25,7 @@ export abstract class MoveFileInput {
   @IdField({
     description: 'The new parent ID',
   })
-  readonly parentId: ID;
+  readonly parent: ID<'Directory'>;
 
   @Field({
     description: stripIndent`

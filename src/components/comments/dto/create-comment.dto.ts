@@ -5,10 +5,10 @@ import { Comment } from './comment.dto';
 @InputType()
 export abstract class CreateCommentInput {
   @IdField({ nullable: true })
-  readonly threadId?: ID;
+  readonly thread?: ID<'CommentThread'>;
 
   @IdField()
-  readonly resourceId: ID;
+  readonly resource: ID;
 
   @RichTextField()
   readonly body: RichTextDocument;

@@ -37,8 +37,8 @@ describe('Region e2e', () => {
 
   it('create a field region', async () => {
     const region = await createRegion(app, {
-      directorId: director.id,
-      fieldZoneId: fieldZone.id,
+      director: director.id,
+      fieldZone: fieldZone.id,
     });
     expect(region.id).toBeDefined();
   });
@@ -47,23 +47,23 @@ describe('Region e2e', () => {
     // Old test.  Attempt to create a region with a name that is taken will return the existing region
     const name = faker.location.country() + ' Region';
     await createRegion(app, {
-      directorId: director.id,
+      director: director.id,
       name,
-      fieldZoneId: fieldZone.id,
+      fieldZone: fieldZone.id,
     });
     await expect(
       createRegion(app, {
-        directorId: director.id,
+        director: director.id,
         name,
-        fieldZoneId: fieldZone.id,
+        fieldZone: fieldZone.id,
       }),
     ).rejects.toThrowGqlError();
   });
 
   it('read one field region by id', async () => {
     const fieldRegion = await createRegion(app, {
-      directorId: director.id,
-      fieldZoneId: fieldZone.id,
+      director: director.id,
+      fieldZone: fieldZone.id,
     });
 
     const { fieldRegion: actual } = await app.graphql.query(
@@ -104,8 +104,8 @@ describe('Region e2e', () => {
 
   it('update field region', async () => {
     const fieldRegion = await createRegion(app, {
-      directorId: director.id,
-      fieldZoneId: fieldZone.id,
+      director: director.id,
+      fieldZone: fieldZone.id,
     });
 
     const newName = faker.company.name();
@@ -155,11 +155,11 @@ describe('Region e2e', () => {
   // This test should be updated with refactoring of location service for zone
   it.skip('update field region`s zone', async () => {
     const fieldRegion = await createRegion(app, {
-      directorId: director.id,
+      director: director.id,
     });
 
     const newZone = await createZone(app, {
-      directorId: director.id,
+      director: director.id,
     });
 
     const result = await app.graphql.mutate(
@@ -184,7 +184,7 @@ describe('Region e2e', () => {
         input: {
           fieldRegion: {
             id: fieldRegion.id,
-            fieldZoneId: newZone.id,
+            fieldZone: newZone.id,
           },
         },
       },
@@ -198,7 +198,7 @@ describe('Region e2e', () => {
 
   // This test should be updated with refactoring of location service for zone
   it.skip('update region`s director', async () => {
-    const fieldRegion = await createRegion(app, { directorId: director.id });
+    const fieldRegion = await createRegion(app, { director: director.id });
 
     const newDirector = await createPerson(app, {
       roles: [Role.FieldOperationsDirector, Role.ProjectManager],
@@ -226,7 +226,7 @@ describe('Region e2e', () => {
         input: {
           fieldRegion: {
             id: fieldRegion.id,
-            directorId: newDirector.id,
+            director: newDirector.id,
           },
         },
       },
@@ -240,8 +240,8 @@ describe('Region e2e', () => {
 
   it.skip('delete region', async () => {
     const fieldRegion = await createRegion(app, {
-      directorId: director.id,
-      fieldZoneId: fieldZone.id,
+      director: director.id,
+      fieldZone: fieldZone.id,
     });
 
     const result = await app.graphql.mutate(
@@ -266,8 +266,8 @@ describe('Region e2e', () => {
       ['Western Mainlandia', 'Eastern Mainlandia'].map((regionName) =>
         createRegion(app, {
           name: regionName,
-          directorId: director.id,
-          fieldZoneId: fieldZone.id,
+          director: director.id,
+          fieldZone: fieldZone.id,
         }),
       ),
     );

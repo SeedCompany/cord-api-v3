@@ -114,7 +114,7 @@ export class ProgressReportWorkflowRepository extends DtoRepository(
       .return<{ status?: Status }>('status.value as status')
       .first();
     if (!res) {
-      throw new NotFoundException('Could not find report', 'reportId');
+      throw new NotFoundException('Could not find report', 'report');
     }
     if (!res.status) {
       throw new NotFoundException('Could not find report status');

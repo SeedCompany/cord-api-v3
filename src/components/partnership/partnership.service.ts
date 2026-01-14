@@ -58,25 +58,23 @@ export class PartnershipService {
   ) {}
 
   async create(input: CreatePartnership, changeset?: ID): Promise<Partnership> {
-    const { projectId, partnerId } = input;
-
     PartnershipDateRangeException.throwIfInvalid(input);
 
     const [_project, partner] = await Promise.all([
-      this.resourceLoader.load('Project', projectId).catch((e) => {
+      this.resourceLoader.load('Project', input.project).catch((e) => {
         throw e instanceof NotFoundException
           ? new NotFoundException(
               'Could not find project',
-              'partnership.projectId',
+              'partnership.project',
               e,
             )
           : e;
       }),
-      this.resourceLoader.load('Partner', partnerId).catch((e) => {
+      this.resourceLoader.load('Partner', input.partner).catch((e) => {
         throw e instanceof NotFoundException
           ? new NotFoundException(
               'Could not find partner',
-              'partnership.partnerId',
+              'partnership.partner',
               e,
             )
           : e;
@@ -84,7 +82,7 @@ export class PartnershipService {
     ]);
 
     const isFirstPartnership = await this.repo.isFirstPartnership(
-      projectId,
+      input.project,
       changeset,
     );
     const primary = isFirstPartnership ? true : input.primary;

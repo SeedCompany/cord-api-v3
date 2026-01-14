@@ -50,10 +50,10 @@ import { LanguageService } from './language.service';
 @ArgsType()
 class ModifyLocationArgs {
   @IdField()
-  languageId: ID;
+  language: ID<'Language'>;
 
   @IdField()
-  locationId: ID;
+  location: ID<'Location'>;
 }
 
 @Resolver(Language)
@@ -211,19 +211,19 @@ export class LanguageResolver {
     description: 'Add a location to a language',
   })
   async addLocationToLanguage(
-    @Args() { languageId, locationId }: ModifyLocationArgs,
+    @Args() { language, location }: ModifyLocationArgs,
   ): Promise<Language> {
-    await this.langService.addLocation(languageId, locationId);
-    return await this.langService.readOne(languageId);
+    await this.langService.addLocation(language, location);
+    return await this.langService.readOne(language);
   }
 
   @Mutation(() => Language, {
     description: 'Remove a location from a language',
   })
   async removeLocationFromLanguage(
-    @Args() { languageId, locationId }: ModifyLocationArgs,
+    @Args() { language, location }: ModifyLocationArgs,
   ): Promise<Language> {
-    await this.langService.removeLocation(languageId, locationId);
-    return await this.langService.readOne(languageId);
+    await this.langService.removeLocation(language, location);
+    return await this.langService.readOne(language);
   }
 }

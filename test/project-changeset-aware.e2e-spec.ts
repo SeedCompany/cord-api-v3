@@ -54,7 +54,7 @@ const activeProject = async (app: TestApp) => {
   const [location, fieldRegion] = await runAsAdmin(app, async () => {
     const fundingAccount = await createFundingAccount(app);
     const location = await createLocation(app, {
-      fundingAccountId: fundingAccount.id,
+      fundingAccount: fundingAccount.id,
     });
     const fieldRegion = await createRegion(app);
 
@@ -63,8 +63,8 @@ const activeProject = async (app: TestApp) => {
   const project = await createProject(app, {
     mouStart: CalendarDate.local(2020).toISO(),
     mouEnd: CalendarDate.local(2021).toISO(),
-    primaryLocationId: location.id,
-    fieldRegionId: fieldRegion.id,
+    primaryLocation: location.id,
+    fieldRegion: fieldRegion.id,
   });
 
   await runAsAdmin(app, async () => {
@@ -98,7 +98,7 @@ describe('Project Changeset Aware e2e', () => {
   it('name', async () => {
     const project = await activeProject(app);
     const changeset = await createProjectChangeRequest(app, {
-      projectId: project.id,
+      project: project.id,
     });
 
     // Update project with changeset
@@ -146,7 +146,7 @@ describe('Project Changeset Aware e2e', () => {
   it('mouStart and mouEnd', async () => {
     const project = await activeProject(app);
     const changeset = await createProjectChangeRequest(app, {
-      projectId: project.id,
+      project: project.id,
     });
 
     // Update project with changeset
@@ -200,12 +200,12 @@ describe('Project Changeset Aware e2e', () => {
   it('budget records', async () => {
     const project = await activeProject(app);
     const changeset = await createProjectChangeRequest(app, {
-      projectId: project.id,
+      project: project.id,
     });
 
     // Create Partnership with Funding type, which will add budget records
     await createPartnership(app, {
-      projectId: project.id,
+      project: project.id,
       changeset: changeset.id,
       types: [PartnerType.Funding],
       financialReportingType: undefined,
@@ -265,7 +265,7 @@ describe('Project Changeset Aware e2e', () => {
   it.skip('project step', async () => {
     const project = await activeProject(app);
     const changeset = await createProjectChangeRequest(app, {
-      projectId: project.id,
+      project: project.id,
     });
 
     // Update project step with changeset
