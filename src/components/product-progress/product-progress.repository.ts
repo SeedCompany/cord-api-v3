@@ -361,9 +361,10 @@ export class ProductProgressRepository {
             relation('out', '', 'progressTarget', ACTIVE),
             node('progressTarget', 'Property'),
           ])
-          .return<{ progressTarget: number; steps: ProductStep[] }>(
-            'progressTarget.value as progressTarget, steps.value as steps',
-          ),
+          .return<{
+            progressTarget: number;
+            steps: ProductStep[];
+          }>('progressTarget.value as progressTarget, steps.value as steps'),
       )
       .return(['sensitivity', 'scope', 'progressTarget', 'steps']);
     const result = await query.first();

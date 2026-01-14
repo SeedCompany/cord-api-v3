@@ -137,8 +137,8 @@ export class Sheet {
     const { s, e } = a1end
       ? { s: a1start as Cell | string, e: a1end }
       : typeof a1start === 'object'
-      ? (a1start as LibRange)
-      : utils.decode_range(a1start);
+        ? (a1start as LibRange)
+        : utils.decode_range(a1start);
     return new Range(
       this,
       s instanceof Cell ? s : this.cell(s),

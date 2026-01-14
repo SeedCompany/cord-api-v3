@@ -20,9 +20,9 @@ export interface HasCreator {
   creator: MaybeSecuredProp<ID | LinkTo<'User'>>;
 }
 
-class CreatorCondition<TResourceStatic extends ResourceShape<HasCreator>>
-  implements Condition<TResourceStatic>
-{
+class CreatorCondition<
+  TResourceStatic extends ResourceShape<HasCreator>,
+> implements Condition<TResourceStatic> {
   isAllowed({ object, session }: IsAllowedParams<TResourceStatic>) {
     if (!object) {
       throw new MissingContextException();

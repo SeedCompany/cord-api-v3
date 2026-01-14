@@ -4,9 +4,10 @@ import { ProgressReportWorkflowEvent as WorkflowEvent } from './dto/workflow-eve
 import { ProgressReportWorkflowService } from './progress-report-workflow.service';
 
 @LoaderFactory(() => WorkflowEvent)
-export class ProgressReportWorkflowEventLoader
-  implements DataLoaderStrategy<WorkflowEvent, ID<WorkflowEvent>>
-{
+export class ProgressReportWorkflowEventLoader implements DataLoaderStrategy<
+  WorkflowEvent,
+  ID<WorkflowEvent>
+> {
   constructor(private readonly service: ProgressReportWorkflowService) {}
 
   async loadMany(ids: ReadonlyArray<ID<WorkflowEvent>>) {

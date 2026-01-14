@@ -8,9 +8,10 @@ import { type AnyMedia } from './media.dto';
 import { MediaRepository } from './media.repository';
 
 @LoaderFactory()
-export class MediaByFileVersionLoader
-  implements DataLoaderStrategy<AnyMedia, ID>
-{
+export class MediaByFileVersionLoader implements DataLoaderStrategy<
+  AnyMedia,
+  ID
+> {
   constructor(private readonly repo: MediaRepository) {}
 
   getOptions(): DataLoaderOptions<AnyMedia, ID> {

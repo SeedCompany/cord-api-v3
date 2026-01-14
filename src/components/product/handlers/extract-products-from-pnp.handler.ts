@@ -12,9 +12,7 @@ import { PnpProductSyncService } from '../pnp-product-sync.service';
 type SubscribedEvent = EngagementCreatedEvent | EngagementUpdatedEvent;
 
 @EventsHandler(EngagementCreatedEvent, EngagementUpdatedEvent)
-export class ExtractProductsFromPnpHandler
-  implements IEventHandler<SubscribedEvent>
-{
+export class ExtractProductsFromPnpHandler implements IEventHandler<SubscribedEvent> {
   constructor(
     private readonly syncer: PnpProductSyncService,
     private readonly files: FileService,

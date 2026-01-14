@@ -9,9 +9,7 @@ import { type Session } from './session/session.dto';
 
 @Injectable()
 @DbTraceLayer.applyToClass()
-export class AuthenticationGelRepository
-  implements PublicOf<AuthenticationRepository>
-{
+export class AuthenticationGelRepository implements PublicOf<AuthenticationRepository> {
   private readonly db: Gel;
   constructor(db: Gel) {
     this.db = db.withOptions(disableAccessPolicies);

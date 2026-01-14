@@ -166,8 +166,8 @@ export class ProductResolver {
     return product.title
       ? 'Other'
       : !product.produces
-      ? 'Scripture'
-      : startCase(product.produces.value?.__typename) || null;
+        ? 'Scripture'
+        : startCase(product.produces.value?.__typename) || null;
   }
 
   @Query(() => [Step], {

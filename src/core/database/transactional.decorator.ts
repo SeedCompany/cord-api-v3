@@ -32,7 +32,7 @@ export function Transactional(options?: TransactionOptions) {
     const clsName: string = target.constructor.name;
     const methodDescription =
       typeof methodName === 'symbol'
-        ? methodName.description ?? 'symbol'
+        ? (methodName.description ?? 'symbol')
         : methodName;
     const initiator = `${clsName}.${methodDescription}`;
 

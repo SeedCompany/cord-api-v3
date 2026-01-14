@@ -75,11 +75,12 @@ export interface SetUnsecuredType<Value> {
   __unsecured_type__?: Value;
 }
 
-export type UnwrapSecured<T> = T extends SetUnsecuredType<infer Override>
-  ? Override
-  : T extends Secured<infer P>
-  ? P
-  : T;
+export type UnwrapSecured<T> =
+  T extends SetUnsecuredType<infer Override>
+    ? Override
+    : T extends Secured<infer P>
+      ? P
+      : T;
 
 export const isSecured = <T>(value: T | Secured<T>): value is Secured<T> =>
   isObject(value) && 'canRead' in value && 'canEdit' in value;

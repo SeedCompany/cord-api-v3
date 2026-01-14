@@ -16,9 +16,11 @@ export interface UsagesByContainer {
 }
 
 @LoaderFactory()
-export class ToolUsageByContainerLoader
-  implements DataLoaderStrategy<UsagesByContainer, Resource, ID>
-{
+export class ToolUsageByContainerLoader implements DataLoaderStrategy<
+  UsagesByContainer,
+  Resource,
+  ID
+> {
   constructor(private readonly usages: ToolUsageService) {}
 
   getOptions() {

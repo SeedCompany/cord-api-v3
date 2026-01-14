@@ -4,9 +4,10 @@ import { ToolUsage } from './dto';
 import { ToolUsageService } from './tool-usage.service';
 
 @LoaderFactory(() => ToolUsage)
-export class ToolUsageLoader
-  implements DataLoaderStrategy<ToolUsage, ID<ToolUsage>>
-{
+export class ToolUsageLoader implements DataLoaderStrategy<
+  ToolUsage,
+  ID<ToolUsage>
+> {
   constructor(private readonly usages: ToolUsageService) {}
 
   async loadMany(ids: ReadonlyArray<ID<ToolUsage>>) {

@@ -84,9 +84,9 @@ interface TransitionCheck<W extends Workflow> {
   endState?: W['state'];
 }
 
-export class TransitionCondition<W extends Workflow>
-  implements Condition<W['eventResource']>
-{
+export class TransitionCondition<W extends Workflow> implements Condition<
+  W['eventResource']
+> {
   readonly allowedTransitionKeys;
 
   protected constructor(

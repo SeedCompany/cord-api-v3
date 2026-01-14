@@ -108,8 +108,8 @@ export async function generateInlineQueries({
       type: types
         ? `TypedEdgeQL<${types.args}, ${types.result}>`
         : error
-        ? `{ ${error.name}: \`${error.message.trim()}\` }`
-        : 'unknown',
+          ? `{ ${error.name}: \`${error.message.trim()}\` }`
+          : 'unknown',
       leadingTrivia:
         (queryMapType.getProperties().length > 0 ? '\n' : '') +
         `/** {@link import('${path}')} L${lineNumber} */\n`,

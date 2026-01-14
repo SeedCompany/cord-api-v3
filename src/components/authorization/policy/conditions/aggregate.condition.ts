@@ -19,8 +19,7 @@ import type {
 
 export abstract class AggregateConditions<
   TResourceStatic extends ResourceShape<any> = ResourceShape<any>,
-> implements Condition<TResourceStatic>
-{
+> implements Condition<TResourceStatic> {
   protected constructor(
     readonly conditions: Array<Condition<TResourceStatic>>,
   ) {}

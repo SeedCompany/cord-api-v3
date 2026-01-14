@@ -4,9 +4,10 @@ import { FieldZone } from './dto';
 import { FieldZoneService } from './field-zone.service';
 
 @LoaderFactory(() => FieldZone)
-export class FieldZoneLoader
-  implements DataLoaderStrategy<FieldZone, ID<FieldZone>>
-{
+export class FieldZoneLoader implements DataLoaderStrategy<
+  FieldZone,
+  ID<FieldZone>
+> {
   constructor(private readonly fieldZones: FieldZoneService) {}
 
   async loadMany(ids: ReadonlyArray<ID<FieldZone>>) {

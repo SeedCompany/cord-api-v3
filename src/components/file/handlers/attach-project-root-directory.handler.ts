@@ -3,9 +3,7 @@ import { ProjectCreatedEvent } from '../../project/events';
 import { FileService } from '../file.service';
 
 @EventsHandler(ProjectCreatedEvent)
-export class AttachProjectRootDirectoryHandler
-  implements IEventHandler<ProjectCreatedEvent>
-{
+export class AttachProjectRootDirectoryHandler implements IEventHandler<ProjectCreatedEvent> {
   constructor(private readonly files: FileService) {}
 
   async handle(event: ProjectCreatedEvent) {

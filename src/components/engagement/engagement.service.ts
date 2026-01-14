@@ -344,7 +344,10 @@ class EngagementDateRangeException extends RangeException {
     }
   }
 
-  constructor(readonly value: Range<CalendarDate>, readonly field: string) {
+  constructor(
+    readonly value: Range<CalendarDate>,
+    readonly field: string,
+  ) {
     const message = "Engagement's start date must be before the end date";
     super({ message, field });
   }

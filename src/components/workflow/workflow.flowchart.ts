@@ -67,10 +67,10 @@ export const WorkflowFlowchart = <W extends Workflow>(workflow: () => W) => {
             typeof t.to === 'string'
               ? `--> ${useState(t.to)}`
               : t.to.relatedStates
-              ? `-."${t.to.description}".-> ${t.to.relatedStates
-                  .map(useState)
-                  .join(' & ')}`
-              : `--> ${dynamicToId(t.to)}`;
+                ? `-."${t.to.description}".-> ${t.to.relatedStates
+                    .map(useState)
+                    .join(' & ')}`
+                : `--> ${dynamicToId(t.to)}`;
           const endHalf = `${endId}{{ ${t.label} }}:::${t.type} ${to}`;
 
           const conditions =

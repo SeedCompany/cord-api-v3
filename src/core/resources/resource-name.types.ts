@@ -29,23 +29,21 @@ export type ResourceNameLike = LiteralUnion<AllResourceNames, string>;
  * "foo"                -> never
  * Foo                  -> never
  */
-export type ResourceName<
-  T,
-  IncludeSubclasses extends boolean = false,
-> = IsAny<T> extends true
-  ? AllResourceAppNames // short-circuit and prevent many seemly random circular definitions
-  : T extends AllResourceDBNames
-  ? ResourceNameFromStatic<
-      ResourceMap[ResourceNameFromDBName<T>],
-      IncludeSubclasses
-    >
-  : T extends AllResourceAppNames
-  ? ResourceNameFromStatic<ResourceMap[T], IncludeSubclasses>
-  : T extends ResourceShape<any>
-  ? ResourceNameFromStatic<T, IncludeSubclasses>
-  : ResourceNameFromInstance<T> extends string
-  ? ResourceNameFromInstance<T, IncludeSubclasses> & string
-  : never;
+export type ResourceName<T, IncludeSubclasses extends boolean = false> =
+  IsAny<T> extends true
+    ? AllResourceAppNames // short-circuit and prevent many seemly random circular definitions
+    : T extends AllResourceDBNames
+      ? ResourceNameFromStatic<
+          ResourceMap[ResourceNameFromDBName<T>],
+          IncludeSubclasses
+        >
+      : T extends AllResourceAppNames
+        ? ResourceNameFromStatic<ResourceMap[T], IncludeSubclasses>
+        : T extends ResourceShape<any>
+          ? ResourceNameFromStatic<T, IncludeSubclasses>
+          : ResourceNameFromInstance<T> extends string
+            ? ResourceNameFromInstance<T, IncludeSubclasses> & string
+            : never;
 
 type ResourceNameFromInstance<
   TResource,
@@ -55,43 +53,45 @@ type ResourceNameFromInstance<
     ? IncludeSubclasses extends true
       ? Name
       : TResource extends ResourceMap[Name]['prototype'] // Exclude subclasses
-      ? Name
-      : never
+        ? Name
+        : never
     : never;
 }[keyof ResourceMap];
 
 type ResourceNameFromStatic<
   TResourceStatic extends ResourceShape<any>,
   IncludeSubclasses extends boolean = false,
-> = ResourceShape<any> extends TResourceStatic
-  ? string // short-circuit non-specific types
-  : InstanceType<TResourceStatic> extends infer TResource
-  ? {
-      [Name in keyof ResourceMap]: InstanceType<
-        ResourceMap[Name]
-      > extends infer Other
-        ? Other extends TResource // Only self or subclasses
-          ? IncludeSubclasses extends true
-            ? Name
-            : TResource extends Other // Exclude subclasses
-            ? Name
-            : never
-          : never
-        : never;
-    }[keyof ResourceMap]
-  : never;
+> =
+  ResourceShape<any> extends TResourceStatic
+    ? string // short-circuit non-specific types
+    : InstanceType<TResourceStatic> extends infer TResource
+      ? {
+          [Name in keyof ResourceMap]: InstanceType<
+            ResourceMap[Name]
+          > extends infer Other
+            ? Other extends TResource // Only self or subclasses
+              ? IncludeSubclasses extends true
+                ? Name
+                : TResource extends Other // Exclude subclasses
+                  ? Name
+                  : never
+              : never
+            : never;
+        }[keyof ResourceMap]
+      : never;
 
-type ResourceNameFromDBName<Name extends AllResourceDBNames> = ConditionalKeys<
-  ResourceDBMap,
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  { __element__: { __name__: Name } }
-> extends infer AppName extends AllResourceAppNames
-  ? AppName
-  : never;
+type ResourceNameFromDBName<Name extends AllResourceDBNames> =
+  ConditionalKeys<
+    ResourceDBMap,
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    { __element__: { __name__: Name } }
+  > extends infer AppName extends AllResourceAppNames
+    ? AppName
+    : never;
 //endregion
 
 export type ResourceStaticFromName<Name> = string extends Name
   ? ResourceShape<any>
   : Name extends keyof ResourceMap
-  ? ValueOf<Pick<ResourceMap, Name>>
-  : never;
+    ? ValueOf<Pick<ResourceMap, Name>>
+    : never;

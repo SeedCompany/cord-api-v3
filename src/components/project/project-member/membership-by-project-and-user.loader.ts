@@ -13,14 +13,11 @@ export interface MembershipByProjectAndUserInput {
 }
 
 @LoaderFactory()
-export class MembershipByProjectAndUserLoader
-  implements
-    DataLoaderStrategy<
-      { id: MembershipByProjectAndUserInput; membership: ProjectMember },
-      MembershipByProjectAndUserInput,
-      string
-    >
-{
+export class MembershipByProjectAndUserLoader implements DataLoaderStrategy<
+  { id: MembershipByProjectAndUserInput; membership: ProjectMember },
+  MembershipByProjectAndUserInput,
+  string
+> {
   constructor(private readonly service: ProjectMemberService) {}
 
   getOptions() {

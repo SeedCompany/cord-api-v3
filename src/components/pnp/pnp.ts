@@ -7,7 +7,10 @@ import { ProgressSheet } from './progress-sheet';
 const ParsedPnp = Symbol('Parsed PnP');
 
 export class Pnp {
-  constructor(protected workbook: WorkBook, protected fileName?: string) {}
+  constructor(
+    protected workbook: WorkBook,
+    protected fileName?: string,
+  ) {}
 
   /**
    * Create PnP from Downloadable.

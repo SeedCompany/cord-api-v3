@@ -19,9 +19,10 @@ import { ProductService } from './product.service';
   DerivativeScriptureProduct,
   OtherProduct,
 ])
-export class ProductLoader
-  implements DataLoaderStrategy<AnyProduct, ID<'Product'>>
-{
+export class ProductLoader implements DataLoaderStrategy<
+  AnyProduct,
+  ID<'Product'>
+> {
   constructor(private readonly products: ProductService) {}
 
   async loadMany(ids: ReadonlyArray<ID<'Product'>>) {

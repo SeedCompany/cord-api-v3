@@ -6,8 +6,8 @@ import { type ID, SecuredProperty } from '~/common';
     'engagement' in obj
       ? InternalFirstScripture
       : obj.hasFirst
-      ? ExternalFirstScripture
-      : NoFirstScripture,
+        ? ExternalFirstScripture
+        : NoFirstScripture,
 })
 export abstract class FirstScripture {
   @Field({

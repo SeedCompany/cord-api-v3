@@ -4,9 +4,10 @@ import { FundingAccount } from './dto';
 import { FundingAccountService } from './funding-account.service';
 
 @LoaderFactory(() => FundingAccount)
-export class FundingAccountLoader
-  implements DataLoaderStrategy<FundingAccount, ID<FundingAccount>>
-{
+export class FundingAccountLoader implements DataLoaderStrategy<
+  FundingAccount,
+  ID<FundingAccount>
+> {
   constructor(private readonly fundingAccounts: FundingAccountService) {}
 
   async loadMany(ids: ReadonlyArray<ID<FundingAccount>>) {

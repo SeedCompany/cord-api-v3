@@ -92,7 +92,7 @@ export class LanguageResolver {
       canEdit: false, // this is a computed field
       canRead,
       value: canRead
-        ? value ?? language.ethnologue.population.value
+        ? (value ?? language.ethnologue.population.value)
         : undefined,
     };
   }

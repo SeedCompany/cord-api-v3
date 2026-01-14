@@ -13,7 +13,10 @@ export class Position {
     return new Position(start, start + needle.length);
   }
 
-  constructor(readonly start: number, readonly end: number) {}
+  constructor(
+    readonly start: number,
+    readonly end: number,
+  ) {}
 
   shift(by: Pick<Position, 'start'>) {
     return new Position(this.start + by.start, this.end + by.start);

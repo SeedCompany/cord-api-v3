@@ -566,7 +566,10 @@ class ProjectDateRangeException extends RangeException {
     }
   }
 
-  constructor(readonly value: Range<CalendarDate>, readonly field: string) {
+  constructor(
+    readonly value: Range<CalendarDate>,
+    readonly field: string,
+  ) {
     const message = "Project's MOU start date must be before the MOU end date";
     super({ message, field });
   }

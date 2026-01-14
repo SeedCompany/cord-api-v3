@@ -134,7 +134,7 @@ export class ProductService {
 
     const type = otherInput
       ? ProducibleType.OtherProduct
-      : producibleType ?? ProducibleType.DirectScriptureProduct;
+      : (producibleType ?? ProducibleType.DirectScriptureProduct);
     const availableSteps = getAvailableSteps({
       type,
       methodology: input.methodology,
@@ -483,7 +483,7 @@ export class ProductService {
         Number: changes.progressStepMeasurement
           ? // If measurement is being changed to number,
             // accept new target value or default to 1 (as done in create).
-            changes.progressTarget ?? 1
+            (changes.progressTarget ?? 1)
           : // If measurement was already number,
             // accept new target value if given or accept no change.
             changes.progressTarget,
@@ -516,7 +516,7 @@ export class ProductService {
     });
     const steps = intersection(
       availableSteps,
-      changes.steps ? changes.steps : current.steps ?? [],
+      changes.steps ? changes.steps : (current.steps ?? []),
     );
     // Check again to see if new steps value is different than current.
     // and return updated value or "no change".

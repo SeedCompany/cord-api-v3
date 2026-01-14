@@ -69,4 +69,4 @@ class SubQueryClause extends SubClauseCollection {
 export const varInExp = (variable: string | Variable) =>
   variable.toString().startsWith('$')
     ? ''
-    : /(?:.+\()?\)?([^.]*)\.?.*/.exec(variable.toString())?.[1] ?? '';
+    : (/(?:.+\()?\)?([^.]*)\.?.*/.exec(variable.toString())?.[1] ?? '');

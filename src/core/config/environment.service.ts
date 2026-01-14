@@ -136,8 +136,8 @@ export class EnvironmentService implements Iterable<[string, string]> {
         typeof options.parseKey === 'function'
           ? options.parseKey
           : options.parseKey
-          ? verifyInSet(key, options.parseKey)
-          : identity;
+            ? verifyInSet(key, options.parseKey)
+            : identity;
       const parseValue = options.parseValue ?? identity;
 
       return new Map(
@@ -180,8 +180,8 @@ class ConfigValue<Out, In> {
     return this.exists
       ? this.parse(this.rawValue)
       : defaultValue == null
-      ? undefined
-      : this.parse(defaultValue);
+        ? undefined
+        : this.parse(defaultValue);
   }
 }
 

@@ -22,7 +22,10 @@ export class WinstonLoggerService
   private readonly logger: WinstonLogger;
   private closing = false;
 
-  constructor(private readonly matcher: LevelMatcher, options: LoggerOptions) {
+  constructor(
+    private readonly matcher: LevelMatcher,
+    options: LoggerOptions,
+  ) {
     super();
     this.logger = createLogger({
       format: options.format,

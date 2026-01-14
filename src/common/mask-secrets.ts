@@ -8,8 +8,8 @@ export const maskSecrets = (
     isSecret(key, val)
       ? maskSecret(val)
       : isPlainObject(val) && depth > 0
-      ? maskSecrets(val, depth - 1)
-      : val,
+        ? maskSecrets(val, depth - 1)
+        : val,
   ).asRecord;
 
 export const dropSecrets = (
@@ -20,8 +20,8 @@ export const dropSecrets = (
     isSecret(key, val)
       ? undefined
       : isPlainObject(val) && depth > 0
-      ? dropSecrets(val, depth - 1)
-      : val,
+        ? dropSecrets(val, depth - 1)
+        : val,
   ).asRecord;
 
 const isSecret = (key: string, val: unknown): val is string =>

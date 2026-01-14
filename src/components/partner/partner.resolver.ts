@@ -143,7 +143,7 @@ export class PartnerResolver {
     const { value: languages, ...rest } = partner.languagesOfConsulting;
     const value = await loadManyIgnoreMissingThrowAny(
       loader,
-      languages.map(({ id }) => ({ id, view: { active: true } } as const)),
+      languages.map(({ id }) => ({ id, view: { active: true } }) as const),
     );
     return { ...rest, value };
   }

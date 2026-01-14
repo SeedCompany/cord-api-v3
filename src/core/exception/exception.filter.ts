@@ -70,16 +70,16 @@ export class ExceptionFilter implements IExceptionFilter {
     const status = codes.has('NotFound')
       ? HttpStatus.NOT_FOUND
       : codes.has('Unauthenticated')
-      ? HttpStatus.UNAUTHORIZED
-      : codes.has('Unauthorized')
-      ? HttpStatus.FORBIDDEN
-      : codes.has('Client')
-      ? HttpStatus.BAD_REQUEST
-      : codes.has('Transient')
-      ? HttpStatus.SERVICE_UNAVAILABLE
-      : codes.has('NotImplemented')
-      ? HttpStatus.NOT_IMPLEMENTED
-      : HttpStatus.INTERNAL_SERVER_ERROR;
+        ? HttpStatus.UNAUTHORIZED
+        : codes.has('Unauthorized')
+          ? HttpStatus.FORBIDDEN
+          : codes.has('Client')
+            ? HttpStatus.BAD_REQUEST
+            : codes.has('Transient')
+              ? HttpStatus.SERVICE_UNAVAILABLE
+              : codes.has('NotImplemented')
+                ? HttpStatus.NOT_IMPLEMENTED
+                : HttpStatus.INTERNAL_SERVER_ERROR;
 
     const out = {
       ...ex,

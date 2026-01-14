@@ -385,8 +385,8 @@ export class FileService {
       tempUpload.status === 'fulfilled'
         ? tempUpload.value
         : existingUpload.status === 'fulfilled'
-        ? existingUpload.value
-        : undefined;
+          ? existingUpload.value
+          : undefined;
 
     const mimeType =
       mimeTypeOverride ?? upload?.ContentType ?? 'application/octet-stream';

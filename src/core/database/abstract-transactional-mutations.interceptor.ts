@@ -13,9 +13,7 @@ import { TransactionHooks } from './transaction-hooks';
  * This allows automatic rollbacks on error.
  */
 @Injectable()
-export abstract class TransactionalMutationsInterceptor
-  implements NestInterceptor
-{
+export abstract class TransactionalMutationsInterceptor implements NestInterceptor {
   constructor(private readonly txHooks: TransactionHooks) {}
 
   async intercept(context: ExecutionContext, next: CallHandler) {

@@ -18,8 +18,8 @@ export const apolloExplorer = (options: Options) => {
     <body style="margin: 0; overflow-x: hidden; overflow-y: hidden">
     <div id="sandbox" style="height:100vh; width:100vw;"></div>
     <script src="https://embeddable-${product}.cdn.apollographql.com/${
-    product === 'sandbox' ? '_latest' : 'v3'
-  }/embeddable-${product}.umd.production.min.js"></script>
+      product === 'sandbox' ? '_latest' : 'v3'
+    }/embeddable-${product}.umd.production.min.js"></script>
     <script>
       var initialEndpoint = window.location.href;
       var config = ${JSON.stringify(config)};

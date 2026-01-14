@@ -45,7 +45,7 @@ export function OptionalField(...args: any) {
   const nilIn =
     options.nullable === 'items' && options.optional
       ? 'itemsAndList'
-      : options.nullable ?? options.optional ?? true;
+      : (options.nullable ?? options.optional ?? true);
   const nullOut = !!options.nullable && options.nullable !== 'items';
   const schemaOptions = {
     ...options,

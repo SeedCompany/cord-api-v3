@@ -276,7 +276,7 @@ export class EnhancedResource<T extends ResourceShape<any>> {
     const rawRels =
       typeof this.type.Relations === 'function'
         ? this.type.Relations()
-        : this.type.Relations ?? {};
+        : (this.type.Relations ?? {});
     return new Map(
       Object.entries(rawRels).map(([rawName, rawType]) => {
         const name = rawName as RelKey<T>;
@@ -373,10 +373,10 @@ export type DBType<TResourceStatic extends ResourceShape<any>> =
   ResourceShape<any> extends TResourceStatic
     ? typeof e.Resource // short-circuit non-specific types
     : ResourceName<TResourceStatic> extends `${infer Name extends keyof ResourceDBMap}`
-    ? ResourceDBMap[Name] extends infer T extends $.$expr_PathNode
-      ? T
-      : never
-    : never;
+      ? ResourceDBMap[Name] extends infer T extends $.$expr_PathNode
+        ? T
+        : never
+      : never;
 
 /**
  * The name of the Gel type, it could be abstract.
@@ -422,20 +422,20 @@ export type ExtraPropsFromRelationsKey<T extends ResourceShape<any>> = {
         : R
       : R
     : RelOf<T>[R] extends ResourceShape<any>
-    ? RelOf<T>[R]['Parent'] extends {}
-      ? never
-      : R
-    : R;
+      ? RelOf<T>[R]['Parent'] extends {}
+        ? never
+        : R
+      : R;
 }[RelKey<T>];
 
 export type ChildSinglesKey<T extends ResourceShape<any>> = {
   [R in RelKey<T>]: RelOf<T>[R] extends readonly any[]
     ? never
     : RelOf<T>[R] extends ResourceShape<any>
-    ? RelOf<T>[R]['Parent'] extends {}
-      ? R
-      : never
-    : never;
+      ? RelOf<T>[R]['Parent'] extends {}
+        ? R
+        : never
+      : never;
 }[RelKey<T>];
 
 export type ChildListsKey<T extends ResourceShape<any>> = {

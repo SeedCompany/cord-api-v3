@@ -82,9 +82,8 @@ export class ProductProgressService {
       product.id,
       product,
     ]).asRecord;
-    const rows = await this.repo.readAllProgressReportsForManyProducts(
-      products,
-    );
+    const rows =
+      await this.repo.readAllProgressReportsForManyProducts(products);
     return rows.map((row): ProgressVariantByProductOutput => {
       const product = productMap[row.productId]!;
       return {
@@ -108,8 +107,8 @@ export class ProductProgressService {
     const context = !isIdLike(product)
       ? product
       : !isIdLike(report)
-      ? report
-      : await this.repo.getScope(productId);
+        ? report
+        : await this.repo.getScope(productId);
 
     const unsecured = await this.repo.readOne(productId, reportId, variant);
     const progress = this.secure(unsecured, this.privilegesFor(context));

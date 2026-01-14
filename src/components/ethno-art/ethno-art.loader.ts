@@ -4,9 +4,10 @@ import { EthnoArt } from './dto';
 import { EthnoArtService } from './ethno-art.service';
 
 @LoaderFactory(() => EthnoArt)
-export class EthnoArtLoader
-  implements DataLoaderStrategy<EthnoArt, ID<EthnoArt>>
-{
+export class EthnoArtLoader implements DataLoaderStrategy<
+  EthnoArt,
+  ID<EthnoArt>
+> {
   constructor(private readonly ethnoArt: EthnoArtService) {}
 
   async loadMany(ids: ReadonlyArray<ID<EthnoArt>>) {

@@ -20,8 +20,8 @@ const isDateIntervalEqual = (a: unknown, b: unknown) => {
   return isADateInterval && isBDateInterval
     ? a.equals(b)
     : isADateInterval === isBDateInterval
-    ? undefined
-    : false;
+      ? undefined
+      : false;
 };
 expect.addEqualityTesters([isDateIntervalEqual]);
 
