@@ -1,4 +1,5 @@
 import { faker } from '@faker-js/faker';
+import { afterAll, beforeAll, describe, expect, it } from '@jest/globals';
 import { some } from 'lodash';
 import { DateTime, Interval } from 'luxon';
 import { generateId, type ID, Role } from '~/common';
@@ -671,66 +672,6 @@ describe('Engagement e2e', () => {
     expect(result.updateCeremony.ceremony.estimatedDate.value).toBe(date);
 
     await user.login();
-  });
-
-  it.skip('delete ceremony upon engagement deletion', async () => {
-    project = await createProject(app);
-    language = await runAsAdmin(app, createLanguage);
-    const languageEngagement = await createLanguageEngagement(app, {
-      languageId: language.id,
-      projectId: project.id,
-    });
-
-    const languageEngagementRead = await app.graphql.query(
-      graphql(
-        `
-          query engagement($id: ID!) {
-            engagement(id: $id) {
-              ...engagement
-            }
-          }
-        `,
-        [fragments.engagement],
-      ),
-      {
-        id: languageEngagement.id,
-      },
-    );
-
-    expect(languageEngagementRead.engagement.ceremony.value?.id).toBeDefined();
-
-    const ceremonyId = languageEngagementRead.engagement.ceremony.value?.id;
-
-    await app.graphql.mutate(
-      graphql(`
-        mutation deleteEngagement($id: ID!) {
-          deleteEngagement(id: $id) {
-            __typename
-          }
-        }
-      `),
-      {
-        id: languageEngagement.id,
-      },
-    );
-
-    await app.graphql
-      .query(
-        graphql(
-          `
-            query ceremony($id: ID!) {
-              ceremony(id: $id) {
-                ...ceremony
-              }
-            }
-          `,
-          [fragments.ceremony],
-        ),
-        {
-          id: ceremonyId!,
-        },
-      )
-      .expectError(errors.notFound());
   });
 
   it('lists both language engagements and internship engagements', async () => {

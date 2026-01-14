@@ -1,4 +1,5 @@
 import { faker } from '@faker-js/faker';
+import { afterAll, beforeAll, describe, expect, it } from '@jest/globals';
 import { type ID } from '~/common';
 import { graphql } from '~/graphql';
 import {
@@ -106,7 +107,7 @@ describe.skip('Language Changeset Aware e2e', () => {
 
     // read language without changeset
     let result = await readLanguage(app, language.id);
-    expect(result.language.name.value === language.name.value);
+    expect(result.language.name.value).toBe(language.name.value);
     // read language with changeset
     result = await readLanguage(app, language.id, changeset.id);
     expect(result.language.name.value).toBe(newLanguageName);

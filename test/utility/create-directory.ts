@@ -1,4 +1,5 @@
 import { faker } from '@faker-js/faker';
+import { expect } from '@jest/globals';
 import { startCase } from 'lodash';
 import { type ID } from '~/common';
 import { SessionHost } from '~/core/authentication/session/session.host';
