@@ -16,6 +16,7 @@ import { BudgetRepository } from './budget.repository';
 import { BudgetResolver } from './budget.resolver';
 import { BudgetService } from './budget.service';
 import * as handlers from './handlers';
+import { MigrateInitialAmountMigration } from './migrations/migrate-adjusted-amount.migration';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import * as handlers from './handlers';
     BudgetRecordRepository,
     BudgetLoader,
     BudgetRecordLoader,
+    MigrateInitialAmountMigration,
     ...Object.values(handlers),
   ],
   exports: [BudgetService],

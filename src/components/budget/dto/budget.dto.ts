@@ -1,4 +1,5 @@
 import { Field, ObjectType } from '@nestjs/graphql';
+import { stripIndent } from 'common-tags';
 import {
   Calculated,
   DbLabel,
@@ -19,6 +20,25 @@ import { BudgetRecord } from './budget-record.dto';
 import { BudgetStatus } from './budget-status.enum';
 
 const Interfaces = IntersectTypes(Resource, ChangesetAware);
+
+@ObjectType({
+  description: stripIndent`
+    Rollup information across budget records.
+    Provides aggregated insights and summary data about budget records.
+  `,
+})
+export class BudgetSummary {
+  @Field(() => Boolean, {
+    description: 'Whether any budget record has a preApproved amount set',
+  })
+  hasPreApproved: boolean;
+
+  @Field(() => Boolean, {
+    description:
+      'Whether any budget record amount exceeds its preApproved amount',
+  })
+  preApprovedExceeded: boolean;
+}
 
 @Calculated()
 @RegisterResource({ db: e.Budget })
