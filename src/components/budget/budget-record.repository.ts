@@ -51,6 +51,7 @@ export class BudgetRecordRepository extends DtoRepository<
             fiscalYear: input.fiscalYear,
             amount: null,
             initialAmount: null,
+            preApprovedAmount: null,
           },
         }),
       )
