@@ -80,14 +80,6 @@ export abstract class CreatePartner {
   readonly departmentIdBlock?: FinanceDepartmentIdBlockInput;
 }
 
-@InputType()
-export abstract class CreatePartnerInput {
-  @Field()
-  @Type(() => CreatePartner)
-  @ValidateNested()
-  readonly partner: CreatePartner;
-}
-
 @ObjectType()
 export abstract class CreatePartnerOutput {
   @Field()

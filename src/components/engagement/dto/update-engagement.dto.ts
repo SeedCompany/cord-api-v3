@@ -12,7 +12,7 @@ import {
   RichTextField,
 } from '~/common';
 import { ChangesetIdField } from '../../changeset';
-import { CreateDefinedFileVersionInput } from '../../file/dto';
+import { CreateDefinedFileVersion } from '../../file/dto';
 import { LanguageMilestone } from '../../language/dto';
 import { AIAssistedTranslation } from '../../language/dto/ai-assisted-translation.enum';
 import { ProductMethodology } from '../../product/dto';
@@ -63,9 +63,9 @@ export abstract class UpdateLanguageEngagement extends UpdateEngagement {
   readonly paratextRegistryId?: string | null;
 
   @Field({ nullable: true })
-  @Type(() => CreateDefinedFileVersionInput)
+  @Type(() => CreateDefinedFileVersion)
   @ValidateNested()
-  readonly pnp?: CreateDefinedFileVersionInput;
+  readonly pnp?: CreateDefinedFileVersion;
 
   @Field(() => ProductMethodology, {
     nullable: true,
@@ -88,6 +88,9 @@ export abstract class UpdateLanguageEngagement extends UpdateEngagement {
 
   @OptionalField(() => AIAssistedTranslation)
   readonly usingAIAssistedTranslation?: AIAssistedTranslation;
+
+  @ChangesetIdField()
+  readonly changeset?: ID;
 }
 
 @InputType()
@@ -105,43 +108,24 @@ export abstract class UpdateInternshipEngagement extends UpdateEngagement {
   readonly methodologies?: readonly ProductMethodology[];
 
   @Field({ nullable: true })
-  @Type(() => CreateDefinedFileVersionInput)
+  @Type(() => CreateDefinedFileVersion)
   @ValidateNested()
-  readonly growthPlan?: CreateDefinedFileVersionInput;
+  readonly growthPlan?: CreateDefinedFileVersion;
 
   @OptionalField(() => Boolean)
   readonly marketable?: boolean;
 
   @Field(() => String, { nullable: true })
   readonly webId?: string | null;
-}
 
-@InputType()
-export abstract class UpdateLanguageEngagementInput {
   @ChangesetIdField()
   readonly changeset?: ID;
-
-  @Field()
-  @Type(() => UpdateLanguageEngagement)
-  @ValidateNested()
-  readonly engagement: UpdateLanguageEngagement;
 }
 
 @ObjectType()
 export abstract class UpdateLanguageEngagementOutput {
   @Field()
   readonly engagement: LanguageEngagement;
-}
-
-@InputType()
-export abstract class UpdateInternshipEngagementInput {
-  @ChangesetIdField()
-  readonly changeset?: ID;
-
-  @Field()
-  @Type(() => UpdateInternshipEngagement)
-  @ValidateNested()
-  readonly engagement: UpdateInternshipEngagement;
 }
 
 @ObjectType()

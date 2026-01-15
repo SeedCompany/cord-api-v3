@@ -13,7 +13,7 @@ import { UserLoader } from '../user';
 import { User } from '../user/dto';
 import {
   asDirectory,
-  CreateDirectoryInput,
+  CreateDirectory,
   Directory,
   File,
   FileListInput,
@@ -75,7 +75,7 @@ export class DirectoryResolver {
 
   @Mutation(() => Directory)
   async createDirectory(
-    @Args('input') { parent, name }: CreateDirectoryInput,
+    @Args('input') { parent, name }: CreateDirectory,
   ): Promise<Directory> {
     return await this.service.createDirectory(parent, name);
   }

@@ -3,13 +3,13 @@ import { type ID, IdArg, ListArg } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { EthnoArtLoader, EthnoArtService } from '../ethno-art';
 import {
-  CreateEthnoArtInput,
+  CreateEthnoArt,
   CreateEthnoArtOutput,
   DeleteEthnoArtOutput,
   EthnoArt,
   EthnoArtListInput,
   EthnoArtListOutput,
-  UpdateEthnoArtInput,
+  UpdateEthnoArt,
   UpdateEthnoArtOutput,
 } from './dto';
 
@@ -43,7 +43,7 @@ export class EthnoArtResolver {
     description: 'Create an ethno art',
   })
   async createEthnoArt(
-    @Args('input') { ethnoArt: input }: CreateEthnoArtInput,
+    @Args('input') input: CreateEthnoArt,
   ): Promise<CreateEthnoArtOutput> {
     const ethnoArt = await this.ethnoArtService.create(input);
     return { ethnoArt };
@@ -53,7 +53,7 @@ export class EthnoArtResolver {
     description: 'Update an ethno art',
   })
   async updateEthnoArt(
-    @Args('input') { ethnoArt: input }: UpdateEthnoArtInput,
+    @Args('input') input: UpdateEthnoArt,
   ): Promise<UpdateEthnoArtOutput> {
     const ethnoArt = await this.ethnoArtService.update(input);
     return { ethnoArt };

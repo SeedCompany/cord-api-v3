@@ -3,13 +3,13 @@ import { type ID, IdArg, ListArg } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { UnavailabilityLoader, UnavailabilityService } from '../unavailability';
 import {
-  CreateUnavailabilityInput,
+  CreateUnavailability,
   CreateUnavailabilityOutput,
   DeleteUnavailabilityOutput,
   Unavailability,
   UnavailabilityListInput,
   UnavailabilityListOutput,
-  UpdateUnavailabilityInput,
+  UpdateUnavailability,
   UpdateUnavailabilityOutput,
 } from './dto';
 
@@ -48,7 +48,7 @@ export class UnavailabilityResolver {
     deprecationReason: `This is unfinished functionality, don't use`,
   })
   async createUnavailability(
-    @Args('input') { unavailability: input }: CreateUnavailabilityInput,
+    @Args('input') input: CreateUnavailability,
   ): Promise<CreateUnavailabilityOutput> {
     const unavailability = await this.service.create(input);
     return { unavailability };
@@ -59,7 +59,7 @@ export class UnavailabilityResolver {
     deprecationReason: `This is unfinished functionality, don't use`,
   })
   async updateUnavailability(
-    @Args('input') { unavailability: input }: UpdateUnavailabilityInput,
+    @Args('input') input: UpdateUnavailability,
   ): Promise<UpdateUnavailabilityOutput> {
     const unavailability = await this.service.update(input);
     return { unavailability };

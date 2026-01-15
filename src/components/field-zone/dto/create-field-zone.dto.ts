@@ -1,6 +1,4 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import { Type } from 'class-transformer';
-import { ValidateNested } from 'class-validator';
 import { type ID, IdField, NameField } from '~/common';
 import { FieldZone } from './field-zone.dto';
 
@@ -13,14 +11,6 @@ export abstract class CreateFieldZone {
     description: 'A user ID that will be the director of the field Zone',
   })
   readonly director: ID<'User'>;
-}
-
-@InputType()
-export abstract class CreateFieldZoneInput {
-  @Field()
-  @Type(() => CreateFieldZone)
-  @ValidateNested()
-  readonly fieldZone: CreateFieldZone;
 }
 
 @ObjectType()

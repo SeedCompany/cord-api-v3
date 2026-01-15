@@ -59,7 +59,7 @@ describe('Education e2e', () => {
     const result = await app.graphql.mutate(
       graphql(
         `
-          mutation updateEducation($input: UpdateEducationInput!) {
+          mutation updateEducation($input: UpdateEducation!) {
             updateEducation(input: $input) {
               education {
                 ...education
@@ -71,10 +71,8 @@ describe('Education e2e', () => {
       ),
       {
         input: {
-          education: {
-            id: education.id,
-            institution: newInstitution,
-          },
+          id: education.id,
+          institution: newInstitution,
         },
       },
     );

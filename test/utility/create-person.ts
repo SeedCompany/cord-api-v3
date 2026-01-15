@@ -48,7 +48,7 @@ export async function createPerson(
 const CreatePersonDoc = graphql(
   `
     mutation createPerson($input: CreatePerson!) {
-      createPerson(input: { person: $input }) {
+      createPerson(input: $input) {
         user {
           ...user
         }

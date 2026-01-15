@@ -4,7 +4,7 @@ import { type ID, IdField, RichTextDocument, RichTextField } from '~/common';
 import { ProgressReportStatus } from '../../dto';
 
 @InputType()
-export abstract class ExecuteProgressReportTransitionInput {
+export abstract class ExecuteProgressReportTransition {
   @IdField({
     description: 'The progress report ID to transition',
   })

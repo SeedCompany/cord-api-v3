@@ -85,7 +85,7 @@ describe('Field Zone e2e', () => {
     const result = await app.graphql.mutate(
       graphql(
         `
-          mutation updateFieldZone($input: UpdateFieldZoneInput!) {
+          mutation updateFieldZone($input: UpdateFieldZone!) {
             updateFieldZone(input: $input) {
               fieldZone {
                 ...fieldZone
@@ -97,10 +97,8 @@ describe('Field Zone e2e', () => {
       ),
       {
         input: {
-          fieldZone: {
-            id: fieldZone.id,
-            name: newName,
-          },
+          id: fieldZone.id,
+          name: newName,
         },
       },
     );
@@ -117,7 +115,7 @@ describe('Field Zone e2e', () => {
     const result = await app.graphql.mutate(
       graphql(
         `
-          mutation updateFieldZone($input: UpdateFieldZoneInput!) {
+          mutation updateFieldZone($input: UpdateFieldZone!) {
             updateFieldZone(input: $input) {
               fieldZone {
                 ...fieldZone
@@ -134,10 +132,8 @@ describe('Field Zone e2e', () => {
       ),
       {
         input: {
-          fieldZone: {
-            id: fieldZone.id,
-            director: newDirector.id,
-          },
+          id: fieldZone.id,
+          director: newDirector.id,
         },
       },
     );

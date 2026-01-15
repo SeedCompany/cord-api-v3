@@ -11,13 +11,13 @@ import { Loader, type LoaderOf } from '~/core';
 import { UserLoader } from '../user';
 import { SecuredUser } from '../user/dto';
 import {
-  CreateFieldZoneInput,
+  CreateFieldZone,
   CreateFieldZoneOutput,
   DeleteFieldZoneOutput,
   FieldZone,
   FieldZoneListInput,
   FieldZoneListOutput,
-  UpdateFieldZoneInput,
+  UpdateFieldZone,
   UpdateFieldZoneOutput,
 } from './dto';
 import { FieldZoneLoader } from './field-zone.loader';
@@ -63,7 +63,7 @@ export class FieldZoneResolver {
     description: 'Create a field zone',
   })
   async createFieldZone(
-    @Args('input') { fieldZone: input }: CreateFieldZoneInput,
+    @Args('input') input: CreateFieldZone,
   ): Promise<CreateFieldZoneOutput> {
     const fieldZone = await this.fieldZoneService.create(input);
     return { fieldZone };
@@ -73,7 +73,7 @@ export class FieldZoneResolver {
     description: 'Update a field zone',
   })
   async updateFieldZone(
-    @Args('input') { fieldZone: input }: UpdateFieldZoneInput,
+    @Args('input') input: UpdateFieldZone,
   ): Promise<UpdateFieldZoneOutput> {
     const fieldZone = await this.fieldZoneService.update(input);
     return { fieldZone };

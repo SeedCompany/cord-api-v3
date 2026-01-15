@@ -3,7 +3,7 @@ import { MinLength } from 'class-validator';
 import { EmailField, MutationPlaceholderOutput } from '~/common';
 
 @InputType()
-export abstract class ResetPasswordInput {
+export abstract class ResetPassword {
   @Field()
   readonly token: string;
 

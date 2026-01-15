@@ -32,7 +32,7 @@ import {
   SecuredTranslationProjectList,
 } from '../project/dto';
 import {
-  CreateLanguageInput,
+  CreateLanguage,
   CreateLanguageOutput,
   DeleteLanguageOutput,
   type ExternalFirstScripture,
@@ -41,7 +41,7 @@ import {
   LanguageListInput,
   LanguageListOutput,
   SecuredFirstScripture,
-  UpdateLanguageInput,
+  UpdateLanguage,
   UpdateLanguageOutput,
 } from './dto';
 import { LanguageLoader } from './language.loader';
@@ -180,7 +180,7 @@ export class LanguageResolver {
     description: 'Create a language',
   })
   async createLanguage(
-    @Args('input') { language: input }: CreateLanguageInput,
+    @Args('input') input: CreateLanguage,
   ): Promise<CreateLanguageOutput> {
     const language = await this.langService.create(input);
     return { language };
@@ -190,7 +190,7 @@ export class LanguageResolver {
     description: 'Update a language',
   })
   async updateLanguage(
-    @Args('input') { language: input, changeset }: UpdateLanguageInput,
+    @Args('input') { changeset, ...input }: UpdateLanguage,
   ): Promise<UpdateLanguageOutput> {
     const language = await this.langService.update(
       input,

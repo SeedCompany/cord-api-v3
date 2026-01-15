@@ -12,7 +12,7 @@ import { Loader, type LoaderOf } from '~/core/data-loader';
 import { UserLoader } from '../../../components/user';
 import { User } from '../../../components/user/dto';
 import { AuthenticationService } from '../authentication.service';
-import { RegisterInput, RegisterOutput } from '../dto';
+import { RegisterOutput, RegisterUser } from '../dto';
 import { AuthLevel } from '../session/auth-level.decorator';
 
 @Resolver(RegisterOutput)
@@ -29,7 +29,7 @@ export class RegisterResolver {
       @sensitive-secrets
     `,
   })
-  async register(@Args('input') input: RegisterInput): Promise<RegisterOutput> {
+  async register(@Args('input') input: RegisterUser): Promise<RegisterOutput> {
     if (!this.config.registrationEnabled) {
       throw new UnauthorizedException(
         'User registration is currently disabled',

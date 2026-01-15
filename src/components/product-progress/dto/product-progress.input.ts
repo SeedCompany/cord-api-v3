@@ -7,7 +7,7 @@ import { ProductStep } from '../../product/dto';
 import { VariantProgressArg } from './variant-progress.dto';
 
 @InputType()
-export abstract class ProductProgressInput extends VariantProgressArg {
+export abstract class UpdateProductProgress extends VariantProgressArg {
   @IdField({
     description: 'Which product are you reporting on?',
   })
@@ -21,20 +21,20 @@ export abstract class ProductProgressInput extends VariantProgressArg {
   })
   readonly report: ID<'ProgressReport'>;
 
-  @Field(() => [StepProgressInput], {
+  @Field(() => [UpdateStepProgress], {
     description: stripIndent`
       Data for this entry.
       Each item should be a step the product has with the percent
       done it is.
     `,
   })
-  @Type(() => StepProgressInput)
+  @Type(() => UpdateStepProgress)
   @ValidateNested()
-  readonly steps: readonly StepProgressInput[];
+  readonly steps: readonly UpdateStepProgress[];
 }
 
 @InputType()
-export abstract class StepProgressInput {
+export abstract class UpdateStepProgress {
   @Field(() => ProductStep)
   readonly step: ProductStep;
 

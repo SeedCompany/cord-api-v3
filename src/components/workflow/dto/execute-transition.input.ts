@@ -8,7 +8,7 @@ import {
   RichTextField,
 } from '~/common';
 
-export function ExecuteTransitionInput<State extends string>(
+export function ExecuteTransition<State extends string>(
   state: MadeEnum<State>,
 ) {
   @InputType({ isAbstract: true })

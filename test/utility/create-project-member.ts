@@ -27,7 +27,7 @@ export async function createProjectMember(
 const CreateProjectMemberDoc = graphql(
   `
     mutation createProjectMember($input: CreateProjectMember!) {
-      createProjectMember(input: { projectMember: $input }) {
+      createProjectMember(input: $input) {
         projectMember {
           ...projectMember
         }

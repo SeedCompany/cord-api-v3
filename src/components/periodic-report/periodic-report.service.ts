@@ -24,7 +24,7 @@ import {
   type ReportType,
   resolveReportType,
   type SecuredPeriodicReportList,
-  type UpdatePeriodicReportInput,
+  type UpdatePeriodicReport,
 } from './dto';
 import { PeriodicReportUploadedEvent } from './events';
 import { PeriodicReportRepository } from './periodic-report.repository';
@@ -60,7 +60,7 @@ export class PeriodicReportService {
     }
   }
 
-  async update(input: UpdatePeriodicReportInput) {
+  async update(input: UpdatePeriodicReport) {
     const currentRaw = await this.repo.readOne(input.id);
     const current = this.secure(currentRaw);
     const changes = this.repo.getActualChanges(current, input);

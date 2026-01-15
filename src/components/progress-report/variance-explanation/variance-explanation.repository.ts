@@ -10,8 +10,8 @@ import {
   updateProperties,
 } from '~/core/database/query';
 import {
+  type ExplainProgressVariance as ExplainVariance,
   ProgressReportVarianceExplanation as VarianceExplanation,
-  type ProgressReportVarianceExplanationInput as VarianceExplanationInput,
 } from './variance-explanation.dto';
 
 @Injectable()
@@ -53,7 +53,7 @@ export class ProgressReportVarianceExplanationRepository extends DtoRepository(
         .return('dto');
   }
 
-  async update(input: { id: ID } & Omit<VarianceExplanationInput, 'report'>) {
+  async update(input: { id: ID } & Omit<ExplainVariance, 'report'>) {
     const { id, ...changes } = input;
     await this.db
       .query()

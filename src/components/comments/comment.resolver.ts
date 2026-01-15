@@ -16,7 +16,7 @@ import {
   Commentable,
   CommentThread,
   DeleteCommentOutput,
-  UpdateCommentInput,
+  UpdateComment,
   UpdateCommentOutput,
 } from './dto';
 
@@ -28,7 +28,7 @@ export class CommentResolver {
     description: 'Update an existing comment',
   })
   async updateComment(
-    @Args('input') input: UpdateCommentInput,
+    @Args('input') input: UpdateComment,
   ): Promise<UpdateCommentOutput> {
     const comment = await this.service.update(input);
     return { comment };

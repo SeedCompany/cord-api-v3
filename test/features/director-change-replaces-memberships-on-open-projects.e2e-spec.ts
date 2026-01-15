@@ -230,9 +230,7 @@ it('director change replaces memberships on open projects', async () => {
   await app.graphql.mutate(
     graphql(`
       mutation ChangeDirector($region: ID!, $director: ID!) {
-        updateFieldRegion(
-          input: { fieldRegion: { id: $region, director: $director } }
-        ) {
+        updateFieldRegion(input: { id: $region, director: $director }) {
           __typename
         }
       }

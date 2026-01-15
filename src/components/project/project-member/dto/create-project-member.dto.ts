@@ -1,6 +1,4 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import { Type } from 'class-transformer';
-import { ValidateNested } from 'class-validator';
 import type { DateTime } from 'luxon';
 import {
   DateTimeField,
@@ -31,14 +29,6 @@ export class CreateProjectMember {
     nullable: true,
   })
   readonly inactiveAt?: DateTime | null;
-}
-
-@InputType()
-export abstract class CreateProjectMemberInput {
-  @Field()
-  @Type(() => CreateProjectMember)
-  @ValidateNested()
-  readonly projectMember: CreateProjectMember;
 }
 
 @ObjectType()

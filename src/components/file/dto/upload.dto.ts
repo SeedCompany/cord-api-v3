@@ -19,7 +19,7 @@ export abstract class RequestUploadOutput {
 }
 
 @InputType()
-export abstract class CreateDefinedFileVersionInput {
+export abstract class CreateDefinedFileVersion {
   @IdField({
     description: stripIndent`
       The ID returned from the \`requestFileUpload\` mutation.
@@ -64,7 +64,7 @@ export abstract class CreateDefinedFileVersionInput {
 }
 
 @InputType()
-export abstract class CreateFileVersionInput extends CreateDefinedFileVersionInput {
+export abstract class CreateFileVersion extends CreateDefinedFileVersion {
   @IdField({
     description:
       'The directory ID if creating a new file or the file ID if creating a new version',
@@ -73,7 +73,7 @@ export abstract class CreateFileVersionInput extends CreateDefinedFileVersionInp
 }
 
 @InputType()
-export abstract class CreateDirectoryInput {
+export abstract class CreateDirectory {
   @IdField({
     description: 'The ID for the parent directory',
   })

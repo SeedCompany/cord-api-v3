@@ -164,9 +164,7 @@ describe('Language e2e', () => {
     const project = await createProject(app);
     await app.graphql.mutate(
       graphql(`
-        mutation createLanguageEngagement(
-          $input: CreateLanguageEngagementInput!
-        ) {
+        mutation createLanguageEngagement($input: CreateLanguageEngagement!) {
           createLanguageEngagement(input: $input) {
             engagement {
               status {
@@ -180,10 +178,8 @@ describe('Language e2e', () => {
       `),
       {
         input: {
-          engagement: {
-            language: lang.id,
-            project: project.id,
-          },
+          language: lang.id,
+          project: project.id,
         },
       },
     );
@@ -280,7 +276,7 @@ describe('Language e2e', () => {
       app.graphql.mutate(
         graphql(
           `
-            mutation updateLanguage($input: UpdateLanguageInput!) {
+            mutation updateLanguage($input: UpdateLanguage!) {
               updateLanguage(input: $input) {
                 language {
                   ...language
@@ -292,10 +288,8 @@ describe('Language e2e', () => {
         ),
         {
           input: {
-            language: {
-              id: language.id,
-              hasExternalFirstScripture: true,
-            },
+            id: language.id,
+            hasExternalFirstScripture: true,
           },
         },
       ),
@@ -394,7 +388,7 @@ async function updateLanguage(
 const UpdateLanguageDoc = graphql(
   `
     mutation updateLanguage($input: UpdateLanguage!) {
-      updateLanguage(input: { language: $input }) {
+      updateLanguage(input: $input) {
         language {
           ...language
         }

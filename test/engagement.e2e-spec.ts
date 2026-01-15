@@ -106,9 +106,7 @@ describe('Engagement e2e', () => {
     const result = await app.graphql.mutate(
       graphql(
         `
-          mutation createLanguageEngagement(
-            $input: CreateLanguageEngagementInput!
-          ) {
+          mutation createLanguageEngagement($input: CreateLanguageEngagement!) {
             createLanguageEngagement(input: $input) {
               engagement {
                 ...languageEngagement
@@ -119,9 +117,7 @@ describe('Engagement e2e', () => {
         [fragments.languageEngagement],
       ),
       {
-        input: {
-          engagement: languageEngagement,
-        },
+        input: languageEngagement,
       },
     );
 
@@ -172,7 +168,7 @@ describe('Engagement e2e', () => {
           mutation createInternshipEngagement(
             $input: CreateInternshipEngagement!
           ) {
-            createInternshipEngagement(input: { engagement: $input }) {
+            createInternshipEngagement(input: $input) {
               engagement {
                 ...internshipEngagement
               }
@@ -327,9 +323,7 @@ describe('Engagement e2e', () => {
     const result = await app.graphql.mutate(
       graphql(
         `
-          mutation updateLanguageEngagement(
-            $input: UpdateLanguageEngagementInput!
-          ) {
+          mutation updateLanguageEngagement($input: UpdateLanguageEngagement!) {
             updateLanguageEngagement(input: $input) {
               engagement {
                 ...languageEngagement
@@ -341,12 +335,10 @@ describe('Engagement e2e', () => {
       ),
       {
         input: {
-          engagement: {
-            id: languageEngagement.id,
-            firstScripture: updateFirstScripture,
-            lukePartnership: updateLukePartnership,
-            paratextRegistryId: updateParatextRegistryId,
-          },
+          id: languageEngagement.id,
+          firstScripture: updateFirstScripture,
+          lukePartnership: updateLukePartnership,
+          paratextRegistryId: updateParatextRegistryId,
         },
       },
     );
@@ -382,7 +374,7 @@ describe('Engagement e2e', () => {
       graphql(
         `
           mutation updateInternshipEngagement(
-            $input: UpdateInternshipEngagementInput!
+            $input: UpdateInternshipEngagement!
           ) {
             updateInternshipEngagement(input: $input) {
               engagement {
@@ -396,13 +388,11 @@ describe('Engagement e2e', () => {
       ),
       {
         input: {
-          engagement: {
-            id: internshipEngagement.id,
-            mentor: mentor.id,
-            countryOfOrigin: location.id,
-            position: updatePosition,
-            methodologies: updateMethodologies,
-          },
+          id: internshipEngagement.id,
+          mentor: mentor.id,
+          countryOfOrigin: location.id,
+          position: updatePosition,
+          methodologies: updateMethodologies,
         },
       },
     );
@@ -573,7 +563,7 @@ describe('Engagement e2e', () => {
     const date = '2020-05-13';
     const result = await app.graphql.mutate(
       graphql(`
-        mutation updateCeremony($input: UpdateCeremonyInput!) {
+        mutation updateCeremony($input: UpdateCeremony!) {
           updateCeremony(input: $input) {
             ceremony {
               id
@@ -591,11 +581,9 @@ describe('Engagement e2e', () => {
       `),
       {
         input: {
-          ceremony: {
-            id: ceremony.id,
-            planned: true,
-            estimatedDate: date,
-          },
+          id: ceremony.id,
+          planned: true,
+          estimatedDate: date,
         },
       },
     );
@@ -638,7 +626,7 @@ describe('Engagement e2e', () => {
     const date = '2020-05-13';
     const result = await app.graphql.mutate(
       graphql(`
-        mutation updateCeremony($input: UpdateCeremonyInput!) {
+        mutation updateCeremony($input: UpdateCeremony!) {
           updateCeremony(input: $input) {
             ceremony {
               id
@@ -656,11 +644,9 @@ describe('Engagement e2e', () => {
       `),
       {
         input: {
-          ceremony: {
-            id: ceremony.id,
-            planned: true,
-            estimatedDate: date,
-          },
+          id: ceremony.id,
+          planned: true,
+          estimatedDate: date,
         },
       },
     );

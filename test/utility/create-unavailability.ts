@@ -34,7 +34,7 @@ export async function createUnavailability(
 const CreateUnavailabilityDoc = graphql(
   `
     mutation createUnavailability($input: CreateUnavailability!) {
-      createUnavailability(input: { unavailability: $input }) {
+      createUnavailability(input: $input) {
         unavailability {
           ...unavailability
         }

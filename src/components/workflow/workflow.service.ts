@@ -6,7 +6,7 @@ import { Privileges } from '../authorization';
 import { MissingContextException } from '../authorization/policy/conditions';
 import { type Workflow } from './define-workflow';
 import {
-  type ExecuteTransitionInput as ExecuteTransitionInputFn,
+  type ExecuteTransition as ExecuteTransitionInputFn,
   SerializedWorkflow,
 } from './dto';
 import { transitionPermissionSerializer } from './permission.serializer';

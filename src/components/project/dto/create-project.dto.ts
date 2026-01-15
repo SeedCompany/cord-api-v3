@@ -1,6 +1,5 @@
 import { Field, ID as IDType, InputType, ObjectType } from '@nestjs/graphql';
-import { Transform, Type } from 'class-transformer';
-import { ValidateNested } from 'class-validator';
+import { Transform } from 'class-transformer';
 import { uniq } from 'lodash';
 import { DateTime } from 'luxon';
 import {
@@ -87,14 +86,6 @@ export abstract class CreateProject {
 
   @Field({ nullable: true })
   readonly departmentId?: string;
-}
-
-@InputType()
-export abstract class CreateProjectInput {
-  @Field()
-  @Type(() => CreateProject)
-  @ValidateNested()
-  readonly project: CreateProject;
 }
 
 @ObjectType()

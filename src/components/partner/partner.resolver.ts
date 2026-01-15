@@ -36,13 +36,13 @@ import { ProjectListInput, SecuredProjectList } from '../project/dto';
 import { UserLoader } from '../user';
 import { SecuredUser } from '../user/dto';
 import {
-  CreatePartnerInput,
+  CreatePartner,
   CreatePartnerOutput,
   DeletePartnerOutput,
   Partner,
   PartnerListInput,
   PartnerListOutput,
-  UpdatePartnerInput,
+  UpdatePartner,
   UpdatePartnerOutput,
 } from './dto';
 
@@ -191,7 +191,7 @@ export class PartnerResolver {
     description: 'Create a partner',
   })
   async createPartner(
-    @Args('input') { partner: input }: CreatePartnerInput,
+    @Args('input') input: CreatePartner,
   ): Promise<CreatePartnerOutput> {
     const partner = await this.partnerService.create(input);
     return { partner };
@@ -201,7 +201,7 @@ export class PartnerResolver {
     description: 'Update a partner',
   })
   async updatePartner(
-    @Args('input') { partner: input }: UpdatePartnerInput,
+    @Args('input') input: UpdatePartner,
   ): Promise<UpdatePartnerOutput> {
     const partner = await this.partnerService.update(input);
     return { partner };

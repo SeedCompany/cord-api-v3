@@ -33,7 +33,7 @@ export async function createPartner(
 const CreatePartnerDoc = graphql(
   `
     mutation createPartner($input: CreatePartner!) {
-      createPartner(input: { partner: $input }) {
+      createPartner(input: $input) {
         partner {
           ...partner
         }

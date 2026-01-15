@@ -10,7 +10,7 @@ import {
   OptionalField,
 } from '~/common';
 import { ChangesetIdField } from '../../changeset';
-import { CreateDefinedFileVersionInput } from '../../file/dto';
+import { CreateDefinedFileVersion } from '../../file/dto';
 import { PartnerType } from '../../partner/dto';
 import { FinancialReportingType } from './financial-reporting-type.enum';
 import { PartnershipAgreementStatus } from './partnership-agreement-status.enum';
@@ -25,14 +25,14 @@ export abstract class UpdatePartnership {
   readonly agreementStatus?: PartnershipAgreementStatus;
 
   @Field({ description: 'The partner agreement', nullable: true })
-  @Type(() => CreateDefinedFileVersionInput)
+  @Type(() => CreateDefinedFileVersion)
   @ValidateNested()
-  readonly agreement?: CreateDefinedFileVersionInput;
+  readonly agreement?: CreateDefinedFileVersion;
 
   @Field({ description: 'The MOU agreement', nullable: true })
-  @Type(() => CreateDefinedFileVersionInput)
+  @Type(() => CreateDefinedFileVersion)
   @ValidateNested()
-  readonly mou?: CreateDefinedFileVersionInput;
+  readonly mou?: CreateDefinedFileVersion;
 
   @OptionalField(() => PartnershipAgreementStatus)
   readonly mouStatus?: PartnershipAgreementStatus;
@@ -51,17 +51,9 @@ export abstract class UpdatePartnership {
 
   @OptionalField()
   readonly primary?: boolean;
-}
 
-@InputType()
-export abstract class UpdatePartnershipInput {
   @ChangesetIdField()
   readonly changeset?: ID;
-
-  @Field()
-  @Type(() => UpdatePartnership)
-  @ValidateNested()
-  readonly partnership: UpdatePartnership;
 }
 
 @ObjectType()

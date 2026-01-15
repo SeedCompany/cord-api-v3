@@ -154,7 +154,7 @@ describe('ProjectMember e2e', () => {
       const result = await app.graphql.query(
         graphql(
           `
-            mutation updateProjectMember($input: UpdateProjectMemberInput!) {
+            mutation updateProjectMember($input: UpdateProjectMember!) {
               updateProjectMember(input: $input) {
                 projectMember {
                   ...projectMember
@@ -166,10 +166,8 @@ describe('ProjectMember e2e', () => {
         ),
         {
           input: {
-            projectMember: {
-              id: projectMember.id,
-              roles: [Role.ProjectManager],
-            },
+            id: projectMember.id,
+            roles: [Role.ProjectManager],
           },
         },
       );
@@ -197,7 +195,7 @@ describe('ProjectMember e2e', () => {
       app.graphql.query(
         graphql(
           `
-            mutation updateProjectMember($input: UpdateProjectMemberInput!) {
+            mutation updateProjectMember($input: UpdateProjectMember!) {
               updateProjectMember(input: $input) {
                 projectMember {
                   ...projectMember
@@ -209,10 +207,8 @@ describe('ProjectMember e2e', () => {
         ),
         {
           input: {
-            projectMember: {
-              id: projectMember.id,
-              roles: [Role.Intern],
-            },
+            id: projectMember.id,
+            roles: [Role.Intern],
           },
         },
       ),

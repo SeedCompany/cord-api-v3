@@ -26,7 +26,7 @@ export async function createStory(
 const CreateStoryDoc = graphql(
   `
     mutation createStory($input: CreateStory!) {
-      createStory(input: { story: $input }) {
+      createStory(input: $input) {
         story {
           ...story
         }

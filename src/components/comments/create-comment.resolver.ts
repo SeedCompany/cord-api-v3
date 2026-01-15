@@ -8,7 +8,7 @@ import {
 import { Loader, type LoaderOf } from '~/core';
 import { CommentThreadLoader } from './comment-thread.loader';
 import { CommentService } from './comment.service';
-import { CommentThread, CreateCommentInput, CreateCommentOutput } from './dto';
+import { CommentThread, CreateComment, CreateCommentOutput } from './dto';
 
 @Resolver(CreateCommentOutput)
 export class CreateCommentResolver {
@@ -18,7 +18,7 @@ export class CreateCommentResolver {
     description: 'Create a comment',
   })
   async createComment(
-    @Args('input') input: CreateCommentInput,
+    @Args('input') input: CreateComment,
   ): Promise<CreateCommentOutput> {
     const comment = await this.service.create(input);
     return { comment };

@@ -169,9 +169,7 @@ describe('Engagement Changeset Aware e2e', () => {
     const changesetEngagement = await app.graphql.mutate(
       graphql(
         `
-          mutation createLanguageEngagement(
-            $input: CreateLanguageEngagementInput!
-          ) {
+          mutation createLanguageEngagement($input: CreateLanguageEngagement!) {
             createLanguageEngagement(input: $input) {
               engagement {
                 ...languageEngagement
@@ -183,11 +181,9 @@ describe('Engagement Changeset Aware e2e', () => {
       ),
       {
         input: {
-          engagement: {
-            language: newLang.id,
-            project: project.id,
-            status: EngagementStatus.InDevelopment,
-          },
+          language: newLang.id,
+          project: project.id,
+          status: EngagementStatus.InDevelopment,
           changeset: changeset.id,
         },
       },
@@ -221,9 +217,7 @@ describe('Engagement Changeset Aware e2e', () => {
     await app.graphql.mutate(
       graphql(
         `
-          mutation updateLanguageEngagement(
-            $input: UpdateLanguageEngagementInput!
-          ) {
+          mutation updateLanguageEngagement($input: UpdateLanguageEngagement!) {
             updateLanguageEngagement(input: $input) {
               engagement {
                 ...languageEngagement
@@ -235,10 +229,8 @@ describe('Engagement Changeset Aware e2e', () => {
       ),
       {
         input: {
-          engagement: {
-            id: languageEngagement.id,
-            completeDate: '2100-08-22',
-          },
+          id: languageEngagement.id,
+          completeDate: '2100-08-22',
           changeset: changeset.id,
         },
       },
@@ -270,9 +262,7 @@ describe('Engagement Changeset Aware e2e', () => {
     const changesetEngagement = await app.graphql.mutate(
       graphql(
         `
-          mutation createLanguageEngagement(
-            $input: CreateLanguageEngagementInput!
-          ) {
+          mutation createLanguageEngagement($input: CreateLanguageEngagement!) {
             createLanguageEngagement(input: $input) {
               engagement {
                 ...languageEngagement
@@ -284,11 +274,9 @@ describe('Engagement Changeset Aware e2e', () => {
       ),
       {
         input: {
-          engagement: {
-            language: language.id,
-            project: project.id,
-            completeDate: '2021-09-22',
-          },
+          language: language.id,
+          project: project.id,
+          completeDate: '2021-09-22',
           changeset: changeset.id,
         },
       },
@@ -303,9 +291,7 @@ describe('Engagement Changeset Aware e2e', () => {
     await app.graphql.mutate(
       graphql(
         `
-          mutation updateLanguageEngagement(
-            $input: UpdateLanguageEngagementInput!
-          ) {
+          mutation updateLanguageEngagement($input: UpdateLanguageEngagement!) {
             updateLanguageEngagement(input: $input) {
               engagement {
                 ...languageEngagement
@@ -317,10 +303,8 @@ describe('Engagement Changeset Aware e2e', () => {
       ),
       {
         input: {
-          engagement: {
-            id: engagementId,
-            completeDate: '2100-08-22',
-          },
+          id: engagementId,
+          completeDate: '2100-08-22',
           changeset: changeset.id,
         },
       },
@@ -348,9 +332,7 @@ describe('Engagement Changeset Aware e2e', () => {
     const le = await app.graphql.mutate(
       graphql(
         `
-          mutation createLanguageEngagement(
-            $input: CreateLanguageEngagementInput!
-          ) {
+          mutation createLanguageEngagement($input: CreateLanguageEngagement!) {
             createLanguageEngagement(input: $input) {
               engagement {
                 ...languageEngagement
@@ -362,11 +344,9 @@ describe('Engagement Changeset Aware e2e', () => {
       ),
       {
         input: {
-          engagement: {
-            language: language.id,
-            project: project.id,
-            completeDate: '2021-09-22',
-          },
+          language: language.id,
+          project: project.id,
+          completeDate: '2021-09-22',
           changeset: changeset.id,
         },
       },
@@ -425,7 +405,7 @@ describe('Engagement Changeset Aware e2e', () => {
         graphql(
           `
             mutation createLanguageEngagement(
-              $input: CreateLanguageEngagementInput!
+              $input: CreateLanguageEngagement!
             ) {
               createLanguageEngagement(input: $input) {
                 engagement {
@@ -438,10 +418,8 @@ describe('Engagement Changeset Aware e2e', () => {
         ),
         {
           input: {
-            engagement: {
-              language: language.id,
-              project: project.id,
-            },
+            language: language.id,
+            project: project.id,
             changeset: changeset.id,
           },
         },

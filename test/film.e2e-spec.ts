@@ -69,7 +69,7 @@ describe('Film e2e', () => {
     const result = await app.graphql.mutate(
       graphql(
         `
-          mutation updateFilm($input: UpdateFilmInput!) {
+          mutation updateFilm($input: UpdateFilm!) {
             updateFilm(input: $input) {
               film {
                 ...film
@@ -81,11 +81,9 @@ describe('Film e2e', () => {
       ),
       {
         input: {
-          film: {
-            id: fm.id,
-            name: newName,
-            scriptureReferences,
-          },
+          id: fm.id,
+          name: newName,
+          scriptureReferences,
         },
       },
     );

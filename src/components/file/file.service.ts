@@ -29,8 +29,8 @@ import { ConfigService, IEventBus, ILogger, type LinkTo, Logger } from '~/core';
 import { TransactionHooks } from '~/core/database';
 import { FileBucket } from './bucket';
 import {
-  type CreateDefinedFileVersionInput,
-  type CreateFileVersionInput,
+  type CreateDefinedFileVersion,
+  type CreateFileVersion,
   type Directory,
   type Downloadable,
   type File,
@@ -43,8 +43,8 @@ import {
   isDirectory,
   isFile,
   isFileVersion,
-  type MoveFileInput,
-  type RenameFileInput,
+  type MoveFile,
+  type RenameFile,
   type RequestUploadOutput,
 } from './dto';
 import { AfterFileUploadEvent } from './events/after-file-upload.event';
@@ -283,7 +283,7 @@ export class FileService {
    * the existing file with the same name or create a new file if not found.
    */
   async createFileVersion(
-    input: CreateFileVersionInput,
+    input: CreateFileVersion,
   ): Promise<FileWithNewVersion> {
     const {
       parent,
@@ -446,10 +446,7 @@ export class FileService {
     return type;
   }
 
-  private async resolveName(
-    name?: string,
-    input?: CreateDefinedFileVersionInput,
-  ) {
+  private async resolveName(name?: string, input?: CreateDefinedFileVersion) {
     if (name) {
       return sanitizeFilename(name);
     }
@@ -499,7 +496,7 @@ export class FileService {
     initialFileName: string | undefined,
     baseNodeId: ID,
     propertyName: string,
-    initialVersion?: CreateDefinedFileVersionInput,
+    initialVersion?: CreateDefinedFileVersion,
     field?: string,
     isPublic?: boolean,
   ) {
@@ -527,9 +524,7 @@ export class FileService {
     }
   }
 
-  async updateDefinedFile<
-    Input extends CreateDefinedFileVersionInput | undefined,
-  >(
+  async updateDefinedFile<Input extends CreateDefinedFileVersion | undefined>(
     file: Secured<FileId | LinkTo<'File'> | null>,
     field: string,
     input: Input,
@@ -560,14 +555,14 @@ export class FileService {
     }
   }
 
-  async rename(input: RenameFileInput): Promise<void> {
+  async rename(input: RenameFile): Promise<void> {
     const fileNode = await this.repo.getById(input.id);
     if (fileNode.name !== input.name) {
       await this.repo.rename(fileNode, input.name);
     }
   }
 
-  async move(input: MoveFileInput): Promise<FileNode> {
+  async move(input: MoveFile): Promise<FileNode> {
     const fileNode = await this.repo.getById(input.id);
 
     if (input.name) {

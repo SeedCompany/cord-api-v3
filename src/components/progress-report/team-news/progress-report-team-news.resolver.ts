@@ -33,21 +33,21 @@ export class ProgressReportTeamNewsResolver {
 
   @Mutation(() => PromptVariantResponse)
   async createProgressReportTeamNews(
-    @Args({ name: 'input' }) input: ChoosePrompt,
+    @Args('input') input: ChoosePrompt,
   ): Promise<PromptVariantResponse> {
     return await this.service.create(input);
   }
 
   @Mutation(() => PromptVariantResponse)
   async changeProgressReportTeamNewsPrompt(
-    @Args({ name: 'input' }) input: ChangePrompt,
+    @Args('input') input: ChangePrompt,
   ): Promise<PromptVariantResponse> {
     return await this.service.changePrompt(input);
   }
 
   @Mutation(() => PromptVariantResponse)
   async updateProgressReportTeamNewsResponse(
-    @Args({ name: 'input' })
+    @Args('input')
     input: UpdatePromptVariantResponse<TeamNewsVariant>,
   ): Promise<PromptVariantResponse> {
     return await this.service.submitResponse(input);

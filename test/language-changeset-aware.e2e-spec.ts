@@ -80,7 +80,7 @@ describe.skip('Language Changeset Aware e2e', () => {
     await app.graphql.mutate(
       graphql(
         `
-          mutation updateLanguage($input: UpdateLanguageInput!) {
+          mutation updateLanguage($input: UpdateLanguage!) {
             updateLanguage(input: $input) {
               language {
                 ...language
@@ -92,10 +92,8 @@ describe.skip('Language Changeset Aware e2e', () => {
       ),
       {
         input: {
-          language: {
-            id: language.id,
-            name: newLanguageName,
-          },
+          id: language.id,
+          name: newLanguageName,
           changeset: changeset.id,
         },
       },

@@ -49,7 +49,7 @@ describe('Partner e2e', () => {
     const result = await app.graphql.mutate(
       graphql(
         `
-          mutation updatePartner($input: UpdatePartnerInput!) {
+          mutation updatePartner($input: UpdatePartner!) {
             updatePartner(input: $input) {
               partner {
                 ...partner
@@ -61,16 +61,14 @@ describe('Partner e2e', () => {
       ),
       {
         input: {
-          partner: {
-            id: pt.id,
-            pointOfContact: person.id,
-            types,
-            financialReportingTypes,
-            pmcEntityCode,
-            globalInnovationsClient,
-            active,
-            address,
-          },
+          id: pt.id,
+          pointOfContact: person.id,
+          types,
+          financialReportingTypes,
+          pmcEntityCode,
+          globalInnovationsClient,
+          active,
+          address,
         },
       },
     );

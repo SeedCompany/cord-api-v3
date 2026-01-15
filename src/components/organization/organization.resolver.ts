@@ -19,13 +19,13 @@ import { LocationLoader } from '../location';
 import { LocationListInput, SecuredLocationList } from '../location/dto';
 import { OrganizationLoader, OrganizationService } from '../organization';
 import {
-  CreateOrganizationInput,
+  CreateOrganization,
   CreateOrganizationOutput,
   DeleteOrganizationOutput,
   Organization,
   OrganizationListInput,
   OrganizationListOutput,
-  UpdateOrganizationInput,
+  UpdateOrganization,
   UpdateOrganizationOutput,
 } from './dto';
 
@@ -46,7 +46,7 @@ export class OrganizationResolver {
     description: 'Create an organization',
   })
   async createOrganization(
-    @Args('input') { organization: input }: CreateOrganizationInput,
+    @Args('input') input: CreateOrganization,
   ): Promise<CreateOrganizationOutput> {
     const organization = await this.orgs.create(input);
     return { organization };
@@ -96,7 +96,7 @@ export class OrganizationResolver {
     description: 'Update an organization',
   })
   async updateOrganization(
-    @Args('input') { organization: input }: UpdateOrganizationInput,
+    @Args('input') input: UpdateOrganization,
   ): Promise<UpdateOrganizationOutput> {
     const organization = await this.orgs.update(input);
     return { organization };

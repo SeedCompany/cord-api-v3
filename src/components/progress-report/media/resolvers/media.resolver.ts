@@ -48,7 +48,7 @@ export class ProgressReportMediaResolver {
 
   @Mutation(() => ProgressReport)
   async uploadProgressReportMedia(
-    @Args({ name: 'input' }) input: UploadMedia,
+    @Args('input') input: UploadMedia,
     @Loader(() => PeriodicReportLoader) reports: LoaderOf<PeriodicReportLoader>,
   ) {
     await this.service.upload(input);
@@ -57,7 +57,7 @@ export class ProgressReportMediaResolver {
 
   @Mutation(() => ReportMedia)
   async updateProgressReportMedia(
-    @Args({ name: 'input' }) input: UpdateMedia,
+    @Args('input') input: UpdateMedia,
   ): Promise<ReportMedia> {
     return await this.service.update(input);
   }

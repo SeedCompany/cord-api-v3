@@ -105,7 +105,7 @@ describe('Partnership Changeset Aware e2e', () => {
     const changesetPartnership = await app.graphql.mutate(
       graphql(
         `
-          mutation createPartnership($input: CreatePartnershipInput!) {
+          mutation createPartnership($input: CreatePartnership!) {
             createPartnership(input: $input) {
               partnership {
                 ...partnership
@@ -117,10 +117,8 @@ describe('Partnership Changeset Aware e2e', () => {
       ),
       {
         input: {
-          partnership: {
-            partner: (await createPartner(app)).id,
-            project: project.id,
-          },
+          partner: (await createPartner(app)).id,
+          project: project.id,
           changeset: changeset.id,
         },
       },
@@ -152,7 +150,7 @@ describe('Partnership Changeset Aware e2e', () => {
     await app.graphql.mutate(
       graphql(
         `
-          mutation updatePartnership($input: UpdatePartnershipInput!) {
+          mutation updatePartnership($input: UpdatePartnership!) {
             updatePartnership(input: $input) {
               partnership {
                 ...partnership
@@ -164,10 +162,8 @@ describe('Partnership Changeset Aware e2e', () => {
       ),
       {
         input: {
-          partnership: {
-            id: partnership.id,
-            mouStatus: PartnershipAgreementStatus.Signed,
-          },
+          id: partnership.id,
+          mouStatus: PartnershipAgreementStatus.Signed,
           changeset: changeset.id,
         },
       },

@@ -84,7 +84,7 @@ describe('Partnership e2e', () => {
       graphql(
         `
           mutation updatePartnership($input: UpdatePartnership!) {
-            updatePartnership(input: { partnership: $input }) {
+            updatePartnership(input: $input) {
               partnership {
                 ...partnership
               }
@@ -165,20 +165,8 @@ describe('Partnership e2e', () => {
     const result = await app.graphql.query(
       graphql(
         `
-          mutation updatePartnership(
-            $id: ID!
-            $startOverride: Date!
-            $endOverride: Date!
-          ) {
-            updatePartnership(
-              input: {
-                partnership: {
-                  id: $id
-                  mouStartOverride: $startOverride
-                  mouEndOverride: $endOverride
-                }
-              }
-            ) {
+          mutation updatePartnership($input: UpdatePartnership!) {
+            updatePartnership(input: $input) {
               partnership {
                 ...partnership
               }
@@ -188,9 +176,11 @@ describe('Partnership e2e', () => {
         [fragments.partnership],
       ),
       {
-        id: partnership.id,
-        startOverride: mouStartOverride,
-        endOverride: mouEndOverride,
+        input: {
+          id: partnership.id,
+          mouStartOverride,
+          mouEndOverride,
+        },
       },
     );
 
@@ -409,7 +399,7 @@ describe('Partnership e2e', () => {
       app.graphql.mutate(
         graphql(
           `
-            mutation updatePartnership($input: UpdatePartnershipInput!) {
+            mutation updatePartnership($input: UpdatePartnership!) {
               updatePartnership(input: $input) {
                 partnership {
                   ...partnership
@@ -421,10 +411,8 @@ describe('Partnership e2e', () => {
         ),
         {
           input: {
-            partnership: {
-              id: partnership.id,
-              financialReportingType: FinancialReportingType.Funded,
-            },
+            id: partnership.id,
+            financialReportingType: FinancialReportingType.Funded,
           },
         },
       ),
@@ -520,7 +508,7 @@ describe('Partnership e2e', () => {
       graphql(
         `
           mutation updatePartnership($input: UpdatePartnership!) {
-            updatePartnership(input: { partnership: $input }) {
+            updatePartnership(input: $input) {
               partnership {
                 ...partnership
               }

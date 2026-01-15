@@ -75,14 +75,6 @@ export abstract class UpdatePartner {
   readonly departmentIdBlock?: FinanceDepartmentIdBlockInput | null;
 }
 
-@InputType()
-export abstract class UpdatePartnerInput {
-  @Field()
-  @Type(() => UpdatePartner)
-  @ValidateNested()
-  readonly partner: UpdatePartner;
-}
-
 @ObjectType()
 export abstract class UpdatePartnerOutput {
   @Field()

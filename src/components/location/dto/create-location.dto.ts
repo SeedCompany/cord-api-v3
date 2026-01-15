@@ -3,7 +3,7 @@ import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { type ID, IdField, ISO31661Alpha3, NameField } from '~/common';
 import { Transform } from '~/common/transform.decorator';
-import { CreateDefinedFileVersionInput } from '../../file/dto';
+import { CreateDefinedFileVersion } from '../../file/dto';
 import { LocationType } from './location-type.enum';
 import { Location } from './location.dto';
 
@@ -33,17 +33,9 @@ export abstract class CreateLocation {
   readonly defaultMarketingRegion?: ID<Location>;
 
   @Field({ nullable: true })
-  @Type(() => CreateDefinedFileVersionInput)
+  @Type(() => CreateDefinedFileVersion)
   @ValidateNested()
-  readonly mapImage?: CreateDefinedFileVersionInput;
-}
-
-@InputType()
-export abstract class CreateLocationInput {
-  @Field()
-  @Type(() => CreateLocation)
-  @ValidateNested()
-  readonly location: CreateLocation;
+  readonly mapImage?: CreateDefinedFileVersion;
 }
 
 @ObjectType()

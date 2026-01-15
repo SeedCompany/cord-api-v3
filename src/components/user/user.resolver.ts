@@ -32,17 +32,17 @@ import { PartnerListInput, SecuredPartnerList } from '../partner/dto';
 import { TimeZoneService } from '../timezone';
 import { SecuredTimeZone } from '../timezone/timezone.dto';
 import {
-  AssignOrganizationToUserInput,
+  AssignOrganizationToUser,
   AssignOrganizationToUserOutput,
   CheckEmailArgs,
-  CreatePersonInput,
+  CreatePerson,
   CreatePersonOutput,
   DeleteUserOutput,
   KnownLanguage,
   ModifyKnownLanguageArgs,
-  RemoveOrganizationFromUserInput,
+  RemoveOrganizationFromUser,
   RemoveOrganizationFromUserOutput,
-  UpdateUserInput,
+  UpdateUser,
   UpdateUserOutput,
   User,
   UserListInput,
@@ -220,7 +220,7 @@ export class UserResolver {
     description: 'Create a person',
   })
   async createPerson(
-    @Args('input') { person: input }: CreatePersonInput,
+    @Args('input') input: CreatePerson,
   ): Promise<CreatePersonOutput> {
     const userId = await this.userService.create(input);
     const user = await this.userService.readOne(userId).catch((e) => {
@@ -235,7 +235,7 @@ export class UserResolver {
     description: 'Update a user',
   })
   async updateUser(
-    @Args('input') { user: input }: UpdateUserInput,
+    @Args('input') input: UpdateUser,
   ): Promise<UpdateUserOutput> {
     const user = await this.userService.update(input);
     return { user };
@@ -273,9 +273,9 @@ export class UserResolver {
     description: 'Assign organization OR primaryOrganization to user',
   })
   async assignOrganizationToUser(
-    @Args('input') input: AssignOrganizationToUserInput,
+    @Args('input') input: AssignOrganizationToUser,
   ): Promise<AssignOrganizationToUserOutput> {
-    await this.userService.assignOrganizationToUser(input.request);
+    await this.userService.assignOrganizationToUser(input);
     return { success: true };
   }
 
@@ -283,9 +283,9 @@ export class UserResolver {
     description: 'Remove organization OR primaryOrganization from user',
   })
   async removeOrganizationFromUser(
-    @Args('input') input: RemoveOrganizationFromUserInput,
+    @Args('input') input: RemoveOrganizationFromUser,
   ): Promise<RemoveOrganizationFromUserOutput> {
-    await this.userService.removeOrganizationFromUser(input.request);
+    await this.userService.removeOrganizationFromUser(input);
     return { success: true };
   }
 

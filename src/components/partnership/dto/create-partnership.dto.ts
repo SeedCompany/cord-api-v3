@@ -4,7 +4,7 @@ import { ValidateNested } from 'class-validator';
 import { uniq } from 'lodash';
 import { CalendarDate, DateField, type ID, IdField } from '~/common';
 import { ChangesetIdField } from '../../changeset';
-import { CreateDefinedFileVersionInput } from '../../file/dto';
+import { CreateDefinedFileVersion } from '../../file/dto';
 import { PartnerType } from '../../partner/dto';
 import { FinancialReportingType } from './financial-reporting-type.enum';
 import { PartnershipAgreementStatus } from './partnership-agreement-status.enum';
@@ -22,14 +22,14 @@ export class CreatePartnership {
   readonly agreementStatus?: PartnershipAgreementStatus;
 
   @Field({ description: 'The partner agreement', nullable: true })
-  @Type(() => CreateDefinedFileVersionInput)
+  @Type(() => CreateDefinedFileVersion)
   @ValidateNested()
-  readonly agreement?: CreateDefinedFileVersionInput;
+  readonly agreement?: CreateDefinedFileVersion;
 
   @Field({ description: 'The MOU agreement', nullable: true })
-  @Type(() => CreateDefinedFileVersionInput)
+  @Type(() => CreateDefinedFileVersion)
   @ValidateNested()
-  readonly mou?: CreateDefinedFileVersionInput;
+  readonly mou?: CreateDefinedFileVersion;
 
   @Field(() => PartnershipAgreementStatus, { nullable: true })
   readonly mouStatus?: PartnershipAgreementStatus;
@@ -49,17 +49,9 @@ export class CreatePartnership {
 
   @Field({ nullable: true })
   readonly primary?: boolean = false;
-}
 
-@InputType()
-export abstract class CreatePartnershipInput {
   @ChangesetIdField()
   readonly changeset?: ID;
-
-  @Field()
-  @Type(() => CreatePartnership)
-  @ValidateNested()
-  readonly partnership: CreatePartnership;
 }
 
 @ObjectType()

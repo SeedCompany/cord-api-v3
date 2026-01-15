@@ -31,7 +31,7 @@ export async function createProjectChangeRequest(
 const CreateChangeRequestDoc = graphql(
   `
     mutation CreateProjectChangeRequest($input: CreateProjectChangeRequest!) {
-      createProjectChangeRequest(input: { projectChangeRequest: $input }) {
+      createProjectChangeRequest(input: $input) {
         projectChangeRequest {
           ...projectChangeRequest
         }
@@ -54,9 +54,7 @@ export async function approveProjectChangeRequest(app: TestApp, id: ID) {
 const ApproveProjectChangeRequestDoc = graphql(
   `
     mutation ApproveProjectChangeRequest($id: ID!) {
-      updateProjectChangeRequest(
-        input: { projectChangeRequest: { id: $id, status: Approved } }
-      ) {
+      updateProjectChangeRequest(input: { id: $id, status: Approved }) {
         projectChangeRequest {
           ...projectChangeRequest
         }

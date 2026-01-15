@@ -63,7 +63,7 @@ describe('FundingAccount e2e', () => {
       const result = await app.graphql.mutate(
         graphql(
           `
-            mutation updateFundingAccount($input: UpdateFundingAccountInput!) {
+            mutation updateFundingAccount($input: UpdateFundingAccount!) {
               updateFundingAccount(input: $input) {
                 fundingAccount {
                   ...fundingAccount
@@ -75,11 +75,9 @@ describe('FundingAccount e2e', () => {
         ),
         {
           input: {
-            fundingAccount: {
-              id: st.id,
-              name: newName,
-              accountNumber: newAccountNumber,
-            },
+            id: st.id,
+            name: newName,
+            accountNumber: newAccountNumber,
           },
         },
       );

@@ -45,7 +45,7 @@ export async function createRegion(
 const CreateFieldRegionDoc = graphql(
   `
     mutation createFieldRegion($input: CreateFieldRegion!) {
-      createFieldRegion(input: { fieldRegion: $input }) {
+      createFieldRegion(input: $input) {
         fieldRegion {
           ...fieldRegion
         }

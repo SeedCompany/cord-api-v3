@@ -1,6 +1,4 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import { Type } from 'class-transformer';
-import { ValidateNested } from 'class-validator';
 import { type ID, IdField } from '~/common';
 import { Degree, Education } from './education.dto';
 
@@ -17,14 +15,6 @@ export class CreateEducation {
 
   @Field()
   readonly institution: string;
-}
-
-@InputType()
-export abstract class CreateEducationInput {
-  @Field()
-  @Type(() => CreateEducation)
-  @ValidateNested()
-  readonly education: CreateEducation;
 }
 
 @ObjectType()

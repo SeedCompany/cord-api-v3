@@ -3,10 +3,7 @@ import { type ID } from '~/common';
 import { e, edgeql, RepoFor } from '~/core/gel';
 import { type ProjectStep } from '../dto';
 import { projectRefShape } from '../project.gel.repository';
-import {
-  type ExecuteProjectTransitionInput,
-  ProjectWorkflowEvent,
-} from './dto';
+import { type ExecuteProjectTransition, ProjectWorkflowEvent } from './dto';
 
 @Injectable()
 export class ProjectWorkflowRepository extends RepoFor(ProjectWorkflowEvent, {
@@ -32,7 +29,7 @@ export class ProjectWorkflowRepository extends RepoFor(ProjectWorkflowEvent, {
   }
 
   async recordEvent(
-    input: Omit<ExecuteProjectTransitionInput, 'bypassTo'> & {
+    input: Omit<ExecuteProjectTransition, 'bypassTo'> & {
       to: ProjectStep;
     },
   ) {

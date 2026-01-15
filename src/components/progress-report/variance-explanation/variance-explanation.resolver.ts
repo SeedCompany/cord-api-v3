@@ -12,8 +12,8 @@ import { ProgressSummaryLoader } from '../../progress-summary/progress-summary.l
 import { ProgressReport } from '../dto';
 import { ProgressReportVarianceExplanationReasonOptions as ReasonOptions } from './reason-options';
 import {
+  ExplainProgressVariance,
   type ProgressReportVarianceExplanation,
-  ProgressReportVarianceExplanationInput,
   ProgressReportVarianceExplanation as VarianceExplanation,
 } from './variance-explanation.dto';
 import { ProgressReportVarianceExplanationLoader } from './variance-explanation.loader';
@@ -36,7 +36,7 @@ export class ProgressReportVarianceExplanationResolver {
 
   @Mutation(() => ProgressReport)
   async explainProgressVariance(
-    @Args({ name: 'input' }) input: ProgressReportVarianceExplanationInput,
+    @Args('input') input: ExplainProgressVariance,
   ): Promise<ProgressReport> {
     return await this.service.update(input);
   }

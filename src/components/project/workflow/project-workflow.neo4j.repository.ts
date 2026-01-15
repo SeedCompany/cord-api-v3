@@ -13,7 +13,7 @@ import {
 } from '~/core/database/query';
 import { IProject, type ProjectStep, stepToStatus } from '../dto';
 import {
-  type ExecuteProjectTransitionInput,
+  type ExecuteProjectTransition,
   ProjectWorkflowEvent as WorkflowEvent,
 } from './dto';
 import { type ProjectWorkflowRepository } from './project-workflow.repository';
@@ -89,7 +89,7 @@ export class ProjectWorkflowNeo4jRepository
   async recordEvent({
     project,
     ...props
-  }: Omit<ExecuteProjectTransitionInput, 'bypassTo'> & { to: ProjectStep }) {
+  }: Omit<ExecuteProjectTransition, 'bypassTo'> & { to: ProjectStep }) {
     const result = await this.db
       .query()
       .apply(
