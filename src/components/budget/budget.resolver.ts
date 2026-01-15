@@ -56,13 +56,9 @@ export class BudgetResolver {
     );
 
     const recordsExceedingPreApproved = budget.records.filter((record) => {
-      const initialAmount = record.initialAmount.value;
+      const amount = record.amount.value;
       const preApproved = record.preApprovedAmount.value;
-      return (
-        initialAmount != null &&
-        preApproved != null &&
-        initialAmount > preApproved
-      );
+      return amount != null && preApproved != null && amount > preApproved;
     });
 
     return {
