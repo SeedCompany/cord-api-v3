@@ -1,5 +1,5 @@
-CREATE MIGRATION m12ts3fog5hksrsvnr3ddcei5ibyyotspv2xw2ixleuqtraondodea
-    ONTO m13j2wdmzu2ee56a7cpvryzfqdoexqgfx2pbhqrdnrh5cjtkgybwhq
+CREATE MIGRATION m1stuiewjnhrznhwslwjqll7jd3rattughkehe3krd4oegtezhclka
+    ONTO m1k2xtayazrywfs6y4bvw24x5id4xgsdjiu5uuk525becui22bcnya
 {
   ALTER TYPE Budget::Record {
       CREATE PROPERTY initialAmount: std::float32;
