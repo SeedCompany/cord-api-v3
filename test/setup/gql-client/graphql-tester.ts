@@ -32,7 +32,18 @@ export const createTester = (app: TestApp): Tester => {
   const tester: Tester = {
     run: execute,
     apply(op) {
-      return op(this);
+      const boundTester: Tester = Object.assign(Object.create(this ?? tester), {
+        // Replace apply() given to operation, with a bound scope,
+        // allowing the function to be destructured.
+        // We wait to do this binding so that the tester can be subclassed.
+        // identifiedTester.apply(({ apply }) => {
+        //   apply(tester => {
+        //     tester.identity;
+        //   });
+        // });
+        apply: (op2: Operation<any>) => op2(boundTester),
+      });
+      return op(boundTester);
     },
     /**
      * This will work to run GQL operations
