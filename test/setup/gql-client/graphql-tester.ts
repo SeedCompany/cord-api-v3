@@ -9,9 +9,7 @@ import { CookieJar, createExecute, type GqlExecute } from './gql-execute';
 export interface Tester {
   run: GqlExecute;
 
-  apply: <Output>(
-    operation: (tester: this) => Promise<Output>,
-  ) => Promise<Output>;
+  apply: <Output>(operation: (tester: this) => Output) => Output;
 
   /** @deprecated */
   legacyApp: LegacyTestApp;
