@@ -69,8 +69,6 @@ export class Budget extends Interfaces {
     description: "Based on the project's sensitivity",
   })
   readonly sensitivity: Sensitivity;
-
-  readonly budgetSummary: BudgetSummary;
 }
 
 @ObjectType({

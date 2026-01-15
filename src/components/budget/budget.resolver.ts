@@ -48,7 +48,7 @@ export class BudgetResolver {
   }
 
   @ResolveField(() => BudgetSummary)
-  budgetSummary(@Parent() budget: Budget): BudgetSummary {
+  summary(@Parent() budget: Budget): BudgetSummary {
     const recordsWithPreApproved = budget.records.filter(
       (record) =>
         record.preApprovedAmount.value !== null &&
