@@ -11,6 +11,12 @@ export interface Tester {
 
   apply: <Output>(operation: (tester: this) => Output) => Output;
 
+  /**
+   * This is here to help facilitate migration.
+   * It would probably be better to avoid using this, as it hides logic.
+   */
+  app: TestApp;
+
   /** @deprecated */
   legacyApp: LegacyTestApp;
 }
@@ -43,6 +49,7 @@ export const createTester = (app: TestApp): Tester => {
       });
       return op(boundTester);
     },
+    app,
     /**
      * This will work to run GQL operations
      * unless those operations swap users.
