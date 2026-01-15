@@ -25,10 +25,11 @@ export const registerUser =
   (input?: Partial<InputOf<typeof RegisterUserDoc>>) =>
   async (tester: Tester) => {
     await tester.apply(initSessionOnce());
+    const password = faker.internet.password();
     const res = await tester.run(RegisterUserDoc, {
       input: {
         email: faker.internet.email(),
-        password: faker.internet.password(),
+        password,
         realFirstName: faker.person.firstName(),
         realLastName: faker.person.lastName(),
         displayFirstName: faker.person.firstName(),
@@ -36,7 +37,10 @@ export const registerUser =
         ...input,
       },
     });
-    return res.register.user;
+    return {
+      password,
+      ...res.register.user,
+    };
   };
 
 const RegisterUserDoc = graphql(
@@ -55,8 +59,8 @@ const RegisterUserDoc = graphql(
 export const login =
   (input: InputOf<typeof LoginDoc>) => async (tester: Tester) => {
     await tester.apply(initSessionOnce());
-    await tester.run(LoginDoc, { input });
-    return tester;
+    const res = await tester.run(LoginDoc, { input });
+    return res.login;
   };
 
 const LoginDoc = graphql(`
@@ -81,3 +85,17 @@ const LogoutDoc = graphql(`
     }
   }
 `);
+
+export const currentUser = () => async (tester: Tester) => {
+  const CurrentUserDoc = graphql(`
+    query CurrentUser {
+      session {
+        user {
+          id
+        }
+      }
+    }
+  `);
+  const res = await tester.run(CurrentUserDoc);
+  return res.session.user;
+};

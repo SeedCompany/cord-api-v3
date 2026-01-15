@@ -13,7 +13,6 @@ export * from './create-person';
 export * from './create-zone';
 export * from './register';
 export * from './login';
-export * from './logout';
 export * as errors from '../setup/gql-client/error-shape-helpers';
 export * as fragments from './fragments';
 export * from './create-region';
