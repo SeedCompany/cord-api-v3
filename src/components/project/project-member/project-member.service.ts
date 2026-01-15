@@ -56,7 +56,7 @@ export class ProjectMemberService {
     if (input.inactiveAt && input.inactiveAt < created.createdAt) {
       throw new InputException(
         'Inactive date cannot be before creation date',
-        'projectMember.inactiveAt',
+        'inactiveAt',
       );
     }
 
@@ -119,7 +119,7 @@ export class ProjectMemberService {
     if (input.inactiveAt && input.inactiveAt < object.createdAt) {
       throw new InputException(
         'Inactive date cannot be before creation date',
-        'projectMember.inactiveAt',
+        'inactiveAt',
       );
     }
 
@@ -156,7 +156,7 @@ export class ProjectMemberService {
       const forbiddenRolesStr = [...forbiddenRoles].join(', ');
       throw new InputException(
         `Role(s) ${forbiddenRolesStr} cannot be assigned to this project member`,
-        'input.roles',
+        'roles',
       );
     }
   }

@@ -144,7 +144,7 @@ describe('Organization e2e', () => {
           },
         },
       )
-      .expectError(errors.invalidId('organization.id'));
+      .expectError(errors.invalidId('id'));
 
     await app.graphql
       .mutate(
@@ -191,7 +191,7 @@ describe('Organization e2e', () => {
           },
         },
       )
-      .expectError(errors.invalidId('organization.id'));
+      .expectError(errors.invalidId('id'));
   });
 
   it.skip('update organization with mismatch name', async () => {

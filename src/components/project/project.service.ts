@@ -97,7 +97,7 @@ export class ProjectService {
     if (input.type !== ProjectType.Internship && input.sensitivity) {
       throw new InputException(
         'Can only set sensitivity on Internship Projects',
-        'project.sensitivity',
+        'sensitivity',
       );
     }
     this.privileges.for(IProject).verifyCan('create');
@@ -245,7 +245,7 @@ export class ProjectService {
     if (input.sensitivity && currentProject.type !== ProjectType.Internship)
       throw new InputException(
         'Can only set sensitivity on Internship Projects',
-        'project.sensitivity',
+        'sensitivity',
       );
 
     const changes = this.repo.getActualChanges(currentProject, input);
@@ -266,14 +266,14 @@ export class ProjectService {
         if (!location.fundingAccount.value) {
           throw new InputException(
             'Cannot connect location without a funding account',
-            'project.primaryLocation',
+            'primaryLocation',
           );
         }
       } catch (e) {
         if (e instanceof NotFoundException) {
           throw new NotFoundException(
             'Primary location not found',
-            'project.primaryLocation',
+            'primaryLocation',
             e,
           );
         }
@@ -545,7 +545,7 @@ export class ProjectService {
         }
         throw new NotFoundException(
           errMsg,
-          `project.${resourceField}${Array.isArray(ids) ? `[${index}]` : ''}`,
+          `${resourceField}${Array.isArray(ids) ? `[${index}]` : ''}`,
         );
       }),
     );

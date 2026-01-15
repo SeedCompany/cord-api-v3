@@ -50,7 +50,7 @@ export class PostService {
       });
 
       if (!(await this.repo.getBaseNode(input.parent, 'BaseNode'))) {
-        throw new InputException('Parent is invalid', 'post.parent');
+        throw new InputException('Parent is invalid', 'parent');
       }
 
       throw new CreationFailed(Post, { cause: exception });

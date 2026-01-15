@@ -830,7 +830,7 @@ describe('Engagement e2e', () => {
       errors.input({
         message:
           'Only Internship Engagements can be created on Internship Projects',
-        field: 'engagement.intern',
+        field: 'intern',
       }),
     );
   });
@@ -852,7 +852,7 @@ describe('Engagement e2e', () => {
     ).rejects.toThrowGqlError(
       errors.duplicate({
         message: 'Engagement for this project and language already exists',
-        field: 'engagement.language',
+        field: 'language',
       }),
     );
   });
@@ -876,7 +876,7 @@ describe('Engagement e2e', () => {
     ).rejects.toThrowGqlError(
       errors.duplicate({
         message: 'Engagement for this project and person already exists',
-        field: 'engagement.intern',
+        field: 'intern',
       }),
     );
   });
@@ -894,7 +894,7 @@ describe('Engagement e2e', () => {
       errors.input({
         message:
           'First scripture has already been marked as having been done externally',
-        field: 'languageEngagement.firstScripture',
+        field: 'firstScripture',
       }),
     );
   });
@@ -915,7 +915,7 @@ describe('Engagement e2e', () => {
       errors.input({
         message:
           'Another engagement has already been marked as having done the first scripture',
-        field: 'languageEngagement.firstScripture',
+        field: 'firstScripture',
       }),
     );
   });

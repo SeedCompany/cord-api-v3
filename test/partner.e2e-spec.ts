@@ -141,7 +141,7 @@ describe('Partner e2e', () => {
     ).rejects.toThrowGqlError(
       errors.duplicate({
         message: 'Partner for organization already exists.',
-        field: 'partner.organization',
+        field: 'organization',
       }),
     );
   });
@@ -156,7 +156,7 @@ describe('Partner e2e', () => {
         }),
       ).rejects.toThrowGqlError(
         errors.validation({
-          'partner.pmcEntityCode': {
+          pmcEntityCode: {
             matches: 'Must be 3 uppercase letters',
           },
         }),
@@ -176,7 +176,7 @@ describe('Partner e2e', () => {
       errors.input({
         message:
           'Financial reporting type can only be applied to managing partners',
-        field: 'partnership.financialReportingType',
+        field: 'financialReportingType',
       }),
     );
   });

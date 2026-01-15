@@ -65,7 +65,6 @@ export class EducationRepository extends DtoRepository(Education) {
     if (!result) {
       throw new NotFoundException(
         'Could not find user associated with education',
-        'user.education',
       );
     }
     return result;

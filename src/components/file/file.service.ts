@@ -497,7 +497,6 @@ export class FileService {
     baseNodeId: ID,
     propertyName: string,
     initialVersion?: CreateDefinedFileVersion,
-    field?: string,
     isPublic?: boolean,
   ) {
     const name = await this.resolveName(initialFileName, initialVersion);
@@ -516,8 +515,8 @@ export class FileService {
           name: initialVersion.name ?? name,
         });
       } catch (e) {
-        if (e instanceof InputException && e.field === 'upload' && field) {
-          throw e.withField(field + '.upload');
+        if (e instanceof InputException && e.field === 'upload') {
+          throw e.withField(propertyName + '.upload');
         }
         throw e;
       }

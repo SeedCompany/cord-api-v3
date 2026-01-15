@@ -270,7 +270,7 @@ export class LanguageService {
     if (engagement) {
       throw new InputException(
         'hasExternalFirstScripture can be set to true if the language has no engagements that have firstScripture=true',
-        'language.hasExternalFirstScripture',
+        'hasExternalFirstScripture',
       );
     }
   }

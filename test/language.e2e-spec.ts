@@ -258,7 +258,7 @@ describe('Language e2e', () => {
       createLanguage(app, { signLanguageCode }),
     ).rejects.toThrowGqlError(
       errors.validation({
-        'language.signLanguageCode': {
+        signLanguageCode: {
           matches: 'Must be 2 uppercase letters followed by 2 digits',
         },
       }),
@@ -297,7 +297,7 @@ describe('Language e2e', () => {
       errors.input({
         message:
           'hasExternalFirstScripture can be set to true if the language has no engagements that have firstScripture=true',
-        field: 'language.hasExternalFirstScripture',
+        field: 'hasExternalFirstScripture',
       }),
     );
   });

@@ -43,7 +43,7 @@ export class LocationRepository extends DtoRepository(Location) {
     const checkName = await this.doesNameExist(input.name);
     if (checkName) {
       throw new DuplicateException(
-        'location.name',
+        'name',
         'Location with this name already exists.',
       );
     }
@@ -87,7 +87,6 @@ export class LocationRepository extends DtoRepository(Location) {
       dto.id,
       'mapImage',
       input.mapImage,
-      'location.mapImage',
       true,
     );
 

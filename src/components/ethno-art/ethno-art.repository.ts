@@ -40,7 +40,7 @@ export class EthnoArtRepository extends DtoRepository(EthnoArt) {
   async create(input: CreateEthnoArt) {
     if (!(await this.isUnique(input.name))) {
       throw new DuplicateException(
-        'ethnoArt.name',
+        'name',
         'Ethno art with this name already exists',
       );
     }

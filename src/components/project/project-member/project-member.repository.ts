@@ -80,20 +80,14 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
       );
     }
     if (!result.project) {
-      throw new NotFoundException(
-        'Could not find project',
-        'projectMember.project',
-      );
+      throw new NotFoundException('Could not find project', 'project');
     }
     if (!result.user) {
-      throw new NotFoundException(
-        'Could not find person',
-        'projectMember.user',
-      );
+      throw new NotFoundException('Could not find person', 'user');
     }
     if (result.member) {
       throw new DuplicateException(
-        'projectMember.user',
+        'user',
         'Person is already a member of this project',
       );
     }

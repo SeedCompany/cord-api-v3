@@ -62,7 +62,7 @@ export class PartnerRepository extends DtoRepository(Partner) {
     const partnerExists = await this.partnerIdByOrg(input.organization);
     if (partnerExists) {
       throw new DuplicateException(
-        'partner.organization',
+        'organization',
         'Partner for organization already exists.',
       );
     }
@@ -160,9 +160,7 @@ export class PartnerRepository extends DtoRepository(Partner) {
           newList: countries,
         });
       } catch (e) {
-        throw e instanceof InputException
-          ? e.withField('partner.countries')
-          : e;
+        throw e instanceof InputException ? e.withField('countries') : e;
       }
     }
 
@@ -174,9 +172,7 @@ export class PartnerRepository extends DtoRepository(Partner) {
           newList: fieldRegions,
         });
       } catch (e) {
-        throw e instanceof InputException
-          ? e.withField('partner.fieldRegions')
-          : e;
+        throw e instanceof InputException ? e.withField('fieldRegions') : e;
       }
     }
 
@@ -189,7 +185,7 @@ export class PartnerRepository extends DtoRepository(Partner) {
         });
       } catch (e) {
         throw e instanceof InputException
-          ? e.withField('partner.languagesOfConsulting')
+          ? e.withField('languagesOfConsulting')
           : e;
       }
     }

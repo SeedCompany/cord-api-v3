@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import {
   AuthenticationException,
-  DuplicateException,
   type ID,
   InputException,
   ServerException,
@@ -44,21 +43,12 @@ export class AuthenticationService {
       await this.logout(session.token, false);
     }
 
-    let userId;
-    try {
-      const userMod = await import('../../components/user');
-      const users = this.moduleRef.get(userMod.UserService, { strict: false });
-      userId = await this.gel.usingOptions(
-        disableAccessPolicies,
-        async () => await users.create(input),
-      );
-    } catch (e) {
-      // remap field prop as `email` field is at a different location in register() than createPerson()
-      if (e instanceof DuplicateException && e.field === 'person.email') {
-        throw e.withField('email');
-      }
-      throw e;
-    }
+    const userMod = await import('../../components/user');
+    const users = this.moduleRef.get(userMod.UserService, { strict: false });
+    const userId = await this.gel.usingOptions(
+      disableAccessPolicies,
+      async () => await users.create(input),
+    );
 
     const passwordHash = await this.crypto.hash(password);
     await this.repo.savePasswordHashOnUser(userId, passwordHash);

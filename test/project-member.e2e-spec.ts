@@ -60,7 +60,7 @@ describe('ProjectMember e2e', () => {
     ).rejects.toThrowGqlError(
       errors.input({
         message: 'Role(s) Controller cannot be assigned to this project member',
-        field: 'input.roles',
+        field: 'roles',
       }),
     );
   });
@@ -107,7 +107,7 @@ describe('ProjectMember e2e', () => {
     ).rejects.toThrowGqlError(
       errors.notFound({
         message: 'Could not find project member',
-        field: 'projectMember.id',
+        field: 'id',
       }),
     );
   });
@@ -215,7 +215,7 @@ describe('ProjectMember e2e', () => {
     ).rejects.toThrowGqlError(
       errors.input({
         message: 'Role(s) Intern cannot be assigned to this project member',
-        field: 'input.roles',
+        field: 'roles',
       }),
     );
   });

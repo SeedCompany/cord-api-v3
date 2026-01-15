@@ -39,7 +39,7 @@ export class FieldRegionRepository extends DtoRepository(FieldRegion) {
   async create(input: CreateFieldRegion) {
     if (!(await this.isUnique(input.name))) {
       throw new DuplicateException(
-        'fieldRegion.name',
+        'name',
         'FieldRegion with this name already exists.',
       );
     }

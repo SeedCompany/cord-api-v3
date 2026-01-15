@@ -63,20 +63,12 @@ export class PartnershipService {
     const [_project, partner] = await Promise.all([
       this.resourceLoader.load('Project', input.project).catch((e) => {
         throw e instanceof NotFoundException
-          ? new NotFoundException(
-              'Could not find project',
-              'partnership.project',
-              e,
-            )
+          ? new NotFoundException('Could not find project', 'project', e)
           : e;
       }),
       this.resourceLoader.load('Partner', input.partner).catch((e) => {
         throw e instanceof NotFoundException
-          ? new NotFoundException(
-              'Could not find partner',
-              'partnership.partner',
-              e,
-            )
+          ? new NotFoundException('Could not find partner', 'partner', e)
           : e;
       }),
     ]);
@@ -184,7 +176,7 @@ export class PartnershipService {
     if (input.primary === false) {
       throw new InputException(
         'To remove primary from this partnership, set another partnership as the primary',
-        'partnership.primary',
+        'primary',
       );
     }
 
@@ -233,7 +225,6 @@ export class PartnershipService {
       if (isOthers) {
         throw new InputException(
           'Primary partnerships cannot be removed. Make another partnership primary first.',
-          'partnership.id',
         );
       }
     }
@@ -276,13 +267,13 @@ export class PartnershipService {
     ) {
       throw new InputException(
         `Partner does not have this financial reporting type available`,
-        'partnership.financialReportingType',
+        'financialReportingType',
       );
     }
     if (!types.includes(PartnerType.Managing)) {
       throw new InputException(
         'Financial reporting type can only be applied to managing partners',
-        'partnership.financialReportingType',
+        'financialReportingType',
       );
     }
   }

@@ -69,7 +69,6 @@ export class UnavailabilityRepository extends DtoRepository(Unavailability) {
     if (!result) {
       throw new NotFoundException(
         'Could not find user associated with unavailability',
-        'user.unavailability',
       );
     }
     return result;

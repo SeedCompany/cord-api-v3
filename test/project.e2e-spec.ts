@@ -119,7 +119,7 @@ describe('Project e2e', () => {
     ).rejects.toThrowGqlError(
       errors.duplicate({
         message: 'Project with this name already exists',
-        field: 'project.name',
+        field: 'name',
       }),
     );
   });
@@ -193,7 +193,7 @@ describe('Project e2e', () => {
     ).rejects.toThrowGqlError(
       errors.notFound({
         message: 'Field region not found',
-        field: 'project.fieldRegion',
+        field: 'fieldRegion',
       }),
     );
   });

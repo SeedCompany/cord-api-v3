@@ -228,7 +228,7 @@ export class ProjectRepository extends CommonRepository {
       if (e instanceof UniquenessError && e.label === 'ProjectName') {
         throw Object.assign(
           new DuplicateException(
-            'project.name',
+            'name',
             'Project with this name already exists',
           ),
           { value: e.value },
@@ -237,7 +237,7 @@ export class ProjectRepository extends CommonRepository {
       if (e instanceof UniquenessError && e.label === 'DepartmentId') {
         throw Object.assign(
           new DuplicateException(
-            'project.departmentId',
+            'departmentId',
             'Another Project with this Department ID already exists',
           ),
           { value: e.value },
@@ -277,7 +277,7 @@ export class ProjectRepository extends CommonRepository {
       if (e instanceof UniquenessError && e.label === 'DepartmentId') {
         throw Object.assign(
           new DuplicateException(
-            'project.departmentId',
+            'departmentId',
             'Another Project with this Department ID already exists',
           ),
           { value: e.value },

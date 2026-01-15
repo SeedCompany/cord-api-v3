@@ -33,7 +33,7 @@ export class FundingAccountService {
     this.privileges.for(FundingAccount).verifyCan('create');
     if (!(await this.repo.isUnique(input.name))) {
       throw new DuplicateException(
-        'fundingAccount.name',
+        'name',
         'FundingAccount with this name already exists.',
       );
     }

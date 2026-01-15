@@ -125,7 +125,7 @@ export class EngagementService {
     if (status && status !== EngagementStatus.InDevelopment) {
       throw new InputException(
         'The Engagement status should be in development',
-        'engagement.status',
+        'status',
       );
     }
   }
