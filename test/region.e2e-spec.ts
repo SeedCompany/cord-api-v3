@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker';
-import { afterAll, beforeAll, describe, expect, it } from '@jest/globals';
+import { beforeAll, describe, expect, it } from '@jest/globals';
 import { isValidId, Role } from '~/common';
 import { graphql } from '~/graphql';
 import {
@@ -29,10 +29,6 @@ describe('Region e2e', () => {
       roles: [Role.RegionalDirector],
     });
     fieldZone = await createZone(app);
-  });
-
-  afterAll(async () => {
-    await app.close();
   });
 
   it('create a field region', async () => {

@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from '@jest/globals';
+import { beforeAll, describe, expect, it } from '@jest/globals';
 import { DateTime, Interval } from 'luxon';
 import { Role } from '~/common';
 import { graphql } from '~/graphql';
@@ -30,9 +30,6 @@ describe('ProjectMember e2e', () => {
       ],
     });
     project = await createProject(app);
-  });
-  afterAll(async () => {
-    await app.close();
   });
 
   it('create projectMember', async () => {

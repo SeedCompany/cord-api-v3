@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker';
-import { afterAll, beforeAll, describe, expect, it } from '@jest/globals';
+import { beforeAll, describe, expect, it } from '@jest/globals';
 import { intersection, times } from 'lodash';
 import { v1 as uuid } from 'uuid';
 import {
@@ -109,10 +109,6 @@ describe('Project e2e', () => {
     });
     intern = director;
     mentor = director;
-  });
-
-  afterAll(async () => {
-    await app.close();
   });
 
   it('should have unique name', async () => {

@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from '@jest/globals';
+import { beforeAll, describe, expect, it } from '@jest/globals';
 import { type ID, Role } from '~/common';
 import { graphql } from '~/graphql';
 import { PartnershipAgreementStatus } from '../src/components/partnership/dto';
@@ -90,10 +90,6 @@ describe('Partnership Changeset Aware e2e', () => {
     await registerUser(app, {
       roles: [Role.ProjectManager, Role.Administrator],
     });
-  });
-
-  afterAll(async () => {
-    await app.close();
   });
 
   it('Create', async () => {

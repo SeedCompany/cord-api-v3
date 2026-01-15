@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, expect, it } from '@jest/globals';
+import { beforeAll, expect, it } from '@jest/globals';
 import { entries, mapEntries } from '@seedcompany/common';
 import { DateTime } from 'luxon';
 import { type ID, Role } from '~/common';
@@ -22,9 +22,6 @@ beforeAll(async () => {
   app = await createTestApp();
   await createSession(app);
   await loginAsAdmin(app);
-});
-afterAll(async () => {
-  await app.close();
 });
 
 it('director change replaces memberships on open projects', async () => {

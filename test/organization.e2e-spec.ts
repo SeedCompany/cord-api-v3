@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker';
-import { afterAll, beforeAll, describe, expect, it } from '@jest/globals';
+import { beforeAll, describe, expect, it } from '@jest/globals';
 import { sortBy } from '@seedcompany/common';
 import { times } from 'lodash';
 import { generateId, type ID, isValidId, Role } from '~/common';
@@ -23,10 +23,6 @@ describe('Organization e2e', () => {
     await registerUser(app, {
       roles: [Role.Controller],
     });
-  });
-
-  afterAll(async () => {
-    await app.close();
   });
 
   it.skip('should have unique name', async () => {

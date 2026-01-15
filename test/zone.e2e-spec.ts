@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker';
-import { afterAll, beforeAll, describe, expect, it } from '@jest/globals';
+import { beforeAll, describe, expect, it } from '@jest/globals';
 import { times } from 'lodash';
 import { isValidId } from '~/common';
 import { graphql } from '~/graphql';
@@ -30,10 +30,6 @@ describe('Field Zone e2e', () => {
     newDirector = await createPerson(app, {
       roles: ['FieldOperationsDirector'],
     });
-  });
-
-  afterAll(async () => {
-    await app.close();
   });
 
   it('create a field zone', async () => {

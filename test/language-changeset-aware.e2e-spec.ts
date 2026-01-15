@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker';
-import { afterAll, beforeAll, describe, expect, it } from '@jest/globals';
+import { beforeAll, describe, expect, it } from '@jest/globals';
 import { type ID } from '~/common';
 import { graphql } from '~/graphql';
 import {
@@ -63,10 +63,6 @@ describe.skip('Language Changeset Aware e2e', () => {
     // Only admins can modify languages. This will probably need changes in app code,
     // to allow others to modify certain language props within changesets.
     await loginAsAdmin(app);
-  });
-
-  afterAll(async () => {
-    await app.close();
   });
 
   it('Update', async () => {

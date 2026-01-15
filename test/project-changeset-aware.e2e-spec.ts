@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker';
-import { afterAll, beforeAll, describe, expect, it } from '@jest/globals';
+import { beforeAll, describe, expect, it } from '@jest/globals';
 import { CalendarDate, type ID, Role } from '~/common';
 import { graphql } from '~/graphql';
 import { PartnerType } from '../src/components/partner/dto';
@@ -89,10 +89,6 @@ describe('Project Changeset Aware e2e', () => {
     await registerUser(app, {
       roles: [Role.Administrator],
     });
-  });
-
-  afterAll(async () => {
-    await app.close();
   });
 
   it('name', async () => {
