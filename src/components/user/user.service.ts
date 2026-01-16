@@ -4,7 +4,6 @@ import {
   type ObjectView,
   Role,
   SecuredList,
-  ServerException,
   UnauthorizedException,
   type UnsecuredDto,
 } from '~/common';
@@ -264,29 +263,21 @@ export class UserService {
   }
 
   async addLocation(userId: ID, locationId: ID): Promise<void> {
-    try {
-      await this.locationService.addLocationToNode(
-        'User',
-        userId,
-        'locations',
-        locationId,
-      );
-    } catch (e) {
-      throw new ServerException('Could not add location to user', e);
-    }
+    await this.locationService.addLocationToNode(
+      'User',
+      userId,
+      'locations',
+      locationId,
+    );
   }
 
   async removeLocation(userId: ID, locationId: ID): Promise<void> {
-    try {
-      await this.locationService.removeLocationFromNode(
-        'User',
-        userId,
-        'locations',
-        locationId,
-      );
-    } catch (e) {
-      throw new ServerException('Could not remove location from user', e);
-    }
+    await this.locationService.removeLocationFromNode(
+      'User',
+      userId,
+      'locations',
+      locationId,
+    );
   }
 
   async listLocations(

@@ -237,29 +237,21 @@ export class LanguageService {
   }
 
   async addLocation(languageId: ID, locationId: ID): Promise<void> {
-    try {
-      await this.locationService.addLocationToNode(
-        'Language',
-        languageId,
-        'locations',
-        locationId,
-      );
-    } catch (e) {
-      throw new ServerException('Could not add location to language', e);
-    }
+    await this.locationService.addLocationToNode(
+      'Language',
+      languageId,
+      'locations',
+      locationId,
+    );
   }
 
   async removeLocation(languageId: ID, locationId: ID): Promise<void> {
-    try {
-      await this.locationService.removeLocationFromNode(
-        'Language',
-        languageId,
-        'locations',
-        locationId,
-      );
-    } catch (e) {
-      throw new ServerException('Could not remove location from language', e);
-    }
+    await this.locationService.removeLocationFromNode(
+      'Language',
+      languageId,
+      'locations',
+      locationId,
+    );
   }
 
   /**
