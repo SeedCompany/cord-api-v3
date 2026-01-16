@@ -7,8 +7,8 @@ import {
   Grandparent,
   type ID,
   IdField,
-  OmitType,
 } from '~/common';
+import { AsChangesType } from '~/common/as-changes.type';
 import { UpdateProject } from './update-project.dto';
 
 @InterfaceType({
@@ -47,20 +47,15 @@ export class ProjectCreated extends AnyProjectChange {
 }
 
 @ObjectType()
-export class ProjectChanges extends OmitType(UpdateProject, [
-  'id',
-  // Annoying omit from schema, re-add for TS, so that the resolver
-  // can resolve the fields to their objects instead of presenting IDs
-  'primaryLocation',
-  'marketingLocation',
-  'marketingRegionOverride',
-  'fieldRegion',
-]) {
-  readonly primaryLocation?: ID<'Location'> | null;
-  readonly marketingLocation?: ID<'Location'> | null;
-  readonly marketingRegionOverride?: ID<'Location'> | null;
-  readonly fieldRegion?: ID<'FieldRegion'> | null;
-}
+export class ProjectChanges extends AsChangesType(UpdateProject, {
+  omit: ['id'],
+  links: [
+    'primaryLocation',
+    'marketingLocation',
+    'marketingRegionOverride',
+    'fieldRegion',
+  ],
+}) {}
 
 @ObjectType({ implements: [AnyProjectChange] })
 export class ProjectUpdated extends AnyProjectChange {

@@ -1,6 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { type Many } from '@seedcompany/common';
-import { omit } from 'lodash';
 import {
   type CalendarDate,
   ClientException,
@@ -55,6 +54,7 @@ import {
   MomentumTranslationProject,
   MultiplicationTranslationProject,
   type Project,
+  ProjectChanges,
   type ProjectListInput,
   ProjectStatus,
   ProjectType,
@@ -316,7 +316,7 @@ export class ProjectService {
     this.channels.publishToAll('updated', {
       project: updated.id,
       at: changes.modifiedAt!,
-      changes: omit(changes, ['modifiedAt']),
+      changes: ProjectChanges.fromUpdateChanges(changes),
     });
 
     return event.updated;

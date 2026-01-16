@@ -33,7 +33,7 @@ export class ProjectChangesLinksResolver {
         ...project.primaryLocation,
         value: changes.primaryLocation,
       },
-      (id) => locations.load(id),
+      ({ id }) => locations.load(id),
     );
   }
 
@@ -58,7 +58,7 @@ export class ProjectChangesLinksResolver {
         ...project.marketingLocation,
         value: changes.marketingLocation,
       },
-      (id) => locations.load(id),
+      ({ id }) => locations.load(id),
     );
   }
 
@@ -83,7 +83,7 @@ export class ProjectChangesLinksResolver {
         ...project.marketingRegionOverride,
         value: changes.marketingRegionOverride,
       },
-      (id) => locations.load(id),
+      ({ id }) => locations.load(id),
     );
   }
 
@@ -108,7 +108,7 @@ export class ProjectChangesLinksResolver {
         ...project.fieldRegion,
         value: changes.fieldRegion,
       },
-      (id) => regions.load(id),
+      ({ id }) => regions.load(id),
     );
   }
 }
