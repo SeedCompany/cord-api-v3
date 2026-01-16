@@ -85,32 +85,21 @@ export class OrganizationService {
   }
 
   async addLocation(organizationId: ID, locationId: ID): Promise<void> {
-    try {
-      await this.locationService.addLocationToNode(
-        'Organization',
-        organizationId,
-        'locations',
-        locationId,
-      );
-    } catch (e) {
-      throw new ServerException('Could not add location to organization', e);
-    }
+    await this.locationService.addLocationToNode(
+      'Organization',
+      organizationId,
+      'locations',
+      locationId,
+    );
   }
 
   async removeLocation(organizationId: ID, locationId: ID): Promise<void> {
-    try {
-      await this.locationService.removeLocationFromNode(
-        'Organization',
-        organizationId,
-        'locations',
-        locationId,
-      );
-    } catch (e) {
-      throw new ServerException(
-        'Could not remove location from organization',
-        e,
-      );
-    }
+    await this.locationService.removeLocationFromNode(
+      'Organization',
+      organizationId,
+      'locations',
+      locationId,
+    );
   }
 
   async listLocations(

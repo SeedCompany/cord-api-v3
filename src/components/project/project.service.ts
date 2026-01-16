@@ -456,32 +456,21 @@ export class ProjectService {
   }
 
   async addOtherLocation(projectId: ID, locationId: ID): Promise<void> {
-    try {
-      await this.locationService.addLocationToNode(
-        'Project',
-        projectId,
-        'otherLocations',
-        locationId,
-      );
-    } catch (e) {
-      throw new ServerException('Could not add other location to project', e);
-    }
+    await this.locationService.addLocationToNode(
+      'Project',
+      projectId,
+      'otherLocations',
+      locationId,
+    );
   }
 
   async removeOtherLocation(projectId: ID, locationId: ID): Promise<void> {
-    try {
-      await this.locationService.removeLocationFromNode(
-        'Project',
-        projectId,
-        'otherLocations',
-        locationId,
-      );
-    } catch (e) {
-      throw new ServerException(
-        'Could not remove other location from project',
-        e,
-      );
-    }
+    await this.locationService.removeLocationFromNode(
+      'Project',
+      projectId,
+      'otherLocations',
+      locationId,
+    );
   }
 
   async listOtherLocations(

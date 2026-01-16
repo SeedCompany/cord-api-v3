@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
+import { DateTime } from 'luxon';
 import { type ID, type PublicOf, ServerException } from '~/common';
+import type { ResourceNameLike } from '~/core';
 import { e, RepoFor } from '~/core/gel';
 import {
   type CreateLocation,
@@ -37,33 +39,59 @@ export class LocationGelRepository
     });
   }
 
-  async addLocationToNode(label: string, id: ID, rel: string, locationId: ID) {
+  async addLocationToNode(
+    label: ResourceNameLike,
+    id: ID,
+    rel: string,
+    locationId: ID<'Location'>,
+  ) {
+    const location = e.cast(e.Location, e.cast(e.uuid, locationId));
     const res = this.resources.getByGel(label);
     const node = e.cast(res.db, e.cast(e.uuid, id));
-    const location = e.cast(e.Location, e.cast(e.uuid, locationId));
-    const query = e.update(node, () => ({
-      set: {
-        [rel]: { '+=': location },
-      },
-    }));
-    await this.db.run(query);
+    const edge = (node as any)[
+      rel
+    ] as unknown as typeof e.Project.otherLocations;
+
+    const query = e.op(
+      'if',
+      e.op('not', e.op(location, 'in', edge)),
+      'then',
+      e.update(node, () => ({
+        set: { [rel]: { '+=': location } },
+      })),
+      'else',
+      e.cast(e.uuid, e.set()),
+    );
+    const updated = await this.db.run(query);
+    return updated ? DateTime.now() : null;
   }
 
   async removeLocationFromNode(
-    label: string,
+    label: ResourceNameLike,
     id: ID,
     rel: string,
-    locationId: ID,
+    locationId: ID<'Location'>,
   ) {
+    const location = e.cast(e.Location, e.cast(e.uuid, locationId));
+
     const res = this.resources.getByGel(label);
     const node = e.cast(res.db, e.cast(e.uuid, id));
-    const location = e.cast(e.Location, e.cast(e.uuid, locationId));
-    const query = e.update(node, () => ({
-      set: {
-        [rel]: { '-=': location },
-      },
-    }));
-    await this.db.run(query);
+    const edge = (node as any)[
+      rel
+    ] as unknown as typeof e.Project.otherLocations;
+
+    const query = e.op(
+      'if',
+      e.op(location, 'in', edge),
+      'then',
+      e.update(node, () => ({
+        set: { [rel]: { '-=': location } },
+      })),
+      'else',
+      e.cast(e.uuid, e.set()),
+    );
+    const updated = await this.db.run(query);
+    return updated ? DateTime.now() : null;
   }
 
   async listLocationsFromNodeNoSecGroups(
