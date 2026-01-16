@@ -6,23 +6,23 @@ import { omitNotFound$, Subscription } from '~/common';
 import { Hooks } from '~/core/hooks';
 import { ResourceLoader } from '~/core/resources';
 import {
-  AnyProjectChange,
-  AnyProjectChangeOrDeletion,
   IProject,
   ProjectCreated,
   ProjectDeleted,
+  ProjectMutation,
+  ProjectMutationOrDeletion,
   ProjectUpdated,
 } from './dto';
-import { ObserveProjectChangeHook } from './events';
+import { ObserveProjectMutationHook } from './events';
 import {
-  ProjectChangedArgs,
-  type ProjectChangedPayload,
   ProjectChannels,
+  ProjectMutationArgs,
+  type ProjectMutationPayload,
 } from './project.channels';
 import { ProjectLoader } from './project.loader';
 
-@Resolver(AnyProjectChange)
-export class ProjectChangeSubscriptionsResolver {
+@Resolver(ProjectMutation)
+export class ProjectMutationSubscriptionsResolver {
   constructor(
     private readonly channels: ProjectChannels,
     private readonly loaders: ResourceLoader,
@@ -31,7 +31,7 @@ export class ProjectChangeSubscriptionsResolver {
 
   private verifyReadPermission$() {
     return mergeMap(
-      <Payload extends ProjectChangedPayload>(payload: Payload) => {
+      <Payload extends ProjectMutationPayload>(payload: Payload) => {
         // Omit event if the user watching doesn't have permission to view the project
         return from(this.loaders.load('Project', payload.project)).pipe(
           omitNotFound$(),
@@ -46,63 +46,59 @@ export class ProjectChangeSubscriptionsResolver {
     return this.channels.created().pipe(
       this.verifyReadPermission$(),
       map(
-        ({ project, at, by }): ProjectCreated => ({
+        ({ project, ...rest }): ProjectCreated => ({
           __typename: 'ProjectCreated',
           projectId: project,
-          at,
-          by,
+          ...rest,
         }),
       ),
     );
   }
 
   @Subscription(() => ProjectUpdated)
-  projectUpdated(@Args() args: ProjectChangedArgs) {
+  projectUpdated(@Args() args: ProjectMutationArgs) {
     return this.channels.updated(args).pipe(
       this.verifyReadPermission$(),
       map(
-        ({ project, changes, at, by }): ProjectUpdated => ({
+        ({ project, ...rest }): ProjectUpdated => ({
           __typename: 'ProjectUpdated',
           projectId: project,
-          changes,
-          changedKeys: keys(changes),
-          at,
-          by,
+          ...rest,
+          updatedKeys: keys(rest.updated),
         }),
       ),
     );
   }
 
   @Subscription(() => ProjectDeleted)
-  projectDeleted(@Args() args: ProjectChangedArgs) {
+  projectDeleted(@Args() args: ProjectMutationArgs) {
     return this.channels.deleted(args).pipe(
       map(
-        ({ project: id, at, by }): ProjectDeleted => ({
+        ({ project: id, ...rest }): ProjectDeleted => ({
           __typename: 'ProjectDeleted',
           projectId: id,
-          at,
-          by,
+          ...rest,
         }),
       ),
     );
   }
 
-  @Subscription(() => AnyProjectChangeOrDeletion, {
-    description: 'Subscribe to any changes of project(s)',
+  @Subscription(() => ProjectMutationOrDeletion, {
+    description: 'Subscribe to any mutations of project(s)',
   })
-  async projectChanges(@Args() args: ProjectChangedArgs) {
-    const channels = new Set<ObservableInput<AnyProjectChange>>([
+  async projectMutations(@Args() args: ProjectMutationArgs) {
+    const channels = new Set<ObservableInput<ProjectMutationOrDeletion>>([
       this.projectCreated(),
       this.projectUpdated(args),
       this.projectDeleted(args),
     ]);
-    await this.hooks.run(new ObserveProjectChangeHook(args, channels));
+    await this.hooks.run(new ObserveProjectMutationHook(args, channels));
     return merge(...channels);
   }
 
   @ResolveField(() => IProject)
   async project(
-    @Parent() change: AnyProjectChange,
+    @Parent() change: ProjectMutation,
     @Loader(ProjectLoader) projects: LoaderOf<ProjectLoader>,
   ): Promise<IProject> {
     return await projects.load({

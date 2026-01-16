@@ -3,18 +3,18 @@ import { Loader, type LoaderOf } from '@seedcompany/data-loader';
 import { NotFoundException } from '~/common';
 import { ActorLoader } from '../user/actor.loader';
 import { SecuredActor } from '../user/dto';
-import { AnyProjectChange, AnyProjectChangeOrDeletion } from './dto';
+import { ProjectMutation, ProjectMutationOrDeletion } from './dto';
 
-@Resolver(AnyProjectChangeOrDeletion)
-export class ProjectChangeActorResolver {
+@Resolver(ProjectMutationOrDeletion)
+export class ProjectMutationActorResolver {
   @ResolveField(() => SecuredActor, {
     description: 'The actor who initiated the change',
   })
   async by(
-    @Parent() change: AnyProjectChange,
+    @Parent() mutation: ProjectMutation,
     @Loader(ActorLoader) actors: LoaderOf<ActorLoader>,
   ): Promise<SecuredActor> {
-    const actor = await actors.load(change.by).catch((e) => {
+    const actor = await actors.load(mutation.by).catch((e) => {
       if (e instanceof NotFoundException) {
         return undefined;
       }

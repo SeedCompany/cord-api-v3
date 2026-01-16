@@ -5,7 +5,10 @@ import type { LinkTo, LinkToUnknown, ResourceMap } from '~/core/resources';
 import { type ID } from './id-field';
 import { OmitType } from './types';
 
-export const AsChangesType = <
+/**
+ * Converts a GQL `input` UpdateX class to a GQL `type` (output) XUpdate class.
+ */
+export const AsUpdateType = <
   T,
   Args extends unknown[],
   const OmitKeys extends keyof T,
@@ -26,7 +29,7 @@ export const AsChangesType = <
     ]) as Class<Output, Args>,
     {
       Links: links,
-      fromUpdateChanges: makeForUpdate<Omit<T, OmitKeys>, Output>(links),
+      fromInput: makeFromInput<Omit<T, OmitKeys>, Output>(links),
     },
   );
 };
@@ -53,7 +56,7 @@ type IDsAsLinks<T, Links extends LiteralUnion<keyof T & string, string>> = Omit<
     : never;
 };
 
-const makeForUpdate =
+const makeFromInput =
   <Input extends object, Output>(links: ReadonlySet<string>) =>
   (changes: Input): Output => {
     return Object.fromEntries(

@@ -54,10 +54,10 @@ import {
   MomentumTranslationProject,
   MultiplicationTranslationProject,
   type Project,
-  ProjectChanges,
   type ProjectListInput,
   ProjectStatus,
   ProjectType,
+  ProjectUpdate,
   resolveProjectType,
   type SecuredProjectList,
   TranslationProject,
@@ -316,7 +316,7 @@ export class ProjectService {
     this.channels.publishToAll('updated', {
       project: updated.id,
       at: changes.modifiedAt!,
-      changes: ProjectChanges.fromUpdateChanges(changes),
+      updated: ProjectUpdate.fromInput(changes),
     });
 
     return event.updated;

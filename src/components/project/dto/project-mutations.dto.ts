@@ -8,13 +8,13 @@ import {
   type ID,
   IdField,
 } from '~/common';
-import { AsChangesType } from '~/common/as-changes.type';
+import { AsUpdateType } from '~/common/as-update.type';
 import { UpdateProject } from './update-project.dto';
 
 @InterfaceType({
   resolveType: (x) => x.__typename,
 })
-export class AnyProjectChangeOrDeletion extends DataObject {
+export class ProjectMutationOrDeletion extends DataObject {
   readonly __typename: string;
 
   /**
@@ -23,7 +23,7 @@ export class AnyProjectChangeOrDeletion extends DataObject {
    * favoring the actual object instead which holds its own id property.
    * We compromise here because a delete action cannot include the output type,
    * since it doesn't exist anymore.
-   * This interface would be better as a union of the delete action or AnyProjectChange.
+   * This interface would be better as a union of the delete action or ProjectMutation.
    * This way the delete action can give the ID directly, and any other project
    * change can give the project object.
    * Unfortunately, the GraphQL spec does not allow interfaces in unions.
@@ -39,17 +39,17 @@ export class AnyProjectChangeOrDeletion extends DataObject {
 }
 
 @InterfaceType({
-  implements: [AnyProjectChangeOrDeletion],
+  implements: [ProjectMutationOrDeletion],
 })
-export class AnyProjectChange extends AnyProjectChangeOrDeletion {}
+export class ProjectMutation extends ProjectMutationOrDeletion {}
 
-@ObjectType({ implements: [AnyProjectChange] })
-export class ProjectCreated extends AnyProjectChange {
+@ObjectType({ implements: [ProjectMutation] })
+export class ProjectCreated extends ProjectMutation {
   declare readonly __typename: 'ProjectCreated';
 }
 
 @ObjectType()
-export class ProjectChanges extends AsChangesType(UpdateProject, {
+export class ProjectUpdate extends AsUpdateType(UpdateProject, {
   omit: ['id'],
   links: [
     'primaryLocation',
@@ -59,33 +59,25 @@ export class ProjectChanges extends AsChangesType(UpdateProject, {
   ],
 }) {}
 
-@ObjectType({ implements: [AnyProjectChange] })
-export class ProjectUpdated extends AnyProjectChange {
+@ObjectType({ implements: [ProjectMutation] })
+export class ProjectUpdated extends ProjectMutation {
   declare readonly __typename: 'ProjectUpdated';
 
-  // TODO maybe updates: ProjectUpdates
-  //  avoid ambiguity with AnyProjectChange
-  //  and it is only project's own properties that change, not nested.
   @Field({ middleware: [Grandparent.store] })
-  readonly changes: ProjectChanges;
+  readonly updated: ProjectUpdate;
 
-  // TODO should this be here or in ProjectChanges.
-  //   ProjectUpdated.changeKeys
-  //                 .changes
-  //      or
-  //   ProjectUpdated.changes.changeKeys
   @Field(() => [String], {
     description: stripIndent`
-      A list of keys of this object which have changed.
+      A list of keys of this object which have been updated.
 
       If your GQL usage cannot distinguish between omitted fields and explicit nulls,
-      this can be used to determine which fields have changed.
+      this can be used to determine which fields have been updated.
     `,
   })
-  readonly changedKeys: ReadonlyArray<keyof ProjectChanges>;
+  readonly updatedKeys: ReadonlyArray<keyof ProjectUpdate>;
 }
 
-@ObjectType({ implements: [AnyProjectChangeOrDeletion] })
-export class ProjectDeleted extends AnyProjectChangeOrDeletion {
+@ObjectType({ implements: [ProjectMutationOrDeletion] })
+export class ProjectDeleted extends ProjectMutationOrDeletion {
   declare readonly __typename: 'ProjectDeleted';
 }

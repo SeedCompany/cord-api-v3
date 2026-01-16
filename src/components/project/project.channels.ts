@@ -5,17 +5,17 @@ import type { SetRequired } from 'type-fest';
 import { type ID, IdField } from '~/common';
 import { Identity } from '~/core/authentication';
 import { type BroadcastChannel, Broadcaster } from '~/core/broadcast';
-import { type ProjectChanges } from './dto';
+import { type ProjectUpdate } from './dto';
 
 @ArgsType()
-export class ProjectChangedArgs {
+export class ProjectMutationArgs {
   @IdField({ nullable: true })
   project?: ID<'Project'>;
 }
 
-export type ProjectChangedPayload = SetRequired<
-  ProjectChangedArgs,
-  keyof ProjectChangedArgs
+export type ProjectMutationPayload = SetRequired<
+  ProjectMutationArgs,
+  keyof ProjectMutationArgs
 > & {
   at: DateTime;
   by: ID<'User'>;
@@ -37,7 +37,7 @@ export class ProjectChannels {
   publishToAll<Action extends Exclude<keyof ProjectChannels, 'publishToAll'>>(
     action: Action,
     payload: ReturnType<ProjectChannels[Action]> extends BroadcastChannel<
-      infer T extends ProjectChangedPayload
+      infer T extends ProjectMutationPayload
     >
       ? Omit<T, 'by'>
       : never,
@@ -49,19 +49,21 @@ export class ProjectChannels {
   }
 
   created() {
-    return this.broadcaster.channel<ProjectChangedPayload>('project:created');
+    return this.broadcaster.channel<ProjectMutationPayload>('project:created');
   }
 
-  deleted({ project }: ProjectChangedArgs = {}) {
-    return this.broadcaster.channel<ProjectChangedPayload>(
+  deleted({ project }: ProjectMutationArgs = {}) {
+    return this.broadcaster.channel<ProjectMutationPayload>(
       'project:deleted',
       project,
     );
   }
 
-  updated({ project }: ProjectChangedArgs = {}) {
+  updated({ project }: ProjectMutationArgs = {}) {
     return this.broadcaster.channel<
-      ProjectChangedPayload & { changes: ProjectChanges }
+      ProjectMutationPayload & {
+        updated: ProjectUpdate;
+      }
     >('project:updated', project);
   }
 }
