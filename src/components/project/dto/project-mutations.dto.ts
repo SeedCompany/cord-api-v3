@@ -64,6 +64,9 @@ export class ProjectUpdated extends ProjectMutation {
   declare readonly __typename: 'ProjectUpdated';
 
   @Field({ middleware: [Grandparent.store] })
+  readonly previous: ProjectUpdate;
+
+  @Field({ middleware: [Grandparent.store] })
   readonly updated: ProjectUpdate;
 
   @Field(() => [String], {

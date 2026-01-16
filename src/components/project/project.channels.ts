@@ -62,6 +62,7 @@ export class ProjectChannels {
   updated({ project }: ProjectMutationArgs = {}) {
     return this.broadcaster.channel<
       ProjectMutationPayload & {
+        previous: ProjectUpdate;
         updated: ProjectUpdate;
       }
     >('project:updated', project);

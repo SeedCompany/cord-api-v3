@@ -1,5 +1,5 @@
 import { entries, setHas, setOf } from '@seedcompany/common';
-import { omit } from 'lodash';
+import { omit, pick } from 'lodash';
 import type { AbstractClass, Class, LiteralUnion } from 'type-fest';
 import type { LinkTo, LinkToUnknown, ResourceMap } from '~/core/resources';
 import { type ID } from './id-field';
@@ -30,6 +30,8 @@ export const AsUpdateType = <
     {
       Links: links,
       fromInput: makeFromInput<Omit<T, OmitKeys>, Output>(links),
+      pickPrevious: (prev: Output, changes: Omit<T, OmitKeys>): Output =>
+        omit(pick(prev, Object.keys(changes)), 'modifiedAt') as Output,
     },
   );
 };

@@ -317,6 +317,7 @@ export class ProjectService {
       project: updated.id,
       at: changes.modifiedAt!,
       updated: ProjectUpdate.fromInput(changes),
+      previous: ProjectUpdate.pickPrevious(currentProject, changes),
     });
 
     return event.updated;
