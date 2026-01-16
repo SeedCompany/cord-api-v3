@@ -475,21 +475,39 @@ export class ProjectService {
   }
 
   async addOtherLocation(projectId: ID, locationId: ID): Promise<void> {
-    await this.locationService.addLocationToNode(
+    const changedAt = await this.locationService.addLocationToNode(
       'Project',
       projectId,
       'otherLocations',
       locationId,
     );
+    if (!changedAt) {
+      return;
+    }
+    this.channels.publishToAll('updated', {
+      project: projectId,
+      at: changedAt,
+      updated: { otherLocations: { Added: [locationId] } },
+      previous: {},
+    });
   }
 
   async removeOtherLocation(projectId: ID, locationId: ID): Promise<void> {
-    await this.locationService.removeLocationFromNode(
+    const changedAt = await this.locationService.removeLocationFromNode(
       'Project',
       projectId,
       'otherLocations',
       locationId,
     );
+    if (!changedAt) {
+      return;
+    }
+    this.channels.publishToAll('updated', {
+      project: projectId,
+      at: changedAt,
+      updated: { otherLocations: { Removed: [locationId] } },
+      previous: {},
+    });
   }
 
   async listOtherLocations(

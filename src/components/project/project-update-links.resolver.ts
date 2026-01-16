@@ -1,15 +1,25 @@
-import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
+import { Args, Parent, ResolveField, Resolver } from '@nestjs/graphql';
+import { asNonEmptyArray } from '@seedcompany/common';
 import { Loader, type LoaderOf } from '@seedcompany/data-loader';
-import { Grandparent, mapSecuredValue } from '~/common';
+import {
+  CollectionMutationType,
+  Grandparent,
+  loadManyIgnoreMissingThrowAny,
+  mapSecuredValue,
+  SecuredList,
+} from '~/common';
+import { Privileges } from '../authorization';
 import { FieldRegionLoader } from '../field-region';
 import { SecuredFieldRegion } from '../field-region/dto';
 import { LocationLoader } from '../location';
-import { SecuredLocation } from '../location/dto';
-import { ProjectUpdate, ProjectUpdated } from './dto';
+import { SecuredLocation, SecuredLocationList } from '../location/dto';
+import { IProject, ProjectUpdate, ProjectUpdated } from './dto';
 import { ProjectLoader } from './project.loader';
 
 @Resolver(ProjectUpdate)
 export class ProjectUpdateLinksResolver {
+  constructor(private readonly privileges: Privileges) {}
+
   @ResolveField(() => SecuredLocation, {
     // Secured objects should actually be nullable in this `Update` object
     // as unchanged is null.
@@ -85,6 +95,53 @@ export class ProjectUpdateLinksResolver {
       },
       ({ id }) => locations.load(id),
     );
+  }
+
+  @ResolveField(() => SecuredLocationList, {
+    nullable: true,
+  })
+  async otherLocations(
+    @Args({
+      name: 'mutation',
+      type: () => CollectionMutationType,
+      // Could be nullable in the future, to emit the entire list, but we don't
+      // have that currently without going to DB to collect it.
+      // We also don't really need it because
+      // ProjectUpdated.project.otherLocations gives it.
+      nullable: false,
+    })
+    type: CollectionMutationType,
+    @Grandparent() updated: ProjectUpdated,
+    @Parent() update: ProjectUpdate,
+    @Loader(ProjectLoader) projects: LoaderOf<ProjectLoader>,
+    @Loader(LocationLoader) locations: LoaderOf<LocationLoader>,
+  ): Promise<SecuredLocationList | null> {
+    const ids = asNonEmptyArray(update.otherLocations?.[type] ?? []);
+    if (!ids) {
+      return null;
+    }
+
+    const project = await projects.load({
+      id: updated.projectId,
+      view: { active: true },
+    });
+
+    const perms = this.privileges
+      .for(IProject, project)
+      .forEdge('otherLocations');
+    if (!perms.can('read')) {
+      return SecuredList.Redacted;
+    }
+
+    const items = await loadManyIgnoreMissingThrowAny(locations, ids);
+
+    return {
+      canRead: true,
+      canCreate: false, // meaningless here
+      items,
+      hasMore: false,
+      total: ids.length,
+    };
   }
 
   @ResolveField(() => SecuredFieldRegion, {

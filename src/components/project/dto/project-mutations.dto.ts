@@ -2,6 +2,7 @@ import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { DateTime } from 'luxon';
 import {
+  type CollectionMutationType,
   DataObject,
   DateTimeField,
   Grandparent,
@@ -57,7 +58,11 @@ export class ProjectUpdate extends AsUpdateType(UpdateProject, {
     'marketingRegionOverride',
     'fieldRegion',
   ],
-}) {}
+}) {
+  readonly otherLocations?: Partial<
+    Record<CollectionMutationType, ReadonlyArray<ID<'Location'>>>
+  >;
+}
 
 @ObjectType({ implements: [ProjectMutation] })
 export class ProjectUpdated extends ProjectMutation {

@@ -10,6 +10,7 @@ export { makeEnum, type MadeEnum, type EnumType } from '@seedcompany/nest';
 export * from './and-call';
 export * from './temporal';
 export * from './calculated.decorator';
+export * from './collection-mutation-type.enum';
 export * from './context.type';
 export * from './create-and-inject';
 export * from './data-object';
