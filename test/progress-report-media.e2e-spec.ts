@@ -1,7 +1,6 @@
 import { beforeAll, beforeEach, describe, expect, it } from '@jest/globals';
 import { CalendarDate, type ID, type IdOf, isIdLike } from '~/common';
 import { graphql, type InputOf } from '~/graphql';
-import { type CreateLanguageEngagement } from '../src/components/engagement/dto';
 import { type ProgressReport } from '../src/components/progress-report/dto';
 import {
   type ProgressReportMedia,
@@ -54,7 +53,7 @@ describe('ProgressReport Media e2e', () => {
       graphql(
         `
           mutation CreateLanguageEngagement($input: CreateLanguageEngagement!) {
-            createEng: createLanguageEngagement(input: { engagement: $input }) {
+            createEng: createLanguageEngagement(input: $input) {
               engagement {
                 ...languageEngagement
                 progressReports(input: { count: 1 }) {
@@ -72,7 +71,7 @@ describe('ProgressReport Media e2e', () => {
         input: {
           project: project.id,
           language: language.id,
-        } satisfies CreateLanguageEngagement,
+        },
       },
     );
     reportId = createEng.engagement.progressReports.items[0]!.id;

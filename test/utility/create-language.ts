@@ -63,7 +63,7 @@ export async function createLanguageMinimal(
 const CreateLanguageDoc = graphql(
   `
     mutation createLanguage($input: CreateLanguage!) {
-      createLanguage(input: { language: $input }) {
+      createLanguage(input: $input) {
         language {
           ...language
         }

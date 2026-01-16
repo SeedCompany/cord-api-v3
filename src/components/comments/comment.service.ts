@@ -24,8 +24,8 @@ import {
   type CommentThread,
   type CommentThreadList,
   type CommentThreadListInput,
-  type CreateCommentInput,
-  type UpdateCommentInput,
+  type CreateComment,
+  type UpdateComment,
 } from './dto';
 import { CommentViaMentionNotificationService } from './mention-notification/comment-via-mention-notification.service';
 
@@ -42,7 +42,7 @@ export class CommentService {
     private readonly mentionNotificationService: CommentViaMentionNotificationService,
   ) {}
 
-  async create(input: CreateCommentInput) {
+  async create(input: CreateComment) {
     const perms = await this.getPermissionsFromResource(input.resource);
     perms.verifyCan('create');
 
@@ -126,7 +126,7 @@ export class CommentService {
     return this.privileges.for(Comment).secure(dto);
   }
 
-  async update(input: UpdateCommentInput): Promise<Comment> {
+  async update(input: UpdateComment): Promise<Comment> {
     const object = await this.repo.readOne(input.id);
 
     const changes = this.repo.getActualChanges(object, input);

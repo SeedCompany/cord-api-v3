@@ -111,7 +111,7 @@ export class UserRepository extends DtoRepository(User) {
     } catch (e) {
       if (e instanceof UniquenessError && e.label === 'EmailAddress') {
         throw new DuplicateException(
-          'person.email',
+          'email',
           'Email address is already in use',
           e,
         );
@@ -130,7 +130,6 @@ export class UserRepository extends DtoRepository(User) {
         result.id,
         'photo',
         input.photo,
-        'user.photo',
         true,
       );
     });
@@ -211,7 +210,7 @@ export class UserRepository extends DtoRepository(User) {
     } catch (e) {
       if (e instanceof UniquenessError && e.label === 'EmailAddress') {
         throw new DuplicateException(
-          'person.email',
+          'email',
           'Email address is already in use',
           e,
         );

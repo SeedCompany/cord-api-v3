@@ -20,13 +20,13 @@ import { PartnerLoader } from '../partner';
 import { SecuredPartner } from '../partner/dto';
 import { PartnershipLoader, PartnershipService } from '../partnership';
 import {
-  CreatePartnershipInput,
+  CreatePartnership,
   CreatePartnershipOutput,
   DeletePartnershipOutput,
   Partnership,
   PartnershipListInput,
   PartnershipListOutput,
-  UpdatePartnershipInput,
+  UpdatePartnership,
   UpdatePartnershipOutput,
 } from './dto';
 
@@ -38,7 +38,7 @@ export class PartnershipResolver {
     description: 'Create a Partnership entry',
   })
   async createPartnership(
-    @Args('input') { partnership: input, changeset }: CreatePartnershipInput,
+    @Args('input') { changeset, ...input }: CreatePartnership,
   ): Promise<CreatePartnershipOutput> {
     const partnership = await this.service.create(input, changeset);
     return { partnership };
@@ -114,7 +114,7 @@ export class PartnershipResolver {
     description: 'Update a Partnership',
   })
   async updatePartnership(
-    @Args('input') { partnership: input, changeset }: UpdatePartnershipInput,
+    @Args('input') { changeset, ...input }: UpdatePartnership,
   ): Promise<UpdatePartnershipOutput> {
     const partnership = await this.service.update(
       input,

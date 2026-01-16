@@ -13,15 +13,15 @@ import { UserLoader } from '../user';
 import { User } from '../user/dto';
 import {
   asFile,
-  CreateFileVersionInput,
+  CreateFileVersion,
   DeleteFileNodeOutput,
   File,
   FileListInput,
   FileListOutput,
   type FileNode,
   IFileNode,
-  MoveFileInput,
-  RenameFileInput,
+  MoveFile,
+  RenameFile,
   RequestUploadOutput,
 } from './dto';
 import { FileNodeLoader } from './file-node.loader';
@@ -97,18 +97,14 @@ export class FileResolver {
       the existing file with the same name or create a new file if not found.
     `,
   })
-  createFileVersion(
-    @Args('input') input: CreateFileVersionInput,
-  ): Promise<File> {
+  createFileVersion(@Args('input') input: CreateFileVersion): Promise<File> {
     return this.service.createFileVersion(input);
   }
 
   @Mutation(() => IFileNode, {
     description: 'Rename a file or directory',
   })
-  async renameFileNode(
-    @Args('input') input: RenameFileInput,
-  ): Promise<FileNode> {
+  async renameFileNode(@Args('input') input: RenameFile): Promise<FileNode> {
     await this.service.rename(input);
     return await this.service.getFileNode(input.id);
   }
@@ -116,7 +112,7 @@ export class FileResolver {
   @Mutation(() => IFileNode, {
     description: 'Move a file or directory',
   })
-  moveFileNode(@Args('input') input: MoveFileInput): Promise<FileNode> {
+  moveFileNode(@Args('input') input: MoveFile): Promise<FileNode> {
     return this.service.move(input);
   }
 }

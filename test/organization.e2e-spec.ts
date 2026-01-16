@@ -96,7 +96,7 @@ describe('Organization e2e', () => {
     const result = await app.graphql.mutate(
       graphql(
         `
-          mutation updateOrganization($input: UpdateOrganizationInput!) {
+          mutation updateOrganization($input: UpdateOrganization!) {
             updateOrganization(input: $input) {
               organization {
                 ...org
@@ -108,10 +108,8 @@ describe('Organization e2e', () => {
       ),
       {
         input: {
-          organization: {
-            id: org.id,
-            name: newName,
-          },
+          id: org.id,
+          name: newName,
         },
       },
     );
@@ -129,7 +127,7 @@ describe('Organization e2e', () => {
       .mutate(
         graphql(
           `
-            mutation updateOrganization($input: UpdateOrganizationInput!) {
+            mutation updateOrganization($input: UpdateOrganization!) {
               updateOrganization(input: $input) {
                 organization {
                   ...org
@@ -141,20 +139,18 @@ describe('Organization e2e', () => {
         ),
         {
           input: {
-            organization: {
-              id: '' as ID,
-              name: newName,
-            },
+            id: '' as ID,
+            name: newName,
           },
         },
       )
-      .expectError(errors.invalidId('organization.id'));
+      .expectError(errors.invalidId('id'));
 
     await app.graphql
       .mutate(
         graphql(
           `
-            mutation updateOrganization($input: UpdateOrganizationInput!) {
+            mutation updateOrganization($input: UpdateOrganization!) {
               updateOrganization(input: $input) {
                 organization {
                   ...org
@@ -166,11 +162,9 @@ describe('Organization e2e', () => {
         ),
         {
           input: {
-            organization: {
-              // @ts-expect-error confirming runtime error here
-              id5: '',
-              name: newName,
-            },
+            // @ts-expect-error confirming runtime error here
+            id5: '',
+            name: newName,
           },
         },
       )
@@ -180,7 +174,7 @@ describe('Organization e2e', () => {
       .mutate(
         graphql(
           `
-            mutation updateOrganization($input: UpdateOrganizationInput!) {
+            mutation updateOrganization($input: UpdateOrganization!) {
               updateOrganization(input: $input) {
                 organization {
                   ...org
@@ -192,14 +186,12 @@ describe('Organization e2e', () => {
         ),
         {
           input: {
-            organization: {
-              id: '!@#$%^' as ID,
-              name: newName,
-            },
+            id: '!@#$%^' as ID,
+            name: newName,
           },
         },
       )
-      .expectError(errors.invalidId('organization.id'));
+      .expectError(errors.invalidId('id'));
   });
 
   it.skip('update organization with mismatch name', async () => {
@@ -211,7 +203,7 @@ describe('Organization e2e', () => {
       .mutate(
         graphql(
           `
-            mutation updateOrganization($input: UpdateOrganizationInput!) {
+            mutation updateOrganization($input: UpdateOrganization!) {
               updateOrganization(input: $input) {
                 organization {
                   ...org
@@ -223,11 +215,9 @@ describe('Organization e2e', () => {
         ),
         {
           input: {
-            organization: {
-              id: org.id,
-              // @ts-expect-error confirming runtime error here
-              name2: newName,
-            },
+            id: org.id,
+            // @ts-expect-error confirming runtime error here
+            name2: newName,
           },
         },
       )

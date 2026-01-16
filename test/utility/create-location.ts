@@ -32,7 +32,7 @@ export async function createLocation(
 const CreateLocationDoc = graphql(
   `
     mutation createLocation($input: CreateLocation!) {
-      createLocation(input: { location: $input }) {
+      createLocation(input: $input) {
         location {
           ...location
         }

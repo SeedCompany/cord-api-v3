@@ -59,7 +59,7 @@ describe('Unavailability e2e', () => {
     const result = await app.graphql.mutate(
       graphql(
         `
-          mutation updateUnavailability($input: UpdateUnavailabilityInput!) {
+          mutation updateUnavailability($input: UpdateUnavailability!) {
             updateUnavailability(input: $input) {
               unavailability {
                 ...unavailability
@@ -71,10 +71,8 @@ describe('Unavailability e2e', () => {
       ),
       {
         input: {
-          unavailability: {
-            id: unavailability.id,
-            description: newDesc,
-          },
+          id: unavailability.id,
+          description: newDesc,
         },
       },
     );

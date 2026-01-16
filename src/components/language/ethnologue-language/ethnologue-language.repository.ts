@@ -1,14 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { simpleSwitch } from '@seedcompany/common';
 import {
   CreationFailed,
-  DuplicateException,
   type ID,
   NotFoundException,
   ReadAfterCreationFailed,
   ServerException,
 } from '~/common';
-import { DtoRepository, UniquenessError } from '~/core/database';
+import { DtoRepository } from '~/core/database';
 import { createNode } from '~/core/database/query';
 import {
   type CreateEthnologueLanguage,
@@ -37,20 +35,6 @@ export class EthnologueLanguageRepository extends DtoRepository(
     try {
       result = await query.first();
     } catch (e) {
-      if (e instanceof UniquenessError) {
-        const prop =
-          simpleSwitch(e.label, {
-            LanguageName: 'name',
-            LanguageDisplayName: 'displayName',
-            RegistryOfLanguageVarietiesCode: 'registryOfLanguageVarietiesCode',
-          }) ?? e.label;
-        throw new DuplicateException(
-          `language.${prop}`,
-          `${prop} with value ${e.value} already exists`,
-          e,
-        );
-      }
-
       throw new CreationFailed(EthnologueLanguage, { cause: e });
     }
 

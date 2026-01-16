@@ -39,7 +39,7 @@ export async function createZone(
 const CreateFieldZoneDoc = graphql(
   `
     mutation createFieldZone($input: CreateFieldZone!) {
-      createFieldZone(input: { fieldZone: $input }) {
+      createFieldZone(input: $input) {
         fieldZone {
           ...fieldZone
           director {

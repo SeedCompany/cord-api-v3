@@ -2,13 +2,13 @@ import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { type ID, IdArg, ListArg } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import {
-  CreateFilmInput,
+  CreateFilm,
   CreateFilmOutput,
   DeleteFilmOutput,
   Film,
   FilmListInput,
   FilmListOutput,
-  UpdateFilmInput,
+  UpdateFilm,
   UpdateFilmOutput,
 } from './dto';
 import { FilmLoader } from './film.loader';
@@ -44,7 +44,7 @@ export class FilmResolver {
     description: 'Create a film',
   })
   async createFilm(
-    @Args('input') { film: input }: CreateFilmInput,
+    @Args('input') input: CreateFilm,
   ): Promise<CreateFilmOutput> {
     const film = await this.filmService.create(input);
     return { film };
@@ -54,7 +54,7 @@ export class FilmResolver {
     description: 'Update a film',
   })
   async updateFilm(
-    @Args('input') { film: input }: UpdateFilmInput,
+    @Args('input') input: UpdateFilm,
   ): Promise<UpdateFilmOutput> {
     const film = await this.filmService.update(input);
     return { film };

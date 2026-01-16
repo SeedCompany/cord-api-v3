@@ -78,9 +78,8 @@ export class ProgressReportMediaService {
       fileId,
       input.file.name,
       initialDto.id,
-      'file', // relation name
+      'file',
       input.file,
-      'file', // input path for exceptions
       ReportMedia.PublicVariants.has(input.variant.key),
     );
   }

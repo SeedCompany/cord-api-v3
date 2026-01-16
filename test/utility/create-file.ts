@@ -77,7 +77,7 @@ export async function createFileVersion(
 }
 const CreateFileVersionDoc = graphql(
   `
-    mutation createFileVersion($input: CreateFileVersionInput!) {
+    mutation createFileVersion($input: CreateFileVersion!) {
       createFileVersion(input: $input) {
         ...fileNode
       }

@@ -3,7 +3,7 @@ import { type SetRequired } from 'type-fest';
 import { type ID, type PublicOf } from '~/common';
 import { e, edgeql, RepoFor } from '~/core/gel';
 import { type ProgressReportStatus as Status } from '../dto';
-import { type ExecuteProgressReportTransitionInput } from './dto/execute-progress-report-transition.input';
+import { type ExecuteProgressReportTransition } from './dto/execute-progress-report-transition.input';
 import { ProgressReportWorkflowEvent } from './dto/workflow-event.dto';
 import { type ProgressReportWorkflowRepository } from './progress-report-workflow.repository';
 
@@ -29,7 +29,7 @@ export class ProgressReportWorkflowGelRepository
   async recordEvent({
     report,
     ...props
-  }: SetRequired<ExecuteProgressReportTransitionInput, 'status'>) {
+  }: SetRequired<ExecuteProgressReportTransition, 'status'>) {
     const query = e.select(
       e.insert(e.ProgressReport.WorkflowEvent, {
         report: e.cast(e.ProgressReport, e.uuid(report)),

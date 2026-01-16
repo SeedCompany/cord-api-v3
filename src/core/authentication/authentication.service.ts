@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import {
   AuthenticationException,
-  DuplicateException,
   type ID,
   InputException,
   ServerException,
@@ -13,7 +12,7 @@ import { ILogger, Logger } from '~/core/logger';
 import { disableAccessPolicies, Gel } from '../gel';
 import { AuthenticationRepository } from './authentication.repository';
 import { CryptoService } from './crypto.service';
-import type { LoginInput, RegisterInput, ResetPasswordInput } from './dto';
+import type { LoginInput, RegisterUser, ResetPassword } from './dto';
 import { ForgotPassword } from './emails/forgot-password.email';
 import { JwtService } from './jwt.service';
 import { SessionHost } from './session/session.host';
@@ -36,7 +35,7 @@ export class AuthenticationService {
     private readonly moduleRef: ModuleRef,
   ) {}
 
-  async register({ password, ...input }: RegisterInput): Promise<ID> {
+  async register({ password, ...input }: RegisterUser): Promise<ID> {
     const session = this.sessionHost.currentIfInCtx;
 
     // ensure no other tokens are associated with this user
@@ -44,21 +43,12 @@ export class AuthenticationService {
       await this.logout(session.token, false);
     }
 
-    let userId;
-    try {
-      const userMod = await import('../../components/user');
-      const users = this.moduleRef.get(userMod.UserService, { strict: false });
-      userId = await this.gel.usingOptions(
-        disableAccessPolicies,
-        async () => await users.create(input),
-      );
-    } catch (e) {
-      // remap field prop as `email` field is at a different location in register() than createPerson()
-      if (e instanceof DuplicateException && e.field === 'person.email') {
-        throw e.withField('email');
-      }
-      throw e;
-    }
+    const userMod = await import('../../components/user');
+    const users = this.moduleRef.get(userMod.UserService, { strict: false });
+    const userId = await this.gel.usingOptions(
+      disableAccessPolicies,
+      async () => await users.create(input),
+    );
 
     const passwordHash = await this.crypto.hash(password);
     await this.repo.savePasswordHashOnUser(userId, passwordHash);
@@ -138,7 +128,7 @@ export class AuthenticationService {
     await this.mailer.compose(email, [ForgotPassword, { token }]).send();
   }
 
-  async resetPassword({ token, password }: ResetPasswordInput): Promise<void> {
+  async resetPassword({ token, password }: ResetPassword): Promise<void> {
     const emailToken = await this.repo.findEmailToken(token);
     if (!emailToken) {
       throw new InputException('Token is invalid', 'TokenInvalid');

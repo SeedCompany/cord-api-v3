@@ -69,7 +69,7 @@ describe('Story e2e', () => {
     const result = await app.graphql.mutate(
       graphql(
         `
-          mutation updateStory($input: UpdateStoryInput!) {
+          mutation updateStory($input: UpdateStory!) {
             updateStory(input: $input) {
               story {
                 ...story
@@ -81,11 +81,9 @@ describe('Story e2e', () => {
       ),
       {
         input: {
-          story: {
-            id: st.id,
-            name: newName,
-            scriptureReferences,
-          },
+          id: st.id,
+          name: newName,
+          scriptureReferences,
         },
       },
     );

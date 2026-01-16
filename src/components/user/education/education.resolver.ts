@@ -3,13 +3,13 @@ import { type ID, IdArg, ListArg } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { EducationLoader, EducationService } from '../education';
 import {
-  CreateEducationInput,
+  CreateEducation,
   CreateEducationOutput,
   DeleteEducationOutput,
   Education,
   EducationListInput,
   EducationListOutput,
-  UpdateEducationInput,
+  UpdateEducation,
   UpdateEducationOutput,
 } from './dto';
 
@@ -22,7 +22,7 @@ export class EducationResolver {
     deprecationReason: `This is unfinished functionality, don't use`,
   })
   async createEducation(
-    @Args('input') { education: input }: CreateEducationInput,
+    @Args('input') input: CreateEducation,
   ): Promise<CreateEducationOutput> {
     const education = await this.service.create(input);
     return { education };
@@ -57,7 +57,7 @@ export class EducationResolver {
     deprecationReason: `This is unfinished functionality, don't use`,
   })
   async updateEducation(
-    @Args('input') { education: input }: UpdateEducationInput,
+    @Args('input') input: UpdateEducation,
   ): Promise<UpdateEducationOutput> {
     const education = await this.service.update(input);
     return { education };

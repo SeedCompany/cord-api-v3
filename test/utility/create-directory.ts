@@ -44,7 +44,7 @@ export async function createDirectory(app: TestApp, parent: ID, name?: string) {
 
 const CreateDirectoryDoc = graphql(
   `
-    mutation createDirectory($input: CreateDirectoryInput!) {
+    mutation createDirectory($input: CreateDirectory!) {
       createDirectory(input: $input) {
         ...fileNode
       }

@@ -31,7 +31,7 @@ export abstract class ProgressReportVarianceExplanation {
 }
 
 @InputType()
-export abstract class ProgressReportVarianceExplanationInput {
+export abstract class ExplainProgressVariance {
   @IdField({
     description: 'The progress report ID',
   })

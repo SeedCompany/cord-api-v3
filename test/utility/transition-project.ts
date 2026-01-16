@@ -55,7 +55,7 @@ export const transitionProject = async (
   return result.transitionProject;
 };
 const TransitionProjectDoc = graphql(`
-  mutation TransitionProject($input: ExecuteProjectTransitionInput!) {
+  mutation TransitionProject($input: ExecuteProjectTransition!) {
     transitionProject(input: $input) {
       step {
         canRead

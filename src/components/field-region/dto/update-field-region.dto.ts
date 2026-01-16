@@ -1,6 +1,4 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import { Type } from 'class-transformer';
-import { ValidateNested } from 'class-validator';
 import { type ID, IdField, NameField } from '~/common';
 import { FieldRegion } from './field-region.dto';
 
@@ -23,14 +21,6 @@ export abstract class UpdateFieldRegion {
     optional: true,
   })
   readonly director?: ID<'User'>;
-}
-
-@InputType()
-export abstract class UpdateFieldRegionInput {
-  @Field()
-  @Type(() => UpdateFieldRegion)
-  @ValidateNested()
-  readonly fieldRegion: UpdateFieldRegion;
 }
 
 @ObjectType()

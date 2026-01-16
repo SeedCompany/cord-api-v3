@@ -109,7 +109,7 @@ describe('Region e2e', () => {
     const result = await app.graphql.mutate(
       graphql(
         `
-          mutation updateFieldRegion($input: UpdateFieldRegionInput!) {
+          mutation updateFieldRegion($input: UpdateFieldRegion!) {
             updateFieldRegion(input: $input) {
               fieldRegion {
                 ...fieldRegion
@@ -135,10 +135,8 @@ describe('Region e2e', () => {
       ),
       {
         input: {
-          fieldRegion: {
-            id: fieldRegion.id,
-            name: newName,
-          },
+          id: fieldRegion.id,
+          name: newName,
         },
       },
     );
@@ -161,7 +159,7 @@ describe('Region e2e', () => {
     const result = await app.graphql.mutate(
       graphql(
         `
-          mutation updateFieldRegion($input: UpdateFieldRegionInput!) {
+          mutation updateFieldRegion($input: UpdateFieldRegion!) {
             updateFieldRegion(input: $input) {
               fieldRegion {
                 ...fieldRegion
@@ -178,10 +176,8 @@ describe('Region e2e', () => {
       ),
       {
         input: {
-          fieldRegion: {
-            id: fieldRegion.id,
-            fieldZone: newZone.id,
-          },
+          id: fieldRegion.id,
+          fieldZone: newZone.id,
         },
       },
     );
@@ -203,7 +199,7 @@ describe('Region e2e', () => {
     const result = await app.graphql.mutate(
       graphql(
         `
-          mutation updateFieldRegion($input: UpdateFieldRegionInput!) {
+          mutation updateFieldRegion($input: UpdateFieldRegion!) {
             updateFieldRegion(input: $input) {
               fieldRegion {
                 ...fieldRegion
@@ -220,10 +216,8 @@ describe('Region e2e', () => {
       ),
       {
         input: {
-          fieldRegion: {
-            id: fieldRegion.id,
-            director: newDirector.id,
-          },
+          id: fieldRegion.id,
+          director: newDirector.id,
         },
       },
     );

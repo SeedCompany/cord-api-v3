@@ -102,7 +102,7 @@ export class PartnerService {
       if (input.financialReportingTypes && input.types) {
         throw new InputException(
           'Financial reporting type can only be applied to managing partners',
-          'partnership.financialReportingType',
+          'financialReportingType',
         );
       }
       input = {
@@ -135,7 +135,7 @@ export class PartnerService {
       if (!lang.isAvailableForReporting.value) {
         throw new InputException(
           'Language is not marked as available for reporting',
-          'partner.languageOfReporting',
+          'languageOfReporting',
         );
       }
     }
@@ -213,7 +213,7 @@ export class PartnerService {
     if (!this.validateFinancialReportingType(financialReportingTypes, types)) {
       throw new InputException(
         'Financial reporting type can only be applied to managing partners',
-        'partnership.financialReportingType',
+        'financialReportingType',
       );
     }
   }
@@ -238,7 +238,7 @@ export class PartnerService {
       return;
     }
     const ex = new LocationTypeException([LocationType.Country], invalidIds);
-    throw ex.withField('partner.countries');
+    throw ex.withField('countries');
   }
 }
 

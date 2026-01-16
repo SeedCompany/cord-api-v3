@@ -119,7 +119,7 @@ describe('Project e2e', () => {
     ).rejects.toThrowGqlError(
       errors.duplicate({
         message: 'Project with this name already exists',
-        field: 'project.name',
+        field: 'name',
       }),
     );
   });
@@ -193,7 +193,7 @@ describe('Project e2e', () => {
     ).rejects.toThrowGqlError(
       errors.notFound({
         message: 'Field region not found',
-        field: 'project.fieldRegion',
+        field: 'fieldRegion',
       }),
     );
   });
@@ -202,7 +202,7 @@ describe('Project e2e', () => {
     const res = await app.graphql.mutate(
       graphql(
         `
-          mutation createProject($input: CreateProjectInput!) {
+          mutation createProject($input: CreateProject!) {
             createProject(input: $input) {
               project {
                 ...project
@@ -227,11 +227,9 @@ describe('Project e2e', () => {
       ),
       {
         input: {
-          project: {
-            name: faker.string.uuid(),
-            type: ProjectType.MomentumTranslation,
-            fieldRegion: fieldRegion.id,
-          },
+          name: faker.string.uuid(),
+          type: ProjectType.MomentumTranslation,
+          fieldRegion: fieldRegion.id,
         },
       },
     );
@@ -283,7 +281,7 @@ describe('Project e2e', () => {
       graphql(
         `
           mutation updateProject($id: ID!, $name: String!) {
-            updateProject(input: { project: { id: $id, name: $name } }) {
+            updateProject(input: { id: $id, name: $name }) {
               project {
                 ...project
               }
@@ -841,7 +839,7 @@ describe('Project e2e', () => {
       // Ensure the result from the change to Active returns the correct budget status
       const { updatedProject } = await app.graphql.mutate(
         graphql(`
-          mutation updateProject($input: ExecuteProjectTransitionInput!) {
+          mutation updateProject($input: ExecuteProjectTransition!) {
             updatedProject: transitionProject(input: $input) {
               departmentId {
                 value
@@ -880,7 +878,7 @@ describe('Project e2e', () => {
     const { createProject } = await app.graphql.mutate(
       graphql(
         `
-          mutation createProject($input: CreateProjectInput!) {
+          mutation createProject($input: CreateProject!) {
             createProject(input: $input) {
               project {
                 ...project
@@ -892,11 +890,9 @@ describe('Project e2e', () => {
       ),
       {
         input: {
-          project: {
-            name: faker.string.uuid(),
-            type: ProjectType.MomentumTranslation,
-            fieldRegion: fieldRegion.id,
-          },
+          name: faker.string.uuid(),
+          type: ProjectType.MomentumTranslation,
+          fieldRegion: fieldRegion.id,
         },
       },
     );
@@ -907,7 +903,7 @@ describe('Project e2e', () => {
     const { createProject } = await app.graphql.mutate(
       graphql(
         `
-          mutation createProject($input: CreateProjectInput!) {
+          mutation createProject($input: CreateProject!) {
             createProject(input: $input) {
               project {
                 ...project
@@ -919,13 +915,11 @@ describe('Project e2e', () => {
       ),
       {
         input: {
-          project: {
-            name: faker.string.uuid(),
-            type: 'MomentumTranslation',
-            mouEnd: '1992-11-01',
-            estimatedSubmission: '1993-11-01',
-            fieldRegion: fieldRegion.id,
-          },
+          name: faker.string.uuid(),
+          type: 'MomentumTranslation',
+          mouEnd: '1992-11-01',
+          estimatedSubmission: '1993-11-01',
+          fieldRegion: fieldRegion.id,
         },
       },
     );
@@ -950,7 +944,7 @@ describe('Project e2e', () => {
     await app.graphql.mutate(
       graphql(
         `
-          mutation createPartnership($input: CreatePartnershipInput!) {
+          mutation createPartnership($input: CreatePartnership!) {
             createPartnership(input: $input) {
               partnership {
                 ...partnership
@@ -962,11 +956,9 @@ describe('Project e2e', () => {
       ),
       {
         input: {
-          partnership: {
-            project: proj.id,
-            partner: (await createPartner(app, { organization: org.id })).id,
-            types: ['Funding'],
-          },
+          project: proj.id,
+          partner: (await createPartner(app, { organization: org.id })).id,
+          types: ['Funding'],
         },
       },
     );
@@ -977,9 +969,7 @@ describe('Project e2e', () => {
         `
           mutation updateProject($id: ID!, $mouStart: Date!, $mouEnd: Date!) {
             updateProject(
-              input: {
-                project: { id: $id, mouStart: $mouStart, mouEnd: $mouEnd }
-              }
+              input: { id: $id, mouStart: $mouStart, mouEnd: $mouEnd }
             ) {
               project {
                 ...project
@@ -1021,7 +1011,7 @@ describe('Project e2e', () => {
     await app.graphql.mutate(
       graphql(
         `
-          mutation createPartnership($input: CreatePartnershipInput!) {
+          mutation createPartnership($input: CreatePartnership!) {
             createPartnership(input: $input) {
               partnership {
                 ...partnership
@@ -1033,11 +1023,9 @@ describe('Project e2e', () => {
       ),
       {
         input: {
-          partnership: {
-            project: project.id,
-            partner: (await createPartner(app, { organization: org.id })).id,
-            types: [PartnerType.Funding],
-          },
+          project: project.id,
+          partner: (await createPartner(app, { organization: org.id })).id,
+          types: [PartnerType.Funding],
         },
       },
     );

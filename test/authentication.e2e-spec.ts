@@ -57,7 +57,7 @@ describe('Authentication e2e', () => {
     const newPassword = faker.internet.password();
     await app.graphql.mutate(
       graphql(`
-        mutation resetPassword($input: ResetPasswordInput!) {
+        mutation resetPassword($input: ResetPassword!) {
           resetPassword(input: $input) {
             __typename
           }
@@ -126,7 +126,7 @@ describe('Authentication e2e', () => {
     await app.graphql.query(
       graphql(`
         mutation DisableUser($id: ID!) {
-          updateUser(input: { user: { id: $id, status: Disabled } }) {
+          updateUser(input: { id: $id, status: Disabled }) {
             __typename
           }
         }

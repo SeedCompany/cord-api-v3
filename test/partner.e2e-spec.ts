@@ -49,7 +49,7 @@ describe('Partner e2e', () => {
     const result = await app.graphql.mutate(
       graphql(
         `
-          mutation updatePartner($input: UpdatePartnerInput!) {
+          mutation updatePartner($input: UpdatePartner!) {
             updatePartner(input: $input) {
               partner {
                 ...partner
@@ -61,16 +61,14 @@ describe('Partner e2e', () => {
       ),
       {
         input: {
-          partner: {
-            id: pt.id,
-            pointOfContact: person.id,
-            types,
-            financialReportingTypes,
-            pmcEntityCode,
-            globalInnovationsClient,
-            active,
-            address,
-          },
+          id: pt.id,
+          pointOfContact: person.id,
+          types,
+          financialReportingTypes,
+          pmcEntityCode,
+          globalInnovationsClient,
+          active,
+          address,
         },
       },
     );
@@ -143,7 +141,7 @@ describe('Partner e2e', () => {
     ).rejects.toThrowGqlError(
       errors.duplicate({
         message: 'Partner for organization already exists.',
-        field: 'partner.organization',
+        field: 'organization',
       }),
     );
   });
@@ -158,7 +156,7 @@ describe('Partner e2e', () => {
         }),
       ).rejects.toThrowGqlError(
         errors.validation({
-          'partner.pmcEntityCode': {
+          pmcEntityCode: {
             matches: 'Must be 3 uppercase letters',
           },
         }),
@@ -178,7 +176,7 @@ describe('Partner e2e', () => {
       errors.input({
         message:
           'Financial reporting type can only be applied to managing partners',
-        field: 'partnership.financialReportingType',
+        field: 'financialReportingType',
       }),
     );
   });

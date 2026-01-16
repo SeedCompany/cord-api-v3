@@ -74,10 +74,7 @@ export class ProductService {
       this.logger.warning(`Could not find engagement`, {
         id: input.engagement,
       });
-      throw new NotFoundException(
-        'Could not find engagement',
-        'product.engagement',
-      );
+      throw new NotFoundException('Could not find engagement', 'engagement');
     }
 
     const otherInput: CreateOtherProduct | undefined =
@@ -106,7 +103,7 @@ export class ProductService {
         });
         throw new NotFoundException(
           'Could not find producible node',
-          'product.produces',
+          'produces',
         );
       }
       producibleType = this.resources.resolveTypeByBaseNode(
@@ -372,7 +369,7 @@ export class ProductService {
         });
         throw new NotFoundException(
           'Could not find producible node',
-          'product.produces',
+          'produces',
         );
       }
       await this.repo.updateProducible(input, produces);

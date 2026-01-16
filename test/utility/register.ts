@@ -6,7 +6,7 @@ import { type TestApp } from './create-app';
 import * as fragments from './fragments';
 import { login, runAsAdmin, runInIsolatedSession } from './login';
 
-type RegisterInput = InputOf<typeof RegisterUserDoc>;
+type RegisterUser = InputOf<typeof RegisterUserDoc>;
 
 export const generateRegisterInput = async () =>
   ({
@@ -16,7 +16,7 @@ export const generateRegisterInput = async () =>
     status: 'Active',
     roles: [Role.ProjectManager, Role.Consultant],
     title: faker.person.jobTitle(),
-  }) satisfies RegisterInput;
+  }) satisfies RegisterUser;
 
 export const generateRequireFieldsRegisterInput = async () =>
   ({
@@ -27,11 +27,11 @@ export const generateRequireFieldsRegisterInput = async () =>
     displayLastName: faker.person.lastName() + (await generateId()),
     password: faker.internet.password(),
     timezone: 'America/Chicago',
-  }) satisfies RegisterInput;
+  }) satisfies RegisterUser;
 
 export async function registerUserWithStrictInput(
   app: TestApp,
-  input: RegisterInput,
+  input: RegisterUser,
 ) {
   const result = await app.graphql.mutate(RegisterUserDoc, { input });
   const actual = result.register.user;
@@ -57,9 +57,9 @@ export type TestUser = fragments.user & {
 
 export async function registerUser(
   app: TestApp,
-  input: Partial<RegisterInput> = {},
+  input: Partial<RegisterUser> = {},
 ): Promise<TestUser> {
-  const { roles, ...user }: RegisterInput = {
+  const { roles, ...user }: RegisterUser = {
     ...(await generateRegisterInput()),
     ...input,
   };
@@ -98,7 +98,7 @@ export async function registerUser(
 
 const RegisterUserDoc = graphql(
   `
-    mutation RegisterUser($input: RegisterInput!) {
+    mutation RegisterUser($input: RegisterUser!) {
       register(input: $input) {
         user {
           ...user
@@ -111,7 +111,7 @@ const RegisterUserDoc = graphql(
 
 const AddRolesToUser = graphql(`
   mutation AddRolesToUser($userId: ID!, $roles: [Role!]!) {
-    updateUser(input: { user: { id: $userId, roles: $roles } }) {
+    updateUser(input: { id: $userId, roles: $roles }) {
       __typename
     }
   }

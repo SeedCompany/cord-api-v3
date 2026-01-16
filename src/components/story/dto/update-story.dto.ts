@@ -1,6 +1,4 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import { Type } from 'class-transformer';
-import { ValidateNested } from 'class-validator';
 import { type ID, IdField, NameField } from '~/common';
 import { ScriptureField, type ScriptureRangeInput } from '../../scripture/dto';
 import { Story } from './story.dto';
@@ -15,14 +13,6 @@ export abstract class UpdateStory {
 
   @ScriptureField({ nullable: true })
   readonly scriptureReferences?: readonly ScriptureRangeInput[];
-}
-
-@InputType()
-export abstract class UpdateStoryInput {
-  @Field()
-  @Type(() => UpdateStory)
-  @ValidateNested()
-  readonly story: UpdateStory;
 }
 
 @ObjectType()

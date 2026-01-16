@@ -18,9 +18,9 @@ import { SecuredCeremony } from '../ceremony/dto';
 import { ChangesetIds, type IdsAndView, IdsAndViewArg } from '../changeset/dto';
 import { EngagementLoader, EngagementService } from '../engagement';
 import {
-  CreateInternshipEngagementInput,
+  CreateInternshipEngagement,
   CreateInternshipEngagementOutput,
-  CreateLanguageEngagementInput,
+  CreateLanguageEngagement,
   CreateLanguageEngagementOutput,
   DeleteEngagementOutput,
   type Engagement,
@@ -31,9 +31,9 @@ import {
   InternshipEngagementListOutput,
   LanguageEngagement,
   LanguageEngagementListOutput,
-  UpdateInternshipEngagementInput,
+  UpdateInternshipEngagement,
   UpdateInternshipEngagementOutput,
-  UpdateLanguageEngagementInput,
+  UpdateLanguageEngagement,
   UpdateLanguageEngagementOutput,
 } from './dto';
 
@@ -150,8 +150,7 @@ export class EngagementResolver {
     description: 'Create a language engagement',
   })
   async createLanguageEngagement(
-    @Args('input')
-    { engagement: input, changeset }: CreateLanguageEngagementInput,
+    @Args('input') { changeset, ...input }: CreateLanguageEngagement,
   ): Promise<CreateLanguageEngagementOutput> {
     const engagement = await this.service.createLanguageEngagement(
       input,
@@ -164,8 +163,7 @@ export class EngagementResolver {
     description: 'Create an internship engagement',
   })
   async createInternshipEngagement(
-    @Args('input')
-    { engagement: input, changeset }: CreateInternshipEngagementInput,
+    @Args('input') { changeset, ...input }: CreateInternshipEngagement,
   ): Promise<CreateInternshipEngagementOutput> {
     const engagement = await this.service.createInternshipEngagement(
       input,
@@ -178,8 +176,7 @@ export class EngagementResolver {
     description: 'Update a language engagement',
   })
   async updateLanguageEngagement(
-    @Args('input')
-    { engagement: input, changeset }: UpdateLanguageEngagementInput,
+    @Args('input') { changeset, ...input }: UpdateLanguageEngagement,
   ): Promise<UpdateLanguageEngagementOutput> {
     const engagement = await this.service.updateLanguageEngagement(
       input,
@@ -192,8 +189,7 @@ export class EngagementResolver {
     description: 'Update an internship engagement',
   })
   async updateInternshipEngagement(
-    @Args('input')
-    { engagement: input, changeset }: UpdateInternshipEngagementInput,
+    @Args('input') { changeset, ...input }: UpdateInternshipEngagement,
   ): Promise<UpdateInternshipEngagementOutput> {
     const engagement = await this.service.updateInternshipEngagement(
       input,

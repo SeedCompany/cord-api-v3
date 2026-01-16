@@ -1,6 +1,4 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import { Type } from 'class-transformer';
-import { ValidateNested } from 'class-validator';
 import { DateTime } from 'luxon';
 import {
   type CalendarDate,
@@ -81,14 +79,6 @@ export abstract class UpdateProject {
 
   @Field(() => String, { nullable: true })
   readonly departmentId?: string | null;
-}
-
-@InputType()
-export abstract class UpdateProjectInput {
-  @Field()
-  @Type(() => UpdateProject)
-  @ValidateNested()
-  readonly project: UpdateProject;
 
   @ChangesetIdField()
   readonly changeset?: ID;

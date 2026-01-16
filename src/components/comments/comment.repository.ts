@@ -19,8 +19,8 @@ import { CommentThreadRepository } from './comment-thread.repository';
 import {
   Comment,
   type CommentListInput,
-  type CreateCommentInput,
-  type UpdateCommentInput,
+  type CreateComment,
+  type UpdateComment,
 } from './dto';
 
 @Injectable()
@@ -32,7 +32,7 @@ export class CommentRepository extends DtoRepository(Comment) {
     super();
   }
 
-  async create(input: CreateCommentInput) {
+  async create(input: CreateComment) {
     const initialProps = {
       body: input.body,
       modifiedAt: DateTime.local(),
@@ -63,7 +63,7 @@ export class CommentRepository extends DtoRepository(Comment) {
 
   async update(
     existing: UnsecuredDto<Comment>,
-    changes: ChangesOf<Comment, UpdateCommentInput>,
+    changes: ChangesOf<Comment, UpdateComment>,
   ) {
     await this.updateProperties(existing, changes);
   }

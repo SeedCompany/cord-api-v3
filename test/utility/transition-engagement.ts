@@ -31,9 +31,7 @@ const ChangeInternshipEngStatusDoc = graphql(
       $id: ID!
       $status: EngagementStatus!
     ) {
-      updateInternshipEngagement(
-        input: { engagement: { id: $id, status: $status } }
-      ) {
+      updateInternshipEngagement(input: { id: $id, status: $status }) {
         engagement {
           ...internshipEngagement
         }
@@ -61,9 +59,7 @@ const ChangeLangEngStatusDoc = graphql(
       $id: ID!
       $status: EngagementStatus!
     ) {
-      updateLanguageEngagement(
-        input: { engagement: { id: $id, status: $status } }
-      ) {
+      updateLanguageEngagement(input: { id: $id, status: $status }) {
         engagement {
           ...languageEngagement
         }

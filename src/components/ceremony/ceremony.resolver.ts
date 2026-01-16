@@ -1,6 +1,6 @@
 import { Args, Mutation, Resolver } from '@nestjs/graphql';
 import { CeremonyService } from '../ceremony';
-import { UpdateCeremonyInput, UpdateCeremonyOutput } from './dto';
+import { UpdateCeremony, UpdateCeremonyOutput } from './dto';
 
 @Resolver()
 export class CeremonyResolver {
@@ -10,7 +10,7 @@ export class CeremonyResolver {
     description: 'Update a ceremony',
   })
   async updateCeremony(
-    @Args('input') { ceremony: input }: UpdateCeremonyInput,
+    @Args('input') input: UpdateCeremony,
   ): Promise<UpdateCeremonyOutput> {
     const ceremony = await this.service.update(input);
     return { ceremony };

@@ -84,7 +84,7 @@ describe('Partnership e2e', () => {
       graphql(
         `
           mutation updatePartnership($input: UpdatePartnership!) {
-            updatePartnership(input: { partnership: $input }) {
+            updatePartnership(input: $input) {
               partnership {
                 ...partnership
               }
@@ -165,20 +165,8 @@ describe('Partnership e2e', () => {
     const result = await app.graphql.query(
       graphql(
         `
-          mutation updatePartnership(
-            $id: ID!
-            $startOverride: Date!
-            $endOverride: Date!
-          ) {
-            updatePartnership(
-              input: {
-                partnership: {
-                  id: $id
-                  mouStartOverride: $startOverride
-                  mouEndOverride: $endOverride
-                }
-              }
-            ) {
+          mutation updatePartnership($input: UpdatePartnership!) {
+            updatePartnership(input: $input) {
               partnership {
                 ...partnership
               }
@@ -188,9 +176,11 @@ describe('Partnership e2e', () => {
         [fragments.partnership],
       ),
       {
-        id: partnership.id,
-        startOverride: mouStartOverride,
-        endOverride: mouEndOverride,
+        input: {
+          id: partnership.id,
+          mouStartOverride,
+          mouEndOverride,
+        },
       },
     );
 
@@ -279,7 +269,7 @@ describe('Partnership e2e', () => {
     ).rejects.toThrowGqlError(
       errors.notFound({
         message: 'Could not find partner',
-        field: 'partnership.partner',
+        field: 'partner',
       }),
     );
   });
@@ -292,7 +282,7 @@ describe('Partnership e2e', () => {
     ).rejects.toThrowGqlError(
       errors.notFound({
         message: 'Could not find project',
-        field: 'partnership.project',
+        field: 'project',
       }),
     );
   });
@@ -389,7 +379,7 @@ describe('Partnership e2e', () => {
       errors.input({
         message:
           'Partner does not have this financial reporting type available',
-        field: 'partnership.financialReportingType',
+        field: 'financialReportingType',
       }),
     );
   });
@@ -409,7 +399,7 @@ describe('Partnership e2e', () => {
       app.graphql.mutate(
         graphql(
           `
-            mutation updatePartnership($input: UpdatePartnershipInput!) {
+            mutation updatePartnership($input: UpdatePartnership!) {
               updatePartnership(input: $input) {
                 partnership {
                   ...partnership
@@ -421,10 +411,8 @@ describe('Partnership e2e', () => {
         ),
         {
           input: {
-            partnership: {
-              id: partnership.id,
-              financialReportingType: FinancialReportingType.Funded,
-            },
+            id: partnership.id,
+            financialReportingType: FinancialReportingType.Funded,
           },
         },
       ),
@@ -432,7 +420,7 @@ describe('Partnership e2e', () => {
       errors.input({
         message:
           'Partner does not have this financial reporting type available',
-        field: 'partnership.financialReportingType',
+        field: 'financialReportingType',
       }),
     );
   });
@@ -454,7 +442,7 @@ describe('Partnership e2e', () => {
     ).rejects.toThrowGqlError(
       errors.duplicate({
         message: 'Partnership for this project and partner already exists',
-        field: 'partnership.project',
+        field: 'project',
       }),
     );
   });
@@ -520,7 +508,7 @@ describe('Partnership e2e', () => {
       graphql(
         `
           mutation updatePartnership($input: UpdatePartnership!) {
-            updatePartnership(input: { partnership: $input }) {
+            updatePartnership(input: $input) {
               partnership {
                 ...partnership
               }
@@ -548,7 +536,6 @@ describe('Partnership e2e', () => {
       errors.input({
         message:
           'Primary partnerships cannot be removed. Make another partnership primary first.',
-        field: 'partnership.id',
       }),
     );
 
@@ -557,7 +544,6 @@ describe('Partnership e2e', () => {
       errors.input({
         message:
           'Primary partnerships cannot be removed. Make another partnership primary first.',
-        field: 'partnership.id',
       }),
     );
 

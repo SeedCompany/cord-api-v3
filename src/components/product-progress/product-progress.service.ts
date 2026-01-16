@@ -19,13 +19,13 @@ import { type Product } from '../product/dto';
 import type { ProgressReport } from '../progress-report/dto';
 import {
   type ProductProgress,
-  type ProductProgressInput,
   type ProgressVariantByProductInput,
   type ProgressVariantByProductOutput,
   type ProgressVariantByReportInput,
   type ProgressVariantByReportOutput,
   StepProgress,
   type UnsecuredProductProgress,
+  type UpdateProductProgress,
 } from './dto';
 import {
   ProgressReportVariantProgress as Progress,
@@ -128,7 +128,7 @@ export class ProductProgressService {
     return this.secure(progress, this.privilegesFor(input.product));
   }
 
-  async update(input: ProductProgressInput) {
+  async update(input: UpdateProductProgress) {
     const scope = await this.repo.getScope(input.product);
     const privileges = this.privilegesFor(withVariant(scope, input.variant));
     if (!privileges.can('read') || !privileges.can('edit', 'completed')) {

@@ -56,7 +56,6 @@ export class BudgetService {
         budgetId,
         'universalTemplateFile',
         input.universalTemplateFile,
-        'budget.universalTemplateFile',
       );
 
       return await this.readOne(budgetId);

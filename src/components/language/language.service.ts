@@ -95,7 +95,7 @@ export class LanguageService {
     if (input.hasExternalFirstScripture) {
       await this.verifyExternalFirstScripture(input.id);
     }
-    const { registryOfDialectsCode, ...props } = input;
+    const { registryOfDialectsCode, changeset, ...props } = input;
 
     const language = await this.repo.readOne(input.id, view);
     const changes = this.repo.getActualChanges(language, {
@@ -270,7 +270,7 @@ export class LanguageService {
     if (engagement) {
       throw new InputException(
         'hasExternalFirstScripture can be set to true if the language has no engagements that have firstScripture=true',
-        'language.hasExternalFirstScripture',
+        'hasExternalFirstScripture',
       );
     }
   }

@@ -43,7 +43,7 @@ export async function createProject(
 const CreateProjectDoc = graphql(
   `
     mutation createProject($input: CreateProject!) {
-      createProject(input: { project: $input }) {
+      createProject(input: $input) {
         project {
           ...project
         }

@@ -16,8 +16,8 @@ export class FinancialApprover {
   readonly projectTypes: readonly [ProjectType, ...ProjectType[]];
 }
 
-@InputType('ProjectTypeFinancialApproverInput')
-export abstract class FinancialApproverInput {
+@InputType('SetProjectTypeFinancialApprover')
+export abstract class SetFinancialApprover {
   @IdField()
   readonly user: ID<'User'>;
 

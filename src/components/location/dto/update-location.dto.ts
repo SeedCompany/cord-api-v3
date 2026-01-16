@@ -9,7 +9,7 @@ import {
   OptionalField,
 } from '~/common';
 import { Transform } from '~/common/transform.decorator';
-import { CreateDefinedFileVersionInput } from '../../file/dto';
+import { CreateDefinedFileVersion } from '../../file/dto';
 import { LocationType } from './location-type.enum';
 import { Location } from './location.dto';
 
@@ -42,17 +42,9 @@ export abstract class UpdateLocation {
   readonly defaultMarketingRegion?: ID<Location> | null;
 
   @Field({ nullable: true })
-  @Type(() => CreateDefinedFileVersionInput)
+  @Type(() => CreateDefinedFileVersion)
   @ValidateNested()
-  readonly mapImage?: CreateDefinedFileVersionInput;
-}
-
-@InputType()
-export abstract class UpdateLocationInput {
-  @Field()
-  @Type(() => UpdateLocation)
-  @ValidateNested()
-  readonly location: UpdateLocation;
+  readonly mapImage?: CreateDefinedFileVersion;
 }
 
 @ObjectType()

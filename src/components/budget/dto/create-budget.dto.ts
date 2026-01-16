@@ -2,7 +2,7 @@ import { Field, InputType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { type ID, IdField } from '~/common';
-import { CreateDefinedFileVersionInput } from '../../file/dto';
+import { CreateDefinedFileVersion } from '../../file/dto';
 
 @InputType()
 export abstract class CreateBudget {
@@ -13,9 +13,9 @@ export abstract class CreateBudget {
     description: 'Initial version of the universal budget template',
     nullable: true,
   })
-  @Type(() => CreateDefinedFileVersionInput)
+  @Type(() => CreateDefinedFileVersion)
   @ValidateNested()
-  readonly universalTemplateFile?: CreateDefinedFileVersionInput;
+  readonly universalTemplateFile?: CreateDefinedFileVersion;
 }
 
 export abstract class CreateBudgetRecord {

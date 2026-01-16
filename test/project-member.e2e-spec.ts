@@ -60,7 +60,7 @@ describe('ProjectMember e2e', () => {
     ).rejects.toThrowGqlError(
       errors.input({
         message: 'Role(s) Controller cannot be assigned to this project member',
-        field: 'input.roles',
+        field: 'roles',
       }),
     );
   });
@@ -107,7 +107,7 @@ describe('ProjectMember e2e', () => {
     ).rejects.toThrowGqlError(
       errors.notFound({
         message: 'Could not find project member',
-        field: 'projectMember.id',
+        field: 'id',
       }),
     );
   });
@@ -154,7 +154,7 @@ describe('ProjectMember e2e', () => {
       const result = await app.graphql.query(
         graphql(
           `
-            mutation updateProjectMember($input: UpdateProjectMemberInput!) {
+            mutation updateProjectMember($input: UpdateProjectMember!) {
               updateProjectMember(input: $input) {
                 projectMember {
                   ...projectMember
@@ -166,10 +166,8 @@ describe('ProjectMember e2e', () => {
         ),
         {
           input: {
-            projectMember: {
-              id: projectMember.id,
-              roles: [Role.ProjectManager],
-            },
+            id: projectMember.id,
+            roles: [Role.ProjectManager],
           },
         },
       );
@@ -197,7 +195,7 @@ describe('ProjectMember e2e', () => {
       app.graphql.query(
         graphql(
           `
-            mutation updateProjectMember($input: UpdateProjectMemberInput!) {
+            mutation updateProjectMember($input: UpdateProjectMember!) {
               updateProjectMember(input: $input) {
                 projectMember {
                   ...projectMember
@@ -209,17 +207,15 @@ describe('ProjectMember e2e', () => {
         ),
         {
           input: {
-            projectMember: {
-              id: projectMember.id,
-              roles: [Role.Intern],
-            },
+            id: projectMember.id,
+            roles: [Role.Intern],
           },
         },
       ),
     ).rejects.toThrowGqlError(
       errors.input({
         message: 'Role(s) Intern cannot be assigned to this project member',
-        field: 'input.roles',
+        field: 'roles',
       }),
     );
   });

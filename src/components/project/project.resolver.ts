@@ -55,7 +55,7 @@ import {
   SecuredProjectChangeRequestList,
 } from '../project-change-request/dto';
 import {
-  CreateProjectInput,
+  CreateProject,
   CreateProjectOutput,
   DeleteProjectOutput,
   InternshipProjectListOutput,
@@ -66,7 +66,7 @@ import {
   ProjectType,
   TranslationProject,
   TranslationProjectListOutput,
-  UpdateProjectInput,
+  UpdateProject,
   UpdateProjectOutput,
 } from './dto';
 import { ProjectMemberLoader } from './project-member';
@@ -385,7 +385,7 @@ export class ProjectResolver {
     description: 'Create a project',
   })
   async createProject(
-    @Args('input') { project: input }: CreateProjectInput,
+    @Args('input') input: CreateProject,
   ): Promise<CreateProjectOutput> {
     const project = await this.projectService.create(input);
     const secured = this.projectService.secure(project);
@@ -396,7 +396,7 @@ export class ProjectResolver {
     description: 'Update a project',
   })
   async updateProject(
-    @Args('input') { project: input, changeset }: UpdateProjectInput,
+    @Args('input') { changeset, ...input }: UpdateProject,
   ): Promise<UpdateProjectOutput> {
     const project = await this.projectService.update(input, changeset);
     const secured = this.projectService.secure(project);

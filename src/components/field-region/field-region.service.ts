@@ -83,14 +83,14 @@ export class FieldRegionService {
       director = await this.users.readOneUnsecured(directorId);
     } catch (e) {
       if (e instanceof NotFoundException) {
-        throw e.withField('fieldRegion.director');
+        throw e.withField('director');
       }
       throw e;
     }
     if (!director.roles.includes('RegionalDirector')) {
       throw new InputException(
         'User does not have the Regional Director role',
-        'fieldRegion.director',
+        'director',
       );
     }
     return director;

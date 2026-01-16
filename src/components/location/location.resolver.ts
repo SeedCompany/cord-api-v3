@@ -16,14 +16,14 @@ import { SecuredFile } from '../file/dto';
 import { FundingAccountLoader } from '../funding-account';
 import { SecuredFundingAccount } from '../funding-account/dto';
 import {
-  CreateLocationInput,
+  CreateLocation,
   CreateLocationOutput,
   DeleteLocationOutput,
   Location,
   LocationListInput,
   LocationListOutput,
   SecuredLocation,
-  UpdateLocationInput,
+  UpdateLocation,
   UpdateLocationOutput,
 } from './dto';
 import { IsoCountry } from './dto/iso-country.dto';
@@ -119,7 +119,7 @@ export class LocationResolver {
     description: 'Create a location',
   })
   async createLocation(
-    @Args('input') { location: input }: CreateLocationInput,
+    @Args('input') input: CreateLocation,
   ): Promise<CreateLocationOutput> {
     const location = await this.locationService.create(input);
     return { location };
@@ -129,7 +129,7 @@ export class LocationResolver {
     description: 'Update a location',
   })
   async updateLocation(
-    @Args('input') { location: input }: UpdateLocationInput,
+    @Args('input') input: UpdateLocation,
   ): Promise<UpdateLocationOutput> {
     const location = await this.locationService.update(input);
     return { location };

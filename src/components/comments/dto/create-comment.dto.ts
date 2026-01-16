@@ -3,7 +3,7 @@ import { type ID, IdField, RichTextDocument, RichTextField } from '~/common';
 import { Comment } from './comment.dto';
 
 @InputType()
-export abstract class CreateCommentInput {
+export abstract class CreateComment {
   @IdField({ nullable: true })
   readonly thread?: ID<'CommentThread'>;
 

@@ -114,7 +114,7 @@ export class LanguageRepository extends DtoRepository<
             RegistryOfLanguageAndVariantsCode: `registryOfLanguageAndVariantsCode`,
           }) ?? e.label;
         throw new DuplicateException(
-          `language.${prop}`,
+          prop,
           `${prop} with value ${e.value} already exists`,
           e,
         );

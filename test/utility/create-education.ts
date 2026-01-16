@@ -31,7 +31,7 @@ export async function createEducation(
 const CreateEducationDoc = graphql(
   `
     mutation createEducation($input: CreateEducation!) {
-      createEducation(input: { education: $input }) {
+      createEducation(input: $input) {
         education {
           ...education
         }

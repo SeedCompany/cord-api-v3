@@ -28,7 +28,7 @@ export async function createOrganization(
 const CreateOrganizationDoc = graphql(
   `
     mutation createOrganization($input: CreateOrganization!) {
-      createOrganization(input: { organization: $input }) {
+      createOrganization(input: $input) {
         organization {
           ...org
         }

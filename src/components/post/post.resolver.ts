@@ -12,11 +12,11 @@ import { PostLoader, PostService } from '../post';
 import { UserLoader } from '../user';
 import { SecuredUser } from '../user/dto';
 import {
-  CreatePostInput,
+  CreatePost,
   CreatePostOutput,
   DeletePostOutput,
   Post,
-  UpdatePostInput,
+  UpdatePost,
   UpdatePostOutput,
 } from './dto';
 
@@ -28,7 +28,7 @@ export class PostResolver {
     description: 'Create a discussion post',
   })
   async createPost(
-    @Args('input') { post: input }: CreatePostInput,
+    @Args('input') input: CreatePost,
   ): Promise<CreatePostOutput> {
     const post = await this.service.create(input);
     return { post };
@@ -56,7 +56,7 @@ export class PostResolver {
     description: 'Update an existing Post',
   })
   async updatePost(
-    @Args('input') { post: input }: UpdatePostInput,
+    @Args('input') input: UpdatePost,
   ): Promise<UpdatePostOutput> {
     const post = await this.service.update(input);
     return { post };

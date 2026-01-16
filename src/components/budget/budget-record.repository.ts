@@ -116,10 +116,7 @@ export class BudgetRecordRepository extends DtoRepository<
       .return<{ dto: UnsecuredDto<BudgetRecord> }>('dto');
     const result = await query.first();
     if (!result) {
-      throw new NotFoundException(
-        'Could not find BudgetRecord',
-        'budgetRecord.budget',
-      );
+      throw new NotFoundException('Could not find BudgetRecord', 'budget');
     }
 
     return result.dto;

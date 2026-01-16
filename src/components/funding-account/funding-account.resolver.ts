@@ -2,13 +2,13 @@ import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { type ID, IdArg, ListArg } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import {
-  CreateFundingAccountInput,
+  CreateFundingAccount,
   CreateFundingAccountOutput,
   DeleteFundingAccountOutput,
   FundingAccount,
   FundingAccountListInput,
   FundingAccountListOutput,
-  UpdateFundingAccountInput,
+  UpdateFundingAccount,
   UpdateFundingAccountOutput,
 } from './dto';
 import { FundingAccountLoader } from './funding-account.loader';
@@ -46,7 +46,7 @@ export class FundingAccountResolver {
     description: 'Create a funding account',
   })
   async createFundingAccount(
-    @Args('input') { fundingAccount: input }: CreateFundingAccountInput,
+    @Args('input') input: CreateFundingAccount,
   ): Promise<CreateFundingAccountOutput> {
     const fundingAccount = await this.fundingAccountService.create(input);
     return { fundingAccount };
@@ -56,7 +56,7 @@ export class FundingAccountResolver {
     description: 'Update a funding account',
   })
   async updateFundingAccount(
-    @Args('input') { fundingAccount: input }: UpdateFundingAccountInput,
+    @Args('input') input: UpdateFundingAccount,
   ): Promise<UpdateFundingAccountOutput> {
     const fundingAccount = await this.fundingAccountService.update(input);
     return { fundingAccount };

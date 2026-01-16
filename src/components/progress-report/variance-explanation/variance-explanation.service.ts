@@ -7,7 +7,7 @@ import { ProgressReport } from '../dto';
 import { ProgressReportVarianceExplanationReasonOptions as ReasonOptions } from './reason-options';
 import {
   ProgressReportVarianceExplanation as VarianceExplanation,
-  type ProgressReportVarianceExplanationInput as VarianceExplanationInput,
+  type ExplainProgressVariance as VarianceExplanationInput,
 } from './variance-explanation.dto';
 import { ProgressReportVarianceExplanationRepository } from './variance-explanation.repository';
 

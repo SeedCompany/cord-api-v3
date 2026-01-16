@@ -2,13 +2,13 @@ import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { type ID, IdArg, ListArg } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import {
-  CreateStoryInput,
+  CreateStory,
   CreateStoryOutput,
   DeleteStoryOutput,
   Story,
   StoryListInput,
   StoryListOutput,
-  UpdateStoryInput,
+  UpdateStory,
   UpdateStoryOutput,
 } from './dto';
 import { StoryLoader } from './story.loader';
@@ -44,7 +44,7 @@ export class StoryResolver {
     description: 'Create a story',
   })
   async createStory(
-    @Args('input') { story: input }: CreateStoryInput,
+    @Args('input') input: CreateStory,
   ): Promise<CreateStoryOutput> {
     const story = await this.storyService.create(input);
     return { story };
@@ -54,7 +54,7 @@ export class StoryResolver {
     description: 'Update a story',
   })
   async updateStory(
-    @Args('input') { story: input }: UpdateStoryInput,
+    @Args('input') input: UpdateStory,
   ): Promise<UpdateStoryOutput> {
     const story = await this.storyService.update(input);
     return { story };

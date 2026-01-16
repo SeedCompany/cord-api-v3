@@ -11,7 +11,7 @@ import {
   OptionalField,
   Role,
 } from '~/common';
-import { CreateDefinedFileVersionInput } from '../../../components/file/dto';
+import { CreateDefinedFileVersion } from '../../../components/file/dto';
 import { Gender } from './gender.enum';
 import { UserStatus } from './user-status.enum';
 import { User } from './user.dto';
@@ -59,17 +59,9 @@ export abstract class UpdateUser {
   readonly gender?: Gender;
 
   @Field({ nullable: true })
-  @Type(() => CreateDefinedFileVersionInput)
+  @Type(() => CreateDefinedFileVersion)
   @ValidateNested()
-  readonly photo?: CreateDefinedFileVersionInput;
-}
-
-@InputType()
-export abstract class UpdateUserInput {
-  @Field()
-  @Type(() => UpdateUser)
-  @ValidateNested()
-  readonly user: UpdateUser;
+  readonly photo?: CreateDefinedFileVersion;
 }
 
 @ObjectType()

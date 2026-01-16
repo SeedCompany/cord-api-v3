@@ -1,11 +1,11 @@
 import { fileURLToPath } from 'url';
 import { type ID, UnauthorizedException } from '~/common';
 import { jestSkipFileInExceptionSource } from '~/core/exception';
-import { type ExecuteProjectTransitionInput } from '../../src/components/project/workflow/dto';
+import { type ExecuteProjectTransition } from '../../src/components/project/workflow/dto';
 import { type ProjectWorkflow } from '../../src/components/project/workflow/project-workflow';
 import { type Workflow } from '../../src/components/workflow/define-workflow';
 import {
-  type ExecuteTransitionInput,
+  type ExecuteTransition,
   type WorkflowTransition,
 } from '../../src/components/workflow/dto';
 import { type TestApp } from './create-app';
@@ -98,7 +98,7 @@ export abstract class WorkflowTester<
   protected abstract fetchTransitions(): Promise<Transition[]>;
 
   protected abstract doExecute(
-    input: InstanceType<ReturnType<typeof ExecuteTransitionInput<W['state']>>>,
+    input: InstanceType<ReturnType<typeof ExecuteTransition<W['state']>>>,
   ): Promise<{ state: W['state']; transitions: Transition[] }>;
 }
 
@@ -118,7 +118,7 @@ export class ProjectWorkflowTester extends WorkflowTester<
     }));
   }
 
-  protected async doExecute(input: ExecuteProjectTransitionInput) {
+  protected async doExecute(input: ExecuteProjectTransition) {
     const res = await transitionProject(this.app, {
       ...input,
       project: this.id,

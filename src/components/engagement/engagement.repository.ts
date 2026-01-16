@@ -291,7 +291,6 @@ export class EngagementRepository extends CommonRepository {
       result.id,
       'pnp',
       input.pnp,
-      'engagement.pnp',
     );
 
     return (await this.readOne(result.id, viewOfChangeset(changeset)).catch(
@@ -346,10 +345,7 @@ export class EngagementRepository extends CommonRepository {
     const result = await query.first();
     if (!result) {
       if (mentor && !(await this.getBaseNode(mentor, User))) {
-        throw new NotFoundException(
-          'Could not find mentor',
-          'engagement.mentor',
-        );
+        throw new NotFoundException('Could not find mentor', 'mentor');
       }
 
       if (
@@ -358,7 +354,7 @@ export class EngagementRepository extends CommonRepository {
       ) {
         throw new NotFoundException(
           'Could not find country of origin',
-          'engagement.countryOfOrigin',
+          'countryOfOrigin',
         );
       }
 
@@ -371,7 +367,6 @@ export class EngagementRepository extends CommonRepository {
       result.id,
       'growthPlan',
       input.growthPlan,
-      'engagement.growthPlan',
     );
 
     return (await this.readOne(result.id, viewOfChangeset(changeset)).catch(
@@ -620,10 +615,7 @@ export class EngagementRepository extends CommonRepository {
       .first();
 
     if (!result?.project) {
-      throw new NotFoundException(
-        'Could not find project',
-        'engagement.project',
-      );
+      throw new NotFoundException('Could not find project', 'project');
     }
 
     const isActuallyInternship =
@@ -635,21 +627,18 @@ export class EngagementRepository extends CommonRepository {
         } Engagements can be created on ${
           isInternship ? 'Internship' : 'Translation'
         } Projects`,
-        `engagement.${property}`,
+        property,
       );
     }
 
     const label = isInternship ? 'person' : 'language';
     if (!result.other) {
-      throw new NotFoundException(
-        `Could not find ${label}`,
-        `engagement.${property}`,
-      );
+      throw new NotFoundException(`Could not find ${label}`, property);
     }
 
     if (result.engagement) {
       throw new DuplicateException(
-        `engagement.${property}`,
+        property,
         `Engagement for this project and ${label} already exists`,
       );
     }
@@ -716,13 +705,13 @@ export class EngagementRepository extends CommonRepository {
     if (await this.doesLanguageHaveExternalFirstScripture(id)) {
       throw new InputException(
         'First scripture has already been marked as having been done externally',
-        'languageEngagement.firstScripture',
+        'firstScripture',
       );
     }
     if (await this.doOtherEngagementsHaveFirstScripture(id)) {
       throw new InputException(
         'Another engagement has already been marked as having done the first scripture',
-        'languageEngagement.firstScripture',
+        'firstScripture',
       );
     }
   }

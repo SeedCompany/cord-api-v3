@@ -12,7 +12,7 @@ import { SecuredOrganization } from '../organization/dto';
 import { BudgetService } from './budget.service';
 import {
   BudgetRecord,
-  UpdateBudgetRecordInput,
+  UpdateBudgetRecord,
   UpdateBudgetRecordOutput,
 } from './dto';
 
@@ -34,7 +34,7 @@ export class BudgetRecordResolver {
     description: 'Update a budgetRecord',
   })
   async updateBudgetRecord(
-    @Args('input') { budgetRecord: input, changeset }: UpdateBudgetRecordInput,
+    @Args('input') { changeset, ...input }: UpdateBudgetRecord,
   ): Promise<UpdateBudgetRecordOutput> {
     const budgetRecord = await this.service.updateRecord(input, changeset);
     return { budgetRecord };

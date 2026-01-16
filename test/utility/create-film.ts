@@ -26,7 +26,7 @@ export async function createFilm(
 const CreateFilmDoc = graphql(
   `
     mutation createFilm($input: CreateFilm!) {
-      createFilm(input: { film: $input }) {
+      createFilm(input: $input) {
         film {
           ...film
         }

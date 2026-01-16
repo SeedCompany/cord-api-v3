@@ -8,11 +8,11 @@ import {
 import { type ID, IdArg } from '~/common';
 import { ProjectMemberService } from '../project-member';
 import {
-  CreateProjectMemberInput,
+  CreateProjectMember,
   CreateProjectMemberOutput,
   DeleteProjectMemberOutput,
   ProjectMember,
-  UpdateProjectMemberInput,
+  UpdateProjectMember,
   UpdateProjectMemberOutput,
 } from './dto';
 
@@ -31,7 +31,7 @@ export class ProjectMemberResolver {
     description: 'Create a project member',
   })
   async createProjectMember(
-    @Args('input') { projectMember: input }: CreateProjectMemberInput,
+    @Args('input') input: CreateProjectMember,
   ): Promise<CreateProjectMemberOutput> {
     const projectMember = await this.service.create(input);
     return { projectMember };
@@ -41,7 +41,7 @@ export class ProjectMemberResolver {
     description: 'Update a project member',
   })
   async updateProjectMember(
-    @Args('input') { projectMember: input }: UpdateProjectMemberInput,
+    @Args('input') input: UpdateProjectMember,
   ): Promise<UpdateProjectMemberOutput> {
     const projectMember = await this.service.update(input);
     return { projectMember };

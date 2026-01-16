@@ -57,7 +57,7 @@ describe('Location e2e', () => {
     const result = await app.graphql.mutate(
       graphql(
         `
-          mutation updateLocation($input: UpdateLocationInput!) {
+          mutation updateLocation($input: UpdateLocation!) {
             updateLocation(input: $input) {
               location {
                 ...location
@@ -69,10 +69,8 @@ describe('Location e2e', () => {
       ),
       {
         input: {
-          location: {
-            id: st.id,
-            name: newName,
-          },
+          id: st.id,
+          name: newName,
         },
       },
     );
@@ -143,7 +141,7 @@ describe('Location e2e', () => {
     const result = await app.graphql.mutate(
       graphql(
         `
-          mutation updateLocation($input: UpdateLocationInput!) {
+          mutation updateLocation($input: UpdateLocation!) {
             updateLocation(input: $input) {
               location {
                 ...location
@@ -155,10 +153,8 @@ describe('Location e2e', () => {
       ),
       {
         input: {
-          location: {
-            id: l.id,
-            defaultFieldRegion: newFieldRegion.id,
-          },
+          id: l.id,
+          defaultFieldRegion: newFieldRegion.id,
         },
       },
     );
@@ -177,7 +173,7 @@ describe('Location e2e', () => {
     const result = await app.graphql.mutate(
       graphql(
         `
-          mutation updateLocation($input: UpdateLocationInput!) {
+          mutation updateLocation($input: UpdateLocation!) {
             updateLocation(input: $input) {
               location {
                 ...location
@@ -189,10 +185,8 @@ describe('Location e2e', () => {
       ),
       {
         input: {
-          location: {
-            id: l.id,
-            defaultMarketingRegion: newMarketingRegion.id,
-          },
+          id: l.id,
+          defaultMarketingRegion: newMarketingRegion.id,
         },
       },
     );
@@ -213,7 +207,7 @@ describe('Location e2e', () => {
     const result = await app.graphql.mutate(
       graphql(
         `
-          mutation updateLocation($input: UpdateLocationInput!) {
+          mutation updateLocation($input: UpdateLocation!) {
             updateLocation(input: $input) {
               location {
                 ...location
@@ -225,10 +219,8 @@ describe('Location e2e', () => {
       ),
       {
         input: {
-          location: {
-            id: st.id,
-            fundingAccount: newFundingAccount.id,
-          },
+          id: st.id,
+          fundingAccount: newFundingAccount.id,
         },
       },
     );

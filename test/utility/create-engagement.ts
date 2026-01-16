@@ -45,7 +45,7 @@ export async function createLanguageEngagement(
 const UpdateLangEngDoc = graphql(
   `
     mutation createLanguageEngagement($input: CreateLanguageEngagement!) {
-      createLanguageEngagement(input: { engagement: $input }) {
+      createLanguageEngagement(input: $input) {
         engagement {
           ...languageEngagement
         }
@@ -105,7 +105,7 @@ export async function createInternshipEngagementWithMinimumValues(
 const UpdateInternshipEngDoc = graphql(
   `
     mutation createInternshipEngagement($input: CreateInternshipEngagement!) {
-      createInternshipEngagement(input: { engagement: $input }) {
+      createInternshipEngagement(input: $input) {
         engagement {
           ...internshipEngagement
         }

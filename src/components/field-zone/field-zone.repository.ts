@@ -36,7 +36,7 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
   async create(input: CreateFieldZone) {
     if (!(await this.isUnique(input.name))) {
       throw new DuplicateException(
-        'fieldZone.name',
+        'name',
         'FieldZone with this name already exists.',
       );
     }

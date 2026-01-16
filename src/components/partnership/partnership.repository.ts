@@ -100,7 +100,6 @@ export class PartnershipRepository extends DtoRepository<
       result.id,
       'mou',
       input.mou,
-      'partnership.mou',
     );
 
     await this.files.createDefinedFile(
@@ -109,7 +108,6 @@ export class PartnershipRepository extends DtoRepository<
       result.id,
       'agreement',
       input.agreement,
-      'partnership.agreement',
     );
 
     return result;
@@ -326,22 +324,16 @@ export class PartnershipRepository extends DtoRepository<
         .first()) ?? {};
 
     if (!result.project) {
-      throw new NotFoundException(
-        'Could not find project',
-        'partnership.project',
-      );
+      throw new NotFoundException('Could not find project', 'project');
     }
 
     if (!result.partner) {
-      throw new NotFoundException(
-        'Could not find partner',
-        'partnership.partner',
-      );
+      throw new NotFoundException('Could not find partner', 'partner');
     }
 
     if (result.partnership) {
       throw new DuplicateException(
-        'partnership.project',
+        'project',
         'Partnership for this project and partner already exists',
       );
     }

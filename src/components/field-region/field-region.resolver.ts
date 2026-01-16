@@ -13,13 +13,13 @@ import { SecuredFieldZone } from '../field-zone/dto';
 import { UserLoader } from '../user';
 import { SecuredUser } from '../user/dto';
 import {
-  CreateFieldRegionInput,
+  CreateFieldRegion,
   CreateFieldRegionOutput,
   DeleteFieldRegionOutput,
   FieldRegion,
   FieldRegionListInput,
   FieldRegionListOutput,
-  UpdateFieldRegionInput,
+  UpdateFieldRegion,
   UpdateFieldRegionOutput,
 } from './dto';
 import { FieldRegionLoader } from './field-region.loader';
@@ -75,7 +75,7 @@ export class FieldRegionResolver {
     description: 'Create a field region',
   })
   async createFieldRegion(
-    @Args('input') { fieldRegion: input }: CreateFieldRegionInput,
+    @Args('input') input: CreateFieldRegion,
   ): Promise<CreateFieldRegionOutput> {
     const fieldRegion = await this.fieldRegionService.create(input);
     return { fieldRegion };
@@ -85,7 +85,7 @@ export class FieldRegionResolver {
     description: 'Update a field region',
   })
   async updateFieldRegion(
-    @Args('input') { fieldRegion: input }: UpdateFieldRegionInput,
+    @Args('input') input: UpdateFieldRegion,
   ): Promise<UpdateFieldRegionOutput> {
     const fieldRegion = await this.fieldRegionService.update(input);
     return { fieldRegion };

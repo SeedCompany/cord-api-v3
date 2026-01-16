@@ -1,6 +1,4 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import { Type } from 'class-transformer';
-import { ValidateNested } from 'class-validator';
 import { type ID, IdField, NameField, OptionalField } from '~/common';
 import { OrganizationReach } from './organization-reach.dto';
 import { OrganizationType } from './organization-type.dto';
@@ -25,14 +23,6 @@ export abstract class UpdateOrganization {
 
   @OptionalField(() => [OrganizationReach])
   readonly reach?: readonly OrganizationReach[];
-}
-
-@InputType()
-export abstract class UpdateOrganizationInput {
-  @Field()
-  @Type(() => UpdateOrganization)
-  @ValidateNested()
-  readonly organization: UpdateOrganization;
 }
 
 @ObjectType()

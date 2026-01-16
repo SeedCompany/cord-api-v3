@@ -171,7 +171,7 @@ async function assignRegionAndFetchMembers(
 
 const AssignRegionDoc = graphql(`
   mutation AssignRegion($project: ID!, $region: ID!) {
-    updateProject(input: { project: { id: $project, fieldRegion: $region } }) {
+    updateProject(input: { id: $project, fieldRegion: $region }) {
       project {
         team {
           items {

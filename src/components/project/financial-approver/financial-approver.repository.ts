@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { many, type Many } from '@seedcompany/common';
 import { e, Gel } from '~/core/gel';
 import { type ProjectType } from '../dto';
-import { type FinancialApproverInput } from './dto';
+import { type SetFinancialApprover } from './dto';
 
 @Injectable()
 export class FinancialApproverRepository {
@@ -28,7 +28,7 @@ export class FinancialApproverRepository {
     return await this.db.run(query);
   }
 
-  async write({ user: userId, projectTypes }: FinancialApproverInput) {
+  async write({ user: userId, projectTypes }: SetFinancialApprover) {
     const user = e.cast(e.User, e.cast(e.uuid, userId));
 
     if (projectTypes.length === 0) {

@@ -3,7 +3,7 @@ import { Transform, Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { uniq } from 'lodash';
 import { EmailField, IsIanaTimezone, NameField, Role } from '~/common';
-import { CreateDefinedFileVersionInput } from '../../../components/file/dto';
+import { CreateDefinedFileVersion } from '../../../components/file/dto';
 import { Gender } from './gender.enum';
 import { UserStatus } from './user-status.enum';
 
@@ -48,15 +48,7 @@ export abstract class CreatePerson {
   readonly gender?: Gender;
 
   @Field({ nullable: true })
-  @Type(() => CreateDefinedFileVersionInput)
+  @Type(() => CreateDefinedFileVersion)
   @ValidateNested()
-  readonly photo?: CreateDefinedFileVersionInput;
-}
-
-@InputType()
-export abstract class CreatePersonInput {
-  @Field()
-  @Type(() => CreatePerson)
-  @ValidateNested()
-  readonly person: CreatePerson;
+  readonly photo?: CreateDefinedFileVersion;
 }

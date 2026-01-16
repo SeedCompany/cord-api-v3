@@ -6,7 +6,7 @@ import {
   ChangePasswordOutput,
   ForgotPasswordArgs,
   ForgotPasswordOutput,
-  ResetPasswordInput,
+  ResetPassword,
   ResetPasswordOutput,
 } from '../dto';
 import { AuthLevel } from '../session/auth-level.decorator';
@@ -47,7 +47,7 @@ export class PasswordResolver {
   })
   @AuthLevel('anonymous')
   async resetPassword(
-    @Args('input') input: ResetPasswordInput,
+    @Args('input') input: ResetPassword,
   ): Promise<ResetPasswordOutput> {
     await this.authentication.resetPassword(input);
     return { success: true };

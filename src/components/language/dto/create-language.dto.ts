@@ -110,14 +110,6 @@ export abstract class CreateLanguage {
   readonly isAvailableForReporting?: boolean = false;
 }
 
-@InputType()
-export abstract class CreateLanguageInput {
-  @Field()
-  @Type(() => CreateLanguage)
-  @ValidateNested()
-  readonly language: CreateLanguage;
-}
-
 @ObjectType()
 export abstract class CreateLanguageOutput {
   @Field()

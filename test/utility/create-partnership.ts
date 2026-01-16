@@ -1,5 +1,5 @@
 import { expect } from '@jest/globals';
-import { CalendarDate, type ID, isValidId } from '~/common';
+import { CalendarDate, isValidId } from '~/common';
 import { graphql, type InputOf } from '~/graphql';
 import { type TestApp } from './create-app';
 import { createPartner } from './create-partner';
@@ -8,10 +8,7 @@ import * as fragments from './fragments';
 
 export async function createPartnership(
   app: TestApp,
-  {
-    changeset,
-    ...input
-  }: Partial<InputOf<typeof CreatePartnershipDoc>> & { changeset?: ID } = {},
+  input: Partial<InputOf<typeof CreatePartnershipDoc>> = {},
 ) {
   const partnership = {
     project: input.project || (await createProject(app)).id,
@@ -27,7 +24,6 @@ export async function createPartnership(
 
   const result = await app.graphql.mutate(CreatePartnershipDoc, {
     input: partnership,
-    changeset,
   });
 
   const actual = result.createPartnership.partnership;
@@ -45,8 +41,8 @@ export async function createPartnership(
 
 const CreatePartnershipDoc = graphql(
   `
-    mutation createPartnership($input: CreatePartnership!, $changeset: ID) {
-      createPartnership(input: { partnership: $input, changeset: $changeset }) {
+    mutation createPartnership($input: CreatePartnership!) {
+      createPartnership(input: $input) {
         partnership {
           ...partnership
         }

@@ -13,7 +13,7 @@ import {
   type UnwrapSecured,
 } from '~/common';
 import { type LinkTo } from '~/core';
-import { type CreateDefinedFileVersionInput } from '../../components/file/dto';
+import { type CreateDefinedFileVersion } from '../../components/file/dto';
 import { type Variable } from './query';
 import { type NativeDbValue } from './results';
 
@@ -66,7 +66,7 @@ type ChangeOf<Val> =
 
 export type RawChangeOf<Val> =
   IsFileField<Val> extends true
-    ? CreateDefinedFileVersionInput
+    ? CreateDefinedFileVersion
     : Val extends LinkTo<infer X>
       ? ID<X>
       : Val extends ReadonlyArray<LinkTo<infer X>>

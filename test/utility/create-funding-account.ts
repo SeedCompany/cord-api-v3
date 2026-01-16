@@ -29,7 +29,7 @@ export async function createFundingAccount(
 const CreateFundingAccountDoc = graphql(
   `
     mutation createFundingAccount($input: CreateFundingAccount!) {
-      createFundingAccount(input: { fundingAccount: $input }) {
+      createFundingAccount(input: $input) {
         fundingAccount {
           ...fundingAccount
         }

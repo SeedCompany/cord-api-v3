@@ -83,14 +83,14 @@ export class FieldZoneService {
       director = await this.users.readOneUnsecured(directorId);
     } catch (e) {
       if (e instanceof NotFoundException) {
-        throw e.withField('fieldZone.director');
+        throw e.withField('director');
       }
       throw e;
     }
     if (!director.roles.includes('FieldOperationsDirector')) {
       throw new InputException(
         'User does not have the Field Operations Director role',
-        'fieldZone.director',
+        'director',
       );
     }
     return director;

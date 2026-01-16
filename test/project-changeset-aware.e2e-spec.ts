@@ -102,7 +102,7 @@ describe('Project Changeset Aware e2e', () => {
     const mutationResult = await app.graphql.mutate(
       graphql(
         `
-          mutation updateProject($input: UpdateProjectInput!) {
+          mutation updateProject($input: UpdateProject!) {
             updateProject(input: $input) {
               project {
                 ...project
@@ -114,10 +114,8 @@ describe('Project Changeset Aware e2e', () => {
       ),
       {
         input: {
-          project: {
-            id: project.id,
-            name: newCRName,
-          },
+          id: project.id,
+          name: newCRName,
           changeset: changeset.id,
         },
       },
@@ -151,7 +149,7 @@ describe('Project Changeset Aware e2e', () => {
     const mutationResult = await app.graphql.mutate(
       graphql(
         `
-          mutation updateProject($input: UpdateProjectInput!) {
+          mutation updateProject($input: UpdateProject!) {
             updateProject(input: $input) {
               project {
                 ...project
@@ -163,11 +161,9 @@ describe('Project Changeset Aware e2e', () => {
       ),
       {
         input: {
-          project: {
-            id: project.id,
-            mouStart,
-            mouEnd,
-          },
+          id: project.id,
+          mouStart,
+          mouEnd,
           changeset: changeset.id,
         },
       },
@@ -213,7 +209,7 @@ describe('Project Changeset Aware e2e', () => {
     await app.graphql.mutate(
       graphql(
         `
-          mutation updateProject($input: UpdateProjectInput!) {
+          mutation updateProject($input: UpdateProject!) {
             updateProject(input: $input) {
               project {
                 ...project
@@ -233,11 +229,9 @@ describe('Project Changeset Aware e2e', () => {
       ),
       {
         input: {
-          project: {
-            id: project.id,
-            mouStart: '2020-08-23',
-            mouEnd: '2021-08-22',
-          },
+          id: project.id,
+          mouStart: '2020-08-23',
+          mouEnd: '2021-08-22',
           changeset: changeset.id,
         },
       },
@@ -268,7 +262,7 @@ describe('Project Changeset Aware e2e', () => {
     const mutationResult = await app.graphql.mutate(
       graphql(
         `
-          mutation updateProject($input: UpdateProjectInput!) {
+          mutation updateProject($input: UpdateProject!) {
             updateProject(input: $input) {
               project {
                 ...project
@@ -280,10 +274,8 @@ describe('Project Changeset Aware e2e', () => {
       ),
       {
         input: {
-          project: {
-            id: project.id,
-            // step: ProjectStep.FinalizingCompletion,
-          },
+          id: project.id,
+          // step: ProjectStep.FinalizingCompletion,
           changeset: changeset.id,
         },
       },

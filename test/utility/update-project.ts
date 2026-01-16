@@ -18,7 +18,7 @@ export async function updateProject(
 const UpdateProjectDoc = graphql(
   `
     mutation UpdateProject($input: UpdateProject!) {
-      updateProject(input: { project: $input }) {
+      updateProject(input: $input) {
         project {
           ...project
         }

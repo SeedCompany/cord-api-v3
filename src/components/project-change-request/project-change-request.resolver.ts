@@ -10,11 +10,11 @@ import { Loader, type LoaderOf } from '~/core';
 import { ProjectLoader } from '../project';
 import { IProject, type Project } from '../project/dto';
 import {
-  CreateProjectChangeRequestInput,
+  CreateProjectChangeRequest,
   CreateProjectChangeRequestOutput,
   DeleteProjectChangeRequestOutput,
   ProjectChangeRequest,
-  UpdateProjectChangeRequestInput,
+  UpdateProjectChangeRequest,
   UpdateProjectChangeRequestOutput,
 } from './dto';
 import { ProjectChangeRequestService } from './project-change-request.service';
@@ -38,8 +38,7 @@ export class ProjectChangeRequestResolver {
     description: 'Create a project change request',
   })
   async createProjectChangeRequest(
-    @Args('input')
-    { projectChangeRequest: input }: CreateProjectChangeRequestInput,
+    @Args('input') input: CreateProjectChangeRequest,
   ): Promise<CreateProjectChangeRequestOutput> {
     const projectChangeRequest = await this.service.create(input);
     return { projectChangeRequest };
@@ -49,8 +48,7 @@ export class ProjectChangeRequestResolver {
     description: 'Update a project change request',
   })
   async updateProjectChangeRequest(
-    @Args('input')
-    { projectChangeRequest: input }: UpdateProjectChangeRequestInput,
+    @Args('input') input: UpdateProjectChangeRequest,
   ): Promise<UpdateProjectChangeRequestOutput> {
     const projectChangeRequest = await this.service.update(input);
     return { projectChangeRequest };
