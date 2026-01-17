@@ -1,5 +1,4 @@
 import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
-import { stripIndent } from 'common-tags';
 import { DateTime } from 'luxon';
 import {
   type CollectionMutationType,
@@ -73,16 +72,6 @@ export class ProjectUpdated extends ProjectMutation {
 
   @Field({ middleware: [Grandparent.store] })
   readonly updated: ProjectUpdate;
-
-  @Field(() => [String], {
-    description: stripIndent`
-      A list of keys of this object which have been updated.
-
-      If your GQL usage cannot distinguish between omitted fields and explicit nulls,
-      this can be used to determine which fields have been updated.
-    `,
-  })
-  readonly updatedKeys: ReadonlyArray<keyof ProjectUpdate>;
 }
 
 @ObjectType({ implements: [ProjectMutationOrDeletion] })

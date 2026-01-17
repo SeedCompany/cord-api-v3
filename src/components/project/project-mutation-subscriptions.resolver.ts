@@ -1,5 +1,4 @@
 import { Args, Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { keys } from '@seedcompany/common';
 import { Loader, type LoaderOf } from '@seedcompany/data-loader';
 import { from, map, merge, mergeMap, type ObservableInput } from 'rxjs';
 import { omitNotFound$, Subscription } from '~/common';
@@ -64,7 +63,6 @@ export class ProjectMutationSubscriptionsResolver {
           __typename: 'ProjectUpdated',
           projectId: project,
           ...rest,
-          updatedKeys: keys(rest.updated),
         }),
       ),
     );

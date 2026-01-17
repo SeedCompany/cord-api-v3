@@ -21,6 +21,7 @@ import { ProjectMemberModule } from './project-member/project-member.module';
 import { ProjectMutationActorResolver } from './project-mutation-actor.resolver';
 import { ProjectMutationSubscriptionsResolver } from './project-mutation-subscriptions.resolver';
 import { ProjectUpdateLinksResolver } from './project-update-links.resolver';
+import { ProjectUpdatedResolver } from './project-updated.resolver';
 import { ProjectChannels } from './project.channels';
 import { ConcreteRepos, ProjectGelRepository } from './project.gel.repository';
 import { ProjectLoader } from './project.loader';
@@ -53,6 +54,7 @@ import { ProjectWorkflowModule } from './workflow/project-workflow.module';
     InternshipProjectResolver,
     ProjectMutationSubscriptionsResolver,
     ProjectUpdateLinksResolver,
+    ProjectUpdatedResolver,
     ProjectMutationActorResolver,
     ProjectEngagementConnectionResolver,
     ProjectUserConnectionResolver,
