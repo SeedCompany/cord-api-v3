@@ -3,33 +3,35 @@ import { DateTime } from 'luxon';
 import { type ResourceShape } from '~/common';
 import { ACTIVE } from './matching';
 
-export const deleteBaseNode = (nodeVar: string) => (query: Query) =>
-  query.comment`deleteBaseNode(${nodeVar})`
-    .optionalMatch([
-      node(nodeVar),
-      /**
+export const deleteBaseNode =
+  (nodeVar: string, deletedAt: DateTime = DateTime.now()) =>
+  (query: Query) =>
+    query.comment`deleteBaseNode(${nodeVar})`
+      .optionalMatch([
+        node(nodeVar),
+        /**
          in this case we want to set Deleted_ labels for all properties
          including active = false
          deleteProperties does this, but deletes from before that was changed only prefixed
          unique property labels
          */
-      relation('out', ''),
-      node('propertyNode', 'Property'),
-    ])
-    // Mark any parent base node relationships (pointing to the base node) as active = false.
-    .optionalMatch([node(nodeVar), relation('in', 'baseNodeRel'), node()])
-    .setValues({
-      [`${nodeVar}.deletedAt`]: DateTime.local(),
-      'baseNodeRel.active': false,
-    })
-    /**
+        relation('out', ''),
+        node('propertyNode', 'Property'),
+      ])
+      // Mark any parent base node relationships (pointing to the base node) as active = false.
+      .optionalMatch([node(nodeVar), relation('in', 'baseNodeRel'), node()])
+      .setValues({
+        [`${nodeVar}.deletedAt`]: deletedAt,
+        'baseNodeRel.active': false,
+      })
+      /**
        if we set anything on property nodes or property relationships in the query above (as was done previously)
        we need to distinct propertyNode to avoid collecting and labeling each propertyNode more than once
        */
-    .with(`${nodeVar}, collect(propertyNode) as propList`)
-    .with(`[${nodeVar}] + propList as nodeList`)
-    .raw('unwind nodeList as node')
-    .apply(prefixNodeLabelsWithDeleted('node'));
+      .with(`${nodeVar}, collect(propertyNode) as propList`)
+      .with(`[${nodeVar}] + propList as nodeList`)
+      .raw('unwind nodeList as node')
+      .apply(prefixNodeLabelsWithDeleted('node'));
 
 /**
  * This will set all relationships given to active false

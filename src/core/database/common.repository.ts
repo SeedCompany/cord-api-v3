@@ -146,6 +146,7 @@ export class CommonRepository {
     const id = isIdLike(objectOrId) ? objectOrId : objectOrId.id;
     const res = resource ? this.resources.enhance(resource) : undefined;
     const label = res ? res.dbLabel : 'BaseNode';
+    const at = DateTime.now();
 
     res && this.liveQueryStore.invalidate([res, id]);
 
@@ -153,10 +154,11 @@ export class CommonRepository {
       await this.db
         .query()
         .matchNode('node', label, { id })
-        .apply(deleteBaseNode('node'))
+        .apply(deleteBaseNode('node', at))
         .return('*')
         .run();
-      return;
+
+      return { at };
     }
     try {
       await this.db
@@ -173,6 +175,8 @@ export class CommonRepository {
     } catch (e) {
       throw new ServerException('Failed to remove node in changeset', e);
     }
+
+    return { at };
   }
 
   protected getConstraintsFor(resource: ResourceShape<any>) {

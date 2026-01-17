@@ -18,6 +18,11 @@ import { FixDeptIdLabelMigration } from './migrations/fix-dept-id-label.migratio
 import { RenameTranslationToMomentumMigration } from './migrations/rename-translation-to-momentum.migration';
 import { ProjectEngagementIdResolvers } from './project-engagement-id.resolver';
 import { ProjectMemberModule } from './project-member/project-member.module';
+import { ProjectMutationActorResolver } from './project-mutation-actor.resolver';
+import { ProjectMutationSubscriptionsResolver } from './project-mutation-subscriptions.resolver';
+import { ProjectUpdateLinksResolver } from './project-update-links.resolver';
+import { ProjectUpdatedResolver } from './project-updated.resolver';
+import { ProjectChannels } from './project.channels';
 import { ConcreteRepos, ProjectGelRepository } from './project.gel.repository';
 import { ProjectLoader } from './project.loader';
 import { ProjectRepository } from './project.repository';
@@ -47,9 +52,14 @@ import { ProjectWorkflowModule } from './workflow/project-workflow.module';
     ProjectResolver,
     TranslationProjectResolver,
     InternshipProjectResolver,
+    ProjectMutationSubscriptionsResolver,
+    ProjectUpdateLinksResolver,
+    ProjectUpdatedResolver,
+    ProjectMutationActorResolver,
     ProjectEngagementConnectionResolver,
     ProjectUserConnectionResolver,
     ...ProjectEngagementIdResolvers,
+    ProjectChannels,
     ProjectService,
     splitDb(ProjectRepository, ProjectGelRepository),
     ...Object.values(ConcreteRepos),
