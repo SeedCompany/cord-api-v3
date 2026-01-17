@@ -1,7 +1,7 @@
-import { InputType, ObjectType } from '@nestjs/graphql';
-import { type ID, IdField, MutationPlaceholderOutput } from '~/common';
+import { ArgsType } from '@nestjs/graphql';
+import { type ID, IdField } from '~/common';
 
-@InputType()
+@ArgsType()
 export class RemoveOrganizationFromUser {
   @IdField()
   readonly org: ID<'Organization'>;
@@ -9,6 +9,3 @@ export class RemoveOrganizationFromUser {
   @IdField()
   readonly user: ID<'User'>;
 }
-
-@ObjectType()
-export abstract class OrganizationRemovedFromUser extends MutationPlaceholderOutput {}

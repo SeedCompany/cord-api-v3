@@ -1,7 +1,7 @@
-import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import { type ID, IdField, MutationPlaceholderOutput } from '~/common';
+import { ArgsType, Field } from '@nestjs/graphql';
+import { type ID, IdField } from '~/common';
 
-@InputType()
+@ArgsType()
 export class AssignOrganizationToUser {
   @IdField()
   readonly org: ID<'Organization'>;
@@ -12,6 +12,3 @@ export class AssignOrganizationToUser {
   @Field(() => Boolean, { nullable: true })
   readonly primary?: boolean;
 }
-
-@ObjectType()
-export abstract class OrganizationAssignedToUser extends MutationPlaceholderOutput {}
