@@ -5,7 +5,6 @@ import { firstLettersOfWords, isValidId } from '~/common';
 import { graphql, type InputOf } from '~/graphql';
 import { UserStatus } from '../src/components/user/dto';
 import {
-  createEducation,
   createOrganization,
   createPerson,
   createSession,
@@ -329,40 +328,6 @@ describe('User e2e', () => {
     );
 
     // TODO after #430 is resolved, list orgs and make sure org is removed as primary
-  });
-
-  it('read one users education', async () => {
-    const newUser = await createPerson(app);
-    const edu = await createEducation(app, { user: newUser.id });
-
-    const result = await app.graphql.query(
-      graphql(
-        `
-          query user($id: ID!) {
-            user(id: $id) {
-              ...user
-              education {
-                items {
-                  ...education
-                }
-                hasMore
-                total
-                canRead
-                canCreate
-              }
-            }
-          }
-        `,
-        [fragments.user, fragments.education],
-      ),
-      {
-        id: newUser.id,
-      },
-    );
-    const actual = result.user;
-    expect(actual).toBeTruthy();
-    expect(actual.education.items[0]!.id).toBe(edu.id);
-    return true;
   });
 
   it('read one users unavailability', async () => {

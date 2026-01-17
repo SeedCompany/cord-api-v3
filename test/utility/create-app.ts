@@ -1,62 +1,27 @@
-import { faker } from '@faker-js/faker';
-import { afterAll } from '@jest/globals';
-import { Test } from '@nestjs/testing';
-import { andCall } from '~/common';
-import { ConfigService } from '~/core';
-import { HttpAdapter, type NestHttpApplication } from '~/core/http';
-import { LogLevel } from '~/core/logger';
-import { LevelMatcher } from '~/core/logger/level-matcher';
-import { AppModule } from '../../src/app.module';
+import { type NestHttpApplication } from '~/core/http';
+import { createApp } from '../setup/create-app';
 import {
   createGraphqlClient,
   type GraphQLTestClient,
 } from './create-graphql-client';
-import { ephemeralGel } from './gel-setup';
 
-// Patch faker email to be more unique
-const origEmail = faker.internet.email.bind(faker.internet);
-faker.internet.email = (...args) =>
-  origEmail(...(args as any)).replace('@', `.${Date.now()}@`);
-
+/**
+ * @deprecated use {@link import("../setup").TestApp} instead
+ */
 export interface TestApp extends NestHttpApplication {
+  /**
+   * @deprecated use {@link import("../setup").Tester} instead
+   */
   graphql: GraphQLTestClient;
 }
 
-const appsToClose = new Set<TestApp>();
-afterAll(async () => {
-  for (const app of appsToClose) {
-    await app.close();
-  }
-});
-
+/**
+ * @deprecated use {@link createApp} instead
+ */
 export const createTestApp = async () => {
-  const db = await ephemeralGel();
+  const app = (await createApp()) as TestApp;
 
-  let app;
-  try {
-    const moduleFixture = await Test.createTestingModule({
-      imports: [AppModule],
-    })
-      .overrideProvider(LevelMatcher)
-      .useValue(new LevelMatcher([], LogLevel.ERROR))
-      .overrideProvider('GEL_CONNECT')
-      .useValue(db?.options)
-      .compile();
-
-    app = moduleFixture.createNestApplication<TestApp>(new HttpAdapter());
-    await app.configure(app, app.get(ConfigService));
-    await app.init();
-    app.graphql = await createGraphqlClient(app);
-  } catch (e) {
-    await db?.cleanup();
-    throw e;
-  }
-
-  andCall(app, 'close', async () => {
-    await db?.cleanup();
+  return Object.assign(Object.create(app) as TestApp, {
+    graphql: createGraphqlClient(app),
   });
-
-  appsToClose.add(app);
-
-  return app;
 };

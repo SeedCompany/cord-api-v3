@@ -8,6 +8,7 @@ import { login, runAsAdmin, runInIsolatedSession } from './login';
 
 type RegisterUser = InputOf<typeof RegisterUserDoc>;
 
+/** @deprecated */
 export const generateRegisterInput = async () =>
   ({
     ...(await generateRequireFieldsRegisterInput()),
@@ -18,6 +19,7 @@ export const generateRegisterInput = async () =>
     title: faker.person.jobTitle(),
   }) satisfies RegisterUser;
 
+/** @deprecated */
 export const generateRequireFieldsRegisterInput = async () =>
   ({
     email: faker.internet.email(),
@@ -29,6 +31,7 @@ export const generateRequireFieldsRegisterInput = async () =>
     timezone: 'America/Chicago',
   }) satisfies RegisterUser;
 
+/** @deprecated use {@link import('../setup').createTesterWithRole} instead */
 export async function registerUserWithStrictInput(
   app: TestApp,
   input: RegisterUser,
@@ -43,18 +46,22 @@ export async function registerUserWithStrictInput(
   return actual;
 }
 
+/** @deprecated use {@link import('../setup').Tester} instead */
 export type TestUser = fragments.user & {
   /**
    * Login as the user with the current session
+   * @deprecated
    */
   login: () => Promise<void>;
 
   /**
    * Execute this code as this user in an isolated session
+   * @deprecated
    */
   runAs: <R>(execution: () => Promise<R>) => Promise<R>;
 };
 
+/** @deprecated use {@link import('../setup').createTesterWithRole} instead */
 export async function registerUser(
   app: TestApp,
   input: Partial<RegisterUser> = {},

@@ -259,6 +259,7 @@ describe('Organization e2e', () => {
       .mutate(DeleteOrganization, { id: '' as ID })
       .expectError(errors.invalidId());
 
+    // @ts-expect-error confirming runtime error here
     await app.graphql.mutate(DeleteOrganization).expectError(errors.schema());
 
     await app.graphql
