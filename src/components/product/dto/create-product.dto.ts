@@ -81,7 +81,7 @@ export abstract class CreateDirectScriptureProduct extends CreateBaseProduct {
   @ScriptureField({
     nullable: true,
   })
-  readonly scriptureReferences?: readonly ScriptureRangeInput[];
+  readonly scriptureReferences?: readonly ScriptureRangeInput[] | null;
 
   @Field(() => UnspecifiedScripturePortionInput, {
     nullable: true,

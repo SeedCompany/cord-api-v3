@@ -324,7 +324,7 @@ export class ProductService {
         compareNullable(UnspecifiedScripturePortion.isEqual),
       )(input.unspecifiedScripture, current.unspecifiedScripture),
       scriptureReferences: ifDiff(isScriptureEqual)(
-        input.scriptureReferences,
+        input.scriptureReferences === null ? [] : input.scriptureReferences,
         current.scriptureReferences,
       ),
     };
