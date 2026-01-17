@@ -50,7 +50,7 @@ export class ProjectCreated extends ProjectMutation {
 
 @ObjectType()
 export class ProjectUpdate extends AsUpdateType(UpdateProject, {
-  omit: ['id'],
+  omit: ['id', 'changeset'],
   links: [
     'primaryLocation',
     'marketingLocation',
