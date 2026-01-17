@@ -20,7 +20,7 @@ export abstract class CreateFieldRegion {
 }
 
 @ObjectType()
-export abstract class CreateFieldRegionOutput {
+export abstract class FieldRegionCreated {
   @Field()
   readonly fieldRegion: FieldRegion;
 }

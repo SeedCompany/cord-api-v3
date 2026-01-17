@@ -123,13 +123,13 @@ export abstract class UpdateInternshipEngagement extends UpdateEngagement {
 }
 
 @ObjectType()
-export abstract class UpdateLanguageEngagementOutput {
+export abstract class LanguageEngagementUpdated {
   @Field()
   readonly engagement: LanguageEngagement;
 }
 
 @ObjectType()
-export abstract class UpdateInternshipEngagementOutput {
+export abstract class InternshipEngagementUpdated {
   @Field()
   readonly engagement: InternshipEngagement;
 }

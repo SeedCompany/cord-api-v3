@@ -13,7 +13,7 @@ export abstract class CreateStory {
 }
 
 @ObjectType()
-export abstract class CreateStoryOutput {
+export abstract class StoryCreated {
   @Field()
   readonly story: Story;
 }

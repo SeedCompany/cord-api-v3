@@ -46,6 +46,7 @@ export class ProjectChannels {
     const payloadWithBy = { ...payload, by };
     this[action](payload).publish(payloadWithBy);
     this[action]().publish(payloadWithBy);
+    return payloadWithBy;
   }
 
   created() {

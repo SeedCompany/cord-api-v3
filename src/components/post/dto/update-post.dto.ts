@@ -24,7 +24,7 @@ export abstract class UpdatePost {
 }
 
 @ObjectType()
-export abstract class UpdatePostOutput {
+export abstract class PostUpdated {
   @Field()
   readonly post: Post;
 }

@@ -3,13 +3,13 @@ import { type ID, IdArg, ListArg } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import {
   CreateTool,
-  CreateToolOutput,
-  DeleteToolOutput,
   Tool,
+  ToolCreated,
+  ToolDeleted,
   ToolListInput,
   ToolListOutput,
+  ToolUpdated,
   UpdateTool,
-  UpdateToolOutput,
 } from './dto';
 import { ToolLoader } from './tool.loader';
 import { ToolService } from './tool.service';
@@ -40,31 +40,27 @@ export class ToolResolver {
     return list;
   }
 
-  @Mutation(() => CreateToolOutput, {
+  @Mutation(() => ToolCreated, {
     description: 'Create a tool',
   })
-  async createTool(
-    @Args('input') input: CreateTool,
-  ): Promise<CreateToolOutput> {
+  async createTool(@Args('input') input: CreateTool): Promise<ToolCreated> {
     const tool = await this.toolService.create(input);
     return { tool };
   }
 
-  @Mutation(() => UpdateToolOutput, {
+  @Mutation(() => ToolUpdated, {
     description: 'Update a tool',
   })
-  async updateTool(
-    @Args('input') input: UpdateTool,
-  ): Promise<UpdateToolOutput> {
+  async updateTool(@Args('input') input: UpdateTool): Promise<ToolUpdated> {
     const tool = await this.toolService.update(input);
     return { tool };
   }
 
-  @Mutation(() => DeleteToolOutput, {
+  @Mutation(() => ToolDeleted, {
     description: 'Delete a tool',
   })
-  async deleteTool(@IdArg() id: ID): Promise<DeleteToolOutput> {
+  async deleteTool(@IdArg() id: ID): Promise<ToolDeleted> {
     await this.toolService.delete(id);
-    return { success: true };
+    return {};
   }
 }

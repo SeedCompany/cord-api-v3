@@ -2,7 +2,7 @@ import { faker } from '@faker-js/faker';
 import { beforeAll, describe, expect, it } from '@jest/globals';
 import { times } from 'lodash';
 import { firstLettersOfWords, isValidId } from '~/common';
-import { graphql, type InputOf } from '~/graphql';
+import { graphql, type InputOf, type VariablesOf } from '~/graphql';
 import { UserStatus } from '../src/components/user/dto';
 import {
   createOrganization,
@@ -186,19 +186,10 @@ describe('User e2e', () => {
 
   it('assign organization to user', async () => {
     const newUser = await createPerson(app);
-    await app.graphql.mutate(
-      graphql(`
-        mutation assignOrganizationToUser($org: ID!, $user: ID!) {
-          assignOrganizationToUser(input: { org: $org, user: $user }) {
-            __typename
-          }
-        }
-      `),
-      {
-        org: org.id,
-        user: newUser.id,
-      },
-    );
+    await assignOrganizationToUser(app, {
+      org: org.id,
+      user: newUser.id,
+    });
 
     const result1 = await app.graphql.query(
       graphql(
@@ -233,99 +224,42 @@ describe('User e2e', () => {
     const newUser = await createPerson(app);
 
     // assign organization to user
-    await app.graphql.mutate(
-      graphql(`
-        mutation assignOrganizationToUser($org: ID!, $user: ID!) {
-          assignOrganizationToUser(input: { org: $org, user: $user }) {
-            __typename
-          }
-        }
-      `),
-      {
-        org: org.id,
-        user: newUser.id,
-      },
-    );
+    await assignOrganizationToUser(app, {
+      org: org.id,
+      user: newUser.id,
+    });
 
     // remove organization from user
-    await app.graphql.mutate(
-      graphql(`
-        mutation removeOrganizationFromUser($org: ID!, $user: ID!) {
-          removeOrganizationFromUser(input: { org: $org, user: $user }) {
-            __typename
-          }
-        }
-      `),
-      {
-        org: org.id,
-        user: newUser.id,
-      },
-    );
+    await removeOrganizationFromUser(app, {
+      org: org.id,
+      user: newUser.id,
+    });
   });
 
   it('assign primary organization to user', async () => {
     const newUser = await createPerson(app);
-    await app.graphql.mutate(
-      graphql(`
-        mutation assignOrganizationToUser(
-          $org: ID!
-          $user: ID!
-          $primary: Boolean!
-        ) {
-          assignOrganizationToUser(
-            input: { org: $org, user: $user, primary: $primary }
-          ) {
-            __typename
-          }
-        }
-      `),
-      {
-        org: org.id,
-        user: newUser.id,
-        primary: true,
-      },
-    );
+    await assignOrganizationToUser(app, {
+      org: org.id,
+      user: newUser.id,
+      primary: true,
+    });
   });
 
   it('remove primary organization from user', async () => {
     const newUser = await createPerson(app);
 
     // assign primary organization to user
-    await app.graphql.mutate(
-      graphql(`
-        mutation assignOrganizationToUser(
-          $org: ID!
-          $user: ID!
-          $primary: Boolean!
-        ) {
-          assignOrganizationToUser(
-            input: { org: $org, user: $user, primary: $primary }
-          ) {
-            __typename
-          }
-        }
-      `),
-      {
-        org: org.id,
-        user: newUser.id,
-        primary: true,
-      },
-    );
+    await assignOrganizationToUser(app, {
+      org: org.id,
+      user: newUser.id,
+      primary: true,
+    });
 
     // remove primary organization from user
-    await app.graphql.mutate(
-      graphql(`
-        mutation removeOrganizationFromUser($org: ID!, $user: ID!) {
-          removeOrganizationFromUser(input: { org: $org, user: $user }) {
-            __typename
-          }
-        }
-      `),
-      {
-        org: org.id,
-        user: newUser.id,
-      },
-    );
+    await removeOrganizationFromUser(app, {
+      org: org.id,
+      user: newUser.id,
+    });
 
     // TODO after #430 is resolved, list orgs and make sure org is removed as primary
   });
@@ -402,3 +336,31 @@ describe('User e2e', () => {
     expect(result.updateUser.user.email.value).toBeNull();
   });
 });
+
+async function assignOrganizationToUser(
+  app: TestApp,
+  input: VariablesOf<typeof AssignOrgToUserDoc>,
+) {
+  await app.graphql.mutate(AssignOrgToUserDoc, input);
+}
+const AssignOrgToUserDoc = graphql(`
+  mutation assignOrganizationToUser($org: ID!, $user: ID!, $primary: Boolean) {
+    assignOrganizationToUser(org: $org, user: $user, primary: $primary) {
+      __typename
+    }
+  }
+`);
+
+async function removeOrganizationFromUser(
+  app: TestApp,
+  input: VariablesOf<typeof RemoveOrgFromUserDoc>,
+) {
+  await app.graphql.mutate(RemoveOrgFromUserDoc, input);
+}
+const RemoveOrgFromUserDoc = graphql(`
+  mutation removeOrganizationFromUser($org: ID!, $user: ID!) {
+    removeOrganizationFromUser(org: $org, user: $user) {
+      __typename
+    }
+  }
+`);

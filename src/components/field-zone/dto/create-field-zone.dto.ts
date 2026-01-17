@@ -14,7 +14,7 @@ export abstract class CreateFieldZone {
 }
 
 @ObjectType()
-export abstract class CreateFieldZoneOutput {
+export abstract class FieldZoneCreated {
   @Field()
   readonly fieldZone: FieldZone;
 }

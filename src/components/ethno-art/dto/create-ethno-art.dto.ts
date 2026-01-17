@@ -13,7 +13,7 @@ export abstract class CreateEthnoArt {
 }
 
 @ObjectType()
-export abstract class CreateEthnoArtOutput {
+export abstract class EthnoArtCreated {
   @Field()
   readonly ethnoArt: EthnoArt;
 }

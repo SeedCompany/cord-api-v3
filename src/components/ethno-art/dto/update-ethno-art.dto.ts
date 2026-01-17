@@ -16,7 +16,7 @@ export abstract class UpdateEthnoArt {
 }
 
 @ObjectType()
-export abstract class UpdateEthnoArtOutput {
+export abstract class EthnoArtUpdated {
   @Field()
   readonly ethnoArt: EthnoArt;
 }

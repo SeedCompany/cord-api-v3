@@ -227,7 +227,14 @@ export class AuthenticationGelRepository implements PublicOf<AuthenticationRepos
     passwordHash: string,
   ) {
     const userId = await this.userByEmail(email);
-    await this.savePasswordHashOnUser(userId!, passwordHash);
+    if (!userId) {
+      throw new ServerException(
+        'Failed to reset password',
+        new ServerException('Could not find user by email'),
+      );
+    }
+    await this.savePasswordHashOnUser(userId, passwordHash);
+    return { user: { id: userId } };
   }
 
   async removeAllEmailTokensForEmail(email: string) {

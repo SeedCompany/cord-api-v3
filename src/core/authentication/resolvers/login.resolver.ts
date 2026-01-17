@@ -10,11 +10,11 @@ import { Loader, type LoaderOf } from '~/core';
 import { UserLoader } from '../../../components/user';
 import { User } from '../../../components/user/dto';
 import { AuthenticationService } from '../authentication.service';
-import { LoginInput, LoginOutput, LogoutOutput } from '../dto';
+import { LoggedIn, LoggedOut, LoginInput } from '../dto';
 import { AuthLevel } from '../session/auth-level.decorator';
 import { SessionHost } from '../session/session.host';
 
-@Resolver(LoginOutput)
+@Resolver(LoggedIn)
 @AuthLevel('anonymous')
 export class LoginResolver {
   constructor(
@@ -22,32 +22,32 @@ export class LoginResolver {
     private readonly sessionHost: SessionHost,
   ) {}
 
-  @Mutation(() => LoginOutput, {
+  @Mutation(() => LoggedIn, {
     description: stripIndent`
       Login a user
       @sensitive-secrets
     `,
   })
-  async login(@Args('input') input: LoginInput): Promise<LoginOutput> {
+  async login(@Args('input') input: LoginInput): Promise<LoggedIn> {
     const user = await this.authentication.login(input);
     return { user };
   }
 
-  @Mutation(() => LogoutOutput, {
+  @Mutation(() => LoggedOut, {
     description: stripIndent`
       Logout a user
       @sensitive-secrets
     `,
   })
-  async logout(): Promise<LogoutOutput> {
+  async logout(): Promise<LoggedOut> {
     const session = this.sessionHost.current;
     await this.authentication.logout(session.token);
-    return { success: true };
+    return {};
   }
 
   @ResolveField(() => User, { description: 'The logged-in user' })
   async user(
-    @Parent() { user }: LoginOutput,
+    @Parent() { user }: LoggedIn,
     @Loader(UserLoader) users: LoaderOf<UserLoader>,
   ): Promise<User> {
     return await users.load(user);

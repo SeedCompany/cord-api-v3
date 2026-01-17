@@ -39,7 +39,7 @@ export abstract class CreateLocation {
 }
 
 @ObjectType()
-export abstract class CreateLocationOutput {
+export abstract class LocationCreated {
   @Field()
   readonly location: Location;
 }

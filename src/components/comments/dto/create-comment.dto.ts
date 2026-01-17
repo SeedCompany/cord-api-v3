@@ -15,7 +15,7 @@ export abstract class CreateComment {
 }
 
 @ObjectType()
-export abstract class CreateCommentOutput {
+export abstract class CommentCreated {
   @Field()
   readonly comment: Comment;
 }

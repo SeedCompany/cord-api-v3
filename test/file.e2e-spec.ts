@@ -23,7 +23,7 @@ import { FileBucket, type LocalBucket } from '../src/components/file/bucket';
 import {
   type Directory,
   FileNodeType,
-  type RequestUploadOutput,
+  type FileUploadRequested,
 } from '../src/components/file/dto';
 import {
   createFileVersion,
@@ -51,7 +51,7 @@ export async function uploadFile(
   app: TestApp,
   parent: ID,
   input: Partial<FakeFile> = {},
-  uploadRequest?: RequestUploadOutput,
+  uploadRequest?: FileUploadRequested,
 ) {
   const { id, url } = uploadRequest ?? (await requestFileUpload(app));
 

@@ -24,7 +24,7 @@ export class CreatePost {
 }
 
 @ObjectType()
-export abstract class CreatePostOutput {
+export abstract class PostCreated {
   @Field()
   readonly post: Post;
 }

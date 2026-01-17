@@ -18,7 +18,7 @@ export abstract class UpdateEducation {
 }
 
 @ObjectType()
-export abstract class UpdateEducationOutput {
+export abstract class EducationUpdated {
   @Field()
   readonly education: Education;
 }

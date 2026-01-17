@@ -12,7 +12,7 @@ export abstract class CreateTool {
 }
 
 @ObjectType()
-export abstract class CreateToolOutput {
+export abstract class ToolCreated {
   @Field()
   readonly tool: Tool;
 }

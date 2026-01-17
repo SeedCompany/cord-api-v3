@@ -26,7 +26,7 @@ export abstract class UpdateOrganization {
 }
 
 @ObjectType()
-export abstract class UpdateOrganizationOutput {
+export abstract class OrganizationUpdated {
   @Field()
   readonly organization: Organization;
 }

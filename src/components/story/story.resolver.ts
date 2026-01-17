@@ -3,13 +3,13 @@ import { type ID, IdArg, ListArg } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import {
   CreateStory,
-  CreateStoryOutput,
-  DeleteStoryOutput,
   Story,
+  StoryCreated,
+  StoryDeleted,
   StoryListInput,
   StoryListOutput,
+  StoryUpdated,
   UpdateStory,
-  UpdateStoryOutput,
 } from './dto';
 import { StoryLoader } from './story.loader';
 import { StoryService } from './story.service';
@@ -40,31 +40,27 @@ export class StoryResolver {
     return list;
   }
 
-  @Mutation(() => CreateStoryOutput, {
+  @Mutation(() => StoryCreated, {
     description: 'Create a story',
   })
-  async createStory(
-    @Args('input') input: CreateStory,
-  ): Promise<CreateStoryOutput> {
+  async createStory(@Args('input') input: CreateStory): Promise<StoryCreated> {
     const story = await this.storyService.create(input);
     return { story };
   }
 
-  @Mutation(() => UpdateStoryOutput, {
+  @Mutation(() => StoryUpdated, {
     description: 'Update a story',
   })
-  async updateStory(
-    @Args('input') input: UpdateStory,
-  ): Promise<UpdateStoryOutput> {
+  async updateStory(@Args('input') input: UpdateStory): Promise<StoryUpdated> {
     const story = await this.storyService.update(input);
     return { story };
   }
 
-  @Mutation(() => DeleteStoryOutput, {
+  @Mutation(() => StoryDeleted, {
     description: 'Delete a story',
   })
-  async deleteStory(@IdArg() id: ID): Promise<DeleteStoryOutput> {
+  async deleteStory(@IdArg() id: ID): Promise<StoryDeleted> {
     await this.storyService.delete(id);
-    return { success: true };
+    return {};
   }
 }

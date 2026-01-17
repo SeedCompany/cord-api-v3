@@ -13,8 +13,8 @@ import { PartnershipLoader } from '../partnership';
 import { Partnership } from '../partnership/dto';
 import {
   PartnershipProducingMedium,
+  PartnershipProducingMediumUpdated,
   UpdatePartnershipProducingMedium,
-  UpdatePartnershipProducingMediumOutput,
 } from './dto/partnership-producing-medium.dto';
 import { PartnershipProducingMediumService } from './partnership-producing-medium.service';
 
@@ -49,10 +49,10 @@ export class PartnershipProducingMediumResolver {
       : null;
   }
 
-  @Mutation(() => UpdatePartnershipProducingMediumOutput)
+  @Mutation(() => PartnershipProducingMediumUpdated)
   async updatePartnershipsProducingMediums(
     @Args() { engagement, input }: UpdatePartnershipProducingMediumsArgs,
-  ): Promise<UpdatePartnershipProducingMediumOutput> {
+  ): Promise<PartnershipProducingMediumUpdated> {
     await this.service.update(engagement, input);
     return { engagement };
   }

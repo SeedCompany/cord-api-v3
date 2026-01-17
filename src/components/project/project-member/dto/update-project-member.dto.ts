@@ -18,7 +18,7 @@ export abstract class UpdateProjectMember {
 }
 
 @ObjectType()
-export abstract class UpdateProjectMemberOutput {
+export abstract class ProjectMemberUpdated {
   @Field()
   readonly projectMember: ProjectMember;
 }

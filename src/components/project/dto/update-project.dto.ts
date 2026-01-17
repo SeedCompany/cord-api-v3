@@ -14,7 +14,6 @@ import {
 } from '~/common';
 import { ChangesetIdField } from '../../changeset';
 import { ReportPeriod } from '../../periodic-report/dto';
-import { IProject, type Project } from './project.dto';
 
 @ObjectType({ isAbstract: true })
 @InputType()
@@ -83,10 +82,4 @@ export abstract class UpdateProject {
 
   @ChangesetIdField()
   readonly changeset?: ID;
-}
-
-@ObjectType()
-export abstract class UpdateProjectOutput {
-  @Field(() => IProject)
-  readonly project: Project;
 }

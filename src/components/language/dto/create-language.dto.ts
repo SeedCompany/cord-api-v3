@@ -111,7 +111,7 @@ export abstract class CreateLanguage {
 }
 
 @ObjectType()
-export abstract class CreateLanguageOutput {
+export abstract class LanguageCreated {
   @Field()
   readonly language: Language;
 }

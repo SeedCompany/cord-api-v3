@@ -4,13 +4,13 @@ import { Loader, type LoaderOf } from '~/core';
 import { UnavailabilityLoader, UnavailabilityService } from '../unavailability';
 import {
   CreateUnavailability,
-  CreateUnavailabilityOutput,
-  DeleteUnavailabilityOutput,
   Unavailability,
+  UnavailabilityCreated,
+  UnavailabilityDeleted,
   UnavailabilityListInput,
   UnavailabilityListOutput,
+  UnavailabilityUpdated,
   UpdateUnavailability,
-  UpdateUnavailabilityOutput,
 } from './dto';
 
 @Resolver()
@@ -43,36 +43,34 @@ export class UnavailabilityResolver {
     return list;
   }
 
-  @Mutation(() => CreateUnavailabilityOutput, {
+  @Mutation(() => UnavailabilityCreated, {
     description: 'Create an unavailability',
     deprecationReason: `This is unfinished functionality, don't use`,
   })
   async createUnavailability(
     @Args('input') input: CreateUnavailability,
-  ): Promise<CreateUnavailabilityOutput> {
+  ): Promise<UnavailabilityCreated> {
     const unavailability = await this.service.create(input);
     return { unavailability };
   }
 
-  @Mutation(() => UpdateUnavailabilityOutput, {
+  @Mutation(() => UnavailabilityUpdated, {
     description: 'Update an unavailability',
     deprecationReason: `This is unfinished functionality, don't use`,
   })
   async updateUnavailability(
     @Args('input') input: UpdateUnavailability,
-  ): Promise<UpdateUnavailabilityOutput> {
+  ): Promise<UnavailabilityUpdated> {
     const unavailability = await this.service.update(input);
     return { unavailability };
   }
 
-  @Mutation(() => DeleteUnavailabilityOutput, {
+  @Mutation(() => UnavailabilityDeleted, {
     description: 'Delete an unavailability',
     deprecationReason: `This is unfinished functionality, don't use`,
   })
-  async deleteUnavailability(
-    @IdArg() id: ID,
-  ): Promise<DeleteUnavailabilityOutput> {
+  async deleteUnavailability(@IdArg() id: ID): Promise<UnavailabilityDeleted> {
     await this.service.delete(id);
-    return { success: true };
+    return {};
   }
 }

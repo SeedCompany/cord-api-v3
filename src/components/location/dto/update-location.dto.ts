@@ -48,7 +48,7 @@ export abstract class UpdateLocation {
 }
 
 @ObjectType()
-export abstract class UpdateLocationOutput {
+export abstract class LocationUpdated {
   @Field()
   readonly location: Location;
 }

@@ -1,4 +1,4 @@
-import { Field, ID as IDType, InputType, ObjectType } from '@nestjs/graphql';
+import { Field, ID as IDType, InputType } from '@nestjs/graphql';
 import { Transform } from 'class-transformer';
 import { uniq } from 'lodash';
 import { DateTime } from 'luxon';
@@ -15,7 +15,6 @@ import {
 } from '~/common';
 import { ReportPeriod } from '../../periodic-report/dto';
 import { ProjectType } from './project-type.enum';
-import { IProject, type Project } from './project.dto';
 
 @InputType()
 export abstract class CreateProject {
@@ -86,10 +85,4 @@ export abstract class CreateProject {
 
   @Field({ nullable: true })
   readonly departmentId?: string;
-}
-
-@ObjectType()
-export abstract class CreateProjectOutput {
-  @Field(() => IProject)
-  readonly project: Project;
 }

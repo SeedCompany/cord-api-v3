@@ -67,7 +67,7 @@ export abstract class UpdateOtherProduct extends UpdateBaseProduct {
 }
 
 @ObjectType()
-export abstract class UpdateProductOutput {
+export abstract class ProductUpdated {
   @Field(() => Product)
   readonly product: AnyProduct;
 }

@@ -55,7 +55,7 @@ export class CreatePartnership {
 }
 
 @ObjectType()
-export abstract class CreatePartnershipOutput {
+export abstract class PartnershipCreated {
   @Field()
   readonly partnership: Partnership;
 }

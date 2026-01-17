@@ -4,7 +4,7 @@ import { type FileUpload, FileUploadScalar, type ID, IdField } from '~/common';
 import { MediaUserMetadata } from '../media/media.dto';
 
 @ObjectType()
-export abstract class RequestUploadOutput {
+export abstract class FileUploadRequested {
   @IdField()
   readonly id: ID;
 
@@ -33,7 +33,7 @@ export abstract class CreateDefinedFileVersion {
     description: stripIndent`
       A file directly uploaded.
       This is mainly here to allow usage with Apollo Studio/Sandbox.
-      For production, prefer a PUT request to the \`url\` from the \`RequestUploadOutput\`.
+      For production, prefer a PUT request to the \`url\` from the \`FileUploadRequested\`.
     `,
     nullable: true,
   })

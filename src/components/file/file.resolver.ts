@@ -14,15 +14,15 @@ import { User } from '../user/dto';
 import {
   asFile,
   CreateFileVersion,
-  DeleteFileNodeOutput,
   File,
   FileListInput,
   FileListOutput,
   type FileNode,
+  FileNodeDeleted,
+  FileUploadRequested,
   IFileNode,
   MoveFile,
   RenameFile,
-  RequestUploadOutput,
 } from './dto';
 import { FileNodeLoader } from './file-node.loader';
 import * as FileUrl from './file-url.resolver-util';
@@ -73,18 +73,18 @@ export class FileResolver {
     return await this.service.getUrl(node, options);
   }
 
-  @Mutation(() => DeleteFileNodeOutput, {
+  @Mutation(() => FileNodeDeleted, {
     description: 'Delete a file node',
   })
-  async deleteFileNode(@IdArg() id: ID): Promise<DeleteFileNodeOutput> {
+  async deleteFileNode(@IdArg() id: ID): Promise<FileNodeDeleted> {
     await this.service.delete(id);
-    return { success: true };
+    return {};
   }
 
-  @Mutation(() => RequestUploadOutput, {
+  @Mutation(() => FileUploadRequested, {
     description: 'Start the file upload process by requesting an upload',
   })
-  async requestFileUpload(): Promise<RequestUploadOutput> {
+  async requestFileUpload(): Promise<FileUploadRequested> {
     return await this.service.requestUpload();
   }
 

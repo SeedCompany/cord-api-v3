@@ -18,7 +18,7 @@ export class CreateEducation {
 }
 
 @ObjectType()
-export abstract class CreateEducationOutput {
+export abstract class EducationCreated {
   @Field()
   readonly education: Education;
 }

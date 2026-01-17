@@ -17,14 +17,14 @@ import { FundingAccountLoader } from '../funding-account';
 import { SecuredFundingAccount } from '../funding-account/dto';
 import {
   CreateLocation,
-  CreateLocationOutput,
-  DeleteLocationOutput,
   Location,
+  LocationCreated,
+  LocationDeleted,
   LocationListInput,
   LocationListOutput,
+  LocationUpdated,
   SecuredLocation,
   UpdateLocation,
-  UpdateLocationOutput,
 } from './dto';
 import { IsoCountry } from './dto/iso-country.dto';
 import { LocationLoader } from './location.loader';
@@ -115,31 +115,31 @@ export class LocationResolver {
     return countries();
   }
 
-  @Mutation(() => CreateLocationOutput, {
+  @Mutation(() => LocationCreated, {
     description: 'Create a location',
   })
   async createLocation(
     @Args('input') input: CreateLocation,
-  ): Promise<CreateLocationOutput> {
+  ): Promise<LocationCreated> {
     const location = await this.locationService.create(input);
     return { location };
   }
 
-  @Mutation(() => UpdateLocationOutput, {
+  @Mutation(() => LocationUpdated, {
     description: 'Update a location',
   })
   async updateLocation(
     @Args('input') input: UpdateLocation,
-  ): Promise<UpdateLocationOutput> {
+  ): Promise<LocationUpdated> {
     const location = await this.locationService.update(input);
     return { location };
   }
 
-  @Mutation(() => DeleteLocationOutput, {
+  @Mutation(() => LocationDeleted, {
     description: 'Delete a location',
   })
-  async deleteLocation(@IdArg() id: ID): Promise<DeleteLocationOutput> {
+  async deleteLocation(@IdArg() id: ID): Promise<LocationDeleted> {
     await this.locationService.delete(id);
-    return { success: true };
+    return {};
   }
 }

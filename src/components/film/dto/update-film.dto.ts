@@ -16,7 +16,7 @@ export abstract class UpdateFilm {
 }
 
 @ObjectType()
-export abstract class UpdateFilmOutput {
+export abstract class FilmUpdated {
   @Field()
   readonly film: Film;
 }

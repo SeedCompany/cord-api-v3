@@ -25,7 +25,7 @@ export abstract class UpdateBudget {
 }
 
 @ObjectType()
-export abstract class UpdateBudgetOutput {
+export abstract class BudgetUpdated {
   @Field()
   readonly budget: Budget;
 }
@@ -43,7 +43,7 @@ export abstract class UpdateBudgetRecord {
 }
 
 @ObjectType()
-export abstract class UpdateBudgetRecordOutput {
+export abstract class BudgetRecordUpdated {
   @Field()
   readonly budgetRecord: BudgetRecord;
 }

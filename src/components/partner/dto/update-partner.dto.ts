@@ -76,7 +76,7 @@ export abstract class UpdatePartner {
 }
 
 @ObjectType()
-export abstract class UpdatePartnerOutput {
+export abstract class PartnerUpdated {
   @Field()
   readonly partner: Partner;
 }

@@ -19,7 +19,7 @@ export abstract class CreateToolUsage {
 }
 
 @ObjectType()
-export abstract class CreateToolUsageOutput {
+export abstract class ToolUsageCreated {
   @Field()
   readonly toolUsage: ToolUsage;
 }

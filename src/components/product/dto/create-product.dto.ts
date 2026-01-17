@@ -131,7 +131,7 @@ export abstract class CreateOtherProduct extends CreateBaseProduct {
 }
 
 @ObjectType()
-export abstract class CreateProductOutput {
+export abstract class ProductCreated {
   @Field(() => Product)
   readonly product: AnyProduct;
 }

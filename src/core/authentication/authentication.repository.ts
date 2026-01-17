@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { type ID, type Role, ServerException } from '~/common';
+import { type LinkTo } from '~/core/resources';
 import { type UserStatus } from '../../components/user/dto';
 import { DatabaseService, DbTraceLayer, OnIndex } from '../database';
 import {
@@ -298,11 +299,8 @@ export class AuthenticationRepository {
     return result ?? null;
   }
 
-  async updatePasswordViaEmailToken(
-    { token, email }: EmailToken,
-    pash: string,
-  ): Promise<void> {
-    await this.db
+  async updatePasswordViaEmailToken({ email }: EmailToken, pash: string) {
+    const query = this.db
       .query()
       .raw(
         `
@@ -312,16 +310,23 @@ export class AuthenticationRepository {
         WITH user
         LIMIT 1
         CREATE (user)-[:password {active: true, createdAt: $createdAt }]->(password:Property { value: $password })
-        RETURN password
+        RETURN user { .id }
       `,
         {
-          token,
           email,
           password: pash,
           createdAt: DateTime.local(),
         },
       )
-      .first();
+      .asResult<{ user: LinkTo<'User'> }>();
+    const res = await query.first();
+    if (!res) {
+      throw new ServerException(
+        'Failed to reset password',
+        new ServerException('Could not find user by email'),
+      );
+    }
+    return res;
   }
 
   async removeAllEmailTokensForEmail(email: string) {

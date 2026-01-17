@@ -12,7 +12,13 @@ import { ILogger, Logger } from '~/core/logger';
 import { disableAccessPolicies, Gel } from '../gel';
 import { AuthenticationRepository } from './authentication.repository';
 import { CryptoService } from './crypto.service';
-import type { LoginInput, RegisterUser, ResetPassword } from './dto';
+import {
+  type ChangePassword,
+  type LoginInput,
+  type RegisterUser,
+  type RequestPasswordReset,
+  type ResetPassword,
+} from './dto';
 import { ForgotPassword } from './emails/forgot-password.email';
 import { JwtService } from './jwt.service';
 import { SessionHost } from './session/session.host';
@@ -96,10 +102,10 @@ export class AuthenticationService {
     await this.repo.deactivateAllSessions(user);
   }
 
-  async changePassword(
-    oldPassword: string,
-    newPassword: string,
-  ): Promise<void> {
+  async changePassword({
+    oldPassword,
+    newPassword,
+  }: ChangePassword): Promise<void> {
     if (!oldPassword)
       throw new InputException('Old Password Required', 'oldPassword');
 
@@ -115,7 +121,7 @@ export class AuthenticationService {
     await this.repo.deactivateAllOtherSessions(this.sessionHost.current);
   }
 
-  async forgotPassword(email: string): Promise<void> {
+  async forgotPassword({ email }: RequestPasswordReset): Promise<void> {
     const exists = await this.repo.doesEmailAddressExist(email);
     if (!exists) {
       this.logger.warning('Email not found; Skipping reset email', { email });
@@ -128,7 +134,7 @@ export class AuthenticationService {
     await this.mailer.compose(email, [ForgotPassword, { token }]).send();
   }
 
-  async resetPassword({ token, password }: ResetPassword): Promise<void> {
+  async resetPassword({ token, password }: ResetPassword) {
     const emailToken = await this.repo.findEmailToken(token);
     if (!emailToken) {
       throw new InputException('Token is invalid', 'TokenInvalid');
@@ -140,12 +146,16 @@ export class AuthenticationService {
 
     const pash = await this.crypto.hash(password);
 
-    await this.repo.updatePasswordViaEmailToken(emailToken, pash);
+    const { user } = await this.repo.updatePasswordViaEmailToken(
+      emailToken,
+      pash,
+    );
     await this.repo.deactivateAllOtherSessionsByEmail(
       emailToken.email,
       this.sessionHost.current,
     );
     await this.repo.removeAllEmailTokensForEmail(emailToken.email);
+    return { user };
   }
 }
 

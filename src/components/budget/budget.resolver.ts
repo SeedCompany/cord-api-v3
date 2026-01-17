@@ -11,7 +11,7 @@ import { Loader, type LoaderOf } from '~/core';
 import { BudgetService } from '../budget';
 import { FileNodeLoader, resolveDefinedFile } from '../file';
 import { SecuredFile } from '../file/dto';
-import { Budget, UpdateBudget, UpdateBudgetOutput } from './dto';
+import { Budget, BudgetUpdated, UpdateBudget } from './dto';
 
 @Resolver(Budget)
 export class BudgetResolver {
@@ -32,12 +32,12 @@ export class BudgetResolver {
     return await resolveDefinedFile(files, budget.universalTemplateFile);
   }
 
-  @Mutation(() => UpdateBudgetOutput, {
+  @Mutation(() => BudgetUpdated, {
     description: 'Update a budget',
   })
   async updateBudget(
     @Args('input') input: UpdateBudget,
-  ): Promise<UpdateBudgetOutput> {
+  ): Promise<BudgetUpdated> {
     const budget = await this.service.update(input);
     return { budget };
   }

@@ -10,11 +10,7 @@ import { Loader, type LoaderOf } from '~/core';
 import { OrganizationLoader } from '../organization';
 import { SecuredOrganization } from '../organization/dto';
 import { BudgetService } from './budget.service';
-import {
-  BudgetRecord,
-  UpdateBudgetRecord,
-  UpdateBudgetRecordOutput,
-} from './dto';
+import { BudgetRecord, BudgetRecordUpdated, UpdateBudgetRecord } from './dto';
 
 @Resolver(BudgetRecord)
 export class BudgetRecordResolver {
@@ -30,12 +26,12 @@ export class BudgetRecordResolver {
     );
   }
 
-  @Mutation(() => UpdateBudgetRecordOutput, {
+  @Mutation(() => BudgetRecordUpdated, {
     description: 'Update a budgetRecord',
   })
   async updateBudgetRecord(
     @Args('input') { changeset, ...input }: UpdateBudgetRecord,
-  ): Promise<UpdateBudgetRecordOutput> {
+  ): Promise<BudgetRecordUpdated> {
     const budgetRecord = await this.service.updateRecord(input, changeset);
     return { budgetRecord };
   }
