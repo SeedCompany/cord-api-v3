@@ -78,7 +78,7 @@ export class FileResolver {
   })
   async deleteFileNode(@IdArg() id: ID): Promise<FileNodeDeleted> {
     await this.service.delete(id);
-    return { success: true };
+    return {};
   }
 
   @Mutation(() => FileUploadRequested, {

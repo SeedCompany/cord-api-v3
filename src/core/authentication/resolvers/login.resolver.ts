@@ -42,7 +42,7 @@ export class LoginResolver {
   async logout(): Promise<LoggedOut> {
     const session = this.sessionHost.current;
     await this.authentication.logout(session.token);
-    return { success: true };
+    return {};
   }
 
   @ResolveField(() => User, { description: 'The logged-in user' })

@@ -270,6 +270,6 @@ export class ProductResolver {
   })
   async deleteProduct(@IdArg() id: ID): Promise<ProductDeleted> {
     await this.productService.delete(id);
-    return { success: true };
+    return {};
   }
 }

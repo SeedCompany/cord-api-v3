@@ -39,7 +39,7 @@ export class CommentResolver {
   })
   async deleteComment(@IdArg() id: ID): Promise<CommentDeleted> {
     await this.service.delete(id);
-    return { success: true };
+    return {};
   }
 
   @ResolveField(() => User)

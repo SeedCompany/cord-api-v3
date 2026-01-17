@@ -64,6 +64,6 @@ export class EthnoArtResolver {
   })
   async deleteEthnoArt(@IdArg() id: ID): Promise<EthnoArtDeleted> {
     await this.ethnoArtService.delete(id);
-    return { success: true };
+    return {};
   }
 }

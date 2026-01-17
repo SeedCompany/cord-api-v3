@@ -61,6 +61,6 @@ export class ToolResolver {
   })
   async deleteTool(@IdArg() id: ID): Promise<ToolDeleted> {
     await this.toolService.delete(id);
-    return { success: true };
+    return {};
   }
 }

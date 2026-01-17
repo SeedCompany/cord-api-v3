@@ -212,6 +212,6 @@ export class PartnerResolver {
   })
   async deletePartner(@IdArg() id: ID): Promise<PartnerDeleted> {
     await this.partnerService.delete(id);
-    return { success: true };
+    return {};
   }
 }

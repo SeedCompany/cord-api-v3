@@ -130,6 +130,6 @@ export class PartnershipResolver {
     @Args() { id, changeset }: ChangesetIds,
   ): Promise<PartnershipDeleted> {
     await this.service.delete(id, changeset);
-    return { success: true };
+    return {};
   }
 }

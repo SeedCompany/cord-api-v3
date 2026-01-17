@@ -205,6 +205,6 @@ export class EngagementResolver {
     @Args() { id, changeset }: ChangesetIds,
   ): Promise<EngagementDeleted> {
     await this.service.delete(id, changeset);
-    return { success: true };
+    return {};
   }
 }

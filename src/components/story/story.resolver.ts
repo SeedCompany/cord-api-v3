@@ -61,6 +61,6 @@ export class StoryResolver {
   })
   async deleteStory(@IdArg() id: ID): Promise<StoryDeleted> {
     await this.storyService.delete(id);
-    return { success: true };
+    return {};
   }
 }

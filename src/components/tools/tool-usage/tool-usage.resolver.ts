@@ -64,6 +64,6 @@ export class ToolUsageResolver {
   @Mutation(() => ToolUsageDeleted)
   async deleteToolUsage(@IdArg() id: ID<ToolUsage>): Promise<ToolUsageDeleted> {
     await this.service.delete(id);
-    return { success: true };
+    return {};
   }
 }

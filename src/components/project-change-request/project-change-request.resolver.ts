@@ -61,6 +61,6 @@ export class ProjectChangeRequestResolver {
     @IdArg() id: ID,
   ): Promise<ProjectChangeRequestDeleted> {
     await this.service.delete(id);
-    return { success: true };
+    return {};
   }
 }

@@ -84,6 +84,6 @@ export class FieldZoneResolver {
   })
   async deleteFieldZone(@IdArg() id: ID): Promise<FieldZoneDeleted> {
     await this.fieldZoneService.delete(id);
-    return { success: true };
+    return {};
   }
 }

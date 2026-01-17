@@ -69,6 +69,6 @@ export class EducationResolver {
   })
   async deleteEducation(@IdArg() id: ID): Promise<EducationDeleted> {
     await this.service.delete(id);
-    return { success: true };
+    return {};
   }
 }

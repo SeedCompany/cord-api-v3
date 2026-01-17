@@ -67,6 +67,6 @@ export class FundingAccountResolver {
   })
   async deleteFundingAccount(@IdArg() id: ID): Promise<FundingAccountDeleted> {
     await this.fundingAccountService.delete(id);
-    return { success: true };
+    return {};
   }
 }

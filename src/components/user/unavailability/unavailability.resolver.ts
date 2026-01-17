@@ -71,6 +71,6 @@ export class UnavailabilityResolver {
   })
   async deleteUnavailability(@IdArg() id: ID): Promise<UnavailabilityDeleted> {
     await this.service.delete(id);
-    return { success: true };
+    return {};
   }
 }

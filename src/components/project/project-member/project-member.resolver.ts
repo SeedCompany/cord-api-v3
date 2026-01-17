@@ -52,6 +52,6 @@ export class ProjectMemberResolver {
   })
   async deleteProjectMember(@IdArg() id: ID): Promise<ProjectMemberDeleted> {
     await this.service.delete(id);
-    return { success: true };
+    return {};
   }
 }

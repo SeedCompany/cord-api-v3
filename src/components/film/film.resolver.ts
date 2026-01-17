@@ -61,6 +61,6 @@ export class FilmResolver {
   })
   async deleteFilm(@IdArg() id: ID): Promise<FilmDeleted> {
     await this.filmService.delete(id);
-    return { success: true };
+    return {};
   }
 }

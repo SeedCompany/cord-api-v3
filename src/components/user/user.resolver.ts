@@ -240,7 +240,7 @@ export class UserResolver {
   })
   async deleteUser(@IdArg() id: ID): Promise<UserDeleted> {
     await this.userService.delete(id);
-    return { success: true };
+    return {};
   }
 
   @Mutation(() => UserUpdated, {

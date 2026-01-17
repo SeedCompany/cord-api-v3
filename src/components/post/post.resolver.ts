@@ -63,6 +63,6 @@ export class PostResolver {
   })
   async deletePost(@IdArg() id: ID): Promise<PostDeleted> {
     await this.service.delete(id);
-    return { success: true };
+    return {};
   }
 }

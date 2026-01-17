@@ -96,6 +96,6 @@ export class FieldRegionResolver {
   })
   async deleteFieldRegion(@IdArg() id: ID): Promise<FieldRegionDeleted> {
     await this.fieldRegionService.delete(id);
-    return { success: true };
+    return {};
   }
 }

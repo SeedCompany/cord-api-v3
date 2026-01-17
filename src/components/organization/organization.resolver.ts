@@ -107,7 +107,7 @@ export class OrganizationResolver {
   })
   async deleteOrganization(@IdArg() id: ID): Promise<OrganizationDeleted> {
     await this.orgs.delete(id);
-    return { success: true };
+    return {};
   }
 
   @Mutation(() => Organization, {

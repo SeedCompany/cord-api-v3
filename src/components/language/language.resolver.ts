@@ -204,7 +204,7 @@ export class LanguageResolver {
   })
   async deleteLanguage(@IdArg() id: ID): Promise<LanguageDeleted> {
     await this.langService.delete(id);
-    return { success: true };
+    return {};
   }
 
   @Mutation(() => Language, {

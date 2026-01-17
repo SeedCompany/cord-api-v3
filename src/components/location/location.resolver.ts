@@ -140,6 +140,6 @@ export class LocationResolver {
   })
   async deleteLocation(@IdArg() id: ID): Promise<LocationDeleted> {
     await this.locationService.delete(id);
-    return { success: true };
+    return {};
   }
 }
