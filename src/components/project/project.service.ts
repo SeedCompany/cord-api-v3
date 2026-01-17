@@ -245,10 +245,7 @@ export class ProjectService {
     return this.secure(unsecured);
   }
 
-  async update(
-    input: UpdateProject,
-    changeset?: ID,
-  ): Promise<UnsecuredDto<Project>> {
+  async update(input: UpdateProject, changeset?: ID) {
     const currentProject = await this.readOneUnsecured(input.id, changeset);
     if (input.sensitivity && currentProject.type !== ProjectType.Internship)
       throw new InputException(
@@ -261,7 +258,7 @@ export class ProjectService {
       .for(resolveProjectType(currentProject), currentProject)
       .verifyChanges(changes, { pathPrefix: 'project' });
     if (Object.keys(changes).length === 0) {
-      return await this.readOneUnsecured(input.id, changeset);
+      return { project: currentProject };
     }
 
     ProjectDateRangeException.throwIfInvalid(currentProject, changes);
@@ -313,17 +310,19 @@ export class ProjectService {
     });
     await this.eventBus.publish(event);
 
-    this.channels.publishToAll('updated', {
+    const updatedPayload = this.channels.publishToAll('updated', {
       project: updated.id,
       at: changes.modifiedAt!,
       updated: ProjectUpdate.fromInput(changes),
       previous: ProjectUpdate.pickPrevious(currentProject, changes),
     });
-
-    return event.updated;
+    return {
+      project: event.updated,
+      payload: updatedPayload,
+    };
   }
 
-  async delete(id: ID): Promise<void> {
+  async delete(id: ID) {
     const object = await this.readOneUnsecured(id);
 
     this.privileges.for(IProject, object).verifyCan('delete');
@@ -334,7 +333,7 @@ export class ProjectService {
 
     await this.eventBus.publish(new ProjectDeletedEvent(object));
 
-    this.channels.publishToAll('deleted', {
+    return this.channels.publishToAll('deleted', {
       project: object.id,
       at,
     });
@@ -474,38 +473,38 @@ export class ProjectService {
     };
   }
 
-  async addOtherLocation(projectId: ID, locationId: ID): Promise<void> {
+  async addOtherLocation(project: ID<'Project'>, location: ID<'Location'>) {
     const changedAt = await this.locationService.addLocationToNode(
       'Project',
-      projectId,
+      project,
       'otherLocations',
-      locationId,
+      location,
     );
     if (!changedAt) {
-      return;
+      return undefined;
     }
-    this.channels.publishToAll('updated', {
-      project: projectId,
+    return this.channels.publishToAll('updated', {
+      project: project,
       at: changedAt,
-      updated: { otherLocations: { Added: [locationId] } },
+      updated: { otherLocations: { Added: [location] } },
       previous: {},
     });
   }
 
-  async removeOtherLocation(projectId: ID, locationId: ID): Promise<void> {
+  async removeOtherLocation(project: ID<'Project'>, location: ID<'Location'>) {
     const changedAt = await this.locationService.removeLocationFromNode(
       'Project',
-      projectId,
+      project,
       'otherLocations',
-      locationId,
+      location,
     );
     if (!changedAt) {
-      return;
+      return undefined;
     }
-    this.channels.publishToAll('updated', {
-      project: projectId,
+    return this.channels.publishToAll('updated', {
+      project,
       at: changedAt,
-      updated: { otherLocations: { Removed: [locationId] } },
+      updated: { otherLocations: { Removed: [location] } },
       previous: {},
     });
   }
