@@ -8,12 +8,13 @@ export const DB_MIGRATION_KEY = 'ON_DB_INDEX';
 
 export const MigrationVersion = createMetadataDecorator({
   key: DB_MIGRATION_KEY,
-  setter: (isoTime: string) => DateTime.fromISO(isoTime),
+  setter: (isoTime: DateTime | string) =>
+    DateTime.isDateTime(isoTime) ? isoTime : DateTime.fromISO(isoTime),
   types: ['class'],
   additionalDecorators: [Injectable()],
 });
 
 export const Migration =
-  (isoTime: string) =>
+  (isoTime: DateTime | string) =>
   <Cls extends AbstractClass<BaseMigration>>(cls: Cls) =>
     MigrationVersion(isoTime)(cls);
