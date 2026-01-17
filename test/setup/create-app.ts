@@ -34,13 +34,6 @@ export const createApp = async (): Promise<TestApp> => {
     app = moduleFixture.createNestApplication<NestHttpApplication>(
       new HttpAdapter(),
     );
-    const config = app.get(ConfigService);
-    await app.configure(app, config);
-    await app.init();
-
-    await app.listen(0);
-    const url = await app.getUrl();
-    config.hostUrl$.next(new URL(url) as URL & string);
   } catch (e) {
     await db?.cleanup();
     throw e;
@@ -49,6 +42,18 @@ export const createApp = async (): Promise<TestApp> => {
   andCall(app, 'close', async () => {
     await db?.cleanup();
   });
+
+  try {
+    const config = app.get(ConfigService);
+    await app.configure(app, config);
+
+    await app.listen(0);
+    const url = await app.getUrl();
+    config.hostUrl$.next(new URL(url) as URL & string);
+  } catch (e) {
+    await app.close();
+    throw e;
+  }
 
   appsToClose.add(app);
 
