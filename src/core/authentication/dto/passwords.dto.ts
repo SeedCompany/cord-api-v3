@@ -1,8 +1,21 @@
-import { ArgsType, Field, InputType, ObjectType } from '@nestjs/graphql';
+import { ArgsType, Field, ObjectType } from '@nestjs/graphql';
 import { MinLength } from 'class-validator';
-import { EmailField, MutationPlaceholderOutput } from '~/common';
+import { EmailField } from '~/common';
+import type { LinkTo } from '~/core/resources';
 
-@InputType()
+@ArgsType()
+export abstract class RequestPasswordReset {
+  @EmailField()
+  readonly email: string;
+}
+
+@ObjectType()
+export abstract class PasswordResetRequested {
+  @EmailField()
+  readonly email: string;
+}
+
+@ArgsType()
 export abstract class ResetPassword {
   @Field()
   readonly token: string;
@@ -11,11 +24,8 @@ export abstract class ResetPassword {
   readonly password: string;
 }
 
-@ObjectType()
-export abstract class PasswordReset extends MutationPlaceholderOutput {}
-
 @ArgsType()
-export abstract class ChangePasswordArgs {
+export abstract class ChangePassword {
   @Field()
   readonly oldPassword: string;
 
@@ -25,13 +35,6 @@ export abstract class ChangePasswordArgs {
 }
 
 @ObjectType()
-export abstract class PasswordChanged extends MutationPlaceholderOutput {}
-
-@ArgsType()
-export abstract class ForgotPasswordArgs {
-  @EmailField()
-  readonly email: string;
+export abstract class PasswordUpdated {
+  user: LinkTo<'User'>;
 }
-
-@ObjectType()
-export abstract class ForgotPasswordSent extends MutationPlaceholderOutput {}
