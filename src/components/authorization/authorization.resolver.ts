@@ -7,9 +7,9 @@ import {
 import { mapValues } from '@seedcompany/common';
 import { EnhancedResource } from '~/common';
 import {
-  LoginOutput,
-  RegisterOutput,
+  LoggedIn,
   SessionOutput,
+  UserRegistered,
 } from '~/core/authentication/dto';
 import { Power } from './dto';
 import { BetaFeatures } from './dto/beta-features.dto';
@@ -52,9 +52,9 @@ export class SessionExtraInfoResolver extends AuthExtraInfoResolver(
 ) {}
 
 export class LoginExtraInfoResolver extends AuthExtraInfoResolver(
-  () => LoginOutput,
+  () => LoggedIn,
 ) {}
 
 export class RegisterExtraInfoResolver extends AuthExtraInfoResolver(
-  () => RegisterOutput,
+  () => UserRegistered,
 ) {}

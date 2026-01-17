@@ -33,20 +33,20 @@ import { TimeZoneService } from '../timezone';
 import { SecuredTimeZone } from '../timezone/timezone.dto';
 import {
   AssignOrganizationToUser,
-  AssignOrganizationToUserOutput,
   CheckEmailArgs,
   CreatePerson,
-  CreatePersonOutput,
-  DeleteUserOutput,
   KnownLanguage,
   ModifyKnownLanguageArgs,
+  OrganizationAssignedToUser,
+  OrganizationRemovedFromUser,
   RemoveOrganizationFromUser,
-  RemoveOrganizationFromUserOutput,
   UpdateUser,
-  UpdateUserOutput,
   User,
+  UserCreated,
+  UserDeleted,
   UserListInput,
   UserListOutput,
+  UserUpdated,
 } from './dto';
 import { EducationLoader } from './education';
 import { EducationListInput, SecuredEducationList } from './education/dto';
@@ -216,12 +216,10 @@ export class UserResolver {
     return await this.userService.listKnownLanguages(id);
   }
 
-  @Mutation(() => CreatePersonOutput, {
+  @Mutation(() => UserCreated, {
     description: 'Create a person',
   })
-  async createPerson(
-    @Args('input') input: CreatePerson,
-  ): Promise<CreatePersonOutput> {
+  async createPerson(@Args('input') input: CreatePerson): Promise<UserCreated> {
     const userId = await this.userService.create(input);
     const user = await this.userService.readOne(userId).catch((e) => {
       throw e instanceof NotFoundException
@@ -231,20 +229,18 @@ export class UserResolver {
     return { user };
   }
 
-  @Mutation(() => UpdateUserOutput, {
+  @Mutation(() => UserUpdated, {
     description: 'Update a user',
   })
-  async updateUser(
-    @Args('input') input: UpdateUser,
-  ): Promise<UpdateUserOutput> {
+  async updateUser(@Args('input') input: UpdateUser): Promise<UserUpdated> {
     const user = await this.userService.update(input);
     return { user };
   }
 
-  @Mutation(() => DeleteUserOutput, {
+  @Mutation(() => UserDeleted, {
     description: 'Delete a user',
   })
-  async deleteUser(@IdArg() id: ID): Promise<DeleteUserOutput> {
+  async deleteUser(@IdArg() id: ID): Promise<UserDeleted> {
     await this.userService.delete(id);
     return { success: true };
   }
@@ -269,22 +265,22 @@ export class UserResolver {
     return await this.userService.readOne(user);
   }
 
-  @Mutation(() => AssignOrganizationToUserOutput, {
+  @Mutation(() => OrganizationAssignedToUser, {
     description: 'Assign organization OR primaryOrganization to user',
   })
   async assignOrganizationToUser(
     @Args('input') input: AssignOrganizationToUser,
-  ): Promise<AssignOrganizationToUserOutput> {
+  ): Promise<OrganizationAssignedToUser> {
     await this.userService.assignOrganizationToUser(input);
     return { success: true };
   }
 
-  @Mutation(() => RemoveOrganizationFromUserOutput, {
+  @Mutation(() => OrganizationRemovedFromUser, {
     description: 'Remove organization OR primaryOrganization from user',
   })
   async removeOrganizationFromUser(
     @Args('input') input: RemoveOrganizationFromUser,
-  ): Promise<RemoveOrganizationFromUserOutput> {
+  ): Promise<OrganizationRemovedFromUser> {
     await this.userService.removeOrganizationFromUser(input);
     return { success: true };
   }

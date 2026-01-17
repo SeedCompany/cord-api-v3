@@ -39,13 +39,13 @@ import {
   type FileListOutput,
   type FileNode,
   FileNodeType,
+  type FileUploadRequested,
   FileVersion,
   isDirectory,
   isFile,
   isFileVersion,
   type MoveFile,
   type RenameFile,
-  type RequestUploadOutput,
 } from './dto';
 import { AfterFileUploadEvent } from './events/after-file-upload.event';
 import { FileUrlController as FileUrl } from './file-url.controller';
@@ -264,7 +264,7 @@ export class FileService {
     return await this.repo.createRootDirectory(...args);
   }
 
-  async requestUpload(): Promise<RequestUploadOutput> {
+  async requestUpload(): Promise<FileUploadRequested> {
     const id = await generateId();
     const url = await this.bucket.getSignedUrl(PutObject, {
       Key: `temp/${id}`,

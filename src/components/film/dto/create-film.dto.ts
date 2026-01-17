@@ -13,7 +13,7 @@ export abstract class CreateFilm {
 }
 
 @ObjectType()
-export abstract class CreateFilmOutput {
+export abstract class FilmCreated {
   @Field()
   readonly film: Film;
 }

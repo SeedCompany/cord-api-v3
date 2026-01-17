@@ -21,25 +21,25 @@ import { SecuredPartner } from '../partner/dto';
 import { PartnershipLoader, PartnershipService } from '../partnership';
 import {
   CreatePartnership,
-  CreatePartnershipOutput,
-  DeletePartnershipOutput,
   Partnership,
+  PartnershipCreated,
+  PartnershipDeleted,
   PartnershipListInput,
   PartnershipListOutput,
+  PartnershipUpdated,
   UpdatePartnership,
-  UpdatePartnershipOutput,
 } from './dto';
 
 @Resolver(Partnership)
 export class PartnershipResolver {
   constructor(private readonly service: PartnershipService) {}
 
-  @Mutation(() => CreatePartnershipOutput, {
+  @Mutation(() => PartnershipCreated, {
     description: 'Create a Partnership entry',
   })
   async createPartnership(
     @Args('input') { changeset, ...input }: CreatePartnership,
-  ): Promise<CreatePartnershipOutput> {
+  ): Promise<PartnershipCreated> {
     const partnership = await this.service.create(input, changeset);
     return { partnership };
   }
@@ -110,12 +110,12 @@ export class PartnershipResolver {
     return list;
   }
 
-  @Mutation(() => UpdatePartnershipOutput, {
+  @Mutation(() => PartnershipUpdated, {
     description: 'Update a Partnership',
   })
   async updatePartnership(
     @Args('input') { changeset, ...input }: UpdatePartnership,
-  ): Promise<UpdatePartnershipOutput> {
+  ): Promise<PartnershipUpdated> {
     const partnership = await this.service.update(
       input,
       viewOfChangeset(changeset),
@@ -123,12 +123,12 @@ export class PartnershipResolver {
     return { partnership };
   }
 
-  @Mutation(() => DeletePartnershipOutput, {
+  @Mutation(() => PartnershipDeleted, {
     description: 'Delete a Partnership',
   })
   async deletePartnership(
     @Args() { id, changeset }: ChangesetIds,
-  ): Promise<DeletePartnershipOutput> {
+  ): Promise<PartnershipDeleted> {
     await this.service.delete(id, changeset);
     return { success: true };
   }

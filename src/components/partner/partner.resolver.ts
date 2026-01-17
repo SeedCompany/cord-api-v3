@@ -37,13 +37,13 @@ import { UserLoader } from '../user';
 import { SecuredUser } from '../user/dto';
 import {
   CreatePartner,
-  CreatePartnerOutput,
-  DeletePartnerOutput,
   Partner,
+  PartnerCreated,
+  PartnerDeleted,
   PartnerListInput,
   PartnerListOutput,
+  PartnerUpdated,
   UpdatePartner,
-  UpdatePartnerOutput,
 } from './dto';
 
 @Resolver(Partner)
@@ -187,30 +187,30 @@ export class PartnerResolver {
     return list;
   }
 
-  @Mutation(() => CreatePartnerOutput, {
+  @Mutation(() => PartnerCreated, {
     description: 'Create a partner',
   })
   async createPartner(
     @Args('input') input: CreatePartner,
-  ): Promise<CreatePartnerOutput> {
+  ): Promise<PartnerCreated> {
     const partner = await this.partnerService.create(input);
     return { partner };
   }
 
-  @Mutation(() => UpdatePartnerOutput, {
+  @Mutation(() => PartnerUpdated, {
     description: 'Update a partner',
   })
   async updatePartner(
     @Args('input') input: UpdatePartner,
-  ): Promise<UpdatePartnerOutput> {
+  ): Promise<PartnerUpdated> {
     const partner = await this.partnerService.update(input);
     return { partner };
   }
 
-  @Mutation(() => DeletePartnerOutput, {
+  @Mutation(() => PartnerDeleted, {
     description: 'Delete a partner',
   })
-  async deletePartner(@IdArg() id: ID): Promise<DeletePartnerOutput> {
+  async deletePartner(@IdArg() id: ID): Promise<PartnerDeleted> {
     await this.partnerService.delete(id);
     return { success: true };
   }

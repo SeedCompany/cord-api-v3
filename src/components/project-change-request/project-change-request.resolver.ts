@@ -11,11 +11,11 @@ import { ProjectLoader } from '../project';
 import { IProject, type Project } from '../project/dto';
 import {
   CreateProjectChangeRequest,
-  CreateProjectChangeRequestOutput,
-  DeleteProjectChangeRequestOutput,
   ProjectChangeRequest,
+  ProjectChangeRequestCreated,
+  ProjectChangeRequestDeleted,
+  ProjectChangeRequestUpdated,
   UpdateProjectChangeRequest,
-  UpdateProjectChangeRequestOutput,
 } from './dto';
 import { ProjectChangeRequestService } from './project-change-request.service';
 
@@ -34,32 +34,32 @@ export class ProjectChangeRequestResolver {
     });
   }
 
-  @Mutation(() => CreateProjectChangeRequestOutput, {
+  @Mutation(() => ProjectChangeRequestCreated, {
     description: 'Create a project change request',
   })
   async createProjectChangeRequest(
     @Args('input') input: CreateProjectChangeRequest,
-  ): Promise<CreateProjectChangeRequestOutput> {
+  ): Promise<ProjectChangeRequestCreated> {
     const projectChangeRequest = await this.service.create(input);
     return { projectChangeRequest };
   }
 
-  @Mutation(() => UpdateProjectChangeRequestOutput, {
+  @Mutation(() => ProjectChangeRequestUpdated, {
     description: 'Update a project change request',
   })
   async updateProjectChangeRequest(
     @Args('input') input: UpdateProjectChangeRequest,
-  ): Promise<UpdateProjectChangeRequestOutput> {
+  ): Promise<ProjectChangeRequestUpdated> {
     const projectChangeRequest = await this.service.update(input);
     return { projectChangeRequest };
   }
 
-  @Mutation(() => DeleteProjectChangeRequestOutput, {
+  @Mutation(() => ProjectChangeRequestDeleted, {
     description: 'Delete a project change request',
   })
   async deleteProjectChangeRequest(
     @IdArg() id: ID,
-  ): Promise<DeleteProjectChangeRequestOutput> {
+  ): Promise<ProjectChangeRequestDeleted> {
     await this.service.delete(id);
     return { success: true };
   }

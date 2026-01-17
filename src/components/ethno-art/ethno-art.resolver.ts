@@ -4,13 +4,13 @@ import { Loader, type LoaderOf } from '~/core';
 import { EthnoArtLoader, EthnoArtService } from '../ethno-art';
 import {
   CreateEthnoArt,
-  CreateEthnoArtOutput,
-  DeleteEthnoArtOutput,
   EthnoArt,
+  EthnoArtCreated,
+  EthnoArtDeleted,
   EthnoArtListInput,
   EthnoArtListOutput,
+  EthnoArtUpdated,
   UpdateEthnoArt,
-  UpdateEthnoArtOutput,
 } from './dto';
 
 @Resolver(EthnoArt)
@@ -39,30 +39,30 @@ export class EthnoArtResolver {
     return list;
   }
 
-  @Mutation(() => CreateEthnoArtOutput, {
+  @Mutation(() => EthnoArtCreated, {
     description: 'Create an ethno art',
   })
   async createEthnoArt(
     @Args('input') input: CreateEthnoArt,
-  ): Promise<CreateEthnoArtOutput> {
+  ): Promise<EthnoArtCreated> {
     const ethnoArt = await this.ethnoArtService.create(input);
     return { ethnoArt };
   }
 
-  @Mutation(() => UpdateEthnoArtOutput, {
+  @Mutation(() => EthnoArtUpdated, {
     description: 'Update an ethno art',
   })
   async updateEthnoArt(
     @Args('input') input: UpdateEthnoArt,
-  ): Promise<UpdateEthnoArtOutput> {
+  ): Promise<EthnoArtUpdated> {
     const ethnoArt = await this.ethnoArtService.update(input);
     return { ethnoArt };
   }
 
-  @Mutation(() => DeleteEthnoArtOutput, {
+  @Mutation(() => EthnoArtDeleted, {
     description: 'Delete an ethno art',
   })
-  async deleteEthnoArt(@IdArg() id: ID): Promise<DeleteEthnoArtOutput> {
+  async deleteEthnoArt(@IdArg() id: ID): Promise<EthnoArtDeleted> {
     await this.ethnoArtService.delete(id);
     return { success: true };
   }

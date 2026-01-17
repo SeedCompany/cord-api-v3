@@ -19,7 +19,7 @@ export abstract class CreateProjectChangeRequest {
 }
 
 @ObjectType()
-export abstract class CreateProjectChangeRequestOutput {
+export abstract class ProjectChangeRequestCreated {
   @Field(() => ProjectChangeRequest)
   readonly projectChangeRequest: ProjectChangeRequest;
 }

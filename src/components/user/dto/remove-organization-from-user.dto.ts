@@ -11,4 +11,4 @@ export class RemoveOrganizationFromUser {
 }
 
 @ObjectType()
-export abstract class RemoveOrganizationFromUserOutput extends MutationPlaceholderOutput {}
+export abstract class OrganizationRemovedFromUser extends MutationPlaceholderOutput {}

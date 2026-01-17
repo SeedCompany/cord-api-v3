@@ -14,6 +14,6 @@ export abstract class RegisterUser extends CreatePerson {
 }
 
 @ObjectType()
-export abstract class RegisterOutput {
+export abstract class UserRegistered {
   readonly user: ID;
 }

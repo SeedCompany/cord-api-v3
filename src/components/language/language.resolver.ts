@@ -33,16 +33,16 @@ import {
 } from '../project/dto';
 import {
   CreateLanguage,
-  CreateLanguageOutput,
-  DeleteLanguageOutput,
   type ExternalFirstScripture,
   type InternalFirstScripture,
   Language,
+  LanguageCreated,
+  LanguageDeleted,
   LanguageListInput,
   LanguageListOutput,
+  LanguageUpdated,
   SecuredFirstScripture,
   UpdateLanguage,
-  UpdateLanguageOutput,
 } from './dto';
 import { LanguageLoader } from './language.loader';
 import { LanguageService } from './language.service';
@@ -176,22 +176,22 @@ export class LanguageResolver {
     return list;
   }
 
-  @Mutation(() => CreateLanguageOutput, {
+  @Mutation(() => LanguageCreated, {
     description: 'Create a language',
   })
   async createLanguage(
     @Args('input') input: CreateLanguage,
-  ): Promise<CreateLanguageOutput> {
+  ): Promise<LanguageCreated> {
     const language = await this.langService.create(input);
     return { language };
   }
 
-  @Mutation(() => UpdateLanguageOutput, {
+  @Mutation(() => LanguageUpdated, {
     description: 'Update a language',
   })
   async updateLanguage(
     @Args('input') { changeset, ...input }: UpdateLanguage,
-  ): Promise<UpdateLanguageOutput> {
+  ): Promise<LanguageUpdated> {
     const language = await this.langService.update(
       input,
       viewOfChangeset(changeset),
@@ -199,10 +199,10 @@ export class LanguageResolver {
     return { language };
   }
 
-  @Mutation(() => DeleteLanguageOutput, {
+  @Mutation(() => LanguageDeleted, {
     description: 'Delete a language',
   })
-  async deleteLanguage(@IdArg() id: ID): Promise<DeleteLanguageOutput> {
+  async deleteLanguage(@IdArg() id: ID): Promise<LanguageDeleted> {
     await this.langService.delete(id);
     return { success: true };
   }

@@ -24,7 +24,7 @@ export abstract class UpdateFieldRegion {
 }
 
 @ObjectType()
-export abstract class UpdateFieldRegionOutput {
+export abstract class FieldRegionUpdated {
   @Field()
   readonly fieldRegion: FieldRegion;
 }

@@ -32,7 +32,7 @@ export class CreateProjectMember {
 }
 
 @ObjectType()
-export abstract class CreateProjectMemberOutput {
+export abstract class ProjectMemberCreated {
   @Field()
   readonly projectMember: ProjectMember;
 }

@@ -3,13 +3,13 @@ import { type ID, IdArg, ListArg } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import {
   CreateFilm,
-  CreateFilmOutput,
-  DeleteFilmOutput,
   Film,
+  FilmCreated,
+  FilmDeleted,
   FilmListInput,
   FilmListOutput,
+  FilmUpdated,
   UpdateFilm,
-  UpdateFilmOutput,
 } from './dto';
 import { FilmLoader } from './film.loader';
 import { FilmService } from './film.service';
@@ -40,30 +40,26 @@ export class FilmResolver {
     return list;
   }
 
-  @Mutation(() => CreateFilmOutput, {
+  @Mutation(() => FilmCreated, {
     description: 'Create a film',
   })
-  async createFilm(
-    @Args('input') input: CreateFilm,
-  ): Promise<CreateFilmOutput> {
+  async createFilm(@Args('input') input: CreateFilm): Promise<FilmCreated> {
     const film = await this.filmService.create(input);
     return { film };
   }
 
-  @Mutation(() => UpdateFilmOutput, {
+  @Mutation(() => FilmUpdated, {
     description: 'Update a film',
   })
-  async updateFilm(
-    @Args('input') input: UpdateFilm,
-  ): Promise<UpdateFilmOutput> {
+  async updateFilm(@Args('input') input: UpdateFilm): Promise<FilmUpdated> {
     const film = await this.filmService.update(input);
     return { film };
   }
 
-  @Mutation(() => DeleteFilmOutput, {
+  @Mutation(() => FilmDeleted, {
     description: 'Delete a film',
   })
-  async deleteFilm(@IdArg() id: ID): Promise<DeleteFilmOutput> {
+  async deleteFilm(@IdArg() id: ID): Promise<FilmDeleted> {
     await this.filmService.delete(id);
     return { success: true };
   }

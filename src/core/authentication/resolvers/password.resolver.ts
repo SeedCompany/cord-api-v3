@@ -3,11 +3,11 @@ import { stripIndent } from 'common-tags';
 import { AuthenticationService } from '../authentication.service';
 import {
   ChangePasswordArgs,
-  ChangePasswordOutput,
   ForgotPasswordArgs,
-  ForgotPasswordOutput,
+  ForgotPasswordSent,
+  PasswordChanged,
+  PasswordReset,
   ResetPassword,
-  ResetPasswordOutput,
 } from '../dto';
 import { AuthLevel } from '../session/auth-level.decorator';
 
@@ -15,7 +15,7 @@ import { AuthLevel } from '../session/auth-level.decorator';
 export class PasswordResolver {
   constructor(private readonly authentication: AuthenticationService) {}
 
-  @Mutation(() => ChangePasswordOutput, {
+  @Mutation(() => PasswordChanged, {
     description: stripIndent`
       Change your password
       @sensitive-secrets
@@ -23,23 +23,23 @@ export class PasswordResolver {
   })
   async changePassword(
     @Args() { oldPassword, newPassword }: ChangePasswordArgs,
-  ): Promise<ChangePasswordOutput> {
+  ): Promise<PasswordChanged> {
     await this.authentication.changePassword(oldPassword, newPassword);
     return { success: true };
   }
 
-  @Mutation(() => ForgotPasswordOutput, {
+  @Mutation(() => ForgotPasswordSent, {
     description: 'Forgot password; send password reset email',
   })
   @AuthLevel('anonymous')
   async forgotPassword(
     @Args() { email }: ForgotPasswordArgs,
-  ): Promise<ForgotPasswordOutput> {
+  ): Promise<ForgotPasswordSent> {
     await this.authentication.forgotPassword(email);
     return { success: true };
   }
 
-  @Mutation(() => ResetPasswordOutput, {
+  @Mutation(() => PasswordReset, {
     description: stripIndent`
       Reset Password
       @sensitive-secrets
@@ -48,7 +48,7 @@ export class PasswordResolver {
   @AuthLevel('anonymous')
   async resetPassword(
     @Args('input') input: ResetPassword,
-  ): Promise<ResetPasswordOutput> {
+  ): Promise<PasswordReset> {
     await this.authentication.resetPassword(input);
     return { success: true };
   }

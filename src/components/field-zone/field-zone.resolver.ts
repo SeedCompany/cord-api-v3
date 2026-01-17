@@ -12,13 +12,13 @@ import { UserLoader } from '../user';
 import { SecuredUser } from '../user/dto';
 import {
   CreateFieldZone,
-  CreateFieldZoneOutput,
-  DeleteFieldZoneOutput,
   FieldZone,
+  FieldZoneCreated,
+  FieldZoneDeleted,
   FieldZoneListInput,
   FieldZoneListOutput,
+  FieldZoneUpdated,
   UpdateFieldZone,
-  UpdateFieldZoneOutput,
 } from './dto';
 import { FieldZoneLoader } from './field-zone.loader';
 import { FieldZoneService } from './field-zone.service';
@@ -59,30 +59,30 @@ export class FieldZoneResolver {
     );
   }
 
-  @Mutation(() => CreateFieldZoneOutput, {
+  @Mutation(() => FieldZoneCreated, {
     description: 'Create a field zone',
   })
   async createFieldZone(
     @Args('input') input: CreateFieldZone,
-  ): Promise<CreateFieldZoneOutput> {
+  ): Promise<FieldZoneCreated> {
     const fieldZone = await this.fieldZoneService.create(input);
     return { fieldZone };
   }
 
-  @Mutation(() => UpdateFieldZoneOutput, {
+  @Mutation(() => FieldZoneUpdated, {
     description: 'Update a field zone',
   })
   async updateFieldZone(
     @Args('input') input: UpdateFieldZone,
-  ): Promise<UpdateFieldZoneOutput> {
+  ): Promise<FieldZoneUpdated> {
     const fieldZone = await this.fieldZoneService.update(input);
     return { fieldZone };
   }
 
-  @Mutation(() => DeleteFieldZoneOutput, {
+  @Mutation(() => FieldZoneDeleted, {
     description: 'Delete a field zone',
   })
-  async deleteFieldZone(@IdArg() id: ID): Promise<DeleteFieldZoneOutput> {
+  async deleteFieldZone(@IdArg() id: ID): Promise<FieldZoneDeleted> {
     await this.fieldZoneService.delete(id);
     return { success: true };
   }

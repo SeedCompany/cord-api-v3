@@ -27,6 +27,6 @@ export class UpdatePartnershipProducingMedium {
 }
 
 @ObjectType()
-export class UpdatePartnershipProducingMediumOutput {
+export class PartnershipProducingMediumUpdated {
   readonly engagement: ID;
 }

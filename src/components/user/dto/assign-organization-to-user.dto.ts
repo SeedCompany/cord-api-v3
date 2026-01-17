@@ -14,4 +14,4 @@ export class AssignOrganizationToUser {
 }
 
 @ObjectType()
-export abstract class AssignOrganizationToUserOutput extends MutationPlaceholderOutput {}
+export abstract class OrganizationAssignedToUser extends MutationPlaceholderOutput {}

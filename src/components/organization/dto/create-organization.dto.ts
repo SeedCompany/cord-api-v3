@@ -23,7 +23,7 @@ export abstract class CreateOrganization {
 }
 
 @ObjectType()
-export abstract class CreateOrganizationOutput {
+export abstract class OrganizationCreated {
   @Field()
   readonly organization: Organization;
 }

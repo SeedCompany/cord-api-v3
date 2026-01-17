@@ -15,7 +15,7 @@ export abstract class CreateFundingAccount {
 }
 
 @ObjectType()
-export abstract class CreateFundingAccountOutput {
+export abstract class FundingAccountCreated {
   @Field()
   readonly fundingAccount: FundingAccount;
 }

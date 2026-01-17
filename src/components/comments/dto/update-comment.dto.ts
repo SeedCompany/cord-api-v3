@@ -12,7 +12,7 @@ export abstract class UpdateComment {
 }
 
 @ObjectType()
-export abstract class UpdateCommentOutput {
+export abstract class CommentUpdated {
   @Field()
   readonly comment: Comment;
 }

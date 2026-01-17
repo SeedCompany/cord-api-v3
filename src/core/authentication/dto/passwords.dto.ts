@@ -12,7 +12,7 @@ export abstract class ResetPassword {
 }
 
 @ObjectType()
-export abstract class ResetPasswordOutput extends MutationPlaceholderOutput {}
+export abstract class PasswordReset extends MutationPlaceholderOutput {}
 
 @ArgsType()
 export abstract class ChangePasswordArgs {
@@ -25,7 +25,7 @@ export abstract class ChangePasswordArgs {
 }
 
 @ObjectType()
-export abstract class ChangePasswordOutput extends MutationPlaceholderOutput {}
+export abstract class PasswordChanged extends MutationPlaceholderOutput {}
 
 @ArgsType()
 export abstract class ForgotPasswordArgs {
@@ -34,4 +34,4 @@ export abstract class ForgotPasswordArgs {
 }
 
 @ObjectType()
-export abstract class ForgotPasswordOutput extends MutationPlaceholderOutput {}
+export abstract class ForgotPasswordSent extends MutationPlaceholderOutput {}
