@@ -1,5 +1,4 @@
-import { ConfigService } from '~/core';
-import { type TestApp } from '../setup';
+import { createHttpClientForApp, type TestApp } from '../setup';
 import {
   createExecute,
   type GqlExecute,
@@ -15,12 +14,10 @@ export interface GraphQLTestClient {
 
 /** @deprecated */
 export const createGraphqlClient = (app: TestApp): GraphQLTestClient => {
-  const url = app.get(ConfigService).hostUrl$.value + 'graphql';
   let authToken = '';
   let email: string | undefined = undefined;
 
-  const execute = createExecute({
-    url,
+  const http = createHttpClientForApp(app).extend({
     hooks: {
       beforeRequest: [
         (req) => {
@@ -31,6 +28,7 @@ export const createGraphqlClient = (app: TestApp): GraphQLTestClient => {
       ],
     },
   });
+  const execute = createExecute(http);
 
   return {
     query: execute,

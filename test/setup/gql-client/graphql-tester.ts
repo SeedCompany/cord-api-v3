@@ -1,3 +1,4 @@
+import got, { type Got } from 'got';
 import { ConfigService } from '~/core';
 import {
   type TestApp as LegacyTestApp,
@@ -19,6 +20,9 @@ export interface Tester {
 
   /** @deprecated */
   legacyApp: LegacyTestApp;
+
+  /** Raw HTTP client */
+  http: Got;
 }
 
 export type Operation<R, TTester extends Tester = Tester> = (
@@ -26,12 +30,11 @@ export type Operation<R, TTester extends Tester = Tester> = (
 ) => Promise<R>;
 
 export const createTester = (app: TestApp): Tester => {
-  const url = app.get(ConfigService).hostUrl$.value + 'graphql';
-
-  const execute = createExecute({
-    url,
+  const http = createHttpClientForApp(app).extend({
     cookieJar: new CookieJar(),
   });
+
+  const execute = createExecute(http);
 
   const tester: Tester = {
     run: execute,
@@ -68,6 +71,16 @@ export const createTester = (app: TestApp): Tester => {
       };
       return Object.assign(Object.create(app), { graphql });
     },
+    http,
   };
   return tester;
+};
+
+export const createHttpClientForApp = (app: TestApp) => {
+  const url = app.get(ConfigService).hostUrl$.value + 'graphql';
+  const http = got.extend({
+    url,
+    enableUnixSockets: true,
+  });
+  return http;
 };
