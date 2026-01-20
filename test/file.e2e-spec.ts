@@ -25,6 +25,8 @@ import {
   FileNodeType,
   type FileUploadRequested,
 } from '../src/components/file/dto';
+import { createRootDirectory } from './operations/directory';
+import { getRootTester } from './setup';
 import {
   createFileVersion,
   createSession,
@@ -42,10 +44,7 @@ import {
   type TestUser,
   uploadFileContents,
 } from './utility';
-import {
-  createDirectory,
-  createRootDirectory,
-} from './utility/create-directory';
+import { createDirectory } from './utility/create-directory';
 
 export async function uploadFile(
   app: TestApp,
@@ -139,7 +138,7 @@ describe('File e2e', () => {
 
   beforeEach(async () => {
     await bucket.clear();
-    root = await createRootDirectory(app);
+    root = await (await getRootTester(app)).apply(createRootDirectory());
   });
 
   afterEach(resetNow);
