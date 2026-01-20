@@ -6,7 +6,7 @@ import { WebhookChannelService } from '../channels/webhook-channel.service';
 import { WebhookValidator } from '../webhook.validator';
 import {
   type DeleteWebhookArgs,
-  type UpsertWebhookInput,
+  type WebhookConfig,
   type WebhookListInput,
 } from './dto';
 import { WebhooksRepository } from './webhooks.repository';
@@ -22,7 +22,7 @@ export class WebhookManagementService {
     private readonly channels: WebhookChannelService,
   ) {}
 
-  async upsert({ document: rawDocStr, ...input }: UpsertWebhookInput) {
+  async save({ document: rawDocStr, ...input }: WebhookConfig) {
     const { name, document: docNode } = await this.validator.validate(
       rawDocStr,
       input.key,

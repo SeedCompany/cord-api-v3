@@ -2,12 +2,12 @@ import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { ListArg } from '~/common';
 import {
   DeleteWebhookArgs,
-  RotateWebhookSecretOutput,
-  UpsertWebhookInput,
-  UpsertWebhookOutput,
+  WebhookConfig,
   WebhookList,
   WebhookListInput,
+  WebhookSaved,
   WebhooksDeleted,
+  WebhookSecretRotated,
 } from './dto';
 import { WebhookManagementService } from './webhook-management.service';
 
@@ -15,18 +15,18 @@ import { WebhookManagementService } from './webhook-management.service';
 export class WebhookManagementResolver {
   constructor(private readonly service: WebhookManagementService) {}
 
-  @Mutation(() => UpsertWebhookOutput)
-  async upsertWebhook(
-    @Args('input') input: UpsertWebhookInput,
-  ): Promise<UpsertWebhookOutput> {
-    const webhook = await this.service.upsert(input);
+  @Mutation(() => WebhookSaved)
+  async saveWebhook(
+    @Args('input') input: WebhookConfig,
+  ): Promise<WebhookSaved> {
+    const webhook = await this.service.save(input);
     return { webhook };
   }
 
-  @Mutation(() => RotateWebhookSecretOutput, {
+  @Mutation(() => WebhookSecretRotated, {
     description: "Rotate the secret used for all of the user's webhooks",
   })
-  async rotateWebhookSecret(): Promise<RotateWebhookSecretOutput> {
+  async rotateWebhookSecret(): Promise<WebhookSecretRotated> {
     const next = await this.service.rotateSecret();
     return { secret: next };
   }

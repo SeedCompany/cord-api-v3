@@ -1,7 +1,7 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 
 @ObjectType()
-export class RotateWebhookSecretOutput {
+export class WebhookSecretRotated {
   @Field()
   secret: string;
 }
