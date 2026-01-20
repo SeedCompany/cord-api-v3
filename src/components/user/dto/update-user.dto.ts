@@ -65,7 +65,7 @@ export abstract class UpdateUser {
 }
 
 @ObjectType()
-export abstract class UpdateUserOutput {
+export abstract class UserUpdated {
   @Field()
   readonly user: User;
 }

@@ -1,5 +1,6 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { MinLength } from 'class-validator';
+import { stripIndent } from 'common-tags';
 import { type ID } from '~/common';
 import { CreatePerson } from '../../../components/user/dto/create-person.dto';
 
@@ -13,7 +14,11 @@ export abstract class RegisterUser extends CreatePerson {
   readonly password: string;
 }
 
-@ObjectType()
-export abstract class RegisterOutput {
+@ObjectType({
+  description: stripIndent`
+    A user/person was anonymously "self" created with their login credentials.
+  `,
+})
+export abstract class UserRegistered {
   readonly user: ID;
 }

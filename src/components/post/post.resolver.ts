@@ -13,23 +13,21 @@ import { UserLoader } from '../user';
 import { SecuredUser } from '../user/dto';
 import {
   CreatePost,
-  CreatePostOutput,
-  DeletePostOutput,
   Post,
+  PostCreated,
+  PostDeleted,
+  PostUpdated,
   UpdatePost,
-  UpdatePostOutput,
 } from './dto';
 
 @Resolver(Post)
 export class PostResolver {
   constructor(private readonly service: PostService) {}
 
-  @Mutation(() => CreatePostOutput, {
+  @Mutation(() => PostCreated, {
     description: 'Create a discussion post',
   })
-  async createPost(
-    @Args('input') input: CreatePost,
-  ): Promise<CreatePostOutput> {
+  async createPost(@Args('input') input: CreatePost): Promise<PostCreated> {
     const post = await this.service.create(input);
     return { post };
   }
@@ -52,21 +50,19 @@ export class PostResolver {
     return await mapSecuredValue(post.creator, ({ id }) => users.load(id));
   }
 
-  @Mutation(() => UpdatePostOutput, {
+  @Mutation(() => PostUpdated, {
     description: 'Update an existing Post',
   })
-  async updatePost(
-    @Args('input') input: UpdatePost,
-  ): Promise<UpdatePostOutput> {
+  async updatePost(@Args('input') input: UpdatePost): Promise<PostUpdated> {
     const post = await this.service.update(input);
     return { post };
   }
 
-  @Mutation(() => DeletePostOutput, {
+  @Mutation(() => PostDeleted, {
     description: 'Delete a post',
   })
-  async deletePost(@IdArg() id: ID): Promise<DeletePostOutput> {
+  async deletePost(@IdArg() id: ID): Promise<PostDeleted> {
     await this.service.delete(id);
-    return { success: true };
+    return {};
   }
 }

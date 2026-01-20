@@ -8,6 +8,7 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
+import { DateTime } from 'luxon';
 import {
   Fields,
   firstLettersOfWords,
@@ -23,6 +24,7 @@ import {
   SecuredDateRange,
 } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
+import { Identity } from '~/core/authentication';
 import { SecuredBudget } from '../budget/dto';
 import { type IdsAndView, IdsAndViewArg } from '../changeset/dto';
 import { EngagementLoader } from '../engagement';
@@ -56,18 +58,18 @@ import {
 } from '../project-change-request/dto';
 import {
   CreateProject,
-  CreateProjectOutput,
-  DeleteProjectOutput,
   InternshipProjectListOutput,
   IProject,
   type Project,
+  ProjectCreated,
+  ProjectDeleted,
   ProjectListInput,
   ProjectListOutput,
   ProjectType,
+  ProjectUpdated,
   TranslationProject,
   TranslationProjectListOutput,
   UpdateProject,
-  UpdateProjectOutput,
 } from './dto';
 import { ProjectMemberLoader } from './project-member';
 import {
@@ -96,7 +98,10 @@ class IsMemberArgs {
 
 @Resolver(IProject)
 export class ProjectResolver {
-  constructor(private readonly projectService: ProjectService) {}
+  constructor(
+    private readonly projectService: ProjectService,
+    private readonly identity: Identity,
+  ) {}
 
   @Query(() => IProject, {
     description: 'Look up a project by its ID',
@@ -381,53 +386,104 @@ export class ProjectResolver {
     return SecuredDateRange.fromPair(project.mouStart, project.mouEnd);
   }
 
-  @Mutation(() => CreateProjectOutput, {
+  @Mutation(() => ProjectCreated, {
     description: 'Create a project',
   })
   async createProject(
     @Args('input') input: CreateProject,
-  ): Promise<CreateProjectOutput> {
+    @Loader(ProjectLoader) projects: LoaderOf<ProjectLoader>,
+  ): Promise<ProjectCreated> {
     const project = await this.projectService.create(input);
-    const secured = this.projectService.secure(project);
-    return { project: secured };
+    projects.prime(
+      { id: project.id, view: { active: true } },
+      this.projectService.secure(project),
+    );
+    return {
+      __typename: 'ProjectCreated',
+      projectId: project.id,
+      at: project.createdAt,
+      by: this.identity.current.userId,
+    };
   }
 
-  @Mutation(() => UpdateProjectOutput, {
+  @Mutation(() => ProjectUpdated, {
     description: 'Update a project',
   })
   async updateProject(
     @Args('input') { changeset, ...input }: UpdateProject,
-  ): Promise<UpdateProjectOutput> {
-    const project = await this.projectService.update(input, changeset);
-    const secured = this.projectService.secure(project);
-    return { project: secured };
+    @Loader(ProjectLoader) projects: LoaderOf<ProjectLoader>,
+  ): Promise<ProjectUpdated> {
+    const { project, payload } = await this.projectService.update(
+      input,
+      changeset,
+    );
+    projects.prime(
+      { id: project.id, view: { active: true } },
+      this.projectService.secure(project),
+    );
+    return {
+      __typename: 'ProjectUpdated',
+      projectId: project.id,
+      by: this.identity.current.userId,
+      updated: {},
+      previous: {},
+      // if actual changes, then this overrides those empty values.
+      ...payload,
+      at: payload?.at ?? DateTime.now(),
+    };
   }
 
-  @Mutation(() => DeleteProjectOutput, {
+  @Mutation(() => ProjectDeleted, {
     description: 'Delete a project',
   })
-  async deleteProject(@IdArg() id: ID): Promise<DeleteProjectOutput> {
-    await this.projectService.delete(id);
-    return { success: true };
+  async deleteProject(@IdArg() id: ID): Promise<ProjectDeleted> {
+    const payload = await this.projectService.delete(id);
+    return {
+      __typename: 'ProjectDeleted',
+      projectId: id,
+      ...payload,
+    };
   }
 
-  @Mutation(() => IProject, {
+  @Mutation(() => ProjectUpdated, {
     description: 'Add a location to a project',
   })
   async addOtherLocationToProject(
     @Args() { project, location }: ModifyOtherLocationArgs,
-  ): Promise<Project> {
-    await this.projectService.addOtherLocation(project, location);
-    return await this.projectService.readOne(project);
+  ): Promise<ProjectUpdated> {
+    const changed = await this.projectService.addOtherLocation(
+      project,
+      location,
+    );
+    return {
+      __typename: 'ProjectUpdated',
+      projectId: project,
+      by: this.identity.current.userId,
+      updated: {},
+      previous: {},
+      ...changed,
+      at: changed?.at ?? DateTime.now(),
+    };
   }
 
-  @Mutation(() => IProject, {
+  @Mutation(() => ProjectUpdated, {
     description: 'Remove a location from a project',
   })
   async removeOtherLocationFromProject(
     @Args() { project, location }: ModifyOtherLocationArgs,
-  ): Promise<Project> {
-    await this.projectService.removeOtherLocation(project, location);
-    return await this.projectService.readOne(project);
+  ): Promise<ProjectUpdated> {
+    const changed = await this.projectService.removeOtherLocation(
+      project,
+      location,
+    );
+    return {
+      __typename: 'ProjectUpdated',
+      projectId: project,
+      by: this.identity.current.userId,
+      updated: {},
+      previous: {},
+      ...changed,
+      at: changed?.at ?? DateTime.now(),
+    };
   }
 }

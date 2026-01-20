@@ -122,16 +122,16 @@ const forgotPassword = (email: string) => async (tester: Tester) => {
 };
 
 const resetPassword =
-  (token: string, password: string) => async (tester: Tester) => {
+  (token: string, newPassword: string) => async (tester: Tester) => {
     await tester.run(
       graphql(`
-        mutation resetPassword($input: ResetPassword!) {
-          resetPassword(input: $input) {
+        mutation resetPassword($token: String!, $newPassword: String!) {
+          resetPassword(token: $token, password: $newPassword) {
             __typename
           }
         }
       `),
-      { input: { token, password } },
+      { token, newPassword },
     );
   };
 

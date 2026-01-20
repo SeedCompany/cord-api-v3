@@ -2,4 +2,4 @@ import { ObjectType } from '@nestjs/graphql';
 import { MutationPlaceholderOutput } from '~/common';
 
 @ObjectType()
-export abstract class DeleteUserOutput extends MutationPlaceholderOutput {}
+export abstract class UserDeleted extends MutationPlaceholderOutput {}

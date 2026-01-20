@@ -33,20 +33,18 @@ import { TimeZoneService } from '../timezone';
 import { SecuredTimeZone } from '../timezone/timezone.dto';
 import {
   AssignOrganizationToUser,
-  AssignOrganizationToUserOutput,
   CheckEmailArgs,
   CreatePerson,
-  CreatePersonOutput,
-  DeleteUserOutput,
   KnownLanguage,
   ModifyKnownLanguageArgs,
   RemoveOrganizationFromUser,
-  RemoveOrganizationFromUserOutput,
   UpdateUser,
-  UpdateUserOutput,
   User,
+  UserCreated,
+  UserDeleted,
   UserListInput,
   UserListOutput,
+  UserUpdated,
 } from './dto';
 import { EducationLoader } from './education';
 import { EducationListInput, SecuredEducationList } from './education/dto';
@@ -216,12 +214,10 @@ export class UserResolver {
     return await this.userService.listKnownLanguages(id);
   }
 
-  @Mutation(() => CreatePersonOutput, {
+  @Mutation(() => UserCreated, {
     description: 'Create a person',
   })
-  async createPerson(
-    @Args('input') input: CreatePerson,
-  ): Promise<CreatePersonOutput> {
+  async createPerson(@Args('input') input: CreatePerson): Promise<UserCreated> {
     const userId = await this.userService.create(input);
     const user = await this.userService.readOne(userId).catch((e) => {
       throw e instanceof NotFoundException
@@ -231,62 +227,64 @@ export class UserResolver {
     return { user };
   }
 
-  @Mutation(() => UpdateUserOutput, {
+  @Mutation(() => UserUpdated, {
     description: 'Update a user',
   })
-  async updateUser(
-    @Args('input') input: UpdateUser,
-  ): Promise<UpdateUserOutput> {
+  async updateUser(@Args('input') input: UpdateUser): Promise<UserUpdated> {
     const user = await this.userService.update(input);
     return { user };
   }
 
-  @Mutation(() => DeleteUserOutput, {
+  @Mutation(() => UserDeleted, {
     description: 'Delete a user',
   })
-  async deleteUser(@IdArg() id: ID): Promise<DeleteUserOutput> {
+  async deleteUser(@IdArg() id: ID): Promise<UserDeleted> {
     await this.userService.delete(id);
-    return { success: true };
+    return {};
   }
 
-  @Mutation(() => User, {
+  @Mutation(() => UserUpdated, {
     description: 'Add a location to a user',
   })
   async addLocationToUser(
-    @Args() { user, location }: ModifyLocationArgs,
-  ): Promise<User> {
-    await this.userService.addLocation(user, location);
-    return await this.userService.readOne(user);
+    @Args() args: ModifyLocationArgs,
+  ): Promise<UserUpdated> {
+    await this.userService.addLocation(args.user, args.location);
+    const user = await this.userService.readOne(args.user);
+    return { user };
   }
 
-  @Mutation(() => User, {
+  @Mutation(() => UserUpdated, {
     description: 'Remove a location from a user',
   })
   async removeLocationFromUser(
-    @Args() { user, location }: ModifyLocationArgs,
-  ): Promise<User> {
-    await this.userService.removeLocation(user, location);
-    return await this.userService.readOne(user);
+    @Args() args: ModifyLocationArgs,
+  ): Promise<UserUpdated> {
+    await this.userService.removeLocation(args.user, args.location);
+    const user = await this.userService.readOne(args.user);
+    return { user };
   }
 
-  @Mutation(() => AssignOrganizationToUserOutput, {
+  @Mutation(() => UserUpdated, {
     description: 'Assign organization OR primaryOrganization to user',
   })
   async assignOrganizationToUser(
-    @Args('input') input: AssignOrganizationToUser,
-  ): Promise<AssignOrganizationToUserOutput> {
+    @Args() input: AssignOrganizationToUser,
+  ): Promise<UserUpdated> {
     await this.userService.assignOrganizationToUser(input);
-    return { success: true };
+    const user = await this.userService.readOne(input.user);
+    return { user };
   }
 
-  @Mutation(() => RemoveOrganizationFromUserOutput, {
+  @Mutation(() => UserUpdated, {
     description: 'Remove organization OR primaryOrganization from user',
   })
   async removeOrganizationFromUser(
-    @Args('input') input: RemoveOrganizationFromUser,
-  ): Promise<RemoveOrganizationFromUserOutput> {
+    @Args() input: RemoveOrganizationFromUser,
+  ): Promise<UserUpdated> {
     await this.userService.removeOrganizationFromUser(input);
-    return { success: true };
+    const user = await this.userService.readOne(input.user);
+    return { user };
   }
 
   @Mutation(() => User, {

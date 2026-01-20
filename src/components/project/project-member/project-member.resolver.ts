@@ -9,11 +9,11 @@ import { type ID, IdArg } from '~/common';
 import { ProjectMemberService } from '../project-member';
 import {
   CreateProjectMember,
-  CreateProjectMemberOutput,
-  DeleteProjectMemberOutput,
   ProjectMember,
+  ProjectMemberCreated,
+  ProjectMemberDeleted,
+  ProjectMemberUpdated,
   UpdateProjectMember,
-  UpdateProjectMemberOutput,
 } from './dto';
 
 @Resolver(ProjectMember)
@@ -27,33 +27,31 @@ export class ProjectMemberResolver {
     return member.inactiveAt.canRead ? !member.inactiveAt.value : null;
   }
 
-  @Mutation(() => CreateProjectMemberOutput, {
+  @Mutation(() => ProjectMemberCreated, {
     description: 'Create a project member',
   })
   async createProjectMember(
     @Args('input') input: CreateProjectMember,
-  ): Promise<CreateProjectMemberOutput> {
+  ): Promise<ProjectMemberCreated> {
     const projectMember = await this.service.create(input);
     return { projectMember };
   }
 
-  @Mutation(() => UpdateProjectMemberOutput, {
+  @Mutation(() => ProjectMemberUpdated, {
     description: 'Update a project member',
   })
   async updateProjectMember(
     @Args('input') input: UpdateProjectMember,
-  ): Promise<UpdateProjectMemberOutput> {
+  ): Promise<ProjectMemberUpdated> {
     const projectMember = await this.service.update(input);
     return { projectMember };
   }
 
-  @Mutation(() => DeleteProjectMemberOutput, {
+  @Mutation(() => ProjectMemberDeleted, {
     description: 'Delete a project member',
   })
-  async deleteProjectMember(
-    @IdArg() id: ID,
-  ): Promise<DeleteProjectMemberOutput> {
+  async deleteProjectMember(@IdArg() id: ID): Promise<ProjectMemberDeleted> {
     await this.service.delete(id);
-    return { success: true };
+    return {};
   }
 }

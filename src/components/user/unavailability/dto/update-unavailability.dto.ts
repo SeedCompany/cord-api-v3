@@ -19,7 +19,7 @@ export abstract class UpdateUnavailability {
 }
 
 @ObjectType()
-export abstract class UpdateUnavailabilityOutput {
+export abstract class UnavailabilityUpdated {
   @Field()
   readonly unavailability: Unavailability;
 }

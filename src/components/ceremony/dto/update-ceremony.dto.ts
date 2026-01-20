@@ -18,7 +18,7 @@ export abstract class UpdateCeremony {
 }
 
 @ObjectType()
-export abstract class UpdateCeremonyOutput {
+export abstract class CeremonyUpdated {
   @Field()
   readonly ceremony: Ceremony;
 }

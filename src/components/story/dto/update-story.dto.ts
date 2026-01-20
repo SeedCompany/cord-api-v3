@@ -16,7 +16,7 @@ export abstract class UpdateStory {
 }
 
 @ObjectType()
-export abstract class UpdateStoryOutput {
+export abstract class StoryUpdated {
   @Field()
   readonly story: Story;
 }

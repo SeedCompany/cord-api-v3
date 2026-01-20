@@ -18,7 +18,7 @@ export abstract class UpdateFieldZone {
 }
 
 @ObjectType()
-export abstract class UpdateFieldZoneOutput {
+export abstract class FieldZoneUpdated {
   @Field()
   readonly fieldZone: FieldZone;
 }

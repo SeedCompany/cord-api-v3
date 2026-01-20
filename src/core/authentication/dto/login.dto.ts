@@ -11,6 +11,6 @@ export abstract class LoginInput {
 }
 
 @ObjectType()
-export class LoginOutput {
+export class LoggedIn {
   user: ID;
 }

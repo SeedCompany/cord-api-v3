@@ -12,7 +12,7 @@ export abstract class UpdateToolUsage {
 }
 
 @ObjectType()
-export abstract class UpdateToolUsageOutput {
+export abstract class ToolUsageUpdated {
   @Field()
   readonly toolUsage: ToolUsage;
 }

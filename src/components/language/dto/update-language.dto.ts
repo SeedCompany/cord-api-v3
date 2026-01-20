@@ -119,7 +119,7 @@ export abstract class UpdateLanguage {
 }
 
 @ObjectType()
-export abstract class UpdateLanguageOutput {
+export abstract class LanguageUpdated {
   @Field()
   readonly language: Language;
 }
