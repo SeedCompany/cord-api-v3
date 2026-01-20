@@ -11,6 +11,6 @@ import { createTester } from './graphql-tester';
 export const getRootTester = cacheable(async (app: TestApp) => {
   const root = createTester(app);
   const { email, password } = app.get(ConfigService).rootUser;
-  await root.apply(login({ email, password }));
-  return root;
+  const { user } = await root.apply(login({ email, password }));
+  return Object.assign(root, { identity: user });
 })(new WeakMap());
