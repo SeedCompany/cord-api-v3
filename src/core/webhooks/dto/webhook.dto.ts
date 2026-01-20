@@ -4,6 +4,7 @@ import { GraphQLJSONObject } from 'graphql-scalars';
 import { DateTime } from 'luxon';
 import { type ID, IdField, NameField, UrlField } from '~/common';
 import { type LinkTo, RegisterResource } from '~/core/resources';
+import { GraphqlDocumentScalar } from './graphql-document.scalar';
 
 @RegisterResource()
 @InputType({ isAbstract: true })
@@ -36,7 +37,7 @@ export class Webhook {
   })
   name: string;
 
-  @Field({
+  @Field(() => GraphqlDocumentScalar, {
     description: stripIndent`
       A GraphQL document with a subscription operation.
       This describes what will be POSTed to the given url.
