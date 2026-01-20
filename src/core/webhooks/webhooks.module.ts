@@ -6,6 +6,7 @@ import { GraphqlModule } from '../graphql';
 import { WebhookChannelSyncMigration } from './channels/channel-sync.migration';
 import { WebhookChannelRepository } from './channels/webhook-channel.repository';
 import { WebhookChannelService } from './channels/webhook-channel.service';
+import { GraphqlDocumentScalar } from './dto/graphql-document.scalar';
 import { WebhookExecutor } from './executor/webhook.executor';
 import { WebhookManagementResolver } from './management/webhook-management.resolver';
 import { WebhookManagementService } from './management/webhook-management.service';
@@ -18,6 +19,7 @@ import { WebhookValidator } from './webhook.validator';
   imports: [GraphqlModule],
   providers: [
     WebhookManagementResolver,
+    GraphqlDocumentScalar,
     WebhookManagementService,
     WebhookValidator,
     WebhookListener,
