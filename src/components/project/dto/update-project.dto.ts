@@ -1,5 +1,5 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import { DateTime } from 'luxon';
+import { type DateTime } from 'luxon';
 import {
   type CalendarDate,
   DateField,
@@ -16,6 +16,7 @@ import { ChangesetIdField } from '../../changeset';
 import { ReportPeriod } from '../../periodic-report/dto';
 import { IProject, type Project } from './project.dto';
 
+@ObjectType({ isAbstract: true })
 @InputType()
 export abstract class UpdateProject {
   @IdField()
@@ -69,7 +70,7 @@ export abstract class UpdateProject {
   readonly tags?: readonly string[];
 
   @DateTimeField({ nullable: true })
-  readonly financialReportReceivedAt?: DateTime;
+  readonly financialReportReceivedAt?: DateTime | null;
 
   @Field(() => ReportPeriod, { nullable: true })
   readonly financialReportPeriod?: ReportPeriod | null;
