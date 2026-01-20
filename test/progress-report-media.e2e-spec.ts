@@ -1,41 +1,36 @@
 import { beforeAll, beforeEach, describe, expect, it } from '@jest/globals';
-import { CalendarDate, type ID, type IdOf, isIdLike } from '~/common';
+import { CalendarDate, type ID, isIdLike } from '~/common';
 import { graphql, type InputOf } from '~/graphql';
-import { type ProgressReport } from '../src/components/progress-report/dto';
 import {
-  type ProgressReportMedia,
-  type UpdateProgressReportMedia,
-  type UploadProgressReportMedia,
-} from '../src/components/progress-report/media/dto';
-import {
-  createLanguage,
-  createProject,
-  createSession,
-  createTestApp,
-  fragments,
   generateFakeFile,
-  registerUser,
   requestFileUpload,
-  runAsAdmin,
-  runInIsolatedSession,
-  type TestApp,
-  type TestUser,
   uploadFileContents,
-} from './utility';
+} from './operations/file';
+import {
+  createApp,
+  createTesterWithRole,
+  getRootTester,
+  type IdentifiedTester,
+  type TestApp,
+  type Tester,
+} from './setup';
+import { createLanguage, createProject, fragments } from './utility';
 
 describe('ProgressReport Media e2e', () => {
   let app: TestApp;
+  let root: Tester;
+  let fpm: IdentifiedTester;
   let project: fragments.project;
   let language: fragments.language;
   let reportId: ID<'ProgressReport'>;
   let image: ReturnType<typeof generateFakeFile>;
 
   beforeAll(async () => {
-    app = await createTestApp();
-    await createSession(app);
-    await registerUser(app, { roles: ['ProjectManager'] });
+    app = await createApp();
+    root = await getRootTester(app);
+    fpm = await createTesterWithRole(app, 'ProjectManager');
 
-    project = await createProject(app, {
+    project = await createProject(fpm.legacyApp, {
       mouStart: CalendarDate.local(2023, 1, 1).toISO(),
       mouEnd: CalendarDate.local(2024, 1, 1).toISO(),
     });
@@ -47,9 +42,9 @@ describe('ProgressReport Media e2e', () => {
   });
 
   beforeEach(async () => {
-    language = await runAsAdmin(app, createLanguage);
+    language = await createLanguage(root.legacyApp);
 
-    const { createEng } = await app.graphql.mutate(
+    const { createEng } = await fpm.run(
       graphql(
         `
           mutation CreateLanguageEngagement($input: CreateLanguageEngagement!) {
@@ -78,7 +73,7 @@ describe('ProgressReport Media e2e', () => {
   });
 
   it('View uploadable options', async () => {
-    const { report } = await app.graphql.query(
+    const { report } = await fpm.run(
       graphql(`
         query UploadableVariantsOfReportMedia($id: ID!) {
           report: periodicReport(id: $id) {
@@ -102,8 +97,8 @@ describe('ProgressReport Media e2e', () => {
   });
 
   it('Upload', async () => {
-    const { id: uploadId, url } = await requestFileUpload(app);
-    await uploadFileContents(app, url, image);
+    const { id: uploadId, url } = await fpm.apply(requestFileUpload());
+    await fpm.apply(uploadFileContents(url, image));
 
     const input = {
       report: reportId,
@@ -117,8 +112,8 @@ describe('ProgressReport Media e2e', () => {
           caption: 'Look it works!',
         },
       },
-    } satisfies UploadProgressReportMedia;
-    const upload = await uploadMedia(app, input);
+    } satisfies UploadMedia;
+    const upload = await fpm.apply(uploadMedia(input));
 
     expect(upload.id).toBe(reportId);
     expect(upload.media.items).toHaveLength(1);
@@ -138,29 +133,31 @@ describe('ProgressReport Media e2e', () => {
   });
 
   it('Update', async () => {
-    const upload = await requestFileUpload(app);
-    await uploadFileContents(app, upload.url, image);
-    const report = await uploadMedia(app, {
-      report: reportId,
-      variant: 'draft' as ID,
-      category: 'CommunityEngagement',
-      file: {
-        upload: upload.id,
-        name: 'A picture',
-        media: {
-          altText: 'A fake pic',
-          caption: 'Look it works!',
+    const upload = await fpm.apply(requestFileUpload());
+    await fpm.apply(uploadFileContents(upload.url, image));
+    const report = await fpm.apply(
+      uploadMedia({
+        report: reportId,
+        variant: 'draft' as ID,
+        category: 'CommunityEngagement',
+        file: {
+          upload: upload.id,
+          name: 'A picture',
+          media: {
+            altText: 'A fake pic',
+            caption: 'Look it works!',
+          },
         },
-      },
-    });
+      }),
+    );
 
     const input = {
-      id: report.media.items[0]!.id as IdOf<ProgressReportMedia>,
+      id: report.media.items[0]!.id as ID<'ProgressReportMedia'>,
       category: 'WorkInProgress',
       altText: 'Actually a cat',
       caption: 'This it updates!',
-    } satisfies UpdateProgressReportMedia;
-    const { update } = await app.graphql.mutate(
+    } as const;
+    const { update } = await fpm.run(
       graphql(
         `
           mutation Update($input: UpdateProgressReportMedia!) {
@@ -181,23 +178,27 @@ describe('ProgressReport Media e2e', () => {
   });
 
   it('Upload another variant in group', async () => {
-    const upload1 = await requestFileUpload(app);
-    await uploadFileContents(app, upload1.url, image);
-    const report = await uploadMedia(app, {
-      report: reportId,
-      variant: 'draft' as ID,
-      file: { upload: upload1.id, name: 'asdf' },
-    });
+    const upload1 = await fpm.apply(requestFileUpload());
+    await fpm.apply(uploadFileContents(upload1.url, image));
+    const report = await fpm.apply(
+      uploadMedia({
+        report: reportId,
+        variant: 'draft' as ID,
+        file: { upload: upload1.id, name: 'asdf' },
+      }),
+    );
     const media1 = report.media.items[0]!;
 
-    const upload2 = await requestFileUpload(app);
-    await uploadFileContents(app, upload2.url, image);
-    const reportUpdated = await uploadMedia(app, {
-      report: reportId,
-      variant: 'fpm' as ID,
-      variantGroup: media1.variantGroup,
-      file: { upload: upload2.id, name: 'asdf' },
-    });
+    const upload2 = await fpm.apply(requestFileUpload());
+    await fpm.apply(uploadFileContents(upload2.url, image));
+    const reportUpdated = await fpm.apply(
+      uploadMedia({
+        report: reportId,
+        variant: 'fpm' as ID,
+        variantGroup: media1.variantGroup,
+        file: { upload: upload2.id, name: 'asdf' },
+      }),
+    );
 
     expect(reportUpdated.media.items).toHaveLength(2);
     expect(reportUpdated.media.total).toBe(2);
@@ -207,24 +208,28 @@ describe('ProgressReport Media e2e', () => {
   });
 
   it('Only one variant per group', async () => {
-    const upload1 = await requestFileUpload(app);
-    await uploadFileContents(app, upload1.url, image);
-    const report = await uploadMedia(app, {
-      report: reportId,
-      variant: 'draft' as ID,
-      file: { upload: upload1.id, name: 'asdf' },
-    });
-    const media1 = report.media.items[0]!;
-
-    const upload2 = await requestFileUpload(app);
-    await uploadFileContents(app, upload2.url, image);
-    await expect(
-      uploadMedia(app, {
+    const upload1 = await fpm.apply(requestFileUpload());
+    await fpm.apply(uploadFileContents(upload1.url, image));
+    const report = await fpm.apply(
+      uploadMedia({
         report: reportId,
         variant: 'draft' as ID,
-        variantGroup: media1.variantGroup,
-        file: { upload: upload2.id, name: 'asdf' },
+        file: { upload: upload1.id, name: 'asdf' },
       }),
+    );
+    const media1 = report.media.items[0]!;
+
+    const upload2 = await fpm.apply(requestFileUpload());
+    await fpm.apply(uploadFileContents(upload2.url, image));
+    await expect(
+      fpm.apply(
+        uploadMedia({
+          report: reportId,
+          variant: 'draft' as ID,
+          variantGroup: media1.variantGroup,
+          file: { upload: upload2.id, name: 'asdf' },
+        }),
+      ),
     ).rejects.toThrowGqlError({
       code: 'Input',
       field: 'variant',
@@ -232,19 +237,21 @@ describe('ProgressReport Media e2e', () => {
   });
 
   it('Delete', async () => {
-    const upload = await requestFileUpload(app);
-    await uploadFileContents(app, upload.url, image);
+    const upload = await fpm.apply(requestFileUpload());
+    await fpm.apply(uploadFileContents(upload.url, image));
 
-    const report = await uploadMedia(app, {
-      report: reportId,
-      variant: 'draft' as ID,
-      file: {
-        upload: upload.id,
-        name: 'A picture',
-      },
-    });
+    const report = await fpm.apply(
+      uploadMedia({
+        report: reportId,
+        variant: 'draft' as ID,
+        file: {
+          upload: upload.id,
+          name: 'A picture',
+        },
+      }),
+    );
 
-    const { report: updated } = await app.graphql.mutate(
+    const { report: updated } = await fpm.run(
       graphql(
         `
           mutation Delete($id: ID!) {
@@ -271,123 +278,124 @@ describe('ProgressReport Media e2e', () => {
   });
 
   describe('Featured Media', () => {
-    let marketing: TestUser;
+    let marketing: IdentifiedTester;
     beforeAll(async () => {
-      marketing = await runInIsolatedSession(app, async () => {
-        return await registerUser(app, { roles: ['Marketing'] });
-      });
+      marketing = await createTesterWithRole(app, 'Marketing');
     });
 
     it('Upload', async () => {
-      const before = await getFeaturedMedia(app, reportId);
+      const before = await fpm.apply(getFeaturedMedia(reportId));
       expect(before).toBeNull();
 
-      const upload = await runInIsolatedSession(app, async () => {
-        await marketing.login();
-
-        const upload = await requestFileUpload(app);
-        await uploadFileContents(app, upload.url, image);
-        return await uploadMedia(app, {
-          report: reportId,
-          variant: 'published' as any,
-          file: {
-            upload: upload.id,
-            name: 'A picture',
-          },
-        });
+      const upload = await marketing.apply(async ({ apply }) => {
+        const uploadRequest = await apply(requestFileUpload());
+        await apply(uploadFileContents(uploadRequest.url, image));
+        return await apply(
+          uploadMedia({
+            report: reportId,
+            variant: 'published' as any,
+            file: {
+              upload: uploadRequest.id,
+              name: 'A picture',
+            },
+          }),
+        );
       });
 
-      const after = await getFeaturedMedia(app, reportId);
+      const after = await fpm.apply(getFeaturedMedia(reportId));
       expect(after).not.toBeNull();
       expect(after?.id).toEqual(upload.media.items[0]!.id);
     });
 
     it('Latest Wins', async () => {
-      const before = await getFeaturedMedia(app, reportId);
+      const before = await fpm.apply(getFeaturedMedia(reportId));
       expect(before).toBeNull();
 
-      await runInIsolatedSession(app, async () => {
-        await marketing.login();
-
-        const upload1 = await requestFileUpload(app);
-        await uploadFileContents(app, upload1.url, image);
-        await uploadMedia(app, {
-          report: reportId,
-          variant: 'published' as any,
-          file: {
-            upload: upload1.id,
-            name: 'The picture',
-          },
-        });
-
-        const upload2 = await requestFileUpload(app);
-        await uploadFileContents(app, upload2.url, image);
-        await uploadMedia(app, {
-          report: reportId,
-          variant: 'published' as any,
-          file: {
-            upload: upload2.id,
-            name: 'The picture',
-            media: {
-              caption: 'The latest picture',
+      await marketing.apply(async ({ apply }) => {
+        const upload1 = await apply(requestFileUpload());
+        await apply(uploadFileContents(upload1.url, image));
+        await apply(
+          uploadMedia({
+            report: reportId,
+            variant: 'published' as any,
+            file: {
+              upload: upload1.id,
+              name: 'The picture',
             },
-          },
-        });
+          }),
+        );
+
+        const upload2 = await apply(requestFileUpload());
+        await apply(uploadFileContents(upload2.url, image));
+        await apply(
+          uploadMedia({
+            report: reportId,
+            variant: 'published' as any,
+            file: {
+              upload: upload2.id,
+              name: 'The picture',
+              media: {
+                caption: 'The latest picture',
+              },
+            },
+          }),
+        );
       });
 
-      const after = await getFeaturedMedia(app, reportId);
+      const after = await fpm.apply(getFeaturedMedia(reportId));
       expect(after).not.toBeNull();
       expect(after?.media.caption).toEqual('The latest picture');
     });
 
     it('None if not published variant', async () => {
-      const upload = await requestFileUpload(app);
-      await uploadFileContents(app, upload.url, image);
-      await uploadMedia(app, {
-        report: reportId,
-        variant: 'draft' as any,
-        file: {
-          upload: upload.id,
-          name: 'A picture',
-        },
-      });
+      const upload = await fpm.apply(requestFileUpload());
+      await fpm.apply(uploadFileContents(upload.url, image));
+      await fpm.apply(
+        uploadMedia({
+          report: reportId,
+          variant: 'draft' as any,
+          file: {
+            upload: upload.id,
+            name: 'A picture',
+          },
+        }),
+      );
 
-      const featured = await getFeaturedMedia(app, reportId);
+      const featured = await fpm.apply(getFeaturedMedia(reportId));
       expect(featured).toBeNull();
     });
   });
 });
 
-async function uploadMedia(
-  app: TestApp,
-  input: InputOf<typeof UploadMediaDoc>,
-) {
-  const { upload } = await app.graphql.mutate(UploadMediaDoc, { input });
+type UploadMedia = InputOf<typeof UploadMediaDoc>;
+const uploadMedia = (input: UploadMedia) => async (tester: Tester) => {
+  const { upload } = await tester.run(UploadMediaDoc, { input });
   return upload;
-}
+};
 
-async function getFeaturedMedia(app: TestApp, id: IdOf<ProgressReport>) {
-  const { report } = await app.graphql.query(
-    graphql(
-      `
-        query ($id: ID!) {
-          report: periodicReport(id: $id) {
-            __typename
-            ... on ProgressReport {
-              featuredMedia {
-                ...reportMedia
+const getFeaturedMedia =
+  (id: ID<'ProgressReport'>) => async (tester: Tester) => {
+    const { report } = await tester.run(
+      graphql(
+        `
+          query GetFeaturedMedia($id: ID!) {
+            report: periodicReport(id: $id) {
+              __typename
+              ... on ProgressReport {
+                featuredMedia {
+                  ...reportMedia
+                }
               }
             }
           }
-        }
-      `,
-      [reportMediaFrag],
-    ),
-    { id },
-  );
-  if (report.__typename !== 'ProgressReport') throw new Error();
-  return report.featuredMedia;
-}
+        `,
+        [reportMediaFrag],
+      ),
+      { id },
+    );
+    if (report.__typename !== 'ProgressReport') throw new Error();
+    return report.featuredMedia;
+  };
 
 const reportMediaFrag = graphql(`
   fragment reportMedia on ProgressReportMedia {

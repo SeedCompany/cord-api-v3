@@ -1,5 +1,4 @@
 export * from './create-app';
-export * from './create-file';
 export * from './create-film';
 export * from './create-story';
 export * from './create-graphql-client';

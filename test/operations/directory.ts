@@ -1,9 +1,12 @@
 import { faker } from '@faker-js/faker';
+import { expect } from '@jest/globals';
 import { Case } from '@seedcompany/common/case';
 import type { ID } from '~/common';
 import { Identity } from '~/core/authentication';
+import { graphql } from '~/graphql';
 import { FileService } from '../../src/components/file';
 import { type Tester } from '../setup';
+import { fileNode } from '../utility/fragments';
 
 /**
  * This functionality is not exposed externally, so we access the app
@@ -25,3 +28,32 @@ export const createRootDirectory =
       return await files.getDirectory(dirId);
     });
   };
+
+export const createDirectory =
+  (parent: ID, name?: string) => async (tester: Tester) => {
+    const input = {
+      parent,
+      name: name ?? Case.capital(faker.lorem.words()),
+    };
+
+    const result = await tester.run(CreateDirectoryDoc, {
+      input,
+    });
+
+    const actual = result.createDirectory;
+    expect(actual).toBeTruthy();
+    expect(actual.name).toBe(input.name);
+
+    return actual;
+  };
+
+const CreateDirectoryDoc = graphql(
+  `
+    mutation createDirectory($input: CreateDirectory!) {
+      createDirectory(input: $input) {
+        ...fileNode
+      }
+    }
+  `,
+  [fileNode],
+);
