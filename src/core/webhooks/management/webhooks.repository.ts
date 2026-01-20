@@ -5,11 +5,7 @@ import { nanoid } from 'nanoid';
 import { EnhancedResource, type ID } from '~/common';
 import { DtoRepository } from '~/core/database';
 import { currentUser, merge, randomUUID } from '~/core/database/query';
-import {
-  type DeleteWebhookArgs,
-  type UpsertWebhookInput,
-  Webhook,
-} from './dto';
+import { type DeleteWebhookArgs, Webhook, type WebhookConfig } from './dto';
 
 /**
  * Each `User` can have multiple `Webhooks`.
@@ -65,7 +61,7 @@ export class WebhooksRepository extends DtoRepository(Webhook) {
       .run();
   }
 
-  async save(input: UpsertWebhookInput & Pick<Webhook, 'key' | 'name'>) {
+  async save(input: WebhookConfig & Pick<Webhook, 'key' | 'name'>) {
     const maybeNewSecret = nanoid(32);
     const query = this.db
       .query()

@@ -58,10 +58,10 @@ export class Webhook {
   @Field(() => GraphQLJSONObject, {
     nullable: true,
     description: stripIndent`
-      Any user metadata that we will be sent with each POST request
-      in the body's \`extensions.userMetadata\`.
+      Any metadata to help facilitate management of the webhook on the consumer side.
 
-      This can be used to pass additional information to the webhook consumer.
+      This can be viewed on the webhook and we will send it with each POST request
+      in the body's \`extensions.userMetadata\`.
     `,
   })
   metadata?: Record<string, unknown>;
@@ -85,14 +85,14 @@ export class Webhook {
     description: stripIndent`
       Whether the webhook is currently valid.
 
-      This is enforced when upserting a webhook, but if our schema changes it
+      This is enforced when saving a webhook, but if our schema changes it
       could cause the webhook document to become invalid.
       We'll POST this validation error to the webhook URL, with the same
       extensions normally sent (to identity the webhook), and with the same
-      \`error\` info you'd get back from \`upsertWebhook\`.
+      \`error\` info you'd get back from \`saveWebhook\`.
       After this happens we'll no longer consider this webhook valid, and it
       won't receive any further events.
-      This can be reset with another upsert mutation providing a updated operation.
+      This can be reset with another save mutation providing a updated operation.
     `,
   })
   valid: boolean;
