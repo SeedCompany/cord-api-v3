@@ -59,6 +59,7 @@ export const createTester = (app: TestApp): Tester => {
      */
     get legacyApp(): LegacyTestApp {
       const graphql: LegacyTestClient = {
+        http,
         query: execute,
         mutate: execute,
         get authToken() {

@@ -1,3 +1,4 @@
+import type { Got } from 'got';
 import { createHttpClientForApp, type TestApp } from '../setup';
 import {
   createExecute,
@@ -6,6 +7,7 @@ import {
 
 /** @deprecated */
 export interface GraphQLTestClient {
+  http: Got;
   query: GqlExecute;
   mutate: GqlExecute;
   authToken: string;
@@ -31,6 +33,7 @@ export const createGraphqlClient = (app: TestApp): GraphQLTestClient => {
   const execute = createExecute(http);
 
   return {
+    http,
     query: execute,
     mutate: execute,
     get authToken() {
