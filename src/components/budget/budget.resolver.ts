@@ -44,21 +44,15 @@ export class BudgetResolver {
 
   @ResolveField(() => BudgetSummary)
   summary(@Parent() budget: Budget): BudgetSummary {
-    const recordsWithPreApproved = budget.records.filter(
-      (record) =>
-        record.preApprovedAmount.value !== null &&
-        record.preApprovedAmount.value !== undefined,
-    );
-
-    const recordsExceedingPreApproved = budget.records.filter((record) => {
-      const amount = record.amount.value;
-      const preApproved = record.preApprovedAmount.value;
-      return amount != null && preApproved != null && amount > preApproved;
-    });
-
     return {
-      hasPreApproved: recordsWithPreApproved.length > 0,
-      preApprovedExceeded: recordsExceedingPreApproved.length > 0,
+      hasPreApproved: budget.records.some(
+        (record) => record.preApprovedAmount.value != null,
+      ),
+      preApprovedExceeded: budget.records.some((record) => {
+        const amount = record.amount.value;
+        const preApproved = record.preApprovedAmount.value;
+        return amount != null && preApproved != null && amount > preApproved;
+      }),
     };
   }
 }
