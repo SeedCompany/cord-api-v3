@@ -22,7 +22,7 @@ export class WebhookManagementService {
     private readonly channels: WebhookChannelService,
   ) {}
 
-  async save({ document: rawDocStr, ...input }: WebhookConfig) {
+  async save({ subscription: rawDocStr, ...input }: WebhookConfig) {
     const { name, document: docNode } = await this.validator.validate(
       rawDocStr,
       input.key,
@@ -34,7 +34,7 @@ export class WebhookManagementService {
     const existing = await this.repo.readByUserKey(key);
     if (
       existing &&
-      normalizedDoc === existing.document &&
+      normalizedDoc === existing.subscription &&
       isEqual(
         omit(input, ['key']),
         pick(existing, 'variables', 'url', 'metadata'),
@@ -46,7 +46,7 @@ export class WebhookManagementService {
 
     const webhook = await this.repo.save({
       ...input,
-      document: normalizedDoc,
+      subscription: normalizedDoc,
       key,
       name,
     });

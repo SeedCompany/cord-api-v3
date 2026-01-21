@@ -4,7 +4,7 @@ import { Webhook } from '../../dto';
 
 @InputType()
 export class WebhookConfig extends IntersectTypes(
-  PickType(Webhook, ['document', 'variables', 'url', 'metadata']),
+  PickType(Webhook, ['subscription', 'variables', 'url', 'metadata']),
   PartialType(PickType(Webhook, ['key'])),
 ) {}
 

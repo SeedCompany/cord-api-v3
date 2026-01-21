@@ -21,12 +21,15 @@ export class WebhookValidator {
       throw Object.assign(new AggregateError(errors), { [SkipLogging]: true });
     }
     if (doc.definitions[0]?.kind !== 'OperationDefinition') {
-      throw new InputException('Given operation is invalid', 'operation');
+      throw new InputException(
+        'Given subscription operation is invalid',
+        'subscription',
+      );
     }
     if (doc.definitions[0].operation !== 'subscription') {
       throw new InputException(
         'Only subscription operations are valid here',
-        'operation',
+        'subscription',
       );
     }
 
@@ -34,8 +37,8 @@ export class WebhookValidator {
     if (!name) {
       if (!key) {
         throw new InputException(
-          'Webhooks are identified by their operation name or a key. Please provide one.',
-          'document',
+          'Webhooks are identified by their subscription operation name or a key. Please provide one.',
+          'subscription',
         );
       }
       name = key;

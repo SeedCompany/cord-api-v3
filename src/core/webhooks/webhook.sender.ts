@@ -16,7 +16,7 @@ import { type Webhook as FullWebhook, type WebhookTrigger } from './dto';
 // Strip out large, unneeded properties to save on storage in a future queue.
 type Webhook = Omit<
   FullWebhook,
-  'document' | 'variables' | 'channels' | 'createdAt' | 'modifiedAt'
+  'subscription' | 'variables' | 'channels' | 'createdAt' | 'modifiedAt'
 >;
 
 export interface WebhookExecution {

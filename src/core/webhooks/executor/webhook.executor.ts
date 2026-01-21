@@ -77,7 +77,7 @@ export class WebhookExecutor {
   private async subscribe(webhook: Webhook) {
     const envelop = this.yoga.getEnveloped();
 
-    const document: DocumentNode = envelop.parse(webhook.document);
+    const document: DocumentNode = envelop.parse(webhook.subscription);
 
     // Webhook could become invalid with schema changes.
     const errors = envelop.validate(envelop.schema, document);
