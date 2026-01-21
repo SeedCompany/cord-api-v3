@@ -18,7 +18,9 @@ module Budget {
       readonly := true;
     };
     
-    amount: float32;
+    amount: float32; 
+    preApprovedAmount: float32;
+    initialAmount: float32;
     
     required budget: default::Budget {
       readonly := true;

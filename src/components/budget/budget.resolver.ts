@@ -11,7 +11,7 @@ import { Loader, type LoaderOf } from '~/core';
 import { BudgetService } from '../budget';
 import { FileNodeLoader, resolveDefinedFile } from '../file';
 import { SecuredFile } from '../file/dto';
-import { Budget, BudgetUpdated, UpdateBudget } from './dto';
+import { Budget, BudgetSummary, BudgetUpdated, UpdateBudget } from './dto';
 
 @Resolver(Budget)
 export class BudgetResolver {
@@ -40,5 +40,19 @@ export class BudgetResolver {
   ): Promise<BudgetUpdated> {
     const budget = await this.service.update(input);
     return { budget };
+  }
+
+  @ResolveField(() => BudgetSummary)
+  summary(@Parent() budget: Budget): BudgetSummary {
+    return {
+      hasPreApproved: budget.records.some(
+        (record) => record.preApprovedAmount.value != null,
+      ),
+      preApprovedExceeded: budget.records.some((record) => {
+        const amount = record.amount.value;
+        const preApproved = record.preApprovedAmount.value;
+        return amount != null && preApproved != null && amount > preApproved;
+      }),
+    };
   }
 }

@@ -21,7 +21,9 @@ export const projectTransitions = () =>
   [Role.FinancialAnalyst, Role.LeadFinancialAnalyst, Role.Controller],
   (r) => [
     r.Budget.read.when(member).edit,
-    r.BudgetRecord.read.when(member).edit,
+    r.BudgetRecord.read
+      .when(member)
+      .edit.specifically((p) => [p.preApprovedAmount.read]),
     r.Ceremony.read,
     r.Directory.read.when(member).edit,
     r.Education.read,

@@ -37,8 +37,21 @@ export class BudgetRecord extends Interfaces {
   @Field()
   readonly fiscalYear: SecuredInt;
 
-  @Field()
+  @Field({
+    description: 'The current amount including any change to plans',
+  })
   readonly amount: SecuredFloatNullable;
+
+  @Field({
+    description: 'The amount that was pre-approved for this budget record.',
+  })
+  readonly preApprovedAmount: SecuredFloatNullable;
+
+  @Field({
+    description:
+      'The amount that was originally approved for this budget record.',
+  })
+  readonly initialAmount: SecuredFloatNullable;
 
   @SensitivityField({
     description: "Based on the project's sensitivity",
