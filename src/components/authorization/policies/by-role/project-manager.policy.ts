@@ -74,12 +74,11 @@ export const momentumProjectsTransitions = () =>
     ]),
 
     r.Budget.read.when(member).edit,
-    r.BudgetRecord.read
-      .when(member)
-      .specifically((p) => [
-        p.initialAmount.read.whenAll(member, field('status', 'Pending')).edit,
-        p.amount.read.whenAll(member, field('status', 'Current')).edit,
-      ]),
+    r.BudgetRecord.read.specifically((p) => [
+      p
+        .many('amount', 'initialAmount')
+        .read.whenAll(member, field('status', 'Pending')).edit,
+    ]),
     r.Ceremony.read.when(member).edit,
     r.Education.read.create,
     inherit(
