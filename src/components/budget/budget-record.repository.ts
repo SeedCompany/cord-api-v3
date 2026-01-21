@@ -75,7 +75,7 @@ export class BudgetRecordRepository extends DtoRepository<
   }
 
   async update(
-    existing: BudgetRecord,
+    existing: UnsecuredDto<BudgetRecord>,
     changes: ChangesOf<Budget, UpdateBudgetRecord>,
     changeset?: ID,
   ) {
