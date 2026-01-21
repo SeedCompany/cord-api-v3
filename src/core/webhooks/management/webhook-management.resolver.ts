@@ -1,5 +1,5 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { ListArg } from '~/common';
+import { InputException, ListArg } from '~/common';
 import {
   DeleteWebhookArgs,
   WebhookConfig,
@@ -43,8 +43,14 @@ export class WebhookManagementResolver {
   @Mutation(() => WebhooksDeleted)
   async deleteWebhook(
     @Args({ type: () => DeleteWebhookArgs })
-    { id, key, name, all }: DeleteWebhookArgs,
+    args: DeleteWebhookArgs,
   ): Promise<WebhooksDeleted> {
+    if (Object.values(args).filter((v) => v !== undefined).length > 1) {
+      throw new InputException(
+        'Only one filter may be provided at a time to delete webhooks',
+      );
+    }
+    const { id, key, name, all } = args;
     const filters = id ? { id } : key ? { key } : name ? { name } : null;
     if (!filters && !all) {
       return { deleted: [] };
