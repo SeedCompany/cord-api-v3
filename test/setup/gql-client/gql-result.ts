@@ -2,7 +2,7 @@ import { expect } from '@jest/globals';
 import { stripIndent } from 'common-tags';
 import { type AsymmetricMatchers, type MatcherFunction } from 'expect';
 import type { FormattedExecutionResult, GraphQLFormattedError } from 'graphql';
-import type { Merge } from 'type-fest';
+import type { Merge, Writable } from 'type-fest';
 import { many, type Many } from '~/common';
 
 export class GqlResult<TData> implements PromiseLike<TData> {
@@ -23,6 +23,25 @@ export type ExecutionResult<TData> = Omit<
 > & {
   errors?: readonly RawGqlError[];
 };
+
+expect.addSnapshotSerializer({
+  test: (v) => v instanceof GqlError,
+  serialize: ({ raw }: GqlError, config, indentation, depth, refs, printer) => {
+    const err = structuredClone(raw) as Writable<typeof raw>;
+    // This location info does not really come from our own src code.
+    // Additionally, we do keep `path` which describes where it was thrown.
+    delete err.locations;
+    // `message` & `extensions.codes` should provide the info that should be
+    // programmatically accessed.
+    // This stacktrace is really just for DX. It contains absolute paths,
+    // so IDEs can jump straight to src, but this makes it unstable for a snapshot.
+    // Removing for this reason, and also because it really shouldn't be
+    // programmatically inspected.
+    delete err.extensions.stacktrace;
+
+    return printer(err, config, indentation, depth, refs);
+  },
+});
 
 /**
  * An error class consuming the JSON formatted GraphQL error.
