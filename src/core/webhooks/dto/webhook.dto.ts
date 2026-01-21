@@ -43,7 +43,7 @@ export class Webhook {
       This describes what will be POSTed to the given url.
     `,
   })
-  document: string;
+  subscription: string;
 
   @Field(() => GraphQLJSONObject, {
     nullable: true,
