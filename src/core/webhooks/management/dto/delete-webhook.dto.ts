@@ -1,11 +1,18 @@
 import { ArgsType, Field, ObjectType } from '@nestjs/graphql';
-import { OptionalField, PartialType, PickType } from '~/common';
+import { type ID, IdField, NameField, OptionalField } from '~/common';
 import { Webhook } from '../../dto';
 
 @ArgsType()
-export class DeleteWebhookArgs extends PartialType(
-  PickType(Webhook, ['id', 'key', 'name']),
-) {
+export class DeleteWebhookArgs {
+  @IdField({ optional: true })
+  id?: ID<'Webhook'>;
+
+  @IdField({ optional: true })
+  key?: ID<'Webhook'>;
+
+  @NameField({ optional: true })
+  name?: string;
+
   @OptionalField(() => Boolean, {
     description: 'Delete all webhooks for the requesting user',
   })
