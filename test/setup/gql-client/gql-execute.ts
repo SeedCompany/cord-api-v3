@@ -1,7 +1,7 @@
 import { type TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/core';
 import { expect } from '@jest/globals';
 import { asNonEmptyArray } from '@seedcompany/common';
-import got, { type PromiseCookieJar, type StrictOptions } from 'got';
+import { type Got, type PromiseCookieJar } from 'got';
 import { print } from 'graphql';
 import type { HasRequiredKeys } from 'type-fest';
 import { type ExecutionResult, GqlError, GqlResult } from './gql-result';
@@ -22,15 +22,14 @@ type VarsArg<Vars extends AnyObject> =
       ? [variables: Vars]
       : [variables?: Vars];
 
-export const createExecute = (options: StrictOptions): GqlExecute => {
+export const createExecute = (http: Got): GqlExecute => {
   const execute = <Input extends AnyObject, Output extends AnyObject>(
     doc: DocumentNode<Output, Input>,
     variables?: Input,
   ) => {
     const query = print(doc);
-    const result = got
+    const result = http
       .post({
-        ...options,
         throwHttpErrors: false,
         json: {
           query,

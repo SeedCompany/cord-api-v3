@@ -8,14 +8,9 @@ import {
   expect,
   it,
 } from '@jest/globals';
-import got from 'got';
+import type { DurationIn } from '@seedcompany/common/temporal/luxon';
 import { startCase, times } from 'lodash';
-import {
-  DateTime,
-  Duration,
-  type DurationObjectUnits as DurationObject,
-  Settings,
-} from 'luxon';
+import { DateTime, Duration, Settings } from 'luxon';
 import { type ID, Role } from '~/common';
 import { DatabaseService } from '~/core/database';
 import { graphql } from '~/graphql';
@@ -25,49 +20,51 @@ import {
   FileNodeType,
   type FileUploadRequested,
 } from '../src/components/file/dto';
+import { createDirectory, createRootDirectory } from './operations/directory';
 import {
   createFileVersion,
-  createSession,
-  createTestApp,
-  errors,
   type FakeFile,
-  type fragments,
   generateFakeFile,
   getFileNode,
   getFileNodeChildren,
-  registerUser,
   requestFileUpload,
-  runInIsolatedSession,
-  type TestApp,
-  type TestUser,
   uploadFileContents,
-} from './utility';
+} from './operations/file';
 import {
-  createDirectory,
-  createRootDirectory,
-} from './utility/create-directory';
+  createApp,
+  createTesterWithRole,
+  getRootTester,
+  type IdentifiedTester,
+  type TestApp,
+  type Tester,
+} from './setup';
+import { errors, type fragments } from './utility';
 
-export async function uploadFile(
-  app: TestApp,
-  parent: ID,
-  input: Partial<FakeFile> = {},
-  uploadRequest?: FileUploadRequested,
-) {
-  const { id, url } = uploadRequest ?? (await requestFileUpload(app));
+export const uploadFile =
+  (
+    parent: ID,
+    input: Partial<FakeFile> = {},
+    uploadRequest?: FileUploadRequested,
+  ) =>
+  async (tester: Tester) => {
+    const { id, url } =
+      uploadRequest ?? (await tester.apply(requestFileUpload()));
 
-  const fakeFile = await uploadFileContents(app, url, input);
+    const fakeFile = await tester.apply(uploadFileContents(url, input));
 
-  const fileNode = await createFileVersion(app, {
-    upload: id,
-    parent,
-    name: fakeFile.name,
-  });
+    const fileNode = await tester.apply(
+      createFileVersion({
+        upload: id,
+        parent,
+        name: fakeFile.name,
+      }),
+    );
 
-  return fileNode;
-}
+    return fileNode;
+  };
 
-async function deleteNode(app: TestApp, id: ID) {
-  await app.graphql.mutate(
+const deleteNode = (id: ID) => async (tester: Tester) => {
+  await tester.run(
     graphql(`
       mutation deleteFileNode($id: ID!) {
         deleteFileNode(id: $id) {
@@ -75,15 +72,13 @@ async function deleteNode(app: TestApp, id: ID) {
         }
       }
     `),
-    {
-      id,
-    },
+    { id },
   );
-}
+};
 
-async function expectNodeNotFound(app: TestApp, id: ID) {
-  await app.graphql
-    .query(
+const expectNodeNotFound = (id: ID) => async (tester: Tester) => {
+  await tester
+    .run(
       graphql(`
         query fileNode($id: ID!) {
           fileNode(id: $id) {
@@ -91,55 +86,41 @@ async function expectNodeNotFound(app: TestApp, id: ID) {
           }
         }
       `),
-      {
-        id,
-      },
+      { id },
     )
     .expectError(errors.notFound());
-}
+};
 
-function shiftNow(duration: DurationObject) {
-  Settings.now = () =>
-    Date.now() + Duration.fromObject(duration).as('milliseconds');
+function shiftNow(duration: DurationIn) {
+  Settings.now = () => Date.now() + Duration.from(duration).toMillis();
 }
 
 function resetNow() {
   Settings.now = () => Date.now();
 }
 
-const expectEqualContent = async (
-  app: TestApp,
-  url: string,
-  expected: FakeFile,
-) => {
-  const expectedContents = expected.content;
-  const actualContents = await got(url, {
-    headers: {
-      Authorization: `Bearer ${app.graphql.authToken}`,
-    },
-    enableUnixSockets: true,
-  }).buffer();
-  expect(expectedContents).toEqual(actualContents);
-};
+const expectEqualContent =
+  (url: string, expected: FakeFile) => async (tester: Tester) => {
+    const expectedContents = expected.content;
+    const actualContents = await tester.http.get(url).buffer();
+    expect(expectedContents).toEqual(actualContents);
+  };
 
 describe('File e2e', () => {
   let app: TestApp;
   let bucket: LocalBucket;
   let root: Directory;
-  let me: TestUser;
+  let me: IdentifiedTester;
 
   beforeAll(async () => {
-    app = await createTestApp();
+    app = await createApp();
     bucket = app.get(FileBucket);
-    await createSession(app);
-    me = await registerUser(app, {
-      roles: [Role.ProjectManager],
-    });
+    me = await createTesterWithRole(app, Role.ProjectManager);
   });
 
   beforeEach(async () => {
     await bucket.clear();
-    root = await createRootDirectory(app);
+    root = await (await getRootTester(app)).apply(createRootDirectory());
   });
 
   afterEach(resetNow);
@@ -147,8 +128,8 @@ describe('File e2e', () => {
   it('upload file and download', async () => {
     const fakeFile = generateFakeFile();
 
-    const created = await uploadFile(app, root.id, fakeFile);
-    const fetched = await getFileNode(app, created.id);
+    const created = await me.apply(uploadFile(root.id, fakeFile));
+    const fetched = await me.apply(getFileNode(created.id));
     if (fetched.__typename !== 'File') throw new Error();
     for (const file of [created, fetched]) {
       expect(file.id).toBeDefined();
@@ -156,24 +137,24 @@ describe('File e2e', () => {
       expect(file.type).toEqual(FileNodeType.File);
       expect(file.size).toEqual(fakeFile.size);
       expect(file.mimeType).toEqual(fakeFile.mimeType);
-      expect(file.createdBy.id).toEqual(me.id);
-      expect(file.modifiedBy.id).toEqual(me.id);
+      expect(file.createdBy.id).toEqual(me.identity.id);
+      expect(file.modifiedBy.id).toEqual(me.identity.id);
       const modifiedAt = DateTime.fromISO(file.modifiedAt);
       expect(modifiedAt.diffNow().as('seconds')).toBeGreaterThan(-30);
       const createdAt = DateTime.fromISO(file.createdAt);
       expect(createdAt.diffNow().as('seconds')).toBeGreaterThan(-30);
-      await expectEqualContent(app, file.url, fakeFile);
+      await me.apply(expectEqualContent(file.url, fakeFile));
       expect(file.parents[0]!.id).toEqual(root.id);
     }
   });
 
   it('get file version', async () => {
     const fakeFile = generateFakeFile();
-    const upload = await requestFileUpload(app);
-    const file = await uploadFile(app, root.id, fakeFile, upload);
+    const upload = await me.apply(requestFileUpload());
+    const file = await me.apply(uploadFile(root.id, fakeFile, upload));
 
     // Maybe get version from file.children when implemented
-    const version = await getFileNode(app, upload.id);
+    const version = await me.apply(getFileNode(upload.id));
     if (version.__typename !== 'FileVersion') throw new Error();
 
     expect(version.id).toBeDefined();
@@ -181,39 +162,40 @@ describe('File e2e', () => {
     expect(version.type).toEqual(FileNodeType.FileVersion);
     expect(version.size).toEqual(fakeFile.size);
     expect(version.mimeType).toEqual(fakeFile.mimeType);
-    expect(version.createdBy.id).toEqual(me.id);
+    expect(version.createdBy.id).toEqual(me.identity.id);
     const createdAt = DateTime.fromISO(version.createdAt);
     expect(createdAt.diffNow().as('seconds')).toBeGreaterThan(-30);
-    await expectEqualContent(app, file.url, fakeFile);
+    await me.apply(expectEqualContent(file.url, fakeFile));
     expect(version.parents[0]!.id).toEqual(file.id);
   });
 
   it('update file using file id', async () => {
-    const initial = await uploadFile(app, root.id);
+    const initial = await me.apply(uploadFile(root.id));
     shiftNow({ days: 2 });
 
-    await runInIsolatedSession(app, async () => {
-      // change user
-      const current = await registerUser(app);
+    // Create a new tester with a different user
+    const otherTester = await createTesterWithRole(
+      app,
+      me.identity.roles.value,
+    );
 
-      const fakeFile = generateFakeFile();
-      const updated = await uploadFile(app, initial.id, fakeFile);
-      await assertFileChanges(updated, initial, fakeFile);
-      expect(updated.modifiedBy.id).toEqual(current.id);
-      // TODO Files have their own names, should these be updated to match the new version's name?
-      // expect(updatedFile.name).not.toEqual(initialFile.name);
-    });
+    const fakeFile = generateFakeFile();
+    const updated = await otherTester.apply(uploadFile(initial.id, fakeFile));
+    await assertFileChanges(updated, initial, fakeFile);
+    expect(updated.modifiedBy.id).toEqual(otherTester.identity.id);
+    // TODO Files have their own names, should these be updated to match the new version's name?
+    // expect(updatedFile.name).not.toEqual(initialFile.name);
   });
 
   it.skip('update file using directory with same file name', async () => {
-    const initial = await uploadFile(app, root.id);
+    const initial = await me.apply(uploadFile(root.id));
     shiftNow({ days: 2 });
 
     const fakeFile = {
       ...generateFakeFile(),
       name: initial.name,
     };
-    const updated = await uploadFile(app, root.id, fakeFile);
+    const updated = await me.apply(uploadFile(root.id, fakeFile));
     await assertFileChanges(updated, initial, fakeFile);
   });
 
@@ -223,7 +205,7 @@ describe('File e2e', () => {
     input: FakeFile,
   ) {
     expect(updated.id).toEqual(initial.id);
-    await expectEqualContent(app, updated.url, input);
+    await me.apply(expectEqualContent(updated.url, input));
     expect(updated.size).toEqual(input.size);
     expect(updated.mimeType).toEqual(input.mimeType);
     const createdAt = DateTime.fromISO(updated.createdAt);
@@ -236,13 +218,13 @@ describe('File e2e', () => {
 
   it('create directory', async () => {
     const name = startCase(faker.lorem.words());
-    const created = await createDirectory(app, root.id, name);
-    const fetched = await getFileNode(app, created.id);
+    const created = await me.apply(createDirectory(root.id, name));
+    const fetched = await me.apply(getFileNode(created.id));
     for (const dir of [created, fetched]) {
       expect(dir.id).toBeDefined();
       expect(dir.type).toEqual(FileNodeType.Directory);
       expect(dir.name).toEqual(name);
-      expect(dir.createdBy.id).toEqual(me.id);
+      expect(dir.createdBy.id).toEqual(me.identity.id);
       const createdAt = DateTime.fromISO(dir.createdAt);
       expect(createdAt.diffNow().as('seconds')).toBeGreaterThan(-30);
       expect(dir.parents[0]!.id).toEqual(root.id);
@@ -250,37 +232,37 @@ describe('File e2e', () => {
   });
 
   it('list parents', async () => {
-    const a = await createDirectory(app, root.id);
-    const b = await createDirectory(app, a.id);
-    const upload = await requestFileUpload(app);
-    const c = await uploadFile(app, b.id, {}, upload);
+    const a = await me.apply(createDirectory(root.id));
+    const b = await me.apply(createDirectory(a.id));
+    const upload = await me.apply(requestFileUpload());
+    const c = await me.apply(uploadFile(b.id, {}, upload));
     // Maybe get version from file.children when implemented
-    const version = await getFileNode(app, upload.id);
+    const version = await me.apply(getFileNode(upload.id));
     const { parents } = version;
 
     expect(parents.map((n) => n.id)).toEqual([c.id, b.id, a.id, root.id]);
   });
 
   it.skip('delete file', async () => {
-    const { id } = await uploadFile(app, root.id);
-    await deleteNode(app, id);
-    await expectNodeNotFound(app, id);
+    const { id } = await me.apply(uploadFile(root.id));
+    await me.apply(deleteNode(id));
+    await me.apply(expectNodeNotFound(id));
   });
 
   it.skip('delete directory', async () => {
-    const { id } = await createDirectory(app, root.id);
-    await deleteNode(app, id);
-    await expectNodeNotFound(app, id);
+    const { id } = await me.apply(createDirectory(root.id));
+    await me.apply(deleteNode(id));
+    await me.apply(expectNodeNotFound(id));
   });
 
   it.skip('delete version', async () => {
-    const upload = await requestFileUpload(app);
-    const file = await uploadFile(app, root.id, {}, upload);
+    const upload = await me.apply(requestFileUpload());
+    const file = await me.apply(uploadFile(root.id, {}, upload));
     // Maybe get version from file.children when implemented
-    const version = await getFileNode(app, upload.id);
-    await deleteNode(app, version.id);
-    await expectNodeNotFound(app, version.id);
-    await expectNodeNotFound(app, file.id);
+    const version = await me.apply(getFileNode(upload.id));
+    await me.apply(deleteNode(version.id));
+    await me.apply(expectNodeNotFound(version.id));
+    await me.apply(expectNodeNotFound(file.id));
   });
 
   describe('directory children', () => {
@@ -292,37 +274,41 @@ describe('File e2e', () => {
     let expectedTotalVideos: number;
     beforeEach(async () => {
       // Isolated directory to test in
-      dir = await createDirectory(app, root.id);
+      dir = await me.apply(createDirectory(root.id));
       // create a bunch of files
       expectedTotalFiles = 10;
       const files = await Promise.all(
         times(expectedTotalFiles).map(() =>
-          uploadFile(app, dir.id, {
-            mimeType: 'font/woff',
-          }),
+          me.apply(
+            uploadFile(dir.id, {
+              mimeType: 'font/woff',
+            }),
+          ),
         ),
       );
 
       expectedTotalVideos = 4;
       const videos = await Promise.all(
         times(expectedTotalVideos).map(() =>
-          uploadFile(app, dir.id, {
-            mimeType: 'video/mp4',
-          }),
+          me.apply(
+            uploadFile(dir.id, {
+              mimeType: 'video/mp4',
+            }),
+          ),
         ),
       );
       expectedTotalFiles += expectedTotalVideos;
 
       expectedTotalDirs = 3;
       const dirs = await Promise.all(
-        times(expectedTotalDirs).map(() => createDirectory(app, dir.id)),
+        times(expectedTotalDirs).map(() => me.apply(createDirectory(dir.id))),
       );
       expectedTotalChildren = expectedTotalFiles + expectedTotalDirs;
       expectedChildren = [...files, ...videos, ...dirs];
     });
 
     it('full list', async () => {
-      const children = await getFileNodeChildren(app, dir.id);
+      const children = await me.apply(getFileNodeChildren(dir.id));
       expect(children.total).toEqual(expectedTotalChildren);
       expect(children.hasMore).toBeFalsy();
       expect(children.items.length).toEqual(expectedTotalChildren);
@@ -335,18 +321,22 @@ describe('File e2e', () => {
       // Divide evenly between 3 pages
       const count = Math.ceil(expectedTotalChildren / 3);
 
-      const firstPage = await getFileNodeChildren(app, dir.id, {
-        count,
-        page: 1,
-      });
+      const firstPage = await me.apply(
+        getFileNodeChildren(dir.id, {
+          count,
+          page: 1,
+        }),
+      );
       expect(firstPage.total).toEqual(expectedTotalChildren);
       expect(firstPage.hasMore).toBeTruthy();
       expect(firstPage.items.length).toEqual(count); // complete page
 
-      const nextPage = await getFileNodeChildren(app, dir.id, {
-        count,
-        page: 2,
-      });
+      const nextPage = await me.apply(
+        getFileNodeChildren(dir.id, {
+          count,
+          page: 2,
+        }),
+      );
       expect(nextPage.total).toEqual(expectedTotalChildren);
       expect(nextPage.hasMore).toBeTruthy();
       expect(nextPage.items.length).toEqual(count); // complete page
@@ -354,10 +344,12 @@ describe('File e2e', () => {
         expect.arrayContaining(firstPage.items.map((n) => n.id)),
       );
 
-      const lastPage = await getFileNodeChildren(app, dir.id, {
-        count,
-        page: 3,
-      });
+      const lastPage = await me.apply(
+        getFileNodeChildren(dir.id, {
+          count,
+          page: 3,
+        }),
+      );
       expect(lastPage.total).toEqual(expectedTotalChildren);
       expect(lastPage.hasMore).toBeFalsy();
       expect(lastPage.items.length).toEqual(expectedTotalChildren - count * 2); // partial page
@@ -369,11 +361,13 @@ describe('File e2e', () => {
     });
 
     it('filter files', async () => {
-      const children = await getFileNodeChildren(app, dir.id, {
-        filter: {
-          type: FileNodeType.File,
-        },
-      });
+      const children = await me.apply(
+        getFileNodeChildren(dir.id, {
+          filter: {
+            type: FileNodeType.File,
+          },
+        }),
+      );
       expect(children.total).toEqual(expectedTotalFiles);
       expect(children.hasMore).toBeFalsy();
       expect(children.items.length).toEqual(expectedTotalFiles);
@@ -383,11 +377,13 @@ describe('File e2e', () => {
     });
 
     it('filter directories', async () => {
-      const children = await getFileNodeChildren(app, dir.id, {
-        filter: {
-          type: FileNodeType.Directory,
-        },
-      });
+      const children = await me.apply(
+        getFileNodeChildren(dir.id, {
+          filter: {
+            type: FileNodeType.Directory,
+          },
+        }),
+      );
       expect(children.total).toEqual(expectedTotalDirs);
       expect(children.hasMore).toBeFalsy();
       expect(children.items.length).toEqual(expectedTotalDirs);
@@ -453,13 +449,13 @@ describe('File e2e', () => {
     });
 
     beforeEach(async () => {
-      const uploadRequest = await requestFileUpload(app);
-      file = await uploadFile(app, root.id, {}, uploadRequest);
+      const uploadRequest = await me.apply(requestFileUpload());
+      file = await me.apply(uploadFile(root.id, {}, uploadRequest));
       // create a bunch of versions
       const extraVersions = 2;
       for (const _ of times(extraVersions)) {
-        const upload = await requestFileUpload(app);
-        await uploadFile(app, file.id, {}, upload);
+        const upload = await me.apply(requestFileUpload());
+        await me.apply(uploadFile(file.id, {}, upload));
         expectedVersionIds.push(upload.id);
       }
 
@@ -468,7 +464,7 @@ describe('File e2e', () => {
     });
 
     it('full list', async () => {
-      const children = await getFileNodeChildren(app, file.id);
+      const children = await me.apply(getFileNodeChildren(file.id));
       expect(children.total).toEqual(expectedTotalVersions);
       expect(children.hasMore).toBeFalsy();
       expect(children.items.length).toEqual(expectedTotalVersions);

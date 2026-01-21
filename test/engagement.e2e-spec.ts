@@ -10,6 +10,7 @@ import {
 } from '../src/components/engagement/dto';
 import { ProductMethodology } from '../src/components/product/dto';
 import { ProjectStep, ProjectType } from '../src/components/project/dto';
+import { requestFileUpload, uploadFileContents } from './operations/file';
 import {
   createDirectProduct,
   createFundingAccount,
@@ -26,11 +27,9 @@ import {
   fragments,
   getUserFromSession,
   registerUser,
-  requestFileUpload,
   runAsAdmin,
   type TestApp,
   type TestUser,
-  uploadFileContents,
 } from './utility';
 import {
   changeInternshipEngagementStatus,
@@ -200,8 +199,8 @@ describe('Engagement e2e', () => {
 
   it('reads a language engagement by id', async () => {
     project = await createProject(app);
-    const upload = await requestFileUpload(app);
-    const fakeFile = await uploadFileContents(app, upload.url);
+    const upload = await app.tester.apply(requestFileUpload());
+    const fakeFile = await app.tester.apply(uploadFileContents(upload.url));
 
     const languageEngagement = await createLanguageEngagement(app, {
       language: language.id,
@@ -251,8 +250,8 @@ describe('Engagement e2e', () => {
   });
 
   it('reads an internship engagement by id', async () => {
-    const upload = await requestFileUpload(app);
-    const fakeFile = await uploadFileContents(app, upload.url);
+    const upload = await app.tester.apply(requestFileUpload());
+    const fakeFile = await app.tester.apply(uploadFileContents(upload.url));
     internshipProject = await createProject(app, {
       type: ProjectType.Internship,
     });

@@ -1,11 +1,10 @@
 import { faker } from '@faker-js/faker';
-import got from 'got';
 import { type SetOptional } from 'type-fest';
 import { type ID } from '~/common';
 import { graphql, type InputOf } from '~/graphql';
 import { mimeTypes } from '../../src/components/file/mimeTypes';
-import { type TestApp } from './create-app';
-import * as fragments from './fragments';
+import type { Tester } from '../setup';
+import { fragments } from '../utility';
 
 export const generateFakeFile = () => {
   const content = Buffer.from(
@@ -22,10 +21,10 @@ export const generateFakeFile = () => {
 
 export type FakeFile = ReturnType<typeof generateFakeFile>;
 
-export async function requestFileUpload(app: TestApp) {
-  const res = await app.graphql.mutate(RequestFileUploadDoc);
+export const requestFileUpload = () => async (tester: Tester) => {
+  const res = await tester.run(RequestFileUploadDoc);
   return res.requestFileUpload;
-}
+};
 const RequestFileUploadDoc = graphql(`
   mutation RequestFileUpload {
     requestFileUpload {
@@ -35,46 +34,42 @@ const RequestFileUploadDoc = graphql(`
   }
 `);
 
-// fake file upload, this would normally be a direct POST to S3 from the client
-export const uploadFileContents = async (
-  app: TestApp,
-  url: string,
-  input: Partial<FakeFile> = {},
-) => {
-  const completeInput = {
-    ...generateFakeFile(),
-    ...input,
-  };
-  const { content, mimeType } = completeInput;
-
-  await got.put(url, {
-    headers: {
-      'Content-Type': mimeType,
-    },
-    body: content,
-    enableUnixSockets: true,
-  });
-
-  return completeInput;
-};
-
-export async function createFileVersion(
-  app: TestApp,
-  input: SetOptional<InputOf<typeof CreateFileVersionDoc>, 'name'>,
-) {
-  const result = await app.graphql.mutate(CreateFileVersionDoc, {
-    input: {
+export const uploadFileContents =
+  (url: string, input: Partial<FakeFile> = {}) =>
+  async (tester: Tester) => {
+    const completeInput = {
+      ...generateFakeFile(),
       ...input,
-      upload: input.upload,
-      parent: input.parent,
-      name: input.name ?? faker.system.fileName(),
-    },
-  });
+    };
+    const { content, mimeType } = completeInput;
 
-  const actual = result.createFileVersion;
+    await tester.http.put(url, {
+      headers: {
+        'Content-Type': mimeType,
+      },
+      body: content,
+    });
 
-  return actual;
-}
+    return completeInput;
+  };
+
+export const createFileVersion =
+  (input: SetOptional<InputOf<typeof CreateFileVersionDoc>, 'name'>) =>
+  async (tester: Tester) => {
+    const result = await tester.run(CreateFileVersionDoc, {
+      input: {
+        ...input,
+        upload: input.upload,
+        parent: input.parent,
+        name: input.name ?? faker.system.fileName(),
+      },
+    });
+
+    const actual = result.createFileVersion;
+
+    return actual;
+  };
+
 const CreateFileVersionDoc = graphql(
   `
     mutation createFileVersion($input: CreateFileVersion!) {
@@ -86,10 +81,11 @@ const CreateFileVersionDoc = graphql(
   [fragments.fileNode],
 );
 
-export async function getFileNode(app: TestApp, id: ID) {
-  const { fileNode } = await app.graphql.query(GetFileNodeDoc, { id });
+export const getFileNode = (id: ID) => async (tester: Tester) => {
+  const { fileNode } = await tester.run(GetFileNodeDoc, { id });
   return fileNode;
-}
+};
+
 const GetFileNodeDoc = graphql(
   `
     query getFileNode($id: ID!) {
@@ -101,21 +97,20 @@ const GetFileNodeDoc = graphql(
   [fragments.fileNode],
 );
 
-export async function getFileNodeChildren(
-  app: TestApp,
-  id: ID,
-  input?: InputOf<typeof GetFileNodeChildrenDoc>,
-) {
-  const result = await app.graphql.query(GetFileNodeChildrenDoc, {
-    id,
-    input,
-  });
-  if (result.fileNode.__typename === 'FileVersion') throw new Error();
+export const getFileNodeChildren =
+  (id: ID, input?: InputOf<typeof GetFileNodeChildrenDoc>) =>
+  async (tester: Tester) => {
+    const result = await tester.run(GetFileNodeChildrenDoc, {
+      id,
+      input,
+    });
+    if (result.fileNode.__typename === 'FileVersion') throw new Error();
 
-  const actual = result.fileNode.children;
+    const actual = result.fileNode.children;
 
-  return actual;
-}
+    return actual;
+  };
+
 const GetFileNodeChildrenDoc = graphql(
   `
     query getFileNodeChildren($id: ID!, $input: FileListInput) {
