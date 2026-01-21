@@ -4,7 +4,7 @@ import * as FA from './financial-analyst.policy';
 // NOTE: There could be other permissions for this role from other policies
 @Policy([Role.LeadFinancialAnalyst, Role.Controller], (r) => [
   r.Budget.edit,
-  r.BudgetRecord.edit,
+  r.BudgetRecord.edit.specifically((p) => [p.preApprovedAmount.read]),
   r.Engagement.specifically(
     (p) =>
       p.many(

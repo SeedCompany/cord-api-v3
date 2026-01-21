@@ -38,6 +38,12 @@ export abstract class UpdateBudgetRecord {
   @Field(() => Float, { nullable: true })
   readonly amount: number | null;
 
+  @Field(() => Float, { nullable: true })
+  readonly preApprovedAmount?: number | null;
+
+  @Field(() => Float, { nullable: true })
+  readonly initialAmount?: number | null;
+
   @ChangesetIdField()
   readonly changeset?: ID;
 }

@@ -50,6 +50,8 @@ export class BudgetRecordRepository extends DtoRepository<
           initialProps: {
             fiscalYear: input.fiscalYear,
             amount: null,
+            initialAmount: null,
+            preApprovedAmount: null,
           },
         }),
       )
@@ -73,7 +75,7 @@ export class BudgetRecordRepository extends DtoRepository<
   }
 
   async update(
-    existing: BudgetRecord,
+    existing: UnsecuredDto<BudgetRecord>,
     changes: ChangesOf<Budget, UpdateBudgetRecord>,
     changeset?: ID,
   ) {
