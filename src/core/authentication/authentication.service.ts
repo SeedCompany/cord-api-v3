@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import {
   AuthenticationException,
-  DuplicateException,
   type ID,
   InputException,
   ServerException,
@@ -13,7 +12,13 @@ import { ILogger, Logger } from '~/core/logger';
 import { disableAccessPolicies, Gel } from '../gel';
 import { AuthenticationRepository } from './authentication.repository';
 import { CryptoService } from './crypto.service';
-import type { LoginInput, RegisterInput, ResetPasswordInput } from './dto';
+import {
+  type ChangePassword,
+  type LoginInput,
+  type RegisterUser,
+  type RequestPasswordReset,
+  type ResetPassword,
+} from './dto';
 import { ForgotPassword } from './emails/forgot-password.email';
 import { JwtService } from './jwt.service';
 import { SessionHost } from './session/session.host';
@@ -36,7 +41,7 @@ export class AuthenticationService {
     private readonly moduleRef: ModuleRef,
   ) {}
 
-  async register({ password, ...input }: RegisterInput): Promise<ID> {
+  async register({ password, ...input }: RegisterUser): Promise<ID> {
     const session = this.sessionHost.currentIfInCtx;
 
     // ensure no other tokens are associated with this user
@@ -44,21 +49,12 @@ export class AuthenticationService {
       await this.logout(session.token, false);
     }
 
-    let userId;
-    try {
-      const userMod = await import('../../components/user');
-      const users = this.moduleRef.get(userMod.UserService, { strict: false });
-      userId = await this.gel.usingOptions(
-        disableAccessPolicies,
-        async () => await users.create(input),
-      );
-    } catch (e) {
-      // remap field prop as `email` field is at a different location in register() than createPerson()
-      if (e instanceof DuplicateException && e.field === 'person.email') {
-        throw e.withField('email');
-      }
-      throw e;
-    }
+    const userMod = await import('../../components/user');
+    const users = this.moduleRef.get(userMod.UserService, { strict: false });
+    const userId = await this.gel.usingOptions(
+      disableAccessPolicies,
+      async () => await users.create(input),
+    );
 
     const passwordHash = await this.crypto.hash(password);
     await this.repo.savePasswordHashOnUser(userId, passwordHash);
@@ -106,10 +102,10 @@ export class AuthenticationService {
     await this.repo.deactivateAllSessions(user);
   }
 
-  async changePassword(
-    oldPassword: string,
-    newPassword: string,
-  ): Promise<void> {
+  async changePassword({
+    oldPassword,
+    newPassword,
+  }: ChangePassword): Promise<void> {
     if (!oldPassword)
       throw new InputException('Old Password Required', 'oldPassword');
 
@@ -125,7 +121,7 @@ export class AuthenticationService {
     await this.repo.deactivateAllOtherSessions(this.sessionHost.current);
   }
 
-  async forgotPassword(email: string): Promise<void> {
+  async forgotPassword({ email }: RequestPasswordReset): Promise<void> {
     const exists = await this.repo.doesEmailAddressExist(email);
     if (!exists) {
       this.logger.warning('Email not found; Skipping reset email', { email });
@@ -138,7 +134,7 @@ export class AuthenticationService {
     await this.mailer.compose(email, [ForgotPassword, { token }]).send();
   }
 
-  async resetPassword({ token, password }: ResetPasswordInput): Promise<void> {
+  async resetPassword({ token, password }: ResetPassword) {
     const emailToken = await this.repo.findEmailToken(token);
     if (!emailToken) {
       throw new InputException('Token is invalid', 'TokenInvalid');
@@ -150,12 +146,16 @@ export class AuthenticationService {
 
     const pash = await this.crypto.hash(password);
 
-    await this.repo.updatePasswordViaEmailToken(emailToken, pash);
+    const { user } = await this.repo.updatePasswordViaEmailToken(
+      emailToken,
+      pash,
+    );
     await this.repo.deactivateAllOtherSessionsByEmail(
       emailToken.email,
       this.sessionHost.current,
     );
     await this.repo.removeAllEmailTokensForEmail(emailToken.email);
+    return { user };
   }
 }
 

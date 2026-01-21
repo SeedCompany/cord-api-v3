@@ -15,7 +15,7 @@ import {
 import { IProject, type Project } from '../dto';
 import { ProjectService } from '../project.service';
 import {
-  type ExecuteProjectTransitionInput,
+  type ExecuteProjectTransition,
   ProjectWorkflowEvent as WorkflowEvent,
 } from './dto';
 import { ProjectTransitionedEvent } from './events/project-transitioned.event';
@@ -61,7 +61,7 @@ export class ProjectWorkflowService extends WorkflowService(
     );
   }
 
-  async executeTransition(input: ExecuteProjectTransitionInput) {
+  async executeTransition(input: ExecuteProjectTransition) {
     const { project: projectId, notes } = input;
 
     const previous = await this.projects.readOneUnsecured(projectId);

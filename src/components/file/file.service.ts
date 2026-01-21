@@ -29,8 +29,8 @@ import { ConfigService, IEventBus, ILogger, type LinkTo, Logger } from '~/core';
 import { TransactionHooks } from '~/core/database';
 import { FileBucket } from './bucket';
 import {
-  type CreateDefinedFileVersionInput,
-  type CreateFileVersionInput,
+  type CreateDefinedFileVersion,
+  type CreateFileVersion,
   type Directory,
   type Downloadable,
   type File,
@@ -39,13 +39,13 @@ import {
   type FileListOutput,
   type FileNode,
   FileNodeType,
+  type FileUploadRequested,
   FileVersion,
   isDirectory,
   isFile,
   isFileVersion,
-  type MoveFileInput,
-  type RenameFileInput,
-  type RequestUploadOutput,
+  type MoveFile,
+  type RenameFile,
 } from './dto';
 import { AfterFileUploadEvent } from './events/after-file-upload.event';
 import { FileUrlController as FileUrl } from './file-url.controller';
@@ -264,7 +264,7 @@ export class FileService {
     return await this.repo.createRootDirectory(...args);
   }
 
-  async requestUpload(): Promise<RequestUploadOutput> {
+  async requestUpload(): Promise<FileUploadRequested> {
     const id = await generateId();
     const url = await this.bucket.getSignedUrl(PutObject, {
       Key: `temp/${id}`,
@@ -283,23 +283,23 @@ export class FileService {
    * the existing file with the same name or create a new file if not found.
    */
   async createFileVersion(
-    input: CreateFileVersionInput,
+    input: CreateFileVersion,
   ): Promise<FileWithNewVersion> {
     const {
-      parentId,
+      parent,
       file: uploadingFile,
-      uploadId: uploadIdInput,
+      upload: uploadIdInput,
       mimeType: mimeTypeOverride,
       media,
     } = input;
     if (!uploadIdInput && !uploadingFile) {
-      throw new InputException('Upload ID is required', 'uploadId');
+      throw new InputException('Upload ID is required', 'upload');
     }
 
     const uploadId = uploadIdInput ?? (await generateId());
 
     const parentType = await this.validateParentNode(
-      parentId,
+      parent,
       (type) => type !== FileNodeType.FileVersion,
       'Only files and directories can be parents of a file version',
     );
@@ -346,7 +346,7 @@ export class FileService {
       existingUpload.status === 'rejected'
     ) {
       if (tempUpload.reason instanceof NotFoundException) {
-        throw new NotFoundException('Could not find upload', 'uploadId');
+        throw new NotFoundException('Could not find upload', 'upload');
       }
       throw new CreationFailed(FileVersion);
     } else if (
@@ -355,7 +355,7 @@ export class FileService {
     ) {
       throw new InputException(
         'Upload request has already been used',
-        'uploadId',
+        'upload',
       );
     } else if (
       tempUpload.status === 'rejected' &&
@@ -363,7 +363,7 @@ export class FileService {
     ) {
       try {
         await this.getFileNode(uploadId);
-        throw new InputException('Already uploaded', 'uploadId');
+        throw new InputException('Already uploaded', 'upload');
       } catch (e) {
         if (!(e instanceof NotFoundException)) {
           throw e;
@@ -373,8 +373,8 @@ export class FileService {
 
     const fileId =
       parentType === FileNodeType.File
-        ? parentId
-        : await this.getOrCreateFileByName(parentId, name);
+        ? parent
+        : await this.getOrCreateFileByName(parent, name);
     this.logger.debug('Creating file version', {
       parentId: fileId,
       fileName: name,
@@ -385,8 +385,8 @@ export class FileService {
       tempUpload.status === 'fulfilled'
         ? tempUpload.value
         : existingUpload.status === 'fulfilled'
-        ? existingUpload.value
-        : undefined;
+          ? existingUpload.value
+          : undefined;
 
     const mimeType =
       mimeTypeOverride ?? upload?.ContentType ?? 'application/octet-stream';
@@ -434,22 +434,19 @@ export class FileService {
   ) {
     const node = await this.repo.getBaseNode(id);
     if (!node) {
-      throw new NotFoundException('Could not find parent', 'parentId');
+      throw new NotFoundException('Could not find parent', 'parent');
     }
     const type = intersection(
       node.labels,
       Object.keys(FileNodeType),
     )[0] as FileNodeType;
     if (!isType(type)) {
-      throw new InputException(typeMismatchError, 'parentId');
+      throw new InputException(typeMismatchError, 'parent');
     }
     return type;
   }
 
-  private async resolveName(
-    name?: string,
-    input?: CreateDefinedFileVersionInput,
-  ) {
+  private async resolveName(name?: string, input?: CreateDefinedFileVersion) {
     if (name) {
       return sanitizeFilename(name);
     }
@@ -499,8 +496,7 @@ export class FileService {
     initialFileName: string | undefined,
     baseNodeId: ID,
     propertyName: string,
-    initialVersion?: CreateDefinedFileVersionInput,
-    field?: string,
+    initialVersion?: CreateDefinedFileVersion,
     isPublic?: boolean,
   ) {
     const name = await this.resolveName(initialFileName, initialVersion);
@@ -514,22 +510,20 @@ export class FileService {
     if (initialVersion) {
       try {
         await this.createFileVersion({
-          parentId: fileId,
+          parent: fileId,
           ...initialVersion,
           name: initialVersion.name ?? name,
         });
       } catch (e) {
-        if (e instanceof InputException && e.field === 'uploadId' && field) {
-          throw e.withField(field + '.uploadId');
+        if (e instanceof InputException && e.field === 'upload') {
+          throw e.withField(propertyName + '.upload');
         }
         throw e;
       }
     }
   }
 
-  async updateDefinedFile<
-    Input extends CreateDefinedFileVersionInput | undefined,
-  >(
+  async updateDefinedFile<Input extends CreateDefinedFileVersion | undefined>(
     file: Secured<FileId | LinkTo<'File'> | null>,
     field: string,
     input: Input,
@@ -549,32 +543,32 @@ export class FileService {
     const fileId = isIdLike(file.value) ? file.value : file.value.id;
     try {
       return await this.createFileVersion({
-        parentId: fileId,
+        parent: fileId,
         ...input,
       });
     } catch (e) {
-      if (e instanceof InputException && e.field === 'uploadId' && field) {
-        throw e.withField(field + '.uploadId');
+      if (e instanceof InputException && e.field === 'upload' && field) {
+        throw e.withField(field + '.upload');
       }
       throw e;
     }
   }
 
-  async rename(input: RenameFileInput): Promise<void> {
+  async rename(input: RenameFile): Promise<void> {
     const fileNode = await this.repo.getById(input.id);
     if (fileNode.name !== input.name) {
       await this.repo.rename(fileNode, input.name);
     }
   }
 
-  async move(input: MoveFileInput): Promise<FileNode> {
+  async move(input: MoveFile): Promise<FileNode> {
     const fileNode = await this.repo.getById(input.id);
 
     if (input.name) {
       await this.repo.rename(fileNode, input.name);
     }
 
-    await this.repo.move(input.id, input.parentId);
+    await this.repo.move(input.id, input.parent);
 
     return await this.getFileNode(input.id);
   }

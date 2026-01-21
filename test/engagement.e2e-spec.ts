@@ -1,4 +1,5 @@
 import { faker } from '@faker-js/faker';
+import { beforeAll, describe, expect, it } from '@jest/globals';
 import { some } from 'lodash';
 import { DateTime, Interval } from 'luxon';
 import { generateId, type ID, Role } from '~/common';
@@ -75,15 +76,11 @@ describe('Engagement e2e', () => {
     mentor = await getUserFromSession(app);
   });
 
-  afterAll(async () => {
-    await app.close();
-  });
-
   it('creates a language engagement', async () => {
     project = await createProject(app);
     const languageEngagement = await createLanguageEngagement(app, {
-      languageId: language.id,
-      projectId: project.id,
+      language: language.id,
+      project: project.id,
       status: EngagementStatus.InDevelopment,
     });
     expect(languageEngagement.modifiedAt).toBeDefined();
@@ -103,15 +100,13 @@ describe('Engagement e2e', () => {
   it('create a language engagement with only required fields', async () => {
     project = await createProject(app);
     const languageEngagement = {
-      languageId: language.id,
-      projectId: project.id,
+      language: language.id,
+      project: project.id,
     };
     const result = await app.graphql.mutate(
       graphql(
         `
-          mutation createLanguageEngagement(
-            $input: CreateLanguageEngagementInput!
-          ) {
+          mutation createLanguageEngagement($input: CreateLanguageEngagement!) {
             createLanguageEngagement(input: $input) {
               engagement {
                 ...languageEngagement
@@ -122,9 +117,7 @@ describe('Engagement e2e', () => {
         [fragments.languageEngagement],
       ),
       {
-        input: {
-          engagement: languageEngagement,
-        },
+        input: languageEngagement,
       },
     );
 
@@ -147,10 +140,10 @@ describe('Engagement e2e', () => {
       type: ProjectType.Internship,
     });
     const internEngagement = await createInternshipEngagement(app, {
-      projectId: internshipProject.id,
-      countryOfOriginId: location.id,
-      internId: intern.id,
-      mentorId: mentor.id,
+      project: internshipProject.id,
+      countryOfOrigin: location.id,
+      intern: intern.id,
+      mentor: mentor.id,
     });
 
     expect(internEngagement.id).toBeDefined();
@@ -175,7 +168,7 @@ describe('Engagement e2e', () => {
           mutation createInternshipEngagement(
             $input: CreateInternshipEngagement!
           ) {
-            createInternshipEngagement(input: { engagement: $input }) {
+            createInternshipEngagement(input: $input) {
               engagement {
                 ...internshipEngagement
               }
@@ -186,8 +179,8 @@ describe('Engagement e2e', () => {
       ),
       {
         input: {
-          projectId: internshipProject.id,
-          internId: user.id,
+          project: internshipProject.id,
+          intern: user.id,
         },
       },
     );
@@ -211,10 +204,10 @@ describe('Engagement e2e', () => {
     const fakeFile = await uploadFileContents(app, upload.url);
 
     const languageEngagement = await createLanguageEngagement(app, {
-      languageId: language.id,
-      projectId: project.id,
+      language: language.id,
+      project: project.id,
       pnp: {
-        uploadId: upload.id,
+        upload: upload.id,
         name: fakeFile.name,
       },
     });
@@ -265,12 +258,12 @@ describe('Engagement e2e', () => {
     });
 
     const internshipEngagement = await createInternshipEngagement(app, {
-      mentorId: mentor.id,
-      projectId: internshipProject.id,
-      countryOfOriginId: location.id,
-      internId: intern.id,
+      mentor: mentor.id,
+      project: internshipProject.id,
+      countryOfOrigin: location.id,
+      intern: intern.id,
       growthPlan: {
-        uploadId: upload.id,
+        upload: upload.id,
         name: fakeFile.name,
       },
     });
@@ -318,8 +311,8 @@ describe('Engagement e2e', () => {
   it('update language engagement', async () => {
     project = await createProject(app);
     const languageEngagement = await createLanguageEngagement(app, {
-      projectId: project.id,
-      languageId: language.id,
+      project: project.id,
+      language: language.id,
       status: EngagementStatus.InDevelopment,
     });
 
@@ -330,9 +323,7 @@ describe('Engagement e2e', () => {
     const result = await app.graphql.mutate(
       graphql(
         `
-          mutation updateLanguageEngagement(
-            $input: UpdateLanguageEngagementInput!
-          ) {
+          mutation updateLanguageEngagement($input: UpdateLanguageEngagement!) {
             updateLanguageEngagement(input: $input) {
               engagement {
                 ...languageEngagement
@@ -344,12 +335,10 @@ describe('Engagement e2e', () => {
       ),
       {
         input: {
-          engagement: {
-            id: languageEngagement.id,
-            firstScripture: updateFirstScripture,
-            lukePartnership: updateLukePartnership,
-            paratextRegistryId: updateParatextRegistryId,
-          },
+          id: languageEngagement.id,
+          firstScripture: updateFirstScripture,
+          lukePartnership: updateLukePartnership,
+          paratextRegistryId: updateParatextRegistryId,
         },
       },
     );
@@ -372,8 +361,8 @@ describe('Engagement e2e', () => {
     const mentor = await createPerson(app);
     const internshipEngagement =
       await createInternshipEngagementWithMinimumValues(app, {
-        projectId: internshipProject.id,
-        internId: intern.id,
+        project: internshipProject.id,
+        intern: intern.id,
       });
     const updatePosition = InternshipPosition.LanguageProgramManager;
     const updateMethodologies = [
@@ -385,7 +374,7 @@ describe('Engagement e2e', () => {
       graphql(
         `
           mutation updateInternshipEngagement(
-            $input: UpdateInternshipEngagementInput!
+            $input: UpdateInternshipEngagement!
           ) {
             updateInternshipEngagement(input: $input) {
               engagement {
@@ -399,13 +388,11 @@ describe('Engagement e2e', () => {
       ),
       {
         input: {
-          engagement: {
-            id: internshipEngagement.id,
-            mentorId: mentor.id,
-            countryOfOriginId: location.id,
-            position: updatePosition,
-            methodologies: updateMethodologies,
-          },
+          id: internshipEngagement.id,
+          mentor: mentor.id,
+          countryOfOrigin: location.id,
+          position: updatePosition,
+          methodologies: updateMethodologies,
         },
       },
     );
@@ -432,8 +419,8 @@ describe('Engagement e2e', () => {
   it.skip('deletes engagement', async () => {
     project = await createProject(app);
     const languageEngagement = await createLanguageEngagement(app, {
-      projectId: project.id,
-      languageId: language.id,
+      project: project.id,
+      language: language.id,
     });
 
     const result = await app.graphql.mutate(
@@ -474,15 +461,15 @@ describe('Engagement e2e', () => {
     project = await createProject(app);
     language = await runAsAdmin(app, createLanguage);
     const languageEngagement = await createLanguageEngagement(app, {
-      languageId: language.id,
-      projectId: project.id,
+      language: language.id,
+      project: project.id,
     });
 
     const product1 = await createDirectProduct(app, {
-      engagementId: languageEngagement.id,
+      engagement: languageEngagement.id,
     });
     const product2 = await createDirectProduct(app, {
-      engagementId: languageEngagement.id,
+      engagement: languageEngagement.id,
     });
     const result = await app.graphql.query(
       graphql(
@@ -521,8 +508,8 @@ describe('Engagement e2e', () => {
     language = await runAsAdmin(app, createLanguage);
 
     const languageEngagement = await createLanguageEngagement(app, {
-      languageId: language.id,
-      projectId: project.id,
+      language: language.id,
+      project: project.id,
     });
 
     const result = await app.graphql.query(
@@ -550,8 +537,8 @@ describe('Engagement e2e', () => {
     });
     language = await runAsAdmin(app, createLanguage);
     const languageEngagement = await createLanguageEngagement(app, {
-      languageId: language.id,
-      projectId: project.id,
+      language: language.id,
+      project: project.id,
     });
 
     const languageEngagementRead = await app.graphql.query(
@@ -576,7 +563,7 @@ describe('Engagement e2e', () => {
     const date = '2020-05-13';
     const result = await app.graphql.mutate(
       graphql(`
-        mutation updateCeremony($input: UpdateCeremonyInput!) {
+        mutation updateCeremony($input: UpdateCeremony!) {
           updateCeremony(input: $input) {
             ceremony {
               id
@@ -594,11 +581,9 @@ describe('Engagement e2e', () => {
       `),
       {
         input: {
-          ceremony: {
-            id: ceremony.id,
-            planned: true,
-            estimatedDate: date,
-          },
+          id: ceremony.id,
+          planned: true,
+          estimatedDate: date,
         },
       },
     );
@@ -613,10 +598,10 @@ describe('Engagement e2e', () => {
       type: ProjectType.Internship,
     });
     const ie = await createInternshipEngagement(app, {
-      projectId: internshipProject.id,
-      internId: intern.id,
-      mentorId: mentor.id,
-      countryOfOriginId: location.id,
+      project: internshipProject.id,
+      intern: intern.id,
+      mentor: mentor.id,
+      countryOfOrigin: location.id,
     });
 
     const internshipEngagementRead = await app.graphql.query(
@@ -641,7 +626,7 @@ describe('Engagement e2e', () => {
     const date = '2020-05-13';
     const result = await app.graphql.mutate(
       graphql(`
-        mutation updateCeremony($input: UpdateCeremonyInput!) {
+        mutation updateCeremony($input: UpdateCeremony!) {
           updateCeremony(input: $input) {
             ceremony {
               id
@@ -659,11 +644,9 @@ describe('Engagement e2e', () => {
       `),
       {
         input: {
-          ceremony: {
-            id: ceremony.id,
-            planned: true,
-            estimatedDate: date,
-          },
+          id: ceremony.id,
+          planned: true,
+          estimatedDate: date,
         },
       },
     );
@@ -673,66 +656,6 @@ describe('Engagement e2e', () => {
     await user.login();
   });
 
-  it.skip('delete ceremony upon engagement deletion', async () => {
-    project = await createProject(app);
-    language = await runAsAdmin(app, createLanguage);
-    const languageEngagement = await createLanguageEngagement(app, {
-      languageId: language.id,
-      projectId: project.id,
-    });
-
-    const languageEngagementRead = await app.graphql.query(
-      graphql(
-        `
-          query engagement($id: ID!) {
-            engagement(id: $id) {
-              ...engagement
-            }
-          }
-        `,
-        [fragments.engagement],
-      ),
-      {
-        id: languageEngagement.id,
-      },
-    );
-
-    expect(languageEngagementRead.engagement.ceremony.value?.id).toBeDefined();
-
-    const ceremonyId = languageEngagementRead.engagement.ceremony.value?.id;
-
-    await app.graphql.mutate(
-      graphql(`
-        mutation deleteEngagement($id: ID!) {
-          deleteEngagement(id: $id) {
-            __typename
-          }
-        }
-      `),
-      {
-        id: languageEngagement.id,
-      },
-    );
-
-    await app.graphql
-      .query(
-        graphql(
-          `
-            query ceremony($id: ID!) {
-              ceremony(id: $id) {
-                ...ceremony
-              }
-            }
-          `,
-          [fragments.ceremony],
-        ),
-        {
-          id: ceremonyId!,
-        },
-      )
-      .expectError(errors.notFound());
-  });
-
   it('lists both language engagements and internship engagements', async () => {
     project = await createProject(app);
     internshipProject = await createProject(app, {
@@ -740,14 +663,14 @@ describe('Engagement e2e', () => {
     });
 
     await createLanguageEngagement(app, {
-      languageId: language.id,
-      projectId: project.id,
+      language: language.id,
+      project: project.id,
     });
     await createInternshipEngagement(app, {
-      projectId: internshipProject.id,
-      countryOfOriginId: location.id,
-      internId: intern.id,
-      mentorId: mentor.id,
+      project: internshipProject.id,
+      countryOfOrigin: location.id,
+      intern: intern.id,
+      mentor: mentor.id,
     });
     const { engagements } = await app.graphql.query(
       graphql(`
@@ -789,10 +712,10 @@ describe('Engagement e2e', () => {
     const invalidId = await generateId();
     await expect(
       createInternshipEngagement(app, {
-        projectId: invalidId,
-        countryOfOriginId: location.id,
-        internId: intern.id,
-        mentorId: mentor.id,
+        project: invalidId,
+        countryOfOrigin: location.id,
+        intern: intern.id,
+        mentor: mentor.id,
       }),
     ).rejects.toThrowGqlError(
       errors.notFound({
@@ -801,10 +724,10 @@ describe('Engagement e2e', () => {
     );
     await expect(
       createInternshipEngagement(app, {
-        projectId: internshipProject.id,
-        countryOfOriginId: invalidId,
-        internId: intern.id,
-        mentorId: mentor.id,
+        project: internshipProject.id,
+        countryOfOrigin: invalidId,
+        intern: intern.id,
+        mentor: mentor.id,
       }),
     ).rejects.toThrowGqlError(
       errors.notFound({ message: 'Could not find country of origin' }),
@@ -816,10 +739,10 @@ describe('Engagement e2e', () => {
 
     await expect(
       createInternshipEngagement(app, {
-        projectId: internshipProject.id,
-        countryOfOriginId: location.id,
-        internId: invalidId,
-        mentorId: mentor.id,
+        project: internshipProject.id,
+        countryOfOrigin: location.id,
+        intern: invalidId,
+        mentor: mentor.id,
       }),
     ).rejects.toThrowGqlError(
       errors.notFound({ message: 'Could not find person' }),
@@ -831,10 +754,10 @@ describe('Engagement e2e', () => {
 
     await expect(
       createInternshipEngagement(app, {
-        projectId: internshipProject.id,
-        countryOfOriginId: location.id,
-        internId: intern.id,
-        mentorId: invalidId,
+        project: internshipProject.id,
+        countryOfOrigin: location.id,
+        intern: intern.id,
+        mentor: invalidId,
       }),
     ).rejects.toThrowGqlError(
       errors.notFound({ message: 'Could not find mentor' }),
@@ -845,8 +768,8 @@ describe('Engagement e2e', () => {
     const invalidId = await generateId();
     await expect(
       createLanguageEngagement(app, {
-        projectId: invalidId,
-        languageId: language.id,
+        project: invalidId,
+        language: language.id,
       }),
     ).rejects.toThrowGqlError(
       errors.notFound({
@@ -855,8 +778,8 @@ describe('Engagement e2e', () => {
     );
     await expect(
       createLanguageEngagement(app, {
-        projectId: project.id,
-        languageId: invalidId,
+        project: project.id,
+        language: invalidId,
       }),
     ).rejects.toThrowGqlError(
       errors.notFound({ message: 'Could not find language' }),
@@ -869,8 +792,8 @@ describe('Engagement e2e', () => {
     });
     // Create InternshipEngagement without methodologies
     const internshipEngagement = await createInternshipEngagement(app, {
-      projectId: internshipProject.id,
-      internId: intern.id,
+      project: internshipProject.id,
+      intern: intern.id,
       methodologies: [],
     });
 
@@ -901,13 +824,13 @@ describe('Engagement e2e', () => {
     project = await createProject(app);
     await expect(
       createInternshipEngagement(app, {
-        projectId: project.id,
+        project: project.id,
       }),
     ).rejects.toThrowGqlError(
       errors.input({
         message:
           'Only Internship Engagements can be created on Internship Projects',
-        field: 'engagement.internId',
+        field: 'intern',
       }),
     );
   });
@@ -917,19 +840,19 @@ describe('Engagement e2e', () => {
     const language = await runAsAdmin(app, createLanguage);
 
     await createLanguageEngagement(app, {
-      projectId: project.id,
-      languageId: language.id,
+      project: project.id,
+      language: language.id,
     });
 
     await expect(
       createLanguageEngagement(app, {
-        projectId: project.id,
-        languageId: language.id,
+        project: project.id,
+        language: language.id,
       }),
     ).rejects.toThrowGqlError(
       errors.duplicate({
         message: 'Engagement for this project and language already exists',
-        field: 'engagement.languageId',
+        field: 'language',
       }),
     );
   });
@@ -941,19 +864,19 @@ describe('Engagement e2e', () => {
     const intern = await createPerson(app);
 
     await createInternshipEngagement(app, {
-      projectId: project.id,
-      internId: intern.id,
+      project: project.id,
+      intern: intern.id,
     });
 
     await expect(
       createInternshipEngagement(app, {
-        projectId: project.id,
-        internId: intern.id,
+        project: project.id,
+        intern: intern.id,
       }),
     ).rejects.toThrowGqlError(
       errors.duplicate({
         message: 'Engagement for this project and person already exists',
-        field: 'engagement.internId',
+        field: 'intern',
       }),
     );
   });
@@ -964,14 +887,14 @@ describe('Engagement e2e', () => {
     });
     await expect(
       createLanguageEngagement(app, {
-        languageId: language.id,
+        language: language.id,
         firstScripture: true,
       }),
     ).rejects.toThrowGqlError(
       errors.input({
         message:
           'First scripture has already been marked as having been done externally',
-        field: 'languageEngagement.firstScripture',
+        field: 'firstScripture',
       }),
     );
   });
@@ -979,20 +902,20 @@ describe('Engagement e2e', () => {
   it('can not set firstScripture=true if it is not only engagement for the language that has firstScripture=true', async () => {
     language = await runAsAdmin(app, createLanguage);
     await createLanguageEngagement(app, {
-      languageId: language.id,
+      language: language.id,
       firstScripture: true,
     });
-    await createLanguageEngagement(app, { languageId: language.id });
+    await createLanguageEngagement(app, { language: language.id });
     await expect(
       createLanguageEngagement(app, {
-        languageId: language.id,
+        language: language.id,
         firstScripture: true,
       }),
     ).rejects.toThrowGqlError(
       errors.input({
         message:
           'Another engagement has already been marked as having done the first scripture',
-        field: 'languageEngagement.firstScripture',
+        field: 'firstScripture',
       }),
     );
   });
@@ -1001,16 +924,16 @@ describe('Engagement e2e', () => {
     const location = await runAsAdmin(app, async () => {
       const fundingAccount = await createFundingAccount(app);
       const location = await createLocation(app, {
-        fundingAccountId: fundingAccount.id,
+        fundingAccount: fundingAccount.id,
       });
       return location;
     });
 
     const project = await createProject(app, {
-      primaryLocationId: location.id,
+      primaryLocation: location.id,
     });
     await createLanguageEngagement(app, {
-      projectId: project.id,
+      project: project.id,
     });
 
     // Change the project & engagement to FinalizingCompletion
@@ -1019,7 +942,7 @@ describe('Engagement e2e', () => {
     // Add another engagement not FinalizingCompletion
     await runAsAdmin(app, async () => {
       await createLanguageEngagement(app, {
-        projectId: project.id,
+        project: project.id,
       });
     });
 
@@ -1085,15 +1008,15 @@ describe('Engagement e2e', () => {
       const location = await runAsAdmin(app, async () => {
         const fundingAccount = await createFundingAccount(app);
         const location = await createLocation(app, {
-          fundingAccountId: fundingAccount.id,
+          fundingAccount: fundingAccount.id,
         });
         return location;
       });
       const project = await createProject(app, {
-        primaryLocationId: location.id,
+        primaryLocation: location.id,
       });
       const engagement = await createLanguageEngagement(app, {
-        projectId: project.id,
+        project: project.id,
       });
       const {
         step: { transitions },
@@ -1141,16 +1064,16 @@ describe('Engagement e2e', () => {
     const location = await runAsAdmin(app, async () => {
       const fundingAccount = await createFundingAccount(app);
       const location = await createLocation(app, {
-        fundingAccountId: fundingAccount.id,
+        fundingAccount: fundingAccount.id,
       });
       return location;
     });
     const project = await createProject(app, {
       type: ProjectType.Internship,
-      primaryLocationId: location.id,
+      primaryLocation: location.id,
     });
     const engagement = await createInternshipEngagement(app, {
-      projectId: project.id,
+      project: project.id,
     });
     // Update Project and Engagement status to Active
     await runAsAdmin(app, async () => {
@@ -1175,16 +1098,16 @@ describe('Engagement e2e', () => {
     const location = await runAsAdmin(app, async () => {
       const fundingAccount = await createFundingAccount(app);
       const location = await createLocation(app, {
-        fundingAccountId: fundingAccount.id,
+        fundingAccount: fundingAccount.id,
       });
       return location;
     });
     const project = await createProject(app, {
       type: ProjectType.Internship,
-      primaryLocationId: location.id,
+      primaryLocation: location.id,
     });
     const engagement = await createInternshipEngagement(app, {
-      projectId: project.id,
+      project: project.id,
     });
     // Update Project status to Active
     await runAsAdmin(app, async () => {
@@ -1219,16 +1142,16 @@ describe('Engagement e2e', () => {
     const location = await runAsAdmin(app, async () => {
       const fundingAccount = await createFundingAccount(app);
       const location = await createLocation(app, {
-        fundingAccountId: fundingAccount.id,
+        fundingAccount: fundingAccount.id,
       });
       return location;
     });
     const project = await createProject(app, {
       type: ProjectType.Internship,
-      primaryLocationId: location.id,
+      primaryLocation: location.id,
     });
     const engagement = await createInternshipEngagement(app, {
-      projectId: project.id,
+      project: project.id,
     });
 
     // Update Project status to Active
@@ -1273,15 +1196,15 @@ describe('Engagement e2e', () => {
     const location = await runAsAdmin(app, async () => {
       const fundingAccount = await createFundingAccount(app);
       const location = await createLocation(app, {
-        fundingAccountId: fundingAccount.id,
+        fundingAccount: fundingAccount.id,
       });
       return location;
     });
     const project = await createProject(app, {
-      primaryLocationId: location.id,
+      primaryLocation: location.id,
     });
     const engagement = await createLanguageEngagement(app, {
-      projectId: project.id,
+      project: project.id,
     });
 
     await runAsAdmin(app, async () => {
@@ -1293,7 +1216,7 @@ describe('Engagement e2e', () => {
 
     await expect(
       createLanguageEngagement(app, {
-        projectId: project.id,
+        project: project.id,
       }),
     ).rejects.toThrowGqlError(
       errors.unauthorized({

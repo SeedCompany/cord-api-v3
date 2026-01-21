@@ -12,7 +12,7 @@ import {
   type ProgressReport,
   type ProgressReportStatus as Status,
 } from '../dto';
-import { type ExecuteProgressReportTransitionInput } from './dto/execute-progress-report-transition.input';
+import { type ExecuteProgressReportTransition } from './dto/execute-progress-report-transition.input';
 import { ProgressReportWorkflowEvent as WorkflowEvent } from './dto/workflow-event.dto';
 import { WorkflowUpdatedEvent } from './events/workflow-updated.event';
 import { ProgressReportWorkflowRepository } from './progress-report-workflow.repository';
@@ -62,7 +62,7 @@ export class ProgressReportWorkflowService {
     return this.privileges.for(WorkflowEvent).can('create');
   }
 
-  async executeTransition(input: ExecuteProgressReportTransitionInput) {
+  async executeTransition(input: ExecuteProgressReportTransition) {
     const { report: reportId, notes } = input;
 
     const currentStatus = await this.repo.currentStatus(reportId);
@@ -86,7 +86,7 @@ export class ProgressReportWorkflowService {
   }
 
   private validateExecutionInput(
-    input: ExecuteProgressReportTransitionInput,
+    input: ExecuteProgressReportTransition,
     currentStatus: Status,
   ) {
     const { transition: transitionId, status: overrideStatus } = input;

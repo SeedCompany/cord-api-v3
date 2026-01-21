@@ -1,6 +1,5 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import { Type } from 'class-transformer';
-import { IsNotEmpty, ValidateNested } from 'class-validator';
+import { IsNotEmpty } from 'class-validator';
 import { type ID, IdField } from '~/common';
 import { PostType } from './post-type.enum';
 import { Post } from './post.dto';
@@ -24,16 +23,8 @@ export abstract class UpdatePost {
   readonly body: string;
 }
 
-@InputType()
-export abstract class UpdatePostInput {
-  @Field()
-  @Type(() => UpdatePost)
-  @ValidateNested()
-  readonly post: UpdatePost;
-}
-
 @ObjectType()
-export abstract class UpdatePostOutput {
+export abstract class PostUpdated {
   @Field()
   readonly post: Post;
 }

@@ -1,39 +1,33 @@
 import { faker } from '@faker-js/faker';
+import { beforeAll, describe, expect, it } from '@jest/globals';
 import { times } from 'lodash';
-import { isValidId, Role } from '~/common';
+import { isValidId } from '~/common';
 import { graphql } from '~/graphql';
+import { createEducation } from './operations/education';
 import {
-  createEducation,
-  createSession,
-  createTestApp,
-  fragments,
-  registerUser,
-  type TestApp,
-} from './utility';
+  createApp,
+  createTesterWithRole,
+  type IdentifiedTester,
+} from './setup';
+import { fragments } from './utility';
 
 describe('Education e2e', () => {
-  let app: TestApp;
-  let user: fragments.user;
+  let user: IdentifiedTester;
 
   beforeAll(async () => {
-    app = await createTestApp();
-    await createSession(app);
-    user = await registerUser(app, { roles: [Role.FieldOperationsDirector] });
-  });
-
-  afterAll(async () => {
-    await app.close();
+    const app = await createApp();
+    user = await createTesterWithRole(app, 'FieldOperationsDirector');
   });
 
   it('create a education', async () => {
-    const education = await createEducation(app, { userId: user.id });
+    const education = await user.apply(createEducation());
     expect(education.id).toBeDefined();
   });
 
   it('read one education by id', async () => {
-    const education = await createEducation(app, { userId: user.id });
+    const education = await user.apply(createEducation());
 
-    const { education: actual } = await app.graphql.query(
+    const { education: actual } = await user.run(
       graphql(
         `
           query education($id: ID!) {
@@ -56,13 +50,13 @@ describe('Education e2e', () => {
 
   // UPDATE EDUCATION
   it('update education', async () => {
-    const education = await createEducation(app, { userId: user.id });
+    const education = await user.apply(createEducation());
     const newInstitution = faker.company.name();
 
-    const result = await app.graphql.mutate(
+    const result = await user.run(
       graphql(
         `
-          mutation updateEducation($input: UpdateEducationInput!) {
+          mutation updateEducation($input: UpdateEducation!) {
             updateEducation(input: $input) {
               education {
                 ...education
@@ -74,10 +68,8 @@ describe('Education e2e', () => {
       ),
       {
         input: {
-          education: {
-            id: education.id,
-            institution: newInstitution,
-          },
+          id: education.id,
+          institution: newInstitution,
         },
       },
     );
@@ -89,9 +81,9 @@ describe('Education e2e', () => {
 
   // DELETE EDUCATION
   it.skip('delete education', async () => {
-    const education = await createEducation(app, { userId: user.id });
+    const education = await user.apply(createEducation());
 
-    const result = await app.graphql.mutate(
+    const result = await user.run(
       graphql(`
         mutation deleteEducation($id: ID!) {
           deleteEducation(id: $id) {
@@ -112,10 +104,10 @@ describe('Education e2e', () => {
     // create 2 educations
     const numEducations = 2;
     await Promise.all(
-      times(numEducations).map(() => createEducation(app, { userId: user.id })),
+      times(numEducations).map(() => user.apply(createEducation())),
     );
 
-    const result = await app.graphql.query(
+    const result = await user.run(
       graphql(
         `
           query UserEducation($id: ID!) {
@@ -133,7 +125,7 @@ describe('Education e2e', () => {
         [fragments.education],
       ),
       {
-        id: user.id,
+        id: user.identity.id,
       },
     );
 

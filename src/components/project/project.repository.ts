@@ -177,11 +177,11 @@ export class ProjectRepository extends CommonRepository {
     const step = ProjectStep.EarlyConversations;
     const now = DateTime.local();
     const {
-      primaryLocationId,
-      fieldRegionId,
-      marketingLocationId,
-      marketingRegionOverrideId,
-      otherLocationIds,
+      primaryLocation,
+      fieldRegion,
+      marketingLocation,
+      marketingRegionOverride,
+      otherLocations,
       type,
       ...initialProps
     } = {
@@ -212,11 +212,11 @@ export class ProjectRepository extends CommonRepository {
       )
       .apply(
         createRelationships(IProject, 'out', {
-          fieldRegion: ['FieldRegion', fieldRegionId],
-          primaryLocation: ['Location', primaryLocationId],
-          otherLocations: ['Location', otherLocationIds],
-          marketingLocation: ['Location', marketingLocationId],
-          marketingRegionOverride: ['Location', marketingRegionOverrideId],
+          fieldRegion: ['FieldRegion', fieldRegion],
+          primaryLocation: ['Location', primaryLocation],
+          otherLocations: ['Location', otherLocations],
+          marketingLocation: ['Location', marketingLocation],
+          marketingRegionOverride: ['Location', marketingRegionOverride],
           owningOrganization: ['Organization', this.config.defaultOrg.id],
         }),
       )
@@ -228,7 +228,7 @@ export class ProjectRepository extends CommonRepository {
       if (e instanceof UniquenessError && e.label === 'ProjectName') {
         throw Object.assign(
           new DuplicateException(
-            'project.name',
+            'name',
             'Project with this name already exists',
           ),
           { value: e.value },
@@ -237,7 +237,7 @@ export class ProjectRepository extends CommonRepository {
       if (e instanceof UniquenessError && e.label === 'DepartmentId') {
         throw Object.assign(
           new DuplicateException(
-            'project.departmentId',
+            'departmentId',
             'Another Project with this Department ID already exists',
           ),
           { value: e.value },
@@ -256,10 +256,10 @@ export class ProjectRepository extends CommonRepository {
     changeset?: ID,
   ) {
     const {
-      primaryLocationId,
-      marketingLocationId,
-      marketingRegionOverrideId,
-      fieldRegionId,
+      primaryLocation,
+      marketingLocation,
+      marketingRegionOverride,
+      fieldRegion,
       ...simpleChanges
     } = changes;
 
@@ -277,7 +277,7 @@ export class ProjectRepository extends CommonRepository {
       if (e instanceof UniquenessError && e.label === 'DepartmentId') {
         throw Object.assign(
           new DuplicateException(
-            'project.departmentId',
+            'departmentId',
             'Another Project with this Department ID already exists',
           ),
           { value: e.value },
@@ -286,62 +286,60 @@ export class ProjectRepository extends CommonRepository {
       throw e;
     }
 
-    if (primaryLocationId !== undefined) {
+    if (primaryLocation !== undefined) {
       await this.updateRelation(
         'primaryLocation',
         'Location',
         existing.id,
-        primaryLocationId,
+        primaryLocation,
         type,
       );
       result = {
         ...result,
-        primaryLocation: primaryLocationId ? { id: primaryLocationId } : null,
+        primaryLocation: primaryLocation ? { id: primaryLocation } : null,
       };
     }
 
-    if (fieldRegionId !== undefined) {
+    if (fieldRegion !== undefined) {
       await this.updateRelation(
         'fieldRegion',
         'FieldRegion',
         existing.id,
-        fieldRegionId,
+        fieldRegion,
         type,
       );
       result = {
         ...result,
-        fieldRegion: fieldRegionId ? { id: fieldRegionId } : null,
+        fieldRegion: fieldRegion ? { id: fieldRegion } : null,
       };
     }
 
-    if (marketingLocationId !== undefined) {
+    if (marketingLocation !== undefined) {
       await this.updateRelation(
         'marketingLocation',
         'Location',
         existing.id,
-        marketingLocationId,
+        marketingLocation,
         type,
       );
       result = {
         ...result,
-        marketingLocation: marketingLocationId
-          ? { id: marketingLocationId }
-          : null,
+        marketingLocation: marketingLocation ? { id: marketingLocation } : null,
       };
     }
 
-    if (marketingRegionOverrideId !== undefined) {
+    if (marketingRegionOverride !== undefined) {
       await this.updateRelation(
         'marketingRegionOverride',
         'Location',
         existing.id,
-        marketingRegionOverrideId,
+        marketingRegionOverride,
         type,
       );
       result = {
         ...result,
-        marketingRegionOverride: marketingRegionOverrideId
-          ? { id: marketingRegionOverrideId }
+        marketingRegionOverride: marketingRegionOverride
+          ? { id: marketingRegionOverride }
           : null,
       };
     }

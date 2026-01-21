@@ -21,7 +21,7 @@ export class UnavailabilityGelRepository
   implements PublicOf<UnavailabilityRepository>
 {
   async create(input: CreateUnavailability) {
-    const user = e.cast(e.User, e.uuid(input.userId));
+    const user = e.cast(e.User, e.uuid(input.user));
     const inserted = e.insert(e.User.Unavailability, {
       description: input.description,
       dates: new Range(input.start, input.end),

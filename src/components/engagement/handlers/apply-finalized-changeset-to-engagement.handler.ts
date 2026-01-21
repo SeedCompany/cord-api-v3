@@ -14,9 +14,7 @@ import { EngagementService } from '../engagement.service';
 type SubscribedEvent = ChangesetFinalizingEvent;
 
 @EventsHandler(ChangesetFinalizingEvent)
-export class ApplyFinalizedChangesetToEngagement
-  implements IEventHandler<SubscribedEvent>
-{
+export class ApplyFinalizedChangesetToEngagement implements IEventHandler<SubscribedEvent> {
   constructor(
     private readonly db: DatabaseService,
     private readonly engagementService: EngagementService,

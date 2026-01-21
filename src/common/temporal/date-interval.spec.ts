@@ -1,33 +1,31 @@
+import { describe, expect, it } from '@jest/globals';
 import { differenceWith } from 'lodash';
 import { DateTime, Interval } from 'luxon';
 import { CalendarDate } from './calendar-date';
 import { DateInterval } from './date-interval';
 
-declare global {
-  // eslint-disable-next-line @typescript-eslint/no-namespace -- it's fine for module augmentation
-  namespace jest {
-    // eslint-disable-next-line @seedcompany/no-unused-vars,@typescript-eslint/ban-types
-    interface Matchers<R, T = {}> {
-      toBeDateInterval: (expected: DateInterval) => R;
-      toBeDateIntervals: (expected: DateInterval[]) => R;
-    }
-  }
+declare module 'expect' {
+  // eslint-disable-next-line @typescript-eslint/no-empty-interface
+  interface Matchers<R> extends CustomMatchers<R> {}
+  // eslint-disable-next-line @typescript-eslint/no-empty-interface
+  interface AsymmetricMatchers extends CustomMatchers<unknown> {}
+}
+interface CustomMatchers<R> {
+  toBeDateIntervals: (expected: DateInterval[]) => R;
 }
 
+const isDateIntervalEqual = (a: unknown, b: unknown) => {
+  const isADateInterval = DateInterval.isInterval(a);
+  const isBDateInterval = DateInterval.isInterval(b);
+  return isADateInterval && isBDateInterval
+    ? a.equals(b)
+    : isADateInterval === isBDateInterval
+      ? undefined
+      : false;
+};
+expect.addEqualityTesters([isDateIntervalEqual]);
+
 expect.extend({
-  toBeDateInterval(received: DateInterval, expected: DateInterval) {
-    const pass = received.equals(expected);
-    const message = () =>
-      `${this.utils.matcherHint('toBeDateInterval', undefined, undefined, {
-        isNot: this.isNot,
-        promise: this.promise,
-      })}\n\nExpected:${this.isNot ? ' not' : ''} ${this.utils.EXPECTED_COLOR(
-        expected.toString(),
-      )}\nReceived:${this.isNot ? '    ' : ''} ${this.utils.RECEIVED_COLOR(
-        received.toString(),
-      )}`;
-    return { pass, message };
-  },
   toBeDateIntervals(received: DateInterval[], expected: DateInterval[]) {
     const diEqual = (a: DateInterval, b: DateInterval) => a.equals(b);
     const pass =
@@ -76,7 +74,7 @@ describe('DateInterval', () => {
     expectInstances(interval);
     expect(interval.toISO()).toBe(iso);
     expect(interval.toISODate()).toBe(iso);
-    expect(() => interval.toISOTime()).toThrowError();
+    expect(() => interval.toISOTime()).toThrow();
   });
   it('toString', () => {
     const interval = DateInterval.fromISO('2020-03-04/2021-05-22');
@@ -169,25 +167,25 @@ describe('DateInterval', () => {
     expect(days(5, 8).isAfter(day(8))).toBeFalsy();
   });
   it('union', () => {
-    expect(days(5, 8).union(days(10, 11))).toBeDateInterval(days(5, 11));
-    expect(days(5, 8).union(days(2, 4))).toBeDateInterval(days(2, 8));
-    expect(days(5, 8).union(days(7, 10))).toBeDateInterval(days(5, 10));
-    expect(days(5, 8).union(days(4, 6))).toBeDateInterval(days(4, 8));
-    expect(days(5, 8).union(days(6, 7))).toBeDateInterval(days(5, 8));
-    expect(days(5, 8).union(days(4, 10))).toBeDateInterval(days(4, 10));
-    expect(days(5, 8).union(days(9, 10))).toBeDateInterval(days(5, 10));
+    expect(days(5, 8).union(days(10, 11))).toEqual(days(5, 11));
+    expect(days(5, 8).union(days(2, 4))).toEqual(days(2, 8));
+    expect(days(5, 8).union(days(7, 10))).toEqual(days(5, 10));
+    expect(days(5, 8).union(days(4, 6))).toEqual(days(4, 8));
+    expect(days(5, 8).union(days(6, 7))).toEqual(days(5, 8));
+    expect(days(5, 8).union(days(4, 10))).toEqual(days(4, 10));
+    expect(days(5, 8).union(days(9, 10))).toEqual(days(5, 10));
   });
   describe('intersection', () => {
     it('no intersection is null', () => {
       expect(days(5, 8).intersection(days(2, 3))).toBeNull();
     });
     it('partial overlap', () => {
-      expect(days(5, 8).intersection(days(3, 7))).toBeDateInterval(days(5, 7));
-      expect(days(5, 8).intersection(days(7, 10))).toBeDateInterval(days(7, 8));
+      expect(days(5, 8).intersection(days(3, 7))).toEqual(days(5, 7));
+      expect(days(5, 8).intersection(days(7, 10))).toEqual(days(7, 8));
     });
     it('overlap', () => {
-      expect(days(5, 8).intersection(days(3, 10))).toBeDateInterval(days(5, 8));
-      expect(days(3, 10).intersection(days(5, 8))).toBeDateInterval(days(5, 8));
+      expect(days(5, 8).intersection(days(3, 10))).toEqual(days(5, 8));
+      expect(days(3, 10).intersection(days(5, 8))).toEqual(days(5, 8));
     });
     it('null for adjacent', () => {
       expect(days(5, 8).intersection(days(9, 10))).toBeNull();

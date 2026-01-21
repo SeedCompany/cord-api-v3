@@ -1,4 +1,5 @@
 import { faker } from '@faker-js/faker';
+import { expect } from '@jest/globals';
 import { startCase } from 'lodash';
 import { type ID } from '~/common';
 import { SessionHost } from '~/core/authentication/session/session.host';
@@ -24,13 +25,9 @@ export async function createRootDirectory(app: TestApp, name?: string) {
   });
 }
 
-export async function createDirectory(
-  app: TestApp,
-  parentId: ID,
-  name?: string,
-) {
+export async function createDirectory(app: TestApp, parent: ID, name?: string) {
   const input = {
-    parentId,
+    parent,
     name: name ?? startCase(faker.lorem.words()),
   };
 
@@ -47,7 +44,7 @@ export async function createDirectory(
 
 const CreateDirectoryDoc = graphql(
   `
-    mutation createDirectory($input: CreateDirectoryInput!) {
+    mutation createDirectory($input: CreateDirectory!) {
       createDirectory(input: $input) {
         ...fileNode
       }

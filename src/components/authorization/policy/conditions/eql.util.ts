@@ -24,8 +24,8 @@ export const eqlInLiteralSet = (
     const expectedStr = isEnum
       ? `${castName}.${list[0]}`
       : castName
-      ? `<${castName}>'${list[0]}'`
-      : `'${list[0]}'`;
+        ? `<${castName}>'${list[0]}'`
+        : `'${list[0]}'`;
     return `${actual} = ${expectedStr}`;
   }
   return `${actual} in ${eqlLiteralSet(list ?? [], castName)}`;

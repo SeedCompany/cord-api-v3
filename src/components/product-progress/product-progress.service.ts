@@ -19,13 +19,13 @@ import { type Product } from '../product/dto';
 import type { ProgressReport } from '../progress-report/dto';
 import {
   type ProductProgress,
-  type ProductProgressInput,
   type ProgressVariantByProductInput,
   type ProgressVariantByProductOutput,
   type ProgressVariantByReportInput,
   type ProgressVariantByReportOutput,
   StepProgress,
   type UnsecuredProductProgress,
+  type UpdateProductProgress,
 } from './dto';
 import {
   ProgressReportVariantProgress as Progress,
@@ -82,9 +82,8 @@ export class ProductProgressService {
       product.id,
       product,
     ]).asRecord;
-    const rows = await this.repo.readAllProgressReportsForManyProducts(
-      products,
-    );
+    const rows =
+      await this.repo.readAllProgressReportsForManyProducts(products);
     return rows.map((row): ProgressVariantByProductOutput => {
       const product = productMap[row.productId]!;
       return {
@@ -108,8 +107,8 @@ export class ProductProgressService {
     const context = !isIdLike(product)
       ? product
       : !isIdLike(report)
-      ? report
-      : await this.repo.getScope(productId);
+        ? report
+        : await this.repo.getScope(productId);
 
     const unsecured = await this.repo.readOne(productId, reportId, variant);
     const progress = this.secure(unsecured, this.privilegesFor(context));
@@ -129,8 +128,8 @@ export class ProductProgressService {
     return this.secure(progress, this.privilegesFor(input.product));
   }
 
-  async update(input: ProductProgressInput) {
-    const scope = await this.repo.getScope(input.productId);
+  async update(input: UpdateProductProgress) {
+    const scope = await this.repo.getScope(input.product);
     const privileges = this.privilegesFor(withVariant(scope, input.variant));
     if (!privileges.can('read') || !privileges.can('edit', 'completed')) {
       throw new UnauthorizedException(
@@ -140,7 +139,7 @@ export class ProductProgressService {
 
     const errors = input.steps.flatMap((step, index) => {
       if (!scope.steps.includes(step.step)) {
-        return new StepNotPlannedException(input.productId, step.step, index);
+        return new StepNotPlannedException(input.product, step.step, index);
       }
       if (step.completed && step.completed > scope.progressTarget) {
         return new InputException(

@@ -34,7 +34,7 @@ export class UnavailabilityRepository extends DtoRepository(Unavailability) {
       .apply(await createNode(Unavailability, { initialProps }))
       .apply(
         createRelationships(Unavailability, 'in', {
-          unavailability: ['User', input.userId],
+          unavailability: ['User', input.user],
         }),
       )
       .return<{ id: ID }>('node.id as id');
@@ -69,7 +69,6 @@ export class UnavailabilityRepository extends DtoRepository(Unavailability) {
     if (!result) {
       throw new NotFoundException(
         'Could not find user associated with unavailability',
-        'user.unavailability',
       );
     }
     return result;

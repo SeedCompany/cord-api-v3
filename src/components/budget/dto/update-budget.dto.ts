@@ -3,7 +3,7 @@ import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { type ID, IdField } from '~/common';
 import { ChangesetIdField } from '../../changeset';
-import { CreateDefinedFileVersionInput } from '../../file/dto';
+import { CreateDefinedFileVersion } from '../../file/dto';
 import { BudgetRecord } from './budget-record.dto';
 import { type BudgetStatus } from './budget-status.enum';
 import { Budget } from './budget.dto';
@@ -19,21 +19,13 @@ export abstract class UpdateBudget {
     description: 'New version of the universal budget template',
     nullable: true,
   })
-  @Type(() => CreateDefinedFileVersionInput)
+  @Type(() => CreateDefinedFileVersion)
   @ValidateNested()
-  readonly universalTemplateFile?: CreateDefinedFileVersionInput;
-}
-
-@InputType()
-export abstract class UpdateBudgetInput {
-  @Field()
-  @Type(() => UpdateBudget)
-  @ValidateNested()
-  readonly budget: UpdateBudget;
+  readonly universalTemplateFile?: CreateDefinedFileVersion;
 }
 
 @ObjectType()
-export abstract class UpdateBudgetOutput {
+export abstract class BudgetUpdated {
   @Field()
   readonly budget: Budget;
 }
@@ -45,21 +37,13 @@ export abstract class UpdateBudgetRecord {
 
   @Field(() => Float, { nullable: true })
   readonly amount: number | null;
-}
-
-@InputType()
-export abstract class UpdateBudgetRecordInput {
-  @Field()
-  @Type(() => UpdateBudgetRecord)
-  @ValidateNested()
-  readonly budgetRecord: UpdateBudgetRecord;
 
   @ChangesetIdField()
   readonly changeset?: ID;
 }
 
 @ObjectType()
-export abstract class UpdateBudgetRecordOutput {
+export abstract class BudgetRecordUpdated {
   @Field()
   readonly budgetRecord: BudgetRecord;
 }

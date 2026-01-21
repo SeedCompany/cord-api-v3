@@ -1,3 +1,4 @@
+import { expect } from '@jest/globals';
 import { type ID } from '~/common';
 import { graphql, type VariablesOf } from '~/graphql';
 import { type TestApp } from './create-app';
@@ -30,9 +31,7 @@ const ChangeInternshipEngStatusDoc = graphql(
       $id: ID!
       $status: EngagementStatus!
     ) {
-      updateInternshipEngagement(
-        input: { engagement: { id: $id, status: $status } }
-      ) {
+      updateInternshipEngagement(input: { id: $id, status: $status }) {
         engagement {
           ...internshipEngagement
         }
@@ -60,9 +59,7 @@ const ChangeLangEngStatusDoc = graphql(
       $id: ID!
       $status: EngagementStatus!
     ) {
-      updateLanguageEngagement(
-        input: { engagement: { id: $id, status: $status } }
-      ) {
+      updateLanguageEngagement(input: { id: $id, status: $status }) {
         engagement {
           ...languageEngagement
         }
@@ -80,13 +77,13 @@ export const transitionEngagementToActive = async (
   await runAsAdmin(app, async () => {
     const fundingAccount = await createFundingAccount(app);
     const location = await createLocation(app, {
-      fundingAccountId: fundingAccount.id,
+      fundingAccount: fundingAccount.id,
     });
     const fieldRegion = await createRegion(app);
     await updateProject(app, {
       id: projectId,
-      primaryLocationId: location.id,
-      fieldRegionId: fieldRegion.id,
+      primaryLocation: location.id,
+      fieldRegion: fieldRegion.id,
     });
     for (const next of stepsFromEarlyConversationToBeforeActive) {
       await changeProjectStep(app, projectId, next);

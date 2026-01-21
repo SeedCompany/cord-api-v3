@@ -1,14 +1,11 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import { Type } from 'class-transformer';
-import { ValidateNested } from 'class-validator';
-import { DateTime } from 'luxon';
+import { type DateTime } from 'luxon';
 import {
   type CalendarDate,
   DateField,
   DateTimeField,
   type ID,
   IdField,
-  type IdOf,
   ListField,
   NameField,
   OptionalField,
@@ -16,10 +13,9 @@ import {
   SensitivityField,
 } from '~/common';
 import { ChangesetIdField } from '../../changeset';
-import { type Location } from '../../location/dto';
 import { ReportPeriod } from '../../periodic-report/dto';
-import { IProject, type Project } from './project.dto';
 
+@ObjectType({ isAbstract: true })
 @InputType()
 export abstract class UpdateProject {
   @IdField()
@@ -32,25 +28,25 @@ export abstract class UpdateProject {
     description: 'A primary location ID',
     nullable: true,
   })
-  readonly primaryLocationId?: ID | null;
+  readonly primaryLocation?: ID<'Location'> | null;
 
   @IdField({
     description: 'A marketing primary location ID',
     nullable: true,
   })
-  readonly marketingLocationId?: ID | null;
+  readonly marketingLocation?: ID<'Location'> | null;
 
   @IdField({
     description: 'A marketing region override location ID',
     nullable: true,
   })
-  readonly marketingRegionOverrideId?: IdOf<Location> | null;
+  readonly marketingRegionOverride?: ID<'Location'> | null;
 
   @IdField({
     description: 'A field region ID',
     nullable: true,
   })
-  readonly fieldRegionId?: ID | null;
+  readonly fieldRegion?: ID<'FieldRegion'> | null;
 
   @DateField({ nullable: true })
   readonly mouStart?: CalendarDate | null;
@@ -73,7 +69,7 @@ export abstract class UpdateProject {
   readonly tags?: readonly string[];
 
   @DateTimeField({ nullable: true })
-  readonly financialReportReceivedAt?: DateTime;
+  readonly financialReportReceivedAt?: DateTime | null;
 
   @Field(() => ReportPeriod, { nullable: true })
   readonly financialReportPeriod?: ReportPeriod | null;
@@ -83,21 +79,7 @@ export abstract class UpdateProject {
 
   @Field(() => String, { nullable: true })
   readonly departmentId?: string | null;
-}
-
-@InputType()
-export abstract class UpdateProjectInput {
-  @Field()
-  @Type(() => UpdateProject)
-  @ValidateNested()
-  readonly project: UpdateProject;
 
   @ChangesetIdField()
   readonly changeset?: ID;
-}
-
-@ObjectType()
-export abstract class UpdateProjectOutput {
-  @Field(() => IProject)
-  readonly project: Project;
 }

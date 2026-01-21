@@ -3,7 +3,7 @@ import { stripIndent } from 'common-tags';
 import { type ID, IdField, NameField } from '~/common';
 
 @InputType()
-export abstract class RenameFileInput {
+export abstract class RenameFile {
   @IdField({
     description: "The file node's ID",
   })
@@ -16,7 +16,7 @@ export abstract class RenameFileInput {
 }
 
 @InputType()
-export abstract class MoveFileInput {
+export abstract class MoveFile {
   @IdField({
     description: "The file or directory's ID",
   })
@@ -25,7 +25,7 @@ export abstract class MoveFileInput {
   @IdField({
     description: 'The new parent ID',
   })
-  readonly parentId: ID;
+  readonly parent: ID<'Directory'>;
 
   @Field({
     description: stripIndent`

@@ -9,9 +9,7 @@ import { type Session } from './session/session.dto';
 
 @Injectable()
 @DbTraceLayer.applyToClass()
-export class AuthenticationGelRepository
-  implements PublicOf<AuthenticationRepository>
-{
+export class AuthenticationGelRepository implements PublicOf<AuthenticationRepository> {
   private readonly db: Gel;
   constructor(db: Gel) {
     this.db = db.withOptions(disableAccessPolicies);
@@ -229,7 +227,14 @@ export class AuthenticationGelRepository
     passwordHash: string,
   ) {
     const userId = await this.userByEmail(email);
-    await this.savePasswordHashOnUser(userId!, passwordHash);
+    if (!userId) {
+      throw new ServerException(
+        'Failed to reset password',
+        new ServerException('Could not find user by email'),
+      );
+    }
+    await this.savePasswordHashOnUser(userId, passwordHash);
+    return { user: { id: userId } };
   }
 
   async removeAllEmailTokensForEmail(email: string) {

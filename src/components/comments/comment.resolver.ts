@@ -14,32 +14,32 @@ import { CommentService } from './comment.service';
 import {
   Comment,
   Commentable,
+  CommentDeleted,
   CommentThread,
-  DeleteCommentOutput,
-  UpdateCommentInput,
-  UpdateCommentOutput,
+  CommentUpdated,
+  UpdateComment,
 } from './dto';
 
 @Resolver(Comment)
 export class CommentResolver {
   constructor(private readonly service: CommentService) {}
 
-  @Mutation(() => UpdateCommentOutput, {
+  @Mutation(() => CommentUpdated, {
     description: 'Update an existing comment',
   })
   async updateComment(
-    @Args('input') input: UpdateCommentInput,
-  ): Promise<UpdateCommentOutput> {
+    @Args('input') input: UpdateComment,
+  ): Promise<CommentUpdated> {
     const comment = await this.service.update(input);
     return { comment };
   }
 
-  @Mutation(() => DeleteCommentOutput, {
+  @Mutation(() => CommentDeleted, {
     description: 'Delete a comment',
   })
-  async deleteComment(@IdArg() id: ID): Promise<DeleteCommentOutput> {
+  async deleteComment(@IdArg() id: ID): Promise<CommentDeleted> {
     await this.service.delete(id);
-    return { success: true };
+    return {};
   }
 
   @ResolveField(() => User)

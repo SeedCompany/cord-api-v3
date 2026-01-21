@@ -21,8 +21,7 @@ interface Key<Kind extends ResourceNameLike | object> {
 export abstract class ObjectViewAwareLoader<
   T extends ChangesetAware,
   Kind extends ResourceNameLike | object = T,
-> implements DataLoaderStrategy<T, Key<Kind>, string>
-{
+> implements DataLoaderStrategy<T, Key<Kind>, string> {
   abstract loadManyByView(
     ids: ReadonlyArray<ID<Kind>>,
     view: ObjectView,

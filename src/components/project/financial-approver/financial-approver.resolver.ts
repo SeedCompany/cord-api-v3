@@ -12,7 +12,7 @@ import { Privileges } from '../../authorization';
 import { UserLoader } from '../../user';
 import { User } from '../../user/dto';
 import { ProjectType } from '../dto/project-type.enum';
-import { FinancialApprover, FinancialApproverInput } from './dto';
+import { FinancialApprover, SetFinancialApprover } from './dto';
 import { FinancialApproverRepository } from './financial-approver.repository';
 
 @Resolver(FinancialApprover)
@@ -44,7 +44,7 @@ export class FinancialApproverResolver {
     nullable: true,
   })
   async setProjectTypeFinancialApprover(
-    @Args('input') input: FinancialApproverInput,
+    @Args('input') input: SetFinancialApprover,
   ): Promise<FinancialApprover | null> {
     this.privileges.for(FinancialApprover).verifyCan('edit');
     return await this.repo.write(input);

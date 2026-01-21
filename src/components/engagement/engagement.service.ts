@@ -69,7 +69,7 @@ export class EngagementService {
     input: CreateLanguageEngagement,
     changeset?: ID,
   ): Promise<LanguageEngagement> {
-    await this.verifyCreateEngagement(input.projectId);
+    await this.verifyCreateEngagement(input.project);
     this.verifyCreationStatus(input.status);
     EngagementDateRangeException.throwIfInvalid(input);
 
@@ -90,7 +90,7 @@ export class EngagementService {
     input: CreateInternshipEngagement,
     changeset?: ID,
   ): Promise<InternshipEngagement> {
-    await this.verifyCreateEngagement(input.projectId);
+    await this.verifyCreateEngagement(input.project);
     this.verifyCreationStatus(input.status);
     EngagementDateRangeException.throwIfInvalid(input);
 
@@ -125,7 +125,7 @@ export class EngagementService {
     if (status && status !== EngagementStatus.InDevelopment) {
       throw new InputException(
         'The Engagement status should be in development',
-        'engagement.status',
+        'status',
       );
     }
   }
@@ -344,7 +344,10 @@ class EngagementDateRangeException extends RangeException {
     }
   }
 
-  constructor(readonly value: Range<CalendarDate>, readonly field: string) {
+  constructor(
+    readonly value: Range<CalendarDate>,
+    readonly field: string,
+  ) {
     const message = "Engagement's start date must be before the end date";
     super({ message, field });
   }

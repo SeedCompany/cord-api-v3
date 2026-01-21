@@ -3,27 +3,27 @@ import { type ID, IdArg, ListArg } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { EducationLoader, EducationService } from '../education';
 import {
-  CreateEducationInput,
-  CreateEducationOutput,
-  DeleteEducationOutput,
+  CreateEducation,
   Education,
+  EducationCreated,
+  EducationDeleted,
   EducationListInput,
   EducationListOutput,
-  UpdateEducationInput,
-  UpdateEducationOutput,
+  EducationUpdated,
+  UpdateEducation,
 } from './dto';
 
 @Resolver()
 export class EducationResolver {
   constructor(private readonly service: EducationService) {}
 
-  @Mutation(() => CreateEducationOutput, {
+  @Mutation(() => EducationCreated, {
     description: 'Create an education entry',
     deprecationReason: `This is unfinished functionality, don't use`,
   })
   async createEducation(
-    @Args('input') { education: input }: CreateEducationInput,
-  ): Promise<CreateEducationOutput> {
+    @Args('input') input: CreateEducation,
+  ): Promise<EducationCreated> {
     const education = await this.service.create(input);
     return { education };
   }
@@ -52,23 +52,23 @@ export class EducationResolver {
     return list;
   }
 
-  @Mutation(() => UpdateEducationOutput, {
+  @Mutation(() => EducationUpdated, {
     description: 'Update an education',
     deprecationReason: `This is unfinished functionality, don't use`,
   })
   async updateEducation(
-    @Args('input') { education: input }: UpdateEducationInput,
-  ): Promise<UpdateEducationOutput> {
+    @Args('input') input: UpdateEducation,
+  ): Promise<EducationUpdated> {
     const education = await this.service.update(input);
     return { education };
   }
 
-  @Mutation(() => DeleteEducationOutput, {
+  @Mutation(() => EducationDeleted, {
     description: 'Delete an education',
     deprecationReason: `This is unfinished functionality, don't use`,
   })
-  async deleteEducation(@IdArg() id: ID): Promise<DeleteEducationOutput> {
+  async deleteEducation(@IdArg() id: ID): Promise<EducationDeleted> {
     await this.service.delete(id);
-    return { success: true };
+    return {};
   }
 }

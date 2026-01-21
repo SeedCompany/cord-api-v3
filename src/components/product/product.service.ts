@@ -67,17 +67,14 @@ export class ProductService {
       | CreateOtherProduct,
   ): Promise<AnyProduct> {
     const engagement = await this.repo.getBaseNode(
-      input.engagementId,
+      input.engagement,
       'Engagement',
     );
     if (!engagement) {
       this.logger.warning(`Could not find engagement`, {
-        id: input.engagementId,
+        id: input.engagement,
       });
-      throw new NotFoundException(
-        'Could not find engagement',
-        'product.engagementId',
-      );
+      throw new NotFoundException('Could not find engagement', 'engagement');
     }
 
     const otherInput: CreateOtherProduct | undefined =
@@ -106,7 +103,7 @@ export class ProductService {
         });
         throw new NotFoundException(
           'Could not find producible node',
-          'product.produces',
+          'produces',
         );
       }
       producibleType = this.resources.resolveTypeByBaseNode(
@@ -134,7 +131,7 @@ export class ProductService {
 
     const type = otherInput
       ? ProducibleType.OtherProduct
-      : producibleType ?? ProducibleType.DirectScriptureProduct;
+      : (producibleType ?? ProducibleType.DirectScriptureProduct);
     const availableSteps = getAvailableSteps({
       type,
       methodology: input.methodology,
@@ -327,7 +324,7 @@ export class ProductService {
         compareNullable(UnspecifiedScripturePortion.isEqual),
       )(input.unspecifiedScripture, current.unspecifiedScripture),
       scriptureReferences: ifDiff(isScriptureEqual)(
-        input.scriptureReferences,
+        input.scriptureReferences === null ? [] : input.scriptureReferences,
         current.scriptureReferences,
       ),
     };
@@ -372,7 +369,7 @@ export class ProductService {
         });
         throw new NotFoundException(
           'Could not find producible node',
-          'product.produces',
+          'produces',
         );
       }
       await this.repo.updateProducible(input, produces);
@@ -483,7 +480,7 @@ export class ProductService {
         Number: changes.progressStepMeasurement
           ? // If measurement is being changed to number,
             // accept new target value or default to 1 (as done in create).
-            changes.progressTarget ?? 1
+            (changes.progressTarget ?? 1)
           : // If measurement was already number,
             // accept new target value if given or accept no change.
             changes.progressTarget,
@@ -516,7 +513,7 @@ export class ProductService {
     });
     const steps = intersection(
       availableSteps,
-      changes.steps ? changes.steps : current.steps ?? [],
+      changes.steps ? changes.steps : (current.steps ?? []),
     );
     // Check again to see if new steps value is different than current.
     // and return updated value or "no change".

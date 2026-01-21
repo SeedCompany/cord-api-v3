@@ -41,7 +41,10 @@ type ProcedureArgs = Record<string, any> | any[];
 
 class Procedure extends Clause {
   private readonly params: Parameter[];
-  constructor(public name: string, public args: Record<string, any> | any[]) {
+  constructor(
+    public name: string,
+    public args: Record<string, any> | any[],
+  ) {
     super();
     this.params = (
       Array.isArray(args)

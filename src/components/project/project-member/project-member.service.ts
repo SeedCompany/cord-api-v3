@@ -43,12 +43,12 @@ export class ProjectMemberService {
   ): Promise<ProjectMember> {
     enforcePerms &&
       (await this.assertValidRoles(input.roles, () =>
-        this.resources.load('User', input.userId),
+        this.resources.load('User', input.user),
       ));
 
-    const projectId = isIdLike(input.projectId)
-      ? input.projectId
-      : input.projectId.id;
+    const projectId = isIdLike(input.project)
+      ? input.project
+      : input.project.id;
     const invalidating = this.invalidateProject(projectId);
     const created = await this.repo.create(input);
     await invalidating;
@@ -56,7 +56,7 @@ export class ProjectMemberService {
     if (input.inactiveAt && input.inactiveAt < created.createdAt) {
       throw new InputException(
         'Inactive date cannot be before creation date',
-        'projectMember.inactiveAt',
+        'inactiveAt',
       );
     }
 
@@ -119,7 +119,7 @@ export class ProjectMemberService {
     if (input.inactiveAt && input.inactiveAt < object.createdAt) {
       throw new InputException(
         'Inactive date cannot be before creation date',
-        'projectMember.inactiveAt',
+        'inactiveAt',
       );
     }
 
@@ -156,7 +156,7 @@ export class ProjectMemberService {
       const forbiddenRolesStr = [...forbiddenRoles].join(', ');
       throw new InputException(
         `Role(s) ${forbiddenRolesStr} cannot be assigned to this project member`,
-        'input.roles',
+        'roles',
       );
     }
   }

@@ -11,11 +11,11 @@ import { ActorLoader } from '../../user/actor.loader';
 import { Actor } from '../../user/dto';
 import {
   CreateToolUsage,
-  CreateToolUsageOutput,
-  DeleteToolUsageOutput,
   ToolUsage,
+  ToolUsageCreated,
+  ToolUsageDeleted,
+  ToolUsageUpdated,
   UpdateToolUsage,
-  UpdateToolUsageOutput,
 } from './dto';
 import { ToolUsageService } from './tool-usage.service';
 
@@ -45,27 +45,25 @@ export class ToolUsageResolver {
     return await actors.load(toolUsage.creator.id);
   }
 
-  @Mutation(() => CreateToolUsageOutput)
+  @Mutation(() => ToolUsageCreated)
   async createToolUsage(
     @Args('input') input: CreateToolUsage,
-  ): Promise<CreateToolUsageOutput> {
+  ): Promise<ToolUsageCreated> {
     const toolUsage = await this.service.create(input);
     return { toolUsage: toolUsage };
   }
 
-  @Mutation(() => UpdateToolUsageOutput)
+  @Mutation(() => ToolUsageUpdated)
   async updateToolUsage(
     @Args('input') input: UpdateToolUsage,
-  ): Promise<UpdateToolUsageOutput> {
+  ): Promise<ToolUsageUpdated> {
     const toolUsage = await this.service.update(input);
     return { toolUsage };
   }
 
-  @Mutation(() => DeleteToolUsageOutput)
-  async deleteToolUsage(
-    @IdArg() id: ID<ToolUsage>,
-  ): Promise<DeleteToolUsageOutput> {
+  @Mutation(() => ToolUsageDeleted)
+  async deleteToolUsage(@IdArg() id: ID<ToolUsage>): Promise<ToolUsageDeleted> {
     await this.service.delete(id);
-    return { success: true };
+    return {};
   }
 }

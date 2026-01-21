@@ -1,4 +1,5 @@
 import { faker } from '@faker-js/faker';
+import { beforeAll, describe, expect, it } from '@jest/globals';
 import { times } from 'lodash';
 import { isValidId, Role } from '~/common';
 import { graphql } from '~/graphql';
@@ -21,10 +22,6 @@ describe('FundingAccount e2e', () => {
     await registerUser(app, { roles: [Role.LeadFinancialAnalyst] });
     //todo
     // [Powers.CreateFundingAccount]
-  });
-
-  afterAll(async () => {
-    await app.close();
   });
 
   // Create Funding Account
@@ -66,7 +63,7 @@ describe('FundingAccount e2e', () => {
       const result = await app.graphql.mutate(
         graphql(
           `
-            mutation updateFundingAccount($input: UpdateFundingAccountInput!) {
+            mutation updateFundingAccount($input: UpdateFundingAccount!) {
               updateFundingAccount(input: $input) {
                 fundingAccount {
                   ...fundingAccount
@@ -78,11 +75,9 @@ describe('FundingAccount e2e', () => {
         ),
         {
           input: {
-            fundingAccount: {
-              id: st.id,
-              name: newName,
-              accountNumber: newAccountNumber,
-            },
+            id: st.id,
+            name: newName,
+            accountNumber: newAccountNumber,
           },
         },
       );

@@ -43,8 +43,8 @@ export const resolveProductType = (
   product.produces
     ? DerivativeScriptureProduct
     : product.title
-    ? OtherProduct
-    : DirectScriptureProduct;
+      ? OtherProduct
+      : DirectScriptureProduct;
 
 @RegisterResource({ db: e.Product })
 @InterfaceType({

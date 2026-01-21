@@ -5,7 +5,7 @@ import { ILogger, Logger } from '~/core';
 import { CommonRepository } from '~/core/database';
 import { ACTIVE, apoc, collect, merge, variable } from '~/core/database/query';
 import { type ProductMedium } from '../product/dto';
-import { type PartnershipProducingMediumInput } from './dto/partnership-producing-medium.dto';
+import { type UpdatePartnershipProducingMedium } from './dto/partnership-producing-medium.dto';
 
 @Injectable()
 export class PartnershipProducingMediumRepository extends CommonRepository {
@@ -60,7 +60,7 @@ export class PartnershipProducingMediumRepository extends CommonRepository {
 
   async update(
     engagementId: ID,
-    input: readonly PartnershipProducingMediumInput[],
+    input: readonly UpdatePartnershipProducingMedium[],
   ) {
     const results = await this.db
       .query()

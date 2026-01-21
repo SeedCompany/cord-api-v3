@@ -24,8 +24,8 @@ import {
   type CommentThread,
   type CommentThreadList,
   type CommentThreadListInput,
-  type CreateCommentInput,
-  type UpdateCommentInput,
+  type CreateComment,
+  type UpdateComment,
 } from './dto';
 import { CommentViaMentionNotificationService } from './mention-notification/comment-via-mention-notification.service';
 
@@ -42,8 +42,8 @@ export class CommentService {
     private readonly mentionNotificationService: CommentViaMentionNotificationService,
   ) {}
 
-  async create(input: CreateCommentInput) {
-    const perms = await this.getPermissionsFromResource(input.resourceId);
+  async create(input: CreateComment) {
+    const perms = await this.getPermissionsFromResource(input.resource);
     perms.verifyCan('create');
 
     let dto;
@@ -55,13 +55,10 @@ export class CommentService {
       dto = await this.repo.readOne(result.id);
     } catch (exception) {
       if (
-        input.threadId &&
-        !(await this.repo.threads.getBaseNode(input.threadId))
+        input.thread &&
+        !(await this.repo.threads.getBaseNode(input.thread))
       ) {
-        throw new NotFoundException(
-          'Comment thread does not exist',
-          'threadId',
-        );
+        throw new NotFoundException('Comment thread does not exist', 'thread');
       }
 
       throw new CreationFailed(Comment, { cause: exception });
@@ -92,7 +89,7 @@ export class CommentService {
       ? await this.repo.getBaseNode(resource, Resource)
       : resource;
     if (!parentNode) {
-      throw new NotFoundException('Resource does not exist', 'resourceId');
+      throw new NotFoundException('Resource does not exist', 'resource');
     }
     const parent = isBaseNode(parentNode)
       ? await this.resources.loadByBaseNode(parentNode)
@@ -129,7 +126,7 @@ export class CommentService {
     return this.privileges.for(Comment).secure(dto);
   }
 
-  async update(input: UpdateCommentInput): Promise<Comment> {
+  async update(input: UpdateComment): Promise<Comment> {
     const object = await this.repo.readOne(input.id);
 
     const changes = this.repo.getActualChanges(object, input);

@@ -1,4 +1,5 @@
 import { faker } from '@faker-js/faker';
+import { expect } from '@jest/globals';
 import { DateTime } from 'luxon';
 import type { SetOptional } from 'type-fest';
 import { isValidId } from '~/common';
@@ -33,7 +34,7 @@ export async function createUnavailability(
 const CreateUnavailabilityDoc = graphql(
   `
     mutation createUnavailability($input: CreateUnavailability!) {
-      createUnavailability(input: { unavailability: $input }) {
+      createUnavailability(input: $input) {
         unavailability {
           ...unavailability
         }

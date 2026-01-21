@@ -1,3 +1,4 @@
+import { beforeAll, expect, it } from '@jest/globals';
 import { mapEntries } from '@seedcompany/common';
 import { DateTime } from 'luxon';
 import { Role } from '~/common';
@@ -18,9 +19,6 @@ beforeAll(async () => {
   app = await createTestApp();
   await createSession(app);
   await loginAsAdmin(app);
-});
-afterAll(async () => {
-  await app.close();
 });
 
 it('add directors if role is needed on project', async () => {
@@ -53,14 +51,14 @@ it('add directors if role is inactive on project', async () => {
   const project = await createProject(app);
   await Promise.all([
     createProjectMember(app, {
-      projectId: project.id,
-      userId: oldRegion.director.value!.id,
+      project: project.id,
+      user: oldRegion.director.value!.id,
       roles: [Role.RegionalDirector],
       inactiveAt: DateTime.now().plus({ minute: 1 }).toISO(),
     }),
     createProjectMember(app, {
-      projectId: project.id,
-      userId: oldRegion.fieldZone.value!.director.value!.id,
+      project: project.id,
+      user: oldRegion.fieldZone.value!.director.value!.id,
       roles: [Role.FieldOperationsDirector],
       inactiveAt: DateTime.now().plus({ minute: 1 }).toISO(),
     }),
@@ -103,8 +101,8 @@ it('update existing member on project', async () => {
   const region = await createRegion(app);
   const project = await createProject(app);
   await createProjectMember(app, {
-    projectId: project.id,
-    userId: region.director.value!.id,
+    project: project.id,
+    user: region.director.value!.id,
     roles: [Role.ProjectManager],
   });
   // endregion
@@ -132,13 +130,13 @@ it('ignore directors if role is not needed on project', async () => {
   const project = await createProject(app);
   await Promise.all([
     createProjectMember(app, {
-      projectId: project.id,
-      userId: unrelatedRegion.director.value!.id,
+      project: project.id,
+      user: unrelatedRegion.director.value!.id,
       roles: [Role.RegionalDirector],
     }),
     createProjectMember(app, {
-      projectId: project.id,
-      userId: unrelatedRegion.fieldZone.value!.director.value!.id,
+      project: project.id,
+      user: unrelatedRegion.fieldZone.value!.director.value!.id,
       roles: [Role.FieldOperationsDirector],
     }),
   ]);
@@ -173,9 +171,7 @@ async function assignRegionAndFetchMembers(
 
 const AssignRegionDoc = graphql(`
   mutation AssignRegion($project: ID!, $region: ID!) {
-    updateProject(
-      input: { project: { id: $project, fieldRegionId: $region } }
-    ) {
+    updateProject(input: { id: $project, fieldRegion: $region }) {
       project {
         team {
           items {

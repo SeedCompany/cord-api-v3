@@ -1,10 +1,10 @@
 import { InputType } from '@nestjs/graphql';
 import { type ID, IdField } from '~/common';
-import { ExecuteTransitionInput } from '../../../workflow/dto';
+import { ExecuteTransition } from '../../../workflow/dto';
 import { ProjectStep } from '../../dto';
 
 @InputType()
-export abstract class ExecuteProjectTransitionInput extends ExecuteTransitionInput(
+export abstract class ExecuteProjectTransition extends ExecuteTransition(
   ProjectStep,
 ) {
   @IdField({

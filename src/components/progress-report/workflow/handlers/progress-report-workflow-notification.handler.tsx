@@ -32,9 +32,7 @@ const rolesToAlwaysNotify = [
 ];
 
 @EventsHandler(WorkflowUpdatedEvent)
-export class ProgressReportWorkflowNotificationHandler
-  implements IEventHandler<WorkflowUpdatedEvent>
-{
+export class ProgressReportWorkflowNotificationHandler implements IEventHandler<WorkflowUpdatedEvent> {
   constructor(
     private readonly identity: Identity,
     private readonly repo: ProgressReportWorkflowRepository,
@@ -59,9 +57,8 @@ export class ProgressReportWorkflowNotificationHandler
     if (!enabled) {
       return;
     }
-    const { projectId, languageId } = await this.repo.getProjectInfoByReportId(
-      reportId,
-    );
+    const { projectId, languageId } =
+      await this.repo.getProjectInfoByReportId(reportId);
 
     const userIdByEmail = mapEntries(
       [
@@ -176,7 +173,9 @@ export class ProgressReportWorkflowNotificationHandler
   ) {
     const roles = [
       ...rolesToAlwaysNotify,
-      ...(typeof next !== 'string' ? next.notify?.membersWithRoles ?? [] : []),
+      ...(typeof next !== 'string'
+        ? (next.notify?.membersWithRoles ?? [])
+        : []),
     ];
 
     const members = await this.repo.getProjectMemberInfoByReportId(reportId);

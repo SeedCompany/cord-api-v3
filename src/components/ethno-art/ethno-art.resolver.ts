@@ -3,14 +3,14 @@ import { type ID, IdArg, ListArg } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { EthnoArtLoader, EthnoArtService } from '../ethno-art';
 import {
-  CreateEthnoArtInput,
-  CreateEthnoArtOutput,
-  DeleteEthnoArtOutput,
+  CreateEthnoArt,
   EthnoArt,
+  EthnoArtCreated,
+  EthnoArtDeleted,
   EthnoArtListInput,
   EthnoArtListOutput,
-  UpdateEthnoArtInput,
-  UpdateEthnoArtOutput,
+  EthnoArtUpdated,
+  UpdateEthnoArt,
 } from './dto';
 
 @Resolver(EthnoArt)
@@ -39,31 +39,31 @@ export class EthnoArtResolver {
     return list;
   }
 
-  @Mutation(() => CreateEthnoArtOutput, {
+  @Mutation(() => EthnoArtCreated, {
     description: 'Create an ethno art',
   })
   async createEthnoArt(
-    @Args('input') { ethnoArt: input }: CreateEthnoArtInput,
-  ): Promise<CreateEthnoArtOutput> {
+    @Args('input') input: CreateEthnoArt,
+  ): Promise<EthnoArtCreated> {
     const ethnoArt = await this.ethnoArtService.create(input);
     return { ethnoArt };
   }
 
-  @Mutation(() => UpdateEthnoArtOutput, {
+  @Mutation(() => EthnoArtUpdated, {
     description: 'Update an ethno art',
   })
   async updateEthnoArt(
-    @Args('input') { ethnoArt: input }: UpdateEthnoArtInput,
-  ): Promise<UpdateEthnoArtOutput> {
+    @Args('input') input: UpdateEthnoArt,
+  ): Promise<EthnoArtUpdated> {
     const ethnoArt = await this.ethnoArtService.update(input);
     return { ethnoArt };
   }
 
-  @Mutation(() => DeleteEthnoArtOutput, {
+  @Mutation(() => EthnoArtDeleted, {
     description: 'Delete an ethno art',
   })
-  async deleteEthnoArt(@IdArg() id: ID): Promise<DeleteEthnoArtOutput> {
+  async deleteEthnoArt(@IdArg() id: ID): Promise<EthnoArtDeleted> {
     await this.ethnoArtService.delete(id);
-    return { success: true };
+    return {};
   }
 }

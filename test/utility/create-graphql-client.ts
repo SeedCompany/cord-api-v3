@@ -1,70 +1,36 @@
-import { type TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/core';
-import { type INestApplication } from '@nestjs/common';
-import got from 'got';
-import {
-  type FormattedExecutionResult,
-  type GraphQLFormattedError,
-  print,
-} from 'graphql';
-import { type Merge } from 'type-fest';
 import { ConfigService } from '~/core';
-// eslint-disable-next-line import/no-duplicates
-import { type ErrorExpectations } from './expect-gql-error';
-// eslint-disable-next-line import/no-duplicates -- ensures runtime execution
-import './expect-gql-error';
+import { type TestApp } from '../setup';
+import {
+  createExecute,
+  type GqlExecute,
+} from '../setup/gql-client/gql-execute';
 
+/** @deprecated */
 export interface GraphQLTestClient {
-  query: <TData extends AnyObject, TVars extends AnyObject>(
-    query: DocumentNode<TData, TVars>,
-    variables?: NoInfer<TVars>,
-  ) => GqlResult<TData>;
-  mutate: <TData extends AnyObject, TVars extends AnyObject>(
-    query: DocumentNode<TData, TVars>,
-    variables?: NoInfer<TVars>,
-  ) => GqlResult<TData>;
+  query: GqlExecute;
+  mutate: GqlExecute;
   authToken: string;
   email?: string;
 }
 
-export const createGraphqlClient = async (
-  app: INestApplication,
-): Promise<GraphQLTestClient> => {
-  await app.listen(0);
-  const url = await app.getUrl();
-  app.get(ConfigService).hostUrl$.next(new URL(url) as URL & string);
-
+/** @deprecated */
+export const createGraphqlClient = (app: TestApp): GraphQLTestClient => {
+  const url = app.get(ConfigService).hostUrl$.value + 'graphql';
   let authToken = '';
   let email: string | undefined = undefined;
 
-  const execute = <TData extends AnyObject, TVars extends AnyObject>(
-    doc: DocumentNode<TData, TVars>,
-    variables?: TVars,
-  ) => {
-    const query = print(doc);
-    const result = got
-      .post({
-        url: `${url}/graphql`,
-        throwHttpErrors: false,
-        headers: {
-          ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+  const execute = createExecute({
+    url,
+    hooks: {
+      beforeRequest: [
+        (req) => {
+          if (authToken) {
+            req.headers.authorization = `Bearer ${authToken}`;
+          }
         },
-        json: {
-          query,
-          variables,
-        },
-        retry: {
-          // Retry queries, not mutations
-          methods: query.trim().startsWith('query') ? ['POST'] : [],
-        },
-      })
-      .json<ExecutionResult<TData>>()
-      .then((result) => {
-        validateResult(result);
-        return result.data;
-      });
-
-    return new GqlResult(result);
-  };
+      ],
+    },
+  });
 
   return {
     query: execute,
@@ -83,70 +49,3 @@ export const createGraphqlClient = async (
     },
   };
 };
-
-class GqlResult<TData> implements PromiseLike<TData> {
-  constructor(private readonly result: Promise<TData>) {}
-
-  then: PromiseLike<TData>['then'] = (onFulfilled, onRejected) => {
-    return this.result.then(onFulfilled, onRejected);
-  };
-
-  expectError(expectations: ErrorExpectations = {}): Promise<void> {
-    return expect(this).rejects.toThrowGqlError(expectations);
-  }
-}
-
-function validateResult<TData>(
-  res: ExecutionResult<TData>,
-): asserts res is Omit<ExecutionResult<TData>, 'data' | 'errors'> & {
-  data: TData;
-} {
-  if (res.errors && res.errors.length > 0) {
-    throw GqlError.from(res.errors[0]!);
-  }
-  expect(res.data).toBeTruthy();
-}
-
-/**
- * An error class consuming the JSON formatted GraphQL error.
- */
-export class GqlError extends Error {
-  constructor(readonly raw: RawGqlError) {
-    super();
-  }
-
-  static from(raw: RawGqlError) {
-    const err = new GqlError(raw);
-    err.name = raw.extensions.codes[0]!;
-    // must be after err constructor finishes to capture correctly.
-    let frames = err.stack!.split('\n').slice(5);
-    if (raw.extensions.stacktrace) {
-      frames = [...raw.extensions.stacktrace, ...frames];
-    }
-    err.message = raw.message;
-    const codes = raw.extensions.codes.join(', ');
-    err.stack = `[${codes}]: ${err.message}\n\n` + frames.join('\n');
-    return err;
-  }
-}
-
-export type ExecutionResult<TData> = Omit<
-  FormattedExecutionResult<TData>,
-  'errors'
-> & {
-  errors?: readonly RawGqlError[];
-};
-
-export type RawGqlError = Merge<
-  GraphQLFormattedError,
-  {
-    extensions: {
-      codes: readonly string[];
-      stacktrace?: readonly string[];
-    };
-  }
->;
-
-interface AnyObject {
-  [key: string]: any;
-}

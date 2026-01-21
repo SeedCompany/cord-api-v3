@@ -113,21 +113,13 @@ export abstract class UpdateLanguage {
 
   @OptionalField()
   readonly isAvailableForReporting?: boolean;
-}
 
-@InputType()
-export abstract class UpdateLanguageInput {
   @ChangesetIdField()
   readonly changeset?: ID;
-
-  @Field()
-  @Type(() => UpdateLanguage)
-  @ValidateNested()
-  readonly language: UpdateLanguage;
 }
 
 @ObjectType()
-export abstract class UpdateLanguageOutput {
+export abstract class LanguageUpdated {
   @Field()
   readonly language: Language;
 }

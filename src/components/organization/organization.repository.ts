@@ -37,7 +37,7 @@ export class OrganizationRepository extends DtoRepository(Organization) {
   async create(input: CreateOrganization) {
     if (!(await this.isUnique(input.name))) {
       throw new DuplicateException(
-        'organization.name',
+        'name',
         'Organization with this name already exists',
       );
     }

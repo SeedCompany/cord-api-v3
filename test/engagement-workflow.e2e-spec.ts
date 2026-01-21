@@ -1,3 +1,4 @@
+import { beforeAll, describe, expect, it } from '@jest/globals';
 import { Role } from '~/common';
 import { EngagementStatus } from '../src/components/engagement/dto';
 import { ProjectStep, ProjectType } from '../src/components/project/dto';
@@ -36,9 +37,6 @@ describe('Engagement-Workflow e2e', () => {
       roles: [Role.ProjectManager, Role.Controller],
     });
   });
-  afterAll(async () => {
-    await app.close();
-  });
 
   it("should have engagement status 'InDevelopment' when add language or internship engagement", async () => {
     // --- Translation Project with engagement
@@ -47,7 +45,7 @@ describe('Engagement-Workflow e2e', () => {
     });
 
     const langEngagement = await createLanguageEngagement(app, {
-      projectId: transProject.id,
+      project: transProject.id,
     });
     expect(langEngagement.status.value).toBe(EngagementStatus.InDevelopment);
 
@@ -56,7 +54,7 @@ describe('Engagement-Workflow e2e', () => {
       type: ProjectType.Internship,
     });
     const internEngagement = await createInternshipEngagement(app, {
-      projectId: internProject.id,
+      project: internProject.id,
     });
     expect(internEngagement.status.value).toBe(EngagementStatus.InDevelopment);
   });
@@ -68,18 +66,18 @@ describe('Engagement-Workflow e2e', () => {
         type: ProjectType.MomentumTranslation,
       });
       const langEngagement = await createLanguageEngagement(app, {
-        projectId: transProject.id,
+        project: transProject.id,
       });
       await runAsAdmin(app, async () => {
         const fundingAccount = await createFundingAccount(app);
         const location = await createLocation(app, {
-          fundingAccountId: fundingAccount.id,
+          fundingAccount: fundingAccount.id,
         });
         const fieldRegion = await createRegion(app);
         await updateProject(app, {
           id: transProject.id,
-          primaryLocationId: location.id,
-          fieldRegionId: fieldRegion.id,
+          primaryLocation: location.id,
+          fieldRegion: fieldRegion.id,
         });
         for (const next of stepsFromEarlyConversationToBeforeActive) {
           await changeProjectStep(app, transProject.id, next);
@@ -98,19 +96,19 @@ describe('Engagement-Workflow e2e', () => {
         type: ProjectType.Internship,
       });
       const internEngagement = await createInternshipEngagement(app, {
-        projectId: internProject.id,
+        project: internProject.id,
       });
       await runAsAdmin(app, async () => {
         const fundingAccount = await createFundingAccount(app);
         const location = await createLocation(app, {
-          fundingAccountId: fundingAccount.id,
+          fundingAccount: fundingAccount.id,
         });
         const fieldRegion = await createRegion(app);
 
         await updateProject(app, {
           id: internProject.id,
-          primaryLocationId: location.id,
-          fieldRegionId: fieldRegion.id,
+          primaryLocation: location.id,
+          fieldRegion: fieldRegion.id,
         });
         for (const next of stepsFromEarlyConversationToBeforeActive) {
           await changeProjectStep(app, internProject.id, next);
@@ -132,7 +130,7 @@ describe('Engagement-Workflow e2e', () => {
         type: ProjectType.MomentumTranslation,
       });
       const langEngagement = await createLanguageEngagement(app, {
-        projectId: transProject.id,
+        project: transProject.id,
       });
       await transitionEngagementToActive(
         app,
@@ -171,7 +169,7 @@ describe('Engagement-Workflow e2e', () => {
         type: ProjectType.MomentumTranslation,
       });
       const langEngagement = await createLanguageEngagement(app, {
-        projectId: transProject.id,
+        project: transProject.id,
       });
       await transitionEngagementToActive(
         app,

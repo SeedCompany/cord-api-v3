@@ -1,4 +1,5 @@
 import { faker } from '@faker-js/faker';
+import { beforeAll, describe, expect, it } from '@jest/globals';
 import { type ID } from '~/common';
 import { graphql } from '~/graphql';
 import {
@@ -39,13 +40,13 @@ const readLanguage = (app: TestApp, id: ID, changeset?: ID) =>
 const activeProject = async (app: TestApp) => {
   const fundingAccount = await createFundingAccount(app);
   const location = await createLocation(app, {
-    fundingAccountId: fundingAccount.id,
+    fundingAccount: fundingAccount.id,
   });
   const fieldRegion = await createRegion(app);
 
   const project = await createProject(app, {
-    primaryLocationId: location.id,
-    fieldRegionId: fieldRegion.id,
+    primaryLocation: location.id,
+    fieldRegion: fieldRegion.id,
   });
   await forceProjectTo(app, project.id, 'Active');
 
@@ -64,26 +65,22 @@ describe.skip('Language Changeset Aware e2e', () => {
     await loginAsAdmin(app);
   });
 
-  afterAll(async () => {
-    await app.close();
-  });
-
   it('Update', async () => {
     const project = await activeProject(app);
     const changeset = await createProjectChangeRequest(app, {
-      projectId: project.id,
+      project: project.id,
     });
     const language = await createLanguage(app);
     await createLanguageEngagement(app, {
-      projectId: project.id,
-      languageId: language.id,
+      project: project.id,
+      language: language.id,
     });
     const newLanguageName = faker.company.name();
     // Update language name with changeset
     await app.graphql.mutate(
       graphql(
         `
-          mutation updateLanguage($input: UpdateLanguageInput!) {
+          mutation updateLanguage($input: UpdateLanguage!) {
             updateLanguage(input: $input) {
               language {
                 ...language
@@ -95,10 +92,8 @@ describe.skip('Language Changeset Aware e2e', () => {
       ),
       {
         input: {
-          language: {
-            id: language.id,
-            name: newLanguageName,
-          },
+          id: language.id,
+          name: newLanguageName,
           changeset: changeset.id,
         },
       },
@@ -106,7 +101,7 @@ describe.skip('Language Changeset Aware e2e', () => {
 
     // read language without changeset
     let result = await readLanguage(app, language.id);
-    expect(result.language.name.value === language.name.value);
+    expect(result.language.name.value).toBe(language.name.value);
     // read language with changeset
     result = await readLanguage(app, language.id, changeset.id);
     expect(result.language.name.value).toBe(newLanguageName);

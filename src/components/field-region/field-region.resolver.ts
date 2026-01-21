@@ -13,14 +13,14 @@ import { SecuredFieldZone } from '../field-zone/dto';
 import { UserLoader } from '../user';
 import { SecuredUser } from '../user/dto';
 import {
-  CreateFieldRegionInput,
-  CreateFieldRegionOutput,
-  DeleteFieldRegionOutput,
+  CreateFieldRegion,
   FieldRegion,
+  FieldRegionCreated,
+  FieldRegionDeleted,
   FieldRegionListInput,
   FieldRegionListOutput,
-  UpdateFieldRegionInput,
-  UpdateFieldRegionOutput,
+  FieldRegionUpdated,
+  UpdateFieldRegion,
 } from './dto';
 import { FieldRegionLoader } from './field-region.loader';
 import { FieldRegionService } from './field-region.service';
@@ -71,31 +71,31 @@ export class FieldRegionResolver {
     );
   }
 
-  @Mutation(() => CreateFieldRegionOutput, {
+  @Mutation(() => FieldRegionCreated, {
     description: 'Create a field region',
   })
   async createFieldRegion(
-    @Args('input') { fieldRegion: input }: CreateFieldRegionInput,
-  ): Promise<CreateFieldRegionOutput> {
+    @Args('input') input: CreateFieldRegion,
+  ): Promise<FieldRegionCreated> {
     const fieldRegion = await this.fieldRegionService.create(input);
     return { fieldRegion };
   }
 
-  @Mutation(() => UpdateFieldRegionOutput, {
+  @Mutation(() => FieldRegionUpdated, {
     description: 'Update a field region',
   })
   async updateFieldRegion(
-    @Args('input') { fieldRegion: input }: UpdateFieldRegionInput,
-  ): Promise<UpdateFieldRegionOutput> {
+    @Args('input') input: UpdateFieldRegion,
+  ): Promise<FieldRegionUpdated> {
     const fieldRegion = await this.fieldRegionService.update(input);
     return { fieldRegion };
   }
 
-  @Mutation(() => DeleteFieldRegionOutput, {
+  @Mutation(() => FieldRegionDeleted, {
     description: 'Delete a field region',
   })
-  async deleteFieldRegion(@IdArg() id: ID): Promise<DeleteFieldRegionOutput> {
+  async deleteFieldRegion(@IdArg() id: ID): Promise<FieldRegionDeleted> {
     await this.fieldRegionService.delete(id);
-    return { success: true };
+    return {};
   }
 }

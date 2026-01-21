@@ -35,7 +35,7 @@ export class EducationRepository extends DtoRepository(Education) {
       .apply(await createNode(Education, { initialProps }))
       .apply(
         createRelationships(Education, 'in', {
-          education: ['User', input.userId],
+          education: ['User', input.user],
         }),
       )
       .return<{ id: ID }>('node.id as id');
@@ -65,7 +65,6 @@ export class EducationRepository extends DtoRepository(Education) {
     if (!result) {
       throw new NotFoundException(
         'Could not find user associated with education',
-        'user.education',
       );
     }
     return result;

@@ -1,3 +1,4 @@
+import { beforeAll, beforeEach, describe, expect, it } from '@jest/globals';
 import { Role } from '~/common';
 import { graphql } from '~/graphql';
 import { PartnerType } from '../src/components/partner/dto';
@@ -64,16 +65,13 @@ describe('Project-Workflow e2e', () => {
     location = await runAsAdmin(app, async () => {
       const fundingAccount = await createFundingAccount(app);
       const location = await createLocation(app, {
-        fundingAccountId: fundingAccount.id,
+        fundingAccount: fundingAccount.id,
       });
 
       return location;
     });
 
     language = await runAsAdmin(app, createLanguage);
-  });
-  afterAll(async () => {
-    await app.close();
   });
 
   it('should have project step', async () => {
@@ -120,21 +118,21 @@ describe('Project-Workflow e2e', () => {
     // Create a new project (single language)
     const project = await createProject(app);
     let languageEngagement = await createLanguageEngagement(app, {
-      projectId: project.id,
+      project: project.id,
     });
     expect(languageEngagement.id).toBeDefined();
 
     // Create a new project (cluster)
     languageEngagement = await createLanguageEngagement(app, {
-      projectId: project.id,
-      languageId: language.id,
+      project: project.id,
+      language: language.id,
     });
 
     // Enter location and field region
     const [location, fieldRegion] = await runAsAdmin(app, async () => {
       const fundingAccount = await createFundingAccount(app);
       const location = await createLocation(app, {
-        fundingAccountId: fundingAccount.id,
+        fundingAccount: fundingAccount.id,
       });
       const fieldRegion = await createRegion(app);
 
@@ -142,8 +140,8 @@ describe('Project-Workflow e2e', () => {
     });
     let result = await updateProject(app, {
       id: project.id,
-      primaryLocationId: location.id,
-      fieldRegionId: fieldRegion.id,
+      primaryLocation: location.id,
+      fieldRegion: fieldRegion.id,
     });
     expect(result.primaryLocation.value!.id).toBe(location.id);
     expect(result.fieldRegion.value!.id).toBe(fieldRegion.id);
@@ -169,8 +167,8 @@ describe('Project-Workflow e2e', () => {
     // TODO: Upload mock Approval docs
     // Add team members
     const projectMember = await createProjectMember(app, {
-      projectId: project.id,
-      userId: person.id,
+      project: project.id,
+      user: person.id,
     });
     expect(projectMember.user.value?.id).toBe(person.id);
 
@@ -184,14 +182,14 @@ describe('Project-Workflow e2e', () => {
       return { partner };
     });
     await createPartnership(app, {
-      partnerId: partner.id,
-      projectId: project.id,
+      partner: partner.id,
+      project: project.id,
       financialReportingType: undefined,
     });
 
     // Add products
     await createDirectProduct(app, {
-      engagementId: languageEngagement.id,
+      engagement: languageEngagement.id,
     });
   });
 
@@ -202,17 +200,17 @@ describe('Project-Workflow e2e', () => {
       await projectManager.login();
 
       const createdProject = await createProject(app, {
-        primaryLocationId: location.id,
+        primaryLocation: location.id,
       });
       await createProjectMember(app, {
-        userId: financialAnalyst.id,
-        projectId: createdProject.id,
+        user: financialAnalyst.id,
+        project: createdProject.id,
         roles: [Role.FinancialAnalyst],
       });
       // Projects need an engagement to move out of Early Conversations
       await createLanguageEngagement(app, {
-        projectId: createdProject.id,
-        languageId: language.id,
+        project: createdProject.id,
+        language: language.id,
       });
       project = await ProjectWorkflowTester.for(app, createdProject.id);
     });

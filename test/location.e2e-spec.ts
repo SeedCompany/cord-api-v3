@@ -1,4 +1,5 @@
 import { faker } from '@faker-js/faker';
+import { beforeAll, describe, expect, it } from '@jest/globals';
 import { times } from 'lodash';
 import { generateId, type IdOf, isValidId } from '~/common';
 import { graphql } from '~/graphql';
@@ -22,10 +23,6 @@ describe('Location e2e', () => {
     await createSession(app);
     // Only admins can modify locations
     await loginAsAdmin(app);
-  });
-
-  afterAll(async () => {
-    await app.close();
   });
 
   // Read Location
@@ -60,7 +57,7 @@ describe('Location e2e', () => {
     const result = await app.graphql.mutate(
       graphql(
         `
-          mutation updateLocation($input: UpdateLocationInput!) {
+          mutation updateLocation($input: UpdateLocation!) {
             updateLocation(input: $input) {
               location {
                 ...location
@@ -72,10 +69,8 @@ describe('Location e2e', () => {
       ),
       {
         input: {
-          location: {
-            id: st.id,
-            name: newName,
-          },
+          id: st.id,
+          name: newName,
         },
       },
     );
@@ -139,14 +134,14 @@ describe('Location e2e', () => {
   it('update location with defaultFieldRegion', async () => {
     const defaultFieldRegion = await createRegion(app);
     const l = await createLocation(app, {
-      defaultFieldRegionId: defaultFieldRegion.id,
+      defaultFieldRegion: defaultFieldRegion.id,
     });
     const newFieldRegion = await createRegion(app);
 
     const result = await app.graphql.mutate(
       graphql(
         `
-          mutation updateLocation($input: UpdateLocationInput!) {
+          mutation updateLocation($input: UpdateLocation!) {
             updateLocation(input: $input) {
               location {
                 ...location
@@ -158,10 +153,8 @@ describe('Location e2e', () => {
       ),
       {
         input: {
-          location: {
-            id: l.id,
-            defaultFieldRegionId: newFieldRegion.id,
-          },
+          id: l.id,
+          defaultFieldRegion: newFieldRegion.id,
         },
       },
     );
@@ -173,14 +166,14 @@ describe('Location e2e', () => {
   it('update location with defaultMarketingRegion', async () => {
     const defaultMarketingRegion = await createLocation(app);
     const l = await createLocation(app, {
-      defaultMarketingRegionId: defaultMarketingRegion.id as IdOf<Location>,
+      defaultMarketingRegion: defaultMarketingRegion.id as IdOf<Location>,
     });
     const newMarketingRegion = await createLocation(app);
 
     const result = await app.graphql.mutate(
       graphql(
         `
-          mutation updateLocation($input: UpdateLocationInput!) {
+          mutation updateLocation($input: UpdateLocation!) {
             updateLocation(input: $input) {
               location {
                 ...location
@@ -192,10 +185,8 @@ describe('Location e2e', () => {
       ),
       {
         input: {
-          location: {
-            id: l.id,
-            defaultMarketingRegionId: newMarketingRegion.id,
-          },
+          id: l.id,
+          defaultMarketingRegion: newMarketingRegion.id,
         },
       },
     );
@@ -209,14 +200,14 @@ describe('Location e2e', () => {
   it('update location with funding account', async () => {
     const fundingAccount = await createFundingAccount(app);
     const st = await createLocation(app, {
-      fundingAccountId: fundingAccount.id,
+      fundingAccount: fundingAccount.id,
     });
     const newFundingAccount = await createFundingAccount(app);
 
     const result = await app.graphql.mutate(
       graphql(
         `
-          mutation updateLocation($input: UpdateLocationInput!) {
+          mutation updateLocation($input: UpdateLocation!) {
             updateLocation(input: $input) {
               location {
                 ...location
@@ -228,10 +219,8 @@ describe('Location e2e', () => {
       ),
       {
         input: {
-          location: {
-            id: st.id,
-            fundingAccountId: newFundingAccount.id,
-          },
+          id: st.id,
+          fundingAccount: newFundingAccount.id,
         },
       },
     );

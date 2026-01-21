@@ -21,8 +21,8 @@ export const ScheduleStatus = makeEnum({
       return variance > 0.3
         ? status.Ahead
         : variance < -0.1
-        ? status.Behind
-        : status.OnTime;
+          ? status.Behind
+          : status.OnTime;
     },
   }),
 });

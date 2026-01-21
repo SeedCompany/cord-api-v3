@@ -32,17 +32,17 @@ import {
   SecuredTranslationProjectList,
 } from '../project/dto';
 import {
-  CreateLanguageInput,
-  CreateLanguageOutput,
-  DeleteLanguageOutput,
+  CreateLanguage,
   type ExternalFirstScripture,
   type InternalFirstScripture,
   Language,
+  LanguageCreated,
+  LanguageDeleted,
   LanguageListInput,
   LanguageListOutput,
+  LanguageUpdated,
   SecuredFirstScripture,
-  UpdateLanguageInput,
-  UpdateLanguageOutput,
+  UpdateLanguage,
 } from './dto';
 import { LanguageLoader } from './language.loader';
 import { LanguageService } from './language.service';
@@ -50,10 +50,10 @@ import { LanguageService } from './language.service';
 @ArgsType()
 class ModifyLocationArgs {
   @IdField()
-  languageId: ID;
+  language: ID<'Language'>;
 
   @IdField()
-  locationId: ID;
+  location: ID<'Location'>;
 }
 
 @Resolver(Language)
@@ -92,7 +92,7 @@ export class LanguageResolver {
       canEdit: false, // this is a computed field
       canRead,
       value: canRead
-        ? value ?? language.ethnologue.population.value
+        ? (value ?? language.ethnologue.population.value)
         : undefined,
     };
   }
@@ -176,22 +176,22 @@ export class LanguageResolver {
     return list;
   }
 
-  @Mutation(() => CreateLanguageOutput, {
+  @Mutation(() => LanguageCreated, {
     description: 'Create a language',
   })
   async createLanguage(
-    @Args('input') { language: input }: CreateLanguageInput,
-  ): Promise<CreateLanguageOutput> {
+    @Args('input') input: CreateLanguage,
+  ): Promise<LanguageCreated> {
     const language = await this.langService.create(input);
     return { language };
   }
 
-  @Mutation(() => UpdateLanguageOutput, {
+  @Mutation(() => LanguageUpdated, {
     description: 'Update a language',
   })
   async updateLanguage(
-    @Args('input') { language: input, changeset }: UpdateLanguageInput,
-  ): Promise<UpdateLanguageOutput> {
+    @Args('input') { changeset, ...input }: UpdateLanguage,
+  ): Promise<LanguageUpdated> {
     const language = await this.langService.update(
       input,
       viewOfChangeset(changeset),
@@ -199,31 +199,31 @@ export class LanguageResolver {
     return { language };
   }
 
-  @Mutation(() => DeleteLanguageOutput, {
+  @Mutation(() => LanguageDeleted, {
     description: 'Delete a language',
   })
-  async deleteLanguage(@IdArg() id: ID): Promise<DeleteLanguageOutput> {
+  async deleteLanguage(@IdArg() id: ID): Promise<LanguageDeleted> {
     await this.langService.delete(id);
-    return { success: true };
+    return {};
   }
 
   @Mutation(() => Language, {
     description: 'Add a location to a language',
   })
   async addLocationToLanguage(
-    @Args() { languageId, locationId }: ModifyLocationArgs,
+    @Args() { language, location }: ModifyLocationArgs,
   ): Promise<Language> {
-    await this.langService.addLocation(languageId, locationId);
-    return await this.langService.readOne(languageId);
+    await this.langService.addLocation(language, location);
+    return await this.langService.readOne(language);
   }
 
   @Mutation(() => Language, {
     description: 'Remove a location from a language',
   })
   async removeLocationFromLanguage(
-    @Args() { languageId, locationId }: ModifyLocationArgs,
+    @Args() { language, location }: ModifyLocationArgs,
   ): Promise<Language> {
-    await this.langService.removeLocation(languageId, locationId);
-    return await this.langService.readOne(languageId);
+    await this.langService.removeLocation(language, location);
+    return await this.langService.readOne(language);
   }
 }

@@ -1,6 +1,4 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import { Type } from 'class-transformer';
-import { ValidateNested } from 'class-validator';
 import { type ID, IdField, NameField } from '~/common';
 import { FieldRegion } from './field-region.dto';
 
@@ -13,24 +11,16 @@ export abstract class CreateFieldRegion {
     description:
       'The field zone ID that the field region will be associated with',
   })
-  readonly fieldZoneId: ID;
+  readonly fieldZone: ID<'FieldZone'>;
 
   @IdField({
     description: 'A user ID that will be the director of the field region',
   })
-  readonly directorId: ID;
-}
-
-@InputType()
-export abstract class CreateFieldRegionInput {
-  @Field()
-  @Type(() => CreateFieldRegion)
-  @ValidateNested()
-  readonly fieldRegion: CreateFieldRegion;
+  readonly director: ID<'User'>;
 }
 
 @ObjectType()
-export abstract class CreateFieldRegionOutput {
+export abstract class FieldRegionCreated {
   @Field()
   readonly fieldRegion: FieldRegion;
 }

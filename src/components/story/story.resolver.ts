@@ -2,14 +2,14 @@ import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { type ID, IdArg, ListArg } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import {
-  CreateStoryInput,
-  CreateStoryOutput,
-  DeleteStoryOutput,
+  CreateStory,
   Story,
+  StoryCreated,
+  StoryDeleted,
   StoryListInput,
   StoryListOutput,
-  UpdateStoryInput,
-  UpdateStoryOutput,
+  StoryUpdated,
+  UpdateStory,
 } from './dto';
 import { StoryLoader } from './story.loader';
 import { StoryService } from './story.service';
@@ -40,31 +40,27 @@ export class StoryResolver {
     return list;
   }
 
-  @Mutation(() => CreateStoryOutput, {
+  @Mutation(() => StoryCreated, {
     description: 'Create a story',
   })
-  async createStory(
-    @Args('input') { story: input }: CreateStoryInput,
-  ): Promise<CreateStoryOutput> {
+  async createStory(@Args('input') input: CreateStory): Promise<StoryCreated> {
     const story = await this.storyService.create(input);
     return { story };
   }
 
-  @Mutation(() => UpdateStoryOutput, {
+  @Mutation(() => StoryUpdated, {
     description: 'Update a story',
   })
-  async updateStory(
-    @Args('input') { story: input }: UpdateStoryInput,
-  ): Promise<UpdateStoryOutput> {
+  async updateStory(@Args('input') input: UpdateStory): Promise<StoryUpdated> {
     const story = await this.storyService.update(input);
     return { story };
   }
 
-  @Mutation(() => DeleteStoryOutput, {
+  @Mutation(() => StoryDeleted, {
     description: 'Delete a story',
   })
-  async deleteStory(@IdArg() id: ID): Promise<DeleteStoryOutput> {
+  async deleteStory(@IdArg() id: ID): Promise<StoryDeleted> {
     await this.storyService.delete(id);
-    return { success: true };
+    return {};
   }
 }

@@ -17,7 +17,7 @@ import {
 import { type PnpProgressExtractionResult } from '../pnp/extraction-result';
 import { type ProductStep as Step } from '../product/dto';
 import { type ScriptureRange } from '../scripture/dto';
-import { type StepProgressInput } from './dto';
+import { type UpdateStepProgress } from './dto';
 
 type ExtractedRow = MergeExclusive<
   {
@@ -79,7 +79,7 @@ const parseProgressRow =
       pnp.planning.goals.start.row.a1 + rowIndex,
     );
 
-    const steps = entries(stepColumns).flatMap<StepProgressInput>(
+    const steps = entries(stepColumns).flatMap<UpdateStepProgress>(
       ([step, column]) => {
         const fiscalYear = pnp.planning.cell(
           planningStepColumns.get(step)!,

@@ -2,10 +2,10 @@ import { Field, InputType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { type CalendarDate, DateField, type ID, IdField } from '~/common';
-import { CreateDefinedFileVersionInput } from '../../file/dto';
+import { CreateDefinedFileVersion } from '../../file/dto';
 
 @InputType()
-export abstract class UpdatePeriodicReportInput {
+export abstract class UpdatePeriodicReport {
   @IdField()
   readonly id: ID;
 
@@ -13,9 +13,9 @@ export abstract class UpdatePeriodicReportInput {
     description: 'New version of the report file',
     nullable: true,
   })
-  @Type(() => CreateDefinedFileVersionInput)
+  @Type(() => CreateDefinedFileVersion)
   @ValidateNested()
-  readonly reportFile?: CreateDefinedFileVersionInput;
+  readonly reportFile?: CreateDefinedFileVersion;
 
   @DateField({ nullable: true })
   readonly receivedDate?: CalendarDate | null;

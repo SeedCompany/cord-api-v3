@@ -10,7 +10,7 @@ import { PeriodicReportLoader } from '../periodic-report';
 import { ProductLoader } from '../product';
 import { Product } from '../product/dto';
 import { ProgressReport } from '../progress-report/dto';
-import { ProductProgress, ProductProgressInput } from './dto';
+import { ProductProgress, UpdateProductProgress } from './dto';
 import { ProductProgressService } from './product-progress.service';
 
 @Resolver(ProductProgress)
@@ -36,7 +36,7 @@ export class ProductProgressResolver {
 
   @Mutation(() => ProductProgress)
   async updateProductProgress(
-    @Args('input') input: ProductProgressInput,
+    @Args('input') input: UpdateProductProgress,
   ): Promise<ProductProgress> {
     return await this.service.update(input);
   }

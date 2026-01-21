@@ -5,9 +5,7 @@ import { EngagementStatus, IEngagement } from '../dto';
 import { EngagementUpdatedEvent } from '../events';
 
 @EventsHandler(EngagementUpdatedEvent)
-export class SetLastStatusDate
-  implements IEventHandler<EngagementUpdatedEvent>
-{
+export class SetLastStatusDate implements IEventHandler<EngagementUpdatedEvent> {
   constructor(private readonly db: DatabaseService) {}
 
   async handle(event: EngagementUpdatedEvent) {

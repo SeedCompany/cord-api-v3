@@ -1,3 +1,4 @@
+import { expect, test } from '@jest/globals';
 import { parseUri } from './parse-uri';
 
 test.each<[uri: string, output: [type: string, path: string, ro: boolean]]>([

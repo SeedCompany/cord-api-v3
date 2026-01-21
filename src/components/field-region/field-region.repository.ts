@@ -39,7 +39,7 @@ export class FieldRegionRepository extends DtoRepository(FieldRegion) {
   async create(input: CreateFieldRegion) {
     if (!(await this.isUnique(input.name))) {
       throw new DuplicateException(
-        'fieldRegion.name',
+        'name',
         'FieldRegion with this name already exists.',
       );
     }
@@ -55,8 +55,8 @@ export class FieldRegionRepository extends DtoRepository(FieldRegion) {
       .apply(await createNode(FieldRegion, { initialProps }))
       .apply(
         createRelationships(FieldRegion, 'out', {
-          director: ['User', input.directorId],
-          zone: ['FieldZone', input.fieldZoneId],
+          director: ['User', input.director],
+          zone: ['FieldZone', input.fieldZone],
         }),
       )
       .return<{ id: ID }>('node.id as id');
@@ -74,15 +74,15 @@ export class FieldRegionRepository extends DtoRepository(FieldRegion) {
   }
 
   async update(changes: UpdateFieldRegion) {
-    const { id, directorId, fieldZoneId, ...simpleChanges } = changes;
+    const { id, director, fieldZone, ...simpleChanges } = changes;
     await this.updateProperties({ id }, simpleChanges);
 
-    if (directorId !== undefined) {
-      await this.updateRelation('director', 'User', id, directorId);
+    if (director !== undefined) {
+      await this.updateRelation('director', 'User', id, director);
     }
 
-    if (fieldZoneId !== undefined) {
-      await this.updateRelation('zone', 'FieldZone', id, fieldZoneId);
+    if (fieldZone !== undefined) {
+      await this.updateRelation('zone', 'FieldZone', id, fieldZone);
     }
 
     return await this.readOne(id);

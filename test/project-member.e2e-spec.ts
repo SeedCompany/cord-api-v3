@@ -1,3 +1,4 @@
+import { beforeAll, describe, expect, it } from '@jest/globals';
 import { DateTime, Interval } from 'luxon';
 import { Role } from '~/common';
 import { graphql } from '~/graphql';
@@ -30,15 +31,12 @@ describe('ProjectMember e2e', () => {
     });
     project = await createProject(app);
   });
-  afterAll(async () => {
-    await app.close();
-  });
 
   it('create projectMember', async () => {
     const member = await createPerson(app);
     const projectMember = await createProjectMember(app, {
-      userId: member.id,
-      projectId: project.id,
+      user: member.id,
+      project: project.id,
     });
     expect(projectMember.id).toBeDefined();
     expect(projectMember.modifiedAt).toBeDefined();
@@ -55,14 +53,14 @@ describe('ProjectMember e2e', () => {
     const member = await createPerson(app);
     await expect(
       createProjectMember(app, {
-        userId: member.id,
-        projectId: project.id,
+        user: member.id,
+        project: project.id,
         roles: [Role.Controller],
       }),
     ).rejects.toThrowGqlError(
       errors.input({
         message: 'Role(s) Controller cannot be assigned to this project member',
-        field: 'input.roles',
+        field: 'roles',
       }),
     );
   });
@@ -70,8 +68,8 @@ describe('ProjectMember e2e', () => {
   it.skip('delete projectMember', async () => {
     const member = await createPerson(app);
     const projectMember = await createProjectMember(app, {
-      userId: member.id,
-      projectId: project.id,
+      user: member.id,
+      project: project.id,
     });
 
     const result = await app.graphql.mutate(
@@ -109,7 +107,7 @@ describe('ProjectMember e2e', () => {
     ).rejects.toThrowGqlError(
       errors.notFound({
         message: 'Could not find project member',
-        field: 'projectMember.id',
+        field: 'id',
       }),
     );
   });
@@ -117,8 +115,8 @@ describe('ProjectMember e2e', () => {
   it('Can create the same projectMember after deletion', async () => {
     const member = await createPerson(app);
     const projectMember = await createProjectMember(app, {
-      userId: member.id,
-      projectId: project.id,
+      user: member.id,
+      project: project.id,
     });
 
     await app.graphql.mutate(
@@ -135,8 +133,8 @@ describe('ProjectMember e2e', () => {
     );
 
     const newProjectMember = await createProjectMember(app, {
-      userId: member.id,
-      projectId: project.id,
+      user: member.id,
+      project: project.id,
     });
 
     expect(newProjectMember.id).toBeTruthy();
@@ -149,14 +147,14 @@ describe('ProjectMember e2e', () => {
       });
 
       const projectMember = await createProjectMember(app, {
-        userId: member.id,
-        projectId: project.id,
+        user: member.id,
+        project: project.id,
       });
 
       const result = await app.graphql.query(
         graphql(
           `
-            mutation updateProjectMember($input: UpdateProjectMemberInput!) {
+            mutation updateProjectMember($input: UpdateProjectMember!) {
               updateProjectMember(input: $input) {
                 projectMember {
                   ...projectMember
@@ -168,10 +166,8 @@ describe('ProjectMember e2e', () => {
         ),
         {
           input: {
-            projectMember: {
-              id: projectMember.id,
-              roles: [Role.ProjectManager],
-            },
+            id: projectMember.id,
+            roles: [Role.ProjectManager],
           },
         },
       );
@@ -191,15 +187,15 @@ describe('ProjectMember e2e', () => {
   it('should throw error with invalid roles when update', async () => {
     const member = await createPerson(app);
     const projectMember = await createProjectMember(app, {
-      userId: member.id,
-      projectId: project.id,
+      user: member.id,
+      project: project.id,
     });
 
     await expect(
       app.graphql.query(
         graphql(
           `
-            mutation updateProjectMember($input: UpdateProjectMemberInput!) {
+            mutation updateProjectMember($input: UpdateProjectMember!) {
               updateProjectMember(input: $input) {
                 projectMember {
                   ...projectMember
@@ -211,17 +207,15 @@ describe('ProjectMember e2e', () => {
         ),
         {
           input: {
-            projectMember: {
-              id: projectMember.id,
-              roles: [Role.Intern],
-            },
+            id: projectMember.id,
+            roles: [Role.Intern],
           },
         },
       ),
     ).rejects.toThrowGqlError(
       errors.input({
         message: 'Role(s) Intern cannot be assigned to this project member',
-        field: 'input.roles',
+        field: 'roles',
       }),
     );
   });

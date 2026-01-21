@@ -20,7 +20,7 @@ import {
   sorting,
 } from '~/core/database/query';
 import { ProgressReport, type ProgressReportStatus as Status } from '../dto';
-import { type ExecuteProgressReportTransitionInput } from './dto/execute-progress-report-transition.input';
+import { type ExecuteProgressReportTransition } from './dto/execute-progress-report-transition.input';
 import { ProgressReportWorkflowEvent as WorkflowEvent } from './dto/workflow-event.dto';
 
 @Injectable()
@@ -83,7 +83,7 @@ export class ProgressReportWorkflowRepository extends DtoRepository(
   async recordEvent({
     report,
     ...props
-  }: SetRequired<ExecuteProgressReportTransitionInput, 'status'>) {
+  }: SetRequired<ExecuteProgressReportTransition, 'status'>) {
     const result = await this.db
       .query()
       .apply(
@@ -114,7 +114,7 @@ export class ProgressReportWorkflowRepository extends DtoRepository(
       .return<{ status?: Status }>('status.value as status')
       .first();
     if (!res) {
-      throw new NotFoundException('Could not find report', 'reportId');
+      throw new NotFoundException('Could not find report', 'report');
     }
     if (!res.status) {
       throw new NotFoundException('Could not find report status');

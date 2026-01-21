@@ -24,13 +24,13 @@ import { PeriodicReportService } from '../periodic-report';
 import { ReportType } from '../periodic-report/dto';
 import { type ProductStep } from '../product/dto';
 import {
-  type ProductProgressInput,
   type ProgressVariant,
   type ProgressVariantByProductInput,
   type ProgressVariantByReportInput,
   ProductProgress as RawProductProgress,
   StepProgress as RawStepProgress,
   type UnsecuredProductProgress,
+  type UpdateProductProgress,
 } from './dto';
 
 const ProductProgress = EnhancedResource.of(RawProductProgress);
@@ -228,7 +228,7 @@ export class ProductProgressRepository {
       );
   }
 
-  async update(input: ProductProgressInput) {
+  async update(input: UpdateProductProgress) {
     const createdAt = DateTime.local();
     // Create temp IDs in case the Progress/Step nodes need to be created.
     const tempProgressId = await generateId();
@@ -241,8 +241,8 @@ export class ProductProgressRepository {
 
     const query = this.db
       .query()
-      .match([node('product', 'Product', { id: input.productId })])
-      .match([node('report', 'PeriodicReport', { id: input.reportId })])
+      .match([node('product', 'Product', { id: input.product })])
+      .match([node('report', 'PeriodicReport', { id: input.report })])
       .apply(this.withVariant(input.variant))
 
       .comment('Create ProductProgress if needed')
@@ -361,9 +361,10 @@ export class ProductProgressRepository {
             relation('out', '', 'progressTarget', ACTIVE),
             node('progressTarget', 'Property'),
           ])
-          .return<{ progressTarget: number; steps: ProductStep[] }>(
-            'progressTarget.value as progressTarget, steps.value as steps',
-          ),
+          .return<{
+            progressTarget: number;
+            steps: ProductStep[];
+          }>('progressTarget.value as progressTarget, steps.value as steps'),
       )
       .return(['sensitivity', 'scope', 'progressTarget', 'steps']);
     const result = await query.first();

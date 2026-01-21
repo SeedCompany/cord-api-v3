@@ -2,14 +2,14 @@ import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { type ID, IdArg, ListArg } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import {
-  CreateFundingAccountInput,
-  CreateFundingAccountOutput,
-  DeleteFundingAccountOutput,
+  CreateFundingAccount,
   FundingAccount,
+  FundingAccountCreated,
+  FundingAccountDeleted,
   FundingAccountListInput,
   FundingAccountListOutput,
-  UpdateFundingAccountInput,
-  UpdateFundingAccountOutput,
+  FundingAccountUpdated,
+  UpdateFundingAccount,
 } from './dto';
 import { FundingAccountLoader } from './funding-account.loader';
 import { FundingAccountService } from './funding-account.service';
@@ -42,33 +42,31 @@ export class FundingAccountResolver {
     return list;
   }
 
-  @Mutation(() => CreateFundingAccountOutput, {
+  @Mutation(() => FundingAccountCreated, {
     description: 'Create a funding account',
   })
   async createFundingAccount(
-    @Args('input') { fundingAccount: input }: CreateFundingAccountInput,
-  ): Promise<CreateFundingAccountOutput> {
+    @Args('input') input: CreateFundingAccount,
+  ): Promise<FundingAccountCreated> {
     const fundingAccount = await this.fundingAccountService.create(input);
     return { fundingAccount };
   }
 
-  @Mutation(() => UpdateFundingAccountOutput, {
+  @Mutation(() => FundingAccountUpdated, {
     description: 'Update a funding account',
   })
   async updateFundingAccount(
-    @Args('input') { fundingAccount: input }: UpdateFundingAccountInput,
-  ): Promise<UpdateFundingAccountOutput> {
+    @Args('input') input: UpdateFundingAccount,
+  ): Promise<FundingAccountUpdated> {
     const fundingAccount = await this.fundingAccountService.update(input);
     return { fundingAccount };
   }
 
-  @Mutation(() => DeleteFundingAccountOutput, {
+  @Mutation(() => FundingAccountDeleted, {
     description: 'Delete a funding account',
   })
-  async deleteFundingAccount(
-    @IdArg() id: ID,
-  ): Promise<DeleteFundingAccountOutput> {
+  async deleteFundingAccount(@IdArg() id: ID): Promise<FundingAccountDeleted> {
     await this.fundingAccountService.delete(id);
-    return { success: true };
+    return {};
   }
 }

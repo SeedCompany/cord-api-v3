@@ -12,8 +12,8 @@ import { Privileges } from '../authorization';
 import { LanguageEngagement } from '../engagement/dto';
 import { IProject } from '../project/dto';
 import {
-  type PartnershipProducingMediumInput,
   type SecuredPartnershipsProducingMediums,
+  type UpdatePartnershipProducingMedium,
 } from './dto/partnership-producing-medium.dto';
 import { PartnershipProducingMediumRepository } from './partnership-producing-medium.repository';
 
@@ -51,7 +51,7 @@ export class PartnershipProducingMediumService {
 
   async update(
     engagementId: ID,
-    input: readonly PartnershipProducingMediumInput[],
+    input: readonly UpdatePartnershipProducingMedium[],
   ) {
     if (uniqBy(input, (pair) => pair.medium).length !== input.length) {
       throw new InputException('A medium can only be mentioned once');

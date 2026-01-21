@@ -5,7 +5,7 @@ import { type PublicOf, ServerException } from '~/common';
 import { CommonRepository } from '~/core/database';
 import { ACTIVE, merge } from '~/core/database/query';
 import { type ProjectType } from '../dto/project-type.enum';
-import { type FinancialApprover, type FinancialApproverInput } from './dto';
+import { type FinancialApprover, type SetFinancialApprover } from './dto';
 import { type FinancialApproverRepository } from './financial-approver.repository';
 
 @Injectable()
@@ -33,7 +33,7 @@ export class FinancialApproverNeo4jRepository
     return await query.run();
   }
 
-  async write(input: FinancialApproverInput) {
+  async write(input: SetFinancialApprover) {
     if (input.projectTypes.length === 0) {
       const query = this.db
         .query()

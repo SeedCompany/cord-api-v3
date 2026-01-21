@@ -40,7 +40,7 @@ export class FilmRepository extends DtoRepository(Film) {
   async create(input: CreateFilm) {
     if (!(await this.isUnique(input.name))) {
       throw new DuplicateException(
-        'film.name',
+        'name',
         'Film with this name already exists',
       );
     }

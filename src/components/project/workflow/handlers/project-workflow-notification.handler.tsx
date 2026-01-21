@@ -22,9 +22,7 @@ import {
 import { ProjectTransitionedEvent } from '../events/project-transitioned.event';
 
 @EventsHandler(ProjectTransitionedEvent)
-export class ProjectWorkflowNotificationHandler
-  implements IEventHandler<ProjectTransitionedEvent>
-{
+export class ProjectWorkflowNotificationHandler implements IEventHandler<ProjectTransitionedEvent> {
   constructor(
     private readonly identity: Identity,
     private readonly config: ConfigService,

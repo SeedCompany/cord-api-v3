@@ -121,10 +121,12 @@ export const ConcreteRepos = {
     },
   ) {
     async create(input: CreateLanguageEngagement) {
-      const project = e.cast(e.TranslationProject, e.uuid(input.projectId));
+      const project = e.cast(e.TranslationProject, e.uuid(input.project));
       return await this.defaults.create({
         ...input,
+        project,
         projectContext: project.projectContext,
+        pnp: undefined, // TODO
       });
     }
   },
@@ -137,10 +139,12 @@ export const ConcreteRepos = {
     },
   ) {
     async create(input: CreateInternshipEngagement) {
-      const project = e.cast(e.InternshipProject, e.uuid(input.projectId));
+      const project = e.cast(e.InternshipProject, e.uuid(input.project));
       return await this.defaults.create({
         ...input,
+        project,
         projectContext: project.projectContext,
+        growthPlan: undefined, // TODO
       });
     }
   },
@@ -178,12 +182,18 @@ export class EngagementGelRepository
     return this.concretes.InternshipEngagement.getActualChanges;
   }
 
-  async updateLanguage(input: UpdateLanguageEngagement) {
-    return await this.concretes.LanguageEngagement.update(input);
+  async updateLanguage({ methodology, ...input }: UpdateLanguageEngagement) {
+    return await this.concretes.LanguageEngagement.update({
+      ...input,
+      pnp: undefined, // TODO
+    });
   }
 
   async updateInternship(input: UpdateInternshipEngagement) {
-    return await this.concretes.InternshipEngagement.update(input);
+    return await this.concretes.InternshipEngagement.update({
+      ...input,
+      growthPlan: undefined, // TODO
+    });
   }
 
   async listAllByProjectId(projectId: ID) {

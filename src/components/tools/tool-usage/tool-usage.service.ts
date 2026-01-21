@@ -38,7 +38,7 @@ export class ToolUsageService {
     const container = await this.loadContainer(dto.container);
     const usage = this.secure(dto, container);
     if (!usage) {
-      throw new NotFoundException('Tool usage not found', 'id');
+      throw new NotFoundException('Tool usage not found');
     }
     return usage;
   }

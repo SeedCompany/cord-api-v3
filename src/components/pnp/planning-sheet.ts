@@ -60,8 +60,8 @@ export abstract class PlanningSheet extends Sheet {
     const goal = this.isWritten()
       ? this.bookName(row)
       : this.isOBS()
-      ? this.storyName(row)
-      : undefined;
+        ? this.storyName(row)
+        : undefined;
     if (!goal) {
       throw new Error('Could not determine goal name cell');
     }
@@ -84,7 +84,9 @@ export abstract class PlanningSheet extends Sheet {
 
   myNote(goalRow: Row, fallback = true) {
     const cell = this.myNotesColumn.cell(goalRow);
-    return !fallback || cell.asString ? cell : this.myNotesFallbackCell ?? cell;
+    return !fallback || cell.asString
+      ? cell
+      : (this.myNotesFallbackCell ?? cell);
   }
   protected abstract myNotesFallbackCell: Cell | undefined;
   protected abstract myNotesColumn: Column;

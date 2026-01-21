@@ -36,14 +36,14 @@ import { ProjectListInput, SecuredProjectList } from '../project/dto';
 import { UserLoader } from '../user';
 import { SecuredUser } from '../user/dto';
 import {
-  CreatePartnerInput,
-  CreatePartnerOutput,
-  DeletePartnerOutput,
+  CreatePartner,
   Partner,
+  PartnerCreated,
+  PartnerDeleted,
   PartnerListInput,
   PartnerListOutput,
-  UpdatePartnerInput,
-  UpdatePartnerOutput,
+  PartnerUpdated,
+  UpdatePartner,
 } from './dto';
 
 @Resolver(Partner)
@@ -143,7 +143,7 @@ export class PartnerResolver {
     const { value: languages, ...rest } = partner.languagesOfConsulting;
     const value = await loadManyIgnoreMissingThrowAny(
       loader,
-      languages.map(({ id }) => ({ id, view: { active: true } } as const)),
+      languages.map(({ id }) => ({ id, view: { active: true } }) as const),
     );
     return { ...rest, value };
   }
@@ -187,31 +187,31 @@ export class PartnerResolver {
     return list;
   }
 
-  @Mutation(() => CreatePartnerOutput, {
+  @Mutation(() => PartnerCreated, {
     description: 'Create a partner',
   })
   async createPartner(
-    @Args('input') { partner: input }: CreatePartnerInput,
-  ): Promise<CreatePartnerOutput> {
+    @Args('input') input: CreatePartner,
+  ): Promise<PartnerCreated> {
     const partner = await this.partnerService.create(input);
     return { partner };
   }
 
-  @Mutation(() => UpdatePartnerOutput, {
+  @Mutation(() => PartnerUpdated, {
     description: 'Update a partner',
   })
   async updatePartner(
-    @Args('input') { partner: input }: UpdatePartnerInput,
-  ): Promise<UpdatePartnerOutput> {
+    @Args('input') input: UpdatePartner,
+  ): Promise<PartnerUpdated> {
     const partner = await this.partnerService.update(input);
     return { partner };
   }
 
-  @Mutation(() => DeletePartnerOutput, {
+  @Mutation(() => PartnerDeleted, {
     description: 'Delete a partner',
   })
-  async deletePartner(@IdArg() id: ID): Promise<DeletePartnerOutput> {
+  async deletePartner(@IdArg() id: ID): Promise<PartnerDeleted> {
     await this.partnerService.delete(id);
-    return { success: true };
+    return {};
   }
 }

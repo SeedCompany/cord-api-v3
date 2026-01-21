@@ -16,8 +16,8 @@ import {
   IPeriodicReport,
   PeriodicReportListInput,
   PeriodicReportListOutput,
-  UpdatePeriodicReportInput,
-  UploadPeriodicReportInput,
+  UpdatePeriodicReport,
+  UploadPeriodicReportFile,
 } from './dto';
 import { PeriodicReportLoader as ReportLoader } from './periodic-report.loader';
 import { PeriodicReportService } from './periodic-report.service';
@@ -70,7 +70,7 @@ export class PeriodicReportResolver {
   })
   async uploadPeriodicReport(
     @Args('input')
-    { reportId: id, file: reportFile }: UploadPeriodicReportInput,
+    { report: id, file: reportFile }: UploadPeriodicReportFile,
   ): Promise<IPeriodicReport> {
     return await this.service.update({ id, reportFile });
   }
@@ -79,7 +79,7 @@ export class PeriodicReportResolver {
     description: 'Update a report',
   })
   async updatePeriodicReport(
-    @Args('input') input: UpdatePeriodicReportInput,
+    @Args('input') input: UpdatePeriodicReport,
   ): Promise<IPeriodicReport> {
     return await this.service.update(input);
   }

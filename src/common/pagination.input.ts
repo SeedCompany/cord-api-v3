@@ -64,8 +64,9 @@ export abstract class CursorPaginationInput extends DataObject {
   readonly before?: string;
 }
 
-export interface SortablePaginationInput<SortKey extends string = string>
-  extends PaginationInput {
+export interface SortablePaginationInput<
+  SortKey extends string = string,
+> extends PaginationInput {
   sort: SortKey;
   order: Order;
 }

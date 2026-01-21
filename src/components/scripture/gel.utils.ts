@@ -37,8 +37,8 @@ export const valueOptional = (input: readonly ScriptureRangeInput[] | Nil) =>
   input === undefined
     ? undefined
     : input && input.length > 0
-    ? value(input)
-    : null;
+      ? value(input)
+      : null;
 
 export const value = (input: readonly ScriptureRangeInput[]) => ({
   label: labelOfVerseRanges(input),

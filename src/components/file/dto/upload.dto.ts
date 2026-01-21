@@ -4,7 +4,7 @@ import { type FileUpload, FileUploadScalar, type ID, IdField } from '~/common';
 import { MediaUserMetadata } from '../media/media.dto';
 
 @ObjectType()
-export abstract class RequestUploadOutput {
+export abstract class FileUploadRequested {
   @IdField()
   readonly id: ID;
 
@@ -19,7 +19,7 @@ export abstract class RequestUploadOutput {
 }
 
 @InputType()
-export abstract class CreateDefinedFileVersionInput {
+export abstract class CreateDefinedFileVersion {
   @IdField({
     description: stripIndent`
       The ID returned from the \`requestFileUpload\` mutation.
@@ -27,13 +27,13 @@ export abstract class CreateDefinedFileVersionInput {
     `,
     nullable: true,
   })
-  readonly uploadId?: ID;
+  readonly upload?: ID;
 
   @Field(() => FileUploadScalar, {
     description: stripIndent`
       A file directly uploaded.
       This is mainly here to allow usage with Apollo Studio/Sandbox.
-      For production, prefer a PUT request to the \`url\` from the \`RequestUploadOutput\`.
+      For production, prefer a PUT request to the \`url\` from the \`FileUploadRequested\`.
     `,
     nullable: true,
   })
@@ -64,20 +64,20 @@ export abstract class CreateDefinedFileVersionInput {
 }
 
 @InputType()
-export abstract class CreateFileVersionInput extends CreateDefinedFileVersionInput {
+export abstract class CreateFileVersion extends CreateDefinedFileVersion {
   @IdField({
     description:
       'The directory ID if creating a new file or the file ID if creating a new version',
   })
-  readonly parentId: ID;
+  readonly parent: ID<'Directory' | 'File'>;
 }
 
 @InputType()
-export abstract class CreateDirectoryInput {
+export abstract class CreateDirectory {
   @IdField({
     description: 'The ID for the parent directory',
   })
-  readonly parentId: ID;
+  readonly parent: ID<'Directory'>;
 
   @Field({
     description: 'The directory name',

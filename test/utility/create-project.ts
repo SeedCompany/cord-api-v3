@@ -1,4 +1,5 @@
 import { faker } from '@faker-js/faker';
+import { expect } from '@jest/globals';
 import { CalendarDate, isValidId } from '~/common';
 import { graphql, type InputOf } from '~/graphql';
 import { type TestApp } from './create-app';
@@ -17,8 +18,8 @@ export async function createProject(
       mouStart: CalendarDate.fromISO('1991-01-01').toISO(),
       mouEnd: CalendarDate.fromISO('1992-01-01').toISO(),
       tags: ['tag1', 'tag2'],
-      fieldRegionId:
-        input.fieldRegionId ||
+      fieldRegion:
+        input.fieldRegion ||
         (await runAsAdmin(app, async () => {
           return (await createRegion(app)).id;
         })),
@@ -42,7 +43,7 @@ export async function createProject(
 const CreateProjectDoc = graphql(
   `
     mutation createProject($input: CreateProject!) {
-      createProject(input: { project: $input }) {
+      createProject(input: $input) {
         project {
           ...project
         }

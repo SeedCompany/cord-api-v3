@@ -6,7 +6,7 @@ import { Privileges } from '../authorization';
 import { MissingContextException } from '../authorization/policy/conditions';
 import { type Workflow } from './define-workflow';
 import {
-  type ExecuteTransitionInput as ExecuteTransitionInputFn,
+  type ExecuteTransition as ExecuteTransitionInputFn,
   SerializedWorkflow,
 } from './dto';
 import { transitionPermissionSerializer } from './permission.serializer';
@@ -79,7 +79,7 @@ export const WorkflowService = <W extends Workflow>(workflow: () => W) => {
           return t;
         }
         const disabledReasons = conditions.flatMap((c) =>
-          c.status === 'DISABLED' ? c.disabledReason ?? [] : [],
+          c.status === 'DISABLED' ? (c.disabledReason ?? []) : [],
         );
         return {
           ...t,

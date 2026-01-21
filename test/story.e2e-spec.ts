@@ -1,4 +1,5 @@
 import { faker } from '@faker-js/faker';
+import { beforeAll, describe, expect, it } from '@jest/globals';
 import { times } from 'lodash';
 import { isValidId, Role } from '~/common';
 import { graphql } from '~/graphql';
@@ -19,10 +20,6 @@ describe('Story e2e', () => {
     app = await createTestApp();
     await createSession(app);
     await registerUser(app, { roles: [Role.FieldOperationsDirector] });
-  });
-
-  afterAll(async () => {
-    await app.close();
   });
 
   it('Create Story', async () => {
@@ -72,7 +69,7 @@ describe('Story e2e', () => {
     const result = await app.graphql.mutate(
       graphql(
         `
-          mutation updateStory($input: UpdateStoryInput!) {
+          mutation updateStory($input: UpdateStory!) {
             updateStory(input: $input) {
               story {
                 ...story
@@ -84,11 +81,9 @@ describe('Story e2e', () => {
       ),
       {
         input: {
-          story: {
-            id: st.id,
-            name: newName,
-            scriptureReferences,
-          },
+          id: st.id,
+          name: newName,
+          scriptureReferences,
         },
       },
     );

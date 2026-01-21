@@ -12,10 +12,10 @@ import { Loader, type LoaderOf } from '~/core/data-loader';
 import { UserLoader } from '../../../components/user';
 import { User } from '../../../components/user/dto';
 import { AuthenticationService } from '../authentication.service';
-import { RegisterInput, RegisterOutput } from '../dto';
+import { RegisterUser, UserRegistered } from '../dto';
 import { AuthLevel } from '../session/auth-level.decorator';
 
-@Resolver(RegisterOutput)
+@Resolver(UserRegistered)
 @AuthLevel('anonymous')
 export class RegisterResolver {
   constructor(
@@ -23,13 +23,13 @@ export class RegisterResolver {
     private readonly config: ConfigService,
   ) {}
 
-  @Mutation(() => RegisterOutput, {
+  @Mutation(() => UserRegistered, {
     description: stripIndent`
       Register a new user
       @sensitive-secrets
     `,
   })
-  async register(@Args('input') input: RegisterInput): Promise<RegisterOutput> {
+  async register(@Args('input') input: RegisterUser): Promise<UserRegistered> {
     if (!this.config.registrationEnabled) {
       throw new UnauthorizedException(
         'User registration is currently disabled',
@@ -44,7 +44,7 @@ export class RegisterResolver {
     description: 'The newly created, logged-in user',
   })
   async user(
-    @Parent() { user }: RegisterOutput,
+    @Parent() { user }: UserRegistered,
     @Loader(UserLoader) users: LoaderOf<UserLoader>,
   ): Promise<User> {
     return await users.load(user);

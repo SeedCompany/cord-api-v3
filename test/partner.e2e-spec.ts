@@ -1,4 +1,5 @@
 import { faker } from '@faker-js/faker';
+import { beforeAll, describe, expect, it } from '@jest/globals';
 import { Role } from '~/common';
 import { graphql } from '~/graphql';
 import { PartnerType } from '../src/components/partner/dto';
@@ -25,13 +26,9 @@ describe('Partner e2e', () => {
     await registerUser(app, { roles: [Role.LeadFinancialAnalyst] });
   });
 
-  afterAll(async () => {
-    await app.close();
-  });
-
   it('create & read partner by id', async () => {
     const org = await createOrganization(app);
-    const partner = await createPartner(app, { organizationId: org.id });
+    const partner = await createPartner(app, { organization: org.id });
     expect(partner.id).toBeDefined();
     expect(partner.organization).toBeDefined();
     expect(partner.pointOfContact).toBeDefined();
@@ -40,7 +37,7 @@ describe('Partner e2e', () => {
 
   it('update partner', async () => {
     const org = await createOrganization(app);
-    const pt = await createPartner(app, { organizationId: org.id });
+    const pt = await createPartner(app, { organization: org.id });
     const person = await createPerson(app);
     const types = [PartnerType.Funding, PartnerType.Managing];
     const financialReportingTypes = [FinancialReportingType.FieldEngaged];
@@ -52,7 +49,7 @@ describe('Partner e2e', () => {
     const result = await app.graphql.mutate(
       graphql(
         `
-          mutation updatePartner($input: UpdatePartnerInput!) {
+          mutation updatePartner($input: UpdatePartner!) {
             updatePartner(input: $input) {
               partner {
                 ...partner
@@ -64,16 +61,14 @@ describe('Partner e2e', () => {
       ),
       {
         input: {
-          partner: {
-            id: pt.id,
-            pointOfContactId: person.id,
-            types,
-            financialReportingTypes,
-            pmcEntityCode,
-            globalInnovationsClient,
-            active,
-            address,
-          },
+          id: pt.id,
+          pointOfContact: person.id,
+          types,
+          financialReportingTypes,
+          pmcEntityCode,
+          globalInnovationsClient,
+          active,
+          address,
         },
       },
     );
@@ -94,7 +89,7 @@ describe('Partner e2e', () => {
 
   it('delete partner', async () => {
     const org = await createOrganization(app);
-    const pt = await createPartner(app, { organizationId: org.id });
+    const pt = await createPartner(app, { organization: org.id });
 
     await runAsAdmin(app, async () => {
       await app.graphql.mutate(
@@ -115,8 +110,8 @@ describe('Partner e2e', () => {
   it('list view of partners', async () => {
     const org1 = await createOrganization(app);
     const org2 = await createOrganization(app);
-    await createPartner(app, { organizationId: org1.id });
-    await createPartner(app, { organizationId: org2.id });
+    await createPartner(app, { organization: org1.id });
+    await createPartner(app, { organization: org2.id });
     const numPartners = 2;
     const { partners } = await app.graphql.query(
       graphql(
@@ -140,13 +135,13 @@ describe('Partner e2e', () => {
 
   it('should throw error if try to create duplicate partners for organization', async () => {
     const org = await createOrganization(app);
-    await createPartner(app, { organizationId: org.id });
+    await createPartner(app, { organization: org.id });
     await expect(
-      createPartner(app, { organizationId: org.id }),
+      createPartner(app, { organization: org.id }),
     ).rejects.toThrowGqlError(
       errors.duplicate({
         message: 'Partner for organization already exists.',
-        field: 'partner.organizationId',
+        field: 'organization',
       }),
     );
   });
@@ -157,11 +152,11 @@ describe('Partner e2e', () => {
       await expect(
         createPartner(app, {
           pmcEntityCode: pmc,
-          organizationId: org.id,
+          organization: org.id,
         }),
       ).rejects.toThrowGqlError(
         errors.validation({
-          'partner.pmcEntityCode': {
+          pmcEntityCode: {
             matches: 'Must be 3 uppercase letters',
           },
         }),
@@ -173,7 +168,7 @@ describe('Partner e2e', () => {
     const org = await createOrganization(app);
     await expect(
       createPartner(app, {
-        organizationId: org.id,
+        organization: org.id,
         types: [PartnerType.Funding],
         financialReportingTypes: [FinancialReportingType.Funded],
       }),
@@ -181,7 +176,7 @@ describe('Partner e2e', () => {
       errors.input({
         message:
           'Financial reporting type can only be applied to managing partners',
-        field: 'partnership.financialReportingType',
+        field: 'financialReportingType',
       }),
     );
   });

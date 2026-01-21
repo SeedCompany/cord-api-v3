@@ -7,7 +7,7 @@ import {
   ServerException,
   type UnsecuredDto,
 } from '~/common';
-import { HandleIdLookup } from '~/core';
+import { HandleIdLookup, type ResourceNameLike } from '~/core';
 import { Privileges, type UserEdgePrivileges } from '../authorization';
 import { type PropAction } from '../authorization/policy/actions';
 import {
@@ -82,27 +82,22 @@ export class LocationService {
     };
   }
 
-  async addLocationToNode(label: string, id: ID, rel: string, locationId: ID) {
-    try {
-      await this.removeLocationFromNode(label, id, rel, locationId);
-
-      await this.repo.addLocationToNode(label, id, rel, locationId);
-    } catch (e) {
-      throw new ServerException(`Could not add location to ${label}`, e);
-    }
+  async addLocationToNode(
+    label: ResourceNameLike,
+    id: ID,
+    rel: string,
+    locationId: ID<'Location'>,
+  ) {
+    return await this.repo.addLocationToNode(label, id, rel, locationId);
   }
 
   async removeLocationFromNode(
-    label: string,
+    label: ResourceNameLike,
     id: ID,
     rel: string,
-    locationId: ID,
+    locationId: ID<'Location'>,
   ) {
-    try {
-      await this.repo.removeLocationFromNode(label, id, rel, locationId);
-    } catch (e) {
-      throw new ServerException(`Could not remove location from ${label}`, e);
-    }
+    return await this.repo.removeLocationFromNode(label, id, rel, locationId);
   }
 
   async listLocationForResource<TResourceStatic extends ResourceShape<any>>(

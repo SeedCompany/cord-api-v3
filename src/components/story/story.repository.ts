@@ -40,7 +40,7 @@ export class StoryRepository extends DtoRepository(Story) {
   async create(input: CreateStory) {
     if (!(await this.isUnique(input.name))) {
       throw new DuplicateException(
-        'story.name',
+        'name',
         'Story with this name already exists.',
       );
     }

@@ -31,7 +31,7 @@ export abstract class ProgressReportVarianceExplanation {
 }
 
 @InputType()
-export abstract class ProgressReportVarianceExplanationInput {
+export abstract class ExplainProgressVariance {
   @IdField({
     description: 'The progress report ID',
   })
@@ -39,7 +39,7 @@ export abstract class ProgressReportVarianceExplanationInput {
 
   @ListField(() => String, {
     optional: true,
-    transform: (prev) => (value) => value === null ? [] : prev(value),
+    transform: (prev) => (value) => (value === null ? [] : prev(value)),
   })
   @IsIn([...ReasonOptions.instance.all], {
     each: true,

@@ -12,7 +12,7 @@ import {
   UnauthorizedException,
   type UnsecuredDto,
 } from '~/common';
-import { type AnyChangesOf, isRelation } from '~/core/database/changes';
+import { type AnyChangesOf } from '~/core/database/changes';
 import {
   type AnyAction,
   type ChildListAction,
@@ -177,9 +177,7 @@ export class ResourcePrivileges<TResourceStatic extends ResourceShape<any>> {
     }
 
     for (const prop of Object.keys(changes)) {
-      const dtoPropName: any = isRelation(this.resource, prop)
-        ? prop.slice(0, -2)
-        : prop;
+      const dtoPropName: any = prop;
       if (!this.resource.securedProps.has(dtoPropName)) {
         continue;
       }

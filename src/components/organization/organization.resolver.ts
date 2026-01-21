@@ -19,35 +19,35 @@ import { LocationLoader } from '../location';
 import { LocationListInput, SecuredLocationList } from '../location/dto';
 import { OrganizationLoader, OrganizationService } from '../organization';
 import {
-  CreateOrganizationInput,
-  CreateOrganizationOutput,
-  DeleteOrganizationOutput,
+  CreateOrganization,
   Organization,
+  OrganizationCreated,
+  OrganizationDeleted,
   OrganizationListInput,
   OrganizationListOutput,
-  UpdateOrganizationInput,
-  UpdateOrganizationOutput,
+  OrganizationUpdated,
+  UpdateOrganization,
 } from './dto';
 
 @ArgsType()
 class ModifyLocationArgs {
   @IdField()
-  organizationId: ID;
+  organization: ID<'Organization'>;
 
   @IdField()
-  locationId: ID;
+  location: ID<'Location'>;
 }
 
 @Resolver(Organization)
 export class OrganizationResolver {
   constructor(private readonly orgs: OrganizationService) {}
 
-  @Mutation(() => CreateOrganizationOutput, {
+  @Mutation(() => OrganizationCreated, {
     description: 'Create an organization',
   })
   async createOrganization(
-    @Args('input') { organization: input }: CreateOrganizationInput,
-  ): Promise<CreateOrganizationOutput> {
+    @Args('input') input: CreateOrganization,
+  ): Promise<OrganizationCreated> {
     const organization = await this.orgs.create(input);
     return { organization };
   }
@@ -92,41 +92,41 @@ export class OrganizationResolver {
     return list;
   }
 
-  @Mutation(() => UpdateOrganizationOutput, {
+  @Mutation(() => OrganizationUpdated, {
     description: 'Update an organization',
   })
   async updateOrganization(
-    @Args('input') { organization: input }: UpdateOrganizationInput,
-  ): Promise<UpdateOrganizationOutput> {
+    @Args('input') input: UpdateOrganization,
+  ): Promise<OrganizationUpdated> {
     const organization = await this.orgs.update(input);
     return { organization };
   }
 
-  @Mutation(() => DeleteOrganizationOutput, {
+  @Mutation(() => OrganizationDeleted, {
     description: 'Delete an organization',
   })
-  async deleteOrganization(@IdArg() id: ID): Promise<DeleteOrganizationOutput> {
+  async deleteOrganization(@IdArg() id: ID): Promise<OrganizationDeleted> {
     await this.orgs.delete(id);
-    return { success: true };
+    return {};
   }
 
   @Mutation(() => Organization, {
     description: 'Add a location to a organization',
   })
   async addLocationToOrganization(
-    @Args() { organizationId, locationId }: ModifyLocationArgs,
+    @Args() { organization, location }: ModifyLocationArgs,
   ): Promise<Organization> {
-    await this.orgs.addLocation(organizationId, locationId);
-    return await this.orgs.readOne(organizationId);
+    await this.orgs.addLocation(organization, location);
+    return await this.orgs.readOne(organization);
   }
 
   @Mutation(() => Organization, {
     description: 'Remove a location from a organization',
   })
   async removeLocationFromOrganization(
-    @Args() { organizationId, locationId }: ModifyLocationArgs,
+    @Args() { organization, location }: ModifyLocationArgs,
   ): Promise<Organization> {
-    await this.orgs.removeLocation(organizationId, locationId);
-    return await this.orgs.readOne(organizationId);
+    await this.orgs.removeLocation(organization, location);
+    return await this.orgs.readOne(organization);
   }
 }

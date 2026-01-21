@@ -1,6 +1,4 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import { Type } from 'class-transformer';
-import { ValidateNested } from 'class-validator';
 import { type CalendarDate, DateField, type ID, IdField } from '~/common';
 import { Ceremony } from './ceremony.dto';
 
@@ -19,16 +17,8 @@ export abstract class UpdateCeremony {
   readonly actualDate?: CalendarDate | null;
 }
 
-@InputType()
-export abstract class UpdateCeremonyInput {
-  @Field()
-  @Type(() => UpdateCeremony)
-  @ValidateNested()
-  readonly ceremony: UpdateCeremony;
-}
-
 @ObjectType()
-export abstract class UpdateCeremonyOutput {
+export abstract class CeremonyUpdated {
   @Field()
   readonly ceremony: Ceremony;
 }

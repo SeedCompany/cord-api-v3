@@ -5,7 +5,7 @@ import type { AllResourceDBNames } from '~/core';
 import { attributesOf } from './attributes';
 
 export class MyConstraintViolationError extends ConstraintViolationError {
-  private declare readonly orig: ConstraintViolationError;
+  declare private readonly orig: ConstraintViolationError;
   constructor(e: ConstraintViolationError) {
     // @ts-expect-error it is a private field
     const message: string = e._message;

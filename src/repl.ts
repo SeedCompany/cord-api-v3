@@ -14,18 +14,16 @@ import './polyfills';
 runRepl({
   module: () => import('./app.module').then((m) => m.AppModule),
   options: async () => {
-    const { bootstrapLogger: logger } = await import(
-      '~/core/logger/logger.module'
-    );
+    const { bootstrapLogger: logger } =
+      await import('~/core/logger/logger.module');
     return { logger };
   },
   import: { import: (name) => import(name) },
   extraContext: async (app) => {
     const { ResourcesHost } = await import('~/core');
     const { e } = await import('~/core/gel');
-    const { SessionManager } = await import(
-      './core/authentication/session/session.manager'
-    );
+    const { SessionManager } =
+      await import('./core/authentication/session/session.manager');
     const { Pnp } = await import('./components/pnp');
 
     const session = app.get(SessionManager).lazySessionForRootUser();

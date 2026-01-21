@@ -1,20 +1,34 @@
 import {
   Args,
+  ArgsType,
+  Field,
   Mutation,
   Parent,
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { type ID, IdArg } from '~/common';
+import { type ID, IdField } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { PartnershipLoader } from '../partnership';
 import { Partnership } from '../partnership/dto';
 import {
   PartnershipProducingMedium,
-  PartnershipProducingMediumInput,
-  UpdatePartnershipProducingMediumOutput,
+  PartnershipProducingMediumUpdated,
+  UpdatePartnershipProducingMedium,
 } from './dto/partnership-producing-medium.dto';
 import { PartnershipProducingMediumService } from './partnership-producing-medium.service';
+
+@ArgsType()
+class UpdatePartnershipProducingMediumsArgs {
+  @IdField({ description: 'The engagement ID' })
+  readonly engagement: ID<'LanguageEngagement'>;
+
+  @Field(() => [UpdatePartnershipProducingMedium], {
+    description:
+      'A partial list of changes to the partners producing which mediums',
+  })
+  readonly input: readonly UpdatePartnershipProducingMedium[];
+}
 
 @Resolver(PartnershipProducingMedium)
 export class PartnershipProducingMediumResolver {
@@ -35,19 +49,11 @@ export class PartnershipProducingMediumResolver {
       : null;
   }
 
-  @Mutation(() => UpdatePartnershipProducingMediumOutput)
+  @Mutation(() => PartnershipProducingMediumUpdated)
   async updatePartnershipsProducingMediums(
-    @IdArg({ name: 'engagementId', description: 'A LanguageEngagement ID' })
-    engagementId: ID,
-    @Args({
-      name: 'input',
-      type: () => [PartnershipProducingMediumInput],
-      description:
-        'A partial list of changes to the partners producing which mediums',
-    })
-    input: readonly PartnershipProducingMediumInput[],
-  ): Promise<UpdatePartnershipProducingMediumOutput> {
-    await this.service.update(engagementId, input);
-    return { engagement: engagementId };
+    @Args() { engagement, input }: UpdatePartnershipProducingMediumsArgs,
+  ): Promise<PartnershipProducingMediumUpdated> {
+    await this.service.update(engagement, input);
+    return { engagement };
   }
 }

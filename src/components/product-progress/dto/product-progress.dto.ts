@@ -23,8 +23,10 @@ export interface ProgressVariantByProductInput {
   variant: Variant<ProgressVariant>;
 }
 
-export interface ProgressVariantByProductOutput
-  extends Pick<ProgressReportVariantProgress, 'variant' | 'details'> {
+export interface ProgressVariantByProductOutput extends Pick<
+  ProgressReportVariantProgress,
+  'variant' | 'details'
+> {
   product: Product;
 }
 
@@ -33,8 +35,10 @@ export interface ProgressVariantByReportInput {
   variant: Variant<ProgressVariant>;
 }
 
-export interface ProgressVariantByReportOutput
-  extends Pick<ProgressReportVariantProgress, 'variant' | 'details'> {
+export interface ProgressVariantByReportOutput extends Pick<
+  ProgressReportVariantProgress,
+  'variant' | 'details'
+> {
   report: ProgressReport;
 }
 

@@ -17,7 +17,7 @@ import { type AnyProduct, Product } from './product.dto';
 
 @InputType()
 export abstract class UpdateBaseProduct extends OmitType(CreateBaseProduct, [
-  'engagementId',
+  'engagement',
   'createdAt',
   'pnpIndex',
 ]) {
@@ -67,7 +67,7 @@ export abstract class UpdateOtherProduct extends UpdateBaseProduct {
 }
 
 @ObjectType()
-export abstract class UpdateProductOutput {
+export abstract class ProductUpdated {
   @Field(() => Product)
   readonly product: AnyProduct;
 }

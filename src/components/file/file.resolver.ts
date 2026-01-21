@@ -13,16 +13,16 @@ import { UserLoader } from '../user';
 import { User } from '../user/dto';
 import {
   asFile,
-  CreateFileVersionInput,
-  DeleteFileNodeOutput,
+  CreateFileVersion,
   File,
   FileListInput,
   FileListOutput,
   type FileNode,
+  FileNodeDeleted,
+  FileUploadRequested,
   IFileNode,
-  MoveFileInput,
-  RenameFileInput,
-  RequestUploadOutput,
+  MoveFile,
+  RenameFile,
 } from './dto';
 import { FileNodeLoader } from './file-node.loader';
 import * as FileUrl from './file-url.resolver-util';
@@ -73,18 +73,18 @@ export class FileResolver {
     return await this.service.getUrl(node, options);
   }
 
-  @Mutation(() => DeleteFileNodeOutput, {
+  @Mutation(() => FileNodeDeleted, {
     description: 'Delete a file node',
   })
-  async deleteFileNode(@IdArg() id: ID): Promise<DeleteFileNodeOutput> {
+  async deleteFileNode(@IdArg() id: ID): Promise<FileNodeDeleted> {
     await this.service.delete(id);
-    return { success: true };
+    return {};
   }
 
-  @Mutation(() => RequestUploadOutput, {
+  @Mutation(() => FileUploadRequested, {
     description: 'Start the file upload process by requesting an upload',
   })
-  async requestFileUpload(): Promise<RequestUploadOutput> {
+  async requestFileUpload(): Promise<FileUploadRequested> {
     return await this.service.requestUpload();
   }
 
@@ -97,18 +97,14 @@ export class FileResolver {
       the existing file with the same name or create a new file if not found.
     `,
   })
-  createFileVersion(
-    @Args('input') input: CreateFileVersionInput,
-  ): Promise<File> {
+  createFileVersion(@Args('input') input: CreateFileVersion): Promise<File> {
     return this.service.createFileVersion(input);
   }
 
   @Mutation(() => IFileNode, {
     description: 'Rename a file or directory',
   })
-  async renameFileNode(
-    @Args('input') input: RenameFileInput,
-  ): Promise<FileNode> {
+  async renameFileNode(@Args('input') input: RenameFile): Promise<FileNode> {
     await this.service.rename(input);
     return await this.service.getFileNode(input.id);
   }
@@ -116,7 +112,7 @@ export class FileResolver {
   @Mutation(() => IFileNode, {
     description: 'Move a file or directory',
   })
-  moveFileNode(@Args('input') input: MoveFileInput): Promise<FileNode> {
+  moveFileNode(@Args('input') input: MoveFile): Promise<FileNode> {
     return this.service.move(input);
   }
 }

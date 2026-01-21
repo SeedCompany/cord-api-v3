@@ -1,3 +1,4 @@
+import { expect } from '@jest/globals';
 import { generateId, isValidId } from '~/common';
 import { graphql, type InputOf } from '~/graphql';
 import { type TestApp } from './create-app';
@@ -13,14 +14,14 @@ export async function createRegion(
   const name = input.name ?? 'Region' + (await generateId());
   const result = await app.graphql.mutate(CreateFieldRegionDoc, {
     input: {
-      fieldZoneId:
-        input.fieldZoneId ||
+      fieldZone:
+        input.fieldZone ||
         (await runAsAdmin(app, async () => {
           return (await createZone(app)).id;
         })),
 
-      directorId:
-        input.directorId ||
+      director:
+        input.director ||
         (await runAsAdmin(app, async () => {
           const director = await createPerson(app, {
             roles: ['RegionalDirector'],
@@ -44,7 +45,7 @@ export async function createRegion(
 const CreateFieldRegionDoc = graphql(
   `
     mutation createFieldRegion($input: CreateFieldRegion!) {
-      createFieldRegion(input: { fieldRegion: $input }) {
+      createFieldRegion(input: $input) {
         fieldRegion {
           ...fieldRegion
         }

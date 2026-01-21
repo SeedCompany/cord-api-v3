@@ -16,7 +16,7 @@ export class SecuredPartnershipsProducingMediums extends SecuredList(
 ) {}
 
 @InputType()
-export class PartnershipProducingMediumInput {
+export class UpdatePartnershipProducingMedium {
   @Field(() => Medium)
   readonly medium: Medium;
 
@@ -27,6 +27,6 @@ export class PartnershipProducingMediumInput {
 }
 
 @ObjectType()
-export class UpdatePartnershipProducingMediumOutput {
+export class PartnershipProducingMediumUpdated {
   readonly engagement: ID;
 }

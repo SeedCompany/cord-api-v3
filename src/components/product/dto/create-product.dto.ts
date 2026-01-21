@@ -24,7 +24,7 @@ export abstract class CreateBaseProduct {
   @IdField({
     description: 'An ID of a `LanguageEngagement` to create this product for',
   })
-  readonly engagementId: ID;
+  readonly engagement: ID<'LanguageEngagement'>;
 
   @Field(() => [ProductMedium], { nullable: true })
   @Transform(({ value }) => uniq(value))
@@ -81,7 +81,7 @@ export abstract class CreateDirectScriptureProduct extends CreateBaseProduct {
   @ScriptureField({
     nullable: true,
   })
-  readonly scriptureReferences?: readonly ScriptureRangeInput[];
+  readonly scriptureReferences?: readonly ScriptureRangeInput[] | null;
 
   @Field(() => UnspecifiedScripturePortionInput, {
     nullable: true,
@@ -131,7 +131,7 @@ export abstract class CreateOtherProduct extends CreateBaseProduct {
 }
 
 @ObjectType()
-export abstract class CreateProductOutput {
+export abstract class ProductCreated {
   @Field(() => Product)
   readonly product: AnyProduct;
 }

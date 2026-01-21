@@ -118,11 +118,8 @@ export interface Workflow<
   State extends string = string,
   StateEnum extends MadeEnum<State> = MadeEnum<State>,
   TransitionNames extends string = string,
-  Transition extends InternalTransition<
-    State,
-    TransitionNames,
-    Context
-  > = InternalTransition<State, TransitionNames, Context>,
+  Transition extends InternalTransition<State, TransitionNames, Context> =
+    InternalTransition<State, TransitionNames, Context>,
   Transitions extends readonly Transition[] = readonly Transition[],
 > {
   readonly name: Name;

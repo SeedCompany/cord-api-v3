@@ -57,6 +57,7 @@ import {
   type ProjectListInput,
   ProjectStatus,
   ProjectType,
+  ProjectUpdate,
   resolveProjectType,
   type SecuredProjectList,
   TranslationProject,
@@ -72,6 +73,7 @@ import {
   type ProjectMemberListInput,
   type SecuredProjectMemberList,
 } from './project-member/dto';
+import { ProjectChannels } from './project.channels';
 import { ProjectRepository } from './project.repository';
 
 @Injectable()
@@ -88,6 +90,7 @@ export class ProjectService {
     private readonly privileges: Privileges,
     private readonly identity: Identity,
     private readonly eventBus: IEventBus,
+    private readonly channels: ProjectChannels,
     private readonly repo: ProjectRepository,
     private readonly projectChangeRequests: ProjectChangeRequestService,
   ) {}
@@ -97,39 +100,39 @@ export class ProjectService {
     if (input.type !== ProjectType.Internship && input.sensitivity) {
       throw new InputException(
         'Can only set sensitivity on Internship Projects',
-        'project.sensitivity',
+        'sensitivity',
       );
     }
     this.privileges.for(IProject).verifyCan('create');
 
     await this.validateOtherResourceId(
-      input.fieldRegionId,
+      input.fieldRegion,
       'FieldRegion',
-      'fieldRegionId',
+      'fieldRegion',
       'Field region not found',
     );
     await this.validateOtherResourceId(
-      input.primaryLocationId,
+      input.primaryLocation,
       'Location',
-      'primaryLocationId',
+      'primaryLocation',
       'Primary location not found',
     );
     await this.validateOtherResourceId(
-      input.otherLocationIds,
+      input.otherLocations,
       'Location',
-      'otherLocationIds',
+      'otherLocations',
       'One of the other locations was not found',
     );
     await this.validateOtherResourceId(
-      input.marketingLocationId,
+      input.marketingLocation,
       'Location',
-      'marketingLocationId',
+      'marketingLocation',
       'Marketing location not found',
     );
     await this.validateOtherResourceId(
-      input.marketingRegionOverrideId,
+      input.marketingRegionOverride,
       'Location',
-      'marketingRegionOverrideId',
+      'marketingRegionOverride',
       'Marketing Region Override not found',
     );
 
@@ -157,12 +160,12 @@ export class ProjectService {
       const session = this.identity.current;
       await this.projectMembers.create(
         {
-          userId: session.userId,
+          user: session.userId,
           roles: session.roles
             .values()
             .filter((role) => Role.applicableToProjectMembership.has(role))
             .toArray(),
-          projectId: project,
+          project,
         },
         false,
       );
@@ -175,6 +178,11 @@ export class ProjectService {
 
       const event = new ProjectCreatedEvent(project);
       await this.eventBus.publish(event);
+
+      this.channels.publishToAll('created', {
+        project: project.id,
+        at: project.createdAt,
+      });
 
       return event.project;
     } catch (e) {
@@ -237,15 +245,12 @@ export class ProjectService {
     return this.secure(unsecured);
   }
 
-  async update(
-    input: UpdateProject,
-    changeset?: ID,
-  ): Promise<UnsecuredDto<Project>> {
+  async update(input: UpdateProject, changeset?: ID) {
     const currentProject = await this.readOneUnsecured(input.id, changeset);
     if (input.sensitivity && currentProject.type !== ProjectType.Internship)
       throw new InputException(
         'Can only set sensitivity on Internship Projects',
-        'project.sensitivity',
+        'sensitivity',
       );
 
     const changes = this.repo.getActualChanges(currentProject, input);
@@ -253,27 +258,27 @@ export class ProjectService {
       .for(resolveProjectType(currentProject), currentProject)
       .verifyChanges(changes, { pathPrefix: 'project' });
     if (Object.keys(changes).length === 0) {
-      return await this.readOneUnsecured(input.id, changeset);
+      return { project: currentProject };
     }
 
     ProjectDateRangeException.throwIfInvalid(currentProject, changes);
 
-    if (changes.primaryLocationId) {
+    if (changes.primaryLocation) {
       try {
         const location = await this.locationService.readOne(
-          changes.primaryLocationId,
+          changes.primaryLocation,
         );
         if (!location.fundingAccount.value) {
           throw new InputException(
             'Cannot connect location without a funding account',
-            'project.primaryLocationId',
+            'primaryLocation',
           );
         }
       } catch (e) {
         if (e instanceof NotFoundException) {
           throw new NotFoundException(
             'Primary location not found',
-            'project.primaryLocationId',
+            'primaryLocation',
             e,
           );
         }
@@ -282,9 +287,9 @@ export class ProjectService {
     }
 
     await this.validateOtherResourceId(
-      changes.fieldRegionId,
+      changes.fieldRegion,
       'FieldRegion',
-      'fieldRegionId',
+      'fieldRegion',
       'Field region not found',
     );
 
@@ -304,21 +309,34 @@ export class ProjectService {
       ...changes,
     });
     await this.eventBus.publish(event);
-    return event.updated;
+
+    const updatedPayload = this.channels.publishToAll('updated', {
+      project: updated.id,
+      at: changes.modifiedAt!,
+      updated: ProjectUpdate.fromInput(changes),
+      previous: ProjectUpdate.pickPrevious(currentProject, changes),
+    });
+    return {
+      project: event.updated,
+      payload: updatedPayload,
+    };
   }
 
-  async delete(id: ID): Promise<void> {
+  async delete(id: ID) {
     const object = await this.readOneUnsecured(id);
 
     this.privileges.for(IProject, object).verifyCan('delete');
 
-    try {
-      await this.repo.deleteNode(object);
-    } catch (e) {
+    const { at } = await this.repo.deleteNode(object).catch((e) => {
       throw new ServerException('Failed to delete project', e);
-    }
+    });
 
     await this.eventBus.publish(new ProjectDeletedEvent(object));
+
+    return this.channels.publishToAll('deleted', {
+      project: object.id,
+      at,
+    });
   }
 
   async list(input: ProjectListInput) {
@@ -455,33 +473,40 @@ export class ProjectService {
     };
   }
 
-  async addOtherLocation(projectId: ID, locationId: ID): Promise<void> {
-    try {
-      await this.locationService.addLocationToNode(
-        'Project',
-        projectId,
-        'otherLocations',
-        locationId,
-      );
-    } catch (e) {
-      throw new ServerException('Could not add other location to project', e);
+  async addOtherLocation(project: ID<'Project'>, location: ID<'Location'>) {
+    const changedAt = await this.locationService.addLocationToNode(
+      'Project',
+      project,
+      'otherLocations',
+      location,
+    );
+    if (!changedAt) {
+      return undefined;
     }
+    return this.channels.publishToAll('updated', {
+      project: project,
+      at: changedAt,
+      updated: { otherLocations: { Added: [location] } },
+      previous: {},
+    });
   }
 
-  async removeOtherLocation(projectId: ID, locationId: ID): Promise<void> {
-    try {
-      await this.locationService.removeLocationFromNode(
-        'Project',
-        projectId,
-        'otherLocations',
-        locationId,
-      );
-    } catch (e) {
-      throw new ServerException(
-        'Could not remove other location from project',
-        e,
-      );
+  async removeOtherLocation(project: ID<'Project'>, location: ID<'Location'>) {
+    const changedAt = await this.locationService.removeLocationFromNode(
+      'Project',
+      project,
+      'otherLocations',
+      location,
+    );
+    if (!changedAt) {
+      return undefined;
     }
+    return this.channels.publishToAll('updated', {
+      project,
+      at: changedAt,
+      updated: { otherLocations: { Removed: [location] } },
+      previous: {},
+    });
   }
 
   async listOtherLocations(
@@ -545,7 +570,7 @@ export class ProjectService {
         }
         throw new NotFoundException(
           errMsg,
-          `project.${resourceField}${Array.isArray(ids) ? `[${index}]` : ''}`,
+          `${resourceField}${Array.isArray(ids) ? `[${index}]` : ''}`,
         );
       }),
     );
@@ -566,7 +591,10 @@ class ProjectDateRangeException extends RangeException {
     }
   }
 
-  constructor(readonly value: Range<CalendarDate>, readonly field: string) {
+  constructor(
+    readonly value: Range<CalendarDate>,
+    readonly field: string,
+  ) {
     const message = "Project's MOU start date must be before the MOU end date";
     super({ message, field });
   }

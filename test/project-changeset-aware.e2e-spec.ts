@@ -1,4 +1,5 @@
 import { faker } from '@faker-js/faker';
+import { beforeAll, describe, expect, it } from '@jest/globals';
 import { CalendarDate, type ID, Role } from '~/common';
 import { graphql } from '~/graphql';
 import { PartnerType } from '../src/components/partner/dto';
@@ -53,7 +54,7 @@ const activeProject = async (app: TestApp) => {
   const [location, fieldRegion] = await runAsAdmin(app, async () => {
     const fundingAccount = await createFundingAccount(app);
     const location = await createLocation(app, {
-      fundingAccountId: fundingAccount.id,
+      fundingAccount: fundingAccount.id,
     });
     const fieldRegion = await createRegion(app);
 
@@ -62,8 +63,8 @@ const activeProject = async (app: TestApp) => {
   const project = await createProject(app, {
     mouStart: CalendarDate.local(2020).toISO(),
     mouEnd: CalendarDate.local(2021).toISO(),
-    primaryLocationId: location.id,
-    fieldRegionId: fieldRegion.id,
+    primaryLocation: location.id,
+    fieldRegion: fieldRegion.id,
   });
 
   await runAsAdmin(app, async () => {
@@ -90,14 +91,10 @@ describe('Project Changeset Aware e2e', () => {
     });
   });
 
-  afterAll(async () => {
-    await app.close();
-  });
-
   it('name', async () => {
     const project = await activeProject(app);
     const changeset = await createProjectChangeRequest(app, {
-      projectId: project.id,
+      project: project.id,
     });
 
     // Update project with changeset
@@ -105,7 +102,7 @@ describe('Project Changeset Aware e2e', () => {
     const mutationResult = await app.graphql.mutate(
       graphql(
         `
-          mutation updateProject($input: UpdateProjectInput!) {
+          mutation updateProject($input: UpdateProject!) {
             updateProject(input: $input) {
               project {
                 ...project
@@ -117,10 +114,8 @@ describe('Project Changeset Aware e2e', () => {
       ),
       {
         input: {
-          project: {
-            id: project.id,
-            name: newCRName,
-          },
+          id: project.id,
+          name: newCRName,
           changeset: changeset.id,
         },
       },
@@ -145,7 +140,7 @@ describe('Project Changeset Aware e2e', () => {
   it('mouStart and mouEnd', async () => {
     const project = await activeProject(app);
     const changeset = await createProjectChangeRequest(app, {
-      projectId: project.id,
+      project: project.id,
     });
 
     // Update project with changeset
@@ -154,7 +149,7 @@ describe('Project Changeset Aware e2e', () => {
     const mutationResult = await app.graphql.mutate(
       graphql(
         `
-          mutation updateProject($input: UpdateProjectInput!) {
+          mutation updateProject($input: UpdateProject!) {
             updateProject(input: $input) {
               project {
                 ...project
@@ -166,11 +161,9 @@ describe('Project Changeset Aware e2e', () => {
       ),
       {
         input: {
-          project: {
-            id: project.id,
-            mouStart,
-            mouEnd,
-          },
+          id: project.id,
+          mouStart,
+          mouEnd,
           changeset: changeset.id,
         },
       },
@@ -199,12 +192,12 @@ describe('Project Changeset Aware e2e', () => {
   it('budget records', async () => {
     const project = await activeProject(app);
     const changeset = await createProjectChangeRequest(app, {
-      projectId: project.id,
+      project: project.id,
     });
 
     // Create Partnership with Funding type, which will add budget records
     await createPartnership(app, {
-      projectId: project.id,
+      project: project.id,
       changeset: changeset.id,
       types: [PartnerType.Funding],
       financialReportingType: undefined,
@@ -216,7 +209,7 @@ describe('Project Changeset Aware e2e', () => {
     await app.graphql.mutate(
       graphql(
         `
-          mutation updateProject($input: UpdateProjectInput!) {
+          mutation updateProject($input: UpdateProject!) {
             updateProject(input: $input) {
               project {
                 ...project
@@ -236,11 +229,9 @@ describe('Project Changeset Aware e2e', () => {
       ),
       {
         input: {
-          project: {
-            id: project.id,
-            mouStart: '2020-08-23',
-            mouEnd: '2021-08-22',
-          },
+          id: project.id,
+          mouStart: '2020-08-23',
+          mouEnd: '2021-08-22',
           changeset: changeset.id,
         },
       },
@@ -264,14 +255,14 @@ describe('Project Changeset Aware e2e', () => {
   it.skip('project step', async () => {
     const project = await activeProject(app);
     const changeset = await createProjectChangeRequest(app, {
-      projectId: project.id,
+      project: project.id,
     });
 
     // Update project step with changeset
     const mutationResult = await app.graphql.mutate(
       graphql(
         `
-          mutation updateProject($input: UpdateProjectInput!) {
+          mutation updateProject($input: UpdateProject!) {
             updateProject(input: $input) {
               project {
                 ...project
@@ -283,10 +274,8 @@ describe('Project Changeset Aware e2e', () => {
       ),
       {
         input: {
-          project: {
-            id: project.id,
-            // step: ProjectStep.FinalizingCompletion,
-          },
+          id: project.id,
+          // step: ProjectStep.FinalizingCompletion,
           changeset: changeset.id,
         },
       },

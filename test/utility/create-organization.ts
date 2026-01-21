@@ -1,4 +1,5 @@
 import { faker } from '@faker-js/faker';
+import { expect } from '@jest/globals';
 import { graphql, type InputOf } from '~/graphql';
 import { type TestApp } from './create-app';
 import * as fragments from './fragments';
@@ -27,7 +28,7 @@ export async function createOrganization(
 const CreateOrganizationDoc = graphql(
   `
     mutation createOrganization($input: CreateOrganization!) {
-      createOrganization(input: { organization: $input }) {
+      createOrganization(input: $input) {
         organization {
           ...org
         }

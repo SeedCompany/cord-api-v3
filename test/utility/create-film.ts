@@ -1,4 +1,5 @@
 import { faker } from '@faker-js/faker';
+import { expect } from '@jest/globals';
 import { graphql, type InputOf } from '~/graphql';
 import { type TestApp } from './create-app';
 import * as fragments from './fragments';
@@ -25,7 +26,7 @@ export async function createFilm(
 const CreateFilmDoc = graphql(
   `
     mutation createFilm($input: CreateFilm!) {
-      createFilm(input: { film: $input }) {
+      createFilm(input: $input) {
         film {
           ...film
         }

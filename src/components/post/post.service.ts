@@ -34,7 +34,7 @@ export class PostService {
   ) {}
 
   async create(input: CreatePost): Promise<Post> {
-    const perms = await this.getPermissionsFromPostable(input.parentId);
+    const perms = await this.getPermissionsFromPostable(input.parent);
     perms.verifyCan('create');
 
     try {
@@ -49,8 +49,8 @@ export class PostService {
         exception,
       });
 
-      if (!(await this.repo.getBaseNode(input.parentId, 'BaseNode'))) {
-        throw new InputException('parentId is invalid', 'post.parentId');
+      if (!(await this.repo.getBaseNode(input.parent, 'BaseNode'))) {
+        throw new InputException('Parent is invalid', 'parent');
       }
 
       throw new CreationFailed(Post, { cause: exception });
@@ -125,7 +125,7 @@ export class PostService {
       ? await this.repo.getBaseNode(resource, Resource)
       : resource;
     if (!parentNode) {
-      throw new NotFoundException('Resource does not exist', 'resourceId');
+      throw new NotFoundException('Resource does not exist', 'resource');
     }
     const parent = isBaseNode(parentNode)
       ? ((await this.resources.loadByBaseNode(parentNode)) as ConcretePostable)

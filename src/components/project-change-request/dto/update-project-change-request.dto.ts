@@ -1,7 +1,5 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { type NonEmptyArray } from '@seedcompany/common';
-import { Type } from 'class-transformer';
-import { ValidateNested } from 'class-validator';
 import {
   type ID,
   IdField,
@@ -28,16 +26,8 @@ export abstract class UpdateProjectChangeRequest {
   readonly status?: ProjectChangeRequestStatus;
 }
 
-@InputType()
-export abstract class UpdateProjectChangeRequestInput {
-  @Field()
-  @Type(() => UpdateProjectChangeRequest)
-  @ValidateNested()
-  readonly projectChangeRequest: UpdateProjectChangeRequest;
-}
-
 @ObjectType()
-export abstract class UpdateProjectChangeRequestOutput {
+export abstract class ProjectChangeRequestUpdated {
   @Field()
   readonly projectChangeRequest: ProjectChangeRequest;
 }

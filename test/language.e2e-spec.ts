@@ -1,4 +1,5 @@
 import { faker } from '@faker-js/faker';
+import { beforeAll, describe, expect, it } from '@jest/globals';
 import { times } from 'lodash';
 import { isValidId } from '~/common';
 import { graphql, type InputOf } from '~/graphql';
@@ -23,10 +24,6 @@ describe('Language e2e', () => {
     await createSession(app);
     // Only admins can modify languages
     await loginAsAdmin(app);
-  });
-
-  afterAll(async () => {
-    await app.close();
   });
 
   it('create a language', async () => {
@@ -167,9 +164,7 @@ describe('Language e2e', () => {
     const project = await createProject(app);
     await app.graphql.mutate(
       graphql(`
-        mutation createLanguageEngagement(
-          $input: CreateLanguageEngagementInput!
-        ) {
+        mutation createLanguageEngagement($input: CreateLanguageEngagement!) {
           createLanguageEngagement(input: $input) {
             engagement {
               status {
@@ -183,10 +178,8 @@ describe('Language e2e', () => {
       `),
       {
         input: {
-          engagement: {
-            languageId: lang.id,
-            projectId: project.id,
-          },
+          language: lang.id,
+          project: project.id,
         },
       },
     );
@@ -223,14 +216,12 @@ describe('Language e2e', () => {
     const numProjects = 1;
     const language = await createLanguage(app);
     const project = await createProject(app);
-    const languageId = language.id;
-    const projectId = project.id;
 
     await Promise.all(
       times(numProjects).map(() =>
         createLanguageEngagement(app, {
-          projectId,
-          languageId,
+          project: project.id,
+          language: language.id,
         }),
       ),
     );
@@ -267,7 +258,7 @@ describe('Language e2e', () => {
       createLanguage(app, { signLanguageCode }),
     ).rejects.toThrowGqlError(
       errors.validation({
-        'language.signLanguageCode': {
+        signLanguageCode: {
           matches: 'Must be 2 uppercase letters followed by 2 digits',
         },
       }),
@@ -277,7 +268,7 @@ describe('Language e2e', () => {
   it('should throw error if trying to set hasExternalFirstScripture=true while language has engagements that have firstScripture=true', async () => {
     const language = await createLanguage(app);
     await createLanguageEngagement(app, {
-      languageId: language.id,
+      language: language.id,
       firstScripture: true,
     });
 
@@ -285,7 +276,7 @@ describe('Language e2e', () => {
       app.graphql.mutate(
         graphql(
           `
-            mutation updateLanguage($input: UpdateLanguageInput!) {
+            mutation updateLanguage($input: UpdateLanguage!) {
               updateLanguage(input: $input) {
                 language {
                   ...language
@@ -297,10 +288,8 @@ describe('Language e2e', () => {
         ),
         {
           input: {
-            language: {
-              id: language.id,
-              hasExternalFirstScripture: true,
-            },
+            id: language.id,
+            hasExternalFirstScripture: true,
           },
         },
       ),
@@ -308,7 +297,7 @@ describe('Language e2e', () => {
       errors.input({
         message:
           'hasExternalFirstScripture can be set to true if the language has no engagements that have firstScripture=true',
-        field: 'language.hasExternalFirstScripture',
+        field: 'hasExternalFirstScripture',
       }),
     );
   });
@@ -316,7 +305,7 @@ describe('Language e2e', () => {
   it('can set hasExternalFirstScripture=true if language has no engagements that have firstScripture=true', async () => {
     const language = await createLanguage(app);
     await createLanguageEngagement(app, {
-      languageId: language.id,
+      language: language.id,
       firstScripture: false,
     });
 
@@ -331,8 +320,8 @@ describe('Language e2e', () => {
     const project = await createProject(app, { presetInventory: true });
     const language = await createLanguage(app);
     await createLanguageEngagement(app, {
-      projectId: project.id,
-      languageId: language.id,
+      project: project.id,
+      language: language.id,
     });
 
     const { language: actual } = await app.graphql.query(
@@ -362,8 +351,8 @@ describe('Language e2e', () => {
     const project = await createProject(app, { presetInventory: true });
     const language = await createLanguage(app);
     await createLanguageEngagement(app, {
-      projectId: project.id,
-      languageId: language.id,
+      project: project.id,
+      language: language.id,
     });
 
     const { languages } = await app.graphql.query(
@@ -399,7 +388,7 @@ async function updateLanguage(
 const UpdateLanguageDoc = graphql(
   `
     mutation updateLanguage($input: UpdateLanguage!) {
-      updateLanguage(input: { language: $input }) {
+      updateLanguage(input: $input) {
         language {
           ...language
         }

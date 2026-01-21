@@ -32,12 +32,13 @@ declare const IDTo: unique symbol;
 type IDTo<T> = { readonly [IDTo]: T };
 
 // Normalize resource name if possible, otherwise use input directly
-type IDTag<Kind> = IsAny<Kind> extends true
-  ? any // continue to allow ID<any> to be assignable to any ID
-  : ResourceName<Kind, true> extends infer Normalized
-  ? IsNever<Normalized> extends false
-    ? Normalized
-    : Kind
-  : never;
+type IDTag<Kind> =
+  IsAny<Kind> extends true
+    ? any // continue to allow ID<any> to be assignable to any ID
+    : ResourceName<Kind, true> extends infer Normalized
+      ? IsNever<Normalized> extends false
+        ? Normalized
+        : Kind
+      : never;
 
 type IDKindLike = ResourceNameLike | object;

@@ -65,8 +65,8 @@ export async function createFileVersion(
   const result = await app.graphql.mutate(CreateFileVersionDoc, {
     input: {
       ...input,
-      uploadId: input.uploadId,
-      parentId: input.parentId,
+      upload: input.upload,
+      parent: input.parent,
       name: input.name ?? faker.system.fileName(),
     },
   });
@@ -77,7 +77,7 @@ export async function createFileVersion(
 }
 const CreateFileVersionDoc = graphql(
   `
-    mutation createFileVersion($input: CreateFileVersionInput!) {
+    mutation createFileVersion($input: CreateFileVersion!) {
       createFileVersion(input: $input) {
         ...fileNode
       }

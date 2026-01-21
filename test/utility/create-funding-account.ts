@@ -1,4 +1,5 @@
 import { faker } from '@faker-js/faker';
+import { expect } from '@jest/globals';
 import { graphql, type InputOf } from '~/graphql';
 import { type TestApp } from './create-app';
 import * as fragments from './fragments';
@@ -28,7 +29,7 @@ export async function createFundingAccount(
 const CreateFundingAccountDoc = graphql(
   `
     mutation createFundingAccount($input: CreateFundingAccount!) {
-      createFundingAccount(input: { fundingAccount: $input }) {
+      createFundingAccount(input: $input) {
         fundingAccount {
           ...fundingAccount
         }

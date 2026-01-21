@@ -20,26 +20,26 @@ import { PartnerLoader } from '../partner';
 import { SecuredPartner } from '../partner/dto';
 import { PartnershipLoader, PartnershipService } from '../partnership';
 import {
-  CreatePartnershipInput,
-  CreatePartnershipOutput,
-  DeletePartnershipOutput,
+  CreatePartnership,
   Partnership,
+  PartnershipCreated,
+  PartnershipDeleted,
   PartnershipListInput,
   PartnershipListOutput,
-  UpdatePartnershipInput,
-  UpdatePartnershipOutput,
+  PartnershipUpdated,
+  UpdatePartnership,
 } from './dto';
 
 @Resolver(Partnership)
 export class PartnershipResolver {
   constructor(private readonly service: PartnershipService) {}
 
-  @Mutation(() => CreatePartnershipOutput, {
+  @Mutation(() => PartnershipCreated, {
     description: 'Create a Partnership entry',
   })
   async createPartnership(
-    @Args('input') { partnership: input, changeset }: CreatePartnershipInput,
-  ): Promise<CreatePartnershipOutput> {
+    @Args('input') { changeset, ...input }: CreatePartnership,
+  ): Promise<PartnershipCreated> {
     const partnership = await this.service.create(input, changeset);
     return { partnership };
   }
@@ -110,12 +110,12 @@ export class PartnershipResolver {
     return list;
   }
 
-  @Mutation(() => UpdatePartnershipOutput, {
+  @Mutation(() => PartnershipUpdated, {
     description: 'Update a Partnership',
   })
   async updatePartnership(
-    @Args('input') { partnership: input, changeset }: UpdatePartnershipInput,
-  ): Promise<UpdatePartnershipOutput> {
+    @Args('input') { changeset, ...input }: UpdatePartnership,
+  ): Promise<PartnershipUpdated> {
     const partnership = await this.service.update(
       input,
       viewOfChangeset(changeset),
@@ -123,13 +123,13 @@ export class PartnershipResolver {
     return { partnership };
   }
 
-  @Mutation(() => DeletePartnershipOutput, {
+  @Mutation(() => PartnershipDeleted, {
     description: 'Delete a Partnership',
   })
   async deletePartnership(
     @Args() { id, changeset }: ChangesetIds,
-  ): Promise<DeletePartnershipOutput> {
+  ): Promise<PartnershipDeleted> {
     await this.service.delete(id, changeset);
-    return { success: true };
+    return {};
   }
 }

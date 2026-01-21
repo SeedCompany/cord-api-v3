@@ -9,9 +9,10 @@ import { type ProgressReportMedia as ReportMedia } from './dto';
 import { ProgressReportMediaService } from './progress-report-media.service';
 
 @LoaderFactory()
-export class ProgressReportFeaturedMediaLoader
-  implements DataLoaderStrategy<ReportMedia, ID<ProgressReport>>
-{
+export class ProgressReportFeaturedMediaLoader implements DataLoaderStrategy<
+  ReportMedia,
+  ID<ProgressReport>
+> {
   constructor(private readonly service: ProgressReportMediaService) {}
 
   getOptions() {

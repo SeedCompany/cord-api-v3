@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { node, type Query, relation } from 'cypher-query-builder';
+import { isNull, node, not, type Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   CreationFailed,
@@ -11,9 +11,11 @@ import {
   ServerException,
   type UnsecuredDto,
 } from '~/common';
+import { type ResourceNameLike } from '~/core';
 import { DtoRepository, OnIndex } from '~/core/database';
 import {
   ACTIVE,
+  collect,
   createNode,
   createRelationships,
   defineSorters,
@@ -22,8 +24,10 @@ import {
   matchProps,
   merge,
   paginate,
+  path,
   sortWith,
 } from '~/core/database/query';
+import { type BaseNode } from '~/core/database/results';
 import { FileService } from '../file';
 import { type FileId } from '../file/dto';
 import {
@@ -43,7 +47,7 @@ export class LocationRepository extends DtoRepository(Location) {
     const checkName = await this.doesNameExist(input.name);
     if (checkName) {
       throw new DuplicateException(
-        'location.name',
+        'name',
         'Location with this name already exists.',
       );
     }
@@ -63,9 +67,9 @@ export class LocationRepository extends DtoRepository(Location) {
       .apply(await createNode(Location, { initialProps }))
       .apply(
         createRelationships(Location, 'out', {
-          fundingAccount: ['FundingAccount', input.fundingAccountId],
-          defaultFieldRegion: ['FieldRegion', input.defaultFieldRegionId],
-          defaultMarketingRegion: ['Location', input.defaultMarketingRegionId],
+          fundingAccount: ['FundingAccount', input.fundingAccount],
+          defaultFieldRegion: ['FieldRegion', input.defaultFieldRegion],
+          defaultMarketingRegion: ['Location', input.defaultMarketingRegion],
         }),
       )
       .return<{ id: ID }>('node.id as id');
@@ -87,7 +91,6 @@ export class LocationRepository extends DtoRepository(Location) {
       dto.id,
       'mapImage',
       input.mapImage,
-      'location.mapImage',
       true,
     );
 
@@ -97,21 +100,21 @@ export class LocationRepository extends DtoRepository(Location) {
   async update(changes: UpdateLocation) {
     const {
       id,
-      fundingAccountId,
-      defaultFieldRegionId,
-      defaultMarketingRegionId,
+      fundingAccount,
+      defaultFieldRegion,
+      defaultMarketingRegion,
       mapImage,
       ...simpleChanges
     } = changes;
 
     await this.updateProperties({ id }, simpleChanges);
 
-    if (fundingAccountId !== undefined) {
+    if (fundingAccount !== undefined) {
       await this.updateRelation(
         'fundingAccount',
         'FundingAccount',
         id,
-        fundingAccountId,
+        fundingAccount,
       );
     }
 
@@ -126,25 +129,25 @@ export class LocationRepository extends DtoRepository(Location) {
 
       await this.files.createFileVersion({
         ...mapImage,
-        parentId: location.mapImage.id,
+        parent: location.mapImage.id,
       });
     }
 
-    if (defaultFieldRegionId !== undefined) {
+    if (defaultFieldRegion !== undefined) {
       await this.updateRelation(
         'defaultFieldRegion',
         'FieldRegion',
         id,
-        defaultFieldRegionId,
+        defaultFieldRegion,
       );
     }
 
-    if (defaultMarketingRegionId !== undefined) {
+    if (defaultMarketingRegion !== undefined) {
       await this.updateRelation(
         'defaultMarketingRegion',
         'Location',
         id,
-        defaultMarketingRegionId,
+        defaultMarketingRegion,
       );
     }
 
@@ -191,41 +194,98 @@ export class LocationRepository extends DtoRepository(Location) {
     return result!; // result from paginate() will always have 1 row.
   }
 
-  async addLocationToNode(label: string, id: ID, rel: string, locationId: ID) {
-    await this.db
+  async addLocationToNode(
+    label: ResourceNameLike,
+    id: ID,
+    rel: string,
+    locationId: ID<'Location'>,
+  ) {
+    const query = this.db
       .query()
-      .matchNode('node', label, { id })
-      .matchNode('location', 'Location', { id: locationId })
-      .create([
-        node('node'),
-        relation('out', '', rel, {
-          active: true,
-          createdAt: DateTime.local(),
-        }),
-        node('location'),
-      ])
-      .run();
+      .optionalMatch(node('node', label, { id }))
+      .optionalMatch(node('location', 'Location', { id: locationId }))
+      .subQuery(['node', 'location'], (sub) =>
+        sub
+          .with(['node', 'location'])
+          .where({
+            node: not(isNull()),
+            location: not(isNull()),
+            '': not(
+              path([
+                node('node'),
+                relation('out', '', rel, ACTIVE),
+                node('location'),
+              ]),
+            ),
+          })
+          .create([
+            node('node'),
+            relation('out', 'rel', rel, {
+              ...ACTIVE,
+              createdAt: DateTime.now(),
+            }),
+            node('location'),
+          ])
+          .with(collect('rel.createdAt').as('createdAt'))
+          .return('createdAt[0] as createdAt'),
+      )
+      .return<{ node?: BaseNode; location?: BaseNode; createdAt?: DateTime }>([
+        'node',
+        'location',
+        'createdAt',
+      ]);
+    const res = await query.first();
+    if (!res?.location) {
+      throw new NotFoundException('Location not found', 'location');
+    }
+    if (!res.node) {
+      throw new NotFoundException('Resource not found');
+    }
+    return res.createdAt ?? null;
   }
 
   async removeLocationFromNode(
-    label: string,
+    label: ResourceNameLike,
     id: ID,
     rel: string,
-    locationId: ID,
+    locationId: ID<'Location'>,
   ) {
-    await this.db
+    const query = this.db
       .query()
-      .matchNode('node', label, { id })
-      .matchNode('location', 'Location', { id: locationId })
-      .match([
-        node('node'),
-        relation('out', 'rel', rel, ACTIVE),
-        node('location'),
-      ])
-      .setValues({
-        'rel.active': false,
-      })
-      .run();
+      .optionalMatch(node('node', label, { id }))
+      .optionalMatch(node('location', 'Location', { id: locationId }))
+      .subQuery(['node', 'location'], (sub) =>
+        sub
+          .with(['node', 'location'])
+          .where({
+            node: not(isNull()),
+            location: not(isNull()),
+          })
+          .match([
+            node('node'),
+            relation('out', 'rel', rel, ACTIVE),
+            node('location'),
+          ])
+          .set({
+            variables: { 'rel.active': 'false' },
+            values: { 'rel.deletedAt': DateTime.now() },
+          })
+          .with(collect('rel.deletedAt').as('deletedAt'))
+          .return('deletedAt[0] as deletedAt'),
+      )
+      .return<{ node?: BaseNode; location?: BaseNode; deletedAt?: DateTime }>([
+        'node',
+        'location',
+        'deletedAt',
+      ]);
+    const res = await query.first();
+    if (!res?.location) {
+      throw new NotFoundException('Location not found', 'location');
+    }
+    if (!res.node) {
+      throw new NotFoundException('Resource not found');
+    }
+    return res.deletedAt ?? null;
   }
 
   async listLocationsFromNodeNoSecGroups(

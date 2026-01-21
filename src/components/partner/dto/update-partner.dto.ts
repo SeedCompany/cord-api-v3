@@ -22,7 +22,7 @@ export abstract class UpdatePartner {
   readonly id: ID;
 
   @IdField({ nullable: true })
-  readonly pointOfContactId?: ID<'User'> | null;
+  readonly pointOfContact?: ID<'User'> | null;
 
   @ListField(() => PartnerType, { optional: true })
   readonly types?: readonly PartnerType[];
@@ -46,10 +46,10 @@ export abstract class UpdatePartner {
   readonly address?: string | null;
 
   @IdField({ nullable: true })
-  readonly languageOfWiderCommunicationId?: ID<'Language'> | null;
+  readonly languageOfWiderCommunication?: ID<'Language'> | null;
 
   @IdField({ nullable: true })
-  readonly languageOfReportingId?: ID<'Language'> | null;
+  readonly languageOfReporting?: ID<'Language'> | null;
 
   @ListField(() => IDType, { optional: true })
   @IsId({ each: true })
@@ -75,16 +75,8 @@ export abstract class UpdatePartner {
   readonly departmentIdBlock?: FinanceDepartmentIdBlockInput | null;
 }
 
-@InputType()
-export abstract class UpdatePartnerInput {
-  @Field()
-  @Type(() => UpdatePartner)
-  @ValidateNested()
-  readonly partner: UpdatePartner;
-}
-
 @ObjectType()
-export abstract class UpdatePartnerOutput {
+export abstract class PartnerUpdated {
   @Field()
   readonly partner: Partner;
 }

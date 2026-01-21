@@ -316,7 +316,7 @@ export class ProductRepository extends CommonRepository {
       .apply(
         createRelationships(Product, {
           in: {
-            product: ['LanguageEngagement', input.engagementId],
+            product: ['LanguageEngagement', input.engagement],
           },
           out: isDerivative
             ? {
@@ -329,22 +329,22 @@ export class ProductRepository extends CommonRepository {
       .apply((q) => {
         const createdAt = DateTime.local();
         const connectScriptureRange =
-          (label: string) => (range: ScriptureRangeInput) =>
-            [
-              node('node'),
-              relation('out', '', label, ACTIVE),
-              node('', ScriptureRange.dbLabels, {
-                ...ScriptureRange.type.fromReferences(range),
-                createdAt,
-              }),
-            ];
+          (label: string) => (range: ScriptureRangeInput) => [
+            node('node'),
+            relation('out', '', label, ACTIVE),
+            node('', ScriptureRange.dbLabels, {
+              ...ScriptureRange.type.fromReferences(range),
+              createdAt,
+            }),
+          ];
         return q.create([
-          ...(!isDerivative ? input.scriptureReferences ?? [] : []).map(
+          ...(!isDerivative ? (input.scriptureReferences ?? []) : []).map(
             connectScriptureRange('scriptureReferences'),
           ),
-          ...(isDerivative ? input.scriptureReferencesOverride ?? [] : []).map(
-            connectScriptureRange('scriptureReferencesOverride'),
-          ),
+          ...(isDerivative
+            ? (input.scriptureReferencesOverride ?? [])
+            : []
+          ).map(connectScriptureRange('scriptureReferencesOverride')),
           !isDerivative && input.unspecifiedScripture
             ? [
                 node('node'),
@@ -390,7 +390,7 @@ export class ProductRepository extends CommonRepository {
       )
       .apply(
         createRelationships(OtherProduct, 'in', {
-          product: ['LanguageEngagement', input.engagementId],
+          product: ['LanguageEngagement', input.engagement],
         }),
       )
       .return<{ id: ID }>('node.id as id');

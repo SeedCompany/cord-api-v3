@@ -58,8 +58,8 @@ TermListClause.prototype.stringifyTerm = function stringifyTerm(term: Term) {
     typeof term === 'string'
       ? stripIndent(term)
       : isExp(term)
-      ? term.toString()
-      : term;
+        ? term.toString()
+        : term;
   // Remove empty strings, so they don't cause problems with double commas
   if (!stripped) {
     return [];

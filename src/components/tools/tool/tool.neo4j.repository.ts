@@ -41,7 +41,7 @@ export class ToolRepository extends DtoRepository(Tool) {
   async create(input: CreateTool): Promise<UnsecuredDto<Tool>> {
     if (!(await this.isUnique(input.name))) {
       throw new DuplicateException(
-        'tool.name',
+        'name',
         'Tool with this name already exists.',
       );
     }

@@ -1,4 +1,5 @@
 import { faker } from '@faker-js/faker';
+import { expect } from '@jest/globals';
 import { CalendarDate, generateId, isValidId } from '~/common';
 import { graphql, type InputOf } from '~/graphql';
 import { type TestApp } from './create-app';
@@ -62,7 +63,7 @@ export async function createLanguageMinimal(
 const CreateLanguageDoc = graphql(
   `
     mutation createLanguage($input: CreateLanguage!) {
-      createLanguage(input: { language: $input }) {
+      createLanguage(input: $input) {
         language {
           ...language
         }

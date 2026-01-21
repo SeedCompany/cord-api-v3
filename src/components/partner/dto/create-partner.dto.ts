@@ -19,10 +19,10 @@ import { Partner } from './partner.dto';
 @InputType()
 export abstract class CreatePartner {
   @IdField()
-  readonly organizationId: ID;
+  readonly organization: ID<'Organization'>;
 
   @IdField({ nullable: true })
-  readonly pointOfContactId?: ID;
+  readonly pointOfContact?: ID<'User'>;
 
   @Field(() => [PartnerType], { nullable: true })
   @Transform(({ value }) => uniq(value))
@@ -48,10 +48,10 @@ export abstract class CreatePartner {
   readonly address?: string;
 
   @IdField({ nullable: true })
-  readonly languageOfWiderCommunicationId?: ID<'Language'> | null;
+  readonly languageOfWiderCommunication?: ID<'Language'> | null;
 
   @IdField({ nullable: true })
-  readonly languageOfReportingId?: ID<'Language'> | null;
+  readonly languageOfReporting?: ID<'Language'> | null;
 
   @Field(() => [IDType], { nullable: true })
   @IsId({ each: true })
@@ -80,16 +80,8 @@ export abstract class CreatePartner {
   readonly departmentIdBlock?: FinanceDepartmentIdBlockInput;
 }
 
-@InputType()
-export abstract class CreatePartnerInput {
-  @Field()
-  @Type(() => CreatePartner)
-  @ValidateNested()
-  readonly partner: CreatePartner;
-}
-
 @ObjectType()
-export abstract class CreatePartnerOutput {
+export abstract class PartnerCreated {
   @Field()
   readonly partner: Partner;
 }

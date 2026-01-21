@@ -49,7 +49,7 @@ import {
   type PeriodicReportListInput,
   ReportType,
   resolveReportType,
-  type UpdatePeriodicReportInput,
+  type UpdatePeriodicReport,
 } from './dto';
 
 @Injectable()
@@ -173,7 +173,7 @@ export class PeriodicReportRepository extends DtoRepository<
   async update<T extends PeriodicReport | UnsecuredDto<PeriodicReport>>(
     existing: T,
     simpleChanges: Omit<
-      ChangesOf<PeriodicReport, UpdatePeriodicReportInput>,
+      ChangesOf<PeriodicReport, UpdatePeriodicReport>,
       'reportFile'
     > &
       Partial<Pick<PeriodicReport, 'start' | 'end'>>,

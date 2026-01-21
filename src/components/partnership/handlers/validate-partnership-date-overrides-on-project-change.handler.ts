@@ -6,9 +6,7 @@ import { ProjectUpdatedEvent } from '../../project/events';
 import { PartnershipService } from '../partnership.service';
 
 @EventsHandler([ProjectUpdatedEvent, 10])
-export class ValidatePartnershipDateOverridesOnProjectChangeHandler
-  implements IEventHandler<ProjectUpdatedEvent>
-{
+export class ValidatePartnershipDateOverridesOnProjectChangeHandler implements IEventHandler<ProjectUpdatedEvent> {
   constructor(
     private readonly partnerships: PartnershipService,
     private readonly resources: ResourceLoader,

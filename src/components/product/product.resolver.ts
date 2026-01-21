@@ -29,17 +29,17 @@ import { TranslationProject } from '../project/dto';
 import {
   type AnyProduct,
   CreateOtherProduct,
-  CreateProductOutput,
-  DeleteProductOutput,
   MethodologyToApproach,
   Product,
   ProductApproach,
   ProductCompletionDescriptionSuggestionsInput,
   ProductCompletionDescriptionSuggestionsOutput,
+  ProductCreated,
+  ProductDeleted,
   ProductListInput,
   ProductListOutput,
+  ProductUpdated,
   UpdateOtherProduct,
-  UpdateProductOutput,
 } from './dto';
 
 @Resolver(Product)
@@ -166,8 +166,8 @@ export class ProductResolver {
     return product.title
       ? 'Other'
       : !product.produces
-      ? 'Scripture'
-      : startCase(product.produces.value?.__typename) || null;
+        ? 'Scripture'
+        : startCase(product.produces.value?.__typename) || null;
   }
 
   @Query(() => [Step], {
@@ -205,71 +205,71 @@ export class ProductResolver {
     return await this.productService.suggestCompletionDescriptions(input);
   }
 
-  @Mutation(() => CreateProductOutput, {
+  @Mutation(() => ProductCreated, {
     description: 'Create a direct scripture product',
   })
   async createDirectScriptureProduct(
     @Args('input') input: CreateDirectScriptureProduct,
-  ): Promise<CreateProductOutput> {
+  ): Promise<ProductCreated> {
     const product = await this.productService.create(input);
     return { product };
   }
 
-  @Mutation(() => CreateProductOutput, {
+  @Mutation(() => ProductCreated, {
     description: 'Create a derivative scripture product',
   })
   async createDerivativeScriptureProduct(
     @Args('input') input: CreateDerivativeScriptureProduct,
-  ): Promise<CreateProductOutput> {
+  ): Promise<ProductCreated> {
     const product = await this.productService.create(input);
     return { product };
   }
 
-  @Mutation(() => CreateProductOutput, {
+  @Mutation(() => ProductCreated, {
     description: 'Create an other product entry',
   })
   async createOtherProduct(
     @Args('input') input: CreateOtherProduct,
-  ): Promise<CreateProductOutput> {
+  ): Promise<ProductCreated> {
     const product = await this.productService.create(input);
     return { product };
   }
 
-  @Mutation(() => UpdateProductOutput, {
+  @Mutation(() => ProductUpdated, {
     description: 'Update a direct scripture product',
   })
   async updateDirectScriptureProduct(
     @Args('input') input: UpdateDirectScriptureProduct,
-  ): Promise<UpdateProductOutput> {
+  ): Promise<ProductUpdated> {
     const product = await this.productService.updateDirect(input);
     return { product };
   }
 
-  @Mutation(() => UpdateProductOutput, {
+  @Mutation(() => ProductUpdated, {
     description: 'Update a derivative scripture product',
   })
   async updateDerivativeScriptureProduct(
     @Args('input') input: UpdateDerivativeScriptureProduct,
-  ): Promise<UpdateProductOutput> {
+  ): Promise<ProductUpdated> {
     const product = await this.productService.updateDerivative(input);
     return { product };
   }
 
-  @Mutation(() => UpdateProductOutput, {
+  @Mutation(() => ProductUpdated, {
     description: 'Update an other product entry',
   })
   async updateOtherProduct(
     @Args('input') input: UpdateOtherProduct,
-  ): Promise<UpdateProductOutput> {
+  ): Promise<ProductUpdated> {
     const product = await this.productService.updateOther(input);
     return { product };
   }
 
-  @Mutation(() => DeleteProductOutput, {
+  @Mutation(() => ProductDeleted, {
     description: 'Delete a product entry',
   })
-  async deleteProduct(@IdArg() id: ID): Promise<DeleteProductOutput> {
+  async deleteProduct(@IdArg() id: ID): Promise<ProductDeleted> {
     await this.productService.delete(id);
-    return { success: true };
+    return {};
   }
 }

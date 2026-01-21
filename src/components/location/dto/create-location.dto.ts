@@ -1,15 +1,9 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import {
-  type ID,
-  IdField,
-  type IdOf,
-  ISO31661Alpha3,
-  NameField,
-} from '~/common';
+import { type ID, IdField, ISO31661Alpha3, NameField } from '~/common';
 import { Transform } from '~/common/transform.decorator';
-import { CreateDefinedFileVersionInput } from '../../file/dto';
+import { CreateDefinedFileVersion } from '../../file/dto';
 import { LocationType } from './location-type.enum';
 import { Location } from './location.dto';
 
@@ -30,30 +24,22 @@ export abstract class CreateLocation {
   readonly isoAlpha3?: string | null;
 
   @IdField({ nullable: true })
-  readonly fundingAccountId?: ID;
+  readonly fundingAccount?: ID<'FundingAccount'>;
 
   @IdField({ nullable: true })
-  readonly defaultFieldRegionId?: ID;
+  readonly defaultFieldRegion?: ID<'FieldRegion'>;
 
   @IdField({ nullable: true })
-  readonly defaultMarketingRegionId?: IdOf<Location>;
+  readonly defaultMarketingRegion?: ID<Location>;
 
   @Field({ nullable: true })
-  @Type(() => CreateDefinedFileVersionInput)
+  @Type(() => CreateDefinedFileVersion)
   @ValidateNested()
-  readonly mapImage?: CreateDefinedFileVersionInput;
-}
-
-@InputType()
-export abstract class CreateLocationInput {
-  @Field()
-  @Type(() => CreateLocation)
-  @ValidateNested()
-  readonly location: CreateLocation;
+  readonly mapImage?: CreateDefinedFileVersion;
 }
 
 @ObjectType()
-export abstract class CreateLocationOutput {
+export abstract class LocationCreated {
   @Field()
   readonly location: Location;
 }

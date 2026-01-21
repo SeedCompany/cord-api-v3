@@ -1,4 +1,5 @@
 import { faker } from '@faker-js/faker';
+import { expect } from '@jest/globals';
 import { generateId, isValidId } from '~/common';
 import { graphql, type InputOf, type ResultOf } from '~/graphql';
 import { type TestApp } from './create-app';
@@ -47,7 +48,7 @@ export async function createPerson(
 const CreatePersonDoc = graphql(
   `
     mutation createPerson($input: CreatePerson!) {
-      createPerson(input: { person: $input }) {
+      createPerson(input: $input) {
         user {
           ...user
         }

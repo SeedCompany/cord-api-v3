@@ -80,8 +80,8 @@ export abstract class SecuredDateRange
       canRead,
       canEdit: start.canEdit && end.canEdit,
       value: {
-        start: canRead ? start.value ?? null : null,
-        end: canRead ? end.value ?? null : null,
+        start: canRead ? (start.value ?? null) : null,
+        end: canRead ? (end.value ?? null) : null,
       },
     };
   }

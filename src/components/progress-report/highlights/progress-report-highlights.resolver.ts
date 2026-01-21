@@ -33,21 +33,21 @@ export class ProgressReportHighlightsResolver {
 
   @Mutation(() => PromptVariantResponse)
   async createProgressReportHighlight(
-    @Args({ name: 'input' }) input: ChoosePrompt,
+    @Args('input') input: ChoosePrompt,
   ): Promise<PromptVariantResponse> {
     return await this.service.create(input);
   }
 
   @Mutation(() => PromptVariantResponse)
   async changeProgressReportHighlightPrompt(
-    @Args({ name: 'input' }) input: ChangePrompt,
+    @Args('input') input: ChangePrompt,
   ): Promise<PromptVariantResponse> {
     return await this.service.changePrompt(input);
   }
 
   @Mutation(() => PromptVariantResponse)
   async updateProgressReportHighlightResponse(
-    @Args({ name: 'input' })
+    @Args('input')
     input: UpdatePromptVariantResponse<HighlightVariant>,
   ): Promise<PromptVariantResponse> {
     return await this.service.submitResponse(input);

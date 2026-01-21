@@ -111,7 +111,7 @@ export class UserRepository extends DtoRepository(User) {
     } catch (e) {
       if (e instanceof UniquenessError && e.label === 'EmailAddress') {
         throw new DuplicateException(
-          'person.email',
+          'email',
           'Email address is already in use',
           e,
         );
@@ -130,7 +130,6 @@ export class UserRepository extends DtoRepository(User) {
         result.id,
         'photo',
         input.photo,
-        'user.photo',
         true,
       );
     });
@@ -160,7 +159,7 @@ export class UserRepository extends DtoRepository(User) {
 
       await this.files.createFileVersion({
         ...photo,
-        parentId: person.photo.id,
+        parent: person.photo.id,
       });
     }
 
@@ -211,7 +210,7 @@ export class UserRepository extends DtoRepository(User) {
     } catch (e) {
       if (e instanceof UniquenessError && e.label === 'EmailAddress') {
         throw new DuplicateException(
-          'person.email',
+          'email',
           'Email address is already in use',
           e,
         );
@@ -307,15 +306,15 @@ export class UserRepository extends DtoRepository(User) {
   }
 
   async assignOrganizationToUser({
-    userId,
-    orgId,
+    user,
+    org,
     primary,
   }: AssignOrganizationToUser) {
     await this.db
       .query()
       .match([
-        [node('user', 'User', { id: userId })],
-        [node('org', 'Organization', { id: orgId })],
+        [node('user', 'User', { id: user })],
+        [node('org', 'Organization', { id: org })],
       ])
       .subQuery((sub) =>
         sub
@@ -363,8 +362,8 @@ export class UserRepository extends DtoRepository(User) {
     const result = await this.db
       .query()
       .match([
-        [node('org', 'Organization', { id: orgId })],
-        [node('user', 'User', { id: userId })],
+        [node('org', 'Organization', { id: org })],
+        [node('user', 'User', { id: user })],
       ])
       .create([
         userToOrg('organization'),
@@ -382,13 +381,13 @@ export class UserRepository extends DtoRepository(User) {
       .query()
       .match([
         node('user', 'User', {
-          id: request.userId,
+          id: request.user,
         }),
         relation('out', 'oldRel', 'organization', {
           active: true,
         }),
         node('org', 'Organization', {
-          id: request.orgId,
+          id: request.org,
         }),
       ])
       .optionalMatch([
@@ -407,13 +406,13 @@ export class UserRepository extends DtoRepository(User) {
         .query()
         .match([
           node('user', 'User', {
-            id: request.userId,
+            id: request.user,
           }),
           relation('out', 'oldRel', 'primaryOrganization', {
             active: true,
           }),
           node('primaryOrg', 'Organization', {
-            id: request.orgId,
+            id: request.org,
           }),
         ])
         .setValues({ 'oldRel.active': false })

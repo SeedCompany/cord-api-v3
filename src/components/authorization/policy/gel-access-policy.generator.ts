@@ -61,7 +61,9 @@ export class GelAccessPolicyGenerator {
       .join('')}GeneratedFromAppPoliciesFor${params.resource.name}`;
 
     const withAliases =
-      typeof perm === 'boolean' ? {} : perm.setupEdgeQLContext?.(params) ?? {};
+      typeof perm === 'boolean'
+        ? {}
+        : (perm.setupEdgeQLContext?.(params) ?? {});
     const withAliasesEql = Object.entries(withAliases)
       .map(([key, value]) => `${key} := ${value}`)
       .join(',\n');

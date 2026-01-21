@@ -1,4 +1,5 @@
 import { faker } from '@faker-js/faker';
+import { expect } from '@jest/globals';
 import { graphql, type InputOf } from '~/graphql';
 import { type TestApp } from './create-app';
 import * as fragments from './fragments';
@@ -25,7 +26,7 @@ export async function createStory(
 const CreateStoryDoc = graphql(
   `
     mutation createStory($input: CreateStory!) {
-      createStory(input: { story: $input }) {
+      createStory(input: $input) {
         story {
           ...story
         }

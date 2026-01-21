@@ -15,7 +15,7 @@ export abstract class UpdateTool {
 }
 
 @ObjectType()
-export abstract class UpdateToolOutput {
+export abstract class ToolUpdated {
   @Field()
   readonly tool: Tool;
 }

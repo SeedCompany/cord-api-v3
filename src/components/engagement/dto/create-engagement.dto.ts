@@ -11,7 +11,7 @@ import {
   IdField,
 } from '~/common';
 import { ChangesetIdField } from '../../changeset';
-import { CreateDefinedFileVersionInput } from '../../file/dto';
+import { CreateDefinedFileVersion } from '../../file/dto';
 import { LanguageMilestone } from '../../language/dto';
 import { AIAssistedTranslation } from '../../language/dto/ai-assisted-translation.enum';
 import { ProductMethodology } from '../../product/dto';
@@ -24,7 +24,7 @@ import { EngagementStatus } from './status.enum';
 })
 export abstract class CreateEngagement extends DataObject {
   @IdField()
-  readonly projectId: ID;
+  readonly project: ID<'Project'>;
 
   @DateField({ nullable: true })
   readonly completeDate?: CalendarDate;
@@ -50,7 +50,7 @@ export class CreateLanguageEngagement extends CreateEngagement {
   ).map(([k]) => k);
 
   @IdField()
-  readonly languageId: ID;
+  readonly language: ID<'Language'>;
 
   @Field({ nullable: true })
   readonly firstScripture?: boolean;
@@ -65,9 +65,9 @@ export class CreateLanguageEngagement extends CreateEngagement {
   readonly paratextRegistryId?: string;
 
   @Field({ nullable: true })
-  @Type(() => CreateDefinedFileVersionInput)
+  @Type(() => CreateDefinedFileVersion)
   @ValidateNested()
-  readonly pnp?: CreateDefinedFileVersionInput;
+  readonly pnp?: CreateDefinedFileVersion;
 
   @Field(() => ProductMethodology, {
     nullable: true,
@@ -90,6 +90,9 @@ export class CreateLanguageEngagement extends CreateEngagement {
 
   @Field(() => AIAssistedTranslation, { nullable: true })
   readonly usingAIAssistedTranslation?: AIAssistedTranslation;
+
+  @ChangesetIdField()
+  readonly changeset?: ID;
 }
 
 @InputType()
@@ -100,13 +103,13 @@ export class CreateInternshipEngagement extends CreateEngagement {
   ).map(([k]) => k);
 
   @IdField()
-  readonly internId: ID;
+  readonly intern: ID<'User'>;
 
   @IdField({ nullable: true })
-  readonly mentorId?: ID;
+  readonly mentor?: ID<'User'>;
 
   @IdField({ nullable: true })
-  readonly countryOfOriginId?: ID;
+  readonly countryOfOrigin?: ID<'Location'>;
 
   @Field(() => InternshipPosition, { nullable: true })
   readonly position?: InternshipPosition;
@@ -115,47 +118,28 @@ export class CreateInternshipEngagement extends CreateEngagement {
   readonly methodologies?: readonly ProductMethodology[];
 
   @Field({ nullable: true })
-  @Type(() => CreateDefinedFileVersionInput)
+  @Type(() => CreateDefinedFileVersion)
   @ValidateNested()
-  readonly growthPlan?: CreateDefinedFileVersionInput;
+  readonly growthPlan?: CreateDefinedFileVersion;
 
   @Field(() => Boolean)
   readonly marketable: boolean = false;
 
   @Field({ nullable: true })
   readonly webId?: string;
-}
 
-@InputType()
-export abstract class CreateLanguageEngagementInput {
   @ChangesetIdField()
   readonly changeset?: ID;
-
-  @Field()
-  @Type(() => CreateLanguageEngagement)
-  @ValidateNested()
-  readonly engagement: CreateLanguageEngagement;
 }
 
 @ObjectType()
-export abstract class CreateLanguageEngagementOutput {
+export abstract class LanguageEngagementCreated {
   @Field()
   readonly engagement: LanguageEngagement;
 }
 
-@InputType()
-export abstract class CreateInternshipEngagementInput {
-  @ChangesetIdField()
-  readonly changeset?: ID;
-
-  @Field()
-  @Type(() => CreateInternshipEngagement)
-  @ValidateNested()
-  readonly engagement: CreateInternshipEngagement;
-}
-
 @ObjectType()
-export abstract class CreateInternshipEngagementOutput {
+export abstract class InternshipEngagementCreated {
   @Field()
   readonly engagement: InternshipEngagement;
 }

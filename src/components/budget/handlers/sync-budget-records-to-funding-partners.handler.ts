@@ -38,9 +38,7 @@ type SubscribedEvent =
   PartnershipUpdatedEvent,
   PartnershipWillDeleteEvent,
 )
-export class SyncBudgetRecordsToFundingPartners
-  implements IEventHandler<SubscribedEvent>
-{
+export class SyncBudgetRecordsToFundingPartners implements IEventHandler<SubscribedEvent> {
   constructor(
     private readonly budgets: BudgetService,
     private readonly budgetRepo: BudgetRepository,
@@ -166,7 +164,7 @@ export class SyncBudgetRecordsToFundingPartners
 
   private async addRecords(
     budget: PartialBudget,
-    organizationId: ID,
+    organization: ID<'Organization'>,
     additions: readonly FiscalYear[],
     changeset?: ID,
   ) {
@@ -175,9 +173,9 @@ export class SyncBudgetRecordsToFundingPartners
         this.budgets
           .createRecord(
             {
-              budgetId: budget.id,
+              budget: budget.id,
               fiscalYear,
-              organizationId,
+              organization,
             },
             changeset,
           )

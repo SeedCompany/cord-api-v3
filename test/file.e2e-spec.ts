@@ -1,4 +1,13 @@
 import { faker } from '@faker-js/faker';
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from '@jest/globals';
 import got from 'got';
 import { startCase, times } from 'lodash';
 import {
@@ -14,7 +23,7 @@ import { FileBucket, type LocalBucket } from '../src/components/file/bucket';
 import {
   type Directory,
   FileNodeType,
-  type RequestUploadOutput,
+  type FileUploadRequested,
 } from '../src/components/file/dto';
 import {
   createFileVersion,
@@ -40,17 +49,17 @@ import {
 
 export async function uploadFile(
   app: TestApp,
-  parentId: ID,
+  parent: ID,
   input: Partial<FakeFile> = {},
-  uploadRequest?: RequestUploadOutput,
+  uploadRequest?: FileUploadRequested,
 ) {
   const { id, url } = uploadRequest ?? (await requestFileUpload(app));
 
   const fakeFile = await uploadFileContents(app, url, input);
 
   const fileNode = await createFileVersion(app, {
-    uploadId: id,
-    parentId,
+    upload: id,
+    parent,
     name: fakeFile.name,
   });
 
@@ -126,10 +135,6 @@ describe('File e2e', () => {
     me = await registerUser(app, {
       roles: [Role.ProjectManager],
     });
-  });
-
-  afterAll(async () => {
-    await app.close();
   });
 
   beforeEach(async () => {

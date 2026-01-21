@@ -1,172 +1,143 @@
 import { faker } from '@faker-js/faker';
-import { jest } from '@jest/globals';
-import { Connection } from 'cypher-query-builder';
-import { isValidId } from '~/common';
+import { beforeAll, describe, expect, it, jest } from '@jest/globals';
+import { EmailMessage } from '@seedcompany/nestjs-email';
+import { type ComponentProps as PropsOf } from 'react';
+import { type ID } from '~/common';
+import { type ForgotPassword } from '~/core/authentication/emails/forgot-password.email';
 import { MailerService } from '~/core/email';
 import { graphql } from '~/graphql';
-import {
-  createSession,
-  createTestApp,
-  CurrentUserDoc,
-  fragments,
-  generateRegisterInput,
-  login,
-  LoginDoc,
-  logout,
-  registerUser,
-  type TestApp,
-} from './utility';
+import { currentUser, login, logout, registerUser } from './operations/auth';
+import { createApp, createTester, type TestApp, type Tester } from './setup';
+
+type ForgotPasswordMsg = EmailMessage<PropsOf<typeof ForgotPassword>>;
 
 describe('Authentication e2e', () => {
   let app: TestApp;
-  let db: Connection;
 
   beforeAll(async () => {
-    app = await createTestApp();
-    await createSession(app);
-    db = app.get(Connection);
-  });
-
-  afterAll(async () => {
-    await app.close();
+    app = await createApp();
   });
 
   it('Check Email Existence and Reset Password', async () => {
     const sendEmail = jest.spyOn(app.get(MailerService), 'send');
+    const tester = createTester(app);
 
-    const fakeUser = await generateRegisterInput();
-    const email = fakeUser.email;
     // create user first
-    await registerUser(app, fakeUser);
-    await app.graphql.mutate(
-      graphql(`
-        mutation forgotPassword($email: String!) {
-          forgotPassword(email: $email) {
-            __typename
-          }
-        }
-      `),
-      {
-        email: email,
-      },
-    );
+    const user = await tester.apply(registerUser());
+    const email = user.email.value!;
 
-    const tokenRes = await db
-      .query()
-      .matchNode('e', 'EmailToken', { value: email.toLowerCase() })
-      .return<{ token: string }>('e.token as token')
-      .first();
+    // request reset via forgot password
+    await tester.apply(forgotPassword(email));
 
-    const token = tokenRes ? tokenRes.token : '';
-    const newPassword = faker.internet.password();
-    await app.graphql.mutate(
-      graphql(`
-        mutation resetPassword($input: ResetPasswordInput!) {
-          resetPassword(input: $input) {
-            __typename
-          }
-        }
-      `),
-      {
-        input: {
-          token: token,
-          password: newPassword,
-        },
-      },
-    );
-
-    const { login: newLogin } = await login(app, {
-      email: email,
-      password: newPassword,
-    });
-
+    // pull token from the email message
     expect(sendEmail).toHaveBeenCalledTimes(1);
-    expect(newLogin.user.id).toBeDefined();
+    const forgotPasswordMsg = sendEmail.mock.calls[0]![0]! as ForgotPasswordMsg;
+    expect(forgotPasswordMsg).toBeInstanceOf(EmailMessage);
+    const { token } = forgotPasswordMsg.body.props;
+    expect(token).toEqual(expect.any(String));
+
+    // reset password with token & new password
+    const newPassword = faker.internet.password();
+    await tester.apply(resetPassword(token, newPassword));
+
+    // confirm the new password works to log in
+    await tester.apply(
+      login({
+        email,
+        password: newPassword,
+      }),
+    );
   });
 
   it('login user', async () => {
-    const fakeUser = await generateRegisterInput();
-    const user = await registerUser(app, fakeUser);
-    await logout(app);
+    const tester = createTester(app);
+    const user = await tester.apply(registerUser());
+    await tester.apply(logout());
 
-    await login(app, { email: fakeUser.email, password: fakeUser.password });
-    const result = await app.graphql.query(
-      graphql(
-        `
-          query user($id: ID!) {
-            user(id: $id) {
-              ...user
-            }
-          }
-        `,
-        [fragments.user],
-      ),
-      {
-        id: user.id,
-      },
+    const res = await tester.apply(
+      login({ email: user.email.value!, password: user.password }),
     );
-
-    const actual = result.user;
-    expect(actual).toBeTruthy();
-    expect(isValidId(actual.id)).toBe(true);
-    expect(actual.email.value).toBe(fakeUser.email.toLowerCase());
-    expect(actual.realFirstName.value).toBe(fakeUser.realFirstName);
-    expect(actual.realLastName.value).toBe(fakeUser.realLastName);
-    expect(actual.displayFirstName.value).toBe(fakeUser.displayFirstName);
-    expect(actual.displayLastName.value).toBe(fakeUser.displayLastName);
-    expect(actual.phone.value).toBe(fakeUser.phone);
-    expect(actual.timezone.value?.name).toBe(fakeUser.timezone);
-    expect(actual.about.value).toBe(fakeUser.about);
+    expect(res.user.id).toBe(user.id);
   });
 
   it('disabled users are logged out & cannot login', async () => {
-    const input = await generateRegisterInput();
-    const user = await registerUser(app, input);
+    const tester = createTester(app);
+    const user = await tester.apply(registerUser());
 
     // confirm they're logged in
-    const before = await app.graphql.query(CurrentUserDoc);
-    expect(before.session.user).toBeTruthy();
+    const before = await tester.apply(currentUser());
+    expect(before?.id).toBe(user.id);
 
-    await app.graphql.query(
-      graphql(
-        `
-          mutation DisableUser($id: ID!) {
-            updateUser(input: { user: { id: $id, status: Disabled } }) {
-              __typename
-            }
-          }
-        `,
-      ),
-      {
-        id: user.id,
-      },
-    );
+    await tester.apply(disableUser(user.id));
 
     // Confirm mutation logged them out
-    const after = await app.graphql.query(CurrentUserDoc);
-    expect(after.session.user).toBeNull();
+    const after = await tester.apply(currentUser());
+    expect(after).toBeNull();
 
     // Confirm they can't log back in
-    await app.graphql
-      .query(LoginDoc, {
-        input: {
-          email: input.email,
-          password: input.password,
-        },
-      })
-      .expectError({
-        message: 'User is disabled',
-        code: ['UserDisabled', 'Authentication', 'Client'],
-      });
+    await expect(
+      tester.apply(
+        login({
+          email: user.email.value!,
+          password: user.password,
+        }),
+      ),
+    ).rejects.toThrowGqlError({
+      message: 'User is disabled',
+      code: ['UserDisabled', 'Authentication', 'Client'],
+    });
   });
 
   it('Password changed', async () => {
-    const fakeUser = await generateRegisterInput();
+    const tester = createTester(app);
 
-    const user = await registerUser(app, fakeUser);
+    // create user
+    const user = await tester.apply(registerUser());
 
+    // change password user
     const newPassword = faker.internet.password();
-    await app.graphql.mutate(
+    await tester.apply(changePassword(user.password, newPassword));
+
+    // Verify we can login with the new password
+    await tester.apply(
+      login({
+        email: user.email.value!,
+        password: newPassword,
+      }),
+    );
+  });
+});
+
+const forgotPassword = (email: string) => async (tester: Tester) => {
+  await tester.run(
+    graphql(`
+      mutation forgotPassword($email: String!) {
+        forgotPassword(email: $email) {
+          __typename
+        }
+      }
+    `),
+    { email },
+  );
+};
+
+const resetPassword =
+  (token: string, newPassword: string) => async (tester: Tester) => {
+    await tester.run(
+      graphql(`
+        mutation resetPassword($token: String!, $newPassword: String!) {
+          resetPassword(token: $token, password: $newPassword) {
+            __typename
+          }
+        }
+      `),
+      { token, newPassword },
+    );
+  };
+
+const changePassword =
+  (oldPassword: string, newPassword: string) => async (tester: Tester) => {
+    return await tester.run(
       graphql(`
         mutation changePassword($oldPassword: String!, $newPassword: String!) {
           changePassword(oldPassword: $oldPassword, newPassword: $newPassword) {
@@ -174,16 +145,19 @@ describe('Authentication e2e', () => {
           }
         }
       `),
-      {
-        oldPassword: fakeUser.password,
-        newPassword: newPassword,
-      },
+      { oldPassword, newPassword },
     );
+  };
 
-    const updatedUser = await login(app, {
-      email: fakeUser.email,
-      password: newPassword,
-    });
-    expect(updatedUser.login.user.id).toBe(user.id);
-  });
-});
+const disableUser = (userId: ID) => async (tester: Tester) => {
+  await tester.run(
+    graphql(`
+      mutation DisableUser($id: ID!) {
+        updateUser(input: { id: $id, status: Disabled }) {
+          __typename
+        }
+      }
+    `),
+    { id: userId },
+  );
+};

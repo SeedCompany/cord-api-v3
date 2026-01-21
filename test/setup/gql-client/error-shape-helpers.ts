@@ -1,4 +1,4 @@
-import { type ErrorExpectations as Expectations } from './expect-gql-error';
+import { type ErrorExpectations as Expectations } from './gql-result';
 
 const extend =
   (defaults: Expectations) =>

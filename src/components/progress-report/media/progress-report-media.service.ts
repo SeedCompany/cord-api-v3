@@ -64,7 +64,7 @@ export class ProgressReportMediaService {
   }
 
   async upload(input: UploadMedia) {
-    const report = await this.resources.load(Report, input.reportId);
+    const report = await this.resources.load(Report, input.report);
 
     const context = report as any; // the report is fine for condition context
     this.privileges
@@ -78,9 +78,8 @@ export class ProgressReportMediaService {
       fileId,
       input.file.name,
       initialDto.id,
-      'file', // relation name
+      'file',
       input.file,
-      'file', // input path for exceptions
       ReportMedia.PublicVariants.has(input.variant.key),
     );
   }

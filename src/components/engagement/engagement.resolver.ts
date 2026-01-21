@@ -18,23 +18,23 @@ import { SecuredCeremony } from '../ceremony/dto';
 import { ChangesetIds, type IdsAndView, IdsAndViewArg } from '../changeset/dto';
 import { EngagementLoader, EngagementService } from '../engagement';
 import {
-  CreateInternshipEngagementInput,
-  CreateInternshipEngagementOutput,
-  CreateLanguageEngagementInput,
-  CreateLanguageEngagementOutput,
-  DeleteEngagementOutput,
+  CreateInternshipEngagement,
+  CreateLanguageEngagement,
   type Engagement,
+  EngagementDeleted,
   EngagementListInput,
   EngagementListOutput,
   IEngagement,
   InternshipEngagement,
+  InternshipEngagementCreated,
   InternshipEngagementListOutput,
+  InternshipEngagementUpdated,
   LanguageEngagement,
+  LanguageEngagementCreated,
   LanguageEngagementListOutput,
-  UpdateInternshipEngagementInput,
-  UpdateInternshipEngagementOutput,
-  UpdateLanguageEngagementInput,
-  UpdateLanguageEngagementOutput,
+  LanguageEngagementUpdated,
+  UpdateInternshipEngagement,
+  UpdateLanguageEngagement,
 } from './dto';
 
 @Resolver(IEngagement)
@@ -146,13 +146,12 @@ export class EngagementResolver {
     );
   }
 
-  @Mutation(() => CreateLanguageEngagementOutput, {
+  @Mutation(() => LanguageEngagementCreated, {
     description: 'Create a language engagement',
   })
   async createLanguageEngagement(
-    @Args('input')
-    { engagement: input, changeset }: CreateLanguageEngagementInput,
-  ): Promise<CreateLanguageEngagementOutput> {
+    @Args('input') { changeset, ...input }: CreateLanguageEngagement,
+  ): Promise<LanguageEngagementCreated> {
     const engagement = await this.service.createLanguageEngagement(
       input,
       changeset,
@@ -160,13 +159,12 @@ export class EngagementResolver {
     return { engagement };
   }
 
-  @Mutation(() => CreateInternshipEngagementOutput, {
+  @Mutation(() => InternshipEngagementCreated, {
     description: 'Create an internship engagement',
   })
   async createInternshipEngagement(
-    @Args('input')
-    { engagement: input, changeset }: CreateInternshipEngagementInput,
-  ): Promise<CreateInternshipEngagementOutput> {
+    @Args('input') { changeset, ...input }: CreateInternshipEngagement,
+  ): Promise<InternshipEngagementCreated> {
     const engagement = await this.service.createInternshipEngagement(
       input,
       changeset,
@@ -174,13 +172,12 @@ export class EngagementResolver {
     return { engagement };
   }
 
-  @Mutation(() => UpdateLanguageEngagementOutput, {
+  @Mutation(() => LanguageEngagementUpdated, {
     description: 'Update a language engagement',
   })
   async updateLanguageEngagement(
-    @Args('input')
-    { engagement: input, changeset }: UpdateLanguageEngagementInput,
-  ): Promise<UpdateLanguageEngagementOutput> {
+    @Args('input') { changeset, ...input }: UpdateLanguageEngagement,
+  ): Promise<LanguageEngagementUpdated> {
     const engagement = await this.service.updateLanguageEngagement(
       input,
       changeset,
@@ -188,13 +185,12 @@ export class EngagementResolver {
     return { engagement };
   }
 
-  @Mutation(() => UpdateInternshipEngagementOutput, {
+  @Mutation(() => InternshipEngagementUpdated, {
     description: 'Update an internship engagement',
   })
   async updateInternshipEngagement(
-    @Args('input')
-    { engagement: input, changeset }: UpdateInternshipEngagementInput,
-  ): Promise<UpdateInternshipEngagementOutput> {
+    @Args('input') { changeset, ...input }: UpdateInternshipEngagement,
+  ): Promise<InternshipEngagementUpdated> {
     const engagement = await this.service.updateInternshipEngagement(
       input,
       changeset,
@@ -202,13 +198,13 @@ export class EngagementResolver {
     return { engagement };
   }
 
-  @Mutation(() => DeleteEngagementOutput, {
+  @Mutation(() => EngagementDeleted, {
     description: 'Delete an engagement',
   })
   async deleteEngagement(
     @Args() { id, changeset }: ChangesetIds,
-  ): Promise<DeleteEngagementOutput> {
+  ): Promise<EngagementDeleted> {
     await this.service.delete(id, changeset);
-    return { success: true };
+    return {};
   }
 }

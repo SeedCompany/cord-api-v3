@@ -3,14 +3,14 @@ import { type ID, IdArg, ListArg } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { UnavailabilityLoader, UnavailabilityService } from '../unavailability';
 import {
-  CreateUnavailabilityInput,
-  CreateUnavailabilityOutput,
-  DeleteUnavailabilityOutput,
+  CreateUnavailability,
   Unavailability,
+  UnavailabilityCreated,
+  UnavailabilityDeleted,
   UnavailabilityListInput,
   UnavailabilityListOutput,
-  UpdateUnavailabilityInput,
-  UpdateUnavailabilityOutput,
+  UnavailabilityUpdated,
+  UpdateUnavailability,
 } from './dto';
 
 @Resolver()
@@ -43,36 +43,34 @@ export class UnavailabilityResolver {
     return list;
   }
 
-  @Mutation(() => CreateUnavailabilityOutput, {
+  @Mutation(() => UnavailabilityCreated, {
     description: 'Create an unavailability',
     deprecationReason: `This is unfinished functionality, don't use`,
   })
   async createUnavailability(
-    @Args('input') { unavailability: input }: CreateUnavailabilityInput,
-  ): Promise<CreateUnavailabilityOutput> {
+    @Args('input') input: CreateUnavailability,
+  ): Promise<UnavailabilityCreated> {
     const unavailability = await this.service.create(input);
     return { unavailability };
   }
 
-  @Mutation(() => UpdateUnavailabilityOutput, {
+  @Mutation(() => UnavailabilityUpdated, {
     description: 'Update an unavailability',
     deprecationReason: `This is unfinished functionality, don't use`,
   })
   async updateUnavailability(
-    @Args('input') { unavailability: input }: UpdateUnavailabilityInput,
-  ): Promise<UpdateUnavailabilityOutput> {
+    @Args('input') input: UpdateUnavailability,
+  ): Promise<UnavailabilityUpdated> {
     const unavailability = await this.service.update(input);
     return { unavailability };
   }
 
-  @Mutation(() => DeleteUnavailabilityOutput, {
+  @Mutation(() => UnavailabilityDeleted, {
     description: 'Delete an unavailability',
     deprecationReason: `This is unfinished functionality, don't use`,
   })
-  async deleteUnavailability(
-    @IdArg() id: ID,
-  ): Promise<DeleteUnavailabilityOutput> {
+  async deleteUnavailability(@IdArg() id: ID): Promise<UnavailabilityDeleted> {
     await this.service.delete(id);
-    return { success: true };
+    return {};
   }
 }

@@ -3,19 +3,19 @@ import { type ID, IdField, RichTextDocument, RichTextField } from '~/common';
 import { Comment } from './comment.dto';
 
 @InputType()
-export abstract class CreateCommentInput {
+export abstract class CreateComment {
   @IdField({ nullable: true })
-  readonly threadId?: ID;
+  readonly thread?: ID<'CommentThread'>;
 
   @IdField()
-  readonly resourceId: ID;
+  readonly resource: ID;
 
   @RichTextField()
   readonly body: RichTextDocument;
 }
 
 @ObjectType()
-export abstract class CreateCommentOutput {
+export abstract class CommentCreated {
   @Field()
   readonly comment: Comment;
 }

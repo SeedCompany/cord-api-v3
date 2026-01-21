@@ -18,8 +18,7 @@ import {
 export class EnumFieldCondition<
   TResourceStatic extends ResourceShape<any>,
   Path extends Paths<InstanceType<TResourceStatic>> & string,
-> implements Condition<TResourceStatic>
-{
+> implements Condition<TResourceStatic> {
   constructor(
     private readonly path: Path,
     private readonly allowed: ReadonlySet<ValueOfPath<TResourceStatic, Path>>,
