@@ -189,6 +189,10 @@ export class ExceptionNormalizer {
     }
 
     if (ex instanceof GraphQLError) {
+      // If we've defined & a GraphQLError with `codes`, just give all info associated.
+      if (ex.extensions.codes) {
+        return ex.extensions;
+      }
       if (ex.extensions.code === 'GRAPHQL_VALIDATION_FAILED') {
         return { codes: ['Validation', 'GraphQL', 'Client'] };
       }

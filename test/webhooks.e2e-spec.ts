@@ -309,8 +309,8 @@ describe('Webhooks', () => {
             }),
           );
           await expect(op).rejects.toThrowGqlError({
-            code: ['GraphQL', 'Client'],
-            // field: 'subscription',
+            code: ['GraphQL', 'Input'],
+            field: 'subscription',
           });
           await expect(op).rejects.toMatchSnapshot();
         });
