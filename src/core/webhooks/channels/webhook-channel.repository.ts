@@ -8,7 +8,11 @@ import {
 } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { type ID, NotFoundException } from '~/common';
-import { CommonRepository } from '~/core/database';
+import {
+  CommonRepository,
+  createUniqueConstraint,
+  OnIndex,
+} from '~/core/database';
 import { path, variable } from '~/core/database/query';
 import { ILogger, Logger } from '~/core/logger';
 import { WebhooksRepository } from '../management/webhooks.repository';
@@ -22,8 +26,13 @@ export class WebhookChannelRepository extends CommonRepository {
     super();
   }
 
+  @OnIndex()
+  private createConstraints() {
+    return [createUniqueConstraint('BroadcastChannel', 'name')];
+  }
+
   async save(webhook: ID<'Webhook'>, channels: readonly string[]) {
-    const result = await this.db
+    const query = this.db
       .query()
       .match(node('webhook', 'Webhook', { id: webhook }))
 
@@ -37,15 +46,16 @@ export class WebhookChannelRepository extends CommonRepository {
           ])
           .where({ 'channel.name': not(inArray(channels)) })
           .delete('rel')
-          .return('collect(channel.name) as unobserved'),
+          .return('collect(channel) as unobserved'),
       )
 
       .comment(
         'Cleanup channels that no longer have any webhooks observing them',
       )
-      .subQuery((sub) =>
+      .subQuery('unobserved', (sub) =>
         sub
-          .match(node('channel', 'BroadcastChannel'))
+          .raw('UNWIND unobserved AS channel')
+          .with('channel')
           .where(
             not(
               path([
@@ -55,7 +65,7 @@ export class WebhookChannelRepository extends CommonRepository {
               ]),
             ),
           )
-          .detachDelete('channel')
+          .delete('channel')
           .return('collect(channel.name) as orphaned'),
       )
 
@@ -81,8 +91,12 @@ export class WebhookChannelRepository extends CommonRepository {
         observed: readonly string[];
         unobserved: readonly string[];
         orphaned: readonly string[];
-      }>(['unobserved', 'observed', 'orphaned'])
-      .first();
+      }>([
+        '[channel in unobserved | channel.name] as unobserved',
+        'observed',
+        'orphaned',
+      ]);
+    const result = await query.first();
     if (!result) {
       throw new NotFoundException('Webhook not found');
     }
