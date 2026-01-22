@@ -4,7 +4,7 @@ import { DateTime } from 'luxon';
 import { nanoid } from 'nanoid';
 import { EnhancedResource, type ID } from '~/common';
 import { DtoRepository } from '~/core/database';
-import { currentUser, merge, randomUUID } from '~/core/database/query';
+import { collect, currentUser, merge, randomUUID } from '~/core/database/query';
 import { type DeleteWebhookArgs, Webhook, type WebhookConfig } from './dto';
 
 /**
@@ -108,6 +108,26 @@ export class WebhooksRepository extends DtoRepository(Webhook) {
       .query()
       .apply(this.matchWebhook(filters))
       .subQuery('node', this.hydrate())
+
+      // Cascade delete to orphaned channels
+      .subQuery('node', (sub) =>
+        sub
+          .match([
+            node('node'),
+            relation('out', '', 'observes'),
+            node('channel', 'BroadcastChannel'),
+          ])
+          .raw(
+            `WHERE NOT EXISTS {
+              MATCH (channel)<-[:observes]-(other:Webhook)
+              WHERE other <> node
+            }`,
+          )
+          .with(['channel', 'channel.name as name'])
+          .detachDelete('channel')
+          .return(collect('name').as('orphaned')),
+      )
+
       .detachDelete('node')
       .return('dto')
       .map('dto')
