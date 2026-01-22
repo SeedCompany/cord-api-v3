@@ -61,9 +61,12 @@ exports[`Webhooks Management Saving / Creation Subscription Validation should re
 {
   "extensions": {
     "codes": [
+      "Parse",
       "GraphQL",
+      "Input",
       "Client",
     ],
+    "field": "subscription",
   },
   "message": "Syntax Error: Unexpected Name "this".",
   "path": [

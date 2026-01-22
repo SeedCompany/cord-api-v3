@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
+import { JsonSet } from '@seedcompany/common';
 import {
   type DocumentNode,
-  type GraphQLError,
+  GraphQLError,
   Kind,
   type OperationDefinitionNode,
 } from 'graphql';
@@ -15,7 +16,22 @@ export class WebhookValidator {
 
   async validate(documentStr: string, key?: ID) {
     const { schema, parse, validate } = this.yoga.getEnveloped();
-    const doc: DocumentNode = parse(documentStr);
+    let doc: DocumentNode;
+    try {
+      doc = parse(documentStr);
+    } catch (e) {
+      if (e instanceof GraphQLError) {
+        e.extensions.codes = new JsonSet([
+          e.message.startsWith('Syntax Error:') ? 'Parse' : 'Validation',
+          'GraphQL',
+          'Input', // Injecting this because this is both a input error & a graphql error
+          'Client',
+        ]);
+        // Give field associated with InputException
+        e.extensions.field = 'subscription';
+      }
+      throw e;
+    }
     const errors: readonly GraphQLError[] = validate(schema, doc);
     if (errors.length > 0) {
       throw Object.assign(new AggregateError(errors), { [SkipLogging]: true });
