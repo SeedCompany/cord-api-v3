@@ -45,6 +45,7 @@ export class WebhooksRepository extends DtoRepository(Webhook) {
           merge('node', {
             owner: 'owner { .id }',
             secret: 'executor.secret',
+            variables: apoc.convert.fromJsonMap('node.variables'),
             metadata: apoc.convert.fromJsonMap('node.metadata'),
           }).as('dto'),
         );
@@ -100,6 +101,7 @@ export class WebhooksRepository extends DtoRepository(Webhook) {
             ...input,
             valid: true,
             modifiedAt: DateTime.now(),
+            variables: input.variables ? JSON.stringify(input.variables) : null,
             metadata: input.metadata ? JSON.stringify(input.metadata) : null,
           },
         },

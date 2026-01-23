@@ -49,7 +49,7 @@ export class Webhook {
     nullable: true,
     description: 'Variables for the operation given',
   })
-  variables?: Record<string, any>;
+  variables?: Record<string, unknown>;
 
   @UrlField({
     description: 'The url which we will POST subscription events to',
