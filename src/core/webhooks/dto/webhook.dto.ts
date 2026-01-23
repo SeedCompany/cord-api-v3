@@ -1,4 +1,4 @@
-import { Field, InputType, ObjectType } from '@nestjs/graphql';
+import { Field, ID as IDType, InputType, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { GraphQLJSONObject } from 'graphql-scalars';
 import { DateTime } from 'luxon';
@@ -19,7 +19,9 @@ export class Webhook {
   @IdField()
   id: ID<'Webhook'>;
 
-  @IdField({
+  // Not using IDField here because the value is user-provided, so it should
+  // not follow our usual ID encoding rules. Consider changing to raw String.
+  @Field(() => IDType, {
     description: stripIndent`
       The unique key/ID (per user) of the webhook.
 
