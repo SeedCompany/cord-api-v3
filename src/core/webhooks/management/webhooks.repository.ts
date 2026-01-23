@@ -4,7 +4,13 @@ import { DateTime } from 'luxon';
 import { nanoid } from 'nanoid';
 import { EnhancedResource, type ID } from '~/common';
 import { DtoRepository } from '~/core/database';
-import { collect, currentUser, merge, randomUUID } from '~/core/database/query';
+import {
+  apoc,
+  collect,
+  currentUser,
+  merge,
+  randomUUID,
+} from '~/core/database/query';
 import { type DeleteWebhookArgs, Webhook, type WebhookConfig } from './dto';
 
 /**
@@ -39,6 +45,7 @@ export class WebhooksRepository extends DtoRepository(Webhook) {
           merge('node', {
             owner: 'owner { .id }',
             secret: 'executor.secret',
+            metadata: apoc.convert.fromJsonMap('node.metadata'),
           }).as('dto'),
         );
   }
@@ -93,6 +100,7 @@ export class WebhooksRepository extends DtoRepository(Webhook) {
             ...input,
             valid: true,
             modifiedAt: DateTime.now(),
+            metadata: input.metadata ? JSON.stringify(input.metadata) : null,
           },
         },
         true,
