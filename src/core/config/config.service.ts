@@ -326,6 +326,10 @@ export const makeConfig = (env: EnvironmentService) =>
 
     /** Should logger output as JSON? Defaults to true if running in ECS */
     jsonLogs = env.boolean('JSON_LOGS').optional(!!this.ecsMetadataUri);
+
+    webhooks = {
+      requestTimeout: env.duration('WEBHOOK_REQUEST_TIMEOUT').optional('5m'),
+    };
   };
 
 // @ts-expect-error We will call makeConfig to create this shape.

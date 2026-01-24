@@ -3,13 +3,14 @@ import { cleanJoin, type Nil, nonEnumerable } from '@seedcompany/common';
 import got, {
   type BeforeRequestHook,
   type ExtendOptions,
+  type Got,
   RequestError,
   type Response,
   TimeoutError,
 } from 'got';
 import { type FormattedExecutionResult } from 'graphql';
-import { Duration } from 'luxon';
 import { createHmac } from 'node:crypto';
+import { ConfigService } from '~/core/config/config.service';
 import { ILogger, Logger, LogLevel } from '../logger';
 import { type Webhook as FullWebhook, type WebhookTrigger } from './dto';
 
@@ -30,17 +31,22 @@ export interface WebhookExecution {
  */
 @Injectable()
 export class WebhookSender {
-  constructor(@Logger('webhooks') private readonly logger: ILogger) {}
+  private readonly http: Got;
 
-  private readonly http = got.extend({
-    throwHttpErrors: false,
-    timeout: {
-      request: Duration.from('5 mins').toMillis(),
-    },
-    headers: {
-      'user-agent': `cord webhook`,
-    },
-  } satisfies ExtendOptions);
+  constructor(
+    config: ConfigService,
+    @Logger('webhooks') private readonly logger: ILogger,
+  ) {
+    this.http = got.extend({
+      throwHttpErrors: false,
+      timeout: {
+        request: config.webhooks.requestTimeout.toMillis(),
+      },
+      headers: {
+        'user-agent': `cord webhook`,
+      },
+    } satisfies ExtendOptions);
+  }
 
   // TODO use job queue to decouple flight attempts & retries
   async push({ webhook, payload, trigger }: WebhookExecution) {
