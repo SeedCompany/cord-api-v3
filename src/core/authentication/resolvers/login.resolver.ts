@@ -15,7 +15,7 @@ import { AuthLevel } from '../session/auth-level.decorator';
 import { SessionHost } from '../session/session.host';
 
 @Resolver(LoggedIn)
-@AuthLevel('anonymous')
+@AuthLevel(AuthLevel.Anonymous)
 export class LoginResolver {
   constructor(
     private readonly authentication: AuthenticationService,
