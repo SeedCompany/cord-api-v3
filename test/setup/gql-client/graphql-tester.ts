@@ -17,6 +17,13 @@ export interface Tester {
    */
   app: TestApp;
 
+  /**
+   * Clone this tester to operate against another app
+   * while maintaining the tester's session.
+   * This only works if both apps share the same database.
+   */
+  move: (otherApp: TestApp) => Promise<Tester>;
+
   /** @deprecated */
   legacyApp: LegacyTestApp;
 }
@@ -25,13 +32,24 @@ export type Operation<R, TTester extends Tester = Tester> = (
   tester: TTester,
 ) => Promise<R>;
 
-export const createTester = (app: TestApp): Tester => {
-  const url = app.get(ConfigService).hostUrl$.value + 'graphql';
+export const createTester = (app: TestApp, cookies?: CookieJar): Tester => {
+  cookies ??= new CookieJar();
+  const getUrl = (app: TestApp) =>
+    app.get(ConfigService).hostUrl$.value + 'graphql';
 
   const execute = createExecute({
-    url,
-    cookieJar: new CookieJar(),
+    url: getUrl(app),
+    cookieJar: cookies,
   });
+
+  const move = async (otherApp: TestApp) => {
+    const nextCookies = new CookieJar([
+      ...cookies.cookies,
+      // Forward our auth cookie from the old app to the new one
+      [getUrl(otherApp), await cookies.getCookieString(getUrl(app))],
+    ]);
+    return createTester(otherApp, nextCookies);
+  };
 
   const tester: Tester = {
     run: execute,
@@ -50,6 +68,7 @@ export const createTester = (app: TestApp): Tester => {
       return op(boundTester);
     },
     app,
+    move,
     /**
      * This will work to run GQL operations
      * unless those operations swap users.
