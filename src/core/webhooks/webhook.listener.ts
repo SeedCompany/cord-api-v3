@@ -71,7 +71,7 @@ export class WebhookListener implements OnModuleDestroy {
     // here to achieve.
     const events = new Map([[channel.name, [data]]]);
 
-    const payloadsByHook = asyncPool(Infinity, webhooks, async (webhook) => {
+    const payloadsByHook = asyncPool(3, webhooks, async (webhook) => {
       const payloads = await this.executor
         .executeWithEvents(webhook, events)
         .catch(async (e: Error): Promise<ExecutionResult[]> => {
