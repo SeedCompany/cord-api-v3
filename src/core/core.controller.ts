@@ -5,7 +5,7 @@ import process from 'node:process';
 import { AuthLevel } from '~/core/authentication';
 
 @Controller()
-@AuthLevel('sessionless')
+@AuthLevel(AuthLevel.Sessionless)
 export class CoreController {
   @Get()
   welcome() {
