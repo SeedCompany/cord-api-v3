@@ -95,6 +95,7 @@ exports[`Webhooks Management Saving / Creation Subscription Validation should re
 {
   "extensions": {
     "codes": [
+      "Validation",
       "GraphQL",
       "Client",
     ],
