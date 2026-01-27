@@ -80,11 +80,12 @@ export class WebhookChannelRepository extends CommonRepository {
           )
           .merge([
             node('webhook'),
-            relation('out', '', 'observes', {
-              evaluatedAt: DateTime.now(),
-            }),
+            relation('out', 'observes', 'observes'),
             node('channel'),
           ])
+          .setValues({
+            'observes.evaluatedAt': DateTime.now(),
+          })
           .return('collect(channel.name) as observed'),
       )
       .return<{
