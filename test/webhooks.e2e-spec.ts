@@ -7,7 +7,6 @@ import {
   it,
 } from '@jest/globals';
 import { delay, mapEntries, patchMethod } from '@seedcompany/common';
-import type { DurationIn } from '@seedcompany/common/temporal/luxon';
 import {
   createServerAdapter,
   type ServerAdapterRequestHandler,
@@ -58,7 +57,7 @@ import {
 } from './setup';
 import { GqlError } from './setup/gql-client/gql-result';
 
-const ms = (duration: DurationIn) => +Duration.from(duration);
+const SHORT = +Duration.from('30s');
 
 describe('Move to Generic Subscriptions Tests', () => {
   it.todo(
@@ -854,7 +853,7 @@ describe('Webhooks', () => {
         );
 
         // Listen for webhook event
-        const waitingForHook = firstValueFrom(events.pipe(timeout(ms('10s'))));
+        const waitingForHook = firstValueFrom(events.pipe(timeout(SHORT)));
 
         // Create a project which should trigger the webhook
         project = await tester.apply(createProject());
@@ -966,7 +965,7 @@ describe('Webhooks', () => {
 
       // Listen for both webhook events
       const waitingForWebhooks = lastValueFrom(
-        events.pipe(timeout(ms('10s')), take(2), toArray()),
+        events.pipe(timeout(SHORT), take(2), toArray()),
       );
 
       // Trigger the event
@@ -1010,7 +1009,7 @@ describe('Webhooks', () => {
 
       // Listen for both webhook events
       const waitingForWebhooks = lastValueFrom(
-        events.pipe(timeout(ms('10s')), take(2), toArray()),
+        events.pipe(timeout(SHORT), take(2), toArray()),
       );
 
       // Trigger the event (as first user)
@@ -1079,7 +1078,7 @@ describe('Webhooks', () => {
 
       // Emit & collect events for update for project 1
       const waitingForProjectUpdates1 = firstValueFrom(
-        events.pipe(bufferTime(ms('5s'))),
+        events.pipe(bufferTime(SHORT)),
       );
       await tester.run(UpdateProject, {
         input: { id: project1.id, name: `${project1.name.value!} Updated` },
@@ -1093,7 +1092,7 @@ describe('Webhooks', () => {
 
       // Trigger update for project 2
       const waitingForProjectUpdates2 = firstValueFrom(
-        events.pipe(bufferTime(ms('5s'))),
+        events.pipe(bufferTime(SHORT)),
       );
       await tester.run(UpdateProject, {
         input: { id: project2.id, name: `${project2.name.value!} Updated` },
@@ -1126,9 +1125,7 @@ describe('Webhooks', () => {
           }),
         );
 
-        const waitingForWebhook = firstValueFrom(
-          events.pipe(timeout(ms('10s'))),
-        );
+        const waitingForWebhook = firstValueFrom(events.pipe(timeout(SHORT)));
 
         await tester.apply(createProject());
 
@@ -1158,9 +1155,7 @@ describe('Webhooks', () => {
           }),
         );
 
-        const waitingForWebhook = firstValueFrom(
-          events.pipe(timeout(ms('10s'))),
-        );
+        const waitingForWebhook = firstValueFrom(events.pipe(timeout(SHORT)));
 
         await tester.apply(createProject());
 
@@ -1191,9 +1186,7 @@ describe('Webhooks', () => {
           }),
         );
 
-        const waitingForWebhook = firstValueFrom(
-          events.pipe(timeout(ms('10s'))),
-        );
+        const waitingForWebhook = firstValueFrom(events.pipe(timeout(SHORT)));
 
         await tester.apply(createProject());
 
@@ -1263,9 +1256,7 @@ describe('Webhooks', () => {
           }),
         );
 
-        const waitingForWebhook = firstValueFrom(
-          events.pipe(timeout(ms('10s'))),
-        );
+        const waitingForWebhook = firstValueFrom(events.pipe(timeout(SHORT)));
 
         const project = await tester.apply(createProject());
 
@@ -1318,9 +1309,7 @@ describe('Webhooks', () => {
           });
         });
 
-        const waitingForWebhook = firstValueFrom(
-          events.pipe(timeout(ms('10s'))),
-        );
+        const waitingForWebhook = firstValueFrom(events.pipe(timeout(SHORT)));
 
         // Trigger event by creating a project
         await tester.apply(createProject());
@@ -1339,7 +1328,7 @@ describe('Webhooks', () => {
         expect(updated.valid).toBe(false);
 
         const waitingForWebhook2 = firstValueFrom(
-          events.pipe(timeout({ each: ms('5s'), with: () => [undefined] })),
+          events.pipe(timeout({ each: SHORT, with: () => [undefined] })),
         );
         // Trigger event by creating a project
         await tester.apply(createProject());
@@ -1385,9 +1374,7 @@ describe('Webhooks', () => {
           return channel;
         });
 
-        const waitingForWebhook = firstValueFrom(
-          events.pipe(timeout(ms('10s'))),
-        );
+        const waitingForWebhook = firstValueFrom(events.pipe(timeout(SHORT)));
 
         // Trigger event by creating a project
         await thisTester.apply(createProject());
@@ -1441,9 +1428,7 @@ describe('Webhooks', () => {
           return channel;
         });
 
-        const waitingForWebhook = firstValueFrom(
-          events.pipe(timeout(ms('10s'))),
-        );
+        const waitingForWebhook = firstValueFrom(events.pipe(timeout(SHORT)));
 
         // Trigger event by creating a project
         await thisTester.apply(createProject());
@@ -1604,7 +1589,7 @@ describe('Webhooks', () => {
       // endregion
 
       // region Act
-      const waitingForWebhook = firstValueFrom(events.pipe(timeout(ms('10s'))));
+      const waitingForWebhook = firstValueFrom(events.pipe(timeout(SHORT)));
 
       // Call db migrate, as would happen on deployment, which should trigger webhook migration
       await newApp.get(DatabaseMigrationCommand).execute();
