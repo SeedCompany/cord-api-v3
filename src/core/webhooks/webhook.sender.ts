@@ -24,6 +24,7 @@ export interface WebhookExecution {
   webhook: Webhook;
   payload: FormattedExecutionResult;
   trigger: WebhookTrigger;
+  fatal: boolean; // whether this is the last event the hook will receive, due to it being invalid.
 }
 
 /**
@@ -49,7 +50,7 @@ export class WebhookSender {
   }
 
   // TODO use job queue to decouple flight attempts & retries
-  async push({ webhook, payload, trigger }: WebhookExecution) {
+  async push({ webhook, payload, trigger, fatal }: WebhookExecution) {
     const body = {
       ...payload,
       extensions: {
@@ -58,6 +59,7 @@ export class WebhookSender {
           id: webhook.id,
           key: webhook.key,
           trigger,
+          valid: !fatal,
           // attempt: 1,
         },
         userMetadata: webhook.metadata,

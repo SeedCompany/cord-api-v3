@@ -72,6 +72,7 @@ export class WebhookListener implements OnModuleDestroy {
     const events = new Map([[channel.name, [data]]]);
 
     const payloadsByHook = asyncPool(3, webhooks, async (webhook) => {
+      let fatal = false;
       const payloads = await this.executor
         .executeWithEvents(webhook, events)
         .catch(async (e: Error): Promise<ExecutionResult[]> => {
@@ -86,16 +87,17 @@ export class WebhookListener implements OnModuleDestroy {
             // so the webhook will never be valid.
             // Stop trying to execute it until the owner makes a change to it.
             await this.channels.markInvalid(webhook, e);
+            fatal = true;
           }
           // emit an error payload to the webhook, so it is notified
           return [{ errors: e.errors }];
         });
-      return { webhook, payloads };
+      return { webhook, payloads, fatal };
     });
 
-    for await (const { webhook, payloads } of payloadsByHook) {
+    for await (const { webhook, payloads, fatal } of payloadsByHook) {
       for (const payload of payloads) {
-        await this.sender.push({ webhook, payload, trigger });
+        await this.sender.push({ webhook, payload, trigger, fatal });
       }
     }
   }
