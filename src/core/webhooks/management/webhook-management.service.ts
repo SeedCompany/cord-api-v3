@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { isEqual, omit, pick } from 'lodash';
 import { type ID } from '~/common';
 import { WebhookChannelService } from '../channels/webhook-channel.service';
+import { WebhookSender } from '../webhook.sender';
 import { WebhookValidator } from '../webhook.validator';
 import {
   type DeleteWebhookArgs,
@@ -19,6 +20,7 @@ export class WebhookManagementService {
   constructor(
     private readonly repo: WebhooksRepository,
     private readonly validator: WebhookValidator,
+    private readonly sender: WebhookSender,
     private readonly channels: WebhookChannelService,
   ) {}
 
@@ -50,6 +52,8 @@ export class WebhookManagementService {
       key,
       name,
     });
+
+    await this.sender.verify(webhook);
 
     await this.channels.calculateOnUpsert(webhook);
 
