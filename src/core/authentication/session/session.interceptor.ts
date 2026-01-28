@@ -44,30 +44,30 @@ export class SessionInterceptor implements NestInterceptor {
   }
 
   async intercept(executionContext: ExecutionContext, next: CallHandler) {
-    const session$ = this.sessionByRequest.getStore();
-    if (!session$) {
-      throw new Error('Session holder for request is not in async context');
-    }
-
     const isMutation = this.isMutation(executionContext);
-    const authLevel =
+    const authLevel: AuthLevel =
       AuthLevel.get(executionContext.getHandler() as FnLike) ??
       AuthLevel.get(executionContext.getClass()) ??
-      (isMutation ? 'authenticated' : 'anonymous');
+      // defaults:
+      (isMutation ? AuthLevel.Authenticated : AuthLevel.Anonymous);
 
-    if (authLevel === 'sessionless') {
+    if (authLevel === AuthLevel.Sessionless) {
       return next.handle();
     }
 
     const request = this.getRequest(executionContext);
-    const session = request
-      ? await this.sessionInitiator.resume(request)
-      : undefined;
-    if (session) {
-      session$.next(session);
-      if (authLevel === 'authenticated') {
-        this.identity.verifyLoggedIn();
-      }
+    if (!request) {
+      return next.handle();
+    }
+
+    const session = await this.sessionInitiator.resume(request);
+    const session$ = this.sessionByRequest.getStore();
+    if (!session$) {
+      throw new Error('Session holder for request is not in async context');
+    }
+    session$.next(session);
+    if (authLevel === AuthLevel.Authenticated) {
+      this.identity.verifyLoggedIn();
     }
 
     return next.handle();

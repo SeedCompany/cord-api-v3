@@ -16,7 +16,7 @@ import { RegisterUser, UserRegistered } from '../dto';
 import { AuthLevel } from '../session/auth-level.decorator';
 
 @Resolver(UserRegistered)
-@AuthLevel('anonymous')
+@AuthLevel(AuthLevel.Anonymous)
 export class RegisterResolver {
   constructor(
     private readonly authentication: AuthenticationService,

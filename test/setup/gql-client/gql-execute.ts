@@ -66,7 +66,10 @@ function validateResult<TData>(
 }
 
 export class CookieJar implements PromiseCookieJar {
-  private readonly cookies = new Map<string, string>();
+  readonly cookies: Map<string, string>;
+  constructor(cookies?: Iterable<readonly [string, string]>) {
+    this.cookies = new Map(cookies);
+  }
   async getCookieString(url: string) {
     return this.cookies.get(url) ?? '';
   }

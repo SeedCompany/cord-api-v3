@@ -19,7 +19,7 @@ import { SessionInitiator } from '../session/session.initiator';
 import { SessionManager } from '../session/session.manager';
 
 @Resolver(SessionOutput)
-@AuthLevel('sessionless')
+@AuthLevel(AuthLevel.Sessionless)
 export class SessionResolver {
   constructor(
     private readonly sessionManager: SessionManager,

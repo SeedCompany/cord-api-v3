@@ -69,6 +69,8 @@ declare module 'cypher-query-builder/dist/typings/connection' {
       inTx: (this: void) => Promise<R>,
       options?: TransactionOptions,
     ) => Promise<R>;
+
+    outsideOfTransaction: <R>(inTx: (this: void) => Promise<R>) => Promise<R>;
   }
 }
 
@@ -77,6 +79,12 @@ Object.defineProperty(Connection.prototype, 'currentTransaction', {
     return this.transactionStorage.getStore();
   },
 });
+
+Connection.prototype.outsideOfTransaction = async function outsideOfTransaction<
+  R,
+>(this: PatchedConnection, inner: (this: void) => Promise<R>): Promise<R> {
+  return await this.transactionStorage.run(null!, inner);
+};
 
 Connection.prototype.runInTransaction = async function withTransaction<R>(
   this: PatchedConnection,
