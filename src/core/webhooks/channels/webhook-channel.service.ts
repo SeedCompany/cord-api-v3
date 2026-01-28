@@ -31,6 +31,7 @@ export class WebhookChannelService {
       webhook,
       payload: { errors: error.errors },
       trigger,
+      fatal: true,
     });
   }
 

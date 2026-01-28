@@ -1436,7 +1436,7 @@ describe('Webhooks', () => {
         // Receive the webhook with an error
         const request = await waitingForWebhook;
 
-        expectErrorPayload(request.body);
+        expectErrorPayload(request.body, true);
 
         // Expect the webhook to remain valid since event emission errors
         // don't invalidate the webhook (other events may succeed)
@@ -1755,10 +1755,11 @@ const parseSignature = (request: WebhookRequest) =>
   ).asRecord;
 // endregion
 
-function expectErrorPayload(body: string) {
+function expectErrorPayload(body: string, isStillValid = false) {
   const payload = JSON.parse(body);
   expect(payload.errors).toBeDefined();
   expect(payload.errors.length).toBeGreaterThan(0);
   expect(new GqlError(payload.errors[0])).toMatchSnapshot();
+  expect(payload.extensions.webhook.valid).toBe(isStillValid);
   return payload;
 }
