@@ -1,15 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { cleanJoin, type Nil, nonEnumerable } from '@seedcompany/common';
+import { stripIndent } from 'common-tags';
 import got, {
   type BeforeRequestHook,
   type ExtendOptions,
   type Got,
+  HTTPError,
+  ParseError,
   RequestError,
   type Response,
   TimeoutError,
 } from 'got';
 import { type FormattedExecutionResult } from 'graphql';
-import { createHmac } from 'node:crypto';
+import { createHmac, randomBytes } from 'node:crypto';
+import { InputException } from '~/common';
 import { ConfigService } from '~/core/config/config.service';
 import { ILogger, Logger, LogLevel } from '../logger';
 import { type Webhook as FullWebhook, type WebhookTrigger } from './dto';
@@ -44,9 +48,82 @@ export class WebhookSender {
         request: config.webhooks.requestTimeout.toMillis(),
       },
       headers: {
-        'user-agent': `cord webhook`,
+        'user-agent': 'cord webhook',
       },
     } satisfies ExtendOptions);
+  }
+
+  async verify(webhook: Webhook, challenge?: string) {
+    challenge ??= randomBytes(32).toString('hex');
+
+    const logCtx = {
+      name: webhook.name,
+      id: webhook.id,
+      url: webhook.url,
+      owner: webhook.owner.id,
+    };
+
+    const body = { challenge };
+    try {
+      const payload = await this.http
+        .post(webhook.url, {
+          json: body,
+          throwHttpErrors: true,
+        })
+        .json<typeof body>();
+      if (payload.challenge !== challenge) {
+        // noinspection ExceptionCaughtLocallyJS
+        throw new InputException(
+          'The endpoint must echo back the challenge request.',
+        );
+      } else {
+        this.logger.info('Webhook challenge verified', logCtx);
+      }
+    } catch (error) {
+      let reason = 'unknown error';
+      let cause: RequestError | undefined = undefined;
+      if (error instanceof InputException) {
+        reason = error.message;
+      } else if (error instanceof RequestError) {
+        if (error.code === 'ECONNREFUSED') {
+          reason = 'Connection refused';
+        } else if (error instanceof TimeoutError) {
+          reason = 'Request timed out';
+        } else if (error instanceof HTTPError) {
+          reason = 'Response did not have a successful status code';
+        } else if (error instanceof ParseError) {
+          reason = 'Response was not valid JSON';
+          cause = error;
+        } else {
+          cause = error;
+        }
+      }
+
+      if (cause) {
+        // suppress log spam
+        nonEnumerable(
+          cause,
+          ...(cause.input ? [] : ['input']),
+          'options',
+          'request',
+          'timings',
+        );
+      }
+
+      this.logger.warning('Webhook challenge verification failed', {
+        ...logCtx,
+        reason,
+        exception: cause,
+      });
+      throw new InputException(
+        stripIndent`
+          Webhook challenge verification failed.
+          Reason: ${reason}
+        `,
+        'url',
+        cause,
+      );
+    }
   }
 
   // TODO use job queue to decouple flight attempts & retries

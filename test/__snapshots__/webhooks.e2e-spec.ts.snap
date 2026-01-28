@@ -123,6 +123,142 @@ exports[`Webhooks Management Saving / Creation Subscription Validation should re
 }
 `;
 
+exports[`Webhooks Management Saving / Creation URL Challenge 404 1`] = `
+{
+  "extensions": {
+    "codes": [
+      "Input",
+      "Client",
+    ],
+    "field": "url",
+  },
+  "message": "Webhook challenge verification failed.
+Reason: Response did not have a successful status code",
+  "path": [
+    "saveWebhook",
+  ],
+}
+`;
+
+exports[`Webhooks Management Saving / Creation URL Challenge 500 1`] = `
+{
+  "extensions": {
+    "codes": [
+      "Input",
+      "Client",
+    ],
+    "field": "url",
+  },
+  "message": "Webhook challenge verification failed.
+Reason: Response did not have a successful status code",
+  "path": [
+    "saveWebhook",
+  ],
+}
+`;
+
+exports[`Webhooks Management Saving / Creation URL Challenge DNS resolution failure 1`] = `
+{
+  "extensions": {
+    "codes": [
+      "Input",
+      "Client",
+    ],
+    "field": "url",
+  },
+  "message": "Webhook challenge verification failed.
+Reason: unknown error",
+  "path": [
+    "saveWebhook",
+  ],
+}
+`;
+
+exports[`Webhooks Management Saving / Creation URL Challenge mismatched challenge 1`] = `
+{
+  "extensions": {
+    "codes": [
+      "Input",
+      "Client",
+    ],
+    "field": "url",
+  },
+  "message": "Webhook challenge verification failed.
+Reason: The endpoint must echo back the challenge request.",
+  "path": [
+    "saveWebhook",
+  ],
+}
+`;
+
+exports[`Webhooks Management Saving / Creation URL Challenge missing challenge in response 1`] = `
+{
+  "extensions": {
+    "codes": [
+      "Input",
+      "Client",
+    ],
+    "field": "url",
+  },
+  "message": "Webhook challenge verification failed.
+Reason: The endpoint must echo back the challenge request.",
+  "path": [
+    "saveWebhook",
+  ],
+}
+`;
+
+exports[`Webhooks Management Saving / Creation URL Challenge non existent url 1`] = `
+{
+  "extensions": {
+    "codes": [
+      "Input",
+      "Client",
+    ],
+    "field": "url",
+  },
+  "message": "Webhook challenge verification failed.
+Reason: Connection refused",
+  "path": [
+    "saveWebhook",
+  ],
+}
+`;
+
+exports[`Webhooks Management Saving / Creation URL Challenge not json response 1`] = `
+{
+  "extensions": {
+    "codes": [
+      "Input",
+      "Client",
+    ],
+    "field": "url",
+  },
+  "message": "Webhook challenge verification failed.
+Reason: Response was not valid JSON",
+  "path": [
+    "saveWebhook",
+  ],
+}
+`;
+
+exports[`Webhooks Management Saving / Creation URL Challenge timeout 1`] = `
+{
+  "extensions": {
+    "codes": [
+      "Input",
+      "Client",
+    ],
+    "field": "url",
+  },
+  "message": "Webhook challenge verification failed.
+Reason: Request timed out",
+  "path": [
+    "saveWebhook",
+  ],
+}
+`;
+
 exports[`Webhooks SubscriptionChannelVersion Increments -> app will recalculate subscriptions invalid webhook will be marked invalid & error payload sent 1`] = `
 {
   "extensions": {

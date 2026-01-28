@@ -6,12 +6,17 @@ import {
   expect,
   it,
 } from '@jest/globals';
-import { delay, mapEntries, patchMethod } from '@seedcompany/common';
+import {
+  delay,
+  mapEntries,
+  type MaybeAsync,
+  patchMethod,
+} from '@seedcompany/common';
 import {
   createServerAdapter,
   type ServerAdapterRequestHandler,
 } from '@whatwg-node/server';
-import { type FormattedExecutionResult } from 'graphql';
+import { type FormattedExecutionResult, print } from 'graphql';
 import { DateTime, Duration } from 'luxon';
 import type { AddressInfo } from 'net';
 import { createHmac } from 'node:crypto';
@@ -83,6 +88,14 @@ describe('Webhooks', () => {
   });
 
   describe('Management', () => {
+    let receiver: { url: string } & AsyncDisposable;
+    beforeAll(async () => {
+      receiver = await serve(handleRequest(new Subject()));
+    });
+    afterAll(async () => {
+      await receiver[Symbol.asyncDispose]();
+    });
+
     describe('Saving / Creation', () => {
       it('should create a new webhook with valid subscription document', async () => {
         const webhook = await tester.apply(
@@ -99,7 +112,7 @@ describe('Webhooks', () => {
                 }
               }
             `),
-            url: 'https://example.com/webhook',
+            url: receiver.url,
             key: 'MyWebhook' as ID,
           }),
         );
@@ -108,7 +121,7 @@ describe('Webhooks', () => {
         expect(webhook.id).toBeTruthy();
         expect(webhook.key).toBe('MyWebhook');
         expect(webhook.subscription).toContain('subscription ProjectCreated');
-        expect(webhook.url).toBe('https://example.com/webhook');
+        expect(webhook.url).toBe(receiver.url);
         expect(webhook.valid).toBe(true);
         expect(webhook.secret).toBeTruthy();
       });
@@ -125,7 +138,7 @@ describe('Webhooks', () => {
                 }
               }
             `),
-            url: 'https://example.com/webhook',
+            url: receiver.url,
           }),
         );
 
@@ -145,7 +158,7 @@ describe('Webhooks', () => {
         const webhook = await tester.apply(
           webhooks.save({
             subscription,
-            url: 'https://example.com/webhook',
+            url: receiver.url,
           }),
         );
         expect(webhook.key).toBe('NotificationAdded');
@@ -163,7 +176,7 @@ describe('Webhooks', () => {
                 }
               }
             `),
-            url: 'https://example.com/first',
+            url: `${receiver.url}/first`,
           }),
         );
 
@@ -181,13 +194,13 @@ describe('Webhooks', () => {
                 }
               }
             `),
-            url: 'https://example.com/second',
+            url: `${receiver.url}/second`,
           }),
         );
 
         expect(secondWebhook.id).toBe(firstWebhook.id);
         expect(secondWebhook.key).toBe('TestKey');
-        expect(secondWebhook.url).toBe('https://example.com/second');
+        expect(secondWebhook.url).toBe(`${receiver.url}/second`);
         expect(secondWebhook.subscription).toContain('name');
       });
 
@@ -203,7 +216,7 @@ describe('Webhooks', () => {
                 }
               }
             `),
-            url: 'https://example.com/first-for-secret',
+            url: receiver.url,
           }),
         );
 
@@ -218,7 +231,7 @@ describe('Webhooks', () => {
                 }
               }
             `),
-            url: 'https://example.com/second-for-secret',
+            url: receiver.url,
           }),
         );
 
@@ -229,7 +242,7 @@ describe('Webhooks', () => {
         it('should return input error variables are not provided for operation', async () => {
           const op = tester.apply(
             webhooks.save({
-              url: 'https://example.com/webhook',
+              url: receiver.url,
               subscription: graphql(`
                 subscription ProjectUpdatedWithVar($project: ID!) {
                   projectUpdated(project: $project) {
@@ -251,7 +264,7 @@ describe('Webhooks', () => {
         it('should return validation error for non-subscription operation', async () => {
           const op = tester.apply(
             webhooks.save({
-              url: 'https://example.com/webhook',
+              url: receiver.url,
               subscription: `
                 query GetProjects {
                   projects {
@@ -282,7 +295,7 @@ describe('Webhooks', () => {
                   }
                 }
               `),
-              url: 'https://example.com/webhook',
+              url: receiver.url,
             }),
           );
           await expect(op).rejects.toThrowGqlError({
@@ -304,7 +317,7 @@ describe('Webhooks', () => {
                   }
                 } this is invalid syntax
               `,
-              url: 'https://example.com/webhook',
+              url: receiver.url,
             }),
           );
           await expect(op).rejects.toThrowGqlError({
@@ -326,7 +339,7 @@ describe('Webhooks', () => {
                   }
                 }
               `,
-              url: 'https://example.com/webhook',
+              url: receiver.url,
             }),
           );
           await expect(op).rejects.toThrowGqlError({
@@ -351,7 +364,7 @@ describe('Webhooks', () => {
                   }
                 }
               `,
-              url: 'https://example.com/webhook',
+              url: receiver.url,
             }),
           );
           await expect(saveOp).rejects.toThrowGqlError();
@@ -359,6 +372,85 @@ describe('Webhooks', () => {
           const listAfter = await tester.apply(webhooks.list());
           expect(listAfter.items).toHaveLength(countBefore);
         });
+      });
+
+      // Only asserting errors here, as the rest of the suite handles the successful case
+      describe('URL Challenge', () => {
+        it.each([
+          {
+            name: '404',
+            responder: () => new Response('Not Found', { status: 404 }),
+          },
+          {
+            name: '500',
+            responder: () => new Response('Server Error', { status: 500 }),
+          },
+          {
+            name: 'timeout',
+            responder: async () => {
+              await delay('10s');
+              return new Response('Server Error', { status: 500 });
+            },
+          },
+          {
+            name: 'not json response',
+            responder: () => new Response('hi'),
+          },
+          {
+            name: 'missing challenge in response',
+            responder: () => Response.json({}),
+          },
+          {
+            name: 'mismatched challenge',
+            responder: () => Response.json({ challenge: 'incorrect' }),
+          },
+          {
+            name: 'non existent url',
+            // Use a port that's not listening
+            url: 'http://localhost:59999/webhook',
+            responder: () => Response.error(),
+          },
+          {
+            name: 'DNS resolution failure',
+            url: 'http://this-domain-does-not-exist-1234567890.com/webhook',
+            responder: () => Response.error(),
+          },
+        ])(
+          '$name',
+          async ({
+            url,
+            responder,
+            assertions,
+          }: {
+            name: string;
+            url?: string;
+            responder: (req: Request) => MaybeAsync<Response>;
+            assertions?: (op: Promise<unknown>) => Promise<void>;
+          }) => {
+            await using invalidReceiver = await serve(responder);
+
+            const op = tester.apply(
+              webhooks.save({
+                subscription: graphql(`
+                  subscription TestKey {
+                    projectCreated {
+                      project {
+                        id
+                      }
+                    }
+                  }
+                `),
+                url: url ?? invalidReceiver.url,
+              }),
+            );
+            await assertions?.(op);
+            await expect(op).rejects.toThrowGqlError({
+              code: ['Input', 'Client'],
+              field: 'url',
+            });
+            await expect(op).rejects.toMatchSnapshot();
+          },
+        );
       });
     });
 
@@ -378,7 +470,7 @@ describe('Webhooks', () => {
                 }
               }
             `),
-            url: 'https://example.com/list-test-1',
+            url: receiver.url,
           }),
         );
 
@@ -393,7 +485,7 @@ describe('Webhooks', () => {
                 }
               }
             `),
-            url: 'https://example.com/list-test-2',
+            url: receiver.url,
           }),
         );
 
@@ -432,7 +524,7 @@ describe('Webhooks', () => {
                 }
               }
             `),
-            url: 'https://example.com/user1',
+            url: receiver.url,
           }),
         );
 
@@ -449,7 +541,7 @@ describe('Webhooks', () => {
                 }
               }
             `),
-            url: 'https://example.com/user2',
+            url: receiver.url,
           }),
         );
 
@@ -481,7 +573,7 @@ describe('Webhooks', () => {
                 }
               }
             `),
-            url: 'https://example.com/delete-by-id',
+            url: receiver.url,
           }),
         );
 
@@ -510,7 +602,7 @@ describe('Webhooks', () => {
                 }
               }
             `),
-            url: 'https://example.com/delete-by-key',
+            url: receiver.url,
           }),
         );
 
@@ -542,14 +634,14 @@ describe('Webhooks', () => {
           webhooks.save({
             subscription,
             key: 'sub1' as ID,
-            url: 'https://example.com/delete-by-name',
+            url: receiver.url,
           }),
         );
         const webhook2 = await tester.apply(
           webhooks.save({
             subscription,
             key: 'sub2' as ID,
-            url: 'https://example.com/delete-by-name',
+            url: receiver.url,
           }),
         );
 
@@ -582,7 +674,7 @@ describe('Webhooks', () => {
                 }
               }
             `),
-            url: 'https://example.com/delete-twice',
+            url: receiver.url,
           }),
         );
 
@@ -608,7 +700,7 @@ describe('Webhooks', () => {
                 }
               }
             `),
-            url: 'https://example.com/user1-delete',
+            url: receiver.url,
           }),
         );
 
@@ -625,7 +717,7 @@ describe('Webhooks', () => {
                 }
               }
             `),
-            url: 'https://example.com/user2-delete',
+            url: receiver.url,
           }),
         );
 
@@ -657,7 +749,7 @@ describe('Webhooks', () => {
                 }
               }
             `),
-            url: 'https://example.com/rotate-test',
+            url: receiver.url,
           }),
         );
 
@@ -682,7 +774,7 @@ describe('Webhooks', () => {
                 }
               }
             `),
-            url: 'https://example.com/rotate1',
+            url: receiver.url,
           }),
         );
 
@@ -697,7 +789,7 @@ describe('Webhooks', () => {
                 }
               }
             `),
-            url: 'https://example.com/rotate2',
+            url: receiver.url,
           }),
         );
 
@@ -726,7 +818,7 @@ describe('Webhooks', () => {
                 }
               }
             `),
-            url: 'https://example.com/before-rotate',
+            url: receiver.url,
           }),
         );
 
@@ -745,7 +837,7 @@ describe('Webhooks', () => {
                 }
               }
             `),
-            url: 'https://example.com/after-rotate',
+            url: receiver.url,
           }),
         );
 
@@ -765,7 +857,7 @@ describe('Webhooks', () => {
                 }
               }
             `),
-            url: 'https://example.com/user1-rotate',
+            url: receiver.url,
           }),
         );
 
@@ -782,7 +874,7 @@ describe('Webhooks', () => {
                 }
               }
             `),
-            url: 'https://example.com/user2-rotate',
+            url: receiver.url,
           }),
         );
 
@@ -1108,14 +1200,12 @@ describe('Webhooks', () => {
     describe('Consumer Error Handling', () => {
       it('should handle webhook URL returning 404', async () => {
         const events = new Subject<WebhookRequest>();
-        await using receiver = await serve(async (req: Request) => {
-          events.next({
-            method: req.method,
-            headers: req.headers,
-            body: await req.text(),
-          });
-          return new Response('Not Found', { status: 404 });
-        });
+        await using receiver = await serve(
+          handleRequest(
+            events,
+            async () => new Response('Not Found', { status: 404 }),
+          ),
+        );
 
         await tester.apply(
           webhooks.save({
@@ -1138,14 +1228,12 @@ describe('Webhooks', () => {
 
       it('should handle webhook URL returning 500', async () => {
         const events = new Subject<WebhookRequest>();
-        await using receiver = await serve(async (req: Request) => {
-          events.next({
-            method: req.method,
-            headers: req.headers,
-            body: await req.text(),
-          });
-          return new Response('Internal Server Error', { status: 500 });
-        });
+        await using receiver = await serve(
+          handleRequest(
+            events,
+            async () => new Response('Internal Server Error', { status: 500 }),
+          ),
+        );
 
         await tester.apply(
           webhooks.save({
@@ -1168,15 +1256,12 @@ describe('Webhooks', () => {
 
       it('should handle webhook URL connection timeout', async () => {
         const events = new Subject<WebhookRequest>();
-        await using receiver = await serve(async (req: Request) => {
-          events.next({
-            method: req.method,
-            headers: req.headers,
-            body: await req.text(),
-          });
-          await delay('10s'); // Delay response to simulate timeout
-          return new Response();
-        });
+        await using receiver = await serve(
+          handleRequest(events, async () => {
+            await delay('10s'); // Delay response to simulate timeout
+            return new Response();
+          }),
+        );
 
         await tester.apply(
           webhooks.save({
@@ -1201,14 +1286,23 @@ describe('Webhooks', () => {
       it('should handle webhook URL connection refused', async () => {
         // Use a port that's not listening
         const nonExistentUrl = 'http://localhost:59999/webhook';
+        await using receiver = await serve(handleRequest());
 
-        await tester.apply(
-          webhooks.save({
-            subscription: ProjectCreatedId,
+        const config = {
+          subscription: print(ProjectCreatedId),
+          url: receiver.url,
+          key: 'TestConnectionRefused' as ID,
+        };
+        await tester.apply(webhooks.save(config));
+
+        // Simulate future URL becoming invalid
+        await app.get(Identity).asUser(tester.identity.id, async () => {
+          await app.get(WebhooksRepository).save({
+            ...config,
+            name: 'ProjectCreatedId',
             url: nonExistentUrl,
-            key: 'TestConnectionRefused' as ID,
-          }),
-        );
+          });
+        });
 
         await tester.apply(createProject());
 
@@ -1219,14 +1313,23 @@ describe('Webhooks', () => {
       it('should handle webhook URL DNS resolution failure', async () => {
         const invalidUrl =
           'http://this-domain-does-not-exist-1234567890.com/webhook';
+        await using receiver = await serve(handleRequest());
 
-        await tester.apply(
-          webhooks.save({
-            subscription: ProjectCreatedId,
+        const config = {
+          subscription: print(ProjectCreatedId),
+          url: receiver.url,
+          key: 'TestDNSFailure' as ID,
+        };
+        await tester.apply(webhooks.save(config));
+
+        // Simulate future DNS resolution failure
+        await app.get(Identity).asUser(tester.identity.id, async () => {
+          await app.get(WebhooksRepository).save({
+            ...config,
+            name: 'ProjectCreatedId',
             url: invalidUrl,
-            key: 'TestDNSFailure' as ID,
-          }),
-        );
+          });
+        });
 
         await tester.apply(createProject());
 
@@ -1248,13 +1351,19 @@ describe('Webhooks', () => {
         );
 
         // Create webhook that will fail (connection refused)
-        await tester.apply(
-          webhooks.save({
-            subscription: ProjectCreatedId,
+        const config = {
+          subscription: print(ProjectCreatedId),
+          url: receiver.url,
+          key: 'FailWebhook' as ID,
+        };
+        await tester.apply(webhooks.save(config));
+        await app.get(Identity).asUser(tester.identity.id, async () => {
+          await app.get(WebhooksRepository).save({
+            ...config,
+            name: 'ProjectCreatedId',
             url: 'http://localhost:59998/webhook',
-            key: 'FailWebhook' as ID,
-          }),
-        );
+          });
+        });
 
         const waitingForWebhook = firstValueFrom(events.pipe(timeout(SHORT)));
 
@@ -1738,13 +1847,25 @@ const serve = async (handler: ServerAdapterRequestHandler<unknown>) => {
 type WebhookRequest = Pick<Request, 'method' | 'headers'> & { body: string };
 
 const handleRequest =
-  (events: Subject<WebhookRequest>) => async (req: Request) => {
-    events.next({
+  (events?: Subject<WebhookRequest>, response = async () => new Response()) =>
+  async (req: Request) => {
+    const body = await req.text();
+
+    try {
+      const json = JSON.parse(body);
+      if (json.challenge) {
+        return Response.json({ challenge: json.challenge });
+      }
+    } catch (error) {
+      // Ignore, other tests will fail
+    }
+
+    events?.next({
       method: req.method,
       headers: req.headers,
-      body: await req.text(),
+      body,
     });
-    return new Response();
+    return await response();
   };
 
 type SignatureHeader = ReturnType<typeof parseSignature>;
