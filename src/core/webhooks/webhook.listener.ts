@@ -49,13 +49,21 @@ export class WebhookListener implements OnModuleDestroy {
 
     // A simple promise chain as a placeholder for a real job queue.
     this.draining = this.draining.then(() =>
-      this.handleJob({ ...event, trigger }).catch((error) => {
-        this.logger.error('Failed to process webhook event', {
-          channel: event.channel.name,
-          data: event.data,
-          exception: error,
-        });
-      }),
+      this.handleJob({ ...event, trigger }).then(
+        () => {
+          this.logger.debug('Processed webhook event', {
+            channel: event.channel.name,
+            data: event.data,
+          });
+        },
+        (error) => {
+          this.logger.error('Failed to process webhook event', {
+            channel: event.channel.name,
+            data: event.data,
+            exception: error,
+          });
+        },
+      ),
     );
   }
 
