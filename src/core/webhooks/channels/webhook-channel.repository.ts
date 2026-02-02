@@ -55,7 +55,7 @@ export class WebhookChannelRepository extends CommonRepository {
       .subQuery('unobserved', (sub) =>
         sub
           .raw('UNWIND unobserved AS channel')
-          .with('channel')
+          .with(['channel', 'channel.name as name'])
           .where(
             not(
               path([
@@ -66,7 +66,7 @@ export class WebhookChannelRepository extends CommonRepository {
             ),
           )
           .delete('channel')
-          .return('collect(channel.name) as orphaned'),
+          .return('collect(name) as orphaned'),
       )
 
       .comment('Upsert new channels & observations for the webhook')
