@@ -69,6 +69,13 @@ export class WebhookSender {
         .post(webhook.url, {
           json: body,
           throwHttpErrors: true,
+          hooks: {
+            // This is not strictly necessary as it we don't send any data
+            // that should be acted upon.
+            // But this does allow the consumer to blindly verify the request
+            // before splitting their logic based on the challenge vs. event.
+            beforeRequest: [this.signRequest(webhook)],
+          },
         })
         .json<typeof body>();
       if (payload.challenge !== challenge) {
