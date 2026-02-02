@@ -35,14 +35,15 @@ export const createApp = async ({
   try {
     let builder = Test.createTestingModule({
       imports: [AppModule, ...(imports ?? [])],
-      providers,
+      providers: [
+        ...(config ? [ConfigService.providePart(config)] : []),
+        ...(providers ?? []),
+      ],
     })
       .overrideProvider(LevelMatcher)
       .useValue(new LevelMatcher([], LogLevel.ERROR))
       .overrideProvider('GEL_CONNECT')
-      .useValue(db?.options)
-      .overrideProvider('CONFIG_PART')
-      .useValue(config);
+      .useValue(db?.options);
     if (overrides) {
       builder = overrides?.(builder);
     }
