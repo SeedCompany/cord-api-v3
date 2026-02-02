@@ -66,7 +66,7 @@ export class WebhookChannelService {
     });
   }
 
-  async listFor(channel: string) {
-    return await this.repo.listForChannel(channel);
+  async listFor(channels: Iterable<string>) {
+    return await this.repo.listForChannels(channels);
   }
 }

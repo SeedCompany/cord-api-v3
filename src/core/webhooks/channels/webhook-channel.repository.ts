@@ -13,8 +13,9 @@ import {
   createUniqueConstraint,
   OnIndex,
 } from '~/core/database';
-import { path, variable } from '~/core/database/query';
+import { collect, path, variable } from '~/core/database/query';
 import { ILogger, Logger } from '~/core/logger';
+import { type Webhook } from '../dto';
 import { WebhooksRepository } from '../management/webhooks.repository';
 
 @Injectable()
@@ -112,19 +113,23 @@ export class WebhookChannelRepository extends CommonRepository {
       .executeAndLogStats();
   }
 
-  async listForChannel(channel: string) {
+  async listForChannels(channels: Iterable<string>) {
     return await this.db
       .query()
-      .match(node('node', 'Webhook', { valid: true }))
-      .where(
-        path([
-          node('node'),
-          relation('out', '', 'observes'),
-          node('', 'BroadcastChannel', { name: channel }),
-        ]),
-      )
-      .apply(this.webhooks.hydrate())
-      .map((row) => row.dto)
+      .unwind([...channels], 'channelName')
+      .match([
+        node('node', 'Webhook', { valid: true }),
+        relation('out', '', 'observes'),
+        node('channel', 'BroadcastChannel', {
+          name: variable('channelName'),
+        }),
+      ])
+      .with(['distinct node', collect('channel.name').as('channels')])
+      .subQuery('node', this.webhooks.hydrate())
+      .return<{ webhook: Webhook; channels: readonly string[] }>([
+        'dto as webhook',
+        'channels',
+      ])
       .run();
   }
 

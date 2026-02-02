@@ -1,5 +1,10 @@
 import { Injectable, type OnModuleDestroy } from '@nestjs/common';
-import { asyncPool } from '@seedcompany/common';
+import {
+  asyncPool,
+  cached,
+  groupToMapBy,
+  mapValues,
+} from '@seedcompany/common';
 import { type ExecutionResult } from 'graphql';
 import { internal } from '../broadcast';
 import { BroadcastPublishedHook } from '../broadcast/hooks';
@@ -14,9 +19,11 @@ import {
 } from './executor/webhook.executor';
 import { WebhookSender } from './webhook.sender';
 
-type WebhookJob = BroadcastPublishedHook & {
+interface Batch {
+  events: BroadcastPublishedHook[];
   trigger: WebhookTrigger;
-};
+  timer: NodeJS.Timeout;
+}
 
 /**
  * Holds logic to listen for published broadcast events,
@@ -26,6 +33,16 @@ type WebhookJob = BroadcastPublishedHook & {
  */
 @Injectable()
 export class WebhookListener implements OnModuleDestroy {
+  /**
+   * Pending batches keyed by event object identity.
+   */
+  private readonly pendingBatches = new Map<unknown, Batch>();
+  /**
+   * How long to wait before processing batched events with the same data identity.
+   * This allows the same data object published to multiple channels to share a trigger.
+   */
+  private static readonly batchWindowMs = 10;
+
   constructor(
     private readonly channels: WebhookChannelService,
     private readonly executor: WebhookExecutor,
@@ -35,6 +52,12 @@ export class WebhookListener implements OnModuleDestroy {
 
   draining = Promise.resolve();
   async onModuleDestroy() {
+    // Flush all pending batches immediately on shutdown
+    for (const [data, batch] of this.pendingBatches) {
+      clearTimeout(batch.timer);
+      this.pendingBatches.delete(data);
+      this.enqueueBatch(batch);
+    }
     await this.draining;
   }
 
@@ -45,21 +68,34 @@ export class WebhookListener implements OnModuleDestroy {
       return;
     }
 
-    const trigger = new WebhookTrigger();
+    const batch = cached(this.pendingBatches, event.data, (id): Batch => {
+      const newBatch: Batch = {
+        events: [],
+        trigger: new WebhookTrigger(),
+        timer: setTimeout(() => {
+          this.pendingBatches.delete(id);
+          this.enqueueBatch(newBatch);
+        }, WebhookListener.batchWindowMs),
+      };
+      return newBatch;
+    });
+    batch.events.push(event);
+  }
 
+  private enqueueBatch(batch: Batch) {
     // A simple promise chain as a placeholder for a real job queue.
     this.draining = this.draining.then(() =>
-      this.handleJob({ ...event, trigger }).then(
+      this.handleJob(batch).then(
         () => {
-          this.logger.debug('Processed webhook event', {
-            channel: event.channel.name,
-            data: event.data,
+          this.logger.debug('Processed webhook events', {
+            channels: batch.events.map((e) => e.channel.name),
+            data: batch.events.map((e) => e.data),
           });
         },
         (error) => {
-          this.logger.error('Failed to process webhook event', {
-            channel: event.channel.name,
-            data: event.data,
+          this.logger.error('Failed to process webhook events', {
+            channels: batch.events.map((e) => e.channel.name),
+            data: batch.events.map((e) => e.data),
             exception: error,
           });
         },
@@ -67,22 +103,24 @@ export class WebhookListener implements OnModuleDestroy {
     );
   }
 
-  private async handleJob({ channel, data, trigger }: WebhookJob) {
-    const webhooks = await this.channels.listFor(channel.name);
+  private async handleJob({ events, trigger }: Batch) {
+    // Build a map of channel name -> data for each event
+    // All events share the same data object but may have different channels
+    const channelMap = groupToMapBy(events, (e) => e.channel.name);
+
+    const webhooks = await this.channels.listFor(channelMap.keys());
     if (!webhooks.length) {
       return;
     }
 
-    // There is potential for multiple events to be batched together here,
-    // which would save only in subscription initialization code.
-    // Seemingly only minor performance value there, and would add complexity
-    // here to achieve.
-    const events = new Map([[channel.name, [data]]]);
+    const eventMap = mapValues(channelMap, (channel, publishes) =>
+      publishes.map((e) => e.data),
+    ).asMap;
 
-    const payloadsByHook = asyncPool(3, webhooks, async (webhook) => {
+    const payloadsByHook = asyncPool(3, webhooks, async ({ webhook }) => {
       let fatal = false;
       const payloads = await this.executor
-        .executeWithEvents(webhook, events)
+        .executeWithEvents(webhook, eventMap)
         .catch(async (e: Error): Promise<ExecutionResult[]> => {
           if (!(e instanceof WebhookError)) {
             throw e;

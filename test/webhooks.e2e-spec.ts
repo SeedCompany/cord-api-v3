@@ -1075,6 +1075,82 @@ describe('Webhooks', () => {
       );
     });
 
+    it('should share trigger ID when webhooks receive events from same data object', async () => {
+      const events = new Subject<WebhookRequest>();
+      await using receiver = await serve(handleRequest(events));
+
+      // Create a project to update
+      const project = await tester.apply(createProject());
+
+      // Create webhook that listens to updates on this specific project
+      await tester.apply(
+        webhooks.save({
+          subscription: graphql(`
+            subscription SpecificProjectUpdate($project: ID!) {
+              projectUpdated(project: $project) {
+                project {
+                  id
+                }
+              }
+            }
+          `),
+          url: receiver.url,
+          variables: { project: project.id },
+        }),
+      );
+
+      // Create webhook that listens to any project update
+      await tester.apply(
+        webhooks.save({
+          subscription: graphql(`
+            subscription AnyProjectUpdate {
+              projectUpdated {
+                project {
+                  id
+                }
+              }
+            }
+          `),
+          url: receiver.url,
+        }),
+      );
+
+      const UpdateProject = graphql(`
+        mutation UpdateProject($input: UpdateProject!) {
+          updateProject(input: $input) {
+            project {
+              id
+            }
+          }
+        }
+      `);
+
+      // Listen for both webhook events
+      const waitingForWebhooks = firstValueFrom(events.pipe(bufferTime(SHORT)));
+
+      // Trigger an update on the project
+      await tester.run(UpdateProject, {
+        input: { id: project.id, name: `${project.name.value!} Updated` },
+      });
+
+      // Wait for both webhooks to be sent
+      const requests = await waitingForWebhooks;
+
+      expect(requests).toHaveLength(2);
+
+      // Verify both webhooks received the same project data
+      const payload1 = JSON.parse(requests[0]!.body);
+      const payload2 = JSON.parse(requests[1]!.body);
+      expect(payload1.data.projectUpdated.project.id).toBe(project.id);
+      expect(payload2.data.projectUpdated.project.id).toBe(project.id);
+
+      // Verify both webhooks share the same trigger ID
+      // This confirms events with the same data object identity are batched together
+      expect(payload1.extensions.webhook.trigger.id).toBe(
+        payload2.extensions.webhook.trigger.id,
+      );
+    });
+
     it('should send to webhooks owned by different users', async () => {
       const events = new Subject<WebhookRequest>();
       await using receiver = await serve(handleRequest(events));
