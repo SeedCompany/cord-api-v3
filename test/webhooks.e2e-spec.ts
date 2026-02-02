@@ -26,12 +26,9 @@ import {
   bufferTime,
   defer,
   firstValueFrom,
-  lastValueFrom,
   merge,
   Subject,
-  take,
   timeout,
-  toArray,
 } from 'rxjs';
 import type { SetNonNullable, SetRequired } from 'type-fest';
 import { validate as isUUID } from 'uuid';
@@ -1056,15 +1053,15 @@ describe('Webhooks', () => {
       );
 
       // Listen for both webhook events
-      const waitingForWebhooks = lastValueFrom(
-        events.pipe(timeout(SHORT), take(2), toArray()),
-      );
+      const waitingForWebhooks = firstValueFrom(events.pipe(bufferTime(SHORT)));
 
       // Trigger the event
       const project = await tester.apply(createProject());
 
       // Wait for both webhooks to be sent
       const requests = await waitingForWebhooks;
+
+      expect(requests).toHaveLength(2);
 
       // Verify both webhooks received the same project data
       const payload1 = JSON.parse(requests[0]!.body);
@@ -1100,15 +1097,15 @@ describe('Webhooks', () => {
       );
 
       // Listen for both webhook events
-      const waitingForWebhooks = lastValueFrom(
-        events.pipe(timeout(SHORT), take(2), toArray()),
-      );
+      const waitingForWebhooks = firstValueFrom(events.pipe(bufferTime(SHORT)));
 
       // Trigger the event (as first user)
       await tester.apply(createProject());
 
       // Wait for both webhooks
       const requests = await waitingForWebhooks;
+
+      expect(requests).toHaveLength(2);
 
       // Verify both webhooks received the event
       const payloads = requests.map((r) => JSON.parse(r.body));
