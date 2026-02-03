@@ -1,5 +1,7 @@
 /* eslint-disable @seedcompany/no-restricted-imports */
 import { initGraphQLTada, type VariablesOf } from 'gql.tada';
+import type { DocumentNode } from 'graphql';
+import type { JsonObject } from 'type-fest';
 import { type ID } from '~/common';
 import type { introspection } from './graphql-env.generated';
 
@@ -13,6 +15,8 @@ export const graphql = initGraphQLTada<{
     Markdown: string;
     RichText: object;
     URL: string;
+    JSONObject: JsonObject;
+    GraphQLDocument: string | DocumentNode;
   };
   disableMasking: true;
 }>();

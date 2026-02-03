@@ -1,5 +1,7 @@
 import { afterAll } from '@jest/globals';
-import { Test } from '@nestjs/testing';
+import type { ModuleMetadata, Provider } from '@nestjs/common';
+import { Test, type TestingModuleBuilder } from '@nestjs/testing';
+import type { DeepPartial } from 'ts-essentials';
 import { andCall } from '~/common';
 import { ConfigService } from '~/core';
 import { HttpAdapter, type NestHttpApplication } from '~/core/http';
@@ -17,19 +19,35 @@ afterAll(async () => {
   }
 });
 
-export const createApp = async (): Promise<TestApp> => {
+export const createApp = async ({
+  config,
+  imports,
+  providers,
+  overrides,
+}: {
+  config?: DeepPartial<ConfigService>;
+  providers?: Provider[];
+  overrides?: (builder: TestingModuleBuilder) => TestingModuleBuilder;
+} & Pick<ModuleMetadata, 'imports' | 'providers'> = {}): Promise<TestApp> => {
   const db = await ephemeralGel();
 
   let app;
   try {
-    const moduleFixture = await Test.createTestingModule({
-      imports: [AppModule],
+    let builder = Test.createTestingModule({
+      imports: [AppModule, ...(imports ?? [])],
+      providers: [
+        ...(config ? [ConfigService.providePart(config)] : []),
+        ...(providers ?? []),
+      ],
     })
       .overrideProvider(LevelMatcher)
       .useValue(new LevelMatcher([], LogLevel.ERROR))
       .overrideProvider('GEL_CONNECT')
-      .useValue(db?.options)
-      .compile();
+      .useValue(db?.options);
+    if (overrides) {
+      builder = overrides?.(builder);
+    }
+    const moduleFixture = await builder.compile();
 
     app = moduleFixture.createNestApplication<NestHttpApplication>(
       new HttpAdapter(),

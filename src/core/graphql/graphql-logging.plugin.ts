@@ -30,6 +30,10 @@ export class GraphqlLoggingPlugin {
     if (operationName === 'IntrospectionQuery') {
       return;
     }
+    if (args.contextValue.webhook) {
+      // Don't log webhook requests, they are produced internally.
+      return;
+    }
     this.logger.info(`Received ${contextValue.operation.operation}`, {
       operation: operationName,
       ...maskSecrets(variableValues ?? {}),

@@ -16,6 +16,7 @@ import {
   NormalizedException,
 } from './exception.normalizer';
 import { isFromHackAttempt } from './is-from-hack-attempt';
+import { SkipLogging } from './skip-logging.symbol';
 
 @Catch()
 @Injectable()
@@ -94,6 +95,9 @@ export class ExceptionFilter implements IExceptionFilter {
   }
 
   logIt(info: ExceptionJson, error: Error) {
+    if (SkipLogging in error) {
+      return;
+    }
     if ('logProps' in error && error.logProps) {
       // Assume these have already been logged.
       return;

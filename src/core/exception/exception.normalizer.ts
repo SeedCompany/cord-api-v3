@@ -189,24 +189,32 @@ export class ExceptionNormalizer {
     }
 
     if (ex instanceof GraphQLError) {
-      if (ex.extensions.code === 'GRAPHQL_VALIDATION_FAILED') {
-        return { codes: ['Validation', 'GraphQL', 'Client'] };
-      }
-      if (ex.extensions.code === 'GRAPHQL_PARSE_FAILED') {
-        return { codes: ['Parse', 'GraphQL', 'Client'] };
-      }
-      if (ex.extensions.code === 'OPERATION_RESOLUTION_FAILURE') {
-        return { codes: ['OperationResolution', 'GraphQL', 'Client'] };
+      const { code, codes: codesIn, stacktrace, ...rest } = ex.extensions;
+      const codes =
+        simpleSwitch(code, {
+          // eslint-disable-next-line @typescript-eslint/naming-convention
+          GRAPHQL_VALIDATION_FAILED: ['Validation', 'GraphQL', 'Client'],
+          // eslint-disable-next-line @typescript-eslint/naming-convention
+          GRAPHQL_PARSE_FAILED: ['Parse', 'GraphQL', 'Client'],
+          // eslint-disable-next-line @typescript-eslint/naming-convention
+          OPERATION_RESOLUTION_FAILURE: [
+            'OperationResolution',
+            'GraphQL',
+            'Client',
+          ],
+        }) ?? (codesIn instanceof JsonSet ? codesIn : undefined);
+      if (codes) {
+        return { ...rest, codes };
       }
       const status = (ex.extensions as any).http?.status ?? 500;
       if (status === 413 && ex.message.startsWith('Batching is limited')) {
-        return { codes: ['BatchLimit', 'GraphQL', 'Client'] };
+        return { ...rest, codes: ['BatchLimit', 'GraphQL', 'Client'] };
       }
       const isClient =
         status < 500 ||
         // Guessing here. No execution path - client problem.
         !ex.path;
-      return { codes: ['GraphQL', isClient ? 'Client' : 'Server'] };
+      return { ...rest, codes: ['GraphQL', isClient ? 'Client' : 'Server'] };
     }
 
     // Bad output from API, that doesn't match the schema

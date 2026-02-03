@@ -44,7 +44,9 @@ export class ProjectChannels {
   ) {
     const by = this.identity.current.userId;
     const payloadWithBy = { ...payload, by };
-    this[action](payload).publish(payloadWithBy);
+    if (action !== 'created') {
+      this[action](payload).publish(payloadWithBy);
+    }
     this[action]().publish(payloadWithBy);
     return payloadWithBy;
   }

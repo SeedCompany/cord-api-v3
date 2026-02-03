@@ -12,7 +12,9 @@ import Redis from 'ioredis';
 import { ConfigService } from '~/core/config';
 import { TransactionHooks } from '~/core/database';
 import { GqlContextHost } from '~/core/graphql';
+import { Hooks } from '~/core/hooks';
 import { type ILogger, LoggerToken, NestLoggerAdapter } from '~/core/logger';
+import { HookedTransport } from './hooked.transport';
 import { TransactionDeferredTransport } from './transaction-deferred.transport';
 
 @Module({
@@ -35,13 +37,15 @@ import { TransactionDeferredTransport } from './transaction-deferred.transport';
     },
     {
       provide: Transport,
-      inject: ['RealTransport', TransactionHooks, GqlContextHost],
+      inject: ['RealTransport', Hooks, TransactionHooks, GqlContextHost],
       useFactory: (
         transport: Transport,
+        hooks: Hooks,
         txHooks: TransactionHooks,
         gqlContextHost: GqlContextHost,
       ) => {
         let composed = transport;
+        composed = new HookedTransport(composed, hooks);
         composed = new TransactionDeferredTransport(
           composed,
           txHooks,

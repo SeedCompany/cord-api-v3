@@ -24,7 +24,7 @@ import { FileBucket, InvalidSignedUrlException } from './bucket';
  * This fakes S3 web hosting for use with LocalBuckets.
  */
 @Controller(LocalBucketController.path)
-@AuthLevel('sessionless')
+@AuthLevel(AuthLevel.Sessionless)
 export class LocalBucketController {
   static path = '/local-bucket';
 

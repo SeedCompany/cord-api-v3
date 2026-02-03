@@ -44,7 +44,7 @@ export class PasswordResolver {
   @Mutation(() => PasswordResetRequested, {
     description: 'Forgot password; send password reset email',
   })
-  @AuthLevel('anonymous')
+  @AuthLevel(AuthLevel.Anonymous)
   async forgotPassword(
     @Args() input: RequestPasswordReset,
   ): Promise<PasswordResetRequested> {
@@ -58,7 +58,7 @@ export class PasswordResolver {
       @sensitive-secrets
     `,
   })
-  @AuthLevel('anonymous')
+  @AuthLevel(AuthLevel.Anonymous)
   async resetPassword(@Args() input: ResetPassword): Promise<PasswordUpdated> {
     const { user } = await this.authentication.resetPassword(input);
     return { user };

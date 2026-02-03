@@ -29,6 +29,7 @@ import { TimeoutInterceptor } from './timeout.interceptor';
 import { TracingModule } from './tracing';
 import { ValidationModule } from './validation/validation.module';
 import { WaitResolver } from './wait.resolver';
+import { WebhooksModule } from './webhooks/webhooks.module';
 
 @Global()
 @Module({
@@ -51,6 +52,7 @@ import { WaitResolver } from './wait.resolver';
     ResourceModule,
     ValidationModule,
     AuthenticationModule,
+    WebhooksModule,
   ],
   providers: [
     AwsS3Factory,
@@ -83,6 +85,7 @@ import { WaitResolver } from './wait.resolver';
     TracingModule,
     ValidationModule,
     AuthenticationModule,
+    WebhooksModule,
   ],
 })
 export class CoreModule {}
