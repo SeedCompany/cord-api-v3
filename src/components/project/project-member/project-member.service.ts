@@ -1,6 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { type MaybeAsync, setOf } from '@seedcompany/common';
-import { DateTime } from 'luxon';
 import {
   type ID,
   InputException,
@@ -67,14 +66,13 @@ export class ProjectMemberService {
     enforcePerms &&
       this.privileges.for(ProjectMember, created).verifyCan('create');
 
-    const secured = this.secure(created);
-
     this.channels.publishToAll('created', {
-      projectMember: secured.id,
-      at: secured.createdAt,
+      project: created.project.id,
+      member: created.id,
+      at: created.createdAt,
     });
 
-    return secured;
+    return this.secure(created);
   }
 
   @HandleIdLookup(ProjectMember)
@@ -114,11 +112,11 @@ export class ProjectMemberService {
     };
   }
 
-  async update(input: UpdateProjectMember): Promise<ProjectMember> {
-    const object = await this.readOne(input.id);
+  async update(input: UpdateProjectMember) {
+    const object = await this.repo.readOne(input.id);
 
     await this.assertValidRoles(input.roles, () => {
-      const user = object.user.value;
+      const user = this.secure(object).user.value;
       if (!user) {
         throw new UnauthorizedException(
           'Cannot read user to verify roles available',
@@ -135,19 +133,25 @@ export class ProjectMemberService {
     }
 
     const changes = this.repo.getActualChanges(object, input);
+    if (Object.keys(changes).length === 0) {
+      return { member: this.secure(object) };
+    }
     this.privileges.for(ProjectMember, object).verifyChanges(changes);
 
     const updated = await this.repo.update({ id: object.id, ...changes });
-    const secured = this.secure(updated);
 
-    this.channels.publishToAll('updated', {
-      projectMember: secured.id,
+    const updatedPayload = this.channels.publishToAll('updated', {
+      project: updated.project.id,
+      member: updated.id,
       at: changes.modifiedAt!,
       updated: ProjectMemberUpdate.fromInput(changes),
       previous: ProjectMemberUpdate.pickPrevious(object, changes),
     });
 
-    return secured;
+    return {
+      member: this.secure(updated),
+      payload: updatedPayload,
+    };
   }
 
   getAvailableRoles(user: User) {
@@ -181,21 +185,20 @@ export class ProjectMemberService {
     }
   }
 
-  async delete(id: ID): Promise<void> {
+  async delete(id: ID) {
     const object = await this.readOne(id);
 
     this.privileges.for(ProjectMember, object).verifyCan('delete');
 
-    try {
-      await this.repo.deleteNode(object);
+    const { at } = await this.repo.deleteNode(object).catch((e) => {
+      throw new ServerException('Failed to delete project member', e);
+    });
 
-      this.channels.publishToAll('deleted', {
-        projectMember: id,
-        at: DateTime.now(),
-      });
-    } catch (exception) {
-      throw new ServerException('Failed to delete project member', exception);
-    }
+    return this.channels.publishToAll('deleted', {
+      project: object.project.id,
+      member: id,
+      at,
+    });
   }
 
   private async invalidateProject(id: ID<'Project'>) {

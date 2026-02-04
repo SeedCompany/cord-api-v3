@@ -2,19 +2,20 @@ import { Args, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { Loader, type LoaderOf } from '@seedcompany/data-loader';
 import { from, map, merge, mergeMap, type ObservableInput } from 'rxjs';
 import { omitNotFound$, Subscription } from '~/common';
-import { Hooks } from '~/core/hooks';
+import { OnHook } from '~/core/hooks';
 import { ResourceLoader } from '~/core/resources';
+import { ObserveProjectMutationHook } from '../events';
 import {
+  ProjectMember,
   ProjectMemberCreated,
   ProjectMemberDeleted,
   ProjectMemberMutation,
   ProjectMemberMutationOrDeletion,
   ProjectMemberUpdated,
-  ProjectMember,
 } from './dto';
-import { ObserveProjectMemberMutationHook } from './events';
 import {
   ProjectMemberChannels,
+  ProjectMemberCreatedArgs,
   ProjectMemberMutationArgs,
   type ProjectMemberMutationPayload,
 } from './project-member.channels';
@@ -25,16 +26,18 @@ export class ProjectMemberMutationSubscriptionsResolver {
   constructor(
     private readonly channels: ProjectMemberChannels,
     private readonly loaders: ResourceLoader,
-    private readonly hooks: Hooks,
   ) {}
+
+  @OnHook(ObserveProjectMutationHook)
+  observeProjectChanges(hook: ObserveProjectMutationHook) {
+    hook.add(this.projectMemberMutations({ project: hook.args.project }));
+  }
 
   private verifyReadPermission$() {
     return mergeMap(
       <Payload extends ProjectMemberMutationPayload>(payload: Payload) => {
         // Omit event if the user watching doesn't have permission to view the project member
-        return from(
-          this.loaders.load('ProjectMember', payload.projectMember),
-        ).pipe(
+        return from(this.loaders.load('Project', payload.project)).pipe(
           omitNotFound$(),
           map(() => payload),
         );
@@ -43,13 +46,14 @@ export class ProjectMemberMutationSubscriptionsResolver {
   }
 
   @Subscription(() => ProjectMemberCreated)
-  projectMemberCreated() {
-    return this.channels.created().pipe(
+  projectMemberCreated(@Args() args: ProjectMemberCreatedArgs) {
+    return this.channels.created(args).pipe(
       this.verifyReadPermission$(),
       map(
-        ({ projectMember, ...rest }): ProjectMemberCreated => ({
+        ({ project, member, ...rest }): ProjectMemberCreated => ({
           __typename: 'ProjectMemberCreated',
-          projectMemberId: projectMember,
+          projectId: project,
+          memberId: member,
           ...rest,
         }),
       ),
@@ -61,9 +65,10 @@ export class ProjectMemberMutationSubscriptionsResolver {
     return this.channels.updated(args).pipe(
       this.verifyReadPermission$(),
       map(
-        ({ projectMember, ...rest }): ProjectMemberUpdated => ({
+        ({ project, member, ...rest }): ProjectMemberUpdated => ({
           __typename: 'ProjectMemberUpdated',
-          projectMemberId: projectMember,
+          projectId: project,
+          memberId: member,
           ...rest,
         }),
       ),
@@ -73,10 +78,12 @@ export class ProjectMemberMutationSubscriptionsResolver {
   @Subscription(() => ProjectMemberDeleted)
   projectMemberDeleted(@Args() args: ProjectMemberMutationArgs) {
     return this.channels.deleted(args).pipe(
+      this.verifyReadPermission$(),
       map(
-        ({ projectMember: id, ...rest }): ProjectMemberDeleted => ({
+        ({ project, member, ...rest }): ProjectMemberDeleted => ({
           __typename: 'ProjectMemberDeleted',
-          projectMemberId: id,
+          projectId: project,
+          memberId: member,
           ...rest,
         }),
       ),
@@ -86,25 +93,22 @@ export class ProjectMemberMutationSubscriptionsResolver {
   @Subscription(() => ProjectMemberMutationOrDeletion, {
     description: 'Subscribe to any mutations of project member(s)',
   })
-  async projectMemberMutations(@Args() args: ProjectMemberMutationArgs) {
-    const channels = new Set<
-      ObservableInput<ProjectMemberMutationOrDeletion>
-    >([
-      this.projectMemberCreated(),
+  projectMemberMutations(@Args() args: ProjectMemberMutationArgs) {
+    const channels = new Set<ObservableInput<ProjectMemberMutationOrDeletion>>([
+      this.projectMemberCreated(args),
       this.projectMemberUpdated(args),
       this.projectMemberDeleted(args),
     ]);
-    await this.hooks.run(
-      new ObserveProjectMemberMutationHook(args, channels),
-    );
+    // No need as there's no "children" of these members, right now.
+    // await this.hooks.run(new ObserveProjectMemberMutationHook(args, channels));
     return merge(...channels);
   }
 
   @ResolveField(() => ProjectMember)
   async projectMember(
     @Parent() change: ProjectMemberMutation,
-    @Loader(ProjectMemberLoader) projectMembers: LoaderOf<ProjectMemberLoader>,
+    @Loader(ProjectMemberLoader) members: LoaderOf<ProjectMemberLoader>,
   ): Promise<ProjectMember> {
-    return await projectMembers.load(change.projectMemberId);
+    return await members.load(change.memberId);
   }
 }

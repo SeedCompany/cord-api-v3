@@ -8,9 +8,15 @@ import { type BroadcastChannel, Broadcaster } from '~/core/broadcast';
 import { type ProjectMemberUpdate } from './dto';
 
 @ArgsType()
-export class ProjectMemberMutationArgs {
+export class ProjectMemberCreatedArgs {
   @IdField({ nullable: true })
-  projectMember?: ID<'ProjectMember'>;
+  project?: ID<'Project'>;
+}
+
+@ArgsType()
+export class ProjectMemberMutationArgs extends ProjectMemberCreatedArgs {
+  @IdField({ nullable: true })
+  member?: ID<'ProjectMember'>;
 }
 
 export type ProjectMemberMutationPayload = SetRequired<
@@ -47,31 +53,37 @@ export class ProjectMemberChannels {
     const by = this.identity.current.userId;
     const payloadWithBy = { ...payload, by };
     if (action !== 'created') {
-      this[action](payload).publish(payloadWithBy);
+      this[action]({ member: payload.member }).publish(payloadWithBy);
     }
+    this[action]({ project: payload.project }).publish(payloadWithBy);
     this[action]().publish(payloadWithBy);
     return payloadWithBy;
   }
 
-  created() {
+  created(args: ProjectMemberCreatedArgs = {}) {
     return this.broadcaster.channel<ProjectMemberMutationPayload>(
-      'projectMember:created',
+      `project:${args.project ?? 'any'}:member:created`,
     );
   }
 
-  deleted({ projectMember }: ProjectMemberMutationArgs = {}) {
+  deleted(args: ProjectMemberMutationArgs = {}) {
     return this.broadcaster.channel<ProjectMemberMutationPayload>(
-      'projectMember:deleted',
-      projectMember,
+      args.member
+        ? `project:member:deleted:${args.member}`
+        : `project:${args.project ?? 'any'}:member:deleted`,
     );
   }
 
-  updated({ projectMember }: ProjectMemberMutationArgs = {}) {
+  updated(args: ProjectMemberMutationArgs = {}) {
     return this.broadcaster.channel<
       ProjectMemberMutationPayload & {
         previous: ProjectMemberUpdate;
         updated: ProjectMemberUpdate;
       }
-    >('projectMember:updated', projectMember);
+    >(
+      args.member
+        ? `project:member:updated:${args.member}`
+        : `project:${args.project ?? 'any'}:member:updated`,
+    );
   }
 }

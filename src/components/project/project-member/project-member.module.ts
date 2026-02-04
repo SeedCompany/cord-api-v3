@@ -11,14 +11,14 @@ import { MemberProjectConnectionResolver } from './member-project-connection.res
 import { MembershipByProjectAndUserLoader } from './membership-by-project-and-user.loader';
 import { AddInactiveAtMigration } from './migrations/add-inactive-at.migration';
 import { BackfillMissingDirectorsMigration } from './migrations/backfill-missing-directors.migration';
+import { ProjectMemberMutationActorResolver } from './project-member-mutation-actor.resolver';
+import { ProjectMemberMutationSubscriptionsResolver } from './project-member-mutation-subscriptions.resolver';
+import { ProjectMemberUpdatedResolver } from './project-member-updated.resolver';
 import { ProjectMemberChannels } from './project-member.channels';
 import { ProjectMemberGelRepository } from './project-member.gel.repository';
 import { ProjectMemberLoader } from './project-member.loader';
-import { ProjectMemberMutationActorResolver } from './project-member-mutation-actor.resolver';
-import { ProjectMemberMutationSubscriptionsResolver } from './project-member-mutation-subscriptions.resolver';
 import { ProjectMemberRepository } from './project-member.repository';
 import { ProjectMemberResolver } from './project-member.resolver';
-import { ProjectMemberUpdatedResolver } from './project-member-updated.resolver';
 import { ProjectMemberService } from './project-member.service';
 
 @Module({

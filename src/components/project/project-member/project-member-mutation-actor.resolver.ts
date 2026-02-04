@@ -3,10 +3,7 @@ import { Loader, type LoaderOf } from '@seedcompany/data-loader';
 import { NotFoundException } from '~/common';
 import { ActorLoader } from '../../user/actor.loader';
 import { SecuredActor } from '../../user/dto';
-import {
-  ProjectMemberMutation,
-  ProjectMemberMutationOrDeletion,
-} from './dto';
+import { ProjectMemberMutation, ProjectMemberMutationOrDeletion } from './dto';
 
 @Resolver(ProjectMemberMutationOrDeletion)
 export class ProjectMemberMutationActorResolver {
