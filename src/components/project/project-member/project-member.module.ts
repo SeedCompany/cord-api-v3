@@ -14,9 +14,11 @@ import { BackfillMissingDirectorsMigration } from './migrations/backfill-missing
 import { ProjectMemberChannels } from './project-member.channels';
 import { ProjectMemberGelRepository } from './project-member.gel.repository';
 import { ProjectMemberLoader } from './project-member.loader';
+import { ProjectMemberMutationActorResolver } from './project-member-mutation-actor.resolver';
 import { ProjectMemberMutationSubscriptionsResolver } from './project-member-mutation-subscriptions.resolver';
 import { ProjectMemberRepository } from './project-member.repository';
 import { ProjectMemberResolver } from './project-member.resolver';
+import { ProjectMemberUpdatedResolver } from './project-member-updated.resolver';
 import { ProjectMemberService } from './project-member.service';
 
 @Module({
@@ -28,6 +30,8 @@ import { ProjectMemberService } from './project-member.service';
   providers: [
     ProjectMemberResolver,
     ProjectMemberMutationSubscriptionsResolver,
+    ProjectMemberMutationActorResolver,
+    ProjectMemberUpdatedResolver,
     AvailableRolesToProjectResolver,
     MemberProjectConnectionResolver,
     ProjectMemberService,
