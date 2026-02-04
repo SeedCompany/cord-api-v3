@@ -1,8 +1,8 @@
-import { Field, InputType, ObjectType } from '@nestjs/graphql';
+import { InputType, ObjectType } from '@nestjs/graphql';
 import { type DateTime } from 'luxon';
 import { DateTimeField, type ID, IdField, ListField, Role } from '~/common';
-import { ProjectMember } from './project-member.dto';
 
+@ObjectType({ isAbstract: true })
 @InputType()
 export abstract class UpdateProjectMember {
   @IdField()
@@ -15,10 +15,4 @@ export abstract class UpdateProjectMember {
     nullable: true,
   })
   readonly inactiveAt?: DateTime | null;
-}
-
-@ObjectType()
-export abstract class ProjectMemberUpdated {
-  @Field()
-  readonly projectMember: ProjectMember;
 }
