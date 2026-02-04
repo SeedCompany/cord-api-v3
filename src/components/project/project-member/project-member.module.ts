@@ -11,8 +11,10 @@ import { MemberProjectConnectionResolver } from './member-project-connection.res
 import { MembershipByProjectAndUserLoader } from './membership-by-project-and-user.loader';
 import { AddInactiveAtMigration } from './migrations/add-inactive-at.migration';
 import { BackfillMissingDirectorsMigration } from './migrations/backfill-missing-directors.migration';
+import { ProjectMemberChannels } from './project-member.channels';
 import { ProjectMemberGelRepository } from './project-member.gel.repository';
 import { ProjectMemberLoader } from './project-member.loader';
+import { ProjectMemberMutationSubscriptionsResolver } from './project-member-mutation-subscriptions.resolver';
 import { ProjectMemberRepository } from './project-member.repository';
 import { ProjectMemberResolver } from './project-member.resolver';
 import { ProjectMemberService } from './project-member.service';
@@ -25,9 +27,11 @@ import { ProjectMemberService } from './project-member.service';
   ],
   providers: [
     ProjectMemberResolver,
+    ProjectMemberMutationSubscriptionsResolver,
     AvailableRolesToProjectResolver,
     MemberProjectConnectionResolver,
     ProjectMemberService,
+    ProjectMemberChannels,
     splitDb(ProjectMemberRepository, ProjectMemberGelRepository),
     ProjectMemberLoader,
     MembershipByProjectAndUserLoader,

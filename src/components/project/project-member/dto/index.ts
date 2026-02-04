@@ -3,3 +3,4 @@ export * from './create-project-member.dto';
 export * from './update-project-member.dto';
 export * from './delete-project-member.dto';
 export * from './list-project-members.dto';
+export * from './project-member-mutations.dto';

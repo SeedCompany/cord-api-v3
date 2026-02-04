@@ -1,5 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { type MaybeAsync, setOf } from '@seedcompany/common';
+import { DateTime } from 'luxon';
 import {
   type ID,
   InputException,
@@ -20,9 +21,11 @@ import {
   ProjectMember,
   type ProjectMemberListInput,
   type ProjectMemberListOutput,
+  ProjectMemberUpdate,
   type UpdateProjectMember,
 } from './dto';
 import { type MembershipByProjectAndUserInput } from './membership-by-project-and-user.loader';
+import { ProjectMemberChannels } from './project-member.channels';
 import { ProjectMemberRepository } from './project-member.repository';
 
 @Injectable()
@@ -34,6 +37,7 @@ export class ProjectMemberService {
     private readonly resourceResolver: ResourceResolver,
     private readonly liveQueryStore: LiveQueryStore,
     private readonly privileges: Privileges,
+    private readonly channels: ProjectMemberChannels,
     private readonly repo: ProjectMemberRepository,
   ) {}
 
@@ -63,7 +67,14 @@ export class ProjectMemberService {
     enforcePerms &&
       this.privileges.for(ProjectMember, created).verifyCan('create');
 
-    return this.secure(created);
+    const secured = this.secure(created);
+
+    this.channels.publishToAll('created', {
+      projectMember: secured.id,
+      at: secured.createdAt,
+    });
+
+    return secured;
   }
 
   @HandleIdLookup(ProjectMember)
@@ -127,7 +138,16 @@ export class ProjectMemberService {
     this.privileges.for(ProjectMember, object).verifyChanges(changes);
 
     const updated = await this.repo.update({ id: object.id, ...changes });
-    return this.secure(updated);
+    const secured = this.secure(updated);
+
+    this.channels.publishToAll('updated', {
+      projectMember: secured.id,
+      at: changes.modifiedAt!,
+      updated: ProjectMemberUpdate.fromInput(changes),
+      previous: ProjectMemberUpdate.pickPrevious(object, changes),
+    });
+
+    return secured;
   }
 
   getAvailableRoles(user: User) {
@@ -168,6 +188,11 @@ export class ProjectMemberService {
 
     try {
       await this.repo.deleteNode(object);
+
+      this.channels.publishToAll('deleted', {
+        projectMember: id,
+        at: DateTime.now(),
+      });
     } catch (exception) {
       throw new ServerException('Failed to delete project member', exception);
     }
