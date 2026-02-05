@@ -7,7 +7,18 @@ import { LanguageModule } from '../language/language.module';
 import { LocationModule } from '../location/location.module';
 import { ProductModule } from '../product/product.module';
 import { ProjectModule } from '../project/project.module';
+import {
+  InternshipEngagementMutationLinksResolver,
+  LanguageEngagementMutationLinksResolver,
+} from './engagement-mutation-links.resolver';
+import { EngagementMutationSubscriptionsResolver } from './engagement-mutation-subscriptions.resolver';
 import { EngagementStatusResolver } from './engagement-status.resolver';
+import {
+  InternshipEngagementUpdateLinksResolver,
+  LanguageEngagementUpdateLinksResolver,
+} from './engagement-update-links.resolver';
+import { EngagementUpdatedResolver } from './engagement-updated.resolver';
+import { EngagementChannels } from './engagement.channels';
 import { EngagementGelRepository } from './engagement.gel.repository';
 import { EngagementLoader } from './engagement.loader';
 import { EngagementRepository } from './engagement.repository';
@@ -36,6 +47,14 @@ import { EngagementProductConnectionResolver } from './product-connection.resolv
   ],
   providers: [
     EngagementResolver,
+    EngagementMutationSubscriptionsResolver,
+    EngagementUpdatedResolver,
+    LanguageEngagementMutationLinksResolver,
+    InternshipEngagementMutationLinksResolver,
+    // TODO cannot get this to work with without concretes overriding this
+    // EngagementMutationLinksResolver,
+    LanguageEngagementUpdateLinksResolver,
+    InternshipEngagementUpdateLinksResolver,
     LanguageEngagementResolver,
     InternshipEngagementResolver,
     EngagementStatusResolver,
@@ -43,6 +62,7 @@ import { EngagementProductConnectionResolver } from './product-connection.resolv
     EngagementProductConnectionResolver,
     EngagementRules,
     EngagementService,
+    EngagementChannels,
     splitDb(EngagementRepository, EngagementGelRepository),
     EngagementLoader,
     ...Object.values(handlers),

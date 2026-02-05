@@ -1,4 +1,4 @@
-import { Field, InputType, ObjectType } from '@nestjs/graphql';
+import { Field, InputType } from '@nestjs/graphql';
 import { entries } from '@seedcompany/common';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
@@ -15,7 +15,6 @@ import { CreateDefinedFileVersion } from '../../file/dto';
 import { LanguageMilestone } from '../../language/dto';
 import { AIAssistedTranslation } from '../../language/dto/ai-assisted-translation.enum';
 import { ProductMethodology } from '../../product/dto';
-import { InternshipEngagement, LanguageEngagement } from './engagement.dto';
 import { InternshipPosition } from './intern-position.enum';
 import { EngagementStatus } from './status.enum';
 
@@ -130,16 +129,4 @@ export class CreateInternshipEngagement extends CreateEngagement {
 
   @ChangesetIdField()
   readonly changeset?: ID;
-}
-
-@ObjectType()
-export abstract class LanguageEngagementCreated {
-  @Field()
-  readonly engagement: LanguageEngagement;
-}
-
-@ObjectType()
-export abstract class InternshipEngagementCreated {
-  @Field()
-  readonly engagement: InternshipEngagement;
 }

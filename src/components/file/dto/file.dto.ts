@@ -159,6 +159,11 @@ export abstract class SecuredDirectory extends SecuredProperty(Directory) {}
 })
 export abstract class SecuredFile extends SecuredProperty(File) {}
 
+@ObjectType({
+  description: SecuredProperty.descriptionFor('a file version'),
+})
+export abstract class SecuredFileVersion extends SecuredProperty(FileVersion) {}
+
 /**
  * A reference to a secured defined file. The value is the ID of the file.
  */
@@ -188,6 +193,13 @@ export const asFile = (node: AnyFileNode) => {
 
 export const isFileVersion = (node: AnyFileNode): node is FileVersion =>
   node.type === FileNodeType.FileVersion;
+
+export const asFileVersion = (node: AnyFileNode) => {
+  if (!isFileVersion(node)) {
+    throw new InputException('Node is not a file version');
+  }
+  return node;
+};
 
 export type Downloadable<T> = T & {
   download: () => Promise<Buffer>;
