@@ -6,6 +6,7 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
+import { DateTime } from 'luxon';
 import {
   InvalidIdForTypeException,
   ListArg,
@@ -13,10 +14,11 @@ import {
   SecuredDateRange,
 } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
+import { Identity } from '~/core/authentication';
 import { CeremonyLoader } from '../ceremony';
 import { SecuredCeremony } from '../ceremony/dto';
 import { ChangesetIds, type IdsAndView, IdsAndViewArg } from '../changeset/dto';
-import { EngagementLoader, EngagementService } from '../engagement';
+import { EngagementService } from '../engagement';
 import {
   CreateInternshipEngagement,
   CreateLanguageEngagement,
@@ -33,13 +35,18 @@ import {
   LanguageEngagementCreated,
   LanguageEngagementListOutput,
   LanguageEngagementUpdated,
+  resolveEngagementType,
   UpdateInternshipEngagement,
   UpdateLanguageEngagement,
 } from './dto';
+import { EngagementLoader } from './engagement.loader';
 
 @Resolver(IEngagement)
 export class EngagementResolver {
-  constructor(private readonly service: EngagementService) {}
+  constructor(
+    private readonly service: EngagementService,
+    private readonly identity: Identity,
+  ) {}
 
   @Query(() => IEngagement, {
     description: 'Lookup an engagement by ID',
@@ -156,7 +163,13 @@ export class EngagementResolver {
       input,
       changeset,
     );
-    return { engagement };
+    return {
+      __typename: 'LanguageEngagementCreated',
+      projectId: engagement.project.id,
+      engagementId: engagement.id,
+      at: engagement.createdAt,
+      by: this.identity.current.userId,
+    };
   }
 
   @Mutation(() => InternshipEngagementCreated, {
@@ -169,7 +182,13 @@ export class EngagementResolver {
       input,
       changeset,
     );
-    return { engagement };
+    return {
+      __typename: 'InternshipEngagementCreated',
+      projectId: engagement.project.id,
+      engagementId: engagement.id,
+      at: engagement.createdAt,
+      by: this.identity.current.userId,
+    };
   }
 
   @Mutation(() => LanguageEngagementUpdated, {
@@ -178,11 +197,21 @@ export class EngagementResolver {
   async updateLanguageEngagement(
     @Args('input') { changeset, ...input }: UpdateLanguageEngagement,
   ): Promise<LanguageEngagementUpdated> {
-    const engagement = await this.service.updateLanguageEngagement(
+    const { engagement, payload } = await this.service.updateLanguageEngagement(
       input,
       changeset,
     );
-    return { engagement };
+    return {
+      __typename: 'LanguageEngagementUpdated',
+      projectId: engagement.project.id,
+      engagementId: engagement.id,
+      by: this.identity.current.userId,
+      previous: {},
+      updated: {},
+      // if actual changes, then this overrides those empty values.
+      ...payload,
+      at: payload?.at ?? DateTime.now(),
+    };
   }
 
   @Mutation(() => InternshipEngagementUpdated, {
@@ -191,11 +220,19 @@ export class EngagementResolver {
   async updateInternshipEngagement(
     @Args('input') { changeset, ...input }: UpdateInternshipEngagement,
   ): Promise<InternshipEngagementUpdated> {
-    const engagement = await this.service.updateInternshipEngagement(
-      input,
-      changeset,
-    );
-    return { engagement };
+    const { engagement, payload } =
+      await this.service.updateInternshipEngagement(input, changeset);
+    return {
+      __typename: 'InternshipEngagementUpdated',
+      projectId: engagement.project.id,
+      engagementId: engagement.id,
+      by: this.identity.current.userId,
+      previous: {},
+      updated: {},
+      // if actual changes, then this overrides those empty values.
+      ...payload,
+      at: payload?.at ?? DateTime.now(),
+    };
   }
 
   @Mutation(() => EngagementDeleted, {
@@ -204,7 +241,15 @@ export class EngagementResolver {
   async deleteEngagement(
     @Args() { id, changeset }: ChangesetIds,
   ): Promise<EngagementDeleted> {
-    await this.service.delete(id, changeset);
-    return {};
+    const { engagement, payload } = await this.service.delete(id, changeset);
+    return {
+      __typename:
+        resolveEngagementType(engagement) === LanguageEngagement
+          ? 'LanguageEngagementDeleted'
+          : 'InternshipEngagementDeleted',
+      projectId: payload.project,
+      engagementId: payload.engagement,
+      ...payload,
+    };
   }
 }

@@ -13,7 +13,4 @@ export const AIAssistedTranslation = makeEnum({
 })
 export class SecuredAIAssistedTranslation extends SecuredEnum(
   AIAssistedTranslation,
-  {
-    nullable: true,
-  },
 ) {}
