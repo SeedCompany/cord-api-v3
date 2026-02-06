@@ -1,6 +1,6 @@
 import { BroadcasterTransport } from '@seedcompany/nest/broadcast';
-import { EMPTY, type ObservableInput } from 'rxjs';
-import type { BroadcastChannel } from '../../broadcast';
+import { type ObservableInput } from 'rxjs';
+import { type BroadcastChannel, CompositeChannel } from '../../broadcast';
 
 export class WebhookStaticEventsTransport extends BroadcasterTransport {
   constructor(
@@ -13,8 +13,10 @@ export class WebhookStaticEventsTransport extends BroadcasterTransport {
   }
 
   observe(channel: BroadcastChannel) {
-    const events = this.eventsByChannel.get(channel.name);
-    return events ?? EMPTY;
+    return CompositeChannel.names(channel).flatMap((name) => {
+      const events = this.eventsByChannel.get(name);
+      return events ?? [];
+    });
   }
 
   publish() {

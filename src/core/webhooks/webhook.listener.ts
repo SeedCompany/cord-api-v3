@@ -1,12 +1,7 @@
 import { Injectable, type OnModuleDestroy } from '@nestjs/common';
-import {
-  asyncPool,
-  cached,
-  groupToMapBy,
-  mapValues,
-} from '@seedcompany/common';
+import { asyncPool, cached, mapValues } from '@seedcompany/common';
 import { type ExecutionResult } from 'graphql';
-import { internal } from '../broadcast';
+import { CompositeChannel, internal } from '../broadcast';
 import { BroadcastPublishedHook } from '../broadcast/hooks';
 import { OnHook } from '../hooks';
 import { ILogger, Logger } from '../logger';
@@ -88,13 +83,17 @@ export class WebhookListener implements OnModuleDestroy {
       this.handleJob(batch).then(
         () => {
           this.logger.debug('Processed webhook events', {
-            channels: batch.events.map((e) => e.channel.name),
+            channels: batch.events.flatMap((e) =>
+              CompositeChannel.names(e.channel),
+            ),
             data: batch.events.map((e) => e.data),
           });
         },
         (error) => {
           this.logger.error('Failed to process webhook events', {
-            channels: batch.events.map((e) => e.channel.name),
+            channels: batch.events.flatMap((e) =>
+              CompositeChannel.names(e.channel),
+            ),
             data: batch.events.map((e) => e.data),
             exception: error,
           });
@@ -106,7 +105,12 @@ export class WebhookListener implements OnModuleDestroy {
   private async handleJob({ events, trigger }: Batch) {
     // Build a map of channel name -> data for each event
     // All events share the same data object but may have different channels
-    const channelMap = groupToMapBy(events, (e) => e.channel.name);
+    const channelMap = events.reduce((map, event) => {
+      for (const channel of CompositeChannel.flatten(event.channel)) {
+        cached(map, channel.name, () => []).push(event);
+      }
+      return map;
+    }, new Map<string, BroadcastPublishedHook[]>());
 
     const webhooks = await this.channels.listFor(channelMap.keys());
     if (!webhooks.length) {
