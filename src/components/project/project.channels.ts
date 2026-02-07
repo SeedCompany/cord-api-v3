@@ -32,7 +32,7 @@ export type ProjectMutationPayload = Omit<
 > & {
   program: Program;
   at: DateTime;
-  by: ID<'User'>;
+  by: ID<'Actor'>;
 };
 
 type Action = keyof Pick<ProjectChannels, 'created' | 'updated' | 'deleted'>;
