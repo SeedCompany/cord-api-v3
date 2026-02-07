@@ -1,20 +1,25 @@
 import { Injectable } from '@nestjs/common';
 import { ArgsType } from '@nestjs/graphql';
-import { type DateTime } from 'luxon';
-import type { SetRequired } from 'type-fest';
-import { type ID, IdField } from '~/common';
+import { type Many, many } from '@seedcompany/common';
+import { Case } from '@seedcompany/common/case';
+import { type AllRequired, type ID, IdField } from '~/common';
 import { Identity } from '~/core/authentication';
-import { type BroadcastChannel, Broadcaster } from '~/core/broadcast';
+import {
+  Broadcaster,
+  type BroadcastChannel as Channel,
+  CompositeChannel as Composite,
+} from '~/core/broadcast';
+import {
+  ProjectMutationArgs,
+  type ProjectMutationPayload,
+} from '../project/project.channels';
 import {
   type InternshipEngagementUpdate,
   type LanguageEngagementUpdate,
 } from './dto';
 
 @ArgsType()
-export class EngagementCreatedArgs {
-  @IdField({ nullable: true })
-  project?: ID<'Project'>;
-}
+export class EngagementCreatedArgs extends ProjectMutationArgs {}
 
 @ArgsType()
 export class EngagementMutationArgs extends EngagementCreatedArgs {
@@ -22,17 +27,15 @@ export class EngagementMutationArgs extends EngagementCreatedArgs {
   engagement?: ID<'Engagement'>;
 }
 
-export type EngagementMutationPayload = SetRequired<
-  EngagementMutationArgs,
-  keyof EngagementMutationArgs
-> & {
-  at: DateTime;
-  by: ID<'User'>;
-};
+export type EngagementMutationPayload = ProjectMutationPayload &
+  AllRequired<EngagementMutationArgs>;
 
 export type LanguageEngagementMutationPayload = EngagementMutationPayload;
 
 export type InternshipEngagementMutationPayload = EngagementMutationPayload;
+
+type Type = 'language' | 'internship';
+type Action = 'created' | 'updated' | 'deleted';
 
 /**
  * Typed channels for engagement events.
@@ -48,10 +51,13 @@ export class EngagementChannels {
    * Call publish() on the channel action for all arg/filter variations.
    */
   publishToAll<
-    Action extends Exclude<keyof EngagementChannels, 'publishToAll'>,
+    TType extends Type,
+    TAction extends Action,
+    Method extends `${TType}${Case.UpperFirst<TAction>}`,
   >(
-    action: Action,
-    payload: ReturnType<EngagementChannels[Action]> extends BroadcastChannel<
+    type: TType,
+    action: TAction,
+    payload: ReturnType<EngagementChannels[Method]> extends Channel<
       infer T extends EngagementMutationPayload
     >
       ? Omit<T, 'by'>
@@ -59,65 +65,98 @@ export class EngagementChannels {
   ) {
     const by = this.identity.current.userId;
     const payloadWithBy = { ...payload, by };
-    if (action !== 'languageCreated' && action !== 'internshipCreated') {
-      this[action]({ engagement: payload.engagement }).publish(payloadWithBy);
-    }
-    this[action]({ project: payload.project }).publish(payloadWithBy);
-    this[action]().publish(payloadWithBy);
+    this.forAllActionChannels(type, action, payloadWithBy).publish(
+      payloadWithBy,
+    );
     return payloadWithBy;
   }
 
-  languageCreated(args: EngagementCreatedArgs = {}) {
-    return this.broadcaster.channel<LanguageEngagementMutationPayload>(
-      `project:${args.project ?? 'any'}:engagement:language:created`,
-    );
+  languageCreated(
+    args: EngagementCreatedArgs = {},
+  ): Channel<LanguageEngagementMutationPayload> {
+    return this.forAction('language', 'created', args);
   }
 
-  internshipCreated(args: EngagementCreatedArgs = {}) {
-    return this.broadcaster.channel<InternshipEngagementMutationPayload>(
-      `project:${args.project ?? 'any'}:engagement:internship:created`,
-    );
+  internshipCreated(
+    args: EngagementCreatedArgs = {},
+  ): Channel<InternshipEngagementMutationPayload> {
+    return this.forAction('internship', 'created', args);
   }
 
-  languageUpdated(args: EngagementMutationArgs = {}) {
-    return this.broadcaster.channel<
-      LanguageEngagementMutationPayload & {
-        previous: LanguageEngagementUpdate;
-        updated: LanguageEngagementUpdate;
+  languageUpdated(args: EngagementMutationArgs = {}): Channel<
+    LanguageEngagementMutationPayload & {
+      previous: LanguageEngagementUpdate;
+      updated: LanguageEngagementUpdate;
+    }
+  > {
+    return this.forAction('language', 'updated', args);
+  }
+
+  internshipUpdated(args: EngagementMutationArgs = {}): Channel<
+    InternshipEngagementMutationPayload & {
+      previous: InternshipEngagementUpdate;
+      updated: InternshipEngagementUpdate;
+    }
+  > {
+    return this.forAction('internship', 'updated', args);
+  }
+
+  languageDeleted(
+    args: EngagementMutationArgs = {},
+  ): Channel<EngagementMutationPayload> {
+    return this.forAction('language', 'deleted', args);
+  }
+
+  internshipDeleted(
+    args: EngagementMutationArgs = {},
+  ): Channel<EngagementMutationPayload> {
+    return this.forAction('internship', 'deleted', args);
+  }
+
+  private forAllActionChannels<T>(
+    type: Type,
+    action: Action,
+    payload: EngagementMutationPayload,
+  ): Channel<T> {
+    return Composite.for([
+      this.forAction(type, action, { engagement: payload.engagement }),
+      this.forAction(type, action, { project: payload.project }),
+      this.forAction(type, action, { program: payload.program }),
+      this.forAction(type, action, {}),
+    ]);
+  }
+
+  private forAction<T>(
+    type: Type,
+    action: Action,
+    args: EngagementMutationArgs,
+  ): Channel<T> {
+    if (args.engagement) {
+      if (action === 'created') {
+        return this.channel([]);
       }
-    >(
-      args.engagement
-        ? `engagement:language:updated:${args.engagement}`
-        : `project:${args.project ?? 'any'}:engagement:language:updated`,
-    );
+      return this.channel(`${type}-engagement:${args.engagement}:${action}`);
+    }
+    if (args.project) {
+      return this.channel(
+        `project:${args.project}:${type}-engagement:${action}`,
+      );
+    }
+    if (args.program?.length) {
+      const programs = many(args.program);
+      return this.channel(
+        programs.map(
+          (program) =>
+            `program:${Case.kebab(program)}:${type}-engagement:${action}`,
+        ),
+      );
+    }
+    return this.channel(`${type}-engagement:${action}`);
   }
 
-  internshipUpdated(args: EngagementMutationArgs = {}) {
-    return this.broadcaster.channel<
-      InternshipEngagementMutationPayload & {
-        previous: InternshipEngagementUpdate;
-        updated: InternshipEngagementUpdate;
-      }
-    >(
-      args.engagement
-        ? `engagement:internship:updated:${args.engagement}`
-        : `project:${args.project ?? 'any'}:engagement:internship:updated`,
-    );
-  }
-
-  languageDeleted(args: EngagementMutationArgs = {}) {
-    return this.broadcaster.channel<EngagementMutationPayload>(
-      args.engagement
-        ? `engagement:language:deleted:${args.engagement}`
-        : `project:${args.project ?? 'any'}:engagement:language:deleted`,
-    );
-  }
-
-  internshipDeleted(args: EngagementMutationArgs = {}) {
-    return this.broadcaster.channel<EngagementMutationPayload>(
-      args.engagement
-        ? `engagement:internship:deleted:${args.engagement}`
-        : `project:${args.project ?? 'any'}:engagement:internship:deleted`,
+  private channel<T>(channels: Many<string>): Channel<T> {
+    return Composite.for(
+      many(channels).map((name) => this.broadcaster.channel(name)),
     );
   }
 }
