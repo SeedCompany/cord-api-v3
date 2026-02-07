@@ -1,27 +1,36 @@
 import { Injectable } from '@nestjs/common';
 import { ArgsType } from '@nestjs/graphql';
 import { many, type Many } from '@seedcompany/common';
+import { Case } from '@seedcompany/common/case';
 import { type DateTime } from 'luxon';
 import type { SetRequired } from 'type-fest';
-import { type ID, IdField } from '~/common';
+import { type ID, IdField, ListField } from '~/common';
 import { Identity } from '~/core/authentication';
 import {
   Broadcaster,
   type BroadcastChannel as Channel,
   CompositeChannel as Composite,
 } from '~/core/broadcast';
-import { type ProjectUpdate } from './dto';
+import { ProjectType as Program, type ProjectUpdate } from './dto';
 
 @ArgsType()
 export class ProjectMutationArgs {
+  @ListField(() => Program, {
+    description: 'Only for one of these programs/types',
+    optional: true,
+    empty: 'omit',
+  })
+  readonly program?: Many<Program>;
+
   @IdField({ nullable: true })
   readonly project?: ID<'Project'>;
 }
 
 export type ProjectMutationPayload = Omit<
   SetRequired<ProjectMutationArgs, keyof ProjectMutationArgs>,
-  'programs'
+  'program'
 > & {
+  program: Program;
   at: DateTime;
   by: ID<'User'>;
 };
@@ -80,6 +89,7 @@ export class ProjectChannels {
   ): Channel<T> {
     return Composite.for([
       this.forAction(action, { project: payload.project }),
+      this.forAction(action, { program: payload.program }),
       this.forAction(action, {}),
     ]);
   }
@@ -90,6 +100,14 @@ export class ProjectChannels {
         return this.channel([]);
       }
       return this.channel(`project:${args.project}:${action}`);
+    }
+    if (args.program?.length) {
+      const programs = many(args.program);
+      return this.channel(
+        programs.map(
+          (program) => `program:${Case.kebab(program)}:project:${action}`,
+        ),
+      );
     }
     return this.channel(`project:${action}`);
   }

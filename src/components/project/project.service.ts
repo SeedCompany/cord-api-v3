@@ -180,6 +180,7 @@ export class ProjectService {
       await this.eventBus.publish(event);
 
       this.channels.publishToAll('created', {
+        program: project.type,
         project: project.id,
         at: project.createdAt,
       });
@@ -311,6 +312,7 @@ export class ProjectService {
     await this.eventBus.publish(event);
 
     const updatedPayload = this.channels.publishToAll('updated', {
+      program: updated.type,
       project: updated.id,
       at: changes.modifiedAt!,
       updated: ProjectUpdate.fromInput(changes),
@@ -334,6 +336,7 @@ export class ProjectService {
     await this.eventBus.publish(new ProjectDeletedEvent(object));
 
     return this.channels.publishToAll('deleted', {
+      program: object.type,
       project: object.id,
       at,
     });
@@ -483,7 +486,9 @@ export class ProjectService {
     if (!changedAt) {
       return undefined;
     }
+    const proj = await this.repo.readOne(project);
     return this.channels.publishToAll('updated', {
+      program: proj.type,
       project: project,
       at: changedAt,
       updated: { otherLocations: { Added: [location] } },
@@ -501,7 +506,9 @@ export class ProjectService {
     if (!changedAt) {
       return undefined;
     }
+    const proj = await this.repo.readOne(project);
     return this.channels.publishToAll('updated', {
+      program: proj.type,
       project,
       at: changedAt,
       updated: { otherLocations: { Removed: [location] } },
