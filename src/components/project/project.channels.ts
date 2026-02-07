@@ -3,8 +3,8 @@ import { ArgsType } from '@nestjs/graphql';
 import { many, type Many } from '@seedcompany/common';
 import { Case } from '@seedcompany/common/case';
 import { type DateTime } from 'luxon';
-import type { SetRequired } from 'type-fest';
-import { type ID, IdField, ListField } from '~/common';
+import type { Merge } from 'type-fest';
+import { type AllRequired, type ID, IdField, ListField } from '~/common';
 import { Identity } from '~/core/authentication';
 import {
   Broadcaster,
@@ -26,14 +26,14 @@ export class ProjectMutationArgs {
   readonly project?: ID<'Project'>;
 }
 
-export type ProjectMutationPayload = Omit<
-  SetRequired<ProjectMutationArgs, keyof ProjectMutationArgs>,
-  'program'
-> & {
-  program: Program;
-  at: DateTime;
-  by: ID<'Actor'>;
-};
+export type ProjectMutationPayload = Merge<
+  AllRequired<ProjectMutationArgs>,
+  {
+    program: Program;
+    at: DateTime;
+    by: ID<'Actor'>;
+  }
+>;
 
 type Action = keyof Pick<ProjectChannels, 'created' | 'updated' | 'deleted'>;
 
