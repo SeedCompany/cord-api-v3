@@ -148,7 +148,7 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
         )
         .return<{ dto: UnsecuredDto<ProjectMember> }>(
           merge('props', {
-            project: 'project { .id }',
+            project: 'project { .id, .type }',
             user: 'dto',
           }).as('dto'),
         );

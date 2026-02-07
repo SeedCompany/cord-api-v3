@@ -13,6 +13,7 @@ import {
 import { e } from '~/core/gel';
 import { type LinkTo, RegisterResource } from '~/core/resources';
 import { SecuredUser, type User } from '../../../user/dto';
+import { type IProject } from '../../dto';
 
 @RegisterResource({ db: e.Project.Member })
 @ObjectType({
@@ -21,7 +22,7 @@ import { SecuredUser, type User } from '../../../user/dto';
 export class ProjectMember extends Resource {
   static readonly Parent = () => import('../../dto').then((m) => m.IProject);
 
-  readonly project: LinkTo<'Project'>;
+  readonly project: LinkTo<'Project'> & Pick<UnsecuredDto<IProject>, 'type'>;
 
   @Field(() => SecuredUser)
   readonly user: SecuredUser & SetUnsecuredType<UnsecuredDto<User>>;
