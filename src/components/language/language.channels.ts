@@ -49,6 +49,8 @@ export class LanguageChannels {
   ) {
     const by = this.identity.current.userId;
     const payloadWithBy = { ...payload, by };
+    // Note: 'created' doesn't support language-specific channels because
+    // the language ID doesn't exist yet when a client subscribes
     if (action !== 'created') {
       this[action]({ language: payload.language }).publish(payloadWithBy);
     }
