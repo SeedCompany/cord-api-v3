@@ -15,7 +15,6 @@ type SubscribedEvent = ProjectUpdatedHook;
 @OnHook(ProjectUpdatedHook)
 export class SyncPeriodicReportsToProjectDateRange
   extends AbstractPeriodicReportSync
- 
 {
   constructor(
     periodicReports: PeriodicReportService,
