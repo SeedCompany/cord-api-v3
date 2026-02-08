@@ -1,17 +1,22 @@
 import { Injectable } from '@nestjs/common';
 import { ArgsType } from '@nestjs/graphql';
-import { type DateTime } from 'luxon';
-import type { SetRequired } from 'type-fest';
-import { type ID, IdField } from '~/common';
+import { type Many, many } from '@seedcompany/common';
+import { Case } from '@seedcompany/common/case';
+import { type AllRequired, type ID, IdField } from '~/common';
 import { Identity } from '~/core/authentication';
-import { type BroadcastChannel, Broadcaster } from '~/core/broadcast';
+import {
+  Broadcaster,
+  type BroadcastChannel as Channel,
+  CompositeChannel as Composite,
+} from '~/core/broadcast';
+import {
+  ProjectMutationArgs,
+  type ProjectMutationPayload,
+} from '../project.channels';
 import { type ProjectMemberUpdate } from './dto';
 
 @ArgsType()
-export class ProjectMemberCreatedArgs {
-  @IdField({ nullable: true })
-  project?: ID<'Project'>;
-}
+export class ProjectMemberCreatedArgs extends ProjectMutationArgs {}
 
 @ArgsType()
 export class ProjectMemberMutationArgs extends ProjectMemberCreatedArgs {
@@ -19,13 +24,13 @@ export class ProjectMemberMutationArgs extends ProjectMemberCreatedArgs {
   member?: ID<'ProjectMember'>;
 }
 
-export type ProjectMemberMutationPayload = SetRequired<
-  ProjectMemberMutationArgs,
-  keyof ProjectMemberMutationArgs
-> & {
-  at: DateTime;
-  by: ID<'User'>;
-};
+export type ProjectMemberMutationPayload = ProjectMutationPayload &
+  AllRequired<ProjectMemberMutationArgs>;
+
+type Action = keyof Pick<
+  ProjectMemberChannels,
+  'created' | 'updated' | 'deleted'
+>;
 
 /**
  * Typed channels for project member events.
@@ -40,11 +45,9 @@ export class ProjectMemberChannels {
   /**
    * Call publish() on the channel action for all arg/filter variations.
    */
-  publishToAll<
-    Action extends Exclude<keyof ProjectMemberChannels, 'publishToAll'>,
-  >(
-    action: Action,
-    payload: ReturnType<ProjectMemberChannels[Action]> extends BroadcastChannel<
+  publishToAll<TAction extends Action>(
+    action: TAction,
+    payload: ReturnType<ProjectMemberChannels[TAction]> extends Channel<
       infer T extends ProjectMemberMutationPayload
     >
       ? Omit<T, 'by'>
@@ -52,38 +55,71 @@ export class ProjectMemberChannels {
   ) {
     const by = this.identity.current.userId;
     const payloadWithBy = { ...payload, by };
-    if (action !== 'created') {
-      this[action]({ member: payload.member }).publish(payloadWithBy);
-    }
-    this[action]({ project: payload.project }).publish(payloadWithBy);
-    this[action]().publish(payloadWithBy);
+    this.forAllActionChannels(action, payloadWithBy).publish(payloadWithBy);
     return payloadWithBy;
   }
 
-  created(args: ProjectMemberCreatedArgs = {}) {
-    return this.broadcaster.channel<ProjectMemberMutationPayload>(
-      `project:${args.project ?? 'any'}:member:created`,
-    );
+  created(
+    args: ProjectMemberCreatedArgs = {},
+  ): Channel<ProjectMemberMutationPayload> {
+    return this.forAction('created', args);
   }
 
-  deleted(args: ProjectMemberMutationArgs = {}) {
-    return this.broadcaster.channel<ProjectMemberMutationPayload>(
-      args.member
-        ? `project:member:deleted:${args.member}`
-        : `project:${args.project ?? 'any'}:member:deleted`,
-    );
+  deleted(
+    args: ProjectMemberMutationArgs = {},
+  ): Channel<ProjectMemberMutationPayload> {
+    return this.forAction('deleted', args);
   }
 
-  updated(args: ProjectMemberMutationArgs = {}) {
-    return this.broadcaster.channel<
-      ProjectMemberMutationPayload & {
-        previous: ProjectMemberUpdate;
-        updated: ProjectMemberUpdate;
+  updated(args: ProjectMemberMutationArgs = {}): Channel<
+    ProjectMemberMutationPayload & {
+      previous: ProjectMemberUpdate;
+      updated: ProjectMemberUpdate;
+    }
+  > {
+    return this.forAction('updated', args);
+  }
+
+  private forAllActionChannels<T>(
+    action: Action,
+    payload: ProjectMemberMutationPayload,
+  ): Channel<T> {
+    return Composite.for([
+      this.forAction(action, { member: payload.member }),
+      this.forAction(action, { project: payload.project }),
+      this.forAction(action, { program: payload.program }),
+      this.forAction(action, {}),
+    ]);
+  }
+
+  private forAction<T>(
+    action: Action,
+    args: ProjectMemberMutationArgs,
+  ): Channel<T> {
+    if (args.member) {
+      if (action === 'created') {
+        return this.channel([]);
       }
-    >(
-      args.member
-        ? `project:member:updated:${args.member}`
-        : `project:${args.project ?? 'any'}:member:updated`,
+      return this.channel(`project-member:${args.member}:${action}`);
+    }
+    if (args.project) {
+      return this.channel(`project:${args.project}:member:${action}`);
+    }
+    if (args.program?.length) {
+      const programs = many(args.program);
+      return this.channel(
+        programs.map(
+          (program) =>
+            `program:${Case.kebab(program)}:project-member:${action}`,
+        ),
+      );
+    }
+    return this.channel(`project-member:${action}`);
+  }
+
+  private channel<T>(channels: Many<string>): Channel<T> {
+    return Composite.for(
+      many(channels).map((name) => this.broadcaster.channel(name)),
     );
   }
 }

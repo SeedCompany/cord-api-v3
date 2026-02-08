@@ -90,7 +90,8 @@ export class EngagementService {
     const event = new EngagementCreatedEvent(engagement, input);
     await this.eventBus.publish(event);
 
-    this.channels.publishToAll('languageCreated', {
+    this.channels.publishToAll('language', 'created', {
+      program: engagement.project.type,
       project: engagement.project.id,
       engagement: engagement.id,
       at: engagement.createdAt,
@@ -117,7 +118,8 @@ export class EngagementService {
     const event = new EngagementCreatedEvent(engagement, input);
     await this.eventBus.publish(event);
 
-    this.channels.publishToAll('internshipCreated', {
+    this.channels.publishToAll('internship', 'created', {
+      program: engagement.project.type,
       project: engagement.project.id,
       engagement: engagement.id,
       at: engagement.createdAt,
@@ -236,7 +238,8 @@ export class EngagementService {
 
     const { pnp, ...simplePrevious } = previous;
     const { pnp: newPnp, ...simpleChanges } = changes;
-    const updatedPayload = this.channels.publishToAll('languageUpdated', {
+    const updatedPayload = this.channels.publishToAll('language', 'updated', {
+      program: updated.project.type,
       project: updated.project.id,
       engagement: updated.id,
       at: changes.modifiedAt!,
@@ -323,7 +326,8 @@ export class EngagementService {
 
     const { growthPlan, ...simplePrevious } = previous;
     const { growthPlan: newGrowthPlan, ...simpleChanges } = changes;
-    const updatedPayload = this.channels.publishToAll('internshipUpdated', {
+    const updatedPayload = this.channels.publishToAll('internship', 'updated', {
+      program: updated.project.type,
       project: updated.project.id,
       engagement: updated.id,
       at: changes.modifiedAt!,
@@ -365,9 +369,11 @@ export class EngagementService {
 
     const payload = this.channels.publishToAll(
       resolveEngagementType(object) === LanguageEngagement
-        ? 'languageDeleted'
-        : 'internshipDeleted',
+        ? 'language'
+        : 'internship',
+      'deleted',
       {
+        program: object.project.type,
         project: object.project.id,
         engagement: object.id,
         at,

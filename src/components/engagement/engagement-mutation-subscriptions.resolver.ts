@@ -34,7 +34,7 @@ export class EngagementMutationSubscriptionsResolver {
 
   @OnHook(ObserveProjectMutationHook)
   async observeProjectChanges(hook: ObserveProjectMutationHook) {
-    hook.add(await this.engagementMutations({ project: hook.args.project }));
+    hook.add(await this.engagementMutations(hook.args));
   }
 
   private verifyReadPermission$() {

@@ -67,6 +67,7 @@ export class ProjectMemberService {
       this.privileges.for(ProjectMember, created).verifyCan('create');
 
     this.channels.publishToAll('created', {
+      program: created.project.type,
       project: created.project.id,
       member: created.id,
       at: created.createdAt,
@@ -141,6 +142,7 @@ export class ProjectMemberService {
     const updated = await this.repo.update({ id: object.id, ...changes });
 
     const updatedPayload = this.channels.publishToAll('updated', {
+      program: updated.project.type,
       project: updated.project.id,
       member: updated.id,
       at: changes.modifiedAt!,
@@ -195,6 +197,7 @@ export class ProjectMemberService {
     });
 
     return this.channels.publishToAll('deleted', {
+      program: object.project.type,
       project: object.project.id,
       member: id,
       at,

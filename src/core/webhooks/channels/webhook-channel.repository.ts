@@ -47,7 +47,10 @@ export class WebhookChannelRepository extends CommonRepository {
           ])
           .where({ 'channel.name': not(inArray(channels)) })
           .delete('rel')
-          .return('collect(channel) as unobserved'),
+          .return([
+            'collect(channel) as unobserved',
+            'collect(channel.name) as unobservedNames',
+          ]),
       )
 
       .comment(
@@ -93,11 +96,7 @@ export class WebhookChannelRepository extends CommonRepository {
         observed: readonly string[];
         unobserved: readonly string[];
         orphaned: readonly string[];
-      }>([
-        '[channel in unobserved | channel.name] as unobserved',
-        'observed',
-        'orphaned',
-      ]);
+      }>(['unobservedNames as unobserved', 'observed', 'orphaned']);
     const result = await query.first();
     if (!result) {
       throw new NotFoundException('Webhook not found');

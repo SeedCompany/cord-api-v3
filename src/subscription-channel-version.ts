@@ -12,6 +12,6 @@ import { DateTime } from 'luxon';
  * subscriptions to their appropriate channels.
  */
 export const SubscriptionChannelVersion = Object.assign(
-  DateTime.fromSQL('2021-09-01 00:00'),
+  DateTime.fromSQL('2026-02-07 00:00'),
   { TOKEN: Symbol('SUBSCRIPTION_CHANNEL_VERSION') },
 );

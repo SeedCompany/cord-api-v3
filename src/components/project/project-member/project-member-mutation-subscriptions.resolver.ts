@@ -30,7 +30,7 @@ export class ProjectMemberMutationSubscriptionsResolver {
 
   @OnHook(ObserveProjectMutationHook)
   observeProjectChanges(hook: ObserveProjectMutationHook) {
-    hook.add(this.projectMemberMutations({ project: hook.args.project }));
+    hook.add(this.projectMemberMutations(hook.args));
   }
 
   private verifyReadPermission$() {
