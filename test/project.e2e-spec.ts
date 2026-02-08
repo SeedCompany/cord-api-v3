@@ -837,11 +837,23 @@ describe('Project e2e', () => {
       } = await forceProjectTo(app, project.id, 'PendingFinanceConfirmation');
 
       // Ensure the result from the change to Active returns the correct budget status
-      await app.graphql.mutate(
+      const { transitionProject: { project: updatedProject } } = await app.graphql.mutate(
         graphql(`
           mutation updateProject($input: ExecuteProjectTransition!) {
             transitionProject(input: $input) {
-              projectId
+              project {
+                departmentId {
+                  value
+                }
+                initialMouEnd {
+                  value
+                }
+                budget {
+                  value {
+                    status
+                  }
+                }
+              }
             }
           }
         `),
@@ -851,27 +863,6 @@ describe('Project e2e', () => {
             transition: transitions.find((t) => t.to === 'Active')?.key,
           },
         },
-      );
-      // Query the project to get the updated fields
-      const { project: updatedProject } = await app.graphql.query(
-        graphql(`
-          query GetProject($id: ID!) {
-            project(id: $id) {
-              departmentId {
-                value
-              }
-              initialMouEnd {
-                value
-              }
-              budget {
-                value {
-                  status
-                }
-              }
-            }
-          }
-        `),
-        { id: project.id },
       );
 
       expect(updatedProject.budget.value!.status).toBe(BudgetStatus.Current);
@@ -1085,33 +1076,24 @@ describe('Project e2e', () => {
           primaryLocation: location.id,
           fieldRegion: fieldRegion.id,
         });
-        const result = await app.graphql.mutate(
+        const { transitionProject: { project: updatedProject } } = await app.graphql.mutate(
           graphql(`
             mutation updateProject($id: ID!) {
               transitionProject(
                 # updating to this step assigns a dept id
                 input: { project: $id, bypassTo: PendingFinanceConfirmation }
               ) {
-                projectId
+                project {
+                  departmentId {
+                    value
+                  }
+                }
               }
             }
           `),
           {
             id: project.id,
           },
-        );
-        // Query the project to get the updated departmentId
-        const { project: updatedProject } = await app.graphql.query(
-          graphql(`
-            query GetProject($id: ID!) {
-              project(id: $id) {
-                departmentId {
-                  value
-                }
-              }
-            }
-          `),
-          { id: project.id },
         );
         return updatedProject;
       };
