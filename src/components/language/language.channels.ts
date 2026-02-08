@@ -21,7 +21,7 @@ export type LanguageMutationPayload = SetRequired<
   keyof LanguageMutationArgs
 > & {
   at: DateTime;
-  by: ID<'User'>;
+  by: ID<'Actor'>;
 };
 
 /**

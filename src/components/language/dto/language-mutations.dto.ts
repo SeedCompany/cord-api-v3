@@ -1,22 +1,28 @@
 import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
-import { Grandparent, type ID, IdField } from '~/common';
+import { DateTimeField, Grandparent, type ID, IdField } from '~/common';
 import { AsUpdateType } from '~/common/as-update.type';
 import type { Language } from './language.dto';
 import { UpdateLanguage } from './update-language.dto';
 
-@InterfaceType()
+@InterfaceType({
+  resolveType: (x) => x.__typename,
+})
 export class LanguageMutationOrDeletion {
-  @IdField({
-    description: 'The language ID',
-  })
+  readonly __typename: string;
+
+  /**
+   * The language ID.
+   * This is exposed directly for delete actions since the deleted language
+   * cannot be included in the payload.
+   */
+  @IdField()
   readonly languageId: ID<Language>;
 
-  @Field(() => Date, { description: 'When the mutation occurred' })
-  readonly at: DateTime;
+  @DateTimeField()
+  at: DateTime;
 
-  @IdField({ description: 'The user who initiated the change' })
-  readonly by: ID<'User'>;
+  by: ID<'Actor'>;
 }
 
 @InterfaceType({ implements: [LanguageMutationOrDeletion] })
