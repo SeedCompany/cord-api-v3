@@ -5,6 +5,7 @@ import { ProjectModule } from '../project.module';
 import { ProjectWorkflowNotificationHandler } from './handlers/project-workflow-notification.handler';
 import { StepHistoryToWorkflowEventsMigration } from './migrations/step-history-to-workflow-events.migration';
 import { ProjectWorkflowEventLoader } from './project-workflow-event.loader';
+import { ProjectWorkflowChannels } from './project-workflow.channels';
 import { ProjectWorkflowFlowchart } from './project-workflow.flowchart';
 import { ProjectWorkflowEventGranter } from './project-workflow.granter';
 import { ProjectWorkflowNeo4jRepository } from './project-workflow.neo4j.repository';
@@ -14,6 +15,7 @@ import { ProjectExecuteTransitionResolver } from './resolvers/project-execute-tr
 import { ProjectTransitionsResolver } from './resolvers/project-transitions.resolver';
 import { ProjectWorkflowEventResolver } from './resolvers/project-workflow-event.resolver';
 import { ProjectWorkflowEventsResolver } from './resolvers/project-workflow-events.resolver';
+import { ProjectWorkflowMutationSubscriptionsResolver } from './resolvers/project-workflow-mutation-subscriptions.resolver';
 
 @Module({
   imports: [forwardRef(() => UserModule), forwardRef(() => ProjectModule)],
@@ -22,8 +24,10 @@ import { ProjectWorkflowEventsResolver } from './resolvers/project-workflow-even
     ProjectExecuteTransitionResolver,
     ProjectWorkflowEventsResolver,
     ProjectWorkflowEventResolver,
+    ProjectWorkflowMutationSubscriptionsResolver,
     ProjectWorkflowEventLoader,
     ProjectWorkflowService,
+    ProjectWorkflowChannels,
     ProjectWorkflowEventGranter,
     splitDb2(ProjectWorkflowRepository, {
       neo4j: ProjectWorkflowNeo4jRepository,
