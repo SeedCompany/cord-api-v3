@@ -45,6 +45,7 @@ export abstract class UpdateEthnologueLanguage {
   readonly population?: number | null;
 }
 
+@ObjectType({ isAbstract: true })
 @InputType()
 export abstract class UpdateLanguage {
   @IdField()
@@ -116,10 +117,4 @@ export abstract class UpdateLanguage {
 
   @ChangesetIdField()
   readonly changeset?: ID;
-}
-
-@ObjectType()
-export abstract class LanguageUpdated {
-  @Field()
-  readonly language: Language;
 }

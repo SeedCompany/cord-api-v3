@@ -109,9 +109,3 @@ export abstract class CreateLanguage {
   @OptionalField()
   readonly isAvailableForReporting?: boolean = false;
 }
-
-@ObjectType()
-export abstract class LanguageCreated {
-  @Field()
-  readonly language: Language;
-}

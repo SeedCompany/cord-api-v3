@@ -31,9 +31,11 @@ import {
   Language,
   type LanguageListInput,
   type LanguageListOutput,
+  LanguageUpdate,
   type UpdateLanguage,
 } from './dto';
 import { EthnologueLanguageService } from './ethnologue-language';
+import { LanguageChannels } from './language.channels';
 import { LanguageRepository } from './language.repository';
 
 @Injectable()
@@ -47,6 +49,7 @@ export class LanguageService {
     private readonly engagementService: EngagementService & {},
     private readonly privileges: Privileges,
     private readonly loaders: ResourceLoader,
+    private readonly channels: LanguageChannels,
     private readonly repo: LanguageRepository,
     @Logger('language:service') private readonly logger: ILogger,
   ) {}
@@ -55,6 +58,11 @@ export class LanguageService {
     this.privileges.for(Language).verifyCan('create');
 
     const resultLanguage = await this.repo.create(input);
+
+    this.channels.publishToAll('created', {
+      language: resultLanguage.id,
+      at: resultLanguage.createdAt,
+    });
 
     return this.secure(resultLanguage);
   }
@@ -91,7 +99,7 @@ export class LanguageService {
     };
   }
 
-  async update(input: UpdateLanguage, view?: ObjectView): Promise<Language> {
+  async update(input: UpdateLanguage, view?: ObjectView) {
     if (input.hasExternalFirstScripture) {
       await this.verifyExternalFirstScripture(input.id);
     }
@@ -103,6 +111,11 @@ export class LanguageService {
       registryOfLanguageVarietiesCode:
         props.registryOfLanguageVarietiesCode ?? registryOfDialectsCode,
     });
+
+    if (Object.keys(changes).length === 0) {
+      return { language: this.secure(language) };
+    }
+
     this.privileges.for(Language, language).verifyChanges(changes);
 
     const { ethnologue, ...simpleChanges } = changes;
@@ -120,20 +133,33 @@ export class LanguageService {
       view?.changeset,
     );
 
-    return this.secure(updated);
+    const updatedPayload = this.channels.publishToAll('updated', {
+      language: updated.id,
+      at: changes.modifiedAt!,
+      updated: LanguageUpdate.fromInput(changes),
+      previous: LanguageUpdate.pickPrevious(language, changes),
+    });
+
+    return {
+      language: this.secure(updated),
+      payload: updatedPayload,
+    };
   }
 
-  async delete(id: ID): Promise<void> {
+  async delete(id: ID) {
     const object = await this.readOne(id);
 
     this.privileges.for(Language, object).verifyCan('delete');
 
-    try {
-      await this.repo.deleteNode(object);
-    } catch (exception) {
+    const { at } = await this.repo.deleteNode(object).catch((exception) => {
       this.logger.error('Failed to delete', { id, exception });
       throw new ServerException('Failed to delete', exception);
-    }
+    });
+
+    return this.channels.publishToAll('deleted', {
+      language: id,
+      at,
+    });
   }
 
   async list(input: LanguageListInput): Promise<LanguageListOutput> {

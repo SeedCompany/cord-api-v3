@@ -8,6 +8,10 @@ import { EthnologueLanguageService } from './ethnologue-language';
 import { EthnologueLanguageGelRepository } from './ethnologue-language/ethnologue-language.gel.repository';
 import { EthnologueLanguageRepository } from './ethnologue-language/ethnologue-language.repository';
 import { InternalFirstScriptureResolver } from './internal-first-scripture.resolver';
+import { LanguageMutationActorResolver } from './language-mutation-actor.resolver';
+import { LanguageMutationSubscriptionsResolver } from './language-mutation-subscriptions.resolver';
+import { LanguageUpdatedResolver } from './language-updated.resolver';
+import { LanguageChannels } from './language.channels';
 import { LanguageGelRepository } from './language.gel.repository';
 import { LanguageLoader } from './language.loader';
 import { LanguageRepository } from './language.repository';
@@ -25,7 +29,11 @@ import { RegistryOfDialectToRegistryOfLanguageVarietiesMigration } from './migra
   ],
   providers: [
     LanguageResolver,
+    LanguageMutationSubscriptionsResolver,
+    LanguageMutationActorResolver,
+    LanguageUpdatedResolver,
     LanguageService,
+    LanguageChannels,
     EthnologueLanguageService,
     splitDb(EthnologueLanguageRepository, EthnologueLanguageGelRepository),
     splitDb(LanguageRepository, LanguageGelRepository),
