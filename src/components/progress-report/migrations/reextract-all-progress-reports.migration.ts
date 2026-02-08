@@ -1,8 +1,8 @@
 import { asyncPool } from '@seedcompany/common';
 import { node, relation } from 'cypher-query-builder';
-import { Hooks } from '~/core';
 import { BaseMigration, Migration } from '~/core/database';
 import { ACTIVE, matchProps, merge } from '~/core/database/query';
+import { Hooks } from '~/core/hooks';
 import { FileService } from '../../file';
 import { type FileVersion } from '../../file/dto';
 import { PeriodicReportUploadedHook } from '../../periodic-report/hooks';

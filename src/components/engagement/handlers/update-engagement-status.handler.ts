@@ -1,6 +1,6 @@
 import type { MergeExclusive, RequireAtLeastOne } from 'type-fest';
 import { type ID, type UnsecuredDto } from '~/common';
-import { OnHook } from '~/core';
+import { OnHook } from '~/core/hooks';
 import {
   type Project,
   ProjectStatus,

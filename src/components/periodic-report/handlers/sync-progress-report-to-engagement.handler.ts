@@ -31,10 +31,7 @@ export class SyncProgressReportToEngagementDateRange extends AbstractPeriodicRep
   @OnHook(EngagementUpdatedHook)
   @OnHook(ProjectUpdatedHook)
   async handle(
-    event:
-      | EngagementCreatedHook
-      | EngagementUpdatedHook
-      | ProjectUpdatedHook,
+    event: EngagementCreatedHook | EngagementUpdatedHook | ProjectUpdatedHook,
   ) {
     // Only LanguageEngagements
     if (

@@ -1,4 +1,4 @@
-import { OnHook } from '~/core';
+import { OnHook } from '~/core/hooks';
 import {
   EngagementCreatedHook,
   EngagementUpdatedHook,
@@ -25,9 +25,7 @@ export class ExtractProductsFromPnpHandler {
       return;
     }
     const engagement =
-      event instanceof EngagementCreatedHook
-        ? event.engagement
-        : event.updated;
+      event instanceof EngagementCreatedHook ? event.engagement : event.updated;
     const { pnp: hasPnpInput, methodology } = event.input;
     if (!engagement.pnp || !hasPnpInput || !methodology) {
       return;

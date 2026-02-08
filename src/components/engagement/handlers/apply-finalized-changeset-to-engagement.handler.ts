@@ -1,9 +1,10 @@
 import { asyncPool, setOf } from '@seedcompany/common';
 import { node, relation } from 'cypher-query-builder';
 import { type ID, ServerException } from '~/common';
-import { OnHook, ILogger, Logger } from '~/core';
+import { ILogger, Logger } from '~/core';
 import { DatabaseService } from '~/core/database';
 import { ACTIVE, deleteBaseNode, INACTIVE } from '~/core/database/query';
+import { OnHook } from '~/core/hooks';
 import {
   ChangesetFinalizingHook,
   commitChangesetProps,

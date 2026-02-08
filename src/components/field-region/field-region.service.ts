@@ -18,8 +18,8 @@ import {
   type FieldRegionListOutput,
   type UpdateFieldRegion,
 } from './dto';
-import { FieldRegionUpdatedHook } from './hooks/field-region-updated.hook';
 import { FieldRegionRepository } from './field-region.repository';
+import { FieldRegionUpdatedHook } from './hooks/field-region-updated.hook';
 
 @Injectable()
 export class FieldRegionService {

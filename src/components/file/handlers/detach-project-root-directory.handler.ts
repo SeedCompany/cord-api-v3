@@ -1,8 +1,5 @@
-import { OnHook } from '~/core';
-import {
-  type ProjectCreatedHook,
-  ProjectDeletedHook,
-} from '../../project/hooks';
+import { OnHook } from '~/core/hooks';
+import { ProjectDeletedHook } from '../../project/hooks';
 
 @OnHook(ProjectDeletedHook)
 export class DetachProjectRootDirectoryHandler {

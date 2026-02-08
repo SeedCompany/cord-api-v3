@@ -20,9 +20,10 @@ import {
   UnauthorizedException,
   type UnsecuredDto,
 } from '~/common';
-import { HandleIdLookup, Hooks } from '~/core';
+import { HandleIdLookup } from '~/core';
 import { Identity } from '~/core/authentication';
 import { type AnyChangesOf } from '~/core/database/changes';
+import { Hooks } from '~/core/hooks';
 import { Privileges } from '../authorization';
 import { BudgetService } from '../budget';
 import { BudgetStatus, type SecuredBudget } from '../budget/dto';

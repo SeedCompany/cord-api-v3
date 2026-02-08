@@ -1,4 +1,4 @@
-import { OnHook } from '~/core';
+import { OnHook } from '~/core/hooks';
 import { ProjectCreatedHook } from '../../project/hooks';
 import { FileService } from '../file.service';
 

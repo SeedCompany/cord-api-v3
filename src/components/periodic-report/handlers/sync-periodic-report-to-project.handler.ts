@@ -1,6 +1,7 @@
 import { type DateTimeUnit } from 'luxon';
 import { type DateInterval } from '~/common';
-import { OnHook, ILogger, Logger } from '~/core';
+import { ILogger, Logger } from '~/core';
+import { OnHook } from '~/core/hooks';
 import { projectRange } from '../../project/dto';
 import { ProjectUpdatedHook } from '../../project/hooks';
 import { ReportPeriod, ReportType } from '../dto';
@@ -13,9 +14,7 @@ import {
 type SubscribedEvent = ProjectUpdatedHook;
 
 @OnHook(ProjectUpdatedHook)
-export class SyncPeriodicReportsToProjectDateRange
-  extends AbstractPeriodicReportSync
-{
+export class SyncPeriodicReportsToProjectDateRange extends AbstractPeriodicReportSync {
   constructor(
     periodicReports: PeriodicReportService,
     @Logger('periodic-reports:project-sync') private readonly logger: ILogger,

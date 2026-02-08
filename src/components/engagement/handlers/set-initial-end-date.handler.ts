@@ -1,5 +1,6 @@
 import { ServerException } from '~/common';
-import { ConfigService, OnHook } from '~/core';
+import { ConfigService } from '~/core';
+import { OnHook } from '~/core/hooks';
 import { EngagementStatus, LanguageEngagement } from '../dto';
 import { EngagementRepository } from '../engagement.repository';
 import { EngagementCreatedHook, EngagementUpdatedHook } from '../hooks';

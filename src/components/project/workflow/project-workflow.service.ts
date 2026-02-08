@@ -7,7 +7,7 @@ import {
   type UnsecuredDto,
   unwrapSecured,
 } from '~/common';
-import { Hooks } from '~/core';
+import { Hooks } from '~/core/hooks';
 import {
   findTransition,
   WorkflowService,

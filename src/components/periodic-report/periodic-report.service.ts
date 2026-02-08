@@ -11,6 +11,7 @@ import {
 import { HandleIdLookup, ILogger, Logger } from '~/core';
 import { Identity } from '~/core/authentication';
 import { type Variable } from '~/core/database/query';
+import { Hooks } from '~/core/hooks';
 import { Privileges } from '../authorization';
 import { FileService } from '../file';
 import { ProgressReport } from '../progress-report/dto';

@@ -13,13 +13,9 @@ import {
   type UnsecuredDto,
   viewOfChangeset,
 } from '~/common';
-import {
-  HandleIdLookup,
-  ILogger,
-  Logger,
-  ResourceLoader,
-} from '~/core';
+import { HandleIdLookup, ILogger, Logger, ResourceLoader } from '~/core';
 import { type AnyChangesOf } from '~/core/database/changes';
+import { Hooks } from '~/core/hooks';
 import { Privileges } from '../authorization';
 import { FileService } from '../file';
 import { PartnerService } from '../partner';

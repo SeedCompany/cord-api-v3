@@ -1,6 +1,6 @@
 import { ServerException } from '~/common';
-import { OnHook } from '~/core';
 import { DatabaseService } from '~/core/database';
+import { OnHook } from '~/core/hooks';
 import { IProject, ProjectStatus } from '../dto';
 import { ProjectCreatedHook } from '../hooks';
 import { ProjectTransitionedHook } from '../workflow/hooks/project-transitioned.hook';

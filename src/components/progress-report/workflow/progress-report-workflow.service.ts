@@ -6,7 +6,7 @@ import {
   UnauthorizedException,
   type UnsecuredDto,
 } from '~/common';
-import { Hooks } from '~/core';
+import { Hooks } from '~/core/hooks';
 import { Privileges } from '../../authorization';
 import {
   type ProgressReport,

@@ -1,4 +1,4 @@
-import { OnHook } from '~/core';
+import { OnHook } from '~/core/hooks';
 import { UserUpdatedHook } from '../../../components/user/hooks/user-updated.hook';
 import { AuthenticationService } from '../authentication.service';
 

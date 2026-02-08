@@ -11,6 +11,7 @@ import {
 import { HandleIdLookup, ILogger, Logger } from '~/core';
 import { DatabaseService } from '~/core/database';
 import { mapListResults } from '~/core/database/results';
+import { Hooks } from '~/core/hooks';
 import { Privileges } from '../authorization';
 import { ChangesetFinalizingHook } from '../changeset';
 import { ProjectService } from '../project';
@@ -110,9 +111,7 @@ export class ProjectChangeRequestService {
     if (isStatusChanged) {
       await this.hooks.run(new ChangesetFinalizingHook(updated));
       if (changes.status === Status.Approved) {
-        await this.hooks.run(
-          new ProjectChangeRequestApprovedHook(updated),
-        );
+        await this.hooks.run(new ProjectChangeRequestApprovedHook(updated));
       }
     }
 

@@ -1,6 +1,6 @@
 import { ServerException } from '~/common';
-import { OnHook } from '~/core';
 import { DatabaseService } from '~/core/database';
+import { OnHook } from '~/core/hooks';
 import { EngagementStatus, IEngagement } from '../dto';
 import { EngagementUpdatedHook } from '../hooks';
 

@@ -21,6 +21,7 @@ import {
   ResourceLoader,
 } from '~/core';
 import { type AnyChangesOf } from '~/core/database/changes';
+import { Hooks } from '~/core/hooks';
 import { Privileges } from '../authorization';
 import { CeremonyService } from '../ceremony';
 import { FileNodeLoader } from '../file';

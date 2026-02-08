@@ -27,6 +27,7 @@ import {
 import { withAddedPath } from '~/common/url.util';
 import { ConfigService, ILogger, type LinkTo, Logger } from '~/core';
 import { TransactionHooks } from '~/core/database';
+import { Hooks } from '~/core/hooks';
 import { FileBucket } from './bucket';
 import {
   type CreateDefinedFileVersion,
@@ -47,10 +48,10 @@ import {
   type MoveFile,
   type RenameFile,
 } from './dto';
-import { AfterFileUploadHook } from './hooks/after-file-upload.hook';
 import { FileUrlController as FileUrl } from './file-url.controller';
 import { type FileUrlArgs } from './file-url.resolver-util';
 import { FileRepository } from './file.repository';
+import { AfterFileUploadHook } from './hooks/after-file-upload.hook';
 import { MediaService } from './media/media.service';
 
 type FileWithNewVersion = File & { newVersion: FileVersion };

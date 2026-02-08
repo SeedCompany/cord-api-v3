@@ -1,5 +1,6 @@
 import { mapOf } from '@seedcompany/common';
-import { OnHook, ILogger, Logger } from '~/core';
+import { ILogger, Logger } from '~/core';
+import { OnHook } from '~/core/hooks';
 import { ReportType } from '../../periodic-report/dto';
 import { PeriodicReportUploadedHook } from '../../periodic-report/hooks';
 import { PnpProblemType } from '../../pnp/extraction-result';

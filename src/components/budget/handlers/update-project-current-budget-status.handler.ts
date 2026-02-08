@@ -1,4 +1,4 @@
-import { OnHook } from '~/core';
+import { OnHook } from '~/core/hooks';
 import { ProjectStatus, stepToStatus } from '../../project/dto';
 import { ProjectTransitionedHook } from '../../project/workflow/hooks/project-transitioned.hook';
 import { BudgetService } from '../budget.service';

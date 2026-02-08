@@ -1,4 +1,4 @@
-import { OnHook } from '~/core';
+import { OnHook } from '~/core/hooks';
 import { PeriodicReportUploadedHook } from '../../periodic-report/hooks';
 import { ProductStep } from '../../product/dto';
 import { PnpProductSyncService } from '../../product/pnp-product-sync.service';

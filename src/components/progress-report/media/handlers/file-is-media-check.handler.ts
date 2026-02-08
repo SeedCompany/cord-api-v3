@@ -1,5 +1,6 @@
 import { InputException } from '~/common';
-import { OnHook, ResourceLoader, ResourceResolver } from '~/core';
+import { ResourceLoader, ResourceResolver } from '~/core';
+import { OnHook } from '~/core/hooks';
 import { AfterFileUploadHook } from '../../../file/hooks/after-file-upload.hook';
 import { MediaByFileVersionLoader } from '../../../file/media/media-by-file-version.loader';
 

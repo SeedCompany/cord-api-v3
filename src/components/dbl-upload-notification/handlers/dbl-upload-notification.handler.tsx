@@ -13,15 +13,10 @@ import {
 } from '@seedcompany/scripture';
 import { type ComponentProps as PropsOf } from 'react';
 import { type ID, type Range } from '~/common';
-import {
-  ConfigService,
-  ILogger,
-  Logger,
-  OnHook,
-  ResourceLoader,
-} from '~/core';
+import { ConfigService, ILogger, Logger, ResourceLoader } from '~/core';
 import { Identity } from '~/core/authentication';
 import { MailerService } from '~/core/email';
+import { OnHook } from '~/core/hooks';
 import {
   type ProgressReport,
   ProgressReportStatus as Status,
