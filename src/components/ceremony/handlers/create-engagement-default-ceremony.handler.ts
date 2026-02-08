@@ -1,21 +1,21 @@
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { ConfigService, EventsHandler, type IEventHandler } from '~/core';
+import { ConfigService, OnHook } from '~/core';
 import { DatabaseService } from '~/core/database';
 import { LanguageEngagement } from '../../engagement/dto';
-import { EngagementCreatedEvent } from '../../engagement/events';
+import { EngagementCreatedHook } from '../../engagement/hooks';
 import { CeremonyService } from '../ceremony.service';
 import { CeremonyType } from '../dto';
 
-@EventsHandler(EngagementCreatedEvent)
-export class CreateEngagementDefaultCeremonyHandler implements IEventHandler<EngagementCreatedEvent> {
+@OnHook(EngagementCreatedHook)
+export class CreateEngagementDefaultCeremonyHandler {
   constructor(
     private readonly ceremonies: CeremonyService,
     private readonly config: ConfigService,
     private readonly db: DatabaseService,
   ) {}
 
-  async handle(event: EngagementCreatedEvent) {
+  async handle(event: EngagementCreatedHook) {
     const { engagement } = event;
     const input = {
       type:

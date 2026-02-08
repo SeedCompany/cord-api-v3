@@ -12,7 +12,7 @@ import {
   ProjectMutationOrDeletion,
   ProjectUpdated,
 } from './dto';
-import { ObserveProjectMutationHook } from './events';
+import { ObserveProjectMutationHook } from './hooks';
 import {
   ProjectChannels,
   ProjectMutationArgs,

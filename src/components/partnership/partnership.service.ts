@@ -35,10 +35,10 @@ import {
   type UpdatePartnership,
 } from './dto';
 import {
-  PartnershipCreatedEvent,
-  PartnershipUpdatedEvent,
-  PartnershipWillDeleteEvent,
-} from './events';
+  PartnershipCreatedHook,
+  PartnershipUpdatedHook,
+  PartnershipWillDeleteHook,
+} from './hooks';
 import type { PartnershipByProjectAndPartnerInput } from './partnership-by-project-and-partner.loader';
 import { PartnershipRepository } from './partnership.repository';
 
@@ -51,7 +51,7 @@ export class PartnershipService {
     @Inject(forwardRef(() => ProjectService))
     private readonly projectService: ProjectService & {},
     private readonly privileges: Privileges,
-    private readonly eventBus: IEventBus,
+    private readonly hooks: Hooks,
     private readonly repo: PartnershipRepository,
     private readonly resourceLoader: ResourceLoader,
     @Logger('partnership:service') private readonly logger: ILogger,
@@ -109,7 +109,7 @@ export class PartnershipService {
 
       this.privileges.for(Partnership, partnership).verifyCan('create');
 
-      await this.eventBus.publish(new PartnershipCreatedEvent(partnership));
+      await this.hooks.run(new PartnershipCreatedHook(partnership));
 
       return partnership;
     } catch (exception) {
@@ -209,8 +209,8 @@ export class PartnershipService {
     }
 
     const partnership = await this.readOne(input.id, view);
-    const event = new PartnershipUpdatedEvent(partnership, object, input);
-    await this.eventBus.publish(event);
+    const event = new PartnershipUpdatedHook(partnership, object, input);
+    await this.hooks.run(event);
     return event.updated;
   }
 
@@ -229,7 +229,7 @@ export class PartnershipService {
       }
     }
 
-    await this.eventBus.publish(new PartnershipWillDeleteEvent(object));
+    await this.hooks.run(new PartnershipWillDeleteHook(object));
 
     try {
       await this.repo.deleteNode(object, { changeset });

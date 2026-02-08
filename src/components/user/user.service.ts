@@ -9,7 +9,7 @@ import {
 } from '~/common';
 import { HandleIdLookup, ILogger, Logger } from '~/core';
 import { Identity } from '~/core/authentication';
-import { IEventBus } from '~/core/events';
+import { Hooks } from '~/core/hooks';
 import { Privileges } from '../authorization';
 import { AssignableRoles } from '../authorization/dto/assignable-roles.dto';
 import { LocationService } from '../location';
@@ -40,7 +40,7 @@ import {
   type EducationListInput,
   type SecuredEducationList,
 } from './education/dto';
-import { UserUpdatedEvent } from './events/user-updated.event';
+import { UserUpdatedHook } from './hooks/user-updated.hook';
 import { KnownLanguageRepository } from './known-language.repository';
 import { UnavailabilityService } from './unavailability';
 import {
@@ -130,7 +130,7 @@ export class UserService {
     };
     const updated = await this.userRepo.update(input);
 
-    const event = new UserUpdatedEvent(user, updated, input);
+    const event = new UserUpdatedHook(user, updated, input);
     await this.events.publish(event);
 
     return this.secure(updated);

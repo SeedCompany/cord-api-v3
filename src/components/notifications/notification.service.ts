@@ -21,7 +21,7 @@ import {
   type NotificationList,
   type NotificationListInput,
 } from './dto';
-import { NotificationAdded } from './dto/notification-added.event';
+import { NotificationAdded } from './dto/notification-added.hook';
 import { NotificationRepository } from './notification.repository';
 import {
   INotificationStrategy,

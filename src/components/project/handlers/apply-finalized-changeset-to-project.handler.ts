@@ -1,18 +1,18 @@
 import { node, relation } from 'cypher-query-builder';
 import { ServerException } from '~/common';
-import { EventsHandler, type IEventHandler, ILogger, Logger } from '~/core';
+import { OnHook, ILogger, Logger } from '~/core';
 import { DatabaseService } from '~/core/database';
 import { ACTIVE, INACTIVE } from '~/core/database/query';
 import {
-  ChangesetFinalizingEvent,
+  ChangesetFinalizingHook,
   commitChangesetProps,
   rejectChangesetProps,
 } from '../../changeset';
 
-type SubscribedEvent = ChangesetFinalizingEvent;
+type SubscribedEvent = ChangesetFinalizingHook;
 
-@EventsHandler(ChangesetFinalizingEvent)
-export class ApplyFinalizedChangesetToProject implements IEventHandler<SubscribedEvent> {
+@OnHook(ChangesetFinalizingHook)
+export class ApplyFinalizedChangesetToProject {
   constructor(
     private readonly db: DatabaseService,
     @Logger('project:change-request:finalized')

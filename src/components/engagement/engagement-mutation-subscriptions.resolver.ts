@@ -3,7 +3,7 @@ import { from, map, merge, mergeMap, type ObservableInput } from 'rxjs';
 import { omitNotFound$, Subscription } from '~/common';
 import { Hooks, OnHook } from '~/core/hooks';
 import { ResourceLoader } from '~/core/resources';
-import { ObserveProjectMutationHook } from '../project/events';
+import { ObserveProjectMutationHook } from '../project/hooks';
 import {
   EngagementCreated,
   EngagementDeleted,
@@ -22,7 +22,7 @@ import {
   EngagementMutationArgs,
   type EngagementMutationPayload,
 } from './engagement.channels';
-import { ObserveEngagementMutationHook } from './events/observe-engagement-mutation.hook';
+import { ObserveEngagementMutationHook } from './hooks/observe-engagement-mutation.hook';
 
 @Resolver()
 export class EngagementMutationSubscriptionsResolver {

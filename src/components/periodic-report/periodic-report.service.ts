@@ -26,7 +26,7 @@ import {
   type SecuredPeriodicReportList,
   type UpdatePeriodicReport,
 } from './dto';
-import { PeriodicReportUploadedEvent } from './events';
+import { PeriodicReportUploadedHook } from './hooks';
 import { PeriodicReportRepository } from './periodic-report.repository';
 
 @Injectable()
@@ -34,7 +34,7 @@ export class PeriodicReportService {
   constructor(
     private readonly files: FileService,
     @Logger('periodic:report:service') private readonly logger: ILogger,
-    private readonly eventBus: IEventBus,
+    private readonly hooks: Hooks,
     private readonly identity: Identity,
     private readonly privileges: Privileges,
     private readonly repo: PeriodicReportRepository,
@@ -78,8 +78,8 @@ export class PeriodicReportService {
         'file',
         reportFile,
       );
-      await this.eventBus.publish(
-        new PeriodicReportUploadedEvent(
+      await this.hooks.run(
+        new PeriodicReportUploadedHook(
           updated,
           this.files.asDownloadable(file.newVersion),
         ),

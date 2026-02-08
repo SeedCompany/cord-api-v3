@@ -1,12 +1,12 @@
-import { EventsHandler, type IEventHandler } from '~/core';
-import { ProjectCreatedEvent } from '../../project/events';
+import { OnHook } from '~/core';
+import { ProjectCreatedHook } from '../../project/hooks';
 import { BudgetService } from '../budget.service';
 
-@EventsHandler(ProjectCreatedEvent)
-export class CreateProjectDefaultBudgetHandler implements IEventHandler<ProjectCreatedEvent> {
+@OnHook(ProjectCreatedHook)
+export class CreateProjectDefaultBudgetHandler {
   constructor(private readonly budgets: BudgetService) {}
 
-  async handle({ project }: ProjectCreatedEvent) {
+  async handle({ project }: ProjectCreatedHook) {
     await this.budgets.create({ project: project.id });
   }
 }

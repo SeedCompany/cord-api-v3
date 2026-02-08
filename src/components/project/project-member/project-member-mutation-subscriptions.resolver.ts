@@ -4,7 +4,7 @@ import { from, map, merge, mergeMap, type ObservableInput } from 'rxjs';
 import { omitNotFound$, Subscription } from '~/common';
 import { OnHook } from '~/core/hooks';
 import { ResourceLoader } from '~/core/resources';
-import { ObserveProjectMutationHook } from '../events';
+import { ObserveProjectMutationHook } from '../hooks';
 import {
   ProjectMember,
   ProjectMemberCreated,

@@ -7,7 +7,7 @@ import {
   type UnsecuredDto,
   unwrapSecured,
 } from '~/common';
-import { IEventBus } from '~/core';
+import { Hooks } from '~/core';
 import {
   findTransition,
   WorkflowService,
@@ -18,7 +18,7 @@ import {
   type ExecuteProjectTransition,
   ProjectWorkflowEvent as WorkflowEvent,
 } from './dto';
-import { ProjectTransitionedEvent } from './events/project-transitioned.event';
+import { ProjectTransitionedHook } from './hooks/project-transitioned.hook';
 import { ProjectWorkflow } from './project-workflow';
 import { ProjectWorkflowChannels } from './project-workflow.channels';
 import { ProjectWorkflowRepository } from './project-workflow.repository';
@@ -32,7 +32,7 @@ export class ProjectWorkflowService extends WorkflowService(
     private readonly projects: ProjectService & {},
     private readonly repo: ProjectWorkflowRepository,
     private readonly channels: ProjectWorkflowChannels,
-    private readonly eventBus: IEventBus,
+    private readonly hooks: Hooks,
     private readonly moduleRef: ModuleRef,
   ) {
     super();
@@ -87,13 +87,13 @@ export class ProjectWorkflowService extends WorkflowService(
 
     RequiredWhen.verify(IProject, updated);
 
-    const event = new ProjectTransitionedEvent(
+    const event = new ProjectTransitionedHook(
       updated,
       previous.step,
       next,
       unsecuredEvent,
     );
-    await this.eventBus.publish(event);
+    await this.hooks.run(event);
 
     return this.channels.publishToAll('transitioned', {
       program: updated.type,

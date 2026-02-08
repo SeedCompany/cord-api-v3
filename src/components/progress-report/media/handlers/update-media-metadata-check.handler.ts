@@ -1,16 +1,16 @@
-import { EventsHandler, ResourceLoader } from '~/core';
+import { OnHook, ResourceLoader } from '~/core';
 import { Privileges } from '../../../authorization';
-import { CanUpdateMediaUserMetadataEvent } from '../../../file/media/events/can-update-event';
+import { CanUpdateMediaUserMetadataHook } from '../../../file/media/hooks/can-update.hook';
 import { ProgressReportMedia as ReportMedia } from '../dto';
 
-@EventsHandler(CanUpdateMediaUserMetadataEvent)
+@OnHook(CanUpdateMediaUserMetadataHook)
 export class ProgressReportUpdateMediaMetadataCheckHandler {
   constructor(
     private readonly resources: ResourceLoader,
     private readonly privileges: Privileges,
   ) {}
 
-  async handle(event: CanUpdateMediaUserMetadataEvent) {
+  async handle(event: CanUpdateMediaUserMetadataHook) {
     const attached = event.getAttachedResource();
     if (!attached.is(ReportMedia)) {
       return;

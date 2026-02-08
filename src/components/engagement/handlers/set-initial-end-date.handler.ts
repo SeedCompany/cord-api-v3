@@ -1,13 +1,14 @@
 import { ServerException } from '~/common';
-import { ConfigService, EventsHandler, type IEventHandler } from '~/core';
+import { ConfigService, OnHook } from '~/core';
 import { EngagementStatus, LanguageEngagement } from '../dto';
 import { EngagementRepository } from '../engagement.repository';
-import { EngagementCreatedEvent, EngagementUpdatedEvent } from '../events';
+import { EngagementCreatedHook, EngagementUpdatedHook } from '../hooks';
 
-type SubscribedEvent = EngagementCreatedEvent | EngagementUpdatedEvent;
+type SubscribedEvent = EngagementCreatedHook | EngagementUpdatedHook;
 
-@EventsHandler(EngagementCreatedEvent, EngagementUpdatedEvent)
-export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
+@OnHook(EngagementCreatedHook)
+@OnHook(EngagementUpdatedHook)
+export class SetInitialEndDate {
   constructor(
     private readonly engagementRepo: EngagementRepository,
     private readonly config: ConfigService,
@@ -21,7 +22,7 @@ export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
     const engagement = 'engagement' in event ? event.engagement : event.updated;
 
     if (
-      event instanceof EngagementUpdatedEvent && // allow setting initial if creating with non-in-dev status
+      event instanceof EngagementUpdatedHook && // allow setting initial if creating with non-in-dev status
       engagement.status !== EngagementStatus.InDevelopment
     ) {
       return;
@@ -52,7 +53,7 @@ export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
         initialEndDate,
       };
 
-      if (event instanceof EngagementUpdatedEvent) {
+      if (event instanceof EngagementUpdatedHook) {
         event.updated = updatedEngagement;
       } else {
         event.engagement = updatedEngagement;

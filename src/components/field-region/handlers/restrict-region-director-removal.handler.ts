@@ -1,13 +1,13 @@
 import { InputException } from '~/common';
-import { EventsHandler } from '~/core/events';
-import { UserUpdatedEvent } from '../../user/events/user-updated.event';
+import { OnHook } from '~/core/hooks';
+import { UserUpdatedHook } from '../../user/hooks/user-updated.hook';
 import { FieldRegionRepository } from '../field-region.repository';
 
-@EventsHandler(UserUpdatedEvent)
+@OnHook(UserUpdatedHook)
 export class RestrictRegionDirectorRemovalHandler {
   constructor(private readonly repo: FieldRegionRepository) {}
 
-  async handle(event: UserUpdatedEvent) {
+  async handle(event: UserUpdatedHook) {
     if (!event.input.roles) {
       return;
     }

@@ -1,14 +1,14 @@
-import { EventsHandler, type IEventHandler } from '~/core';
+import { OnHook } from '~/core';
 import { ProjectStatus, stepToStatus } from '../../project/dto';
-import { ProjectTransitionedEvent } from '../../project/workflow/events/project-transitioned.event';
+import { ProjectTransitionedHook } from '../../project/workflow/hooks/project-transitioned.hook';
 import { BudgetService } from '../budget.service';
 import { BudgetStatus } from '../dto';
 
-@EventsHandler(ProjectTransitionedEvent)
-export class UpdateProjectBudgetStatusHandler implements IEventHandler<ProjectTransitionedEvent> {
+@OnHook(ProjectTransitionedHook)
+export class UpdateProjectBudgetStatusHandler {
   constructor(private readonly budgets: BudgetService) {}
 
-  async handle(event: ProjectTransitionedEvent) {
+  async handle(event: ProjectTransitionedHook) {
     const { project } = event;
 
     const prevStatus = stepToStatus(event.previousStep);

@@ -1,14 +1,14 @@
 import { ServerException } from '~/common';
-import { EventsHandler, type IEventHandler } from '~/core';
+import { OnHook } from '~/core';
 import { DatabaseService } from '~/core/database';
 import { EngagementStatus, IEngagement } from '../dto';
-import { EngagementUpdatedEvent } from '../events';
+import { EngagementUpdatedHook } from '../hooks';
 
-@EventsHandler(EngagementUpdatedEvent)
-export class SetLastStatusDate implements IEventHandler<EngagementUpdatedEvent> {
+@OnHook(EngagementUpdatedHook)
+export class SetLastStatusDate {
   constructor(private readonly db: DatabaseService) {}
 
-  async handle(event: EngagementUpdatedEvent) {
+  async handle(event: EngagementUpdatedHook) {
     const { previous, updated } = event;
     if (previous.status === updated.status) {
       return;

@@ -1,12 +1,12 @@
-import { EventsHandler, type IEventHandler } from '~/core';
-import { ProjectCreatedEvent } from '../../project/events';
+import { OnHook } from '~/core';
+import { ProjectCreatedHook } from '../../project/hooks';
 import { FileService } from '../file.service';
 
-@EventsHandler(ProjectCreatedEvent)
-export class AttachProjectRootDirectoryHandler implements IEventHandler<ProjectCreatedEvent> {
+@OnHook(ProjectCreatedHook)
+export class AttachProjectRootDirectoryHandler {
   constructor(private readonly files: FileService) {}
 
-  async handle(event: ProjectCreatedEvent) {
+  async handle(event: ProjectCreatedHook) {
     const { project } = event;
 
     const rootDirId = await this.files.createRootDirectory({

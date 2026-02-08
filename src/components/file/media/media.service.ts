@@ -9,9 +9,9 @@ import {
   ServerException,
   UnauthorizedException,
 } from '~/common';
-import { IEventBus } from '~/core/events';
+import { Hooks } from '~/core/hooks';
 import { type FileVersion } from '../dto';
-import { CanUpdateMediaUserMetadataEvent } from './events/can-update-event';
+import { CanUpdateMediaUserMetadataHook } from './hooks/can-update.hook';
 import { MediaDetector } from './media-detector.service';
 import { type AnyMedia, type MediaUserMetadata } from './media.dto';
 import { MediaRepository } from './media.repository';
@@ -21,7 +21,7 @@ export class MediaService {
   constructor(
     private readonly detector: MediaDetector,
     private readonly repo: MediaRepository,
-    private readonly eventBus: IEventBus,
+    private readonly hooks: Hooks,
     private readonly moduleRef: ModuleRef,
   ) {}
 
@@ -45,12 +45,12 @@ export class MediaService {
     const canUpdatePoll = new Polls.Poll<boolean>();
     const event = await createAndInject(
       this.moduleRef,
-      CanUpdateMediaUserMetadataEvent,
+      CanUpdateMediaUserMetadataHook,
       media,
       input,
       canUpdatePoll.ballotBox,
     );
-    await this.eventBus.publish(event);
+    await this.hooks.run(event);
     const canUpdate = canUpdatePoll.close().winner ?? false;
     if (!canUpdate) {
       throw new UnauthorizedException(

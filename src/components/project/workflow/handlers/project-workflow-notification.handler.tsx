@@ -19,10 +19,10 @@ import {
   ProjectStepChanged,
   type ProjectStepChangedProps,
 } from '../emails/project-step-changed.email';
-import { ProjectTransitionedEvent } from '../events/project-transitioned.event';
+import { ProjectTransitionedHook } from '../hooks/project-transitioned.hook';
 
-@EventsHandler(ProjectTransitionedEvent)
-export class ProjectWorkflowNotificationHandler implements IEventHandler<ProjectTransitionedEvent> {
+@OnHook(ProjectTransitionedHook)
+export class ProjectWorkflowNotificationHandler {
   constructor(
     private readonly identity: Identity,
     private readonly config: ConfigService,
@@ -34,7 +34,7 @@ export class ProjectWorkflowNotificationHandler implements IEventHandler<Project
     private readonly logger: ILogger,
   ) {}
 
-  async handle(event: ProjectTransitionedEvent) {
+  async handle(event: ProjectTransitionedHook) {
     const { previousStep, next, workflowEvent } = event;
     const transition = typeof next !== 'string' ? next : undefined;
 

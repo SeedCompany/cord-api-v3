@@ -27,7 +27,7 @@ import {
   type ProgressReport,
   ProgressReportStatus as Status,
 } from '../../../components/progress-report/dto';
-import { WorkflowUpdatedEvent } from '../../../components/progress-report/workflow/events/workflow-updated.event';
+import { WorkflowUpdatedHook } from '../../../components/progress-report/workflow/hooks/workflow-updated.hook';
 import { ProductService } from '../../product';
 import { ProgressReportVariantProgress } from '../../product-progress/dto';
 import { ProductProgressByReportLoader } from '../../product-progress/product-progress-by-report.loader';
@@ -40,8 +40,8 @@ import {
 import { ProjectMemberRepository } from '../../project/project-member/project-member.repository';
 import { DBLUpload } from '../emails/dbl-upload.email';
 
-@EventsHandler(WorkflowUpdatedEvent)
-export class DBLUploadNotificationHandler implements IEventHandler<WorkflowUpdatedEvent> {
+@OnHook(WorkflowUpdatedHook)
+export class DBLUploadNotificationHandler {
   constructor(
     private readonly identity: Identity,
     private readonly moduleRef: ModuleRef,
@@ -52,7 +52,7 @@ export class DBLUploadNotificationHandler implements IEventHandler<WorkflowUpdat
     private readonly logger: ILogger,
   ) {}
 
-  async handle({ reportId, previousStatus, next }: WorkflowUpdatedEvent) {
+  async handle({ reportId, previousStatus, next }: WorkflowUpdatedHook) {
     const nextStatus = typeof next === 'string' ? next : next.to;
     // Continue if the report is at least Approved, and wasn't before.
     if (

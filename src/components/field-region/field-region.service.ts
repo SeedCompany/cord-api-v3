@@ -8,7 +8,7 @@ import {
   type UnsecuredDto,
 } from '~/common';
 import { HandleIdLookup } from '~/core';
-import { IEventBus } from '~/core/events';
+import { Hooks } from '~/core/hooks';
 import { Privileges } from '../authorization';
 import { UserService } from '../user';
 import {
@@ -18,7 +18,7 @@ import {
   type FieldRegionListOutput,
   type UpdateFieldRegion,
 } from './dto';
-import { FieldRegionUpdatedEvent } from './events/field-region-updated.event';
+import { FieldRegionUpdatedHook } from './hooks/field-region-updated.hook';
 import { FieldRegionRepository } from './field-region.repository';
 
 @Injectable()
@@ -68,7 +68,7 @@ export class FieldRegionService {
 
     const updated = await this.repo.update({ id: input.id, ...changes });
 
-    const event = new FieldRegionUpdatedEvent(fieldRegion, updated, {
+    const event = new FieldRegionUpdatedHook(fieldRegion, updated, {
       id: input.id,
       ...changes,
     });

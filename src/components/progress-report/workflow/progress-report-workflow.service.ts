@@ -6,7 +6,7 @@ import {
   UnauthorizedException,
   type UnsecuredDto,
 } from '~/common';
-import { IEventBus } from '~/core';
+import { Hooks } from '~/core';
 import { Privileges } from '../../authorization';
 import {
   type ProgressReport,
@@ -14,7 +14,7 @@ import {
 } from '../dto';
 import { type ExecuteProgressReportTransition } from './dto/execute-progress-report-transition.input';
 import { ProgressReportWorkflowEvent as WorkflowEvent } from './dto/workflow-event.dto';
-import { WorkflowUpdatedEvent } from './events/workflow-updated.event';
+import { WorkflowUpdatedHook } from './hooks/workflow-updated.hook';
 import { ProgressReportWorkflowRepository } from './progress-report-workflow.repository';
 import { type InternalTransition, Transitions } from './transitions';
 
@@ -23,7 +23,7 @@ export class ProgressReportWorkflowService {
   constructor(
     private readonly privileges: Privileges,
     private readonly repo: ProgressReportWorkflowRepository,
-    private readonly eventBus: IEventBus,
+    private readonly hooks: Hooks,
   ) {}
 
   async list(report: ProgressReport): Promise<WorkflowEvent[]> {
@@ -76,13 +76,13 @@ export class ProgressReportWorkflowService {
       this.repo.changeStatus(reportId, isTransition ? next.to : next),
     ]);
 
-    const event = new WorkflowUpdatedEvent(
+    const event = new WorkflowUpdatedHook(
       reportId,
       currentStatus,
       next,
       unsecuredEvent,
     );
-    await this.eventBus.publish(event);
+    await this.hooks.run(event);
   }
 
   private validateExecutionInput(
