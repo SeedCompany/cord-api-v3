@@ -8,7 +8,7 @@ import {
   type Range,
   type UnsecuredDto,
 } from '~/common';
-import { HandleIdLookup, IEventBus, ILogger, Logger } from '~/core';
+import { HandleIdLookup, ILogger, Logger } from '~/core';
 import { Identity } from '~/core/authentication';
 import { type Variable } from '~/core/database/query';
 import { Privileges } from '../authorization';

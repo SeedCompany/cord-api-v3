@@ -16,7 +16,6 @@ import {
 import {
   ConfigService,
   HandleIdLookup,
-  IEventBus,
   ILogger,
   Logger,
   ResourceLoader,

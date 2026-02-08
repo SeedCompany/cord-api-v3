@@ -3,10 +3,9 @@ import { asyncPool } from '@seedcompany/common';
 import { type UnsecuredDto } from '~/common';
 import {
   ConfigService,
-  EventsHandler,
-  type IEventHandler,
   ILogger,
   Logger,
+  OnHook,
 } from '~/core';
 import { Identity } from '~/core/authentication';
 import { MailerService } from '~/core/email';

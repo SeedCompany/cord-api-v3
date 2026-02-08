@@ -61,7 +61,7 @@ export class UserService {
     private readonly locationService: LocationService,
     private readonly knownLanguages: KnownLanguageRepository,
     private readonly identity: Identity,
-    private readonly events: IEventBus,
+    private readonly hooks: Hooks,
     private readonly userRepo: UserRepository,
     @Logger('user:service') private readonly logger: ILogger,
   ) {}
@@ -131,7 +131,7 @@ export class UserService {
     const updated = await this.userRepo.update(input);
 
     const event = new UserUpdatedHook(user, updated, input);
-    await this.events.publish(event);
+    await this.hooks.run(event);
 
     return this.secure(updated);
   }

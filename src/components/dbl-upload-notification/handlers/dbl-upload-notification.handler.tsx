@@ -15,10 +15,9 @@ import { type ComponentProps as PropsOf } from 'react';
 import { type ID, type Range } from '~/common';
 import {
   ConfigService,
-  EventsHandler,
-  type IEventHandler,
   ILogger,
   Logger,
+  OnHook,
   ResourceLoader,
 } from '~/core';
 import { Identity } from '~/core/authentication';

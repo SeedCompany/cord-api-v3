@@ -8,7 +8,7 @@ import {
   ServerException,
   type UnsecuredDto,
 } from '~/common';
-import { HandleIdLookup, IEventBus, ILogger, Logger } from '~/core';
+import { HandleIdLookup, ILogger, Logger } from '~/core';
 import { DatabaseService } from '~/core/database';
 import { mapListResults } from '~/core/database/results';
 import { Privileges } from '../authorization';

@@ -15,7 +15,6 @@ import {
 } from '~/common';
 import {
   HandleIdLookup,
-  IEventBus,
   ILogger,
   Logger,
   ResourceLoader,

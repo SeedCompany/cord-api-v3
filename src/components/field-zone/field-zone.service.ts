@@ -25,7 +25,7 @@ import { FieldZoneRepository } from './field-zone.repository';
 export class FieldZoneService {
   constructor(
     private readonly privileges: Privileges,
-    private readonly events: IEventBus,
+    private readonly hooks: Hooks,
     private readonly users: UserService,
     private readonly repo: FieldZoneRepository,
   ) {}
@@ -72,7 +72,7 @@ export class FieldZoneService {
       id: input.id,
       ...changes,
     });
-    await this.events.publish(event);
+    await this.hooks.run(event);
 
     return this.secure(updated);
   }

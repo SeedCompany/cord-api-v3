@@ -25,7 +25,7 @@ import { FieldRegionRepository } from './field-region.repository';
 export class FieldRegionService {
   constructor(
     private readonly privileges: Privileges,
-    private readonly events: IEventBus,
+    private readonly hooks: Hooks,
     private readonly users: UserService,
     private readonly repo: FieldRegionRepository,
   ) {}
@@ -72,7 +72,7 @@ export class FieldRegionService {
       id: input.id,
       ...changes,
     });
-    await this.events.publish(event);
+    await this.hooks.run(event);
 
     return this.secure(updated);
   }

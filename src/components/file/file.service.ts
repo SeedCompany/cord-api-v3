@@ -25,7 +25,7 @@ import {
   UnauthorizedException,
 } from '~/common';
 import { withAddedPath } from '~/common/url.util';
-import { ConfigService, IEventBus, ILogger, type LinkTo, Logger } from '~/core';
+import { ConfigService, ILogger, type LinkTo, Logger } from '~/core';
 import { TransactionHooks } from '~/core/database';
 import { FileBucket } from './bucket';
 import {
