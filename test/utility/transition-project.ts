@@ -52,25 +52,27 @@ export const transitionProject = async (
   input: ExecuteProjectTransitionInput,
 ) => {
   const result = await app.graphql.mutate(TransitionProjectDoc, { input });
-  return result.transitionProject;
+  return result.transitionProject.project;
 };
 const TransitionProjectDoc = graphql(`
   mutation TransitionProject($input: ExecuteProjectTransition!) {
     transitionProject(input: $input) {
-      step {
-        canRead
-        canEdit
-        value
-        transitions {
-          key
-          label
-          to
-          type
-          disabled
-          disabledReason
+      project {
+        step {
+          canRead
+          canEdit
+          value
+          transitions {
+            key
+            label
+            to
+            type
+            disabled
+            disabledReason
+          }
         }
+        status
       }
-      status
     }
   }
 `);

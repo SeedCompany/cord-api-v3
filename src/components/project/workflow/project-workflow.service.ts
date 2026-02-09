@@ -20,6 +20,7 @@ import {
 } from './dto';
 import { ProjectTransitionedEvent } from './events/project-transitioned.event';
 import { ProjectWorkflow } from './project-workflow';
+import { ProjectWorkflowChannels } from './project-workflow.channels';
 import { ProjectWorkflowRepository } from './project-workflow.repository';
 
 @Injectable()
@@ -30,6 +31,7 @@ export class ProjectWorkflowService extends WorkflowService(
     @Inject(forwardRef(() => ProjectService))
     private readonly projects: ProjectService & {},
     private readonly repo: ProjectWorkflowRepository,
+    private readonly channels: ProjectWorkflowChannels,
     private readonly eventBus: IEventBus,
     private readonly moduleRef: ModuleRef,
   ) {
@@ -46,7 +48,7 @@ export class ProjectWorkflowService extends WorkflowService(
     return dtos.map((dto) => this.secure(dto));
   }
 
-  private secure(dto: UnsecuredDto<WorkflowEvent>): WorkflowEvent {
+  secure(dto: UnsecuredDto<WorkflowEvent>): WorkflowEvent {
     return {
       ...this.privileges.for(WorkflowEvent).secure(dto),
       transition: this.transitionByKey(dto.transition, dto.to),
@@ -93,6 +95,12 @@ export class ProjectWorkflowService extends WorkflowService(
     );
     await this.eventBus.publish(event);
 
-    return this.projects.secure(event.project);
+    return this.channels.publishToAll('transitioned', {
+      program: updated.type,
+      project: updated.id,
+      at: unsecuredEvent.at,
+      from: previous.step,
+      event: unsecuredEvent,
+    });
   }
 }
