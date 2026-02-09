@@ -8,16 +8,17 @@ import {
   UnauthorizedException,
   type UnsecuredDto,
 } from '~/common';
-import { EventsHandler, type IEventHandler, ILogger, Logger } from '~/core';
+import { ILogger, Logger } from '~/core';
+import { OnHook } from '~/core/hooks';
 import { PartnerType } from '../../partner/dto';
 import { PartnershipService } from '../../partnership';
 import { type Partnership } from '../../partnership/dto';
 import {
-  PartnershipCreatedEvent,
-  PartnershipUpdatedEvent,
-  PartnershipWillDeleteEvent,
-} from '../../partnership/events';
-import { ProjectUpdatedEvent } from '../../project/events';
+  PartnershipCreatedHook,
+  PartnershipUpdatedHook,
+  PartnershipWillDeleteHook,
+} from '../../partnership/hooks';
+import { ProjectUpdatedHook } from '../../project/hooks';
 import { BudgetRepository } from '../budget.repository';
 import { BudgetService } from '../budget.service';
 import { type Budget, type BudgetRecord } from '../dto';
@@ -27,18 +28,16 @@ type PartialBudget = UnsecuredDto<Pick<Budget, 'id' | 'status'>> & {
 };
 
 type SubscribedEvent =
-  | ProjectUpdatedEvent
-  | PartnershipCreatedEvent
-  | PartnershipUpdatedEvent
-  | PartnershipWillDeleteEvent;
+  | ProjectUpdatedHook
+  | PartnershipCreatedHook
+  | PartnershipUpdatedHook
+  | PartnershipWillDeleteHook;
 
-@EventsHandler(
-  ProjectUpdatedEvent,
-  PartnershipCreatedEvent,
-  PartnershipUpdatedEvent,
-  PartnershipWillDeleteEvent,
-)
-export class SyncBudgetRecordsToFundingPartners implements IEventHandler<SubscribedEvent> {
+@OnHook(ProjectUpdatedHook)
+@OnHook(PartnershipCreatedHook)
+@OnHook(PartnershipUpdatedHook)
+@OnHook(PartnershipWillDeleteHook)
+export class SyncBudgetRecordsToFundingPartners {
   constructor(
     private readonly budgets: BudgetService,
     private readonly budgetRepo: BudgetRepository,
@@ -54,21 +53,21 @@ export class SyncBudgetRecordsToFundingPartners implements IEventHandler<Subscri
 
     // Get some easy conditions out of the way that don't require DB queries
     if (
-      event instanceof PartnershipCreatedEvent &&
+      event instanceof PartnershipCreatedHook &&
       !isFunding(event.partnership)
     ) {
       // Partnership is not and never was funding, so do nothing.
       return;
     }
     if (
-      event instanceof PartnershipWillDeleteEvent &&
+      event instanceof PartnershipWillDeleteHook &&
       !isFunding(event.partnership)
     ) {
       // Partnership was not funding, so do nothing.
       return;
     }
     if (
-      event instanceof ProjectUpdatedEvent &&
+      event instanceof ProjectUpdatedHook &&
       event.changes.mouStart === undefined &&
       event.changes.mouEnd === undefined
     ) {
@@ -93,45 +92,45 @@ export class SyncBudgetRecordsToFundingPartners implements IEventHandler<Subscri
   }
 
   private determineProjectId(event: SubscribedEvent) {
-    if (event instanceof ProjectUpdatedEvent) {
+    if (event instanceof ProjectUpdatedHook) {
       return event.updated.id;
     }
-    if (event instanceof PartnershipUpdatedEvent) {
+    if (event instanceof PartnershipUpdatedHook) {
       return event.updated.project.id;
     }
     return event.partnership.project.id;
   }
 
   private determineChangeset(event: SubscribedEvent) {
-    if (event instanceof ProjectUpdatedEvent) {
+    if (event instanceof ProjectUpdatedHook) {
       return event.updated.changeset;
     }
-    if (event instanceof PartnershipCreatedEvent) {
+    if (event instanceof PartnershipCreatedHook) {
       return event.partnership.changeset;
     }
-    if (event instanceof PartnershipUpdatedEvent) {
+    if (event instanceof PartnershipUpdatedHook) {
       return event.updated.changeset;
     }
-    if (event instanceof PartnershipWillDeleteEvent) {
+    if (event instanceof PartnershipWillDeleteHook) {
       return event.partnership.changeset;
     }
     throw new UnreachableCaseError(event);
   }
 
   private async determinePartnerships(event: SubscribedEvent, changeset?: ID) {
-    if (event instanceof PartnershipCreatedEvent) {
+    if (event instanceof PartnershipCreatedHook) {
       return [event.partnership];
     }
 
-    if (event instanceof PartnershipUpdatedEvent) {
+    if (event instanceof PartnershipUpdatedHook) {
       return [event.updated];
     }
 
-    if (event instanceof PartnershipWillDeleteEvent) {
+    if (event instanceof PartnershipWillDeleteHook) {
       return [event.partnership];
     }
 
-    // event instanceof ProjectUpdatedEvent
+    // event instanceof ProjectUpdatedHook
     const list = await this.partnershipService.list(
       { filter: { projectId: event.updated.id } },
       changeset,
@@ -151,7 +150,7 @@ export class SyncBudgetRecordsToFundingPartners implements IEventHandler<Subscri
       .filter((record) => record.organization === organizationId)
       .map((record) => record.fiscalYear);
     const updated =
-      event instanceof PartnershipWillDeleteEvent
+      event instanceof PartnershipWillDeleteHook
         ? []
         : partnershipFiscalYears(partnership);
 

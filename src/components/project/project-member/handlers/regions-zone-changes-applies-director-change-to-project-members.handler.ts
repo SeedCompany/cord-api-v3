@@ -1,8 +1,9 @@
-import { EventsHandler, ILogger, Logger, ResourceLoader } from '~/core';
-import { FieldRegionUpdatedEvent } from '../../../field-region/events/field-region-updated.event';
+import { ILogger, Logger, ResourceLoader } from '~/core';
+import { OnHook } from '~/core/hooks';
+import { FieldRegionUpdatedHook } from '../../../field-region/hooks/field-region-updated.hook';
 import { ProjectMemberRepository } from '../project-member.repository';
 
-@EventsHandler(FieldRegionUpdatedEvent)
+@OnHook(FieldRegionUpdatedHook)
 export class RegionsZoneChangesAppliesDirectorChangeToProjectMembersHandler {
   constructor(
     private readonly repo: ProjectMemberRepository,
@@ -10,7 +11,7 @@ export class RegionsZoneChangesAppliesDirectorChangeToProjectMembersHandler {
     @Logger('project:members') private readonly logger: ILogger,
   ) {}
 
-  async handle(event: FieldRegionUpdatedEvent) {
+  async handle(event: FieldRegionUpdatedHook) {
     const oldZoneId = event.previous.fieldZone.id;
     const newZoneId = event.input.fieldZone;
     if (!newZoneId) {

@@ -26,8 +26,8 @@ import {
   ProjectStatus as Status,
   ProjectStep as Step,
 } from '../dto';
-import { ProjectUpdatedEvent } from '../events';
-import { ProjectTransitionedEvent } from '../workflow/events/project-transitioned.event';
+import { ProjectUpdatedHook } from '../hooks';
+import { ProjectTransitionedHook } from '../workflow/hooks/project-transitioned.hook';
 
 @Injectable()
 export class SetDepartmentId {
@@ -37,15 +37,15 @@ export class SetDepartmentId {
     private readonly retryInformer: TransactionRetryInformer,
   ) {}
 
-  @OnHook(ProjectTransitionedEvent)
-  @OnHook(ProjectUpdatedEvent)
-  async handle(event: ProjectTransitionedEvent | ProjectUpdatedEvent) {
+  @OnHook(ProjectTransitionedHook)
+  @OnHook(ProjectUpdatedHook)
+  async handle(event: ProjectTransitionedHook | ProjectUpdatedHook) {
     if (this.config.databaseEngine === 'gel') {
       return;
     }
 
     const project =
-      event instanceof ProjectTransitionedEvent ? event.project : event.updated;
+      event instanceof ProjectTransitionedHook ? event.project : event.updated;
 
     const { status, step } = project;
 
@@ -65,7 +65,7 @@ export class SetDepartmentId {
     );
     const changed = { ...project, departmentId };
 
-    if (event instanceof ProjectTransitionedEvent) {
+    if (event instanceof ProjectTransitionedHook) {
       event.project = changed;
     } else {
       event.updated = changed;

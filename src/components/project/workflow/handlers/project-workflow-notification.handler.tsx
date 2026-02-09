@@ -1,15 +1,10 @@
 import { ModuleRef } from '@nestjs/core';
 import { asyncPool } from '@seedcompany/common';
 import { type UnsecuredDto } from '~/common';
-import {
-  ConfigService,
-  EventsHandler,
-  type IEventHandler,
-  ILogger,
-  Logger,
-} from '~/core';
+import { ConfigService, ILogger, Logger } from '~/core';
 import { Identity } from '~/core/authentication';
 import { MailerService } from '~/core/email';
+import { OnHook } from '~/core/hooks';
 import { ProjectService } from '../../../project';
 import { UserService } from '../../../user';
 import { type User } from '../../../user/dto';
@@ -19,10 +14,10 @@ import {
   ProjectStepChanged,
   type ProjectStepChangedProps,
 } from '../emails/project-step-changed.email';
-import { ProjectTransitionedEvent } from '../events/project-transitioned.event';
+import { ProjectTransitionedHook } from '../hooks/project-transitioned.hook';
 
-@EventsHandler(ProjectTransitionedEvent)
-export class ProjectWorkflowNotificationHandler implements IEventHandler<ProjectTransitionedEvent> {
+@OnHook(ProjectTransitionedHook)
+export class ProjectWorkflowNotificationHandler {
   constructor(
     private readonly identity: Identity,
     private readonly config: ConfigService,
@@ -34,7 +29,7 @@ export class ProjectWorkflowNotificationHandler implements IEventHandler<Project
     private readonly logger: ILogger,
   ) {}
 
-  async handle(event: ProjectTransitionedEvent) {
+  async handle(event: ProjectTransitionedHook) {
     const { previousStep, next, workflowEvent } = event;
     const transition = typeof next !== 'string' ? next : undefined;
 

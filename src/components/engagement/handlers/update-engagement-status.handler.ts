@@ -1,6 +1,6 @@
 import type { MergeExclusive, RequireAtLeastOne } from 'type-fest';
 import { type ID, type UnsecuredDto } from '~/common';
-import { EventsHandler, type IEventHandler } from '~/core';
+import { OnHook } from '~/core/hooks';
 import {
   type Project,
   ProjectStatus,
@@ -8,7 +8,7 @@ import {
   ProjectType,
   stepToStatus,
 } from '../../project/dto';
-import { ProjectTransitionedEvent } from '../../project/workflow/events/project-transitioned.event';
+import { ProjectTransitionedHook } from '../../project/workflow/hooks/project-transitioned.hook';
 import { EngagementStatus } from '../dto';
 import { EngagementRepository } from '../engagement.repository';
 import { EngagementService } from '../engagement.service';
@@ -98,8 +98,8 @@ const changeMatcher = (previousStep: ProjectStep, updatedStep: ProjectStep) => {
 const matches = (cond: Condition, p: ProjectState) =>
   cond.step ? cond.step === p.step : cond.status === p.status;
 
-@EventsHandler(ProjectTransitionedEvent)
-export class UpdateEngagementStatusHandler implements IEventHandler<ProjectTransitionedEvent> {
+@OnHook(ProjectTransitionedHook)
+export class UpdateEngagementStatusHandler {
   constructor(
     private readonly repo: EngagementRepository,
     private readonly engagementService: EngagementService,
@@ -109,7 +109,7 @@ export class UpdateEngagementStatusHandler implements IEventHandler<ProjectTrans
     project,
     previousStep,
     workflowEvent,
-  }: ProjectTransitionedEvent) {
+  }: ProjectTransitionedHook) {
     const engagementStatus = changes.find(
       changeMatcher(previousStep, workflowEvent.to),
     )?.newStatus;

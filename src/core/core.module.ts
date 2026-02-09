@@ -15,7 +15,6 @@ import { CoreController } from './core.controller';
 import { DataLoaderConfig } from './data-loader/data-loader.config';
 import { DatabaseModule } from './database/database.module';
 import { EmailConfig } from './email/email.config';
-import { EventsModule } from './events';
 import { ExceptionFilter } from './exception/exception.filter';
 import { ExceptionNormalizer } from './exception/exception.normalizer';
 import { GelModule } from './gel/gel.module';
@@ -47,7 +46,6 @@ import { WebhooksModule } from './webhooks/webhooks.module';
     HooksModule,
     GraphqlModule,
     LiveQueryModule,
-    EventsModule,
     TracingModule,
     ResourceModule,
     ValidationModule,
@@ -79,7 +77,6 @@ import { WebhooksModule } from './webhooks/webhooks.module';
     HooksModule,
     GelModule,
     EmailModule,
-    EventsModule,
     ResourceModule,
     ShutdownHookProvider,
     TracingModule,

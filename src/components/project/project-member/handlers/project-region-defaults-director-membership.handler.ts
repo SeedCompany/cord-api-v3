@@ -1,16 +1,16 @@
 import { ResourceLoader } from '~/core';
-import { EventsHandler } from '~/core/events';
-import { ProjectUpdatedEvent } from '../../events';
+import { OnHook } from '~/core/hooks';
+import { ProjectUpdatedHook } from '../../hooks';
 import { ProjectMemberRepository } from '../project-member.repository';
 
-@EventsHandler(ProjectUpdatedEvent)
+@OnHook(ProjectUpdatedHook)
 export class ProjectRegionDefaultsDirectorMembershipHandler {
   constructor(
     private readonly repo: ProjectMemberRepository,
     private readonly resources: ResourceLoader,
   ) {}
 
-  async handle(event: ProjectUpdatedEvent) {
+  async handle(event: ProjectUpdatedHook) {
     const { changes } = event;
     if (!changes.fieldRegion) {
       return;

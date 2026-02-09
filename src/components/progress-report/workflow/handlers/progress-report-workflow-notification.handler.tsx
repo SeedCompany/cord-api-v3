@@ -1,15 +1,10 @@
 import { entries, mapEntries } from '@seedcompany/common';
 import { type RequireExactlyOne } from 'type-fest';
 import { type ID, Role, type UnsecuredDto } from '~/common';
-import {
-  ConfigService,
-  EventsHandler,
-  type IEventHandler,
-  ILogger,
-  Logger,
-} from '~/core';
+import { ConfigService, ILogger, Logger } from '~/core';
 import { Identity } from '~/core/authentication';
 import { MailerService } from '~/core/email';
+import { OnHook } from '~/core/hooks';
 import { LanguageService } from '../../../language';
 import { PeriodicReportService } from '../../../periodic-report';
 import { ProjectService } from '../../../project';
@@ -20,7 +15,7 @@ import {
   type ProgressReportStatusChangedProps as EmailReportStatusNotification,
   ProgressReportStatusChanged,
 } from '../emails/progress-report-status-changed.email';
-import { WorkflowUpdatedEvent } from '../events/workflow-updated.event';
+import { WorkflowUpdatedHook } from '../hooks/workflow-updated.hook';
 import { ProgressReportWorkflowRepository } from '../progress-report-workflow.repository';
 import { ProgressReportWorkflowService } from '../progress-report-workflow.service';
 import { type InternalTransition } from '../transitions';
@@ -31,8 +26,8 @@ const rolesToAlwaysNotify = [
   Role.FieldOperationsDirector,
 ];
 
-@EventsHandler(WorkflowUpdatedEvent)
-export class ProgressReportWorkflowNotificationHandler implements IEventHandler<WorkflowUpdatedEvent> {
+@OnHook(WorkflowUpdatedHook)
+export class ProgressReportWorkflowNotificationHandler {
   constructor(
     private readonly identity: Identity,
     private readonly repo: ProgressReportWorkflowRepository,
@@ -52,7 +47,7 @@ export class ProgressReportWorkflowNotificationHandler implements IEventHandler<
     previousStatus,
     next,
     workflowEvent,
-  }: WorkflowUpdatedEvent) {
+  }: WorkflowUpdatedHook) {
     const { enabled } = this.configService.progressReportStatusChange;
     if (!enabled) {
       return;

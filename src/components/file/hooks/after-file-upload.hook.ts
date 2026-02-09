@@ -1,0 +1,12 @@
+import type { File, FileVersion } from '../dto';
+
+/**
+ * Emitted as the last step of the file upload process.
+ * Feel free to throw to abort mutation.
+ */
+export class AfterFileUploadHook {
+  constructor(
+    readonly file: File,
+    readonly newVersion: FileVersion,
+  ) {}
+}

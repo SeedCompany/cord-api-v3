@@ -1,11 +1,12 @@
-import { EventsHandler, ILogger, Logger } from '~/core';
+import { ILogger, Logger } from '~/core';
+import { OnHook } from '~/core/hooks';
 import { ReportType } from '../../periodic-report/dto';
-import { PeriodicReportUploadedEvent } from '../../periodic-report/events';
+import { PeriodicReportUploadedHook } from '../../periodic-report/hooks';
 import { SummaryPeriod } from '../dto';
 import { ProgressSummaryExtractor } from '../progress-summary.extractor';
 import { ProgressSummaryRepository } from '../progress-summary.repository';
 
-@EventsHandler(PeriodicReportUploadedEvent)
+@OnHook(PeriodicReportUploadedHook)
 export class ExtractPnpFileOnUploadHandler {
   constructor(
     private readonly repo: ProgressSummaryRepository,
@@ -13,7 +14,7 @@ export class ExtractPnpFileOnUploadHandler {
     @Logger('progress-summary:extractor') private readonly logger: ILogger,
   ) {}
 
-  async handle(event: PeriodicReportUploadedEvent) {
+  async handle(event: PeriodicReportUploadedHook) {
     if (event.report.type !== ReportType.Progress) {
       return;
     }

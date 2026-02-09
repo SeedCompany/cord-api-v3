@@ -1,15 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { DateOverrideConflictException, EnhancedResource } from '~/common';
 import { OnHook } from '~/core/hooks';
-import { ProjectUpdatedEvent } from '../../project/events';
+import { ProjectUpdatedHook } from '../../project/hooks';
 import { EngagementService } from '../engagement.service';
 
 @Injectable()
 export class ValidateEngDateOverridesOnProjectChangeHandler {
   constructor(private readonly engagements: EngagementService) {}
 
-  @OnHook(ProjectUpdatedEvent, -10)
-  async handle(event: ProjectUpdatedEvent) {
+  @OnHook(ProjectUpdatedHook, -10)
+  async handle(event: ProjectUpdatedHook) {
     const { updated: project, changes } = event;
 
     if (changes.mouStart === undefined && changes.mouEnd === undefined) {

@@ -1,8 +1,9 @@
 import { type DateTimeUnit } from 'luxon';
 import { type DateInterval } from '~/common';
-import { EventsHandler, type IEventHandler, ILogger, Logger } from '~/core';
+import { ILogger, Logger } from '~/core';
+import { OnHook } from '~/core/hooks';
 import { projectRange } from '../../project/dto';
-import { ProjectUpdatedEvent } from '../../project/events';
+import { ProjectUpdatedHook } from '../../project/hooks';
 import { ReportPeriod, ReportType } from '../dto';
 import { PeriodicReportService } from '../periodic-report.service';
 import {
@@ -10,13 +11,10 @@ import {
   type Intervals,
 } from './abstract-periodic-report-sync';
 
-type SubscribedEvent = ProjectUpdatedEvent;
+type SubscribedEvent = ProjectUpdatedHook;
 
-@EventsHandler(ProjectUpdatedEvent)
-export class SyncPeriodicReportsToProjectDateRange
-  extends AbstractPeriodicReportSync
-  implements IEventHandler<SubscribedEvent>
-{
+@OnHook(ProjectUpdatedHook)
+export class SyncPeriodicReportsToProjectDateRange extends AbstractPeriodicReportSync {
   constructor(
     periodicReports: PeriodicReportService,
     @Logger('periodic-reports:project-sync') private readonly logger: ILogger,
@@ -56,7 +54,7 @@ export class SyncPeriodicReportsToProjectDateRange
     );
   }
 
-  private diffFinancial(intervals: Intervals, event: ProjectUpdatedEvent) {
+  private diffFinancial(intervals: Intervals, event: ProjectUpdatedHook) {
     const { updated, previous } = event;
 
     const newInterval: DateTimeUnit =
