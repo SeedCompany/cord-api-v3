@@ -11,6 +11,4 @@ export const LanguageMilestone = makeEnum({
 @ObjectType({
   description: SecuredEnum.descriptionFor('a language milestone'),
 })
-export class SecuredLanguageMilestone extends SecuredEnum(LanguageMilestone, {
-  nullable: true,
-}) {}
+export class SecuredLanguageMilestone extends SecuredEnum(LanguageMilestone) {}

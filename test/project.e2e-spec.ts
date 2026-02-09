@@ -837,19 +837,21 @@ describe('Project e2e', () => {
       } = await forceProjectTo(app, project.id, 'PendingFinanceConfirmation');
 
       // Ensure the result from the change to Active returns the correct budget status
-      const { updatedProject } = await app.graphql.mutate(
+      const { transitionProject } = await app.graphql.mutate(
         graphql(`
           mutation updateProject($input: ExecuteProjectTransition!) {
-            updatedProject: transitionProject(input: $input) {
-              departmentId {
-                value
-              }
-              initialMouEnd {
-                value
-              }
-              budget {
-                value {
-                  status
+            transitionProject(input: $input) {
+              project {
+                departmentId {
+                  value
+                }
+                initialMouEnd {
+                  value
+                }
+                budget {
+                  value {
+                    status
+                  }
                 }
               }
             }
@@ -862,6 +864,7 @@ describe('Project e2e', () => {
           },
         },
       );
+      const { project: updatedProject } = transitionProject;
 
       expect(updatedProject.budget.value!.status).toBe(BudgetStatus.Current);
       // TODO move this assertion
@@ -1074,15 +1077,17 @@ describe('Project e2e', () => {
           primaryLocation: location.id,
           fieldRegion: fieldRegion.id,
         });
-        const result = await app.graphql.mutate(
+        const { transitionProject } = await app.graphql.mutate(
           graphql(`
             mutation updateProject($id: ID!) {
-              project: transitionProject(
+              transitionProject(
                 # updating to this step assigns a dept id
                 input: { project: $id, bypassTo: PendingFinanceConfirmation }
               ) {
-                departmentId {
-                  value
+                project {
+                  departmentId {
+                    value
+                  }
                 }
               }
             }
@@ -1091,7 +1096,7 @@ describe('Project e2e', () => {
             id: project.id,
           },
         );
-        return result.project;
+        return transitionProject.project;
       };
       const [project1, project2] = await runAsAdmin(app, () =>
         Promise.all(

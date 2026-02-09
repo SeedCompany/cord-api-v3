@@ -20,9 +20,11 @@ import {
   ProjectMember,
   type ProjectMemberListInput,
   type ProjectMemberListOutput,
+  ProjectMemberUpdate,
   type UpdateProjectMember,
 } from './dto';
 import { type MembershipByProjectAndUserInput } from './membership-by-project-and-user.loader';
+import { ProjectMemberChannels } from './project-member.channels';
 import { ProjectMemberRepository } from './project-member.repository';
 
 @Injectable()
@@ -34,6 +36,7 @@ export class ProjectMemberService {
     private readonly resourceResolver: ResourceResolver,
     private readonly liveQueryStore: LiveQueryStore,
     private readonly privileges: Privileges,
+    private readonly channels: ProjectMemberChannels,
     private readonly repo: ProjectMemberRepository,
   ) {}
 
@@ -62,6 +65,13 @@ export class ProjectMemberService {
 
     enforcePerms &&
       this.privileges.for(ProjectMember, created).verifyCan('create');
+
+    this.channels.publishToAll('created', {
+      program: created.project.type,
+      project: created.project.id,
+      member: created.id,
+      at: created.createdAt,
+    });
 
     return this.secure(created);
   }
@@ -103,11 +113,11 @@ export class ProjectMemberService {
     };
   }
 
-  async update(input: UpdateProjectMember): Promise<ProjectMember> {
-    const object = await this.readOne(input.id);
+  async update(input: UpdateProjectMember) {
+    const object = await this.repo.readOne(input.id);
 
     await this.assertValidRoles(input.roles, () => {
-      const user = object.user.value;
+      const user = this.secure(object).user.value;
       if (!user) {
         throw new UnauthorizedException(
           'Cannot read user to verify roles available',
@@ -124,10 +134,26 @@ export class ProjectMemberService {
     }
 
     const changes = this.repo.getActualChanges(object, input);
+    if (Object.keys(changes).length === 0) {
+      return { member: this.secure(object) };
+    }
     this.privileges.for(ProjectMember, object).verifyChanges(changes);
 
     const updated = await this.repo.update({ id: object.id, ...changes });
-    return this.secure(updated);
+
+    const updatedPayload = this.channels.publishToAll('updated', {
+      program: updated.project.type,
+      project: updated.project.id,
+      member: updated.id,
+      at: changes.modifiedAt!,
+      updated: ProjectMemberUpdate.fromInput(changes),
+      previous: ProjectMemberUpdate.pickPrevious(object, changes),
+    });
+
+    return {
+      member: this.secure(updated),
+      payload: updatedPayload,
+    };
   }
 
   getAvailableRoles(user: User) {
@@ -161,16 +187,21 @@ export class ProjectMemberService {
     }
   }
 
-  async delete(id: ID): Promise<void> {
+  async delete(id: ID) {
     const object = await this.readOne(id);
 
     this.privileges.for(ProjectMember, object).verifyCan('delete');
 
-    try {
-      await this.repo.deleteNode(object);
-    } catch (exception) {
-      throw new ServerException('Failed to delete project member', exception);
-    }
+    const { at } = await this.repo.deleteNode(object).catch((e) => {
+      throw new ServerException('Failed to delete project member', e);
+    });
+
+    return this.channels.publishToAll('deleted', {
+      program: object.project.type,
+      project: object.project.id,
+      member: id,
+      at,
+    });
   }
 
   private async invalidateProject(id: ID<'Project'>) {

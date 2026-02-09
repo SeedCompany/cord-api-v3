@@ -1,4 +1,4 @@
-import { Field, InputType, ObjectType } from '@nestjs/graphql';
+import { Field, InputType } from '@nestjs/graphql';
 import type { DateTime } from 'luxon';
 import {
   DateTimeField,
@@ -8,7 +8,6 @@ import {
   type UnsecuredDto,
 } from '~/common';
 import { type Project } from '../../dto';
-import { ProjectMember } from './project-member.dto';
 
 @InputType()
 export class CreateProjectMember {
@@ -29,10 +28,4 @@ export class CreateProjectMember {
     nullable: true,
   })
   readonly inactiveAt?: DateTime | null;
-}
-
-@ObjectType()
-export abstract class ProjectMemberCreated {
-  @Field()
-  readonly projectMember: ProjectMember;
 }

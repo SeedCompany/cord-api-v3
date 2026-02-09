@@ -1,16 +1,22 @@
 import { Args, Mutation, Resolver } from '@nestjs/graphql';
-import { IProject, type Project } from '../../dto';
-import { ExecuteProjectTransition } from '../dto';
+import { ExecuteProjectTransition, ProjectTransitioned } from '../dto';
 import { ProjectWorkflowService } from '../project-workflow.service';
 
 @Resolver()
 export class ProjectExecuteTransitionResolver {
   constructor(private readonly workflow: ProjectWorkflowService) {}
 
-  @Mutation(() => IProject)
+  @Mutation(() => ProjectTransitioned)
   async transitionProject(
     @Args('input') input: ExecuteProjectTransition,
-  ): Promise<Project> {
-    return await this.workflow.executeTransition(input);
+  ): Promise<ProjectTransitioned> {
+    const { event, project, ...rest } =
+      await this.workflow.executeTransition(input);
+    return {
+      __typename: 'ProjectTransitioned',
+      projectId: project,
+      event: this.workflow.secure(event),
+      ...rest,
+    };
   }
 }

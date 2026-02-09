@@ -15,7 +15,7 @@ import { HttpAdapter, type IRequest, type IResponse } from '~/core/http';
 import { FileService } from './file.service';
 
 @Controller(FileUrlController.path)
-@AuthLevel('sessionless')
+@AuthLevel(AuthLevel.Sessionless)
 export class FileUrlController {
   static path = '/file';
 

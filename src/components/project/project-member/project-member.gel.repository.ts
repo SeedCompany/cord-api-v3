@@ -15,7 +15,7 @@ export class ProjectMemberGelRepository
   extends RepoFor(ProjectMember, {
     hydrate: (member) => ({
       ...member['*'],
-      project: true,
+      project: { id: true, type: true },
       user: hydrateUser(member.user),
     }),
     omit: ['create'],

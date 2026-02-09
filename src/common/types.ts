@@ -6,7 +6,7 @@ import {
   IntersectionType,
 } from '@nestjs/graphql';
 import type { ClassDecoratorFactory } from '@nestjs/graphql/dist/interfaces/class-decorator-factory.interface';
-import type { AbstractClass, Class } from 'type-fest';
+import type { AbstractClass, Class, SetRequired } from 'type-fest';
 import { NotImplementedException } from './exceptions';
 
 /**
@@ -26,6 +26,8 @@ export interface Range<T> {
  * Useful to _implement_ existing class, ignoring private/protected members.
  */
 export type PublicOf<T> = { [P in keyof T]: T[P] };
+
+export type AllRequired<T> = SetRequired<T, keyof T>;
 
 /**
  * The PartialType() function returns a type (class) with all the properties of
