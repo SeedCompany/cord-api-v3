@@ -197,20 +197,20 @@ export class EngagementResolver {
   async updateLanguageEngagement(
     @Args('input') { changeset, ...input }: UpdateLanguageEngagement,
   ): Promise<LanguageEngagementUpdated> {
-    const { engagement, payload } = await this.service.updateLanguageEngagement(
-      input,
-      changeset,
-    );
+    const {
+      engagement,
+      payload: { project: _, engagement: __, ...payload } = {
+        previous: {},
+        updated: {},
+        at: DateTime.now(),
+        by: this.identity.current.userId,
+      },
+    } = await this.service.updateLanguageEngagement(input, changeset);
     return {
       __typename: 'LanguageEngagementUpdated',
       projectId: engagement.project.id,
       engagementId: engagement.id,
-      by: this.identity.current.userId,
-      previous: {},
-      updated: {},
-      // if actual changes, then this overrides those empty values.
       ...payload,
-      at: payload?.at ?? DateTime.now(),
     };
   }
 
@@ -220,18 +220,20 @@ export class EngagementResolver {
   async updateInternshipEngagement(
     @Args('input') { changeset, ...input }: UpdateInternshipEngagement,
   ): Promise<InternshipEngagementUpdated> {
-    const { engagement, payload } =
-      await this.service.updateInternshipEngagement(input, changeset);
+    const {
+      engagement,
+      payload: { project: _, engagement: __, ...payload } = {
+        previous: {},
+        updated: {},
+        at: DateTime.now(),
+        by: this.identity.current.userId,
+      },
+    } = await this.service.updateInternshipEngagement(input, changeset);
     return {
       __typename: 'InternshipEngagementUpdated',
       projectId: engagement.project.id,
       engagementId: engagement.id,
-      by: this.identity.current.userId,
-      previous: {},
-      updated: {},
-      // if actual changes, then this overrides those empty values.
       ...payload,
-      at: payload?.at ?? DateTime.now(),
     };
   }
 
@@ -241,14 +243,17 @@ export class EngagementResolver {
   async deleteEngagement(
     @Args() { id, changeset }: ChangesetIds,
   ): Promise<EngagementDeleted> {
-    const { engagement, payload } = await this.service.delete(id, changeset);
+    const {
+      engagement,
+      payload: { project, engagement: _, ...payload },
+    } = await this.service.delete(id, changeset);
     return {
       __typename:
         resolveEngagementType(engagement) === LanguageEngagement
           ? 'LanguageEngagementDeleted'
           : 'InternshipEngagementDeleted',
-      projectId: payload.project,
-      engagementId: payload.engagement,
+      projectId: project,
+      engagementId: engagement.id,
       ...payload,
     };
   }
