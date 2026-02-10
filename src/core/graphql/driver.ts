@@ -23,6 +23,7 @@ import { MetadataDiscovery } from '~/core/discovery';
 import { HttpAdapter, type IRequest } from '../http';
 import { type IResponse } from '../http/types';
 import { Plugin } from './plugin.decorator';
+import { prettifySchemaGenerationError } from './schema-errors';
 
 export interface ServerContext {
   /** Cannot be `request` as {@link import('graphql-yoga').YogaInitialContext.request} overrides it */
@@ -244,6 +245,14 @@ export class Driver extends AbstractDriver<DriverConfig> {
 
   async stop() {
     await this.#yoga?.dispose();
+  }
+
+  async generateSchema(options: DriverConfig) {
+    try {
+      return (await super.generateSchema(options))!;
+    } catch (e) {
+      throw prettifySchemaGenerationError(e);
+    }
   }
 }
 
