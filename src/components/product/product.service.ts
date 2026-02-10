@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { asNonEmptyArray, mapEntries, simpleSwitch } from '@seedcompany/common';
 import { intersection, sumBy, uniq } from 'lodash';
+import { DateTime } from 'luxon';
 import {
   type ID,
   InputException,
@@ -29,10 +30,13 @@ import {
   type CreateDirectScriptureProduct,
   type CreateOtherProduct,
   DerivativeScriptureProduct,
+  DerivativeScriptureProductUpdate,
   DirectScriptureProduct,
+  DirectScriptureProductUpdate,
   getAvailableSteps,
   MethodologyToApproach,
   OtherProduct,
+  OtherProductUpdate,
   ProducibleType,
   Product,
   type ProductApproach,
@@ -46,6 +50,7 @@ import {
   type UpdateOtherProduct,
   type UpdateBaseProduct as UpdateProduct,
 } from './dto';
+import { ProductChannels } from './product.channels';
 import {
   type HydratedProductRow,
   ProductRepository,
@@ -59,6 +64,7 @@ export class ProductService {
     private readonly repo: ProductRepository,
     private readonly resources: ResourceResolver,
     private readonly liveQueryStore: LiveQueryStore,
+    private readonly channels: ProductChannels,
     @Logger('product:service') private readonly logger: ILogger,
   ) {}
 
@@ -169,6 +175,14 @@ export class ProductService {
 
     this.liveQueryStore.invalidate(['LanguageEngagement', input.engagement]);
 
+    this.channels.publishToAll(created, 'created', {
+      program: 'MomentumTranslation',
+      project: created.project,
+      engagement: created.engagement,
+      product: created.id,
+      at: created.createdAt,
+    });
+
     return created;
   }
 
@@ -273,11 +287,15 @@ export class ProductService {
   async updateDirect(
     input: UpdateDirectScriptureProduct,
     currentProduct?: UnsecuredDto<DirectScriptureProduct>,
-  ): Promise<DirectScriptureProduct> {
+  ) {
     currentProduct ??= asProductType(DirectScriptureProduct)(
       await this.readOneUnsecured(input.id),
     );
     const changes = this.getDirectProductChanges(input, currentProduct);
+
+    if (Object.keys(changes).length === 0) {
+      return { product: this.secure(currentProduct) as DirectScriptureProduct };
+    }
 
     this.privileges
       .for(DirectScriptureProduct, currentProduct)
@@ -301,10 +319,25 @@ export class ProductService {
       DirectScriptureProduct,
     )(await this.readOne(input.id));
 
-    return await this.repo.updateProperties(
+    const updated = await this.repo.updateProperties(
       productUpdatedScriptureReferences,
       simpleChanges,
     );
+
+    const updatedPayload = this.channels.publishToAll('direct', 'updated', {
+      program: 'MomentumTranslation',
+      project: updated.project,
+      engagement: updated.engagement,
+      product: updated.id,
+      at: DateTime.now(),
+      updated: DirectScriptureProductUpdate.fromInput(changes),
+      previous: DirectScriptureProductUpdate.pickPrevious(
+        currentProduct,
+        changes,
+      ),
+    });
+
+    return { product: updated, payload: updatedPayload };
   }
 
   private getDirectProductChanges(
@@ -352,12 +385,19 @@ export class ProductService {
   async updateDerivative(
     input: UpdateDerivativeScriptureProduct,
     currentProduct?: UnsecuredDto<DerivativeScriptureProduct>,
-  ): Promise<DerivativeScriptureProduct> {
+  ) {
     currentProduct ??= asProductType(DerivativeScriptureProduct)(
       await this.readOneUnsecured(input.id),
     );
 
     const changes = this.getDerivativeProductChanges(input, currentProduct);
+
+    if (Object.keys(changes).length === 0) {
+      return {
+        product: this.secure(currentProduct) as DerivativeScriptureProduct,
+      };
+    }
+
     this.privileges
       .for(DerivativeScriptureProduct, currentProduct)
       .verifyChanges(changes, { pathPrefix: 'product' });
@@ -390,10 +430,25 @@ export class ProductService {
       DerivativeScriptureProduct,
     )(await this.readOne(input.id));
 
-    return await this.repo.updateDerivativeProperties(
+    const updated = await this.repo.updateDerivativeProperties(
       productUpdatedScriptureReferences,
       simpleChanges,
     );
+
+    const updatedPayload = this.channels.publishToAll('derivative', 'updated', {
+      program: 'MomentumTranslation',
+      project: updated.project,
+      engagement: updated.engagement,
+      product: updated.id,
+      at: DateTime.now(),
+      updated: DerivativeScriptureProductUpdate.fromInput(changes),
+      previous: DerivativeScriptureProductUpdate.pickPrevious(
+        currentProduct,
+        changes,
+      ),
+    });
+
+    return { product: updated, payload: updatedPayload };
   }
 
   private getDerivativeProductChanges(
@@ -458,6 +513,10 @@ export class ProductService {
       ),
     };
 
+    if (Object.keys(changes).length === 0) {
+      return { product: this.secure(currentProduct) as OtherProduct };
+    }
+
     this.privileges
       .for(OtherProduct, currentProduct)
       .verifyChanges(changes, { pathPrefix: 'product' });
@@ -467,7 +526,19 @@ export class ProductService {
     const currentSecured = asProductType(OtherProduct)(
       this.secure(currentProduct),
     );
-    return await this.repo.updateOther(currentSecured, changes);
+    const updated = await this.repo.updateOther(currentSecured, changes);
+
+    const updatedPayload = this.channels.publishToAll('other', 'updated', {
+      program: 'MomentumTranslation',
+      project: updated.project,
+      engagement: updated.engagement,
+      product: updated.id,
+      at: DateTime.now(),
+      updated: OtherProductUpdate.fromInput(changes),
+      previous: OtherProductUpdate.pickPrevious(currentProduct, changes),
+    });
+
+    return { product: updated, payload: updatedPayload };
   }
 
   /**
@@ -550,19 +621,28 @@ export class ProductService {
     await this.repo.mergeCompletionDescription(describeCompletion, methodology);
   }
 
-  async delete(id: ID): Promise<void> {
+  async delete(id: ID) {
     const object = await this.readOne(id);
 
     this.privileges.for(Product, object).verifyCan('delete');
 
-    try {
-      await this.repo.deleteNode(object, {
+    const { at } = await this.repo
+      .deleteNode(object, {
         resource: resolveProductType(object),
+      })
+      .catch((exception) => {
+        throw new ServerException('Failed to delete', exception);
       });
-    } catch (exception) {
-      this.logger.error('Failed to delete', { id, exception });
-      throw new ServerException('Failed to delete', exception);
-    }
+
+    const payload = this.channels.publishToAll(object, 'deleted', {
+      program: 'MomentumTranslation',
+      project: object.project,
+      engagement: object.engagement,
+      product: object.id,
+      at,
+    });
+
+    return { product: object, payload };
   }
 
   async list(input: ProductListInput): Promise<ProductListOutput> {
