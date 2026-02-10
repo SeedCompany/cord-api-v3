@@ -1,4 +1,4 @@
-import { Field, ID as IDType, InputType, ObjectType } from '@nestjs/graphql';
+import { Field, ID as IDType, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { GraphQLJSONObject } from 'graphql-scalars';
 import { DateTime } from 'luxon';
@@ -7,7 +7,6 @@ import { type LinkTo, RegisterResource } from '~/core/resources';
 import { GraphqlDocumentScalar } from './graphql-document.scalar';
 
 @RegisterResource()
-@InputType({ isAbstract: true })
 @ObjectType({
   description: stripIndent`
     A webhook is a subscription to a GraphQL operation that will POST events to a given URL.

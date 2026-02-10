@@ -1,11 +1,16 @@
+import { applyDecorators } from '@nestjs/common';
 import {
+  ArgsType,
   OmitType as BaseOmitType,
   PartialType as BasePartialType,
   PickType as BasePickType,
+  InputType,
+  InterfaceType,
   // eslint-disable-next-line @seedcompany/no-restricted-imports
   IntersectionType,
+  ObjectType,
 } from '@nestjs/graphql';
-import type { ClassDecoratorFactory } from '@nestjs/graphql/dist/interfaces/class-decorator-factory.interface';
+import { type FnLike } from '@seedcompany/common';
 import type { AbstractClass, Class, SetRequired } from 'type-fest';
 import { NotImplementedException } from './exceptions';
 
@@ -29,6 +34,12 @@ export type PublicOf<T> = { [P in keyof T]: T[P] };
 
 export type AllRequired<T> = SetRequired<T, keyof T>;
 
+// Workaround interface not being exported
+type PartialTypeOptions = Exclude<
+  Parameters<typeof BasePartialType>[1] & {},
+  FnLike
+>;
+
 /**
  * The PartialType() function returns a type (class) with all the properties of
  * the input type set to optional.
@@ -37,9 +48,14 @@ export type AllRequired<T> = SetRequired<T, keyof T>;
  *
  * @see https://docs.nestjs.com/graphql/mapped-types#partial
  */
-export const PartialType = BasePartialType as <T, Args extends unknown[]>(
+export const PartialType = <T, Args extends unknown[]>(
   classRef: AbstractClass<T, Args>,
-) => Class<Partial<T>, Args>;
+  options?: Omit<PartialTypeOptions, 'decorator'>,
+): Class<Partial<T>, Args> =>
+  BasePartialType(classRef as any, {
+    ...options,
+    decorator: AllFieldContainerTypes,
+  });
 
 /**
  * The PickType() function constructs a new type (class) by picking a set of
@@ -49,15 +65,11 @@ export const PartialType = BasePartialType as <T, Args extends unknown[]>(
  *
  * @see https://docs.nestjs.com/graphql/mapped-types#pick
  */
-export const PickType = BasePickType as <
-  T,
-  const K extends keyof T,
-  Args extends unknown[],
->(
+export const PickType = <T, const K extends keyof T, Args extends unknown[]>(
   classRef: AbstractClass<T, Args>,
   keys: readonly K[],
-  decorator?: ClassDecoratorFactory,
-) => Class<Pick<T, (typeof keys)[number]>, Args>;
+): Class<Pick<T, (typeof keys)[number]>, Args> =>
+  BasePickType(classRef as any, keys, AllFieldContainerTypes);
 
 /**
  * The OmitType() function constructs a type by picking all properties from an
@@ -67,15 +79,11 @@ export const PickType = BasePickType as <
  *
  * @see https://docs.nestjs.com/graphql/mapped-types#omit
  */
-export const OmitType = BaseOmitType as <
-  T,
-  const K extends keyof T,
-  Args extends unknown[],
->(
+export const OmitType = <T, const K extends keyof T, Args extends unknown[]>(
   classRef: AbstractClass<T, Args>,
   keys: readonly K[],
-  decorator?: ClassDecoratorFactory,
-) => Class<Omit<T, (typeof keys)[number]>, Args>;
+): Class<Omit<T, (typeof keys)[number]>, Args> =>
+  BaseOmitType(classRef as any, keys, AllFieldContainerTypes);
 
 export function IntersectTypes<A, Args extends unknown[]>(
   type1: AbstractClass<A, Args>,
@@ -179,7 +187,8 @@ export function IntersectTypes<T, Args extends unknown[]>(
 ): IntersectedType<T, Args> {
   return Object.assign(
     (types as any).reduce(
-      (a: any, b: any) => (a ? IntersectionType(a, b) : b),
+      (a: any, b: any) =>
+        a ? IntersectionType(a, b, AllFieldContainerTypes) : b,
       undefined,
     ),
     {
@@ -191,6 +200,18 @@ export function IntersectTypes<T, Args extends unknown[]>(
 type IntersectedType<T, Args extends unknown[]> = Class<T, Args> & {
   members: Array<Class<unknown>>;
 };
+
+/**
+ * These mapped types above, by default, only pull one type to store metadata for.
+ * This changes that to store metadata for all of them.
+ * This allows mapping between different types.
+ */
+const AllFieldContainerTypes = () =>
+  applyDecorators(
+    ...[ArgsType, InterfaceType, ObjectType, InputType].map((gqlType) =>
+      gqlType({ isAbstract: true }),
+    ),
+  );
 
 function TODOFn(..._args: any[]) {
   throw new NotImplementedException();
