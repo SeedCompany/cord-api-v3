@@ -8,6 +8,7 @@ import {
   UnauthorizedException,
 } from '~/common';
 import { ResourceResolver } from '~/core';
+import { LiveQueryStore } from '~/core/live-query';
 import { Privileges } from '../authorization';
 import { LanguageEngagement } from '../engagement/dto';
 import { IProject } from '../project/dto';
@@ -22,6 +23,7 @@ export class PartnershipProducingMediumService {
   constructor(
     private readonly privileges: Privileges,
     private readonly resources: ResourceResolver,
+    private readonly liveQueryStore: LiveQueryStore,
     private readonly repo: PartnershipProducingMediumRepository,
   ) {}
 
@@ -71,5 +73,9 @@ export class PartnershipProducingMediumService {
     }
 
     await this.repo.update(engagementId, input);
+
+    this.liveQueryStore.invalidate(
+      `LanguageEngagement:${engagementId}:partnerships-producing-mediums`,
+    );
   }
 }
