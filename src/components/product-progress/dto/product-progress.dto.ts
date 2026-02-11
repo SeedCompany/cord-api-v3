@@ -10,6 +10,7 @@ import {
   Variant,
 } from '~/common';
 import { e } from '~/core/gel';
+import { LiveQueryConfig } from '~/core/live-query';
 import { RegisterResource } from '~/core/resources';
 import { type Product, ProductStep } from '../../product/dto';
 import { type ProgressReport } from '../../progress-report/dto';
@@ -46,6 +47,16 @@ export interface ProgressVariantByReportOutput extends Pick<
   description: 'The progress of a product for a given report',
 })
 export class ProductProgress {
+  /**
+   * This configures the LiveQuery store to track this resource by these IDs.
+   * Unfortunately, it has to be at the field level, so we throw it a bunch of
+   * places so it will be picked up when requested by the client.
+   */
+  static LiveIDs = LiveQueryConfig({
+    collectResourceIdentifiers: (pp: ProductProgress) =>
+      `ProductProgress:${pp.productId}:${pp.reportId}:${pp.variant.key}`,
+  });
+
   // Both of these only exist if progress has been reported for the product/report pair.
   // This object is really just a container/grouping of StepProgress nodes.
   // I have these here to show that they can exist in the DB, but they are private to the API.
@@ -57,6 +68,7 @@ export class ProductProgress {
   readonly reportId: ID;
 
   @Field(() => Variant)
+  @ProductProgress.LiveIDs
   readonly variant: Variant<ProgressVariant> &
     SetUnsecuredType<ProgressVariant>;
 
@@ -76,6 +88,7 @@ export class ProductProgress {
       },
     ],
   })
+  @ProductProgress.LiveIDs
   readonly steps: readonly StepProgress[];
 }
 

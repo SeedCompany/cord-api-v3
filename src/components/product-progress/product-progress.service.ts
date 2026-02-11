@@ -8,6 +8,7 @@ import {
   UnauthorizedException,
   type Variant,
 } from '~/common';
+import { LiveQueryStore } from '~/core/live-query';
 import {
   type HasScope,
   type HasSensitivity,
@@ -38,6 +39,7 @@ import { StepNotPlannedException } from './step-not-planned.exception';
 export class ProductProgressService {
   constructor(
     private readonly privileges: Privileges,
+    private readonly liveQueryStore: LiveQueryStore,
     private readonly repo: ProductProgressRepository,
   ) {}
 
@@ -154,6 +156,11 @@ export class ProductProgressService {
     }
 
     const progress = await this.repo.update(input);
+
+    this.liveQueryStore.invalidate(
+      `ProductProgress:${input.product}:${input.report}:${input.variant.key}`,
+    );
+
     return this.secure(progress, this.privilegesFor(scope))!;
   }
 
