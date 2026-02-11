@@ -12,6 +12,7 @@ import {
   type UnsecuredDto,
 } from '~/common';
 import { type BaseNode, isBaseNode } from '~/core/database/results';
+import { LiveQueryStore } from '~/core/live-query';
 import {
   HandleIdLookup,
   ResourceLoader,
@@ -35,6 +36,7 @@ export class ToolUsageService {
     private readonly resources: ResourceLoader,
     private readonly resourcesHost: ResourcesHost,
     private readonly resourceResolver: ResourceResolver,
+    private readonly liveQueryStore: LiveQueryStore,
     private readonly repo: ToolUsageRepository,
   ) {}
 
@@ -163,6 +165,9 @@ export class ToolUsageService {
     this.privileges
       .for(ToolUsage, { ...container, ...dto })
       .verifyCan('create');
+
+    this.liveQueryStore.invalidate([container.__typename, container.id]);
+
     return this.secure(dto, container)!;
   }
 
