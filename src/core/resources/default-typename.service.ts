@@ -1,5 +1,6 @@
 import { Injectable, type OnModuleInit } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
+import { GraphQLSchemaHost } from '@nestjs/graphql';
 import { InterfaceDefinitionFactory } from '@nestjs/graphql/dist/schema-builder/factories/interface-definition.factory.js';
 import { UnionDefinitionFactory } from '@nestjs/graphql/dist/schema-builder/factories/union-definition.factory.js';
 import type { UnionMetadata } from '@nestjs/graphql/dist/schema-builder/metadata';
@@ -20,6 +21,7 @@ export class DefaultTypeNameService implements OnModuleInit {
   constructor(
     private readonly moduleRef: ModuleRef,
     private readonly resourcesHost: ResourcesHost,
+    private readonly schemaHost: GraphQLSchemaHost,
   ) {}
 
   /**
@@ -60,7 +62,11 @@ export class DefaultTypeNameService implements OnModuleInit {
     if (!Reflect.has(instance, '__typename')) {
       throw new TypenameCannotBeResolvedError(metadata.name);
     }
-    const res = this.resourcesHost.enhance(instance.__typename);
+    const name = instance.__typename;
+    if (this.schemaHost.schema.getType(name)) {
+      return name;
+    }
+    const res = this.resourcesHost.enhance(name);
     return res.name;
   }
 }
