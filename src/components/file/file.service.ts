@@ -28,6 +28,7 @@ import { withAddedPath } from '~/common/url.util';
 import { ConfigService, ILogger, type LinkTo, Logger } from '~/core';
 import { TransactionHooks } from '~/core/database';
 import { Hooks } from '~/core/hooks';
+import { LiveQueryStore } from '~/core/live-query';
 import { FileBucket } from './bucket';
 import {
   type CreateDefinedFileVersion,
@@ -66,6 +67,7 @@ export class FileService {
     @Inject(forwardRef(() => MediaService))
     private readonly mediaService: MediaService,
     private readonly hooks: Hooks,
+    private readonly liveQueryStore: LiveQueryStore,
     @Logger('file:service') private readonly logger: ILogger,
   ) {}
 
@@ -256,6 +258,8 @@ export class FileService {
 
     const id = await this.repo.createDirectory(parentId, name);
 
+    parentId && this.liveQueryStore.invalidate(['Directory', parentId]);
+
     return await this.getDirectory(id);
   }
 
@@ -398,6 +402,7 @@ export class FileService {
       mimeType,
       size: upload?.ContentLength ?? 0,
     });
+    this.liveQueryStore.invalidate(['File', fileId]);
 
     // Skip S3 move if it's not needed
     if (existingUpload.status === 'rejected') {
@@ -480,6 +485,8 @@ export class FileService {
 
     const fileId = await generateId();
     await this.repo.createFile({ fileId, name, parentId });
+
+    this.liveQueryStore.invalidate(['Directory', parentId]);
 
     this.logger.debug(
       'File matching given name not found, creating a new one',
@@ -569,7 +576,14 @@ export class FileService {
       await this.repo.rename(fileNode, input.name);
     }
 
-    await this.repo.move(input.id, input.parent);
+    const change = await this.repo.move(input.id, input.parent);
+    for (const parent of [change.oldParent, change.newParent]) {
+      this.liveQueryStore.invalidate([
+        // Cheat to resolve typename since it's just these two.
+        parent.labels.includes('Directory') ? 'Directory' : 'File',
+        parent.properties.id,
+      ]);
+    }
 
     return await this.getFileNode(input.id);
   }
