@@ -1,12 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import { DateOverrideConflictException, EnhancedResource } from '~/common';
+import { DateOverrideConflictException } from '~/common';
+import { ResourcesHost } from '~/core';
 import { OnHook } from '~/core/hooks';
 import { ProjectUpdatedHook } from '../../project/hooks';
 import { EngagementService } from '../engagement.service';
 
 @Injectable()
 export class ValidateEngDateOverridesOnProjectChangeHandler {
-  constructor(private readonly engagements: EngagementService) {}
+  constructor(
+    private readonly engagements: EngagementService,
+    private readonly resources: ResourcesHost,
+  ) {}
 
   @OnHook(ProjectUpdatedHook, -10)
   async handle(event: ProjectUpdatedHook) {
@@ -21,7 +25,7 @@ export class ValidateEngDateOverridesOnProjectChangeHandler {
     const conflicts = DateOverrideConflictException.findConflicts(
       canonical,
       engagements.map((eng) => ({
-        __typename: EnhancedResource.resolve(eng.__typename).name,
+        __typename: this.resources.enhance(eng.__typename).name,
         id: eng.id,
         label: (eng.label.language ?? eng.label.intern)!,
         start: eng.startDateOverride,

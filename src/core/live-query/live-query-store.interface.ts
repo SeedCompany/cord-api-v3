@@ -1,7 +1,12 @@
-import { EnhancedResource, type ID } from '~/common';
-import type { ResourceLike } from '~/core/resources';
+import { Inject, Injectable } from '@nestjs/common';
+import { type ID } from '~/common';
+import { type ResourceLike, ResourcesHost } from '~/core/resources';
 
+@Injectable()
 export abstract class LiveQueryStore {
+  @Inject(ResourcesHost)
+  protected readonly resources: ResourcesHost;
+
   /**
    * Invalidate queries (and schedule their re-execution) via a resource identifier.
    *
@@ -36,7 +41,7 @@ export abstract class LiveQueryStore {
           return input;
         }
         const [resLike, id] = input;
-        const res = EnhancedResource.resolve(resLike);
+        const res = this.resources.enhance(resLike);
         return `${res.name}:${id}`;
       }),
     );
