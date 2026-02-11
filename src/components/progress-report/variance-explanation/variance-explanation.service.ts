@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { mapKeys } from '@seedcompany/common';
 import { InputException, NotFoundException } from '~/common';
 import { ResourceLoader } from '~/core';
+import { LiveQueryStore } from '~/core/live-query';
 import { Privileges } from '../../authorization';
 import { ProgressReport } from '../dto';
 import { ProgressReportVarianceExplanationReasonOptions as ReasonOptions } from './reason-options';
@@ -16,6 +17,7 @@ export class ProgressReportVarianceExplanationService {
   constructor(
     private readonly privileges: Privileges,
     private readonly resources: ResourceLoader,
+    private readonly liveQueryStore: LiveQueryStore,
     private readonly repo: ProgressReportVarianceExplanationRepository,
   ) {}
 
@@ -59,6 +61,8 @@ export class ProgressReportVarianceExplanationService {
     this.privilegesFor(report).verifyChanges(changes);
 
     await this.repo.update({ id: report.id, ...changes });
+
+    this.liveQueryStore.invalidate(['ProgressReport', report.id]);
 
     return report;
   }
