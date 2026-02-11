@@ -85,7 +85,7 @@ export class PartnershipGelRepository
     const query = e.update(this.matchOtherPartnerships(id), () => ({
       set: { primary: false },
     }));
-    await this.db.run(query);
+    return await this.db.run(query);
   }
 
   private matchOtherPartnerships(id: ID) {
