@@ -11,9 +11,7 @@ import {
 } from '~/common';
 import { UpdateProject } from './update-project.dto';
 
-@InterfaceType({
-  resolveType: (x) => x.__typename,
-})
+@InterfaceType()
 export class ProjectMutationOrDeletion extends DataObject {
   readonly __typename: string;
 
