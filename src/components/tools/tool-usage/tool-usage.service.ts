@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { mapKeys } from '@seedcompany/common';
 import {
   DuplicateException,
-  EnhancedResource,
+  type EnhancedResource,
   type ID,
   InputException,
   isIdLike,
@@ -11,8 +11,14 @@ import {
   ServerException,
   type UnsecuredDto,
 } from '~/common';
-import { HandleIdLookup, ResourceLoader, ResourceResolver } from '~/core';
 import { type BaseNode, isBaseNode } from '~/core/database/results';
+import { LiveQueryStore } from '~/core/live-query';
+import {
+  HandleIdLookup,
+  ResourceLoader,
+  ResourceResolver,
+  ResourcesHost,
+} from '~/core/resources';
 import { Privileges } from '../../authorization';
 import { Tool } from '../tool/dto';
 import { type CreateToolUsage, ToolUsage, type UpdateToolUsage } from './dto';
@@ -28,7 +34,9 @@ export class ToolUsageService {
   constructor(
     private readonly privileges: Privileges,
     private readonly resources: ResourceLoader,
+    private readonly resourcesHost: ResourcesHost,
     private readonly resourceResolver: ResourceResolver,
+    private readonly liveQueryStore: LiveQueryStore,
     private readonly repo: ToolUsageRepository,
   ) {}
 
@@ -63,7 +71,7 @@ export class ToolUsageService {
       const typeName =
         container.__typename ??
         this.resourceResolver.resolveTypeByBaseNode(row.container);
-      const containerType = EnhancedResource.resolve(
+      const containerType = this.resourcesHost.enhance(
         typeName,
       ) as EnhancedResource<typeof Resource>;
 
@@ -157,6 +165,9 @@ export class ToolUsageService {
     this.privileges
       .for(ToolUsage, { ...container, ...dto })
       .verifyCan('create');
+
+    this.liveQueryStore.invalidate([container.__typename, container.id]);
+
     return this.secure(dto, container)!;
   }
 

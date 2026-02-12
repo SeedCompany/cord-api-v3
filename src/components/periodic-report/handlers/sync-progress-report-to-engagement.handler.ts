@@ -6,10 +6,10 @@ import { OnHook } from '~/core/hooks';
 import { EngagementService } from '../../engagement';
 import { type Engagement, engagementRange } from '../../engagement/dto';
 import {
-  EngagementCreatedEvent,
-  EngagementUpdatedEvent,
-} from '../../engagement/events';
-import { ProjectUpdatedEvent } from '../../project/events';
+  EngagementCreatedHook,
+  EngagementUpdatedHook,
+} from '../../engagement/hooks';
+import { ProjectUpdatedHook } from '../../project/hooks';
 import { ReportType } from '../dto';
 import { PeriodicReportService } from '../periodic-report.service';
 import {
@@ -27,22 +27,19 @@ export class SyncProgressReportToEngagementDateRange extends AbstractPeriodicRep
     super(periodicReports);
   }
 
-  @OnHook(EngagementCreatedEvent)
-  @OnHook(EngagementUpdatedEvent)
-  @OnHook(ProjectUpdatedEvent)
+  @OnHook(EngagementCreatedHook)
+  @OnHook(EngagementUpdatedHook)
+  @OnHook(ProjectUpdatedHook)
   async handle(
-    event:
-      | EngagementCreatedEvent
-      | EngagementUpdatedEvent
-      | ProjectUpdatedEvent,
+    event: EngagementCreatedHook | EngagementUpdatedHook | ProjectUpdatedHook,
   ) {
     // Only LanguageEngagements
     if (
       !(
-        ((event instanceof EngagementCreatedEvent ||
-          event instanceof EngagementUpdatedEvent) &&
+        ((event instanceof EngagementCreatedHook ||
+          event instanceof EngagementUpdatedHook) &&
           event.isLanguageEngagement()) ||
-        (event instanceof ProjectUpdatedEvent &&
+        (event instanceof ProjectUpdatedHook &&
           event.updated.type.includes('Translation'))
       )
     ) {
@@ -50,7 +47,7 @@ export class SyncProgressReportToEngagementDateRange extends AbstractPeriodicRep
     }
 
     if (
-      event instanceof ProjectUpdatedEvent &&
+      event instanceof ProjectUpdatedHook &&
       event.changes.mouStart === undefined &&
       event.changes.mouEnd === undefined
     ) {
@@ -58,7 +55,7 @@ export class SyncProgressReportToEngagementDateRange extends AbstractPeriodicRep
       return;
     }
     if (
-      event instanceof EngagementUpdatedEvent &&
+      event instanceof EngagementUpdatedHook &&
       event.input.startDateOverride === undefined &&
       event.input.endDateOverride === undefined
     ) {
@@ -67,8 +64,8 @@ export class SyncProgressReportToEngagementDateRange extends AbstractPeriodicRep
     }
 
     if (
-      (event instanceof EngagementCreatedEvent && event.engagement.changeset) ||
-      (event instanceof EngagementUpdatedEvent && event.updated.changeset)
+      (event instanceof EngagementCreatedHook && event.engagement.changeset) ||
+      (event instanceof EngagementUpdatedHook && event.updated.changeset)
     ) {
       // Progress reports are not changeset aware yet. Skip processing this
       // until changeset is approved and another update event is fired.
@@ -81,18 +78,18 @@ export class SyncProgressReportToEngagementDateRange extends AbstractPeriodicRep
     });
 
     const engagements =
-      event instanceof ProjectUpdatedEvent
+      event instanceof ProjectUpdatedHook
         ? await this.engagements.listAllByProjectId(event.updated.id)
-        : event instanceof EngagementUpdatedEvent
+        : event instanceof EngagementUpdatedHook
           ? [event.updated]
           : [event.engagement];
 
     for (const engagement of engagements) {
       Settings.throwOnInvalid = false;
       const [updated, prev] =
-        event instanceof ProjectUpdatedEvent
+        event instanceof ProjectUpdatedHook
           ? this.intervalsFromProjectChange(engagement, event)
-          : event instanceof EngagementCreatedEvent
+          : event instanceof EngagementCreatedHook
             ? [engagementRange(event.engagement), null]
             : [
                 engagementRange(event.updated), //
@@ -132,7 +129,7 @@ export class SyncProgressReportToEngagementDateRange extends AbstractPeriodicRep
 
   private intervalsFromProjectChange(
     engagement: UnsecuredDto<Engagement>,
-    event: ProjectUpdatedEvent,
+    event: ProjectUpdatedHook,
   ): Intervals {
     return [
       // Engagement already has all the updated values calculated correctly.

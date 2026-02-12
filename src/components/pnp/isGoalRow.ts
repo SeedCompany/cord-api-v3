@@ -4,14 +4,14 @@ import {
   type Range,
   type Verse,
 } from '@seedcompany/scripture';
-import { type Cell } from '~/common/xlsx.util';
+import { type Xlsx } from '~/common';
 import { ScriptureRange } from '../scripture/dto';
 import { type PnpExtractionResult, PnpProblemType } from './extraction-result';
 import { type PlanningSheet } from './planning-sheet';
 import { type ProgressSheet } from './progress-sheet';
 
 export const isGoalRow = (
-  cell: Cell<PlanningSheet | ProgressSheet>,
+  cell: Xlsx.Cell<PlanningSheet | ProgressSheet>,
   result?: PnpExtractionResult,
 ) => {
   if (cell.sheet.isOBS()) {

@@ -10,9 +10,9 @@ import {
   ValidatorConstraint,
   type ValidatorConstraintInterface,
 } from 'class-validator';
+import { isValidId } from '~/common/functions';
+import { type ID } from '~/common/types';
 import { ValidationException } from '~/core/validation';
-import { isValidId } from '../generate-id';
-import { type ID } from '../id-field';
 import { ValidateBy } from './validateBy';
 
 export const IsId = (validationOptions?: ValidationOptions) =>

@@ -1,6 +1,6 @@
 import { setInspectOnClass, setToStringTag } from '@seedcompany/common';
 import { markSkipClassTransformation } from '@seedcompany/nest';
-import { DateTime } from 'luxon';
+import { DateTime, Settings } from 'luxon';
 import * as Neo from 'neo4j-driver';
 
 /* eslint-disable @typescript-eslint/method-signature-style */
@@ -19,6 +19,13 @@ declare module 'luxon' {
   }
 }
 /* eslint-enable @typescript-eslint/method-signature-style */
+
+Settings.throwOnInvalid = true;
+declare module 'luxon' {
+  interface TSSettings {
+    throwOnInvalid: true;
+  }
+}
 
 setInspectOnClass(DateTime, (dt) => ({ collapsed }) => {
   return collapsed(dt.toLocaleString(DateTime.DATETIME_SHORT_WITH_SECONDS));

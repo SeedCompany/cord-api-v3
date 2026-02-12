@@ -20,8 +20,12 @@ import fs from 'node:fs/promises';
 import { type LiteralUnion } from 'type-fest';
 import { inspect } from 'util';
 import xlsx from 'xlsx';
-import { type EnhancedResource, firstOr, Role } from '~/common';
-import { searchCamelCase } from '~/common/search-camel-case';
+import {
+  type EnhancedResource,
+  firstOr,
+  Role,
+  searchCamelCase,
+} from '~/common';
 import { Identity } from '~/core/authentication';
 import { InjectableCommand } from '~/core/cli';
 import { type ResourceLike, ResourcesHost } from '~/core/resources';

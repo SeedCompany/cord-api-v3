@@ -1,18 +1,19 @@
 import { mapEntries } from '@seedcompany/common';
 import { asNonEmpty, DateOverrideConflictException } from '~/common';
-import { EventsHandler, type IEventHandler, ResourceLoader } from '~/core';
+import { ResourceLoader } from '~/core';
+import { OnHook } from '~/core/hooks';
 import { OrganizationLoader } from '../../organization';
-import { ProjectUpdatedEvent } from '../../project/events';
+import { ProjectUpdatedHook } from '../../project/hooks';
 import { PartnershipService } from '../partnership.service';
 
-@EventsHandler([ProjectUpdatedEvent, 10])
-export class ValidatePartnershipDateOverridesOnProjectChangeHandler implements IEventHandler<ProjectUpdatedEvent> {
+@OnHook(ProjectUpdatedHook, -10)
+export class ValidatePartnershipDateOverridesOnProjectChangeHandler {
   constructor(
     private readonly partnerships: PartnershipService,
     private readonly resources: ResourceLoader,
   ) {}
 
-  async handle(event: ProjectUpdatedEvent) {
+  async handle(event: ProjectUpdatedHook) {
     const { updated: project, changes } = event;
 
     if (changes.mouStart === undefined && changes.mouEnd === undefined) {

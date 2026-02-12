@@ -1,16 +1,13 @@
 import { LazyGetter as Once } from 'lazy-get-decorator';
-import { CalendarDate, DateInterval, expandToFullFiscalYears } from '~/common';
 import {
-  type Cell,
-  type Column,
-  Range,
-  type Row,
-  Sheet,
-  type WorkBook,
-} from '~/common/xlsx.util';
+  CalendarDate,
+  DateInterval,
+  expandToFullFiscalYears,
+  Xlsx,
+} from '~/common';
 
-export abstract class PlanningSheet extends Sheet {
-  static register(book: WorkBook) {
+export abstract class PlanningSheet extends Xlsx.Sheet {
+  static register(book: Xlsx.WorkBook) {
     const sheet = book.sheet('Planning');
     const isOBS = sheet.cell('P19').asString === 'Stories';
     const custom = isOBS
@@ -31,7 +28,7 @@ export abstract class PlanningSheet extends Sheet {
       this.revisionCell.asDate ?? CalendarDate.fromMillis(0).plus({ day: 1 })
     );
   }
-  protected abstract revisionCell: Cell;
+  protected abstract revisionCell: Xlsx.Cell;
 
   @Once() get projectDateRange(): DateInterval {
     const { start, end } = this.projectDateCells;
@@ -51,12 +48,12 @@ export abstract class PlanningSheet extends Sheet {
       end: this.projectEndDateCell,
     };
   }
-  protected abstract projectStartDateCell: Cell;
-  protected abstract projectEndDateCell: Cell;
+  protected abstract projectStartDateCell: Xlsx.Cell;
+  protected abstract projectEndDateCell: Xlsx.Cell;
 
-  abstract readonly stepLabels: Range;
+  abstract readonly stepLabels: Xlsx.Range;
 
-  goalName(row: Row): Cell {
+  goalName(row: Xlsx.Row): Xlsx.Cell {
     const goal = this.isWritten()
       ? this.bookName(row)
       : this.isOBS()
@@ -72,7 +69,7 @@ export abstract class PlanningSheet extends Sheet {
     return this.column('Q');
   }
 
-  @Once() get goals(): Range<PlanningSheet> {
+  @Once() get goals(): Xlsx.Range<PlanningSheet> {
     return this.range(this.goalsStart, this.goalsEnd);
   }
   @Once() protected get goalsStart() {
@@ -82,16 +79,16 @@ export abstract class PlanningSheet extends Sheet {
     return this.sheetRange.end.row.cell(this.goalColumn);
   }
 
-  myNote(goalRow: Row, fallback = true) {
+  myNote(goalRow: Xlsx.Row, fallback = true) {
     const cell = this.myNotesColumn.cell(goalRow);
     return !fallback || cell.asString
       ? cell
       : (this.myNotesFallbackCell ?? cell);
   }
-  protected abstract myNotesFallbackCell: Cell | undefined;
-  protected abstract myNotesColumn: Column;
+  protected abstract myNotesFallbackCell: Xlsx.Cell | undefined;
+  protected abstract myNotesColumn: Xlsx.Column;
 
-  totalVerses(goalRow: Row) {
+  totalVerses(goalRow: Xlsx.Row) {
     return this.cell('T', goalRow);
   }
 }
@@ -110,7 +107,7 @@ export class WrittenScripturePlanningSheet extends PlanningSheet {
       : this.column('Q');
   }
 
-  bookName(goalRow: Row) {
+  bookName(goalRow: Xlsx.Row) {
     return this.cell(this.goalColumn, goalRow);
   }
 
@@ -135,21 +132,21 @@ export class OralStoryingPlanningSheet extends PlanningSheet {
   protected myNotesColumn = this.column('Y');
   protected myNotesFallbackCell = undefined;
 
-  storyName(goalRow: Row) {
+  storyName(goalRow: Xlsx.Row) {
     return this.cell(this.goalColumn, goalRow);
   }
-  scriptureReference(goalRow: Row) {
+  scriptureReference(goalRow: Xlsx.Row) {
     return this.cell('R', goalRow).asString;
   }
-  composite(goalRow: Row) {
+  composite(goalRow: Xlsx.Row) {
     return this.cell('S', goalRow).asString;
   }
 
   readonly sustainabilityGoals = this.range('Y17:AA20');
-  sustainabilityRole(goalRow: Row) {
+  sustainabilityRole(goalRow: Xlsx.Row) {
     return this.cell('Y', goalRow).asString;
   }
-  sustainabilityRoleCount(goalRow: Row) {
+  sustainabilityRoleCount(goalRow: Xlsx.Row) {
     return this.cell('AA', goalRow).asNumber;
   }
 }

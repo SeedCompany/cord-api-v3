@@ -1,4 +1,4 @@
-import { Field, InputType, ObjectType } from '@nestjs/graphql';
+import { Field, InputType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import {
   type ID,
@@ -13,7 +13,6 @@ import {
   CreateDerivativeScriptureProduct,
   CreateDirectScriptureProduct,
 } from './create-product.dto';
-import { type AnyProduct, Product } from './product.dto';
 
 @InputType()
 export abstract class UpdateBaseProduct extends OmitType(CreateBaseProduct, [
@@ -64,10 +63,4 @@ export abstract class UpdateOtherProduct extends UpdateBaseProduct {
 
   @Field(() => String, { nullable: true })
   readonly description?: string | null;
-}
-
-@ObjectType()
-export abstract class ProductUpdated {
-  @Field(() => Product)
-  readonly product: AnyProduct;
 }

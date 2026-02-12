@@ -20,9 +20,10 @@ import {
   UnauthorizedException,
   type UnsecuredDto,
 } from '~/common';
-import { HandleIdLookup, IEventBus } from '~/core';
+import { HandleIdLookup } from '~/core';
 import { Identity } from '~/core/authentication';
 import { type AnyChangesOf } from '~/core/database/changes';
+import { Hooks } from '~/core/hooks';
 import { Privileges } from '../authorization';
 import { BudgetService } from '../budget';
 import { BudgetStatus, type SecuredBudget } from '../budget/dto';
@@ -64,10 +65,10 @@ import {
   type UpdateProject,
 } from './dto';
 import {
-  ProjectCreatedEvent,
-  ProjectDeletedEvent,
-  ProjectUpdatedEvent,
-} from './events';
+  ProjectCreatedHook,
+  ProjectDeletedHook,
+  ProjectUpdatedHook,
+} from './hooks';
 import { ProjectMemberService } from './project-member';
 import {
   type ProjectMemberListInput,
@@ -89,7 +90,7 @@ export class ProjectService {
     private readonly engagementService: EngagementService & {},
     private readonly privileges: Privileges,
     private readonly identity: Identity,
-    private readonly eventBus: IEventBus,
+    private readonly hooks: Hooks,
     private readonly channels: ProjectChannels,
     private readonly repo: ProjectRepository,
     private readonly projectChangeRequests: ProjectChangeRequestService,
@@ -176,8 +177,8 @@ export class ProjectService {
         scope: ['member:true'],
       });
 
-      const event = new ProjectCreatedEvent(project);
-      await this.eventBus.publish(event);
+      const event = new ProjectCreatedHook(project);
+      await this.hooks.run(event);
 
       this.channels.publishToAll('created', {
         program: project.type,
@@ -305,11 +306,11 @@ export class ProjectService {
       throw nowMissing;
     }
 
-    const event = new ProjectUpdatedEvent(updated, currentProject, {
+    const event = new ProjectUpdatedHook(updated, currentProject, {
       id: updated.id,
       ...changes,
     });
-    await this.eventBus.publish(event);
+    await this.hooks.run(event);
 
     const updatedPayload = this.channels.publishToAll('updated', {
       program: updated.type,
@@ -333,7 +334,7 @@ export class ProjectService {
       throw new ServerException('Failed to delete project', e);
     });
 
-    await this.eventBus.publish(new ProjectDeletedEvent(object));
+    await this.hooks.run(new ProjectDeletedHook(object));
 
     return this.channels.publishToAll('deleted', {
       program: object.type,

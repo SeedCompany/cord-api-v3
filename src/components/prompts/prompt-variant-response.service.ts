@@ -3,7 +3,7 @@ import { mapKeys } from '@seedcompany/common';
 import { lowerCase } from 'lodash';
 import { DateTime } from 'luxon';
 import {
-  type IdOf,
+  type ID,
   mapSecuredValue,
   NotFoundException,
   type Resource,
@@ -18,6 +18,7 @@ import {
 import { ResourceLoader } from '~/core';
 import { Identity } from '~/core/authentication';
 import { mapListResults } from '~/core/database/results';
+import { LiveQueryStore } from '~/core/live-query';
 import {
   Privileges,
   type UserResourcePrivileges,
@@ -56,6 +57,8 @@ export const PromptVariantResponseListService = <
     @Inject() protected readonly identity: Identity;
     @Inject(ResourceLoader)
     protected readonly resources: ResourceLoader;
+    @Inject(LiveQueryStore)
+    protected readonly liveQueryStore: LiveQueryStore;
     @Inject(repo)
     protected readonly repo: InstanceType<typeof repo>;
 
@@ -75,7 +78,7 @@ export const PromptVariantResponseListService = <
 
     protected abstract getPrompts(): Promise<readonly Prompt[]>;
 
-    async getPromptById(id: IdOf<Prompt>) {
+    async getPromptById(id: ID<Prompt>) {
       const prompts = await this.getPrompts();
       const prompt = prompts.find((p) => p.id === id);
       if (!prompt) {
@@ -181,6 +184,9 @@ export const PromptVariantResponseListService = <
 
       const dto = await this.repo.create(input);
 
+      // @ts-expect-error yeah, we are assuming it has an id and typename
+      this.liveQueryStore.invalidate([parent.__typename, parent.id]);
+
       return await this.secure(dto);
     }
 
@@ -196,6 +202,7 @@ export const PromptVariantResponseListService = <
 
       if (input.prompt !== response.prompt) {
         await this.repo.changePrompt(input);
+        this.liveQueryStore.invalidate(`PromptVariantResponse:${input.id}`);
       }
 
       return await this.secure({ ...response, prompt: input.prompt });
@@ -228,6 +235,7 @@ export const PromptVariantResponseListService = <
         )
       ) {
         await this.repo.submitResponse(input);
+        this.liveQueryStore.invalidate(`PromptVariantResponse:${input.id}`);
       }
 
       const session = this.identity.current;
@@ -253,7 +261,7 @@ export const PromptVariantResponseListService = <
       return await this.secure(updated);
     }
 
-    async delete(id: IdOf<PromptVariantResponse>) {
+    async delete(id: ID<PromptVariantResponse>) {
       const response = await this.repo.readOne(id);
 
       const context = await this.getPrivilegeContext(response);

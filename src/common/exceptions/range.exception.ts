@@ -1,4 +1,4 @@
-import { InputException } from '~/common';
+import { InputException } from './input.exception';
 
 export class RangeException extends InputException {
   constructor(options?: { message?: string; field?: string; cause?: Error }) {

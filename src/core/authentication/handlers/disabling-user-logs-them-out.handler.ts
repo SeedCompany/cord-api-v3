@@ -1,11 +1,11 @@
-import { EventsHandler } from '~/core';
-import { UserUpdatedEvent } from '../../../components/user/events/user-updated.event';
+import { OnHook } from '~/core/hooks';
+import { UserUpdatedHook } from '../../../components/user/hooks/user-updated.hook';
 import { AuthenticationService } from '../authentication.service';
 
-@EventsHandler(UserUpdatedEvent)
+@OnHook(UserUpdatedHook)
 export class DisablingUserLogsThemOutHandler {
   constructor(private readonly auth: AuthenticationService) {}
-  async handle({ input, updated: user }: UserUpdatedEvent) {
+  async handle({ input, updated: user }: UserUpdatedHook) {
     if (input.status === 'Disabled') {
       await this.auth.logoutByUser(user.id);
     }

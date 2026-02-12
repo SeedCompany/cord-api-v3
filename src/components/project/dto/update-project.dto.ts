@@ -1,4 +1,4 @@
-import { Field, InputType, ObjectType } from '@nestjs/graphql';
+import { Field, InputType } from '@nestjs/graphql';
 import { type DateTime } from 'luxon';
 import {
   type CalendarDate,
@@ -15,7 +15,6 @@ import {
 import { ChangesetIdField } from '../../changeset';
 import { ReportPeriod } from '../../periodic-report/dto';
 
-@ObjectType({ isAbstract: true })
 @InputType()
 export abstract class UpdateProject {
   @IdField()

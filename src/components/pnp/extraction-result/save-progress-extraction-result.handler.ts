@@ -1,17 +1,17 @@
-import { EventsHandler } from '~/core';
-import { PeriodicReportUploadedEvent } from '../../periodic-report/events';
+import { OnHook } from '~/core/hooks';
+import { PeriodicReportUploadedHook } from '../../periodic-report/hooks';
 import { ProductStep } from '../../product/dto';
 import { PnpProductSyncService } from '../../product/pnp-product-sync.service';
 import { PnpExtractionResultRepository } from './pnp-extraction-result.gel.repository';
 
-@EventsHandler([PeriodicReportUploadedEvent, -1])
+@OnHook(PeriodicReportUploadedHook, 1)
 export class SaveProgressExtractionResultHandler {
   constructor(
     private readonly repo: PnpExtractionResultRepository,
     private readonly productSyncer: PnpProductSyncService,
   ) {}
 
-  async handle(event: PeriodicReportUploadedEvent) {
+  async handle(event: PeriodicReportUploadedHook) {
     if (!event.pnpResultUsed) {
       return;
     }

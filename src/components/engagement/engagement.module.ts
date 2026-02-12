@@ -7,10 +7,7 @@ import { LanguageModule } from '../language/language.module';
 import { LocationModule } from '../location/location.module';
 import { ProductModule } from '../product/product.module';
 import { ProjectModule } from '../project/project.module';
-import {
-  InternshipEngagementMutationLinksResolver,
-  LanguageEngagementMutationLinksResolver,
-} from './engagement-mutation-links.resolver';
+import { EngagementMutationLinksResolver } from './engagement-mutation-links.resolver';
 import { EngagementMutationSubscriptionsResolver } from './engagement-mutation-subscriptions.resolver';
 import { EngagementStatusResolver } from './engagement-status.resolver';
 import {
@@ -49,10 +46,7 @@ import { EngagementProductConnectionResolver } from './product-connection.resolv
     EngagementResolver,
     EngagementMutationSubscriptionsResolver,
     EngagementUpdatedResolver,
-    LanguageEngagementMutationLinksResolver,
-    InternshipEngagementMutationLinksResolver,
-    // TODO cannot get this to work with without concretes overriding this
-    // EngagementMutationLinksResolver,
+    EngagementMutationLinksResolver,
     LanguageEngagementUpdateLinksResolver,
     InternshipEngagementUpdateLinksResolver,
     LanguageEngagementResolver,

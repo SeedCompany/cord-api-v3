@@ -3,8 +3,7 @@ import { Injectable, Optional } from '@nestjs/common';
 import { isUUID } from 'class-validator';
 import { type $, type Executor } from 'gel';
 import { type QueryArgs } from 'gel/dist/ifaces';
-import { TraceLayer } from '~/common';
-import { retry, type RetryOptions } from '~/common/retry';
+import { retry, TraceLayer } from '~/common';
 import { TracingService } from '~/core/tracing';
 import { Identity } from '../authentication';
 import { TypedEdgeQL } from './edgeql';
@@ -40,7 +39,7 @@ export class Gel {
     );
   }
 
-  async waitForConnection(options?: RetryOptions) {
+  async waitForConnection(options?: retry.Options) {
     await retry(() => this.client.ensureConnected(), options);
   }
 

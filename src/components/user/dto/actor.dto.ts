@@ -4,7 +4,6 @@ import {
   type ID,
   IdField,
   NameField,
-  resolveByTypename,
   type Role,
   SecuredProperty,
 } from '~/common';
@@ -15,9 +14,7 @@ import { RegisterResource } from '~/core/resources';
   db: e.Actor,
   skipAccessPolicies: true,
 })
-@InterfaceType({
-  resolveType: resolveByTypename(Actor.name),
-})
+@InterfaceType()
 export class Actor extends DataObject {
   declare readonly __typename: 'User' | 'SystemAgent';
 

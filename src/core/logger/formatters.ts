@@ -11,8 +11,7 @@ import * as stacktrace from 'stack-trace';
 import { MESSAGE } from 'triple-beam';
 import { fileURLToPath } from 'url';
 import { config, format, type LogEntry } from 'winston';
-import { getCauseList } from '~/common';
-import { maskSecrets as maskSecretsOfObj } from '~/common/mask-secrets';
+import { getCauseList, maskSecrets as maskSecretsOfObj } from '~/common';
 import { getNameFromEntry, type LogLevel } from './logger.interface';
 
 const colorsEnabled = !process.env.NO_COLOR;

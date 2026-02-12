@@ -1,5 +1,5 @@
-import { EnhancedResource } from '~/common';
-import type { ResourceLike } from '~/core';
+import { EnhancedResource } from '~/common/resources';
+import type { ResourceLike } from '~/core/resources';
 import { ServerException } from './exception';
 
 export class CreationFailed extends ServerException {

@@ -4,6 +4,7 @@ import { Privileges, withEffectiveSensitivity } from '../../authorization';
 import {
   type CreateEthnologueLanguage,
   EthnologueLanguage,
+  EthnologueLanguageUpdate,
   type UpdateEthnologueLanguage,
 } from '../dto';
 import { EthnologueLanguageRepository } from './ethnologue-language.repository';
@@ -36,18 +37,29 @@ export class EthnologueLanguageService {
     };
   }
 
-  async update(
-    id: ID,
-    input: UpdateEthnologueLanguage,
-    sensitivity: Sensitivity,
+  prepChanges(
+    input: UpdateEthnologueLanguage | undefined,
+    ethnologue: UnsecuredDto<EthnologueLanguage>,
+    effectiveSensitivity: Sensitivity,
   ) {
-    const ethnologueLanguage = await this.repo.readOne(id);
-
-    const changes = this.repo.getActualChanges(ethnologueLanguage, input);
+    if (!input) {
+      return undefined;
+    }
+    const changes = this.repo.getActualChanges(ethnologue, input);
+    if (Object.keys(changes).length === 0) {
+      return undefined;
+    }
     this.privileges
-      .for(EthnologueLanguage, ethnologueLanguage)
-      .verifyChanges(withEffectiveSensitivity(changes, sensitivity));
+      .for(EthnologueLanguage, ethnologue)
+      .verifyChanges(withEffectiveSensitivity(changes, effectiveSensitivity));
+    return {
+      changes,
+      updated: EthnologueLanguageUpdate.fromInput(changes),
+      previous: EthnologueLanguageUpdate.pickPrevious(ethnologue, changes),
+    };
+  }
 
-    await this.repo.update({ id: ethnologueLanguage.id, ...changes });
+  async update(id: ID<EthnologueLanguage>, input: UpdateEthnologueLanguage) {
+    await this.repo.update({ id, ...input });
   }
 }

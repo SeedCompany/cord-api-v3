@@ -9,7 +9,7 @@ import {
   Resource,
   type ResourceShape,
 } from '~/common';
-import { DbSort, type SortTransformer } from '~/common/db-sort.decorator';
+import { DbSort } from '~/common';
 import { apoc } from './cypher-functions';
 import { ACTIVE } from './matching';
 
@@ -200,10 +200,10 @@ interface SortInternals {
   /** @internal */
   sub?: boolean;
   /** @internal */
-  transformerRef?: { current: SortTransformer };
+  transformerRef?: { current: DbSort.Transformer };
 }
 
 interface SortMatch<SortKey extends string> {
   matcher: SortMatcher<SortKey>;
-  transformer: SortTransformer;
+  transformer: DbSort.Transformer;
 }

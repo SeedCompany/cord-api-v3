@@ -16,12 +16,13 @@ import {
 import {
   ConfigService,
   HandleIdLookup,
-  IEventBus,
   ILogger,
   Logger,
   ResourceLoader,
 } from '~/core';
 import { type AnyChangesOf } from '~/core/database/changes';
+import { Hooks } from '~/core/hooks';
+import { LiveQueryStore } from '~/core/live-query';
 import { Privileges } from '../authorization';
 import { CeremonyService } from '../ceremony';
 import { FileNodeLoader } from '../file';
@@ -29,7 +30,7 @@ import { type File } from '../file/dto';
 import { ProductService } from '../product';
 import { type ProductListInput, type SecuredProductList } from '../product/dto';
 import { ProjectLoader, ProjectService } from '../project';
-import { IProject } from '../project/dto';
+import { IProject, resolveProjectType } from '../project/dto';
 import {
   type CreateInternshipEngagement,
   type CreateLanguageEngagement,
@@ -49,10 +50,10 @@ import { EngagementChannels } from './engagement.channels';
 import { EngagementRepository } from './engagement.repository';
 import { EngagementRules } from './engagement.rules';
 import {
-  EngagementCreatedEvent,
-  EngagementUpdatedEvent,
-  EngagementWillDeleteEvent,
-} from './events';
+  EngagementCreatedHook,
+  EngagementUpdatedHook,
+  EngagementWillDeleteHook,
+} from './hooks';
 
 @Injectable()
 export class EngagementService {
@@ -66,9 +67,10 @@ export class EngagementService {
     private readonly privileges: Privileges,
     @Inject(forwardRef(() => ProjectService))
     private readonly projectService: ProjectService & {},
-    private readonly eventBus: IEventBus,
+    private readonly hooks: Hooks,
     private readonly resources: ResourceLoader,
     private readonly channels: EngagementChannels,
+    private readonly liveQueryStore: LiveQueryStore,
     @Logger(`engagement:service`) private readonly logger: ILogger,
   ) {}
 
@@ -87,8 +89,13 @@ export class EngagementService {
 
     RequiredWhen.verify(LanguageEngagement, engagement);
 
-    const event = new EngagementCreatedEvent(engagement, input);
-    await this.eventBus.publish(event);
+    const event = new EngagementCreatedHook(engagement, input);
+    await this.hooks.run(event);
+
+    this.liveQueryStore.invalidate([
+      resolveProjectType(engagement.project),
+      engagement.project.id,
+    ]);
 
     this.channels.publishToAll('language', 'created', {
       program: engagement.project.type,
@@ -115,8 +122,13 @@ export class EngagementService {
 
     RequiredWhen.verify(InternshipEngagement, engagement);
 
-    const event = new EngagementCreatedEvent(engagement, input);
-    await this.eventBus.publish(event);
+    const event = new EngagementCreatedHook(engagement, input);
+    await this.hooks.run(event);
+
+    this.liveQueryStore.invalidate([
+      resolveProjectType(engagement.project),
+      engagement.project.id,
+    ]);
 
     this.channels.publishToAll('internship', 'created', {
       program: engagement.project.type,
@@ -229,12 +241,12 @@ export class EngagementService {
       throw nowMissing;
     }
 
-    const event = new EngagementUpdatedEvent(updated, previous, {
+    const event = new EngagementUpdatedHook(updated, previous, {
       id: object.id,
       methodology,
       ...changes,
     });
-    await this.eventBus.publish(event);
+    await this.hooks.run(event);
 
     const { pnp, ...simplePrevious } = previous;
     const { pnp: newPnp, ...simpleChanges } = changes;
@@ -318,11 +330,11 @@ export class EngagementService {
       throw nowMissing;
     }
 
-    const event = new EngagementUpdatedEvent(updated, previous, {
+    const event = new EngagementUpdatedHook(updated, previous, {
       id: object.id,
       ...changes,
     });
-    await this.eventBus.publish(event);
+    await this.hooks.run(event);
 
     const { growthPlan, ...simplePrevious } = previous;
     const { growthPlan: newGrowthPlan, ...simpleChanges } = changes;
@@ -353,8 +365,8 @@ export class EngagementService {
 
   async triggerUpdateEvent(id: ID) {
     const object = await this.repo.readOne(id);
-    const event = new EngagementUpdatedEvent(object, object, { id });
-    await this.eventBus.publish(event);
+    const event = new EngagementUpdatedHook(object, object, { id });
+    await this.hooks.run(event);
   }
 
   async delete(id: ID, changeset?: ID) {
@@ -364,8 +376,11 @@ export class EngagementService {
       .for(resolveEngagementType(object), object)
       .verifyCan('delete');
 
-    await this.eventBus.publish(new EngagementWillDeleteEvent(object));
-    const { at } = await this.repo.deleteNode(object, { changeset });
+    await this.hooks.run(new EngagementWillDeleteHook(object));
+    const { at } = await this.repo.deleteNode(object, {
+      resource: resolveEngagementType(object),
+      changeset,
+    });
 
     const payload = this.channels.publishToAll(
       resolveEngagementType(object) === LanguageEngagement

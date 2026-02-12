@@ -13,19 +13,16 @@ import {
   type UnsecuredDto,
   viewOfChangeset,
 } from '~/common';
-import {
-  HandleIdLookup,
-  IEventBus,
-  ILogger,
-  Logger,
-  ResourceLoader,
-} from '~/core';
+import { HandleIdLookup, ILogger, Logger, ResourceLoader } from '~/core';
 import { type AnyChangesOf } from '~/core/database/changes';
+import { Hooks } from '~/core/hooks';
+import { LiveQueryStore } from '~/core/live-query';
 import { Privileges } from '../authorization';
 import { FileService } from '../file';
 import { PartnerService } from '../partner';
 import { type Partner, PartnerType } from '../partner/dto';
 import { ProjectService } from '../project';
+import { resolveProjectType } from '../project/dto';
 import {
   type CreatePartnership,
   type FinancialReportingType,
@@ -35,10 +32,10 @@ import {
   type UpdatePartnership,
 } from './dto';
 import {
-  PartnershipCreatedEvent,
-  PartnershipUpdatedEvent,
-  PartnershipWillDeleteEvent,
-} from './events';
+  PartnershipCreatedHook,
+  PartnershipUpdatedHook,
+  PartnershipWillDeleteHook,
+} from './hooks';
 import type { PartnershipByProjectAndPartnerInput } from './partnership-by-project-and-partner.loader';
 import { PartnershipRepository } from './partnership.repository';
 
@@ -51,16 +48,17 @@ export class PartnershipService {
     @Inject(forwardRef(() => ProjectService))
     private readonly projectService: ProjectService & {},
     private readonly privileges: Privileges,
-    private readonly eventBus: IEventBus,
+    private readonly hooks: Hooks,
     private readonly repo: PartnershipRepository,
     private readonly resourceLoader: ResourceLoader,
+    private readonly liveQueryStore: LiveQueryStore,
     @Logger('partnership:service') private readonly logger: ILogger,
   ) {}
 
   async create(input: CreatePartnership, changeset?: ID): Promise<Partnership> {
     PartnershipDateRangeException.throwIfInvalid(input);
 
-    const [_project, partner] = await Promise.all([
+    const [project, partner] = await Promise.all([
       this.resourceLoader.load('Project', input.project).catch((e) => {
         throw e instanceof NotFoundException
           ? new NotFoundException('Could not find project', 'project', e)
@@ -95,7 +93,12 @@ export class PartnershipService {
       );
 
       if (primary) {
-        await this.repo.removePrimaryFromOtherPartnerships(result.id);
+        const other = await this.repo.removePrimaryFromOtherPartnerships(
+          result.id,
+        );
+        this.liveQueryStore.invalidateAll(
+          other.map((r) => ['Partnership', r.id]),
+        );
       }
 
       const partnership = await this.readOne(
@@ -109,7 +112,9 @@ export class PartnershipService {
 
       this.privileges.for(Partnership, partnership).verifyCan('create');
 
-      await this.eventBus.publish(new PartnershipCreatedEvent(partnership));
+      await this.hooks.run(new PartnershipCreatedHook(partnership));
+
+      this.liveQueryStore.invalidate([resolveProjectType(project), project.id]);
 
       return partnership;
     } catch (exception) {
@@ -209,8 +214,8 @@ export class PartnershipService {
     }
 
     const partnership = await this.readOne(input.id, view);
-    const event = new PartnershipUpdatedEvent(partnership, object, input);
-    await this.eventBus.publish(event);
+    const event = new PartnershipUpdatedHook(partnership, object, input);
+    await this.hooks.run(event);
     return event.updated;
   }
 
@@ -229,7 +234,7 @@ export class PartnershipService {
       }
     }
 
-    await this.eventBus.publish(new PartnershipWillDeleteEvent(object));
+    await this.hooks.run(new PartnershipWillDeleteHook(object));
 
     try {
       await this.repo.deleteNode(object, { changeset });

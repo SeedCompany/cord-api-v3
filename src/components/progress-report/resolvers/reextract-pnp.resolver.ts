@@ -1,16 +1,17 @@
 import { Mutation, Resolver } from '@nestjs/graphql';
 import { type ID, IdArg, InputException } from '~/common';
-import { IEventBus, Loader, type LoaderOf } from '~/core';
+import { Loader, type LoaderOf } from '~/core';
+import { Hooks } from '~/core/hooks';
 import { FileNodeLoader, FileService, resolveDefinedFile } from '../../file';
 import { PeriodicReportLoader } from '../../periodic-report';
-import { PeriodicReportUploadedEvent } from '../../periodic-report/events';
+import { PeriodicReportUploadedHook } from '../../periodic-report/hooks';
 import { PnpProgressExtractionResult } from '../../pnp/extraction-result';
 
 @Resolver()
 export class ReextractPnpResolver {
   constructor(
     private readonly files: FileService,
-    private readonly eventBus: IEventBus,
+    private readonly hooks: Hooks,
   ) {}
 
   @Mutation(() => PnpProgressExtractionResult)
@@ -37,8 +38,8 @@ export class ReextractPnpResolver {
     const fv = await this.files.getFileVersion(file.value.latestVersionId);
     const pnp = this.files.asDownloadable(fv);
 
-    const event = new PeriodicReportUploadedEvent(report, pnp);
-    await this.eventBus.publish(event);
+    const event = new PeriodicReportUploadedHook(report, pnp);
+    await this.hooks.run(event);
 
     return event.pnpResult;
   }

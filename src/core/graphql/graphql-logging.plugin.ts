@@ -3,8 +3,7 @@ import type {
   OnSubscribeEventPayload as OnSubscribe,
 } from '@envelop/types';
 import { Injectable } from '@nestjs/common';
-import { type GqlContextType as ContextType } from '~/common';
-import { maskSecrets } from '~/common/mask-secrets';
+import { type GqlContextType as ContextType, maskSecrets } from '~/common';
 import { ILogger, Logger } from '../logger';
 import { Plugin } from './plugin.decorator';
 

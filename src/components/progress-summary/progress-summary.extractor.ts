@@ -6,8 +6,8 @@ import {
   fiscalQuarter,
   fiscalQuarterLabel,
   fiscalYear,
+  type Xlsx,
 } from '~/common';
-import { type Column, type Row } from '~/common/xlsx.util';
 import { type Downloadable, type FileVersion } from '../file/dto';
 import { Pnp, type ProgressSheet } from '../pnp';
 import {
@@ -56,7 +56,7 @@ const findFiscalYearRow = (sheet: ProgressSheet, fiscalYear: number) => {
   throw new Error('Unable to find fiscal year in pnp file');
 };
 
-const findLatestCumulative = (currentYear: Row<ProgressSheet>) => {
+const findLatestCumulative = (currentYear: Xlsx.Row<ProgressSheet>) => {
   const { sheet } = currentYear;
   // eslint-disable-next-line no-constant-condition,@typescript-eslint/no-unnecessary-condition
   while (true) {
@@ -72,9 +72,9 @@ const findLatestCumulative = (currentYear: Row<ProgressSheet>) => {
 };
 
 const summaryFrom = (
-  fiscalYear: Row<ProgressSheet>,
-  plannedColumn: Column,
-  actualColumn: Column,
+  fiscalYear: Xlsx.Row<ProgressSheet>,
+  plannedColumn: Xlsx.Column,
+  actualColumn: Xlsx.Column,
 ) => {
   let planned = fiscalYear.cell(plannedColumn).asNumber ?? 0;
   let actual = fiscalYear.cell(actualColumn).asNumber ?? 0;

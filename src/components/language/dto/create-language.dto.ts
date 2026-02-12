@@ -1,4 +1,4 @@
-import { Field, InputType, Int, ObjectType } from '@nestjs/graphql';
+import { Field, InputType, Int } from '@nestjs/graphql';
 import { Transform, Type } from 'class-transformer';
 import {
   IsAlpha,
@@ -18,7 +18,6 @@ import {
   SensitivityField,
 } from '~/common';
 import { ExactLength } from '~/common/validators/exactLength';
-import { Language } from './language.dto';
 
 @InputType()
 export abstract class CreateEthnologueLanguage {
@@ -108,10 +107,4 @@ export abstract class CreateLanguage {
 
   @OptionalField()
   readonly isAvailableForReporting?: boolean = false;
-}
-
-@ObjectType()
-export abstract class LanguageCreated {
-  @Field()
-  readonly language: Language;
 }

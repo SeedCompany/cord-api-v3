@@ -1,18 +1,19 @@
-import { EventsHandler, type IEventHandler } from '~/core';
+import { OnHook } from '~/core/hooks';
 import {
-  EngagementCreatedEvent,
-  EngagementUpdatedEvent,
-} from '../../engagement/events';
+  EngagementCreatedHook,
+  EngagementUpdatedHook,
+} from '../../engagement/hooks';
 import { FileService } from '../../file';
 import { PnpPlanningExtractionResult } from '../../pnp/extraction-result';
 import { PlanningExtractionResultSaver } from '../../pnp/extraction-result/planning-extraction-result-saver';
 import { getAvailableSteps } from '../dto';
 import { PnpProductSyncService } from '../pnp-product-sync.service';
 
-type SubscribedEvent = EngagementCreatedEvent | EngagementUpdatedEvent;
+type SubscribedEvent = EngagementCreatedHook | EngagementUpdatedHook;
 
-@EventsHandler(EngagementCreatedEvent, EngagementUpdatedEvent)
-export class ExtractProductsFromPnpHandler implements IEventHandler<SubscribedEvent> {
+@OnHook(EngagementCreatedHook)
+@OnHook(EngagementUpdatedHook)
+export class ExtractProductsFromPnpHandler {
   constructor(
     private readonly syncer: PnpProductSyncService,
     private readonly files: FileService,
@@ -24,9 +25,7 @@ export class ExtractProductsFromPnpHandler implements IEventHandler<SubscribedEv
       return;
     }
     const engagement =
-      event instanceof EngagementCreatedEvent
-        ? event.engagement
-        : event.updated;
+      event instanceof EngagementCreatedHook ? event.engagement : event.updated;
     const { pnp: hasPnpInput, methodology } = event.input;
     if (!engagement.pnp || !hasPnpInput || !methodology) {
       return;

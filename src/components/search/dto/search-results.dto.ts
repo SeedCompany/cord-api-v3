@@ -1,5 +1,5 @@
 import { createUnionType } from '@nestjs/graphql';
-import { entries, setOf, simpleSwitch } from '@seedcompany/common';
+import { entries, setOf } from '@seedcompany/common';
 import { uniq } from 'lodash';
 import { type EnumType, makeEnum } from '~/common';
 import { type ResourceMap } from '~/core';
@@ -108,8 +108,6 @@ export type SearchResult = SearchResultMap[keyof SearchableMap];
 export const SearchResult = createUnionType({
   name: 'SearchResult',
   types: () => uniq(Object.values(searchable)),
-  resolveType: (value: SearchResult) =>
-    simpleSwitch(value.__typename, searchable),
 });
 
 export type SearchType =

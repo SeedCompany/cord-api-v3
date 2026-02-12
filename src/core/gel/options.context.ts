@@ -10,7 +10,7 @@ import {
   map,
   type Observable,
 } from 'rxjs';
-import { lazyRef } from '~/common/lazy-ref';
+import { lazyRef } from '~/common';
 
 export type OptionsFn = (options: Options) => Options;
 

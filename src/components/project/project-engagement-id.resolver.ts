@@ -1,10 +1,6 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import {
-  type AbstractClassType,
-  type ID,
-  IdArg,
-  NotFoundException,
-} from '~/common';
+import type { AbstractClass } from 'type-fest';
+import { type ID, IdArg, NotFoundException } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { Privileges } from '../authorization';
 import { EngagementLoader } from '../engagement';
@@ -23,8 +19,8 @@ import {
 } from './dto';
 
 function makeResolver(
-  projectClass: AbstractClassType<any>,
-  engagementClass: AbstractClassType<any>,
+  projectClass: AbstractClass<any>,
+  engagementClass: AbstractClass<any>,
 ) {
   @Resolver(projectClass)
   class ProjectEngagementIdConnectionResolver {

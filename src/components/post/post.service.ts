@@ -14,6 +14,7 @@ import {
 import { ILogger, Logger, ResourceLoader, ResourcesHost } from '~/core';
 import { Identity } from '~/core/authentication';
 import { type BaseNode, isBaseNode } from '~/core/database/results';
+import { LiveQueryStore } from '~/core/live-query';
 import { Privileges } from '../authorization';
 import { type CreatePost, Post, Postable, type UpdatePost } from './dto';
 import { type PostListInput, type SecuredPostList } from './dto/list-posts.dto';
@@ -30,6 +31,7 @@ export class PostService {
     private readonly repo: PostRepository,
     private readonly resources: ResourceLoader,
     private readonly resourcesHost: ResourcesHost,
+    private readonly liveQueryStore: LiveQueryStore,
     @Logger('post:service') private readonly logger: ILogger,
   ) {}
 
@@ -42,6 +44,9 @@ export class PostService {
       if (!result) {
         throw new CreationFailed(Post);
       }
+
+      const postable = perms.context as ConcretePostable;
+      this.liveQueryStore.invalidate([postable.__typename, postable.id]);
 
       return this.secure(result.dto);
     } catch (exception) {

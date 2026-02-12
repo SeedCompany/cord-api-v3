@@ -1,20 +1,21 @@
 import { asyncPool, setOf } from '@seedcompany/common';
 import { node, relation } from 'cypher-query-builder';
 import { type ID, ServerException } from '~/common';
-import { EventsHandler, type IEventHandler, ILogger, Logger } from '~/core';
+import { ILogger, Logger } from '~/core';
 import { DatabaseService } from '~/core/database';
 import { ACTIVE, deleteBaseNode, INACTIVE } from '~/core/database/query';
+import { OnHook } from '~/core/hooks';
 import {
-  ChangesetFinalizingEvent,
+  ChangesetFinalizingHook,
   commitChangesetProps,
   rejectChangesetProps,
 } from '../../changeset';
 import { EngagementService } from '../engagement.service';
 
-type SubscribedEvent = ChangesetFinalizingEvent;
+type SubscribedEvent = ChangesetFinalizingHook;
 
-@EventsHandler(ChangesetFinalizingEvent)
-export class ApplyFinalizedChangesetToEngagement implements IEventHandler<SubscribedEvent> {
+@OnHook(ChangesetFinalizingHook)
+export class ApplyFinalizedChangesetToEngagement {
   constructor(
     private readonly db: DatabaseService,
     private readonly engagementService: EngagementService,

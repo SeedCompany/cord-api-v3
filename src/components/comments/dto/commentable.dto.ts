@@ -1,9 +1,5 @@
 import { InterfaceType } from '@nestjs/graphql';
-import {
-  resolveByTypename,
-  Resource,
-  type ResourceRelationsShape,
-} from '~/common';
+import { Resource, type ResourceRelationsShape } from '~/common';
 import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
 import { CommentThread } from './comment-thread.dto';
@@ -12,7 +8,6 @@ import { CommentThread } from './comment-thread.dto';
 @InterfaceType({
   description: 'A resource that can be commented on',
   implements: [Resource],
-  resolveType: resolveByTypename(Commentable.name),
 })
 export abstract class Commentable extends Resource {
   static readonly Relations = (() => ({

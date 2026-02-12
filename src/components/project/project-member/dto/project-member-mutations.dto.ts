@@ -1,6 +1,5 @@
 import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
-import { Grandparent, type ID, IdField } from '~/common';
-import { AsUpdateType } from '~/common/as-update.type';
+import { AsUpdateType, Grandparent, type ID, IdField } from '~/common';
 import { ProjectMutationOrDeletion } from '../../dto/project-mutations.dto';
 import type { ProjectMember } from './project-member.dto';
 import { UpdateProjectMember } from './update-project-member.dto';

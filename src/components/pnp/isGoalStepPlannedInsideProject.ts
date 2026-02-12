@@ -1,6 +1,5 @@
 import { trimStart } from 'lodash';
-import { fullFiscalYear } from '~/common';
-import { type Cell } from '~/common/xlsx.util';
+import { fullFiscalYear, type Xlsx } from '~/common';
 import { ProductStep } from '../product/dto';
 import { type PnpExtractionResult, PnpProblemType } from './extraction-result';
 import { type PlanningSheet } from './planning-sheet';
@@ -11,7 +10,7 @@ import { type Pnp } from './pnp';
  */
 export const isGoalStepPlannedInsideProject = (
   pnp: Pnp,
-  cell: Cell<PlanningSheet>,
+  cell: Xlsx.Cell<PlanningSheet>,
   step: ProductStep,
   result: PnpExtractionResult,
 ) => {
@@ -38,7 +37,7 @@ export const isGoalStepPlannedInsideProject = (
   return false;
 };
 
-export const stepPlanCompleteDate = (cell: Cell<PlanningSheet>) => {
+export const stepPlanCompleteDate = (cell: Xlsx.Cell<PlanningSheet>) => {
   const fiscalYear =
     cell.asNumber ?? (Number(trimStart(cell.asString ?? '', `'`)) || undefined);
   const fullFY = fiscalYear ? fullFiscalYear(fiscalYear) : undefined;

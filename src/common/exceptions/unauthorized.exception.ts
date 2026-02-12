@@ -1,6 +1,6 @@
 import { lowerCase } from 'lodash';
 import pluralize from 'plur';
-import { type EnhancedResource } from '../resource.dto';
+import { type EnhancedResource } from '~/common/resources';
 import { InputException, type InputExceptionArgs } from './input.exception';
 
 /**

@@ -1,7 +1,8 @@
 import { mapOf } from '@seedcompany/common';
-import { EventsHandler, ILogger, Logger } from '~/core';
+import { ILogger, Logger } from '~/core';
+import { OnHook } from '~/core/hooks';
 import { ReportType } from '../../periodic-report/dto';
-import { PeriodicReportUploadedEvent } from '../../periodic-report/events';
+import { PeriodicReportUploadedHook } from '../../periodic-report/hooks';
 import { PnpProblemType } from '../../pnp/extraction-result';
 import { ProductService } from '../../product';
 import { ProducibleType, ProductStep } from '../../product/dto';
@@ -11,7 +12,7 @@ import { ProductProgressService } from '../product-progress.service';
 import { StepNotPlannedException } from '../step-not-planned.exception';
 import { StepProgressExtractor } from '../step-progress-extractor.service';
 
-@EventsHandler(PeriodicReportUploadedEvent)
+@OnHook(PeriodicReportUploadedHook)
 export class ExtractPnpProgressHandler {
   constructor(
     private readonly extractor: StepProgressExtractor,
@@ -20,7 +21,7 @@ export class ExtractPnpProgressHandler {
     @Logger('step-progress:extractor') private readonly logger: ILogger,
   ) {}
 
-  async handle(event: PeriodicReportUploadedEvent) {
+  async handle(event: PeriodicReportUploadedHook) {
     if (event.report.type !== ReportType.Progress) {
       return;
     }

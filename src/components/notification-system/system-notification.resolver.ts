@@ -6,7 +6,7 @@ import {
   ObjectType,
   Resolver,
 } from '@nestjs/graphql';
-import { MarkdownScalar } from '~/common/markdown.scalar';
+import { MarkdownScalar } from '~/common/scalars/markdown.scalar';
 import { Privileges } from '../authorization';
 import { NotificationService } from '../notifications';
 import { SystemNotification } from './system-notification.dto';

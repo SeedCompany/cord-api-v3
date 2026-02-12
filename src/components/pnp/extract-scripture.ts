@@ -1,13 +1,13 @@
 import { asNonEmptyArray } from '@seedcompany/common';
 import { parseScripture, tryParseScripture } from '@seedcompany/scripture';
-import { type Row } from '~/common/xlsx.util';
+import { type Xlsx } from '~/common';
 import { ScriptureRange } from '../scripture/dto';
 import { type PnpExtractionResult, PnpProblemType } from './extraction-result';
 import { MismatchScriptureAndVerseCount } from './isGoalRow';
 import { type WrittenScripturePlanningSheet } from './planning-sheet';
 
 export const extractScripture = (
-  row: Row<WrittenScripturePlanningSheet>,
+  row: Xlsx.Row<WrittenScripturePlanningSheet>,
   result: PnpExtractionResult,
 ) => {
   const sheet = row.sheet;

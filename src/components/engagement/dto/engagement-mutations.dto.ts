@@ -1,8 +1,8 @@
 import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
-import { Grandparent, type ID, IdField } from '~/common';
-import { AsUpdateType } from '~/common/as-update.type';
+import { AsUpdateType, Grandparent, type ID, IdField } from '~/common';
 import type { LinkTo } from '~/core/resources';
 import { ProjectMutation } from '../../project/dto/project-mutations.dto';
+import { InternshipEngagement, LanguageEngagement } from './engagement.dto';
 import {
   UpdateEngagement,
   UpdateInternshipEngagement,
@@ -20,10 +20,16 @@ export class EngagementMutationOrDeletion extends ProjectMutation {
 export class EngagementMutation extends EngagementMutationOrDeletion {}
 
 @InterfaceType({ implements: [EngagementMutation] })
-export class LanguageEngagementMutation extends EngagementMutation {}
+export class LanguageEngagementMutation extends EngagementMutation {
+  @Field(() => LanguageEngagement)
+  readonly engagement?: never; // Resolved from EngagementMutation with EngagementMutationLinksResolver
+}
 
 @InterfaceType({ implements: [EngagementMutation] })
-export class InternshipEngagementMutation extends EngagementMutation {}
+export class InternshipEngagementMutation extends EngagementMutation {
+  @Field(() => InternshipEngagement)
+  readonly engagement?: never; // Resolved from EngagementMutation with EngagementMutationLinksResolver
+}
 
 @InterfaceType({ implements: [EngagementMutation] })
 export abstract class EngagementCreated extends EngagementMutation {}
@@ -31,11 +37,17 @@ export abstract class EngagementCreated extends EngagementMutation {}
 @ObjectType({ implements: [LanguageEngagementMutation, EngagementCreated] })
 export class LanguageEngagementCreated extends EngagementCreated {
   declare readonly __typename: 'LanguageEngagementCreated';
+
+  @Field(() => LanguageEngagement)
+  readonly engagement?: never; // Resolved from EngagementMutation with EngagementMutationLinksResolver
 }
 
 @ObjectType({ implements: [InternshipEngagementMutation, EngagementCreated] })
 export class InternshipEngagementCreated extends EngagementCreated {
   declare readonly __typename: 'InternshipEngagementCreated';
+
+  @Field(() => InternshipEngagement)
+  readonly engagement?: never; // Resolved from EngagementMutation with EngagementMutationLinksResolver
 }
 
 @InterfaceType()
@@ -84,6 +96,9 @@ export class LanguageEngagementUpdated extends EngagementUpdated {
 
   @Field({ middleware: [Grandparent.store] })
   declare readonly updated: LanguageEngagementUpdate;
+
+  @Field(() => LanguageEngagement)
+  readonly engagement?: never; // Resolved from EngagementMutation with EngagementMutationLinksResolver
 }
 
 @ObjectType({ implements: [InternshipEngagementMutation, EngagementUpdated] })
@@ -95,6 +110,9 @@ export class InternshipEngagementUpdated extends EngagementUpdated {
 
   @Field({ middleware: [Grandparent.store] })
   declare readonly updated: InternshipEngagementUpdate;
+
+  @Field(() => InternshipEngagement)
+  readonly engagement?: never; // Resolved from EngagementMutation with EngagementMutationLinksResolver
 }
 
 @InterfaceType({ implements: [EngagementMutationOrDeletion] })

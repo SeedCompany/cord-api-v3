@@ -1,25 +1,26 @@
 import { type Role } from '~/common';
-import { EventsHandler } from '~/core/events';
+import { OnHook } from '~/core/hooks';
 import { ILogger, Logger } from '~/core/logger';
-import { FieldRegionUpdatedEvent } from '../../../field-region/events/field-region-updated.event';
-import { FieldZoneUpdatedEvent } from '../../../field-zone/events/field-zone-updated.event';
+import { FieldRegionUpdatedHook } from '../../../field-region/hooks/field-region-updated.hook';
+import { FieldZoneUpdatedHook } from '../../../field-zone/hooks/field-zone-updated.hook';
 import { ProjectMemberRepository } from '../project-member.repository';
 
-@EventsHandler(FieldZoneUpdatedEvent, FieldRegionUpdatedEvent)
+@OnHook(FieldZoneUpdatedHook)
+@OnHook(FieldRegionUpdatedHook)
 export class DirectorChangeApplyToProjectMembersHandler {
   constructor(
     private readonly repo: ProjectMemberRepository,
     @Logger('project:members') private readonly logger: ILogger,
   ) {}
 
-  async handle(event: FieldZoneUpdatedEvent | FieldRegionUpdatedEvent) {
+  async handle(event: FieldZoneUpdatedHook | FieldRegionUpdatedHook) {
     const oldDirector = event.previous.director.id;
     const newDirector = event.input.director;
     if (!newDirector) {
       return;
     }
     const role: Role =
-      event instanceof FieldZoneUpdatedEvent
+      event instanceof FieldZoneUpdatedHook
         ? 'FieldOperationsDirector'
         : 'RegionalDirector';
 

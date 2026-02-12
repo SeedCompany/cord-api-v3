@@ -1,17 +1,17 @@
 import { asyncPool } from '@seedcompany/common';
 import { node, relation } from 'cypher-query-builder';
-import { IEventBus } from '~/core';
 import { BaseMigration, Migration } from '~/core/database';
 import { ACTIVE, matchProps, merge } from '~/core/database/query';
+import { Hooks } from '~/core/hooks';
 import { FileService } from '../../file';
 import { type FileVersion } from '../../file/dto';
-import { PeriodicReportUploadedEvent } from '../../periodic-report/events';
+import { PeriodicReportUploadedHook } from '../../periodic-report/hooks';
 import { type ProgressReport } from '../dto';
 
 @Migration('2025-01-06T09:00:00')
 export class ReextractPnpProgressReportsMigration extends BaseMigration {
   constructor(
-    private readonly eventBus: IEventBus,
+    private readonly hooks: Hooks,
     private readonly files: FileService,
   ) {
     super();
@@ -24,8 +24,8 @@ export class ReextractPnpProgressReportsMigration extends BaseMigration {
     await asyncPool(2, pnps, async ({ dto: report, fv }) => {
       try {
         const pnp = this.files.asDownloadable(fv);
-        const event = new PeriodicReportUploadedEvent(report, pnp);
-        await this.db.conn.runInTransaction(() => this.eventBus.publish(event));
+        const event = new PeriodicReportUploadedHook(report, pnp);
+        await this.db.conn.runInTransaction(() => this.hooks.run(event));
       } catch (e) {
         this.logger.error('Failed to re-extract PnP', {
           report: report.id,

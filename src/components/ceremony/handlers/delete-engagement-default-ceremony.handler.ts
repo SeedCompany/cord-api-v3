@@ -1,15 +1,16 @@
-import { ConfigService, EventsHandler, type IEventHandler } from '~/core';
-import { EngagementWillDeleteEvent } from '../../engagement/events';
+import { ConfigService } from '~/core';
+import { OnHook } from '~/core/hooks';
+import { EngagementWillDeleteHook } from '../../engagement/hooks';
 import { CeremonyService } from '../ceremony.service';
 
-@EventsHandler(EngagementWillDeleteEvent)
-export class DetachEngagementRootDirectoryHandler implements IEventHandler<EngagementWillDeleteEvent> {
+@OnHook(EngagementWillDeleteHook)
+export class DetachEngagementRootDirectoryHandler {
   constructor(
     private readonly ceremonies: CeremonyService,
     private readonly config: ConfigService,
   ) {}
 
-  async handle({ engagement }: EngagementWillDeleteEvent) {
+  async handle({ engagement }: EngagementWillDeleteHook) {
     if (this.config.databaseEngine === 'gel') {
       return;
     }

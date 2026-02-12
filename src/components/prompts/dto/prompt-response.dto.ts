@@ -4,7 +4,6 @@ import {
   DbLabel,
   type ID,
   IdField,
-  type IdOf,
   Resource,
   type ResourceRelationsShape,
   type RichTextDocument,
@@ -63,7 +62,7 @@ export class PromptVariantResponse<
   readonly parent: BaseNode;
 
   @Field(() => SecuredPrompt)
-  readonly prompt: SecuredPrompt & SetUnsecuredType<IdOf<Prompt>>;
+  readonly prompt: SecuredPrompt & SetUnsecuredType<ID<Prompt>>;
 
   @Field(() => [VariantResponse])
   readonly responses: ReadonlyArray<VariantResponse<Key>> &
@@ -79,22 +78,22 @@ export abstract class ChoosePrompt {
   readonly resource: ID;
 
   @IdField()
-  readonly prompt: IdOf<Prompt>;
+  readonly prompt: ID<Prompt>;
 }
 
 @InputType()
 export abstract class ChangePrompt {
   @IdField()
-  readonly id: IdOf<PromptResponse | PromptVariantResponse>;
+  readonly id: ID<PromptResponse | PromptVariantResponse>;
 
   @IdField()
-  readonly prompt: IdOf<Prompt>;
+  readonly prompt: ID<Prompt>;
 }
 
 @InputType()
 export abstract class UpdatePromptVariantResponse<Key extends string = ID> {
   @IdField()
-  readonly id: IdOf<PromptVariantResponse>;
+  readonly id: ID<PromptVariantResponse>;
 
   @IdField()
   readonly variant: Key;

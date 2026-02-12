@@ -5,7 +5,7 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { IdArg, type IdOf } from '~/common';
+import { type ID, IdArg } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { Privileges } from '../../../authorization';
 import { Media } from '../../../file/media/media.dto';
@@ -64,7 +64,7 @@ export class ProgressReportMediaResolver {
 
   @Mutation(() => ProgressReport)
   async deleteProgressReportMedia(
-    @IdArg() id: IdOf<ReportMedia>,
+    @IdArg() id: ID<ReportMedia>,
     @Loader(() => PeriodicReportLoader) reports: LoaderOf<PeriodicReportLoader>,
   ) {
     const reportId = await this.service.delete(id);

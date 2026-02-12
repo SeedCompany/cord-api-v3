@@ -1,12 +1,9 @@
-import { EventsHandler, type IEventHandler } from '~/core';
-import {
-  type ProjectCreatedEvent,
-  ProjectDeletedEvent,
-} from '../../project/events';
+import { OnHook } from '~/core/hooks';
+import { ProjectDeletedHook } from '../../project/hooks';
 
-@EventsHandler(ProjectDeletedEvent)
-export class DetachProjectRootDirectoryHandler implements IEventHandler<ProjectCreatedEvent> {
-  async handle(_event: ProjectDeletedEvent) {
+@OnHook(ProjectDeletedHook)
+export class DetachProjectRootDirectoryHandler {
+  async handle(_event: ProjectDeletedHook) {
     // TODO Update DB is some fashion
   }
 }

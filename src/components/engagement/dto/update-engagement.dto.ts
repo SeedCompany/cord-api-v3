@@ -1,4 +1,4 @@
-import { Field, InputType, InterfaceType, ObjectType } from '@nestjs/graphql';
+import { Field, InputType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { stripIndent } from 'common-tags';
@@ -19,8 +19,6 @@ import { ProductMethodology } from '../../product/dto';
 import { InternshipPosition } from './intern-position.enum';
 import { EngagementStatus } from './status.enum';
 
-@InterfaceType({ isAbstract: true })
-@ObjectType({ isAbstract: true })
 @InputType({ isAbstract: true })
 export abstract class UpdateEngagement {
   @IdField()
@@ -47,7 +45,6 @@ export abstract class UpdateEngagement {
   readonly description?: RichTextDocument | null;
 }
 
-@ObjectType({ isAbstract: true })
 @InputType()
 export abstract class UpdateLanguageEngagement extends UpdateEngagement {
   @Field({ nullable: true })
@@ -93,7 +90,6 @@ export abstract class UpdateLanguageEngagement extends UpdateEngagement {
   readonly changeset?: ID;
 }
 
-@ObjectType({ isAbstract: true })
 @InputType()
 export abstract class UpdateInternshipEngagement extends UpdateEngagement {
   @IdField({ nullable: true })

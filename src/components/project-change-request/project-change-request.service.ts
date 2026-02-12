@@ -8,11 +8,12 @@ import {
   ServerException,
   type UnsecuredDto,
 } from '~/common';
-import { HandleIdLookup, IEventBus, ILogger, Logger } from '~/core';
+import { HandleIdLookup, ILogger, Logger } from '~/core';
 import { DatabaseService } from '~/core/database';
 import { mapListResults } from '~/core/database/results';
+import { Hooks } from '~/core/hooks';
 import { Privileges } from '../authorization';
-import { ChangesetFinalizingEvent } from '../changeset';
+import { ChangesetFinalizingHook } from '../changeset';
 import { ProjectService } from '../project';
 import { ProjectStatus } from '../project/dto';
 import {
@@ -23,7 +24,7 @@ import {
   ProjectChangeRequestStatus as Status,
   type UpdateProjectChangeRequest,
 } from './dto';
-import { ProjectChangeRequestApprovedEvent } from './events';
+import { ProjectChangeRequestApprovedHook } from './hooks';
 import { ProjectChangeRequestRepository } from './project-change-request.repository';
 
 @Injectable()
@@ -32,7 +33,7 @@ export class ProjectChangeRequestService {
     private readonly db: DatabaseService,
     @Logger('project:change-request:service') private readonly logger: ILogger,
     private readonly privileges: Privileges,
-    private readonly eventBus: IEventBus,
+    private readonly hooks: Hooks,
     @Inject(forwardRef(() => ProjectService))
     private readonly projects: ProjectService & {},
     private readonly repo: ProjectChangeRequestRepository,
@@ -108,11 +109,9 @@ export class ProjectChangeRequestService {
     const updated = await this.readOneUnsecured(input.id);
 
     if (isStatusChanged) {
-      await this.eventBus.publish(new ChangesetFinalizingEvent(updated));
+      await this.hooks.run(new ChangesetFinalizingHook(updated));
       if (changes.status === Status.Approved) {
-        await this.eventBus.publish(
-          new ProjectChangeRequestApprovedEvent(updated),
-        );
+        await this.hooks.run(new ProjectChangeRequestApprovedHook(updated));
       }
     }
 

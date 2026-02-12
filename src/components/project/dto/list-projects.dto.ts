@@ -1,5 +1,5 @@
 import { InputType, ObjectType } from '@nestjs/graphql';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { set } from 'lodash';
 import {
@@ -15,7 +15,6 @@ import {
   type Sensitivity,
   SortablePaginationInput,
 } from '~/common';
-import { Transform } from '~/common/transform.decorator';
 import { FieldRegionFilters } from '../../field-region/dto';
 import { LocationFilters } from '../../location/dto';
 import { PartnershipFilters } from '../../partnership/dto';

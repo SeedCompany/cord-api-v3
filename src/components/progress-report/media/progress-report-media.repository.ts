@@ -4,7 +4,6 @@ import {
   CreationFailed,
   generateId,
   type ID,
-  type IdOf,
   InputException,
   NotFoundException,
 } from '~/common';
@@ -84,7 +83,7 @@ export class ProgressReportMediaRepository extends DtoRepository(ReportMedia) {
       .run();
   }
 
-  async readFeaturedOfReport(ids: ReadonlyArray<IdOf<Report>>) {
+  async readFeaturedOfReport(ids: ReadonlyArray<ID<Report>>) {
     return await this.db
       .query()
       .matchNode('report', 'ProgressReport')
