@@ -1,6 +1,7 @@
 import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import {
+  AsUpdateType,
   type CollectionMutationType,
   DataObject,
   DateTimeField,
@@ -8,7 +9,6 @@ import {
   type ID,
   IdField,
 } from '~/common';
-import { AsUpdateType } from '~/common/as-update.type';
 import { UpdateProject } from './update-project.dto';
 
 @InterfaceType({

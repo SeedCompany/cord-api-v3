@@ -39,7 +39,7 @@ declare module '~/core/resources/map' {
   }
 }
 
-declare module '~/common/resource.dto' {
+declare module '~/common' {
   export interface DeclareResourceRelations {
     readonly tools: readonly [typeof ToolUsage];
   }

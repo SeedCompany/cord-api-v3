@@ -1,6 +1,5 @@
 import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
-import { Grandparent, type ID, IdField } from '~/common';
-import { AsUpdateType } from '~/common/as-update.type';
+import { AsUpdateType, Grandparent, type ID, IdField } from '~/common';
 import type { LinkTo } from '~/core/resources';
 import { ProjectMutation } from '../../project/dto/project-mutations.dto';
 import { InternshipEngagement, LanguageEngagement } from './engagement.dto';

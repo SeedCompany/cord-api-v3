@@ -2,8 +2,7 @@ import { Injectable, type Type } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { LazyGetter } from 'lazy-get-decorator';
 import { difference } from 'lodash';
-import { type ID, type PublicOf } from '~/common';
-import { grabInstances } from '~/common/instance-maps';
+import { grabInstances, type ID, type PublicOf } from '~/common';
 import { e, RepoFor } from '~/core/gel';
 import {
   EngagementConcretes as ConcreteTypes,

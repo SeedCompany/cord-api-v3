@@ -1,6 +1,10 @@
 import { type DateTime } from 'luxon';
-import { DataObject, type Role, UnauthenticatedException } from '~/common';
-import { type ID } from '~/common/id-field';
+import {
+  DataObject,
+  type ID,
+  type Role,
+  UnauthenticatedException,
+} from '~/common';
 
 class RawSession extends DataObject {
   readonly token: string;

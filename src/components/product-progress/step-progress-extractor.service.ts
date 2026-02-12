@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { asNonEmptyArray, entries } from '@seedcompany/common';
 import { assert } from 'ts-essentials';
 import type { MergeExclusive } from 'type-fest';
-import type { Cell, Column, Row } from '~/common/xlsx.util';
+import { type Xlsx } from '~/common';
 import type { Downloadable, FileVersion } from '../file/dto';
 import {
   extractScripture,
@@ -39,7 +39,7 @@ type ExtractedRow = MergeExclusive<
    */
   rowIndex: number;
   steps: ReadonlyArray<{ step: Step; completed?: number | null }>;
-  cell: Cell<ProgressSheet>;
+  cell: Xlsx.Cell<ProgressSheet>;
 };
 
 @Injectable()
@@ -67,11 +67,11 @@ export class StepProgressExtractor {
 const parseProgressRow =
   (
     pnp: Pnp,
-    stepColumns: ReadonlyMap<Step, Column>,
-    planningStepColumns: ReadonlyMap<Step, Column>,
+    stepColumns: ReadonlyMap<Step, Xlsx.Column>,
+    planningStepColumns: ReadonlyMap<Step, Xlsx.Column>,
     result: PnpProgressExtractionResult,
   ) =>
-  (cell: Cell<ProgressSheet>, index: number): ExtractedRow => {
+  (cell: Xlsx.Cell<ProgressSheet>, index: number): ExtractedRow => {
     const sheet = cell.sheet;
     const row = cell.row;
     const rowIndex = row.a1 - sheet.goals.start.row.a1;
@@ -114,13 +114,13 @@ const parseProgressRow =
     return {
       ...common,
       ...extractScripture(
-        planningRow as Row<WrittenScripturePlanningSheet>,
+        planningRow as Xlsx.Row<WrittenScripturePlanningSheet>,
         result,
       ),
     };
   };
 
-const progress = (cell: Cell) => {
+const progress = (cell: Xlsx.Cell) => {
   if (cell.asString?.startsWith('Q')) {
     // Q# means completed that quarter
     return 100;

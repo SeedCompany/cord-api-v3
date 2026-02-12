@@ -8,7 +8,7 @@ import type { LoggerFunction } from 'neo4j-driver-core/types/types';
 import type QueryRunner from 'neo4j-driver/types/query-runner';
 import { type Merge } from 'type-fest';
 import { fileURLToPath } from 'url';
-import { dropSecrets } from '~/common/mask-secrets';
+import { dropSecrets } from '~/common';
 import { ConfigService } from '../config/config.service';
 import { jestSkipFileInExceptionSource } from '../exception';
 import { type ILogger, LoggerToken, LogLevel } from '../logger';

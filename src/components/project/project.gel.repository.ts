@@ -2,12 +2,12 @@ import { Injectable, type Type } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { LazyGetter } from 'lazy-get-decorator';
 import {
+  grabInstances,
   type ID,
   type PublicOf,
   type SortablePaginationInput,
   type UnsecuredDto,
 } from '~/common';
-import { grabInstances } from '~/common/instance-maps';
 import { type ChangesOf } from '~/core/database/changes';
 import {
   e,

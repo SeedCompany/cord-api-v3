@@ -1,7 +1,7 @@
 import { cacheable, setOf } from '@seedcompany/common';
 import { type GelError } from 'gel';
 import { ErrorAttr } from 'gel/dist/errors/base.js';
-import { lazyRecord } from '~/common/lazy-record';
+import { lazyRecord } from '~/common';
 
 type TypedAttrs = Partial<{
   hint: string;

@@ -6,7 +6,7 @@ import { type FFProbeResult } from 'ffprobe';
 import { imageSize } from 'image-size';
 import type { ISize as ImageSize } from 'image-size/types/interface';
 import type { Except } from 'type-fest';
-import { retry } from '~/common/retry';
+import { retry } from '~/common';
 import { ILogger, Logger } from '~/core';
 import { type FileVersion } from '../dto';
 import { FileService } from '../file.service';
