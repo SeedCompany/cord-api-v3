@@ -11,7 +11,7 @@ import { DbLabel } from '~/common/db';
 import { CalculatedSymbol } from '~/common/decorators';
 import { ServerException } from '~/common/exceptions';
 import { getParentTypes } from '~/common/functions';
-import { GqlClassType } from '~/common/graphql/decorators/class-type.decorator';
+import { GqlMetadata } from '~/common/graphql';
 import type { $ } from '~/core/gel/reexports';
 import type {
   ResourceLike,
@@ -109,7 +109,7 @@ export class EnhancedResource<T extends ResourceShape<any>> {
         .filter(
           (cls): cls is ResourceShape<any> =>
             // Is declared as interface. i.e. avoids DataObject.
-            GqlClassType.get(cls) === 'interface' &&
+            GqlMetadata.ClassType.get(cls) === 'interface' &&
             // Avoid intersected classes.
             // getParentTypes will give us the intersect-ees directly.
             !cls.name.startsWith('Intersection'),
@@ -249,7 +249,7 @@ export class EnhancedResource<T extends ResourceShape<any>> {
     const labels = getParentTypes(this.type).flatMap((cls) => {
       if (
         // Is declared as some gql object. i.e. avoids DataObject.
-        !GqlClassType.get(cls) ||
+        !GqlMetadata.ClassType.get(cls) ||
         // Avoid intersected classes.
         // getParentTypes will give us the intersect-ees directly.
         cls.name.startsWith('Intersection')

@@ -12,6 +12,7 @@ export * from './args/list.arg';
 
 export * from './decorators/grandparent.middleware';
 export * from './decorators/subscription.decorator';
+export * as GqlMetadata from './decorators/gql-metadata';
 
 export * from './field-introspection/field-selection';
 export * from './field-introspection/fields.pipe';
