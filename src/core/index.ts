@@ -1,4 +1,3 @@
-export * from './async-local-storage-no-context.exception';
 export * from './logger';
 export { ConfigService } from './config/config.service';
 export * from './core.module';
