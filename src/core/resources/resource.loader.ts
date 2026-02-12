@@ -1,10 +1,7 @@
 import { Injectable, type Type } from '@nestjs/common';
-import {
-  DataLoaderContext,
-  type DataLoaderStrategy,
-} from '@seedcompany/data-loader';
 import type { ConditionalKeys, Merge, ValueOf } from 'type-fest';
 import { type ID, type Many, type ObjectView, ServerException } from '~/common';
+import { DataLoaderContext, type DataLoaderStrategy } from '~/core/data-loader';
 import { Identity } from '../authentication';
 import { ConfigService } from '../config/config.service';
 import { type BaseNode } from '../database/results';

@@ -1,7 +1,7 @@
-import { type DataLoader } from '@seedcompany/data-loader';
 import { NotFoundException } from '~/common/exceptions';
 import type { Secured, UnwrapSecured } from '~/common/graphql';
 import type { ID } from '~/common/types';
+import { type DataLoader } from '~/core/data-loader';
 
 /**
  * Map a secured value to something else.

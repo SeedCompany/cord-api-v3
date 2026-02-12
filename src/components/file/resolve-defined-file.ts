@@ -1,4 +1,3 @@
-import { type LoaderOf } from '@seedcompany/data-loader';
 import {
   isIdLike,
   mapSecuredValue,
@@ -7,6 +6,7 @@ import {
   ServerException,
 } from '~/common';
 import { type LinkTo } from '~/core';
+import { type LoaderOf } from '~/core/data-loader';
 import { type FileId, isFile, type SecuredFile } from './dto';
 import { type FileNodeLoader } from './file-node.loader';
 

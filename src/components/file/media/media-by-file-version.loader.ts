@@ -1,9 +1,9 @@
+import { type ID } from '~/common';
 import {
   type DataLoaderOptions,
   type DataLoaderStrategy,
-} from '@seedcompany/data-loader';
-import { type ID } from '~/common';
-import { LoaderFactory } from '~/core/data-loader';
+  LoaderFactory,
+} from '~/core/data-loader';
 import { type AnyMedia } from './media.dto';
 import { MediaRepository } from './media.repository';
 

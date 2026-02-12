@@ -1,7 +1,7 @@
-import { type LoaderContextType } from '@seedcompany/data-loader';
 import { type ID, type Resource } from '~/common';
 import {
   type DataLoaderStrategy,
+  type LoaderContextType,
   LoaderFactory,
   type LoaderOptionsOf,
 } from '~/core/data-loader';

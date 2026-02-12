@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import {
+  // eslint-disable-next-line @seedcompany/no-restricted-imports
   type DataLoaderOptions,
+  // eslint-disable-next-line @seedcompany/no-restricted-imports
   lifetimeIdFromExecutionContext,
 } from '@seedcompany/data-loader';
 import { NotFoundException } from '~/common';

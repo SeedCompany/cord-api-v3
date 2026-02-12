@@ -1,5 +1,5 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { Loader, type LoaderOf } from '@seedcompany/data-loader';
+import { Loader, type LoaderOf } from '~/core/data-loader';
 import { Tool } from '../tool/dto';
 import { SecuredToolUsageList } from './dto';
 import { ToolUsageByToolLoader } from './tool-usage-by-tool.loader';
