@@ -1,5 +1,4 @@
-import { InputException, NotFoundException } from '~/common';
-import { type Sheet, WorkBook } from '~/common/xlsx.util';
+import { InputException, NotFoundException, Xlsx } from '~/common';
 import { type Downloadable, type FileVersion } from '../file/dto';
 import { PlanningSheet } from './planning-sheet';
 import { ProgressSheet } from './progress-sheet';
@@ -8,7 +7,7 @@ const ParsedPnp = Symbol('Parsed PnP');
 
 export class Pnp {
   constructor(
-    protected workbook: WorkBook,
+    protected workbook: Xlsx.WorkBook,
     protected fileName?: string,
   ) {}
 
@@ -25,7 +24,7 @@ export class Pnp {
   }
 
   static fromBuffer(buffer: Buffer, name?: string) {
-    const book = WorkBook.fromBuffer(buffer);
+    const book = Xlsx.WorkBook.fromBuffer(buffer);
     PlanningSheet.register(book);
     ProgressSheet.register(book);
     return new Pnp(book, name);
@@ -39,7 +38,7 @@ export class Pnp {
     return this.sheet<ProgressSheet>('Progress');
   }
 
-  protected sheet<TSheet extends Sheet>(name: string): TSheet {
+  protected sheet<TSheet extends Xlsx.Sheet>(name: string): TSheet {
     try {
       return this.workbook.sheet(name);
     } catch (e) {

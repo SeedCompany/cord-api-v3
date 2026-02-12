@@ -7,8 +7,7 @@ import {
 import { parseScripture } from '@seedcompany/scripture';
 import { assert } from 'ts-essentials';
 import { type MergeExclusive } from 'type-fest';
-import { type CalendarDate, type DateInterval } from '~/common';
-import { type Cell, type Column, type Row } from '~/common/xlsx.util';
+import { type CalendarDate, type DateInterval, type Xlsx } from '~/common';
 import { type Downloadable, type FileVersion } from '../file/dto';
 import {
   extractScripture,
@@ -86,11 +85,11 @@ export class ProductExtractor {
 const parseProductRow =
   (
     pnp: Pnp,
-    stepColumns: ReadonlyMap<Step, Column>,
-    progressStepColumns: ReadonlyMap<Step, Column>,
+    stepColumns: ReadonlyMap<Step, Xlsx.Column>,
+    progressStepColumns: ReadonlyMap<Step, Xlsx.Column>,
     result: PnpPlanningExtractionResult,
   ) =>
-  (cell: Cell<PlanningSheet>, index: number): ExtractedRow => {
+  (cell: Xlsx.Cell<PlanningSheet>, index: number): ExtractedRow => {
     const sheet = cell.sheet;
     const row = cell.row;
     const rowIndex = row.a1 - sheet.goals.start.row.a1;
@@ -150,7 +149,10 @@ const parseProductRow =
 
     return {
       ...common,
-      ...extractScripture(row as Row<WrittenScripturePlanningSheet>, result),
+      ...extractScripture(
+        row as Xlsx.Row<WrittenScripturePlanningSheet>,
+        result,
+      ),
     };
   };
 
@@ -180,7 +182,7 @@ export type ExtractedRow = MergeExclusive<
   rowIndex: number;
   steps: ReadonlyArray<{ step: Step; plannedCompleteDate: CalendarDate }>;
   note: string | undefined;
-  source: Cell<PlanningSheet>;
+  source: Xlsx.Cell<PlanningSheet>;
 };
 
 const NoGoals = PnpProblemType.register({

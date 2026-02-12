@@ -23,8 +23,8 @@ import {
   type Secured,
   ServerException,
   UnauthorizedException,
+  UrlUtil,
 } from '~/common';
-import { withAddedPath } from '~/common/url.util';
 import { ConfigService, ILogger, type LinkTo, Logger } from '~/core';
 import { TransactionHooks } from '~/core/database';
 import { Hooks } from '~/core/hooks';
@@ -161,7 +161,7 @@ export class FileService {
         : null;
     const name = overrideName ? cleanJoin('', [overrideName, ext]) : node.name;
 
-    const url = withAddedPath(
+    const url = UrlUtil.withAddedPath(
       this.config.hostUrl$.value,
       FileUrl.path,
       id,

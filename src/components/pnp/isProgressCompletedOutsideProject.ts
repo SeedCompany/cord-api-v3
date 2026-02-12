@@ -3,8 +3,8 @@ import {
   fiscalQuarter,
   fiscalYear,
   fullFiscalQuarter,
+  type Xlsx,
 } from '~/common';
-import { type Cell } from '~/common/xlsx.util';
 import { ProductStep } from '../product/dto';
 import { type PnpExtractionResult, PnpProblemType } from './extraction-result';
 import { type Pnp } from './pnp';
@@ -12,7 +12,7 @@ import { type ProgressSheet } from './progress-sheet';
 
 export const isProgressCompletedOutsideProject = (
   pnp: Pnp,
-  cell: Cell<ProgressSheet>,
+  cell: Xlsx.Cell<ProgressSheet>,
   step: ProductStep,
   result: PnpExtractionResult,
 ) => {
@@ -44,7 +44,7 @@ export const isProgressCompletedOutsideProject = (
  * Convert cell (and one to its right) to a calendar date.
  * ['Q2', '2022'] -> 03/31/2022
  */
-const stepCompleteDate = (cell: Cell<ProgressSheet>) => {
+const stepCompleteDate = (cell: Xlsx.Cell<ProgressSheet>) => {
   const fiscalQuarter = Number(cell.asString?.slice(1));
   const fiscalYear = cell.moveX(1).asNumber;
   if (!fiscalQuarter || !fiscalYear) {

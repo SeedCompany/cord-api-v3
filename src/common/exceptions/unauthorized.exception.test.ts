@@ -1,5 +1,5 @@
 import { describe, expect, it } from '@jest/globals';
-import { EnhancedResource } from '~/common';
+import { EnhancedResource } from '~/common/resources';
 import { TranslationProject } from '../../components/project/dto';
 import { UnauthorizedException } from './unauthorized.exception';
 

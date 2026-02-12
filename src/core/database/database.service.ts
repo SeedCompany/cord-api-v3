@@ -17,11 +17,11 @@ import {
   isSecured,
   type MaybeUnsecuredInstance,
   type ResourceShape,
+  retry,
   ServerException,
   TraceLayer,
   type UnwrapSecured,
 } from '~/common';
-import { AbortError, retry, type RetryOptions } from '~/common/retry';
 import { Identity } from '../authentication';
 import { ConfigService } from '../config/config.service';
 import { LiveQueryStore } from '../live-query';
@@ -103,7 +103,7 @@ export class DatabaseService {
    * Optionally run a function in retry context after connecting.
    */
   async waitForConnection(
-    options?: RetryOptions,
+    options?: retry.Options,
     then?: (info: ServerInfo) => Promise<void>,
   ) {
     await retry(async () => {
@@ -112,7 +112,9 @@ export class DatabaseService {
         await this.createDbIfNeeded(info);
         await then?.(info);
       } catch (e) {
-        throw e instanceof ServiceUnavailableError ? e : new AbortError(e);
+        throw e instanceof ServiceUnavailableError
+          ? e
+          : new retry.AbortError(e);
       }
     }, options);
   }

@@ -10,9 +10,9 @@ import {
   IdField,
   makeEnum,
   OptionalField,
+  type Xlsx,
 } from '~/common';
-import { InlineMarkdownScalar } from '~/common/markdown.scalar';
-import { type Cell } from '~/common/xlsx.util';
+import { InlineMarkdownScalar } from '~/common/scalars/markdown.scalar';
 
 export type PnpProblemSeverity = EnumType<typeof PnpProblemSeverity>;
 export const PnpProblemSeverity = makeEnum({
@@ -115,7 +115,7 @@ export class PnpProblem {
 type PnpProblemInput = Omit<PnpProblem, 'id' | 'groups' | 'source'> & {
   id?: string;
   groups?: Many<string>;
-  source?: Cell;
+  source?: Xlsx.Cell;
 };
 
 export type StoredProblem = Pick<PnpProblem, 'id'> & {
@@ -140,7 +140,7 @@ export abstract class PnpExtractionResult {
 
   addProblem<Ctx>(
     type: PnpProblemType<Ctx>,
-    source: Cell,
+    source: Xlsx.Cell,
     context: Omit<Ctx, 'source'>,
   ) {
     const id = uuid.v5(

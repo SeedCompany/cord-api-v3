@@ -6,7 +6,7 @@ export class OurUUIDCodec extends UUIDCodec {
     module: 'std',
     type: 'uuid',
     ts: 'ID',
-    path: '~/common/id-field',
+    path: '~/common/types/id',
   };
   tsType = OurUUIDCodec.info.ts;
   tsModule = OurUUIDCodec.info.path;

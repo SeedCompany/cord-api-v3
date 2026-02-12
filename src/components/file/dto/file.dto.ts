@@ -8,7 +8,6 @@ import {
   DateTimeField,
   DbLabel,
   type ID,
-  type IdOf,
   InputException,
   NameField,
   Resource,
@@ -169,7 +168,7 @@ export abstract class SecuredFileVersion extends SecuredProperty(FileVersion) {}
  */
 export type DefinedFile = Secured<FileId>;
 
-export type FileId = IdOf<'File'>;
+export type FileId = ID<'File'>;
 
 export const isDirectory = (node: AnyFileNode): node is Directory =>
   node.type === FileNodeType.Directory;

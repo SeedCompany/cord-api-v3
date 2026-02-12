@@ -1,5 +1,5 @@
 import { Book } from '@seedcompany/scripture';
-import { Transform } from '~/common/transform.decorator';
+import { Transform } from 'class-transformer';
 
 export const NormalizeBook = () =>
   Transform(({ value: book }) => {

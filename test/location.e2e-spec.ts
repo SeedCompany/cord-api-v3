@@ -1,9 +1,8 @@
 import { faker } from '@faker-js/faker';
 import { beforeAll, describe, expect, it } from '@jest/globals';
 import { times } from 'lodash';
-import { generateId, type IdOf, isValidId } from '~/common';
+import { generateId, type ID, isValidId } from '~/common';
 import { graphql } from '~/graphql';
-import { type Location } from '../src/components/location/dto';
 import {
   createFundingAccount,
   createLocation,
@@ -166,7 +165,7 @@ describe('Location e2e', () => {
   it('update location with defaultMarketingRegion', async () => {
     const defaultMarketingRegion = await createLocation(app);
     const l = await createLocation(app, {
-      defaultMarketingRegion: defaultMarketingRegion.id as IdOf<Location>,
+      defaultMarketingRegion: defaultMarketingRegion.id as ID<'Location'>,
     });
     const newMarketingRegion = await createLocation(app);
 

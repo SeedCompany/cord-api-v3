@@ -5,7 +5,7 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { IdArg, type IdOf } from '~/common';
+import { type ID, IdArg } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { PeriodicReportLoader } from '../../periodic-report';
 import { type PeriodicReport } from '../../periodic-report/dto';
@@ -55,7 +55,7 @@ export class ProgressReportCommunityStoryResolver {
 
   @Mutation(() => ProgressReport)
   async deleteProgressReportCommunityStory(
-    @IdArg() id: IdOf<PromptVariantResponse>,
+    @IdArg() id: ID<PromptVariantResponse>,
     @Loader(PeriodicReportLoader) reports: LoaderOf<PeriodicReportLoader>,
   ): Promise<PeriodicReport> {
     const response = await this.service.delete(id);

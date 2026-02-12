@@ -3,7 +3,7 @@ import { type FactoryProvider } from '@nestjs/common';
 import { asNonEmptyArray } from '@seedcompany/common';
 import { resolve } from 'path';
 import { map } from 'rxjs/operators';
-import { withAddedPath } from '~/common/url.util';
+import { UrlUtil } from '~/common';
 import { ConfigService } from '~/core';
 import {
   CompositeBucket,
@@ -24,7 +24,9 @@ export const FilesBucketFactory: FactoryProvider = {
     const { sources } = config.files;
 
     const baseUrl = config.hostUrl$.pipe(
-      map((hostUrl) => withAddedPath(hostUrl, LocalBucketController.path)),
+      map((hostUrl) =>
+        UrlUtil.withAddedPath(hostUrl, LocalBucketController.path),
+      ),
     );
 
     const files: FileFactory = ({ path }) =>

@@ -4,7 +4,7 @@ import type { NestHttpApplication } from '~/core/http';
 import './polyfills';
 
 async function bootstrap() {
-  // Ensure src files are initialized here were init errors can be caught
+  // Ensure src files are initialized here where init errors can be caught
   const { AppModule } = await import('./app.module');
   const { ConfigService } = await import('./core/config');
   const { bootstrapLogger } = await import('./core/logger/logger.module');

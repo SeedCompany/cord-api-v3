@@ -4,7 +4,7 @@ import { INVALID_CODEC } from 'gel/dist/codecs/codecs.js';
 import { KNOWN_TYPENAMES } from 'gel/dist/codecs/consts.js';
 import type Event from 'gel/dist/primitives/event.js';
 import type LRU from 'gel/dist/primitives/lru.js';
-import { retry } from '~/common/retry';
+import { retry } from '~/common';
 import { type ScalarCodecClass } from './type.util';
 
 export const registerCustomScalarCodecs = async (

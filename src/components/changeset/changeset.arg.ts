@@ -5,10 +5,13 @@ import {
   Scope,
 } from '@nestjs/common';
 import { Args, type ArgsOptions, ID as IDType } from '@nestjs/graphql';
-import { Resolver } from '@nestjs/graphql/dist/enums/resolver.enum.js';
-import { RESOLVER_TYPE_METADATA as TypeKey } from '@nestjs/graphql/dist/graphql.constants.js';
-import { type ID, InputException, ServerException } from '~/common';
-import { createAugmentedMetadataPipe } from '~/common/augmented-metadata.pipe';
+import {
+  createAugmentedMetadataPipe,
+  GqlMetadata,
+  type ID,
+  InputException,
+  ServerException,
+} from '~/common';
 import { ValidateIdPipe } from '~/common/validators/short-id.validator';
 import { ResourceLoader } from '~/core/resources';
 
@@ -21,7 +24,7 @@ export const ChangesetArg = (
   options?: Omit<ArgsOptions, 'type'>,
 ): ParameterDecorator => {
   return (target, methodName, argIndex) => {
-    let type: Resolver;
+    let type: (typeof GqlMetadata.ResolverType)['$value'];
     const resolved: ArgsOptions = {
       nullable: true,
       name: 'changeset',
@@ -32,7 +35,7 @@ export const ChangesetArg = (
       resolved,
       ValidateIdPipe,
       pipeMetadata.attach(() => ({
-        mutation: type === Resolver.MUTATION,
+        mutation: type === 'Mutation',
         fieldName: resolved.name!,
       })),
       ValidateChangesetEditablePipe,
@@ -41,7 +44,7 @@ export const ChangesetArg = (
     // method metadata is set after parameter metadata, so wait until the next tick
     // to determine if method is query or mutation to set the default description.
     process.nextTick(() => {
-      type = Reflect.getMetadata(TypeKey, (target as any)[methodName!]);
+      type = GqlMetadata.ResolverType.get((target as any)[methodName!])!;
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- double-checking at runtime
       if (!type) {
         throw new ServerException(
@@ -52,7 +55,7 @@ export const ChangesetArg = (
         return;
       }
       resolved.description =
-        type === Resolver.MUTATION
+        type === 'Mutation'
           ? 'A changeset ID to associate these changes with'
           : 'Load the object with these changes in this changeset';
     });

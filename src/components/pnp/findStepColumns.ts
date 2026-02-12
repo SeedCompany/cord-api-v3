@@ -1,7 +1,7 @@
 import { mapOf, sortBy } from '@seedcompany/common';
 import levenshtein from 'fastest-levenshtein';
 import { startCase } from 'lodash';
-import { type Column } from '~/common/xlsx.util';
+import { type Xlsx } from '~/common';
 import { ProductStep as Step } from '../product/dto';
 import { type PnpExtractionResult, PnpProblemType } from './extraction-result';
 import { type PlanningSheet } from './planning-sheet';
@@ -32,7 +32,7 @@ export function findStepColumns(
   result?: PnpExtractionResult,
   availableSteps: readonly Step[] = [...Step],
 ) {
-  const matchedColumns = new Map<Step, Column>();
+  const matchedColumns = new Map<Step, Xlsx.Column>();
   const remainingSteps = new Set(availableSteps);
   const possibleSteps = sheet.stepLabels
     .walkRight()
@@ -60,7 +60,7 @@ export function findStepColumns(
     matchedColumns.set(chosen, column);
     remainingSteps.delete(chosen);
   });
-  return matchedColumns as ReadonlyMap<Step, Column>;
+  return matchedColumns as ReadonlyMap<Step, Xlsx.Column>;
 }
 
 const chooseStep = (

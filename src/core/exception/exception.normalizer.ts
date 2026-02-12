@@ -8,8 +8,8 @@ import * as GelTags from 'gel/dist/errors/tags.js';
 import { GraphQLError } from 'graphql';
 import addIndent from 'indent-string';
 import { lowerCase, uniq } from 'lodash';
+import type { AbstractClass } from 'type-fest';
 import {
-  type AbstractClassType,
   DuplicateException,
   Exception,
   getCauseList,
@@ -343,12 +343,12 @@ export class ExceptionNormalizer {
   }
 
   private errorToCodes(ex: Error) {
-    return getParentTypes(ex.constructor as AbstractClassType<Error>)
-      .flatMap((e) => this.errorToCode(e as AbstractClassType<Error>, ex))
+    return getParentTypes(ex.constructor as AbstractClass<Error>)
+      .flatMap((e) => this.errorToCode(e as AbstractClass<Error>, ex))
       .filter(isNotFalsy);
   }
 
-  private errorToCode(type: AbstractClassType<Error>, ex: Error) {
+  private errorToCode(type: AbstractClass<Error>, ex: Error) {
     if (type === Nest.InternalServerErrorException) {
       return 'Server';
     }

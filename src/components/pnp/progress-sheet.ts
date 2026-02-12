@@ -1,15 +1,13 @@
 import { LazyGetter as Once } from 'lazy-get-decorator';
-import { fullFiscalQuarter, isQuarterNumber, isReasonableYear } from '~/common';
 import {
-  type Column,
-  type Range,
-  type Row,
-  Sheet,
-  type WorkBook,
-} from '~/common/xlsx.util';
+  fullFiscalQuarter,
+  isQuarterNumber,
+  isReasonableYear,
+  Xlsx,
+} from '~/common';
 
-export abstract class ProgressSheet extends Sheet {
-  static register(book: WorkBook) {
+export abstract class ProgressSheet extends Xlsx.Sheet {
+  static register(book: Xlsx.WorkBook) {
     const sheet = book.sheet('Progress');
     const isOBS = sheet.cell('P19').asString === 'Stories';
     const custom = isOBS
@@ -29,10 +27,10 @@ export abstract class ProgressSheet extends Sheet {
     return this.range('R19:AB19');
   }
 
-  get goals(): Range<ProgressSheet> {
+  get goals(): Xlsx.Range<ProgressSheet> {
     return this.range(this.goalsStart, this.goalsEnd);
   }
-  protected abstract goalStartColumn: Column;
+  protected abstract goalStartColumn: Xlsx.Column;
   @Once() protected get goalsStart() {
     return this.cell(
       this.goalStartColumn,
@@ -73,11 +71,17 @@ export abstract class ProgressSheet extends Sheet {
   columnForQuarterSummary(fiscalQuarter: number) {
     return this.book.namedRange(`Q${fiscalQuarter}Column`).start.column;
   }
-  get columnsForFiscalYear(): readonly [planned: Column, actual: Column] {
+  get columnsForFiscalYear(): readonly [
+    planned: Xlsx.Column,
+    actual: Xlsx.Column,
+  ] {
     const q4 = this.book.namedRange('Q4Column').start.column;
     return [q4.move(1), q4.move(2)];
   }
-  get columnsForCumulative(): readonly [planned: Column, actual: Column] {
+  get columnsForCumulative(): readonly [
+    planned: Xlsx.Column,
+    actual: Xlsx.Column,
+  ] {
     const q4 = this.book.namedRange('Q4Column').start.column;
     return [q4.move(3), q4.move(4)];
   }
@@ -98,10 +102,10 @@ export class WrittenScriptureProgressSheet extends ProgressSheet {
     return super.goalsEnd.column.cell(row);
   }
 
-  bookName(goalRow: Row) {
+  bookName(goalRow: Xlsx.Row) {
     return this.cell('P', goalRow);
   }
-  totalVerses(goalRow: Row) {
+  totalVerses(goalRow: Xlsx.Row) {
     return this.cell('Q', goalRow);
   }
 }
@@ -109,13 +113,13 @@ export class WrittenScriptureProgressSheet extends ProgressSheet {
 export class OralStoryingProgressSheet extends ProgressSheet {
   protected goalStartColumn = this.column('Q');
 
-  storyName(goalRow: Row) {
+  storyName(goalRow: Xlsx.Row) {
     return this.cell('Q', goalRow);
   }
-  scriptureReference(goalRow: Row) {
+  scriptureReference(goalRow: Xlsx.Row) {
     return this.cell('R', goalRow).asString;
   }
-  composite(goalRow: Row) {
+  composite(goalRow: Xlsx.Row) {
     return this.cell('S', goalRow).asString;
   }
 }

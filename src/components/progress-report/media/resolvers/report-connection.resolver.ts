@@ -1,5 +1,5 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { type IdOf, ListArg, NotFoundException } from '~/common';
+import { type ID, ListArg, NotFoundException } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { ProgressReport } from '../../dto';
 import {
@@ -24,7 +24,7 @@ export class ProgressReportMediaProgressReportConnectionResolver {
     loader: LoaderOf<ProgressReportFeaturedMediaLoader>,
   ): Promise<ReportMedia | null> {
     try {
-      return await loader.load(report.id as IdOf<ProgressReport>);
+      return await loader.load(report.id as ID<ProgressReport>);
     } catch (e) {
       if (e instanceof NotFoundException) {
         return null;

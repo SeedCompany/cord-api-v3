@@ -1,5 +1,5 @@
 import { Field, ObjectType } from '@nestjs/graphql';
-import { MarkdownScalar } from '~/common/markdown.scalar';
+import { MarkdownScalar } from '~/common/scalars/markdown.scalar';
 import { RegisterResource } from '~/core';
 import { e } from '~/core/gel';
 import { Notification } from '../notifications';

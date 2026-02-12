@@ -2,8 +2,8 @@ import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { setOf } from '@seedcompany/common';
 import {
   EnhancedResource,
+  type ID,
   IdField,
-  type IdOf,
   Resource,
   Variant,
   type VariantOf,
@@ -18,7 +18,7 @@ import { type ProgressReport } from '../../dto';
 import { ProgressReportHighlight } from '../../dto/highlights.dto';
 import { MediaCategory } from '../media-category.enum';
 
-export type VariantGroup = IdOf<'ProgressReportMediaVariantGroup'>;
+export type VariantGroup = ID<'ProgressReportMediaVariantGroup'>;
 
 @RegisterResource({ db: e.ProgressReport.Media })
 @InputType({ isAbstract: true })
@@ -41,7 +41,7 @@ export class ProgressReportMedia extends Resource {
     ProgressReportHighlight.Variants.slice(-1).map((v) => v.key),
   );
 
-  readonly report: IdOf<ProgressReport>;
+  readonly report: ID<ProgressReport>;
 
   @Field(() => Variant)
   readonly variant: Variant<MediaVariant> & SetDbType<MediaVariant>;
@@ -49,7 +49,7 @@ export class ProgressReportMedia extends Resource {
   @Field(() => MediaCategory, { nullable: true })
   readonly category?: MediaCategory | null;
 
-  readonly media: IdOf<Media>;
+  readonly media: ID<Media>;
   readonly file: FileId;
 
   @IdField()
