@@ -25,6 +25,7 @@ import {
   SecuredDateTimeNullable,
   SecuredString,
   SecuredStringNullable,
+  SecuredTags,
   Sensitivity,
   SensitivityField,
   ServerException,
@@ -38,7 +39,6 @@ import { ChangesetAware } from '../../changeset/dto';
 import { Commentable } from '../../comments/dto';
 import { IEngagement as Engagement } from '../../engagement/dto';
 import { Directory } from '../../file/dto';
-import { SecuredTags } from '../../language/dto';
 import { Location } from '../../location/dto';
 import { Partnership } from '../../partnership/dto';
 import { SecuredReportPeriod } from '../../periodic-report/dto';
