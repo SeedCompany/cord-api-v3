@@ -12,6 +12,7 @@ import {
   ListArg,
   mapSecuredValue,
   SecuredDateRange,
+  viewOfChangeset,
 } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { Identity } from '~/core/authentication';
@@ -158,10 +159,15 @@ export class EngagementResolver {
   })
   async createLanguageEngagement(
     @Args('input') { changeset, ...input }: CreateLanguageEngagement,
+    @Loader(EngagementLoader) loader: LoaderOf<EngagementLoader>,
   ): Promise<LanguageEngagementCreated> {
     const engagement = await this.service.createLanguageEngagement(
       input,
       changeset,
+    );
+    loader.prime(
+      { id: engagement.id, view: viewOfChangeset(changeset) },
+      engagement,
     );
     return {
       __typename: 'LanguageEngagementCreated',
@@ -177,10 +183,15 @@ export class EngagementResolver {
   })
   async createInternshipEngagement(
     @Args('input') { changeset, ...input }: CreateInternshipEngagement,
+    @Loader(EngagementLoader) loader: LoaderOf<EngagementLoader>,
   ): Promise<InternshipEngagementCreated> {
     const engagement = await this.service.createInternshipEngagement(
       input,
       changeset,
+    );
+    loader.prime(
+      { id: engagement.id, view: viewOfChangeset(changeset) },
+      engagement,
     );
     return {
       __typename: 'InternshipEngagementCreated',
@@ -196,6 +207,7 @@ export class EngagementResolver {
   })
   async updateLanguageEngagement(
     @Args('input') { changeset, ...input }: UpdateLanguageEngagement,
+    @Loader(EngagementLoader) loader: LoaderOf<EngagementLoader>,
   ): Promise<LanguageEngagementUpdated> {
     const {
       engagement,
@@ -206,6 +218,10 @@ export class EngagementResolver {
         by: this.identity.current.userId,
       },
     } = await this.service.updateLanguageEngagement(input, changeset);
+    loader.prime(
+      { id: engagement.id, view: viewOfChangeset(changeset) },
+      engagement,
+    );
     return {
       __typename: 'LanguageEngagementUpdated',
       projectId: engagement.project.id,
@@ -219,6 +235,7 @@ export class EngagementResolver {
   })
   async updateInternshipEngagement(
     @Args('input') { changeset, ...input }: UpdateInternshipEngagement,
+    @Loader(EngagementLoader) loader: LoaderOf<EngagementLoader>,
   ): Promise<InternshipEngagementUpdated> {
     const {
       engagement,
@@ -229,6 +246,10 @@ export class EngagementResolver {
         by: this.identity.current.userId,
       },
     } = await this.service.updateInternshipEngagement(input, changeset);
+    loader.prime(
+      { id: engagement.id, view: viewOfChangeset(changeset) },
+      engagement,
+    );
     return {
       __typename: 'InternshipEngagementUpdated',
       projectId: engagement.project.id,
