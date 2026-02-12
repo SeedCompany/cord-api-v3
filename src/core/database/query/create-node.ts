@@ -9,7 +9,7 @@ import {
   type ResourceShape,
   type UnsecuredDto,
 } from '~/common';
-import { type LinkTo } from '~/core';
+import { type LinkTo } from '~/core/resources';
 import { type FileId } from '../../../components/file/dto';
 import { Variable } from '../query-augmentation/condition-variables';
 

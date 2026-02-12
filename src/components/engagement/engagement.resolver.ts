@@ -14,8 +14,8 @@ import {
   SecuredDateRange,
   viewOfChangeset,
 } from '~/common';
-import { Loader, type LoaderOf } from '~/core';
 import { Identity } from '~/core/authentication';
+import { Loader, type LoaderOf } from '~/core/data-loader';
 import { CeremonyLoader } from '../ceremony';
 import { SecuredCeremony } from '../ceremony/dto';
 import { ChangesetIds, type IdsAndView, IdsAndViewArg } from '../changeset/dto';

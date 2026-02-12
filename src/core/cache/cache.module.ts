@@ -3,7 +3,7 @@ import { CacheModule as LibCacheModule } from '@seedcompany/cache';
 import { LruStore } from '@seedcompany/cache/stores/lru';
 import { RedisStore } from '@seedcompany/cache/stores/redis';
 import Redis from 'ioredis';
-import { ConfigService } from '../config/config.service';
+import { ConfigService } from '~/core/config';
 import { type ILogger, LoggerToken } from '../logger';
 
 @Module({

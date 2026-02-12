@@ -1,5 +1,5 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { splitDb } from '~/core';
+import { splitDb } from '~/core/database';
 import { AuthorizationModule } from '../../authorization/authorization.module';
 import { UserModule } from '../../user/user.module';
 import { ProjectModule } from '../project.module';

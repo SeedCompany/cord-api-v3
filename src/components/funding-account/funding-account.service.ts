@@ -10,8 +10,8 @@ import {
   ServerException,
   type UnsecuredDto,
 } from '~/common';
-import { HandleIdLookup } from '~/core';
 import { mapListResults } from '~/core/database/results';
+import { HandleIdLookup } from '~/core/resources';
 import { Privileges } from '../authorization';
 import {
   type CreateFundingAccount,

@@ -6,8 +6,8 @@ import {
   lifetimeIdFromExecutionContext,
 } from '@seedcompany/data-loader';
 import { NotFoundException } from '~/common';
+import { ConfigService } from '~/core/config';
 import { Identity } from '../authentication';
-import { ConfigService } from '../config/config.service';
 
 @Injectable()
 export class DataLoaderConfig {

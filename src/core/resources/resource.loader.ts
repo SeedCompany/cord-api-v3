@@ -1,9 +1,9 @@
 import { Injectable, type Type } from '@nestjs/common';
 import type { ConditionalKeys, Merge, ValueOf } from 'type-fest';
 import { type ID, type Many, type ObjectView, ServerException } from '~/common';
+import { ConfigService } from '~/core/config';
 import { DataLoaderContext, type DataLoaderStrategy } from '~/core/data-loader';
 import { Identity } from '../authentication';
-import { ConfigService } from '../config/config.service';
 import { type BaseNode } from '../database/results';
 import { GqlContextHost } from '../graphql';
 import { ResourceLoaderRegistry } from './loader.registry';

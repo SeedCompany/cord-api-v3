@@ -5,8 +5,8 @@ import {
   type Secured,
   ServerException,
 } from '~/common';
-import { type LinkTo } from '~/core';
 import { type LoaderOf } from '~/core/data-loader';
+import { type LinkTo } from '~/core/resources';
 import { type FileId, isFile, type SecuredFile } from './dto';
 import { type FileNodeLoader } from './file-node.loader';
 

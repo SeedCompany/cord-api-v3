@@ -1,5 +1,5 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { splitDb2 } from '~/core';
+import { splitDb2 } from '~/core/database';
 import { ProductModule } from '../../product/product.module';
 import { PlanningExtractionResultSaver } from './planning-extraction-result-saver';
 import { PnpExtractionResultLanguageEngagementConnectionResolver } from './pnp-extraction-result-language-engagement-connection.resolver';

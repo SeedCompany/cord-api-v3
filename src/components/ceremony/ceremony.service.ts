@@ -5,7 +5,7 @@ import {
   ServerException,
   type UnsecuredDto,
 } from '~/common';
-import { HandleIdLookup } from '~/core';
+import { HandleIdLookup } from '~/core/resources';
 import { Privileges } from '../authorization';
 import { CeremonyRepository } from './ceremony.repository';
 import { Ceremony, type CreateCeremony, type UpdateCeremony } from './dto';

@@ -9,8 +9,8 @@ import {
   UnauthorizedException,
   type UnsecuredDto,
 } from '~/common';
-import { HandleIdLookup, ResourceLoader } from '~/core';
 import { LiveQueryStore } from '~/core/live-query';
+import { HandleIdLookup, ResourceLoader } from '~/core/resources';
 import { Privileges } from '../../authorization';
 import { UserService } from '../../user';
 import { type User } from '../../user/dto';

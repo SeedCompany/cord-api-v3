@@ -1,7 +1,7 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { type ID, IdField, type UnsecuredDto } from '~/common';
-import { type LinkTo, RegisterResource } from '~/core';
 import { e } from '~/core/gel';
+import { type LinkTo, RegisterResource } from '~/core/resources';
 import { type User } from '../../../user/dto';
 import { ProjectType } from '../../dto';
 

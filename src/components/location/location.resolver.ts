@@ -8,7 +8,7 @@ import {
 } from '@nestjs/graphql';
 import { all as countries, whereAlpha3 } from 'iso-3166-1';
 import { type ID, IdArg, ListArg, mapSecuredValue } from '~/common';
-import { Loader, type LoaderOf } from '~/core';
+import { Loader, type LoaderOf } from '~/core/data-loader';
 import { FieldRegionLoader } from '../field-region';
 import { SecuredFieldRegion } from '../field-region/dto';
 import { FileNodeLoader, resolveDefinedFile } from '../file';

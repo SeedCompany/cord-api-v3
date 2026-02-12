@@ -20,8 +20,8 @@ import {
   SecuredStringNullable,
   viewOfChangeset,
 } from '~/common';
-import { Loader, type LoaderOf } from '~/core';
 import { Identity } from '~/core/authentication';
+import { Loader, type LoaderOf } from '~/core/data-loader';
 import { type IdsAndView, IdsAndViewArg } from '../changeset/dto';
 import { EngagementLoader } from '../engagement';
 import { EngagementListInput, SecuredEngagementList } from '../engagement/dto';

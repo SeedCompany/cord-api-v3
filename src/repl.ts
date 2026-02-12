@@ -20,10 +20,10 @@ runRepl({
   },
   import: { import: (name) => import(name) },
   extraContext: async (app) => {
-    const { ResourcesHost } = await import('~/core');
+    const { ResourcesHost } = await import('~/core/resources');
     const { e } = await import('~/core/gel');
     const { SessionManager } =
-      await import('./core/authentication/session/session.manager');
+      await import('~/core/authentication/session/session.manager');
     const { Pnp } = await import('./components/pnp');
 
     const session = app.get(SessionManager).lazySessionForRootUser();

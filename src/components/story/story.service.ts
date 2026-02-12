@@ -5,8 +5,8 @@ import {
   ServerException,
   type UnsecuredDto,
 } from '~/common';
-import { HandleIdLookup } from '~/core';
 import { ifDiff } from '~/core/database/changes';
+import { HandleIdLookup } from '~/core/resources';
 import { Privileges } from '../authorization';
 import { isScriptureEqual } from '../scripture';
 import {

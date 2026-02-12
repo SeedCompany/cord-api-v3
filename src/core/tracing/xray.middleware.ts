@@ -6,8 +6,8 @@ import {
 } from '@nestjs/common';
 import { GqlExecutionContext } from '@nestjs/graphql';
 import XRay from 'aws-xray-sdk-core';
+import { ConfigService } from '~/core/config';
 import { type GlobalHttpHook, HttpAdapter } from '~/core/http';
-import { ConfigService } from '../config/config.service';
 import { Sampler } from './sampler';
 import { TracingService } from './tracing.service';
 

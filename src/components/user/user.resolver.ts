@@ -16,8 +16,8 @@ import {
   NotFoundException,
   ReadAfterCreationFailed,
 } from '~/common';
-import { Loader, type LoaderOf } from '~/core';
 import { Identity } from '~/core/authentication';
+import { Loader, type LoaderOf } from '~/core/data-loader';
 import { FileNodeLoader, resolveDefinedFile } from '../file';
 import { SecuredFile } from '../file/dto';
 import { LocationLoader } from '../location';

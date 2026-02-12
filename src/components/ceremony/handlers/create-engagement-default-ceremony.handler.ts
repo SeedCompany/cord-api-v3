@@ -1,6 +1,6 @@
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { ConfigService } from '~/core';
+import { ConfigService } from '~/core/config';
 import { DatabaseService } from '~/core/database';
 import { OnHook } from '~/core/hooks';
 import { LanguageEngagement } from '../../engagement/dto';

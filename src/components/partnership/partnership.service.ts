@@ -13,10 +13,11 @@ import {
   type UnsecuredDto,
   viewOfChangeset,
 } from '~/common';
-import { HandleIdLookup, ILogger, Logger, ResourceLoader } from '~/core';
 import { type AnyChangesOf } from '~/core/database/changes';
 import { Hooks } from '~/core/hooks';
 import { LiveQueryStore } from '~/core/live-query';
+import { ILogger, Logger } from '~/core/logger';
+import { HandleIdLookup, ResourceLoader } from '~/core/resources';
 import { Privileges } from '../authorization';
 import { FileService } from '../file';
 import { PartnerService } from '../partner';

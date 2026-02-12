@@ -1,5 +1,5 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { Loader, type LoaderOf } from '~/core';
+import { Loader, type LoaderOf } from '~/core/data-loader';
 import { LanguageLoader } from '../language';
 import { Language } from '../language/dto';
 import { KnownLanguage } from './dto';

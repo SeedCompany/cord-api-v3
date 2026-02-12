@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { memoize } from 'lodash';
 import { createLogger, format, transports } from 'winston';
-import { ConfigService } from '../config/config.service';
+import { ConfigService } from '~/core/config';
 import { BufferLoggerService } from './buffer-logger.service';
 import { ExceptionHandler } from './exception-logger';
 import {

@@ -6,8 +6,8 @@ import {
 } from '@nestjs/common';
 import { ModulesContainer } from '@nestjs/core';
 import { many } from '~/common';
-import { type ResourceMap } from '~/core';
 import { type DataLoaderStrategy } from '~/core/data-loader';
+import type { ResourceMap } from '~/core/resources';
 import {
   LoaderFactoryMetadata,
   type LoaderOptions,

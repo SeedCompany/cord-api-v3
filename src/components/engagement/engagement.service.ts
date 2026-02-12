@@ -13,16 +13,12 @@ import {
   type UnsecuredDto,
   viewOfChangeset,
 } from '~/common';
-import {
-  ConfigService,
-  HandleIdLookup,
-  ILogger,
-  Logger,
-  ResourceLoader,
-} from '~/core';
+import { ConfigService } from '~/core/config';
 import { type AnyChangesOf } from '~/core/database/changes';
 import { Hooks } from '~/core/hooks';
 import { LiveQueryStore } from '~/core/live-query';
+import { ILogger, Logger } from '~/core/logger';
+import { HandleIdLookup, ResourceLoader } from '~/core/resources';
 import { Privileges } from '../authorization';
 import { CeremonyService } from '../ceremony';
 import { FileNodeLoader } from '../file';

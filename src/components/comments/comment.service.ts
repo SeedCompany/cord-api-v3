@@ -11,9 +11,9 @@ import {
   ServerException,
   type UnsecuredDto,
 } from '~/common';
-import { ResourceLoader, ResourcesHost } from '~/core';
 import { Identity } from '~/core/authentication';
 import { type BaseNode, isBaseNode } from '~/core/database/results';
+import { ResourceLoader, ResourcesHost } from '~/core/resources';
 import { Privileges } from '../authorization';
 import { CommentRepository } from './comment.repository';
 import {

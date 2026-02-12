@@ -9,7 +9,7 @@ import type QueryRunner from 'neo4j-driver/types/query-runner';
 import { type Merge } from 'type-fest';
 import { fileURLToPath } from 'url';
 import { dropSecrets } from '~/common';
-import { ConfigService } from '../config/config.service';
+import { ConfigService } from '~/core/config';
 import { jestSkipFileInExceptionSource } from '../exception';
 import { type ILogger, LoggerToken, LogLevel } from '../logger';
 import { AFTER_MESSAGE } from '../logger/formatters';

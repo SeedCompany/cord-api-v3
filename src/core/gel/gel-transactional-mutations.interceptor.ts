@@ -4,7 +4,7 @@ import {
   Inject,
   Injectable,
 } from '@nestjs/common';
-import { ConfigService } from '../config/config.service';
+import { ConfigService } from '~/core/config';
 import { TransactionalMutationsInterceptor } from '../database/abstract-transactional-mutations.interceptor';
 import { TransactionContext } from './transaction.context';
 

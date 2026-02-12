@@ -7,8 +7,8 @@ import {
   SecuredList,
   UnauthorizedException,
 } from '~/common';
-import { ResourceResolver } from '~/core';
 import { LiveQueryStore } from '~/core/live-query';
+import { ResourceResolver } from '~/core/resources';
 import { Privileges } from '../authorization';
 import { LanguageEngagement } from '../engagement/dto';
 import { IProject } from '../project/dto';

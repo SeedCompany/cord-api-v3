@@ -19,7 +19,7 @@ import {
   NotFoundException,
   ServerException,
 } from '~/common';
-import type { ConfigService } from '~/core';
+import type { ConfigService } from '~/core/config';
 import * as Neo from '../database/errors';
 import { ExclusivityViolationError } from '../gel/errors';
 import { ResourcesHost } from '../resources/resources.host';

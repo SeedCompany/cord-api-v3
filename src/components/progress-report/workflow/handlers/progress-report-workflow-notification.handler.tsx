@@ -1,10 +1,11 @@
 import { entries, mapEntries } from '@seedcompany/common';
 import { type RequireExactlyOne } from 'type-fest';
 import { type ID, Role, type UnsecuredDto } from '~/common';
-import { ConfigService, ILogger, Logger } from '~/core';
 import { Identity } from '~/core/authentication';
+import { ConfigService } from '~/core/config';
 import { MailerService } from '~/core/email';
 import { OnHook } from '~/core/hooks';
+import { ILogger, Logger } from '~/core/logger';
 import { LanguageService } from '../../../language';
 import { PeriodicReportService } from '../../../periodic-report';
 import { ProjectService } from '../../../project';

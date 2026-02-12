@@ -15,10 +15,10 @@ import {
   type VariantList,
   type VariantOf,
 } from '~/common';
-import { ResourceLoader } from '~/core';
 import { Identity } from '~/core/authentication';
 import { mapListResults } from '~/core/database/results';
 import { LiveQueryStore } from '~/core/live-query';
+import { ResourceLoader } from '~/core/resources';
 import {
   Privileges,
   type UserResourcePrivileges,

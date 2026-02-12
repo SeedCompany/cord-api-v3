@@ -6,7 +6,7 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import { clamp } from 'lodash';
-import { Loader, type LoaderOf } from '~/core';
+import { Loader, type LoaderOf } from '~/core/data-loader';
 import { ScheduleStatus } from '../../progress-summary/dto';
 import { ProgressSummaryLoader } from '../../progress-summary/progress-summary.loader';
 import { ProgressReport } from '../dto';

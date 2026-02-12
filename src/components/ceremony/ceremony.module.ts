@@ -1,5 +1,5 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { splitDb } from '~/core';
+import { splitDb } from '~/core/database';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { CeremonyGelRepository } from './ceremony.gel.repository';
 import { CeremonyLoader } from './ceremony.loader';

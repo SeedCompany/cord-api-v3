@@ -3,7 +3,7 @@ import { Command, Option } from 'clipanion';
 import { $, execa } from 'execa';
 import { realpath } from 'node:fs/promises';
 import { tmpdir as getTempDir } from 'node:os';
-import { InjectableCommand } from '~/core';
+import { InjectableCommand } from '~/core/cli';
 import { GelAccessPolicyInjector } from './access-policy.injector';
 
 @Injectable()

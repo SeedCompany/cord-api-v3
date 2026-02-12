@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import JWT from 'jsonwebtoken';
 import { UnauthenticatedException } from '~/common';
-import { ConfigService, ILogger, Logger } from '~/core';
+import { ConfigService } from '~/core/config';
+import { ILogger, Logger } from '~/core/logger';
 
 interface JwtPayload {
   iat: number;

@@ -6,8 +6,8 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { mapValues } from '@seedcompany/common';
+import { ConfigService } from '~/core/config';
 import { HttpAdapter } from '~/core/http';
-import { ConfigService } from '../config/config.service';
 import { ILogger, Logger, LogLevel } from '../logger';
 import { ValidationException } from '../validation';
 import {

@@ -1,5 +1,5 @@
 import { cacheable } from '@seedcompany/common';
-import { ConfigService } from '~/core';
+import { ConfigService } from '~/core/config';
 import { login } from '../../operations/auth';
 import type { TestApp } from '../create-app';
 import { createTester } from './graphql-tester';
