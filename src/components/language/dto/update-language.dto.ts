@@ -21,7 +21,6 @@ import {
 } from '~/common';
 import { ExactLength } from '~/common/validators/exactLength';
 import { ChangesetIdField } from '../../changeset';
-import { Language } from './language.dto';
 
 @InputType()
 export abstract class UpdateEthnologueLanguage {
@@ -45,6 +44,7 @@ export abstract class UpdateEthnologueLanguage {
   readonly population?: number | null;
 }
 
+@ObjectType({ isAbstract: true })
 @InputType()
 export abstract class UpdateLanguage {
   @IdField()
@@ -116,10 +116,4 @@ export abstract class UpdateLanguage {
 
   @ChangesetIdField()
   readonly changeset?: ID;
-}
-
-@ObjectType()
-export abstract class LanguageUpdated {
-  @Field()
-  readonly language: Language;
 }

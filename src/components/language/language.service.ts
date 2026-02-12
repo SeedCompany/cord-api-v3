@@ -1,5 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { isNotFalsy, setHas, setOf } from '@seedcompany/common';
+import { DateTime } from 'luxon';
 import {
   CalendarDate,
   type ID,
@@ -31,9 +32,11 @@ import {
   Language,
   type LanguageListInput,
   type LanguageListOutput,
+  LanguageUpdate,
   type UpdateLanguage,
 } from './dto';
 import { EthnologueLanguageService } from './ethnologue-language';
+import { LanguageChannels } from './language.channels';
 import { LanguageRepository } from './language.repository';
 
 @Injectable()
@@ -47,6 +50,7 @@ export class LanguageService {
     private readonly engagementService: EngagementService & {},
     private readonly privileges: Privileges,
     private readonly loaders: ResourceLoader,
+    private readonly channels: LanguageChannels,
     private readonly repo: LanguageRepository,
     @Logger('language:service') private readonly logger: ILogger,
   ) {}
@@ -55,6 +59,11 @@ export class LanguageService {
     this.privileges.for(Language).verifyCan('create');
 
     const resultLanguage = await this.repo.create(input);
+
+    this.channels.publishToAll('created', {
+      language: resultLanguage.id,
+      at: resultLanguage.createdAt,
+    });
 
     return this.secure(resultLanguage);
   }
@@ -91,11 +100,16 @@ export class LanguageService {
     };
   }
 
-  async update(input: UpdateLanguage, view?: ObjectView): Promise<Language> {
+  async update(input: UpdateLanguage, view?: ObjectView) {
     if (input.hasExternalFirstScripture) {
       await this.verifyExternalFirstScripture(input.id);
     }
-    const { registryOfDialectsCode, changeset, ...props } = input;
+    const {
+      registryOfDialectsCode,
+      changeset,
+      ethnologue: ethnologueInput,
+      ...props
+    } = input;
 
     const language = await this.repo.readOne(input.id, view);
     const changes = this.repo.getActualChanges(language, {
@@ -103,37 +117,59 @@ export class LanguageService {
       registryOfLanguageVarietiesCode:
         props.registryOfLanguageVarietiesCode ?? registryOfDialectsCode,
     });
-    this.privileges.for(Language, language).verifyChanges(changes);
-
-    const { ethnologue, ...simpleChanges } = changes;
-
-    if (ethnologue) {
-      await this.ethnologueLanguageService.update(
-        language.ethnologue.id,
-        ethnologue,
-        language.sensitivity,
-      );
-    }
-
-    const updated = await this.repo.update(
-      { id: language.id, ...simpleChanges },
-      view?.changeset,
+    const ethnologueUpdate = this.ethnologueLanguageService.prepChanges(
+      ethnologueInput,
+      language.ethnologue,
+      language.sensitivity,
     );
 
-    return this.secure(updated);
+    if (!ethnologueUpdate && Object.keys(changes).length === 0) {
+      return { language: this.secure(language) };
+    }
+
+    this.privileges.for(Language, language).verifyChanges(changes);
+
+    const [updated] = await Promise.all([
+      this.repo.update({ id: language.id, ...changes }, view?.changeset),
+      ethnologueUpdate &&
+        this.ethnologueLanguageService.update(
+          language.ethnologue.id,
+          ethnologueUpdate.changes,
+        ),
+    ]);
+
+    const updatedPayload = this.channels.publishToAll('updated', {
+      language: updated.id,
+      at: DateTime.now(),
+      updated: {
+        ...LanguageUpdate.fromInput(changes),
+        ethnologue: ethnologueUpdate?.updated,
+      },
+      previous: {
+        ...LanguageUpdate.pickPrevious(language, changes),
+        ethnologue: ethnologueUpdate?.previous,
+      },
+    });
+
+    return {
+      language: this.secure(updated),
+      payload: updatedPayload,
+    };
   }
 
-  async delete(id: ID): Promise<void> {
+  async delete(id: ID) {
     const object = await this.readOne(id);
 
     this.privileges.for(Language, object).verifyCan('delete');
 
-    try {
-      await this.repo.deleteNode(object);
-    } catch (exception) {
-      this.logger.error('Failed to delete', { id, exception });
+    const { at } = await this.repo.deleteNode(object).catch((exception) => {
       throw new ServerException('Failed to delete', exception);
-    }
+    });
+
+    return this.channels.publishToAll('deleted', {
+      language: id,
+      at,
+    });
   }
 
   async list(input: LanguageListInput): Promise<LanguageListOutput> {
@@ -236,22 +272,40 @@ export class LanguageService {
     };
   }
 
-  async addLocation(languageId: ID, locationId: ID): Promise<void> {
-    await this.locationService.addLocationToNode(
+  async addLocation(language: ID<Language>, location: ID<'Location'>) {
+    const changedAt = await this.locationService.addLocationToNode(
       'Language',
-      languageId,
+      language,
       'locations',
-      locationId,
+      location,
     );
+    if (!changedAt) {
+      return undefined;
+    }
+    return this.channels.publishToAll('updated', {
+      language,
+      at: changedAt,
+      updated: { locations: { Added: [location] } },
+      previous: {},
+    });
   }
 
-  async removeLocation(languageId: ID, locationId: ID): Promise<void> {
-    await this.locationService.removeLocationFromNode(
+  async removeLocation(language: ID<'Language'>, location: ID<'Location'>) {
+    const changedAt = await this.locationService.removeLocationFromNode(
       'Language',
-      languageId,
+      language,
       'locations',
-      locationId,
+      location,
     );
+    if (!changedAt) {
+      return undefined;
+    }
+    return this.channels.publishToAll('updated', {
+      language,
+      at: changedAt,
+      updated: { locations: { Removed: [location] } },
+      previous: {},
+    });
   }
 
   /**

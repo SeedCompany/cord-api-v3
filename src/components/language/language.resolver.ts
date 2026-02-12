@@ -8,6 +8,7 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
+import { DateTime } from 'luxon';
 import {
   firstLettersOfWords,
   type ID,
@@ -20,6 +21,7 @@ import {
   viewOfChangeset,
 } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
+import { Identity } from '~/core/authentication';
 import { type IdsAndView, IdsAndViewArg } from '../changeset/dto';
 import { EngagementLoader } from '../engagement';
 import { EngagementListInput, SecuredEngagementList } from '../engagement/dto';
@@ -58,7 +60,10 @@ class ModifyLocationArgs {
 
 @Resolver(Language)
 export class LanguageResolver {
-  constructor(private readonly langService: LanguageService) {}
+  constructor(
+    private readonly langService: LanguageService,
+    private readonly identity: Identity,
+  ) {}
 
   @Query(() => Language, {
     description: 'Look up a language by its ID',
@@ -181,9 +186,16 @@ export class LanguageResolver {
   })
   async createLanguage(
     @Args('input') input: CreateLanguage,
+    @Loader(LanguageLoader) loader: LoaderOf<LanguageLoader>,
   ): Promise<LanguageCreated> {
     const language = await this.langService.create(input);
-    return { language };
+    loader.prime({ id: language.id, view: { active: true } }, language);
+    return {
+      __typename: 'LanguageCreated',
+      languageId: language.id,
+      at: language.createdAt,
+      by: this.identity.current.userId,
+    };
   }
 
   @Mutation(() => LanguageUpdated, {
@@ -191,20 +203,38 @@ export class LanguageResolver {
   })
   async updateLanguage(
     @Args('input') { changeset, ...input }: UpdateLanguage,
+    @Loader(LanguageLoader) loader: LoaderOf<LanguageLoader>,
   ): Promise<LanguageUpdated> {
-    const language = await this.langService.update(
-      input,
-      viewOfChangeset(changeset),
+    const {
+      language,
+      payload = {
+        updated: {},
+        previous: {},
+        at: DateTime.now(),
+        by: this.identity.current.userId,
+      },
+    } = await this.langService.update(input, viewOfChangeset(changeset));
+    loader.prime(
+      { id: language.id, view: viewOfChangeset(changeset) },
+      language,
     );
-    return { language };
+    return {
+      __typename: 'LanguageUpdated',
+      languageId: language.id,
+      ...payload,
+    };
   }
 
   @Mutation(() => LanguageDeleted, {
     description: 'Delete a language',
   })
   async deleteLanguage(@IdArg() id: ID): Promise<LanguageDeleted> {
-    await this.langService.delete(id);
-    return {};
+    const payload = await this.langService.delete(id);
+    return {
+      __typename: 'LanguageDeleted',
+      languageId: payload.language,
+      ...payload,
+    };
   }
 
   @Mutation(() => Language, {
