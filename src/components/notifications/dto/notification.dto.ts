@@ -1,13 +1,12 @@
 import { Field, InterfaceType } from '@nestjs/graphql';
 import { type DateTime } from 'luxon';
-import { DateTimeField, resolveByTypename, Resource } from '~/common';
+import { DateTimeField, Resource } from '~/common';
 import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
 
 @RegisterResource({ db: e.default.Notification })
 @InterfaceType({
   implements: [Resource],
-  resolveType: resolveByTypename(Notification.name),
 })
 export class Notification extends Resource {
   @Field(() => Boolean, {

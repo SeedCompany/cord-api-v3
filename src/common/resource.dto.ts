@@ -41,23 +41,7 @@ const GqlClassType = createMetadataDecorator({
   setter: (type: ClassTypeVal) => type,
 });
 
-const hasTypename = (value: unknown): value is { __typename: string } =>
-  value != null &&
-  typeof value === 'object' &&
-  '__typename' in value &&
-  typeof value.__typename === 'string';
-
-export const resolveByTypename =
-  (interfaceName: string) => (value: unknown) => {
-    if (hasTypename(value)) {
-      return EnhancedResource.resolve(value.__typename).name;
-    }
-    throw new ServerException(`Cannot resolve ${interfaceName} type`);
-  };
-
-@InterfaceType({
-  resolveType: resolveByTypename(Resource.name),
-})
+@InterfaceType()
 @DbLabel('BaseNode')
 export abstract class Resource extends DataObject {
   // eslint-disable-next-line @typescript-eslint/naming-convention
