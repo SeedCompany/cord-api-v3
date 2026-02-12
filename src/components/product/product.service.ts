@@ -12,6 +12,7 @@ import {
 } from '~/common';
 import { HandleIdLookup, ILogger, Logger, ResourceResolver } from '~/core';
 import { compareNullable, ifDiff, isSame } from '~/core/database/changes';
+import { LiveQueryStore } from '~/core/live-query';
 import { Privileges } from '../authorization';
 import {
   getTotalVerseEquivalents,
@@ -57,6 +58,7 @@ export class ProductService {
     private readonly privileges: Privileges,
     private readonly repo: ProductRepository,
     private readonly resources: ResourceResolver,
+    private readonly liveQueryStore: LiveQueryStore,
     @Logger('product:service') private readonly logger: ILogger,
   ) {}
 
@@ -164,6 +166,8 @@ export class ProductService {
     this.privileges
       .for(resolveProductType(created), created)
       .verifyCan('create');
+
+    this.liveQueryStore.invalidate(['LanguageEngagement', input.engagement]);
 
     return created;
   }
@@ -552,7 +556,9 @@ export class ProductService {
     this.privileges.for(Product, object).verifyCan('delete');
 
     try {
-      await this.repo.deleteNode(object);
+      await this.repo.deleteNode(object, {
+        resource: resolveProductType(object),
+      });
     } catch (exception) {
       this.logger.error('Failed to delete', { id, exception });
       throw new ServerException('Failed to delete', exception);

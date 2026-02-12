@@ -1,5 +1,6 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
+import { LiveQueryConfig } from '~/core/live-query';
 import { LanguageEngagement } from '../engagement/dto';
 import { SecuredPartnershipsProducingMediums } from './dto/partnership-producing-medium.dto';
 import { PartnershipProducingMediumService } from './partnership-producing-medium.service';
@@ -13,6 +14,10 @@ export class PartnershipProducingMediumEngagementConnectionResolver {
       A list of mediums used across all of the engagement's products and their
       associated partnerships which are "producing" each medium.
     `,
+  })
+  @LiveQueryConfig({
+    collectResourceIdentifiers: (eng: LanguageEngagement) =>
+      `LanguageEngagement:${eng.id}:partnerships-producing-mediums`,
   })
   async partnershipsProducingMediums(
     @Parent() engagement: LanguageEngagement,

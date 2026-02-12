@@ -3,18 +3,18 @@ import { type MaybeAsync, setOf } from '@seedcompany/common';
 import {
   type ID,
   InputException,
-  isIdLike,
   type ObjectView,
   Role,
   ServerException,
   UnauthorizedException,
   type UnsecuredDto,
 } from '~/common';
-import { HandleIdLookup, ResourceLoader, ResourceResolver } from '~/core';
+import { HandleIdLookup, ResourceLoader } from '~/core';
 import { LiveQueryStore } from '~/core/live-query';
 import { Privileges } from '../../authorization';
 import { UserService } from '../../user';
 import { type User } from '../../user/dto';
+import { resolveProjectType } from '../dto';
 import {
   type CreateProjectMember,
   ProjectMember,
@@ -33,7 +33,6 @@ export class ProjectMemberService {
     @Inject(forwardRef(() => UserService))
     private readonly userService: UserService & {},
     private readonly resources: ResourceLoader,
-    private readonly resourceResolver: ResourceResolver,
     private readonly liveQueryStore: LiveQueryStore,
     private readonly privileges: Privileges,
     private readonly channels: ProjectMemberChannels,
@@ -49,12 +48,7 @@ export class ProjectMemberService {
         this.resources.load('User', input.user),
       ));
 
-    const projectId = isIdLike(input.project)
-      ? input.project
-      : input.project.id;
-    const invalidating = this.invalidateProject(projectId);
     const created = await this.repo.create(input);
-    await invalidating;
 
     if (input.inactiveAt && input.inactiveAt < created.createdAt) {
       throw new InputException(
@@ -65,6 +59,11 @@ export class ProjectMemberService {
 
     enforcePerms &&
       this.privileges.for(ProjectMember, created).verifyCan('create');
+
+    this.liveQueryStore.invalidate([
+      resolveProjectType(created.project),
+      created.project.id,
+    ]);
 
     this.channels.publishToAll('created', {
       program: created.project.type,
@@ -202,12 +201,6 @@ export class ProjectMemberService {
       member: id,
       at,
     });
-  }
-
-  private async invalidateProject(id: ID<'Project'>) {
-    const node = await this.repo.getBaseNode(id, 'Project');
-    const projectType = this.resourceResolver.resolveTypeByBaseNode(node!);
-    this.liveQueryStore.invalidate([projectType, id]);
   }
 
   async list(input: ProjectMemberListInput): Promise<ProjectMemberListOutput> {

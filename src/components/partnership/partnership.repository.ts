@@ -383,7 +383,7 @@ export class PartnershipRepository extends DtoRepository<
   }
 
   async removePrimaryFromOtherPartnerships(id: ID) {
-    await this.db
+    return await this.db
       .query()
       .apply(this.matchOtherPartnerships(id))
       .match([
@@ -406,6 +406,7 @@ export class PartnershipRepository extends DtoRepository<
           value: false,
         }),
       ])
+      .return<{ id: ID }>('otherPartnership.id as id')
       .run();
   }
 

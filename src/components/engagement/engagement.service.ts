@@ -22,6 +22,7 @@ import {
 } from '~/core';
 import { type AnyChangesOf } from '~/core/database/changes';
 import { Hooks } from '~/core/hooks';
+import { LiveQueryStore } from '~/core/live-query';
 import { Privileges } from '../authorization';
 import { CeremonyService } from '../ceremony';
 import { FileNodeLoader } from '../file';
@@ -29,7 +30,7 @@ import { type File } from '../file/dto';
 import { ProductService } from '../product';
 import { type ProductListInput, type SecuredProductList } from '../product/dto';
 import { ProjectLoader, ProjectService } from '../project';
-import { IProject } from '../project/dto';
+import { IProject, resolveProjectType } from '../project/dto';
 import {
   type CreateInternshipEngagement,
   type CreateLanguageEngagement,
@@ -69,6 +70,7 @@ export class EngagementService {
     private readonly hooks: Hooks,
     private readonly resources: ResourceLoader,
     private readonly channels: EngagementChannels,
+    private readonly liveQueryStore: LiveQueryStore,
     @Logger(`engagement:service`) private readonly logger: ILogger,
   ) {}
 
@@ -89,6 +91,11 @@ export class EngagementService {
 
     const event = new EngagementCreatedHook(engagement, input);
     await this.hooks.run(event);
+
+    this.liveQueryStore.invalidate([
+      resolveProjectType(engagement.project),
+      engagement.project.id,
+    ]);
 
     this.channels.publishToAll('language', 'created', {
       program: engagement.project.type,
@@ -117,6 +124,11 @@ export class EngagementService {
 
     const event = new EngagementCreatedHook(engagement, input);
     await this.hooks.run(event);
+
+    this.liveQueryStore.invalidate([
+      resolveProjectType(engagement.project),
+      engagement.project.id,
+    ]);
 
     this.channels.publishToAll('internship', 'created', {
       program: engagement.project.type,
@@ -365,7 +377,10 @@ export class EngagementService {
       .verifyCan('delete');
 
     await this.hooks.run(new EngagementWillDeleteHook(object));
-    const { at } = await this.repo.deleteNode(object, { changeset });
+    const { at } = await this.repo.deleteNode(object, {
+      resource: resolveEngagementType(object),
+      changeset,
+    });
 
     const payload = this.channels.publishToAll(
       resolveEngagementType(object) === LanguageEngagement

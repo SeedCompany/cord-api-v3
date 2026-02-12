@@ -18,6 +18,7 @@ export class ProductProgressResolver {
   constructor(private readonly service: ProductProgressService) {}
 
   @ResolveField(() => Product)
+  @ProductProgress.LiveIDs
   async product(
     @Parent() { productId }: ProductProgress,
     @Loader(ProductLoader) products: LoaderOf<ProductLoader>,
@@ -26,6 +27,7 @@ export class ProductProgressResolver {
   }
 
   @ResolveField(() => ProgressReport)
+  @ProductProgress.LiveIDs
   async report(
     @Parent() { reportId }: ProductProgress,
     @Loader(PeriodicReportLoader)

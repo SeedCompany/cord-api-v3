@@ -16,6 +16,7 @@ import { DateTime } from 'luxon';
 import {
   CreationFailed,
   type ID,
+  InputException,
   NotFoundException,
   ServerException,
 } from '~/common';
@@ -513,7 +514,7 @@ export class FileRepository extends CommonRepository {
     // TODO Do you have permission to rename the file?
     try {
       await this.db.updateProperties({
-        type: IFileNode,
+        type: resolveFileNode(fileNode),
         object: fileNode,
         changes: { name: newName },
       });
@@ -523,9 +524,9 @@ export class FileRepository extends CommonRepository {
     }
   }
 
-  async move(id: ID, newParentId: ID): Promise<void> {
+  async move(id: ID, newParentId: ID) {
     try {
-      await this.db
+      const res = await this.db
         .query()
         .match([
           [node('newParent', [], { id: newParentId })],
@@ -544,8 +545,19 @@ export class FileRepository extends CommonRepository {
           }),
           node('file'),
         ])
-        .run();
+        .return<{ newParent: BaseNode; oldParent: BaseNode }>([
+          'newParent',
+          'oldParent',
+        ])
+        .first();
+      if (!res) {
+        throw new InputException('Old or new parent does not exist');
+      }
+      return res;
     } catch (e) {
+      if (e instanceof InputException) {
+        throw e;
+      }
       this.logger.error('Failed to move', { id, newParentId, exception: e });
       throw new ServerException('Failed to move', e);
     }
