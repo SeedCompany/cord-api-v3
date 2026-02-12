@@ -9,6 +9,10 @@ import { BackfillEmptyMediumsMigration } from './migrations/backfill-empty-mediu
 import { FixNaNTotalVerseEquivalentsMigration } from './migrations/fix-nan-total-verse-equivalents.migration';
 import { PnpProductSyncService } from './pnp-product-sync.service';
 import { ProducibleResolver } from './producible.resolver';
+import { ProductMutationLinksResolver } from './product-mutation-links.resolver';
+import { ProductMutationSubscriptionsResolver } from './product-mutation-subscriptions.resolver';
+import { ProductUpdatedResolver } from './product-updated.resolver';
+import { ProductChannels } from './product.channels';
 import { ProductExtractor } from './product.extractor';
 import { ProductLoader } from './product.loader';
 import { ProductRepository } from './product.repository';
@@ -25,9 +29,13 @@ import { ProductService } from './product.service';
   ],
   providers: [
     ProductResolver,
+    ProductMutationSubscriptionsResolver,
+    ProductUpdatedResolver,
+    ProductMutationLinksResolver,
     ProducibleResolver,
     ProductLoader,
     ProductService,
+    ProductChannels,
     ProductRepository,
     ProductExtractor,
     PnpProductSyncService,

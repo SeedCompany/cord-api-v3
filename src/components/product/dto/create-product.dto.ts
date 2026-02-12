@@ -1,4 +1,4 @@
-import { Field, Float, InputType, ObjectType } from '@nestjs/graphql';
+import { Field, Float, InputType } from '@nestjs/graphql';
 import { Transform, Type } from 'class-transformer';
 import { IsPositive, ValidateNested } from 'class-validator';
 import { stripIndent } from 'common-tags';
@@ -14,7 +14,6 @@ import { ProductMedium } from './product-medium.enum';
 import { ProductMethodology } from './product-methodology.enum';
 import { ProductPurpose } from './product-purpose.enum';
 import { ProductStep as Step } from './product-step.enum';
-import { type AnyProduct, Product } from './product.dto';
 import { ProgressMeasurement } from './progress-measurement.enum';
 
 @InputType({
@@ -41,8 +40,8 @@ export abstract class CreateBaseProduct {
   @Transform(({ value }) => uniq(value))
   readonly steps?: readonly Step[];
 
-  @Field({ nullable: true })
-  readonly describeCompletion?: string;
+  @Field(() => String, { nullable: true })
+  readonly describeCompletion?: string | null;
 
   @Field(() => ProgressMeasurement, {
     nullable: true,
@@ -109,7 +108,7 @@ export abstract class CreateDerivativeScriptureProduct extends CreateBaseProduct
       this property can be set (and read) to "override" the \`producible\`'s list.
     `,
   })
-  readonly scriptureReferencesOverride?: readonly ScriptureRangeInput[];
+  readonly scriptureReferencesOverride?: readonly ScriptureRangeInput[] | null;
 
   @Field({
     description: stripIndent`
@@ -128,10 +127,4 @@ export abstract class CreateOtherProduct extends CreateBaseProduct {
 
   @Field(() => String, { nullable: true })
   readonly description?: string | null;
-}
-
-@ObjectType()
-export abstract class ProductCreated {
-  @Field(() => Product)
-  readonly product: AnyProduct;
 }
