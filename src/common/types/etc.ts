@@ -1,13 +1,5 @@
 import type { SetRequired } from 'type-fest';
 
-/**
- * Used for generic GraphQL types
- * @deprecated Use AbstractClass from type-fest
- */
-export type AbstractClassType<T> = (abstract new (...args: any[]) => T) & {
-  prototype: T;
-};
-
 export interface Range<T> {
   start: T;
   end: T;

@@ -1,14 +1,13 @@
+import { CachedGetter } from '@seedcompany/common';
 import { type GraphQLResolveInfo as ResolveInfo } from 'graphql';
 import {
   parseResolveInfo,
   type ResolveTree,
   simplifyParsedResolveInfoFragmentWithType,
 } from 'graphql-parse-resolve-info';
-import { LazyGetter } from 'lazy-get-decorator';
 import { difference } from 'lodash';
-import { type LiteralUnion } from 'type-fest';
+import type { AbstractClass, LiteralUnion } from 'type-fest';
 import { type ResourceMap } from '~/core/resources';
-import { type AbstractClassType } from '../../types';
 
 /**
  * A helper to query the fields selected of a GraphQL operation.
@@ -47,7 +46,7 @@ export class FieldSelection {
    * actually returned.
    * They could be for other types.
    */
-  @LazyGetter() get forAllTypes(): FieldInfo<any> {
+  @CachedGetter() get forAllTypes(): FieldInfo<any> {
     return Object.assign({}, ...Object.values(this.byRequestedTypes));
   }
 
@@ -70,11 +69,11 @@ export class FieldSelection {
    * This is great too if you know the resolved type to be returned in order
    * to filter out requested but unrelated fields.
    */
-  forType<T>(type: AbstractClassType<T>): FieldInfo<T>;
+  forType<T>(type: AbstractClass<T>): FieldInfo<T>;
   forType<K extends keyof ResourceMap>(
     type: K,
   ): FieldInfo<ResourceMap[K]['prototype']>;
-  forType(type: string | AbstractClassType<any>) {
+  forType(type: string | AbstractClass<any>) {
     const typeName = typeof type === 'string' ? type : type.constructor.name;
     const typeObj = this.resolveInfo.schema.getType(typeName);
     if (!typeObj) {
