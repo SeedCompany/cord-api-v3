@@ -1,7 +1,7 @@
 import { mapEntries } from '@seedcompany/common';
 import { node, relation } from 'cypher-query-builder';
 import { type ValueOf } from 'type-fest';
-import { type ID, type IdOf } from '~/common';
+import { type ID } from '~/common';
 import { BaseMigration, Migration } from '~/core/database';
 import { ACTIVE } from '~/core/database/query';
 import { type Location } from '../dto';
@@ -40,7 +40,7 @@ export class DefaultMarketingRegionMigration extends BaseMigration {
         node('locName', 'LocationName'),
       ])
       .return<{
-        id: IdOf<Location>;
+        id: ID<Location>;
         name: ValueOf<typeof fieldRegionNameToMarketingRegionName>;
       }>(['location.id as id', 'locName.value as name'])
       .run();

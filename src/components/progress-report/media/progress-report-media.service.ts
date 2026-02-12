@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import {
   generateId,
-  type IdOf,
+  type ID,
   NotImplementedException,
   type UnsecuredDto,
 } from '~/common';
@@ -49,14 +49,14 @@ export class ProgressReportMediaService {
     throw new NotImplementedException().with(media);
   }
 
-  async readMany(ids: ReadonlyArray<IdOf<ReportMedia>>) {
+  async readMany(ids: ReadonlyArray<ID<ReportMedia>>) {
     const row = await this.repo.readMany(ids);
     return row.map((row) =>
       this.privileges.for(ReportMedia).secure(this.dbRowToDto(row)),
     );
   }
 
-  async readFeaturedOfReport(ids: ReadonlyArray<IdOf<Report>>) {
+  async readFeaturedOfReport(ids: ReadonlyArray<ID<Report>>) {
     const rows = await this.repo.readFeaturedOfReport(ids);
     return rows.map((row) =>
       this.privileges.for(ReportMedia).secure(this.dbRowToDto(row)),
@@ -109,7 +109,7 @@ export class ProgressReportMediaService {
     return updated;
   }
 
-  async delete(id: IdOf<ReportMedia>) {
+  async delete(id: ID<ReportMedia>) {
     const media = await this.repo.readOne(id);
     this.privileges
       .for(ReportMedia, this.dbRowToDto(media))

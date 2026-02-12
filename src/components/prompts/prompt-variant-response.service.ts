@@ -3,7 +3,7 @@ import { mapKeys } from '@seedcompany/common';
 import { lowerCase } from 'lodash';
 import { DateTime } from 'luxon';
 import {
-  type IdOf,
+  type ID,
   mapSecuredValue,
   NotFoundException,
   type Resource,
@@ -75,7 +75,7 @@ export const PromptVariantResponseListService = <
 
     protected abstract getPrompts(): Promise<readonly Prompt[]>;
 
-    async getPromptById(id: IdOf<Prompt>) {
+    async getPromptById(id: ID<Prompt>) {
       const prompts = await this.getPrompts();
       const prompt = prompts.find((p) => p.id === id);
       if (!prompt) {
@@ -253,7 +253,7 @@ export const PromptVariantResponseListService = <
       return await this.secure(updated);
     }
 
-    async delete(id: IdOf<PromptVariantResponse>) {
+    async delete(id: ID<PromptVariantResponse>) {
       const response = await this.repo.readOne(id);
 
       const context = await this.getPrivilegeContext(response);

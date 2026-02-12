@@ -1,9 +1,7 @@
 import { beforeAll, beforeEach, describe, expect, it } from '@jest/globals';
-import { CalendarDate, type ID, type IdOf, isIdLike } from '~/common';
+import { CalendarDate, type ID, isIdLike } from '~/common';
 import { graphql, type InputOf } from '~/graphql';
-import { type ProgressReport } from '../src/components/progress-report/dto';
 import {
-  type ProgressReportMedia,
   type UpdateProgressReportMedia,
   type UploadProgressReportMedia,
 } from '../src/components/progress-report/media/dto';
@@ -155,7 +153,7 @@ describe('ProgressReport Media e2e', () => {
     });
 
     const input = {
-      id: report.media.items[0]!.id as IdOf<ProgressReportMedia>,
+      id: report.media.items[0]!.id as ID<'ProgressReportMedia'>,
       category: 'WorkInProgress',
       altText: 'Actually a cat',
       caption: 'This it updates!',
@@ -366,7 +364,7 @@ async function uploadMedia(
   return upload;
 }
 
-async function getFeaturedMedia(app: TestApp, id: IdOf<ProgressReport>) {
+async function getFeaturedMedia(app: TestApp, id: ID<'ProgressReport'>) {
   const { report } = await app.graphql.query(
     graphql(
       `

@@ -13,7 +13,6 @@ import {
   DbLabel,
   type ID,
   IdField,
-  type IdOf,
   IntersectTypes,
   NameField,
   ServerException,
@@ -73,7 +72,7 @@ export class Media extends MediaUserMetadata {
   @IdField()
   readonly id: ID;
 
-  readonly file: IdOf<FileVersion>;
+  readonly file: ID<FileVersion>;
 
   /** The resource that holds the root file node that this media is attached to */
   readonly attachedTo: [resource: BaseNode, relation: string];

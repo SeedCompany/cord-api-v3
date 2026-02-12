@@ -3,7 +3,7 @@ import { ModuleRef } from '@nestjs/core';
 import type { RequireAtLeastOne } from 'type-fest';
 import {
   createAndInject,
-  type IdOf,
+  type ID,
   NotFoundException,
   Polls,
   ServerException,
@@ -31,7 +31,7 @@ export class MediaService {
       return null;
     }
     return await this.repo.save({
-      file: file.id as IdOf<FileVersion>,
+      file: file.id as ID<FileVersion>,
       mimeType: file.mimeType,
       ...media,
       ...metadata,
