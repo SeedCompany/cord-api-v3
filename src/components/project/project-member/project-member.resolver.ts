@@ -58,18 +58,21 @@ export class ProjectMemberResolver {
     @Args('input') input: UpdateProjectMember,
     @Loader(ProjectMemberLoader) loader: LoaderOf<ProjectMemberLoader>,
   ): Promise<ProjectMemberUpdated> {
-    const { member, payload } = await this.service.update(input);
+    const {
+      member,
+      payload = {
+        updated: {},
+        previous: {},
+        at: DateTime.now(),
+        by: this.identity.current.userId,
+      },
+    } = await this.service.update(input);
     loader.prime(member.id, member);
     return {
       __typename: 'ProjectMemberUpdated',
       projectId: member.project.id,
       memberId: member.id,
-      by: this.identity.current.userId,
-      updated: {},
-      previous: {},
-      // if actual changes, then this overrides those empty values.
       ...payload,
-      at: payload?.at ?? DateTime.now(),
     };
   }
 
