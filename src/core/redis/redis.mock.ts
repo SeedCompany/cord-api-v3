@@ -20,7 +20,7 @@ const logger = debug ? new Logger('redis') : null;
 if (debug) {
   const { Scripts } = await import('bullmq');
   patchMethod(Scripts.prototype, 'execCommand', (base) => async (...args) => {
-    Logger.debug(args[1], '=> ...', 'BullScript');
+    Logger.debug(args[1], '=> ...', ...args.slice(1), 'BullScript');
     try {
       const res = await base(...args);
       Logger.debug('... <=', res, 'BullScript');
@@ -57,17 +57,17 @@ patchMethod(RedisMock.prototype, '_initCommands', function (baseInit) {
       defineJsonModule(lua);
     });
 
-    // BullMQ uses this to create unique generated job IDs
-    // These job IDs are then concatenated to locate other related keys.
-    // There is a Lua/JS discrepancy here where that concatenation produces
-    // "foo:1.0" instead of "foo:1"
-    // Returning the incremented number as a string works around this.
-    // And luckily, there aren't any other usages of `incr` that are expecting
-    // a number and doing numeric comparison.
-    patchMethod(luaCommands, 'incr', (base) => (...args) => {
-      const res = base(...args);
-      return String(res) as any as number;
-    });
+    /**
+     * Fix LPUSH/RPUSH to convert input values that are numbers to strings.
+     * This is what Redis actually does.
+     */
+    for (const obj of [this, luaCommands]) {
+      for (const command of ['lpush', 'rpush'] as const) {
+        patchMethod(obj, command, (base) => (key, ...vals) => {
+          return base(key, ...vals.map((val) => String(val)));
+        });
+      }
+    }
 
     // BullMQ uses this command to trim events stream
     // Stub it to work around this missing functionality.

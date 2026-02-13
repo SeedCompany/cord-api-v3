@@ -1,5 +1,5 @@
 import { type Logger } from '@nestjs/common';
-import { type FnLike, type Nil } from '@seedcompany/common';
+import { type FnLike, type Nil, patchMethod } from '@seedcompany/common';
 // @ts-expect-error no types are defined
 import Fengari from 'fengari';
 // @ts-expect-error no types are defined
@@ -137,3 +137,25 @@ const betterVm = (vm: any, logger?: Logger) => {
     exec: vm.luaExecString,
   };
 };
+
+/**
+ * Lua has integers and floats.
+ * fengari-interop converts JS numbers to floats.
+ * This causes problems with string concatenation, as Lua uses the float representation.
+ * e.g. "foo:1.0" instead of "foo:1"
+ * We fix this behavior to check if the number is an integer
+ * and convert to that Lua type instead.
+ * Both JS & Lua are loose with these two types and can convert/compare between
+ * them seamlessly.
+ * It is beyond me why this is not the default behavior.
+ * https://github.com/fengari-lua/fengari-interop/issues/31
+ */
+patchMethod(FengariInterp, 'push', (base) => {
+  return (state: unknown, value: unknown) => {
+    if (typeof value === 'number' && Number.isSafeInteger(value)) {
+      Fengari.lua.lua_pushinteger(state, value);
+      return;
+    }
+    base(state, value);
+  };
+});
