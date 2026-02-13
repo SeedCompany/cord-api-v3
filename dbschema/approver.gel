@@ -1,0 +1,29 @@
+module Business {
+  scalar type `Group` extending enum<
+    Development,
+    FieldGrowth,
+    FieldOperations,
+    Finance,
+    MarketingCommunications,
+    OfficeOfThePresident,
+    People,
+    Technology,
+  > {
+    annotation description := "\
+      Each group (formerly domain) within Seed Company. \
+      OrganizationGroup was avoided to not be ambiguous with our Organizations here.";
+  }
+}
+
+module Program {
+  type Approver {
+    annotation description := "\
+      Certain users are approvers on behalf of their group for certain programs / project types.";
+
+    required user: default::User {
+      constraint exclusive;
+    };
+    required multi programs: Project::Type;
+    required multi groups: Business::Group;
+  }
+}
