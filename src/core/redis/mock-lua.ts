@@ -1,5 +1,10 @@
 import { type Logger } from '@nestjs/common';
-import { type FnLike, type Nil, patchMethod } from '@seedcompany/common';
+import {
+  type FnLike,
+  type Nil,
+  patchMethod,
+  toStringTag,
+} from '@seedcompany/common';
 // @ts-expect-error no types are defined
 import Fengari from 'fengari';
 // @ts-expect-error no types are defined
@@ -87,8 +92,37 @@ export const deepNullToUndefined = (obj: unknown): unknown => {
   return obj;
 };
 
+const lenSymbol = Symbol.for('__len');
+
+// If the value is a lua array, we've unshifted a null too to make it 1-indexed,
+// slice it off since we're coming back to JS with 0-indexed arrays.
+const unwrapTableValue = (v: any) =>
+  Array.isArray(v) && lenSymbol in v ? v.slice(1) : v;
+
 type Lua = ReturnType<typeof betterVm>;
 const betterVm = (vm: any, logger?: Logger) => {
+  patchMethod(vm, 'popReturnValue', (base) => (...args) => {
+    const retVal = base(...args);
+    // Unwrap lua's `{}` tables, which are returned to us as a proxy.
+    // This data needs to be extracted before the VM state is deleted.
+    // https://github.com/stipsan/ioredis-mock/blob/6a58955/src/commands/defineCommand.js#L104-L105
+    if (toStringTag(retVal) === 'Fengari object') {
+      const entries: Array<[string | number, any]> = [...retVal].map(
+        ([k, v]) => [k, unwrapTableValue(v)],
+      );
+      // Convert lua "object" with sequential numeric keys to a plain array
+      // Needed for https://github.com/taskforcesh/bullmq/blob/165b6a1/src/commands/getCounts-1.lua
+      if (
+        entries.length > 1 &&
+        entries.every(([key], index) => key === index + 1)
+      ) {
+        return entries.map(([_, v]) => v);
+      }
+      return Object.fromEntries(entries);
+    }
+    return retVal;
+  });
+
   const setGlobal = (name: string) => {
     Fengari.lua.lua_setglobal(vm.L, Fengari.to_luastring(name));
   };
@@ -101,7 +135,7 @@ const betterVm = (vm: any, logger?: Logger) => {
       // lua array indexes are 1-based, so convert to handle
       if (Array.isArray(result)) {
         result.unshift(null);
-        Object.defineProperty(result, Symbol.for('__len'), {
+        Object.defineProperty(result, lenSymbol, {
           value: () => result.length - 1,
         });
       }
