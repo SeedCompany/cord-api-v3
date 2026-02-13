@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { isEqual, omit, pick } from 'lodash';
 import { type ID } from '~/common';
 import { WebhookChannelService } from '../channels/webhook-channel.service';
-import { WebhookSender } from '../webhook.sender';
+import { WebhookSender } from '../delivery/webhook.sender';
 import { WebhookValidator } from '../webhook.validator';
 import {
   type DeleteWebhookArgs,
