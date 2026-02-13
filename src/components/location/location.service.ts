@@ -7,7 +7,8 @@ import {
   ServerException,
   type UnsecuredDto,
 } from '~/common';
-import { HandleIdLookup, type ResourceNameLike } from '~/core';
+import { HandleIdLookup } from '~/core/resources';
+import { type ResourceNameLike } from '~/core/resources';
 import { Privileges, type UserEdgePrivileges } from '../authorization';
 import { type PropAction } from '../authorization/policy/actions';
 import {

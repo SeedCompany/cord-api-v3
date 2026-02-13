@@ -10,7 +10,7 @@ import {
   Sensitivity,
   type UnsecuredDto,
 } from '~/common';
-import { ConfigService } from '~/core';
+import { ConfigService } from '~/core/config';
 import { CommonRepository, OnIndex, UniquenessError } from '~/core/database';
 import { type ChangesOf, getChanges } from '~/core/database/changes';
 import {

@@ -8,8 +8,8 @@ import {
   UnauthorizedException,
   type UnsecuredDto,
 } from '~/common';
-import { ILogger, Logger } from '~/core';
 import { OnHook } from '~/core/hooks';
+import { ILogger, Logger } from '~/core/logger';
 import { PartnerType } from '../../partner/dto';
 import { PartnershipService } from '../../partnership';
 import { type Partnership } from '../../partnership/dto';

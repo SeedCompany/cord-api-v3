@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { DateTime } from 'luxon';
 import { type ID, type PublicOf, ServerException } from '~/common';
-import type { ResourceNameLike } from '~/core';
 import { e, RepoFor } from '~/core/gel';
+import { type ResourceNameLike } from '~/core/resources';
 import {
   type CreateLocation,
   Location,

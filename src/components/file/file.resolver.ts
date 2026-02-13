@@ -8,7 +8,7 @@ import {
 } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { type ID, IdArg, ListArg } from '~/common';
-import { Loader, type LoaderOf } from '~/core';
+import { Loader, type LoaderOf } from '~/core/data-loader';
 import { UserLoader } from '../user';
 import { User } from '../user/dto';
 import {

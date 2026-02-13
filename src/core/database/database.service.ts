@@ -22,8 +22,8 @@ import {
   TraceLayer,
   type UnwrapSecured,
 } from '~/common';
+import { ConfigService } from '~/core/config';
 import { Identity } from '../authentication';
-import { ConfigService } from '../config/config.service';
 import { LiveQueryStore } from '../live-query';
 import { ILogger, Logger } from '../logger';
 import { ShutdownHook } from '../shutdown.hook';

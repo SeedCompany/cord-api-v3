@@ -14,7 +14,7 @@ import got, {
 import { type FormattedExecutionResult } from 'graphql';
 import { createHmac, randomBytes } from 'node:crypto';
 import { InputException } from '~/common';
-import { ConfigService } from '~/core/config/config.service';
+import { ConfigService } from '~/core/config';
 import { ILogger, Logger, LogLevel } from '../logger';
 import { type Webhook as FullWebhook, type WebhookTrigger } from './dto';
 

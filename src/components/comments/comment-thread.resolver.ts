@@ -1,8 +1,9 @@
 import { Args, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { type ID, IdArg, ListArg } from '~/common';
-import { Loader, type LoaderOf, ResourceLoader } from '~/core';
 import { Identity } from '~/core/authentication';
+import { Loader, type LoaderOf } from '~/core/data-loader';
+import { ResourceLoader } from '~/core/resources';
 import { UserLoader } from '../user';
 import { User } from '../user/dto';
 import { CommentThreadLoader } from './comment-thread.loader';

@@ -9,8 +9,8 @@ import {
   ServerException,
   viewOfChangeset,
 } from '~/common';
-import { HandleIdLookup, ResourceResolver } from '~/core';
 import { mapListResults } from '~/core/database/results';
+import { HandleIdLookup, ResourceResolver } from '~/core/resources';
 import { Privileges } from '../authorization';
 import { FileService } from '../file';
 import { type FileId } from '../file/dto';

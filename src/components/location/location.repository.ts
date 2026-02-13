@@ -11,7 +11,6 @@ import {
   ServerException,
   type UnsecuredDto,
 } from '~/common';
-import { type ResourceNameLike } from '~/core';
 import { DtoRepository, OnIndex } from '~/core/database';
 import {
   ACTIVE,
@@ -28,6 +27,7 @@ import {
   sortWith,
 } from '~/core/database/query';
 import { type BaseNode } from '~/core/database/results';
+import { type ResourceNameLike } from '~/core/resources';
 import { FileService } from '../file';
 import { type FileId } from '../file/dto';
 import {

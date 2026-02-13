@@ -11,10 +11,11 @@ import {
   ServerException,
   type UnsecuredDto,
 } from '~/common';
-import { ILogger, Logger, ResourceLoader, ResourcesHost } from '~/core';
 import { Identity } from '~/core/authentication';
 import { type BaseNode, isBaseNode } from '~/core/database/results';
 import { LiveQueryStore } from '~/core/live-query';
+import { ILogger, Logger } from '~/core/logger';
+import { ResourceLoader, ResourcesHost } from '~/core/resources';
 import { Privileges } from '../authorization';
 import { type CreatePost, Post, Postable, type UpdatePost } from './dto';
 import { type PostListInput, type SecuredPostList } from './dto/list-posts.dto';

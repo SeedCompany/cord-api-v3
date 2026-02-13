@@ -1,7 +1,7 @@
 import { type DateTimeUnit } from 'luxon';
 import { type DateInterval } from '~/common';
-import { ILogger, Logger } from '~/core';
 import { OnHook } from '~/core/hooks';
+import { ILogger, Logger } from '~/core/logger';
 import { projectRange } from '../../project/dto';
 import { ProjectUpdatedHook } from '../../project/hooks';
 import { ReportPeriod, ReportType } from '../dto';

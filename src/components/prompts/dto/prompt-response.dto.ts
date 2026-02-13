@@ -15,8 +15,8 @@ import {
   type UnsecuredDto,
   Variant,
 } from '~/common';
-import { type LinkTo, type LinkToUnknown } from '~/core';
 import { type BaseNode } from '~/core/database/results';
+import type { LinkTo, LinkToUnknown } from '~/core/resources';
 import { type Prompt, SecuredPrompt } from './prompt.dto';
 
 @ObjectType()

@@ -1,8 +1,8 @@
 import { Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
 import { type ID, IdArg, type ObjectView } from '~/common';
-import { ResourceLoader } from '~/core';
 import { Identity } from '~/core/authentication';
 import { type BaseNode } from '~/core/database/results';
+import { ResourceLoader } from '~/core/resources';
 import { ChangesetRepository } from './changeset.repository';
 import { Changeset, ChangesetDiff, type ResourceChange } from './dto';
 

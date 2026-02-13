@@ -8,10 +8,11 @@ import {
   type Range,
   type UnsecuredDto,
 } from '~/common';
-import { HandleIdLookup, ILogger, Logger } from '~/core';
 import { Identity } from '~/core/authentication';
 import { type Variable } from '~/core/database/query';
 import { Hooks } from '~/core/hooks';
+import { ILogger, Logger } from '~/core/logger';
+import { HandleIdLookup } from '~/core/resources';
 import { Privileges } from '../authorization';
 import { FileService } from '../file';
 import { ProgressReport } from '../progress-report/dto';

@@ -1,5 +1,5 @@
-import { ResourceLoader } from '~/core';
 import { OnHook } from '~/core/hooks';
+import { ResourceLoader } from '~/core/resources';
 import { ProjectUpdatedHook } from '../../hooks';
 import { ProjectMemberRepository } from '../project-member.repository';
 

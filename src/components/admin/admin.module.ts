@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { splitDb } from '~/core';
+import { splitDb } from '~/core/database';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { UserModule } from '../user/user.module';
 import { AdminGelRepository } from './admin.gel.repository';

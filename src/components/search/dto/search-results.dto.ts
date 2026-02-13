@@ -2,7 +2,7 @@ import { createUnionType } from '@nestjs/graphql';
 import { entries, setOf } from '@seedcompany/common';
 import { uniq } from 'lodash';
 import { type EnumType, makeEnum } from '~/common';
-import { type ResourceMap } from '~/core';
+import { type ResourceMap } from '~/core/resources';
 import { EthnoArt } from '../../ethno-art/dto';
 import { FieldRegion } from '../../field-region/dto';
 import { FieldZone } from '../../field-zone/dto';

@@ -6,7 +6,7 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import { CalendarDate, DateField, ListArg } from '~/common';
-import { Loader, type LoaderOf } from '~/core';
+import { Loader, type LoaderOf } from '~/core/data-loader';
 import { type Engagement, LanguageEngagement } from '../../engagement/dto';
 import {
   PeriodicReportLoader,

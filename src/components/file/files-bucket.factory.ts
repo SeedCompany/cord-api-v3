@@ -4,7 +4,7 @@ import { asNonEmptyArray } from '@seedcompany/common';
 import { resolve } from 'path';
 import { map } from 'rxjs/operators';
 import { UrlUtil } from '~/common';
-import { ConfigService } from '~/core';
+import { ConfigService } from '~/core/config';
 import {
   CompositeBucket,
   FileBucket,

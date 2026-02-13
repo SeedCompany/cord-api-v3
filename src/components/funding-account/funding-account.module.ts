@@ -1,5 +1,5 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { splitDb } from '~/core';
+import { splitDb } from '~/core/database';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { FundingAccountGelRepository } from './funding-account.gel.repository';
 import { FundingAccountLoader } from './funding-account.loader';

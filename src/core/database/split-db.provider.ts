@@ -1,7 +1,7 @@
 import type { Provider, Type } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import type { PublicOf } from '~/common';
-import { ConfigService } from '../config/config.service';
+import { ConfigService } from '~/core/config';
 
 export const splitDb = <T>(
   neo4jRepository: Type<T>,

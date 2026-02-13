@@ -12,7 +12,7 @@ import {
   SecuredDateRange,
   viewOfChangeset,
 } from '~/common';
-import { Loader, type LoaderOf } from '~/core';
+import { Loader, type LoaderOf } from '~/core/data-loader';
 import { ChangesetIds, type IdsAndView, IdsAndViewArg } from '../changeset/dto';
 import { FileNodeLoader, resolveDefinedFile } from '../file';
 import { SecuredFile } from '../file/dto';

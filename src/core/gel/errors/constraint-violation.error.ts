@@ -1,7 +1,7 @@
 import { ConstraintViolationError } from 'gel';
 import type { LiteralUnion } from 'type-fest';
 import { type ID } from '~/common';
-import type { AllResourceDBNames } from '~/core';
+import type { AllResourceDBNames } from '~/core/resources';
 import { attributesOf } from './attributes';
 
 export class MyConstraintViolationError extends ConstraintViolationError {

@@ -12,7 +12,7 @@ import {
   unwrapSecured,
   type UnwrapSecured,
 } from '~/common';
-import { type LinkTo } from '~/core';
+import { type LinkTo } from '~/core/resources';
 import { type CreateDefinedFileVersion } from '../../components/file/dto';
 import { type Variable } from './query';
 import { type NativeDbValue } from './results';

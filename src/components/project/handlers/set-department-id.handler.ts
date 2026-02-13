@@ -6,7 +6,7 @@ import {
   ServerException,
   type UnsecuredDto,
 } from '~/common';
-import { ConfigService } from '~/core';
+import { ConfigService } from '~/core/config';
 import {
   DatabaseService,
   TransactionRetryInformer,

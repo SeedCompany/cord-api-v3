@@ -5,7 +5,7 @@ import { type RelationDirection } from 'cypher-query-builder/dist/typings/clause
 import { type Maybe as Nullable } from 'graphql/jsutils/Maybe';
 import { DateTime } from 'luxon';
 import { EnhancedResource, type ID, many, type ResourceShape } from '~/common';
-import { type ResourceMap } from '~/core';
+import { type ResourceMap } from '~/core/resources';
 import { Variable } from '../query-augmentation/condition-variables';
 import { currentUser } from './matching';
 

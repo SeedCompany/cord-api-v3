@@ -110,6 +110,11 @@ const restrictedImports = [
     replacement: { path: '~/graphql' },
   },
   {
+    path: '@seedcompany/data-loader',
+    replacement: { path: '~/core/data-loader' },
+    message: 'Reference from core instead to keep loose coupling',
+  },
+  {
     path: '@seedcompany/nest/hooks',
     replacement: { path: '~/core/hooks' },
     message: 'Reference from core instead to keep loose coupling',

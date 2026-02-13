@@ -33,9 +33,9 @@ import {
 import type { SetNonNullable, SetRequired } from 'type-fest';
 import { validate as isUUID } from 'uuid';
 import { type ID } from '~/common';
-import { ConfigService } from '~/core';
 import { Identity } from '~/core/authentication';
 import { Broadcaster } from '~/core/broadcast';
+import { ConfigService } from '~/core/config';
 import { DatabaseMigrationCommand } from '~/core/database/migration/migration.command';
 import { WebhookChannelRepository } from '~/core/webhooks/channels/webhook-channel.repository';
 import { WebhooksRepository } from '~/core/webhooks/management/webhooks.repository';

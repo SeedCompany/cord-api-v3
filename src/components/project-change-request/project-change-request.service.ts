@@ -8,10 +8,11 @@ import {
   ServerException,
   type UnsecuredDto,
 } from '~/common';
-import { HandleIdLookup, ILogger, Logger } from '~/core';
 import { DatabaseService } from '~/core/database';
 import { mapListResults } from '~/core/database/results';
 import { Hooks } from '~/core/hooks';
+import { ILogger, Logger } from '~/core/logger';
+import { HandleIdLookup } from '~/core/resources';
 import { Privileges } from '../authorization';
 import { ChangesetFinalizingHook } from '../changeset';
 import { ProjectService } from '../project';

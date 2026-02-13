@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { type ID, type ObjectView, type UnsecuredDto } from '~/common';
-import { HandleIdLookup } from '~/core';
 import { Identity } from '~/core/authentication';
+import { HandleIdLookup } from '~/core/resources';
 import { Privileges } from '../../authorization';
 import {
   type CreateUnavailability,

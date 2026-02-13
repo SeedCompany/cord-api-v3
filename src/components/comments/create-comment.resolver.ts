@@ -5,7 +5,7 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { Loader, type LoaderOf } from '~/core';
+import { Loader, type LoaderOf } from '~/core/data-loader';
 import { CommentThreadLoader } from './comment-thread.loader';
 import { CommentService } from './comment.service';
 import { CommentCreated, CommentThread, CreateComment } from './dto';

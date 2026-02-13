@@ -1,4 +1,4 @@
-import { ConfigService } from '~/core';
+import { ConfigService } from '~/core/config';
 import { OnHook } from '~/core/hooks';
 import { EngagementWillDeleteHook } from '../../engagement/hooks';
 import { CeremonyService } from '../ceremony.service';

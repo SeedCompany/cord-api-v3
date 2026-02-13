@@ -1,5 +1,5 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { Loader, type LoaderOf } from '@seedcompany/data-loader';
+import { Loader, type LoaderOf } from '~/core/data-loader';
 import { type Engagement, EngagementMutation, IEngagement } from './dto';
 import { EngagementLoader } from './engagement.loader';
 

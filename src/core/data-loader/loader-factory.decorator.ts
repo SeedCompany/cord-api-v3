@@ -1,8 +1,8 @@
 import { Injectable, Scope, type Type } from '@nestjs/common';
-import type { DataLoaderStrategy } from '@seedcompany/data-loader';
 import { createMetadataDecorator } from '@seedcompany/nest';
 import type { ValueOf } from 'type-fest';
 import type { Many } from '~/common';
+import { type DataLoaderStrategy } from '~/core/data-loader';
 import { type ResourceMap } from '~/core/resources';
 import { ObjectViewAwareLoader } from './object-view-aware-loader.strategy';
 

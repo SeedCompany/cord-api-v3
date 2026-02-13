@@ -26,7 +26,7 @@ import {
   type ResourceShape,
   type SortablePaginationInput,
 } from '~/common';
-import { type ResourceLike } from '~/core';
+import type { ResourceLike } from '~/core/resources';
 import { Privileges } from '../../components/authorization';
 import { getChanges } from '../database/changes';
 import { privileges } from '../database/dto.repository';

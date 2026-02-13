@@ -7,8 +7,8 @@ import {
 } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import { type ID, IdArg } from '~/common';
-import { Loader, type LoaderOf } from '~/core';
 import { Identity } from '~/core/authentication';
+import { Loader, type LoaderOf } from '~/core/data-loader';
 import { ProjectMemberLoader, ProjectMemberService } from '../project-member';
 import {
   CreateProjectMember,

@@ -1,6 +1,6 @@
 import { Query, Resolver } from '@nestjs/graphql';
 import { ListArg } from '~/common';
-import { Loader, type LoaderOf } from '~/core';
+import { Loader, type LoaderOf } from '~/core/data-loader';
 import { PeriodicReportLoader as ReportLoader } from '../../periodic-report';
 import {
   ProgressReport,

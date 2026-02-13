@@ -1,7 +1,7 @@
 import { type Cardinality } from 'gel/dist/reflection';
 import type { RequireExactlyOne } from 'type-fest';
 import { type ID } from '~/common';
-import { type AllResourceDBNames } from '~/core';
+import type { AllResourceDBNames } from '~/core/resources';
 import type {
   pointerToAssignmentExpression,
   setToAssignmentExpression,

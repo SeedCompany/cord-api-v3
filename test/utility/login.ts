@@ -1,4 +1,4 @@
-import { ConfigService } from '~/core';
+import { ConfigService } from '~/core/config';
 import { graphql, type InputOf } from '~/graphql';
 import { type TestApp } from './create-app';
 import { createSession } from './create-session';

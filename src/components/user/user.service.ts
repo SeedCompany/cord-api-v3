@@ -7,9 +7,10 @@ import {
   UnauthorizedException,
   type UnsecuredDto,
 } from '~/common';
-import { HandleIdLookup, ILogger, Logger } from '~/core';
 import { Identity } from '~/core/authentication';
 import { Hooks } from '~/core/hooks';
+import { ILogger, Logger } from '~/core/logger';
+import { HandleIdLookup } from '~/core/resources';
 import { Privileges } from '../authorization';
 import { AssignableRoles } from '../authorization/dto/assignable-roles.dto';
 import { LocationService } from '../location';

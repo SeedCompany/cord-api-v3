@@ -1,8 +1,8 @@
 import { Module, type OnApplicationShutdown } from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { Connection } from 'cypher-query-builder';
+import { ConfigService } from '~/core/config';
 import { ConfigModule } from '../config/config.module';
-import { ConfigService } from '../config/config.service';
 import { TracingModule } from '../tracing';
 import { CypherFactory } from './cypher.factory';
 import { DatabaseService } from './database.service';
