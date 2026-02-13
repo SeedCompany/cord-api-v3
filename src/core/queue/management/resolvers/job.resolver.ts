@@ -1,13 +1,24 @@
-import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { Queue } from 'bullmq';
+import { search } from '@aws-lambda-powertools/jmespath';
 import {
-  GraphQLJSON as AnyJson,
-  GraphQLJSONObject as JsonObject,
-} from 'graphql-scalars';
+  Args,
+  ArgsType,
+  Parent,
+  ResolveField,
+  Resolver,
+} from '@nestjs/graphql';
+import { GraphQLJSON as AnyJson } from 'graphql-scalars';
 import { DateTime, Duration, Info } from 'luxon';
-import { InputException } from '~/common';
+import { InputException, JmesPathScalar, OptionalField } from '~/common';
 import { GqlContextHost } from '~/core/graphql/gql-context.host';
-import { Job } from '../dto';
+import { Job, Queue } from '../dto';
+
+@ArgsType()
+class SearchArgs {
+  @OptionalField(() => JmesPathScalar)
+  path?: string;
+}
+const maybeSearch = (value: unknown, path?: string) =>
+  path && value ? search(path, value) : value;
 
 @Resolver(() => Job)
 export class JobResolver {
@@ -18,19 +29,29 @@ export class JobResolver {
     return (job as any).queue;
   }
 
-  @ResolveField(() => JsonObject, { nullable: true })
-  options(@Parent() job: Job) {
-    return job.opts;
+  @ResolveField(() => AnyJson, { nullable: true })
+  data(@Parent() job: Job, @Args() { path }: SearchArgs) {
+    return maybeSearch(job.data, path);
   }
 
   @ResolveField(() => AnyJson, { nullable: true })
-  return(@Parent() job: Job) {
-    return job.returnvalue;
+  options(@Parent() job: Job, @Args() { path }: SearchArgs) {
+    return maybeSearch(job.opts, path);
   }
 
-  @ResolveField(() => JsonObject)
-  json(@Parent() job: Job) {
-    return job;
+  @ResolveField(() => AnyJson, { nullable: true })
+  progress(@Parent() job: Job, @Args() { path }: SearchArgs) {
+    return maybeSearch(job.progress, path);
+  }
+
+  @ResolveField(() => AnyJson, { nullable: true })
+  return(@Parent() job: Job, @Args() { path }: SearchArgs) {
+    return maybeSearch(job.returnvalue, path);
+  }
+
+  @ResolveField(() => AnyJson, { nullable: true })
+  json(@Parent() job: Job, @Args() { path }: SearchArgs) {
+    return maybeSearch(job.toJSON(), path);
   }
 
   @ResolveField(() => String)

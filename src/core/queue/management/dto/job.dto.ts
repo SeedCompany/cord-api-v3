@@ -1,15 +1,12 @@
 import { ID, ObjectType } from '@nestjs/graphql';
 import { Job } from 'bullmq';
 import { stripIndent } from 'common-tags';
-import { GraphQLJSON as AnyJson } from 'graphql-scalars';
 import { declareGqlFields } from '~/common';
 
 ObjectType('QueueJob')(Job);
 declareGqlFields(Job, {
   id: { type: () => ID },
   name: { type: () => String },
-  data: { type: () => AnyJson },
-  progress: { type: () => AnyJson },
   stacktrace: { type: () => [String] },
   priority: {
     type: () => Number,

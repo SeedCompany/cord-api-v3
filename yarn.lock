@@ -160,6 +160,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@aws-lambda-powertools/commons@npm:2.31.0":
+  version: 2.31.0
+  resolution: "@aws-lambda-powertools/commons@npm:2.31.0"
+  dependencies:
+    "@aws/lambda-invoke-store": "npm:0.2.3"
+  checksum: 10c0/0bd9790d674d72c4290424e0f8b05af22595d295a79822ef816e3d72d35c28ca453a0fb45549be7cd6f58fbf4e015ccfdc067fa758d7837753e3a852e5f8dfac
+  languageName: node
+  linkType: hard
+
+"@aws-lambda-powertools/jmespath@npm:^2.31.0":
+  version: 2.31.0
+  resolution: "@aws-lambda-powertools/jmespath@npm:2.31.0"
+  dependencies:
+    "@aws-lambda-powertools/commons": "npm:2.31.0"
+  checksum: 10c0/b950022630ec489c3c64d4d57a5a14942f1e786546bfea00267de9a0919ccf347d283b623b7dc12b8ba43f6091e56dd4cce3a729266bfa1fed95d5ae89e0067e
+  languageName: node
+  linkType: hard
+
 "@aws-sdk/client-s3@npm:^3.440.0":
   version: 3.800.0
   resolution: "@aws-sdk/client-s3@npm:3.800.0"
@@ -1210,6 +1228,13 @@ __metadata:
     fast-xml-parser: "npm:5.2.5"
     tslib: "npm:^2.6.2"
   checksum: 10c0/407af75a7ea2d2d27021d54bfb59d53b3fd2f068234ade97b3b158ff6f753f85a0effa0d765c48b377a5b73194e1908f68f2959fb77e871e9137a8650b2caeef
+  languageName: node
+  linkType: hard
+
+"@aws/lambda-invoke-store@npm:0.2.3":
+  version: 0.2.3
+  resolution: "@aws/lambda-invoke-store@npm:0.2.3"
+  checksum: 10c0/3869a5d2494ff81fba306d603c0f2e36c59f89c4efdffd1105a208a595da77059547209a163b6f0c1b716e9d273ce24f94dcbd5a08bad74b2602d13711b0cb3b
   languageName: node
   linkType: hard
 
@@ -6774,6 +6799,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "cord-api-v3@workspace:."
   dependencies:
+    "@aws-lambda-powertools/jmespath": "npm:^2.31.0"
     "@aws-sdk/client-s3": "npm:^3.440.0"
     "@aws-sdk/s3-request-presigner": "npm:^3.440.0"
     "@faire/mjml-react": "npm:^3.5.0"
