@@ -10,7 +10,7 @@ import { GraphQLJSON as AnyJson } from 'graphql-scalars';
 import { DateTime, Duration, Info } from 'luxon';
 import { InputException, JmesPathScalar, OptionalField } from '~/common';
 import { GqlContextHost } from '~/core/graphql/gql-context.host';
-import { Job, Queue } from '../dto';
+import { Job, JobState, Queue } from '../dto';
 
 @ArgsType()
 class SearchArgs {
@@ -54,7 +54,7 @@ export class JobResolver {
     return maybeSearch(job.toJSON(), path);
   }
 
-  @ResolveField(() => String)
+  @ResolveField(() => JobState)
   async state(@Parent() job: Job) {
     return await job.getState();
   }

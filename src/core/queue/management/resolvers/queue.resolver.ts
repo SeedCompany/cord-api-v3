@@ -8,15 +8,14 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { type JobType } from 'bullmq';
 import { GraphQLJSONObject as JsonObject } from 'graphql-scalars';
 import { IdArg, Order } from '~/common';
-import { Job, Queue } from '../dto';
+import { Job, JobType, Queue } from '../dto';
 import { QueueManagementService } from '../queue-management.service';
 
 @ArgsType()
 class JobArgs {
-  @Field(() => [String], { nullable: true })
+  @Field(() => [JobType], { nullable: true })
   types?: JobType[];
   @Field(() => Int, { nullable: true })
   start?: number;

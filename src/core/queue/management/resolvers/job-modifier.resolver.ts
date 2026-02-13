@@ -6,12 +6,11 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { type FinishedStatus } from 'bullmq';
 import { stripIndent } from 'common-tags';
 import { GraphQLJSON as AnyJson } from 'graphql-scalars';
 import { Duration } from 'luxon';
 import { OptionalField } from '~/common';
-import { Job, JobModifier as Modifier } from '../dto';
+import { FinishedStatus, Job, JobModifier as Modifier } from '../dto';
 
 @ArgsType()
 class PriorityArgs {
@@ -28,14 +27,14 @@ class PriorityArgs {
 
 @ArgsType()
 class RetryArgs {
-  @OptionalField(() => String, {
+  @OptionalField(() => FinishedStatus, {
     description: stripIndent`
       The expected job state: \`failed\` or \`completed\`.
 
       If the job is not in the provided state, then it's not reprocessed.
     `,
   })
-  readonly state?: FinishedStatus = 'failed';
+  readonly state?: FinishedStatus = FinishedStatus.Failed;
 }
 
 @Resolver(() => Modifier)

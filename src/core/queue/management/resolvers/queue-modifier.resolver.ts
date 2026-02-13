@@ -10,17 +10,24 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { type FinishedStatus } from 'bullmq';
 import { stripIndent } from 'common-tags';
 import { GraphQLJSONObject as JsonObject } from 'graphql-scalars';
 import { DateTime, Duration } from 'luxon';
 import {
   DateTimeField,
   IdArg,
+  InputException,
   NotFoundException,
   OptionalField,
 } from '~/common';
-import { Job, JobModifier, QueueModifier as Modifier, Queue } from '../dto';
+import {
+  FinishedStatus,
+  Job,
+  JobModifier,
+  JobType,
+  QueueModifier as Modifier,
+  Queue,
+} from '../dto';
 import { QueueManagementService } from '../queue-management.service';
 
 @ArgsType()
@@ -41,8 +48,8 @@ class CleanArgs {
     description: 'Max number of jobs to clean',
   })
   readonly limit: number;
-  @Field(() => String)
-  readonly type: Parameters<Queue['clean']>[2] & {} = 'completed';
+  @Field(() => JobType)
+  readonly type: JobType = JobType.Completed;
 }
 
 @ObjectType('QueueCleanOutput')
@@ -74,10 +81,10 @@ class HasBatchSizeArgs {
 
 @ArgsType()
 class RetryArgs extends HasBatchSizeArgs {
-  @OptionalField(() => String, {
+  @OptionalField(() => FinishedStatus, {
     description: 'Which jobs to retry? failed or completed',
   })
-  readonly state?: FinishedStatus = 'failed';
+  readonly state?: FinishedStatus = FinishedStatus.Failed;
 
   @DateTimeField({
     optional: true,
@@ -159,6 +166,9 @@ export class QueueModifierResolver {
     @Parent() { queue }: Modifier,
     @Args() args: CleanArgs,
   ): Promise<CleanOutput> {
+    if (args.type === 'repeat' || args.type === 'waiting-children') {
+      throw new InputException('Not a clean-able job type');
+    }
     const deletedIds = await queue.clean(+args.grace, args.limit, args.type);
     return { queue, deletedIds };
   }
