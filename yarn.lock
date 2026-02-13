@@ -3839,9 +3839,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@seedcompany/nest@npm:^2.2.5":
-  version: 2.2.5
-  resolution: "@seedcompany/nest@npm:2.2.5"
+"@seedcompany/nest@npm:^2.2.6":
+  version: 2.2.6
+  resolution: "@seedcompany/nest@npm:2.2.6"
   dependencies:
     "@graphql-yoga/redis-event-target": "npm:^3.0.3"
     "@graphql-yoga/typed-event-target": "npm:^3.0.2"
@@ -3862,7 +3862,7 @@ __metadata:
     class-transformer: ^0.5.1
     class-validator: ^0.14.0
     reflect-metadata: ^0.1.12 || ^0.2.0
-  checksum: 10c0/46f576c3d9e22361b49db7b18f19fca3925f219515534382eb53e0253bbb435efabfd967a494374d941a1affc210ca6015b55331881bd51b6ff701a755bbfb9b
+  checksum: 10c0/1ec05505b77dbd198679c8d559343b840b477343f7d3b462459101984bc23a8295b5cd25eb50993b2dc685b835a696b938b4a02d3936b4bdf50369e982bac629
   languageName: node
   linkType: hard
 
@@ -6708,7 +6708,7 @@ __metadata:
     "@seedcompany/common": "npm:^1.3.0"
     "@seedcompany/data-loader": "npm:^3.0.0"
     "@seedcompany/eslint-plugin": "npm:^3.4.1"
-    "@seedcompany/nest": "npm:^2.2.5"
+    "@seedcompany/nest": "npm:^2.2.6"
     "@seedcompany/nestjs-email": "npm:^6.0.0"
     "@seedcompany/scripture": "npm:^1.0.0"
     "@tsconfig/strictest": "npm:^2.0.2"
