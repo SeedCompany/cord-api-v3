@@ -2,6 +2,7 @@ export * from './and-call';
 export * from './first-or';
 export * from './firstLettersOfWords';
 export * from './generate-id';
+export * from './get-cause-list';
 export * from './lazy-record';
 export * from './lazy-ref';
 export * from './map-or-else';
