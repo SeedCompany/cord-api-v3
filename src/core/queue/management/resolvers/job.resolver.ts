@@ -49,6 +49,11 @@ export class JobResolver {
     return maybeSearch(job.returnvalue, path);
   }
 
+  @ResolveField(() => [[String]])
+  failures(@Parent() job: Job) {
+    return job.stacktrace.map((stack) => stack.split('\n'));
+  }
+
   @ResolveField(() => AnyJson, { nullable: true })
   json(@Parent() job: Job, @Args() { path }: SearchArgs) {
     return maybeSearch(job.toJSON(), path);

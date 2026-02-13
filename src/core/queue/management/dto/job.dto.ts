@@ -7,7 +7,6 @@ ObjectType('QueueJob')(Job);
 declareGqlFields(Job, {
   id: { type: () => ID },
   name: { type: () => String },
-  stacktrace: { type: () => [String] },
   priority: {
     type: () => Number,
     description: stripIndent`
