@@ -29,7 +29,7 @@ const normalizeFramePath = (frame: string) =>
     // Convert an absolute path to path relative to src dir
     .replace(matchSrcPathInTrace, (_, group1) => group1)
     // Convert windows paths to unix for consistency
-    .replace(/\\\\/, '/');
+    .replaceAll(/\\/g, '/');
 
 const escapedSep = sep === '/' ? '\\/' : '\\\\';
 const matchSrcPathInTrace = RegExp(
