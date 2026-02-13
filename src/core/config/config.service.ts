@@ -315,6 +315,12 @@ export const makeConfig = (env: EnvironmentService) =>
 
     redis = {
       url: env.string('REDIS_URL').optional(),
+      prefix: env.string('REDIS_PREFIX').optional(),
+    };
+
+    bull = {
+      url: env.string('BULL_URL').optional() ?? this.redis.url,
+      prefix: env.string('BULL_PREFIX').optional() ?? this.redis.prefix,
     };
 
     /**

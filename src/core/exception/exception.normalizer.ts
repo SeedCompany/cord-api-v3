@@ -6,7 +6,6 @@ import { entries, isNotFalsy, simpleSwitch } from '@seedcompany/common';
 import * as Gel from 'gel';
 import * as GelTags from 'gel/dist/errors/tags.js';
 import { GraphQLError } from 'graphql';
-import addIndent from 'indent-string';
 import { lowerCase, uniq } from 'lodash';
 import type { AbstractClass } from 'type-fest';
 import {
@@ -23,8 +22,7 @@ import type { ConfigService } from '~/core/config';
 import * as Neo from '../database/errors';
 import { ExclusivityViolationError } from '../gel/errors';
 import { ResourcesHost } from '../resources/resources.host';
-import { isSrcFrame } from './is-src-frame';
-import { normalizeFramePath } from './normalize-frame-path';
+import { prettyStack } from './pretty-stack';
 
 interface NormalizeParams {
   ex: Error;
@@ -76,7 +74,9 @@ export class ExceptionNormalizer {
       code: codes[0],
       codes: new JsonSet(codes),
       ...extensions,
-      stack: this.getStack(params),
+      stack: prettyStack(params.ex, {
+        relativePaths: !this.config?.jest,
+      }),
     };
   }
 
@@ -292,21 +292,6 @@ export class ExceptionNormalizer {
       ex,
     );
     return Object.assign(wrapped, { idNotFound: id });
-  }
-
-  private getStack({ ex }: NormalizeParams) {
-    return getCauseList(ex)
-      .map((e) =>
-        (e.stack ?? e.message)
-          .split('\n')
-          .filter(isSrcFrame)
-          .map((frame: string) =>
-            this.config?.jest ? frame : normalizeFramePath(frame),
-          )
-          .join('\n'),
-      )
-      .map((e, i) => addIndent(i > 0 ? `[cause]: ${e}` : e, i * 2))
-      .join('\n');
   }
 
   private httpException(ex: Nest.HttpException) {
