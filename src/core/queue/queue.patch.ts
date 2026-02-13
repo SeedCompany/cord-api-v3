@@ -1,6 +1,6 @@
 import { BullModule } from '@nestjs/bullmq';
 import type { Type } from '@nestjs/common';
-import { cleanJoin, setInspectOnClass } from '@seedcompany/common';
+import { cleanJoin, patchMethod, setInspectOnClass } from '@seedcompany/common';
 import { Case } from '@seedcompany/common/case';
 import {
   type FlowJob,
@@ -10,6 +10,7 @@ import {
   RedisConnection,
   Worker,
 } from 'bullmq';
+import { prettyStack } from '../exception';
 
 type QueueCls = Type<Queue<any>> & { NAME?: string };
 
@@ -47,6 +48,14 @@ export class Queue<TJob extends Job> extends QueueBase<TJob> {
   }
 }
 BullModule.queueClass = Queue;
+
+// Patch error handling to strip off non-src frames (etc) like we do for logging.
+patchMethod(Job.prototype, 'moveToFailed', (base) => (...args) => {
+  const error = args[0];
+  error.stack = prettyStack(error);
+
+  return base(...args);
+});
 
 setInspectOnClass(Job, (job) => ({
   collapsedId: cleanJoin(' - ', [job.queueName, job.id, job.name]),
