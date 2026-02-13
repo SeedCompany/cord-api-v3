@@ -6,10 +6,16 @@ import { ConfigService } from '~/core/config';
 @Injectable()
 export class BullConfig implements SharedBullConfigurationFactory {
   constructor(private readonly config: ConfigService) {}
-  createSharedConfiguration(): QueueOptions {
+  async createSharedConfiguration(): Promise<QueueOptions> {
     const { url, prefix } = this.config.bull;
 
-    const connection: QueueOptions['connection'] = url ? { url } : {};
+    let connection: QueueOptions['connection'] | undefined = url
+      ? { url }
+      : undefined;
+    if (!connection) {
+      const { RedisMock } = await import('../redis/redis.mock');
+      connection = new RedisMock();
+    }
 
     return {
       connection,
