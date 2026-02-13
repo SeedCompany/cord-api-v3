@@ -1,4 +1,4 @@
-import { Injectable, Scope, type Type } from '@nestjs/common';
+import { Injectable, type Type } from '@nestjs/common';
 import { createMetadataDecorator } from '@seedcompany/nest';
 import type { ValueOf } from 'type-fest';
 import type { Many } from '~/common';
@@ -42,7 +42,7 @@ export const LoaderFactory =
     options?: LoaderOptions,
   ): (<LoaderCtor extends DataLoaderCtor>(target: LoaderCtor) => void) =>
   (target) => {
-    Injectable({ scope: Scope.REQUEST })(target);
+    Injectable()(target);
 
     LoaderFactoryMetadata(resource, {
       ...options,
