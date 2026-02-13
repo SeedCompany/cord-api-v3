@@ -49,7 +49,7 @@ export class Queue<TJob extends Job> extends QueueBase<TJob> {
 BullModule.queueClass = Queue;
 
 setInspectOnClass(Job, (job) => ({
-  collapsedId: cleanJoin(' - ', [job.id, job.name]),
+  collapsedId: cleanJoin(' - ', [job.queueName, job.id, job.name]),
   exclude: ['toKey', 'scripts', 'queueQualifiedName'],
 }));
 setInspectOnClass(Queue, (queue) => ({
