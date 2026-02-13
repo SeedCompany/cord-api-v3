@@ -14,9 +14,9 @@ import got, {
 import { type FormattedExecutionResult } from 'graphql';
 import { createHmac, randomBytes } from 'node:crypto';
 import { InputException } from '~/common';
-import { ConfigService } from '~/core/config';
-import { ILogger, Logger, LogLevel } from '../logger';
-import { type Webhook as FullWebhook, type WebhookTrigger } from './dto';
+import { ConfigService } from '../../config';
+import { ILogger, Logger, LogLevel } from '../../logger';
+import { type Webhook as FullWebhook, type WebhookTrigger } from '../dto';
 
 // Strip out large, unneeded properties to save on storage in a future queue.
 type Webhook = Omit<
@@ -133,8 +133,10 @@ export class WebhookSender {
     }
   }
 
-  // TODO use job queue to decouple flight attempts & retries
-  async push({ webhook, payload, trigger, fatal }: WebhookExecution) {
+  async send(
+    { webhook, payload, trigger, fatal }: WebhookExecution,
+    { attempt, requestId }: { attempt: number; requestId: string },
+  ) {
     const body = {
       ...payload,
       extensions: {
@@ -144,7 +146,8 @@ export class WebhookSender {
           key: webhook.key,
           trigger,
           valid: !fatal,
-          // attempt: 1,
+          requestId,
+          attempt,
         },
         userMetadata: webhook.metadata,
       },
@@ -157,7 +160,7 @@ export class WebhookSender {
       response = await this.http.post(webhook.url, {
         json: body,
         hooks: {
-          // Add the signature header in hook so timing is recalculated on retries.
+          // Add the signature header in a hook so that the timing is recalculated on retries.
           beforeRequest: [this.signRequest(webhook)],
         },
       });
@@ -196,7 +199,7 @@ export class WebhookSender {
       logExtra.response = body;
     }
 
-    const success = response && response.statusCode < 400;
+    const success = !!response && response.statusCode < 400;
     this.logger.log({
       level: success ? LogLevel.INFO : LogLevel.WARNING,
       message: success
@@ -209,6 +212,8 @@ export class WebhookSender {
       ...(error ? { exception: error } : {}),
       ...logExtra,
     });
+
+    return success;
   }
 
   private signRequest(webhook: Webhook): BeforeRequestHook {
