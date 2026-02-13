@@ -3,6 +3,7 @@ import {
   DbUnique,
   NameField,
   Resource,
+  type ResourceRelationsShape,
   type Secured,
   SecuredProperty,
   SecuredPropertyList,
@@ -10,12 +11,18 @@ import {
 } from '~/common';
 import { e } from '~/core/gel';
 import { type LinkTo, RegisterResource } from '~/core/resources';
+import { IProject } from '../../project/dto';
 
 @RegisterResource({ db: e.FieldRegion })
 @ObjectType({
   implements: [Resource],
 })
 export class FieldRegion extends Resource {
+  static readonly Relations = () =>
+    ({
+      projects: [IProject],
+    } satisfies ResourceRelationsShape);
+
   @NameField()
   @DbUnique()
   readonly name: SecuredString;
