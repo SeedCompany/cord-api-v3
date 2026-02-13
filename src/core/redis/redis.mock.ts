@@ -83,6 +83,14 @@ patchMethod(RedisMock.prototype, '_initCommands', function (baseInit) {
       });
     }
 
+    // BullMQ uses this command to determine if a job is in waiting state
+    // Implement minimal logic needed for this use case.
+    luaCommands.lpos = function lpos(listKey, jobId) {
+      const list = luaCommands.lrange.call(this, listKey, 0, -1);
+      const index = (list as Array<typeof jobId>).indexOf(jobId);
+      return index >= 0 ? index : (undefined as any);
+    };
+
     /**
      * Fix lua scripts falsy comparisons.
      * They aren't necessary and, in fact, break logic.
