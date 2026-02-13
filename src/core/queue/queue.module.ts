@@ -2,9 +2,10 @@ import {
   BullModule,
   BullRegistrar,
   getFlowProducerToken,
+  getSharedConfigToken,
 } from '@nestjs/bullmq';
-import { Module, type OnModuleInit } from '@nestjs/common';
-import { FlowProducer } from 'bullmq';
+import { Inject, Module, type OnModuleInit } from '@nestjs/common';
+import { FlowProducer, type QueueOptions } from 'bullmq';
 import { argv, env } from 'node:process';
 import { BullConfig } from './bull.config';
 import './queue.patch';
@@ -36,10 +37,15 @@ const isTest = !!env.JEST_WORKER_ID;
   exports: [FlowProducer],
 })
 export class QueueModule implements OnModuleInit {
-  constructor(private readonly registrar: BullRegistrar) {}
+  constructor(
+    private readonly registrar: BullRegistrar,
+    @Inject(getSharedConfigToken()) private readonly sharedConfig: QueueOptions,
+  ) {}
 
   onModuleInit() {
-    if (!isCli && !isTest) {
+    const isMock =
+      this.sharedConfig.connection.constructor.name === '_RedisMock';
+    if ((!isCli && !isTest) || isMock) {
       this.registrar.register();
     }
   }
