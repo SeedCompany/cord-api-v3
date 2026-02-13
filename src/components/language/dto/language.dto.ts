@@ -1,6 +1,5 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { GraphQLString } from 'graphql';
 import {
   Calculated,
   DbLabel,
@@ -17,6 +16,7 @@ import {
   SecuredPropertyList,
   SecuredString,
   SecuredStringNullable,
+  SecuredTags,
   Sensitivity,
   SensitivityField,
   type SetUnsecuredType,
@@ -30,13 +30,6 @@ import { Location } from '../../location/dto';
 import { Pinnable } from '../../pin/dto';
 import { Postable } from '../../post/dto';
 import { type UpdateEthnologueLanguage } from './update-language.dto';
-
-@ObjectType({
-  description: SecuredPropertyList.descriptionFor('tags'),
-})
-export abstract class SecuredTags extends SecuredPropertyList<string>(
-  GraphQLString,
-) {}
 
 @RegisterResource({ db: e.Ethnologue.Language })
 @ObjectType()

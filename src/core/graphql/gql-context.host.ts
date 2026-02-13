@@ -1,8 +1,10 @@
 import { Injectable, type OnModuleDestroy } from '@nestjs/common';
 import { isObjectLike } from '@seedcompany/common';
 import { AsyncLocalStorage } from 'async_hooks';
-import { type GqlContextType as ContextType } from '~/common';
-import { AsyncLocalStorageNoContextException } from '../async-local-storage-no-context.exception';
+import {
+  AsyncLocalStorageNoContextException,
+  type GqlContextType as ContextType,
+} from '~/common';
 import { Plugin } from './plugin.decorator';
 
 export const ifGqlContext = (object: unknown): ContextType | undefined =>
