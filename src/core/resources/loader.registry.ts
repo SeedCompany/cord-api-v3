@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  type OnModuleInit,
-  Scope,
-  type Type,
-} from '@nestjs/common';
+import { Injectable, type OnModuleInit, type Type } from '@nestjs/common';
 import { ModulesContainer } from '@nestjs/core';
 import { many } from '~/common';
 import { type DataLoaderStrategy } from '~/core/data-loader';
@@ -25,7 +20,6 @@ export class ResourceLoaderRegistry implements OnModuleInit {
   async onModuleInit() {
     const loaderFactories = [...this.modulesContainer.values()]
       .flatMap((nestModule) => [...nestModule.providers.values()])
-      .filter((provider) => provider.scope === Scope.REQUEST)
       .flatMap((provider) => {
         if (!provider.metatype) {
           return [];
