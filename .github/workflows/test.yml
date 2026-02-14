@@ -47,6 +47,16 @@ jobs:
           --health-interval 10s
           --health-start-period 30s
 
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     strategy:
       matrix:
         shard: [1, 2, 3, 4, 5, 6]
@@ -70,4 +80,5 @@ jobs:
         env:
           NEO4J_VERSION: ${{ matrix.neo4j-version }}
           DATABASE: ${{ matrix.database }}
+          BULL_URL: redis://localhost
         continue-on-error: ${{ matrix.database == 'gel' }}
