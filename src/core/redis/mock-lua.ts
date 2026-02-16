@@ -177,7 +177,7 @@ const betterVm = (vm: any, logger?: Logger) => {
  * fengari-interop converts JS numbers to floats.
  * This causes problems with string concatenation, as Lua uses the float representation.
  * e.g. "foo:1.0" instead of "foo:1"
- * We fix this behavior to check if the number is an integer
+ * We fix this behavior to check if the number is a signed 32-bit integer
  * and convert to that Lua type instead.
  * Both JS & Lua are loose with these two types and can convert/compare between
  * them seamlessly.
@@ -186,10 +186,13 @@ const betterVm = (vm: any, logger?: Logger) => {
  */
 patchMethod(FengariInterp, 'push', (base) => {
   return (state: unknown, value: unknown) => {
-    if (typeof value === 'number' && Number.isSafeInteger(value)) {
+    if (isInt32(value)) {
       Fengari.lua.lua_pushinteger(state, value);
       return;
     }
     base(state, value);
   };
 });
+
+const isInt32 = (value: unknown) =>
+  typeof value === 'number' && (value | 0) === value;
