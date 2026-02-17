@@ -323,6 +323,11 @@ export const makeConfig = (env: EnvironmentService) =>
       prefix: env.string('BULL_PREFIX').optional() ?? this.redis.prefix,
     };
 
+    locker = {
+      url: env.string('LOCKER_REDIS_URL').optional() ?? this.redis.url,
+      prefix: env.string('LOCKER_REDIS_PREFIX').optional() ?? this.redis.prefix,
+    };
+
     /**
      * @see https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-metadata-endpoint.html
      */

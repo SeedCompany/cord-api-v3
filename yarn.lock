@@ -6913,6 +6913,7 @@ __metadata:
     react: "npm:^19.1.0"
     react-dom: "npm:^19.1.0"
     read-package-up: "npm:^11.0.0"
+    redis-semaphore: "npm:^5.6.2"
     reflect-metadata: "npm:^0.2.2"
     rimraf: "npm:^6.0.1"
     rxjs: "npm:^7.8.1"
@@ -13330,6 +13331,20 @@ __metadata:
   dependencies:
     redis-errors: "npm:^1.0.0"
   checksum: 10c0/ee16ac4c7b2a60b1f42a2cdaee22b005bd4453eb2d0588b8a4939718997ae269da717434da5d570fe0b05030466eeb3f902a58cf2e8e1ca058bf6c9c596f632f
+  languageName: node
+  linkType: hard
+
+"redis-semaphore@npm:^5.6.2":
+  version: 5.6.2
+  resolution: "redis-semaphore@npm:5.6.2"
+  dependencies:
+    debug: "npm:^4.4.0"
+  peerDependencies:
+    ioredis: ^4.1.0 || ^5
+  peerDependenciesMeta:
+    ioredis:
+      optional: true
+  checksum: 10c0/63f0fd1a45eb74cac160b041c30a1ecccb19123e41ab17842efcc6e413fffbdeae5091ec07f3e7290809a61ed409939cc36ecdde4bf5a2d1b770d9dc115765e4
   languageName: node
   linkType: hard
 
