@@ -1,0 +1,29 @@
+diff --git a/lib/index.js b/lib/index.js
+index a82c2975d19bfcce4179d27594e26e0c47ef7a1f..2587c1b714d3b11bb52bfd708f4cb256dc511859 100644
+--- a/lib/index.js
++++ b/lib/index.js
+@@ -3824,7 +3824,7 @@ var { lua: lua2, to_luastring: toLuaString2 } = import_fengari2.default, defineR
+   let rawArgs = vm.extractArgs(), returnError = rawArgs[0], result;
+   try {
+     let args = rawArgs.slice(1), name = args[0].toLowerCase();
+-    result = commands_exports[name].bind(this)(...args.slice(1)), name === "hgetall" && (result = [].concat(...Object.entries(result)));
++    result = this.luaCommands[name].call(this, ...args.slice(1)), name === "hgetall" && (result = [].concat(...Object.entries(result)));
+   } catch (err) {
+     if (!returnError)
+       throw err;
+@@ -3845,6 +3845,7 @@ function defineArgv(vm, numberOfKeys, commandArgs) {
+ var customCommand = (numberOfKeys, luaCode) => function(...luaScriptArgs) {
+   let vm = init();
+   defineRedisObject(vm)(callToRedisCommand(vm).bind(this)), defineKeys.bind(this)(vm, numberOfKeys, luaScriptArgs), defineArgv.bind(this)(vm, numberOfKeys, luaScriptArgs);
++  this.vmInit?.(vm);
+   let topBeforeExecute = lua2.lua_gettop(vm.L);
+   vm.luaExecString(luaCode);
+   let retVal = vm.popReturnValue(topBeforeExecute);
+@@ -6243,6 +6244,7 @@ var defaultOptions = {
+     removeFrom(this.channels), removeFrom(this.patternChannels);
+   }
+   _initCommands() {
++    this.luaCommands = { ...commands_exports };
+     Object.keys(commands_exports).forEach((command3) => {
+       let commandName = command3 === "evaluate" ? "eval" : command3;
+       this[commandName] = command(

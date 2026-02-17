@@ -22,6 +22,7 @@ import { GelModule } from './gel/gel.module';
 import { GraphqlModule } from './graphql';
 import { HttpModule } from './http';
 import { LiveQueryModule } from './live-query/live-query.module';
+import { QueueModule } from './queue/queue.module';
 import { ResourceModule } from './resources/resource.module';
 import { ScalarProviders } from './scalars.resolver';
 import { ShutdownHookProvider } from './shutdown.hook';
@@ -52,6 +53,7 @@ import { WebhooksModule } from './webhooks/webhooks.module';
     ValidationModule,
     AuthenticationModule,
     WebhooksModule,
+    QueueModule,
   ],
   providers: [
     AwsS3Factory,
@@ -84,6 +86,7 @@ import { WebhooksModule } from './webhooks/webhooks.module';
     ValidationModule,
     AuthenticationModule,
     WebhooksModule,
+    QueueModule,
   ],
 })
 export class CoreModule {}

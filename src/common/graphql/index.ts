@@ -37,6 +37,7 @@ export * from './objects/concretes/secured-scalars';
 export * from './objects/concretes/variant.dto';
 
 export * from './objects/mappers/as-update.type';
+export * from './objects/mappers/declare-fields';
 export * from './objects/mappers/type-mappers';
 
 export * from './types/gql-context.type';
