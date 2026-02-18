@@ -213,7 +213,7 @@ export class WebhookSender {
       ...logExtra,
     });
 
-    return success;
+    return { success, reason: logExtra.reason };
   }
 
   private signRequest(webhook: Webhook): BeforeRequestHook {

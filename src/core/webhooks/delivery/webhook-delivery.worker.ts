@@ -20,12 +20,12 @@ export class WebhookDeliveryWorker extends WorkerHost {
   }
 
   async process(job: Job) {
-    const success = await this.sender.send(job.data, {
+    const { success, reason } = await this.sender.send(job.data, {
       attempt: job.attemptsMade + 1,
       requestId: job.id!,
     });
     if (!success) {
-      throw new Error();
+      throw new Error(reason);
     }
   }
 }
