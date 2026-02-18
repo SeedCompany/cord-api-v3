@@ -63,7 +63,9 @@ export class ExceptionFilter implements IExceptionFilter {
       throw new NormalizedException(normalized);
     }
 
-    await this.respondToHttp(normalized, args);
+    if (args.getType() === 'http') {
+      await this.respondToHttp(normalized, args);
+    }
   }
 
   private async respondToHttp(ex: ExceptionJson, args: ArgumentsHost) {
