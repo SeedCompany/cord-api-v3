@@ -26,6 +26,7 @@ import { LockerModule } from './locker/locker.module';
 import { QueueModule } from './queue/queue.module';
 import { ResourceModule } from './resources/resource.module';
 import { ScalarProviders } from './scalars.resolver';
+import { ScheduleModule } from './schedule/schedule.module';
 import { ShutdownHookProvider } from './shutdown.hook';
 import { TimeoutInterceptor } from './timeout.interceptor';
 import { TracingModule } from './tracing';
@@ -56,6 +57,7 @@ import { WebhooksModule } from './webhooks/webhooks.module';
     WebhooksModule,
     QueueModule,
     LockerModule,
+    ScheduleModule,
   ],
   providers: [
     AwsS3Factory,
@@ -90,6 +92,7 @@ import { WebhooksModule } from './webhooks/webhooks.module';
     WebhooksModule,
     QueueModule,
     LockerModule,
+    ScheduleModule,
   ],
 })
 export class CoreModule {}
