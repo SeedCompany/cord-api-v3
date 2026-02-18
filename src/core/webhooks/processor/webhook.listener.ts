@@ -74,7 +74,13 @@ export class WebhookListener implements OnModuleDestroy {
     }
     const { data } = events[0];
 
-    this.pendingBatches.delete(data);
+    // Confirm this call deleted the pending batch so that the batch isn't
+    // accidentally pushed multiple times.
+    // AI seems to think there's a race condition between setTimeout & onModuleDestroy.
+    // I'm not convinced but better safe than sorry.
+    if (!this.pendingBatches.delete(data)) {
+      return;
+    }
 
     await this.queue.add('process', {
       trigger,
