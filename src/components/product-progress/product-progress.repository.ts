@@ -9,7 +9,7 @@ import {
   NotFoundException,
   type Variant,
 } from '~/common';
-import { DatabaseService } from '~/core/database';
+import { DatabaseService } from '~/core/neo4j';
 import {
   ACTIVE,
   collect,
@@ -19,7 +19,7 @@ import {
   merge,
   updateProperty,
   variable,
-} from '~/core/database/query';
+} from '~/core/neo4j/query';
 import { PeriodicReportService } from '../periodic-report';
 import { ReportType } from '../periodic-report/dto';
 import { type ProductStep } from '../product/dto';

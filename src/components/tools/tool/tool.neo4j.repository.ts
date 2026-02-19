@@ -8,8 +8,8 @@ import {
   ReadAfterCreationFailed,
   type UnsecuredDto,
 } from '~/common';
-import { OnIndex } from '~/core/database';
-import { DtoRepository } from '~/core/database/dto.repository';
+import { OnIndex } from '~/core/neo4j';
+import { DtoRepository } from '~/core/neo4j/dto.repository';
 import {
   ACTIVE,
   createNode,
@@ -17,7 +17,7 @@ import {
   FullTextIndex,
   paginate,
   sorting,
-} from '~/core/database/query';
+} from '~/core/neo4j/query';
 import {
   type CreateTool,
   Tool,

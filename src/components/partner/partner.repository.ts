@@ -11,7 +11,7 @@ import {
   ReadAfterCreationFailed,
   type UnsecuredDto,
 } from '~/common';
-import { DtoRepository } from '~/core/database';
+import { DtoRepository } from '~/core/neo4j';
 import {
   ACTIVE,
   collect,
@@ -29,7 +29,7 @@ import {
   pinned,
   rankSens,
   sortWith,
-} from '~/core/database/query';
+} from '~/core/neo4j/query';
 import * as departmentIdBlockUtils from '../finance/department/neo4j.utils';
 import {
   organizationFilters,

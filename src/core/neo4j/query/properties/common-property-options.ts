@@ -5,7 +5,7 @@ import {
   type MaybeUnsecuredInstance,
   type ResourceShape,
 } from '~/common';
-import { type DbChanges } from '../../changes';
+import { type DbChanges } from '~/core/database/changes';
 import { type Variable } from '../index';
 
 export type CommonPropertyOptions<

@@ -3,8 +3,8 @@ import { type Query } from 'cypher-query-builder';
 import type { AbstractClass, Simplify } from 'type-fest';
 import type { UnwrapSecured } from '~/common';
 import type { RawChangeOf } from '~/core/database/changes';
-import type { QueryFragment } from '~/core/database/query-augmentation/apply';
 import { type $, e } from '~/core/gel';
+import type { QueryFragment } from '~/core/neo4j/query-augmentation/apply';
 import type { Notification } from './dto';
 
 export const NotificationStrategy = createMetadataDecorator({

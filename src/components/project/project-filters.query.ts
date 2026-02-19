@@ -12,7 +12,7 @@ import {
   matchProjectSens,
   path,
   variable,
-} from '~/core/database/query';
+} from '~/core/neo4j/query';
 import { fieldRegionFilters } from '../field-region/field-region.repository';
 import { locationFilters } from '../location/location.repository';
 import { partnershipFilters } from '../partnership/partnership.repository';

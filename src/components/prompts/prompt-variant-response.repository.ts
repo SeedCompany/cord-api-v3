@@ -12,9 +12,9 @@ import {
   type VariantList,
   type VariantOf,
 } from '~/common';
-import { DtoRepository } from '~/core/database';
 import { type DbTypeOf } from '~/core/database/db-type';
-import { privileges } from '~/core/database/dto.repository';
+import { DtoRepository } from '~/core/neo4j';
+import { privileges } from '~/core/neo4j/dto.repository';
 import {
   ACTIVE,
   createNode,
@@ -28,12 +28,12 @@ import {
   sorting,
   updateProperty,
   variable,
-} from '~/core/database/query';
+} from '~/core/neo4j/query';
 import {
   conditionalOn,
   determineIfPermanent,
   permanentAfterAsVar,
-} from '~/core/database/query/properties/update-property';
+} from '~/core/neo4j/query/properties/update-property';
 import { type EdgePrivileges } from '../authorization';
 import { type ChildListAction } from '../authorization/policy/actions';
 import {

@@ -4,7 +4,7 @@ import * as Nest from '@nestjs/common';
 import * as Fastify from 'fastify';
 import { Neo4jError } from 'neo4j-driver';
 import { InputException, ServerException } from '~/common';
-import * as Neo from '../database/errors';
+import * as Neo from '~/core/neo4j/errors';
 import { ExceptionNormalizer } from './exception.normalizer';
 
 describe('ExceptionNormalizer', () => {

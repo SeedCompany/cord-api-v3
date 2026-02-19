@@ -9,9 +9,9 @@ import {
   relation,
 } from 'cypher-query-builder';
 import { type ID, NotFoundException } from '~/common';
-import { DtoRepository } from '~/core/database';
-import { ACTIVE, path, variable } from '~/core/database/query';
-import { type BaseNode } from '~/core/database/results';
+import { DtoRepository } from '~/core/neo4j';
+import { ACTIVE, path, variable } from '~/core/neo4j/query';
+import { type BaseNode } from '~/core/neo4j/results';
 import { Changeset, type ChangesetDiff } from './dto';
 
 @Injectable()

@@ -22,12 +22,12 @@ import {
   TraceLayer,
   type UnwrapSecured,
 } from '~/common';
+import { Identity } from '~/core/authentication';
 import { ConfigService } from '~/core/config';
-import { Identity } from '../authentication';
-import { LiveQueryStore } from '../live-query';
-import { ILogger, Logger } from '../logger';
-import { ShutdownHook } from '../shutdown.hook';
-import { type DbChanges } from './changes';
+import { type DbChanges } from '~/core/database/changes';
+import { LiveQueryStore } from '~/core/live-query';
+import { ILogger, Logger } from '~/core/logger';
+import { ShutdownHook } from '~/core/shutdown.hook';
 import {
   createBetterError,
   ServiceUnavailableError,

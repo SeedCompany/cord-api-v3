@@ -8,10 +8,10 @@ import {
   ServerException,
   type UnsecuredDto,
 } from '~/common';
-import { DatabaseService } from '~/core/database';
-import { mapListResults } from '~/core/database/results';
 import { Hooks } from '~/core/hooks';
 import { ILogger, Logger } from '~/core/logger';
+import { DatabaseService } from '~/core/neo4j';
+import { mapListResults } from '~/core/neo4j/results';
 import { HandleIdLookup } from '~/core/resources';
 import { Privileges } from '../authorization';
 import { ChangesetFinalizingHook } from '../changeset';

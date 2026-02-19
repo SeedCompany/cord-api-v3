@@ -10,7 +10,7 @@ import {
   ServerException,
   type UnsecuredDto,
 } from '~/common';
-import { mapListResults } from '~/core/database/results';
+import { mapListResults } from '~/core/neo4j/results';
 import { HandleIdLookup } from '~/core/resources';
 import { Privileges } from '../authorization';
 import {

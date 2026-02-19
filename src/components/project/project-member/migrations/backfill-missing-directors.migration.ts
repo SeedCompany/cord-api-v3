@@ -1,8 +1,8 @@
 import { ModuleRef } from '@nestjs/core';
 import { node, type Query, relation } from 'cypher-query-builder';
 import { type Role } from '~/common';
-import { BaseMigration, Migration } from '~/core/database';
-import { ACTIVE, variable } from '~/core/database/query';
+import { BaseMigration, Migration } from '~/core/neo4j';
+import { ACTIVE, variable } from '~/core/neo4j/query';
 import { projectFilters } from '../../project-filters.query';
 import {
   projectMemberFilters,

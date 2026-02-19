@@ -1,6 +1,6 @@
 import { node, relation } from 'cypher-query-builder';
-import { BaseMigration, Migration } from '~/core/database';
-import { path } from '~/core/database/query';
+import { BaseMigration, Migration } from '~/core/neo4j';
+import { path } from '~/core/neo4j/query';
 
 @Migration('2024-09-23T00:00:00')
 export class DropInternshipProgressReportsMigration extends BaseMigration {

@@ -1,4 +1,4 @@
-import { BaseMigration, Migration } from '~/core/database';
+import { BaseMigration, Migration } from '~/core/neo4j';
 
 @Migration('2025-04-02T11:00:01')
 export class FixDeptIdLabelMigration extends BaseMigration {

@@ -9,7 +9,7 @@ import {
   ServerException,
   type UnsecuredDto,
 } from '~/common';
-import { DtoRepository } from '~/core/database';
+import { DtoRepository } from '~/core/neo4j';
 import {
   ACTIVE,
   createNode,
@@ -18,7 +18,7 @@ import {
   merge,
   path,
   sorting,
-} from '~/core/database/query';
+} from '~/core/neo4j/query';
 import { ProgressReport, type ProgressReportStatus as Status } from '../dto';
 import { type ExecuteProgressReportTransition } from './dto/execute-progress-report-transition.input';
 import { ProgressReportWorkflowEvent as WorkflowEvent } from './dto/workflow-event.dto';

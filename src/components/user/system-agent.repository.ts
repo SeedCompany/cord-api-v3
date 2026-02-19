@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { CachedByArg } from '@seedcompany/common';
 import { type Role } from '~/common';
-import { DbTraceLayer } from '~/core/database';
+import { DbTraceLayer } from '~/core/neo4j';
 import { type SystemAgent } from './dto';
 
 @Injectable()

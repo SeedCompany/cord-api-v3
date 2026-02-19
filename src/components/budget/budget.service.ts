@@ -9,7 +9,7 @@ import {
   ServerException,
   viewOfChangeset,
 } from '~/common';
-import { mapListResults } from '~/core/database/results';
+import { mapListResults } from '~/core/neo4j/results';
 import { HandleIdLookup, ResourceResolver } from '~/core/resources';
 import { Privileges } from '../authorization';
 import { FileService } from '../file';

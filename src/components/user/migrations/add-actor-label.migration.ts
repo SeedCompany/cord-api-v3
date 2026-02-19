@@ -1,4 +1,4 @@
-import { BaseMigration, Migration } from '~/core/database';
+import { BaseMigration, Migration } from '~/core/neo4j';
 
 @Migration('2024-06-07T12:00:00')
 export class AddActorLabelMigration extends BaseMigration {

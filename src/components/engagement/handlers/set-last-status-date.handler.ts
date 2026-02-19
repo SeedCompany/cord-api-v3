@@ -1,6 +1,6 @@
 import { ServerException } from '~/common';
-import { DatabaseService } from '~/core/database';
 import { OnHook } from '~/core/hooks';
+import { DatabaseService } from '~/core/neo4j';
 import { EngagementStatus, IEngagement } from '../dto';
 import { EngagementUpdatedHook } from '../hooks';
 

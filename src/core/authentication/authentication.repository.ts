@@ -2,15 +2,15 @@ import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { type ID, type Role, ServerException } from '~/common';
-import { type LinkTo } from '~/core/resources';
-import { type UserStatus } from '../../components/user/dto';
-import { DatabaseService, DbTraceLayer, OnIndex } from '../database';
+import { DatabaseService, DbTraceLayer, OnIndex } from '~/core/neo4j';
 import {
   ACTIVE,
   currentUser,
   matchUserGloballyScopedRoles,
   variable,
-} from '../database/query';
+} from '~/core/neo4j/query';
+import { type LinkTo } from '~/core/resources';
+import { type UserStatus } from '../../components/user/dto';
 import { type LoginInput } from './dto';
 import { type Session } from './session/session.dto';
 

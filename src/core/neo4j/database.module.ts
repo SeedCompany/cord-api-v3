@@ -2,6 +2,7 @@ import { Module, type OnApplicationShutdown } from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { Connection } from 'cypher-query-builder';
 import { ConfigService } from '~/core/config';
+import { TransactionHooks, TransactionRetryInformer } from '~/core/database';
 import { ConfigModule } from '../config/config.module';
 import { TracingModule } from '../tracing';
 import { CypherFactory } from './cypher.factory';
@@ -9,8 +10,6 @@ import { DatabaseService } from './database.service';
 import { IndexerModule } from './indexer/indexer.module';
 import { MigrationModule } from './migration/migration.module';
 import { ParameterTransformer } from './parameter-transformer.service';
-import { TransactionHooks } from './transaction-hooks';
-import { TransactionRetryInformer } from './transaction-retry.informer';
 import { Neo4jTransactionalMutationsInterceptor as TransactionalMutationsInterceptor } from './transactional-mutations.interceptor';
 
 @Module({

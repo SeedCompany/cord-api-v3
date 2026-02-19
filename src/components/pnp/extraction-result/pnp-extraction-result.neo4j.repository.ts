@@ -3,7 +3,7 @@ import { CachedByArg, mapKeys } from '@seedcompany/common';
 import { inArray, node, relation } from 'cypher-query-builder';
 import type { SetNonNullable } from 'type-fest';
 import { type ID, type PublicOf } from '~/common';
-import { CommonRepository } from '~/core/database';
+import { CommonRepository } from '~/core/neo4j';
 import {
   apoc,
   collect,
@@ -14,7 +14,7 @@ import {
   type SortCol,
   sortingForEnumIndex,
   variable,
-} from '~/core/database/query';
+} from '~/core/neo4j/query';
 import {
   PnpExtractionResult,
   PnpExtractionResultFilters,

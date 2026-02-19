@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { node, type Query, relation } from 'cypher-query-builder';
 import { type ID, type UnsecuredDto } from '~/common';
-import { DtoRepository } from '~/core/database';
+import { DtoRepository } from '~/core/neo4j';
 import {
   ACTIVE,
   apoc,
@@ -11,7 +11,7 @@ import {
   paginate,
   sorting,
   variable,
-} from '~/core/database/query';
+} from '~/core/neo4j/query';
 import { ProjectType as Program } from '../project/dto/project-type.enum';
 import {
   type CreateFundingAccount,

@@ -8,13 +8,13 @@ import {
 } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { type ID, NotFoundException } from '~/common';
+import { ILogger, Logger } from '~/core/logger';
 import {
   CommonRepository,
   createUniqueConstraint,
   OnIndex,
-} from '~/core/database';
-import { collect, path, variable } from '~/core/database/query';
-import { ILogger, Logger } from '~/core/logger';
+} from '~/core/neo4j';
+import { collect, path, variable } from '~/core/neo4j/query';
 import { type Webhook } from '../dto';
 import { WebhooksRepository } from '../management/webhooks.repository';
 

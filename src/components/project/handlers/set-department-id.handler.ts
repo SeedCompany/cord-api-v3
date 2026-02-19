@@ -7,19 +7,16 @@ import {
   type UnsecuredDto,
 } from '~/common';
 import { ConfigService } from '~/core/config';
-import {
-  DatabaseService,
-  TransactionRetryInformer,
-  UniquenessError,
-} from '~/core/database';
+import { TransactionRetryInformer } from '~/core/database';
+import { OnHook } from '~/core/hooks';
+import { DatabaseService, UniquenessError } from '~/core/neo4j';
 import {
   ACTIVE,
   apoc,
   collect,
   updateProperty,
   variable,
-} from '~/core/database/query';
-import { OnHook } from '~/core/hooks';
+} from '~/core/neo4j/query';
 import {
   type Project,
   resolveProjectType,

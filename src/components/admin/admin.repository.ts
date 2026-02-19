@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { type DateTime } from 'luxon';
 import { type ID, Resource } from '~/common';
-import { CommonRepository, OnIndex } from '~/core/database';
-import { ACTIVE } from '~/core/database/query';
+import { CommonRepository, OnIndex } from '~/core/neo4j';
+import { ACTIVE } from '~/core/neo4j/query';
 
 @Injectable()
 export class AdminRepository extends CommonRepository {

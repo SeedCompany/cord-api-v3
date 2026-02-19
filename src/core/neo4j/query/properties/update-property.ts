@@ -10,7 +10,7 @@ import {
   type MaybeUnsecuredInstance,
   type ResourceShape,
 } from '~/common';
-import { type DbChanges } from '../../changes';
+import { type DbChanges } from '~/core/database/changes';
 import { varInExp } from '../../query-augmentation/subquery';
 import {
   ACTIVE,

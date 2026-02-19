@@ -2,8 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { inArray, node, type Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { type ID, type UnsecuredDto } from '~/common';
-import { type DbTypeOf, DtoRepository } from '~/core/database';
+import { type DbTypeOf } from '~/core/database';
 import { type ChangesOf } from '~/core/database/changes';
+import { DtoRepository } from '~/core/neo4j';
 import {
   ACTIVE,
   createNode,
@@ -13,7 +14,7 @@ import {
   merge,
   paginate,
   sorting,
-} from '~/core/database/query';
+} from '~/core/neo4j/query';
 import { type CreatePost, Post, type UpdatePost } from './dto';
 import { type PostListInput } from './dto/list-posts.dto';
 import { PostShareability } from './dto/shareability.dto';

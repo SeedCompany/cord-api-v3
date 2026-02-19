@@ -9,14 +9,15 @@ import {
   ReadAfterCreationFailed,
   type UnsecuredDto,
 } from '~/common';
-import { type DbTypeOf, DtoRepository } from '~/core/database';
+import { type DbTypeOf } from '~/core/database';
+import { DtoRepository } from '~/core/neo4j';
 import {
   createNode,
   matchProps,
   merge,
   paginate,
   sorting,
-} from '~/core/database/query';
+} from '~/core/neo4j/query';
 import {
   ScriptureReferenceRepository,
   ScriptureReferenceService,

@@ -12,7 +12,7 @@ import {
   type UnsecuredDto,
 } from '~/common';
 import { Identity } from '~/core/authentication';
-import { type BaseNode, isBaseNode } from '~/core/database/results';
+import { type BaseNode, isBaseNode } from '~/core/neo4j/results';
 import { ResourceLoader, ResourcesHost } from '~/core/resources';
 import { Privileges } from '../authorization';
 import { CommentRepository } from './comment.repository';

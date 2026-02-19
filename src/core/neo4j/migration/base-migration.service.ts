@@ -9,9 +9,9 @@ import {
   type UnwrapSecured,
 } from '~/common';
 import { type DbChanges } from '~/core/database/changes';
-import { ACTIVE, path } from '~/core/database/query';
 import { ILogger, Logger } from '../../logger';
 import { DatabaseService } from '../database.service';
+import { ACTIVE, path } from '../query';
 
 /**
  * Each migration should be decorated with `@Migration()` decorator

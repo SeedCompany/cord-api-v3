@@ -1,6 +1,6 @@
 import { isNull, node, not, relation } from 'cypher-query-builder';
-import { BaseMigration, Migration } from '~/core/database';
-import { ACTIVE, variable } from '~/core/database/query';
+import { BaseMigration, Migration } from '~/core/neo4j';
+import { ACTIVE, variable } from '~/core/neo4j/query';
 import { BudgetRecord } from '../dto';
 
 @Migration('2026-01-07T12:06:00')

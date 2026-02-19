@@ -19,9 +19,9 @@ import {
   ServerException,
 } from '~/common';
 import type { ConfigService } from '~/core/config';
-import * as Neo from '../database/errors';
-import { ExclusivityViolationError } from '../gel/errors';
-import { ResourcesHost } from '../resources/resources.host';
+import { ExclusivityViolationError } from '~/core/gel/errors';
+import * as Neo from '~/core/neo4j/errors';
+import { ResourcesHost } from '~/core/resources/resources.host';
 import { prettyStack } from './pretty-stack';
 
 interface NormalizeParams {

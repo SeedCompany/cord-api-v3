@@ -13,7 +13,7 @@ import {
   type UnsecuredDto,
   viewOfChangeset,
 } from '~/common';
-import { DtoRepository } from '~/core/database';
+import { DtoRepository } from '~/core/neo4j';
 import {
   ACTIVE,
   coalesce,
@@ -31,7 +31,7 @@ import {
   sortWith,
   variable,
   whereNotDeletedInChangeset,
-} from '~/core/database/query';
+} from '~/core/neo4j/query';
 import { FileService } from '../file';
 import { type FileId } from '../file/dto';
 import { partnerFilters, partnerSorters } from '../partner/partner.repository';

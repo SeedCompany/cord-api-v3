@@ -2,8 +2,8 @@ import { mapEntries } from '@seedcompany/common';
 import { node, relation } from 'cypher-query-builder';
 import { type ValueOf } from 'type-fest';
 import { type ID } from '~/common';
-import { BaseMigration, Migration } from '~/core/database';
-import { ACTIVE } from '~/core/database/query';
+import { BaseMigration, Migration } from '~/core/neo4j';
+import { ACTIVE } from '~/core/neo4j/query';
 import { type Location } from '../dto';
 import { LocationService } from '../location.service';
 

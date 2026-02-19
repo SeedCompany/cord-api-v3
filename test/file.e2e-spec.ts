@@ -17,7 +17,7 @@ import {
   Settings,
 } from 'luxon';
 import { type ID, Role } from '~/common';
-import { DatabaseService } from '~/core/database';
+import { DatabaseService } from '~/core/neo4j';
 import { graphql } from '~/graphql';
 import { FileBucket, type LocalBucket } from '../src/components/file/bucket';
 import {

@@ -1,6 +1,6 @@
 import { isNull, node, relation } from 'cypher-query-builder';
-import { BaseMigration, Migration } from '~/core/database';
-import { ACTIVE } from '~/core/database/query';
+import { BaseMigration, Migration } from '~/core/neo4j';
+import { ACTIVE } from '~/core/neo4j/query';
 
 @Migration('2023-08-15T15:00:00')
 export class FixNullMethodologiesMigration extends BaseMigration {

@@ -3,7 +3,7 @@ import { CachedByArg } from '@seedcompany/common';
 import { identity } from 'lodash';
 import { type EnhancedResource } from '~/common';
 import { Identity, type Session } from '~/core/authentication';
-import { type QueryFragment } from '~/core/database/query';
+import { type QueryFragment } from '~/core/neo4j/query';
 import { RoleCondition } from '../../policies/conditions/role.condition';
 import { type Permission } from '../builder/perm-granter';
 import {

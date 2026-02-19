@@ -12,9 +12,9 @@ import {
   type UnsecuredDto,
 } from '~/common';
 import { Identity } from '~/core/authentication';
-import { type BaseNode, isBaseNode } from '~/core/database/results';
 import { LiveQueryStore } from '~/core/live-query';
 import { ILogger, Logger } from '~/core/logger';
+import { type BaseNode, isBaseNode } from '~/core/neo4j/results';
 import { ResourceLoader, ResourcesHost } from '~/core/resources';
 import { Privileges } from '../authorization';
 import { type CreatePost, Post, Postable, type UpdatePost } from './dto';

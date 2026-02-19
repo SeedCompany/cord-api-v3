@@ -1,8 +1,8 @@
 import { Inject, Module } from '@nestjs/common';
 import { DateTime } from 'luxon';
 import { SubscriptionChannelVersion } from '../../subscription-channel-version';
-import { MigrationRegistry } from '../database/migration/migration.registry';
 import { GraphqlModule } from '../graphql';
+import { MigrationRegistry } from '../neo4j/migration/migration.registry';
 import { WebhookChannelSyncMigration } from './channels/channel-sync.migration';
 import { WebhookChannelRepository } from './channels/webhook-channel.repository';
 import { WebhookChannelService } from './channels/webhook-channel.service';
