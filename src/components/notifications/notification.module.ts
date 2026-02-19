@@ -13,7 +13,7 @@ import {
     NotificationResolver,
     { provide: NotificationService, useExisting: NotificationServiceImpl },
     NotificationServiceImpl,
-    splitDb(Neo4jRepository, GelRepository),
+    splitDb(Neo4jRepository, { gel: GelRepository }),
   ],
   exports: [NotificationService],
 })

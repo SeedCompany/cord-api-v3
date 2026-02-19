@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { splitDb2 } from '~/core/database';
+import { splitDb } from '~/core/database';
 import { FinancialApproverNeo4jRepository } from './financial-approver-neo4j.repository';
 import { FinancialApproverRepository } from './financial-approver.repository';
 import { FinancialApproverResolver } from './financial-approver.resolver';
@@ -7,8 +7,7 @@ import { FinancialApproverResolver } from './financial-approver.resolver';
 @Module({
   providers: [
     FinancialApproverResolver,
-    splitDb2(FinancialApproverRepository, {
-      gel: FinancialApproverRepository,
+    splitDb(FinancialApproverRepository, {
       neo4j: FinancialApproverNeo4jRepository,
     }),
   ],

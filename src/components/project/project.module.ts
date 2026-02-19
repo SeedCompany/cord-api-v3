@@ -61,7 +61,9 @@ import { ProjectWorkflowModule } from './workflow/project-workflow.module';
     ...ProjectEngagementIdResolvers,
     ProjectChannels,
     ProjectService,
-    splitDb(ProjectRepository, ProjectGelRepository),
+    splitDb(ProjectRepository, {
+      gel: ProjectGelRepository,
+    }),
     ...Object.values(ConcreteRepos),
     ProjectLoader,
     ...Object.values(handlers),

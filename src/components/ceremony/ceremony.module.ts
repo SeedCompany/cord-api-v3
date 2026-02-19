@@ -13,7 +13,9 @@ import * as handlers from './handlers';
   providers: [
     CeremonyResolver,
     CeremonyService,
-    splitDb(CeremonyRepository, CeremonyGelRepository),
+    splitDb(CeremonyRepository, {
+      gel: CeremonyGelRepository,
+    }),
     CeremonyLoader,
     ...Object.values(handlers),
   ],

@@ -9,7 +9,7 @@ import { PinService } from './pin.service';
   providers: [
     PinResolver,
     PinService,
-    splitDb(PinRepository, PinGelRepository),
+    splitDb(PinRepository, { gel: PinGelRepository }),
   ],
   exports: [PinService],
 })

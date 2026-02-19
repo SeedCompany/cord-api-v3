@@ -37,8 +37,12 @@ import { RegistryOfDialectToRegistryOfLanguageVarietiesMigration } from './migra
     LanguageService,
     LanguageChannels,
     EthnologueLanguageService,
-    splitDb(EthnologueLanguageRepository, EthnologueLanguageGelRepository),
-    splitDb(LanguageRepository, LanguageGelRepository),
+    splitDb(EthnologueLanguageRepository, {
+      gel: EthnologueLanguageGelRepository,
+    }),
+    splitDb(LanguageRepository, {
+      gel: LanguageGelRepository,
+    }),
     LanguageLoader,
     InternalFirstScriptureResolver,
     RegistryOfDialectToRegistryOfLanguageVarietiesMigration,

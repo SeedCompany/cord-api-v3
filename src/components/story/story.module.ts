@@ -13,7 +13,9 @@ import { StoryService } from './story.service';
   providers: [
     StoryResolver,
     StoryService,
-    splitDb(StoryRepository, StoryGelRepository),
+    splitDb(StoryRepository, {
+      gel: StoryGelRepository,
+    }),
     StoryLoader,
   ],
   exports: [StoryService],

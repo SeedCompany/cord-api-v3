@@ -13,7 +13,9 @@ import { EthnoArtService } from './ethno-art.service';
   providers: [
     EthnoArtLoader,
     EthnoArtResolver,
-    splitDb(EthnoArtRepository, EthnoArtGelRepository),
+    splitDb(EthnoArtRepository, {
+      gel: EthnoArtGelRepository,
+    }),
     EthnoArtService,
   ],
   exports: [EthnoArtService],

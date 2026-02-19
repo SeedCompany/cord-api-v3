@@ -1,5 +1,5 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { splitDb2 } from '~/core/database';
+import { splitDb } from '~/core/database';
 import { UserModule } from '../../user/user.module';
 import { ProjectModule } from '../project.module';
 import { ProjectWorkflowNotificationHandler } from './handlers/project-workflow-notification.handler';
@@ -29,9 +29,8 @@ import { ProjectWorkflowMutationSubscriptionsResolver } from './resolvers/projec
     ProjectWorkflowService,
     ProjectWorkflowChannels,
     ProjectWorkflowEventGranter,
-    splitDb2(ProjectWorkflowRepository, {
+    splitDb(ProjectWorkflowRepository, {
       neo4j: ProjectWorkflowNeo4jRepository,
-      gel: ProjectWorkflowRepository,
     }),
     ProjectWorkflowFlowchart,
     ProjectWorkflowNotificationHandler,

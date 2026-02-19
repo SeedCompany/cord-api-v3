@@ -26,7 +26,9 @@ import { PartnerService } from './partner.service';
   providers: [
     PartnerResolver,
     PartnerService,
-    splitDb(PartnerRepository, PartnerGelRepository),
+    splitDb(PartnerRepository, {
+      gel: PartnerGelRepository,
+    }),
     PartnerLoader,
     AddPartnerApprovedProgramsMigration,
     AddPartnerStartDateMigration,
