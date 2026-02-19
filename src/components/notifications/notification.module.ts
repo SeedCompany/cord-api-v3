@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { splitDb } from '~/core/database';
+import { UserModule } from '../user/user.module';
 import { NotificationRepository as GelRepository } from './notification.gel.repository';
 import { NotificationRepository as Neo4jRepository } from './notification.repository';
 import { NotificationResolver } from './notification.resolver';
@@ -10,7 +11,7 @@ import {
 import { NotificationPreferencesModule } from './preferences/notification-preferences.module';
 
 @Module({
-  imports: [NotificationPreferencesModule],
+  imports: [NotificationPreferencesModule, UserModule],
   providers: [
     NotificationResolver,
     { provide: NotificationService, useExisting: NotificationServiceImpl },

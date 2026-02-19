@@ -1,5 +1,6 @@
 import { Case } from '@seedcompany/common/case';
 import { createMetadataDecorator } from '@seedcompany/nest';
+import { type EmailMessage } from '@seedcompany/nestjs-email';
 import { type Query } from 'cypher-query-builder';
 import type { AbstractClass, Simplify } from 'type-fest';
 import type { UnwrapSecured } from '~/common';
@@ -64,6 +65,7 @@ export abstract class INotificationStrategy<
   channelAvailabilities(): ChannelAvailabilities {
     return {
       App: this.broadcastTo().length > 0 ? 'AlwaysOn' : 'DefaultOn',
+      Email: Object.hasOwn(this, 'renderEmail') ? 'DefaultOn' : 'AlwaysOff',
     };
   }
 
@@ -127,4 +129,10 @@ export interface INotificationStrategy<
   >;
 
   hydrateExtraForGel?(): Record<string, any>;
+
+  /**
+   * Send an email notification called for each recipient.
+   * Implementing this method enables the `'email'` channel for this strategy.
+   */
+  renderEmail?(notification: TNotification): EmailMessage<unknown>;
 }
