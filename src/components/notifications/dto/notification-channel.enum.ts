@@ -4,7 +4,7 @@ export type NotificationChannel = EnumType<typeof NotificationChannel>;
 export const NotificationChannel = makeEnum({
   name: 'NotificationChannel',
   description: 'The delivery channels available for notifications',
-  values: ['App'],
+  values: ['App', 'Email'],
 });
 
 export type ChannelAvailability = EnumType<typeof ChannelAvailability>;
