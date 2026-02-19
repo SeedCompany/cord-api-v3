@@ -10,21 +10,30 @@ import {
   useFrontendUrl,
   useResources,
 } from '~/core/email';
-import { type LanguageEngagement } from '../../engagement/dto';
+import type { LanguageEngagement } from '../../engagement/dto';
+import type { Language } from '../../language/dto';
+import type { Project } from '../../project/dto';
 
 interface Props {
   engagement: LanguageEngagement;
+  language: Language;
+  project: Project;
   completedBooks: NonEmptyArray<Range<Verse>>;
 }
 
-export async function DBLUpload(props: Props) {
-  const { engagement, completedBooks } = props;
+export async function DBLUpload(props: Omit<Props, 'language' | 'project'>) {
+  const { engagement } = props;
 
   const resources = useResources();
   const [language, project] = await Promise.all([
-    resources.load('Language', props.engagement.language.value!.id),
-    resources.load('Project', props.engagement.project.id),
+    resources.load('Language', engagement.language.value!.id),
+    resources.load('Project', engagement.project.id),
   ]);
+  return <DBLUploadTemplate {...props} project={project} language={language} />;
+}
+
+function DBLUploadTemplate(props: Props) {
+  const { engagement, completedBooks, project, language } = props;
 
   const config = useConfig().email.notifyDblUpload!;
 
