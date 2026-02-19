@@ -12,7 +12,9 @@ import { EducationService } from './education.service';
   providers: [
     EducationResolver,
     EducationService,
-    splitDb(EducationRepository, EducationGelRepository),
+    splitDb(EducationRepository, {
+      gel: EducationGelRepository,
+    }),
     EducationLoader,
   ],
   exports: [EducationService],

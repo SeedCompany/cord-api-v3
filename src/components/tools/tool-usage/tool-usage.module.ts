@@ -21,7 +21,7 @@ import { ToolUsagesResolver } from './tool-usages.resolver';
     ToolUsageByContainerLoader,
     ToolUsageByToolLoader,
     ToolUsageService,
-    splitDb(Neo4jRepository, GelRepository),
+    splitDb(Neo4jRepository, { gel: GelRepository }),
   ],
   exports: [ToolUsageService],
 })

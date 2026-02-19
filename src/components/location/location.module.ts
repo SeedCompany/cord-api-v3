@@ -21,7 +21,9 @@ import { DefaultMarketingRegionMigration } from './migrations/default-marketing-
   providers: [
     LocationResolver,
     LocationService,
-    splitDb(LocationRepository, LocationGelRepository),
+    splitDb(LocationRepository, {
+      gel: LocationGelRepository,
+    }),
     LocationLoader,
     DefaultMarketingRegionMigration,
   ],

@@ -61,7 +61,7 @@ import './errors';
       provide: APP_INTERCEPTOR,
       useClass: GelTransactionalMutationsInterceptor,
     },
-    splitDb(IdResolver, AliasIdResolver),
+    splitDb(IdResolver, { gel: AliasIdResolver }),
     GelWarningHandler,
   ],
   exports: [Gel, Client, IdResolver],

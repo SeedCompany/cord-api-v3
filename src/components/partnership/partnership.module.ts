@@ -24,7 +24,9 @@ import { PartnershipService } from './partnership.service';
   providers: [
     PartnershipResolver,
     PartnershipService,
-    splitDb(PartnershipRepository, PartnershipGelRepository),
+    splitDb(PartnershipRepository, {
+      gel: PartnershipGelRepository,
+    }),
     PartnershipLoader,
     PartnershipByProjectAndPartnerLoader,
     ...Object.values(handlers),

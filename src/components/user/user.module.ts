@@ -45,10 +45,13 @@ import { UserService } from './user.service';
     UserLoader,
     ActorLoader,
     UserService,
-    splitDb(UserRepository, UserGelRepository),
+    splitDb(UserRepository, { gel: UserGelRepository }),
     KnownLanguageRepository,
     {
-      ...splitDb(SystemAgentNeo4jRepository, SystemAgentGelRepository),
+      ...splitDb(SystemAgentNeo4jRepository, {
+        neo4j: SystemAgentNeo4jRepository,
+        gel: SystemAgentGelRepository,
+      }),
       provide: SystemAgentRepository,
     },
     AddActorLabelMigration,

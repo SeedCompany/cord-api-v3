@@ -16,10 +16,9 @@ import { ProgressReportVarianceExplanationService } from './variance-explanation
     ProgressReportVarianceExplanationReasonOptionsResolver,
     ProgressReportVarianceExplanationLoader,
     ProgressReportVarianceExplanationService,
-    splitDb(
-      ProgressReportVarianceExplanationRepository,
-      VarianceExplanationGelRepository,
-    ),
+    splitDb(ProgressReportVarianceExplanationRepository, {
+      gel: VarianceExplanationGelRepository,
+    }),
     RenameReasonOptionMigration,
   ],
 })

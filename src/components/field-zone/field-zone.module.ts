@@ -17,7 +17,9 @@ import { RestrictZoneDirectorRemovalHandler } from './handlers/restrict-zone-dir
   providers: [
     FieldZoneResolver,
     FieldZoneService,
-    splitDb(FieldZoneRepository, FieldZoneGelRepository),
+    splitDb(FieldZoneRepository, {
+      gel: FieldZoneGelRepository,
+    }),
     FieldZoneLoader,
     RestrictZoneDirectorRemovalHandler,
   ],

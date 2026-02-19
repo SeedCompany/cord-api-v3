@@ -13,7 +13,9 @@ import { FundingAccountAddDeptIdBlockMigration } from './migrations/funding-acco
   providers: [
     FundingAccountResolver,
     FundingAccountService,
-    splitDb(FundingAccountRepository, FundingAccountGelRepository),
+    splitDb(FundingAccountRepository, {
+      gel: FundingAccountGelRepository,
+    }),
     FundingAccountLoader,
     FundingAccountAddDeptIdBlockMigration,
   ],

@@ -57,7 +57,9 @@ import { EngagementProductConnectionResolver } from './product-connection.resolv
     EngagementRules,
     EngagementService,
     EngagementChannels,
-    splitDb(EngagementRepository, EngagementGelRepository),
+    splitDb(EngagementRepository, {
+      gel: EngagementGelRepository,
+    }),
     EngagementLoader,
     ...Object.values(handlers),
     FixNullMethodologiesMigration,

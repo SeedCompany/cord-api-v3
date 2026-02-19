@@ -34,7 +34,9 @@ import { ProjectMemberService } from './project-member.service';
     MemberProjectConnectionResolver,
     ProjectMemberService,
     ProjectMemberChannels,
-    splitDb(ProjectMemberRepository, ProjectMemberGelRepository),
+    splitDb(ProjectMemberRepository, {
+      gel: ProjectMemberGelRepository,
+    }),
     ProjectMemberLoader,
     MembershipByProjectAndUserLoader,
     AddInactiveAtMigration,

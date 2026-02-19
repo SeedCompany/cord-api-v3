@@ -16,7 +16,9 @@ import { ProgressSummaryResolver } from './progress-summary.resolver';
     ProgressReportConnectionResolver,
     ProgressSummaryResolver,
     ProgressSummaryLoader,
-    splitDb(ProgressSummaryRepository, ProgressSummaryGelRepository),
+    splitDb(ProgressSummaryRepository, {
+      gel: ProgressSummaryGelRepository,
+    }),
     ProgressSummaryExtractor,
     ...Object.values(handlers),
   ],

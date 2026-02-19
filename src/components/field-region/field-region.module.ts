@@ -19,7 +19,9 @@ import { RestrictRegionDirectorRemovalHandler } from './handlers/restrict-region
   providers: [
     FieldRegionResolver,
     FieldRegionService,
-    splitDb(FieldRegionRepository, FieldRegionGelRepository),
+    splitDb(FieldRegionRepository, {
+      gel: FieldRegionGelRepository,
+    }),
     FieldRegionLoader,
     RestrictRegionDirectorRemovalHandler,
   ],

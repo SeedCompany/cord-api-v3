@@ -31,10 +31,9 @@ import { ProgressReportWorkflowEventsResolver } from './resolvers/progress-repor
     ProgressReportWorkflowEventLoader,
     ProgressReportWorkflowService,
     ProgressReportWorkflowEventGranter,
-    splitDb(
-      ProgressReportWorkflowRepository,
-      ProgressReportWorkflowGelRepository,
-    ),
+    splitDb(ProgressReportWorkflowRepository, {
+      gel: ProgressReportWorkflowGelRepository,
+    }),
     ProgressReportWorkflowFlowchart,
     ...Object.values(handlers),
   ],

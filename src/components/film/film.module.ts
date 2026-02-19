@@ -13,7 +13,9 @@ import { FilmService } from './film.service';
   providers: [
     FilmResolver,
     FilmService,
-    splitDb(FilmRepository, FilmGelRepository),
+    splitDb(FilmRepository, {
+      gel: FilmGelRepository,
+    }),
     FilmLoader,
   ],
   exports: [FilmService],

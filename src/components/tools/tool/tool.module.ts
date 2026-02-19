@@ -11,7 +11,7 @@ import { ToolService } from './tool.service';
     ToolResolver,
     ToolLoader,
     ToolService,
-    splitDb(Neo4jRepository, GelRepository),
+    splitDb(Neo4jRepository, { gel: GelRepository }),
   ],
   exports: [ToolService],
 })

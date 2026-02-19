@@ -15,7 +15,9 @@ import { OrganizationService } from './organization.service';
   providers: [
     OrganizationResolver,
     OrganizationService,
-    splitDb(OrganizationRepository, OrganizationGelRepository),
+    splitDb(OrganizationRepository, {
+      gel: OrganizationGelRepository,
+    }),
     OrganizationLoader,
     AddOrganizationReachMigration,
     AddOrganizationTypeMigration,

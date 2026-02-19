@@ -36,7 +36,9 @@ import { SessionManager } from './session/session.manager';
     SessionHost,
 
     AuthenticationService,
-    splitDb(AuthenticationRepository, AuthenticationGelRepository),
+    splitDb(AuthenticationRepository, {
+      gel: AuthenticationGelRepository,
+    }),
     JwtService,
     CryptoService,
 
