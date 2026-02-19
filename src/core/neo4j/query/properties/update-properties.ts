@@ -6,7 +6,7 @@ import {
   type MaybeUnsecuredInstance,
   type ResourceShape,
 } from '~/common';
-import { type DbChanges } from '../../changes';
+import { type DbChanges } from '~/core/database/changes';
 import { apoc, collect, merge, Variable, variable } from '../index';
 import { type PropUpdateStat, updateProperty } from './update-property';
 

@@ -3,7 +3,7 @@ import { type Query } from 'cypher-query-builder';
 import { intersection } from 'lodash';
 import { inspect, type InspectOptionsStylized } from 'util';
 import { type ResourceShape, type Role } from '~/common';
-import { matchProjectScopedRoles } from '~/core/database/query';
+import { matchProjectScopedRoles } from '~/core/neo4j/query';
 import { rolesForScope, type ScopedRole, splitScope } from '../../dto/role.dto';
 import {
   type AsEdgeQLParams,

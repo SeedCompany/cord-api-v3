@@ -9,8 +9,8 @@ import {
   type ObjectView,
   type UnsecuredDto,
 } from '~/common';
-import { DtoRepository } from '~/core/database';
 import { type ChangesOf } from '~/core/database/changes';
+import { DtoRepository } from '~/core/neo4j';
 import {
   ACTIVE,
   createNode,
@@ -21,7 +21,7 @@ import {
   merge,
   paginate,
   sorting,
-} from '~/core/database/query';
+} from '~/core/neo4j/query';
 import {
   type Budget,
   BudgetRecord,

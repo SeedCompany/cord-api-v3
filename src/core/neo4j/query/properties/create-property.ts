@@ -7,7 +7,7 @@ import {
   type ResourceShape,
   type UnwrapSecured,
 } from '~/common';
-import { type DbChanges } from '../../changes';
+import { type DbChanges } from '~/core/database/changes';
 import { ACTIVE, exp, Variable, variable as varRef } from '../index';
 import { maybeWhereAnd } from '../maybe-where-and';
 import { type CommonPropertyOptions } from './common-property-options';

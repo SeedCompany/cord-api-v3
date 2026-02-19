@@ -16,8 +16,9 @@ import {
   type ID,
   type Range,
 } from '~/common';
-import { CommonRepository, type DbTypeOf, OnIndex } from '~/core/database';
+import { type DbTypeOf } from '~/core/database';
 import { type DbChanges, getChanges } from '~/core/database/changes';
+import { CommonRepository, OnIndex } from '~/core/neo4j';
 import {
   ACTIVE,
   collect,
@@ -32,7 +33,7 @@ import {
   merge,
   paginate,
   sorting,
-} from '~/core/database/query';
+} from '~/core/neo4j/query';
 import { ScriptureReferenceRepository } from '../scripture';
 import {
   ScriptureRange as RawScriptureRange,

@@ -1,6 +1,6 @@
 import { isNull, node, relation } from 'cypher-query-builder';
-import { BaseMigration, Migration } from '~/core/database';
-import { ACTIVE } from '~/core/database/query';
+import { BaseMigration, Migration } from '~/core/neo4j';
+import { ACTIVE } from '~/core/neo4j/query';
 
 @Migration('2025-02-06T12:00:04')
 export class AddAiAssistFlagMigration extends BaseMigration {

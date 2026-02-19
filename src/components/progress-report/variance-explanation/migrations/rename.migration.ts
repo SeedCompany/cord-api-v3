@@ -1,6 +1,6 @@
 import { node, relation } from 'cypher-query-builder';
-import { BaseMigration, Migration } from '~/core/database';
-import { ACTIVE } from '~/core/database/query';
+import { BaseMigration, Migration } from '~/core/neo4j';
+import { ACTIVE } from '~/core/neo4j/query';
 
 @Migration('2023-10-12T11:00:00')
 export class RenameReasonOptionMigration extends BaseMigration {

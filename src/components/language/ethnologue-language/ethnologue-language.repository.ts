@@ -6,8 +6,8 @@ import {
   ReadAfterCreationFailed,
   ServerException,
 } from '~/common';
-import { DtoRepository } from '~/core/database';
-import { createNode } from '~/core/database/query';
+import { DtoRepository } from '~/core/neo4j';
+import { createNode } from '~/core/neo4j/query';
 import {
   type CreateEthnologueLanguage,
   EthnologueLanguage,

@@ -11,8 +11,8 @@ import {
   ServerException,
   type UnsecuredDto,
 } from '~/common';
-import { type BaseNode, isBaseNode } from '~/core/database/results';
 import { LiveQueryStore } from '~/core/live-query';
+import { type BaseNode, isBaseNode } from '~/core/neo4j/results';
 import {
   HandleIdLookup,
   ResourceLoader,

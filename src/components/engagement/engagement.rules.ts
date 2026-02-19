@@ -10,9 +10,9 @@ import {
   UnauthorizedException,
 } from '~/common';
 import { Identity } from '~/core/authentication';
-import { DatabaseService } from '~/core/database';
-import { ACTIVE, INACTIVE } from '~/core/database/query';
 import { ILogger, Logger } from '~/core/logger';
+import { DatabaseService } from '~/core/neo4j';
+import { ACTIVE, INACTIVE } from '~/core/neo4j/query';
 import { ProjectStep } from '../project/dto';
 import {
   EngagementStatus,

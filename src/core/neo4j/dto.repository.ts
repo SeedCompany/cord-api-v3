@@ -11,11 +11,11 @@ import {
   ServerException,
   type UnsecuredDto,
 } from '~/common';
+import { type DbTypeOf } from '~/core/database';
+import { type DbChanges, getChanges } from '~/core/database/changes';
+import { type ResourceLike } from '~/core/resources';
 import { Privileges } from '../../components/authorization';
-import { type ResourceLike } from '../resources';
-import { type DbChanges, getChanges } from './changes';
 import { CommonRepository } from './common.repository';
-import { type DbTypeOf } from './db-type';
 import { OnIndex } from './indexer';
 import { matchProps, type QueryFragment } from './query';
 

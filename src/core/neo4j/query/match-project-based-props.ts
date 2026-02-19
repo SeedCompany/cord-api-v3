@@ -1,7 +1,7 @@
 import { oneLine } from 'common-tags';
 import { node, type Query, relation } from 'cypher-query-builder';
 import { type Role, type Sensitivity } from '~/common';
-import { type QueryFragment } from '~/core/database/query';
+import { type QueryFragment } from '~/core/neo4j/query';
 import { type ScopedRole } from '../../../components/authorization/dto';
 import { ProjectType } from '../../../components/project/dto/project-type.enum';
 import {

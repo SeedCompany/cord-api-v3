@@ -9,9 +9,9 @@ import {
   type UnsecuredDto,
 } from '~/common';
 import { Identity } from '~/core/authentication';
-import { type Variable } from '~/core/database/query';
 import { Hooks } from '~/core/hooks';
 import { ILogger, Logger } from '~/core/logger';
+import { type Variable } from '~/core/neo4j/query';
 import { HandleIdLookup } from '~/core/resources';
 import { Privileges } from '../authorization';
 import { FileService } from '../file';

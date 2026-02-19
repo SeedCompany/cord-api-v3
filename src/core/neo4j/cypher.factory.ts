@@ -10,6 +10,7 @@ import { type Merge } from 'type-fest';
 import { fileURLToPath } from 'url';
 import { dropSecrets } from '~/common';
 import { ConfigService } from '~/core/config';
+import { TransactionRetryInformer } from '~/core/database';
 import { jestSkipFileInExceptionSource } from '../exception';
 import { type ILogger, LoggerToken, LogLevel } from '../logger';
 import { AFTER_MESSAGE } from '../logger/formatters';
@@ -24,7 +25,6 @@ import { highlight } from './highlight-cypher.util';
 import { ParameterTransformer } from './parameter-transformer.service';
 // eslint-disable-next-line import/no-duplicates
 import { type Neo4jTransaction as Transaction } from './transaction';
-import { TransactionRetryInformer } from './transaction-retry.informer';
 import { MyTransformer } from './transformer';
 // eslint-disable-next-line import/no-duplicates
 import './transaction'; // import our transaction augmentation

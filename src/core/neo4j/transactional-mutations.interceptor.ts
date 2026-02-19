@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Connection } from 'cypher-query-builder';
-import { TransactionalMutationsInterceptor } from './abstract-transactional-mutations.interceptor';
+import { TransactionalMutationsInterceptor } from '../database/abstract-transactional-mutations.interceptor';
 
 @Injectable()
 export class Neo4jTransactionalMutationsInterceptor extends TransactionalMutationsInterceptor {

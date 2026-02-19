@@ -12,8 +12,8 @@ import {
   ServerException,
 } from '~/common';
 import { MetadataDiscovery } from '~/core/discovery';
-import { type BaseNode } from '../database/results';
 import { ILogger, Logger } from '../logger';
+import { type BaseNode } from '../neo4j/results';
 import { type ResourceMap } from './map';
 import { ResourcesHost } from './resources.host';
 

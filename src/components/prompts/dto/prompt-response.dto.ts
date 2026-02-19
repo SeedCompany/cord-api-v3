@@ -15,7 +15,7 @@ import {
   type UnsecuredDto,
   Variant,
 } from '~/common';
-import { type BaseNode } from '~/core/database/results';
+import { type BaseNode } from '~/core/neo4j/results';
 import type { LinkTo, LinkToUnknown } from '~/core/resources';
 import { type Prompt, SecuredPrompt } from './prompt.dto';
 

@@ -6,14 +6,14 @@ import {
   NotFoundException,
   ReadAfterCreationFailed,
 } from '~/common';
-import { DtoRepository } from '~/core/database';
+import { DtoRepository } from '~/core/neo4j';
 import {
   ACTIVE,
   createNode,
   createRelationships,
   paginate,
   sorting,
-} from '~/core/database/query';
+} from '~/core/neo4j/query';
 import {
   type CreateEducation,
   Education,

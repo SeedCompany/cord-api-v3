@@ -1,4 +1,4 @@
-import { BaseMigration, Migration } from '~/core/database';
+import { BaseMigration, Migration } from '~/core/neo4j';
 
 @Migration('2024-04-18T09:00:00')
 export class NormalizeCreatorBaseNodeMigration extends BaseMigration {

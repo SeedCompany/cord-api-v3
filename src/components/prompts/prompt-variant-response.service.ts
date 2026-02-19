@@ -16,8 +16,8 @@ import {
   type VariantOf,
 } from '~/common';
 import { Identity } from '~/core/authentication';
-import { mapListResults } from '~/core/database/results';
 import { LiveQueryStore } from '~/core/live-query';
+import { mapListResults } from '~/core/neo4j/results';
 import { ResourceLoader } from '~/core/resources';
 import {
   Privileges,

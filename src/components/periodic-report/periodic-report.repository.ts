@@ -16,8 +16,8 @@ import {
   type Range,
   type UnsecuredDto,
 } from '~/common';
-import { DtoRepository } from '~/core/database';
 import { type ChangesOf } from '~/core/database/changes';
+import { DtoRepository } from '~/core/neo4j';
 import {
   ACTIVE,
   createNode,
@@ -32,7 +32,7 @@ import {
   sorting,
   variable,
   type Variable,
-} from '~/core/database/query';
+} from '~/core/neo4j/query';
 import { File } from '../file/dto';
 import {
   ProgressReport,

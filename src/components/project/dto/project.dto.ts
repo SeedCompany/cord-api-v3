@@ -31,8 +31,8 @@ import {
   ServerException,
   type UnsecuredDto,
 } from '~/common';
-import { sortingForEnumIndex } from '~/core/database/query';
 import { e } from '~/core/gel';
+import { sortingForEnumIndex } from '~/core/neo4j/query';
 import { type LinkTo, RegisterResource } from '~/core/resources';
 import { Budget } from '../../budget/dto';
 import { ChangesetAware } from '../../changeset/dto';

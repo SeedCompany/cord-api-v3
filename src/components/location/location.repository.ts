@@ -11,7 +11,7 @@ import {
   ServerException,
   type UnsecuredDto,
 } from '~/common';
-import { DtoRepository, OnIndex } from '~/core/database';
+import { DtoRepository, OnIndex } from '~/core/neo4j';
 import {
   ACTIVE,
   collect,
@@ -25,8 +25,8 @@ import {
   paginate,
   path,
   sortWith,
-} from '~/core/database/query';
-import { type BaseNode } from '~/core/database/results';
+} from '~/core/neo4j/query';
+import { type BaseNode } from '~/core/neo4j/results';
 import { type ResourceNameLike } from '~/core/resources';
 import { FileService } from '../file';
 import { type FileId } from '../file/dto';

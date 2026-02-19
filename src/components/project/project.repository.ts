@@ -11,8 +11,8 @@ import {
   type UnsecuredDto,
 } from '~/common';
 import { ConfigService } from '~/core/config';
-import { CommonRepository, OnIndex, UniquenessError } from '~/core/database';
 import { type ChangesOf, getChanges } from '~/core/database/changes';
+import { CommonRepository, OnIndex, UniquenessError } from '~/core/neo4j';
 import {
   ACTIVE,
   collect,
@@ -32,7 +32,7 @@ import {
   type SortCol,
   sortWith,
   variable,
-} from '~/core/database/query';
+} from '~/core/neo4j/query';
 import { Privileges } from '../authorization';
 import { fieldRegionSorters } from '../field-region/field-region.repository';
 import { locationSorters } from '../location/location.repository';

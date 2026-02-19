@@ -1,6 +1,6 @@
 import { type Nil, type NonEmptyArray } from '@seedcompany/common';
 import { node, type Pattern, type Query, relation } from 'cypher-query-builder';
-import { ACTIVE, apoc, collect, merge, variable } from '~/core/database/query';
+import { ACTIVE, apoc, collect, merge, variable } from '~/core/neo4j/query';
 import { type FinanceDepartmentIdBlockInput as Input } from './dto/id-blocks.input';
 
 const defaultRel = [

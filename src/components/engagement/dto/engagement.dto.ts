@@ -23,8 +23,8 @@ import {
   SensitivityField,
   type UnsecuredDto,
 } from '~/common';
-import { type BaseNode } from '~/core/database/results';
 import { e } from '~/core/gel';
+import { type BaseNode } from '~/core/neo4j/results';
 import { type LinkTo, RegisterResource } from '~/core/resources';
 import { ChangesetAware } from '../../changeset/dto';
 import { Commentable } from '../../comments/dto';

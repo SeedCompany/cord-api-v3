@@ -29,7 +29,7 @@ import {
 import type { ResourceLike } from '~/core/resources';
 import { Privileges } from '../../components/authorization';
 import { getChanges } from '../database/changes';
-import { privileges } from '../database/dto.repository';
+import { privileges } from '../neo4j/dto.repository';
 import { CommonRepository } from './common.repository';
 import type { $linkPropify } from './generated-client/path';
 import type {

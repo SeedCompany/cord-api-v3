@@ -1,6 +1,6 @@
 import { node, relation } from 'cypher-query-builder';
-import { oncePerProject } from '~/core/database/query';
-import { type QueryFragment } from '~/core/database/query-augmentation/apply';
+import { oncePerProject } from '~/core/neo4j/query';
+import { type QueryFragment } from '~/core/neo4j/query-augmentation/apply';
 
 /**
  * Fetch project node from a ProgressReport child.

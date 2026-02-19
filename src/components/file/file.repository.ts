@@ -20,7 +20,8 @@ import {
   NotFoundException,
   ServerException,
 } from '~/common';
-import { CommonRepository, OnIndex } from '~/core/database';
+import { ILogger, Logger } from '~/core/logger';
+import { CommonRepository, OnIndex } from '~/core/neo4j';
 import {
   ACTIVE,
   createNode,
@@ -32,9 +33,8 @@ import {
   paginate,
   sorting,
   variable,
-} from '~/core/database/query';
-import { type BaseNode } from '~/core/database/results';
-import { ILogger, Logger } from '~/core/logger';
+} from '~/core/neo4j/query';
+import { type BaseNode } from '~/core/neo4j/results';
 import { type LinkTo } from '~/core/resources';
 import {
   Directory,

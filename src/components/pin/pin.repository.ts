@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { type ID } from '~/common';
-import { DatabaseService, DbTraceLayer } from '~/core/database';
-import { currentUser } from '~/core/database/query';
+import { DatabaseService, DbTraceLayer } from '~/core/neo4j';
+import { currentUser } from '~/core/neo4j/query';
 
 @Injectable()
 @DbTraceLayer.applyToClass()

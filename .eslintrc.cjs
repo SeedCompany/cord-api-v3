@@ -247,7 +247,7 @@ const config = {
   },
   overrides: [
     {
-      files: './src/core/database/query-augmentation/*.ts',
+      files: './src/core/neo4j/query-augmentation/*.ts',
       rules: {
         // This is enforced to treat functions arguments as contravariant instead of bivariant.
         // This doesn't matter here as this class won't be overridden.

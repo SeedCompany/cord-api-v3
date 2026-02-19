@@ -1,7 +1,7 @@
 import { applyDecorators } from '@nestjs/common';
 import { DbSort } from '~/common/db';
 import { Sensitivity } from '~/common/enums';
-import { rankSens } from '~/core/database/query';
+import { rankSens } from '~/core/neo4j/query';
 import { ListField, type ListFieldOptions } from './list.field';
 import { OptionalField, type OptionalFieldOptions } from './optional.field';
 

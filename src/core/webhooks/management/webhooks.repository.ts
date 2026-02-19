@@ -3,14 +3,14 @@ import { node, type Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { nanoid } from 'nanoid';
 import { EnhancedResource, type ID } from '~/common';
-import { DtoRepository } from '~/core/database';
+import { DtoRepository } from '~/core/neo4j';
 import {
   apoc,
   collect,
   currentUser,
   merge,
   randomUUID,
-} from '~/core/database/query';
+} from '~/core/neo4j/query';
 import { type DeleteWebhookArgs, Webhook, type WebhookConfig } from './dto';
 
 /**

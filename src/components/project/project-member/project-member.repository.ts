@@ -17,7 +17,7 @@ import {
   ServerException,
   type UnsecuredDto,
 } from '~/common';
-import { DtoRepository } from '~/core/database';
+import { DtoRepository } from '~/core/neo4j';
 import {
   ACTIVE,
   apoc,
@@ -34,10 +34,10 @@ import {
   updateProperty,
   variable,
   Variable,
-} from '~/core/database/query';
-import { varInExp } from '~/core/database/query-augmentation/subquery';
-import { type FilterFn } from '~/core/database/query/filters';
-import { conditionalOn } from '~/core/database/query/properties/update-property';
+} from '~/core/neo4j/query';
+import { varInExp } from '~/core/neo4j/query-augmentation/subquery';
+import { type FilterFn } from '~/core/neo4j/query/filters';
+import { conditionalOn } from '~/core/neo4j/query/properties/update-property';
 import { userFilters, UserRepository } from '../../user/user.repository';
 import { type ProjectFilters } from '../dto';
 import { projectFilters } from '../project-filters.query';

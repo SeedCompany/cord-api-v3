@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { cleanJoin, isNotFalsy, mapValues, setOf } from '@seedcompany/common';
 import { inArray, node, type Query, relation } from 'cypher-query-builder';
 import { type ID } from '~/common';
-import { CommonRepository } from '~/core/database';
+import { CommonRepository } from '~/core/neo4j';
 import {
   ACTIVE,
   defineSorters,
@@ -10,8 +10,8 @@ import {
   listConcat,
   merge,
   type SortCol,
-} from '~/core/database/query';
-import { WhereExp } from '~/core/database/query/where-and-list';
+} from '~/core/neo4j/query';
+import { WhereExp } from '~/core/neo4j/query/where-and-list';
 import { type ProgressReport } from '../progress-report/dto';
 import {
   type FetchedSummaries,
