@@ -3,9 +3,16 @@ import { groupToMapBy, mapEntries, mapValues } from '@seedcompany/common';
 import { uniqBy } from 'lodash';
 import type { ID } from '~/common';
 import { Identity } from '~/core/authentication';
-import { NotificationChannel, type NotificationType } from '../dto';
+import {
+  ChannelAvailability,
+  NotificationChannel,
+  type NotificationType,
+} from '../dto';
 import { NotificationService } from '../notification.service';
-import { type ChannelSettings } from '../notification.strategy';
+import {
+  type ChannelAvailabilities,
+  type ChannelSettings,
+} from '../notification.strategy';
 import {
   type NotificationChannelPreference,
   type NotificationPreference,
@@ -32,15 +39,13 @@ export class NotificationPreferencesService {
       this.identity.current.userId,
     ]);
     const overridesByType = this.groupOverridesByType(overrideRows);
-    return [...this.notificationService.strategies()].map(
-      ([typeCls, strategy]) => {
-        const typeName = this.notificationService.getTypeName(typeCls);
-        return this.buildPreference(
+    return [...this.notificationService.strategiesByNameType].map(
+      ([typeName, strategy]) =>
+        this.buildPreference(
           typeName,
           strategy.defaultChannels(),
           overridesByType.get(typeName),
-        );
-      },
+        ),
     );
   }
 

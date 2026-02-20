@@ -151,7 +151,7 @@ export class NotificationRepository extends CommonRepository {
     return (query: Query) =>
       query
         .subQuery((q) => {
-          const concreteHydrates = [...this.service.strategyMap].map(
+          const concreteHydrates = [...this.service.strategiesByClassType].map(
             ([dtoCls, strategy]) =>
               (q: Query) => {
                 const type = this.getType(dtoCls);

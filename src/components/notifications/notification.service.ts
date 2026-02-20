@@ -57,10 +57,23 @@ export abstract class NotificationService {
     };
   }
 
-  abstract strategies(): ReadonlyMap<
+  abstract readonly strategiesByClassType: ReadonlyMap<
     ResourceShape<Notification>,
     INotificationStrategy<Notification>
   >;
+
+  abstract readonly strategiesByNameType: ReadonlyMap<
+    NotificationType,
+    INotificationStrategy<Notification>
+  >;
+
+  getStrategy(type: ResourceShape<Notification>) {
+    const strategy = this.strategiesByClassType.get(type);
+    if (!strategy) {
+      throw new ServerException('Notification type has not been registered');
+    }
+    return strategy;
+  }
 
   getTypeName(type: ResourceShape<Notification>) {
     // This conversion is hacky and duplicated in the NotificationStrategy decorator.
@@ -77,10 +90,15 @@ export class NotificationServiceImpl
   extends NotificationService
   implements OnModuleInit
 {
-  strategyMap: ReadonlyMap<
+  strategiesByClassType: ReadonlyMap<
     ResourceShape<Notification>,
     INotificationStrategy<Notification>
   >;
+  strategiesByNameType: ReadonlyMap<
+    NotificationType,
+    INotificationStrategy<Notification>
+  >;
+  typeClassToName: ReadonlyMap<ResourceShape<Notification>, NotificationType>;
   readonly ready = new ((Event as any).default as typeof Event)();
 
   constructor(
@@ -91,10 +109,6 @@ export class NotificationServiceImpl
     private readonly preferencesService: NotificationPreferencesService & {},
   ) {
     super();
-  }
-
-  strategies() {
-    return this.strategyMap;
   }
 
   async create<T extends ResourceShape<Notification>>(
@@ -113,7 +127,7 @@ export class NotificationServiceImpl
 
     // Partition the recipients into channels based on their preferences
     const overridesMap = await this.preferencesService.getOverridesMap(
-      this.getTypeName(type),
+      this.typeClassToName.get(type)!,
       userRecipients,
     );
     const defaultChannels = strategy.defaultChannels();
@@ -144,14 +158,6 @@ export class NotificationServiceImpl
     }
   }
 
-  getStrategy(type: ResourceShape<Notification>) {
-    const strategy = this.strategyMap.get(type);
-    if (!strategy) {
-      throw new ServerException('Notification type has not been registered');
-    }
-    return strategy;
-  }
-
   async list(input: NotificationListInput): Promise<NotificationList> {
     const result = await this.repo.list(input);
     return {
@@ -165,7 +171,7 @@ export class NotificationServiceImpl
    */
   added$(user: ID<'User'>) {
     // Merge user's broadcast channel with static ones defined by strategies.
-    const strategies = this.strategyMap.values().toArray();
+    const strategies = this.strategiesByClassType.values().toArray();
     return from([
       user,
       ...strategies.flatMap((strategy) => strategy.broadcastTo()),
@@ -183,14 +189,32 @@ export class NotificationServiceImpl
 
   async onModuleInit() {
     const discovered = this.discovery.discover(NotificationStrategy).classes();
-    this.strategyMap = mapEntries(discovered, ({ meta, instance }) => {
-      if (!(instance instanceof INotificationStrategy)) {
-        throw new ServerException(
-          `Strategy for ${meta.name} does not implement INotificationStrategy`,
-        );
-      }
-      return [meta, instance];
-    }).asMap;
+    this.strategiesByClassType = mapEntries(
+      discovered,
+      ({ meta: { cls }, instance }) => {
+        if (!(instance instanceof INotificationStrategy)) {
+          throw new ServerException(
+            `Strategy for ${cls.name} does not implement INotificationStrategy`,
+          );
+        }
+        return [cls, instance];
+      },
+    ).asMap;
+    this.strategiesByNameType = mapEntries(
+      discovered,
+      ({ meta: { cls, typeName }, instance }) => {
+        if (!(instance instanceof INotificationStrategy)) {
+          throw new ServerException(
+            `Strategy for ${cls.name} does not implement INotificationStrategy`,
+          );
+        }
+        return [typeName, instance];
+      },
+    ).asMap;
+    this.typeClassToName = mapEntries(discovered, ({ meta }) => [
+      meta.cls,
+      meta.typeName,
+    ]).asMap;
     this.ready.set();
   }
 }

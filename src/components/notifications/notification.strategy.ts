@@ -14,11 +14,9 @@ import {
 export const NotificationStrategy = createMetadataDecorator({
   types: ['class'],
   setter: (cls: AbstractClass<Notification>) => {
-    NotificationTypeEntries.set(
-      cls.name.replace('Notification', '') as NotificationType,
-      cls,
-    );
-    return cls;
+    const type = cls.name.replace('Notification', '') as NotificationType;
+    NotificationTypeEntries.set(type, cls);
+    return { typeName: type, cls };
   },
 });
 
