@@ -4,7 +4,12 @@ import {
   Injectable,
   type OnModuleInit,
 } from '@nestjs/common';
-import { mapEntries, type Nil } from '@seedcompany/common';
+import {
+  asNonEmptyArray,
+  mapEntries,
+  mapValues,
+  type Nil,
+} from '@seedcompany/common';
 import Event from 'gel/dist/primitives/event.js';
 import { from, mergeMap } from 'rxjs';
 import {
@@ -18,8 +23,10 @@ import { MetadataDiscovery } from '~/core/discovery';
 import {
   type MarkNotificationReadArgs,
   type Notification,
+  NotificationChannel,
   type NotificationList,
   type NotificationListInput,
+  type NotificationType,
 } from './dto';
 import { NotificationAdded } from './dto/notification-added.hook';
 import { NotificationRepository } from './notification.repository';
@@ -28,6 +35,7 @@ import {
   type InputOf,
   NotificationStrategy,
 } from './notification.strategy';
+import { NotificationPreferencesService } from './preferences/notification-preferences.service';
 
 @Injectable()
 export abstract class NotificationService {
@@ -54,6 +62,11 @@ export abstract class NotificationService {
     INotificationStrategy<Notification>
   >;
 
+  getTypeName(type: ResourceShape<Notification>) {
+    // This conversion is hacky and duplicated in the NotificationStrategy decorator.
+    return type.name.replace('Notification', '') as NotificationType;
+  }
+
   protected secure(dto: UnsecuredDto<Notification>) {
     return { ...dto, canDelete: true };
   }
@@ -74,6 +87,8 @@ export class NotificationServiceImpl
     private readonly discovery: MetadataDiscovery,
     @Inject(forwardRef(() => Broadcaster))
     private readonly broadcaster: Broadcaster & {},
+    @Inject(forwardRef(() => NotificationPreferencesService))
+    private readonly preferencesService: NotificationPreferencesService & {},
   ) {
     super();
   }
@@ -87,19 +102,46 @@ export class NotificationServiceImpl
     recipients: ReadonlyArray<ID<'User'>> | Nil,
     input: T extends { Input: infer Input } ? Input : InputOf<T['prototype']>,
   ) {
+    const strategy = this.getStrategy(type);
+
     const out = await super.create(type, recipients, input);
     const { notification } = out;
 
-    // from app, or dynamic db, or static by strategy
-    const broadcastTo =
-      recipients ?? out.recipients ?? this.getStrategy(type).broadcastTo();
-    for (const recipient of broadcastTo) {
-      this.broadcaster.channel(NotificationAdded, recipient).publish({
-        notification,
-      });
-    }
+    // User IDs that received the notification (for preference lookup)
+    const userRecipients: ReadonlyArray<ID<'User'>> =
+      recipients ?? out.recipients ?? [];
+
+    // Partition the recipients into channels based on their preferences
+    const overridesMap = await this.preferencesService.getOverridesMap(
+      this.getTypeName(type),
+      userRecipients,
+    );
+    const defaultChannels = strategy.defaultChannels();
+    const channelsForUsers = mapValues.fromList(
+      NotificationChannel,
+      (channel) =>
+        asNonEmptyArray(
+          userRecipients.filter(
+            (user) =>
+              overridesMap.get(user)?.[channel] ?? defaultChannels[channel],
+          ),
+        ),
+    ).asRecord;
+
+    this.deliverToAppChannel(notification, [
+      // Always broadcast to static targets (they're not users with prefs)
+      ...strategy.broadcastTo(),
+      ...(channelsForUsers.App ?? []),
+    ]);
 
     return out;
+  }
+
+  deliverToAppChannel(notification: Notification, targets: readonly string[]) {
+    const appPayload = { notification }; // maintain object identity for webhook batching
+    for (const target of targets) {
+      this.broadcaster.channel(NotificationAdded, target).publish(appPayload);
+    }
   }
 
   getStrategy(type: ResourceShape<Notification>) {

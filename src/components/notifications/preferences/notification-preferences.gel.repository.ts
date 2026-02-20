@@ -18,17 +18,23 @@ export class NotificationPreferencesRepository
    */
   async getOverridesForUsers(
     userIds: ReadonlyArray<ID<'User'>>,
+    notificationType?: NotificationType,
   ): Promise<readonly PreferenceOverrideRow[]> {
     return await this.db.run(this.getOverridesForUsersQuery, {
       userIds,
+      notificationType,
     });
   }
   private readonly getOverridesForUsersQuery = e.params(
-    { userIds: e.array(e.uuid) },
-    ({ userIds }) => {
+    { userIds: e.array(e.uuid), notificationType: e.optional(e.str) },
+    ({ userIds, notificationType }) => {
       const users = e.cast(e.User, e.array_unpack(userIds));
       return e.select(e.Notification.Preference, (pref) => ({
-        filter: e.op(pref.user, 'in', users),
+        filter: e.op(
+          e.op(pref.user, 'in', users),
+          'and',
+          e.op(pref.notificationType, '=', notificationType),
+        ),
         user: true,
         notificationType: castToEnum<
           typeof pref.notificationType,

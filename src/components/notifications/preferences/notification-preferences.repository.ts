@@ -24,13 +24,18 @@ export class NotificationPreferencesRepository extends CommonRepository {
   /**
    * Fetch overrides for a specific set of users.
    */
-  async getOverridesForUsers(userIds: ReadonlyArray<ID<'User'>>) {
+  async getOverridesForUsers(
+    userIds: ReadonlyArray<ID<'User'>>,
+    notificationType?: NotificationType,
+  ) {
     const result = await this.db
       .query()
       .match([
         node('user', 'User'),
         relation('out', '', 'user'),
-        node('pref', 'NotificationPreference'),
+        node('pref', 'NotificationPreference', {
+          notificationType,
+        }),
       ])
       .where({ 'user.id': inArray(userIds) })
       .return<PreferenceOverrideRow>([

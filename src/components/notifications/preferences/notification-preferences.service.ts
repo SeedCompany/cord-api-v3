@@ -1,13 +1,9 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { groupToMapBy, mapEntries, mapValues } from '@seedcompany/common';
 import { uniqBy } from 'lodash';
-import type { ResourceShape } from '~/common';
+import type { ID } from '~/common';
 import { Identity } from '~/core/authentication';
-import {
-  type Notification,
-  NotificationChannel,
-  type NotificationType,
-} from '../dto';
+import { NotificationChannel, type NotificationType } from '../dto';
 import { NotificationService } from '../notification.service';
 import { type ChannelSettings } from '../notification.strategy';
 import {
@@ -36,12 +32,15 @@ export class NotificationPreferencesService {
       this.identity.current.userId,
     ]);
     const overridesByType = this.groupOverridesByType(overrideRows);
-    return [...this.notificationService.strategies()].map(([type, strategy]) =>
-      this.buildPreference(
-        this.getTypeName(type),
-        strategy.defaultChannels(),
-        overridesByType.get(this.getTypeName(type)),
-      ),
+    return [...this.notificationService.strategies()].map(
+      ([typeCls, strategy]) => {
+        const typeName = this.notificationService.getTypeName(typeCls);
+        return this.buildPreference(
+          typeName,
+          strategy.defaultChannels(),
+          overridesByType.get(typeName),
+        );
+      },
     );
   }
 
@@ -70,6 +69,24 @@ export class NotificationPreferencesService {
     await this.repo.saveOverrides(this.identity.current.userId, flattened);
   }
 
+  /**
+   * Get the saved override settings for this notification and these users.
+   */
+  async getOverridesMap(
+    notificationType: NotificationType,
+    userIds: ReadonlyArray<ID<'User'>>,
+  ): Promise<ReadonlyMap<ID<'User'>, Partial<ChannelSettings>>> {
+    if (userIds.length === 0) return new Map();
+    const rows = await this.repo.getOverridesForUsers(
+      userIds,
+      notificationType,
+    );
+    return mapValues(
+      groupToMapBy(rows, (row) => row.user.id),
+      (_, rows) => this.groupOverridesByType(rows).get(notificationType) ?? {},
+    ).asMap;
+  }
+
   private buildPreference(
     notificationType: NotificationType,
     defaults: ChannelSettings,
@@ -86,11 +103,6 @@ export class NotificationPreferencesService {
         }),
       ),
     };
-  }
-
-  private getTypeName(type: ResourceShape<Notification>) {
-    // This conversion is hacky and duplicated in the NotificationStrategy decorator.
-    return type.name.replace('Notification', '') as NotificationType;
   }
 
   private groupOverridesByType(overrides: readonly PreferenceOverrideRow[]) {
