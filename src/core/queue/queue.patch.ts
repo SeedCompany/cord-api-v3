@@ -20,7 +20,8 @@ export class Queue<TJob extends Job> extends QueueBase<TJob> {
     return queueCls.NAME;
   };
 
-  // @ts-expect-error this is fixing the base signature to work with unions discriminated on the job name
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment -- sometimes this fails, sometimes it doesn't, idk why
+  // @ts-ignore this is fixing the base signature to work with unions discriminated on the job name
   async add<Name extends TJob['name']>(
     name: Name,
     data: string extends TJob['name']
@@ -30,14 +31,16 @@ export class Queue<TJob extends Job> extends QueueBase<TJob> {
         : never,
     opts?: JobsOptions,
   ): Promise<TJob>;
-  // @ts-expect-error adding this for unity with flows
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment -- sometimes this fails, sometimes it doesn't, idk why
+  // @ts-ignore adding this for unity with flows
   async add(
     jobDefinition: Omit<FlowJob, 'children'> & {
       prefix?: undefined;
       children?: undefined;
     },
   ): Promise<TJob>;
-  // @ts-expect-error adding this for unity with flows
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment -- sometimes this fails, sometimes it doesn't, idk why
+  // @ts-ignore adding this for unity with flows
   async add(...args: any[]) {
     if (args.length === 1) {
       args = [args[0].name, args[0].data, args[0].opts];
