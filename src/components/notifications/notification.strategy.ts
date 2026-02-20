@@ -5,7 +5,7 @@ import type { UnwrapSecured } from '~/common';
 import type { RawChangeOf } from '~/core/database/changes';
 import { type $, e } from '~/core/gel';
 import type { QueryFragment } from '~/core/neo4j/query-augmentation/apply';
-import type { Notification } from './dto';
+import type { Notification, NotificationChannel } from './dto';
 import {
   type NotificationType,
   NotificationTypeEntries,
@@ -22,6 +22,11 @@ export const NotificationStrategy = createMetadataDecorator({
   },
 });
 
+/**
+ * A map of channel → enabled for a notification type.
+ */
+export type ChannelSettings = Readonly<Record<NotificationChannel, boolean>>;
+
 export type InputOf<T extends Notification> = Simplify<{
   [K in keyof T as Exclude<K, keyof Notification>]:
     | RawChangeOf<UnwrapSecured<T[K]> & {}>
@@ -32,6 +37,16 @@ export abstract class INotificationStrategy<
   TNotification extends Notification,
   TInput = InputOf<TNotification>,
 > {
+  /**
+   * The default channel settings for this notification type.
+   * Users can override these per-channel in their preferences.
+   */
+  defaultChannels(): ChannelSettings {
+    return {
+      App: true,
+    };
+  }
+
   /**
    * Should recipients be returned from the database?
    * Useful if the strategy can dynamically select a small-ish set of users
