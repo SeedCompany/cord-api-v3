@@ -6,10 +6,20 @@ import type { RawChangeOf } from '~/core/database/changes';
 import { type $, e } from '~/core/gel';
 import type { QueryFragment } from '~/core/neo4j/query-augmentation/apply';
 import type { Notification } from './dto';
+import {
+  type NotificationType,
+  NotificationTypeEntries,
+} from './dto/notification-type.enum';
 
 export const NotificationStrategy = createMetadataDecorator({
   types: ['class'],
-  setter: (cls: AbstractClass<Notification>) => cls,
+  setter: (cls: AbstractClass<Notification>) => {
+    NotificationTypeEntries.set(
+      cls.name.replace('Notification', '') as NotificationType,
+      cls,
+    );
+    return cls;
+  },
 });
 
 export type InputOf<T extends Notification> = Simplify<{

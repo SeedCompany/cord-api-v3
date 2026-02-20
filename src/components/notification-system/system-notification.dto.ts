@@ -21,3 +21,9 @@ declare module '~/core/resources/map' {
     SystemNotification: typeof e.Notification.System;
   }
 }
+
+declare module '../notifications' {
+  interface NotificationMap {
+    System: typeof SystemNotification;
+  }
+}
