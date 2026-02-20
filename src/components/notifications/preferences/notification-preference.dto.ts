@@ -1,6 +1,10 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { NotificationChannel, NotificationType } from '../dto';
+import {
+  ChannelAvailability,
+  NotificationChannel,
+  NotificationType,
+} from '../dto';
 
 @ObjectType({
   description: 'The enabled/disabled state for a single delivery channel.',
@@ -9,10 +13,10 @@ export class NotificationChannelPreference {
   @Field(() => NotificationChannel)
   readonly channel: NotificationChannel;
 
-  @Field({
-    description: 'The system default for this channel',
+  @Field(() => ChannelAvailability, {
+    description: 'The availability of this channel for this notification type',
   })
-  readonly default: boolean;
+  readonly availability: ChannelAvailability;
 
   @Field(() => Boolean, {
     nullable: true,

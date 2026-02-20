@@ -43,7 +43,7 @@ export class NotificationPreferencesService {
       ([typeName, strategy]) =>
         this.buildPreference(
           typeName,
-          strategy.defaultChannels(),
+          strategy.channelAvailabilities(),
           overridesByType.get(typeName),
         ),
     );
@@ -55,18 +55,31 @@ export class NotificationPreferencesService {
    */
   async updatePreferences(input: readonly UpdateNotificationPreference[]) {
     const normalized = uniqBy(input, (i) => i.notificationType).map(
-      ({ notificationType, channels }) => ({
-        notificationType,
-        channels: channels
-          ? uniqBy(channels, (c) => c.channel).map(({ channel, enabled }) => ({
-              channel,
-              enabled: enabled ?? null,
-            }))
-          : [...NotificationChannel].map((channel) => ({
-              channel,
-              enabled: null,
-            })),
-      }),
+      ({ notificationType, channels }) => {
+        const strategy =
+          this.notificationService.strategiesByNameType.get(notificationType)!;
+        const availabilities = strategy.channelAvailabilities();
+        return {
+          notificationType,
+          channels: channels
+            ? uniqBy(channels, (c) => c.channel)
+                .filter(({ channel }) =>
+                  ChannelAvailability.isConfigurable(availabilities[channel]),
+                )
+                .map(({ channel, enabled }) => ({
+                  channel,
+                  enabled: enabled ?? null,
+                }))
+            : [...NotificationChannel]
+                .filter((channel) =>
+                  ChannelAvailability.isConfigurable(availabilities[channel]),
+                )
+                .map((channel) => ({
+                  channel,
+                  enabled: null,
+                })),
+        };
+      },
     );
     const flattened = normalized.flatMap(({ notificationType, channels }) =>
       channels.map((ch) => ({ notificationType, ...ch })),
@@ -94,18 +107,24 @@ export class NotificationPreferencesService {
 
   private buildPreference(
     notificationType: NotificationType,
-    defaults: ChannelSettings,
+    availabilities: ChannelAvailabilities,
     overrides: Partial<ChannelSettings> | undefined,
   ): NotificationPreference {
     return {
       notificationType,
       channelPreferences: [...NotificationChannel].map(
-        (channel): NotificationChannelPreference => ({
-          channel,
-          default: defaults[channel],
-          override: overrides?.[channel] ?? null,
-          enabled: overrides?.[channel] ?? defaults[channel],
-        }),
+        (channel): NotificationChannelPreference => {
+          const availability = availabilities[channel];
+          return {
+            channel,
+            availability,
+            override: overrides?.[channel] ?? null,
+            enabled: ChannelAvailability.resolve(
+              availability,
+              overrides?.[channel],
+            ),
+          };
+        },
       ),
     };
   }

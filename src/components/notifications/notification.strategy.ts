@@ -5,7 +5,11 @@ import type { UnwrapSecured } from '~/common';
 import type { RawChangeOf } from '~/core/database/changes';
 import { type $, e } from '~/core/gel';
 import type { QueryFragment } from '~/core/neo4j/query-augmentation/apply';
-import type { Notification, NotificationChannel } from './dto';
+import type {
+  ChannelAvailability,
+  Notification,
+  NotificationChannel,
+} from './dto';
 import {
   type NotificationType,
   NotificationTypeEntries,
@@ -24,6 +28,9 @@ export const NotificationStrategy = createMetadataDecorator({
  * A map of channel → enabled for a notification type.
  */
 export type ChannelSettings = Readonly<Record<NotificationChannel, boolean>>;
+export type ChannelAvailabilities = Readonly<
+  Record<NotificationChannel, ChannelAvailability>
+>;
 
 export type InputOf<T extends Notification> = Simplify<{
   [K in keyof T as Exclude<K, keyof Notification>]:
@@ -36,12 +43,13 @@ export abstract class INotificationStrategy<
   TInput = InputOf<TNotification>,
 > {
   /**
-   * The default channel settings for this notification type.
-   * Users can override these per-channel in their preferences.
+   * Whether each channel is always on/off,
+   * or if it is user-configurable and defaulted on/off.
+   * Each strategy can define this uniquely.
    */
-  defaultChannels(): ChannelSettings {
+  channelAvailabilities(): ChannelAvailabilities {
     return {
-      App: true,
+      App: 'DefaultOn',
     };
   }
 

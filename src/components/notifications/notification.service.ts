@@ -130,16 +130,22 @@ export class NotificationServiceImpl
       this.typeClassToName.get(type)!,
       userRecipients,
     );
-    const defaultChannels = strategy.defaultChannels();
+    const availabilities = strategy.channelAvailabilities();
     const channelsForUsers = mapValues.fromList(
       NotificationChannel,
-      (channel) =>
-        asNonEmptyArray(
-          userRecipients.filter(
-            (user) =>
-              overridesMap.get(user)?.[channel] ?? defaultChannels[channel],
-          ),
-        ),
+      (channel) => {
+        const availability = availabilities[channel];
+        if (availability === 'AlwaysOff') return undefined;
+        return asNonEmptyArray(
+          availability === 'AlwaysOn'
+            ? userRecipients
+            : userRecipients.filter(
+                (user) =>
+                  overridesMap.get(user)?.[channel] ??
+                  availability === 'DefaultOn',
+              ),
+        );
+      },
     ).asRecord;
 
     this.deliverToAppChannel(notification, [
