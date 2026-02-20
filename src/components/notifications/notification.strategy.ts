@@ -1,3 +1,4 @@
+import { Case } from '@seedcompany/common/case';
 import { createMetadataDecorator } from '@seedcompany/nest';
 import { type Query } from 'cypher-query-builder';
 import type { AbstractClass, Simplify } from 'type-fest';
@@ -42,6 +43,19 @@ export abstract class INotificationStrategy<
   TNotification extends Notification,
   TInput = InputOf<TNotification>,
 > {
+  getLabel() {
+    return Case.capital(
+      this.constructor.name.replace('NotificationStrategy', ''),
+    );
+  }
+
+  /**
+   * The Markdown description given for this notification in user preferences.
+   */
+  getDescription(): string | null {
+    return null;
+  }
+
   /**
    * Whether each channel is always on/off,
    * or if it is user-configurable and defaulted on/off.

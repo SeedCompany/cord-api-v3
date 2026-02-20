@@ -1,10 +1,11 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { groupToMapBy, mapEntries, mapValues } from '@seedcompany/common';
 import { uniqBy } from 'lodash';
-import type { ID } from '~/common';
+import { type ID } from '~/common';
 import { Identity } from '~/core/authentication';
 import {
   ChannelAvailability,
+  type Notification,
   NotificationChannel,
   type NotificationType,
 } from '../dto';
@@ -12,6 +13,7 @@ import { NotificationService } from '../notification.service';
 import {
   type ChannelAvailabilities,
   type ChannelSettings,
+  type INotificationStrategy,
 } from '../notification.strategy';
 import {
   type NotificationChannelPreference,
@@ -43,6 +45,7 @@ export class NotificationPreferencesService {
       ([typeName, strategy]) =>
         this.buildPreference(
           typeName,
+          strategy,
           strategy.channelAvailabilities(),
           overridesByType.get(typeName),
         ),
@@ -107,11 +110,14 @@ export class NotificationPreferencesService {
 
   private buildPreference(
     notificationType: NotificationType,
+    strategy: INotificationStrategy<Notification>,
     availabilities: ChannelAvailabilities,
     overrides: Partial<ChannelSettings> | undefined,
   ): NotificationPreference {
     return {
       notificationType,
+      label: strategy.getLabel(),
+      description: strategy.getDescription(),
       channelPreferences: [...NotificationChannel].map(
         (channel): NotificationChannelPreference => {
           const availability = availabilities[channel];

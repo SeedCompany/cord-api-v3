@@ -1,5 +1,6 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
+import { MarkdownScalar } from '~/common';
 import {
   ChannelAvailability,
   NotificationChannel,
@@ -41,6 +42,18 @@ export class NotificationPreference {
     description: 'The notification type identifier (e.g. "System")',
   })
   readonly notificationType: NotificationType;
+
+  @Field(() => String, {
+    description: 'The human-readable label for this notification type',
+  })
+  readonly label: string;
+
+  @Field(() => MarkdownScalar, {
+    nullable: true,
+    description:
+      'The markdown description providing more details on this notification type',
+  })
+  readonly description: string | null | undefined;
 
   @Field(() => [NotificationChannelPreference], {
     description: 'Per-channel preference details',
