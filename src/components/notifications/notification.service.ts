@@ -49,6 +49,11 @@ export abstract class NotificationService {
     };
   }
 
+  abstract strategies(): ReadonlyMap<
+    ResourceShape<Notification>,
+    INotificationStrategy<Notification>
+  >;
+
   protected secure(dto: UnsecuredDto<Notification>) {
     return { ...dto, canDelete: true };
   }
@@ -71,6 +76,10 @@ export class NotificationServiceImpl
     private readonly broadcaster: Broadcaster & {},
   ) {
     super();
+  }
+
+  strategies() {
+    return this.strategyMap;
   }
 
   async create<T extends ResourceShape<Notification>>(
