@@ -49,7 +49,7 @@ export abstract class INotificationStrategy<
    */
   channelAvailabilities(): ChannelAvailabilities {
     return {
-      App: 'DefaultOn',
+      App: this.broadcastTo().length > 0 ? 'AlwaysOn' : 'DefaultOn',
     };
   }
 
