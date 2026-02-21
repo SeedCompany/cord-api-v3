@@ -51,8 +51,7 @@ export class ProjectWorkflowNotificationHandler {
     };
 
     const notificationInput = {
-      project: event.project.id,
-      changedBy: workflowEvent.who.id,
+      workflowEvent: workflowEvent.id,
       previousStep,
     };
 

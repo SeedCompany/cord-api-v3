@@ -6,7 +6,7 @@ import {
   INotificationStrategy,
   type InputOf,
   NotificationStrategy,
-} from '../../../notifications/notification.strategy';
+} from '../../../notifications';
 import { ProjectStepChangedNotification } from '../emails/project-step-changed-notification.email';
 import { ProjectTransitionViaMembershipNotification } from './project-transition-via-membership-notification.dto';
 
@@ -18,8 +18,10 @@ export class ProjectTransitionViaMembershipNotificationStrategy extends INotific
 
   insertForGel(input: InputOf<ProjectTransitionViaMembershipNotification>) {
     return e.insert(e.Notification.ProjectTransitionViaMembership, {
-      project: e.cast(e.Project, e.uuid(input.project)),
-      changedBy: e.cast(e.User, e.uuid(input.changedBy)),
+      workflowEvent: e.cast(
+        e.Project.WorkflowEvent,
+        e.uuid(input.workflowEvent),
+      ),
       previousStep: e.cast(e.Project.Step, input.previousStep),
     });
   }
@@ -28,8 +30,7 @@ export class ProjectTransitionViaMembershipNotificationStrategy extends INotific
     return (query: Query) =>
       query.apply(
         createRelationships(ProjectTransitionViaMembershipNotification, 'out', {
-          project: ['Project', input.project],
-          changedBy: ['User', input.changedBy],
+          workflowEvent: ['ProjectWorkflowEvent', input.workflowEvent],
         }),
       );
   }
@@ -39,18 +40,12 @@ export class ProjectTransitionViaMembershipNotificationStrategy extends INotific
       query
         .match([
           node('node'),
-          relation('out', '', 'project'),
-          node('project', 'Project'),
-        ])
-        .match([
-          node('node'),
-          relation('out', '', 'changedBy'),
-          node('changedBy', 'User'),
+          relation('out', '', 'workflowEvent'),
+          node('workflowEvent', 'ProjectWorkflowEvent'),
         ])
         .return(
           exp({
-            project: 'project { .id }',
-            changedBy: 'changedBy { .id }',
+            workflowEvent: 'workflowEvent { .id }',
           }).as(outVar),
         );
   }
@@ -58,8 +53,7 @@ export class ProjectTransitionViaMembershipNotificationStrategy extends INotific
   renderEmail(notification: ProjectTransitionViaMembershipNotification) {
     return EmailMessage.from(
       <ProjectStepChangedNotification
-        projectId={notification.project.id}
-        changedById={notification.changedBy.id}
+        workflowEventId={notification.workflowEvent.id}
         previousStep={notification.previousStep}
       />,
     );
