@@ -68,8 +68,16 @@ export class NotificationRepository extends CommonRepository {
           creator: currentUser,
         }),
       )
-      .subQuery(['node'], (sub) =>
-        sub
+      .subQuery(['node'], (sub) => {
+        const appAvailability = strategy.channelAvailabilities().App;
+        if (appAvailability === 'AlwaysOff') {
+          return sub.return<{
+            totalRecipients: number;
+            recipients: readonly ID[] | null;
+          }>(['0 as totalRecipients', 'null as recipients']);
+        }
+        const typeName = this.getType(type);
+        return sub
           .apply((q) =>
             recipients == null
               ? q.subQuery(strategy.recipientsForNeo4j(input))
@@ -77,6 +85,33 @@ export class NotificationRepository extends CommonRepository {
                   .match(node('recipient', 'User'))
                   .where({ 'recipient.id': inArray(recipients) }),
           )
+          .apply((q) => {
+            if (appAvailability === 'DefaultOn') {
+              return q.raw(
+                `WHERE NOT EXISTS {
+                  MATCH (recipient)-[:user]->(pref:NotificationPreference {
+                    notificationType: $typeName,
+                    channel: 'App',
+                    enabled: false
+                  })
+                }`,
+                { typeName },
+              );
+            }
+            if (appAvailability === 'DefaultOff') {
+              return q.raw(
+                `WHERE EXISTS {
+                  MATCH (recipient)-[:user]->(pref:NotificationPreference {
+                    notificationType: $typeName,
+                    channel: 'App',
+                    enabled: true
+                  })
+                }`,
+                { typeName },
+              );
+            }
+            return q; // AlwaysOn: no filtering
+          })
           .create([
             node('node'),
             relation('out', '', 'recipient'),
@@ -90,8 +125,8 @@ export class NotificationRepository extends CommonRepository {
             strategy.returnRecipientsFromDB()
               ? 'collect(recipient.id) as recipients'
               : 'null as recipients',
-          ]),
-      )
+          ]);
+      })
       .subQuery('node', this.hydrate())
       .return('dto, totalRecipients, recipients')
       .first();
