@@ -6,6 +6,7 @@ import { ConfigService } from '~/core/config';
 import { MailerService } from '~/core/email';
 import { OnHook } from '~/core/hooks';
 import { ILogger, Logger } from '~/core/logger';
+import { NotificationService } from '../../../notifications';
 import { ProjectService } from '../../../project';
 import { UserService } from '../../../user';
 import { type User } from '../../../user/dto';
@@ -16,8 +17,8 @@ import {
   type ProjectStepChangedProps,
 } from '../emails/project-step-changed.email';
 import { ProjectTransitionedHook } from '../hooks/project-transitioned.hook';
-import { ProjectTransitionRequiringFinancialApprovalNotificationService } from '../notifications/project-transition-requiring-financial-approval-notification.service';
-import { ProjectTransitionViaMembershipNotificationService } from '../notifications/project-transition-via-membership-notification.service';
+import { ProjectTransitionRequiringFinancialApprovalNotification } from '../notifications/project-transition-requiring-financial-approval-notification.dto';
+import { ProjectTransitionViaMembershipNotification } from '../notifications/project-transition-via-membership-notification.dto';
 import { FinancialApprovers, TeamMembers } from '../transitions/notifiers';
 
 @OnHook(ProjectTransitionedHook)
@@ -29,8 +30,7 @@ export class ProjectWorkflowNotificationHandler {
     private readonly projects: ProjectService,
     private readonly mailer: MailerService,
     private readonly moduleRef: ModuleRef,
-    private readonly membershipNotifications: ProjectTransitionViaMembershipNotificationService,
-    private readonly financialApprovalNotifications: ProjectTransitionRequiringFinancialApprovalNotificationService,
+    private readonly notifier: NotificationService,
     @Logger('project:step-change-notifier')
     private readonly logger: ILogger,
   ) {}
@@ -72,7 +72,8 @@ export class ProjectWorkflowNotificationHandler {
               previousStep,
               toStep: workflowEvent.to,
             });
-            await this.membershipNotifications.notify(
+            await this.notifier.create(
+              ProjectTransitionViaMembershipNotification,
               userIds,
               notificationInput,
             );
@@ -95,7 +96,8 @@ export class ProjectWorkflowNotificationHandler {
                 toStep: workflowEvent.to,
               },
             );
-            await this.financialApprovalNotifications.notify(
+            await this.notifier.create(
+              ProjectTransitionRequiringFinancialApprovalNotification,
               userIds,
               notificationInput,
             );

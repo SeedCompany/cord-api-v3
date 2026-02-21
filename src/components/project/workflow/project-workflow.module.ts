@@ -5,11 +5,8 @@ import { UserModule } from '../../user/user.module';
 import { ProjectModule } from '../project.module';
 import { ProjectWorkflowNotificationHandler } from './handlers/project-workflow-notification.handler';
 import { StepHistoryToWorkflowEventsMigration } from './migrations/step-history-to-workflow-events.migration';
-import { ProjectTransitionRequiringFinancialApprovalNotificationResolver } from './notifications/project-transition-requiring-financial-approval-notification.resolver';
-import { ProjectTransitionRequiringFinancialApprovalNotificationService } from './notifications/project-transition-requiring-financial-approval-notification.service';
+import { ProjectTransitionNotificationLinksResolver } from './notifications/project-transition-notification-links.resolver';
 import { ProjectTransitionRequiringFinancialApprovalNotificationStrategy } from './notifications/project-transition-requiring-financial-approval-notification.strategy';
-import { ProjectTransitionViaMembershipNotificationResolver } from './notifications/project-transition-via-membership-notification.resolver';
-import { ProjectTransitionViaMembershipNotificationService } from './notifications/project-transition-via-membership-notification.service';
 import { ProjectTransitionViaMembershipNotificationStrategy } from './notifications/project-transition-via-membership-notification.strategy';
 import { ProjectWorkflowEventLoader } from './project-workflow-event.loader';
 import { ProjectWorkflowChannels } from './project-workflow.channels';
@@ -46,12 +43,9 @@ import { ProjectWorkflowMutationSubscriptionsResolver } from './resolvers/projec
     ProjectWorkflowFlowchart,
     ProjectWorkflowNotificationHandler,
     StepHistoryToWorkflowEventsMigration,
-    ProjectTransitionViaMembershipNotificationResolver,
+    ProjectTransitionNotificationLinksResolver,
     ProjectTransitionViaMembershipNotificationStrategy,
-    ProjectTransitionViaMembershipNotificationService,
-    ProjectTransitionRequiringFinancialApprovalNotificationResolver,
     ProjectTransitionRequiringFinancialApprovalNotificationStrategy,
-    ProjectTransitionRequiringFinancialApprovalNotificationService,
   ],
   exports: [ProjectWorkflowService],
 })

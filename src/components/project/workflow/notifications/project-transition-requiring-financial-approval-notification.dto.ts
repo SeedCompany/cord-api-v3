@@ -1,21 +1,13 @@
-import { Field, ObjectType } from '@nestjs/graphql';
+import { ObjectType } from '@nestjs/graphql';
 import { e } from '~/core/gel';
-import { type LinkTo, RegisterResource } from '~/core/resources';
-import { Notification } from '../../../notifications';
-import { ProjectStep } from '../../dto';
+import { RegisterResource } from '~/core/resources';
+import { ProjectTransitionNotification } from './project-transition-notification.dto';
 
 @RegisterResource({
   db: e.Notification.ProjectTransitionRequiringFinancialApproval,
 })
-@ObjectType({
-  implements: [Notification],
-})
-export class ProjectTransitionRequiringFinancialApprovalNotification extends Notification {
-  readonly workflowEvent: LinkTo<'ProjectWorkflowEvent'>;
-
-  @Field(() => ProjectStep)
-  readonly previousStep: ProjectStep;
-}
+@ObjectType({ implements: [ProjectTransitionNotification] })
+export class ProjectTransitionRequiringFinancialApprovalNotification extends ProjectTransitionNotification {}
 
 declare module '~/core/resources/map' {
   interface ResourceMap {

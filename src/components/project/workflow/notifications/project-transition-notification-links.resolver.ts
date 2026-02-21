@@ -2,13 +2,13 @@ import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { Loader, type LoaderOf } from '~/core/data-loader';
 import { ProjectWorkflowEvent } from '../dto';
 import { ProjectWorkflowEventLoader } from '../project-workflow-event.loader';
-import { ProjectTransitionRequiringFinancialApprovalNotification as Notification } from './project-transition-requiring-financial-approval-notification.dto';
+import { ProjectTransitionNotification } from './project-transition-notification.dto';
 
-@Resolver(Notification)
-export class ProjectTransitionRequiringFinancialApprovalNotificationResolver {
+@Resolver(ProjectTransitionNotification)
+export class ProjectTransitionNotificationLinksResolver {
   @ResolveField(() => ProjectWorkflowEvent)
   async workflowEvent(
-    @Parent() { workflowEvent }: Notification,
+    @Parent() { workflowEvent }: ProjectTransitionNotification,
     @Loader(ProjectWorkflowEventLoader)
     events: LoaderOf<ProjectWorkflowEventLoader>,
   ) {
