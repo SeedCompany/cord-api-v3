@@ -33,10 +33,7 @@ module Notification {
   type CommentViaMembership extending Comment;
 
   abstract type ProjectTransition extending default::Notification {
-    required project: default::Project {
-      on target delete delete source;
-    };
-    required changedBy: default::User {
+    required workflowEvent: Project::WorkflowEvent {
       on target delete delete source;
     };
     required previousStep: Project::Step;

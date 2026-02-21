@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { splitDb } from '~/core/database';
 import { UserModule } from '../user/user.module';
 import { NotificationDeliveryQueue } from './notification-delivery.queue';
@@ -15,7 +15,7 @@ import { NotificationPreferencesModule } from './preferences/notification-prefer
 @Module({
   imports: [
     NotificationPreferencesModule,
-    UserModule,
+    forwardRef(() => UserModule),
     NotificationDeliveryQueue.register(),
   ],
   providers: [
