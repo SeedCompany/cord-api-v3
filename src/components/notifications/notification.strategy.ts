@@ -65,7 +65,7 @@ export abstract class INotificationStrategy<
   channelAvailabilities(): ChannelAvailabilities {
     return {
       App: this.broadcastTo().length > 0 ? 'AlwaysOn' : 'DefaultOn',
-      Email: Object.hasOwn(this, 'renderEmail') ? 'DefaultOn' : 'AlwaysOff',
+      Email: this.renderEmail ? 'DefaultOn' : 'AlwaysOff',
     };
   }
 
