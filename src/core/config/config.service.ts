@@ -131,6 +131,10 @@ export const makeConfig = (env: EnvironmentService) =>
       notifyDistributionLists: env
         .boolean('NOTIFY_DISTRIBUTION_LIST')
         .optional(false),
+      /**
+       * Whether email notifications should be default on or off
+       * for project workflow event notifications.
+       */
       notifyProjectStepChanges: env
         .boolean('NOTIFY_PROJECT_STEP_CHANGES')
         .optional(true),

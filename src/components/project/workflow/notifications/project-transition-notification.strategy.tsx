@@ -1,13 +1,19 @@
+import { Injectable } from '@nestjs/common';
 import { node, type Query, relation } from 'cypher-query-builder';
 import { type AbstractClass } from 'type-fest';
 import { EnhancedResource } from '~/common';
+import { ConfigService } from '~/core/config';
 import { EmailMessage } from '~/core/email';
 import { e } from '~/core/gel';
 import { createRelationships, exp } from '~/core/neo4j/query';
-import { INotificationStrategy, type InputOf } from '../../../notifications';
+import {
+  type ChannelAvailabilities,
+  INotificationStrategy,
+  type InputOf,
+} from '../../../notifications';
 import { ProjectStepChangedNotification } from '../emails/project-step-changed-notification.email';
 import { type ProjectTransitionNotification } from './project-transition-notification.dto';
-import type { ProjectTransitionViaMembershipNotification } from './project-transition-via-membership-notification.dto';
+import { type ProjectTransitionViaMembershipNotification } from './project-transition-via-membership-notification.dto';
 
 /**
  * Shared input type for all ProjectTransition notification strategies.
@@ -15,10 +21,24 @@ import type { ProjectTransitionViaMembershipNotification } from './project-trans
  */
 export type ProjectTransitionInput = InputOf<ProjectTransitionNotification>;
 
+@Injectable()
 export abstract class ProjectTransitionNotificationStrategy<
   T extends ProjectTransitionViaMembershipNotification,
 > extends INotificationStrategy<T, ProjectTransitionInput> {
   protected abstract readonly dtoClass: AbstractClass<T>;
+
+  constructor(protected config: ConfigService) {
+    super();
+  }
+
+  override channelAvailabilities(): ChannelAvailabilities {
+    return {
+      ...super.channelAvailabilities(),
+      Email: this.config.email.notifyProjectStepChanges
+        ? 'DefaultOn'
+        : 'DefaultOff',
+    };
+  }
 
   saveForNeo4j({ previousStep, workflowEvent }: ProjectTransitionInput) {
     return (query: Query) =>
