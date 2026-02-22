@@ -1,11 +1,12 @@
 import { ModuleRef } from '@nestjs/core';
-import { asyncPool } from '@seedcompany/common';
-import { type UnsecuredDto } from '~/common';
+import { many } from '@seedcompany/common';
+import { type ID, type UnsecuredDto } from '~/common';
 import { Identity } from '~/core/authentication';
 import { ConfigService } from '~/core/config';
 import { MailerService } from '~/core/email';
 import { OnHook } from '~/core/hooks';
 import { ILogger, Logger } from '~/core/logger';
+import { NotificationService } from '../../../notifications';
 import { ProjectService } from '../../../project';
 import { UserService } from '../../../user';
 import { type User } from '../../../user/dto';
@@ -16,6 +17,9 @@ import {
   type ProjectStepChangedProps,
 } from '../emails/project-step-changed.email';
 import { ProjectTransitionedHook } from '../hooks/project-transitioned.hook';
+import { ProjectTransitionRequiringFinancialApprovalNotification } from '../notifications/project-transition-requiring-financial-approval-notification.dto';
+import { ProjectTransitionViaMembershipNotification } from '../notifications/project-transition-via-membership-notification.dto';
+import { FinancialApprovers, TeamMembers } from '../transitions/notifiers';
 
 @OnHook(ProjectTransitionedHook)
 export class ProjectWorkflowNotificationHandler {
@@ -26,7 +30,8 @@ export class ProjectWorkflowNotificationHandler {
     private readonly projects: ProjectService,
     private readonly mailer: MailerService,
     private readonly moduleRef: ModuleRef,
-    @Logger('progress-report:status-change-notifier')
+    private readonly notifier: NotificationService,
+    @Logger('project:step-change-notifier')
     private readonly logger: ILogger,
   ) {}
 
@@ -34,7 +39,7 @@ export class ProjectWorkflowNotificationHandler {
     const { previousStep, next, workflowEvent } = event;
     const transition = typeof next !== 'string' ? next : undefined;
 
-    const session = this.identity.current;
+    const currentUserId = this.identity.current.userId;
 
     // TODO on bypass: keep notifying members? add anyone else?
     const notifiers = transition?.notifiers ?? [];
@@ -44,28 +49,87 @@ export class ProjectWorkflowNotificationHandler {
       previousStep,
       moduleRef: this.moduleRef,
     };
-    const notifyees = (
-      await Promise.all(notifiers.map((notifier) => notifier.resolve(params)))
-    )
-      .flat()
-      .filter(
-        (n) =>
-          // Not current user
-          n.id !== session.userId &&
-          // Only email notifications right now
-          n.email,
-      );
 
-    if (notifyees.length === 0) {
-      return;
-    }
+    const notificationInput = {
+      workflowEvent: workflowEvent.id,
+      previousStep,
+    };
 
-    this.logger.info('Notifying', {
-      emails: notifyees.flatMap((r) => r.email ?? []),
-      projectId: event.project.id,
-      previousStep: event.previousStep,
-      toStep: event.workflowEvent.to,
-    });
+    // Resolve each notifier separately so we can categorize them
+    await Promise.all(
+      notifiers.map(async (notifier) => {
+        const resolved = many(await notifier.resolve(params));
+
+        if (notifier === TeamMembers) {
+          const userIds = resolved
+            .filter((n): n is Notifier & { id: ID<'User'> } => !!n.id)
+            .map((n) => n.id)
+            .filter((id) => id !== currentUserId);
+          if (userIds.length > 0) {
+            this.logger.info('Notifying team members via notification system', {
+              userIds,
+              projectId: event.project.id,
+              previousStep,
+              toStep: workflowEvent.to,
+            });
+            await this.notifier.create(
+              ProjectTransitionViaMembershipNotification,
+              userIds,
+              notificationInput,
+            );
+          }
+          return;
+        }
+
+        if (notifier === FinancialApprovers) {
+          const userIds = resolved
+            .filter((n): n is Notifier & { id: ID<'User'> } => !!n.id)
+            .map((n) => n.id)
+            .filter((id) => id !== currentUserId);
+          if (userIds.length > 0) {
+            this.logger.info(
+              'Notifying financial approvers via notification system',
+              {
+                userIds,
+                projectId: event.project.id,
+                previousStep,
+                toStep: workflowEvent.to,
+              },
+            );
+            await this.notifier.create(
+              ProjectTransitionRequiringFinancialApprovalNotification,
+              userIds,
+              notificationInput,
+            );
+          }
+          return;
+        }
+
+        // Email distros and other custom notifiers — send emails directly
+        const emailNotifyees = resolved.filter(
+          (n) => n.email && n.id !== currentUserId,
+        );
+        if (emailNotifyees.length === 0) {
+          return;
+        }
+
+        this.logger.info('Notifying via direct email', {
+          emails: emailNotifyees.map((n) => n.email),
+          projectId: event.project.id,
+          previousStep,
+          toStep: workflowEvent.to,
+        });
+
+        await this.sendDirectEmails(emailNotifyees, event);
+      }),
+    );
+  }
+
+  private async sendDirectEmails(
+    notifyees: Notifier[],
+    event: ProjectTransitionedHook,
+  ) {
+    const { previousStep, workflowEvent } = event;
 
     const [changedBy, project, primaryPartnerName] = await this.identity.asUser(
       this.config.rootUser.id,
@@ -77,12 +141,10 @@ export class ProjectWorkflowNotificationHandler {
         ]),
     );
 
-    await asyncPool(1, notifyees, async (notifier) => {
-      if (!notifier.email) {
-        return;
-      }
+    for (const notifier of notifyees) {
+      if (!notifier.email) continue;
 
-      const props = await this.resolveTemplateProps(
+      const props = this.resolveDistroTemplateProps(
         notifier,
         changedBy,
         project,
@@ -92,42 +154,35 @@ export class ProjectWorkflowNotificationHandler {
       await this.mailer
         .compose(notifier.email, <ProjectStepChanged {...props} />)
         .send();
-    });
+    }
   }
 
-  private async resolveTemplateProps(
+  private resolveDistroTemplateProps(
     notifier: Notifier,
     changedBy: UnsecuredDto<User>,
     project: UnsecuredDto<Project>,
     previousStep: ProjectStep,
     primaryPartnerName: string | null,
-  ): Promise<ProjectStepChangedProps> {
-    const recipientId = notifier.id ?? this.config.rootUser.id;
-    return await this.identity.asUser(recipientId, async () => {
-      const recipient = notifier.id
-        ? await this.users.readOne(recipientId)
-        : ({
-            email: { value: notifier.email, canRead: true, canEdit: false },
-            displayFirstName: {
-              value: notifier.email!.split('@')[0],
-              canRead: true,
-              canEdit: false,
-            },
-            displayLastName: { value: '', canRead: true, canEdit: false },
-            timezone: {
-              value: this.config.defaultTimeZone,
-              canRead: true,
-              canEdit: false,
-            },
-          } satisfies ProjectStepChangedProps['recipient']);
-
-      return {
-        recipient,
-        changedBy: this.users.secure(changedBy),
-        project: this.projects.secure(project),
-        previousStep,
-        primaryPartnerName,
-      };
-    });
+  ): ProjectStepChangedProps {
+    return {
+      recipient: {
+        email: { value: notifier.email!, canRead: true, canEdit: false },
+        displayFirstName: {
+          value: notifier.email!.split('@')[0],
+          canRead: true,
+          canEdit: false,
+        },
+        displayLastName: { value: '', canRead: true, canEdit: false },
+        timezone: {
+          value: this.config.defaultTimeZone,
+          canRead: true,
+          canEdit: false,
+        },
+      },
+      changedBy: this.users.secure(changedBy),
+      project: this.projects.secure(project),
+      previousStep,
+      primaryPartnerName,
+    };
   }
 }

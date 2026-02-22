@@ -1,9 +1,13 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { splitDb } from '~/core/database';
+import { NotificationModule } from '../../notifications';
 import { UserModule } from '../../user/user.module';
 import { ProjectModule } from '../project.module';
 import { ProjectWorkflowNotificationHandler } from './handlers/project-workflow-notification.handler';
 import { StepHistoryToWorkflowEventsMigration } from './migrations/step-history-to-workflow-events.migration';
+import { ProjectTransitionNotificationLinksResolver } from './notifications/project-transition-notification-links.resolver';
+import { ProjectTransitionRequiringFinancialApprovalNotificationStrategy } from './notifications/project-transition-requiring-financial-approval-notification.strategy';
+import { ProjectTransitionViaMembershipNotificationStrategy } from './notifications/project-transition-via-membership-notification.strategy';
 import { ProjectWorkflowEventLoader } from './project-workflow-event.loader';
 import { ProjectWorkflowChannels } from './project-workflow.channels';
 import { ProjectWorkflowFlowchart } from './project-workflow.flowchart';
@@ -18,7 +22,11 @@ import { ProjectWorkflowEventsResolver } from './resolvers/project-workflow-even
 import { ProjectWorkflowMutationSubscriptionsResolver } from './resolvers/project-workflow-mutation-subscriptions.resolver';
 
 @Module({
-  imports: [forwardRef(() => UserModule), forwardRef(() => ProjectModule)],
+  imports: [
+    forwardRef(() => UserModule),
+    forwardRef(() => ProjectModule),
+    forwardRef(() => NotificationModule),
+  ],
   providers: [
     ProjectTransitionsResolver,
     ProjectExecuteTransitionResolver,
@@ -35,6 +43,9 @@ import { ProjectWorkflowMutationSubscriptionsResolver } from './resolvers/projec
     ProjectWorkflowFlowchart,
     ProjectWorkflowNotificationHandler,
     StepHistoryToWorkflowEventsMigration,
+    ProjectTransitionNotificationLinksResolver,
+    ProjectTransitionViaMembershipNotificationStrategy,
+    ProjectTransitionRequiringFinancialApprovalNotificationStrategy,
   ],
   exports: [ProjectWorkflowService],
 })

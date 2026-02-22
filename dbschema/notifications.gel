@@ -32,6 +32,15 @@ module Notification {
   type CommentViaMention extending Comment;
   type CommentViaMembership extending Comment;
 
+  abstract type ProjectTransition extending default::Notification {
+    required workflowEvent: Project::WorkflowEvent {
+      on target delete delete source;
+    };
+    required previousStep: Project::Step;
+  }
+  type ProjectTransitionViaMembership extending ProjectTransition;
+  type ProjectTransitionRequiringFinancialApproval extending ProjectTransition;
+
   type Preference {
     required user: default::User {
       on target delete delete source;
