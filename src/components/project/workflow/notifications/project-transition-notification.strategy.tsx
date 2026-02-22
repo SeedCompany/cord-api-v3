@@ -20,13 +20,16 @@ export abstract class ProjectTransitionNotificationStrategy<
 > extends INotificationStrategy<T, ProjectTransitionInput> {
   protected abstract readonly dtoClass: AbstractClass<T>;
 
-  saveForNeo4j(input: ProjectTransitionInput) {
+  saveForNeo4j({ previousStep, workflowEvent }: ProjectTransitionInput) {
     return (query: Query) =>
-      query.apply(
-        createRelationships(this.dtoClass, 'out', {
-          workflowEvent: ['ProjectWorkflowEvent', input.workflowEvent],
-        }),
-      );
+      query
+        .setValues({ node: { previousStep } }, true)
+        .with('node')
+        .apply(
+          createRelationships(this.dtoClass, 'out', {
+            workflowEvent: ['ProjectWorkflowEvent', workflowEvent],
+          }),
+        );
   }
 
   hydrateExtraForNeo4j(outVar: string) {
