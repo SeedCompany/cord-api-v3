@@ -33,11 +33,12 @@ export class NotificationPreferencesRepository extends CommonRepository {
       .match([
         node('user', 'User'),
         relation('out', '', 'user'),
-        node('pref', 'NotificationPreference', {
-          notificationType,
-        }),
+        node('pref', 'NotificationPreference'),
       ])
-      .where({ 'user.id': inArray(userIds) })
+      .where({
+        'user.id': inArray(userIds),
+        ...(notificationType && { 'pref.notificationType': notificationType }),
+      })
       .return<PreferenceOverrideRow>([
         apoc.map.merge('pref', {
           user: 'user { .id }',
