@@ -139,10 +139,10 @@ export class NotificationDeliveryWorker extends WorkerHost {
     if (!strategy.renderEmail) {
       return;
     }
+    const allRecipients = new Set(progress.get().channels!.Email);
+    const previouslyDelivered = new Set(progress.get().emailDelivered ?? []);
     const remainingUsers = asNonEmptyArray([
-      ...new Set(progress.get().channels!.Email).difference(
-        new Set(progress.get().emailDelivered ?? []),
-      ),
+      ...allRecipients.difference(previouslyDelivered),
     ]);
     if (!remainingUsers) {
       return;
@@ -158,7 +158,7 @@ export class NotificationDeliveryWorker extends WorkerHost {
     }
     await progress.set((prev) => ({
       ...prev,
-      emailDelivered: success,
+      emailDelivered: [...previouslyDelivered, ...success],
     }));
     const error = new AggregateError(
       failures,
