@@ -14,6 +14,7 @@ import {
   type UnsecuredDto,
 } from '~/common';
 import { Broadcaster } from '~/core/broadcast';
+import { TransactionHooks } from '~/core/database';
 import { MetadataDiscovery } from '~/core/discovery';
 import {
   type MarkNotificationReadArgs,
@@ -100,6 +101,7 @@ export class NotificationServiceImpl
     @Inject(forwardRef(() => Broadcaster))
     private readonly broadcaster: Broadcaster & {},
     private readonly deliveryQueue: NotificationDeliveryQueue,
+    private readonly txHooks: TransactionHooks,
   ) {
     super();
   }
@@ -112,10 +114,12 @@ export class NotificationServiceImpl
     const out = await super.create(type, recipients, input);
     const { notification } = out;
 
-    await this.deliveryQueue.add('deliver', {
-      typeName: this.typeClassToName.get(type)!,
-      notification,
-      recipients: recipients ?? out.recipients ?? [],
+    this.txHooks.afterCommit.add(async () => {
+      await this.deliveryQueue.add('deliver', {
+        typeName: this.typeClassToName.get(type)!,
+        notification,
+        recipients: recipients ?? out.recipients ?? [],
+      });
     });
 
     return out;
