@@ -6,10 +6,13 @@ import {
 } from '@nestjs/common';
 import {
   asNonEmptyArray,
+  asyncPool,
   mapEntries,
   mapValues,
   type Nil,
+  type NonEmptyArray,
 } from '@seedcompany/common';
+import { type EmailMessage, MailerService } from '@seedcompany/nestjs-email';
 import Event from 'gel/dist/primitives/event.js';
 import { from, mergeMap } from 'rxjs';
 import {
@@ -18,8 +21,10 @@ import {
   ServerException,
   type UnsecuredDto,
 } from '~/common';
+import { Identity } from '~/core/authentication';
 import { Broadcaster } from '~/core/broadcast';
 import { MetadataDiscovery } from '~/core/discovery';
+import { UserService } from '../user';
 import {
   type MarkNotificationReadArgs,
   type Notification,
@@ -105,6 +110,9 @@ export class NotificationServiceImpl
     private readonly discovery: MetadataDiscovery,
     @Inject(forwardRef(() => Broadcaster))
     private readonly broadcaster: Broadcaster & {},
+    private readonly mailer: MailerService,
+    private readonly identity: Identity,
+    private readonly users: UserService,
     @Inject(forwardRef(() => NotificationPreferencesService))
     private readonly preferencesService: NotificationPreferencesService & {},
   ) {
@@ -154,6 +162,12 @@ export class NotificationServiceImpl
       ...(channelsForUsers.App ?? []),
     ]);
 
+    await this.deliverToEmailChannel(
+      strategy,
+      notification,
+      channelsForUsers.Email,
+    );
+
     return out;
   }
 
@@ -162,6 +176,28 @@ export class NotificationServiceImpl
     for (const target of targets) {
       this.broadcaster.channel(NotificationAdded, target).publish(appPayload);
     }
+  }
+
+  async deliverToEmailChannel(
+    strategy: INotificationStrategy<Notification>,
+    notification: Notification,
+    userIds: NonEmptyArray<ID<'User'>> | undefined,
+  ) {
+    if (!strategy.renderEmail || !userIds) {
+      return;
+    }
+    const users = await this.identity.asRole(
+      'Administrator',
+      async () => await this.users.readMany(userIds),
+    );
+    await asyncPool(Infinity, users, async (user) => {
+      const email = user.email.value;
+      if (!email) return;
+      await this.identity.asUser(user.id, async () => {
+        const msg: EmailMessage<any> = strategy.renderEmail!(notification);
+        await this.mailer.send(msg.withHeaders({ to: email }));
+      });
+    });
   }
 
   async list(input: NotificationListInput): Promise<NotificationList> {
