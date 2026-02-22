@@ -110,9 +110,17 @@ export class ResourceLoader {
     if (this.config.isCli) {
       await this.identity.readyForCli();
     }
-    const context = this.config.isCli
-      ? CLI_CONTEXT_ID
-      : this.contextHost.context;
+    const context = this.identity.currentMaybe
+      ? // If we have an ALS identity, the loaders are configured to use that.
+        // Just fake an object id, as it will be ignored.
+        // See: cc912734a68439fe03a992b365d6af4bbb02cff3
+        // Duplicating this check here to prevent requiring a GQL Context to exist.
+        // If we've configured an Identity, like Identity.asUser() then that is sufficient.
+        // And queue workers do not have a GQL Context.
+        IDENTITY_CONTEXT_ID
+      : this.config.isCli
+        ? CLI_CONTEXT_ID
+        : this.contextHost.context;
     return await this.loaderContext.getLoader<T, Key, CachedKey>(type, context);
   }
 
@@ -140,3 +148,4 @@ export class ResourceLoader {
 }
 
 const CLI_CONTEXT_ID = {};
+const IDENTITY_CONTEXT_ID = {}; // passed, but not really referenced
