@@ -183,16 +183,27 @@ export class ToolUsageService {
     const existing = await this.repo.usageFor(container, toolId);
     if (use) {
       if (!existing) {
-        await this.create({ container, tool: toolId });
+        try {
+          await this.create({ container, tool: toolId });
+        } catch (e: unknown) {
+          if (!(e instanceof DuplicateException)) {
+            throw e;
+          }
+        }
       }
       return true;
     }
     if (existing) {
-      await this.delete(existing.id);
+      try {
+        await this.delete(existing.id);
+      } catch (e: unknown) {
+        if (!(e instanceof NotFoundException)) {
+          throw e;
+        }
+      }
     }
     return false;
   }
-
   async update(input: UpdateToolUsage): Promise<ToolUsage> {
     const dto = await this.repo.readOne(input.id);
     const changes = this.repo.getActualChanges(dto, input);
