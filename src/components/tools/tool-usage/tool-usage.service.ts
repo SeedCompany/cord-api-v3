@@ -21,6 +21,8 @@ import {
 } from '~/core/resources';
 import { Privileges } from '../../authorization';
 import { Tool } from '../tool/dto';
+import { type ToolKey } from '../tool/dto/tool-key.enum';
+import { ToolRepository } from '../tool/tool.neo4j.repository';
 import { type CreateToolUsage, ToolUsage, type UpdateToolUsage } from './dto';
 import { type UsagesByContainer } from './tool-usage-by-container.loader';
 import { type UsagesByTool } from './tool-usage-by-tool.loader';
@@ -38,6 +40,7 @@ export class ToolUsageService {
     private readonly resourceResolver: ResourceResolver,
     private readonly liveQueryStore: LiveQueryStore,
     private readonly repo: ToolUsageRepository,
+    private readonly toolRepo: ToolRepository,
   ) {}
 
   @HandleIdLookup(ToolUsage)
@@ -169,6 +172,25 @@ export class ToolUsageService {
     this.liveQueryStore.invalidate([container.__typename, container.id]);
 
     return this.secure(dto, container)!;
+  }
+
+  async setUsageByKey(
+    container: ID<'Resource'>,
+    key: ToolKey,
+    use: boolean,
+  ): Promise<boolean> {
+    const toolId = await this.toolRepo.idByKey(key);
+    const existing = await this.repo.usageFor(container, toolId);
+    if (use) {
+      if (!existing) {
+        await this.create({ container, tool: toolId });
+      }
+      return true;
+    }
+    if (existing) {
+      await this.delete(existing.id);
+    }
+    return false;
   }
 
   async update(input: UpdateToolUsage): Promise<ToolUsage> {

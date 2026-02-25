@@ -25,6 +25,7 @@ import {
   type ToolListInput,
   type UpdateTool,
 } from './dto';
+import { type ToolKey } from './dto/tool-key.enum';
 
 @Injectable()
 export class ToolRepository extends DtoRepository(Tool) {
@@ -45,11 +46,18 @@ export class ToolRepository extends DtoRepository(Tool) {
         'Tool with this name already exists.',
       );
     }
+    if (input.key !== undefined) {
+      await this.assertKeyUnassigned(input.key);
+    }
 
     const initialProps = {
       name: input.name,
       aiBased: input.aiBased,
+      key: input.key,
     };
+    if (input.key !== undefined) {
+      initialProps.key = input.key;
+    }
     const result = await this.db
       .query()
       .apply(await createNode(Tool, { initialProps }))
@@ -71,6 +79,40 @@ export class ToolRepository extends DtoRepository(Tool) {
     const { id, ...simpleChanges } = changes;
     await this.updateProperties({ id }, simpleChanges);
     return await this.readOne(id);
+  }
+  private async assertKeyUnassigned(key: ToolKey) {
+    const result = await this.db
+      .query()
+      .match([
+        node('tool', 'Tool'),
+        relation('out', '', 'key'),
+        node('prop', 'Property', { value: key }),
+      ])
+      .return<{ id: ID<'Tool'> }>('tool.id as id')
+      .first();
+
+    if (result) {
+      throw new DuplicateException(
+        'key',
+        'Key is already assigned to another tool.',
+      );
+    }
+  }
+
+  async idByKey(key: ToolKey) {
+    const result = await this.db
+      .query()
+      .match([
+        node('tool', 'Tool'),
+        relation('out', '', 'key'),
+        node('prop', 'Property', { value: key }),
+      ])
+      .return<{ id: ID<'Tool'> }>('tool.id as id')
+      .first();
+    if (!result) {
+      throw new NotFoundException('Tool not found', 'key');
+    }
+    return result.id;
   }
 
   @OnIndex('schema')
