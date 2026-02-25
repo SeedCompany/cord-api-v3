@@ -8,11 +8,21 @@ module default {
       default := false;
     };
 
+    # Stable machine identifier for known tools (e.g. Rev79)
+    optional key: Tool::Key {
+      constraint exclusive;
+    };
+
     usages := .<tool[is Tool::Usage];
   }
 }
 
 module Tool {
+  # A machine-stable set of known tool keys
+  scalar type Key extending enum<
+    Rev79
+  >;
+
   type Usage extending default::Resource, Mixin::Embedded {
     required tool: default::Tool;
     

@@ -8,6 +8,7 @@ import {
 } from '~/common';
 import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
+import { SecuredToolKey } from './tool-key.enum';
 
 @RegisterResource({ db: e.Tool })
 @ObjectType({
@@ -20,6 +21,12 @@ export class Tool extends Resource {
 
   @Field()
   readonly aiBased: SecuredBoolean;
+
+  @Field({
+    description: 'A stable machine identifier for known tools',
+    nullable: true,
+  })
+  readonly key: SecuredToolKey;
 }
 
 declare module '~/core/resources/map' {
