@@ -37,6 +37,7 @@ import { Privileges } from '../authorization';
 import { fieldRegionSorters } from '../field-region/field-region.repository';
 import { locationSorters } from '../location/location.repository';
 import { partnershipSorters } from '../partnership/partnership.repository';
+import { ToolKey } from '../tools/tool/dto/tool-key.enum';
 import {
   type CreateProject,
   IProject,
@@ -148,6 +149,19 @@ export class ProjectRepository extends CommonRepository {
             ])
             .return('count(engagement) as engagementTotal'),
         )
+        .subQuery('node', (sub) =>
+          sub
+            .optionalMatch([
+              node('node'),
+              relation('out', '', 'uses', ACTIVE),
+              node('', 'ToolUsage'),
+              relation('out', '', 'tool', ACTIVE),
+              node('tool', 'Tool'),
+              relation('out', '', 'key'),
+              node('', 'Property', { value: ToolKey.Rev79 }),
+            ])
+            .return('count(tool) > 0 as usesRev79'),
+        )
         .return<{ dto: UnsecuredDto<Project> }>(
           merge('props', 'changedProps', {
             type: 'node.type',
@@ -160,6 +174,7 @@ export class ProjectRepository extends CommonRepository {
             fieldRegion: 'fieldRegion { .id }',
             owningOrganization: 'organization { .id }',
             engagementTotal: 'engagementTotal',
+            usesRev79: 'usesRev79',
             changeset: 'changeset.id',
             marketingRegionOverride: 'marketingRegionOverride { .id }',
           }).as('dto'),

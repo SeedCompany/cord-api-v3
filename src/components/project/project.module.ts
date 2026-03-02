@@ -9,6 +9,7 @@ import { OrganizationModule } from '../organization/organization.module';
 import { PartnerModule } from '../partner/partner.module';
 import { PartnershipModule } from '../partnership/partnership.module';
 import { ProjectChangeRequestModule } from '../project-change-request/project-change-request.module';
+import { ToolModule } from '../tools/tool.module';
 import { UserModule } from '../user/user.module';
 import { ProjectEngagementConnectionResolver } from './engagement-connection.resolver';
 import { FinancialApproverModule } from './financial-approver/financial-approver.module';
@@ -43,6 +44,7 @@ import { ProjectWorkflowModule } from './workflow/project-workflow.module';
     forwardRef(() => LocationModule),
     forwardRef(() => EngagementModule),
     forwardRef(() => AuthorizationModule),
+    forwardRef(() => ToolModule),
     PartnerModule,
     forwardRef(() => OrganizationModule),
     FinancialApproverModule,
@@ -61,9 +63,7 @@ import { ProjectWorkflowModule } from './workflow/project-workflow.module';
     ...ProjectEngagementIdResolvers,
     ProjectChannels,
     ProjectService,
-    splitDb(ProjectRepository, {
-      gel: ProjectGelRepository,
-    }),
+    splitDb(ProjectRepository, { gel: ProjectGelRepository }),
     ...Object.values(ConcreteRepos),
     ProjectLoader,
     ...Object.values(handlers),

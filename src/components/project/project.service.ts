@@ -47,6 +47,8 @@ import {
   type ProjectChangeRequestListInput,
   type SecuredProjectChangeRequestList,
 } from '../project-change-request/dto';
+import { ToolUsageService } from '../tools/tool-usage/tool-usage.service';
+import { ToolKey } from '../tools/tool/dto/tool-key.enum';
 import { User } from '../user/dto';
 import {
   type CreateProject,
@@ -94,6 +96,7 @@ export class ProjectService {
     private readonly channels: ProjectChannels,
     private readonly repo: ProjectRepository,
     private readonly projectChangeRequests: ProjectChangeRequestService,
+    private readonly toolUsage: ToolUsageService,
   ) {}
 
   async create(input: CreateProject): Promise<UnsecuredDto<Project>> {
@@ -248,81 +251,131 @@ export class ProjectService {
   }
 
   async update(input: UpdateProject, changeset?: ID) {
-    const currentProject = await this.readOneUnsecured(input.id, changeset);
-    if (input.sensitivity && currentProject.type !== ProjectType.Internship)
+    const { usesRev79, ...regularInput } = input;
+    const currentProject = await this.readOneUnsecured(
+      regularInput.id,
+      changeset,
+    );
+    if (
+      regularInput.sensitivity &&
+      currentProject.type !== ProjectType.Internship
+    )
       throw new InputException(
         'Can only set sensitivity on Internship Projects',
         'sensitivity',
       );
+    if (
+      usesRev79 !== undefined &&
+      currentProject.type !== ProjectType.MomentumTranslation
+    ) {
+      throw new InputException('Rev79 is only applicable to Momentum projects');
+    }
 
-    const changes = this.repo.getActualChanges(currentProject, input);
+    const changes = this.repo.getActualChanges(currentProject, regularInput);
     this.privileges
       .for(resolveProjectType(currentProject), currentProject)
       .verifyChanges(changes, { pathPrefix: 'project' });
-    if (Object.keys(changes).length === 0) {
+    if (Object.keys(changes).length === 0 && usesRev79 === undefined) {
       return { project: currentProject };
     }
 
-    ProjectDateRangeException.throwIfInvalid(currentProject, changes);
+    let project = currentProject;
+    let payload: ReturnType<ProjectChannels['publishToAll']> | undefined;
 
-    if (changes.primaryLocation) {
-      try {
-        const location = await this.locationService.readOne(
-          changes.primaryLocation,
-        );
-        if (!location.fundingAccount.value) {
-          throw new InputException(
-            'Cannot connect location without a funding account',
-            'primaryLocation',
+    if (Object.keys(changes).length > 0) {
+      ProjectDateRangeException.throwIfInvalid(currentProject, changes);
+
+      if (changes.primaryLocation) {
+        try {
+          const location = await this.locationService.readOne(
+            changes.primaryLocation,
           );
+          if (!location.fundingAccount.value) {
+            throw new InputException(
+              'Cannot connect location without a funding account',
+              'primaryLocation',
+            );
+          }
+        } catch (e) {
+          if (e instanceof NotFoundException) {
+            throw new NotFoundException(
+              'Primary location not found',
+              'primaryLocation',
+              e,
+            );
+          }
+          throw e;
         }
-      } catch (e) {
-        if (e instanceof NotFoundException) {
-          throw new NotFoundException(
-            'Primary location not found',
-            'primaryLocation',
-            e,
-          );
-        }
-        throw e;
       }
+
+      await this.validateOtherResourceId(
+        changes.fieldRegion,
+        'FieldRegion',
+        'fieldRegion',
+        'Field region not found',
+      );
+
+      const updated = await this.repo.update(
+        currentProject,
+        changes,
+        changeset,
+      );
+
+      const prevMissing = RequiredWhen.calc(IProject, currentProject);
+      const nowMissing = RequiredWhen.calc(IProject, updated);
+      if (
+        nowMissing &&
+        (!prevMissing ||
+          nowMissing.missing.length >= prevMissing.missing.length)
+      ) {
+        throw nowMissing;
+      }
+
+      const event = new ProjectUpdatedHook(updated, currentProject, {
+        id: updated.id,
+        ...changes,
+      });
+      await this.hooks.run(event);
+
+      payload = this.channels.publishToAll('updated', {
+        program: updated.type,
+        project: updated.id,
+        at: changes.modifiedAt!,
+        updated: ProjectUpdate.fromInput(changes),
+        previous: ProjectUpdate.pickPrevious(currentProject, changes),
+      });
+      project = event.updated;
     }
 
-    await this.validateOtherResourceId(
-      changes.fieldRegion,
-      'FieldRegion',
-      'fieldRegion',
-      'Field region not found',
-    );
-
-    const updated = await this.repo.update(currentProject, changes, changeset);
-
-    const prevMissing = RequiredWhen.calc(IProject, currentProject);
-    const nowMissing = RequiredWhen.calc(IProject, updated);
-    if (
-      nowMissing &&
-      (!prevMissing || nowMissing.missing.length >= prevMissing.missing.length)
-    ) {
-      throw nowMissing;
+    if (usesRev79 !== undefined) {
+      await this.toolUsage.setUsageByKey(
+        regularInput.id,
+        ToolKey.Rev79,
+        usesRev79,
+      );
+      if (!usesRev79) {
+        if (currentProject.rev79ProjectId !== null) {
+          await this.repo.update(currentProject, { rev79ProjectId: null });
+        }
+        const engagements = await this.engagementService.listAllByProjectId(
+          regularInput.id,
+        );
+        await Promise.all(
+          engagements
+            .filter((e) => e.rev79CommunityId !== null)
+            .map((e) =>
+              this.engagementService.updateLanguageEngagement({
+                id: e.id,
+                rev79CommunityId: null,
+              }),
+            ),
+        );
+      }
+      // Re-read to pick up the updated usesRev79 value (derived from tool usage)
+      project = await this.readOneUnsecured(regularInput.id);
     }
 
-    const event = new ProjectUpdatedHook(updated, currentProject, {
-      id: updated.id,
-      ...changes,
-    });
-    await this.hooks.run(event);
-
-    const updatedPayload = this.channels.publishToAll('updated', {
-      program: updated.type,
-      project: updated.id,
-      at: changes.modifiedAt!,
-      updated: ProjectUpdate.fromInput(changes),
-      previous: ProjectUpdate.pickPrevious(currentProject, changes),
-    });
-    return {
-      project: event.updated,
-      payload: updatedPayload,
-    };
+    return { project, payload };
   }
 
   async delete(id: ID) {
