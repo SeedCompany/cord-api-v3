@@ -30,6 +30,8 @@ import { BudgetStatus, type SecuredBudget } from '../budget/dto';
 import { EngagementService } from '../engagement';
 import {
   type EngagementListInput,
+  LanguageEngagement,
+  resolveEngagementType,
   type SecuredEngagementList,
 } from '../engagement/dto';
 import { LocationService } from '../location';
@@ -271,10 +273,12 @@ export class ProjectService {
       throw new InputException('Rev79 is only applicable to Momentum projects');
     }
 
+    const projectPrivs = this.privileges.for(
+      resolveProjectType(currentProject),
+      currentProject,
+    );
     const changes = this.repo.getActualChanges(currentProject, regularInput);
-    this.privileges
-      .for(resolveProjectType(currentProject), currentProject)
-      .verifyChanges(changes, { pathPrefix: 'project' });
+    projectPrivs.verifyChanges(changes, { pathPrefix: 'project' });
     if (Object.keys(changes).length === 0 && usesRev79 === undefined) {
       return { project: currentProject };
     }
@@ -348,21 +352,26 @@ export class ProjectService {
     }
 
     if (usesRev79 !== undefined) {
+      projectPrivs.verifyCan('edit');
       await this.toolUsage.setUsageByKey(
         regularInput.id,
         ToolKey.Rev79,
         usesRev79,
       );
       if (!usesRev79) {
-        if (currentProject.rev79ProjectId !== null) {
-          await this.repo.update(currentProject, { rev79ProjectId: null });
+        if (project.rev79ProjectId !== null) {
+          await this.repo.update(project, { rev79ProjectId: null }, changeset);
         }
         const engagements = await this.engagementService.listAllByProjectId(
           regularInput.id,
         );
         await Promise.all(
           engagements
-            .filter((e) => e.rev79CommunityId !== null)
+            .filter(
+              (e) =>
+                resolveEngagementType(e) === LanguageEngagement &&
+                e.rev79CommunityId !== null,
+            )
             .map((e) =>
               this.engagementService.updateLanguageEngagement({
                 id: e.id,
@@ -372,7 +381,7 @@ export class ProjectService {
         );
       }
       // Re-read to pick up the updated usesRev79 value (derived from tool usage)
-      project = await this.readOneUnsecured(regularInput.id);
+      project = await this.readOneUnsecured(regularInput.id, changeset);
     }
 
     return { project, payload };
