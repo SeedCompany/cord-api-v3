@@ -13,6 +13,6 @@ import { ToolService } from './tool.service';
     ToolService,
     splitDb(Neo4jRepository, { gel: GelRepository }),
   ],
-  exports: [ToolService],
+  exports: [ToolService, Neo4jRepository],
 })
 export class ToolCoreModule {}
