@@ -101,6 +101,8 @@ module default {
     marketingRegionOverride: Location;
     
     link rootDirectory: Directory;
+    # External identifier for the Rev79 project mapping (optional)
+    rev79ProjectId: str;
     
     partnerships := .<project[is Partnership];
     primaryPartnership := (

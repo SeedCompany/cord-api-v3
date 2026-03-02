@@ -74,6 +74,9 @@ module default {
     paratextRegistryId: str;
     pnp: File;
     
+    # External identifier for Rev79 community mapping (optional)
+    rev79CommunityId: str;
+    
     sentPrintingDate: cal::local_date {
       annotation deprecated := "Legacy data";
     };
