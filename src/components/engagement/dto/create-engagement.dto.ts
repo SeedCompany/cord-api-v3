@@ -64,6 +64,9 @@ export class CreateLanguageEngagement extends CreateEngagement {
   readonly paratextRegistryId?: string;
 
   @Field({ nullable: true })
+  readonly rev79CommunityId?: string;
+
+  @Field({ nullable: true })
   @Type(() => CreateDefinedFileVersion)
   @ValidateNested()
   readonly pnp?: CreateDefinedFileVersion;
