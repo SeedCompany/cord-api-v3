@@ -23,6 +23,7 @@ import {
 import { Identity } from '~/core/authentication';
 import { type AnyChangesOf } from '~/core/database/changes';
 import { Hooks } from '~/core/hooks';
+import { Transactional } from '~/core/neo4j';
 import { HandleIdLookup } from '~/core/resources';
 import { Privileges } from '../authorization';
 import { BudgetService } from '../budget';
@@ -252,6 +253,7 @@ export class ProjectService {
     return this.secure(unsecured);
   }
 
+  @Transactional()
   async update(input: UpdateProject, changeset?: ID) {
     const { usesRev79, ...regularInput } = input;
     const currentProject = await this.readOneUnsecured(
