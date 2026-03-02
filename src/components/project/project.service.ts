@@ -336,21 +336,7 @@ export class ProjectService {
       ) {
         throw nowMissing;
       }
-
-      const event = new ProjectUpdatedHook(updated, currentProject, {
-        id: updated.id,
-        ...changes,
-      });
-      await this.hooks.run(event);
-
-      payload = this.channels.publishToAll('updated', {
-        program: updated.type,
-        project: updated.id,
-        at: changes.modifiedAt!,
-        updated: ProjectUpdate.fromInput(changes),
-        previous: ProjectUpdate.pickPrevious(currentProject, changes),
-      });
-      project = event.updated;
+      project = updated;
     }
 
     if (usesRev79 !== undefined) {
@@ -362,7 +348,11 @@ export class ProjectService {
       );
       if (!usesRev79) {
         if (project.rev79ProjectId !== null) {
-          await this.repo.update(project, { rev79ProjectId: null }, changeset);
+          project = await this.repo.update(
+            project,
+            { rev79ProjectId: null },
+            changeset,
+          );
         }
         const engagements = await this.engagementService.listAllByProjectId(
           regularInput.id,
@@ -384,6 +374,23 @@ export class ProjectService {
       }
       // Re-read to pick up the updated usesRev79 value (derived from tool usage)
       project = await this.readOneUnsecured(regularInput.id, changeset);
+    }
+
+    if (Object.keys(changes).length > 0) {
+      const event = new ProjectUpdatedHook(project, currentProject, {
+        id: project.id,
+        ...changes,
+      });
+      await this.hooks.run(event);
+
+      payload = this.channels.publishToAll('updated', {
+        program: event.updated.type,
+        project: event.updated.id,
+        at: changes.modifiedAt!,
+        updated: ProjectUpdate.fromInput(changes),
+        previous: ProjectUpdate.pickPrevious(currentProject, changes),
+      });
+      project = event.updated;
     }
 
     return { project, payload };
