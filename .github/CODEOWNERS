@@ -1,22 +1,22 @@
 # GLOBALS
-* 
+* @SeedCompany/Devs
 
 # OPS
-/.github/workflows/ 
-Dockerfile 
+/.github/workflows/ @SeedCompany/Devs
+Dockerfile @SeedCompany/Devs
 
 # Tooling
-tsconfig*
-.eslint*
-/eslint-local-rules.js
-/.prettierrc.yml
-/tools/
-/scripts/
+tsconfig* @SeedCompany/Devs
+.eslint* @SeedCompany/Devs
+/eslint-local-rules.js @SeedCompany/Devs
+/.prettierrc.yml @SeedCompany/Devs
+/tools/ @SeedCompany/Devs
+/scripts/ @SeedCompany/Devs
 
 # API Schema
-*.dto.ts
-*.resolver.ts
+*.dto.ts @SeedCompany/Devs
+*.resolver.ts @SeedCompany/Devs
 
 # Foundation
-/src/common/
-/src/core/
+/src/common/ @SeedCompany/Devs
+/src/core/ @SeedCompany/Devs
