@@ -112,6 +112,9 @@ class Project extends Interfaces {
   @DbUnique()
   readonly name: SecuredString;
 
+  @Field()
+  declare readonly rev79ProjectId: SecuredStringNullable;
+
   @Field({
     description: "The ID for Finance's departments",
   })
@@ -176,6 +179,10 @@ class Project extends Interfaces {
   readonly financialReportPeriod: SecuredReportPeriod;
 
   readonly rootDirectory: Secured<LinkTo<'Directory'> | null>;
+
+  @Field()
+  @Calculated()
+  readonly usesRev79: SecuredBoolean;
 
   /** The current user's membership, if any. */
   readonly membership:

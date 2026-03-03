@@ -55,6 +55,12 @@ const hydrate = e.shape(e.Project, (project) => ({
   stepChangedAt: e.op(project.latestWorkflowEvent.at, '??', project.createdAt),
   owningOrganization: e.cast(e.uuid, null), // Not implemented going forward
   presetInventory: e.bool(false), // Not implemented going forward
+  usesRev79: e.op(
+    'exists',
+    e.select(project.tools, (tu) => ({
+      filter: e.op(tu.tool.key, '=', e.cast(e.Tool.Key, 'Rev79')),
+    })),
+  ),
 }));
 
 export const ConcreteRepos = {
@@ -203,6 +209,17 @@ export class ProjectGelRepository
           project.sensitivity,
           'in',
           e.cast(e.Sensitivity, e.set(...input.sensitivity!)),
+        ),
+      input.usesRev79 != null &&
+        e.op(
+          e.op(
+            'exists',
+            e.select(project.tools, (tu) => ({
+              filter: e.op(tu.tool.key, '=', e.cast(e.Tool.Key, 'Rev79')),
+            })),
+          ),
+          '=',
+          input.usesRev79,
         ),
     ];
   }

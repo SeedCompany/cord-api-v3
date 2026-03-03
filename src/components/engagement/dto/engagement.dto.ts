@@ -199,6 +199,9 @@ export class LanguageEngagement extends Engagement {
   @Field()
   readonly paratextRegistryId: SecuredStringNullable;
 
+  @Field()
+  readonly rev79CommunityId: SecuredStringNullable;
+
   readonly pnp: Secured<LinkTo<'File'> | null>;
 
   @Field()
