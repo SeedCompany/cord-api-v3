@@ -1,7 +1,7 @@
 import { Info, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { type GraphQLResolveInfo } from 'graphql';
 import { ListArg, type Resource } from '~/common';
-import { Loader, type LoaderOf } from '~/core';
+import { Loader, type LoaderOf } from '~/core/data-loader';
 import { Postable } from './dto';
 import { PostListInput, SecuredPostList } from './dto/list-posts.dto';
 import { PostLoader } from './post.loader';

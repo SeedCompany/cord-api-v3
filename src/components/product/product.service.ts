@@ -11,9 +11,10 @@ import {
   ServerException,
   type UnsecuredDto,
 } from '~/common';
-import { HandleIdLookup, ILogger, Logger, ResourceResolver } from '~/core';
 import { compareNullable, ifDiff, isSame } from '~/core/database/changes';
 import { LiveQueryStore } from '~/core/live-query';
+import { ILogger, Logger } from '~/core/logger';
+import { HandleIdLookup, ResourceResolver } from '~/core/resources';
 import { Privileges } from '../authorization';
 import {
   getTotalVerseEquivalents,

@@ -8,8 +8,8 @@ import {
   NotFoundException,
   ServerException,
 } from '~/common';
-import { CommonRepository } from '~/core/database';
-import { ACTIVE, apoc, merge } from '~/core/database/query';
+import { CommonRepository } from '~/core/neo4j';
+import { ACTIVE, apoc, merge } from '~/core/neo4j/query';
 import { type AnyMedia, MediaUserMetadata, resolveMedia } from './media.dto';
 
 @Injectable()

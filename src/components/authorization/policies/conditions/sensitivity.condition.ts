@@ -2,7 +2,7 @@ import { type NonEmptyArray } from '@seedcompany/common';
 import { type Query } from 'cypher-query-builder';
 import { inspect, type InspectOptionsStylized } from 'util';
 import { type ResourceShape, Sensitivity } from '~/common';
-import { matchProjectSens, rankSens } from '~/core/database/query';
+import { matchProjectSens, rankSens } from '~/core/neo4j/query';
 import {
   type AsEdgeQLParams,
   type Condition,

@@ -26,8 +26,8 @@ import {
   type UnsecuredDto,
   viewOfChangeset,
 } from '~/common';
-import { CommonRepository, OnIndex } from '~/core/database';
 import { getChanges } from '~/core/database/changes';
+import { CommonRepository, OnIndex } from '~/core/neo4j';
 import {
   ACTIVE,
   coalesce,
@@ -49,7 +49,7 @@ import {
   sortWith,
   textJoinMaybe,
   whereNotDeletedInChangeset,
-} from '~/core/database/query';
+} from '~/core/neo4j/query';
 import { Privileges } from '../authorization';
 import { FileService } from '../file';
 import { type FileId } from '../file/dto';

@@ -1,6 +1,5 @@
 import { Args, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { asNonEmptyArray } from '@seedcompany/common';
-import { Loader, type LoaderOf } from '@seedcompany/data-loader';
 import {
   CollectionMutationType,
   Grandparent,
@@ -8,6 +7,7 @@ import {
   mapSecuredValue,
   SecuredList,
 } from '~/common';
+import { Loader, type LoaderOf } from '~/core/data-loader';
 import { Privileges } from '../authorization';
 import { FieldRegionLoader } from '../field-region';
 import { SecuredFieldRegion } from '../field-region/dto';

@@ -1,8 +1,5 @@
-import {
-  type DataLoaderOptions,
-  type DataLoaderStrategy,
-} from '@seedcompany/data-loader';
 import { type ID, NotFoundException } from '~/common';
+import type { DataLoaderOptions, DataLoaderStrategy } from '~/core/data-loader';
 
 /**
  * A loader that will load each item one by one.

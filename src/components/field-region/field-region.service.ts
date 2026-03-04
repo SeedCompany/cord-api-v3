@@ -7,8 +7,8 @@ import {
   ServerException,
   type UnsecuredDto,
 } from '~/common';
-import { HandleIdLookup } from '~/core';
 import { Hooks } from '~/core/hooks';
+import { HandleIdLookup } from '~/core/resources';
 import { Privileges } from '../authorization';
 import { UserService } from '../user';
 import {

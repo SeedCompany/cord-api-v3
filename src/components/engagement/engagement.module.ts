@@ -1,5 +1,5 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { splitDb } from '~/core';
+import { splitDb } from '~/core/database';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { CeremonyModule } from '../ceremony/ceremony.module';
 import { FileModule } from '../file/file.module';
@@ -57,7 +57,9 @@ import { EngagementProductConnectionResolver } from './product-connection.resolv
     EngagementRules,
     EngagementService,
     EngagementChannels,
-    splitDb(EngagementRepository, EngagementGelRepository),
+    splitDb(EngagementRepository, {
+      gel: EngagementGelRepository,
+    }),
     EngagementLoader,
     ...Object.values(handlers),
     FixNullMethodologiesMigration,

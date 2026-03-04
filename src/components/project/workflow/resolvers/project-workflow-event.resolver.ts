@@ -1,6 +1,6 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { mapSecuredValue } from '~/common';
-import { Loader, type LoaderOf } from '~/core';
+import { Loader, type LoaderOf } from '~/core/data-loader';
 import { ActorLoader } from '../../../user/actor.loader';
 import { SecuredActor } from '../../../user/dto';
 import { ProjectWorkflowEvent as WorkflowEvent } from '../dto';

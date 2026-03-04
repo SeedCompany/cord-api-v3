@@ -1,7 +1,7 @@
 import { type OnModuleDestroy } from '@nestjs/common';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { BehaviorSubject } from 'rxjs';
-import { AsyncLocalStorageNoContextException } from '../../async-local-storage-no-context.exception';
+import { AsyncLocalStorageNoContextException } from '~/common';
 import { NoSessionException } from './no-session.exception';
 import { type Session } from './session.dto';
 

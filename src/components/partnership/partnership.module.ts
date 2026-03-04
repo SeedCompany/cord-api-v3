@@ -1,5 +1,5 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { splitDb } from '~/core';
+import { splitDb } from '~/core/database';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { BudgetModule } from '../budget/budget.module';
 import { FileModule } from '../file/file.module';
@@ -24,7 +24,9 @@ import { PartnershipService } from './partnership.service';
   providers: [
     PartnershipResolver,
     PartnershipService,
-    splitDb(PartnershipRepository, PartnershipGelRepository),
+    splitDb(PartnershipRepository, {
+      gel: PartnershipGelRepository,
+    }),
     PartnershipLoader,
     PartnershipByProjectAndPartnerLoader,
     ...Object.values(handlers),

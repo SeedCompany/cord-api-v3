@@ -3,6 +3,7 @@ import {
   greaterThan,
   inArray,
   node,
+  not,
   relation,
 } from 'cypher-query-builder';
 import {
@@ -12,10 +13,11 @@ import {
   matchProjectSens,
   path,
   variable,
-} from '~/core/database/query';
+} from '~/core/neo4j/query';
 import { fieldRegionFilters } from '../field-region/field-region.repository';
 import { locationFilters } from '../location/location.repository';
 import { partnershipFilters } from '../partnership/partnership.repository';
+import { ToolKey } from '../tools/tool/dto/tool-key.enum';
 import { ProjectFilters } from './dto';
 import { projectMemberFilters } from './project-member/project-member.repository';
 import { ProjectNameIndex } from './project.repository';
@@ -27,6 +29,18 @@ export const projectFilters = filter.define(() => ProjectFilters, {
   status: filter.stringListProp(),
   step: filter.stringListProp(),
   presetInventory: filter.propVal(),
+  usesRev79: ({ value }) => {
+    const rev79Path = path([
+      node('node'),
+      relation('out', '', 'uses', ACTIVE),
+      node('', 'ToolUsage'),
+      relation('out', '', 'tool', ACTIVE),
+      node('', 'Tool'),
+      relation('out', '', 'key'),
+      node('', 'Property', { value: ToolKey.Rev79 }),
+    ]);
+    return { usesRev79: value ? rev79Path : not(rev79Path) };
+  },
   createdAt: filter.dateTimeBaseNodeProp(),
   modifiedAt: filter.dateTimeProp(),
   mouStart: filter.dateTimeProp(),

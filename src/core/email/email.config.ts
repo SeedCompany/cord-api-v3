@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { type EmailModuleOptions } from '@seedcompany/nestjs-email';
-import { ConfigService } from '~/core/config/config.service';
+import { ConfigService } from '~/core/config';
 
 @Injectable()
 export class EmailConfig {

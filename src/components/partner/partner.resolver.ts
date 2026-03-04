@@ -14,7 +14,7 @@ import {
   loadSecuredIds,
   mapSecuredValue,
 } from '~/common';
-import { Loader, type LoaderOf } from '~/core';
+import { Loader, type LoaderOf } from '~/core/data-loader';
 import { EngagementLoader } from '../engagement';
 import { EngagementListInput, EngagementListOutput } from '../engagement/dto';
 import { FieldRegionLoader } from '../field-region';

@@ -1,6 +1,6 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
-import { splitDb } from '~/core';
+import { splitDb } from '~/core/database';
 import { UserModule } from '../../components/user/user.module';
 import { AuthenticationGelRepository } from './authentication.gel.repository';
 import { AuthenticationRepository } from './authentication.repository';
@@ -36,7 +36,9 @@ import { SessionManager } from './session/session.manager';
     SessionHost,
 
     AuthenticationService,
-    splitDb(AuthenticationRepository, AuthenticationGelRepository),
+    splitDb(AuthenticationRepository, {
+      gel: AuthenticationGelRepository,
+    }),
     JwtService,
     CryptoService,
 

@@ -1,5 +1,6 @@
-import { ILogger, Logger, ResourceLoader } from '~/core';
 import { OnHook } from '~/core/hooks';
+import { ILogger, Logger } from '~/core/logger';
+import { ResourceLoader } from '~/core/resources';
 import { FieldRegionUpdatedHook } from '../../../field-region/hooks/field-region-updated.hook';
 import { ProjectMemberRepository } from '../project-member.repository';
 

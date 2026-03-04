@@ -59,6 +59,9 @@ export abstract class UpdateLanguageEngagement extends UpdateEngagement {
   @Field(() => String, { nullable: true })
   readonly paratextRegistryId?: string | null;
 
+  @Field(() => String, { nullable: true })
+  readonly rev79CommunityId?: string | null;
+
   @Field({ nullable: true })
   @Type(() => CreateDefinedFileVersion)
   @ValidateNested()

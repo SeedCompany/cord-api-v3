@@ -9,7 +9,7 @@ import {
   Role,
   UnauthenticatedException,
 } from '~/common';
-import { ConfigService } from '~/core/config/config.service';
+import { ConfigService } from '~/core/config';
 import { ILogger, Logger } from '~/core/logger';
 import { type IRequest } from '../../http';
 import { type Session } from './session.dto';

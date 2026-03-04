@@ -1,6 +1,6 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { Loader, type LoaderOf } from '~/core';
+import { Loader, type LoaderOf } from '~/core/data-loader';
 import { UserLoader } from '../user';
 import { User } from '../user/dto';
 import { type FileNode, IFileNode, isDirectory } from './dto';

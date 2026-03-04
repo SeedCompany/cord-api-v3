@@ -1,8 +1,8 @@
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { ConfigService } from '~/core';
-import { DatabaseService } from '~/core/database';
+import { ConfigService } from '~/core/config';
 import { OnHook } from '~/core/hooks';
+import { DatabaseService } from '~/core/neo4j';
 import { LanguageEngagement } from '../../engagement/dto';
 import { EngagementCreatedHook } from '../../engagement/hooks';
 import { CeremonyService } from '../ceremony.service';

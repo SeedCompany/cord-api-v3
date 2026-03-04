@@ -1,5 +1,5 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { splitDb } from '~/core';
+import { splitDb } from '~/core/database';
 import { LanguageModule } from '../../language/language.module';
 import { PeriodicReportModule } from '../../periodic-report/periodic-report.module';
 import { ProjectModule } from '../../project/project.module';
@@ -31,10 +31,9 @@ import { ProgressReportWorkflowEventsResolver } from './resolvers/progress-repor
     ProgressReportWorkflowEventLoader,
     ProgressReportWorkflowService,
     ProgressReportWorkflowEventGranter,
-    splitDb(
-      ProgressReportWorkflowRepository,
-      ProgressReportWorkflowGelRepository,
-    ),
+    splitDb(ProgressReportWorkflowRepository, {
+      gel: ProgressReportWorkflowGelRepository,
+    }),
     ProgressReportWorkflowFlowchart,
     ...Object.values(handlers),
   ],

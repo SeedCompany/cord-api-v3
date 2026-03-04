@@ -1,7 +1,7 @@
 import { Args, Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { Loader, type LoaderOf } from '@seedcompany/data-loader';
 import { from, map, merge, mergeMap, type ObservableInput } from 'rxjs';
 import { omitNotFound$, Subscription } from '~/common';
+import { Loader, type LoaderOf } from '~/core/data-loader';
 import { OnHook } from '~/core/hooks';
 import { ResourceLoader } from '~/core/resources';
 import { ObserveProjectMutationHook } from '../hooks';

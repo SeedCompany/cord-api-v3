@@ -12,7 +12,9 @@ import { UnavailabilityService } from './unavailability.service';
   providers: [
     UnavailabilityResolver,
     UnavailabilityService,
-    splitDb(UnavailabilityRepository, UnavailabilityGelRepository),
+    splitDb(UnavailabilityRepository, {
+      gel: UnavailabilityGelRepository,
+    }),
     UnavailabilityLoader,
   ],
   exports: [UnavailabilityService],

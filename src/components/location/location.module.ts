@@ -1,5 +1,5 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { splitDb } from '~/core';
+import { splitDb } from '~/core/database';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { FieldRegionModule } from '../field-region/field-region.module';
 import { FileModule } from '../file/file.module';
@@ -21,7 +21,9 @@ import { DefaultMarketingRegionMigration } from './migrations/default-marketing-
   providers: [
     LocationResolver,
     LocationService,
-    splitDb(LocationRepository, LocationGelRepository),
+    splitDb(LocationRepository, {
+      gel: LocationGelRepository,
+    }),
     LocationLoader,
     DefaultMarketingRegionMigration,
   ],

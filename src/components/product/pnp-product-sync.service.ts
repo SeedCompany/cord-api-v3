@@ -11,7 +11,8 @@ import { stripIndent } from 'common-tags';
 import { difference, uniq } from 'lodash';
 import { DateTime } from 'luxon';
 import { DateInterval, type ID } from '~/common';
-import { ILogger, Logger, ResourceLoader } from '~/core';
+import { ILogger, Logger } from '~/core/logger';
+import { ResourceLoader } from '~/core/resources';
 import { type Downloadable, type FileVersion } from '../file/dto';
 import { NotPnPFile } from '../pnp';
 import {

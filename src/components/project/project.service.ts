@@ -20,16 +20,19 @@ import {
   UnauthorizedException,
   type UnsecuredDto,
 } from '~/common';
-import { HandleIdLookup } from '~/core';
 import { Identity } from '~/core/authentication';
 import { type AnyChangesOf } from '~/core/database/changes';
 import { Hooks } from '~/core/hooks';
+import { Transactional } from '~/core/neo4j';
+import { HandleIdLookup } from '~/core/resources';
 import { Privileges } from '../authorization';
 import { BudgetService } from '../budget';
 import { BudgetStatus, type SecuredBudget } from '../budget/dto';
 import { EngagementService } from '../engagement';
 import {
   type EngagementListInput,
+  LanguageEngagement,
+  resolveEngagementType,
   type SecuredEngagementList,
 } from '../engagement/dto';
 import { LocationService } from '../location';
@@ -47,6 +50,8 @@ import {
   type ProjectChangeRequestListInput,
   type SecuredProjectChangeRequestList,
 } from '../project-change-request/dto';
+import { ToolUsageService } from '../tools/tool-usage/tool-usage.service';
+import { ToolKey } from '../tools/tool/dto/tool-key.enum';
 import { User } from '../user/dto';
 import {
   type CreateProject,
@@ -94,6 +99,7 @@ export class ProjectService {
     private readonly channels: ProjectChannels,
     private readonly repo: ProjectRepository,
     private readonly projectChangeRequests: ProjectChangeRequestService,
+    private readonly toolUsage: ToolUsageService,
   ) {}
 
   async create(input: CreateProject): Promise<UnsecuredDto<Project>> {
@@ -247,82 +253,147 @@ export class ProjectService {
     return this.secure(unsecured);
   }
 
+  @Transactional()
   async update(input: UpdateProject, changeset?: ID) {
-    const currentProject = await this.readOneUnsecured(input.id, changeset);
-    if (input.sensitivity && currentProject.type !== ProjectType.Internship)
+    const { usesRev79, ...regularInput } = input;
+    const currentProject = await this.readOneUnsecured(
+      regularInput.id,
+      changeset,
+    );
+    if (
+      regularInput.sensitivity &&
+      currentProject.type !== ProjectType.Internship
+    )
       throw new InputException(
         'Can only set sensitivity on Internship Projects',
         'sensitivity',
       );
+    if (
+      usesRev79 !== undefined &&
+      currentProject.type !== ProjectType.MomentumTranslation
+    ) {
+      throw new InputException('Rev79 is only applicable to Momentum projects');
+    }
 
-    const changes = this.repo.getActualChanges(currentProject, input);
-    this.privileges
-      .for(resolveProjectType(currentProject), currentProject)
-      .verifyChanges(changes, { pathPrefix: 'project' });
-    if (Object.keys(changes).length === 0) {
+    const projectPrivs = this.privileges.for(
+      resolveProjectType(currentProject),
+      currentProject,
+    );
+    const changes = this.repo.getActualChanges(currentProject, regularInput);
+    projectPrivs.verifyChanges(changes, { pathPrefix: 'project' });
+    if (Object.keys(changes).length === 0 && usesRev79 === undefined) {
       return { project: currentProject };
     }
 
-    ProjectDateRangeException.throwIfInvalid(currentProject, changes);
+    let project = currentProject;
+    let payload: ReturnType<ProjectChannels['publishToAll']> | undefined;
 
-    if (changes.primaryLocation) {
-      try {
-        const location = await this.locationService.readOne(
-          changes.primaryLocation,
-        );
-        if (!location.fundingAccount.value) {
-          throw new InputException(
-            'Cannot connect location without a funding account',
-            'primaryLocation',
+    if (Object.keys(changes).length > 0) {
+      ProjectDateRangeException.throwIfInvalid(currentProject, changes);
+
+      if (changes.primaryLocation) {
+        try {
+          const location = await this.locationService.readOne(
+            changes.primaryLocation,
           );
+          if (!location.fundingAccount.value) {
+            throw new InputException(
+              'Cannot connect location without a funding account',
+              'primaryLocation',
+            );
+          }
+        } catch (e) {
+          if (e instanceof NotFoundException) {
+            throw new NotFoundException(
+              'Primary location not found',
+              'primaryLocation',
+              e,
+            );
+          }
+          throw e;
         }
-      } catch (e) {
-        if (e instanceof NotFoundException) {
-          throw new NotFoundException(
-            'Primary location not found',
-            'primaryLocation',
-            e,
-          );
-        }
-        throw e;
       }
+
+      await this.validateOtherResourceId(
+        changes.fieldRegion,
+        'FieldRegion',
+        'fieldRegion',
+        'Field region not found',
+      );
+
+      const updated = await this.repo.update(
+        currentProject,
+        changes,
+        changeset,
+      );
+
+      const prevMissing = RequiredWhen.calc(IProject, currentProject);
+      const nowMissing = RequiredWhen.calc(IProject, updated);
+      if (
+        nowMissing &&
+        (!prevMissing ||
+          nowMissing.missing.length >= prevMissing.missing.length)
+      ) {
+        throw nowMissing;
+      }
+      project = updated;
     }
 
-    await this.validateOtherResourceId(
-      changes.fieldRegion,
-      'FieldRegion',
-      'fieldRegion',
-      'Field region not found',
-    );
-
-    const updated = await this.repo.update(currentProject, changes, changeset);
-
-    const prevMissing = RequiredWhen.calc(IProject, currentProject);
-    const nowMissing = RequiredWhen.calc(IProject, updated);
-    if (
-      nowMissing &&
-      (!prevMissing || nowMissing.missing.length >= prevMissing.missing.length)
-    ) {
-      throw nowMissing;
+    if (usesRev79 !== undefined) {
+      projectPrivs.verifyCan('edit');
+      await this.toolUsage.setUsageByKey(
+        regularInput.id,
+        ToolKey.Rev79,
+        usesRev79,
+      );
+      if (!usesRev79) {
+        if (project.rev79ProjectId !== null) {
+          project = await this.repo.update(
+            project,
+            { rev79ProjectId: null },
+            changeset,
+          );
+        }
+        const engagements = await this.engagementService.listAllByProjectId(
+          regularInput.id,
+        );
+        await Promise.all(
+          engagements
+            .filter(
+              (e) =>
+                resolveEngagementType(e) === LanguageEngagement &&
+                e.rev79CommunityId !== null,
+            )
+            .map((e) =>
+              this.engagementService.updateLanguageEngagement({
+                id: e.id,
+                rev79CommunityId: null,
+              }),
+            ),
+        );
+      }
+      // Re-read to pick up the updated usesRev79 value (derived from tool usage)
+      project = await this.readOneUnsecured(regularInput.id, changeset);
     }
 
-    const event = new ProjectUpdatedHook(updated, currentProject, {
-      id: updated.id,
-      ...changes,
-    });
-    await this.hooks.run(event);
+    if (Object.keys(changes).length > 0) {
+      const event = new ProjectUpdatedHook(project, currentProject, {
+        id: project.id,
+        ...changes,
+      });
+      await this.hooks.run(event);
 
-    const updatedPayload = this.channels.publishToAll('updated', {
-      program: updated.type,
-      project: updated.id,
-      at: changes.modifiedAt!,
-      updated: ProjectUpdate.fromInput(changes),
-      previous: ProjectUpdate.pickPrevious(currentProject, changes),
-    });
-    return {
-      project: event.updated,
-      payload: updatedPayload,
-    };
+      payload = this.channels.publishToAll('updated', {
+        program: event.updated.type,
+        project: event.updated.id,
+        at: changes.modifiedAt!,
+        updated: ProjectUpdate.fromInput(changes),
+        previous: ProjectUpdate.pickPrevious(currentProject, changes),
+      });
+      project = event.updated;
+    }
+
+    return { project, payload };
   }
 
   async delete(id: ID) {

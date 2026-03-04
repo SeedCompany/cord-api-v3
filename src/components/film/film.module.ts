@@ -1,5 +1,5 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { splitDb } from '~/core';
+import { splitDb } from '~/core/database';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { ScriptureModule } from '../scripture';
 import { FilmGelRepository } from './film.gel.repository';
@@ -13,7 +13,9 @@ import { FilmService } from './film.service';
   providers: [
     FilmResolver,
     FilmService,
-    splitDb(FilmRepository, FilmGelRepository),
+    splitDb(FilmRepository, {
+      gel: FilmGelRepository,
+    }),
     FilmLoader,
   ],
   exports: [FilmService],

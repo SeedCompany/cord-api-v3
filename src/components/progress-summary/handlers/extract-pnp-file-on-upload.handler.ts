@@ -1,5 +1,5 @@
-import { ILogger, Logger } from '~/core';
 import { OnHook } from '~/core/hooks';
+import { ILogger, Logger } from '~/core/logger';
 import { ReportType } from '../../periodic-report/dto';
 import { PeriodicReportUploadedHook } from '../../periodic-report/hooks';
 import { SummaryPeriod } from '../dto';

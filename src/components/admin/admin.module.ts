@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { splitDb } from '~/core';
+import { splitDb } from '~/core/database';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { UserModule } from '../user/user.module';
 import { AdminGelRepository } from './admin.gel.repository';
@@ -12,13 +12,12 @@ import { NormalizeCreatorMigration } from './migrations/normalize-creator.migrat
 @Module({
   imports: [AuthorizationModule, UserModule],
   providers: [
-    splitDb(AdminService, AdminGelService),
-    splitDb(
-      AdminRepository,
+    splitDb(AdminService, { gel: AdminGelService }),
+    splitDb(AdminRepository, {
       // @ts-expect-error types don't have to match since the service is split
       // and each will only use their own.
-      AdminGelRepository,
-    ),
+      gel: AdminGelRepository,
+    }),
     NormalizeCreatorMigration,
     NormalizeCreatorBaseNodeMigration,
   ],

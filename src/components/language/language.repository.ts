@@ -19,7 +19,7 @@ import {
   ServerException,
   type UnsecuredDto,
 } from '~/common';
-import { DtoRepository, OnIndex, UniquenessError } from '~/core/database';
+import { DtoRepository, OnIndex, UniquenessError } from '~/core/neo4j';
 import {
   ACTIVE,
   any,
@@ -43,7 +43,7 @@ import {
   rankSens,
   sortWith,
   variable,
-} from '~/core/database/query';
+} from '~/core/neo4j/query';
 import { ProjectStatus } from '../project/dto';
 import {
   type CreateLanguage,

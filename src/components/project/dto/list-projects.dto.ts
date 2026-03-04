@@ -118,6 +118,11 @@ export abstract class ProjectFilters {
   })
   readonly presetInventory?: boolean;
 
+  @OptionalField({
+    description: 'Only projects that are (not) using Rev79',
+  })
+  readonly usesRev79?: boolean;
+
   readonly languageId?: ID;
 
   readonly partnerId?: ID;

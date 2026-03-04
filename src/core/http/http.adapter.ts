@@ -15,7 +15,7 @@ import {
 import type { FastifyInstance, HTTPMethods, RouteOptions } from 'fastify';
 import rawBody from 'fastify-raw-body';
 import * as zlib from 'node:zlib';
-import { type ConfigService } from '~/core/config/config.service';
+import { type ConfigService } from '~/core/config';
 import { MetadataDiscovery } from '~/core/discovery';
 import {
   GlobalHttpHook,

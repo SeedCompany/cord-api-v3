@@ -1,7 +1,7 @@
 import { node, relation } from 'cypher-query-builder';
 import { type ID } from '~/common';
-import { BaseMigration, Migration } from '~/core/database';
-import { ACTIVE } from '~/core/database/query';
+import { BaseMigration, Migration } from '~/core/neo4j';
+import { ACTIVE } from '~/core/neo4j/query';
 import { getTotalVerseEquivalents } from '../../scripture';
 import { ProductService } from '../product.service';
 

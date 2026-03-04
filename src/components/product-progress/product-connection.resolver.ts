@@ -1,6 +1,6 @@
 import { Args, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { type ID, IdArg } from '~/common';
-import { Loader, type LoaderOf } from '~/core';
+import { Loader, type LoaderOf } from '~/core/data-loader';
 import { Product } from '../product/dto';
 import { ProductProgress, VariantProgressArg } from './dto';
 import { ProductProgressByProductLoader } from './product-progress-by-product.loader';

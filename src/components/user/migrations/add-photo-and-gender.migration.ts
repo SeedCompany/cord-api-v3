@@ -1,12 +1,12 @@
 import { node, relation } from 'cypher-query-builder';
-import { BaseMigration, Migration } from '~/core/database';
+import { BaseMigration, Migration } from '~/core/neo4j';
 import {
   ACTIVE,
   createNode,
   createRelationships,
   randomUUID,
   variable,
-} from '~/core/database/query';
+} from '~/core/neo4j/query';
 import { File } from '../../file/dto';
 import { User } from '../dto';
 

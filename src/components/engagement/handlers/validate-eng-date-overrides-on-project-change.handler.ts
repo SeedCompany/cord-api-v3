@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { DateOverrideConflictException } from '~/common';
-import { ResourcesHost } from '~/core';
 import { OnHook } from '~/core/hooks';
+import { ResourcesHost } from '~/core/resources';
 import { ProjectUpdatedHook } from '../../project/hooks';
 import { EngagementService } from '../engagement.service';
 

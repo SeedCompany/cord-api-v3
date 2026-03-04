@@ -1,5 +1,5 @@
 import { Role } from '~/common';
-import { ConfigService } from '~/core';
+import { ConfigService } from '~/core/config';
 import { type TransitionNotifier } from '../../../workflow/transitions/notifiers';
 import { FinancialApproverRepository } from '../../financial-approver';
 import { ProjectMemberRepository } from '../../project-member/project-member.repository';

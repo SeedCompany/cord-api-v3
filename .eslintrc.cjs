@@ -110,6 +110,11 @@ const restrictedImports = [
     replacement: { path: '~/graphql' },
   },
   {
+    path: '@seedcompany/data-loader',
+    replacement: { path: '~/core/data-loader' },
+    message: 'Reference from core instead to keep loose coupling',
+  },
+  {
     path: '@seedcompany/nest/hooks',
     replacement: { path: '~/core/hooks' },
     message: 'Reference from core instead to keep loose coupling',
@@ -242,7 +247,7 @@ const config = {
   },
   overrides: [
     {
-      files: './src/core/database/query-augmentation/*.ts',
+      files: './src/core/neo4j/query-augmentation/*.ts',
       rules: {
         // This is enforced to treat functions arguments as contravariant instead of bivariant.
         // This doesn't matter here as this class won't be overridden.

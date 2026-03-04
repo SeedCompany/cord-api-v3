@@ -2,8 +2,8 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, type Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { type ID, type UnsecuredDto } from '~/common';
-import { DtoRepository } from '~/core/database';
 import { type ChangesOf } from '~/core/database/changes';
+import { DtoRepository } from '~/core/neo4j';
 import {
   ACTIVE,
   createNode,
@@ -14,7 +14,7 @@ import {
   paginate,
   sorting,
   variable,
-} from '~/core/database/query';
+} from '~/core/neo4j/query';
 import { CommentThreadRepository } from './comment-thread.repository';
 import {
   Comment,

@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { node } from 'cypher-query-builder';
 import { type Role } from '~/common';
-import { DatabaseService } from '~/core/database';
-import { merge } from '~/core/database/query';
+import { DatabaseService } from '~/core/neo4j';
+import { merge } from '~/core/neo4j/query';
 import { type SystemAgent } from './dto';
 import { SystemAgentRepository } from './system-agent.repository';
 

@@ -1,7 +1,7 @@
 import { mapEntries } from '@seedcompany/common';
 import { asNonEmpty, DateOverrideConflictException } from '~/common';
-import { ResourceLoader } from '~/core';
 import { OnHook } from '~/core/hooks';
+import { ResourceLoader } from '~/core/resources';
 import { OrganizationLoader } from '../../organization';
 import { ProjectUpdatedHook } from '../../project/hooks';
 import { PartnershipService } from '../partnership.service';

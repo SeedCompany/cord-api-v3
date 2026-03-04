@@ -1,5 +1,5 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { splitDb2 } from '~/core';
+import { splitDb } from '~/core/database';
 import { ProductModule } from '../../product/product.module';
 import { PlanningExtractionResultSaver } from './planning-extraction-result-saver';
 import { PnpExtractionResultLanguageEngagementConnectionResolver } from './pnp-extraction-result-language-engagement-connection.resolver';
@@ -19,8 +19,7 @@ import { SaveProgressExtractionResultHandler } from './save-progress-extraction-
     PnpExtractionResultLoader,
     PlanningExtractionResultSaver,
     SaveProgressExtractionResultHandler,
-    splitDb2(PnpExtractionResultRepository, {
-      gel: PnpExtractionResultRepository,
+    splitDb(PnpExtractionResultRepository, {
       neo4j: PnpExtractionResultNeo4jRepository,
     }),
   ],

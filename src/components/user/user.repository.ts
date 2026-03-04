@@ -12,7 +12,7 @@ import {
   type UnsecuredDto,
 } from '~/common';
 import { Identity } from '~/core/authentication';
-import { DtoRepository, OnIndex, UniquenessError } from '~/core/database';
+import { DtoRepository, OnIndex, UniquenessError } from '~/core/neo4j';
 import {
   ACTIVE,
   createNode,
@@ -30,7 +30,7 @@ import {
   property,
   type SortCol,
   sortWith,
-} from '~/core/database/query';
+} from '~/core/neo4j/query';
 import { FileService } from '../file';
 import { type FileId } from '../file/dto';
 import {

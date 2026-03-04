@@ -1,8 +1,8 @@
 import { Info, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { Fields, IsOnlyId, Resource } from '~/common';
-import { ResourceLoader, ResourceResolver } from '~/core';
 import { Identity } from '~/core/authentication';
+import { ResourceLoader, ResourceResolver } from '~/core/resources';
 import { ChangesetResolver } from './changeset.resolver';
 import { Changeset, ChangesetAware, ChangesetDiff } from './dto';
 

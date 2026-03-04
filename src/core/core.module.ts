@@ -1,5 +1,6 @@
 import { Global, Module } from '@nestjs/common';
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
+// eslint-disable-next-line @seedcompany/no-restricted-imports
 import { DataLoaderModule } from '@seedcompany/data-loader';
 import { DiscoveryModule } from '@seedcompany/nest/discovery';
 // eslint-disable-next-line @seedcompany/no-restricted-imports
@@ -13,7 +14,6 @@ import { CliModule } from './cli/cli.module';
 import { ConfigModule } from './config/config.module';
 import { CoreController } from './core.controller';
 import { DataLoaderConfig } from './data-loader/data-loader.config';
-import { DatabaseModule } from './database/database.module';
 import { EmailConfig } from './email/email.config';
 import { ExceptionFilter } from './exception/exception.filter';
 import { ExceptionNormalizer } from './exception/exception.normalizer';
@@ -21,8 +21,12 @@ import { GelModule } from './gel/gel.module';
 import { GraphqlModule } from './graphql';
 import { HttpModule } from './http';
 import { LiveQueryModule } from './live-query/live-query.module';
+import { LockerModule } from './locker/locker.module';
+import { DatabaseModule } from './neo4j/database.module';
+import { QueueModule } from './queue/queue.module';
 import { ResourceModule } from './resources/resource.module';
 import { ScalarProviders } from './scalars.resolver';
+import { ScheduleModule } from './schedule/schedule.module';
 import { ShutdownHookProvider } from './shutdown.hook';
 import { TimeoutInterceptor } from './timeout.interceptor';
 import { TracingModule } from './tracing';
@@ -51,6 +55,9 @@ import { WebhooksModule } from './webhooks/webhooks.module';
     ValidationModule,
     AuthenticationModule,
     WebhooksModule,
+    QueueModule,
+    LockerModule,
+    ScheduleModule,
   ],
   providers: [
     AwsS3Factory,
@@ -83,6 +90,9 @@ import { WebhooksModule } from './webhooks/webhooks.module';
     ValidationModule,
     AuthenticationModule,
     WebhooksModule,
+    QueueModule,
+    LockerModule,
+    ScheduleModule,
   ],
 })
 export class CoreModule {}

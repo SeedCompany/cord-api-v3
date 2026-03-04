@@ -6,7 +6,7 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import { type ID, IdArg } from '~/common';
-import { Loader, type LoaderOf } from '~/core';
+import { Loader, type LoaderOf } from '~/core/data-loader';
 import { Privileges } from '../../../authorization';
 import { Media } from '../../../file/media/media.dto';
 import { MediaLoader } from '../../../file/media/media.loader';

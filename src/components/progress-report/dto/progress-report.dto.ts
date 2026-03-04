@@ -7,9 +7,9 @@ import {
   type ResourceRelationsShape,
   SecuredProperty,
 } from '~/common';
-import { sortingForEnumIndex } from '~/core/database/query';
-import { type BaseNode } from '~/core/database/results';
 import { e } from '~/core/gel';
+import { sortingForEnumIndex } from '~/core/neo4j/query';
+import { type BaseNode } from '~/core/neo4j/results';
 import { RegisterResource } from '~/core/resources';
 import { Commentable } from '../../comments/dto';
 import { LanguageEngagement } from '../../engagement/dto';

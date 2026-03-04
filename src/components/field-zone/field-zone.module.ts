@@ -1,5 +1,5 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { splitDb } from '~/core';
+import { splitDb } from '~/core/database';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { UserModule } from '../user/user.module';
 import { FieldZoneGelRepository } from './field-zone.gel.repository';
@@ -17,7 +17,9 @@ import { RestrictZoneDirectorRemovalHandler } from './handlers/restrict-zone-dir
   providers: [
     FieldZoneResolver,
     FieldZoneService,
-    splitDb(FieldZoneRepository, FieldZoneGelRepository),
+    splitDb(FieldZoneRepository, {
+      gel: FieldZoneGelRepository,
+    }),
     FieldZoneLoader,
     RestrictZoneDirectorRemovalHandler,
   ],

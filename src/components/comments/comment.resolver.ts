@@ -6,7 +6,7 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import { type ID, IdArg } from '~/common';
-import { Loader, type LoaderOf } from '~/core';
+import { Loader, type LoaderOf } from '~/core/data-loader';
 import { UserLoader } from '../user';
 import { User } from '../user/dto';
 import { CommentThreadLoader as ThreadLoader } from './comment-thread.loader';

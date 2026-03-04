@@ -1,4 +1,5 @@
 export * from './exception';
+export * from './async-local-storage-no-context.exception';
 export * from './input.exception';
 export * from './range.exception';
 export * from './duplicate.exception';

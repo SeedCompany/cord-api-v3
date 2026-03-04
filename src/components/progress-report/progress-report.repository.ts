@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { node, type Query, relation } from 'cypher-query-builder';
 import { type UnsecuredDto } from '~/common';
-import { DtoRepository } from '~/core/database';
+import { DtoRepository } from '~/core/neo4j';
 import {
   ACTIVE,
   filter,
@@ -11,7 +11,7 @@ import {
   paginate,
   sortWith,
   variable,
-} from '~/core/database/query';
+} from '~/core/neo4j/query';
 import { engagementFilters } from '../engagement/engagement.repository';
 import { progressReportSorters } from '../periodic-report/periodic-report.repository';
 import { pnpExtractionResultFilters } from '../pnp/extraction-result/pnp-extraction-result.neo4j.repository';

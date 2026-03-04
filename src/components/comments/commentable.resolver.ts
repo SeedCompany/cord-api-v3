@@ -8,8 +8,8 @@ import {
   type Resource,
   SecuredList,
 } from '~/common';
-import { Loader, type LoaderOf } from '~/core';
 import { Identity } from '~/core/authentication';
+import { Loader, type LoaderOf } from '~/core/data-loader';
 import { CommentThreadLoader } from './comment-thread.loader';
 import { CommentService } from './comment.service';
 import { Commentable, CommentThreadList, CommentThreadListInput } from './dto';

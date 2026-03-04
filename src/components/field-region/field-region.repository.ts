@@ -9,7 +9,7 @@ import {
   SecuredList,
   type UnsecuredDto,
 } from '~/common';
-import { DtoRepository } from '~/core/database';
+import { DtoRepository } from '~/core/neo4j';
 import {
   ACTIVE,
   createNode,
@@ -20,7 +20,7 @@ import {
   merge,
   paginate,
   sortWith,
-} from '~/core/database/query';
+} from '~/core/neo4j/query';
 import {
   fieldZoneFilters,
   fieldZoneSorters,

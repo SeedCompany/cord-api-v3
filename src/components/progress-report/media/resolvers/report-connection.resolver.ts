@@ -1,6 +1,6 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { type ID, ListArg, NotFoundException } from '~/common';
-import { Loader, type LoaderOf } from '~/core';
+import { Loader, type LoaderOf } from '~/core/data-loader';
 import { ProgressReport } from '../../dto';
 import {
   ProgressReportMediaListInput as ListArgs,

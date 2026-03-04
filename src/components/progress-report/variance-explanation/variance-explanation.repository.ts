@@ -1,14 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { inArray, node, type Query, relation } from 'cypher-query-builder';
 import { type ID, type UnsecuredDto } from '~/common';
-import { DtoRepository } from '~/core/database';
+import { DtoRepository } from '~/core/neo4j';
 import {
   ACTIVE,
   type ExpressionInput,
   matchProps,
   merge,
   updateProperties,
-} from '~/core/database/query';
+} from '~/core/neo4j/query';
 import {
   type ExplainProgressVariance as ExplainVariance,
   ProgressReportVarianceExplanation as VarianceExplanation,

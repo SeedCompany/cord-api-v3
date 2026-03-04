@@ -17,7 +17,7 @@ import {
   type ResourceShape,
   type UnsecuredDto,
 } from '~/common';
-import { CommonRepository } from '~/core/database';
+import { CommonRepository } from '~/core/neo4j';
 import {
   apoc,
   createRelationships,
@@ -26,7 +26,7 @@ import {
   merge,
   paginate,
   variable,
-} from '~/core/database/query';
+} from '~/core/neo4j/query';
 import {
   type MarkNotificationReadArgs,
   Notification,

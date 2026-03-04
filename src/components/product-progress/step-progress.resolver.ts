@@ -2,7 +2,7 @@ import { Args, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { simpleSwitch } from '@seedcompany/common';
 import { stripIndent } from 'common-tags';
 import { type ID, mapSecuredValue, SecuredFloatNullable } from '~/common';
-import { Loader, type LoaderOf } from '~/core';
+import { Loader, type LoaderOf } from '~/core/data-loader';
 import { ProductLoader } from '../product';
 import { ProgressFormat, StepProgress } from './dto';
 

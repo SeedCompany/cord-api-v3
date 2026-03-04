@@ -8,7 +8,7 @@ import {
   ReadAfterCreationFailed,
   type UnsecuredDto,
 } from '~/common';
-import { DtoRepository, OnIndex } from '~/core/database';
+import { DtoRepository, OnIndex } from '~/core/neo4j';
 import {
   ACTIVE,
   createNode,
@@ -23,7 +23,7 @@ import {
   paginate,
   rankSens,
   sortWith,
-} from '~/core/database/query';
+} from '~/core/neo4j/query';
 import {
   type CreateOrganization,
   Organization,

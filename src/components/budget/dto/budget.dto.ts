@@ -10,8 +10,8 @@ import {
   Sensitivity,
   SensitivityField,
 } from '~/common';
-import { type BaseNode } from '~/core/database/results';
 import { e } from '~/core/gel';
+import { type BaseNode } from '~/core/neo4j/results';
 import { RegisterResource } from '~/core/resources';
 import { ChangesetAware } from '../../changeset/dto';
 import { type DefinedFile } from '../../file/dto';

@@ -12,10 +12,10 @@ import {
   unwrapSecured,
   type UnwrapSecured,
 } from '~/common';
-import { type LinkTo } from '~/core';
+import { type LinkTo } from '~/core/resources';
 import { type CreateDefinedFileVersion } from '../../components/file/dto';
-import { type Variable } from './query';
-import { type NativeDbValue } from './results';
+import { type Variable } from '../neo4j/query';
+import { type NativeDbValue } from '../neo4j/results';
 
 /**
  * Specify this on a property to override the key & value type for ChangesOf on

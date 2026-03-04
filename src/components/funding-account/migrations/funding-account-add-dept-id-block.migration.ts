@@ -1,6 +1,6 @@
 import { node, relation } from 'cypher-query-builder';
-import { BaseMigration, Migration } from '~/core/database';
-import { ACTIVE, apoc, variable } from '~/core/database/query';
+import { BaseMigration, Migration } from '~/core/neo4j';
+import { ACTIVE, apoc, variable } from '~/core/neo4j/query';
 import { ProjectType as Program } from '../../project/dto/project-type.enum';
 
 @Migration('2025-04-02T11:00:00')

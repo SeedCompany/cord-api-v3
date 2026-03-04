@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
+import { randomUUID } from 'node:crypto';
 import { ILogger, Logger } from '~/core/logger';
 import { SkipLogging } from '../../exception/skip-logging.symbol';
+import { WebhookDeliveryQueue } from '../delivery/webhook-delivery.queue';
 import { type Webhook, type WebhookTrigger } from '../dto';
 import { WebhookError, WebhookExecutor } from '../executor/webhook.executor';
-import { WebhookSender } from '../webhook.sender';
 import { WebhookChannelRepository } from './webhook-channel.repository';
 
 @Injectable()
@@ -11,7 +12,7 @@ export class WebhookChannelService {
   constructor(
     private readonly repo: WebhookChannelRepository,
     private readonly executor: WebhookExecutor,
-    private readonly sender: WebhookSender,
+    private readonly deliveryQueue: WebhookDeliveryQueue,
     @Logger('webhooks') private readonly logger: ILogger,
   ) {}
 
@@ -27,12 +28,18 @@ export class WebhookChannelService {
     }
     await this.markInvalid(webhook, error);
     // emit an error payload to the webhook, so it is notified
-    await this.sender.push({
-      webhook,
-      payload: { errors: error.errors },
-      trigger,
-      fatal: true,
-    });
+    await this.deliveryQueue.add(
+      'invalid-on-recalculate',
+      {
+        webhook,
+        payload: { errors: error.errors },
+        trigger,
+        fatal: true,
+      },
+      {
+        jobId: randomUUID(),
+      },
+    );
   }
 
   async calculateOnUpsert(webhook: Webhook) {

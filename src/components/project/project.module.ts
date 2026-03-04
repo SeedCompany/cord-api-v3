@@ -1,5 +1,5 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { splitDb } from '~/core';
+import { splitDb } from '~/core/database';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { BudgetModule } from '../budget/budget.module';
 import { EngagementModule } from '../engagement/engagement.module';
@@ -9,6 +9,7 @@ import { OrganizationModule } from '../organization/organization.module';
 import { PartnerModule } from '../partner/partner.module';
 import { PartnershipModule } from '../partnership/partnership.module';
 import { ProjectChangeRequestModule } from '../project-change-request/project-change-request.module';
+import { ToolModule } from '../tools/tool.module';
 import { UserModule } from '../user/user.module';
 import { ProjectEngagementConnectionResolver } from './engagement-connection.resolver';
 import { FinancialApproverModule } from './financial-approver/financial-approver.module';
@@ -43,6 +44,7 @@ import { ProjectWorkflowModule } from './workflow/project-workflow.module';
     forwardRef(() => LocationModule),
     forwardRef(() => EngagementModule),
     forwardRef(() => AuthorizationModule),
+    forwardRef(() => ToolModule),
     PartnerModule,
     forwardRef(() => OrganizationModule),
     FinancialApproverModule,
@@ -61,7 +63,7 @@ import { ProjectWorkflowModule } from './workflow/project-workflow.module';
     ...ProjectEngagementIdResolvers,
     ProjectChannels,
     ProjectService,
-    splitDb(ProjectRepository, ProjectGelRepository),
+    splitDb(ProjectRepository, { gel: ProjectGelRepository }),
     ...Object.values(ConcreteRepos),
     ProjectLoader,
     ...Object.values(handlers),

@@ -77,3 +77,10 @@ export abstract class SecuredBooleanNullable extends SecuredProperty<
 >(GraphQLBoolean, {
   nullable: true,
 }) {}
+
+@ObjectType({
+  description: SecuredPropertyList.descriptionFor('tags'),
+})
+export abstract class SecuredTags extends SecuredPropertyList<string>(
+  GraphQLString,
+) {}

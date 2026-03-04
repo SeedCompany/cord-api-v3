@@ -13,8 +13,8 @@ import { stripIndent } from 'common-tags';
 import { startCase } from 'lodash';
 import { DateTime } from 'luxon';
 import { Fields, type ID, IdArg, IsOnlyId, ListArg } from '~/common';
-import { Loader, type LoaderOf } from '~/core';
 import { Identity } from '~/core/authentication';
+import { Loader, type LoaderOf } from '~/core/data-loader';
 import { type IdsAndView, IdsAndViewArg } from '../changeset/dto';
 import { ProductLoader, ProductService } from '../product';
 import {
@@ -224,8 +224,10 @@ export class ProductResolver {
   })
   async createDirectScriptureProduct(
     @Args('input') input: CreateDirectScriptureProduct,
+    @Loader(ProductLoader) loader: LoaderOf<ProductLoader>,
   ): Promise<DirectScriptureProductCreated> {
     const product = await this.productService.create(input);
+    loader.prime(product.id, product);
     return {
       __typename: 'DirectScriptureProductCreated',
       projectId: product.project,
@@ -241,8 +243,10 @@ export class ProductResolver {
   })
   async createDerivativeScriptureProduct(
     @Args('input') input: CreateDerivativeScriptureProduct,
+    @Loader(ProductLoader) loader: LoaderOf<ProductLoader>,
   ): Promise<DerivativeScriptureProductCreated> {
     const product = await this.productService.create(input);
+    loader.prime(product.id, product);
     return {
       __typename: 'DerivativeScriptureProductCreated',
       projectId: product.project,
@@ -258,8 +262,10 @@ export class ProductResolver {
   })
   async createOtherProduct(
     @Args('input') input: CreateOtherProduct,
+    @Loader(ProductLoader) loader: LoaderOf<ProductLoader>,
   ): Promise<OtherProductCreated> {
     const product = await this.productService.create(input);
+    loader.prime(product.id, product);
     return {
       __typename: 'OtherProductCreated',
       projectId: product.project,
@@ -275,6 +281,7 @@ export class ProductResolver {
   })
   async updateDirectScriptureProduct(
     @Args('input') input: UpdateDirectScriptureProduct,
+    @Loader(ProductLoader) loader: LoaderOf<ProductLoader>,
   ): Promise<DirectScriptureProductUpdated> {
     const {
       product,
@@ -285,6 +292,7 @@ export class ProductResolver {
         by: this.identity.current.userId,
       },
     } = await this.productService.updateDirect(input);
+    loader.prime(product.id, product);
     return {
       __typename: 'DirectScriptureProductUpdated',
       projectId: product.project,
@@ -299,6 +307,7 @@ export class ProductResolver {
   })
   async updateDerivativeScriptureProduct(
     @Args('input') input: UpdateDerivativeScriptureProduct,
+    @Loader(ProductLoader) loader: LoaderOf<ProductLoader>,
   ): Promise<DerivativeScriptureProductUpdated> {
     const {
       product,
@@ -309,6 +318,7 @@ export class ProductResolver {
         by: this.identity.current.userId,
       },
     } = await this.productService.updateDerivative(input);
+    loader.prime(product.id, product);
     return {
       __typename: 'DerivativeScriptureProductUpdated',
       projectId: product.project,
@@ -323,6 +333,7 @@ export class ProductResolver {
   })
   async updateOtherProduct(
     @Args('input') input: UpdateOtherProduct,
+    @Loader(ProductLoader) loader: LoaderOf<ProductLoader>,
   ): Promise<OtherProductUpdated> {
     const {
       product,
@@ -333,6 +344,7 @@ export class ProductResolver {
         by: this.identity.current.userId,
       },
     } = await this.productService.updateOther(input);
+    loader.prime(product.id, product);
     return {
       __typename: 'OtherProductUpdated',
       projectId: product.project,

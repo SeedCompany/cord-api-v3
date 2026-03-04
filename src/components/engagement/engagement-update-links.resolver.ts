@@ -1,6 +1,6 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { Loader, type LoaderOf } from '@seedcompany/data-loader';
 import { Grandparent, mapSecuredValue } from '~/common';
+import { Loader, type LoaderOf } from '~/core/data-loader';
 import { FileNodeLoader } from '../file';
 import { asFileVersion, SecuredFileVersion } from '../file/dto';
 import { LocationLoader } from '../location';

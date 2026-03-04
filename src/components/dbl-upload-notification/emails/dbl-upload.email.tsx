@@ -1,26 +1,46 @@
 import { type NonEmptyArray } from '@seedcompany/common';
 import type { Verse } from '@seedcompany/scripture';
 import type { Range } from '~/common';
-import { EmailTemplate, LanguageRef, Mjml, useFrontendUrl } from '~/core/email';
-import { type Engagement } from '../../../components/engagement/dto';
-import { type Language } from '../../../components/language/dto';
-import { type Project } from '../../../components/project/dto';
-import { type User } from '../../../components/user/dto';
+import {
+  EmailTemplate,
+  Headers,
+  LanguageRef,
+  Mjml,
+  useConfig,
+  useFrontendUrl,
+  useResources,
+} from '~/core/email';
+import type { LanguageEngagement } from '../../engagement/dto';
+import type { Language } from '../../language/dto';
+import type { Project } from '../../project/dto';
 
 interface Props {
-  recipient: User;
-  project: Pick<Project, 'id' | 'name'>;
-  engagement: Pick<Engagement, 'id'>;
-  language: Pick<Language, 'id' | 'name' | 'ethnologue'>;
+  engagement: LanguageEngagement;
+  language: Language;
+  project: Project;
   completedBooks: NonEmptyArray<Range<Verse>>;
-  dblFormUrl: string;
 }
 
-export function DBLUpload(props: Props) {
-  const { language, project, completedBooks, engagement, dblFormUrl } = props;
+export async function DBLUpload(props: Omit<Props, 'language' | 'project'>) {
+  const { engagement } = props;
+
+  const resources = useResources();
+  const [language, project] = await Promise.all([
+    resources.load('Language', engagement.language.value!.id),
+    resources.load('Project', engagement.project.id),
+  ]);
+  return <DBLUploadTemplate {...props} project={project} language={language} />;
+}
+
+function DBLUploadTemplate(props: Props) {
+  const { engagement, completedBooks, project, language } = props;
+
+  const config = useConfig().email.notifyDblUpload!;
+
   const languageName = language.name.value;
   return (
     <EmailTemplate title={`${languageName || 'Language'} needs a DBL upload`}>
+      {config.replyTo && <Headers replyTo={config.replyTo} />}
       <Mjml.Section>
         <Mjml.Column>
           <Mjml.Text>
@@ -136,7 +156,7 @@ export function DBLUpload(props: Props) {
         <Mjml.Column>
           <Mjml.Text>
             🔗{' '}
-            <a href={dblFormUrl} style={{ backgroundColor: 'yellow' }}>
+            <a href={config.formUrl} style={{ backgroundColor: 'yellow' }}>
               Seed Company DBL Publication Request Form
             </a>
           </Mjml.Text>

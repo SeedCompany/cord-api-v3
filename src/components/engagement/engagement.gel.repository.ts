@@ -43,6 +43,7 @@ const languageExtraHydrate = {
   openToInvestorVisit: true,
   sentPrintingDate: true,
   paratextRegistryId: true,
+  rev79CommunityId: true,
   pnp: true,
   historicGoal: true,
   milestonePlanned: true,

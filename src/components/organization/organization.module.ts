@@ -1,5 +1,5 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { splitDb } from '~/core';
+import { splitDb } from '~/core/database';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { LocationModule } from '../location/location.module';
 import { AddOrganizationReachMigration } from './migrations/add-reach.migration';
@@ -15,7 +15,9 @@ import { OrganizationService } from './organization.service';
   providers: [
     OrganizationResolver,
     OrganizationService,
-    splitDb(OrganizationRepository, OrganizationGelRepository),
+    splitDb(OrganizationRepository, {
+      gel: OrganizationGelRepository,
+    }),
     OrganizationLoader,
     AddOrganizationReachMigration,
     AddOrganizationTypeMigration,

@@ -1,5 +1,5 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { ResourceLoader } from '~/core';
+import { ResourceLoader } from '~/core/resources';
 import { IPeriodicReport, type PeriodicReport } from '../periodic-report/dto';
 
 @Resolver(IPeriodicReport)

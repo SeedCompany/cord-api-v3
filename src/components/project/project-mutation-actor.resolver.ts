@@ -1,6 +1,6 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { Loader, type LoaderOf } from '@seedcompany/data-loader';
 import { NotFoundException } from '~/common';
+import { Loader, type LoaderOf } from '~/core/data-loader';
 import { ActorLoader } from '../user/actor.loader';
 import { SecuredActor } from '../user/dto';
 import { ProjectMutation, ProjectMutationOrDeletion } from './dto';

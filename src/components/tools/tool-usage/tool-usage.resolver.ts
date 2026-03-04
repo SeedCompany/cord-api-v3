@@ -6,7 +6,8 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import { type ID, IdArg, Resource, ServerException } from '~/common';
-import { Loader, type LoaderOf, ResourceLoader } from '~/core';
+import { Loader, type LoaderOf } from '~/core/data-loader';
+import { ResourceLoader } from '~/core/resources';
 import { ActorLoader } from '../../user/actor.loader';
 import { Actor } from '../../user/dto';
 import {

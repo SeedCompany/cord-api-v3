@@ -6,8 +6,9 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { mapValues } from '@seedcompany/common';
+import { ConfigService } from '~/core/config';
 import { HttpAdapter } from '~/core/http';
-import { ConfigService } from '../config/config.service';
+import { type Scheduled } from '~/core/schedule';
 import { ILogger, Logger, LogLevel } from '../logger';
 import { ValidationException } from '../validation';
 import {
@@ -56,14 +57,16 @@ export class ExceptionFilter implements IExceptionFilter {
       throw exception;
     }
 
-    this.logIt(normalized, exception);
+    this.logIt(normalized, exception, args);
 
     if (args.getType() === 'graphql') {
       // re-throw our result so that the GraphQL Server picks it up
       throw new NormalizedException(normalized);
     }
 
-    await this.respondToHttp(normalized, args);
+    if (args.getType() === 'http') {
+      await this.respondToHttp(normalized, args);
+    }
   }
 
   private async respondToHttp(ex: ExceptionJson, args: ArgumentsHost) {
@@ -94,7 +97,7 @@ export class ExceptionFilter implements IExceptionFilter {
     await this.http.reply(res, out, status);
   }
 
-  logIt(info: ExceptionJson, error: Error) {
+  logIt(info: ExceptionJson, error: Error, args?: ArgumentsHost) {
     if (SkipLogging in error) {
       return;
     }
@@ -120,9 +123,19 @@ export class ExceptionFilter implements IExceptionFilter {
       return;
     }
 
+    const extra: Record<string, unknown> = {};
+
+    if (args?.getType() === 'scheduledTask') {
+      const task: Scheduled.Task = args.getArgByIndex(0);
+      extra.scheduledTask = {
+        name: task.name,
+      };
+    }
+
     const level = info.codes.has('Client') ? LogLevel.WARNING : LogLevel.ERROR;
     this.logger.log(level, info.message, {
       exception: error,
+      ...extra,
     });
   }
 }

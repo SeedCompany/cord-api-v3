@@ -6,8 +6,8 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { Loader, type LoaderOf } from '~/core';
 import { Identity } from '~/core/authentication';
+import { Loader, type LoaderOf } from '~/core/data-loader';
 import { Privileges } from '../../authorization';
 import { UserLoader } from '../../user';
 import { User } from '../../user/dto';

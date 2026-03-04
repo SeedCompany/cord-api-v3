@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { Settings } from 'luxon';
 import { DateInterval, type UnsecuredDto } from '~/common';
-import { ILogger, Logger } from '~/core';
 import { OnHook } from '~/core/hooks';
+import { ILogger, Logger } from '~/core/logger';
 import { EngagementService } from '../../engagement';
 import { type Engagement, engagementRange } from '../../engagement/dto';
 import {

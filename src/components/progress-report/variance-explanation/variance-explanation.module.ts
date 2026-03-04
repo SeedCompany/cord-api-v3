@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { splitDb } from '~/core';
+import { splitDb } from '~/core/database';
 import { RenameReasonOptionMigration } from './migrations/rename.migration';
 import { VarianceExplanationGelRepository } from './variance-explanation.gel.repository';
 import { ProgressReportVarianceExplanationLoader } from './variance-explanation.loader';
@@ -16,10 +16,9 @@ import { ProgressReportVarianceExplanationService } from './variance-explanation
     ProgressReportVarianceExplanationReasonOptionsResolver,
     ProgressReportVarianceExplanationLoader,
     ProgressReportVarianceExplanationService,
-    splitDb(
-      ProgressReportVarianceExplanationRepository,
-      VarianceExplanationGelRepository,
-    ),
+    splitDb(ProgressReportVarianceExplanationRepository, {
+      gel: VarianceExplanationGelRepository,
+    }),
     RenameReasonOptionMigration,
   ],
 })

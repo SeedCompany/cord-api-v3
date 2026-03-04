@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { BaseMigration } from '../../database';
+import { BaseMigration } from '~/core/neo4j';
 import { WebhookTrigger } from '../dto';
 import { WebhookChannelRepository } from './webhook-channel.repository';
 import { WebhookChannelService } from './webhook-channel.service';

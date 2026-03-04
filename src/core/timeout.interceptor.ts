@@ -5,6 +5,7 @@ import {
   type NestInterceptor,
 } from '@nestjs/common';
 import { GqlExecutionContext } from '@nestjs/graphql';
+import { simpleSwitch } from '@seedcompany/common';
 import { fromEvent, type Observable, race } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ServiceUnavailableException } from '~/common';
@@ -16,11 +17,11 @@ import { ServiceUnavailableException } from '~/common';
 @Injectable()
 export class TimeoutInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
-    const response =
-      context.getType() !== 'graphql'
-        ? context.switchToHttp().getResponse()
-        : GqlExecutionContext.create(context).getContext().response;
-
+    const getResponse = simpleSwitch(context.getType(), {
+      http: () => context.switchToHttp().getResponse(),
+      graphql: () => GqlExecutionContext.create(context).getContext().response,
+    });
+    const response = getResponse?.();
     if (!response) {
       return next.handle();
     }

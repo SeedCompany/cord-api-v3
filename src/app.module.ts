@@ -40,7 +40,7 @@ import { StoryModule } from './components/story/story.module';
 import { TimeZoneModule } from './components/timezone';
 import { ToolModule } from './components/tools/tool.module';
 import { UserModule } from './components/user/user.module';
-import { CoreModule } from './core';
+import { CoreModule } from './core/core.module';
 import { LoggerModule } from './core/logger/logger.module';
 
 import '@seedcompany/nest/patches';

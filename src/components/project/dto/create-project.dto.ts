@@ -85,4 +85,7 @@ export abstract class CreateProject {
 
   @Field({ nullable: true })
   readonly departmentId?: string;
+
+  @Field({ nullable: true })
+  readonly rev79ProjectId?: string;
 }

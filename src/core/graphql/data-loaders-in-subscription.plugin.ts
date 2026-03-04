@@ -1,4 +1,4 @@
-import { DataLoaderContext } from '@seedcompany/data-loader';
+import { DataLoaderContext } from '~/core/data-loader';
 import { Identity } from '../authentication';
 import { Plugin } from './plugin.decorator';
 

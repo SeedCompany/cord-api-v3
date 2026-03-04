@@ -1,5 +1,5 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { Loader, type LoaderOf } from '@seedcompany/data-loader';
+import { Loader, type LoaderOf } from '~/core/data-loader';
 import { ProgressReport } from '../../progress-report/dto';
 import { PnpProgressExtractionResult } from './extraction-result.dto';
 import { PnpExtractionResultLoader } from './pnp-extraction-result.loader';

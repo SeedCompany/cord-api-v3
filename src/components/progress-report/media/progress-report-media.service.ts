@@ -5,8 +5,8 @@ import {
   NotImplementedException,
   type UnsecuredDto,
 } from '~/common';
-import { ResourceLoader } from '~/core';
 import { type DbTypeOf } from '~/core/database';
+import { ResourceLoader } from '~/core/resources';
 import { Privileges, withVariant } from '../../authorization';
 import { FileService } from '../../file';
 import { MediaService } from '../../file/media/media.service';

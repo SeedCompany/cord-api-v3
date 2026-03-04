@@ -7,8 +7,8 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import { CalendarDate, ListArg, UnauthorizedException } from '~/common';
-import { Loader, type LoaderOf } from '~/core';
 import { Identity } from '~/core/authentication';
+import { Loader, type LoaderOf } from '~/core/data-loader';
 import { type IdsAndView, IdsAndViewArg } from '../changeset/dto';
 import { FileNodeLoader, resolveDefinedFile } from '../file';
 import { SecuredFile } from '../file/dto';

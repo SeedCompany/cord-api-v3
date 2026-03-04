@@ -8,7 +8,7 @@ import {
   ServerException,
   type UnsecuredDto,
 } from '~/common';
-import { HandleIdLookup, ResourceLoader } from '~/core';
+import { HandleIdLookup, ResourceLoader } from '~/core/resources';
 import { Privileges } from '../authorization';
 import { EngagementService } from '../engagement';
 import { type EngagementListInput } from '../engagement/dto';

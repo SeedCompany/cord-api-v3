@@ -1,5 +1,5 @@
 import { node, type Query, relation } from 'cypher-query-builder';
-import { createRelationships, exp } from '~/core/database/query';
+import { createRelationships, exp } from '~/core/neo4j/query';
 import {
   INotificationStrategy,
   type InputOf,

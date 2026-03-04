@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import * as argon2 from 'argon2';
-import { ConfigService } from '~/core';
+import { ConfigService } from '~/core/config';
 
 @Injectable()
 export class CryptoService {

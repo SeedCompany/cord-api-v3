@@ -1,5 +1,5 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { splitDb } from '~/core';
+import { splitDb } from '~/core/database';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { ScriptureModule } from '../scripture/scripture.module';
 import { EthnoArtGelRepository } from './ethno-art.gel.repository';
@@ -13,7 +13,9 @@ import { EthnoArtService } from './ethno-art.service';
   providers: [
     EthnoArtLoader,
     EthnoArtResolver,
-    splitDb(EthnoArtRepository, EthnoArtGelRepository),
+    splitDb(EthnoArtRepository, {
+      gel: EthnoArtGelRepository,
+    }),
     EthnoArtService,
   ],
   exports: [EthnoArtService],

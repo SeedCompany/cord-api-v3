@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { node, type Query, relation } from 'cypher-query-builder';
 import { CreationFailed, type ID, type UnsecuredDto } from '~/common';
-import { DtoRepository } from '~/core/database';
+import { DtoRepository } from '~/core/neo4j';
 import {
   ACTIVE,
   collect,
@@ -12,8 +12,8 @@ import {
   matchProps,
   merge,
   variable,
-} from '~/core/database/query';
-import { type BaseNode } from '~/core/database/results';
+} from '~/core/neo4j/query';
+import { type BaseNode } from '~/core/neo4j/results';
 import { toolFilters } from '../tool/tool.neo4j.repository';
 import {
   type CreateToolUsage,

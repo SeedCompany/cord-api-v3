@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { type ID } from '~/common';
-import { DtoRepository } from '~/core/database';
-import { ACTIVE } from '~/core/database/query';
+import { DtoRepository } from '~/core/neo4j';
+import { ACTIVE } from '~/core/neo4j/query';
 import { KnownLanguage, type ModifyKnownLanguageArgs } from './dto';
 
 @Injectable()

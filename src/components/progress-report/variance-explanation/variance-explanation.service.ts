@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { mapKeys } from '@seedcompany/common';
 import { InputException, NotFoundException } from '~/common';
-import { ResourceLoader } from '~/core';
 import { LiveQueryStore } from '~/core/live-query';
+import { ResourceLoader } from '~/core/resources';
 import { Privileges } from '../../authorization';
 import { ProgressReport } from '../dto';
 import { ProgressReportVarianceExplanationReasonOptions as ReasonOptions } from './reason-options';

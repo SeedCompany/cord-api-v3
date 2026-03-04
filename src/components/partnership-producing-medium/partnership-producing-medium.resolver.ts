@@ -8,7 +8,7 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import { type ID, IdField } from '~/common';
-import { Loader, type LoaderOf } from '~/core';
+import { Loader, type LoaderOf } from '~/core/data-loader';
 import { PartnershipLoader } from '../partnership';
 import { Partnership } from '../partnership/dto';
 import {

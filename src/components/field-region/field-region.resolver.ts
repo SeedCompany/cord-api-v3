@@ -7,7 +7,7 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import { type ID, IdArg, ListArg, mapSecuredValue } from '~/common';
-import { Loader, type LoaderOf } from '~/core';
+import { Loader, type LoaderOf } from '~/core/data-loader';
 import { FieldZoneLoader } from '../field-zone';
 import { SecuredFieldZone } from '../field-zone/dto';
 import { UserLoader } from '../user';

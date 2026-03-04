@@ -1,7 +1,11 @@
+/* eslint-disable @seedcompany/no-restricted-imports */
 export {
   type DataLoaderOptions,
   Loader,
+  type DataLoader,
+  DataLoaderContext,
   type DataLoaderStrategy,
+  type LoaderContextType,
   type LoaderOf,
 } from '@seedcompany/data-loader';
 

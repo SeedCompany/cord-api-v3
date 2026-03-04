@@ -1,5 +1,5 @@
-import { ResourceLoader } from '~/core';
 import { OnHook } from '~/core/hooks';
+import { ResourceLoader } from '~/core/resources';
 import { Privileges } from '../../../authorization';
 import { CanUpdateMediaUserMetadataHook } from '../../../file/media/hooks/can-update.hook';
 import { ProgressReportMedia as ReportMedia } from '../dto';

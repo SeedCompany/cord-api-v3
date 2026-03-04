@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { inArray, node, type Query, relation } from 'cypher-query-builder';
 import { type ID, Order, type PublicOf, type UnsecuredDto } from '~/common';
-import { DtoRepository } from '~/core/database';
+import { DtoRepository } from '~/core/neo4j';
 import {
   ACTIVE,
   createNode,
@@ -10,7 +10,7 @@ import {
   INACTIVE,
   merge,
   sorting,
-} from '~/core/database/query';
+} from '~/core/neo4j/query';
 import { IProject, type ProjectStep, stepToStatus } from '../dto';
 import {
   type ExecuteProjectTransition,

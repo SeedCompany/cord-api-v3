@@ -14,7 +14,7 @@ import {
   IdField,
   ListArg,
 } from '~/common';
-import { Loader, type LoaderOf } from '~/core';
+import { Loader, type LoaderOf } from '~/core/data-loader';
 import { LocationLoader } from '../location';
 import { LocationListInput, SecuredLocationList } from '../location/dto';
 import { OrganizationLoader, OrganizationService } from '../organization';

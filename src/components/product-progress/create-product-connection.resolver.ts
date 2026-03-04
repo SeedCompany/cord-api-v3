@@ -1,7 +1,7 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { Loader, type LoaderOf } from '@seedcompany/data-loader';
 import { Variant } from '~/common';
 import { Identity } from '~/core/authentication';
+import { Loader, type LoaderOf } from '~/core/data-loader';
 import { ProductCreated } from '../product/dto/product-mutations.dto';
 import { ProductLoader } from '../product/product.loader';
 import { ProductProgressService } from './product-progress.service';

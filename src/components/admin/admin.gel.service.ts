@@ -6,7 +6,7 @@ import {
 import { ModuleRef } from '@nestjs/core';
 import { LazyGetter as Once } from 'lazy-get-decorator';
 import { CryptoService } from '~/core/authentication/crypto.service';
-import { ConfigService } from '~/core/config/config.service';
+import { ConfigService } from '~/core/config';
 import { ILogger, Logger } from '~/core/logger';
 import { AdminGelRepository } from './admin.gel.repository';
 import { AdminRepository } from './admin.repository';

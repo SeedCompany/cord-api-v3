@@ -1,4 +1,4 @@
-import { BaseMigration, Migration } from '~/core/database';
+import { BaseMigration, Migration } from '~/core/neo4j';
 import { Partner } from '../dto';
 
 @Migration('2025-04-24T14:00:00')

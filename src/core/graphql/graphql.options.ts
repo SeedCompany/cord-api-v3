@@ -13,7 +13,7 @@ import {
 import { type Plugin as PluginNoContext } from 'graphql-yoga';
 import { type GqlContextType } from '~/common';
 import { getRegisteredScalars } from '~/common/scalars';
-import { ConfigService } from '../config/config.service';
+import { ConfigService } from '~/core/config';
 import { VersionService } from '../config/version.service';
 import { apolloExplorer } from './apollo-explorer';
 import { type DriverConfig, type ServerContext } from './driver';

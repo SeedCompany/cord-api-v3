@@ -25,10 +25,12 @@ import {
   UnauthorizedException,
   UrlUtil,
 } from '~/common';
-import { ConfigService, ILogger, type LinkTo, Logger } from '~/core';
+import { ConfigService } from '~/core/config';
 import { TransactionHooks } from '~/core/database';
 import { Hooks } from '~/core/hooks';
 import { LiveQueryStore } from '~/core/live-query';
+import { ILogger, Logger } from '~/core/logger';
+import { type LinkTo } from '~/core/resources';
 import { FileBucket } from './bucket';
 import {
   type CreateDefinedFileVersion,

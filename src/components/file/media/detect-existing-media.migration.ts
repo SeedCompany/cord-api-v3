@@ -1,7 +1,7 @@
 import { ModuleRef } from '@nestjs/core';
 import { node, relation } from 'cypher-query-builder';
-import { BaseMigration, Migration } from '~/core/database';
-import { ACTIVE } from '~/core/database/query';
+import { BaseMigration, Migration } from '~/core/neo4j';
+import { ACTIVE } from '~/core/neo4j/query';
 import { type FileVersion } from '../dto';
 import { FileRepository } from '../file.repository';
 import { MediaService } from './media.service';

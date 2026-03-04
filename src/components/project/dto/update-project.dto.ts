@@ -79,6 +79,15 @@ export abstract class UpdateProject {
   @Field(() => String, { nullable: true })
   readonly departmentId?: string | null;
 
+  @Field(() => String, { nullable: true })
+  readonly rev79ProjectId?: string | null;
+
+  @OptionalField({
+    description:
+      'Enable/disable Rev79 for this project (Momentum Translation only)',
+  })
+  readonly usesRev79?: boolean;
+
   @ChangesetIdField()
   readonly changeset?: ID;
 }

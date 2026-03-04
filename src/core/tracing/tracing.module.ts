@@ -2,7 +2,7 @@ import { Module, type OnModuleInit } from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import XRay from 'aws-xray-sdk-core';
 import * as process from 'node:process';
-import { ConfigService } from '../config/config.service';
+import { ConfigService } from '~/core/config';
 import { VersionService } from '../config/version.service';
 import { ILogger, Logger, LogLevel } from '../logger';
 import { Sampler } from './sampler';

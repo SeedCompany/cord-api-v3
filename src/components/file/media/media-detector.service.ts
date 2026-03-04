@@ -7,7 +7,7 @@ import { imageSize } from 'image-size';
 import type { ISize as ImageSize } from 'image-size/types/interface';
 import type { Except } from 'type-fest';
 import { retry } from '~/common';
-import { ILogger, Logger } from '~/core';
+import { ILogger, Logger } from '~/core/logger';
 import { type FileVersion } from '../dto';
 import { FileService } from '../file.service';
 import { type AnyMedia, type Media } from './media.dto';

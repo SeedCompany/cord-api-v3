@@ -3,7 +3,7 @@ import type { ModuleMetadata, Provider } from '@nestjs/common';
 import { Test, type TestingModuleBuilder } from '@nestjs/testing';
 import type { DeepPartial } from 'ts-essentials';
 import { andCall } from '~/common';
-import { ConfigService } from '~/core';
+import { ConfigService } from '~/core/config';
 import { HttpAdapter, type NestHttpApplication } from '~/core/http';
 import { LogLevel } from '~/core/logger';
 import { LevelMatcher } from '~/core/logger/level-matcher';

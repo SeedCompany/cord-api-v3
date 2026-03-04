@@ -25,20 +25,20 @@ import {
   SecuredDateTimeNullable,
   SecuredString,
   SecuredStringNullable,
+  SecuredTags,
   Sensitivity,
   SensitivityField,
   ServerException,
   type UnsecuredDto,
 } from '~/common';
-import { sortingForEnumIndex } from '~/core/database/query';
 import { e } from '~/core/gel';
+import { sortingForEnumIndex } from '~/core/neo4j/query';
 import { type LinkTo, RegisterResource } from '~/core/resources';
 import { Budget } from '../../budget/dto';
 import { ChangesetAware } from '../../changeset/dto';
 import { Commentable } from '../../comments/dto';
 import { IEngagement as Engagement } from '../../engagement/dto';
 import { Directory } from '../../file/dto';
-import { SecuredTags } from '../../language/dto';
 import { Location } from '../../location/dto';
 import { Partnership } from '../../partnership/dto';
 import { SecuredReportPeriod } from '../../periodic-report/dto';
@@ -112,6 +112,9 @@ class Project extends Interfaces {
   @DbUnique()
   readonly name: SecuredString;
 
+  @Field()
+  declare readonly rev79ProjectId: SecuredStringNullable;
+
   @Field({
     description: "The ID for Finance's departments",
   })
@@ -176,6 +179,9 @@ class Project extends Interfaces {
   readonly financialReportPeriod: SecuredReportPeriod;
 
   readonly rootDirectory: Secured<LinkTo<'Directory'> | null>;
+
+  @Field()
+  readonly usesRev79: SecuredBoolean;
 
   /** The current user's membership, if any. */
   readonly membership:

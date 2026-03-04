@@ -1,4 +1,4 @@
-import { ConfigService } from '~/core';
+import { ConfigService } from '~/core/config';
 import { type TestApp } from '../setup';
 import {
   createExecute,

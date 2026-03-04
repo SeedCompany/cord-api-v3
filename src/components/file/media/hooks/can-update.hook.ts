@@ -1,7 +1,7 @@
 import { Inject, Injectable, Optional, Scope } from '@nestjs/common';
 import { CachedByArg as Once } from '@seedcompany/common';
 import { Polls } from '~/common';
-import { ResourceResolver, ResourcesHost } from '~/core';
+import { ResourceResolver, ResourcesHost } from '~/core/resources';
 import { type AnyMedia, MediaUserMetadata } from '../media.dto';
 
 /**

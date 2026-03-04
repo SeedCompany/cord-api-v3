@@ -8,10 +8,10 @@ import {
   Variant,
   type VariantOf,
 } from '~/common';
-import { type LinkTo } from '~/core';
 import { type SetDbType } from '~/core/database';
 import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
+import { type LinkTo } from '~/core/resources';
 import { type FileId } from '../../../file/dto';
 import { type Media } from '../../../file/media/media.dto';
 import { type ProgressReport } from '../../dto';

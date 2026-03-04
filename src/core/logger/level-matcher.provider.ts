@@ -3,7 +3,7 @@ import { mapEntries } from '@seedcompany/common';
 import { promises as fs } from 'fs';
 import { pickBy } from 'lodash';
 import { parse } from 'yaml';
-import { ConfigService } from '../config/config.service';
+import { ConfigService } from '~/core/config';
 import { LevelMatcher } from './level-matcher';
 import { type LogLevel } from './logger.interface';
 

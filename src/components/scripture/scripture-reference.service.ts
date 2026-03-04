@@ -1,6 +1,6 @@
 import { sortBy } from '@seedcompany/common';
 import { type ID } from '~/common';
-import { ILogger, Logger } from '~/core';
+import { ILogger, Logger } from '~/core/logger';
 import { ScriptureRange, type ScriptureRangeInput } from './dto';
 import {
   type DbScriptureReferences,

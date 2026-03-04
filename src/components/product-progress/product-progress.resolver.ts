@@ -5,7 +5,7 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { Loader, type LoaderOf } from '~/core';
+import { Loader, type LoaderOf } from '~/core/data-loader';
 import { PeriodicReportLoader } from '../periodic-report';
 import { ProductLoader } from '../product';
 import { Product } from '../product/dto';

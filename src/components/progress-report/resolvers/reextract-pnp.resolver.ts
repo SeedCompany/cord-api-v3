@@ -1,6 +1,6 @@
 import { Mutation, Resolver } from '@nestjs/graphql';
 import { type ID, IdArg, InputException } from '~/common';
-import { Loader, type LoaderOf } from '~/core';
+import { Loader, type LoaderOf } from '~/core/data-loader';
 import { Hooks } from '~/core/hooks';
 import { FileNodeLoader, FileService, resolveDefinedFile } from '../../file';
 import { PeriodicReportLoader } from '../../periodic-report';

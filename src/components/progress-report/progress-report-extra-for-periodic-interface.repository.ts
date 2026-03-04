@@ -13,7 +13,7 @@ import {
   type SortMatcher,
   sortWith,
   variable,
-} from '~/core/database/query';
+} from '~/core/neo4j/query';
 import { engagementSorters } from '../engagement/engagement.repository';
 import { type MergePeriodicReports } from '../periodic-report/dto';
 import { pnpExtractionResultSorters } from '../pnp/extraction-result/pnp-extraction-result.neo4j.repository';

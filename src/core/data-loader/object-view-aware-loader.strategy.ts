@@ -1,9 +1,9 @@
 import { groupBy } from '@seedcompany/common';
+import { type ID, type ObjectView, viewOfChangeset } from '~/common';
 import {
   type DataLoaderOptions,
   type DataLoaderStrategy,
-} from '@seedcompany/data-loader';
-import { type ID, type ObjectView, viewOfChangeset } from '~/common';
+} from '~/core/data-loader';
 import { type ChangesetAware } from '../../components/changeset/dto';
 import type { ResourceNameLike } from '../resources';
 

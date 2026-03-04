@@ -1,7 +1,7 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import type { AbstractClass } from 'type-fest';
 import { type ID, IdArg, NotFoundException } from '~/common';
-import { Loader, type LoaderOf } from '~/core';
+import { Loader, type LoaderOf } from '~/core/data-loader';
 import { Privileges } from '../authorization';
 import { EngagementLoader } from '../engagement';
 import {

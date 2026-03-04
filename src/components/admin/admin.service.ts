@@ -5,9 +5,9 @@ import { DateTime } from 'luxon';
 import { Role, ServerException } from '~/common';
 import { AuthenticationService } from '~/core/authentication/authentication.service';
 import { CryptoService } from '~/core/authentication/crypto.service';
-import { ConfigService } from '~/core/config/config.service';
-import { Transactional } from '~/core/database';
+import { ConfigService } from '~/core/config';
 import { ILogger, Logger } from '~/core/logger';
+import { Transactional } from '~/core/neo4j';
 import { AdminRepository } from './admin.repository';
 
 @Injectable()

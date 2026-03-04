@@ -1,6 +1,6 @@
 import { node, relation } from 'cypher-query-builder';
-import { BaseMigration, Migration } from '~/core/database';
-import { collect, variable } from '~/core/database/query';
+import { BaseMigration, Migration } from '~/core/neo4j';
+import { collect, variable } from '~/core/neo4j/query';
 
 @Migration('2024-07-30T13:02:07')
 export class RegistryOfDialectToRegistryOfLanguageVarietiesMigration extends BaseMigration {

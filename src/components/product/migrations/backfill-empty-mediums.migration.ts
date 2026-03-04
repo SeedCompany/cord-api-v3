@@ -2,8 +2,8 @@ import { groupBy } from '@seedcompany/common';
 import { node } from 'cypher-query-builder';
 import { uniq } from 'lodash';
 import { type ID } from '~/common';
-import { BaseMigration, Migration } from '~/core/database';
-import { updateProperty, variable } from '~/core/database/query';
+import { BaseMigration, Migration } from '~/core/neo4j';
+import { updateProperty, variable } from '~/core/neo4j/query';
 import { type ProductMedium as Medium, Product } from '../dto';
 import { ProductService } from '../product.service';
 

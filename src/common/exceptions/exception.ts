@@ -14,13 +14,3 @@ export abstract class Exception extends Error {
 export class ServerException extends Exception {}
 
 export class ClientException extends Exception {}
-
-export function getCauseList(ex: Error, includeSelf = true): readonly Error[] {
-  const previous: Error[] = includeSelf ? [ex] : [];
-  let current = ex;
-  while (current.cause instanceof Error) {
-    current = current.cause;
-    previous.push(current);
-  }
-  return previous;
-}

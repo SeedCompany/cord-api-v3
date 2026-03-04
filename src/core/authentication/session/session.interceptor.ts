@@ -44,6 +44,11 @@ export class SessionInterceptor implements NestInterceptor {
   }
 
   async intercept(executionContext: ExecutionContext, next: CallHandler) {
+    const request = this.getRequest(executionContext);
+    if (!request) {
+      return next.handle();
+    }
+
     const isMutation = this.isMutation(executionContext);
     const authLevel: AuthLevel =
       AuthLevel.get(executionContext.getHandler() as FnLike) ??
@@ -52,11 +57,6 @@ export class SessionInterceptor implements NestInterceptor {
       (isMutation ? AuthLevel.Authenticated : AuthLevel.Anonymous);
 
     if (authLevel === AuthLevel.Sessionless) {
-      return next.handle();
-    }
-
-    const request = this.getRequest(executionContext);
-    if (!request) {
       return next.handle();
     }
 
