@@ -181,7 +181,6 @@ class Project extends Interfaces {
   readonly rootDirectory: Secured<LinkTo<'Directory'> | null>;
 
   @Field()
-  @Calculated()
   readonly usesRev79: SecuredBoolean;
 
   /** The current user's membership, if any. */
