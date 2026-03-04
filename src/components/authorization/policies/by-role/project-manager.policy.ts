@@ -62,7 +62,12 @@ export const momentumProjectsTransitions = () =>
 
 // NOTE: There could be other permissions for this role from other policies
 @Policy(
-  [Role.ProjectManager, Role.RegionalDirector, Role.FieldOperationsDirector],
+  [
+    Role.ProjectManager,
+    Role.RegionalDirector,
+    Role.FieldOperationsDirector,
+    Role.FieldServices,
+  ],
   (r) => [
     Role.assignable(r, [
       Role.Intern,
@@ -90,7 +95,7 @@ export const momentumProjectsTransitions = () =>
     r.FieldRegion.read,
     r.FieldZone.read,
     r.FundingAccount.read,
-    r.Language.read,
+    r.Language.read.children((c) => c.posts.read.create),
     r.Organization.read,
     r.Partner.read
       .specifically((p) => p.pmcEntityCode.none)
