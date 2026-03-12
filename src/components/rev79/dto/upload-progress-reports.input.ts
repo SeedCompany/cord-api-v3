@@ -38,7 +38,7 @@ export class Rev79ProductProgressInput extends VariantProgressArg {
 
   @Field(() => [UpdateStepProgress])
   @Type(() => UpdateStepProgress)
-  @ValidateNested()
+  @ValidateNested({ each: true })
   readonly steps: readonly UpdateStepProgress[];
 }
 
@@ -62,12 +62,12 @@ export class Rev79ReportItemInput {
 
   @Field(() => [Rev79CommunityStoryInput], { nullable: true })
   @Type(() => Rev79CommunityStoryInput)
-  @ValidateNested()
+  @ValidateNested({ each: true })
   readonly communityStories?: readonly Rev79CommunityStoryInput[];
 
   @Field(() => [Rev79ProductProgressInput], { nullable: true })
   @Type(() => Rev79ProductProgressInput)
-  @ValidateNested()
+  @ValidateNested({ each: true })
   readonly productProgress?: readonly Rev79ProductProgressInput[];
 }
 
@@ -80,6 +80,6 @@ export class Rev79BulkUploadProgressReportsInput {
 
   @Field(() => [Rev79ReportItemInput])
   @Type(() => Rev79ReportItemInput)
-  @ValidateNested()
+  @ValidateNested({ each: true })
   readonly reports: readonly Rev79ReportItemInput[];
 }

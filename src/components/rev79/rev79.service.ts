@@ -18,6 +18,7 @@ import type {
 } from './dto';
 import {
   AmbiguousRev79CommunityException,
+  AmbiguousRev79ProjectException,
   ProgressReportNotFoundException,
   QuarterOutOfRangeException,
   Rev79CommunityNotFoundException,
@@ -122,6 +123,9 @@ export class Rev79Service {
     const matches = await this.repo.findProjectsByRev79Id(rev79ProjectId);
     if (matches.length === 0) {
       throw new Rev79ProjectNotFoundException(rev79ProjectId);
+    }
+    if (matches.length > 1) {
+      throw new AmbiguousRev79ProjectException(rev79ProjectId);
     }
     const projectId = matches[0]!.id;
     try {

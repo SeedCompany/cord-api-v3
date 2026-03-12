@@ -79,7 +79,10 @@ describe('Rev79 quarterly report context (e2e)', () => {
 
       // Language must be created as admin.
       const { createLanguage } = await root.run(CreateLanguageDoc, {
-        input: { name: faker.lorem.word() + ' ' + faker.string.uuid() },
+        input: {
+          name: faker.lorem.word() + ' ' + faker.string.uuid(),
+          displayName: faker.company.name() + ' ' + faker.string.uuid(),
+        },
       });
       const languageId = createLanguage.language.id;
 
@@ -196,7 +199,10 @@ describe('Rev79 quarterly report context (e2e)', () => {
       );
 
       const { createLanguage } = await root.run(CreateLanguageDoc, {
-        input: { name: faker.lorem.word() + ' ' + faker.string.uuid() },
+        input: {
+          name: faker.lorem.word() + ' ' + faker.string.uuid(),
+          displayName: faker.company.name() + ' ' + faker.string.uuid(),
+        },
       });
       await tester.run(CreateLanguageEngagementDoc, {
         input: {

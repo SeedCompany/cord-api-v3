@@ -26,6 +26,19 @@ export class Rev79CommunityNotFoundException extends NotFoundException {
 }
 
 /**
+ * More than one Cord project has the given Rev79 project ID, making the
+ * mapping ambiguous.
+ */
+export class AmbiguousRev79ProjectException extends InputException {
+  constructor(rev79ProjectId: string) {
+    super(
+      `Multiple projects found for Rev79 project ID "${rev79ProjectId}". Mapping is ambiguous.`,
+      'rev79ProjectId',
+    );
+  }
+}
+
+/**
  * More than one language engagement within the project has the given Rev79
  * community ID, making the mapping ambiguous.
  */
