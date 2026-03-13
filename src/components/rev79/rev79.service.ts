@@ -261,12 +261,16 @@ export class Rev79Service {
     input: Rev79CommunityStoryInput,
   ) {
     const list = await this.communityStoryService.list(report);
-    const existing = list.items.find(
-      (pvr) => pvr.prompt.value?.id === input.promptId,
-    );
+    const first = list.items[0];
     let pvrId: ID;
-    if (existing) {
-      pvrId = existing.id;
+    if (first) {
+      pvrId = first.id;
+      if (first.prompt.value?.id !== input.promptId) {
+        await this.communityStoryService.changePrompt({
+          id: pvrId,
+          prompt: input.promptId,
+        });
+      }
     } else {
       const created = await this.communityStoryService.create({
         resource: reportId,
