@@ -11,8 +11,18 @@ import {
   UpdateStepProgress,
   VariantProgressArg,
 } from '../../product-progress/dto';
+import { MediaCategory } from '../../progress-report/media/media-category.enum';
 import { type Prompt } from '../../prompts/dto';
 import { QuarterPeriodInput } from './quarter-period.input';
+
+@InputType()
+export class Rev79MediaInput {
+  @Field({ description: 'A URL to the image to download and attach.' })
+  readonly url: string;
+
+  @Field(() => MediaCategory, { nullable: true })
+  readonly category?: MediaCategory;
+}
 
 @InputType()
 export class Rev79TeamNewsInput {
@@ -69,6 +79,11 @@ export class Rev79ReportItemInput {
   @Type(() => Rev79ProductProgressInput)
   @ValidateNested({ each: true })
   readonly productProgress?: readonly Rev79ProductProgressInput[];
+
+  @Field(() => [Rev79MediaInput], { nullable: true })
+  @Type(() => Rev79MediaInput)
+  @ValidateNested({ each: true })
+  readonly media?: readonly Rev79MediaInput[];
 }
 
 @InputType()

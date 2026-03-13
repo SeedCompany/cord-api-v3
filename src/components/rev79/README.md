@@ -7,7 +7,7 @@ Rev79 is an external system that tracks Bible translation projects and community
 Two capabilities are provided:
 
 - **Resolve context** — given a Rev79 project ID, community ID, and calendar quarter, returns the matching Cord project, language engagement, and progress report IDs along with the report date range. Useful for Rev79 to look up the right Cord records before doing anything.
-- **Bulk upload** — given a Rev79 project ID and a list of community reports, writes team news, community story, and product progress data into the matching Cord progress reports in a single call.
+- **Bulk upload** — given a Rev79 project ID and a list of community reports, writes team news, community story, product progress, and media images into the matching Cord progress reports in a single call.
 
 Authorization is enforced: if the caller cannot read a project, it appears as not found (the same as if it didn't exist) to avoid leaking project existence.
 
@@ -58,8 +58,16 @@ Each `Rev79ReportItemInput` supports:
 - `teamNews` — optional rich-text response for the team news prompt
 - `communityStories` — optional list of `{ promptId, response }` pairs
 - `productProgress` — optional list of step-level progress updates per product
+- `media` — optional list of `{ url, category? }` image references (see below)
 
-Media uploads are not included — use `uploadProgressReportMedia` separately.
+**Media (`Rev79MediaInput`)**
+
+| Field | Type | Description |
+|---|---|---|
+| `url` | `String` | Signed GCS URL for the image to download |
+| `category` | `ProgressReportMediaCategory` (optional) | `Team`, `WorkInProgress`, `CommunityEngagement`, `LifeInCommunity`, `Events`, `SceneryLandscape`, `Other` |
+
+Each image is fetched from the provided URL at mutation time and stored in Cord's S3 bucket as a `draft` variant `ProgressReportMedia` record. This means Rev79's signed GCS URLs (which expire) are only needed at upload time — Cord owns the file permanently after that.
 
 ---
 
@@ -106,6 +114,7 @@ The repository is split between Neo4j (`Rev79Repository`) and EdgeDB (`Rev79GelR
 - `PeriodicReportService.getReportByDate` — resolves the progress report for a given engagement + quarter start date
 - `ProgressReportTeamNewsService` / `ProgressReportCommunityStoryService` — write prompt variant responses; both are exported from `ProgressReportModule`
 - `ProductProgressService.update` — writes step-level product progress
+- `ProgressReportMediaService.upload` — downloads images from Rev79 URLs and stores them in S3; exported from `ProgressReportMediaModule` (re-exported by `ProgressReportModule`)
 
 ### Data model assumptions
 
