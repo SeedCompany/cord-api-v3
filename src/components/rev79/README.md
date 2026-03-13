@@ -27,8 +27,8 @@ Resolves Cord IDs for a single community+quarter combination.
 |---|---|---|
 | `rev79ProjectId` | `String` | Rev79's project identifier |
 | `rev79CommunityId` | `String` | Rev79's community identifier |
-| `period.year` | `Int` | Calendar year (e.g. 2024) |
-| `period.quarter` | `Int` | Quarter 1–4 (1 = Jan–Mar) |
+| `period.year` | `Int` | Fiscal year (e.g. 2024 = Oct 1 2023 – Sep 30 2024) |
+| `period.quarter` | `Int` | Fiscal quarter 1–4 (Q1 = Oct–Dec, Q2 = Jan–Mar, Q3 = Apr–Jun, Q4 = Jul–Sep) |
 
 **Result** (`Rev79QuarterlyReportContextResult`):
 
