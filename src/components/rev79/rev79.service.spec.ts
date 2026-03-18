@@ -52,6 +52,9 @@ jest.unstable_mockModule('~/core/logger', () => ({
   Logger: () => () => undefined,
   ILogger: class {},
 }));
+jest.unstable_mockModule('./rev79.repository', () => ({
+  Rev79Repository: class {},
+}));
 
 const PROJECT_ID = 'project-uuid-1' as ID<'Project'>;
 const ENGAGEMENT_ID = 'engagement-uuid-1' as ID<'LanguageEngagement'>;
