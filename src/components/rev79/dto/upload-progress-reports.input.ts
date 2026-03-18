@@ -20,6 +20,12 @@ export class Rev79MediaInput {
   @Field({ description: 'A URL to the image to download and attach.' })
   readonly url: string;
 
+  @Field({
+    description: 'Description text to prefill the media caption.',
+    nullable: true,
+  })
+  readonly description?: string;
+
   @Field(() => MediaCategory, { nullable: true })
   readonly category?: MediaCategory;
 }

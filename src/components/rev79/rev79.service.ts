@@ -4,6 +4,7 @@ import { type ID, NotFoundException } from '~/common';
 import { fullFiscalQuarter } from '~/common/temporal/fiscal-year';
 import { ILogger, Logger } from '~/core/logger';
 import { PeriodicReportService } from '../periodic-report/periodic-report.service';
+import { ProgressReportVariantProgress } from '../product-progress/dto';
 import { ProductProgressService } from '../product-progress/product-progress.service';
 import { ProgressReportCommunityStoryService } from '../progress-report/community-stories/progress-report-community-story.service';
 import { ProgressReportMedia } from '../progress-report/media/dto';
@@ -192,6 +193,7 @@ export class Rev79Service {
         await this.productProgressService.update({
           ...progress,
           report: reportId,
+          variant: ProgressReportVariantProgress.Variants.byKey('partner'),
         });
       }
     }
@@ -249,7 +251,11 @@ export class Rev79Service {
 
     await this.mediaService.upload({
       report: reportId,
-      file: { file, name: filename },
+      file: {
+        file,
+        name: filename,
+        media: input.description ? { caption: input.description } : undefined,
+      },
       variant: ProgressReportMedia.Variants.byKey('draft'),
       category: input.category,
     });
