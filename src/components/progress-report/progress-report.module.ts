@@ -51,6 +51,11 @@ import { ProgressReportWorkflowModule } from './workflow/progress-report-workflo
     DropInternshipProgressReportsMigration,
     ReextractPnpProgressReportsMigration,
   ],
-  exports: [ProgressReportExtraForPeriodicInterfaceRepository],
+  exports: [
+    ProgressReportExtraForPeriodicInterfaceRepository,
+    ProgressReportTeamNewsService,
+    ProgressReportCommunityStoryService,
+    ProgressReportMediaModule,
+  ],
 })
 export class ProgressReportModule {}
