@@ -49,7 +49,9 @@ jest.unstable_mockModule('../product-progress/dto', () => ({
   },
 }));
 jest.unstable_mockModule('~/core/logger', () => ({
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   Logger: () => () => undefined,
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   ILogger: class {},
 }));
 jest.unstable_mockModule('./rev79.repository', () => ({
