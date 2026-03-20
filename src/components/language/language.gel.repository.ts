@@ -15,6 +15,7 @@ export class LanguageGelRepository
       sensitivity: lang.ownSensitivity,
       effectiveSensitivity: lang.sensitivity,
       presetInventory: e.bool(false), // Not implemented going forward
+      usesAIAssistance: lang.usesAIAssistance,
     }),
     omit: ['create'],
   })
