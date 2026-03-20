@@ -1,3 +1,4 @@
+import { Case } from '@seedcompany/common/case';
 import { createMetadataDecorator } from '@seedcompany/nest';
 import { type Query } from 'cypher-query-builder';
 import type { AbstractClass, Simplify } from 'type-fest';
@@ -5,12 +6,32 @@ import type { UnwrapSecured } from '~/common';
 import type { RawChangeOf } from '~/core/database/changes';
 import { type $, e } from '~/core/gel';
 import type { QueryFragment } from '~/core/neo4j/query-augmentation/apply';
-import type { Notification } from './dto';
+import type {
+  ChannelAvailability,
+  Notification,
+  NotificationChannel,
+} from './dto';
+import {
+  type NotificationType,
+  NotificationTypeEntries,
+} from './dto/notification-type.enum';
 
 export const NotificationStrategy = createMetadataDecorator({
   types: ['class'],
-  setter: (cls: AbstractClass<Notification>) => cls,
+  setter: (cls: AbstractClass<Notification>) => {
+    const type = cls.name.replace('Notification', '') as NotificationType;
+    NotificationTypeEntries.set(type, cls);
+    return { typeName: type, cls };
+  },
 });
+
+/**
+ * A map of channel → enabled for a notification type.
+ */
+export type ChannelSettings = Readonly<Record<NotificationChannel, boolean>>;
+export type ChannelAvailabilities = Readonly<
+  Record<NotificationChannel, ChannelAvailability>
+>;
 
 export type InputOf<T extends Notification> = Simplify<{
   [K in keyof T as Exclude<K, keyof Notification>]:
@@ -22,6 +43,30 @@ export abstract class INotificationStrategy<
   TNotification extends Notification,
   TInput = InputOf<TNotification>,
 > {
+  getLabel() {
+    return Case.capital(
+      this.constructor.name.replace('NotificationStrategy', ''),
+    );
+  }
+
+  /**
+   * The Markdown description given for this notification in user preferences.
+   */
+  getDescription(): string | null {
+    return null;
+  }
+
+  /**
+   * Whether each channel is always on/off,
+   * or if it is user-configurable and defaulted on/off.
+   * Each strategy can define this uniquely.
+   */
+  channelAvailabilities(): ChannelAvailabilities {
+    return {
+      App: this.broadcastTo().length > 0 ? 'AlwaysOn' : 'DefaultOn',
+    };
+  }
+
   /**
    * Should recipients be returned from the database?
    * Useful if the strategy can dynamically select a small-ish set of users
