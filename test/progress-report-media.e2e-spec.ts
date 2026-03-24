@@ -1,4 +1,5 @@
 import { beforeAll, beforeEach, describe, expect, it } from '@jest/globals';
+import got from 'got';
 import { CalendarDate, type ID, isIdLike } from '~/common';
 import { graphql, type InputOf } from '~/graphql';
 import {
@@ -268,6 +269,45 @@ describe('ProgressReport Media e2e', () => {
     expect(updated.media.total).toBe(0);
   });
 
+  it('Progress report file is anonymous for multiplication projects', async () => {
+    const multiplicationProject = await createProject(app, {
+      type: 'MultiplicationTranslation',
+      mouStart: CalendarDate.local(2023, 1, 1).toISO(),
+      mouEnd: CalendarDate.local(2024, 1, 1).toISO(),
+    });
+    const multiplicationLanguage = await runAsAdmin(app, createLanguage);
+    const multiplicationReportId = await createProgressReportForProject(
+      app,
+      multiplicationProject.id,
+      multiplicationLanguage.id,
+    );
+
+    const url = await uploadPeriodicReportAndGetUrl(
+      app,
+      multiplicationReportId,
+    );
+
+    const response = await got(url, {
+      enableUnixSockets: true,
+      throwHttpErrors: false,
+      followRedirect: false,
+    });
+
+    expect(response.statusCode).toBe(302);
+  });
+
+  it('Progress report file stays authenticated for non-multiplication projects', async () => {
+    const url = await uploadPeriodicReportAndGetUrl(app, reportId);
+
+    const response = await got(url, {
+      enableUnixSockets: true,
+      throwHttpErrors: false,
+      followRedirect: false,
+    });
+
+    expect(response.statusCode).toBe(401);
+  });
+
   describe('Featured Media', () => {
     let marketing: TestUser;
     beforeAll(async () => {
@@ -364,6 +404,46 @@ async function uploadMedia(
   return upload;
 }
 
+async function createProgressReportForProject(
+  app: TestApp,
+  project: ID,
+  language: ID,
+) {
+  const { createEng } = await app.graphql.mutate(CreateLanguageEngagementDoc, {
+    input: {
+      project,
+      language,
+    },
+  });
+  return createEng.engagement.progressReports.items[0]!.id;
+}
+
+async function uploadPeriodicReportAndGetUrl(
+  app: TestApp,
+  reportId: ID<'ProgressReport'>,
+) {
+  const upload = await requestFileUpload(app);
+  await uploadFileContents(app, upload.url, {
+    mimeType: 'application/pdf',
+    name: 'progress-report.pdf',
+  });
+
+  const { report } = await app.graphql.mutate(UploadPeriodicReportDoc, {
+    input: {
+      report: reportId,
+      file: {
+        upload: upload.id,
+        name: 'progress-report.pdf',
+      },
+    },
+  });
+
+  if (report.__typename !== 'ProgressReport') throw new Error();
+  const url = report.reportFile.value?.url;
+  if (!url) throw new Error('Report file URL was not set');
+  return url;
+}
+
 async function getFeaturedMedia(app: TestApp, id: ID<'ProgressReport'>) {
   const { report } = await app.graphql.query(
     graphql(
@@ -406,6 +486,40 @@ const reportMediaFrag = graphql(`
     canDelete
   }
 `);
+const CreateLanguageEngagementDoc = graphql(
+  `
+    mutation CreateLanguageEngagement($input: CreateLanguageEngagement!) {
+      createEng: createLanguageEngagement(input: $input) {
+        engagement {
+          ...languageEngagement
+          progressReports(input: { count: 1 }) {
+            items {
+              id
+            }
+          }
+        }
+      }
+    }
+  `,
+  [fragments.languageEngagement],
+);
+
+const UploadPeriodicReportDoc = graphql(`
+  mutation UploadPeriodicReport($input: UploadPeriodicReportFile!) {
+    report: uploadPeriodicReport(input: $input) {
+      __typename
+      ... on ProgressReport {
+        reportFile {
+          value {
+            id
+            url
+          }
+        }
+      }
+    }
+  }
+`);
+
 const UploadMediaDoc = graphql(
   `
     mutation Upload($input: UploadProgressReportMedia!) {

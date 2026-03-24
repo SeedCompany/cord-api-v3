@@ -89,6 +89,23 @@ export class PeriodicReportRepository extends DtoRepository<
       .with('datetime() as now')
       .matchNode('parent', 'BaseNode', { id: input.parent })
       .unwind(intervals, 'interval')
+      .with(
+        `
+          now,
+          parent,
+          interval,
+          CASE
+            WHEN
+              "${input.type}" = "${ReportType.Progress}"
+              AND (
+                (parent:Project AND parent.type = "MultiplicationTranslation")
+                OR EXISTS((parent)<-[:engagement { active: true }]-(:Project { type: "MultiplicationTranslation" }))
+              )
+            THEN true
+            ELSE false
+          END as reportFilePublic
+        `,
+      )
       .comment('Stop processing this row if the report already exists')
       .subQuery('parent, interval', (sub) =>
         sub
@@ -146,11 +163,12 @@ export class PeriodicReportRepository extends DtoRepository<
       )
       .apply(isProgress ? this.progressRepo.amendAfterCreateNode() : undefined)
       // rename node to report, so we can call create node again for the file
-      .with('now, interval, node as report')
+      .with('now, interval, reportFilePublic, node as report')
       .apply(
         await createNode(File, {
           initialProps: {
             name: variable('apoc.temporal.format(interval.end, "date")'),
+            public: variable('reportFilePublic'),
           },
           baseNodeProps: {
             id: variable('interval.tempFileId'),
