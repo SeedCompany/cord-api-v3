@@ -27,6 +27,7 @@ import { QueueModule } from './queue/queue.module';
 import { ResourceModule } from './resources/resource.module';
 import { ScalarProviders } from './scalars.resolver';
 import { ScheduleModule } from './schedule/schedule.module';
+import { SeedApiModule } from './seed-api/seed-api.module';
 import { ShutdownHookProvider } from './shutdown.hook';
 import { TimeoutInterceptor } from './timeout.interceptor';
 import { TracingModule } from './tracing';
@@ -58,6 +59,7 @@ import { WebhooksModule } from './webhooks/webhooks.module';
     QueueModule,
     LockerModule,
     ScheduleModule,
+    SeedApiModule,
   ],
   providers: [
     AwsS3Factory,

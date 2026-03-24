@@ -341,6 +341,11 @@ export const makeConfig = (env: EnvironmentService) =>
     webhooks = {
       requestTimeout: env.duration('WEBHOOK_REQUEST_TIMEOUT').optional('5m'),
     };
+
+    seedApi = {
+      url: env.url('SEED_API_URL').optional('http://localhost:8367'),
+      secret: env.string('SEED_API_SECRET').optional(''),
+    };
   };
 
 // @ts-expect-error We will call makeConfig to create this shape.
