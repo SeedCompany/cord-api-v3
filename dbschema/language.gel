@@ -57,6 +57,14 @@ module default {
       constraint regexp(r'^[0-9]{5}$');
     }
     
+    property usesAIAssistance := exists (
+      select .engagements
+      filter .usingAIAssistedTranslation not in {
+        Engagement::AIAssistedTranslation.None,
+        Engagement::AIAssistedTranslation.Unknown
+      }
+    );
+    
     property population := .populationOverride ?? .ethnologue.population;
     populationOverride: population;
     
