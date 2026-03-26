@@ -25,8 +25,15 @@ export class Pnp {
 
   static fromBuffer(buffer: Buffer, name?: string) {
     const book = Xlsx.WorkBook.fromBuffer(buffer);
-    PlanningSheet.register(book);
-    ProgressSheet.register(book);
+    try {
+      PlanningSheet.register(book);
+      ProgressSheet.register(book);
+    } catch (e) {
+      if (e instanceof NotFoundException) {
+        throw new NotPnPFile(e.message, e);
+      }
+      throw e;
+    }
     return new Pnp(book, name);
   }
 
