@@ -415,6 +415,41 @@ describe('Project e2e', () => {
     expect(projects.items.length).toBeGreaterThanOrEqual(numProjects);
   });
 
+  it('filters projects by field region name', async () => {
+    const matchingRegion = await runAsAdmin(
+      app,
+      async () => await createRegion(app, { name: 'Amazonia Region' }),
+    );
+    const otherRegion = await runAsAdmin(
+      app,
+      async () => await createRegion(app, { name: 'Baltic Region' }),
+    );
+
+    const matchingProject = await createProject(app, {
+      name: 'Project in Amazonia ' + (await generateId()),
+      fieldRegion: matchingRegion.id,
+    });
+    const otherProject = await createProject(app, {
+      name: 'Project in Baltic ' + (await generateId()),
+      fieldRegion: otherRegion.id,
+    });
+
+    const projects = await listProjects(app, {
+      filter: {
+        fieldRegion: {
+          name: 'am',
+        },
+      },
+    });
+
+    expect(projects.items.map((project) => project.id)).toContain(
+      matchingProject.id,
+    );
+    expect(projects.items.map((project) => project.id)).not.toContain(
+      otherProject.id,
+    );
+  });
+
   it('List of projects sorted by Sensitivity', async () => {
     //Create three intern projects of different sensitivities
     await createProject(app, {

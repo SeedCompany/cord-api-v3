@@ -3,6 +3,7 @@ import {
   FilterField,
   type ID,
   IdField,
+  OptionalField,
   PaginatedList,
   SecuredList,
   SortablePaginationInput,
@@ -15,6 +16,9 @@ import { FieldRegion } from './field-region.dto';
 export abstract class FieldRegionFilters {
   @IdField({ optional: true })
   readonly id?: ID<'FieldRegion'>;
+
+  @OptionalField()
+  readonly name?: string;
 
   @FilterField(() => UserFilters)
   readonly director?: UserFilters & {};

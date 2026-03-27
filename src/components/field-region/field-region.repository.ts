@@ -9,13 +9,14 @@ import {
   SecuredList,
   type UnsecuredDto,
 } from '~/common';
-import { DtoRepository } from '~/core/neo4j';
+import { DtoRepository, OnIndex } from '~/core/neo4j';
 import {
   ACTIVE,
   createNode,
   createRelationships,
   defineSorters,
   filter,
+  FullTextIndex,
   matchProps,
   merge,
   paginate,
@@ -136,10 +137,25 @@ export class FieldRegionRepository extends DtoRepository(FieldRegion) {
       .map('dto')
       .run();
   }
+
+  @OnIndex('schema')
+  private async createSchemaIndexes() {
+    await this.db.query().apply(FieldRegionNameIndex.create()).run();
+  }
 }
 
 export const fieldRegionFilters = filter.define(() => FieldRegionFilters, {
   id: filter.baseNodeProp(),
+  name: filter.fullText({
+    index: () => FieldRegionNameIndex,
+    matchToNode: (q) =>
+      q.match([
+        node('node', 'FieldRegion'),
+        relation('out', '', 'name', ACTIVE),
+        node('match'),
+      ]),
+    minScore: 0.8,
+  }),
   director: filter.sub(() => userFilters)((sub) =>
     sub.match([
       node('outer'),
@@ -177,4 +193,11 @@ export const fieldRegionSorters = defineSorters(FieldRegion, {
         node('node', 'FieldZone'),
       ])
       .apply(sortWith(fieldZoneSorters, input)),
+});
+
+const FieldRegionNameIndex = FullTextIndex({
+  indexName: 'FieldRegionName',
+  labels: 'FieldRegionName',
+  properties: 'value',
+  analyzer: 'standard-folding',
 });
