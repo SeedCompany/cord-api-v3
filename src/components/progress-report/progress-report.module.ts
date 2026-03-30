@@ -9,6 +9,7 @@ import { ProgressReportHighlightsResolver } from './highlights/progress-report-h
 import { ProgressReportHighlightsService } from './highlights/progress-report-highlights.service';
 import { ProgressReportMediaModule } from './media/progress-report-media.module';
 import { BackfillMultiplicationProgressReportFilePublicMigration } from './migrations/backfill-multiplication-progress-report-file-public.migration';
+import { DropDuplicateMultiplicationProgressReportsMigration } from './migrations/drop-duplicate-multiplication-progress-reports.migration';
 import { DropInternshipProgressReportsMigration } from './migrations/drop-internship-progress-reports.migration';
 import { ReextractPnpProgressReportsMigration } from './migrations/reextract-all-progress-reports.migration';
 import { ProgressReportExtraForPeriodicInterfaceRepository } from './progress-report-extra-for-periodic-interface.repository';
@@ -50,6 +51,7 @@ import { ProgressReportWorkflowModule } from './workflow/progress-report-workflo
     ProgressReportRepository,
     ProgressReportExtraForPeriodicInterfaceRepository,
     BackfillMultiplicationProgressReportFilePublicMigration,
+    DropDuplicateMultiplicationProgressReportsMigration,
     DropInternshipProgressReportsMigration,
     ReextractPnpProgressReportsMigration,
   ],
