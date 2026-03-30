@@ -9,6 +9,7 @@ import {
   type Query,
   relation,
 } from 'cypher-query-builder';
+import { createHash } from 'node:crypto';
 import {
   type CalendarDate,
   generateId,
@@ -17,7 +18,7 @@ import {
   type UnsecuredDto,
 } from '~/common';
 import { type ChangesOf } from '~/core/database/changes';
-import { DtoRepository } from '~/core/neo4j';
+import { DtoRepository, UniquenessError } from '~/core/neo4j';
 import {
   ACTIVE,
   createNode,
@@ -69,9 +70,20 @@ export class PeriodicReportRepository extends DtoRepository<
 
     // Create IDs here that will feed into the reports that are new.
     // If only neo4j had a nanoid generator natively.
+    //
+    // tempId is derived deterministically from (parent, type, start, end) so
+    // that concurrent transactions computing IDs for the same interval always
+    // land on the same value.  The existing BaseNode.id uniqueness constraint
+    // then guarantees at most one node is created: the second writer gets a
+    // UniquenessError (caught below) and returns [] instead of a duplicate.
     const intervals = await Promise.all(
       input.intervals.map(async (interval) => ({
-        tempId: await generateId(),
+        tempId: deterministicReportId(
+          input.parent,
+          input.type,
+          interval.start,
+          interval.end,
+        ),
         start: interval.start,
         end: interval.end,
         tempFileId: await generateId(),
@@ -185,7 +197,16 @@ export class PeriodicReportRepository extends DtoRepository<
       .return<{ id: ID; interval: Range<CalendarDate> }>(
         'report.id as id, interval',
       );
-    return await query.run();
+    try {
+      return await query.run();
+    } catch (e) {
+      // A concurrent transaction created these same reports (same deterministic
+      // IDs) and committed first.  Treat this as a no-op: the reports exist.
+      if (e instanceof UniquenessError && e.property === 'id') {
+        return [];
+      }
+      throw e;
+    }
   }
 
   async update<T extends PeriodicReport | UnsecuredDto<PeriodicReport>>(
@@ -431,6 +452,25 @@ export class PeriodicReportRepository extends DtoRepository<
         );
   }
 }
+
+/**
+ * Produces a stable ID for a periodic report given its identifying dimensions.
+ * Two calls with the same arguments always return the same 11-character
+ * base64url string (66 bits of SHA-256), which is enough to avoid accidental
+ * collisions while being deterministic enough to detect intentional duplicates.
+ */
+const deterministicReportId = (
+  parentId: ID,
+  type: string,
+  start: CalendarDate,
+  end: CalendarDate,
+): ID => {
+  const key = `${parentId}:${type}:${start.toISODate()}:${end.toISODate()}`;
+  return createHash('sha256')
+    .update(key)
+    .digest('base64url')
+    .slice(0, 11) as ID;
+};
 
 export const matchCurrentDue =
   (parentId: ID | Variable | undefined, reportType: ReportType) =>
