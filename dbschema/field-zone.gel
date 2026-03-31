@@ -7,5 +7,6 @@ module default {
     required director: User;
     
     fieldRegions := .<fieldZone[is FieldRegion];
+    projects := .<fieldZone[is FieldRegion].projects;
   }
 }
