@@ -326,6 +326,13 @@ export class FileRepository extends CommonRepository {
     return (query: Query) =>
       query
         .apply(matchProps())
+        .optionalMatch([
+          node('node'),
+          relation('out', '', 'parent', ACTIVE),
+          node('', 'FileNode'),
+          relation('out', '', 'public', ACTIVE),
+          node('parentPublicProp', 'Property'),
+        ])
         .match([
           node('node'),
           relation('out', '', 'createdBy', ACTIVE),
@@ -336,6 +343,7 @@ export class FileRepository extends CommonRepository {
             type: `"${FileNodeType.FileVersion}"`,
             createdById: 'createdBy.id',
             canDelete: true,
+            public: 'coalesce(props.public, parentPublicProp.value, false)',
           }).as('dto'),
         );
   }
