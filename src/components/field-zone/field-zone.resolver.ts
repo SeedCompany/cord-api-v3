@@ -8,6 +8,8 @@ import {
 } from '@nestjs/graphql';
 import { type ID, IdArg, ListArg, mapSecuredValue } from '~/common';
 import { Loader, type LoaderOf } from '~/core/data-loader';
+import { ProjectListInput, SecuredProjectList } from '../project/dto';
+import { ProjectLoader } from '../project/project.loader';
 import { UserLoader } from '../user';
 import { SecuredUser } from '../user/dto';
 import {
@@ -57,6 +59,19 @@ export class FieldZoneResolver {
     return await mapSecuredValue(fieldZone.director, ({ id }) =>
       users.load(id),
     );
+  }
+
+  @ResolveField(() => SecuredProjectList, {
+    description: 'The list of projects in this field zone.',
+  })
+  async projects(
+    @Parent() fieldZone: FieldZone,
+    @ListArg(ProjectListInput) input: ProjectListInput,
+    @Loader(ProjectLoader) loader: LoaderOf<ProjectLoader>,
+  ): Promise<SecuredProjectList> {
+    const list = await this.fieldZoneService.listProjects(fieldZone, input);
+    loader.primeAll(list.items);
+    return list;
   }
 
   @Mutation(() => FieldZoneCreated, {

@@ -221,6 +221,14 @@ export class ProjectGelRepository
           '=',
           input.usesRev79,
         ),
+      input.fieldRegion?.id &&
+        e.op(project.fieldRegion.id, '=', e.uuid(input.fieldRegion.id)),
+      input.fieldRegion?.fieldZone?.id &&
+        e.op(
+          project.fieldRegion.fieldZone.id,
+          '=',
+          e.uuid(input.fieldRegion.fieldZone.id),
+        ),
     ];
   }
 

@@ -10,6 +10,8 @@ import {
 import { Hooks } from '~/core/hooks';
 import { HandleIdLookup } from '~/core/resources';
 import { Privileges } from '../authorization';
+import { type ProjectListInput, type SecuredProjectList } from '../project/dto';
+import { ProjectService } from '../project/project.service';
 import { UserService } from '../user';
 import {
   type CreateFieldZone,
@@ -28,6 +30,7 @@ export class FieldZoneService {
     private readonly hooks: Hooks,
     private readonly users: UserService,
     private readonly repo: FieldZoneRepository,
+    private readonly projects: ProjectService,
   ) {}
 
   async create(input: CreateFieldZone): Promise<FieldZone> {
@@ -113,6 +116,24 @@ export class FieldZoneService {
     return {
       ...results,
       items: results.items.map((dto) => this.secure(dto)),
+    };
+  }
+
+  async listProjects(
+    fieldZone: FieldZone,
+    input: ProjectListInput,
+  ): Promise<SecuredProjectList> {
+    const result = await this.projects.list({
+      ...input,
+      filter: {
+        ...input.filter,
+        fieldRegion: { fieldZone: { id: fieldZone.id } },
+      },
+    });
+    return {
+      ...result,
+      canRead: true,
+      canCreate: false,
     };
   }
 }
