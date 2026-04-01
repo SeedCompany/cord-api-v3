@@ -11,7 +11,7 @@ export class QuarterPeriodInput {
 
   @Field(() => Int, {
     description:
-      'Quarter number: 1 = Oct–Dec,2 = Jan–Mar, 3 = Apr–Jun, 4 = Jul–Sep',
+      'Quarter number: 1 = Oct–Dec, 2 = Jan–Mar, 3 = Apr–Jun, 4 = Jul–Sep',
   })
   readonly quarter: number;
 }

@@ -102,8 +102,11 @@ export class Rev79Service {
     rev79ProjectId: string,
   ): Promise<Array<{ id: string; name: string }>> {
     const matches = await this.repo.findProjectsByRev79Id(rev79ProjectId);
-    if (matches.length !== 1) {
+    if (matches.length === 0) {
       return [];
+    }
+    if (matches.length > 1) {
+      throw new AmbiguousRev79ProjectException(rev79ProjectId);
     }
     const projectId = matches[0]!.id;
     try {
