@@ -26,6 +26,36 @@ export class Rev79Repository extends CommonRepository {
   }
 
   /**
+   * Returns all Rev79 community IDs (and their language display names) for
+   * LanguageEngagements that belong to `projectId` and have a rev79CommunityId set.
+   */
+  async findCommunitiesByRev79ProjectId(
+    projectId: ID<'Project'>,
+  ): Promise<ReadonlyArray<{ id: string; name: string }>> {
+    return await this.db
+      .query()
+      .match([
+        node('project', 'Project', { id: projectId }),
+        relation('out', '', 'engagement', ACTIVE),
+        node('engagement', 'LanguageEngagement'),
+        relation('out', '', 'rev79CommunityId', ACTIVE),
+        node('communityId', 'Property'),
+      ])
+      .match([
+        node('engagement'),
+        relation('out', '', 'language', ACTIVE),
+        node('language', 'Language'),
+        relation('out', '', 'name', ACTIVE),
+        node('languageName', 'Property'),
+      ])
+      .return<{ id: string; name: string }>([
+        'communityId.value as id',
+        'languageName.value as name',
+      ])
+      .run();
+  }
+
+  /**
    * Returns IDs of all LanguageEngagements within `projectId` whose
    * rev79CommunityId property matches.
    * The service layer enforces that exactly one result is returned.

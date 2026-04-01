@@ -2,6 +2,7 @@ import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import {
   Rev79BulkUploadProgressReportsInput,
   Rev79BulkUploadResult,
+  Rev79Community,
   Rev79QuarterlyReportContextInput,
   Rev79QuarterlyReportContextResult,
 } from './dto';
@@ -28,6 +29,19 @@ export class Rev79Resolver {
     @Args('input') input: Rev79QuarterlyReportContextInput,
   ): Promise<Rev79QuarterlyReportContextResult> {
     return await this.service.resolveQuarterlyReportContext(input);
+  }
+
+  @Query(() => [Rev79Community], {
+    description: `
+      Returns the Rev79 communities that have language engagements
+      under the Cord project mapped to the given Rev79 project ID.
+      Returns an empty list if no Cord project is found for that Rev79 project ID.
+    `,
+  })
+  async rev79ProjectCommunities(
+    @Args('rev79ProjectId') rev79ProjectId: string,
+  ): Promise<Array<{ id: string; name: string }>> {
+    return await this.service.getProjectCommunities(rev79ProjectId);
   }
 
   @Mutation(() => Rev79BulkUploadResult, {

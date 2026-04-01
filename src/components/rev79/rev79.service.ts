@@ -98,6 +98,25 @@ export class Rev79Service {
     };
   }
 
+  async getProjectCommunities(
+    rev79ProjectId: string,
+  ): Promise<Array<{ id: string; name: string }>> {
+    const matches = await this.repo.findProjectsByRev79Id(rev79ProjectId);
+    if (matches.length !== 1) {
+      return [];
+    }
+    const projectId = matches[0]!.id;
+    try {
+      await this.projectService.readOne(projectId);
+    } catch (e) {
+      if (e instanceof NotFoundException) {
+        return [];
+      }
+      throw e;
+    }
+    return await this.repo.findCommunitiesByRev79ProjectId(projectId);
+  }
+
   async uploadProgressReports(
     input: Rev79BulkUploadProgressReportsInput,
   ): Promise<Rev79BulkUploadResult> {
