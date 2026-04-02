@@ -21,6 +21,27 @@ export class Rev79GelRepository extends CommonRepository {
   }
 
   /**
+   * Returns all Rev79 community IDs (and their language display names) for
+   * LanguageEngagements that belong to `projectId` and have a rev79CommunityId set.
+   */
+  async findCommunitiesByRev79ProjectId(
+    projectId: ID<'Project'>,
+  ): Promise<ReadonlyArray<{ id: string; name: string }>> {
+    const project = e.cast(e.Project, e.uuid(projectId));
+    const query = e.select(e.LanguageEngagement, (eng) => ({
+      filter: e.op(
+        e.op(eng.project, '=', project),
+        'and',
+        e.op('exists', eng.rev79CommunityId),
+      ),
+      rev79CommunityId: true,
+      name: eng.language.displayName,
+    }));
+    const rows = await this.db.run(query);
+    return rows.map((r) => ({ id: r.rev79CommunityId!, name: r.name }));
+  }
+
+  /**
    * Returns IDs of all LanguageEngagements within `projectId` whose
    * rev79CommunityId matches.
    * The service layer enforces that exactly one result is returned.
