@@ -34,10 +34,11 @@ export class Rev79GelRepository extends CommonRepository {
         'and',
         e.op('exists', eng.rev79CommunityId),
       ),
-      id: eng.rev79CommunityId,
+      rev79CommunityId: true,
       name: eng.language.displayName,
     }));
-    return (await this.db.run(query)) as Array<{ id: string; name: string }>;
+    const rows = await this.db.run(query);
+    return rows.map((r) => ({ id: r.rev79CommunityId!, name: r.name }));
   }
 
   /**

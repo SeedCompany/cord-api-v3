@@ -40,7 +40,7 @@ export class Rev79Resolver {
   })
   async rev79ProjectCommunities(
     @Args('rev79ProjectId') rev79ProjectId: string,
-  ): Promise<Array<{ id: string; name: string }>> {
+  ): Promise<ReadonlyArray<{ id: string; name: string }>> {
     return await this.service.getProjectCommunities(rev79ProjectId);
   }
 

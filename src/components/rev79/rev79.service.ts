@@ -100,7 +100,7 @@ export class Rev79Service {
 
   async getProjectCommunities(
     rev79ProjectId: string,
-  ): Promise<Array<{ id: string; name: string }>> {
+  ): Promise<ReadonlyArray<{ id: string; name: string }>> {
     const matches = await this.repo.findProjectsByRev79Id(rev79ProjectId);
     if (matches.length === 0) {
       return [];
