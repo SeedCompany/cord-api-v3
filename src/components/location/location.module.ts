@@ -15,7 +15,7 @@ import { DefaultMarketingRegionMigration } from './migrations/default-marketing-
   imports: [
     forwardRef(() => AuthorizationModule),
     forwardRef(() => FundingAccountModule),
-    FieldRegionModule,
+    forwardRef(() => FieldRegionModule),
     FileModule,
   ],
   providers: [

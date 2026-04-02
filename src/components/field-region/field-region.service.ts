@@ -10,6 +10,12 @@ import {
 import { Hooks } from '~/core/hooks';
 import { HandleIdLookup } from '~/core/resources';
 import { Privileges } from '../authorization';
+import {
+  IProject,
+  type ProjectListInput,
+  type SecuredProjectList,
+} from '../project/dto';
+import { ProjectService } from '../project/project.service';
 import { UserService } from '../user';
 import {
   type CreateFieldRegion,
@@ -28,6 +34,7 @@ export class FieldRegionService {
     private readonly hooks: Hooks,
     private readonly users: UserService,
     private readonly repo: FieldRegionRepository,
+    private readonly projects: ProjectService,
   ) {}
 
   async create(input: CreateFieldRegion): Promise<FieldRegion> {
@@ -113,6 +120,21 @@ export class FieldRegionService {
     return {
       ...results,
       items: results.items.map((dto) => this.secure(dto)),
+    };
+  }
+
+  async listProjects(
+    fieldRegion: FieldRegion,
+    input: ProjectListInput,
+  ): Promise<SecuredProjectList> {
+    const result = await this.projects.list({
+      ...input,
+      filter: { ...input.filter, fieldRegion: { id: fieldRegion.id } },
+    });
+    return {
+      ...result,
+      canRead: true,
+      canCreate: this.privileges.for(IProject).can('create'),
     };
   }
 }
