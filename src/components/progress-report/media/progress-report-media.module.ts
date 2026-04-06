@@ -12,6 +12,7 @@ import { ProgressReportMediaProgressReportConnectionResolver } from './resolvers
 
 @Module({
   imports: [FileModule],
+  exports: [ProgressReportMediaService],
   providers: [
     ProgressReportMediaResolver,
     ProgressReportMediaListResolver,

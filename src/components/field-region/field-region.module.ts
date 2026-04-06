@@ -2,6 +2,7 @@ import { forwardRef, Module } from '@nestjs/common';
 import { splitDb } from '~/core/database';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { FieldZoneModule } from '../field-zone/field-zone.module';
+import { ProjectModule } from '../project/project.module';
 import { UserModule } from '../user/user.module';
 import { FieldRegionGelRepository } from './field-region.gel.repository';
 import { FieldRegionLoader } from './field-region.loader';
@@ -14,6 +15,7 @@ import { RestrictRegionDirectorRemovalHandler } from './handlers/restrict-region
   imports: [
     forwardRef(() => AuthorizationModule),
     FieldZoneModule,
+    forwardRef(() => ProjectModule),
     forwardRef(() => UserModule),
   ],
   providers: [

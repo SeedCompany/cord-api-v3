@@ -255,7 +255,7 @@ export class PartnerRepository extends DtoRepository(Partner) {
           sub
             .match([
               node('node'),
-              relation('out', '', 'languagesOfConsulting', ACTIVE),
+              relation('out', '', 'languagesOfConsulting'),
               node('languagesOfConsulting', 'Language'),
             ])
             .return(

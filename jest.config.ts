@@ -14,6 +14,9 @@ export default async (): Promise<Config> => {
     moduleNameMapper: {
       // Imports for *.edgeql files are really *.edgeql.ts files
       [`(.+)\\.edgeql$`]: '$1.edgeql.ts',
+      // TypeScript path aliases (needed for unstable_mockModule which bypasses ts-jest resolution)
+      '^~/core$': '<rootDir>/src/core',
+      '^~/core/(.+)$': '<rootDir>/src/core/$1',
     },
   } satisfies Config;
 

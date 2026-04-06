@@ -34,6 +34,7 @@ import { ProgressSummaryModule } from './components/progress-summary/progress-su
 import { ProjectChangeRequestModule } from './components/project-change-request/project-change-request.module';
 import { ProjectModule } from './components/project/project.module';
 import { PromptsModule } from './components/prompts/prompts.module';
+import { Rev79Module } from './components/rev79/rev79.module';
 import { ScriptureModule } from './components/scripture';
 import { SearchModule } from './components/search/search.module';
 import { StoryModule } from './components/story/story.module';
@@ -92,6 +93,7 @@ if (process.env.NODE_ENV !== 'production') {
     SystemNotificationModule,
     FinanceDepartmentModule,
     DBLUploadNotificationModule,
+    Rev79Module,
     ToolModule,
   ],
 })
