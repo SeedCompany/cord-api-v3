@@ -262,6 +262,7 @@ export class LanguageRepository extends DtoRepository<
         relation('out', '', 'language'),
         node('node'),
       ])
+      .with(['node', 'project'])
       .apply(languageFilters(input.filter))
       .apply(
         this.privileges.filterToReadable({
