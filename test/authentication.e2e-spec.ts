@@ -7,7 +7,13 @@ import { type ForgotPassword } from '~/core/authentication/emails/forgot-passwor
 import { MailerService } from '~/core/email';
 import { graphql } from '~/graphql';
 import { currentUser, login, logout, registerUser } from './operations/auth';
-import { createApp, createTester, type TestApp, type Tester } from './setup';
+import {
+  createApp,
+  createTester,
+  getRootTester,
+  type TestApp,
+  type Tester,
+} from './setup';
 
 type ForgotPasswordMsg = EmailMessage<PropsOf<typeof ForgotPassword>>;
 
@@ -62,13 +68,14 @@ describe('Authentication e2e', () => {
 
   it('disabled users are logged out & cannot login', async () => {
     const tester = createTester(app);
+    const admin = await getRootTester(app);
     const user = await tester.apply(registerUser());
 
     // confirm they're logged in
     const before = await tester.apply(currentUser());
     expect(before?.id).toBe(user.id);
 
-    await tester.apply(disableUser(user.id));
+    await admin.apply(disableUser(user.id));
 
     // Confirm mutation logged them out
     const after = await tester.apply(currentUser());
