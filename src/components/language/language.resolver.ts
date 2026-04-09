@@ -121,12 +121,12 @@ export class LanguageResolver {
     }
     const value = language.firstScriptureEngagement
       ? ({
-        hasFirst: true,
-        engagement: language.firstScriptureEngagement.id,
-      } satisfies InternalFirstScripture)
+          hasFirst: true,
+          engagement: language.firstScriptureEngagement.id,
+        } satisfies InternalFirstScripture)
       : ({
-        hasFirst: language.hasExternalFirstScripture.value!,
-      } satisfies ExternalFirstScripture);
+          hasFirst: language.hasExternalFirstScripture.value!,
+        } satisfies ExternalFirstScripture);
     return { canRead: true, canEdit: false, value };
   }
 
