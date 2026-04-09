@@ -9,13 +9,6 @@ export const fullName = (
     >
   >,
 ) => {
-  const realName = cleanJoin(' ', [
-    user.realFirstName?.value,
-    user.realLastName?.value,
-  ]);
-  if (realName) {
-    return realName;
-  }
   const displayName = cleanJoin(' ', [
     user.displayFirstName?.value,
     user.displayLastName?.value,
@@ -23,6 +16,19 @@ export const fullName = (
   if (displayName) {
     return displayName;
   }
+  const realName = cleanJoin(' ', [
+    user.realFirstName?.value,
+    user.realLastName?.value,
+  ]);
+  if (realName) {
+    return realName;
+  }
 
   return undefined;
 };
+
+export const displayFullName = (
+  user: Partial<Pick<User, 'displayFirstName' | 'displayLastName'>>,
+) =>
+  cleanJoin(' ', [user.displayFirstName?.value, user.displayLastName?.value]) ||
+  undefined;
