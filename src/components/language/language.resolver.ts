@@ -47,6 +47,7 @@ import {
   UpdateLanguage,
 } from './dto';
 import { LanguageLoader } from './language.loader';
+import { languageName } from './languageName';
 import { LanguageService } from './language.service';
 
 @ArgsType()
@@ -76,10 +77,14 @@ export class LanguageResolver {
   }
 
   @ResolveField(() => String, { nullable: true })
+  publicName(@Parent() language: Language): string | undefined {
+    return languageName(language);
+  }
+
+  @ResolveField(() => String, { nullable: true })
   avatarLetters(@Parent() language: Language): string | undefined {
-    return language.name.canRead && language.name.value
-      ? firstLettersOfWords(language.name.value)
-      : undefined;
+    const name = languageName(language);
+    return name ? firstLettersOfWords(name) : undefined;
   }
 
   @ResolveField(() => SecuredIntNullable, {
@@ -116,12 +121,12 @@ export class LanguageResolver {
     }
     const value = language.firstScriptureEngagement
       ? ({
-          hasFirst: true,
-          engagement: language.firstScriptureEngagement.id,
-        } satisfies InternalFirstScripture)
+        hasFirst: true,
+        engagement: language.firstScriptureEngagement.id,
+      } satisfies InternalFirstScripture)
       : ({
-          hasFirst: language.hasExternalFirstScripture.value!,
-        } satisfies ExternalFirstScripture);
+        hasFirst: language.hasExternalFirstScripture.value!,
+      } satisfies ExternalFirstScripture);
     return { canRead: true, canEdit: false, value };
   }
 
