@@ -42,12 +42,12 @@ import {
   LanguageDeleted,
   LanguageListInput,
   LanguageListOutput,
+  languageName,
   LanguageUpdated,
   SecuredFirstScripture,
   UpdateLanguage,
 } from './dto';
 import { LanguageLoader } from './language.loader';
-import { languageName } from './languageName';
 import { LanguageService } from './language.service';
 
 @ArgsType()
