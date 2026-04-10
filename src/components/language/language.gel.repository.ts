@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { type ID, type PublicOf } from '~/common';
-import { e, RepoFor } from '~/core/gel';
-import { type CreateLanguage, Language } from './dto';
+import { e, RepoFor, type ScopeOf } from '~/core/gel';
+import { type CreateLanguage, Language, type LanguageListInput } from './dto';
 import { type LanguageRepository } from './language.repository';
 
 @Injectable()
@@ -49,6 +49,17 @@ export class LanguageGelRepository
     const lang = e.cast(e.Language, e.uuid(id));
     const query = e.op('exists', lang.firstScriptureEngagement);
     return await this.db.run(query);
+  }
+
+  protected listFilters(
+    lang: ScopeOf<typeof e.Language>,
+    input: LanguageListInput,
+  ) {
+    if (!input.filter) return [];
+    return [
+      input.filter.pinned != null &&
+        e.op(lang.pinned, '=', input.filter.pinned),
+    ];
   }
 
   async readOneByEth(ethnologueId: ID) {
