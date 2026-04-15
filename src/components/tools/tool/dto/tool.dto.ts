@@ -4,8 +4,8 @@ import {
   NameField,
   Resource,
   SecuredBoolean,
-  SecuredStringNullable,
   SecuredString,
+  SecuredStringNullable,
 } from '~/common';
 import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
