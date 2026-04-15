@@ -4,6 +4,8 @@ module default {
       constraint exclusive;
     }
 
+    optional description: str;
+
     required aiBased: bool {
       default := false;
     };
