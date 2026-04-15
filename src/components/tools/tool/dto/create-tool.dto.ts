@@ -8,6 +8,9 @@ export abstract class CreateTool {
   @NameField()
   readonly name: string;
 
+  @Field(() => String, { nullable: true })
+  readonly description?: string | null;
+
   @Field()
   readonly aiBased: boolean = false;
 
