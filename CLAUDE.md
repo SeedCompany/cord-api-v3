@@ -8,19 +8,19 @@ CORD API v3 is a **Bible translation project management API** built with NestJS 
 
 ## Tech Stack
 
-| Layer | Choice |
-|---|---|
-| Framework | NestJS v11 (Fastify adapter — not Express) |
-| Language | TypeScript v5 (`type: "module"`, strict mode, ESM) |
-| API | GraphQL Yoga, `@nestjs/graphql` code-first, graphql-ws subscriptions |
-| Primary DB (new) | Gel v2 (`gel`, `@gel/generate`) |
-| Legacy DB | Neo4j (`neo4j-driver`, `cypher-query-builder`) |
-| Queues | BullMQ + Redis |
-| Auth | JWT + argon2 |
-| File storage | AWS S3 |
-| Package manager | Yarn v4 (Berry) — use `yarn`, never `npm` |
-| Node | >= 24 |
-| Testing | Jest 30 + `ts-jest`, ephemeral Gel DB per test file |
+| Layer            | Choice                                                               |
+| ---------------- | -------------------------------------------------------------------- |
+| Framework        | NestJS v11 (Fastify adapter — not Express)                           |
+| Language         | TypeScript v5 (`type: "module"`, strict mode, ESM)                   |
+| API              | GraphQL Yoga, `@nestjs/graphql` code-first, graphql-ws subscriptions |
+| Primary DB (new) | Gel v2 (`gel`, `@gel/generate`)                                      |
+| Legacy DB        | Neo4j (`neo4j-driver`, `cypher-query-builder`)                       |
+| Queues           | BullMQ + Redis                                                       |
+| Auth             | JWT + argon2                                                         |
+| File storage     | AWS S3                                                               |
+| Package manager  | Yarn v4 (Berry) — use `yarn`, never `npm`                            |
+| Node             | >= 24                                                                |
+| Testing          | Jest 30 + `ts-jest`, ephemeral Gel DB per test file                  |
 
 ---
 
@@ -66,7 +66,9 @@ src/components/{entity}/
     update-{entity}.dto.ts        # @InputType
     list-{entity}.dto.ts          # pagination input/output
   hooks/                          # event bus hooks
-  migrations/                     # schema migrations
+  migrations/                     # application/data transformation migrations
+                                  # (src/components/*/migrations/); DB schema
+                                  # migrations are generated under dbschema/migrations/
 ```
 
 ---
@@ -101,7 +103,7 @@ Everything above the repository is DB-agnostic; splitDb() is the migration bound
 
 **Do not remove Neo4j repositories** until a domain's Gel repository is fully built and validated.
 
-**Next phase (planning):** A subsequent migration from Gel to PostgreSQL (Kysely vs Drizzle) is under evaluation. Planning docs live at `~/Desktop/migration-guide.md`. Do not start this work without explicit instruction.
+**Next phase (planning):** A subsequent migration from Gel to PostgreSQL (Kysely vs Drizzle) is under evaluation. Planning docs have not yet been committed to this repository — ask the team for access. Do not start this work without explicit instruction.
 
 ---
 
@@ -119,17 +121,21 @@ export class Partnership extends Interfaces {
   })) satisfies ResourceRelationsShape;
 
   @Field()
-  readonly primary: SecuredBoolean;      // access-controlled field
+  readonly primary: SecuredBoolean; // access-controlled field
 
-  @Calculated()                          // computed, not stored
+  @Calculated() // computed, not stored
   @Field()
   readonly mouStart: SecuredDateNullable;
 }
 
 // Always declare resource in ResourceMap via module augmentation:
 declare module '~/core/resources/map' {
-  interface ResourceMap { Partnership: typeof Partnership; }
-  interface ResourceDBMap { Partnership: typeof e.default.Partnership; }
+  interface ResourceMap {
+    Partnership: typeof Partnership;
+  }
+  interface ResourceDBMap {
+    Partnership: typeof e.default.Partnership;
+  }
 }
 ```
 
@@ -144,13 +150,13 @@ declare module '~/core/resources/map' {
 @Resolver(() => User)
 export class UserResolver {
   @Query(() => User)
-  async user(@IdArg() id: ID): Promise<User> { }
+  async user(@IdArg() id: ID): Promise<User> {}
 
   @Mutation(() => CreateUserOutput)
-  async createUser(@Args() input: CreatePerson): Promise<CreateUserOutput> { }
+  async createUser(@Args() input: CreatePerson): Promise<CreateUserOutput> {}
 
   @ResolveField(() => String, { nullable: true })
-  fullName(@Parent() user: User): string | undefined { }
+  fullName(@Parent() user: User): string | undefined {}
 }
 ```
 
@@ -182,12 +188,16 @@ export class UserResolver {
 
 ```typescript
 // Hook definition
-export class UserUpdatedHook { user: User; }
+export class UserUpdatedHook {
+  user: User;
+}
 
 // Handler — @OnHook runs in the same DB transaction
 @OnHook(UserUpdatedHook)
 class SomeHandler {
-  handle(event: UserUpdatedHook) { /* mutate event fields if needed */ }
+  handle(event: UserUpdatedHook) {
+    /* mutate event fields if needed */
+  }
 }
 ```
 
