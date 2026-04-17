@@ -205,6 +205,8 @@ export const makeConfig = (env: EnvironmentService) =>
     // Control which database is prioritized, while we migrate.
     databaseEngine = env.string('DATABASE').optional('neo4j').toLowerCase();
 
+    postgresUrl = env.string('POSTGRES_URL').optional();
+
     dbIndexesCreate = env
       .boolean('DB_CREATE_INDEXES')
       .optional(isDev ? this.neo4j.isLocal : true);

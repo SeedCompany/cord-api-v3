@@ -3,6 +3,7 @@ import { splitDb } from '~/core/database';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { ProjectModule } from '../project/project.module';
 import { UserModule } from '../user/user.module';
+import { FieldZoneDrizzleRepository } from './field-zone.drizzle.repository';
 import { FieldZoneGelRepository } from './field-zone.gel.repository';
 import { FieldZoneLoader } from './field-zone.loader';
 import { FieldZoneRepository } from './field-zone.repository';
@@ -21,7 +22,10 @@ import { RestrictZoneDirectorRemovalHandler } from './handlers/restrict-zone-dir
     FieldZoneService,
     splitDb(FieldZoneRepository, {
       gel: FieldZoneGelRepository,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      postgres: FieldZoneDrizzleRepository as any,
     }),
+    FieldZoneDrizzleRepository,
     FieldZoneLoader,
     RestrictZoneDirectorRemovalHandler,
   ],

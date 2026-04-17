@@ -2,5 +2,13 @@
   "collection": "@nestjs/schematics",
   "generateOptions": {
     "spec": false
+  },
+  "compilerOptions": {
+    "assets": [
+      {
+        "include": "core/database/drizzle/migrations/**/*",
+        "watchAssets": true
+      }
+    ]
   }
 }
