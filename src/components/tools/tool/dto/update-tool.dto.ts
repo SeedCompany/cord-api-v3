@@ -11,6 +11,9 @@ export abstract class UpdateTool {
   @NameField({ optional: true })
   readonly name?: string;
 
+  @Field(() => String, { nullable: true })
+  readonly description?: string | null;
+
   @OptionalField()
   readonly aiBased?: boolean;
 

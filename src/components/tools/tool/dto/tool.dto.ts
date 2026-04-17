@@ -5,6 +5,7 @@ import {
   Resource,
   SecuredBoolean,
   SecuredString,
+  SecuredStringNullable,
 } from '~/common';
 import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
@@ -18,6 +19,9 @@ export class Tool extends Resource {
   @NameField()
   @DbUnique()
   readonly name: SecuredString;
+
+  @Field({ nullable: true })
+  readonly description: SecuredStringNullable;
 
   @Field()
   readonly aiBased: SecuredBoolean;

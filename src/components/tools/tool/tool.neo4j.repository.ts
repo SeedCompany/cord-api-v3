@@ -52,6 +52,7 @@ export class ToolRepository extends DtoRepository(Tool) {
 
     const initialProps = {
       name: input.name,
+      description: input.description,
       aiBased: input.aiBased,
       key: input.key,
     };
