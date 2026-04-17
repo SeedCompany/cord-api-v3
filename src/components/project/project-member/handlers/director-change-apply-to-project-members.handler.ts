@@ -14,9 +14,9 @@ export class DirectorChangeApplyToProjectMembersHandler {
   ) {}
 
   async handle(event: FieldZoneUpdatedHook | FieldRegionUpdatedHook) {
-    const oldDirector = event.previous.director.id;
+    const oldDirector = event.previous.director?.id;
     const newDirector = event.input.director;
-    if (!newDirector) {
+    if (!oldDirector || !newDirector) {
       return;
     }
     const role: Role =

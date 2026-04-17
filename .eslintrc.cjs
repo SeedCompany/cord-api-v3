@@ -247,6 +247,17 @@ const config = {
   },
   overrides: [
     {
+      // Kysely DB types and repositories use snake_case to match PostgreSQL column names.
+      files: [
+        './src/core/database/kysely/**/*.ts',
+        './src/components/**/*.kysely.*.ts',
+        './src/components/**/*.fragments.ts',
+      ],
+      rules: {
+        '@typescript-eslint/naming-convention': 'off',
+      },
+    },
+    {
       files: './src/core/neo4j/query-augmentation/*.ts',
       rules: {
         // This is enforced to treat functions arguments as contravariant instead of bivariant.

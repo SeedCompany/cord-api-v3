@@ -202,6 +202,8 @@ export const makeConfig = (env: EnvironmentService) =>
       };
     })();
 
+    postgresUrl = env.string('POSTGRES_URL').optional();
+
     // Control which database is prioritized, while we migrate.
     databaseEngine = env.string('DATABASE').optional('neo4j').toLowerCase();
 
