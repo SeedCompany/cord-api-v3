@@ -19,6 +19,7 @@ package-lock.json
 
 # local configuration
 .env.local
+.pg.local/
 .env.*.local
 logging.yml
 docker-compose.override.yml

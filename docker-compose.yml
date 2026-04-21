@@ -14,5 +14,18 @@ services:
       NEO4J_dbms_security_auth__enabled: 'false'
       NEO4J_dbms_security_auth__minimum__password__length: 1
 
+  postgres:
+    image: postgres:16-alpine
+    ports:
+      - 5432:5432
+    networks:
+      - cord
+    environment:
+      POSTGRES_DB: cord
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - ./.pg.local:/var/lib/postgresql/data
+
 networks:
   cord:

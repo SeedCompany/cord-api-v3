@@ -2,5 +2,14 @@
   "collection": "@nestjs/schematics",
   "generateOptions": {
     "spec": false
+  },
+  "compilerOptions": {
+    "assets": [
+      {
+        "include": "core/database/drizzle/migrations/**/*.sql",
+        "outDir": "./dist/src",
+        "watchAssets": true
+      }
+    ]
   }
 }
