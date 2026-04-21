@@ -3,7 +3,7 @@ import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import path from 'path';
 import { ConfigService } from '~/core/config';
 import { ILogger, Logger } from '~/core/logger';
-import { DrizzleService } from './drizzle.service.js';
+import { DrizzleService } from './drizzle.service';
 
 @Injectable()
 export class DrizzleMigrator implements OnModuleInit {

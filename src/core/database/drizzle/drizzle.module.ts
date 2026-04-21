@@ -1,6 +1,6 @@
 import { Global, Module } from '@nestjs/common';
-import { DrizzleService } from './drizzle.service.js';
-import { DrizzleMigrator } from './migrator.js';
+import { DrizzleService } from './drizzle.service';
+import { DrizzleMigrator } from './migrator';
 
 @Global()
 @Module({
