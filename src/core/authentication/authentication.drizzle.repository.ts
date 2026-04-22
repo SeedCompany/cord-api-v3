@@ -10,7 +10,7 @@ import {
   userGlobalRoles,
   users,
 } from '~/core/database/drizzle';
-import { type AuthenticationRepository } from './authentication.repository';
+import { type AuthenticationRepository} from './authentication.repository';
 import { type LoginInput } from './dto';
 import { type Session } from './session/session.dto';
 import { SessionHost } from './session/session.host';
