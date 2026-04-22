@@ -1,11 +1,15 @@
 import { relations } from 'drizzle-orm';
 import {
   boolean,
+  index,
+  pgEnum,
   pgTable,
   primaryKey,
   text,
   timestamp,
 } from 'drizzle-orm/pg-core';
+
+export const userStatusEnum = pgEnum('user_status', ['Active', 'Disabled']);
 
 // Tables are added here as each domain is migrated to PostgreSQL.
 
@@ -14,8 +18,7 @@ import {
 export const users = pgTable('users', {
   id: text('id').primaryKey(),
   isRoot: boolean('is_root').notNull().default(false),
-  // UserStatus: 'Active' | 'Disabled'
-  status: text('status').notNull(),
+  status: userStatusEnum('status').notNull(),
   email: text('email').notNull().unique(),
   createdAt: timestamp('created_at', { withTimezone: true })
     .notNull()
@@ -39,9 +42,7 @@ export const userGlobalRoles = pgTable(
       .references(() => users.id, { onDelete: 'cascade' }),
     role: text('role').notNull(),
   },
-  (t) => ({
-    pk: primaryKey({ columns: [t.userId, t.role] }),
-  }),
+  (t) => [primaryKey({ columns: [t.userId, t.role] })],
 );
 
 export const userGlobalRolesRelations = relations(
@@ -56,17 +57,21 @@ export const userGlobalRolesRelations = relations(
 
 // ─── Auth ──────────────────────────────────────────────────────────────────
 
-export const authSessions = pgTable('auth_sessions', {
-  token: text('token').primaryKey(),
-  // Null = anonymous session. Set on login, cleared on logout (soft delete via active flag).
-  userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }),
-  createdAt: timestamp('created_at', { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-  // Set when connectSessionToUser runs (i.e. actual login time, not token creation time).
-  loggedInAt: timestamp('logged_in_at', { withTimezone: true }),
-  active: boolean('active').notNull().default(true),
-});
+export const authSessions = pgTable(
+  'auth_sessions',
+  {
+    token: text('token').primaryKey(),
+    // Null = anonymous session. Set on login, cleared on logout (soft delete via active flag).
+    userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    // Set when connectSessionToUser runs (i.e. actual login time, not token creation time).
+    loggedInAt: timestamp('logged_in_at', { withTimezone: true }),
+    active: boolean('active').notNull().default(true),
+  },
+  (t) => [index('auth_sessions_user_id_idx').on(t.userId)],
+);
 
 export const authSessionsRelations = relations(authSessions, ({ one }) => ({
   user: one(users, {

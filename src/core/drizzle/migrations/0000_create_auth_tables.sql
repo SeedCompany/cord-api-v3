@@ -1,7 +1,9 @@
+CREATE TYPE "user_status" AS ENUM ('Active', 'Disabled');
+
 CREATE TABLE "users" (
   "id"         text        PRIMARY KEY NOT NULL,
   "is_root"    boolean     NOT NULL DEFAULT false,
-  "status"     text        NOT NULL,
+  "status"     user_status NOT NULL,
   "email"      text        NOT NULL UNIQUE,
   "created_at" timestamptz NOT NULL DEFAULT now()
 );
@@ -27,6 +29,9 @@ CREATE TABLE "auth_sessions" (
 -- Partial index so session lookups only scan active rows.
 CREATE INDEX "auth_sessions_active_idx" ON "auth_sessions" ("token")
   WHERE active = true;
+
+-- Covers deactivateAllOtherSessions / deactivateAllSessions updates by user.
+CREATE INDEX "auth_sessions_user_id_idx" ON "auth_sessions" ("user_id");
 
 CREATE TABLE "auth_identities" (
   "user_id"       text        PRIMARY KEY NOT NULL,

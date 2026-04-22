@@ -1,8 +1,7 @@
 import { asc, desc, type SQL } from 'drizzle-orm';
 import { type PgColumn } from 'drizzle-orm/pg-core';
+import { type Order } from '~/common';
 
-export type SortOrder = 'ASC' | 'DESC';
-
-export function orderByColumn(col: PgColumn, order: SortOrder = 'ASC'): SQL {
+export function orderByColumn(col: PgColumn, order: Order = 'ASC'): SQL {
   return order === 'ASC' ? asc(col) : desc(col);
 }

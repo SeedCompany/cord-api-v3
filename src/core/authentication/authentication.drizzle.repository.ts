@@ -10,7 +10,6 @@ import {
   userGlobalRoles,
   users,
 } from '~/core/database/drizzle';
-import { type UserStatus } from '../../components/user/dto';
 import { type AuthenticationRepository } from './authentication.repository';
 import { type LoginInput } from './dto';
 import { type Session } from './session/session.dto';
@@ -30,12 +29,11 @@ export class AuthenticationDrizzleRepository implements PublicOf<AuthenticationR
   async resumeSession(token: string, impersonatee?: ID) {
     const row = await this.db.db.query.authSessions.findFirst({
       where: (s, { and: a, eq: e }) => a(e(s.token, token), e(s.active, true)),
+      with: { user: { with: { globalRoles: true } } },
     });
     if (!row) return null;
 
-    const roles = row.userId
-      ? await this.rolesForUser(row.userId as ID)
-      : ([] as readonly Role[]);
+    const roles = (row.user?.globalRoles ?? []).map((r) => r.role as Role);
 
     if (!impersonatee) {
       return { userId: row.userId as ID | null, roles };
@@ -145,7 +143,7 @@ export class AuthenticationDrizzleRepository implements PublicOf<AuthenticationR
     return rows[0]
       ? {
           passwordHash: rows[0].passwordHash,
-          status: rows[0].status as UserStatus,
+          status: rows[0].status,
         }
       : null;
   }
