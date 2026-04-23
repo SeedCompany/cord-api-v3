@@ -1,4 +1,7 @@
+import { config } from 'dotenv';
 import { defineConfig } from 'drizzle-kit';
+
+config({ path: '.env.local' });
 
 // eslint-disable-next-line import/no-default-export
 export default defineConfig({
