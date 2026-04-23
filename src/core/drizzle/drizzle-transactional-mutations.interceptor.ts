@@ -26,6 +26,6 @@ export class DrizzleTransactionalMutationsInterceptor extends TransactionalMutat
   }
 
   protected async inTx<R>(fn: () => Promise<R>): Promise<R> {
-    return this.drizzle.inTx(fn);
+    return await this.drizzle.inTx(fn);
   }
 }
