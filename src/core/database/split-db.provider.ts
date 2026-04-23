@@ -3,7 +3,7 @@ import { ModuleRef } from '@nestjs/core';
 import type { PublicOf } from '~/common';
 import { ConfigService } from '~/core/config';
 
-type DatabaseEngines = 'gel' | 'neo4j';
+type DatabaseEngines = 'gel' | 'neo4j' | 'postgres';
 
 export const splitDb = <T>(
   canonical: Type<T>,

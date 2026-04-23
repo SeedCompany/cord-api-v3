@@ -14,6 +14,7 @@ import { CliModule } from './cli/cli.module';
 import { ConfigModule } from './config/config.module';
 import { CoreController } from './core.controller';
 import { DataLoaderConfig } from './data-loader/data-loader.config';
+import { DrizzleModule } from './drizzle/drizzle.module';
 import { EmailConfig } from './email/email.config';
 import { ExceptionFilter } from './exception/exception.filter';
 import { ExceptionNormalizer } from './exception/exception.normalizer';
@@ -43,6 +44,7 @@ import { WebhooksModule } from './webhooks/webhooks.module';
     BroadcasterModule,
     CliModule,
     DatabaseModule,
+    DrizzleModule,
     DataLoaderModule.registerAsync({ useClass: DataLoaderConfig }),
     GelModule,
     EmailModule.registerAsync({ useClass: EmailConfig }),
@@ -79,6 +81,7 @@ import { WebhooksModule } from './webhooks/webhooks.module';
     GraphqlModule,
     LiveQueryModule,
     DatabaseModule,
+    DrizzleModule,
     DataLoaderModule,
     DiscoveryModule,
     HooksModule,

@@ -62,6 +62,6 @@
     "sourceMap": true,
     "incremental": true,
   },
-  "include": ["src", "test", "tools", ".eslintrc.cjs", "jest.config.ts", "dbschema/seeds"],
+  "include": ["src", "test", "tools", ".eslintrc.cjs", "jest.config.ts", "drizzle.config.ts", "dbschema/seeds"],
   "exclude": ["node_modules", "dist"]
 }
