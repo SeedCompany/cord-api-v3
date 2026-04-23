@@ -4,8 +4,8 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { ConfigService } from '~/core/config';
-import { TransactionalMutationsInterceptor } from '../abstract-transactional-mutations.interceptor';
-import { TransactionHooks } from '../transaction-hooks';
+import { TransactionalMutationsInterceptor } from '~/core/database/abstract-transactional-mutations.interceptor';
+import { TransactionHooks } from '~/core/database/transaction-hooks';
 import { DrizzleService } from './drizzle.service';
 
 @Injectable()
@@ -26,6 +26,6 @@ export class DrizzleTransactionalMutationsInterceptor extends TransactionalMutat
   }
 
   protected async inTx<R>(fn: () => Promise<R>): Promise<R> {
-    return await this.drizzle.inTx(fn);
+    return this.drizzle.inTx(fn);
   }
 }
