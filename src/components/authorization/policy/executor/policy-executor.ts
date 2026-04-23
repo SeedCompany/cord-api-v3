@@ -1,5 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { CachedByArg } from '@seedcompany/common';
+import { type SQL } from 'drizzle-orm';
 import { identity } from 'lodash';
 import { type EnhancedResource } from '~/common';
 import { Identity, type Session } from '~/core/authentication';
@@ -164,6 +165,19 @@ export class PolicyExecutor {
       return false;
     }
     return this.conditionOptimizer.optimize(any(...conditions));
+  }
+
+  drizzleFilter(params: ResolveParams): SQL | boolean {
+    const perm = this.resolve(params);
+    if (perm === true || perm === false) return perm;
+
+    const other = { resource: params.resource, session: this.identity.current };
+    if (!perm.asDrizzleCondition) {
+      throw new Error(
+        `Condition ${perm.constructor.name} has not been ported to Drizzle — implement asDrizzleCondition`,
+      );
+    }
+    return perm.asDrizzleCondition(other);
   }
 
   cypherFilter({
