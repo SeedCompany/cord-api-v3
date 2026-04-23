@@ -14,7 +14,7 @@ import { CliModule } from './cli/cli.module';
 import { ConfigModule } from './config/config.module';
 import { CoreController } from './core.controller';
 import { DataLoaderConfig } from './data-loader/data-loader.config';
-import { DrizzleModule } from './database/drizzle/drizzle.module';
+import { DrizzleModule } from './drizzle/drizzle.module';
 import { EmailConfig } from './email/email.config';
 import { ExceptionFilter } from './exception/exception.filter';
 import { ExceptionNormalizer } from './exception/exception.normalizer';
