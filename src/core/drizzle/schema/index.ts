@@ -28,6 +28,7 @@ export const users = pgTable('users', {
 export const usersRelations = relations(users, ({ many, one }) => ({
   globalRoles: many(userGlobalRoles),
   sessions: many(authSessions),
+  passwordResetTokens: many(authPasswordResetTokens),
   identity: one(authIdentities, {
     fields: [users.id],
     references: [authIdentities.userId],
@@ -98,11 +99,28 @@ export const authIdentitiesRelations = relations(authIdentities, ({ one }) => ({
   }),
 }));
 
-// Short-lived tokens for password reset. Deleted after use.
-export const authEmailTokens = pgTable('auth_email_tokens', {
-  token: text('token').primaryKey(),
-  email: text('email').notNull(),
-  createdOn: timestamp('created_on', { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-});
+// Tokens for password resets. Deleted after use.
+export const authPasswordResetTokens = pgTable(
+  'auth_password_reset_tokens',
+  {
+    token: text('token').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    email: text('email').notNull(),
+    createdOn: timestamp('created_on', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [index('auth_password_reset_tokens_user_id_idx').on(t.userId)],
+);
+
+export const authPasswordResetTokensRelations = relations(
+  authPasswordResetTokens,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [authPasswordResetTokens.userId],
+      references: [users.id],
+    }),
+  }),
+);

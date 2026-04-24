@@ -3,14 +3,14 @@ import { and, eq, ne } from 'drizzle-orm';
 import { DateTime } from 'luxon';
 import { type ID, type PublicOf, type Role, ServerException } from '~/common';
 import {
-  authEmailTokens,
   authIdentities,
+  authPasswordResetTokens,
   authSessions,
   DrizzleService,
   userGlobalRoles,
   users,
-} from '~/core/database/drizzle';
-import { type AuthenticationRepository} from './authentication.repository';
+} from '~/core/drizzle';
+import { type AuthenticationRepository } from './authentication.repository';
 import { type LoginInput } from './dto';
 import { type Session } from './session/session.dto';
 import { SessionHost } from './session/session.host';
@@ -56,12 +56,18 @@ export class AuthenticationDrizzleRepository implements PublicOf<AuthenticationR
     });
     if (!user) return undefined;
 
-    await this.db.db
+    const result = await this.db.db
       .update(authSessions)
       .set({ userId: user.id, loggedInAt: new Date() })
-      .where(eq(authSessions.token, session.token));
+      .where(
+        and(
+          eq(authSessions.token, session.token),
+          eq(authSessions.active, true),
+        ),
+      )
+      .returning();
 
-    return user.id as ID;
+    return result.length > 0 ? (user.id as ID) : undefined;
   }
 
   async deactivateAllOtherSessions(session: Session) {
@@ -155,18 +161,27 @@ export class AuthenticationDrizzleRepository implements PublicOf<AuthenticationR
     return !!row;
   }
 
-  async saveEmailToken(email: string, token: string) {
-    await this.db.db.insert(authEmailTokens).values({ email, token });
+  async savePasswordResetToken(email: string, token: string) {
+    const user = await this.db.db.query.users.findFirst({
+      where: (u, { eq: e }) => e(u.email, email),
+    });
+    if (!user) {
+      throw new ServerException('Could not find user by email');
+    }
+    await this.db.db
+      .insert(authPasswordResetTokens)
+      .values({ email, token, userId: user.id });
   }
 
-  async findEmailToken(token: string) {
-    const row = await this.db.db.query.authEmailTokens.findFirst({
+  async findPasswordResetToken(token: string) {
+    const row = await this.db.db.query.authPasswordResetTokens.findFirst({
       where: (et, { eq: e }) => e(et.token, token),
     });
     return row
       ? {
           email: row.email,
           token: row.token,
+          userId: row.userId as ID,
           createdOn: DateTime.fromJSDate(row.createdOn),
         }
       : null;
@@ -189,10 +204,11 @@ export class AuthenticationDrizzleRepository implements PublicOf<AuthenticationR
     return { user: { id: user.id as ID } };
   }
 
-  async removeAllEmailTokensForEmail(email: string) {
+  async removeAllPasswordResetTokensByEmail(email: string) {
+    // migration-todo: switch to userId after Gel and Neo4j are removed
     await this.db.db
-      .delete(authEmailTokens)
-      .where(eq(authEmailTokens.email, email));
+      .delete(authPasswordResetTokens)
+      .where(eq(authPasswordResetTokens.email, email));
   }
 
   async rolesForUser(user: ID) {
@@ -216,12 +232,21 @@ export class AuthenticationDrizzleRepository implements PublicOf<AuthenticationR
       this.db.db.query.users.findFirst({
         where: (u, { eq: e }) => e(u.isRoot, true),
       });
-    let row = await find();
+    let row;
+    try {
+      row = await find();
+    } catch {
+      // Database not ready yet, will retry below
+    }
     while (!row) {
       await new Promise<void>((resolve) => {
         setTimeout(resolve, 1000).unref();
       });
-      row = await find();
+      try {
+        row = await find();
+      } catch {
+        // Continue retrying on error
+      }
     }
     return row.id as ID;
   }

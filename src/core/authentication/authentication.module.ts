@@ -41,7 +41,7 @@ import { SessionManager } from './session/session.manager';
       gel: AuthenticationGelRepository,
       // migration-todo: remove once User domain migration is complete
       // and users/user_global_roles are confirmed populated.
-      postgres: AuthenticationDrizzleRepository as any,
+      postgres: AuthenticationDrizzleRepository,
     }),
     JwtService,
     CryptoService,

@@ -41,11 +41,14 @@ CREATE TABLE "auth_identities" (
     FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE
 );
 
-CREATE TABLE "auth_email_tokens" (
+CREATE TABLE "auth_password_reset_tokens" (
   "token"      text        PRIMARY KEY NOT NULL,
+  "user_id"    text        NOT NULL,
   "email"      text        NOT NULL,
-  "created_on" timestamptz NOT NULL DEFAULT now()
+  "created_on" timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT "auth_password_reset_tokens_user_id_fkey"
+    FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE
 );
 
--- Fast lookups when clearing all tokens for an email after password reset.
-CREATE INDEX "auth_email_tokens_email_idx" ON "auth_email_tokens" ("email");
+-- Index for efficient token removal by user (used after password reset).
+CREATE INDEX "auth_password_reset_tokens_user_id_idx" ON "auth_password_reset_tokens" ("user_id");
