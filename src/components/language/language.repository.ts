@@ -237,6 +237,9 @@ export class LanguageRepository extends DtoRepository<
           relation('out', '', 'firstScripture', ACTIVE),
           node('', 'Property', { value: variable('true') }),
         ])
+        .raw(
+          'WHERE firstScriptureEngagement IS NULL OR exists((firstScriptureEngagement)<-[:engagement { active: true }]-(:Project))',
+        )
         .return<{ dto: UnsecuredDto<Language> }>(
           merge('props', 'changedProps', {
             __typename: '"Language"',
@@ -308,6 +311,9 @@ export class LanguageRepository extends DtoRepository<
           value: true,
         },
       })
+      .raw(
+        'AND exists((languageEngagement)<-[:engagement { active: true }]-(:Project))',
+      )
       .return('languageEngagement')
       .first();
     return !!res;

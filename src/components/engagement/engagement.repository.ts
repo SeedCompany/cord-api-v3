@@ -675,6 +675,9 @@ export class EngagementRepository extends CommonRepository {
         relation('out', '', 'firstScripture', ACTIVE),
         node({ value: true }),
       ])
+      .raw(
+        'WHERE exists((otherLanguageEngagements)<-[:engagement { active: true }]-(:Project))',
+      )
       .return('otherLanguageEngagements')
       .first();
     return !!result;
