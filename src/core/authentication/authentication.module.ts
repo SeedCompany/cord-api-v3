@@ -2,6 +2,7 @@ import { forwardRef, Module } from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { splitDb } from '~/core/database';
 import { UserModule } from '../../components/user/user.module';
+import { AuthenticationDrizzleRepository } from './authentication.drizzle.repository';
 import { AuthenticationGelRepository } from './authentication.gel.repository';
 import { AuthenticationRepository } from './authentication.repository';
 import { AuthenticationService } from './authentication.service';
@@ -38,6 +39,9 @@ import { SessionManager } from './session/session.manager';
     AuthenticationService,
     splitDb(AuthenticationRepository, {
       gel: AuthenticationGelRepository,
+      // migration-todo: remove once User domain migration is complete
+      // and users/user_global_roles are confirmed populated.
+      postgres: AuthenticationDrizzleRepository,
     }),
     JwtService,
     CryptoService,

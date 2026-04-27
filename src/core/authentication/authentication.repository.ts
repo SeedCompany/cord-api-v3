@@ -14,9 +14,12 @@ import { type UserStatus } from '../../components/user/dto';
 import { type LoginInput } from './dto';
 import { type Session } from './session/session.dto';
 
-interface EmailToken {
+interface PasswordResetToken {
   email: string;
   token: string;
+  // migration-todo: make userId non-optional after Gel and Neo4j are removed
+  // (Drizzle always provides it; Gel/Neo4j will be updated or removed)
+  userId?: ID;
   createdOn: DateTime;
 }
 
@@ -269,7 +272,7 @@ export class AuthenticationRepository {
     return !!result;
   }
 
-  async saveEmailToken(email: string, token: string): Promise<void> {
+  async savePasswordResetToken(email: string, token: string): Promise<void> {
     await this.db
       .query()
       .raw(
@@ -285,7 +288,7 @@ export class AuthenticationRepository {
       .run();
   }
 
-  async findEmailToken(token: string) {
+  async findPasswordResetToken(token: string) {
     const result = await this.db
       .query()
       .raw('MATCH (emailToken:EmailToken { token: $token })', { token })
@@ -294,12 +297,15 @@ export class AuthenticationRepository {
         'emailToken.token as token',
         'emailToken.createdOn as createdOn',
       ])
-      .asResult<EmailToken>()
+      .asResult<PasswordResetToken>()
       .first();
     return result ?? null;
   }
 
-  async updatePasswordViaEmailToken({ email }: EmailToken, pash: string) {
+  async updatePasswordViaEmailToken(
+    { email }: PasswordResetToken,
+    pash: string,
+  ) {
     const query = this.db
       .query()
       .raw(
@@ -329,7 +335,8 @@ export class AuthenticationRepository {
     return res;
   }
 
-  async removeAllEmailTokensForEmail(email: string) {
+  async removeAllPasswordResetTokensByEmail(email: string) {
+    // migration-todo: switch to userId after Neo4j/Gel are removed
     await this.db
       .query()
       .match([node('emailToken', 'EmailToken', { value: email })])

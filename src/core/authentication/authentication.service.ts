@@ -130,31 +130,31 @@ export class AuthenticationService {
 
     const token = this.jwt.encode();
 
-    await this.repo.saveEmailToken(email, token);
+    await this.repo.savePasswordResetToken(email, token);
     await this.mailer.compose(email, [ForgotPassword, { token }]).send();
   }
 
   async resetPassword({ token, password }: ResetPassword) {
-    const emailToken = await this.repo.findEmailToken(token);
-    if (!emailToken) {
+    const resetToken = await this.repo.findPasswordResetToken(token);
+    if (!resetToken) {
       throw new InputException('Token is invalid', 'TokenInvalid');
     }
 
-    if (emailToken.createdOn.diffNow().as('days') > 1) {
+    if (resetToken.createdOn.diffNow().as('days') > 1) {
       throw new InputException('Token has expired', 'TokenExpired');
     }
 
     const pash = await this.crypto.hash(password);
 
     const { user } = await this.repo.updatePasswordViaEmailToken(
-      emailToken,
+      resetToken,
       pash,
     );
     await this.repo.deactivateAllOtherSessionsByEmail(
-      emailToken.email,
+      resetToken.email,
       this.sessionHost.current,
     );
-    await this.repo.removeAllEmailTokensForEmail(emailToken.email);
+    await this.repo.removeAllPasswordResetTokensByEmail(resetToken.email);
     return { user };
   }
 }

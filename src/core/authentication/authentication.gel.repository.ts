@@ -201,18 +201,18 @@ export class AuthenticationGelRepository implements PublicOf<AuthenticationRepos
     return !!(await this.userByEmail(email));
   }
 
-  async saveEmailToken(email: string, token: string) {
-    await this.db.run(this.saveEmailTokenQuery, { email, token });
+  async savePasswordResetToken(email: string, token: string) {
+    await this.db.run(this.savePasswordResetTokenQuery, { email, token });
   }
-  private readonly saveEmailTokenQuery = e.params(
+  private readonly savePasswordResetTokenQuery = e.params(
     { email: e.str, token: e.str },
     ({ email, token }) => e.insert(e.Auth.EmailToken, { email, token }),
   );
 
-  async findEmailToken(token: string) {
-    return await this.db.run(this.findEmailTokenQuery, { token });
+  async findPasswordResetToken(token: string) {
+    return await this.db.run(this.findPasswordResetTokenQuery, { token });
   }
-  private readonly findEmailTokenQuery = e.params(
+  private readonly findPasswordResetTokenQuery = e.params(
     { token: e.str },
     ({ token }) =>
       e.select(e.Auth.EmailToken, (et) => ({
@@ -237,10 +237,11 @@ export class AuthenticationGelRepository implements PublicOf<AuthenticationRepos
     return { user: { id: userId } };
   }
 
-  async removeAllEmailTokensForEmail(email: string) {
-    await this.db.run(this.removeAllEmailTokensForEmailQuery, { email });
+  async removeAllPasswordResetTokensByEmail(email: string) {
+    // migration-todo: switch to userId after Gel schema includes user_id
+    await this.db.run(this.removeAllPasswordResetTokensByEmailQuery, { email });
   }
-  private readonly removeAllEmailTokensForEmailQuery = e.params(
+  private readonly removeAllPasswordResetTokensByEmailQuery = e.params(
     { email: e.str },
     ({ email }) =>
       e.delete(e.Auth.EmailToken, (et) => ({
