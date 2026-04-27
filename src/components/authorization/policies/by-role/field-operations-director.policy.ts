@@ -1,4 +1,4 @@
-import { Policy, Role } from '../util';
+import { field, Policy, Role } from '../util';
 
 // NOTE: There could be other permissions for this role from other policies
 @Policy(Role.FieldOperationsDirector, (r) => [
@@ -13,7 +13,10 @@ import { Policy, Role } from '../util';
   ]),
   r.Producible.edit.create,
   r.Product.edit.create.delete,
-  r.Project.edit.specifically((p) => [p.departmentId.read]),
+  r.Project.edit.specifically((p) => [
+    p.departmentId.read,
+    p.many('mouStart', 'mouEnd').when(field('status', 'InDevelopment')).edit,
+  ]),
   r.ProjectMember.edit.create.delete,
   r.ProjectWorkflowEvent.read.transitions(
     'Field Ops Approves Proposal',

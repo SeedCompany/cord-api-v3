@@ -1,4 +1,4 @@
-import { member, Policy, Role, sensMediumOrLower } from '../util';
+import { field, member, Policy, Role, sensMediumOrLower } from '../util';
 import * as PM from './project-manager.policy';
 
 // NOTE: There could be other permissions for this role from other policies
@@ -9,6 +9,9 @@ import * as PM from './project-manager.policy';
   r.Project.when(member).edit.specifically((p) => [
     p.rootDirectory.edit.when(sensMediumOrLower).read,
     p.departmentId.read,
+    p
+      .many('mouStart', 'mouEnd')
+      .whenAll(member, field('status', 'InDevelopment')).edit,
   ]),
   r.ProjectWorkflowEvent.transitions(
     PM.projectTransitions,

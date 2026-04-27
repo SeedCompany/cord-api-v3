@@ -1,4 +1,4 @@
-import { Policy, Role } from '../util';
+import { field, Policy, Role } from '../util';
 
 @Policy(Role.FieldServices, (r) => [
   r.Budget.edit,
@@ -17,7 +17,9 @@ import { Policy, Role } from '../util';
     p.many('agreement', 'agreementStatus', 'types', 'partner', 'primary').edit,
   ]),
   r.Product.edit.create.delete,
-  r.Project.edit.create.delete,
+  r.Project.edit.create.delete.specifically((p) => [
+    p.many('mouStart', 'mouEnd').when(field('status', 'InDevelopment')).edit,
+  ]),
   r.ProjectMember.edit.create.delete,
   r.PeriodicReport.edit,
   r.ToolUsage.edit.create.delete,
