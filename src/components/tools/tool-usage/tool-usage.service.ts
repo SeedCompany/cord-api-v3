@@ -23,7 +23,15 @@ import { Privileges } from '../../authorization';
 import { Tool } from '../tool/dto';
 import { type ToolKey } from '../tool/dto/tool-key.enum';
 import { ToolRepository } from '../tool/tool.neo4j.repository';
-import { type CreateToolUsage, ToolUsage, type UpdateToolUsage } from './dto';
+import {
+  type CreateToolUsage,
+  type SecuredToolUsageList,
+  type ToolContainerSummary,
+  type ToolContainerType,
+  ToolUsage,
+  type ToolUsageFilters,
+  type UpdateToolUsage,
+} from './dto';
 import { type UsagesByContainer } from './tool-usage-by-container.loader';
 import { type UsagesByTool } from './tool-usage-by-tool.loader';
 import { ToolUsageRepository } from './tool-usage.neo4j.repository';
@@ -122,6 +130,65 @@ export class ToolUsageService {
         };
       }),
     );
+  }
+
+  async readForTool(
+    tool: Tool,
+    filters?: ToolUsageFilters,
+  ): Promise<SecuredToolUsageList> {
+    const rows = await this.repo.listForTools(
+      [tool.id],
+      filters?.containerType,
+    );
+    const row = rows[0];
+    if (!row) {
+      return {
+        items: [],
+        total: 0,
+        hasMore: false,
+        canRead: true,
+        canCreate: false,
+      };
+    }
+    const usagesRaw = await Promise.all(
+      row.usages.map(async (dto) => {
+        const container = await this.loadContainer(dto.container);
+        return this.secure(dto, container) ?? [];
+      }),
+    );
+    const usages = usagesRaw.flat();
+    return {
+      items: usages,
+      total: usages.length,
+      hasMore: false,
+      canRead: true,
+      canCreate: false,
+    };
+  }
+
+  async readContainerSummaryForTools(
+    tools: readonly Tool[],
+  ): Promise<Array<{ tool: Tool; summary: ToolContainerSummary[] }>> {
+    const toolsById = mapKeys.fromList(tools, (t) => t.id).asMap;
+    const rows = await this.repo.containerSummaryForTools(
+      tools.map((t) => t.id),
+    );
+    // Group rows by tool id and filter out types not in the ToolContainerType enum
+    const validTypes = new Set<string>(['Engagement', 'Project']);
+    const byToolId = new Map<ID, ToolContainerSummary[]>();
+    for (const row of rows) {
+      if (!validTypes.has(row.containerType)) continue;
+      const entries = byToolId.get(row.tool.id) ?? [];
+      entries.push({
+        containerType: row.containerType as ToolContainerType,
+        total: Number(row.total),
+      });
+      byToolId.set(row.tool.id, entries);
+    }
+    return tools.map((tool) => ({
+      tool: toolsById.get(tool.id)!,
+      summary: byToolId.get(tool.id) ?? [],
+    }));
   }
 
   private secure(

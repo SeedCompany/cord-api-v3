@@ -18,6 +18,7 @@ import { fieldRegionFilters } from '../field-region/field-region.repository';
 import { locationFilters } from '../location/location.repository';
 import { partnershipFilters } from '../partnership/partnership.repository';
 import { ToolKey } from '../tools/tool/dto/tool-key.enum';
+import { toolFilters } from '../tools/tool/tool.neo4j.repository';
 import { ProjectFilters } from './dto';
 import { projectMemberFilters } from './project-member/project-member.repository';
 import { ProjectNameIndex } from './project.repository';
@@ -148,6 +149,15 @@ export const projectFilters = filter.define(() => ProjectFilters, {
       node('outer'),
       relation('out', '', 'partnership', ACTIVE),
       node('node', 'Partnership'),
+    ]),
+  ),
+  tool: filter.sub(() => toolFilters)((sub) =>
+    sub.match([
+      node('outer'),
+      relation('out', '', 'uses', ACTIVE),
+      node('', 'ToolUsage'),
+      relation('out', '', 'tool', ACTIVE),
+      node('node', 'Tool'),
     ]),
   ),
 });
