@@ -18,6 +18,7 @@ import {
 import { FieldRegionFilters } from '../../field-region/dto';
 import { LocationFilters } from '../../location/dto';
 import { PartnershipFilters } from '../../partnership/dto';
+import { ToolFilters } from '../../tools/tool/dto';
 import { ProjectMemberFilters } from '../project-member/dto';
 import { ProjectStatus } from './project-status.enum';
 import { ProjectStep } from './project-step.enum';
@@ -142,6 +143,9 @@ export abstract class ProjectFilters {
 
   @FilterField(() => FieldRegionFilters)
   readonly fieldRegion?: FieldRegionFilters & {};
+
+  @FilterField(() => ToolFilters)
+  readonly tool?: ToolFilters & {};
 }
 
 Object.defineProperty(ProjectFilters.prototype, 'mine', {

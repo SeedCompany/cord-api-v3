@@ -123,6 +123,7 @@ export class ToolRepository extends DtoRepository(Tool) {
 }
 
 export const toolFilters = filter.define(() => ToolFilters, {
+  id: filter.baseNodeProp(),
   name: filter.fullText({
     index: () => ToolNameIndex,
     matchToNode: (q) =>

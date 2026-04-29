@@ -23,7 +23,15 @@ import { Privileges } from '../../authorization';
 import { Tool } from '../tool/dto';
 import { type ToolKey } from '../tool/dto/tool-key.enum';
 import { ToolRepository } from '../tool/tool.neo4j.repository';
-import { type CreateToolUsage, ToolUsage, type UpdateToolUsage } from './dto';
+import {
+  type CreateToolUsage,
+  type SecuredToolUsageList,
+  type ToolContainerSummary,
+  type ToolContainerType,
+  ToolUsage,
+  type ToolUsageFilters,
+  type UpdateToolUsage,
+} from './dto';
 import { type UsagesByContainer } from './tool-usage-by-container.loader';
 import { type UsagesByTool } from './tool-usage-by-tool.loader';
 import { ToolUsageRepository } from './tool-usage.neo4j.repository';
@@ -56,13 +64,7 @@ export class ToolUsageService {
 
   async readMany(ids: ReadonlyArray<ID<ToolUsage>>) {
     const dtos = await this.repo.readMany(ids);
-    const secured = await Promise.all(
-      dtos.map(async (dto) => {
-        const container = await this.loadContainer(dto.container);
-        return this.secure(dto, container) ?? [];
-      }),
-    );
-    return secured.flat();
+    return await this.secureAll(dtos);
   }
 
   async readManyForContainers(containers: readonly Resource[]) {
@@ -103,13 +105,7 @@ export class ToolUsageService {
     return await Promise.all(
       rows.map(async (row): Promise<UsagesByTool> => {
         const tool = toolsById.get(row.tool.id)!;
-        const usagesRaw = await Promise.all(
-          row.usages.map(async (dto) => {
-            const container = await this.loadContainer(dto.container);
-            return this.secure(dto, container) ?? [];
-          }),
-        );
-        const usages = usagesRaw.flat();
+        const usages = await this.secureAll(row.usages);
         return {
           tool,
           usages: {
@@ -122,6 +118,81 @@ export class ToolUsageService {
         };
       }),
     );
+  }
+
+  async readForTool(
+    tool: Tool,
+    filters?: ToolUsageFilters,
+  ): Promise<SecuredToolUsageList> {
+    const rows = await this.repo.listForTools(
+      [tool.id],
+      filters?.containerType,
+    );
+    const row = rows[0];
+    if (!row) {
+      return {
+        items: [],
+        total: 0,
+        hasMore: false,
+        canRead: true,
+        canCreate: false,
+      };
+    }
+    const usages = await this.secureAll(row.usages);
+    return {
+      items: usages,
+      total: usages.length,
+      hasMore: false,
+      canRead: true,
+      canCreate: false,
+    };
+  }
+
+  async readContainerSummaryForTools(
+    tools: readonly Tool[],
+  ): Promise<Array<{ tool: Tool; summary: ToolContainerSummary[] }>> {
+    // readManyForTools loads full container resources to evaluate privileges —
+    // counts are derived from the secured results so only accessible containers
+    // are reflected in the summary.
+    const rows = await this.readManyForTools(tools);
+    return rows.map(({ tool, usages }) => {
+      const totals = new Map<ToolContainerType, number>();
+      for (const usage of usages.items) {
+        const labels: readonly string[] = usage.container.value?.labels ?? [];
+        // labels may be Neo4j node labels or Gel FQN type names; both contain
+        // the substring 'Engagement' or 'Project' for the relevant subtypes
+        const containerType: ToolContainerType | null = labels.some((l) =>
+          l.includes('Engagement'),
+        )
+          ? 'Engagement'
+          : labels.some((l) => l.includes('Project'))
+            ? 'Project'
+            : null;
+        if (containerType) {
+          totals.set(containerType, (totals.get(containerType) ?? 0) + 1);
+        }
+      }
+      return {
+        tool,
+        summary: [...totals.entries()].map(([containerType, total]) => ({
+          containerType,
+          total,
+        })),
+      };
+    });
+  }
+
+  private async secureAll(
+    dtos: ReadonlyArray<UnsecuredDto<ToolUsage>>,
+  ): Promise<ToolUsage[]> {
+    return (
+      await Promise.all(
+        dtos.map(async (dto) => {
+          const container = await this.loadContainer(dto.container);
+          return this.secure(dto, container) ?? [];
+        }),
+      )
+    ).flat();
   }
 
   private secure(
