@@ -4,6 +4,16 @@ import { e, RepoFor } from '~/core/gel';
 import { type ToolContainerType, ToolUsage } from './dto';
 import { type ToolUsageRepository as Neo4jRepository } from './tool-usage.neo4j.repository';
 
+const engagementSubtypes = new Set([
+  'LanguageEngagement',
+  'InternshipEngagement',
+]);
+const projectSubtypes = new Set([
+  'MomentumTranslationProject',
+  'MultiplicationTranslationProject',
+  'InternshipProject',
+]);
+
 const resAsBaseNode = e.shape(e.Resource, (res) => ({
   identity: res.id,
   labels: e.array_agg(e.set(res.__type__.name)),
@@ -62,25 +72,23 @@ export class ToolUsageRepository
   private makeListForToolsWithTypeFilter(containerType: ToolContainerType) {
     const fqns =
       containerType === 'Engagement'
-        ? ([
-            'default::LanguageEngagement',
-            'default::InternshipEngagement',
-          ] as const)
-        : ([`default::${containerType}`] as const);
+        ? ['default::LanguageEngagement', 'default::InternshipEngagement']
+        : [
+            'default::MomentumTranslationProject',
+            'default::MultiplicationTranslationProject',
+            'default::InternshipProject',
+          ];
     return e.params({ tools: e.array(e.uuid) }, ($) => {
       const tools = e.cast(e.Tool, e.array_unpack($.tools));
       return e.select(tools, (tool) => ({
         tool: e.select(tool, (c) => ({ id: c.id })),
         usages: e.select(tool.usages, (usage) => ({
           ...this.hydrate(usage),
-          filter:
-            fqns.length === 1
-              ? e.op(usage.container.__type__.name, '=', e.str(fqns[0]))
-              : e.op(
-                  e.op(usage.container.__type__.name, '=', e.str(fqns[0])),
-                  'or',
-                  e.op(usage.container.__type__.name, '=', e.str(fqns[1])),
-                ),
+          filter: e.op(
+            usage.container.__type__.name,
+            'in',
+            e.array_unpack(e.literal(e.array(e.str), fqns)),
+          ),
         })),
       }));
     });
@@ -88,17 +96,30 @@ export class ToolUsageRepository
 
   async containerSummaryForTools(tools: readonly ID[]) {
     const raw = await this.db.run(this.containerSummaryQuery, { tools });
-    // e.group returns { key: { containerType }, grouping, elements }[] — flatten to match Neo4j shape
-    return raw.flatMap(({ tool, summary }) =>
-      summary.map(({ key, elements }) => {
+    // e.group returns { key: { containerType }, grouping, elements }[] per tool.
+    // Normalize concrete Gel subtypes to enum values and merge totals so grouping
+    // uses the normalized type (avoids duplicate rows when multiple concrete subtypes
+    // map to the same enum value, e.g. LanguageEngagement + InternshipEngagement → Engagement).
+    return raw.flatMap(({ tool, summary }) => {
+      const totals = new Map<string, number>();
+      for (const { key, elements } of summary) {
         const rawType = (key.containerType as string).replace(/^default::/, '');
-        const containerType =
-          rawType === 'LanguageEngagement' || rawType === 'InternshipEngagement'
-            ? 'Engagement'
+        const containerType = engagementSubtypes.has(rawType)
+          ? 'Engagement'
+          : projectSubtypes.has(rawType)
+            ? 'Project'
             : rawType;
-        return { tool, containerType, total: elements.length };
-      }),
-    );
+        totals.set(
+          containerType,
+          (totals.get(containerType) ?? 0) + elements.length,
+        );
+      }
+      return [...totals.entries()].map(([containerType, total]) => ({
+        tool,
+        containerType,
+        total,
+      }));
+    });
   }
   private readonly containerSummaryQuery = e.params(
     { tools: e.array(e.uuid) },

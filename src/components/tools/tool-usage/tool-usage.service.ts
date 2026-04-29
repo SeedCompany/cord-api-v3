@@ -64,13 +64,7 @@ export class ToolUsageService {
 
   async readMany(ids: ReadonlyArray<ID<ToolUsage>>) {
     const dtos = await this.repo.readMany(ids);
-    const secured = await Promise.all(
-      dtos.map(async (dto) => {
-        const container = await this.loadContainer(dto.container);
-        return this.secure(dto, container) ?? [];
-      }),
-    );
-    return secured.flat();
+    return await this.secureAll(dtos);
   }
 
   async readManyForContainers(containers: readonly Resource[]) {
@@ -111,13 +105,7 @@ export class ToolUsageService {
     return await Promise.all(
       rows.map(async (row): Promise<UsagesByTool> => {
         const tool = toolsById.get(row.tool.id)!;
-        const usagesRaw = await Promise.all(
-          row.usages.map(async (dto) => {
-            const container = await this.loadContainer(dto.container);
-            return this.secure(dto, container) ?? [];
-          }),
-        );
-        const usages = usagesRaw.flat();
+        const usages = await this.secureAll(row.usages);
         return {
           tool,
           usages: {
@@ -150,13 +138,7 @@ export class ToolUsageService {
         canCreate: false,
       };
     }
-    const usagesRaw = await Promise.all(
-      row.usages.map(async (dto) => {
-        const container = await this.loadContainer(dto.container);
-        return this.secure(dto, container) ?? [];
-      }),
-    );
-    const usages = usagesRaw.flat();
+    const usages = await this.secureAll(row.usages);
     return {
       items: usages,
       total: usages.length,
@@ -169,26 +151,48 @@ export class ToolUsageService {
   async readContainerSummaryForTools(
     tools: readonly Tool[],
   ): Promise<Array<{ tool: Tool; summary: ToolContainerSummary[] }>> {
-    const toolsById = mapKeys.fromList(tools, (t) => t.id).asMap;
-    const rows = await this.repo.containerSummaryForTools(
-      tools.map((t) => t.id),
-    );
-    // Group rows by tool id and filter out types not in the ToolContainerType enum
-    const validTypes = new Set<string>(['Engagement', 'Project']);
-    const byToolId = new Map<ID, ToolContainerSummary[]>();
-    for (const row of rows) {
-      if (!validTypes.has(row.containerType)) continue;
-      const entries = byToolId.get(row.tool.id) ?? [];
-      entries.push({
-        containerType: row.containerType as ToolContainerType,
-        total: Number(row.total),
-      });
-      byToolId.set(row.tool.id, entries);
-    }
-    return tools.map((tool) => ({
-      tool: toolsById.get(tool.id)!,
-      summary: byToolId.get(tool.id) ?? [],
-    }));
+    // readManyForTools loads full container resources to evaluate privileges —
+    // counts are derived from the secured results so only accessible containers
+    // are reflected in the summary.
+    const rows = await this.readManyForTools(tools);
+    return rows.map(({ tool, usages }) => {
+      const totals = new Map<ToolContainerType, number>();
+      for (const usage of usages.items) {
+        const labels: readonly string[] = usage.container.value?.labels ?? [];
+        // labels may be Neo4j node labels or Gel FQN type names; both contain
+        // the substring 'Engagement' or 'Project' for the relevant subtypes
+        const containerType: ToolContainerType | null = labels.some((l) =>
+          l.includes('Engagement'),
+        )
+          ? 'Engagement'
+          : labels.some((l) => l.includes('Project'))
+            ? 'Project'
+            : null;
+        if (containerType) {
+          totals.set(containerType, (totals.get(containerType) ?? 0) + 1);
+        }
+      }
+      return {
+        tool,
+        summary: [...totals.entries()].map(([containerType, total]) => ({
+          containerType,
+          total,
+        })),
+      };
+    });
+  }
+
+  private async secureAll(
+    dtos: ReadonlyArray<UnsecuredDto<ToolUsage>>,
+  ): Promise<ToolUsage[]> {
+    return (
+      await Promise.all(
+        dtos.map(async (dto) => {
+          const container = await this.loadContainer(dto.container);
+          return this.secure(dto, container) ?? [];
+        }),
+      )
+    ).flat();
   }
 
   private secure(

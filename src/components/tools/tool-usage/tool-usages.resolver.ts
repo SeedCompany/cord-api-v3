@@ -46,7 +46,6 @@ export class ToolUsagesResolver {
     @Loader(() => ToolContainerSummaryLoader)
     loader: LoaderOf<ToolContainerSummaryLoader>,
   ): Promise<ToolContainerSummary[]> {
-    const { summary } = await loader.load(tool);
-    return summary;
+    return (await loader.load(tool)).summary;
   }
 }
