@@ -115,7 +115,9 @@ export class LanguageService {
     const changes = this.repo.getActualChanges(language, {
       ...props,
       registryOfLanguageVarietiesCode:
-        props.registryOfLanguageVarietiesCode ?? registryOfDialectsCode,
+        props.registryOfLanguageVarietiesCode !== undefined
+          ? props.registryOfLanguageVarietiesCode
+          : registryOfDialectsCode,
     });
     const ethnologueUpdate = this.ethnologueLanguageService.prepChanges(
       ethnologueInput,
