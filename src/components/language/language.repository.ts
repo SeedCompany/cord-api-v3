@@ -75,7 +75,9 @@ export class LanguageRepository extends DtoRepository<
       isDialect: input.isDialect,
       populationOverride: input.populationOverride,
       registryOfLanguageVarietiesCode:
-        input.registryOfLanguageVarietiesCode ?? input.registryOfDialectsCode,
+        input.registryOfLanguageVarietiesCode !== undefined
+          ? input.registryOfLanguageVarietiesCode
+          : input.registryOfDialectsCode,
       leastOfThese: input.leastOfThese,
       leastOfTheseReason: input.leastOfTheseReason,
       displayNamePronunciation: input.displayNamePronunciation,
