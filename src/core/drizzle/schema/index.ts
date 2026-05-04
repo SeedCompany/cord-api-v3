@@ -1,6 +1,7 @@
-import { relations } from 'drizzle-orm';
+import { relations, sql } from 'drizzle-orm';
 import {
   boolean,
+  check,
   index,
   pgEnum,
   pgTable,
@@ -10,6 +11,15 @@ import {
 } from 'drizzle-orm/pg-core';
 
 export const userStatusEnum = pgEnum('user_status', ['Active', 'Disabled']);
+export const genderEnum = pgEnum('gender', ['Male', 'Female']);
+export const degreeEnum = pgEnum('degree', [
+  'Primary',
+  'Secondary',
+  'Associates',
+  'Bachelors',
+  'Masters',
+  'Doctorate',
+]);
 
 // Tables are added here as each domain is migrated to PostgreSQL.
 
@@ -19,10 +29,24 @@ export const users = pgTable('users', {
   id: text('id').primaryKey(),
   isRoot: boolean('is_root').notNull().default(false),
   status: userStatusEnum('status').notNull(),
-  email: text('email').notNull().unique(),
+  email: text('email').unique(),
+  realFirstName: text('real_first_name').notNull().default(''),
+  realLastName: text('real_last_name').notNull().default(''),
+  displayFirstName: text('display_first_name').notNull().default(''),
+  displayLastName: text('display_last_name').notNull().default(''),
+  phone: text('phone'),
+  timezone: text('timezone').notNull().default('America/Chicago'),
+  about: text('about'),
+  title: text('title'),
+  gender: genderEnum('gender'),
+  photoId: text('photo_id'),
   createdAt: timestamp('created_at', { withTimezone: true })
     .notNull()
     .defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
 });
 
 export const usersRelations = relations(users, ({ many, one }) => ({
@@ -33,6 +57,8 @@ export const usersRelations = relations(users, ({ many, one }) => ({
     fields: [users.id],
     references: [authIdentities.userId],
   }),
+  educations: many(educations),
+  unavailabilities: many(unavailabilities),
 }));
 
 export const userGlobalRoles = pgTable(
@@ -55,6 +81,78 @@ export const userGlobalRolesRelations = relations(
     }),
   }),
 );
+
+// ─── Educations ────────────────────────────────────────────────────────────
+
+export const educations = pgTable('educations', {
+  id: text('id').primaryKey(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  degree: degreeEnum('degree').notNull(),
+  major: text('major').notNull(),
+  institution: text('institution').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
+});
+
+export const educationsRelations = relations(educations, ({ one }) => ({
+  user: one(users, {
+    fields: [educations.userId],
+    references: [users.id],
+  }),
+}));
+
+// ─── Unavailabilities ──────────────────────────────────────────────────────
+
+export const unavailabilities = pgTable(
+  'unavailabilities',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    description: text('description').notNull(),
+    start: timestamp('start', { withTimezone: true }).notNull(),
+    end: timestamp('end', { withTimezone: true }).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (t) => [
+    check('unavailabilities_valid_range_chk', sql`${t.end} > ${t.start}`),
+  ],
+);
+
+export const unavailabilitiesRelations = relations(
+  unavailabilities,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [unavailabilities.userId],
+      references: [users.id],
+    }),
+  }),
+);
+
+// ─── System Agents ─────────────────────────────────────────────────────────
+
+export const systemAgents = pgTable('system_agents', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull().unique(),
+  roles: text('roles').array().notNull().default([]),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
 
 // ─── Auth ──────────────────────────────────────────────────────────────────
 
