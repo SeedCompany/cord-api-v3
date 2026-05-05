@@ -4,7 +4,7 @@ import { Policy, self } from '../util';
   r.User.when(self).edit.specifically((p) => [
     p.status.none,
     p.roles.none,
-    p.organizations.none,
+    p.organization.none,
   ]),
 )
 export class UserCanEditSelfPolicy {}

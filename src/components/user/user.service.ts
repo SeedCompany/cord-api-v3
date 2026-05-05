@@ -320,12 +320,16 @@ export class UserService {
   }
 
   async assignOrganizationToUser(request: AssignOrganizationToUser) {
+    const user = await this.userRepo.readOne(request.user);
+    this.privileges.for(User, user).verifyCan('edit', 'organization');
     await this.userRepo.assignOrganizationToUser(request);
   }
 
   async removeOrganizationFromUser(
     request: RemoveOrganizationFromUser,
   ): Promise<void> {
+    const user = await this.userRepo.readOne(request.user);
+    this.privileges.for(User, user).verifyCan('edit', 'organization');
     await this.userRepo.removeOrganizationFromUser(request);
   }
 }
