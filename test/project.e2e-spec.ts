@@ -1139,9 +1139,7 @@ describe('Project e2e', () => {
         ),
       );
 
-      expect(project1!.departmentId.value).not.toBe(
-        project2!.departmentId.value,
-      );
+      expect(project1.departmentId.value).not.toBe(project2.departmentId.value);
     });
   });
 });

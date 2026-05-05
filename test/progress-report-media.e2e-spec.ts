@@ -202,7 +202,7 @@ describe('ProgressReport Media e2e', () => {
     expect(reportUpdated.media.total).toBe(2);
 
     const [m1, m2] = reportUpdated.media.items;
-    expect(m1!.variantGroup).toBe(m2!.variantGroup);
+    expect(m1.variantGroup).toBe(m2.variantGroup);
   });
 
   it('Only one variant per group', async () => {
