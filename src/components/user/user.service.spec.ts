@@ -21,7 +21,7 @@ jest.unstable_mockModule('~/core/logger', () => ({
 }));
 
 jest.unstable_mockModule('~/core/resources', () => ({
-  HandleIdLookup: () => (_target: any, _key: string, descriptor: PropertyDescriptor) =>
+  HandleIdLookup: () => (_target: unknown, _key: string, descriptor: PropertyDescriptor) =>
     descriptor,
 }));
 
@@ -88,12 +88,35 @@ const makeMockUser = (id: ID<'User'> = USER_ID) => ({
   __typename: 'User' as const,
 });
 
+interface MockUserRepository {
+  readOne: jest.Mock<Promise<ReturnType<typeof makeMockUser>>>;
+  assignOrganizationToUser: jest.Mock<Promise<void>>;
+  removeOrganizationFromUser: jest.Mock<Promise<void>>;
+  getActualChanges: jest.Mock;
+  update: jest.Mock;
+  create: jest.Mock;
+  delete: jest.Mock;
+  list: jest.Mock;
+}
+
+interface MockResourcePrivileges {
+  verifyCan: jest.Mock<void>;
+}
+
+interface MockPrivileges {
+  for: jest.Mock<MockResourcePrivileges>;
+}
+
+interface MockLogger {
+  debug: jest.Mock;
+}
+
 describe('UserService — assignOrganizationToUser', () => {
   let UserService: typeof UserServiceClass;
   let service: UserServiceClass;
-  let userRepo: any;
-  let privilegesMock: any;
-  let resourcePrivilegesMock: any;
+  let userRepo: MockUserRepository;
+  let privilegesMock: MockPrivileges;
+  let resourcePrivilegesMock: MockResourcePrivileges;
 
   beforeAll(async () => {
     ({ UserService } = await import('./user.service'));
@@ -122,18 +145,20 @@ describe('UserService — assignOrganizationToUser', () => {
     userRepo.readOne.mockResolvedValue(makeMockUser());
     userRepo.assignOrganizationToUser.mockResolvedValue(undefined);
 
+    const mockLogger: MockLogger = { debug: jest.fn() };
+
     service = new UserService(
-      {} as any, // educations
-      {} as any, // organizations
-      {} as any, // partners
-      {} as any, // unavailabilities
-      privilegesMock as any, // privileges
-      {} as any, // locationService
-      {} as any, // knownLanguages
-      {} as any, // identity
-      {} as any, // hooks
-      userRepo as any, // userRepo
-      { debug: jest.fn() } as any, // logger
+      {} as never, // educations
+      {} as never, // organizations
+      {} as never, // partners
+      {} as never, // unavailabilities
+      privilegesMock as never, // privileges
+      {} as never, // locationService
+      {} as never, // knownLanguages
+      {} as never, // identity
+      {} as never, // hooks
+      userRepo as never, // userRepo
+      mockLogger as never, // logger
     );
   });
 
@@ -213,9 +238,9 @@ describe('UserService — assignOrganizationToUser', () => {
 describe('UserService — removeOrganizationFromUser', () => {
   let UserService: typeof UserServiceClass;
   let service: UserServiceClass;
-  let userRepo: any;
-  let privilegesMock: any;
-  let resourcePrivilegesMock: any;
+  let userRepo: MockUserRepository;
+  let privilegesMock: MockPrivileges;
+  let resourcePrivilegesMock: MockResourcePrivileges;
 
   beforeAll(async () => {
     ({ UserService } = await import('./user.service'));
@@ -244,18 +269,20 @@ describe('UserService — removeOrganizationFromUser', () => {
     userRepo.readOne.mockResolvedValue(makeMockUser());
     userRepo.removeOrganizationFromUser.mockResolvedValue(undefined);
 
+    const mockLogger: MockLogger = { debug: jest.fn() };
+
     service = new UserService(
-      {} as any, // educations
-      {} as any, // organizations
-      {} as any, // partners
-      {} as any, // unavailabilities
-      privilegesMock as any, // privileges
-      {} as any, // locationService
-      {} as any, // knownLanguages
-      {} as any, // identity
-      {} as any, // hooks
-      userRepo as any, // userRepo
-      { debug: jest.fn() } as any, // logger
+      {} as never, // educations
+      {} as never, // organizations
+      {} as never, // partners
+      {} as never, // unavailabilities
+      privilegesMock as never, // privileges
+      {} as never, // locationService
+      {} as never, // knownLanguages
+      {} as never, // identity
+      {} as never, // hooks
+      userRepo as never, // userRepo
+      mockLogger as never, // logger
     );
   });
 
