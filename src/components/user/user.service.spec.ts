@@ -8,7 +8,7 @@ import {
   jest,
 } from '@jest/globals';
 import { type ID } from '~/common';
-import type { UserService as UserServiceClass } from './user.service';
+import type { UserService as UserServiceClass } from './user.service.js';
 
 // In ESM mode (ts-jest/presets/default-esm), jest.mock() is NOT hoisted and
 // cannot intercept ES module imports. unstable_mockModule + dynamic import is
