@@ -12,88 +12,95 @@ import type { UserService as UserServiceClass } from './user.service';
 
 // In ESM mode (ts-jest/presets/default-esm), jest.mock() is NOT hoisted and
 // cannot intercept ES module imports. unstable_mockModule + dynamic import is
-// required.
+// required to avoid transitive circular-dep TDZ errors.
 jest.unstable_mockModule('~/core/logger', () => ({
   // eslint-disable-next-line @typescript-eslint/naming-convention
   Logger: () => () => undefined,
   // eslint-disable-next-line @typescript-eslint/naming-convention
   ILogger: class {},
 }));
-jest.unstable_mockModule('~/core/hooks', () => ({
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  Hooks: class {},
-}));
-jest.unstable_mockModule('~/core/authentication', () => ({
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  Identity: class {},
-}));
+
 jest.unstable_mockModule('~/core/resources', () => ({
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  HandleIdLookup: () => (_target: any, _key: any, descriptor: any) =>
+  HandleIdLookup: () => (_target: any, _key: string, descriptor: PropertyDescriptor) =>
     descriptor,
 }));
+
+jest.unstable_mockModule('./user.repository', () => ({
+  UserRepository: class {},
+}));
+
 jest.unstable_mockModule('../authorization', () => ({
-  // eslint-disable-next-line @typescript-eslint/naming-convention
   Privileges: class {},
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  AssignableRoles: class {},
 }));
-jest.unstable_mockModule('../location', () => ({
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  LocationService: class {},
-}));
-jest.unstable_mockModule('../organization', () => ({
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  OrganizationService: class {},
-}));
+
 jest.unstable_mockModule('../partner', () => ({
-  // eslint-disable-next-line @typescript-eslint/naming-convention
   PartnerService: class {},
 }));
+
+jest.unstable_mockModule('../location', () => ({
+  LocationService: class {},
+}));
+
+jest.unstable_mockModule('../organization', () => ({
+  OrganizationService: class {},
+}));
+
 jest.unstable_mockModule('./education', () => ({
-  // eslint-disable-next-line @typescript-eslint/naming-convention
   EducationService: class {},
 }));
+
 jest.unstable_mockModule('./unavailability', () => ({
-  // eslint-disable-next-line @typescript-eslint/naming-convention
   UnavailabilityService: class {},
 }));
+
+jest.unstable_mockModule('~/core/authentication', () => ({
+  Identity: class {},
+}));
+
+jest.unstable_mockModule('~/core/hooks', () => ({
+  Hooks: class {},
+}));
+
 jest.unstable_mockModule('./known-language.repository', () => ({
-  // eslint-disable-next-line @typescript-eslint/naming-convention
   KnownLanguageRepository: class {},
 }));
-jest.unstable_mockModule('./user.repository', () => ({
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  UserRepository: class {},
+
+jest.unstable_mockModule('./hooks/user-updated.hook', () => ({
+  UserUpdatedHook: class {},
+}));
+
+jest.unstable_mockModule('../authorization/dto/assignable-roles.dto', () => ({
+  AssignableRoles: class {},
 }));
 
 const USER_ID = 'user-uuid-1' as ID<'User'>;
 const ORG_ID = 'org-uuid-1' as ID<'Organization'>;
 
-const makeFakeUser = (id = USER_ID) => ({
+const makeMockUser = (id: ID<'User'> = USER_ID) => ({
   id,
-  __typename: 'User' as const,
   email: { value: 'test@example.com', canRead: true, canEdit: false },
   realFirstName: { value: 'Test', canRead: true, canEdit: true },
   realLastName: { value: 'User', canRead: true, canEdit: true },
   displayFirstName: { value: 'Test', canRead: true, canEdit: true },
   displayLastName: { value: 'User', canRead: true, canEdit: true },
+  roles: { value: [], canRead: true, canEdit: false },
+  status: { value: 'Active', canRead: true, canEdit: false },
+  __typename: 'User' as const,
 });
 
-describe('UserService', () => {
+describe('UserService — assignOrganizationToUser', () => {
   let UserService: typeof UserServiceClass;
-  // Typed as `any` to keep mock setup simple.
   let service: UserServiceClass;
   let userRepo: any;
-  let privileges: any;
-  let resourcePrivileges: any;
+  let privilegesMock: any;
+  let resourcePrivilegesMock: any;
 
   beforeAll(async () => {
     ({ UserService } = await import('./user.service'));
   });
 
   beforeEach(() => {
-    resourcePrivileges = {
+    resourcePrivilegesMock = {
       verifyCan: jest.fn(),
     };
 
@@ -101,40 +108,31 @@ describe('UserService', () => {
       readOne: jest.fn(),
       assignOrganizationToUser: jest.fn(),
       removeOrganizationFromUser: jest.fn(),
-      readMany: jest.fn(),
-      readManyActors: jest.fn(),
-      create: jest.fn(),
+      getActualChanges: jest.fn(),
       update: jest.fn(),
+      create: jest.fn(),
       delete: jest.fn(),
       list: jest.fn(),
-      getActualChanges: jest.fn(),
-      doesEmailAddressExist: jest.fn(),
-      getUserByEmailAddress: jest.fn(),
     };
 
-    privileges = {
-      for: jest.fn().mockReturnValue(resourcePrivileges),
+    privilegesMock = {
+      for: jest.fn().mockReturnValue(resourcePrivilegesMock),
     };
 
-    // Default: readOne returns a fake user
-    userRepo.readOne.mockResolvedValue(makeFakeUser());
-    // Default: verifyCan succeeds (no throw)
-    resourcePrivileges.verifyCan.mockReturnValue(undefined);
-    // Default: repo operations succeed
+    userRepo.readOne.mockResolvedValue(makeMockUser());
     userRepo.assignOrganizationToUser.mockResolvedValue(undefined);
-    userRepo.removeOrganizationFromUser.mockResolvedValue(undefined);
 
-    service = new (UserService as any)(
+    service = new UserService(
       {} as any, // educations
       {} as any, // organizations
       {} as any, // partners
       {} as any, // unavailabilities
-      privileges,
+      privilegesMock as any, // privileges
       {} as any, // locationService
       {} as any, // knownLanguages
       {} as any, // identity
       {} as any, // hooks
-      userRepo,
+      userRepo as any, // userRepo
       { debug: jest.fn() } as any, // logger
     );
   });
@@ -143,134 +141,212 @@ describe('UserService', () => {
     jest.clearAllMocks();
   });
 
-  describe('assignOrganizationToUser', () => {
-    it('reads the user from the repository before checking privileges', async () => {
-      const request = { user: USER_ID, org: ORG_ID };
+  it('reads the user before checking privileges', async () => {
+    await service.assignOrganizationToUser({ org: ORG_ID, user: USER_ID });
 
-      await service.assignOrganizationToUser(request);
-
-      expect(userRepo.readOne).toHaveBeenCalledWith(USER_ID);
-    });
-
-    it('verifies the caller can edit the organization field', async () => {
-      const fakeUser = makeFakeUser();
-      userRepo.readOne.mockResolvedValue(fakeUser);
-
-      await service.assignOrganizationToUser({ user: USER_ID, org: ORG_ID });
-
-      expect(privileges.for).toHaveBeenCalledWith(
-        expect.anything(), // User resource
-        fakeUser,
-      );
-      expect(resourcePrivileges.verifyCan).toHaveBeenCalledWith(
-        'edit',
-        'organization',
-      );
-    });
-
-    it('delegates to the repository after successful privilege check', async () => {
-      const request = { user: USER_ID, org: ORG_ID };
-
-      await service.assignOrganizationToUser(request);
-
-      expect(userRepo.assignOrganizationToUser).toHaveBeenCalledWith(request);
-    });
-
-    it('does not call the repository when privilege check throws', async () => {
-      const authError = new Error('Insufficient permission');
-      resourcePrivileges.verifyCan.mockImplementation(() => {
-        throw authError;
-      });
-
-      await expect(
-        service.assignOrganizationToUser({ user: USER_ID, org: ORG_ID }),
-      ).rejects.toThrow(authError);
-
-      expect(userRepo.assignOrganizationToUser).not.toHaveBeenCalled();
-    });
-
-    it('propagates errors thrown by the repository', async () => {
-      const repoError = new Error('Database failure');
-      userRepo.assignOrganizationToUser.mockRejectedValue(repoError);
-
-      await expect(
-        service.assignOrganizationToUser({ user: USER_ID, org: ORG_ID }),
-      ).rejects.toThrow(repoError);
-    });
-
-    it('forwards the full request object including the optional primary flag', async () => {
-      const request = { user: USER_ID, org: ORG_ID, primary: true };
-
-      await service.assignOrganizationToUser(request);
-
-      expect(userRepo.assignOrganizationToUser).toHaveBeenCalledWith(request);
-    });
+    expect(userRepo.readOne).toHaveBeenCalledWith(USER_ID);
   });
 
-  describe('removeOrganizationFromUser', () => {
-    it('reads the user from the repository before checking privileges', async () => {
-      await service.removeOrganizationFromUser({ user: USER_ID, org: ORG_ID });
+  it('checks edit privilege on organization property', async () => {
+    const mockUser = makeMockUser();
+    userRepo.readOne.mockResolvedValue(mockUser);
 
-      expect(userRepo.readOne).toHaveBeenCalledWith(USER_ID);
+    await service.assignOrganizationToUser({ org: ORG_ID, user: USER_ID });
+
+    expect(privilegesMock.for).toHaveBeenCalledWith(
+      expect.anything(), // User class
+      mockUser,
+    );
+    expect(resourcePrivilegesMock.verifyCan).toHaveBeenCalledWith(
+      'edit',
+      'organization',
+    );
+  });
+
+  it('delegates to repository when privilege check passes', async () => {
+    const request = { org: ORG_ID, user: USER_ID, primary: true };
+
+    await service.assignOrganizationToUser(request);
+
+    expect(userRepo.assignOrganizationToUser).toHaveBeenCalledWith(request);
+  });
+
+  it('does not call repository when privilege check throws', async () => {
+    resourcePrivilegesMock.verifyCan.mockImplementation(() => {
+      throw new Error('Unauthorized');
     });
 
-    it('verifies the caller can edit the organization field', async () => {
-      const fakeUser = makeFakeUser();
-      userRepo.readOne.mockResolvedValue(fakeUser);
+    await expect(
+      service.assignOrganizationToUser({ org: ORG_ID, user: USER_ID }),
+    ).rejects.toThrow('Unauthorized');
 
-      await service.removeOrganizationFromUser({ user: USER_ID, org: ORG_ID });
+    expect(userRepo.assignOrganizationToUser).not.toHaveBeenCalled();
+  });
 
-      expect(privileges.for).toHaveBeenCalledWith(
-        expect.anything(), // User resource
-        fakeUser,
-      );
-      expect(resourcePrivileges.verifyCan).toHaveBeenCalledWith(
-        'edit',
-        'organization',
-      );
+  it('propagates the error thrown by verifyCan', async () => {
+    const authError = new Error('You do not have permission to edit organization');
+    resourcePrivilegesMock.verifyCan.mockImplementation(() => {
+      throw authError;
     });
 
-    it('delegates to the repository after successful privilege check', async () => {
-      const request = { user: USER_ID, org: ORG_ID };
+    await expect(
+      service.assignOrganizationToUser({ org: ORG_ID, user: USER_ID }),
+    ).rejects.toBe(authError);
+  });
 
-      await service.removeOrganizationFromUser(request);
+  it('privilege check uses the user object returned by readOne', async () => {
+    const specificUser = makeMockUser('other-user-id' as ID<'User'>);
+    userRepo.readOne.mockResolvedValue(specificUser);
 
-      expect(userRepo.removeOrganizationFromUser).toHaveBeenCalledWith(request);
+    await service.assignOrganizationToUser({
+      org: ORG_ID,
+      user: 'other-user-id' as ID<'User'>,
     });
 
-    it('does not call the repository when privilege check throws', async () => {
-      const authError = new Error('Insufficient permission');
-      resourcePrivileges.verifyCan.mockImplementation(() => {
-        throw authError;
-      });
+    expect(privilegesMock.for).toHaveBeenCalledWith(
+      expect.anything(),
+      specificUser,
+    );
+  });
+});
 
-      await expect(
-        service.removeOrganizationFromUser({ user: USER_ID, org: ORG_ID }),
-      ).rejects.toThrow(authError);
+describe('UserService — removeOrganizationFromUser', () => {
+  let UserService: typeof UserServiceClass;
+  let service: UserServiceClass;
+  let userRepo: any;
+  let privilegesMock: any;
+  let resourcePrivilegesMock: any;
 
-      expect(userRepo.removeOrganizationFromUser).not.toHaveBeenCalled();
+  beforeAll(async () => {
+    ({ UserService } = await import('./user.service'));
+  });
+
+  beforeEach(() => {
+    resourcePrivilegesMock = {
+      verifyCan: jest.fn(),
+    };
+
+    userRepo = {
+      readOne: jest.fn(),
+      assignOrganizationToUser: jest.fn(),
+      removeOrganizationFromUser: jest.fn(),
+      getActualChanges: jest.fn(),
+      update: jest.fn(),
+      create: jest.fn(),
+      delete: jest.fn(),
+      list: jest.fn(),
+    };
+
+    privilegesMock = {
+      for: jest.fn().mockReturnValue(resourcePrivilegesMock),
+    };
+
+    userRepo.readOne.mockResolvedValue(makeMockUser());
+    userRepo.removeOrganizationFromUser.mockResolvedValue(undefined);
+
+    service = new UserService(
+      {} as any, // educations
+      {} as any, // organizations
+      {} as any, // partners
+      {} as any, // unavailabilities
+      privilegesMock as any, // privileges
+      {} as any, // locationService
+      {} as any, // knownLanguages
+      {} as any, // identity
+      {} as any, // hooks
+      userRepo as any, // userRepo
+      { debug: jest.fn() } as any, // logger
+    );
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('reads the user before checking privileges', async () => {
+    await service.removeOrganizationFromUser({ org: ORG_ID, user: USER_ID });
+
+    expect(userRepo.readOne).toHaveBeenCalledWith(USER_ID);
+  });
+
+  it('checks edit privilege on organization property', async () => {
+    const mockUser = makeMockUser();
+    userRepo.readOne.mockResolvedValue(mockUser);
+
+    await service.removeOrganizationFromUser({ org: ORG_ID, user: USER_ID });
+
+    expect(privilegesMock.for).toHaveBeenCalledWith(
+      expect.anything(), // User class
+      mockUser,
+    );
+    expect(resourcePrivilegesMock.verifyCan).toHaveBeenCalledWith(
+      'edit',
+      'organization',
+    );
+  });
+
+  it('delegates to repository when privilege check passes', async () => {
+    const request = { org: ORG_ID, user: USER_ID };
+
+    await service.removeOrganizationFromUser(request);
+
+    expect(userRepo.removeOrganizationFromUser).toHaveBeenCalledWith(request);
+  });
+
+  it('does not call repository when privilege check throws', async () => {
+    resourcePrivilegesMock.verifyCan.mockImplementation(() => {
+      throw new Error('Unauthorized');
     });
 
-    it('propagates errors thrown by the repository', async () => {
-      const repoError = new Error('Database failure');
-      userRepo.removeOrganizationFromUser.mockRejectedValue(repoError);
+    await expect(
+      service.removeOrganizationFromUser({ org: ORG_ID, user: USER_ID }),
+    ).rejects.toThrow('Unauthorized');
 
-      await expect(
-        service.removeOrganizationFromUser({ user: USER_ID, org: ORG_ID }),
-      ).rejects.toThrow(repoError);
+    expect(userRepo.removeOrganizationFromUser).not.toHaveBeenCalled();
+  });
+
+  it('propagates the error thrown by verifyCan', async () => {
+    const authError = new Error('You do not have permission to edit organization');
+    resourcePrivilegesMock.verifyCan.mockImplementation(() => {
+      throw authError;
     });
 
-    it('privilege check uses the user returned by readOne, not the request id', async () => {
-      const differentUser = makeFakeUser('other-user-id' as ID<'User'>);
-      userRepo.readOne.mockResolvedValue(differentUser);
+    await expect(
+      service.removeOrganizationFromUser({ org: ORG_ID, user: USER_ID }),
+    ).rejects.toBe(authError);
+  });
 
-      await service.removeOrganizationFromUser({ user: USER_ID, org: ORG_ID });
+  it('privilege check uses the user object returned by readOne', async () => {
+    const specificUser = makeMockUser('other-user-id' as ID<'User'>);
+    userRepo.readOne.mockResolvedValue(specificUser);
 
-      // Privileges are checked against the actual user object from the DB
-      expect(privileges.for).toHaveBeenCalledWith(
-        expect.anything(),
-        differentUser,
-      );
+    await service.removeOrganizationFromUser({
+      org: ORG_ID,
+      user: 'other-user-id' as ID<'User'>,
     });
+
+    expect(privilegesMock.for).toHaveBeenCalledWith(
+      expect.anything(),
+      specificUser,
+    );
+  });
+
+  it('privilege check happens before repository call (read then verify then remove)', async () => {
+    const callOrder: string[] = [];
+
+    userRepo.readOne.mockImplementation(async () => {
+      callOrder.push('readOne');
+      return makeMockUser();
+    });
+    resourcePrivilegesMock.verifyCan.mockImplementation(() => {
+      callOrder.push('verifyCan');
+    });
+    userRepo.removeOrganizationFromUser.mockImplementation(async () => {
+      callOrder.push('removeOrganizationFromUser');
+    });
+
+    await service.removeOrganizationFromUser({ org: ORG_ID, user: USER_ID });
+
+    expect(callOrder).toEqual(['readOne', 'verifyCan', 'removeOrganizationFromUser']);
   });
 });

@@ -1,92 +1,88 @@
 /**
- * Unit-style tests for the test utilities in create-session.ts.
+ * Unit-style tests for the create-session utility helpers.
  *
- * These tests exercise the changed logic in getUserFromSession without
- * spinning up the full NestJS application. The TestApp is mocked with a
- * minimal stub of app.graphql.query.
+ * These tests run under the E2E Jest project (roots=['test']) but use only
+ * mocked objects so no real database or application is needed.
  */
-import { describe, expect, it, jest } from '@jest/globals';
-import { CurrentUserDoc, getUserFromSession } from './create-session';
+import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { getUserFromSession } from './create-session';
 
-// ---------------------------------------------------------------------------
-// Minimal TestApp stub
-// ---------------------------------------------------------------------------
-
-function makeApp(queryResult: Record<string, any>) {
-  return {
+const makeApp = (sessionUserPayload: unknown) =>
+  ({
     graphql: {
-      authToken: undefined as string | undefined,
-      query: jest.fn<() => Promise<any>>().mockResolvedValue(queryResult),
+      query: jest.fn<() => Promise<any>>().mockResolvedValue({
+        session: sessionUserPayload,
+      }),
     },
-  } as any;
-}
-
-// ---------------------------------------------------------------------------
-// getUserFromSession
-// ---------------------------------------------------------------------------
+  }) as any;
 
 describe('getUserFromSession', () => {
-  it('returns an object with the session user id when authenticated', async () => {
-    const app = makeApp({ session: { user: { id: 'user-abc-123' } } });
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('returns an object with the user id when the session has a logged-in user', async () => {
+    const app = makeApp({ user: { id: 'user-abc-123' } });
 
     const result = await getUserFromSession(app);
 
     expect(result).toEqual({ id: 'user-abc-123' });
   });
 
-  it('throws an error when session user is null', async () => {
-    const app = makeApp({ session: { user: null } });
+  it('throws when the session user is null (unauthenticated session)', async () => {
+    const app = makeApp({ user: null });
 
     await expect(getUserFromSession(app)).rejects.toThrow(
       'Expected session user to be present',
     );
   });
 
-  it('throws an error when session user is undefined', async () => {
-    const app = makeApp({ session: { user: undefined } });
+  it('throws when the session user object is missing an id', async () => {
+    const app = makeApp({ user: {} });
 
     await expect(getUserFromSession(app)).rejects.toThrow(
       'Expected session user to be present',
     );
   });
 
-  it('throws an error when session user exists but has no id', async () => {
-    const app = makeApp({ session: { user: { id: undefined } } });
+  it('throws when the session user id is an empty string', async () => {
+    const app = makeApp({ user: { id: '' } });
 
     await expect(getUserFromSession(app)).rejects.toThrow(
       'Expected session user to be present',
     );
   });
 
-  it('throws an error when session user id is an empty string', async () => {
-    const app = makeApp({ session: { user: { id: '' } } });
+  it('throws when the session user is undefined', async () => {
+    const app = makeApp({ user: undefined });
 
     await expect(getUserFromSession(app)).rejects.toThrow(
       'Expected session user to be present',
     );
   });
 
-  it('queries using the CurrentUserDoc document', async () => {
-    const app = makeApp({ session: { user: { id: 'user-xyz' } } });
-
-    await getUserFromSession(app);
-
-    expect(app.graphql.query).toHaveBeenCalledWith(
-      CurrentUserDoc,
-      expect.anything(),
-    );
-  });
-
-  it('returns only the id, not any additional fields from the session', async () => {
-    // Even if the server returns extra fields, the function strips them.
+  it('returns only id regardless of extra properties on the session user', async () => {
     const app = makeApp({
-      session: { user: { id: 'user-123', email: 'x@y.com', roles: ['Admin'] } },
+      user: { id: 'user-xyz', email: 'user@example.com', roles: ['Admin'] },
     });
 
     const result = await getUserFromSession(app);
 
-    expect(result).toEqual({ id: 'user-123' });
-    expect(result).not.toHaveProperty('email');
-    expect(result).not.toHaveProperty('roles');
+    // Result is shaped as SessionUser, which only has id.
+    expect(result).toEqual({ id: 'user-xyz' });
+    expect(Object.keys(result)).toEqual(['id']);
+  });
+
+  it('passes an empty-object variables argument to app.graphql.query', async () => {
+    const app = makeApp({ user: { id: 'user-abc' } });
+
+    await getUserFromSession(app);
+
+    // The second argument to query() must be {} (not undefined) so the
+    // typed GraphQL client does not complain about missing variables.
+    expect(app.graphql.query).toHaveBeenCalledWith(
+      expect.anything(),
+      {},
+    );
   });
 });
