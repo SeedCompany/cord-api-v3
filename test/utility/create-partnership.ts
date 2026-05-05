@@ -6,6 +6,17 @@ import { createPartner } from './create-partner';
 import { createProject } from './create-project';
 import * as fragments from './fragments';
 
+/**
+ * Creates a partnership via the GraphQL mutation and asserts key fields on the returned entity.
+ *
+ * The function builds a full `CreatePartnership` input (filling defaults and creating dependent
+ * project/partner records when not provided), performs the mutation, and asserts that the
+ * returned partnership exists, has a valid id, and that agreement status, MOU status, and
+ * types match the requested input.
+ *
+ * @param input - Optional overrides for the mutation input; partial fields will replace defaults.
+ * @returns The created partnership object returned by the mutation.
+ */
 export async function createPartnership(
   app: TestApp,
   input: Partial<InputOf<typeof CreatePartnershipDoc>> = {},

@@ -7,6 +7,14 @@ interface SessionUser {
   id: ID;
 }
 
+/**
+ * Creates a test session and stores the returned token on the app's GraphQL client.
+ *
+ * This performs the SessionToken query, assigns the returned token to `app.graphql.authToken`,
+ * and verifies a token was received.
+ *
+ * @returns The session token string
+ */
 export async function createSession(app: TestApp) {
   const result = await app.graphql.query(
     graphql(`
@@ -25,7 +33,10 @@ export async function createSession(app: TestApp) {
 }
 
 /**
- * Return the current session user and fail fast if the session is unauthenticated.
+ * Return the current session user or throw if the session is unauthenticated.
+ *
+ * @returns An object with the session user's `id`.
+ * @throws Error if no authenticated session user is present.
  */
 export async function getUserFromSession(app: TestApp): Promise<SessionUser> {
   const result = await app.graphql.query(CurrentUserDoc, {});
