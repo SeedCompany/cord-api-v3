@@ -10,6 +10,7 @@ import {
   createSession,
   createTestApp,
   createUnavailability,
+  errors,
   fragments,
   generateRegisterInput,
   generateRequireFieldsRegisterInput,
@@ -242,6 +243,32 @@ describe('User e2e', () => {
       org: org.id,
       user: newUser.id,
       primary: true,
+    });
+  });
+
+  it('non-admin cannot assign organization to self', async () => {
+    const user = await registerUser(app);
+
+    await user.runAs(async () => {
+      await expect(
+        assignOrganizationToUser(app, {
+          org: org.id,
+          user: user.id,
+        }),
+      ).rejects.toThrowGqlError(errors.unauthorized());
+    });
+  });
+
+  it('non-admin cannot remove organization from self', async () => {
+    const user = await registerUser(app);
+
+    await user.runAs(async () => {
+      await expect(
+        removeOrganizationFromUser(app, {
+          org: org.id,
+          user: user.id,
+        }),
+      ).rejects.toThrowGqlError(errors.unauthorized());
     });
   });
 
