@@ -55,6 +55,10 @@ export class UnavailabilityRepository extends DtoRepository(Unavailability) {
     return await this.readOne(id);
   }
 
+  async delete(id: ID): Promise<void> {
+    await this.deleteNode(id);
+  }
+
   async getUserIdByUnavailability(id: ID) {
     const result = await this.db
       .query()

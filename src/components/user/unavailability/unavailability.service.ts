@@ -56,8 +56,8 @@ export class UnavailabilityService {
   }
 
   async delete(id: ID): Promise<void> {
-    const ua = await this.repo.readOne(id);
-    await this.repo.deleteNode(ua);
+    await this.repo.readOne(id);
+    await this.repo.delete(id);
   }
 
   async list(

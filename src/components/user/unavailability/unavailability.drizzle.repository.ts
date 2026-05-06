@@ -52,6 +52,10 @@ export class UnavailabilityDrizzleRepository extends DrizzleDtoRepository<
     return await this.readOne(id);
   }
 
+  async delete(id: ID): Promise<void> {
+    await this.softDelete(id);
+  }
+
   async getUserIdByUnavailability(id: ID): Promise<{ id: ID }> {
     const row = await this.db.db.query.unavailabilities.findFirst({
       where: (u, { eq: eqFn }) => eqFn(u.id, id),
