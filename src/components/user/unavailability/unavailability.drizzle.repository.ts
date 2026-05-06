@@ -44,7 +44,7 @@ export class UnavailabilityDrizzleRepository extends DrizzleDtoRepository<
     changes: UpdateUnavailability,
   ): Promise<UnsecuredDto<Unavailability>> {
     const { id, ...fields } = changes;
-    await this.updateProperties(id, {
+    await this.updateColumns(id, {
       description: fields.description,
       start: fields.start?.toJSDate(),
       end: fields.end?.toJSDate(),

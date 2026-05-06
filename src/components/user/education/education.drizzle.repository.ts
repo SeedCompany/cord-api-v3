@@ -40,7 +40,7 @@ export class EducationDrizzleRepository extends DrizzleDtoRepository<
 
   async update(changes: UpdateEducation): Promise<UnsecuredDto<Education>> {
     const { id, ...fields } = changes;
-    await this.updateProperties(id, fields);
+    await this.updateColumns(id, fields);
     return await this.readOne(id);
   }
 

@@ -148,7 +148,7 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
   async update(changes: UpdateUser): Promise<UnsecuredDto<User>> {
     const { id, roles, email, photo, ...simpleChanges } = changes;
 
-    await this.updateProperties(id, {
+    await this.updateColumns(id, {
       realFirstName: simpleChanges.realFirstName,
       realLastName: simpleChanges.realLastName,
       displayFirstName: simpleChanges.displayFirstName,

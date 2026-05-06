@@ -9,7 +9,7 @@ import { type DrizzleService } from './drizzle.service';
  * Subclasses provide the table reference and a `toDto()` mapper. Tables with
  * a `deletedAt` column get soft-delete filtering on reads and a `softDelete()`
  * helper for free; tables with `updatedAt` get an automatic timestamp bump on
- * `updateProperties()`.
+ * `updateColumns()`.
  *
  * Repos that need related rows (e.g. `with: { globalRoles: true }`) override
  * `readMany` and call `toDto` themselves — the base only handles flat tables.
@@ -59,7 +59,7 @@ export abstract class DrizzleDtoRepository<
    * stamps `updatedAt` when that column exists. No-op if no fields remain
    * after filtering.
    */
-  protected async updateProperties(
+  protected async updateColumns(
     id: ID,
     changes: Partial<TTable['$inferInsert']>,
   ): Promise<void> {
