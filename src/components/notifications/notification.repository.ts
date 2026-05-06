@@ -68,8 +68,15 @@ export class NotificationRepository extends CommonRepository {
           creator: currentUser,
         }),
       )
-      .subQuery(['node'], (sub) =>
-        sub
+      .subQuery(['node'], (sub) => {
+        const appAvailability = strategy.channelAvailabilities().App;
+        if (appAvailability === 'AlwaysOff') {
+          return sub.return<{
+            totalRecipients: number;
+            recipients: readonly ID[] | null;
+          }>(['0 as totalRecipients', 'null as recipients']);
+        }
+        return sub
           .apply((q) =>
             recipients == null
               ? q.subQuery(strategy.recipientsForNeo4j(input))
@@ -77,6 +84,22 @@ export class NotificationRepository extends CommonRepository {
                   .match(node('recipient', 'User'))
                   .where({ 'recipient.id': inArray(recipients) }),
           )
+          .apply((q) => {
+            if (appAvailability === 'AlwaysOn') {
+              return q; // no filtering
+            }
+            const isDefaultOn = appAvailability === 'DefaultOn';
+            return q.with(['node', 'recipient']).raw(
+              `WHERE ${isDefaultOn ? 'NOT' : ''} EXISTS {
+                MATCH (recipient)-[:user]->(pref:NotificationPreference {
+                  notificationType: $typeName,
+                  channel: 'App',
+                  enabled: ${isDefaultOn ? 'false' : 'true'}
+                })
+              }`,
+              { typeName: this.getType(type) },
+            );
+          })
           .create([
             node('node'),
             relation('out', '', 'recipient'),
@@ -90,8 +113,8 @@ export class NotificationRepository extends CommonRepository {
             strategy.returnRecipientsFromDB()
               ? 'collect(recipient.id) as recipients'
               : 'null as recipients',
-          ]),
-      )
+          ]);
+      })
       .subQuery('node', this.hydrate())
       .return('dto, totalRecipients, recipients')
       .first();
@@ -151,7 +174,7 @@ export class NotificationRepository extends CommonRepository {
     return (query: Query) =>
       query
         .subQuery((q) => {
-          const concreteHydrates = [...this.service.strategyMap].map(
+          const concreteHydrates = [...this.service.strategiesByClassType].map(
             ([dtoCls, strategy]) =>
               (q: Query) => {
                 const type = this.getType(dtoCls);

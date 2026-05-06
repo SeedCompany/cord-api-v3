@@ -7,8 +7,10 @@ import {
   NotificationService,
   NotificationServiceImpl,
 } from './notification.service';
+import { NotificationPreferencesModule } from './preferences/notification-preferences.module';
 
 @Module({
+  imports: [NotificationPreferencesModule],
   providers: [
     NotificationResolver,
     { provide: NotificationService, useExisting: NotificationServiceImpl },

@@ -42,7 +42,7 @@ export class NotificationRepository
     );
     const hydrateConcretes = Object.assign(
       {},
-      ...[...this.service.strategyMap].flatMap(([type, strategy]) => {
+      ...[...this.service.strategiesByClassType].flatMap(([type, strategy]) => {
         if (strategy.hydrateExtraForGel) {
           return strategy.hydrateExtraForGel();
         }
