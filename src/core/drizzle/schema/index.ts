@@ -84,22 +84,26 @@ export const userGlobalRolesRelations = relations(
 
 // ─── Educations ────────────────────────────────────────────────────────────
 
-export const educations = pgTable('educations', {
-  id: text('id').primaryKey(),
-  userId: text('user_id')
-    .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
-  degree: degreeEnum('degree').notNull(),
-  major: text('major').notNull(),
-  institution: text('institution').notNull(),
-  createdAt: timestamp('created_at', { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-  deletedAt: timestamp('deleted_at', { withTimezone: true }),
-});
+export const educations = pgTable(
+  'educations',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    degree: degreeEnum('degree').notNull(),
+    major: text('major').notNull(),
+    institution: text('institution').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (t) => [index('educations_user_id_idx').on(t.userId)],
+);
 
 export const educationsRelations = relations(educations, ({ one }) => ({
   user: one(users, {
@@ -130,6 +134,7 @@ export const unavailabilities = pgTable(
   },
   (t) => [
     check('unavailabilities_valid_range_chk', sql`${t.end} > ${t.start}`),
+    index('unavailabilities_user_id_idx').on(t.userId),
   ],
 );
 

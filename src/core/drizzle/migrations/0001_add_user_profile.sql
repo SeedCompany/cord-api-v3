@@ -52,3 +52,7 @@ CREATE TABLE "system_agents" (
   "roles" text[] NOT NULL DEFAULT '{}',
   "created_at" timestamptz NOT NULL DEFAULT now()
 );
+--> statement-breakpoint
+
+CREATE INDEX "educations_user_id_idx" ON "educations" ("user_id");
+CREATE INDEX "unavailabilities_user_id_idx" ON "unavailabilities" ("user_id");
