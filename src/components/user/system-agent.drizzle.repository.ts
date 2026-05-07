@@ -35,7 +35,7 @@ export class SystemAgentDrizzleRepository extends SystemAgentRepository {
       id: row.id,
       __typename: 'SystemAgent',
       name: row.name,
-      roles: row.roles as Role[],
+      roles: row.roles,
       createdAt: DateTime.fromJSDate(row.createdAt),
     } as unknown as SystemAgent;
   }

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { and, eq, ne } from 'drizzle-orm';
 import { DateTime } from 'luxon';
-import { type ID, type PublicOf, type Role, ServerException } from '~/common';
+import { type ID, type PublicOf, ServerException } from '~/common';
 import {
   authIdentities,
   authPasswordResetTokens,
@@ -28,19 +28,22 @@ export class AuthenticationDrizzleRepository implements PublicOf<AuthenticationR
 
   async resumeSession(token: string, impersonatee?: ID) {
     const row = await this.db.db.query.authSessions.findFirst({
-      where: (s, { and: a, eq: e }) => a(e(s.token, token), e(s.active, true)),
+      where: (session) =>
+        and(eq(session.token, token), eq(session.active, true)),
       with: { user: { with: { globalRoles: true } } },
     });
     if (!row) return null;
 
-    const roles = (row.user?.globalRoles ?? []).map((r) => r.role as Role);
+    const roles = (row.user?.globalRoles ?? []).map(
+      (globalRole) => globalRole.role,
+    );
 
     if (!impersonatee) {
-      return { userId: row.userId as ID | null, roles };
+      return { userId: row.userId, roles };
     }
 
     const impersonateeRoles = await this.rolesForUser(impersonatee);
-    return { userId: row.userId as ID | null, roles, impersonateeRoles };
+    return { userId: row.userId, roles, impersonateeRoles };
   }
 
   async disconnectUserFromSession(token: string) {
@@ -52,7 +55,7 @@ export class AuthenticationDrizzleRepository implements PublicOf<AuthenticationR
 
   async connectSessionToUser(input: LoginInput, session: Session) {
     const user = await this.db.db.query.users.findFirst({
-      where: (u, { eq: e }) => e(u.email, input.email),
+      where: (user) => eq(user.email, input.email),
     });
     if (!user) return undefined;
 
@@ -67,7 +70,7 @@ export class AuthenticationDrizzleRepository implements PublicOf<AuthenticationR
       )
       .returning();
 
-    return result.length > 0 ? (user.id as ID) : undefined;
+    return result.length > 0 ? user.id : undefined;
   }
 
   async deactivateAllOtherSessions(session: Session) {
@@ -86,7 +89,7 @@ export class AuthenticationDrizzleRepository implements PublicOf<AuthenticationR
 
   async deactivateAllOtherSessionsByEmail(email: string, session: Session) {
     const user = await this.db.db.query.users.findFirst({
-      where: (u, { eq: e }) => e(u.email, email),
+      where: (user) => eq(user.email, email),
     });
     if (!user) return;
 
@@ -122,7 +125,7 @@ export class AuthenticationDrizzleRepository implements PublicOf<AuthenticationR
   async getCurrentPasswordHash() {
     const { userId } = this.session.current;
     const row = await this.db.db.query.authIdentities.findFirst({
-      where: (ai, { eq: e }) => e(ai.userId, userId),
+      where: (identity) => eq(identity.userId, userId),
     });
     return row?.passwordHash ?? null;
   }
@@ -156,14 +159,14 @@ export class AuthenticationDrizzleRepository implements PublicOf<AuthenticationR
 
   async doesEmailAddressExist(email: string) {
     const row = await this.db.db.query.users.findFirst({
-      where: (u, { eq: e }) => e(u.email, email),
+      where: (user) => eq(user.email, email),
     });
     return !!row;
   }
 
   async savePasswordResetToken(email: string, token: string) {
     const user = await this.db.db.query.users.findFirst({
-      where: (u, { eq: e }) => e(u.email, email),
+      where: (user) => eq(user.email, email),
     });
     if (!user) {
       throw new ServerException('Could not find user by email');
@@ -175,13 +178,13 @@ export class AuthenticationDrizzleRepository implements PublicOf<AuthenticationR
 
   async findPasswordResetToken(token: string) {
     const row = await this.db.db.query.authPasswordResetTokens.findFirst({
-      where: (et, { eq: e }) => e(et.token, token),
+      where: (resetToken) => eq(resetToken.token, token),
     });
     return row
       ? {
           email: row.email,
           token: row.token,
-          userId: row.userId as ID,
+          userId: row.userId,
           createdOn: DateTime.fromJSDate(row.createdOn),
         }
       : null;
@@ -192,7 +195,7 @@ export class AuthenticationDrizzleRepository implements PublicOf<AuthenticationR
     passwordHash: string,
   ) {
     const user = await this.db.db.query.users.findFirst({
-      where: (u, { eq: e }) => e(u.email, email),
+      where: (user) => eq(user.email, email),
     });
     if (!user) {
       throw new ServerException(
@@ -200,8 +203,8 @@ export class AuthenticationDrizzleRepository implements PublicOf<AuthenticationR
         new ServerException('Could not find user by email'),
       );
     }
-    await this.savePasswordHashOnUser(user.id as ID, passwordHash);
-    return { user: { id: user.id as ID } };
+    await this.savePasswordHashOnUser(user.id, passwordHash);
+    return { user: { id: user.id } };
   }
 
   async removeAllPasswordResetTokensByEmail(email: string) {
@@ -216,21 +219,21 @@ export class AuthenticationDrizzleRepository implements PublicOf<AuthenticationR
       .select({ role: userGlobalRoles.role })
       .from(userGlobalRoles)
       .where(eq(userGlobalRoles.userId, user));
-    return rows.map((r) => r.role as Role);
+    return rows.map((row) => row.role);
   }
 
   async getRootUserId() {
     const row = await this.db.db.query.users.findFirst({
-      where: (u, { eq: e }) => e(u.isRoot, true),
+      where: (user) => eq(user.isRoot, true),
     });
     if (!row) throw new ServerException('Could not find root user');
-    return row.id as ID;
+    return row.id;
   }
 
   async waitForRootUserId(): Promise<ID> {
     const find = () =>
       this.db.db.query.users.findFirst({
-        where: (u, { eq: e }) => e(u.isRoot, true),
+        where: (user) => eq(user.isRoot, true),
       });
     let row;
     try {
@@ -248,6 +251,6 @@ export class AuthenticationDrizzleRepository implements PublicOf<AuthenticationR
         // Continue retrying on error
       }
     }
-    return row.id as ID;
+    return row.id;
   }
 }

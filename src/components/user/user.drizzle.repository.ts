@@ -18,12 +18,15 @@ import {
   type ID,
   NotImplementedException,
   type PaginatedListType,
-  type Role,
   ServerException,
   type UnsecuredDto,
 } from '~/common';
 import { Identity } from '~/core/authentication';
-import { catchUniqueViolation, DrizzleDtoRepository } from '~/core/drizzle';
+import {
+  catchUniqueViolation,
+  DrizzleDtoRepository,
+  escapeLikePattern,
+} from '~/core/drizzle';
 import { DrizzleService } from '~/core/drizzle/drizzle.service';
 import { userGlobalRoles, users } from '~/core/drizzle/schema';
 import { PolicyExecutor } from '../authorization/policy/executor/policy-executor';
@@ -67,36 +70,35 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
     ids: readonly ID[],
   ): Promise<Array<UnsecuredDto<User>>> {
     const rows = await this.db.db.query.users.findMany({
-      where: (u, { and: a, inArray: inArr, isNull: n }) =>
-        a(inArr(u.id, [...ids]), n(u.deletedAt)),
+      where: (user) => and(inArray(user.id, [...ids]), isNull(user.deletedAt)),
       with: { globalRoles: true },
     });
-    return rows.map((r) => this.toDto(r));
+    return rows.map((row) => this.toDto(row));
   }
 
   async readManyActors(ids: readonly ID[]) {
     const [userRows, agentRows] = await Promise.all([
       this.db.db.query.users.findMany({
-        where: (u, { and: a, inArray: inArr, isNull: n }) =>
-          a(inArr(u.id, [...ids]), n(u.deletedAt)),
+        where: (user) =>
+          and(inArray(user.id, [...ids]), isNull(user.deletedAt)),
         with: { globalRoles: true },
       }),
       this.db.db.query.systemAgents.findMany({
-        where: (a, { inArray: inArr }) => inArr(a.id, [...ids]),
+        where: (agent) => inArray(agent.id, [...ids]),
       }),
     ]);
     return [
-      ...(userRows.map((r) => this.toDto(r)) as Array<
+      ...(userRows.map((row) => this.toDto(row)) as Array<
         UnsecuredDto<User | SystemAgent>
       >),
       ...agentRows.map(
-        (r) =>
+        (row) =>
           // migration-todo: SystemAgent is abstract; cast bridges plain row → class shape
           ({
-            ...r,
+            ...row,
             __typename: 'SystemAgent' as const,
-            roles: r.roles as Role[],
-            createdAt: DateTime.fromJSDate(r.createdAt),
+            roles: row.roles,
+            createdAt: DateTime.fromJSDate(row.createdAt),
           }) as unknown as UnsecuredDto<User | SystemAgent>,
       ),
     ];
@@ -120,7 +122,7 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
         timezone: input.timezone ?? 'America/Chicago',
         about: input.about ?? null,
         title: input.title ?? null,
-        gender: (input.gender ?? null) as (typeof users.$inferInsert)['gender'],
+        gender: input.gender ?? null,
         photoId,
       })
       .catch(catchEmailUnique);
@@ -158,7 +160,7 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
       about: simpleChanges.about,
       status: simpleChanges.status,
       title: simpleChanges.title,
-      gender: simpleChanges.gender as (typeof users.$inferInsert)['gender'],
+      gender: simpleChanges.gender,
       email,
     }).catch(catchEmailUnique);
 
@@ -191,7 +193,9 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
     await this.softDelete(id);
   }
 
-  async list(input: UserListInput): Promise<PaginatedListType<User>> {
+  async list(
+    input: UserListInput,
+  ): Promise<PaginatedListType<UnsecuredDto<User>>> {
     const resource = EnhancedResource.of(User);
     const filter = this.executor.drizzleFilter({ action: 'read', resource });
     if (filter === false) return { items: [], total: 0, hasMore: false };
@@ -202,8 +206,7 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
     if (input.filter?.status)
       conditions.push(eq(users.status, input.filter.status));
     if (input.filter?.name) {
-      const escaped = input.filter.name.replace(/[%_\\]/g, '\\$&');
-      const term = `%${escaped}%`;
+      const term = `%${escapeLikePattern(input.filter.name)}%`;
       conditions.push(
         or(
           ilike(users.realFirstName, term),
@@ -214,8 +217,9 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
       );
     }
     if (input.filter?.title) {
-      const escapedTitle = input.filter.title.replace(/[%_\\]/g, '\\$&');
-      conditions.push(ilike(users.title, `%${escapedTitle}%`));
+      conditions.push(
+        ilike(users.title, `%${escapeLikePattern(input.filter.title)}%`),
+      );
     }
     if (input.filter?.roles?.length) {
       const roleSubq = this.db.db
@@ -243,7 +247,7 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
       count: input.count,
     });
 
-    const ids = rows.map((r) => r.id);
+    const ids = rows.map((row) => row.id);
     const allRoles =
       ids.length > 0
         ? await this.db.db
@@ -251,21 +255,20 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
             .from(userGlobalRoles)
             .where(inArray(userGlobalRoles.userId, ids))
         : [];
-    const rolesByUser = groupBy(allRoles, (r) => r.userId);
+    const rolesByUser = groupBy(allRoles, (row) => row.userId);
 
     return {
       total,
-      // migration-todo: items are UnsecuredDto<User>; service layer secures before resolving
-      items: rows.map((r) =>
-        this.toDto({ ...r, globalRoles: rolesByUser[r.id] ?? [] }),
-      ) as unknown as User[],
+      items: rows.map((row) =>
+        this.toDto({ ...row, globalRoles: rolesByUser[row.id] ?? [] }),
+      ),
       hasMore,
     };
   }
 
   async doesEmailAddressExist(email: string): Promise<boolean> {
     const row = await this.db.db.query.users.findFirst({
-      where: (u, { eq: e }) => e(u.email, email),
+      where: (user) => eq(user.email, email),
       columns: { id: true },
     });
     return !!row;
@@ -305,7 +308,7 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
 
   protected toDto(row: UserRow): UnsecuredDto<User> {
     return {
-      id: row.id as ID,
+      id: row.id,
       __typename: 'User',
       createdAt: DateTime.fromJSDate(row.createdAt),
       email: row.email ?? null,
@@ -317,10 +320,10 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
       timezone: row.timezone,
       about: row.about ?? null,
       status: row.status,
-      roles: (row.globalRoles ?? []).map((r) => r.role as Role),
+      roles: (row.globalRoles ?? []).map((globalRole) => globalRole.role),
       title: row.title ?? null,
       gender: row.gender ?? null,
-      photo: row.photoId ? { id: row.photoId as FileId } : null,
+      photo: row.photoId ? { id: row.photoId } : null,
       // migration-todo: pinned is per-requesting-user state, not stored on the user row
       pinned: false,
     };

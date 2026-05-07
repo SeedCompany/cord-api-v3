@@ -15,7 +15,11 @@ import { type DrizzleService } from './drizzle.service';
  * `readMany` and call `toDto` themselves — the base only handles flat tables.
  */
 export abstract class DrizzleDtoRepository<
-  TTable extends PgTable & { id: AnyPgColumn },
+  TTable extends PgTable & {
+    id: AnyPgColumn;
+    deletedAt?: AnyPgColumn;
+    updatedAt?: AnyPgColumn;
+  },
   TDto extends { id: ID },
 > {
   constructor(
@@ -27,30 +31,33 @@ export abstract class DrizzleDtoRepository<
 
   async readOne(id: ID): Promise<UnsecuredDto<TDto>> {
     const rows = await this.readMany([id]);
-    const row = rows.find((r) => r.id === id);
+    const row = rows.find((row) => row.id === id);
     if (!row) throw new NotFoundException();
     return row;
   }
 
   async readMany(ids: readonly ID[]): Promise<Array<UnsecuredDto<TDto>>> {
     if (ids.length === 0) return [];
-    const conds: SQL[] = [inArray(this.table.id, [...ids])];
-    const deletedAt = (this.table as Record<string, unknown>).deletedAt as
-      | AnyPgColumn
-      | undefined;
-    if (deletedAt) conds.push(isNull(deletedAt));
-    const rows = (await this.db.db
+    const conditions: SQL[] = [inArray(this.table.id, [...ids])];
+    if (this.table.deletedAt) {
+      conditions.push(isNull(this.table.deletedAt));
+    }
+    const rows = await this.db.db
       .select()
       .from(this.table as PgTable)
-      .where(and(...conds))) as Array<TTable['$inferSelect']>;
-    return rows.map((r) => this.toDto(r));
+      .where(and(...conditions));
+    return rows.map((row) => this.toDto(row));
   }
 
+  /**
+   * Sets `deletedAt = now()` on the row. Subclass is responsible for ensuring
+   * the table actually has a `deletedAt` column (the generic constraint allows
+   * but doesn't require it).
+   */
   protected async softDelete(id: ID): Promise<void> {
-    const set: Record<string, unknown> = { deletedAt: new Date() };
     await this.db.db
       .update(this.table as PgTable)
-      .set(set as never)
+      .set({ deletedAt: new Date() })
       .where(eq(this.table.id, id));
   }
 
@@ -65,13 +72,13 @@ export abstract class DrizzleDtoRepository<
   ): Promise<void> {
     const entries = Object.entries(changes).filter(([, v]) => v !== undefined);
     if (entries.length === 0) return;
-    const set: Record<string, unknown> = Object.fromEntries(entries);
-    if ((this.table as Record<string, unknown>).updatedAt) {
+    const set = Object.fromEntries(entries);
+    if (this.table.updatedAt) {
       set.updatedAt = new Date();
     }
     await this.db.db
       .update(this.table as PgTable)
-      .set(set as never)
+      .set(set)
       .where(eq(this.table.id, id));
   }
 
@@ -111,7 +118,7 @@ export abstract class DrizzleDtoRepository<
     ]);
     const total = countResult[0]?.total ?? 0;
     return {
-      rows: rows as Array<TTable['$inferSelect']>,
+      rows,
       total,
       hasMore: offset + rows.length < total,
     };

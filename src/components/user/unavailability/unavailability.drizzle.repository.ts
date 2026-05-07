@@ -56,9 +56,9 @@ export class UnavailabilityDrizzleRepository extends DrizzleDtoRepository<
     await this.softDelete(id);
   }
 
-  async getUserIdByUnavailability(id: ID): Promise<{ id: ID }> {
+  async getUserByUnavailabilityId(id: ID): Promise<{ id: ID<'User'> }> {
     const row = await this.db.db.query.unavailabilities.findFirst({
-      where: (u, { eq: eqFn }) => eqFn(u.id, id),
+      where: (unavailability) => eq(unavailability.id, id),
       columns: { userId: true },
     });
     if (!row) {
@@ -66,7 +66,7 @@ export class UnavailabilityDrizzleRepository extends DrizzleDtoRepository<
         'Could not find user associated with unavailability',
       );
     }
-    return { id: row.userId as ID };
+    return { id: row.userId };
   }
 
   async list(input: UnavailabilityListInput): Promise<{
@@ -94,14 +94,14 @@ export class UnavailabilityDrizzleRepository extends DrizzleDtoRepository<
       page: input.page,
       count: input.count,
     });
-    return { items: rows.map((r) => this.toDto(r)), total, hasMore };
+    return { items: rows.map((row) => this.toDto(row)), total, hasMore };
   }
 
   protected toDto(
     row: typeof unavailabilities.$inferSelect,
   ): UnsecuredDto<Unavailability> {
     return {
-      id: row.id as ID,
+      id: row.id,
       __typename: 'Unavailability',
       createdAt: DateTime.fromJSDate(row.createdAt),
       description: row.description,

@@ -9,6 +9,8 @@ import {
   text,
   timestamp,
 } from 'drizzle-orm/pg-core';
+import { type ID, type Role } from '~/common';
+import { type Gender } from '../../../components/user/dto/gender.enum';
 
 export const userStatusEnum = pgEnum('user_status', ['Active', 'Disabled']);
 export const genderEnum = pgEnum('gender', ['Male', 'Female']);
@@ -26,7 +28,7 @@ export const degreeEnum = pgEnum('degree', [
 // ─── Users ─────────────────────────────────────────────────────────────────
 
 export const users = pgTable('users', {
-  id: text('id').primaryKey(),
+  id: text('id').$type<ID<'User'>>().primaryKey(),
   isRoot: boolean('is_root').notNull().default(false),
   status: userStatusEnum('status').notNull(),
   email: text('email').unique(),
@@ -38,8 +40,8 @@ export const users = pgTable('users', {
   timezone: text('timezone').notNull().default('America/Chicago'),
   about: text('about'),
   title: text('title'),
-  gender: genderEnum('gender'),
-  photoId: text('photo_id'),
+  gender: genderEnum('gender').$type<Gender>(),
+  photoId: text('photo_id').$type<ID<'File'>>(),
   createdAt: timestamp('created_at', { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -65,9 +67,10 @@ export const userGlobalRoles = pgTable(
   'user_global_roles',
   {
     userId: text('user_id')
+      .$type<ID<'User'>>()
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
-    role: text('role').notNull(),
+    role: text('role').$type<Role>().notNull(),
   },
   (t) => [primaryKey({ columns: [t.userId, t.role] })],
 );
@@ -87,8 +90,9 @@ export const userGlobalRolesRelations = relations(
 export const educations = pgTable(
   'educations',
   {
-    id: text('id').primaryKey(),
+    id: text('id').$type<ID<'Education'>>().primaryKey(),
     userId: text('user_id')
+      .$type<ID<'User'>>()
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
     degree: degreeEnum('degree').notNull(),
@@ -117,8 +121,9 @@ export const educationsRelations = relations(educations, ({ one }) => ({
 export const unavailabilities = pgTable(
   'unavailabilities',
   {
-    id: text('id').primaryKey(),
+    id: text('id').$type<ID<'Unavailability'>>().primaryKey(),
     userId: text('user_id')
+      .$type<ID<'User'>>()
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
     description: text('description').notNull(),
@@ -151,9 +156,9 @@ export const unavailabilitiesRelations = relations(
 // ─── System Agents ─────────────────────────────────────────────────────────
 
 export const systemAgents = pgTable('system_agents', {
-  id: text('id').primaryKey(),
+  id: text('id').$type<ID<'SystemAgent'>>().primaryKey(),
   name: text('name').notNull().unique(),
-  roles: text('roles').array().notNull().default([]),
+  roles: text('roles').array().$type<Role[]>().notNull().default([]),
   createdAt: timestamp('created_at', { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -166,7 +171,9 @@ export const authSessions = pgTable(
   {
     token: text('token').primaryKey(),
     // Null = anonymous session. Set on login, cleared on logout (soft delete via active flag).
-    userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }),
+    userId: text('user_id')
+      .$type<ID<'User'>>()
+      .references(() => users.id, { onDelete: 'cascade' }),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -187,6 +194,7 @@ export const authSessionsRelations = relations(authSessions, ({ one }) => ({
 // One row per user; updated in place on password change.
 export const authIdentities = pgTable('auth_identities', {
   userId: text('user_id')
+    .$type<ID<'User'>>()
     .primaryKey()
     .references(() => users.id, { onDelete: 'cascade' }),
   passwordHash: text('password_hash').notNull(),
@@ -208,6 +216,7 @@ export const authPasswordResetTokens = pgTable(
   {
     token: text('token').primaryKey(),
     userId: text('user_id')
+      .$type<ID<'User'>>()
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
     email: text('email').notNull(),

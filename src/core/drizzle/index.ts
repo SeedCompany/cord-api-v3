@@ -3,6 +3,7 @@ export * from './drizzle.module';
 export * from './drizzle.service';
 export * from './dto.repository';
 export * from './errors';
+export * from './like';
 export * from './paginate';
 export * from './pg-error-codes';
 export * from './schema/index';

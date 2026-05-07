@@ -43,7 +43,7 @@ export class UnavailabilityService {
 
   async update(input: UpdateUnavailability): Promise<Unavailability> {
     const unavailability = await this.repo.readOne(input.id);
-    const result = await this.repo.getUserIdByUnavailability(input.id);
+    const result = await this.repo.getUserByUnavailabilityId(input.id);
     const changes = this.repo.getActualChanges(unavailability, input);
     // TODO move this condition into policies
     if (!this.identity.isSelf(result.id)) {

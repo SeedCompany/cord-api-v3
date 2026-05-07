@@ -59,7 +59,7 @@ export class UnavailabilityRepository extends DtoRepository(Unavailability) {
     await this.deleteNode(id);
   }
 
-  async getUserIdByUnavailability(id: ID) {
+  async getUserByUnavailabilityId(id: ID) {
     const result = await this.db
       .query()
       .match([
@@ -67,7 +67,7 @@ export class UnavailabilityRepository extends DtoRepository(Unavailability) {
         relation('out', '', 'unavailability', ACTIVE),
         node('unavailability', 'Unavailability', { id }),
       ])
-      .return<{ id: ID }>('user.id as id')
+      .return<{ id: ID<'User'> }>('user.id as id')
       .first();
 
     if (!result) {

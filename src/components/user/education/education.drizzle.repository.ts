@@ -44,9 +44,9 @@ export class EducationDrizzleRepository extends DrizzleDtoRepository<
     return await this.readOne(id);
   }
 
-  async getUserIdByEducation(id: ID): Promise<{ id: ID }> {
+  async getUserByEducationId(id: ID): Promise<{ id: ID<'User'> }> {
     const row = await this.db.db.query.educations.findFirst({
-      where: (e, { eq: eqFn }) => eqFn(e.id, id),
+      where: (education) => eq(education.id, id),
       columns: { userId: true },
     });
     if (!row) {
@@ -54,7 +54,7 @@ export class EducationDrizzleRepository extends DrizzleDtoRepository<
         'Could not find user associated with education',
       );
     }
-    return { id: row.userId as ID };
+    return { id: row.userId };
   }
 
   async list(input: EducationListInput): Promise<{
@@ -82,14 +82,14 @@ export class EducationDrizzleRepository extends DrizzleDtoRepository<
       page: input.page,
       count: input.count,
     });
-    return { items: rows.map((r) => this.toDto(r)), total, hasMore };
+    return { items: rows.map((row) => this.toDto(row)), total, hasMore };
   }
 
   protected toDto(
     row: typeof educations.$inferSelect,
   ): UnsecuredDto<Education> {
     return {
-      id: row.id as ID,
+      id: row.id,
       __typename: 'Education',
       createdAt: DateTime.fromJSDate(row.createdAt),
       degree: row.degree,
