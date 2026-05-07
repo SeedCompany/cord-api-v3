@@ -51,7 +51,7 @@ export class EducationRepository extends DtoRepository(Education) {
     });
   }
 
-  async getUserIdByEducation(id: ID) {
+  async getUserByEducationId(id: ID) {
     const result = await this.db
       .query()
       .match([
@@ -59,7 +59,7 @@ export class EducationRepository extends DtoRepository(Education) {
         relation('out', '', 'education', ACTIVE),
         node('education', 'Education', { id }),
       ])
-      .return<{ id: ID }>('user.id as id')
+      .return<{ id: ID<'User'> }>('user.id as id')
       .first();
 
     if (!result) {

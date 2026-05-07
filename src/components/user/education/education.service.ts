@@ -44,7 +44,7 @@ export class EducationService {
 
   async update(input: UpdateEducation): Promise<Education> {
     const ed = await this.repo.readOne(input.id);
-    const result = await this.repo.getUserIdByEducation(input.id);
+    const result = await this.repo.getUserByEducationId(input.id);
     const changes = this.repo.getActualChanges(ed, input);
     // TODO move this condition into policies
     if (!this.identity.isSelf(result.id)) {

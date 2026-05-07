@@ -1,0 +1,136 @@
+import { and, asc, count, eq, inArray, isNull, type SQL } from 'drizzle-orm';
+import { type AnyPgColumn, type PgTable } from 'drizzle-orm/pg-core';
+import { type ID, NotFoundException, type UnsecuredDto } from '~/common';
+import { type DrizzleService } from './drizzle.service';
+
+/**
+ * Common machinery for CRUD repositories on a single Drizzle table.
+ *
+ * Subclasses provide the table reference and a `toDto()` mapper. Tables with
+ * a `deletedAt` column get soft-delete filtering on reads and a `softDelete()`
+ * helper for free; tables with `updatedAt` get an automatic timestamp bump on
+ * `updateColumns()`.
+ *
+ * Repos that need related rows (e.g. `with: { globalRoles: true }`) override
+ * `readMany` and call `toDto` themselves — the base only handles flat tables.
+ */
+export abstract class DrizzleDtoRepository<
+  TTable extends PgTable & {
+    id: AnyPgColumn;
+    deletedAt?: AnyPgColumn;
+    updatedAt?: AnyPgColumn;
+  },
+  TDto extends { id: ID },
+> {
+  constructor(
+    private readonly drizzle: DrizzleService,
+    protected readonly table: TTable,
+  ) {}
+
+  /**
+   * Drizzle client. A getter (not a captured value) so AsyncLocalStorage-bound
+   * transactions in `DrizzleService.client` flow through on every access — if
+   * we cached `drizzle.client` at construction time, we'd freeze it to the
+   * base instance and silently bypass transactions opened via `inTx()`.
+   */
+  protected get db() {
+    return this.drizzle.client;
+  }
+
+  protected abstract toDto(row: TTable['$inferSelect']): UnsecuredDto<TDto>;
+
+  async readOne(id: ID): Promise<UnsecuredDto<TDto>> {
+    const rows = await this.readMany([id]);
+    const row = rows.find((row) => row.id === id);
+    if (!row) throw new NotFoundException();
+    return row;
+  }
+
+  async readMany(ids: readonly ID[]): Promise<Array<UnsecuredDto<TDto>>> {
+    if (ids.length === 0) return [];
+    const conditions: SQL[] = [inArray(this.table.id, [...ids])];
+    if (this.table.deletedAt) {
+      conditions.push(isNull(this.table.deletedAt));
+    }
+    const rows = await this.db
+      .select()
+      .from(this.table as PgTable)
+      .where(and(...conditions));
+    return rows.map((row) => this.toDto(row));
+  }
+
+  /**
+   * Sets `deletedAt = now()` on the row. Subclass is responsible for ensuring
+   * the table actually has a `deletedAt` column (the generic constraint allows
+   * but doesn't require it).
+   */
+  protected async softDelete(id: ID): Promise<void> {
+    await this.db
+      .update(this.table as PgTable)
+      .set({ deletedAt: new Date() })
+      .where(eq(this.table.id, id));
+  }
+
+  /**
+   * Apply a partial change set to the row. Drops `undefined` values and
+   * stamps `updatedAt` when that column exists. No-op if no fields remain
+   * after filtering.
+   */
+  protected async updateColumns(
+    id: ID,
+    changes: Partial<TTable['$inferInsert']>,
+  ): Promise<void> {
+    const entries = Object.entries(changes).filter(([, v]) => v !== undefined);
+    if (entries.length === 0) return;
+    const set = Object.fromEntries(entries);
+    if (this.table.updatedAt) {
+      set.updatedAt = new Date();
+    }
+    await this.db
+      .update(this.table as PgTable)
+      .set(set)
+      .where(eq(this.table.id, id));
+  }
+
+  /**
+   * Run a paginated SELECT against the repository's table. Always appends
+   * `asc(table.id)` as the final ORDER BY so identical primary-sort values
+   * don't shuffle across pages.
+   *
+   * Caller is responsible for the predicate (including any `isNull(deletedAt)`
+   * filter) and the primary ORDER BY columns. Returns rows untransformed —
+   * caller maps to DTOs and adds any per-page side-loaded data.
+   */
+  protected async paginatedSelect(args: {
+    predicate?: SQL;
+    orderBy?: SQL[];
+    page: number;
+    count: number;
+  }): Promise<{
+    rows: Array<TTable['$inferSelect']>;
+    total: number;
+    hasMore: boolean;
+  }> {
+    const { predicate, orderBy = [], page, count: pageSize } = args;
+    const offset = (page - 1) * pageSize;
+    const [countResult, rows] = await Promise.all([
+      this.db
+        .select({ total: count() })
+        .from(this.table as PgTable)
+        .where(predicate),
+      this.db
+        .select()
+        .from(this.table as PgTable)
+        .where(predicate)
+        .orderBy(...orderBy, asc(this.table.id))
+        .limit(pageSize)
+        .offset(offset),
+    ]);
+    const total = countResult[0]?.total ?? 0;
+    return {
+      rows,
+      total,
+      hasMore: offset + rows.length < total,
+    };
+  }
+}

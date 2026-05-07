@@ -21,7 +21,13 @@ export interface IsAllowedParams<TResourceStatic extends ResourceShape<any>> {
   session: Session;
 }
 
+// migration-todo: remove with Neo4j; Drizzle uses AsDrizzleParams instead.
 export type AsCypherParams<TResourceStatic extends ResourceShape<any>> = Omit<
+  IsAllowedParams<TResourceStatic>,
+  'object'
+>;
+
+export type AsDrizzleParams<TResourceStatic extends ResourceShape<any>> = Omit<
   IsAllowedParams<TResourceStatic>,
   'object'
 >;
@@ -86,7 +92,7 @@ export abstract class Condition<
    * Drizzle SQL WHERE clause fragment that represents the condition.
    * Optional — implement when porting a domain to PostgreSQL.
    */
-  asDrizzleCondition?(other: AsCypherParams<TResourceStatic>): SQL;
+  asDrizzleCondition?(other: AsDrizzleParams<TResourceStatic>): SQL;
 
   /**
    * Union multiple conditions of this type together to a single one.

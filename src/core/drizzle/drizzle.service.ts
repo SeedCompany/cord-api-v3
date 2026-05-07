@@ -25,13 +25,13 @@ export class DrizzleService implements OnModuleDestroy {
     this.baseDb = drizzle(this.pool, { schema });
   }
 
-  get db(): DrizzleDb {
-    const db = this.als.getStore() ?? this.baseDb;
-    if (!db)
+  get client(): DrizzleDb {
+    const client = this.als.getStore() ?? this.baseDb;
+    if (!client)
       throw new Error(
-        'DrizzleService.db accessed but DATABASE is not postgres',
+        'DrizzleService.client accessed but DATABASE is not postgres',
       );
-    return db;
+    return client;
   }
 
   async inTx<R>(fn: () => Promise<R>): Promise<R> {

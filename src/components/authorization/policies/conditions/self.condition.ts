@@ -1,7 +1,10 @@
 import { type NonEmptyArray } from '@seedcompany/common';
+import { eq } from 'drizzle-orm';
 import { inspect, type InspectOptionsStylized } from 'util';
+import { users } from '~/core/drizzle/schema';
 import { type User } from '../../../user/dto';
 import {
+  type AsDrizzleParams,
   type AsEdgeQLParams,
   type Condition,
   fqnRelativeTo,
@@ -21,6 +24,10 @@ class SelfCondition<
 
   asCypherCondition() {
     return 'node:User AND node.id = $currentUser';
+  }
+
+  asDrizzleCondition({ session }: AsDrizzleParams<TResourceStatic>) {
+    return eq(users.id, session.userId);
   }
 
   asEdgeQLCondition({ namespace }: AsEdgeQLParams<any>) {

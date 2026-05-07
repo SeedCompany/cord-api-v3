@@ -11,7 +11,7 @@ export class EducationGelRepository
   })
   implements PublicOf<EducationRepository>
 {
-  async getUserIdByEducation(id: ID) {
+  async getUserByEducationId(id: ID) {
     const edu = e.cast(e.User.Education, e.uuid(id));
     const query = e.assert_exists(
       e.select(e.User, (user) => ({
