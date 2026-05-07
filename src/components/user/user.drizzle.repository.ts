@@ -1,15 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import {
-  and,
-  asc,
-  desc,
-  eq,
-  ilike,
-  inArray,
-  isNull,
-  or,
-  type SQL,
-} from 'drizzle-orm';
+import { and, eq, ilike, inArray, isNull, or, type SQL } from 'drizzle-orm';
 import { groupBy } from 'lodash';
 import { DateTime } from 'luxon';
 import {
@@ -26,6 +16,8 @@ import {
   catchUniqueViolation,
   DrizzleDtoRepository,
   escapeLikePattern,
+  resolveOrderBy,
+  type SortMap,
 } from '~/core/drizzle';
 import { DrizzleService } from '~/core/drizzle/drizzle.service';
 import { userGlobalRoles, users } from '~/core/drizzle/schema';
@@ -57,6 +49,8 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
   typeof users,
   User
 > {
+  private readonly resource = EnhancedResource.of(User);
+
   constructor(
     db: DrizzleService,
     private readonly executor: PolicyExecutor,
@@ -196,8 +190,10 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
   async list(
     input: UserListInput,
   ): Promise<PaginatedListType<UnsecuredDto<User>>> {
-    const resource = EnhancedResource.of(User);
-    const filter = this.executor.drizzleFilter({ action: 'read', resource });
+    const filter = this.executor.drizzleFilter({
+      action: 'read',
+      resource: this.resource,
+    });
     if (filter === false) return { items: [], total: 0, hasMore: false };
 
     const conditions: SQL[] = [isNull(users.deletedAt)];
@@ -229,20 +225,16 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
       conditions.push(inArray(users.id, roleSubq));
     }
 
-    const dir = input.order === 'ASC' ? asc : desc;
     const sortColumns = {
       realLastName: [users.realLastName, users.realFirstName],
       displayLastName: [users.displayLastName, users.displayFirstName],
       realFirstName: [users.realFirstName, users.realLastName],
       displayFirstName: [users.displayFirstName, users.displayLastName],
-    } satisfies Partial<Record<keyof User, unknown>>;
-    const orderCols = (
-      sortColumns[input.sort as keyof typeof sortColumns] ?? [users.id]
-    ).map(dir);
+    } satisfies SortMap<keyof User>;
 
     const { rows, total, hasMore } = await this.paginatedSelect({
       predicate: and(...conditions),
-      orderBy: orderCols,
+      orderBy: resolveOrderBy(input, sortColumns, users.id),
       page: input.page,
       count: input.count,
     });
@@ -277,15 +269,17 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
   async getUserByEmailAddress(
     email: string,
   ): Promise<UnsecuredDto<User> | null> {
-    const resource = EnhancedResource.of(User);
-    const filter = this.executor.drizzleFilter({ action: 'read', resource });
+    const filter = this.executor.drizzleFilter({
+      action: 'read',
+      resource: this.resource,
+    });
     if (filter === false) return null;
 
     const conditions: SQL[] = [eq(users.email, email), isNull(users.deletedAt)];
     if (filter !== true) conditions.push(filter);
 
     const row = await this.db.query.users.findFirst({
-      where: () => and(...conditions),
+      where: and(...conditions),
       with: { globalRoles: true },
     });
     return row ? this.toDto(row) : null;

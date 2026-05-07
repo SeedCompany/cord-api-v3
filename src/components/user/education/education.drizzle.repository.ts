@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { and, asc, desc, eq, isNull } from 'drizzle-orm';
+import { and, eq, isNull } from 'drizzle-orm';
 import { DateTime } from 'luxon';
 import {
   generateId,
@@ -7,6 +7,7 @@ import {
   NotFoundException,
   type UnsecuredDto,
 } from '~/common';
+import { resolveOrderBy, type SortMap } from '~/core/drizzle';
 import { DrizzleService } from '~/core/drizzle/drizzle.service';
 import { DrizzleDtoRepository } from '~/core/drizzle/dto.repository';
 import { educations } from '~/core/drizzle/schema';
@@ -66,19 +67,15 @@ export class EducationDrizzleRepository extends DrizzleDtoRepository<
     if (input.filter?.userId)
       conditions.push(eq(educations.userId, input.filter.userId));
 
-    const dir = input.order === 'ASC' ? asc : desc;
     const sortColumns = {
       degree: educations.degree,
       major: educations.major,
       institution: educations.institution,
-    } satisfies Partial<Record<keyof Education, unknown>>;
-    const orderCol =
-      sortColumns[input.sort as keyof typeof sortColumns] ??
-      educations.institution;
+    } satisfies SortMap<keyof Education>;
 
     const { rows, total, hasMore } = await this.paginatedSelect({
       predicate: and(...conditions),
-      orderBy: [dir(orderCol)],
+      orderBy: resolveOrderBy(input, sortColumns, educations.institution),
       page: input.page,
       count: input.count,
     });

@@ -4,7 +4,7 @@ import { inspect, type InspectOptionsStylized } from 'util';
 import { users } from '~/core/drizzle/schema';
 import { type User } from '../../../user/dto';
 import {
-  type AsCypherParams,
+  type AsDrizzleParams,
   type AsEdgeQLParams,
   type Condition,
   fqnRelativeTo,
@@ -26,7 +26,7 @@ class SelfCondition<
     return 'node:User AND node.id = $currentUser';
   }
 
-  asDrizzleCondition({ session }: AsCypherParams<TResourceStatic>) {
+  asDrizzleCondition({ session }: AsDrizzleParams<TResourceStatic>) {
     return eq(users.id, session.userId);
   }
 

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { and, asc, desc, eq, isNull } from 'drizzle-orm';
+import { and, eq, isNull } from 'drizzle-orm';
 import { DateTime } from 'luxon';
 import {
   generateId,
@@ -7,6 +7,7 @@ import {
   NotFoundException,
   type UnsecuredDto,
 } from '~/common';
+import { resolveOrderBy, type SortMap } from '~/core/drizzle';
 import { DrizzleService } from '~/core/drizzle/drizzle.service';
 import { DrizzleDtoRepository } from '~/core/drizzle/dto.repository';
 import { unavailabilities } from '~/core/drizzle/schema';
@@ -78,19 +79,15 @@ export class UnavailabilityDrizzleRepository extends DrizzleDtoRepository<
     if (input.filter?.userId)
       conditions.push(eq(unavailabilities.userId, input.filter.userId));
 
-    const dir = input.order === 'ASC' ? asc : desc;
     const sortColumns = {
       description: unavailabilities.description,
       start: unavailabilities.start,
       end: unavailabilities.end,
-    } satisfies Partial<Record<keyof Unavailability, unknown>>;
-    const orderCol =
-      sortColumns[input.sort as keyof typeof sortColumns] ??
-      unavailabilities.start;
+    } satisfies SortMap<keyof Unavailability>;
 
     const { rows, total, hasMore } = await this.paginatedSelect({
       predicate: and(...conditions),
-      orderBy: [dir(orderCol)],
+      orderBy: resolveOrderBy(input, sortColumns, unavailabilities.start),
       page: input.page,
       count: input.count,
     });
