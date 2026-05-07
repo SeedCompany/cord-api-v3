@@ -1,5 +1,6 @@
 import { relations, sql } from 'drizzle-orm';
 import {
+  type AnyPgColumn,
   boolean,
   check,
   index,
@@ -10,6 +11,7 @@ import {
   timestamp,
 } from 'drizzle-orm/pg-core';
 import { type ID, type Role } from '~/common';
+import { type LocationType } from '../../../components/location/dto/location-type.enum';
 import { type Gender } from '../../../components/user/dto/gender.enum';
 
 export const userStatusEnum = pgEnum('user_status', ['Active', 'Disabled']);
@@ -236,3 +238,47 @@ export const authPasswordResetTokensRelations = relations(
     }),
   }),
 );
+
+// ─── Locations ─────────────────────────────────────────────────────────────
+
+export const locationTypeEnum = pgEnum('location_type', [
+  'Country',
+  'City',
+  'County',
+  'Region',
+  'State',
+  'CrossBorderArea',
+]);
+
+export const locations = pgTable(
+  'locations',
+  {
+    id: text('id').$type<ID<'Location'>>().primaryKey(),
+    name: text('name').notNull().unique(),
+    type: locationTypeEnum('type').$type<LocationType>().notNull(),
+    isoAlpha3: text('iso_alpha3').unique(),
+    // migration-todo: add FK constraints once FundingAccount and FieldRegion are migrated to PG
+    fundingAccountId: text('funding_account_id').$type<ID<'FundingAccount'>>(),
+    defaultFieldRegionId: text('default_field_region_id').$type<
+      ID<'FieldRegion'>
+    >(),
+    defaultMarketingRegionId: text('default_marketing_region_id')
+      .$type<ID<'Location'>>()
+      .references((): AnyPgColumn => locations.id),
+    mapImageId: text('map_image_id').$type<ID<'File'>>(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (t) => [
+    index('locations_default_marketing_region_id_idx').on(
+      t.defaultMarketingRegionId,
+    ),
+  ],
+);
+
+export const locationsRelations = relations(locations, () => ({}));
