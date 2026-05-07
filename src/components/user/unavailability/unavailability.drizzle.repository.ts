@@ -30,7 +30,7 @@ export class UnavailabilityDrizzleRepository extends DrizzleDtoRepository<
     input: CreateUnavailability,
   ): Promise<UnsecuredDto<Unavailability>> {
     const id = await generateId();
-    await this.db.db.insert(unavailabilities).values({
+    await this.db.insert(unavailabilities).values({
       id,
       userId: input.user,
       description: input.description,
@@ -57,7 +57,7 @@ export class UnavailabilityDrizzleRepository extends DrizzleDtoRepository<
   }
 
   async getUserByUnavailabilityId(id: ID): Promise<{ id: ID<'User'> }> {
-    const row = await this.db.db.query.unavailabilities.findFirst({
+    const row = await this.db.query.unavailabilities.findFirst({
       where: (unavailability) => eq(unavailability.id, id),
       columns: { userId: true },
     });

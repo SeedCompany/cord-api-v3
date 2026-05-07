@@ -18,16 +18,16 @@ import { SessionHost } from './session/session.host';
 @Injectable()
 export class AuthenticationDrizzleRepository implements PublicOf<AuthenticationRepository> {
   constructor(
-    private readonly db: DrizzleService,
+    private readonly drizzle: DrizzleService,
     private readonly session: SessionHost,
   ) {}
 
   async saveSessionToken(token: string) {
-    await this.db.db.insert(authSessions).values({ token });
+    await this.drizzle.client.insert(authSessions).values({ token });
   }
 
   async resumeSession(token: string, impersonatee?: ID) {
-    const row = await this.db.db.query.authSessions.findFirst({
+    const row = await this.drizzle.client.query.authSessions.findFirst({
       where: (session) =>
         and(eq(session.token, token), eq(session.active, true)),
       with: { user: { with: { globalRoles: true } } },
@@ -47,19 +47,19 @@ export class AuthenticationDrizzleRepository implements PublicOf<AuthenticationR
   }
 
   async disconnectUserFromSession(token: string) {
-    await this.db.db
+    await this.drizzle.client
       .update(authSessions)
       .set({ active: false })
       .where(eq(authSessions.token, token));
   }
 
   async connectSessionToUser(input: LoginInput, session: Session) {
-    const user = await this.db.db.query.users.findFirst({
+    const user = await this.drizzle.client.query.users.findFirst({
       where: (user) => eq(user.email, input.email),
     });
     if (!user) return undefined;
 
-    const result = await this.db.db
+    const result = await this.drizzle.client
       .update(authSessions)
       .set({ userId: user.id, loggedInAt: new Date() })
       .where(
@@ -75,7 +75,7 @@ export class AuthenticationDrizzleRepository implements PublicOf<AuthenticationR
 
   async deactivateAllOtherSessions(session: Session) {
     if (session.anonymous) return;
-    await this.db.db
+    await this.drizzle.client
       .update(authSessions)
       .set({ active: false })
       .where(
@@ -88,12 +88,12 @@ export class AuthenticationDrizzleRepository implements PublicOf<AuthenticationR
   }
 
   async deactivateAllOtherSessionsByEmail(email: string, session: Session) {
-    const user = await this.db.db.query.users.findFirst({
+    const user = await this.drizzle.client.query.users.findFirst({
       where: (user) => eq(user.email, email),
     });
     if (!user) return;
 
-    await this.db.db
+    await this.drizzle.client
       .update(authSessions)
       .set({ active: false })
       .where(
@@ -106,14 +106,14 @@ export class AuthenticationDrizzleRepository implements PublicOf<AuthenticationR
   }
 
   async deactivateAllSessions(user: ID<'User'>) {
-    await this.db.db
+    await this.drizzle.client
       .update(authSessions)
       .set({ active: false })
       .where(eq(authSessions.userId, user));
   }
 
   async savePasswordHashOnUser(userId: ID, passwordHash: string) {
-    await this.db.db
+    await this.drizzle.client
       .insert(authIdentities)
       .values({ userId, passwordHash })
       .onConflictDoUpdate({
@@ -124,7 +124,7 @@ export class AuthenticationDrizzleRepository implements PublicOf<AuthenticationR
 
   async getCurrentPasswordHash() {
     const { userId } = this.session.current;
-    const row = await this.db.db.query.authIdentities.findFirst({
+    const row = await this.drizzle.client.query.authIdentities.findFirst({
       where: (identity) => eq(identity.userId, userId),
     });
     return row?.passwordHash ?? null;
@@ -132,14 +132,14 @@ export class AuthenticationDrizzleRepository implements PublicOf<AuthenticationR
 
   async updatePassword(newPasswordHash: string) {
     const { userId } = this.session.current;
-    await this.db.db
+    await this.drizzle.client
       .update(authIdentities)
       .set({ passwordHash: newPasswordHash, updatedAt: new Date() })
       .where(eq(authIdentities.userId, userId));
   }
 
   async getInfoForLogin({ email }: LoginInput) {
-    const rows = await this.db.db
+    const rows = await this.drizzle.client
       .select({
         passwordHash: authIdentities.passwordHash,
         status: users.status,
@@ -158,28 +158,29 @@ export class AuthenticationDrizzleRepository implements PublicOf<AuthenticationR
   }
 
   async doesEmailAddressExist(email: string) {
-    const row = await this.db.db.query.users.findFirst({
+    const row = await this.drizzle.client.query.users.findFirst({
       where: (user) => eq(user.email, email),
     });
     return !!row;
   }
 
   async savePasswordResetToken(email: string, token: string) {
-    const user = await this.db.db.query.users.findFirst({
+    const user = await this.drizzle.client.query.users.findFirst({
       where: (user) => eq(user.email, email),
     });
     if (!user) {
       throw new ServerException('Could not find user by email');
     }
-    await this.db.db
+    await this.drizzle.client
       .insert(authPasswordResetTokens)
       .values({ email, token, userId: user.id });
   }
 
   async findPasswordResetToken(token: string) {
-    const row = await this.db.db.query.authPasswordResetTokens.findFirst({
-      where: (resetToken) => eq(resetToken.token, token),
-    });
+    const row =
+      await this.drizzle.client.query.authPasswordResetTokens.findFirst({
+        where: (resetToken) => eq(resetToken.token, token),
+      });
     return row
       ? {
           email: row.email,
@@ -194,7 +195,7 @@ export class AuthenticationDrizzleRepository implements PublicOf<AuthenticationR
     { email }: { email: string },
     passwordHash: string,
   ) {
-    const user = await this.db.db.query.users.findFirst({
+    const user = await this.drizzle.client.query.users.findFirst({
       where: (user) => eq(user.email, email),
     });
     if (!user) {
@@ -209,13 +210,13 @@ export class AuthenticationDrizzleRepository implements PublicOf<AuthenticationR
 
   async removeAllPasswordResetTokensByEmail(email: string) {
     // migration-todo: switch to userId after Gel and Neo4j are removed
-    await this.db.db
+    await this.drizzle.client
       .delete(authPasswordResetTokens)
       .where(eq(authPasswordResetTokens.email, email));
   }
 
   async rolesForUser(user: ID) {
-    const rows = await this.db.db
+    const rows = await this.drizzle.client
       .select({ role: userGlobalRoles.role })
       .from(userGlobalRoles)
       .where(eq(userGlobalRoles.userId, user));
@@ -223,7 +224,7 @@ export class AuthenticationDrizzleRepository implements PublicOf<AuthenticationR
   }
 
   async getRootUserId() {
-    const row = await this.db.db.query.users.findFirst({
+    const row = await this.drizzle.client.query.users.findFirst({
       where: (user) => eq(user.isRoot, true),
     });
     if (!row) throw new ServerException('Could not find root user');
@@ -232,7 +233,7 @@ export class AuthenticationDrizzleRepository implements PublicOf<AuthenticationR
 
   async waitForRootUserId(): Promise<ID> {
     const find = () =>
-      this.db.db.query.users.findFirst({
+      this.drizzle.client.query.users.findFirst({
         where: (user) => eq(user.isRoot, true),
       });
     let row;

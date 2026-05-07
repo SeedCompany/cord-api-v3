@@ -28,7 +28,7 @@ export class EducationDrizzleRepository extends DrizzleDtoRepository<
 
   async create(input: CreateEducation): Promise<UnsecuredDto<Education>> {
     const id = await generateId();
-    await this.db.db.insert(educations).values({
+    await this.db.insert(educations).values({
       id,
       userId: input.user,
       degree: input.degree,
@@ -45,7 +45,7 @@ export class EducationDrizzleRepository extends DrizzleDtoRepository<
   }
 
   async getUserByEducationId(id: ID): Promise<{ id: ID<'User'> }> {
-    const row = await this.db.db.query.educations.findFirst({
+    const row = await this.db.query.educations.findFirst({
       where: (education) => eq(education.id, id),
       columns: { userId: true },
     });

@@ -8,7 +8,7 @@ import { SystemAgentRepository } from './system-agent.repository';
 
 @Injectable()
 export class SystemAgentDrizzleRepository extends SystemAgentRepository {
-  constructor(private readonly db: DrizzleService) {
+  constructor(private readonly drizzle: DrizzleService) {
     super();
   }
 
@@ -17,7 +17,7 @@ export class SystemAgentDrizzleRepository extends SystemAgentRepository {
     roles?: readonly Role[],
   ): Promise<SystemAgent> {
     const id = await generateId();
-    const [row] = await this.db.db
+    const [row] = await this.drizzle.client
       .insert(systemAgents)
       .values({ id, name, roles: [...(roles ?? [])] })
       .onConflictDoUpdate({

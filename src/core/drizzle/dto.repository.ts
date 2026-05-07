@@ -23,9 +23,19 @@ export abstract class DrizzleDtoRepository<
   TDto extends { id: ID },
 > {
   constructor(
-    protected readonly db: DrizzleService,
+    private readonly drizzle: DrizzleService,
     protected readonly table: TTable,
   ) {}
+
+  /**
+   * Drizzle client. A getter (not a captured value) so AsyncLocalStorage-bound
+   * transactions in `DrizzleService.client` flow through on every access — if
+   * we cached `drizzle.client` at construction time, we'd freeze it to the
+   * base instance and silently bypass transactions opened via `inTx()`.
+   */
+  protected get db() {
+    return this.drizzle.client;
+  }
 
   protected abstract toDto(row: TTable['$inferSelect']): UnsecuredDto<TDto>;
 
@@ -42,7 +52,7 @@ export abstract class DrizzleDtoRepository<
     if (this.table.deletedAt) {
       conditions.push(isNull(this.table.deletedAt));
     }
-    const rows = await this.db.db
+    const rows = await this.db
       .select()
       .from(this.table as PgTable)
       .where(and(...conditions));
@@ -55,7 +65,7 @@ export abstract class DrizzleDtoRepository<
    * but doesn't require it).
    */
   protected async softDelete(id: ID): Promise<void> {
-    await this.db.db
+    await this.db
       .update(this.table as PgTable)
       .set({ deletedAt: new Date() })
       .where(eq(this.table.id, id));
@@ -76,7 +86,7 @@ export abstract class DrizzleDtoRepository<
     if (this.table.updatedAt) {
       set.updatedAt = new Date();
     }
-    await this.db.db
+    await this.db
       .update(this.table as PgTable)
       .set(set)
       .where(eq(this.table.id, id));
@@ -104,11 +114,11 @@ export abstract class DrizzleDtoRepository<
     const { predicate, orderBy = [], page, count: pageSize } = args;
     const offset = (page - 1) * pageSize;
     const [countResult, rows] = await Promise.all([
-      this.db.db
+      this.db
         .select({ total: count() })
         .from(this.table as PgTable)
         .where(predicate),
-      this.db.db
+      this.db
         .select()
         .from(this.table as PgTable)
         .where(predicate)

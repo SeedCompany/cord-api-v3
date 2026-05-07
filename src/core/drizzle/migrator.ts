@@ -18,7 +18,7 @@ export class DrizzleMigrator implements OnModuleInit {
     if (this.config.databaseEngine !== 'postgres') return;
 
     this.logger.info('Running PostgreSQL migrations');
-    await migrate(this.drizzle.db, {
+    await migrate(this.drizzle.client, {
       migrationsFolder: path.join(process.cwd(), 'src/core/drizzle/migrations'),
     });
     this.logger.info('PostgreSQL migrations complete');

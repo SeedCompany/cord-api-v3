@@ -69,7 +69,7 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
   override async readMany(
     ids: readonly ID[],
   ): Promise<Array<UnsecuredDto<User>>> {
-    const rows = await this.db.db.query.users.findMany({
+    const rows = await this.db.query.users.findMany({
       where: (user) => and(inArray(user.id, [...ids]), isNull(user.deletedAt)),
       with: { globalRoles: true },
     });
@@ -78,12 +78,12 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
 
   async readManyActors(ids: readonly ID[]) {
     const [userRows, agentRows] = await Promise.all([
-      this.db.db.query.users.findMany({
+      this.db.query.users.findMany({
         where: (user) =>
           and(inArray(user.id, [...ids]), isNull(user.deletedAt)),
         with: { globalRoles: true },
       }),
-      this.db.db.query.systemAgents.findMany({
+      this.db.query.systemAgents.findMany({
         where: (agent) => inArray(agent.id, [...ids]),
       }),
     ]);
@@ -108,7 +108,7 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
     const id = await generateId();
     const photoId = await generateId<FileId>();
 
-    await this.db.db
+    await this.db
       .insert(users)
       .values({
         id,
@@ -128,7 +128,7 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
       .catch(catchEmailUnique);
 
     if (input.roles?.length) {
-      await this.db.db
+      await this.db
         .insert(userGlobalRoles)
         .values(input.roles.map((role) => ({ userId: id, role })));
     }
@@ -165,11 +165,11 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
     }).catch(catchEmailUnique);
 
     if (roles !== undefined) {
-      await this.db.db
+      await this.db
         .delete(userGlobalRoles)
         .where(eq(userGlobalRoles.userId, id));
       if (roles.length > 0) {
-        await this.db.db
+        await this.db
           .insert(userGlobalRoles)
           .values(roles.map((role) => ({ userId: id, role })))
           .onConflictDoNothing();
@@ -222,7 +222,7 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
       );
     }
     if (input.filter?.roles?.length) {
-      const roleSubq = this.db.db
+      const roleSubq = this.db
         .selectDistinct({ userId: userGlobalRoles.userId })
         .from(userGlobalRoles)
         .where(inArray(userGlobalRoles.role, input.filter.roles));
@@ -250,7 +250,7 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
     const ids = rows.map((row) => row.id);
     const allRoles =
       ids.length > 0
-        ? await this.db.db
+        ? await this.db
             .select()
             .from(userGlobalRoles)
             .where(inArray(userGlobalRoles.userId, ids))
@@ -267,7 +267,7 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
   }
 
   async doesEmailAddressExist(email: string): Promise<boolean> {
-    const row = await this.db.db.query.users.findFirst({
+    const row = await this.db.query.users.findFirst({
       where: (user) => eq(user.email, email),
       columns: { id: true },
     });
@@ -284,7 +284,7 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
     const conditions: SQL[] = [eq(users.email, email), isNull(users.deletedAt)];
     if (filter !== true) conditions.push(filter);
 
-    const row = await this.db.db.query.users.findFirst({
+    const row = await this.db.query.users.findFirst({
       where: () => and(...conditions),
       with: { globalRoles: true },
     });
