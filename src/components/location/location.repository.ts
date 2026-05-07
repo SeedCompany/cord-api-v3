@@ -194,6 +194,10 @@ export class LocationRepository extends DtoRepository(Location) {
     return result!; // result from paginate() will always have 1 row.
   }
 
+  async delete(id: ID): Promise<void> {
+    await this.deleteNode(id);
+  }
+
   async addLocationToNode(
     label: ResourceNameLike,
     id: ID,
