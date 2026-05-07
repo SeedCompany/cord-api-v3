@@ -142,6 +142,10 @@ export class OrganizationRepository extends DtoRepository(Organization) {
     return (await query.first())!; // result from paginate() will always have 1 row.
   }
 
+  async delete(id: ID): Promise<void> {
+    await this.deleteNode(id);
+  }
+
   @OnIndex('schema')
   private async createSchemaIndexes() {
     await this.db.query().apply(OrgNameIndex.create()).run();

@@ -70,7 +70,7 @@ export class OrganizationService {
     this.privileges.for(Organization, object).verifyCan('delete');
 
     try {
-      await this.repo.deleteNode(object);
+      await this.repo.delete(id);
     } catch (exception) {
       throw new ServerException('Failed to delete', exception);
     }
