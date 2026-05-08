@@ -116,7 +116,39 @@ exports[`Webhooks Management Saving / Creation Subscription Validation should re
     ],
     "field": "subscription",
   },
-  "message": "Webhooks are identified by their subscription operation name or a key. Please provide one.",
+  "message": "Webhooks are identified by their subscription operation name or a key; please provide one.",
+  "path": [
+    "saveWebhook",
+  ],
+}
+`;
+
+exports[`Webhooks Management Saving / Creation Subscription Validation should return validation error when document contains multiple operations 1`] = `
+{
+  "extensions": {
+    "codes": [
+      "Input",
+      "Client",
+    ],
+    "field": "subscription",
+  },
+  "message": "Only a single operation of type subscription is allowed per document",
+  "path": [
+    "saveWebhook",
+  ],
+}
+`;
+
+exports[`Webhooks Management Saving / Creation Subscription Validation should return validation error when key is not a valid GraphQL name 1`] = `
+{
+  "extensions": {
+    "codes": [
+      "Input",
+      "Client",
+    ],
+    "field": "key",
+  },
+  "message": "Key must be a valid GraphQL name (letters, digits, underscores; cannot start with a digit)",
   "path": [
     "saveWebhook",
   ],
