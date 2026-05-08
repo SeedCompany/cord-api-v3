@@ -180,4 +180,64 @@ describe('Partner e2e', () => {
       }),
     );
   });
+
+  it('lists people on a partner via organization membership', async () => {
+    const org = await createOrganization(app);
+    const poc = await createPerson(app);
+    const partner = await createPartner(app, {
+      organization: org.id,
+      pointOfContact: poc.id,
+    });
+
+    const otherUser = await createPerson(app);
+    await runAsAdmin(app, async () => {
+      await app.graphql.mutate(AssignOrgToUserDoc, {
+        org: org.id,
+        user: otherUser.id,
+      });
+      await app.graphql.mutate(AssignOrgToUserDoc, {
+        org: org.id,
+        user: poc.id,
+      });
+    });
+
+    const result = await app.graphql.query(
+      graphql(`
+        query partnerPeople($id: ID!) {
+          partner(id: $id) {
+            pointOfContact {
+              value {
+                id
+              }
+            }
+            people(input: { count: 25 }) {
+              canRead
+              canCreate
+              total
+              hasMore
+              items {
+                id
+              }
+            }
+          }
+        }
+      `),
+      { id: partner.id },
+    );
+
+    const list = result.partner.people;
+    expect(list.canRead).toBe(true);
+    expect(list.total).toBeGreaterThanOrEqual(2);
+    const userIds = list.items.map((u) => u.id);
+    expect(userIds).toEqual(expect.arrayContaining([poc.id, otherUser.id]));
+    expect(result.partner.pointOfContact.value?.id).toBe(poc.id);
+  });
 });
+
+const AssignOrgToUserDoc = graphql(`
+  mutation assignOrgToUserForPartnerPeople($org: ID!, $user: ID!) {
+    assignOrganizationToUser(org: $org, user: $user) {
+      __typename
+    }
+  }
+`);

@@ -26,6 +26,8 @@ import {
   type ProjectListInput,
   type SecuredProjectList,
 } from '../project/dto';
+import { UserService } from '../user';
+import { type SecuredUserList } from '../user/dto';
 import {
   type CreatePartner,
   Partner,
@@ -34,6 +36,7 @@ import {
   PartnerType,
   type UpdatePartner,
 } from './dto';
+import { type PartnerPeopleListInput } from './dto/partner-people-list.dto';
 import { PartnerRepository } from './partner.repository';
 
 @Injectable()
@@ -46,6 +49,8 @@ export class PartnerService {
     private readonly engagementService: EngagementService & {},
     @Inject(forwardRef(() => LanguageService))
     private readonly languageService: LanguageService & {},
+    @Inject(forwardRef(() => UserService))
+    private readonly userService: UserService & {},
     private readonly repo: PartnerRepository,
     private readonly resourceLoader: ResourceLoader,
   ) {}
@@ -204,6 +209,27 @@ export class PartnerService {
       ...input,
       filter: { ...input.filter, partnerId: partner.id },
     });
+  }
+
+  async listPeople(
+    partner: Partner,
+    input: PartnerPeopleListInput,
+  ): Promise<SecuredUserList> {
+    const partnerPrivileges = this.privileges.for(Partner, partner);
+
+    const users = await this.userService.list({
+      ...input,
+      filter: {
+        ...input.filter,
+        partnerId: partner.id,
+      },
+    });
+
+    return {
+      ...users,
+      canRead: true,
+      canCreate: partnerPrivileges.can('edit', 'pointOfContact'),
+    };
   }
 
   protected verifyFinancialReportingType(
