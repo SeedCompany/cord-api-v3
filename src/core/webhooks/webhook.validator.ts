@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { JsonSet } from '@seedcompany/common';
 import {
+  assertName,
   type DocumentNode,
   GraphQLError,
   Kind,
@@ -16,6 +17,7 @@ export class WebhookValidator {
 
   async validate(documentStr: string, key?: ID) {
     const { schema, parse, validate } = this.yoga.getEnveloped();
+
     let doc: DocumentNode;
     try {
       doc = parse(documentStr);
@@ -32,37 +34,69 @@ export class WebhookValidator {
       }
       throw e;
     }
+
     const errors: readonly GraphQLError[] = validate(schema, doc);
     if (errors.length > 0) {
       throw Object.assign(new AggregateError(errors), { [SkipLogging]: true });
     }
-    if (doc.definitions[0]?.kind !== 'OperationDefinition') {
+
+    const operationDefinitionNodes = doc.definitions.filter(
+      (definition): definition is OperationDefinitionNode =>
+        definition.kind === 'OperationDefinition',
+    );
+
+    if (operationDefinitionNodes.length === 0) {
       throw new InputException(
-        'Given subscription operation is invalid',
+        'No subscription operation found in the provided document',
         'subscription',
       );
     }
-    if (doc.definitions[0].operation !== 'subscription') {
+
+    if (operationDefinitionNodes.length > 1) {
+      throw new InputException(
+        'Only a single operation of type subscription is allowed per document',
+        'subscription',
+      );
+    }
+
+    const operationDefinitionNode = operationDefinitionNodes[0]!;
+    if (operationDefinitionNode.operation !== 'subscription') {
       throw new InputException(
         'Only subscription operations are valid here',
         'subscription',
       );
     }
 
-    let name = doc.definitions[0].name?.value;
-    if (!name) {
-      if (!key) {
-        throw new InputException(
-          'Webhooks are identified by their subscription operation name or a key. Please provide one.',
-          'subscription',
-        );
-      }
-      name = key;
-      Object.assign(doc.definitions[0], {
-        name: { kind: Kind.NAME, value: key },
+    const name =
+      operationDefinitionNode.name?.value ??
+      this.validateAndGetNodeNameFromKey(key);
+
+    if (!operationDefinitionNode.name) {
+      Object.assign(operationDefinitionNode, {
+        name: { kind: Kind.NAME, value: name },
       } satisfies Pick<OperationDefinitionNode, 'name'>);
     }
 
     return { name, document: doc };
+  }
+
+  private validateAndGetNodeNameFromKey(key: ID | undefined): string {
+    if (!key) {
+      throw new InputException(
+        'Webhooks are identified by their subscription operation name or a key; please provide one.',
+        'subscription',
+      );
+    }
+
+    try {
+      assertName(key);
+    } catch {
+      throw new InputException(
+        'Key must be a valid GraphQL name (letters, digits, underscores; cannot start with a digit)',
+        'key',
+      );
+    }
+
+    return key;
   }
 }

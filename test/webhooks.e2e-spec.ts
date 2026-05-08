@@ -346,6 +346,72 @@ describe('Webhooks', () => {
           await expect(op).rejects.toMatchSnapshot();
         });
 
+        it('should accept a subscription document with a fragment defined before the operation', async () => {
+          const webhook = await tester.apply(
+            webhooks.save({
+              url: receiver.url,
+              subscription: `
+                fragment projectFields on Project {
+                  id
+                  name { value }
+                }
+                subscription FragmentBeforeOperation {
+                  projectCreated {
+                    project { ...projectFields }
+                  }
+                }
+              `,
+            }),
+          );
+          expect(webhook).toBeDefined();
+        });
+
+        it('should return validation error when document contains multiple operations', async () => {
+          const op = tester.apply(
+            webhooks.save({
+              url: receiver.url,
+              subscription: `
+                subscription FirstSub {
+                  projectCreated {
+                    project { id }
+                  }
+                }
+                subscription SecondSub {
+                  projectDeleted {
+                    projectId
+                  }
+                }
+              `,
+            }),
+          );
+          await expect(op).rejects.toThrowGqlError({
+            code: 'Input',
+            field: 'subscription',
+          });
+          await expect(op).rejects.toMatchSnapshot();
+        });
+
+        it('should return validation error when key is not a valid GraphQL name', async () => {
+          const op = tester.apply(
+            webhooks.save({
+              url: receiver.url,
+              key: 'invalid-key-with-hyphens' as ID,
+              subscription: `
+                subscription {
+                  projectCreated {
+                    project { id }
+                  }
+                }
+              `,
+            }),
+          );
+          await expect(op).rejects.toThrowGqlError({
+            code: 'Input',
+            field: 'key',
+          });
+          await expect(op).rejects.toMatchSnapshot();
+        });
+
         it('should not create webhook when validation fails', async () => {
           const listBefore = await tester.apply(webhooks.list());
           const countBefore = listBefore.items.length;
@@ -368,6 +434,27 @@ describe('Webhooks', () => {
 
           const listAfter = await tester.apply(webhooks.list());
           expect(listAfter.items).toHaveLength(countBefore);
+        });
+
+        it('should inject key as operation name for anonymous subscription, even with preceding fragment', async () => {
+          const webhook = await tester.apply(
+            webhooks.save({
+              url: receiver.url,
+              key: 'SomeKey' as ID,
+              subscription: `
+                fragment projectFields on Project {
+                  id
+                }
+                subscription {
+                  projectCreated {
+                    project { ...projectFields }
+                  }
+                }
+              `,
+            }),
+          );
+          expect(webhook.key).toBe('SomeKey');
+          expect(webhook.subscription).toContain('subscription SomeKey');
         });
       });
 
