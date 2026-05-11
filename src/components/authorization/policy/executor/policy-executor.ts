@@ -180,6 +180,18 @@ export class PolicyExecutor {
     return perm.asDrizzleCondition(other);
   }
 
+  /**
+   * Resolve the read-policy filter for `resource` and push any resulting
+   * `SQL` clause into `conditions`. Returns `false` when access is denied —
+   * caller should short-circuit (typically by returning an empty page).
+   */
+  applyReadFilter(resource: EnhancedResource<any>, conditions: SQL[]): boolean {
+    const filter = this.drizzleFilter({ action: 'read', resource });
+    if (filter === false) return false;
+    if (filter !== true) conditions.push(filter);
+    return true;
+  }
+
   cypherFilter({
     wrapContext = identity,
     wrapConditions = identity,

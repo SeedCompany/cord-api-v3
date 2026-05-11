@@ -3,7 +3,6 @@ import { and, eq, ilike, inArray, isNull, or, type SQL } from 'drizzle-orm';
 import { groupBy } from 'lodash';
 import { DateTime } from 'luxon';
 import {
-  EnhancedResource,
   generateId,
   type ID,
   NotImplementedException,
@@ -15,11 +14,12 @@ import { Identity } from '~/core/authentication';
 import {
   catchUniqueViolation,
   DrizzleDtoRepository,
+  EMPTY_PAGE,
   escapeLikePattern,
   resolveOrderBy,
   type SortMap,
 } from '~/core/drizzle';
-import { DrizzleService } from '~/core/drizzle/drizzle.service';
+import { type DrizzleDb, DrizzleService } from '~/core/drizzle/drizzle.service';
 import { userGlobalRoles, users } from '~/core/drizzle/schema';
 import { PolicyExecutor } from '../authorization/policy/executor/policy-executor';
 import { FileService } from '../file';
@@ -31,6 +31,7 @@ import {
   type SystemAgent,
   type UpdateUser,
   User,
+  type UserFilters,
   type UserListInput,
 } from './dto';
 
@@ -49,15 +50,13 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
   typeof users,
   User
 > {
-  private readonly resource = EnhancedResource.of(User);
-
   constructor(
     db: DrizzleService,
     private readonly executor: PolicyExecutor,
     private readonly files: FileService,
     private readonly identity: Identity,
   ) {
-    super(db, users);
+    super(db, users, User);
   }
 
   override async readMany(
@@ -190,39 +189,12 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
   async list(
     input: UserListInput,
   ): Promise<PaginatedListType<UnsecuredDto<User>>> {
-    const filter = this.executor.drizzleFilter({
-      action: 'read',
-      resource: this.resource,
-    });
-    if (filter === false) return { items: [], total: 0, hasMore: false };
-
-    const conditions: SQL[] = [isNull(users.deletedAt)];
-    if (filter !== true) conditions.push(filter);
-    if (input.filter?.id) conditions.push(eq(users.id, input.filter.id));
-    if (input.filter?.status)
-      conditions.push(eq(users.status, input.filter.status));
-    if (input.filter?.name) {
-      const term = `%${escapeLikePattern(input.filter.name)}%`;
-      conditions.push(
-        or(
-          ilike(users.realFirstName, term),
-          ilike(users.realLastName, term),
-          ilike(users.displayFirstName, term),
-          ilike(users.displayLastName, term),
-        )!,
-      );
-    }
-    if (input.filter?.title) {
-      conditions.push(
-        ilike(users.title, `%${escapeLikePattern(input.filter.title)}%`),
-      );
-    }
-    if (input.filter?.roles?.length) {
-      const roleSubq = this.db
-        .selectDistinct({ userId: userGlobalRoles.userId })
-        .from(userGlobalRoles)
-        .where(inArray(userGlobalRoles.role, input.filter.roles));
-      conditions.push(inArray(users.id, roleSubq));
+    const conditions: SQL[] = [
+      isNull(users.deletedAt),
+      ...userFilterClauses(this.db, input.filter),
+    ];
+    if (!this.executor.applyReadFilter(this.resource, conditions)) {
+      return EMPTY_PAGE;
     }
 
     const sortColumns = {
@@ -269,14 +241,8 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
   async getUserByEmailAddress(
     email: string,
   ): Promise<UnsecuredDto<User> | null> {
-    const filter = this.executor.drizzleFilter({
-      action: 'read',
-      resource: this.resource,
-    });
-    if (filter === false) return null;
-
     const conditions: SQL[] = [eq(users.email, email), isNull(users.deletedAt)];
-    if (filter !== true) conditions.push(filter);
+    if (!this.executor.applyReadFilter(this.resource, conditions)) return null;
 
     const row = await this.db.query.users.findFirst({
       where: and(...conditions),
@@ -323,3 +289,43 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
     };
   }
 }
+
+/**
+ * Build the column-level WHERE clauses for a `UserFilters` input against the
+ * `users` table. Reusable from sub-filters in other domains (e.g. FieldZone's
+ * `director` filter) — the caller composes these with their own join/lookup.
+ *
+ * Note: `pinned` is not stored on the user row (per-requester state), so it is
+ * intentionally not handled here — same migration-todo as the user list itself.
+ */
+export const userFilterClauses = (
+  db: DrizzleDb,
+  filter: UserFilters | undefined,
+): SQL[] => {
+  const conditions: SQL[] = [];
+  if (!filter) return conditions;
+  if (filter.id) conditions.push(eq(users.id, filter.id));
+  if (filter.status) conditions.push(eq(users.status, filter.status));
+  if (filter.name) {
+    const term = `%${escapeLikePattern(filter.name)}%`;
+    conditions.push(
+      or(
+        ilike(users.realFirstName, term),
+        ilike(users.realLastName, term),
+        ilike(users.displayFirstName, term),
+        ilike(users.displayLastName, term),
+      )!,
+    );
+  }
+  if (filter.title) {
+    conditions.push(ilike(users.title, `%${escapeLikePattern(filter.title)}%`));
+  }
+  if (filter.roles?.length) {
+    const roleSubq = db
+      .selectDistinct({ userId: userGlobalRoles.userId })
+      .from(userGlobalRoles)
+      .where(inArray(userGlobalRoles.role, filter.roles));
+    conditions.push(inArray(users.id, roleSubq));
+  }
+  return conditions;
+};

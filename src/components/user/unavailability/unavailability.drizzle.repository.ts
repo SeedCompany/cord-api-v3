@@ -13,7 +13,7 @@ import { DrizzleDtoRepository } from '~/core/drizzle/dto.repository';
 import { unavailabilities } from '~/core/drizzle/schema';
 import {
   type CreateUnavailability,
-  type Unavailability,
+  Unavailability,
   type UnavailabilityListInput,
   type UpdateUnavailability,
 } from './dto';
@@ -24,7 +24,7 @@ export class UnavailabilityDrizzleRepository extends DrizzleDtoRepository<
   Unavailability
 > {
   constructor(db: DrizzleService) {
-    super(db, unavailabilities);
+    super(db, unavailabilities, Unavailability);
   }
 
   async create(

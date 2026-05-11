@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { and, eq, ilike, inArray, isNull, type SQL } from 'drizzle-orm';
 import { DateTime } from 'luxon';
 import {
-  EnhancedResource,
   generateId,
   type ID,
   NotImplementedException,
@@ -13,6 +12,7 @@ import {
 import {
   catchUniqueViolation,
   DrizzleDtoRepository,
+  EMPTY_PAGE,
   escapeLikePattern,
   resolveOrderBy,
   type SortMap,
@@ -42,14 +42,12 @@ export class LocationDrizzleRepository extends DrizzleDtoRepository<
   typeof locations,
   Location
 > {
-  private readonly resource = EnhancedResource.of(Location);
-
   constructor(
     db: DrizzleService,
     private readonly files: FileService,
     private readonly executor: PolicyExecutor,
   ) {
-    super(db, locations);
+    super(db, locations, Location);
   }
 
   async create(input: CreateLocation): Promise<UnsecuredDto<Location>> {
@@ -119,14 +117,10 @@ export class LocationDrizzleRepository extends DrizzleDtoRepository<
   async list(
     input: LocationListInput,
   ): Promise<PaginatedListType<UnsecuredDto<Location>>> {
-    const filter = this.executor.drizzleFilter({
-      action: 'read',
-      resource: this.resource,
-    });
-    if (filter === false) return { items: [], total: 0, hasMore: false };
-
     const conditions: SQL[] = [isNull(locations.deletedAt)];
-    if (filter !== true) conditions.push(filter);
+    if (!this.executor.applyReadFilter(this.resource, conditions)) {
+      return EMPTY_PAGE;
+    }
 
     if (input.filter?.name) {
       conditions.push(
