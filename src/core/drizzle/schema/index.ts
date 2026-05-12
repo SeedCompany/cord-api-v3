@@ -4,6 +4,7 @@ import {
   boolean,
   check,
   index,
+  integer,
   pgEnum,
   pgTable,
   primaryKey,
@@ -260,8 +261,9 @@ export const locations = pgTable(
     name: text('name').notNull(),
     type: locationTypeEnum('type').$type<LocationType>().notNull(),
     isoAlpha3: text('iso_alpha3'),
-    // migration-todo: add FK constraint once FundingAccount is migrated to PG
-    fundingAccountId: text('funding_account_id').$type<ID<'FundingAccount'>>(),
+    fundingAccountId: text('funding_account_id')
+      .$type<ID<'FundingAccount'>>()
+      .references((): AnyPgColumn => fundingAccounts.id),
     defaultFieldRegionId: text('default_field_region_id')
       .$type<ID<'FieldRegion'>>()
       .references((): AnyPgColumn => fieldRegions.id),
@@ -505,3 +507,29 @@ export const fieldRegionsRelations = relations(fieldRegions, ({ one }) => ({
     references: [users.id],
   }),
 }));
+
+// ─── Funding Accounts ──────────────────────────────────────────────────────
+
+export const fundingAccounts = pgTable(
+  'funding_accounts',
+  {
+    id: text('id').$type<ID<'FundingAccount'>>().primaryKey(),
+    name: text('name').notNull().unique(),
+    accountNumber: integer('account_number').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (t) => [
+    check(
+      'funding_accounts_account_number_range_chk',
+      sql`${t.accountNumber} >= 0 AND ${t.accountNumber} <= 9`,
+    ),
+  ],
+);
+
+export const fundingAccountsRelations = relations(fundingAccounts, () => ({}));
