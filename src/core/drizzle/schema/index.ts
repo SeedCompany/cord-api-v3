@@ -540,6 +540,58 @@ export const fundingAccounts = pgTable(
 
 export const fundingAccountsRelations = relations(fundingAccounts, () => ({}));
 
+// ─── Ethnologue Languages ──────────────────────────────────────────────────
+
+export const ethnologueLanguages = pgTable(
+  'ethnologue_languages',
+  {
+    id: text('id').$type<ID<'EthnologueLanguage'>>().primaryKey(),
+    // migration-todo: add REFERENCES languages(id) ON DELETE CASCADE when
+    // Language migrates in Phase 3&4. Until then `language_id` is a logical
+    // FK enforced only at the application layer.
+    languageId: text('language_id').$type<ID<'Language'>>().notNull(),
+    code: text('code'),
+    provisionalCode: text('provisional_code'),
+    name: text('name'),
+    population: integer('population'),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (t) => [
+    check(
+      'ethnologue_languages_code_format_chk',
+      sql`${t.code} IS NULL OR ${t.code} ~ '^[a-z]{3}$'`,
+    ),
+    check(
+      'ethnologue_languages_provisional_code_format_chk',
+      sql`${t.provisionalCode} IS NULL OR ${t.provisionalCode} ~ '^[a-z]{3}$'`,
+    ),
+    check(
+      'ethnologue_languages_population_non_negative_chk',
+      sql`${t.population} IS NULL OR ${t.population} >= 0`,
+    ),
+    uniqueIndex('ethnologue_languages_language_id_unique')
+      .on(t.languageId)
+      .where(sql`${t.deletedAt} IS NULL`),
+    uniqueIndex('ethnologue_languages_code_unique')
+      .on(t.code)
+      .where(sql`${t.code} IS NOT NULL AND ${t.deletedAt} IS NULL`),
+    uniqueIndex('ethnologue_languages_provisional_code_unique')
+      .on(t.provisionalCode)
+      .where(sql`${t.provisionalCode} IS NOT NULL AND ${t.deletedAt} IS NULL`),
+  ],
+);
+
+export const ethnologueLanguagesRelations = relations(
+  ethnologueLanguages,
+  () => ({}),
+);
+
 // ─── Tools ─────────────────────────────────────────────────────────────────
 
 export const toolKeyEnum = pgEnum('tool_key', ['Rev79']);
