@@ -93,6 +93,35 @@ export abstract class DrizzleDtoRepository<
   }
 
   /**
+   * Pre-flight check that no active row has the given value in `columnName`.
+   * Mirrors `DtoRepository.isUnique()` from the Neo4j base so services can
+   * call `this.repo.isUnique(name)` without caring about the engine.
+   *
+   * Excludes soft-deleted rows to match Neo4j behavior (soft-deleted labels
+   * are prefixed with `Deleted_`, so they don't collide on the lookup). If a
+   * soft-deleted row still owns the name at the DB level, the unique-violation
+   * catch in `create()` converts the conflict to a `DuplicateException`.
+   */
+  async isUnique(value: string, columnName = 'name'): Promise<boolean> {
+    const column = (this.table as Record<string, unknown>)[columnName] as
+      | AnyPgColumn
+      | undefined;
+    if (!column) {
+      throw new Error(`isUnique: column "${columnName}" not found on table`);
+    }
+    const conditions: SQL[] = [eq(column, value)];
+    if (this.table.deletedAt) {
+      conditions.push(isNull(this.table.deletedAt));
+    }
+    const rows = await this.db
+      .select({ id: this.table.id })
+      .from(this.table as PgTable)
+      .where(and(...conditions))
+      .limit(1);
+    return rows.length === 0;
+  }
+
+  /**
    * Sets `deletedAt = now()` on the row. Subclass is responsible for ensuring
    * the table actually has a `deletedAt` column (the generic constraint allows
    * but doesn't require it).
