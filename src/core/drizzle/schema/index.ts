@@ -16,6 +16,7 @@ import { type ID, type Role } from '~/common';
 import { type LocationType } from '../../../components/location/dto/location-type.enum';
 import { type OrganizationReach } from '../../../components/organization/dto/organization-reach.dto';
 import { type OrganizationType } from '../../../components/organization/dto/organization-type.dto';
+import { type ToolKey } from '../../../components/tools/tool/dto/tool-key.enum';
 import { type Gender } from '../../../components/user/dto/gender.enum';
 
 export const userStatusEnum = pgEnum('user_status', ['Active', 'Disabled']);
@@ -538,3 +539,35 @@ export const fundingAccounts = pgTable(
 );
 
 export const fundingAccountsRelations = relations(fundingAccounts, () => ({}));
+
+// ─── Tools ─────────────────────────────────────────────────────────────────
+
+export const toolKeyEnum = pgEnum('tool_key', ['Rev79']);
+
+export const tools = pgTable(
+  'tools',
+  {
+    id: text('id').$type<ID<'Tool'>>().primaryKey(),
+    name: text('name').notNull().unique(),
+    description: text('description'),
+    aiBased: boolean('ai_based').notNull().default(false),
+    key: toolKeyEnum('key').$type<ToolKey>(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (t) => [
+    // Partial unique on `key`: enforce one tool per machine identifier among
+    // active (non-deleted) rows. NULLs are excluded by the WHERE clause so
+    // tools without a key never collide.
+    uniqueIndex('tools_key_unique')
+      .on(t.key)
+      .where(sql`${t.key} IS NOT NULL AND ${t.deletedAt} IS NULL`),
+  ],
+);
+
+export const toolsRelations = relations(tools, () => ({}));
