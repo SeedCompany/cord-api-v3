@@ -212,13 +212,6 @@ export class SecuredLanguageNullable extends SecuredProperty(Language, {
   nullable: true,
 }) {}
 
-export const languageName = (
-  language: Partial<Pick<Language, 'name' | 'displayName'>>,
-): string | undefined =>
-  language.displayName?.value ||
-  (language.name?.canRead ? language.name.value : undefined) ||
-  undefined;
-
 declare module '~/core/resources/map' {
   interface ResourceMap {
     EthnologueLanguage: typeof EthnologueLanguage;
