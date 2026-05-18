@@ -34,7 +34,7 @@ import { PartnerLoader, PartnerService } from '../partner';
 import { ProjectLoader } from '../project';
 import { ProjectListInput, SecuredProjectList } from '../project/dto';
 import { UserLoader } from '../user';
-import { SecuredUser } from '../user/dto';
+import { SecuredUser, SecuredUserList } from '../user/dto';
 import {
   CreatePartner,
   Partner,
@@ -45,6 +45,7 @@ import {
   PartnerUpdated,
   UpdatePartner,
 } from './dto';
+import { PartnerPeopleListInput } from './dto/partner-people-list.dto';
 
 @Resolver(Partner)
 export class PartnerResolver {
@@ -184,6 +185,20 @@ export class PartnerResolver {
   ): Promise<EngagementListOutput> {
     const list = await this.partnerService.listEngagements(partner, input);
     loader.primeAll(list.items);
+    return list;
+  }
+
+  @ResolveField(() => SecuredUserList, {
+    description:
+      'Users associated with the partner via organization membership.',
+  })
+  async people(
+    @Parent() partner: Partner,
+    @ListArg(PartnerPeopleListInput) input: PartnerPeopleListInput,
+    @Loader(UserLoader) users: LoaderOf<UserLoader>,
+  ): Promise<SecuredUserList> {
+    const list = await this.partnerService.listPeople(partner, input);
+    users.primeAll(list.items);
     return list;
   }
 
