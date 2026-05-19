@@ -1,4 +1,5 @@
 import { type NonEmptyArray } from '@seedcompany/common';
+import { sql } from 'drizzle-orm';
 import { inspect } from 'util';
 import { type Role } from '~/common';
 import {
@@ -19,6 +20,10 @@ export class RoleCondition implements Condition {
 
   asCypherCondition() {
     return 'false';
+  }
+
+  asDrizzleCondition() {
+    return sql`false`;
   }
 
   asEdgeQLCondition({ namespace }: AsEdgeQLParams<any>) {

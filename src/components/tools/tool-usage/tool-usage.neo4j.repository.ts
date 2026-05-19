@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { node, type Query, relation } from 'cypher-query-builder';
+import { hasLabel, node, type Query, relation } from 'cypher-query-builder';
 import { CreationFailed, type ID, type UnsecuredDto } from '~/common';
 import { DtoRepository } from '~/core/neo4j';
 import {
@@ -17,6 +17,7 @@ import { type BaseNode } from '~/core/neo4j/results';
 import { toolFilters } from '../tool/tool.neo4j.repository';
 import {
   type CreateToolUsage,
+  type ToolContainerType,
   ToolUsage,
   ToolUsageFilters,
   type UpdateToolUsage,
@@ -76,7 +77,39 @@ export class ToolUsageRepository extends DtoRepository(ToolUsage) {
     return result;
   }
 
-  async listForTools(tools: readonly ID[]) {
+  async listForTools(tools: readonly ID[], containerType?: ToolContainerType) {
+    const result = await this.db
+      .query()
+      .unwind([...tools], 'toolId')
+      .match(node('tool', 'Tool', { id: variable('toolId') }))
+      .subQuery('tool', (sub) => {
+        let q = sub.match([
+          node('node', 'ToolUsage'),
+          relation('out', '', 'tool', ACTIVE),
+          node('tool'),
+        ]);
+        if (containerType) {
+          q = q
+            .match([
+              node('container', 'BaseNode'),
+              relation('out', '', 'uses', ACTIVE),
+              node('node'),
+            ])
+            .where({ container: hasLabel(containerType) });
+        }
+        return q
+          .subQuery('node', this.hydrate())
+          .return(collect('dto').as('usages'));
+      })
+      .return<{
+        tool: { id: ID };
+        usages: ReadonlyArray<UnsecuredDto<ToolUsage>>;
+      }>(['tool { .id }', 'usages'])
+      .run();
+    return result;
+  }
+
+  async containerSummaryForTools(tools: readonly ID[]) {
     const result = await this.db
       .query()
       .unwind([...tools], 'toolId')
@@ -84,17 +117,24 @@ export class ToolUsageRepository extends DtoRepository(ToolUsage) {
       .subQuery('tool', (sub) =>
         sub
           .match([
+            node('container', 'BaseNode'),
+            relation('out', '', 'uses', ACTIVE),
             node('node', 'ToolUsage'),
             relation('out', '', 'tool', ACTIVE),
             node('tool'),
           ])
-          .subQuery('node', this.hydrate())
-          .return(collect('dto').as('usages')),
+          // Normalize engagement subtypes to 'Engagement'; keep in sync with ToolContainerType enum
+          .with([
+            "CASE WHEN 'Project' IN labels(container) THEN 'Project' WHEN any(l IN labels(container) WHERE l IN ['LanguageEngagement', 'InternshipEngagement']) THEN 'Engagement' ELSE null END as containerType",
+          ])
+          .raw('WHERE containerType IS NOT NULL')
+          .return(['containerType', 'count(*) as total']),
       )
       .return<{
         tool: { id: ID };
-        usages: ReadonlyArray<UnsecuredDto<ToolUsage>>;
-      }>(['tool { .id }', 'usages'])
+        containerType: string;
+        total: number;
+      }>(['tool { .id }', 'containerType', 'total'])
       .run();
     return result;
   }
@@ -157,4 +197,12 @@ export const toolUsageFilters = filter.define(() => ToolUsageFilters, {
       node('node', 'Tool'),
     ]),
   ),
+  containerType: ({ value, query }) =>
+    query
+      .match([
+        node('container', 'BaseNode'),
+        relation('out', '', 'uses', ACTIVE),
+        node('outer'),
+      ])
+      .where({ container: hasLabel(value) }),
 });

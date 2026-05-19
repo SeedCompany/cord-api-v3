@@ -75,7 +75,9 @@ export class LanguageRepository extends DtoRepository<
       isDialect: input.isDialect,
       populationOverride: input.populationOverride,
       registryOfLanguageVarietiesCode:
-        input.registryOfLanguageVarietiesCode ?? input.registryOfDialectsCode,
+        input.registryOfLanguageVarietiesCode !== undefined
+          ? input.registryOfLanguageVarietiesCode
+          : input.registryOfDialectsCode,
       leastOfThese: input.leastOfThese,
       leastOfTheseReason: input.leastOfTheseReason,
       displayNamePronunciation: input.displayNamePronunciation,
@@ -237,6 +239,9 @@ export class LanguageRepository extends DtoRepository<
           relation('out', '', 'firstScripture', ACTIVE),
           node('', 'Property', { value: variable('true') }),
         ])
+        .raw(
+          'WHERE firstScriptureEngagement IS NULL OR exists((firstScriptureEngagement)<-[:engagement { active: true }]-(:Project))',
+        )
         .return<{ dto: UnsecuredDto<Language> }>(
           merge('props', 'changedProps', {
             __typename: '"Language"',
@@ -308,6 +313,9 @@ export class LanguageRepository extends DtoRepository<
           value: true,
         },
       })
+      .raw(
+        'AND exists((languageEngagement)<-[:engagement { active: true }]-(:Project))',
+      )
       .return('languageEngagement')
       .first();
     return !!res;

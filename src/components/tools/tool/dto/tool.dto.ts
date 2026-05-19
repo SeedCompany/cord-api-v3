@@ -20,7 +20,7 @@ export class Tool extends Resource {
   @DbUnique()
   readonly name: SecuredString;
 
-  @Field({ nullable: true })
+  @Field()
   readonly description: SecuredStringNullable;
 
   @Field()

@@ -56,7 +56,7 @@ export class UnavailabilityGelRepository
     return await this.db.run(query);
   }
 
-  async getUserIdByUnavailability(id: ID) {
+  async getUserByUnavailabilityId(id: ID) {
     const unavailability = e.cast(e.User.Unavailability, e.uuid(id));
     const query = e.assert_exists(
       e.select(e.User, (user) => ({

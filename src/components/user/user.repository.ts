@@ -435,6 +435,13 @@ export const userFilters = filter.define(() => UserFilters, {
   id: filter.baseNodeProp(),
   pinned: filter.isPinned,
   status: filter.propVal(),
+  partnerId: filter.pathExists((id) => [
+    node('node'),
+    relation('out', '', 'organization', ACTIVE),
+    node('', 'Organization'),
+    relation('in', '', 'organization', ACTIVE),
+    node('', 'Partner', { id }),
+  ]),
   name: filter.fullText({
     index: () => NameIndex,
     matchToNode: (q) =>

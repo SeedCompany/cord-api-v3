@@ -7,6 +7,7 @@ import {
   OptionalField,
   PaginatedList,
   Role,
+  SecuredList,
   SortablePaginationInput,
 } from '~/common';
 import { UserStatus } from './user-status.enum';
@@ -16,6 +17,8 @@ import { User } from './user.dto';
 export abstract class UserFilters {
   @IdField({ optional: true })
   readonly id?: ID<'User'>;
+
+  readonly partnerId?: ID<'Partner'>;
 
   @OptionalField()
   readonly name?: string;
@@ -39,8 +42,10 @@ export abstract class UserFilters {
 }
 
 @InputType()
-export class UserListInput extends SortablePaginationInput<keyof User>({
-  defaultSort: 'id', // TODO How to sort on name?
+export class UserListInput extends SortablePaginationInput<
+  keyof User | 'fullName'
+>({
+  defaultSort: 'id',
 }) {
   @FilterField(() => UserFilters)
   readonly filter?: UserFilters;
@@ -48,3 +53,8 @@ export class UserListInput extends SortablePaginationInput<keyof User>({
 
 @ObjectType()
 export class UserListOutput extends PaginatedList(User) {}
+
+@ObjectType({
+  description: SecuredList.descriptionFor('users'),
+})
+export abstract class SecuredUserList extends SecuredList(User) {}

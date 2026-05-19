@@ -67,6 +67,7 @@ import {
 import { IProject, ProjectType } from '../project/dto';
 import { projectFilters } from '../project/project-filters.query';
 import { projectSorters } from '../project/project.repository';
+import { toolFilters } from '../tools/tool/tool.neo4j.repository';
 import { userFilters } from '../user';
 import { User } from '../user/dto';
 import {
@@ -675,6 +676,9 @@ export class EngagementRepository extends CommonRepository {
         relation('out', '', 'firstScripture', ACTIVE),
         node({ value: true }),
       ])
+      .raw(
+        'WHERE exists((otherLanguageEngagements)<-[:engagement { active: true }]-(:Project))',
+      )
       .return('otherLanguageEngagements')
       .first();
     return !!result;
@@ -847,6 +851,15 @@ export const engagementFilters = filter.define(() => EngagementFilters, {
   milestonePlanned: filter.stringListProp(),
   milestoneReached: filter.propVal(),
   usingAIAssistedTranslation: filter.stringListProp(),
+  tool: filter.sub(() => toolFilters)((sub) =>
+    sub.match([
+      node('outer'),
+      relation('out', '', 'uses', ACTIVE),
+      node('', 'ToolUsage'),
+      relation('out', '', 'tool', ACTIVE),
+      node('node', 'Tool'),
+    ]),
+  ),
 });
 
 export const engagementSorters = defineSorters(IEngagement, {
@@ -938,13 +951,17 @@ const matchNames = (query: Query) =>
     ])
     .optionalMatch([
       node('node'),
-      relation('out', '', 'language'),
+      relation('out', '', 'language', ACTIVE),
       node('', 'Language'),
       relation('out', '', 'name', ACTIVE),
       node('languageName'),
     ])
     .optionalMatch([
-      [node('node'), relation('out', '', 'intern'), node('intern', 'User')],
+      [
+        node('node'),
+        relation('out', '', 'intern', ACTIVE),
+        node('intern', 'User'),
+      ],
       [
         node('intern'),
         relation('out', '', 'displayFirstName', ACTIVE),

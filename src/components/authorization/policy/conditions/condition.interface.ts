@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/method-signature-style */
 import { type Many, type NonEmptyArray } from '@seedcompany/common';
 import { type Query } from 'cypher-query-builder';
+import { type SQL } from 'drizzle-orm';
 import { inspect, type InspectOptionsStylized } from 'util';
 import { type EnhancedResource, type ResourceShape } from '~/common';
 import { type Session } from '~/core/authentication';
@@ -20,7 +21,13 @@ export interface IsAllowedParams<TResourceStatic extends ResourceShape<any>> {
   session: Session;
 }
 
+// migration-todo: remove with Neo4j; Drizzle uses AsDrizzleParams instead.
 export type AsCypherParams<TResourceStatic extends ResourceShape<any>> = Omit<
+  IsAllowedParams<TResourceStatic>,
+  'object'
+>;
+
+export type AsDrizzleParams<TResourceStatic extends ResourceShape<any>> = Omit<
   IsAllowedParams<TResourceStatic>,
   'object'
 >;
@@ -80,6 +87,12 @@ export abstract class Condition<
   ): Record<string, string>;
 
   abstract asEdgeQLCondition(params: AsEdgeQLParams<TResourceStatic>): string;
+
+  /**
+   * Drizzle SQL WHERE clause fragment that represents the condition.
+   * Optional — implement when porting a domain to PostgreSQL.
+   */
+  asDrizzleCondition?(other: AsDrizzleParams<TResourceStatic>): SQL;
 
   /**
    * Union multiple conditions of this type together to a single one.
