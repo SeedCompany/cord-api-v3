@@ -951,13 +951,17 @@ const matchNames = (query: Query) =>
     ])
     .optionalMatch([
       node('node'),
-      relation('out', '', 'language'),
+      relation('out', '', 'language', ACTIVE),
       node('', 'Language'),
       relation('out', '', 'name', ACTIVE),
       node('languageName'),
     ])
     .optionalMatch([
-      [node('node'), relation('out', '', 'intern'), node('intern', 'User')],
+      [
+        node('node'),
+        relation('out', '', 'intern', ACTIVE),
+        node('intern', 'User'),
+      ],
       [
         node('intern'),
         relation('out', '', 'displayFirstName', ACTIVE),
