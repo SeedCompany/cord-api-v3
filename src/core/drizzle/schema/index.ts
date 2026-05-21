@@ -432,7 +432,7 @@ export const fieldZones = pgTable(
   'field_zones',
   {
     id: text('id').$type<ID<'FieldZone'>>().primaryKey(),
-    name: text('name').notNull().unique(),
+    name: text('name').notNull(),
     directorId: text('director_id')
       .$type<ID<'User'>>()
       .notNull()
@@ -445,7 +445,14 @@ export const fieldZones = pgTable(
       .defaultNow(),
     deletedAt: timestamp('deleted_at', { withTimezone: true }),
   },
-  (t) => [index('field_zones_director_id_idx').on(t.directorId)],
+  (t) => [
+    // Partial unique index scoped to live rows so soft-deleted records
+    // don't block reuse of their name.
+    uniqueIndex('field_zones_name_active_unique')
+      .on(t.name)
+      .where(sql`${t.deletedAt} IS NULL`),
+    index('field_zones_director_id_idx').on(t.directorId),
+  ],
 );
 
 export const fieldZonesRelations = relations(fieldZones, ({ one, many }) => ({
@@ -460,7 +467,7 @@ export const fieldRegions = pgTable(
   'field_regions',
   {
     id: text('id').$type<ID<'FieldRegion'>>().primaryKey(),
-    name: text('name').notNull().unique(),
+    name: text('name').notNull(),
     fieldZoneId: text('field_zone_id')
       .$type<ID<'FieldZone'>>()
       .notNull()
@@ -478,6 +485,11 @@ export const fieldRegions = pgTable(
     deletedAt: timestamp('deleted_at', { withTimezone: true }),
   },
   (t) => [
+    // Partial unique index scoped to live rows so soft-deleted records
+    // don't block reuse of their name.
+    uniqueIndex('field_regions_name_active_unique')
+      .on(t.name)
+      .where(sql`${t.deletedAt} IS NULL`),
     index('field_regions_field_zone_id_idx').on(t.fieldZoneId),
     index('field_regions_director_id_idx').on(t.directorId),
   ],
