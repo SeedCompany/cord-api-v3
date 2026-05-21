@@ -7,7 +7,7 @@ CREATE TYPE "sensitivity" AS ENUM ('Low', 'Medium', 'High');
 
 CREATE TABLE "organizations" (
   "id" text PRIMARY KEY,
-  "name" text NOT NULL UNIQUE,
+  "name" text NOT NULL,
   "acronym" text,
   "address" text,
   "types" "organization_type"[] NOT NULL DEFAULT '{}',
@@ -34,6 +34,10 @@ CREATE TABLE "user_organizations" (
   PRIMARY KEY ("user_id", "organization_id")
 );
 --> statement-breakpoint
+
+-- Partial unique index: name uniqueness only enforced for live (non-soft-deleted) rows.
+CREATE UNIQUE INDEX "organizations_name_active_unique"
+  ON "organizations" ("name") WHERE "deleted_at" IS NULL;
 
 -- At most one primary org per user
 CREATE UNIQUE INDEX "user_organizations_one_primary_per_user"
