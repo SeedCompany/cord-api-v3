@@ -4,6 +4,7 @@ import { AuthorizationModule } from '../authorization/authorization.module';
 import { FieldRegionModule } from '../field-region/field-region.module';
 import { FileModule } from '../file/file.module';
 import { FundingAccountModule } from '../funding-account/funding-account.module';
+import { LocationDrizzleRepository } from './location.drizzle.repository';
 import { LocationGelRepository } from './location.gel.repository';
 import { LocationLoader } from './location.loader';
 import { LocationRepository } from './location.repository';
@@ -23,6 +24,8 @@ import { DefaultMarketingRegionMigration } from './migrations/default-marketing-
     LocationService,
     splitDb(LocationRepository, {
       gel: LocationGelRepository,
+      // migration-todo: remove `as any` once splitDb types accept drizzle repos directly
+      postgres: LocationDrizzleRepository as any,
     }),
     LocationLoader,
     DefaultMarketingRegionMigration,
