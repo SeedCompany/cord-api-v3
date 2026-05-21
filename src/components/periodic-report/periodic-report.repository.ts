@@ -87,6 +87,7 @@ export class PeriodicReportRepository extends DtoRepository<
         start: interval.start,
         end: interval.end,
         tempFileId: await generateId(),
+        tempNarrativeFileId: await generateId(),
       })),
     );
 
@@ -115,7 +116,7 @@ export class PeriodicReportRepository extends DtoRepository<
               )
             THEN true
             ELSE false
-          END as reportFilePublic
+          END as isFilePublic
         `,
       )
       .comment('Stop processing this row if the report already exists')
@@ -163,7 +164,9 @@ export class PeriodicReportRepository extends DtoRepository<
             end: variable('interval.end'),
             skippedReason: null,
             receivedDate: null,
+            narrativeReceivedDate: null,
             reportFile: variable('interval.tempFileId'),
+            narrativeFile: variable('interval.tempNarrativeFileId'),
             ...extraCreateOptions.initialProps,
           },
         }),
@@ -175,12 +178,12 @@ export class PeriodicReportRepository extends DtoRepository<
       )
       .apply(isProgress ? this.progressRepo.amendAfterCreateNode() : undefined)
       // rename node to report, so we can call create node again for the file
-      .with('now, interval, reportFilePublic, node as report')
+      .with('now, interval, isFilePublic, node as report')
       .apply(
         await createNode(File, {
           initialProps: {
             name: variable('apoc.temporal.format(interval.end, "date")'),
-            public: variable('reportFilePublic'),
+            public: variable('isFilePublic'),
           },
           baseNodeProps: {
             id: variable('interval.tempFileId'),
@@ -191,6 +194,25 @@ export class PeriodicReportRepository extends DtoRepository<
       .apply(
         createRelationships(File, {
           in: { reportFileNode: variable('report') },
+          out: { createdBy: currentUser },
+        }),
+      )
+      .with('now, interval, isFilePublic, report')
+      .apply(
+        await createNode(File, {
+          initialProps: {
+            name: variable('apoc.temporal.format(interval.end, "date")'),
+            public: variable('isFilePublic'),
+          },
+          baseNodeProps: {
+            id: variable('interval.tempNarrativeFileId'),
+            createdAt: variable('now'),
+          },
+        }),
+      )
+      .apply(
+        createRelationships(File, {
+          in: { narrativeFileNode: variable('report') },
           out: { createdBy: currentUser },
         }),
       )
@@ -213,7 +235,7 @@ export class PeriodicReportRepository extends DtoRepository<
     existing: T,
     simpleChanges: Omit<
       ChangesOf<PeriodicReport, UpdatePeriodicReport>,
-      'reportFile'
+      'reportFile' | 'narrativeFile'
     > &
       Partial<Pick<PeriodicReport, 'start' | 'end'>>,
   ) {
@@ -390,6 +412,7 @@ export class PeriodicReportRepository extends DtoRepository<
               (
                 NOT report:ProgressReport
                 AND NOT (report)-[:reportFileNode]->(:File)<-[:parent { active: true }]-(:FileVersion)
+                AND NOT (report)-[:narrativeFileNode]->(:File)<-[:parent { active: true }]-(:FileVersion)
               ) OR (
                 report:ProgressReport
                 AND (report)-[:status { active: true }]->(:Property { value: "${ProgressStatus.NotStarted}" })

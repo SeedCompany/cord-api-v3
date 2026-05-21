@@ -70,7 +70,7 @@ export class PeriodicReportService {
       .for(resolveReportType(current), currentRaw)
       .verifyChanges(changes);
 
-    const { reportFile, ...simpleChanges } = changes;
+    const { reportFile, narrativeFile, ...simpleChanges } = changes;
 
     const updated = await this.repo.update(current, simpleChanges);
 
@@ -85,6 +85,14 @@ export class PeriodicReportService {
           updated,
           this.files.asDownloadable(file.newVersion),
         ),
+      );
+    }
+
+    if (narrativeFile) {
+      await this.files.updateDefinedFile(
+        current.narrativeFile,
+        'narrativeFile',
+        narrativeFile,
       );
     }
 

@@ -17,8 +17,19 @@ export abstract class UpdatePeriodicReport {
   @ValidateNested()
   readonly reportFile?: CreateDefinedFileVersion;
 
+  @Field({
+    description: 'New version of the narrative file',
+    nullable: true,
+  })
+  @Type(() => CreateDefinedFileVersion)
+  @ValidateNested()
+  readonly narrativeFile?: CreateDefinedFileVersion;
+
   @DateField({ nullable: true })
   readonly receivedDate?: CalendarDate | null;
+
+  @DateField({ nullable: true })
+  readonly narrativeReceivedDate?: CalendarDate | null;
 
   @Field(() => String, {
     description: 'Why this report is skipped',
