@@ -514,7 +514,7 @@ export const fundingAccounts = pgTable(
   'funding_accounts',
   {
     id: text('id').$type<ID<'FundingAccount'>>().primaryKey(),
-    name: text('name').notNull().unique(),
+    name: text('name').notNull(),
     accountNumber: integer('account_number').notNull(),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
@@ -525,6 +525,11 @@ export const fundingAccounts = pgTable(
     deletedAt: timestamp('deleted_at', { withTimezone: true }),
   },
   (t) => [
+    // Partial unique index scoped to live rows so soft-deleted records
+    // don't block reuse of their name.
+    uniqueIndex('funding_accounts_name_active_unique')
+      .on(t.name)
+      .where(sql`${t.deletedAt} IS NULL`),
     check(
       'funding_accounts_account_number_range_chk',
       sql`${t.accountNumber} >= 0 AND ${t.accountNumber} <= 9`,
