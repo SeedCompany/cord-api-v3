@@ -17,7 +17,9 @@ import { member, Policy, Role, variant } from '../util';
     (p) => p.many('organization', 'partner', 'types').read,
   ),
   r.Product.read,
-  r.ProgressReport.when(member).read.specifically((p) => p.reportFile.none),
+  r.ProgressReport.when(member).read.specifically(
+    (p) => p.many('reportFile', 'narrativeFile').none,
+  ),
   [
     r.ProgressReportCommunityStory,
     r.ProgressReportHighlight,

@@ -42,9 +42,14 @@ class PeriodicReport extends Resource {
   readonly receivedDate: SecuredDateNullable;
 
   @Field()
+  readonly narrativeReceivedDate: SecuredDateNullable;
+
+  @Field()
   readonly skippedReason: SecuredStringNullable;
 
   readonly reportFile: DefinedFile;
+
+  readonly narrativeFile: DefinedFile;
 
   @SensitivityField({
     description: "Based on the project's sensitivity",
