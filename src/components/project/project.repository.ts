@@ -15,6 +15,7 @@ import { type ChangesOf, getChanges } from '~/core/database/changes';
 import { CommonRepository, OnIndex, UniquenessError } from '~/core/neo4j';
 import {
   ACTIVE,
+  coalesce,
   collect,
   createNode,
   createRelationships,
@@ -140,6 +141,11 @@ export class ProjectRepository extends CommonRepository {
           relation('out', '', 'marketingRegionOverride', ACTIVE),
           node('marketingRegionOverride', 'Location'),
         ])
+        .optionalMatch([
+          node('marketingLocation'),
+          relation('out', '', 'defaultMarketingRegion', ACTIVE),
+          node('inheritedMarketingRegion', 'Location'),
+        ])
         .subQuery('node', (sub) =>
           sub
             .match([
@@ -177,6 +183,10 @@ export class ProjectRepository extends CommonRepository {
             usesRev79: 'usesRev79',
             changeset: 'changeset.id',
             marketingRegionOverride: 'marketingRegionOverride { .id }',
+            marketingRegion: coalesce(
+              'marketingRegionOverride { .id }',
+              'inheritedMarketingRegion { .id }',
+            ),
           }).as('dto'),
         );
   }
