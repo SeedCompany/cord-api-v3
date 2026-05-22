@@ -7,7 +7,7 @@ export const LocationType = makeEnum({
     'Country',
     'City',
     'County',
-    'Region',
+    { value: 'Region', label: 'Marketing Region' },
     'State',
     { value: 'CrossBorderArea', label: 'Cross-Border Area' },
   ],
