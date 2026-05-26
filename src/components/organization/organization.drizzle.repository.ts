@@ -16,7 +16,11 @@ import {
   type SortMap,
 } from '~/core/drizzle';
 import { DrizzleService } from '~/core/drizzle/drizzle.service';
-import { organizations, userOrganizations } from '~/core/drizzle/schema';
+import {
+  organizationLocations,
+  organizations,
+  userOrganizations,
+} from '~/core/drizzle/schema';
 import { PolicyExecutor } from '../authorization/policy/executor/policy-executor';
 import {
   type CreateOrganization,
@@ -76,6 +80,15 @@ export class OrganizationDrizzleRepository extends DrizzleDtoRepository<
   }
 
   async delete(id: ID): Promise<void> {
+    // Soft-delete bypasses FK cascade, so clear joins explicitly — otherwise
+    // a stale primary=true row would block future primary-org reassignment
+    // via the user_organizations_one_primary_per_user partial unique index.
+    await this.db
+      .delete(organizationLocations)
+      .where(eq(organizationLocations.organizationId, id));
+    await this.db
+      .delete(userOrganizations)
+      .where(eq(userOrganizations.organizationId, id));
     await this.softDelete(id);
   }
 
