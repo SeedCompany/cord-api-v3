@@ -9,9 +9,12 @@ import {
   primaryKey,
   text,
   timestamp,
+  uniqueIndex,
 } from 'drizzle-orm/pg-core';
 import { type ID, type Role } from '~/common';
 import { type LocationType } from '../../../components/location/dto/location-type.enum';
+import { type OrganizationReach } from '../../../components/organization/dto/organization-reach.dto';
+import { type OrganizationType } from '../../../components/organization/dto/organization-type.dto';
 import { type Gender } from '../../../components/user/dto/gender.enum';
 
 export const userStatusEnum = pgEnum('user_status', ['Active', 'Disabled']);
@@ -254,9 +257,9 @@ export const locations = pgTable(
   'locations',
   {
     id: text('id').$type<ID<'Location'>>().primaryKey(),
-    name: text('name').notNull().unique(),
+    name: text('name').notNull(),
     type: locationTypeEnum('type').$type<LocationType>().notNull(),
-    isoAlpha3: text('iso_alpha3').unique(),
+    isoAlpha3: text('iso_alpha3'),
     // migration-todo: add FK constraints once FundingAccount and FieldRegion are migrated to PG
     fundingAccountId: text('funding_account_id').$type<ID<'FundingAccount'>>(),
     defaultFieldRegionId: text('default_field_region_id').$type<
@@ -275,6 +278,14 @@ export const locations = pgTable(
     deletedAt: timestamp('deleted_at', { withTimezone: true }),
   },
   (t) => [
+    // Partial unique indexes scoped to live rows so soft-deleted records
+    // don't block reuse of their name / iso_alpha3.
+    uniqueIndex('locations_name_active_unique')
+      .on(t.name)
+      .where(sql`${t.deletedAt} IS NULL`),
+    uniqueIndex('locations_iso_alpha3_active_unique')
+      .on(t.isoAlpha3)
+      .where(sql`${t.deletedAt} IS NULL`),
     index('locations_default_marketing_region_id_idx').on(
       t.defaultMarketingRegionId,
     ),
@@ -282,3 +293,135 @@ export const locations = pgTable(
 );
 
 export const locationsRelations = relations(locations, () => ({}));
+
+// ─── Organizations ─────────────────────────────────────────────────────────
+
+export const organizationTypeEnum = pgEnum('organization_type', [
+  'Church',
+  'Parachurch',
+  'Mission',
+  'Translation',
+  'Alliance',
+]);
+
+export const organizationReachEnum = pgEnum('organization_reach', [
+  'Local',
+  'Regional',
+  'National',
+  'Global',
+]);
+
+export const sensitivityEnum = pgEnum('sensitivity', ['Low', 'Medium', 'High']);
+
+export const organizations = pgTable(
+  'organizations',
+  {
+    id: text('id').$type<ID<'Organization'>>().primaryKey(),
+    name: text('name').notNull(),
+    acronym: text('acronym'),
+    address: text('address'),
+    types: organizationTypeEnum('types')
+      .array()
+      .$type<readonly OrganizationType[]>()
+      .notNull()
+      .default([]),
+    reach: organizationReachEnum('reach')
+      .array()
+      .$type<readonly OrganizationReach[]>()
+      .notNull()
+      .default([]),
+    // migration-todo: keep current via hooks once Project/Partnership migrate;
+    // currently always 'High' since no project linkage exists in PG yet.
+    sensitivity: sensitivityEnum('sensitivity').notNull().default('High'),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (t) => [
+    // Partial unique index scoped to live rows so soft-deleted records
+    // don't block reuse of their name.
+    uniqueIndex('organizations_name_active_unique')
+      .on(t.name)
+      .where(sql`${t.deletedAt} IS NULL`),
+  ],
+);
+
+export const organizationLocations = pgTable(
+  'organization_locations',
+  {
+    organizationId: text('organization_id')
+      .$type<ID<'Organization'>>()
+      .notNull()
+      .references(() => organizations.id, { onDelete: 'cascade' }),
+    locationId: text('location_id')
+      .$type<ID<'Location'>>()
+      .notNull()
+      .references(() => locations.id, { onDelete: 'cascade' }),
+  },
+  (t) => [
+    primaryKey({ columns: [t.organizationId, t.locationId] }),
+    index('organization_locations_location_id_idx').on(t.locationId),
+  ],
+);
+
+export const userOrganizations = pgTable(
+  'user_organizations',
+  {
+    userId: text('user_id')
+      .$type<ID<'User'>>()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    organizationId: text('organization_id')
+      .$type<ID<'Organization'>>()
+      .notNull()
+      .references(() => organizations.id, { onDelete: 'cascade' }),
+    primary: boolean('primary').notNull().default(false),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.userId, t.organizationId] }),
+    index('user_organizations_organization_id_idx').on(t.organizationId),
+    uniqueIndex('user_organizations_one_primary_per_user')
+      .on(t.userId)
+      .where(sql`${t.primary} = true`),
+  ],
+);
+
+export const organizationsRelations = relations(organizations, ({ many }) => ({
+  locations: many(organizationLocations),
+  users: many(userOrganizations),
+}));
+
+export const organizationLocationsRelations = relations(
+  organizationLocations,
+  ({ one }) => ({
+    organization: one(organizations, {
+      fields: [organizationLocations.organizationId],
+      references: [organizations.id],
+    }),
+    location: one(locations, {
+      fields: [organizationLocations.locationId],
+      references: [locations.id],
+    }),
+  }),
+);
+
+export const userOrganizationsRelations = relations(
+  userOrganizations,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [userOrganizations.userId],
+      references: [users.id],
+    }),
+    organization: one(organizations, {
+      fields: [userOrganizations.organizationId],
+      references: [organizations.id],
+    }),
+  }),
+);
