@@ -26,6 +26,7 @@ import { type FileId } from '../file/dto';
 import {
   type CreateLocation,
   Location,
+  type LocationFilters,
   type LocationListInput,
   type LocationListOutput,
   type UpdateLocation,
@@ -122,19 +123,7 @@ export class LocationDrizzleRepository extends DrizzleDtoRepository<
       return EMPTY_PAGE;
     }
 
-    if (input.filter?.name) {
-      conditions.push(
-        ilike(locations.name, `%${escapeLikePattern(input.filter.name)}%`),
-      );
-    }
-    if (input.filter?.type?.length) {
-      conditions.push(inArray(locations.type, [...input.filter.type]));
-    }
-    if (input.filter?.fundingAccountId) {
-      conditions.push(
-        eq(locations.fundingAccountId, input.filter.fundingAccountId),
-      );
-    }
+    conditions.push(...locationFilterClauses(input.filter));
 
     const sortColumns = {
       name: locations.name,
@@ -207,3 +196,27 @@ export class LocationDrizzleRepository extends DrizzleDtoRepository<
     };
   }
 }
+
+/**
+ * Build the column-level WHERE clauses for a `LocationFilters` input against
+ * the `locations` table. Reusable from sub-filters in other domains
+ * (e.g. Project's `location` filter).
+ */
+export const locationFilterClauses = (
+  filter: LocationFilters | undefined,
+): SQL[] => {
+  const conditions: SQL[] = [];
+  if (!filter) return conditions;
+  if (filter.name) {
+    conditions.push(
+      ilike(locations.name, `%${escapeLikePattern(filter.name)}%`),
+    );
+  }
+  if (filter.type?.length) {
+    conditions.push(inArray(locations.type, [...filter.type]));
+  }
+  if (filter.fundingAccountId) {
+    conditions.push(eq(locations.fundingAccountId, filter.fundingAccountId));
+  }
+  return conditions;
+};

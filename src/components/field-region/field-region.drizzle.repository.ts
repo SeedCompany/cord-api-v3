@@ -16,7 +16,7 @@ import {
   type SortMap,
   subFilter,
 } from '~/core/drizzle';
-import { DrizzleService } from '~/core/drizzle/drizzle.service';
+import { type DrizzleDb, DrizzleService } from '~/core/drizzle/drizzle.service';
 import { fieldRegions, fieldZones, users } from '~/core/drizzle/schema';
 import { PolicyExecutor } from '../authorization/policy/executor/policy-executor';
 import { fieldZoneFilterClauses } from '../field-zone/field-zone.drizzle.repository';
@@ -24,6 +24,7 @@ import { userFilterClauses } from '../user/user.drizzle.repository';
 import {
   type CreateFieldRegion,
   FieldRegion,
+  type FieldRegionFilters,
   type FieldRegionListInput,
   type UpdateFieldRegion,
 } from './dto';
@@ -82,31 +83,7 @@ export class FieldRegionDrizzleRepository extends DrizzleDtoRepository<
       return EMPTY_PAGE;
     }
 
-    if (input.filter?.name) {
-      conditions.push(
-        ilike(fieldRegions.name, `%${escapeLikePattern(input.filter.name)}%`),
-      );
-    }
-    if (input.filter?.director) {
-      conditions.push(
-        subFilter(
-          this.db,
-          fieldRegions.directorId,
-          users,
-          userFilterClauses(this.db, input.filter.director),
-        ),
-      );
-    }
-    if (input.filter?.fieldZone) {
-      conditions.push(
-        subFilter(
-          this.db,
-          fieldRegions.fieldZoneId,
-          fieldZones,
-          fieldZoneFilterClauses(this.db, input.filter.fieldZone),
-        ),
-      );
-    }
+    conditions.push(...fieldRegionFilterClauses(this.db, input.filter));
 
     const sortColumns = {
       name: fieldRegions.name,
@@ -151,3 +128,42 @@ export class FieldRegionDrizzleRepository extends DrizzleDtoRepository<
     };
   }
 }
+
+/**
+ * Build the column-level WHERE clauses for a `FieldRegionFilters` input against
+ * the `field_regions` table. Reusable from sub-filters in other domains
+ * (e.g. Project's `fieldRegion` filter).
+ */
+export const fieldRegionFilterClauses = (
+  db: DrizzleDb,
+  filter: FieldRegionFilters | undefined,
+): SQL[] => {
+  const conditions: SQL[] = [];
+  if (!filter) return conditions;
+  if (filter.name) {
+    conditions.push(
+      ilike(fieldRegions.name, `%${escapeLikePattern(filter.name)}%`),
+    );
+  }
+  if (filter.director) {
+    conditions.push(
+      subFilter(
+        db,
+        fieldRegions.directorId,
+        users,
+        userFilterClauses(db, filter.director),
+      ),
+    );
+  }
+  if (filter.fieldZone) {
+    conditions.push(
+      subFilter(
+        db,
+        fieldRegions.fieldZoneId,
+        fieldZones,
+        fieldZoneFilterClauses(db, filter.fieldZone),
+      ),
+    );
+  }
+  return conditions;
+};
