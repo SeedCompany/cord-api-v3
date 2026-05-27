@@ -189,13 +189,11 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
   async list(
     input: UserListInput,
   ): Promise<PaginatedListType<UnsecuredDto<User>>> {
-    const conditions: SQL[] = [
-      isNull(users.deletedAt),
-      ...userFilterClauses(this.db, input.filter),
-    ];
+    const conditions: SQL[] = [isNull(users.deletedAt)];
     if (!this.executor.applyReadFilter(this.resource, conditions)) {
       return EMPTY_PAGE;
     }
+    conditions.push(...userFilterClauses(this.db, input.filter));
 
     const sortColumns = {
       realLastName: [users.realLastName, users.realFirstName],

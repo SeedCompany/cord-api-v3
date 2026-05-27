@@ -74,13 +74,11 @@ export class FieldZoneDrizzleRepository extends DrizzleDtoRepository<
   async list(
     input: FieldZoneListInput,
   ): Promise<PaginatedListType<UnsecuredDto<FieldZone>>> {
-    const conditions: SQL[] = [
-      isNull(fieldZones.deletedAt),
-      ...fieldZoneFilterClauses(this.db, input.filter),
-    ];
+    const conditions: SQL[] = [isNull(fieldZones.deletedAt)];
     if (!this.executor.applyReadFilter(this.resource, conditions)) {
       return EMPTY_PAGE;
     }
+    conditions.push(...fieldZoneFilterClauses(this.db, input.filter));
 
     const sortColumns = {
       name: fieldZones.name,
