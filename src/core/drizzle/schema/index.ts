@@ -260,11 +260,11 @@ export const locations = pgTable(
     name: text('name').notNull(),
     type: locationTypeEnum('type').$type<LocationType>().notNull(),
     isoAlpha3: text('iso_alpha3'),
-    // migration-todo: add FK constraints once FundingAccount and FieldRegion are migrated to PG
+    // migration-todo: add FK constraint once FundingAccount is migrated to PG
     fundingAccountId: text('funding_account_id').$type<ID<'FundingAccount'>>(),
-    defaultFieldRegionId: text('default_field_region_id').$type<
-      ID<'FieldRegion'>
-    >(),
+    defaultFieldRegionId: text('default_field_region_id')
+      .$type<ID<'FieldRegion'>>()
+      .references((): AnyPgColumn => fieldRegions.id),
     defaultMarketingRegionId: text('default_marketing_region_id')
       .$type<ID<'Location'>>()
       .references((): AnyPgColumn => locations.id),
@@ -425,3 +425,83 @@ export const userOrganizationsRelations = relations(
     }),
   }),
 );
+
+// ─── Field Zones / Regions ─────────────────────────────────────────────────
+
+export const fieldZones = pgTable(
+  'field_zones',
+  {
+    id: text('id').$type<ID<'FieldZone'>>().primaryKey(),
+    name: text('name').notNull(),
+    directorId: text('director_id')
+      .$type<ID<'User'>>()
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (t) => [
+    // Partial unique index scoped to live rows so soft-deleted records
+    // don't block reuse of their name.
+    uniqueIndex('field_zones_name_active_unique')
+      .on(t.name)
+      .where(sql`${t.deletedAt} IS NULL`),
+    index('field_zones_director_id_idx').on(t.directorId),
+  ],
+);
+
+export const fieldZonesRelations = relations(fieldZones, ({ one, many }) => ({
+  director: one(users, {
+    fields: [fieldZones.directorId],
+    references: [users.id],
+  }),
+  regions: many(fieldRegions),
+}));
+
+export const fieldRegions = pgTable(
+  'field_regions',
+  {
+    id: text('id').$type<ID<'FieldRegion'>>().primaryKey(),
+    name: text('name').notNull(),
+    fieldZoneId: text('field_zone_id')
+      .$type<ID<'FieldZone'>>()
+      .notNull()
+      .references(() => fieldZones.id),
+    directorId: text('director_id')
+      .$type<ID<'User'>>()
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (t) => [
+    // Partial unique index scoped to live rows so soft-deleted records
+    // don't block reuse of their name.
+    uniqueIndex('field_regions_name_active_unique')
+      .on(t.name)
+      .where(sql`${t.deletedAt} IS NULL`),
+    index('field_regions_field_zone_id_idx').on(t.fieldZoneId),
+    index('field_regions_director_id_idx').on(t.directorId),
+  ],
+);
+
+export const fieldRegionsRelations = relations(fieldRegions, ({ one }) => ({
+  fieldZone: one(fieldZones, {
+    fields: [fieldRegions.fieldZoneId],
+    references: [fieldZones.id],
+  }),
+  director: one(users, {
+    fields: [fieldRegions.directorId],
+    references: [users.id],
+  }),
+}));

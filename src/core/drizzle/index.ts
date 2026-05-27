@@ -7,3 +7,4 @@ export * from './like';
 export * from './order-by';
 export * from './pg-error-codes';
 export * from './schema/index';
+export * from './sub-filter';
