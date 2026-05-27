@@ -74,6 +74,10 @@ export class FundingAccountRepository extends DtoRepository(FundingAccount) {
     return await this.readOne(id);
   }
 
+  async delete(id: ID): Promise<void> {
+    await this.deleteNode(id);
+  }
+
   protected hydrate() {
     return (query: Query) =>
       query
