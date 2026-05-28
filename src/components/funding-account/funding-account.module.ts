@@ -1,6 +1,7 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { splitDb } from '~/core/database';
 import { AuthorizationModule } from '../authorization/authorization.module';
+import { FundingAccountDrizzleRepository } from './funding-account.drizzle.repository';
 import { FundingAccountGelRepository } from './funding-account.gel.repository';
 import { FundingAccountLoader } from './funding-account.loader';
 import { FundingAccountRepository } from './funding-account.repository';
@@ -15,6 +16,8 @@ import { FundingAccountAddDeptIdBlockMigration } from './migrations/funding-acco
     FundingAccountService,
     splitDb(FundingAccountRepository, {
       gel: FundingAccountGelRepository,
+      // migration-todo: remove `as any` once splitDb types accept drizzle repos directly
+      postgres: FundingAccountDrizzleRepository as any,
     }),
     FundingAccountLoader,
     FundingAccountAddDeptIdBlockMigration,

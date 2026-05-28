@@ -31,6 +31,11 @@ export class FundingAccountService {
 
   async create(input: CreateFundingAccount): Promise<FundingAccount> {
     this.privileges.for(FundingAccount).verifyCan('create');
+
+    // Pre-flight uniqueness check for a friendly DuplicateException across all
+    // engines (isUnique() lives on both repo bases). The DB-level unique
+    // constraint (Neo4j) / partial unique index + catchUniqueViolation
+    // (Drizzle) remains the backstop for the concurrent-create race.
     if (!(await this.repo.isUnique(input.name))) {
       throw new DuplicateException(
         'name',
@@ -38,21 +43,16 @@ export class FundingAccountService {
       );
     }
 
-    try {
-      const result = await this.repo.create(input);
-
-      if (!result) {
-        throw new CreationFailed(FundingAccount);
-      }
-
-      return await this.readOne(result.id).catch((e) => {
-        throw e instanceof NotFoundException
-          ? new ReadAfterCreationFailed(FundingAccount)
-          : e;
-      });
-    } catch (err) {
-      throw new CreationFailed(FundingAccount, { cause: err });
+    const result = await this.repo.create(input);
+    if (!result) {
+      throw new CreationFailed(FundingAccount);
     }
+
+    return await this.readOne(result.id).catch((e) => {
+      throw e instanceof NotFoundException
+        ? new ReadAfterCreationFailed(FundingAccount)
+        : e;
+    });
   }
 
   @HandleIdLookup(FundingAccount)
@@ -87,7 +87,7 @@ export class FundingAccountService {
     this.privileges.for(FundingAccount, object).verifyCan('delete');
 
     try {
-      await this.repo.deleteNode(object);
+      await this.repo.delete(object.id);
     } catch (exception) {
       throw new ServerException('Failed to delete', exception);
     }
