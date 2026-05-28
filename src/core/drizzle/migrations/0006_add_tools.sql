@@ -5,7 +5,7 @@ CREATE TYPE "tool_key" AS ENUM ('Rev79');
 
 CREATE TABLE "tools" (
   "id"          text        PRIMARY KEY,
-  "name"        text        NOT NULL UNIQUE,
+  "name"        text        NOT NULL,
   "description" text,
   "ai_based"    boolean     NOT NULL DEFAULT false,
   "key"         "tool_key",
@@ -13,6 +13,11 @@ CREATE TABLE "tools" (
   "updated_at"  timestamptz NOT NULL DEFAULT now(),
   "deleted_at"  timestamptz
 );
+--> statement-breakpoint
+
+-- Partial unique index: name uniqueness only enforced for live (non-soft-deleted) rows.
+CREATE UNIQUE INDEX "tools_name_active_unique"
+  ON "tools" ("name") WHERE "deleted_at" IS NULL;
 --> statement-breakpoint
 
 -- Partial unique: one active tool per machine identifier; NULLs allowed.

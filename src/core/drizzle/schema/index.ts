@@ -548,7 +548,7 @@ export const tools = pgTable(
   'tools',
   {
     id: text('id').$type<ID<'Tool'>>().primaryKey(),
-    name: text('name').notNull().unique(),
+    name: text('name').notNull(),
     description: text('description'),
     aiBased: boolean('ai_based').notNull().default(false),
     key: toolKeyEnum('key').$type<ToolKey>(),
@@ -561,6 +561,11 @@ export const tools = pgTable(
     deletedAt: timestamp('deleted_at', { withTimezone: true }),
   },
   (t) => [
+    // Partial unique index scoped to live rows so soft-deleted records
+    // don't block reuse of their name.
+    uniqueIndex('tools_name_active_unique')
+      .on(t.name)
+      .where(sql`${t.deletedAt} IS NULL`),
     // Partial unique on `key`: enforce one tool per machine identifier among
     // active (non-deleted) rows. NULLs are excluded by the WHERE clause so
     // tools without a key never collide.

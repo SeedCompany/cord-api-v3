@@ -87,13 +87,11 @@ export class ToolDrizzleRepository extends DrizzleDtoRepository<
   async list(
     input: ToolListInput,
   ): Promise<PaginatedListType<UnsecuredDto<Tool>>> {
-    const conditions: SQL[] = [
-      isNull(tools.deletedAt),
-      ...toolFilterClauses(this.db, input.filter),
-    ];
+    const conditions: SQL[] = [isNull(tools.deletedAt)];
     if (!this.executor.applyReadFilter(this.resource, conditions)) {
       return EMPTY_PAGE;
     }
+    conditions.push(...toolFilterClauses(this.db, input.filter));
 
     const sortColumns = {
       name: tools.name,
