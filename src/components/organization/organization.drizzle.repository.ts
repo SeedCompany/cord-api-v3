@@ -164,3 +164,21 @@ export const organizationFilterClauses = (
   }
   return conditions;
 };
+
+/**
+ * Sortable columns on the `organizations` table, exposed for cross-domain sort
+ * delegation (e.g. Partner's `organization.*` sort joins to `organizations`
+ * and orders by one of these). Counterpart to `organizationFilterClauses`.
+ *
+ * Neo4j's `organizationSorters` is empty (`defineSorters(Organization, {})`),
+ * meaning Neo4j relies on its base-node-prop fallback to sort by any scalar
+ * Property. The values here are the meaningful sortable columns on the PG
+ * table — extend as needed.
+ */
+export const organizationSortColumns = {
+  name: organizations.name,
+  acronym: organizations.acronym,
+  address: organizations.address,
+  sensitivity: organizations.sensitivity,
+  createdAt: organizations.createdAt,
+} as const;

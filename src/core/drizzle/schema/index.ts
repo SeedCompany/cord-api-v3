@@ -3,6 +3,7 @@ import {
   type AnyPgColumn,
   boolean,
   check,
+  date,
   index,
   pgEnum,
   pgTable,
@@ -15,7 +16,11 @@ import { type ID, type Role } from '~/common';
 import { type LocationType } from '../../../components/location/dto/location-type.enum';
 import { type OrganizationReach } from '../../../components/organization/dto/organization-reach.dto';
 import { type OrganizationType } from '../../../components/organization/dto/organization-type.dto';
+import { type PartnerType } from '../../../components/partner/dto/partner-type.enum';
+import { type FinancialReportingType } from '../../../components/partnership/dto/financial-reporting-type.enum';
+import { type ProjectType } from '../../../components/project/dto/project-type.enum';
 import { type Gender } from '../../../components/user/dto/gender.enum';
+import { int4multirange } from '../int4-multirange';
 
 export const userStatusEnum = pgEnum('user_status', ['Active', 'Disabled']);
 export const genderEnum = pgEnum('gender', ['Male', 'Female']);
@@ -505,3 +510,216 @@ export const fieldRegionsRelations = relations(fieldRegions, ({ one }) => ({
     references: [users.id],
   }),
 }));
+
+// ─── Partner ────────────────────────────────────────────────────────────────
+
+export const projectTypeEnum = pgEnum('project_type', [
+  'MomentumTranslation',
+  'MultiplicationTranslation',
+  'Internship',
+]);
+
+export const partnerTypeEnum = pgEnum('partner_type', [
+  'Managing',
+  'Funding',
+  'Impact',
+  'Technical',
+  'Resource',
+]);
+
+export const financialReportingTypeEnum = pgEnum('financial_reporting_type', [
+  'Funded',
+  'FieldEngaged',
+  'Hybrid',
+]);
+
+/**
+ * Finance::Department::IdBlock — shared by Partner (user-supplied) and, later,
+ * FundingAccount (computed from accountNumber). `range` mirrors Gel's native
+ * `int4multirange`; `programs` are the project types the block applies to.
+ */
+export const departmentIdBlocks = pgTable('department_id_blocks', {
+  id: text('id').$type<ID>().primaryKey(),
+  range: int4multirange('range').notNull(),
+  programs: projectTypeEnum('programs')
+    .array()
+    .$type<readonly ProjectType[]>()
+    .notNull()
+    .default([]),
+});
+
+export const partners = pgTable(
+  'partners',
+  {
+    id: text('id').$type<ID<'Partner'>>().primaryKey(),
+    organizationId: text('organization_id')
+      .$type<ID<'Organization'>>()
+      .notNull()
+      .references(() => organizations.id),
+    pointOfContactId: text('point_of_contact_id')
+      .$type<ID<'User'>>()
+      .references(() => users.id),
+    types: partnerTypeEnum('types')
+      .array()
+      .$type<readonly PartnerType[]>()
+      .notNull()
+      .default([]),
+    financialReportingTypes: financialReportingTypeEnum(
+      'financial_reporting_types',
+    )
+      .array()
+      .$type<readonly FinancialReportingType[]>()
+      .notNull()
+      .default([]),
+    pmcEntityCode: text('pmc_entity_code'),
+    globalInnovationsClient: boolean('global_innovations_client')
+      .notNull()
+      .default(false),
+    active: boolean('active').notNull().default(false),
+    address: text('address'),
+    // migration-todo: deferred FK → languages(id); add REFERENCES when Language
+    // migrates. Plain text until then (same pattern as locations.funding_account_id).
+    languageOfWiderCommunicationId: text(
+      'language_of_wider_communication_id',
+    ).$type<ID<'Language'>>(),
+    // migration-todo: deferred FK → languages(id); add when Language migrates.
+    languageOfReportingId: text('language_of_reporting_id').$type<
+      ID<'Language'>
+    >(),
+    startDate: date('start_date'),
+    approvedPrograms: projectTypeEnum('approved_programs')
+      .array()
+      .$type<readonly ProjectType[]>()
+      .notNull()
+      .default([]),
+    departmentIdBlockId: text('department_id_block_id')
+      .$type<ID>()
+      .references(() => departmentIdBlocks.id),
+    // migration-todo: derived from the project's sensitivity; keep current via
+    // hook once Project/Partnership migrate. Always 'High' until then — same as
+    // organizations.sensitivity.
+    sensitivity: sensitivityEnum('sensitivity').notNull().default('High'),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (t) => [
+    // One live Partner per Organization (Neo4j enforces via partnerIdByOrg).
+    uniqueIndex('partners_organization_active_unique')
+      .on(t.organizationId)
+      .where(sql`${t.deletedAt} IS NULL`),
+    index('partners_point_of_contact_id_idx').on(t.pointOfContactId),
+    index('partners_department_id_block_id_idx').on(t.departmentIdBlockId),
+    // Indexes on deferred-FK columns — REFERENCES adds when Language migrates,
+    // but the index goes in now so queries on these columns don't seq-scan and
+    // we avoid `CREATE INDEX CONCURRENTLY` later (memory's "Index every FK").
+    index('partners_language_of_wider_communication_id_idx').on(
+      t.languageOfWiderCommunicationId,
+    ),
+    index('partners_language_of_reporting_id_idx').on(t.languageOfReportingId),
+  ],
+);
+
+export const partnerFieldRegions = pgTable(
+  'partner_field_regions',
+  {
+    partnerId: text('partner_id')
+      .$type<ID<'Partner'>>()
+      .notNull()
+      .references(() => partners.id, { onDelete: 'cascade' }),
+    fieldRegionId: text('field_region_id')
+      .$type<ID<'FieldRegion'>>()
+      .notNull()
+      .references(() => fieldRegions.id, { onDelete: 'cascade' }),
+  },
+  (t) => [
+    primaryKey({ columns: [t.partnerId, t.fieldRegionId] }),
+    index('partner_field_regions_field_region_id_idx').on(t.fieldRegionId),
+  ],
+);
+
+export const partnerCountries = pgTable(
+  'partner_countries',
+  {
+    partnerId: text('partner_id')
+      .$type<ID<'Partner'>>()
+      .notNull()
+      .references(() => partners.id, { onDelete: 'cascade' }),
+    locationId: text('location_id')
+      .$type<ID<'Location'>>()
+      .notNull()
+      .references(() => locations.id, { onDelete: 'cascade' }),
+  },
+  (t) => [
+    primaryKey({ columns: [t.partnerId, t.locationId] }),
+    index('partner_countries_location_id_idx').on(t.locationId),
+  ],
+);
+
+export const partnerLanguagesOfConsulting = pgTable(
+  'partner_languages_of_consulting',
+  {
+    partnerId: text('partner_id')
+      .$type<ID<'Partner'>>()
+      .notNull()
+      .references(() => partners.id, { onDelete: 'cascade' }),
+    // migration-todo: deferred FK → languages(id); add REFERENCES when
+    // Language migrates.
+    languageId: text('language_id').$type<ID<'Language'>>().notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.partnerId, t.languageId] }),
+    // Right-side index for "find partners consulting language X" — the
+    // composite PK only covers the left side (partner_id).
+    index('partner_languages_of_consulting_language_id_idx').on(t.languageId),
+  ],
+);
+
+export const departmentIdBlocksRelations = relations(
+  departmentIdBlocks,
+  () => ({}),
+);
+
+export const partnersRelations = relations(partners, ({ one, many }) => ({
+  departmentIdBlock: one(departmentIdBlocks, {
+    fields: [partners.departmentIdBlockId],
+    references: [departmentIdBlocks.id],
+  }),
+  fieldRegions: many(partnerFieldRegions),
+  countries: many(partnerCountries),
+  languagesOfConsulting: many(partnerLanguagesOfConsulting),
+}));
+
+export const partnerFieldRegionsRelations = relations(
+  partnerFieldRegions,
+  ({ one }) => ({
+    partner: one(partners, {
+      fields: [partnerFieldRegions.partnerId],
+      references: [partners.id],
+    }),
+  }),
+);
+
+export const partnerCountriesRelations = relations(
+  partnerCountries,
+  ({ one }) => ({
+    partner: one(partners, {
+      fields: [partnerCountries.partnerId],
+      references: [partners.id],
+    }),
+  }),
+);
+
+export const partnerLanguagesOfConsultingRelations = relations(
+  partnerLanguagesOfConsulting,
+  ({ one }) => ({
+    partner: one(partners, {
+      fields: [partnerLanguagesOfConsulting.partnerId],
+      references: [partners.id],
+    }),
+  }),
+);
