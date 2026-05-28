@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { and, eq, ilike, inArray, isNull, type SQL } from 'drizzle-orm';
 import { DateTime } from 'luxon';
 import {
-  EnhancedResource,
   generateId,
   type ID,
   NotImplementedException,
@@ -13,6 +12,7 @@ import {
 import {
   catchUniqueViolation,
   DrizzleDtoRepository,
+  EMPTY_PAGE,
   escapeLikePattern,
   resolveOrderBy,
   type SortMap,
@@ -26,6 +26,7 @@ import { type FileId } from '../file/dto';
 import {
   type CreateLocation,
   Location,
+  type LocationFilters,
   type LocationListInput,
   type LocationListOutput,
   type UpdateLocation,
@@ -42,14 +43,12 @@ export class LocationDrizzleRepository extends DrizzleDtoRepository<
   typeof locations,
   Location
 > {
-  private readonly resource = EnhancedResource.of(Location);
-
   constructor(
     db: DrizzleService,
     private readonly files: FileService,
     private readonly executor: PolicyExecutor,
   ) {
-    super(db, locations);
+    super(db, locations, Location);
   }
 
   async create(input: CreateLocation): Promise<UnsecuredDto<Location>> {
@@ -119,28 +118,12 @@ export class LocationDrizzleRepository extends DrizzleDtoRepository<
   async list(
     input: LocationListInput,
   ): Promise<PaginatedListType<UnsecuredDto<Location>>> {
-    const filter = this.executor.drizzleFilter({
-      action: 'read',
-      resource: this.resource,
-    });
-    if (filter === false) return { items: [], total: 0, hasMore: false };
-
     const conditions: SQL[] = [isNull(locations.deletedAt)];
-    if (filter !== true) conditions.push(filter);
+    if (!this.executor.applyReadFilter(this.resource, conditions)) {
+      return EMPTY_PAGE;
+    }
 
-    if (input.filter?.name) {
-      conditions.push(
-        ilike(locations.name, `%${escapeLikePattern(input.filter.name)}%`),
-      );
-    }
-    if (input.filter?.type?.length) {
-      conditions.push(inArray(locations.type, [...input.filter.type]));
-    }
-    if (input.filter?.fundingAccountId) {
-      conditions.push(
-        eq(locations.fundingAccountId, input.filter.fundingAccountId),
-      );
-    }
+    conditions.push(...locationFilterClauses(input.filter));
 
     const sortColumns = {
       name: locations.name,
@@ -213,3 +196,27 @@ export class LocationDrizzleRepository extends DrizzleDtoRepository<
     };
   }
 }
+
+/**
+ * Build the column-level WHERE clauses for a `LocationFilters` input against
+ * the `locations` table. Reusable from sub-filters in other domains
+ * (e.g. Project's `location` filter).
+ */
+export const locationFilterClauses = (
+  filter: LocationFilters | undefined,
+): SQL[] => {
+  const conditions: SQL[] = [];
+  if (!filter) return conditions;
+  if (filter.name) {
+    conditions.push(
+      ilike(locations.name, `%${escapeLikePattern(filter.name)}%`),
+    );
+  }
+  if (filter.type?.length) {
+    conditions.push(inArray(locations.type, [...filter.type]));
+  }
+  if (filter.fundingAccountId) {
+    conditions.push(eq(locations.fundingAccountId, filter.fundingAccountId));
+  }
+  return conditions;
+};

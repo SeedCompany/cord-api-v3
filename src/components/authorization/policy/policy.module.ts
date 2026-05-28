@@ -26,6 +26,6 @@ import { PolicyFactory } from './policy.factory';
     VariantAndExpUnionOptimizer,
     FlattenAggregateOptimizer,
   ],
-  exports: [Privileges, GelAccessPolicyGenerator],
+  exports: [Privileges, GelAccessPolicyGenerator, PolicyExecutor],
 })
 export class PolicyModule {}

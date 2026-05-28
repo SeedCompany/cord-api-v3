@@ -1,7 +1,24 @@
 import { and, asc, count, eq, inArray, isNull, type SQL } from 'drizzle-orm';
 import { type AnyPgColumn, type PgTable } from 'drizzle-orm/pg-core';
-import { type ID, NotFoundException, type UnsecuredDto } from '~/common';
+import {
+  EnhancedResource,
+  type ID,
+  NotFoundException,
+  type ResourceShape,
+  type UnsecuredDto,
+} from '~/common';
+import { getChanges } from '../database/changes';
 import { type DrizzleService } from './drizzle.service';
+
+/**
+ * The shape `list()` returns when policy denies read access — caller bails
+ * out before touching the DB. Use with `PolicyExecutor.applyReadFilter()`.
+ */
+export const EMPTY_PAGE = {
+  items: [] as never[],
+  total: 0,
+  hasMore: false,
+} as const;
 
 /**
  * Common machinery for CRUD repositories on a single Drizzle table.
@@ -22,10 +39,26 @@ export abstract class DrizzleDtoRepository<
   },
   TDto extends { id: ID },
 > {
+  protected readonly resource: EnhancedResource<ResourceShape<TDto>>;
+
+  /**
+   * Diff an existing DTO against an `Update*` input and return only fields
+   * whose values actually changed. Mirrors the helper on the Neo4j and Gel
+   * bases — services call `repo.getActualChanges(existing, input)` regardless
+   * of which engine `splitDb` resolves to.
+   */
+  readonly getActualChanges!: ReturnType<
+    typeof getChanges<ResourceShape<TDto>>
+  >;
+
   constructor(
     private readonly drizzle: DrizzleService,
     protected readonly table: TTable,
-  ) {}
+    dto: ResourceShape<TDto>,
+  ) {
+    this.resource = EnhancedResource.of(dto);
+    this.getActualChanges = getChanges(dto);
+  }
 
   /**
    * Drizzle client. A getter (not a captured value) so AsyncLocalStorage-bound

@@ -13,7 +13,7 @@ import { DrizzleDtoRepository } from '~/core/drizzle/dto.repository';
 import { educations } from '~/core/drizzle/schema';
 import {
   type CreateEducation,
-  type Education,
+  Education,
   type EducationListInput,
   type UpdateEducation,
 } from './dto';
@@ -24,7 +24,7 @@ export class EducationDrizzleRepository extends DrizzleDtoRepository<
   Education
 > {
   constructor(db: DrizzleService) {
-    super(db, educations);
+    super(db, educations, Education);
   }
 
   async create(input: CreateEducation): Promise<UnsecuredDto<Education>> {
