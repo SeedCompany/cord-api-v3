@@ -38,6 +38,27 @@ export class EthnologueLanguageDrizzleRepository extends DrizzleDtoRepository<
   async create(
     input: CreateEthnologueLanguage & { languageId: ID },
   ): Promise<UnsecuredDto<EthnologueLanguage>> {
+    // migration-todo: `EthnologueLanguageService.create()` currently passes
+    // `'temp' as ID` for `languageId` because the Language row is created
+    // *after* the EthnologueLanguage in `LanguageRepository.create()` — the
+    // relationship is wired up by the caller via the returned ethnologue
+    // id, so Neo4j never reads `input.languageId`. The Gel repo's `create()`
+    // throws ("Database creates EthnologueLanguages directly. Don't call
+    // this") because Gel creates the row as a side-effect of Language insert.
+    //
+    // Drizzle is the only impl that writes `input.languageId` to a real
+    // column. With `language_id` now nullable (see schema comment), the
+    // 'temp' string still slips through as a non-null bogus id today — the
+    // schema doesn't reject it, but it's still wrong data.
+    //
+    // Resolution lands with the Language migration (Phase 3&4) by flipping
+    // the create flow: insert Language first, then EthnologueLanguage with
+    // the real `languageId`. Or, if the global-pool model is in place by
+    // then, the service `create()` becomes "attach existing pool entry by
+    // code if one matches, else insert a new pool entry" — at which point
+    // `languageId` here is the attaching Language and the call to this
+    // repo's `create()` only fires for genuinely new pool entries.
+    // Dormant until PG mode activates.
     const id = await generateId();
     await this.db
       .insert(ethnologueLanguages)

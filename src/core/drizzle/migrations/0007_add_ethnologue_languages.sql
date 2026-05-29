@@ -1,13 +1,21 @@
 -- Migration: add ethnologue_languages table.
 --
--- EthnologueLanguage is a 1:1 sub-record of Language. The `language_id`
--- column is a logical FK only until Language migrates in Phase 3&4, at which
--- point the `REFERENCES languages(id) ON DELETE CASCADE` clause + a btree
--- index on `language_id` get added in Language's migration.
+-- EthnologueLanguage is currently created 1:1 alongside a Language, but the
+-- schema preserves the path to the planned future model where these become
+-- a global pool of canonical language records and `language_id` is a soft
+-- attachment (new Languages hook into existing pool entries by code).
+-- Concretely:
+--   - `language_id` is NULLABLE (orphans are valid; pool entries pre-date
+--     their attachment).
+--   - When Language migrates in Phase 3&4 it adds `REFERENCES languages(id)
+--     ON DELETE SET NULL` (not CASCADE — deleting a Language releases the
+--     attachment, doesn't destroy the pool entry) + a btree index.
+--   - `code` / `provisional_code` uniqueness is GLOBAL (not scoped to
+--     attached rows) — the future pool requires globally unique codes.
 
 CREATE TABLE "ethnologue_languages" (
   "id"               text        PRIMARY KEY,
-  "language_id"      text        NOT NULL,
+  "language_id"      text,
   "code"             text,
   "provisional_code" text,
   "name"             text,
