@@ -29,7 +29,7 @@ import {
 import { type ToolKey } from './dto/tool-key.enum';
 
 const catchNameUnique = catchUniqueViolation(
-  'tools_name',
+  'tools_name_active_unique',
   'name',
   'Tool with this name already exists.',
 );
