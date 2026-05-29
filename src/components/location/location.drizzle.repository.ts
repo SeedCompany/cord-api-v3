@@ -125,16 +125,9 @@ export class LocationDrizzleRepository extends DrizzleDtoRepository<
 
     conditions.push(...locationFilterClauses(input.filter));
 
-    const sortColumns = {
-      name: locations.name,
-      type: locations.type,
-      isoAlpha3: locations.isoAlpha3,
-      createdAt: locations.createdAt,
-    } satisfies SortMap<keyof Location>;
-
     const { rows, total, hasMore } = await this.paginatedSelect({
       predicate: and(...conditions),
-      orderBy: resolveOrderBy(input, sortColumns, locations.name),
+      orderBy: resolveOrderBy(input, locationSortColumns, locations.name),
       page: input.page,
       count: input.count,
     });
@@ -202,6 +195,18 @@ export class LocationDrizzleRepository extends DrizzleDtoRepository<
  * the `locations` table. Reusable from sub-filters in other domains
  * (e.g. Project's `location` filter).
  */
+/**
+ * Sortable columns on `locations`. Exported for cross-domain sort delegation
+ * (Project's `primaryLocation.*` sort joins via this map). Same pattern as
+ * `organizationSortColumns` introduced in partner-pg.
+ */
+export const locationSortColumns = {
+  name: locations.name,
+  type: locations.type,
+  isoAlpha3: locations.isoAlpha3,
+  createdAt: locations.createdAt,
+} satisfies SortMap<keyof Location>;
+
 export const locationFilterClauses = (
   filter: LocationFilters | undefined,
 ): SQL[] => {
