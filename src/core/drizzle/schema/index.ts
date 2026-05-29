@@ -5,6 +5,7 @@ import {
   check,
   date,
   index,
+  jsonb,
   pgEnum,
   pgTable,
   primaryKey,
@@ -18,6 +19,11 @@ import { type OrganizationReach } from '../../../components/organization/dto/org
 import { type OrganizationType } from '../../../components/organization/dto/organization-type.dto';
 import { type PartnerType } from '../../../components/partner/dto/partner-type.enum';
 import { type FinancialReportingType } from '../../../components/partnership/dto/financial-reporting-type.enum';
+import { type ReportPeriod } from '../../../components/periodic-report/dto/report-period.enum';
+import { type ProjectChangeRequestStatus } from '../../../components/project-change-request/dto/project-change-request-status.enum';
+import { type ProjectChangeRequestType } from '../../../components/project-change-request/dto/project-change-request-type.enum';
+import { type ProjectStatus } from '../../../components/project/dto/project-status.enum';
+import { type ProjectStep } from '../../../components/project/dto/project-step.enum';
 import { type ProjectType } from '../../../components/project/dto/project-type.enum';
 import { type Gender } from '../../../components/user/dto/gender.enum';
 import { int4multirange } from '../int4-multirange';
@@ -720,6 +726,461 @@ export const partnerLanguagesOfConsultingRelations = relations(
     partner: one(partners, {
       fields: [partnerLanguagesOfConsulting.partnerId],
       references: [partners.id],
+    }),
+  }),
+);
+
+// ─── Project ───────────────────────────────────────────────────────────────
+
+export const projectStepEnum = pgEnum('project_step', [
+  'EarlyConversations',
+  'PendingConceptApproval',
+  'PrepForConsultantEndorsement',
+  'PendingConsultantEndorsement',
+  'PrepForFinancialEndorsement',
+  'PendingFinancialEndorsement',
+  'FinalizingProposal',
+  'PendingRegionalDirectorApproval',
+  'PendingZoneDirectorApproval',
+  'PendingFinanceConfirmation',
+  'OnHoldFinanceConfirmation',
+  'DidNotDevelop',
+  'Rejected',
+  'Active',
+  'ActiveChangedPlan',
+  'DiscussingChangeToPlan',
+  'PendingChangeToPlanApproval',
+  'PendingChangeToPlanConfirmation',
+  'DiscussingSuspension',
+  'PendingSuspensionApproval',
+  'Suspended',
+  'DiscussingReactivation',
+  'PendingReactivationApproval',
+  'DiscussingTermination',
+  'PendingTerminationApproval',
+  'FinalizingCompletion',
+  'Terminated',
+  'Completed',
+]);
+
+export const projectStatusEnum = pgEnum('project_status', [
+  'InDevelopment',
+  'Active',
+  'Terminated',
+  'Completed',
+  'DidNotDevelop',
+]);
+
+export const projectChangeRequestStatusEnum = pgEnum(
+  'project_change_request_status',
+  ['Pending', 'Approved', 'Rejected'],
+);
+
+export const projectChangeRequestTypeEnum = pgEnum(
+  'project_change_request_type',
+  ['Time', 'Budget', 'Goal', 'Engagement', 'Other'],
+);
+
+export const reportPeriodEnum = pgEnum('report_period', [
+  'Monthly',
+  'Quarterly',
+]);
+
+/**
+ * First column to use `role` as a pgEnum (project_members.roles role[]).
+ * `user_global_roles.role` predates this and is plain `text` — aligning it is
+ * tracked as a separate cleanup PR (migration-todo on user_global_roles).
+ */
+export const roleEnum = pgEnum('role', [
+  'Administrator',
+  'BetaTester',
+  'BibleTranslationLiaison',
+  'Consultant',
+  'ConsultantManager',
+  'Controller',
+  'ExperienceOperations',
+  'FieldOperationsDirector',
+  'FieldPartner',
+  'FieldServices',
+  'FinancialAnalyst',
+  'Fundraising',
+  'Intern',
+  'LeadFinancialAnalyst',
+  'Leadership',
+  'Liaison',
+  'Marketing',
+  'Mentor',
+  'MultiplicationFinanceApprover',
+  'ProjectManager',
+  'RegionalCommunicationsCoordinator',
+  'RegionalDirector',
+  'StaffMember',
+  'Translator',
+]);
+
+/**
+ * Project — single-table inheritance over the 3 concrete subtypes
+ * (MomentumTranslation, MultiplicationTranslation, Internship). `type` is the
+ * discriminator; `own_sensitivity` is meaningful only for Internship (Translation
+ * rows ignore it and read the denormalized `sensitivity` column).
+ *
+ * `sensitivity` is denormalized: kept current via a hook that recomputes from
+ * Engagement/Language. The hook is stubbed (`migration-todo:`) until Language
+ * migrates — Translation projects read 'High' in DATABASE=postgres until then.
+ *
+ * `status` is `GENERATED ALWAYS AS (CASE step ... END) STORED` in the raw SQL
+ * migration; mirrors Gel's `Project::statusFromStep(.step)`. Drizzle marks it
+ * as generated so insert/update types omit it.
+ */
+export const projects = pgTable(
+  'projects',
+  {
+    id: text('id').$type<ID<'Project'>>().primaryKey(),
+    type: projectTypeEnum('type').$type<ProjectType>().notNull(),
+    name: text('name').notNull(),
+    step: projectStepEnum('step')
+      .$type<ProjectStep>()
+      .notNull()
+      .default('EarlyConversations'),
+    status: projectStatusEnum('status')
+      .$type<ProjectStatus>()
+      .generatedAlwaysAs(
+        // Mirror of stepToStatus() in src/components/project/dto/project-status.enum.ts
+        sql`CASE step
+          WHEN 'EarlyConversations'              THEN 'InDevelopment'::project_status
+          WHEN 'PendingConceptApproval'          THEN 'InDevelopment'::project_status
+          WHEN 'PrepForConsultantEndorsement'    THEN 'InDevelopment'::project_status
+          WHEN 'PendingConsultantEndorsement'    THEN 'InDevelopment'::project_status
+          WHEN 'PrepForFinancialEndorsement'     THEN 'InDevelopment'::project_status
+          WHEN 'PendingFinancialEndorsement'     THEN 'InDevelopment'::project_status
+          WHEN 'FinalizingProposal'              THEN 'InDevelopment'::project_status
+          WHEN 'PendingRegionalDirectorApproval' THEN 'InDevelopment'::project_status
+          WHEN 'PendingZoneDirectorApproval'     THEN 'InDevelopment'::project_status
+          WHEN 'PendingFinanceConfirmation'      THEN 'InDevelopment'::project_status
+          WHEN 'OnHoldFinanceConfirmation'       THEN 'InDevelopment'::project_status
+          WHEN 'DidNotDevelop'                   THEN 'DidNotDevelop'::project_status
+          WHEN 'Rejected'                        THEN 'DidNotDevelop'::project_status
+          WHEN 'Active'                          THEN 'Active'::project_status
+          WHEN 'ActiveChangedPlan'               THEN 'Active'::project_status
+          WHEN 'DiscussingChangeToPlan'          THEN 'Active'::project_status
+          WHEN 'PendingChangeToPlanApproval'     THEN 'Active'::project_status
+          WHEN 'PendingChangeToPlanConfirmation' THEN 'Active'::project_status
+          WHEN 'DiscussingSuspension'            THEN 'Active'::project_status
+          WHEN 'PendingSuspensionApproval'       THEN 'Active'::project_status
+          WHEN 'Suspended'                       THEN 'Active'::project_status
+          WHEN 'DiscussingReactivation'          THEN 'Active'::project_status
+          WHEN 'PendingReactivationApproval'     THEN 'Active'::project_status
+          WHEN 'DiscussingTermination'           THEN 'Active'::project_status
+          WHEN 'PendingTerminationApproval'      THEN 'Active'::project_status
+          WHEN 'FinalizingCompletion'            THEN 'Active'::project_status
+          WHEN 'Terminated'                      THEN 'Terminated'::project_status
+          WHEN 'Completed'                       THEN 'Completed'::project_status
+        END`,
+      )
+      .notNull(),
+    // migration-todo: denormalized — recompute hook fires when Engagement/Language
+    // sensitivity changes (Tier 2 Language migration wires the hook). Translation
+    // rows read 'High' until then; Internship reads own_sensitivity.
+    sensitivity: sensitivityEnum('sensitivity').notNull().default('High'),
+    // Writable only for Internship projects; Translation rows ignore it.
+    ownSensitivity: sensitivityEnum('own_sensitivity'),
+    rev79ProjectId: text('rev79_project_id'),
+    departmentId: text('department_id'),
+    departmentIdBlockId: text('department_id_block_id')
+      .$type<ID>()
+      .references(() => departmentIdBlocks.id),
+    primaryLocationId: text('primary_location_id')
+      .$type<ID<'Location'>>()
+      .references((): AnyPgColumn => locations.id),
+    marketingLocationId: text('marketing_location_id')
+      .$type<ID<'Location'>>()
+      .references((): AnyPgColumn => locations.id),
+    marketingRegionOverrideId: text('marketing_region_override_id')
+      .$type<ID<'Location'>>()
+      .references((): AnyPgColumn => locations.id),
+    fieldRegionId: text('field_region_id')
+      .$type<ID<'FieldRegion'>>()
+      .references(() => fieldRegions.id),
+    owningOrganizationId: text('owning_organization_id')
+      .$type<ID<'Organization'>>()
+      .references(() => organizations.id),
+    // migration-todo: deferred FK → directories(id); add REFERENCES when File
+    // migrates (Tier 7). Plain text until then.
+    rootDirectoryId: text('root_directory_id').$type<ID<'Directory'>>(),
+    mouStart: date('mou_start'),
+    mouEnd: date('mou_end'),
+    initialMouEnd: date('initial_mou_end'),
+    estimatedSubmission: date('estimated_submission'),
+    financialReportReceivedAt: timestamp('financial_report_received_at', {
+      withTimezone: true,
+    }),
+    financialReportPeriod: reportPeriodEnum(
+      'financial_report_period',
+    ).$type<ReportPeriod>(),
+    tags: text('tags').array().notNull().default([]),
+    presetInventory: boolean('preset_inventory').notNull().default(false),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    modifiedAt: timestamp('modified_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (t) => [
+    // Partial uniques — only enforced on live (non-soft-deleted) rows.
+    uniqueIndex('projects_name_active_unique')
+      .on(t.name)
+      .where(sql`${t.deletedAt} IS NULL`),
+    uniqueIndex('projects_department_id_active_unique')
+      .on(t.departmentId)
+      .where(sql`${t.departmentId} IS NOT NULL AND ${t.deletedAt} IS NULL`),
+    // FK b-tree indexes — PG doesn't auto-index FKs.
+    index('projects_department_id_block_id_idx').on(t.departmentIdBlockId),
+    index('projects_primary_location_id_idx').on(t.primaryLocationId),
+    index('projects_marketing_location_id_idx').on(t.marketingLocationId),
+    index('projects_marketing_region_override_id_idx').on(
+      t.marketingRegionOverrideId,
+    ),
+    index('projects_field_region_id_idx').on(t.fieldRegionId),
+    index('projects_owning_organization_id_idx').on(t.owningOrganizationId),
+    // Deferred FK column — indexed now so we avoid CREATE INDEX CONCURRENTLY
+    // later when File adds the REFERENCES clause.
+    index('projects_root_directory_id_idx').on(t.rootDirectoryId),
+    // Filter-hot columns.
+    index('projects_type_idx').on(t.type),
+    index('projects_step_idx').on(t.step),
+    index('projects_status_idx').on(t.status),
+  ],
+);
+
+/**
+ * ProjectMember — composite-unique on (project_id, user_id) for live rows.
+ * `roles role[]` matches Gel's set semantics; GIN index supports the
+ * `roles && ARRAY[...]::role[]` intersectsProp filter.
+ */
+export const projectMembers = pgTable(
+  'project_members',
+  {
+    id: text('id').$type<ID<'ProjectMember'>>().primaryKey(),
+    projectId: text('project_id')
+      .$type<ID<'Project'>>()
+      .notNull()
+      .references(() => projects.id, { onDelete: 'cascade' }),
+    userId: text('user_id')
+      .$type<ID<'User'>>()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    roles: roleEnum('roles')
+      .array()
+      .$type<readonly Role[]>()
+      .notNull()
+      .default([]),
+    inactiveAt: timestamp('inactive_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (t) => [
+    uniqueIndex('project_members_project_user_active_unique')
+      .on(t.projectId, t.userId)
+      .where(sql`${t.deletedAt} IS NULL`),
+    index('project_members_user_id_idx').on(t.userId),
+    // GIN index for `roles && ARRAY[...]::role[]` (intersectsProp filter).
+    index('project_members_roles_gin').using('gin', t.roles),
+  ],
+);
+
+/**
+ * ProjectWorkflowEvent — append-only event stream. A trigger on INSERT keeps
+ * `projects.step` in sync (raw SQL migration). App code writes events, never
+ * touches `projects.step` directly.
+ */
+export const projectWorkflowEvents = pgTable(
+  'project_workflow_events',
+  {
+    id: text('id').$type<ID<'ProjectWorkflowEvent'>>().primaryKey(),
+    projectId: text('project_id')
+      .$type<ID<'Project'>>()
+      .notNull()
+      .references(() => projects.id, { onDelete: 'cascade' }),
+    who: text('who')
+      .$type<ID<'User'>>()
+      .notNull()
+      .references(() => users.id),
+    // Nullable for synthetic/initial events; populated for normal transitions.
+    fromStep: projectStepEnum('from_step').$type<ProjectStep>(),
+    toStep: projectStepEnum('to_step').$type<ProjectStep>().notNull(),
+    // Nullable for dynamic transitions (e.g. BackToActive) where there's no
+    // single transition key — they resolve at runtime from history.
+    transitionKey: text('transition_key'),
+    notes: jsonb('notes'), // RichText
+    at: timestamp('at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    // Compound index — every list query is "events for project X, newest first".
+    index('project_workflow_events_project_id_at_idx').on(
+      t.projectId,
+      t.at.desc(),
+    ),
+  ],
+);
+
+/**
+ * ProjectChangeRequest — the only concrete subtype of the abstract Changeset
+ * concept; no separate `changesets` base table. Fields that the Neo4j/Gel
+ * version inherits from Changeset (status, applied, editable, types, summary)
+ * live on this table directly.
+ */
+export const projectChangeRequests = pgTable(
+  'project_change_requests',
+  {
+    id: text('id').$type<ID<'ProjectChangeRequest'>>().primaryKey(),
+    projectId: text('project_id')
+      .$type<ID<'Project'>>()
+      .notNull()
+      .references(() => projects.id, { onDelete: 'cascade' }),
+    types: projectChangeRequestTypeEnum('types')
+      .array()
+      .$type<readonly ProjectChangeRequestType[]>()
+      .notNull()
+      .default([]),
+    summary: text('summary'),
+    status: projectChangeRequestStatusEnum('status')
+      .$type<ProjectChangeRequestStatus>()
+      .notNull()
+      .default('Pending'),
+    applied: boolean('applied').notNull().default(false),
+    editable: boolean('editable').notNull().default(true),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (t) => [index('project_change_requests_project_id_idx').on(t.projectId)],
+);
+
+/**
+ * Project overrides — JSONB side table for changeset-staged values. Storage is
+ * JSONB; shape is typed at the app layer as `ProjectChangeset` (enumerated
+ * keys: mouStart, mouEnd, primaryLocationId, fieldRegionId, marketingLocationId,
+ * marketingRegionOverrideId, estimatedSubmission, presetInventory, tags).
+ * Apply: write keys onto `projects` and DELETE the row. Reject: DELETE only.
+ */
+export const projectOverrides = pgTable(
+  'project_overrides',
+  {
+    projectId: text('project_id')
+      .$type<ID<'Project'>>()
+      .notNull()
+      .references(() => projects.id, { onDelete: 'cascade' }),
+    projectChangeRequestId: text('project_change_request_id')
+      .$type<ID<'ProjectChangeRequest'>>()
+      .notNull()
+      .references(() => projectChangeRequests.id, { onDelete: 'cascade' }),
+    changes: jsonb('changes')
+      .notNull()
+      .default(sql`'{}'::jsonb`),
+  },
+  (t) => [
+    primaryKey({ columns: [t.projectId, t.projectChangeRequestId] }),
+    // Right-side index — every PCR-finalize path reads "overrides for PCR X".
+    index('project_overrides_project_change_request_id_idx').on(
+      t.projectChangeRequestId,
+    ),
+  ],
+);
+
+export const projectsRelations = relations(projects, ({ one, many }) => ({
+  departmentIdBlock: one(departmentIdBlocks, {
+    fields: [projects.departmentIdBlockId],
+    references: [departmentIdBlocks.id],
+  }),
+  primaryLocation: one(locations, {
+    fields: [projects.primaryLocationId],
+    references: [locations.id],
+    relationName: 'projectPrimaryLocation',
+  }),
+  marketingLocation: one(locations, {
+    fields: [projects.marketingLocationId],
+    references: [locations.id],
+    relationName: 'projectMarketingLocation',
+  }),
+  marketingRegionOverride: one(locations, {
+    fields: [projects.marketingRegionOverrideId],
+    references: [locations.id],
+    relationName: 'projectMarketingRegionOverride',
+  }),
+  fieldRegion: one(fieldRegions, {
+    fields: [projects.fieldRegionId],
+    references: [fieldRegions.id],
+  }),
+  owningOrganization: one(organizations, {
+    fields: [projects.owningOrganizationId],
+    references: [organizations.id],
+  }),
+  members: many(projectMembers),
+  workflowEvents: many(projectWorkflowEvents),
+  changeRequests: many(projectChangeRequests),
+  overrides: many(projectOverrides),
+}));
+
+export const projectMembersRelations = relations(projectMembers, ({ one }) => ({
+  project: one(projects, {
+    fields: [projectMembers.projectId],
+    references: [projects.id],
+  }),
+  user: one(users, {
+    fields: [projectMembers.userId],
+    references: [users.id],
+  }),
+}));
+
+export const projectWorkflowEventsRelations = relations(
+  projectWorkflowEvents,
+  ({ one }) => ({
+    project: one(projects, {
+      fields: [projectWorkflowEvents.projectId],
+      references: [projects.id],
+    }),
+    who: one(users, {
+      fields: [projectWorkflowEvents.who],
+      references: [users.id],
+    }),
+  }),
+);
+
+export const projectChangeRequestsRelations = relations(
+  projectChangeRequests,
+  ({ one, many }) => ({
+    project: one(projects, {
+      fields: [projectChangeRequests.projectId],
+      references: [projects.id],
+    }),
+    overrides: many(projectOverrides),
+  }),
+);
+
+export const projectOverridesRelations = relations(
+  projectOverrides,
+  ({ one }) => ({
+    project: one(projects, {
+      fields: [projectOverrides.projectId],
+      references: [projects.id],
+    }),
+    projectChangeRequest: one(projectChangeRequests, {
+      fields: [projectOverrides.projectChangeRequestId],
+      references: [projectChangeRequests.id],
     }),
   }),
 );

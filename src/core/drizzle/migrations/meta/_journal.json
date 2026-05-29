@@ -43,6 +43,13 @@
       "when": 1747526400000,
       "tag": "0008_add_partners",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1747612800000,
+      "tag": "0009_add_projects",
+      "breakpoints": true
     }
   ]
 }
