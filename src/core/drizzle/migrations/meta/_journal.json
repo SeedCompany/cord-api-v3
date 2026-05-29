@@ -50,6 +50,13 @@
       "when": 1747267200000,
       "tag": "0006_add_tools",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1747353600000,
+      "tag": "0007_add_ethnologue_languages",
+      "breakpoints": true
     }
   ]
 }
