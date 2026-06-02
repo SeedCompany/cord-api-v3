@@ -14,6 +14,7 @@ import { BackfillMissingDirectorsMigration } from './migrations/backfill-missing
 import { ProjectMemberMutationSubscriptionsResolver } from './project-member-mutation-subscriptions.resolver';
 import { ProjectMemberUpdatedResolver } from './project-member-updated.resolver';
 import { ProjectMemberChannels } from './project-member.channels';
+import { ProjectMemberDrizzleRepository } from './project-member.drizzle.repository';
 import { ProjectMemberGelRepository } from './project-member.gel.repository';
 import { ProjectMemberLoader } from './project-member.loader';
 import { ProjectMemberRepository } from './project-member.repository';
@@ -36,6 +37,9 @@ import { ProjectMemberService } from './project-member.service';
     ProjectMemberChannels,
     splitDb(ProjectMemberRepository, {
       gel: ProjectMemberGelRepository,
+      // migration-todo: `as any` removed at Phase 7 cutover when splitDb
+      // disappears with the Neo4j path.
+      postgres: ProjectMemberDrizzleRepository as any,
     }),
     ProjectMemberLoader,
     MembershipByProjectAndUserLoader,

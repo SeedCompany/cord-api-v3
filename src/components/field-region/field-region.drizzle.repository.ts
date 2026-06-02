@@ -85,14 +85,9 @@ export class FieldRegionDrizzleRepository extends DrizzleDtoRepository<
 
     conditions.push(...fieldRegionFilterClauses(this.db, input.filter));
 
-    const sortColumns = {
-      name: fieldRegions.name,
-      createdAt: fieldRegions.createdAt,
-    } satisfies SortMap<keyof FieldRegion>;
-
     const { rows, total, hasMore } = await this.paginatedSelect({
       predicate: and(...conditions),
-      orderBy: resolveOrderBy(input, sortColumns, fieldRegions.name),
+      orderBy: resolveOrderBy(input, fieldRegionSortColumns, fieldRegions.name),
       page: input.page,
       count: input.count,
     });
@@ -128,6 +123,15 @@ export class FieldRegionDrizzleRepository extends DrizzleDtoRepository<
     };
   }
 }
+
+/**
+ * Sortable columns on `field_regions`. Exported for cross-domain sort
+ * delegation (Project's `fieldRegion.*` sort joins via this map).
+ */
+export const fieldRegionSortColumns = {
+  name: fieldRegions.name,
+  createdAt: fieldRegions.createdAt,
+} satisfies SortMap<keyof FieldRegion>;
 
 /**
  * Build the column-level WHERE clauses for a `FieldRegionFilters` input against
