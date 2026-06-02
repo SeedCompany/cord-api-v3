@@ -6,6 +6,7 @@ import { ProjectWorkflowNotificationHandler } from './handlers/project-workflow-
 import { StepHistoryToWorkflowEventsMigration } from './migrations/step-history-to-workflow-events.migration';
 import { ProjectWorkflowEventLoader } from './project-workflow-event.loader';
 import { ProjectWorkflowChannels } from './project-workflow.channels';
+import { ProjectWorkflowDrizzleRepository } from './project-workflow.drizzle.repository';
 import { ProjectWorkflowFlowchart } from './project-workflow.flowchart';
 import { ProjectWorkflowEventGranter } from './project-workflow.granter';
 import { ProjectWorkflowNeo4jRepository } from './project-workflow.neo4j.repository';
@@ -31,6 +32,9 @@ import { ProjectWorkflowMutationSubscriptionsResolver } from './resolvers/projec
     ProjectWorkflowEventGranter,
     splitDb(ProjectWorkflowRepository, {
       neo4j: ProjectWorkflowNeo4jRepository,
+      // migration-todo: `as any` removed at Phase 7 cutover when splitDb
+      // disappears with the Neo4j path.
+      postgres: ProjectWorkflowDrizzleRepository as any,
     }),
     ProjectWorkflowFlowchart,
     ProjectWorkflowNotificationHandler,
