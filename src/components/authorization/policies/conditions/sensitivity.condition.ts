@@ -1,9 +1,15 @@
 import { type NonEmptyArray } from '@seedcompany/common';
 import { type Query } from 'cypher-query-builder';
+import { type SQL, sql } from 'drizzle-orm';
 import { inspect, type InspectOptionsStylized } from 'util';
-import { type ResourceShape, Sensitivity } from '~/common';
+import {
+  type EnhancedResource,
+  type ResourceShape,
+  Sensitivity,
+} from '~/common';
 import { matchProjectSens, rankSens } from '~/core/neo4j/query';
 import {
+  type AsDrizzleParams,
   type AsEdgeQLParams,
   type Condition,
   fqnRelativeTo,
@@ -65,6 +71,15 @@ export class SensitivityCondition<
     const ranked = sensitivityRank[this.access];
     const param = query.params.addParam(ranked, 'requiredSens');
     return `${CQL_VAR} <= ${String(param)}`;
+  }
+
+  asDrizzleCondition({ resource }: AsDrizzleParams<TResourceStatic>) {
+    // PG's sensitivity enum is declared in `Low < Medium < High` order, so
+    // `node.sensitivity <= 'access'` is a single-column compare. For Project
+    // subtypes the column lives on the row directly (denormalized). For
+    // Project-scoped children the column is on the parent project; use a
+    // correlated subquery.
+    return sensitivityRefForResource(resource, this.access);
   }
 
   setupEdgeQLContext({
@@ -139,3 +154,33 @@ export const withEffectiveSensitivity = <T extends object>(
     value: sensitivity,
     enumerable: false,
   }) as T & { [EffectiveSensitivity]: Sensitivity };
+
+/**
+ * Build the `sensitivity <= access` SQL fragment for `resource`. Project rows
+ * carry the denormalized column directly; project-scoped child resources read
+ * it via a correlated subquery against `projects`. Add cases here as each
+ * domain ports to Postgres.
+ */
+const sensitivityRefForResource = (
+  resource: EnhancedResource<any>,
+  access: Sensitivity,
+): SQL => {
+  const accessLit = sql.raw(`'${access}'::"sensitivity"`);
+  switch (resource.name) {
+    case 'Project':
+    case 'TranslationProject':
+    case 'MomentumTranslationProject':
+    case 'MultiplicationTranslationProject':
+    case 'InternshipProject':
+      return sql`"projects"."sensitivity" <= ${accessLit}`;
+    case 'ProjectMember':
+      return sql`(
+        select "p"."sensitivity" from "projects" "p"
+        where "p"."id" = "project_members"."project_id"
+      ) <= ${accessLit}`;
+    default:
+      throw new Error(
+        `SensitivityCondition.asDrizzleCondition: resource ${resource.name} not configured for Drizzle yet; add a case when it migrates.`,
+      );
+  }
+};

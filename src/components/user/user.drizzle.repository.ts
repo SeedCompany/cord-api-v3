@@ -264,6 +264,16 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
     throw new NotImplementedException();
   }
 
+  /**
+   * Public alias of `toDto` for cross-domain hydration. Sibling Drizzle repos
+   * (e.g. ProjectMember) call this to assemble nested User fields without
+   * widening visibility on the abstract base. Caller supplies a row already
+   * loaded with `globalRoles`.
+   */
+  mapRowToDto(row: UserRow): UnsecuredDto<User> {
+    return this.toDto(row);
+  }
+
   protected toDto(row: UserRow): UnsecuredDto<User> {
     return {
       id: row.id,

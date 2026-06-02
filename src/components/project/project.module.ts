@@ -24,6 +24,7 @@ import { ProjectMutationSubscriptionsResolver } from './project-mutation-subscri
 import { ProjectUpdateLinksResolver } from './project-update-links.resolver';
 import { ProjectUpdatedResolver } from './project-updated.resolver';
 import { ProjectChannels } from './project.channels';
+import { ProjectDrizzleRepository } from './project.drizzle.repository';
 import { ConcreteRepos, ProjectGelRepository } from './project.gel.repository';
 import { ProjectLoader } from './project.loader';
 import { ProjectRepository } from './project.repository';
@@ -63,7 +64,12 @@ import { ProjectWorkflowModule } from './workflow/project-workflow.module';
     ...ProjectEngagementIdResolvers,
     ProjectChannels,
     ProjectService,
-    splitDb(ProjectRepository, { gel: ProjectGelRepository }),
+    splitDb(ProjectRepository, {
+      gel: ProjectGelRepository,
+      // migration-todo: `as any` removed at Phase 7 cutover when splitDb
+      // disappears with the Neo4j path (see migration_postgres.md splitDb cast).
+      postgres: ProjectDrizzleRepository as any,
+    }),
     ...Object.values(ConcreteRepos),
     ProjectLoader,
     ...Object.values(handlers),
