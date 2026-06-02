@@ -220,13 +220,6 @@ export class PartnerDrizzleRepository extends DrizzleDtoRepository<
     // Partner` (the GraphQL enum widens beyond the DTO's declared fields).
     const sort = input.sort as string;
 
-    const sortColumns = {
-      active: partners.active,
-      createdAt: partners.createdAt,
-      modifiedAt: partners.updatedAt,
-      startDate: partners.startDate,
-    } satisfies Partial<SortMap<keyof Partner>>;
-
     // Cross-domain sort: ORDER BY a column on `organizations`. Hand-rolled
     // INNER JOIN (FK is NOT NULL) — when a second domain needs this same
     // pattern, extract a shared `paginatedSelectWithJoin` helper (mirror of
@@ -282,7 +275,7 @@ export class PartnerDrizzleRepository extends DrizzleDtoRepository<
     } else {
       const page = await this.paginatedSelect({
         predicate,
-        orderBy: resolveOrderBy(input, sortColumns, partners.createdAt),
+        orderBy: resolveOrderBy(input, partnerSortColumns, partners.createdAt),
         page: input.page,
         count: input.count,
       });
@@ -533,6 +526,18 @@ export class PartnerDrizzleRepository extends DrizzleDtoRepository<
  * `partners` table. Reusable from sub-filters in other domains (e.g. Project's
  * `partnership` filter delegates through Partnership to here).
  */
+/**
+ * Sortable columns on `partners`. Exported for cross-domain sort delegation
+ * (Partnership's `partner.*` sort joins via this map). Same pattern as
+ * `organizationSortColumns` introduced earlier in this same domain.
+ */
+export const partnerSortColumns = {
+  active: partners.active,
+  createdAt: partners.createdAt,
+  modifiedAt: partners.updatedAt,
+  startDate: partners.startDate,
+} satisfies SortMap<keyof Partner>;
+
 export const partnerFilterClauses = (
   db: DrizzleDb,
   filter: PartnerFilters | undefined,

@@ -19,6 +19,7 @@ import { type OrganizationReach } from '../../../components/organization/dto/org
 import { type OrganizationType } from '../../../components/organization/dto/organization-type.dto';
 import { type PartnerType } from '../../../components/partner/dto/partner-type.enum';
 import { type FinancialReportingType } from '../../../components/partnership/dto/financial-reporting-type.enum';
+import { type PartnershipAgreementStatus } from '../../../components/partnership/dto/partnership-agreement-status.enum';
 import { type ReportPeriod } from '../../../components/periodic-report/dto/report-period.enum';
 import { type ProjectStatus } from '../../../components/project/dto/project-status.enum';
 import { type ProjectStep } from '../../../components/project/dto/project-step.enum';
@@ -1077,3 +1078,97 @@ export const projectWorkflowEventsRelations = relations(
     }),
   }),
 );
+
+// ─── Partnership ───────────────────────────────────────────────────────────
+
+export const partnershipAgreementStatusEnum = pgEnum(
+  'partnership_agreement_status',
+  ['NotAttached', 'AwaitingSignature', 'Signed'],
+);
+
+/**
+ * Partnership — links a Project to a Partner with agreement state, MOU dates,
+ * partner types (a subset of the partner's `approved_programs`-style types),
+ * a financial reporting type, and a `primary` flag (one primary per project).
+ *
+ * `mou_id` / `agreement_id` are deferred FKs to `files` (Tier 7). Plain text
+ * here; reference added when File migrates. Pattern matches every other
+ * deferred-file FK in the schema.
+ *
+ * PCR/Changeset is excluded from the migration — no overrides table, the
+ * `mou_*_override` columns live on the row directly and the date coalesce
+ * (override → parent project) happens in `toDto`.
+ */
+export const partnerships = pgTable(
+  'partnerships',
+  {
+    id: text('id').$type<ID<'Partnership'>>().primaryKey(),
+    projectId: text('project_id')
+      .$type<ID<'Project'>>()
+      .notNull()
+      .references(() => projects.id, { onDelete: 'cascade' }),
+    partnerId: text('partner_id')
+      .$type<ID<'Partner'>>()
+      .notNull()
+      .references(() => partners.id, { onDelete: 'cascade' }),
+    agreementStatus: partnershipAgreementStatusEnum('agreement_status')
+      .$type<PartnershipAgreementStatus>()
+      .notNull()
+      .default('NotAttached'),
+    mouStatus: partnershipAgreementStatusEnum('mou_status')
+      .$type<PartnershipAgreementStatus>()
+      .notNull()
+      .default('NotAttached'),
+    // migration-todo: deferred FK → files(id); add REFERENCES when File
+    // migrates (Tier 7). Plain text until then.
+    mouId: text('mou_id').$type<ID<'File'>>(),
+    agreementId: text('agreement_id').$type<ID<'File'>>(),
+    mouStartOverride: date('mou_start_override'),
+    mouEndOverride: date('mou_end_override'),
+    types: partnerTypeEnum('types')
+      .array()
+      .$type<readonly PartnerType[]>()
+      .notNull()
+      .default([]),
+    financialReportingType: financialReportingTypeEnum(
+      'financial_reporting_type',
+    ).$type<FinancialReportingType>(),
+    primary: boolean('primary').notNull().default(false),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (t) => [
+    // One partnership per (project, partner) pair on live rows. Mirror of the
+    // Neo4j repo's `verifyRelationshipEligibility` duplicate check; backstops
+    // it at the DB level.
+    uniqueIndex('partnerships_project_partner_active_unique')
+      .on(t.projectId, t.partnerId)
+      .where(sql`${t.deletedAt} IS NULL`),
+    // At most one primary partnership per project on live rows. Drives
+    // `removePrimaryFromOtherPartnerships` invariant.
+    uniqueIndex('partnerships_project_primary_active_unique')
+      .on(t.projectId)
+      .where(sql`${t.primary} = true AND ${t.deletedAt} IS NULL`),
+    index('partnerships_partner_id_idx').on(t.partnerId),
+    // Deferred-FK columns indexed now to avoid CREATE INDEX CONCURRENTLY when
+    // File migrates and adds the REFERENCES clause.
+    index('partnerships_mou_id_idx').on(t.mouId),
+    index('partnerships_agreement_id_idx').on(t.agreementId),
+  ],
+);
+
+export const partnershipsRelations = relations(partnerships, ({ one }) => ({
+  project: one(projects, {
+    fields: [partnerships.projectId],
+    references: [projects.id],
+  }),
+  partner: one(partners, {
+    fields: [partnerships.partnerId],
+    references: [partners.id],
+  }),
+}));
