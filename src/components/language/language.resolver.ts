@@ -42,7 +42,6 @@ import {
   LanguageDeleted,
   LanguageListInput,
   LanguageListOutput,
-  languageName,
   LanguageUpdated,
   SecuredFirstScripture,
   UpdateLanguage,
@@ -77,13 +76,8 @@ export class LanguageResolver {
   }
 
   @ResolveField(() => String, { nullable: true })
-  publicName(@Parent() language: Language): string | undefined {
-    return languageName(language);
-  }
-
-  @ResolveField(() => String, { nullable: true })
   avatarLetters(@Parent() language: Language): string | undefined {
-    const name = languageName(language);
+    const name = language.displayName.value;
     return name ? firstLettersOfWords(name) : undefined;
   }
 

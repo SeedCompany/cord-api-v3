@@ -65,6 +65,13 @@ function DBLUploadTemplate(props: Props) {
             Digital Bible Library (DBL).
           </Mjml.Text>
           <Mjml.Text>
+            To see what is currently in the DBL for this project,{' '}
+            <a href="https://seedcompany.domo.com/page/1075686824/kpis/details/947814451">
+              click here
+            </a>
+            . You can filter these entries by FPM and/or Eth Code.
+          </Mjml.Text>
+          <Mjml.Text>
             To move forward, we need a few details from you. Please have your
             field partner complete this short form to provide the necessary
             information indicated below:
@@ -156,7 +163,7 @@ function DBLUploadTemplate(props: Props) {
         <Mjml.Column>
           <Mjml.Text>
             🔗{' '}
-            <a href={config.formUrl} style={{ backgroundColor: 'yellow' }}>
+            <a href={config.formUrl}>
               Seed Company DBL Publication Request Form
             </a>
           </Mjml.Text>

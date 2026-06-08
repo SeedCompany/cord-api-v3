@@ -89,22 +89,38 @@ describe('FundingAccount e2e', () => {
   });
 
   // Delete FundingAccount
-  it.skip('delete funding account', async () => {
+  it('delete funding account', async () => {
     const st = await runAsAdmin(app, createFundingAccount);
-    const result = await app.graphql.mutate(
-      graphql(`
-        mutation deleteFundingAccount($id: ID!) {
-          deleteFundingAccount(id: $id) {
-            __typename
+    await runAsAdmin(app, async () => {
+      const result = await app.graphql.mutate(
+        graphql(`
+          mutation deleteFundingAccount($id: ID!) {
+            deleteFundingAccount(id: $id) {
+              __typename
+            }
           }
-        }
-      `),
-      {
-        id: st.id,
-      },
-    );
-    const actual = result.deleteFundingAccount;
-    expect(actual).toBeTruthy();
+        `),
+        {
+          id: st.id,
+        },
+      );
+      const actual = result.deleteFundingAccount;
+      expect(actual).toBeTruthy();
+
+      // The deleted account is no longer readable
+      await app.graphql
+        .query(
+          graphql(`
+            query st($id: ID!) {
+              fundingAccount(id: $id) {
+                id
+              }
+            }
+          `),
+          { id: st.id },
+        )
+        .expectError();
+    });
   });
 
   // List FundingAccounts

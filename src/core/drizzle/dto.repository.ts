@@ -1,7 +1,24 @@
 import { and, asc, count, eq, inArray, isNull, type SQL } from 'drizzle-orm';
 import { type AnyPgColumn, type PgTable } from 'drizzle-orm/pg-core';
-import { type ID, NotFoundException, type UnsecuredDto } from '~/common';
+import {
+  EnhancedResource,
+  type ID,
+  NotFoundException,
+  type ResourceShape,
+  type UnsecuredDto,
+} from '~/common';
+import { getChanges } from '../database/changes';
 import { type DrizzleService } from './drizzle.service';
+
+/**
+ * The shape `list()` returns when policy denies read access — caller bails
+ * out before touching the DB. Use with `PolicyExecutor.applyReadFilter()`.
+ */
+export const EMPTY_PAGE = {
+  items: [] as never[],
+  total: 0,
+  hasMore: false,
+} as const;
 
 /**
  * Common machinery for CRUD repositories on a single Drizzle table.
@@ -22,10 +39,26 @@ export abstract class DrizzleDtoRepository<
   },
   TDto extends { id: ID },
 > {
+  protected readonly resource: EnhancedResource<ResourceShape<TDto>>;
+
+  /**
+   * Diff an existing DTO against an `Update*` input and return only fields
+   * whose values actually changed. Mirrors the helper on the Neo4j and Gel
+   * bases — services call `repo.getActualChanges(existing, input)` regardless
+   * of which engine `splitDb` resolves to.
+   */
+  readonly getActualChanges!: ReturnType<
+    typeof getChanges<ResourceShape<TDto>>
+  >;
+
   constructor(
     private readonly drizzle: DrizzleService,
     protected readonly table: TTable,
-  ) {}
+    dto: ResourceShape<TDto>,
+  ) {
+    this.resource = EnhancedResource.of(dto);
+    this.getActualChanges = getChanges(dto);
+  }
 
   /**
    * Drizzle client. A getter (not a captured value) so AsyncLocalStorage-bound
@@ -57,6 +90,35 @@ export abstract class DrizzleDtoRepository<
       .from(this.table as PgTable)
       .where(and(...conditions));
     return rows.map((row) => this.toDto(row));
+  }
+
+  /**
+   * Pre-flight check that no active row has the given value in `columnName`.
+   * Mirrors `DtoRepository.isUnique()` from the Neo4j base so services can
+   * call `this.repo.isUnique(name)` without caring about the engine.
+   *
+   * Excludes soft-deleted rows to match Neo4j behavior (soft-deleted labels
+   * are prefixed with `Deleted_`, so they don't collide on the lookup). If a
+   * soft-deleted row still owns the name at the DB level, the unique-violation
+   * catch in `create()` converts the conflict to a `DuplicateException`.
+   */
+  async isUnique(value: string, columnName = 'name'): Promise<boolean> {
+    const column = (this.table as Record<string, unknown>)[columnName] as
+      | AnyPgColumn
+      | undefined;
+    if (!column) {
+      throw new Error(`isUnique: column "${columnName}" not found on table`);
+    }
+    const conditions: SQL[] = [eq(column, value)];
+    if (this.table.deletedAt) {
+      conditions.push(isNull(this.table.deletedAt));
+    }
+    const rows = await this.db
+      .select({ id: this.table.id })
+      .from(this.table as PgTable)
+      .where(and(...conditions))
+      .limit(1);
+    return rows.length === 0;
   }
 
   /**
