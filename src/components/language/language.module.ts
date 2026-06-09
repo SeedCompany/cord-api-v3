@@ -5,6 +5,7 @@ import { EngagementModule } from '../engagement/engagement.module';
 import { LocationModule } from '../location/location.module';
 import { ProjectModule } from '../project/project.module';
 import { EthnologueLanguageService } from './ethnologue-language';
+import { EthnologueLanguageDrizzleRepository } from './ethnologue-language/ethnologue-language.drizzle.repository';
 import { EthnologueLanguageGelRepository } from './ethnologue-language/ethnologue-language.gel.repository';
 import { EthnologueLanguageRepository } from './ethnologue-language/ethnologue-language.repository';
 import { InternalFirstScriptureResolver } from './internal-first-scripture.resolver';
@@ -39,6 +40,8 @@ import { RegistryOfDialectToRegistryOfLanguageVarietiesMigration } from './migra
     EthnologueLanguageService,
     splitDb(EthnologueLanguageRepository, {
       gel: EthnologueLanguageGelRepository,
+      // migration-todo: remove `as any` once splitDb types accept drizzle repos directly
+      postgres: EthnologueLanguageDrizzleRepository as any,
     }),
     splitDb(LanguageRepository, {
       gel: LanguageGelRepository,
