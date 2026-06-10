@@ -45,8 +45,9 @@ export class ProgressReport extends Interfaces {
   @Field(() => LanguageEngagement)
   declare readonly parent: BaseNode;
 
-  /** @deprecated */
   declare readonly reportFile: DefinedFile;
+
+  declare readonly narrativeFile: DefinedFile;
 
   @Field(() => SecuredStatus)
   @Calculated()
