@@ -41,5 +41,16 @@ import {
     ])
     .children((c) => c.posts.edit),
   r.Language.specifically((p) => p.displayNamePronunciation.edit),
+  r.InternshipEngagement.specifically((p) => [
+    p.marketable.edit,
+    p.webId.edit,
+    p.description.edit,
+  ]),
+  r.User.specifically((p) => [
+    p.photo.edit,
+    p.displayFirstName.edit,
+    p.displayLastName.edit,
+    p.gender.edit,
+  ]),
 ])
 export class MarketingPolicy {}
