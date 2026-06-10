@@ -143,6 +143,11 @@ class Project extends Interfaces {
   readonly marketingLocation: Secured<LinkTo<'Location'> | null>;
 
   readonly marketingRegionOverride: Secured<LinkTo<'Location'> | null>;
+
+  // Effective marketing region: marketingRegionOverride if set, else
+  // marketingLocation.defaultMarketingRegion. Derived in the repository.
+  @Calculated()
+  readonly marketingRegion: Secured<LinkTo<'Location'> | null>;
   readonly fieldRegion: Secured<LinkTo<'FieldRegion'> | null>;
 
   readonly owningOrganization: Secured<LinkTo<'Organization'> | null>;
