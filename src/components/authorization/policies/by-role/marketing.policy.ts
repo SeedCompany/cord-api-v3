@@ -1,4 +1,5 @@
 import {
+  isIntern,
   member,
   Policy,
   Role,
@@ -46,7 +47,7 @@ import {
     p.webId.edit,
     p.description.edit,
   ]),
-  r.User.specifically((p) => [
+  r.User.when(isIntern).specifically((p) => [
     p.photo.edit,
     p.displayFirstName.edit,
     p.displayLastName.edit,
