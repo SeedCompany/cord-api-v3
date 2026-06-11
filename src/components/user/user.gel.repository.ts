@@ -21,6 +21,9 @@ const hydrateSystemAgent = e.shape(e.SystemAgent, (agent) => ({
   __typename: e.str('SystemAgent'),
 }));
 
+// migration-todo: hydrate `isIntern` on the User shape (mirror of the Neo4j
+// hydrate) so MarketingPolicy's `isIntern` condition resolves in-memory.
+// Expression: exists .<intern[is default::InternshipEngagement].
 @Injectable()
 export class UserGelRepository
   extends RepoFor(User, {

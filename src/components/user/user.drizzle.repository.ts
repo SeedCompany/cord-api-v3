@@ -59,6 +59,9 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
     super(db, users, User);
   }
 
+  // migration-todo: populate `isIntern` on toDto() (subquery against the
+  // internship_engagements table where intern_id = users.id), and add an
+  // `asDrizzleCondition` to IsInternCondition for the DB-level filter.
   override async readMany(
     ids: readonly ID[],
   ): Promise<Array<UnsecuredDto<User>>> {
