@@ -19,6 +19,7 @@ import {
   createProperty,
   deactivateProperty,
   defineSorters,
+  exists,
   filter,
   FullTextIndex,
   matchProps,
@@ -185,6 +186,7 @@ export class UserRepository extends DtoRepository(User) {
             photo: { id: 'props.photo' },
             roles: 'roles',
             pinned,
+            isIntern,
           }).as('dto'),
         );
   }
@@ -475,6 +477,12 @@ export const userSorters = defineSorters(User, {
       ])
       .return<SortCol>(multiPropsAsSortString('firstName', 'lastName')),
 });
+
+const isIntern = exists([
+  node('node'),
+  relation('in', '', 'intern', ACTIVE),
+  node('', 'InternshipEngagement'),
+]);
 
 const NameIndex = FullTextIndex({
   indexName: 'UserName',

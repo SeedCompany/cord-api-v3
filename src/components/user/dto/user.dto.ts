@@ -93,6 +93,10 @@ export class User extends Interfaces {
   gender: SecuredGenderNullable;
 
   readonly photo: Secured<LinkTo<'File'> | null>;
+
+  // Used by MarketingPolicy via the `isIntern` policy condition.
+  // True iff this user is the `intern` on at least one InternshipEngagement.
+  readonly isIntern?: boolean;
 }
 
 @ObjectType({
