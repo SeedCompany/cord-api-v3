@@ -105,7 +105,7 @@ export class FieldZoneService {
     this.privileges.for(FieldZone, object).verifyCan('delete');
 
     try {
-      await this.repo.deleteNode(object);
+      await this.repo.delete(id);
     } catch (exception) {
       throw new ServerException('Failed to delete', exception);
     }

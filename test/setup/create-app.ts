@@ -9,6 +9,7 @@ import { LogLevel } from '~/core/logger';
 import { LevelMatcher } from '~/core/logger/level-matcher';
 import { AppModule } from '../../src/app.module';
 import { ephemeralGel } from './gel-setup';
+import { ephemeralPg } from './pg-setup';
 
 export type TestApp = Pick<NestHttpApplication, 'get'>;
 
@@ -29,7 +30,12 @@ export const createApp = async ({
   providers?: Provider[];
   overrides?: (builder: TestingModuleBuilder) => TestingModuleBuilder;
 } & Pick<ModuleMetadata, 'imports' | 'providers'> = {}): Promise<TestApp> => {
-  const db = await ephemeralGel();
+  const gel = await ephemeralGel();
+  const pg = await ephemeralPg();
+  const cleanupDb = async () => {
+    await gel?.cleanup();
+    await pg?.cleanup();
+  };
 
   let app;
   try {
@@ -37,13 +43,16 @@ export const createApp = async ({
       imports: [AppModule, ...(imports ?? [])],
       providers: [
         ...(config ? [ConfigService.providePart(config)] : []),
+        ...(pg
+          ? [ConfigService.providePart({ postgres: { url: pg.url } })]
+          : []),
         ...(providers ?? []),
       ],
     })
       .overrideProvider(LevelMatcher)
       .useValue(new LevelMatcher([], LogLevel.ERROR))
       .overrideProvider('GEL_CONNECT')
-      .useValue(db?.options);
+      .useValue(gel?.options);
     if (overrides) {
       builder = overrides?.(builder);
     }
@@ -53,12 +62,12 @@ export const createApp = async ({
       new HttpAdapter(),
     );
   } catch (e) {
-    await db?.cleanup();
+    await cleanupDb();
     throw e;
   }
 
   andCall(app, 'close', async () => {
-    await db?.cleanup();
+    await cleanupDb();
   });
 
   try {

@@ -328,6 +328,10 @@ describe('Project e2e', () => {
       .expectError(errors.notFound());
   });
 
+  // migration-todo: the expected ordering here is Neo4j's space/punctuation-
+  // insensitive sort. Decision (2026-06-12): PG keeps its plain collation —
+  // update these expectations to match when this spec joins the postgres CI
+  // subset (Phase 5) or at Phase 7 cutover, whichever comes first.
   it('List of projects sorted by name to be alphabetical', async () => {
     const unsorted = [
       'A ignore spaces',

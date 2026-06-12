@@ -46,13 +46,39 @@ jobs:
           --health-retries 20
           --health-interval 10s
           --health-start-period 30s
+      # Needed for the postgres matrix entries; idle for the neo4j ones.
+      postgres:
+        image: postgres:16-alpine
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_DB: cord
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
 
     strategy:
       matrix:
         shard: [1, 2, 3, 4, 5, 6]
         database:
           - neo4j
+          - postgres
 #          - gel
+        include:
+          # Postgres runs only the suites for domains that have a Drizzle repo
+          # on this branch — unmigrated domains fall back to Neo4j via splitDb
+          # and hit cross-engine boundaries. Each entry below MUST have a
+          # matching *.drizzle.repository.ts; add a domain here only in the same
+          # PR that lands its repo. Widen as each phase lands. migration-todo:
+          # drop the filter entirely at Phase 7 cutover so postgres runs the
+          # full suite.
+          - database: postgres
+            test-args: >-
+              --testPathPatterns "test/(authentication|user|education|unavailability|location|organization|region|zone|funding-account|tool)\."
       fail-fast: false
     steps:
       - uses: actions/checkout@v4
@@ -66,8 +92,9 @@ jobs:
         run: yarn start -- --gen-schema && yarn gql-tada generate output
 
       - name: E2E Tests
-        run: yarn test:e2e --shard=${{ matrix.shard }}/6 --reporters=github-actions
+        run: yarn test:e2e --shard=${{ matrix.shard }}/6 --reporters=github-actions ${{ matrix.test-args }}
         env:
           NEO4J_VERSION: ${{ matrix.neo4j-version }}
           DATABASE: ${{ matrix.database }}
+          POSTGRES_URL: postgresql://postgres:postgres@localhost:5432/cord
         continue-on-error: ${{ matrix.database == 'gel' }}

@@ -47,9 +47,10 @@ export class AuthenticationDrizzleRepository implements PublicOf<AuthenticationR
   }
 
   async disconnectUserFromSession(token: string) {
+    // Logout makes the session anonymous again; the token stays alive.
     await this.drizzle.client
       .update(authSessions)
-      .set({ active: false })
+      .set({ userId: null, loggedInAt: null })
       .where(eq(authSessions.token, token));
   }
 

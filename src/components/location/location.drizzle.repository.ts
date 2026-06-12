@@ -22,7 +22,6 @@ import { locations } from '~/core/drizzle/schema';
 import { type ResourceNameLike } from '~/core/resources';
 import { PolicyExecutor } from '../authorization/policy/executor/policy-executor';
 import { FileService } from '../file';
-import { type FileId } from '../file/dto';
 import {
   type CreateLocation,
   Location,
@@ -53,7 +52,6 @@ export class LocationDrizzleRepository extends DrizzleDtoRepository<
 
   async create(input: CreateLocation): Promise<UnsecuredDto<Location>> {
     const id = await generateId();
-    const mapImageId = await generateId<FileId>();
 
     await this.db
       .insert(locations)
@@ -65,22 +63,17 @@ export class LocationDrizzleRepository extends DrizzleDtoRepository<
         fundingAccountId: input.fundingAccount ?? null,
         defaultFieldRegionId: input.defaultFieldRegion ?? null,
         defaultMarketingRegionId: input.defaultMarketingRegion ?? null,
-        mapImageId,
+        mapImageId: null,
       })
       .catch(catchNameUnique);
 
-    const dto = await this.readOne(id);
+    // migration-todo: map image file creation is skipped until the File
+    // domain migrates (Phase 7). FileRepository is Neo4j-backed and links
+    // createdBy to a user node that doesn't exist there. Restore the
+    // generated mapImageId + files.createDefinedFile call once File is on
+    // Drizzle.
 
-    await this.files.createDefinedFile(
-      mapImageId,
-      input.name,
-      id,
-      'mapImage',
-      input.mapImage,
-      true,
-    );
-
-    return dto;
+    return await this.readOne(id);
   }
 
   async update(changes: UpdateLocation): Promise<UnsecuredDto<Location>> {
@@ -96,6 +89,8 @@ export class LocationDrizzleRepository extends DrizzleDtoRepository<
     }).catch(catchNameUnique);
 
     if (mapImage !== undefined) {
+      // migration-todo: always throws under postgres since create() skips the
+      // map image file; works again once the File domain migrates (Phase 7).
       const location = await this.readOne(id);
       if (!location.mapImage) {
         throw new ServerException(
@@ -165,14 +160,17 @@ export class LocationDrizzleRepository extends DrizzleDtoRepository<
     throw new NotImplementedException();
   }
 
-  // migration-todo: implement when location-node relationships are migrated to PG
-  listLocationsFromNodeNoSecGroups(
+  // migration-todo: implement when location-node relationships are migrated
+  // to PG. Edges can't be written yet (addLocationToNode above throws), so an
+  // empty page is accurate for PG-resident resources — and it keeps reads
+  // (e.g. user.locations in e2e fragments) from hard-failing.
+  async listLocationsFromNodeNoSecGroups(
     _label: string,
     _rel: string,
     _id: ID,
     _input: LocationListInput,
   ): Promise<LocationListOutput> {
-    throw new NotImplementedException();
+    return EMPTY_PAGE;
   }
 
   protected toDto(row: typeof locations.$inferSelect): UnsecuredDto<Location> {

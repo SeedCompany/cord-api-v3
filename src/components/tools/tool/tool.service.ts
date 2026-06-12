@@ -60,7 +60,7 @@ export class ToolService {
     const tool = await this.repo.readOne(id);
     this.privileges.for(Tool, tool).verifyCan('delete');
     try {
-      await this.repo.deleteNode(tool);
+      await this.repo.delete(id);
     } catch (exception) {
       throw new ServerException('Failed to delete', exception);
     }
