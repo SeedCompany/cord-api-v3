@@ -540,6 +540,80 @@ export const fundingAccounts = pgTable(
 
 export const fundingAccountsRelations = relations(fundingAccounts, () => ({}));
 
+// ─── Ethnologue Languages ──────────────────────────────────────────────────
+
+export const ethnologueLanguages = pgTable(
+  'ethnologue_languages',
+  {
+    id: text('id').$type<ID<'EthnologueLanguage'>>().primaryKey(),
+    // migration-todo: add REFERENCES languages(id) ON DELETE SET NULL when
+    // Language migrates in Phase 3&4. Deliberately NOT `ON DELETE CASCADE`
+    // and `language_id` is nullable — preserves the path to the planned
+    // future model where EthnologueLanguage is a global pool of canonical
+    // language records and `language_id` is a *soft attachment* (a new
+    // Language hooks into an existing pool entry by code, rather than
+    // creating its own Ethnologue). Deleting a Language should release the
+    // attachment, not destroy the pool entry. The Apollo client already
+    // treats EthnologueLanguage as a value object (`typePolicies.base.ts:43`
+    // — `keyFields: false`), and no codepath calls a delete on it.
+    //
+    // The `code` / `provisional_code` partial uniques stay GLOBAL (not
+    // scoped to attached rows) because the future global-pool model
+    // requires codes to be unique across the entire pool — orphaned and
+    // attached alike. Today that means deleting a Language and then
+    // creating a new one with the same code throws on the unique index;
+    // that error path is the seed of the future "attach existing pool
+    // entry by code" logic.
+    //
+    // Separate-ticket cleanup (out of scope here): `EthnologueLanguage.canDelete`
+    // (on the DTO) and the `r.EthnologueLanguage.create.read.edit.delete`
+    // grant in `field-services.policy.ts` are vestigial — `canDelete`
+    // surfaces only because `secure()` injects it as standard Resource
+    // boilerplate, and the `.delete` policy bit is never exercised. Prune
+    // both in a follow-up PR.
+    languageId: text('language_id').$type<ID<'Language'>>(),
+    code: text('code'),
+    provisionalCode: text('provisional_code'),
+    name: text('name'),
+    population: integer('population'),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (t) => [
+    check(
+      'ethnologue_languages_code_format_chk',
+      sql`${t.code} IS NULL OR ${t.code} ~ '^[a-z]{3}$'`,
+    ),
+    check(
+      'ethnologue_languages_provisional_code_format_chk',
+      sql`${t.provisionalCode} IS NULL OR ${t.provisionalCode} ~ '^[a-z]{3}$'`,
+    ),
+    check(
+      'ethnologue_languages_population_non_negative_chk',
+      sql`${t.population} IS NULL OR ${t.population} >= 0`,
+    ),
+    uniqueIndex('ethnologue_languages_language_id_unique')
+      .on(t.languageId)
+      .where(sql`${t.deletedAt} IS NULL`),
+    uniqueIndex('ethnologue_languages_code_unique')
+      .on(t.code)
+      .where(sql`${t.code} IS NOT NULL AND ${t.deletedAt} IS NULL`),
+    uniqueIndex('ethnologue_languages_provisional_code_unique')
+      .on(t.provisionalCode)
+      .where(sql`${t.provisionalCode} IS NOT NULL AND ${t.deletedAt} IS NULL`),
+  ],
+);
+
+export const ethnologueLanguagesRelations = relations(
+  ethnologueLanguages,
+  () => ({}),
+);
+
 // ─── Tools ─────────────────────────────────────────────────────────────────
 
 export const toolKeyEnum = pgEnum('tool_key', ['Rev79']);
