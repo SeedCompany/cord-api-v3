@@ -403,6 +403,12 @@ describe('File e2e', () => {
     let expectedTotalVersions: number;
 
     afterAll(async () => {
+      // Neo4j-only: revert deactivated name/mimeType props so the Neo4j
+      // consistency check at teardown passes. Postgres has no such check and no
+      // DatabaseService query surface for these raw cypher statements.
+      if (process.env.DATABASE === 'postgres') {
+        return;
+      }
       // revert the changes so consistency check will be passed for remaining file nodes.
       await app
         .get(DatabaseService)

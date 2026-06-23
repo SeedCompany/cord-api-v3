@@ -1,8 +1,10 @@
 import { relations, sql } from 'drizzle-orm';
 import {
   type AnyPgColumn,
+  bigint,
   boolean,
   check,
+  doublePrecision,
   index,
   integer,
   pgEnum,
@@ -13,6 +15,7 @@ import {
   uniqueIndex,
 } from 'drizzle-orm/pg-core';
 import { type ID, type Role } from '~/common';
+import { type FileNodeType } from '../../../components/file/dto/file-node-type.enum';
 import { type LocationType } from '../../../components/location/dto/location-type.enum';
 import { type OrganizationReach } from '../../../components/organization/dto/organization-reach.dto';
 import { type OrganizationType } from '../../../components/organization/dto/organization-type.dto';
@@ -654,3 +657,89 @@ export const tools = pgTable(
 );
 
 export const toolsRelations = relations(tools, () => ({}));
+
+// ─── Files ───────────────────────────────────────────────────────────────────
+
+export const fileNodeTypeEnum = pgEnum('file_node_type', [
+  'Directory',
+  'File',
+  'FileVersion',
+]);
+
+export const mediaTypeEnum = pgEnum('media_type', ['Image', 'Video', 'Audio']);
+
+export const fileNodes = pgTable(
+  'file_nodes',
+  {
+    id: text('id').$type<ID>().primaryKey(),
+    type: fileNodeTypeEnum('type').$type<FileNodeType>().notNull(),
+    name: text('name').notNull(),
+    // Tri-state: null = inherit from parent.
+    public: boolean('public'),
+    parentId: text('parent_id')
+      .$type<ID>()
+      .references((): AnyPgColumn => fileNodes.id),
+    createdById: text('created_by_id')
+      .$type<ID<'User'>>()
+      .notNull()
+      .references(() => users.id),
+    // FileVersion only.
+    mimeType: text('mime_type'),
+    size: bigint('size', { mode: 'number' }),
+    // File only — denormalized pointer to the latest FileVersion.
+    latestVersionId: text('latest_version_id')
+      .$type<ID>()
+      .references((): AnyPgColumn => fileNodes.id),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (t) => [
+    index('file_nodes_parent_id_idx').on(t.parentId),
+    index('file_nodes_created_by_id_idx').on(t.createdById),
+    index('file_nodes_latest_version_id_idx').on(t.latestVersionId),
+    check(
+      'file_nodes_shape',
+      sql`(${t.type} = 'Directory' AND ${t.mimeType} IS NULL AND ${t.size} IS NULL AND ${t.latestVersionId} IS NULL)
+        OR (${t.type} = 'File' AND ${t.mimeType} IS NULL AND ${t.size} IS NULL)
+        OR (${t.type} = 'FileVersion' AND ${t.mimeType} IS NOT NULL AND ${t.size} IS NOT NULL AND ${t.latestVersionId} IS NULL)`,
+    ),
+  ],
+);
+
+export const media = pgTable(
+  'media',
+  {
+    id: text('id').$type<ID>().primaryKey(),
+    type: mediaTypeEnum('type').$type<'Image' | 'Video' | 'Audio'>().notNull(),
+    fileVersionId: text('file_version_id')
+      .$type<ID>()
+      .notNull()
+      .references(() => fileNodes.id, { onDelete: 'cascade' }),
+    mimeType: text('mime_type').notNull(),
+    altText: text('alt_text'),
+    caption: text('caption'),
+    width: integer('width'),
+    height: integer('height'),
+    duration: doublePrecision('duration'),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [uniqueIndex('media_file_version_id_unique').on(t.fileVersionId)],
+);
+
+export const fileNodesRelations = relations(fileNodes, ({ one }) => ({
+  createdBy: one(users, {
+    fields: [fileNodes.createdById],
+    references: [users.id],
+  }),
+}));
+
+export const mediaRelations = relations(media, ({ one }) => ({
+  fileVersion: one(fileNodes, {
+    fields: [media.fileVersionId],
+    references: [fileNodes.id],
+  }),
+}));

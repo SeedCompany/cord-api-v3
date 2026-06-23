@@ -9,6 +9,7 @@ import {
   ServerException,
   UnauthorizedException,
 } from '~/common';
+import { ConfigService } from '~/core/config';
 import { Hooks } from '~/core/hooks';
 import { type FileVersion } from '../dto';
 import { CanUpdateMediaUserMetadataHook } from './hooks/can-update.hook';
@@ -22,10 +23,19 @@ export class MediaService {
     private readonly detector: MediaDetector,
     private readonly repo: MediaRepository,
     private readonly hooks: Hooks,
+    private readonly config: ConfigService,
     private readonly moduleRef: ModuleRef,
   ) {}
 
   async detectAndSave(file: FileVersion, metadata?: MediaUserMetadata) {
+    // migration-todo (PR #2): Media has no Postgres repository yet — its
+    // `attachedTo` needs the same reverse-lookup across consuming FK columns as
+    // File.rootAttachedTo, which lands in PR #2. Until then, skip detection
+    // under Postgres so uploads don't fall through to the Neo4j MediaRepository.
+    // Drop this guard at Phase 7 cutover.
+    if (this.config.databaseEngine === 'postgres') {
+      return null;
+    }
     const media = await this.detector.detect(file);
     if (!media) {
       return null;
