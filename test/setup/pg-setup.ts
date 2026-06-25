@@ -15,10 +15,16 @@ export const ephemeralPg = async () => {
     return undefined;
   }
 
-  const base = new URL(
-    process.env.POSTGRES_URL ??
-      'postgresql://postgres:postgres@localhost:5432/cord',
-  );
+  // Mirror the app's DrizzleService, which refuses to guess a connection when
+  // DATABASE=postgres. Note: .env.local is NOT visible here — this setup reads
+  // raw process.env before ConfigService loads dotenv — so POSTGRES_URL must be
+  // a real env var (CI sets it; locally export it or pass it on the CLI).
+  if (!process.env.POSTGRES_URL) {
+    throw new Error(
+      'POSTGRES_URL is required to run e2e tests with DATABASE=postgres',
+    );
+  }
+  const base = new URL(process.env.POSTGRES_URL);
   const admin = new Pool({ connectionString: base.toString(), max: 1 });
   const dbName = `${TEST_DB_PREFIX}${Date.now()}_${String(Math.random()).slice(
     2,
@@ -57,19 +63,19 @@ async function dropStale(admin: Pool) {
   // Escape `_` (a LIKE single-char wildcard) in the prefix so it matches
   // literally; parameterized to keep it scoped to our prefix only.
   const likePattern = TEST_DB_PREFIX.replace(/_/g, String.raw`\_`) + '%';
-  const res = await admin.query<{ datname: string }>(
+  const staleCandidatesResult = await admin.query<{ datname: string }>(
     'select datname from pg_database where datname like $1',
     [likePattern],
   );
 
-  const stale = res.rows
+  const stale = staleCandidatesResult.rows
     .map((row) => row.datname)
     .filter((name) => {
-      const ts = Number(name.slice(TEST_DB_PREFIX.length).split('_')[0]);
-      if (isNaN(ts)) {
+      const timestamp = Number(name.slice(TEST_DB_PREFIX.length).split('_')[0]);
+      if (isNaN(timestamp)) {
         return false;
       }
-      const createdAt = DateTime.fromMillis(ts);
+      const createdAt = DateTime.fromMillis(timestamp);
       // more than 1 hour old
       return createdAt.diffNow().as('hours') < -1;
     });

@@ -27,7 +27,7 @@ export class AdminDrizzleRepository {
     await callback();
   }
 
-  async doesRootUserExist() {
+  async findRootUser() {
     const [row] = await this.drizzle.client
       .select({
         id: users.id,
@@ -41,13 +41,15 @@ export class AdminDrizzleRepository {
     return row;
   }
 
+  /**
+   * Atomic: a partial failure would leave a row with isRoot=true but no admin
+   * role/password, and findRootUser would then skip re-creation forever.
+   * Bootstrap isn't a GraphQL mutation, so the transactional-mutations
+   * interceptor doesn't cover it — wrap explicitly. (client is ALS-bound, so
+   * the auth write below joins the same tx.)
+   */
   async createRootUser(id: ID, email: string, passwordHash: string) {
     const userId = id as ID<'User'>;
-    // Atomic: a partial failure would leave a row with isRoot=true but no admin
-    // role/password, and doesRootUserExist would then skip re-creation forever.
-    // Bootstrap isn't a GraphQL mutation, so the transactional-mutations
-    // interceptor doesn't cover it — wrap explicitly. (client is ALS-bound, so
-    // the auth write below joins the same tx.)
     await this.drizzle.inTx(async () => {
       await this.drizzle.client.insert(users).values({
         id: userId,
@@ -66,11 +68,13 @@ export class AdminDrizzleRepository {
     });
   }
 
+  /**
+   * Idempotent on re-boot when the row already exists (id conflict → no-op).
+   * Scope the conflict to the id only: if a *different* org already holds
+   * this name, let the name unique-index violation surface rather than
+   * silently no-op and leave config.defaultOrg.id pointing at no row.
+   */
   async mergeDefaultOrg(id: ID, name: string) {
-    // Idempotent on re-boot when the row already exists (id conflict → no-op).
-    // Scope the conflict to the id only: if a *different* org already holds
-    // this name, let the name unique-index violation surface rather than
-    // silently no-op and leave config.defaultOrg.id pointing at no row.
     await this.drizzle.client
       .insert(organizations)
       .values({ id: id as ID<'Organization'>, name })
