@@ -8,14 +8,14 @@ import { LazyGetter as Once } from 'lazy-get-decorator';
 import { CryptoService } from '~/core/authentication/crypto.service';
 import { ConfigService } from '~/core/config';
 import { ILogger, Logger } from '~/core/logger';
-import { AdminGelRepository } from './admin.gel.repository';
+import { AdminDrizzleRepository } from './admin.drizzle.repository';
 import { AdminRepository } from './admin.repository';
 
 @Injectable()
-export class AdminGelService implements OnApplicationBootstrap {
+export class AdminDrizzleService implements OnApplicationBootstrap {
   constructor(
     private readonly config: ConfigService,
-    @Inject(AdminRepository) private readonly repo: AdminGelRepository,
+    @Inject(AdminRepository) private readonly repo: AdminDrizzleRepository,
     private readonly moduleRef: ModuleRef,
     @Logger('admin:service') private readonly logger: ILogger,
   ) {}
@@ -25,7 +25,10 @@ export class AdminGelService implements OnApplicationBootstrap {
   }
 
   async onApplicationBootstrap(): Promise<void> {
-    const finishing = this.repo.finishing(() => this.setupRootUser());
+    const finishing = this.repo.finishing(async () => {
+      await this.setupRootUser();
+      await this.setupDefaultOrg();
+    });
     // Wait for root object setup when running tests, else just let it run in
     // the background and allow webserver to start.
     if (this.config.jest) {
@@ -37,6 +40,14 @@ export class AdminGelService implements OnApplicationBootstrap {
         });
       });
     }
+  }
+
+  // Projects FK their owning organization to this row (config.defaultOrg),
+  // so it has to exist before the first project insert — same job as the
+  // Neo4j AdminService's mergeDefaultOrg.
+  private async setupDefaultOrg(): Promise<void> {
+    const { id, name } = this.config.defaultOrg;
+    await this.repo.mergeDefaultOrg(id, name);
   }
 
   private async setupRootUser(): Promise<void> {

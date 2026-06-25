@@ -21,6 +21,7 @@ export * from './create-engagement';
 export * from './create-partnership';
 export * from './create-partner';
 export * from './create-funding-account';
+export * from './create-tool';
 export * from './register';
 export * from './update-project';
 export * from './create-pin';

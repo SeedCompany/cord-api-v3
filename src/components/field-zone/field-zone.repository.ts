@@ -125,6 +125,10 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
     await query.run();
   }
 
+  async delete(id: ID): Promise<void> {
+    await this.deleteNode(id);
+  }
+
   async list(input: FieldZoneListInput) {
     if (!this.privileges.can('read')) {
       return SecuredList.Redacted;

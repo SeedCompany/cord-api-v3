@@ -177,7 +177,9 @@ export const authSessions = pgTable(
   'auth_sessions',
   {
     token: text('token').primaryKey(),
-    // Null = anonymous session. Set on login, cleared on logout (soft delete via active flag).
+    // Null = anonymous session. Set on login (connectSessionToUser), cleared
+    // on logout (disconnectUserFromSession) — logout re-anonymizes the session
+    // and keeps the token active.
     userId: text('user_id')
       .$type<ID<'User'>>()
       .references(() => users.id, { onDelete: 'cascade' }),
@@ -186,6 +188,8 @@ export const authSessions = pgTable(
       .defaultNow(),
     // Set when connectSessionToUser runs (i.e. actual login time, not token creation time).
     loggedInAt: timestamp('logged_in_at', { withTimezone: true }),
+    // Revoke flag (NOT logout). Flipped to false only by the deactivate*Sessions
+    // methods (force-logout other devices, password change). Reads filter active=true.
     active: boolean('active').notNull().default(true),
   },
   (t) => [index('auth_sessions_user_id_idx').on(t.userId)],

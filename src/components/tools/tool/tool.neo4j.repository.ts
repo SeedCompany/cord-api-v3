@@ -29,6 +29,10 @@ import { type ToolKey } from './dto/tool-key.enum';
 
 @Injectable()
 export class ToolRepository extends DtoRepository(Tool) {
+  async delete(id: ID): Promise<void> {
+    await this.deleteNode(id);
+  }
+
   async list(input: ToolListInput) {
     const query = this.db
       .query()
