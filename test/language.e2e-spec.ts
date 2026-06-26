@@ -95,6 +95,72 @@ describe('Language e2e', () => {
     });
   });
 
+  // `Language.population` is a computed field (`populationOverride`, falling
+  // back to the ethnologue population). `updatedKeys` reports *input* fields,
+  // not computed ones, so `population` itself never appears. These tests lock
+  // in the two signals a client uses to detect an effective-population change,
+  // as documented on the `updatedKeys` field.
+  describe('population change signals in updatedKeys', () => {
+    it('changing the override surfaces `populationOverride`', async () => {
+      const language = await createLanguageMinimal(app, {
+        populationOverride: 100,
+      });
+
+      const { updatedKeys } = await updateLanguageReturning(app, {
+        id: language.id,
+        populationOverride: 200,
+      });
+
+      expect(updatedKeys).toContain('populationOverride');
+      // The computed field is never reported directly.
+      expect(updatedKeys).not.toContain('population');
+    });
+
+    it('changing the ethnologue population surfaces it in the nested update', async () => {
+      const language = await createLanguageMinimal(app, {
+        ethnologue: { population: 100 },
+      });
+
+      const { updatedKeys, updated } = await updateLanguageReturning(app, {
+        id: language.id,
+        ethnologue: { population: 200 },
+      });
+
+      // With no override, the fallback path is what moves the effective
+      // population — the client detects it via the nested ethnologue update.
+      expect(updatedKeys).toContain('ethnologue');
+      expect(updated.ethnologue?.population).toBe(200);
+      // The computed field is never reported directly, even via the fallback.
+      expect(updatedKeys).not.toContain('population');
+    });
+
+    it('keeps the override result when a masked ethnologue population changes', async () => {
+      const language = await createLanguageMinimal(app, {
+        populationOverride: 500,
+        ethnologue: { population: 100 },
+      });
+
+      const {
+        updatedKeys,
+        updated,
+        language: result,
+      } = await updateLanguageReturning(app, {
+        id: language.id,
+        ethnologue: { population: 200 },
+      });
+
+      // The ethnologue update is real and reported in the nested update...
+      expect(updatedKeys).toContain('ethnologue');
+      expect(updated.ethnologue?.population).toBe(200);
+      // ...but the override still wins, so the effective population is unchanged.
+      expect(result.population.value).toBe(500);
+      // The override was untouched and the computed field is never reported,
+      // so no effective-population signal leaks into updatedKeys.
+      expect(updatedKeys).not.toContain('populationOverride');
+      expect(updatedKeys).not.toContain('population');
+    });
+  });
+
   // DELETE LANGUAGE
   it('delete language', async () => {
     const language = await createLanguage(app);
@@ -397,3 +463,31 @@ const UpdateLanguageDoc = graphql(
   `,
   [fragments.language],
 );
+
+async function updateLanguageReturning(
+  app: TestApp,
+  input: InputOf<typeof UpdateLanguageReturningDoc>,
+) {
+  const result = await app.graphql.mutate(UpdateLanguageReturningDoc, {
+    input,
+  });
+  return result.updateLanguage;
+}
+const UpdateLanguageReturningDoc = graphql(`
+  mutation updateLanguageReturning($input: UpdateLanguage!) {
+    updateLanguage(input: $input) {
+      updatedKeys
+      updated {
+        populationOverride
+        ethnologue {
+          population
+        }
+      }
+      language {
+        population {
+          value
+        }
+      }
+    }
+  }
+`);
