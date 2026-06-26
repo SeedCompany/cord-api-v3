@@ -5,6 +5,7 @@ import {
   createAndInject,
   type ID,
   NotFoundException,
+  NotImplementedException,
   Polls,
   ServerException,
   UnauthorizedException,
@@ -51,6 +52,14 @@ export class MediaService {
   async updateUserMetadata(
     input: RequireAtLeastOne<Pick<AnyMedia, 'id' | 'file'>> & MediaUserMetadata,
   ) {
+    // migration-todo (PR #2): same as detectAndSave — Media has no Postgres
+    // repository yet. Fail explicitly rather than reading/writing through the
+    // Neo4j MediaRepository cross-engine. Drop this guard at Phase 7 cutover.
+    if (this.config.databaseEngine === 'postgres') {
+      throw new NotImplementedException(
+        'Media metadata is not yet supported under Postgres',
+      );
+    }
     const media = await this.repo.readOne(input);
     const canUpdatePoll = new Polls.Poll<boolean>();
     const event = await createAndInject(

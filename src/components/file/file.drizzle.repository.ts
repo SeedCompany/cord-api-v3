@@ -340,6 +340,30 @@ export class FileDrizzleRepository {
       UPDATE ${fileNodes} SET deleted_at = now()
       WHERE id IN (SELECT id FROM subtree)
     `);
+    // Neo4j computes a File's latest version dynamically from its *active*
+    // versions, so deleting the current version falls back to the previous one
+    // (or none). We denormalize latest_version_id, so repoint any surviving
+    // File whose latest version was just soft-deleted to its newest remaining
+    // version — or null, which makes it a version-less placeholder (not-found),
+    // matching Neo4j's "no active version" state.
+    await this.db.execute(sql`
+      UPDATE ${fileNodes} f
+      SET latest_version_id = (
+        SELECT v.id FROM ${fileNodes} v
+        WHERE v.parent_id = f.id
+          AND v.type = ${FileNodeType.FileVersion}
+          AND v.deleted_at IS NULL
+        ORDER BY v.created_at DESC, v.id DESC
+        LIMIT 1
+      )
+      WHERE f.type = ${FileNodeType.File}
+        AND f.deleted_at IS NULL
+        AND f.latest_version_id IS NOT NULL
+        AND (
+          SELECT lv.deleted_at FROM ${fileNodes} lv
+          WHERE lv.id = f.latest_version_id
+        ) IS NOT NULL
+    `);
   }
 
   // ─── hydration ─────────────────────────────────────────────────────────────
@@ -379,7 +403,14 @@ export class FileDrizzleRepository {
       const versionRows = await this.db
         .select()
         .from(fileNodes)
-        .where(inArray(fileNodes.id, latestVersionIds));
+        .where(
+          and(
+            inArray(fileNodes.id, latestVersionIds),
+            // Never surface a soft-deleted version's metadata/size (delete()
+            // repoints latest_version_id, but filter here as defense-in-depth).
+            sql`${fileNodes.deletedAt} is null`,
+          ),
+        );
       for (const v of versionRows) {
         versionsById.set(v.id, v);
       }
@@ -542,7 +573,8 @@ export class FileDrizzleRepository {
         lv.size AS "lvSize", lv.created_at AS "lvCreatedAt",
         lv.created_by_id AS "lvCreatedBy"
       FROM descendants d
-      LEFT JOIN ${fileNodes} lv ON lv.id = d.latest_version_id
+      LEFT JOIN ${fileNodes} lv
+        ON lv.id = d.latest_version_id AND lv.deleted_at IS NULL
       WHERE d.type = 'File'
     `);
 
