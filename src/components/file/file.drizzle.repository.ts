@@ -117,6 +117,15 @@ export class FileDrizzleRepository {
     if (input.filter?.type) {
       conditions.push(eq(fileNodes.type, input.filter.type));
     }
+    // Exclude version-less File placeholders (DefinedFiles created without an
+    // upload) at the SQL level so count + page run on the same rows we actually
+    // return. hydrateMany drops them too (defense-in-depth), but the pagination
+    // math must not count rows that never appear in `items` — otherwise `total`
+    // over-counts and a page of only placeholders comes back empty with
+    // `hasMore: true`.
+    conditions.push(
+      sql`(${fileNodes.type} != ${FileNodeType.File} or ${fileNodes.latestVersionId} is not null)`,
+    );
     const predicate = and(...conditions);
     const offset = (input.page - 1) * input.count;
     const [countRows, pageRows] = await Promise.all([
