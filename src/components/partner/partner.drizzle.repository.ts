@@ -136,6 +136,25 @@ export class PartnerDrizzleRepository extends DrizzleDtoRepository<
           'organization',
           'Partner for organization already exists.',
         ),
+      )
+      // Map main-table FK violations to field-level input errors — parity with
+      // the Neo4j repo's relationship-creation errors and the junction catches
+      // in `replaceJunctions`. `department_id_block_id` is internally generated
+      // (see `insertBlock`), so it can't be a bad user input; only the
+      // user-supplied `organization` and `pointOfContact` FKs need mapping.
+      .catch(
+        catchForeignKeyViolation(
+          'partners_organization_id_fkey',
+          'organization',
+          'Organization does not exist',
+        ),
+      )
+      .catch(
+        catchForeignKeyViolation(
+          'partners_point_of_contact_id_fkey',
+          'pointOfContact',
+          'Point of contact (user) does not exist',
+        ),
       );
 
     await this.replaceJunctions(id, {
@@ -164,7 +183,7 @@ export class PartnerDrizzleRepository extends DrizzleDtoRepository<
       ...fields
     } = changes;
 
-    await this.updateColumns(id, {
+    const scalarChanges = {
       pmcEntityCode: fields.pmcEntityCode,
       globalInnovationsClient: fields.globalInnovationsClient,
       active: fields.active,
@@ -179,7 +198,8 @@ export class PartnerDrizzleRepository extends DrizzleDtoRepository<
       approvedPrograms: approvedPrograms && [...approvedPrograms],
       startDate:
         startDate === undefined ? undefined : (startDate?.toISODate() ?? null),
-    });
+    };
+    await this.updateColumns(id, scalarChanges);
 
     await this.replaceJunctions(id, {
       fieldRegions,
@@ -189,6 +209,27 @@ export class PartnerDrizzleRepository extends DrizzleDtoRepository<
 
     if (departmentIdBlock !== undefined) {
       await this.setBlock(id, departmentIdBlock);
+    }
+
+    // `updateColumns` auto-stamps `updatedAt` whenever a scalar/link column
+    // changes, but a junction-list-only update bypasses it (the lists live in
+    // separate tables). Bump `updatedAt` so `modifiedAt` advances, mirroring
+    // Neo4j — `getChanges` injects `modifiedAt` on any real change and
+    // `updateProperties` persists it. Skip when a scalar already changed (to
+    // avoid a redundant write) and when only `departmentIdBlock` changed (which
+    // doesn't bump `modifiedAt` in Neo4j either).
+    const scalarChanged = Object.values(scalarChanges).some(
+      (v) => v !== undefined,
+    );
+    const junctionsChanged =
+      fieldRegions !== undefined ||
+      countries !== undefined ||
+      languagesOfConsulting !== undefined;
+    if (junctionsChanged && !scalarChanged) {
+      await this.db
+        .update(partners)
+        .set({ updatedAt: new Date() })
+        .where(eq(partners.id, id));
     }
 
     return await this.readOne(id);
@@ -289,6 +330,15 @@ export class PartnerDrizzleRepository extends DrizzleDtoRepository<
       total = countResult[0]?.total ?? 0;
       pageIds = joined;
     } else {
+      // Own-table sort. Reject keys we have no column for instead of silently
+      // sorting by `createdAt` (resolveOrderBy's `?? fallback`), mirroring the
+      // `organization.*` NotImplementedException branch above — a bad sort key
+      // should be discoverable, not quietly ignored.
+      if (!(sort in partnerSortColumns)) {
+        throw new NotImplementedException(
+          `Sorting partners by '${sort}' is not supported.`,
+        );
+      }
       const page = await this.paginatedSelect({
         predicate,
         orderBy: resolveOrderBy(input, partnerSortColumns, partners.createdAt),
@@ -546,8 +596,12 @@ export class PartnerDrizzleRepository extends DrizzleDtoRepository<
  */
 export const partnerSortColumns = {
   active: partners.active,
+  address: partners.address,
   createdAt: partners.createdAt,
+  globalInnovationsClient: partners.globalInnovationsClient,
   modifiedAt: partners.updatedAt,
+  pmcEntityCode: partners.pmcEntityCode,
+  sensitivity: partners.sensitivity,
   startDate: partners.startDate,
 } satisfies SortMap<keyof Partner>;
 
