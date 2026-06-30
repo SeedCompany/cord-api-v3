@@ -22,6 +22,7 @@ import { locations } from '~/core/drizzle/schema';
 import { type ResourceNameLike } from '~/core/resources';
 import { PolicyExecutor } from '../authorization/policy/executor/policy-executor';
 import { FileService } from '../file';
+import { type FileId } from '../file/dto';
 import {
   type CreateLocation,
   Location,
@@ -52,6 +53,7 @@ export class LocationDrizzleRepository extends DrizzleDtoRepository<
 
   async create(input: CreateLocation): Promise<UnsecuredDto<Location>> {
     const id = await generateId();
+    const mapImageId = await generateId<FileId>();
 
     await this.db
       .insert(locations)
@@ -63,17 +65,22 @@ export class LocationDrizzleRepository extends DrizzleDtoRepository<
         fundingAccountId: input.fundingAccount ?? null,
         defaultFieldRegionId: input.defaultFieldRegion ?? null,
         defaultMarketingRegionId: input.defaultMarketingRegion ?? null,
-        mapImageId: null,
+        mapImageId,
       })
       .catch(catchNameUnique);
 
-    // migration-todo: map image file creation is skipped until the File
-    // domain migrates (Phase 7). FileRepository is Neo4j-backed and links
-    // createdBy to a user node that doesn't exist there. Restore the
-    // generated mapImageId + files.createDefinedFile call once File is on
-    // Drizzle.
+    const dto = await this.readOne(id);
 
-    return await this.readOne(id);
+    await this.files.createDefinedFile(
+      mapImageId,
+      input.name,
+      id,
+      'mapImage',
+      input.mapImage,
+      true,
+    );
+
+    return dto;
   }
 
   async update(changes: UpdateLocation): Promise<UnsecuredDto<Location>> {
@@ -89,8 +96,6 @@ export class LocationDrizzleRepository extends DrizzleDtoRepository<
     }).catch(catchNameUnique);
 
     if (mapImage !== undefined) {
-      // migration-todo: always throws under postgres since create() skips the
-      // map image file; works again once the File domain migrates (Phase 7).
       const location = await this.readOne(id);
       if (!location.mapImage) {
         throw new ServerException(

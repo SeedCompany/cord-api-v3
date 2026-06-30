@@ -5,8 +5,8 @@ config({ path: '.env.local' });
 
 // eslint-disable-next-line import/no-default-export
 export default defineConfig({
-  schema: './src/core/database/drizzle/schema/index.ts',
-  out: './src/core/database/drizzle/migrations',
+  schema: './src/core/drizzle/schema/index.ts',
+  out: './src/core/drizzle/migrations',
   dialect: 'postgresql',
   dbCredentials: {
     url: process.env.POSTGRES_URL!,

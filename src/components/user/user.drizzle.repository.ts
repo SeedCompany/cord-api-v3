@@ -10,6 +10,7 @@ import {
   ServerException,
   type UnsecuredDto,
 } from '~/common';
+import { Identity } from '~/core/authentication';
 import {
   catchUniqueViolation,
   DrizzleDtoRepository,
@@ -26,6 +27,7 @@ import {
 } from '~/core/drizzle/schema';
 import { PolicyExecutor } from '../authorization/policy/executor/policy-executor';
 import { FileService } from '../file';
+import { type FileId } from '../file/dto';
 import {
   type AssignOrganizationToUser,
   type CreatePerson,
@@ -56,6 +58,7 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
     db: DrizzleService,
     private readonly executor: PolicyExecutor,
     private readonly files: FileService,
+    private readonly identity: Identity,
   ) {
     super(db, users, User);
   }
@@ -103,6 +106,7 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
 
   async create(input: CreatePerson): Promise<{ id: ID }> {
     const id = await generateId();
+    const photoId = await generateId<FileId>();
 
     await this.db
       .insert(users)
@@ -119,7 +123,7 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
         about: input.about ?? null,
         title: input.title ?? null,
         gender: input.gender ?? null,
-        photoId: null,
+        photoId,
       })
       .catch(catchEmailUnique);
 
@@ -129,11 +133,16 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
         .values(input.roles.map((role) => ({ userId: id, role })));
     }
 
-    // migration-todo: photo file creation is skipped until the File domain
-    // migrates (Phase 7). FileRepository is Neo4j-backed and links createdBy
-    // to a user node that doesn't exist there, so createDefinedFile fails for
-    // PG-only users. Restore the generated photoId + identity.asUser +
-    // files.createDefinedFile call once File is on Drizzle.
+    await this.identity.asUser(id, async () => {
+      await this.files.createDefinedFile(
+        photoId,
+        'Photo',
+        id,
+        'photo',
+        input.photo,
+        true,
+      );
+    });
 
     return { id };
   }
@@ -168,8 +177,6 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
     }
 
     if (photo !== undefined) {
-      // migration-todo: always throws under postgres since create() skips the
-      // photo file; works again once the File domain migrates (Phase 7).
       const person = await this.readOne(id);
       if (!person.photo) {
         throw new ServerException(
