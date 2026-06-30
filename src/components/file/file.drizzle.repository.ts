@@ -319,6 +319,26 @@ export class FileDrizzleRepository {
     if (!oldRow || !newRow) {
       throw new InputException('Old or new parent does not exist');
     }
+    // Reject moving a node into itself or one of its own descendants. Neo4j's
+    // variable-length `[:parent*]` match tolerates a cycle, but our recursive
+    // CTEs (computeRoots / computeDirectoryAggregates / delete's subtree walk)
+    // have no cycle guard and would recurse forever. Walk up from the
+    // destination; if `id` is the new parent or an ancestor of it, the move
+    // would close a loop.
+    if (newParentId === id) {
+      throw new InputException('Cannot move a node into itself');
+    }
+    const cycle = await this.db.execute<{ id: ID }>(sql`
+      WITH RECURSIVE up AS (
+        SELECT id, parent_id FROM ${fileNodes} WHERE id = ${newParentId}
+        UNION ALL
+        SELECT p.id, p.parent_id FROM up JOIN ${fileNodes} p ON p.id = up.parent_id
+      )
+      SELECT id FROM up WHERE id = ${id} LIMIT 1
+    `);
+    if (cycle.rows.length > 0) {
+      throw new InputException('Cannot move a node into its own descendant');
+    }
     await this.db
       .update(fileNodes)
       .set({ parentId: newParentId })

@@ -261,6 +261,35 @@ describe('File e2e', () => {
     expect(parents.map((n) => n.id)).toEqual([c.id, b.id, a.id, root.id]);
   });
 
+  it('cannot move a directory into its own descendant (cycle guard)', async () => {
+    // Postgres-only: the Neo4j move() tolerates a cycle (variable-length
+    // `[:parent*]` match), but the PG recursive CTEs (computeRoots /
+    // computeDirectoryAggregates / delete's subtree walk) have no cycle guard
+    // and would recurse forever — so the guard, and this test, are PG-specific.
+    if (process.env.DATABASE !== 'postgres') {
+      return;
+    }
+    const parent = await createDirectory(app, root.id);
+    const child = await createDirectory(app, parent.id);
+
+    await app.graphql
+      .mutate(
+        graphql(`
+          mutation moveFileNode($input: MoveFile!) {
+            moveFileNode(input: $input) {
+              id
+            }
+          }
+        `),
+        { input: { id: parent.id, parent: child.id } },
+      )
+      .expectError(
+        errors.input({
+          message: 'Cannot move a node into its own descendant',
+        }),
+      );
+  });
+
   it.skip('delete file', async () => {
     const { id } = await uploadFile(app, root.id);
     await deleteNode(app, id);
