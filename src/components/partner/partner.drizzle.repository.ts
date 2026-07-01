@@ -199,7 +199,17 @@ export class PartnerDrizzleRepository extends DrizzleDtoRepository<
       startDate:
         startDate === undefined ? undefined : (startDate?.toISODate() ?? null),
     };
-    await this.updateColumns(id, scalarChanges);
+    await this.updateColumns(id, scalarChanges).catch(
+      // Map the point-of-contact FK violation to a field-level input error —
+      // parity with create(). `pointOfContact` is the only user-supplied live FK
+      // in the update path (`organization` isn't updatable; the language FKs are
+      // still deferred-text with no constraint).
+      catchForeignKeyViolation(
+        'partners_point_of_contact_id_fkey',
+        'pointOfContact',
+        'Point of contact (user) does not exist',
+      ),
+    );
 
     await this.replaceJunctions(id, {
       fieldRegions,
