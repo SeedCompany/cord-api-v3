@@ -78,7 +78,7 @@ jobs:
           # full suite.
           - database: postgres
             test-args: >-
-              --testPathPatterns "test/(authentication|user|education|unavailability|file|location|organization|region|zone|funding-account|tool)\."
+              --testPathPatterns "test/(authentication|user|education|unavailability|file|location|organization|region|zone|funding-account|partner|tool)\."
       fail-fast: false
     steps:
       - uses: actions/checkout@v4
@@ -97,4 +97,11 @@ jobs:
           NEO4J_VERSION: ${{ matrix.neo4j-version }}
           DATABASE: ${{ matrix.database }}
           POSTGRES_URL: postgresql://postgres:postgres@localhost:5432/cord
-        continue-on-error: ${{ matrix.database == 'gel' }}
+        # neo4j is the production engine → blocking (required to merge).
+        # postgres is dev-only until the cutover, so keep it running for
+        # migration signal but DON'T gate merges on it — a PG failure on a
+        # migrated domain shouldn't block an unrelated PR. (gel is likewise
+        # advisory.) migration-todo: flip postgres back to a required gate
+        # (narrow this to `== 'gel'`) once the migration is further along /
+        # approaching cutover.
+        continue-on-error: ${{ matrix.database != 'neo4j' }}

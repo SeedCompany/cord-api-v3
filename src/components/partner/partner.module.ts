@@ -8,6 +8,7 @@ import { ProjectModule } from '../project/project.module';
 import { UserModule } from '../user/user.module';
 import { AddPartnerApprovedProgramsMigration } from './migrations/add-partner-approved-programs.migration';
 import { AddPartnerStartDateMigration } from './migrations/add-partner-start-date.migration';
+import { PartnerDrizzleRepository } from './partner.drizzle.repository';
 import { PartnerGelRepository } from './partner.gel.repository';
 import { PartnerLoader } from './partner.loader';
 import { PartnerRepository } from './partner.repository';
@@ -28,6 +29,8 @@ import { PartnerService } from './partner.service';
     PartnerService,
     splitDb(PartnerRepository, {
       gel: PartnerGelRepository,
+      // migration-todo: drop the `as any` + the Neo4j/Gel paths at Phase 7 cutover.
+      postgres: PartnerDrizzleRepository as any,
     }),
     PartnerLoader,
     AddPartnerApprovedProgramsMigration,

@@ -1,21 +1,22 @@
 import { DatabaseError } from 'pg';
-import { DuplicateException } from '~/common';
+import { DuplicateException, InputException } from '~/common';
 import { PgErrorCode } from './pg-error-codes';
 
 /**
- * Resolve the underlying pg `DatabaseError` from a thrown value. drizzle-orm
- * rethrows query-execution failures wrapped in a `DrizzleQueryError`
- * ("Failed query: ...") with the original pg error on `.cause`, so a bare
- * `instanceof DatabaseError` check no longer matches. Unwrap one level so the
- * constraint-mapping helpers keep working. Reuse for any future pg-error
- * matcher (FK violation, check constraint, etc.).
+ * Drizzle wraps driver failures (`DrizzleQueryError: Failed query: ...`) with
+ * the underlying `pg.DatabaseError` on `cause`, so walk the cause chain to
+ * find it. A bare `instanceof DatabaseError` check no longer matches.
  */
-const asDatabaseError = (e: unknown): DatabaseError | undefined =>
-  e instanceof DatabaseError
-    ? e
-    : e instanceof Error && e.cause instanceof DatabaseError
-      ? e.cause
-      : undefined;
+const findDatabaseError = (e: unknown): DatabaseError | undefined => {
+  let current = e;
+  while (current != null) {
+    if (current instanceof DatabaseError) {
+      return current;
+    }
+    current = (current as { cause?: unknown }).cause;
+  }
+  return undefined;
+};
 
 /**
  * Promise `.catch()` handler that maps a PostgreSQL unique-constraint
@@ -28,12 +29,42 @@ const asDatabaseError = (e: unknown): DatabaseError | undefined =>
 export const catchUniqueViolation =
   (constraintMatch: string, field: string, message: string) =>
   (e: unknown): never => {
-    const dbError = asDatabaseError(e);
+    const dbError = findDatabaseError(e);
     if (
-      dbError?.code === PgErrorCode.UniqueViolation &&
+      dbError &&
+      dbError.code === PgErrorCode.UniqueViolation &&
       dbError.constraint?.includes(constraintMatch)
     ) {
-      throw new DuplicateException(field, message, dbError);
+      throw new DuplicateException(field, message, e as Error);
+    }
+    throw e as Error;
+  };
+
+/**
+ * Promise `.catch()` handler that maps a PostgreSQL foreign-key violation to
+ * an `InputException` carrying the GraphQL input `field` name — preserves the
+ * "which form field caused this" context that the Neo4j repos achieve via
+ * `e.withField(...)`. `constraintMatch` is checked as a substring against the
+ * failing constraint name (e.g. `'field_region_id_fkey'` to scope the catch
+ * to one side of a junction's two FKs).
+ *
+ * @example
+ *   .catch(catchForeignKeyViolation(
+ *     'field_region_id_fkey',
+ *     'fieldRegions',
+ *     'One or more field region IDs do not exist',
+ *   ))
+ */
+export const catchForeignKeyViolation =
+  (constraintMatch: string, field: string, message: string) =>
+  (e: unknown): never => {
+    const dbError = findDatabaseError(e);
+    if (
+      dbError &&
+      dbError.code === PgErrorCode.ForeignKeyViolation &&
+      dbError.constraint?.includes(constraintMatch)
+    ) {
+      throw new InputException(message, field, e as Error);
     }
     throw e as Error;
   };
