@@ -401,11 +401,17 @@ export class ProjectDrizzleRepository extends DrizzleDtoRepository<
    * Resolve the primary partnership's owning organization name. Used by the
    * Rev79 integration. Traverses partnerships → partners → organizations.
    */
-  async getPrimaryOrganizationName(_id: ID): Promise<string | null> {
-    // migration-todo: traverses partnerships → partners → organizations for the
-    // Rev79 integration; `partnerships` isn't on develop until the Partnership
-    // port. Stub null until then (matches the "no primary partnership" case).
-    return null;
+  async getPrimaryOrganizationName(id: ID): Promise<string | null> {
+    const rows = await this.db.execute<{ name: string }>(sql`
+      select "o"."name" from "partnerships" "ps"
+      join "partners" "pt" on "pt"."id" = "ps"."partner_id"
+      join "organizations" "o" on "o"."id" = "pt"."organization_id"
+      where "ps"."project_id" = ${id}
+        and "ps"."primary" = true
+        and "ps"."deleted_at" is null
+      limit 1
+    `);
+    return rows.rows[0]?.name ?? null;
   }
 
   protected toDto(row: ProjectRow): UnsecuredDto<Project> {
@@ -456,8 +462,9 @@ export class ProjectDrizzleRepository extends DrizzleDtoRepository<
       fieldRegion: linkOrNull(row.fieldRegionId),
       owningOrganization: linkOrNull(row.owningOrganizationId),
       rootDirectory: linkOrNull(row.rootDirectoryId),
-      // migration-todo: Partnership not migrated; primaryPartnership always
-      // null until partnership-pg lands.
+      // migration-todo: Partnership is on develop, but per-project
+      // primaryPartnership hydration is not yet wired (mono stubs it null too).
+      // Wire via a `partnerships` subquery (primary = true) as a follow-up.
       primaryPartnership: null,
       engagementTotal: row.engagementTotal ?? 0,
       // migration-todo: ToolUsage not migrated; usesRev79 always false until
@@ -561,8 +568,9 @@ export const projectSortColumns = {
  * `resolveCrossDomainSort(sort, prefix, sortColumns)` helper alongside
  * `paginatedSelectWithJoin` (mirror of `*FilterClauses` emergence).
  *
- * migration-todo: `primaryPartnership.*` sort is not implemented — Partnership
- * isn't migrated. Throw `NotImplementedException` so callers discover the gap.
+ * migration-todo: `primaryPartnership.*` sort is not implemented. Partnership
+ * is on develop now, but mono leaves this sort stubbed too; wire it as a
+ * follow-up. Throw `NotImplementedException` so callers discover the gap.
  */
 const resolveCrossDomainSort = (
   sort: string,
@@ -797,21 +805,26 @@ export const projectFilterClauses = (
       'ProjectFilters.languageId requires Engagement migration.',
     );
   }
-  // Cross-domain filters — throw until their target domain migrates so the
-  // gap is discoverable in tests instead of silently returning all projects.
+  // Cross-domain filters — throw until wired so the gap is discoverable in
+  // tests instead of silently returning all projects.
+  //
+  // migration-todo: Partnership is on develop now, so these three can be wired
+  // via `subFilter(db, projects.id, partnerships, [...])` reusing the exported
+  // `partnershipFilterClauses`. Mono leaves them stubbed too, so kept deferred
+  // to a follow-up rather than writing new (untested-on-mono) filter SQL here.
   if (filter.partnerId) {
     throw new NotImplementedException(
-      'ProjectFilters.partnerId requires Partnership migration.',
+      'ProjectFilters.partnerId is not yet wired under Postgres.',
     );
   }
   if (filter.partnerships) {
     throw new NotImplementedException(
-      'ProjectFilters.partnerships requires Partnership migration.',
+      'ProjectFilters.partnerships is not yet wired under Postgres.',
     );
   }
   if (filter.primaryPartnership) {
     throw new NotImplementedException(
-      'ProjectFilters.primaryPartnership requires Partnership migration.',
+      'ProjectFilters.primaryPartnership is not yet wired under Postgres.',
     );
   }
   if (filter.tool) {

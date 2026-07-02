@@ -155,19 +155,21 @@ const projectIdRefForResource = (resource: EnhancedResource<any>): SQL => {
       return sql.raw(`"projects"."id"`);
     case 'ProjectMember':
       return sql.raw(`"project_members"."project_id"`);
+    case 'Partnership':
+      return sql.raw(`"partnerships"."project_id"`);
     // migration-todo: re-add a case per domain as it ports to Postgres
-    // (Partnership/Budget/Engagement/Ceremony/Language/BudgetRecord each
-    // dereference to their `project_id` FK — mono has the arms). Kept stripped
-    // so an unmigrated domain routed through Drizzle fails loud here instead of
+    // (Budget/Engagement/Ceremony/Language/BudgetRecord each dereference to
+    // their `project_id` FK — mono has the arms). Kept stripped so an
+    // unmigrated domain routed through Drizzle fails loud here instead of
     // emitting SQL against a non-existent table.
     //
     // Partner is on develop and member-gated (field-partner.policy
-    // `r.Partner.when(member).read`), but it intentionally has NO arm: its
-    // member check must traverse partner→partnership→project→project_members,
-    // and `partnerships` isn't on develop, so it can't be expressed in SQL yet.
-    // It therefore hits `default: throw` — a pre-existing dev-only gap (a
-    // FieldPartner reading Partners under DATABASE=postgres; the admin-run e2e
-    // never exercises it). Add the Partner arm when Partnership migrates.
+    // `r.Partner.when(member).read`), but it intentionally has NO arm — mono
+    // ships none either. Its member check would traverse
+    // partner→partnership→project→project_members; even now that `partnerships`
+    // is on develop, we match mono and leave it at `default: throw`. This is a
+    // pre-existing dev-only gap (a FieldPartner reading Partners under
+    // DATABASE=postgres; the admin-run e2e never exercises it).
     default:
       throw new Error(
         `MemberCondition.asDrizzleCondition: resource ${resource.name} not configured for Drizzle yet; add a case when it migrates.`,

@@ -178,11 +178,16 @@ const sensitivityRefForResource = (
         select "p"."sensitivity" from "projects" "p"
         where "p"."id" = "project_members"."project_id"
       ) <= ${accessLiteral}`;
+    case 'Partnership':
+      return sql`(
+        select "p"."sensitivity" from "projects" "p"
+        where "p"."id" = "partnerships"."project_id"
+      ) <= ${accessLiteral}`;
     // migration-todo: re-add a case per domain as it ports to Postgres
-    // (Partnership/Budget/Engagement/Ceremony/Language/BudgetRecord read
-    // sensitivity via their parent project; Partner has its own derived column —
-    // mono has the arms). Kept stripped so an unmigrated domain routed through
-    // Drizzle fails loud here instead of emitting SQL against a missing table.
+    // (Budget/Engagement/Ceremony/Language/BudgetRecord read sensitivity via
+    // their parent project; Partner has its own derived column — mono has the
+    // arms). Kept stripped so an unmigrated domain routed through Drizzle fails
+    // loud here instead of emitting SQL against a missing table.
     default:
       throw new Error(
         `SensitivityCondition.asDrizzleCondition: resource ${resource.name} not configured for Drizzle yet; add a case when it migrates.`,
