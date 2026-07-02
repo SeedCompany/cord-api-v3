@@ -19,6 +19,23 @@ const findDatabaseError = (e: unknown): DatabaseError | undefined => {
 };
 
 /**
+ * Whether the error (or anything in its cause chain) is a PostgreSQL
+ * unique-constraint violation on a constraint whose name contains
+ * `constraintMatch`. For callers that need to branch instead of rethrow.
+ */
+export const isUniqueViolation = (
+  e: unknown,
+  constraintMatch: string,
+): boolean => {
+  const dbError = findDatabaseError(e);
+  return (
+    !!dbError &&
+    dbError.code === PgErrorCode.UniqueViolation &&
+    !!dbError.constraint?.includes(constraintMatch)
+  );
+};
+
+/**
  * Promise `.catch()` handler that maps a PostgreSQL unique-constraint
  * violation to a `DuplicateException`. `constraintMatch` is checked as a
  * substring against the failing constraint name.
