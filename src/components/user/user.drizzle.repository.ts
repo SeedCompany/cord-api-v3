@@ -313,6 +313,15 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
     throw new NotImplementedException();
   }
 
+  /**
+   * Public wrapper around `toDto` so other domains' repos (e.g. ProjectMember)
+   * can hydrate a User from a raw row without duplicating logic. The row should
+   * be loaded with `globalRoles`.
+   */
+  mapRowToDto(row: UserRow): UnsecuredDto<User> {
+    return this.toDto(row);
+  }
+
   protected toDto(row: UserRow): UnsecuredDto<User> {
     return {
       id: row.id,

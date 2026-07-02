@@ -201,6 +201,17 @@ export class LocationDrizzleRepository extends DrizzleDtoRepository<
 }
 
 /**
+ * Sortable columns on `locations`. Exported for cross-domain sort
+ * (Project sorts by `primaryLocation.*`), parallel to `*FilterClauses`.
+ */
+export const locationSortColumns = {
+  name: locations.name,
+  type: locations.type,
+  isoAlpha3: locations.isoAlpha3,
+  createdAt: locations.createdAt,
+} satisfies SortMap<keyof Location>;
+
+/**
  * Build the column-level WHERE clauses for a `LocationFilters` input against
  * the `locations` table. Reusable from sub-filters in other domains
  * (e.g. Project's `location` filter).

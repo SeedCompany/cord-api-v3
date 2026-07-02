@@ -188,6 +188,10 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
       .run();
   }
 
+  async delete(id: ID): Promise<void> {
+    await this.deleteNode(id);
+  }
+
   async list({ filter, ...input }: ProjectMemberListInput) {
     const result = await this.db
       .query()

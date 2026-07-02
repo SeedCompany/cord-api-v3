@@ -1,11 +1,13 @@
 import { type NonEmptyArray } from '@seedcompany/common';
 import { type Query } from 'cypher-query-builder';
+import { type SQL, sql } from 'drizzle-orm';
 import { intersection } from 'lodash';
 import { inspect, type InspectOptionsStylized } from 'util';
-import { type ResourceShape, type Role } from '~/common';
+import { type EnhancedResource, type ResourceShape, type Role } from '~/common';
 import { matchProjectScopedRoles } from '~/core/neo4j/query';
 import { rolesForScope, type ScopedRole, splitScope } from '../../dto/role.dto';
 import {
+  type AsDrizzleParams,
   type AsEdgeQLParams,
   type Condition,
   eqlDoesIntersect,
@@ -34,6 +36,17 @@ class MemberCondition<
 
   asCypherCondition() {
     return 'exists((project)-[:member { active: true }]->(:ProjectMember)-[:user]->(:User { id: $currentUser }))';
+  }
+
+  asDrizzleCondition({ resource, session }: AsDrizzleParams<TResourceStatic>) {
+    const projectIdRef = projectIdRefForResource(resource);
+    return sql`exists (
+      select 1 from "project_members" "pm"
+      where "pm"."project_id" = ${projectIdRef}
+        and "pm"."user_id" = ${session.userId}
+        and "pm"."inactive_at" is null
+        and "pm"."deleted_at" is null
+    )`;
   }
 
   setupEdgeQLContext({
@@ -98,6 +111,24 @@ class MemberWithRolesCondition<
     return `size(apoc.coll.intersection(${CQL_VAR}, ${String(required)})) > 0`;
   }
 
+  asDrizzleCondition({ resource, session }: AsDrizzleParams<TResourceStatic>) {
+    const projectIdRef = projectIdRefForResource(resource);
+    // ARRAY[...]::role[] intersection — true when membership shares at least
+    // one role with the required set. Mirrors `apoc.coll.intersection` >0 in
+    // Cypher and `intersect` in EdgeQL.
+    const requiredRoles = sql.raw(
+      `array[${this.roles.map((r) => `'${r}'`).join(', ')}]::"role"[]`,
+    );
+    return sql`exists (
+      select 1 from "project_members" "pm"
+      where "pm"."project_id" = ${projectIdRef}
+        and "pm"."user_id" = ${session.userId}
+        and "pm"."inactive_at" is null
+        and "pm"."deleted_at" is null
+        and "pm"."roles" && ${requiredRoles}
+    )`;
+  }
+
   asEdgeQLCondition({ namespace }: AsEdgeQLParams<TResourceStatic>) {
     const Role = fqnRelativeTo('default::Role', namespace);
     return eqlDoesIntersect('.membership.roles', this.roles, Role);
@@ -107,6 +138,42 @@ class MemberWithRolesCondition<
     return `Member with ${this.roles.join(', ')}`;
   }
 }
+
+/**
+ * Resolve the SQL fragment that locates the parent project's `id` for the
+ * given resource. Project subtypes (Momentum/Multiplication/Internship)
+ * dereference to `projects.id` directly. Project-scoped child resources
+ * reference their FK column. Add cases here as each domain ports to Postgres.
+ */
+const projectIdRefForResource = (resource: EnhancedResource<any>): SQL => {
+  switch (resource.name) {
+    case 'Project':
+    case 'TranslationProject':
+    case 'MomentumTranslationProject':
+    case 'MultiplicationTranslationProject':
+    case 'InternshipProject':
+      return sql.raw(`"projects"."id"`);
+    case 'ProjectMember':
+      return sql.raw(`"project_members"."project_id"`);
+    // migration-todo: re-add a case per domain as it ports to Postgres
+    // (Partnership/Budget/Engagement/Ceremony/Language/BudgetRecord each
+    // dereference to their `project_id` FK — mono has the arms). Kept stripped
+    // so an unmigrated domain routed through Drizzle fails loud here instead of
+    // emitting SQL against a non-existent table.
+    //
+    // Partner is on develop and member-gated (field-partner.policy
+    // `r.Partner.when(member).read`), but it intentionally has NO arm: its
+    // member check must traverse partner→partnership→project→project_members,
+    // and `partnerships` isn't on develop, so it can't be expressed in SQL yet.
+    // It therefore hits `default: throw` — a pre-existing dev-only gap (a
+    // FieldPartner reading Partners under DATABASE=postgres; the admin-run e2e
+    // never exercises it). Add the Partner arm when Partnership migrates.
+    default:
+      throw new Error(
+        `MemberCondition.asDrizzleCondition: resource ${resource.name} not configured for Drizzle yet; add a case when it migrates.`,
+      );
+  }
+};
 
 /**
  * The following actions only apply if the requester has any "member" scoped roles.

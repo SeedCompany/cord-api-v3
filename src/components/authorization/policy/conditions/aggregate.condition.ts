@@ -5,6 +5,7 @@ import {
   type Nil,
 } from '@seedcompany/common';
 import { type Query } from 'cypher-query-builder';
+import { and, or, type SQL } from 'drizzle-orm';
 import addIndent from 'indent-string';
 import { type Class, type Constructor } from 'type-fest';
 import { inspect, type InspectOptionsStylized } from 'util';
@@ -12,6 +13,7 @@ import { type ResourceShape } from '~/common';
 import { type Policy } from '../policy.factory';
 import type {
   AsCypherParams,
+  AsDrizzleParams,
   AsEdgeQLParams,
   Condition,
   IsAllowedParams,
@@ -62,6 +64,21 @@ export abstract class AggregateConditions<
       .map((c) => c.asCypherCondition(query, other))
       .join(separator);
     return `(${inner})`;
+  }
+
+  asDrizzleCondition(params: AsDrizzleParams<TResourceStatic>): SQL {
+    const inner = this.conditions.map((c) => {
+      if (!c.asDrizzleCondition) {
+        throw new Error(
+          `Condition ${c.constructor.name} has not been ported to Drizzle — implement asDrizzleCondition`,
+        );
+      }
+      return c.asDrizzleCondition(params);
+    });
+    const combined =
+      this instanceof AndConditions ? and(...inner) : or(...inner);
+    // and()/or() only return undefined for zero inputs; from() guarantees 1+.
+    return combined!;
   }
 
   setupEdgeQLContext(params: AsEdgeQLParams<TResourceStatic>) {
