@@ -49,15 +49,6 @@ export class SetDepartmentId {
       return;
     }
 
-    // migration-todo: the PG path (assignDepartmentIdPg, below) is implemented
-    // but needs funding_accounts.department_id_block_id + populated blocks,
-    // which land with the FundingAccount↔department_id_block migration. No-op
-    // under postgres until then; delete this guard to enable the PG path (the
-    // engine-check below already routes to it).
-    if (this.config.databaseEngine === 'postgres') {
-      return;
-    }
-
     const project =
       event instanceof ProjectTransitionedHook ? event.project : event.updated;
 

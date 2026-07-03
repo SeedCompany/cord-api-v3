@@ -157,8 +157,14 @@ const projectIdRefForResource = (resource: EnhancedResource<any>): SQL => {
       return sql.raw(`"project_members"."project_id"`);
     case 'Partnership':
       return sql.raw(`"partnerships"."project_id"`);
+    case 'Budget':
+      return sql.raw(`"budgets"."project_id"`);
+    case 'BudgetRecord':
+      return sql.raw(
+        `(select "b"."project_id" from "budgets" "b" where "b"."id" = "budget_records"."budget_id")`,
+      );
     // migration-todo: re-add a case per domain as it ports to Postgres
-    // (Budget/Engagement/Ceremony/Language/BudgetRecord each dereference to
+    // (Engagement/Ceremony/Language each dereference to
     // their `project_id` FK — mono has the arms). Kept stripped so an
     // unmigrated domain routed through Drizzle fails loud here instead of
     // emitting SQL against a non-existent table.
