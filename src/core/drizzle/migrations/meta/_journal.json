@@ -92,6 +92,13 @@
       "when": 1748649600000,
       "tag": "0012_add_notifications",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1751500800000,
+      "tag": "0013_add_fk_index_backfill",
+      "breakpoints": true
     }
   ]
 }

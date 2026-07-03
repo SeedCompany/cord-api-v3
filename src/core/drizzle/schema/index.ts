@@ -309,6 +309,10 @@ export const locations = pgTable(
     index('locations_default_marketing_region_id_idx').on(
       t.defaultMarketingRegionId,
     ),
+    // FK indexes backfilled in 0012 — these columns predate the
+    // index-every-FK standard (flagged by postgres-schema.e2e's invariant).
+    index('locations_default_field_region_id_idx').on(t.defaultFieldRegionId),
+    index('locations_funding_account_id_idx').on(t.fundingAccountId),
   ],
 );
 

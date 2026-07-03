@@ -85,7 +85,7 @@ jobs:
           # full suite.
           - database: postgres
             test-args: >-
-              --testPathPatterns "test/(authentication|user|education|unavailability|file|location|organization|region|zone|funding-account|partner|project-member|tool|notification)\."
+              --testPathPatterns "test/(authentication|user|education|unavailability|file|location|organization|region|zone|funding-account|partner|project-member|tool|notification|postgres-schema|auth-read-filter)\."
       fail-fast: false
     steps:
       - uses: actions/checkout@v4
