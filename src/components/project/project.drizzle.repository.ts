@@ -12,6 +12,7 @@ import {
   isNull,
   lt,
   lte,
+  max,
   sql,
   type SQL,
 } from 'drizzle-orm';
@@ -45,6 +46,7 @@ import {
   locations,
   projectMembers,
   projects,
+  projectWorkflowEvents,
 } from '~/core/drizzle/schema';
 import { rolesForScope } from '../authorization/dto/role.dto';
 import { PolicyExecutor } from '../authorization/policy/executor/policy-executor';
@@ -85,6 +87,8 @@ const catchDepartmentIdUnique = catchUniqueViolation(
  */
 type ProjectRow = typeof projects.$inferSelect & {
   engagementTotal?: number;
+  /** Latest workflow-event `at`, if any — batched in `readMany`. */
+  stepChangedAt?: Date | null;
   membership?: {
     id: ID<'ProjectMember'>;
     roles: readonly string[];
@@ -162,6 +166,21 @@ export class ProjectDrizzleRepository extends DrizzleDtoRepository<
     const membershipByProject = new Map(
       memberships.map((m) => [m.projectId, m]),
     );
+    // Latest workflow-event timestamp per project — `stepChangedAt` derives
+    // from it at read time (toDto falls back to createdAt, matching Gel's
+    // `latestWorkflowEvent.at ?? createdAt`). Served by the
+    // (project_id, at DESC) index; events are append-only (no soft delete).
+    const latestEvents = await this.db
+      .select({
+        projectId: projectWorkflowEvents.projectId,
+        at: max(projectWorkflowEvents.at),
+      })
+      .from(projectWorkflowEvents)
+      .where(inArray(projectWorkflowEvents.projectId, [...ids]))
+      .groupBy(projectWorkflowEvents.projectId);
+    const stepChangedByProject = new Map(
+      latestEvents.map((e) => [e.projectId, e.at]),
+    );
     // migration-todo: engagementTotal is stubbed to 0 until Engagement migrates
     // (the `engagements` table isn't on develop yet). `pinned` dropped — Pin
     // isn't migrated; re-add the pinnedByRequester batch when the pin domain ports.
@@ -169,6 +188,7 @@ export class ProjectDrizzleRepository extends DrizzleDtoRepository<
       const enriched: ProjectRow = {
         ...row,
         membership: membershipByProject.get(row.id) ?? null,
+        stepChangedAt: stepChangedByProject.get(row.id) ?? null,
         engagementTotal: 0,
       };
       return this.toDto(enriched);
@@ -427,10 +447,9 @@ export class ProjectDrizzleRepository extends DrizzleDtoRepository<
       presetInventory: row.presetInventory,
       createdAt: DateTime.fromJSDate(row.createdAt),
       modifiedAt: DateTime.fromJSDate(row.modifiedAt),
-      // stepChangedAt is derived from the latest workflow event; PR 3 wires
-      // the real query. For now fall back to createdAt — the only reader is
-      // the resolver, and the field has no stored canonical value anyway.
-      stepChangedAt: DateTime.fromJSDate(row.createdAt),
+      // Derived from the latest workflow event (batched in readMany), falling
+      // back to createdAt — Gel parity: `latestWorkflowEvent.at ?? createdAt`.
+      stepChangedAt: DateTime.fromJSDate(row.stepChangedAt ?? row.createdAt),
       primaryLocation: linkOrNull(row.primaryLocationId),
       marketingLocation: linkOrNull(row.marketingLocationId),
       marketingRegionOverride: linkOrNull(row.marketingRegionOverrideId),
@@ -796,16 +815,19 @@ export const projectFilterClauses = (
     );
   }
   if (filter.tool) {
+    // migration-todo: wire when ToolUsage migrates (exists-over-tool_usages).
     throw new NotImplementedException(
       'ProjectFilters.tool requires ToolUsage migration.',
     );
   }
   if (filter.onlyMultipleEngagements != null) {
+    // migration-todo: wire when Engagement migrates (count-over-engagements).
     throw new NotImplementedException(
       'ProjectFilters.onlyMultipleEngagements requires Engagement migration (Phase 5).',
     );
   }
   if (filter.usesRev79 != null) {
+    // migration-todo: wire when ToolUsage migrates (Rev79 tool usage check).
     throw new NotImplementedException(
       'ProjectFilters.usesRev79 requires ToolUsage migration.',
     );
