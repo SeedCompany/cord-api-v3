@@ -1,3 +1,4 @@
+import { ConfigService } from '~/core/config';
 import { OnHook } from '~/core/hooks';
 import { ProjectStatus, stepToStatus } from '../../project/dto';
 import { ProjectTransitionedHook } from '../../project/workflow/hooks/project-transitioned.hook';
@@ -6,9 +7,16 @@ import { BudgetStatus } from '../dto';
 
 @OnHook(ProjectTransitionedHook)
 export class UpdateProjectBudgetStatusHandler {
-  constructor(private readonly budgets: BudgetService) {}
+  constructor(
+    private readonly budgets: BudgetService,
+    private readonly config: ConfigService,
+  ) {}
 
   async handle(event: ProjectTransitionedHook) {
+    // migration-todo: Budget isn't migrated to Postgres yet; skip this
+    // Neo4j-only budget-status sync under DATABASE=postgres. Drop this guard
+    // when budget-pg lands.
+    if (this.config.databaseEngine === 'postgres') return;
     const { project } = event;
 
     const prevStatus = stepToStatus(event.previousStep);

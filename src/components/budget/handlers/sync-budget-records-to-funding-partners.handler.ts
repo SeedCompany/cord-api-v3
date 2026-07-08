@@ -8,6 +8,7 @@ import {
   UnauthorizedException,
   type UnsecuredDto,
 } from '~/common';
+import { ConfigService } from '~/core/config';
 import { OnHook } from '~/core/hooks';
 import { ILogger, Logger } from '~/core/logger';
 import { PartnerType } from '../../partner/dto';
@@ -43,9 +44,15 @@ export class SyncBudgetRecordsToFundingPartners {
     private readonly budgetRepo: BudgetRepository,
     private readonly partnershipService: PartnershipService,
     @Logger('budget:sync-partnerships') private readonly logger: ILogger,
+    private readonly config: ConfigService,
   ) {}
 
   async handle(event: SubscribedEvent) {
+    // migration-todo: Budget/Partnership aren't migrated to Postgres yet; skip
+    // this Neo4j-only budget-record sync under DATABASE=postgres. Drop this
+    // guard when budget-pg lands (Partnership triggers already can't fire
+    // under postgres until partnership-pg lands).
+    if (this.config.databaseEngine === 'postgres') return;
     this.logger.debug('Partnership/Project mutation, syncing budget records', {
       ...event,
       event: event.constructor.name,
