@@ -5,6 +5,7 @@ import { FileModule } from '../file/file.module';
 import { ProgressReportModule } from '../progress-report/progress-report.module';
 import { ProjectModule } from '../project/project.module';
 import * as handlers from './handlers';
+import { BackfillPeriodicReportNarrativeFileMigration } from './migrations/backfill-periodic-report-narrative-file.migration';
 import { PeriodicReportParentResolver } from './periodic-report-parent.resolver';
 import { PeriodicReportProjectConnectionResolver } from './periodic-report-project-connection.resolver';
 import { PeriodicReportLoader } from './periodic-report.loader';
@@ -27,6 +28,7 @@ import { PeriodicReportService } from './periodic-report.service';
     PeriodicReportParentResolver,
     PeriodicReportRepository,
     PeriodicReportLoader,
+    BackfillPeriodicReportNarrativeFileMigration,
     ...Object.values(handlers),
   ],
   exports: [PeriodicReportService],

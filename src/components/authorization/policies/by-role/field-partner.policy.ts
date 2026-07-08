@@ -12,7 +12,9 @@ import { member, Policy, Role, variant } from '../util';
   r.Partnership.when(member).read,
   r.PeriodicReport.read,
   r.Product.read,
-  r.ProgressReport.when(member).read.specifically((p) => p.reportFile.none),
+  r.ProgressReport.when(member).read.specifically(
+    (p) => p.many('reportFile', 'narrativeFile').none,
+  ),
   [
     r.ProgressReportCommunityStory,
     r.ProgressReportHighlight,
