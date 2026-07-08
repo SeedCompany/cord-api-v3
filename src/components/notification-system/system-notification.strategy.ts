@@ -1,4 +1,5 @@
 import { node, type Query } from 'cypher-query-builder';
+import { isNull } from 'drizzle-orm';
 import { type ID } from '~/common';
 import { type DrizzleDb, users } from '~/core/drizzle';
 import { e } from '~/core/gel';
@@ -24,7 +25,12 @@ export class SystemNotificationStrategy extends INotificationStrategy<SystemNoti
     _input: unknown,
     db: DrizzleDb,
   ): Promise<ReadonlyArray<ID<'User'>>> {
-    const rows = await db.select({ id: users.id }).from(users);
+    // Neo4j excludes deleted users structurally (relabelled to Deleted_User);
+    // PG user deletion is a soft delete, so filter explicitly.
+    const rows = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(isNull(users.deletedAt));
     return rows.map((row) => row.id);
   }
 
