@@ -362,6 +362,10 @@ export class ProjectRepository extends CommonRepository {
     return result;
   }
 
+  async delete(id: ID): Promise<void> {
+    await this.deleteNode(id, { resource: IProject });
+  }
+
   async list(input: ProjectListInput) {
     const result = await this.db
       .query()

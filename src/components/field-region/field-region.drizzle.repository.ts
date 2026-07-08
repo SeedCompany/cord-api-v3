@@ -130,6 +130,15 @@ export class FieldRegionDrizzleRepository extends DrizzleDtoRepository<
 }
 
 /**
+ * Sortable columns on `field_regions`. Exported for cross-domain sort
+ * (Project sorts by `fieldRegion.*`), parallel to `*FilterClauses`.
+ */
+export const fieldRegionSortColumns = {
+  name: fieldRegions.name,
+  createdAt: fieldRegions.createdAt,
+} satisfies SortMap<keyof FieldRegion>;
+
+/**
  * Build the column-level WHERE clauses for a `FieldRegionFilters` input against
  * the `field_regions` table. Reusable from sub-filters in other domains
  * (e.g. Project's `fieldRegion` filter).

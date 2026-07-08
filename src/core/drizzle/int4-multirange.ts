@@ -21,10 +21,16 @@ export const int4multirange = customType<{
   driverData: string;
 }>({
   dataType: () => 'int4multirange',
-  toDriver: (ranges) =>
-    ranges.length === 0
-      ? '{}'
-      : `{${ranges.map((r) => `[${r.start},${r.end + 1})`).join(',')}}`,
+  toDriver: (ranges) => {
+    if (ranges.length === 0) {
+      // A block with no ranges can't allocate any ID. The DTO declares
+      // `blocks: NonEmptyArray` and the input parser already rejects empty
+      // ranges; fail fast here too so a non-DTO writer (e.g. a cutover
+      // data-migration script) can't silently persist an unusable `'{}'`.
+      throw new Error('int4multirange cannot serialize an empty range set');
+    }
+    return `{${ranges.map((r) => `[${r.start},${r.end + 1})`).join(',')}}`;
+  },
   fromDriver: (value) => {
     const out: IntRange[] = [];
     for (const m of value.matchAll(/([[(])(\d+),(\d+)([\])])/g)) {
