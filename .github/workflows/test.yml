@@ -32,7 +32,7 @@ jobs:
         run: yarn test --reporters=github-actions
 
   E2E:
-    name: E2E Tests (${{ matrix.database }} ${{ matrix.shard }}/6)
+    name: E2E Tests (${{ matrix.database }} ${{ matrix.shard }}/${{ matrix.total || 6 }})
     runs-on: ubuntu-latest
 
     services:
@@ -73,7 +73,6 @@ jobs:
         shard: [1, 2, 3, 4, 5, 6]
         database:
           - neo4j
-          - postgres
 #          - gel
         include:
           # Postgres runs only the suites for domains that have a Drizzle repo
@@ -82,8 +81,15 @@ jobs:
           # matching *.drizzle.repository.ts; add a domain here only in the same
           # PR that lands its repo. Widen as each phase lands. migration-todo:
           # drop the filter entirely at Phase 7 cutover so postgres runs the
-          # full suite.
+          # full suite (and re-shard it to match neo4j).
+          #
+          # Single shard on purpose: the migrated-domain subset is only a few
+          # minutes of tests — six jobs paying the full setup cost for ~1.5 min
+          # of tests each was pure runner waste. Bump `total` (and add shard
+          # entries) as the subset grows.
           - database: postgres
+            shard: 1
+            total: 1
             test-args: >-
               --testPathPatterns "test/(authentication|user|education|unavailability|file|location|organization|region|zone|funding-account|partner|project-member|tool|notification|postgres-schema|auth-read-filter)\."
       fail-fast: false
@@ -99,7 +105,7 @@ jobs:
         run: yarn start -- --gen-schema && yarn gql-tada generate output
 
       - name: E2E Tests
-        run: yarn test:e2e --shard=${{ matrix.shard }}/6 --reporters=github-actions ${{ matrix.test-args }}
+        run: yarn test:e2e --shard=${{ matrix.shard }}/${{ matrix.total || 6 }} --reporters=github-actions ${{ matrix.test-args }}
         env:
           NEO4J_VERSION: ${{ matrix.neo4j-version }}
           DATABASE: ${{ matrix.database }}
