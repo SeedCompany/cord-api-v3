@@ -6,6 +6,13 @@ on:
       - master
       - develop
 
+# One active run per branch/PR — a force-push cancels the now-stale run
+# instead of letting it occupy runners for its full duration. Guarded to
+# pull_request so develop/master push runs always complete.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   Unit:
     runs-on: ubuntu-latest
