@@ -61,19 +61,19 @@ export abstract class AggregateConditions<
     }
     const separator = this instanceof AndConditions ? ' AND ' : ' OR ';
     const inner = this.conditions
-      .map((c) => c.asCypherCondition(query, other))
+      .map((condition) => condition.asCypherCondition(query, other))
       .join(separator);
     return `(${inner})`;
   }
 
   asDrizzleCondition(params: AsDrizzleParams<TResourceStatic>): SQL {
-    const inner = this.conditions.map((c) => {
-      if (!c.asDrizzleCondition) {
+    const inner = this.conditions.map((condition) => {
+      if (!condition.asDrizzleCondition) {
         throw new Error(
-          `Condition ${c.constructor.name} has not been ported to Drizzle — implement asDrizzleCondition`,
+          `Condition ${condition.constructor.name} has not been ported to Drizzle — implement asDrizzleCondition`,
         );
       }
-      return c.asDrizzleCondition(params);
+      return condition.asDrizzleCondition(params);
     });
     const combined =
       this instanceof AndConditions ? and(...inner) : or(...inner);
@@ -95,16 +95,16 @@ export abstract class AggregateConditions<
     }
     const separator = this instanceof AndConditions ? '\nand ' : '\nor ';
     const inner = this.conditions
-      .map((c) => c.asEdgeQLCondition(params))
+      .map((condition) => condition.asEdgeQLCondition(params))
       .join(separator);
     return `(${addIndent('\n' + inner, 2)}\n)`;
   }
 
   [inspect.custom](_depth: number, _options: InspectOptionsStylized) {
     const name = this instanceof AndConditions ? ' AND ' : ' OR ';
-    const asStrings = this.conditions.map((c) => {
-      const l = inspect(c);
-      return c instanceof AggregateConditions ? `(${l})` : l;
+    const asStrings = this.conditions.map((condition) => {
+      const label = inspect(condition);
+      return condition instanceof AggregateConditions ? `(${label})` : label;
     });
     return [...new Set(asStrings)].join(name);
   }
@@ -156,8 +156,8 @@ export class OrConditions<
       throw new Error('OrConditions requires at least one condition');
     }
 
-    const flattened = conditions.flatMap((c) =>
-      c instanceof OrConditions ? c.conditions : c,
+    const flattened = conditions.flatMap((condition) =>
+      condition instanceof OrConditions ? condition.conditions : condition,
     );
 
     if (!optimize) {
