@@ -238,10 +238,10 @@ export class ProjectMemberDrizzleRepository extends DrizzleDtoRepository<
       isNull(projectMembers.deletedAt),
     ];
     if (roles?.length) {
-      const rolesLit = sql.raw(
+      const rolesLiteral = sql.raw(
         `array[${roles.map((r) => `'${r}'`).join(', ')}]::"role"[]`,
       );
-      conditions.push(sql`${projectMembers.roles} && ${rolesLit}`);
+      conditions.push(sql`${projectMembers.roles} && ${rolesLiteral}`);
     }
     return await this.db
       .select({ id: users.id, email: users.email })
@@ -261,7 +261,7 @@ export class ProjectMemberDrizzleRepository extends DrizzleDtoRepository<
     projectId: ID<'Project'>,
     userId: ID<'User'>,
   ): Promise<void> {
-    const roleLit = sql.raw(`array['${role}']::"role"[]`);
+    const roleLiteral = sql.raw(`array['${role}']::"role"[]`);
     // Cheap guard: bail if any active member already holds the role.
     const existing = await this.db
       .select({ n: sql<number>`1` })
@@ -271,7 +271,7 @@ export class ProjectMemberDrizzleRepository extends DrizzleDtoRepository<
           eq(projectMembers.projectId, projectId),
           isNull(projectMembers.inactiveAt),
           isNull(projectMembers.deletedAt),
-          sql`${projectMembers.roles} && ${roleLit}`,
+          sql`${projectMembers.roles} && ${roleLiteral}`,
         ),
       )
       .limit(1);
@@ -294,7 +294,7 @@ export class ProjectMemberDrizzleRepository extends DrizzleDtoRepository<
     region?: ID<'FieldRegion'>,
   ): Promise<{ projects: readonly ID[]; timestampId: DateTime }> {
     const now = DateTime.now();
-    const roleLit = sql.raw(`array['${role}']::"role"[]`);
+    const roleLiteral = sql.raw(`array['${role}']::"role"[]`);
 
     // Affected projects: old director is an active member with `role`, project
     // is in an open status (InDevelopment | Active), optionally on `region`.
@@ -302,7 +302,7 @@ export class ProjectMemberDrizzleRepository extends DrizzleDtoRepository<
       eq(projectMembers.userId, oldDirector),
       isNull(projectMembers.inactiveAt),
       isNull(projectMembers.deletedAt),
-      sql`${projectMembers.roles} && ${roleLit}`,
+      sql`${projectMembers.roles} && ${roleLiteral}`,
       inArray(projects.status, ['InDevelopment', 'Active']),
       isNull(projects.deletedAt),
     ];
@@ -463,10 +463,10 @@ export const projectMemberFilterClauses = (
   const conditions: SQL[] = [];
   if (!filter) return conditions;
   if (filter.roles?.length) {
-    const rolesLit = sql.raw(
+    const rolesLiteral = sql.raw(
       `array[${filter.roles.map((r) => `'${r}'`).join(', ')}]::"role"[]`,
     );
-    conditions.push(sql`${projectMembers.roles} && ${rolesLit}`);
+    conditions.push(sql`${projectMembers.roles} && ${rolesLiteral}`);
   }
   if (filter.active === true) {
     conditions.push(isNull(projectMembers.inactiveAt));

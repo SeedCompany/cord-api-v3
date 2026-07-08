@@ -165,19 +165,19 @@ const sensitivityRefForResource = (
   resource: EnhancedResource<any>,
   access: Sensitivity,
 ): SQL => {
-  const accessLit = sql.raw(`'${access}'::"sensitivity"`);
+  const accessLiteral = sql.raw(`'${access}'::"sensitivity"`);
   switch (resource.name) {
     case 'Project':
     case 'TranslationProject':
     case 'MomentumTranslationProject':
     case 'MultiplicationTranslationProject':
     case 'InternshipProject':
-      return sql`"projects"."sensitivity" <= ${accessLit}`;
+      return sql`"projects"."sensitivity" <= ${accessLiteral}`;
     case 'ProjectMember':
       return sql`(
         select "p"."sensitivity" from "projects" "p"
         where "p"."id" = "project_members"."project_id"
-      ) <= ${accessLit}`;
+      ) <= ${accessLiteral}`;
     // migration-todo: re-add a case per domain as it ports to Postgres
     // (Partnership/Budget/Engagement/Ceremony/Language/BudgetRecord read
     // sensitivity via their parent project; Partner has its own derived column —
