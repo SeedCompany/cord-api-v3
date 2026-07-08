@@ -76,34 +76,35 @@ describe('Read-filter hides restricted rows from a non-privileged requester', ()
     expect(seen.projects.items.map((p) => p.id)).not.toContain(projectId);
   });
 
-  it('hides a non-member engagement from the engagements list', async () => {
-    if (isPostgres) {
-      // Language/Engagement fixtures can't be created under postgres yet
-      // (domains not migrated on this branch). Covered under neo4j; see the
-      // migration-todo at the top of this file.
-      expect(true).toBe(true);
-      return;
-    }
-    const language = await runAsAdmin(app, createLanguage);
-    const engagement = await createLanguageEngagement(app, {
-      project: projectId,
-      language: language.id,
-    });
-    const engagementId = engagement.id;
+  // Language/Engagement fixtures can't be created under postgres yet (domains
+  // not migrated on this branch) — reported as skipped there, not passed.
+  // Covered under neo4j; see the migration-todo at the top of this file.
+  (isPostgres ? it.skip : it)(
+    'hides a non-member engagement from the engagements list',
+    async () => {
+      const language = await runAsAdmin(app, createLanguage);
+      const engagement = await createLanguageEngagement(app, {
+        project: projectId,
+        language: language.id,
+      });
+      const engagementId = engagement.id;
 
-    const admin = await runAsAdmin(
-      app,
-      async () =>
-        await app.graphql.query(EngagementsDoc, { input: { count: 100 } }),
-    );
-    expect(admin.engagements.items.map((e) => e.id)).toContain(engagementId);
+      const admin = await runAsAdmin(
+        app,
+        async () =>
+          await app.graphql.query(EngagementsDoc, { input: { count: 100 } }),
+      );
+      expect(admin.engagements.items.map((e) => e.id)).toContain(engagementId);
 
-    const seen = await outsider.runAs(
-      async () =>
-        await app.graphql.query(EngagementsDoc, { input: { count: 100 } }),
-    );
-    expect(seen.engagements.items.map((e) => e.id)).not.toContain(engagementId);
-  });
+      const seen = await outsider.runAs(
+        async () =>
+          await app.graphql.query(EngagementsDoc, { input: { count: 100 } }),
+      );
+      expect(seen.engagements.items.map((e) => e.id)).not.toContain(
+        engagementId,
+      );
+    },
+  );
 
   it('hides a partnership from a requester with no Partnership read grant', async () => {
     const admin = await runAsAdmin(

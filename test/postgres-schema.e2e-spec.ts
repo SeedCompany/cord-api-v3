@@ -52,6 +52,10 @@ d('Postgres schema invariants', () => {
           select 1 from pg_index i
           where i.indrelid = con.conrelid
             and i.indkey[0] = con.conkey[1]
+            -- partial indexes (e.g. the soft-delete partial uniques) can't
+            -- serve FK-maintenance scans — only full, valid indexes count
+            and i.indpred is null
+            and i.indisvalid
         )
       order by 1, 2
     `);
