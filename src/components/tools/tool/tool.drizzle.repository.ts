@@ -150,5 +150,8 @@ export const toolFilterClauses = (
   if (filter.name) {
     conditions.push(ilike(tools.name, `%${escapeLikePattern(filter.name)}%`));
   }
+  if (filter.aiBased != null) {
+    conditions.push(eq(tools.aiBased, filter.aiBased));
+  }
   return conditions;
 };

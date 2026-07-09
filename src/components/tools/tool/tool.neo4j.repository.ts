@@ -128,6 +128,7 @@ export class ToolRepository extends DtoRepository(Tool) {
 
 export const toolFilters = filter.define(() => ToolFilters, {
   id: filter.baseNodeProp(),
+  aiBased: filter.propVal(),
   name: filter.fullText({
     index: () => ToolNameIndex,
     matchToNode: (q) =>
