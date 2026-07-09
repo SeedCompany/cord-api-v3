@@ -1589,6 +1589,9 @@ export const budgetRecords = pgTable(
     uniqueIndex('budget_records_budget_org_fy_active_unique')
       .on(t.budgetId, t.organizationId, t.fiscalYear)
       .where(sql`${t.deletedAt} IS NULL`),
+    // Full FK index — the partial unique above leads with budget_id but can't
+    // serve FK-maintenance scans (soft-deleted rows excluded).
+    index('budget_records_budget_id_idx').on(t.budgetId),
     index('budget_records_organization_id_idx').on(t.organizationId),
   ],
 );

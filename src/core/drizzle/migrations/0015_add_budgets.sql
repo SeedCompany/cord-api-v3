@@ -47,3 +47,8 @@ CREATE UNIQUE INDEX "budget_records_budget_org_fy_active_unique"
 
 CREATE INDEX "budget_records_organization_id_idx"
   ON "budget_records" ("organization_id");
+
+-- Full FK index — the partial unique (budget_id, organization_id, fiscal_year)
+-- WHERE deleted_at IS NULL leads with budget_id but can't serve FK-maintenance
+-- scans. Flagged by the tightened postgres-schema.e2e invariant.
+CREATE INDEX "budget_records_budget_id_idx" ON "budget_records" ("budget_id");
