@@ -4,8 +4,11 @@ import { graphql } from '~/graphql';
 import {
   createLanguage,
   createLanguageEngagement,
+  createOrganization,
+  createPartner,
   createPartnership,
   createProject,
+  createProjectMember,
   createSession,
   createTestApp,
   registerUser,
@@ -136,6 +139,147 @@ describe('Read-filter hides restricted rows from a non-privileged requester', ()
   });
 });
 
+// The member condition on Partner/Organization traverses the partnership
+// chain (project → partnership → partner [→ organization]), mirroring the
+// Neo4j list queries' wrapContext patterns. The User member condition is
+// "requester is an active member of ANY project" (Neo4j's unbound-project
+// exists()). Each arm gets a negative (non-member/insufficient-sensitivity
+// sees nothing) and a positive (membership flips visibility), so a vacuous
+// empty list can't pass for the wrong reason.
+describe('Member/sensitivity condition arms via the partnership chain', () => {
+  let app: TestApp;
+  let projectId: ID;
+  let orgId: ID;
+  let partnerId: ID;
+  let fieldPartner: TestUser; // Partner+Org reads are member-gated
+  let fundraising: TestUser; // Partner+Org reads are sensitivity-gated
+  let intern: TestUser; // User reads are member-gated (member of ANY project)
+
+  beforeAll(async () => {
+    app = await createTestApp();
+    await createSession(app);
+    await registerUser(app, { roles: [Role.Administrator] });
+
+    const project = await createProject(app);
+    projectId = project.id;
+    const org = await createOrganization(app);
+    orgId = org.id;
+    const partner = await createPartner(app, { organization: orgId });
+    partnerId = partner.id;
+    await createPartnership(app, { project: projectId, partner: partnerId });
+
+    fieldPartner = await registerUser(app, { roles: [Role.FieldPartner] });
+    fundraising = await registerUser(app, { roles: [Role.Fundraising] });
+    intern = await registerUser(app, { roles: [Role.Intern] });
+  });
+
+  it('hides a partner and its organization from a non-member', async () => {
+    const admin = await runAsAdmin(app, async () => ({
+      partners: await app.graphql.query(PartnersDoc, {
+        input: { count: 100 },
+      }),
+      orgs: await app.graphql.query(OrganizationsDoc, {
+        input: { count: 100 },
+      }),
+    }));
+    expect(admin.partners.partners.items.map((p) => p.id)).toContain(partnerId);
+    expect(admin.orgs.organizations.items.map((o) => o.id)).toContain(orgId);
+
+    const seen = await fieldPartner.runAs(async () => ({
+      partners: await app.graphql.query(PartnersDoc, {
+        input: { count: 100 },
+      }),
+      orgs: await app.graphql.query(OrganizationsDoc, {
+        input: { count: 100 },
+      }),
+    }));
+    expect(seen.partners.partners.items.map((p) => p.id)).not.toContain(
+      partnerId,
+    );
+    expect(seen.orgs.organizations.items.map((o) => o.id)).not.toContain(orgId);
+  });
+
+  it('hides High-sensitivity partners/orgs from a sensitivity-gated role', async () => {
+    // partners.sensitivity / organizations.sensitivity are statically 'High'
+    // until Language migrates and wires the real derivation, so a
+    // sensMediumOrLower role sees none — fail-closed interim.
+    const seen = await fundraising.runAs(async () => ({
+      partners: await app.graphql.query(PartnersDoc, {
+        input: { count: 100 },
+      }),
+      orgs: await app.graphql.query(OrganizationsDoc, {
+        input: { count: 100 },
+      }),
+    }));
+    expect(seen.partners.partners.items.map((p) => p.id)).not.toContain(
+      partnerId,
+    );
+    expect(seen.orgs.organizations.items.map((o) => o.id)).not.toContain(orgId);
+  });
+
+  it('a non-member sees only themselves in the users list', async () => {
+    const seen = await intern.runAs(
+      async () => await app.graphql.query(UsersDoc, { input: { count: 100 } }),
+    );
+    const ids = seen.users.items.map((u) => u.id);
+    expect(ids).toContain(intern.id);
+    expect(ids).not.toContain(fieldPartner.id);
+  });
+
+  it('a non-member cannot resolve a project by id', async () => {
+    const admin = await runAsAdmin(
+      app,
+      async () => await app.graphql.query(ProjectByIdDoc, { id: projectId }),
+    );
+    expect(admin.project.id).toBe(projectId);
+
+    await intern.runAs(async () => {
+      await expect(
+        app.graphql.query(ProjectByIdDoc, { id: projectId }),
+      ).rejects.toThrow();
+    });
+  });
+
+  it('project membership flips partner/org/user/project visibility', async () => {
+    await runAsAdmin(app, async () => {
+      await createProjectMember(app, {
+        project: projectId,
+        user: fieldPartner.id,
+        roles: [Role.FieldPartner],
+      });
+      await createProjectMember(app, {
+        project: projectId,
+        user: intern.id,
+        roles: [Role.Intern],
+      });
+    });
+
+    // Member arm: the partnership chain now grants partner + org.
+    const seen = await fieldPartner.runAs(async () => ({
+      partners: await app.graphql.query(PartnersDoc, {
+        input: { count: 100 },
+      }),
+      orgs: await app.graphql.query(OrganizationsDoc, {
+        input: { count: 100 },
+      }),
+    }));
+    expect(seen.partners.partners.items.map((p) => p.id)).toContain(partnerId);
+    expect(seen.orgs.organizations.items.map((o) => o.id)).toContain(orgId);
+
+    // User arm: member of ANY project → other users become listable.
+    const users = await intern.runAs(
+      async () => await app.graphql.query(UsersDoc, { input: { count: 100 } }),
+    );
+    expect(users.users.items.map((u) => u.id)).toContain(fieldPartner.id);
+
+    // Project readMany: the member can now resolve the project by id.
+    const project = await intern.runAs(
+      async () => await app.graphql.query(ProjectByIdDoc, { id: projectId }),
+    );
+    expect(project.project.id).toBe(projectId);
+  });
+});
+
 const ProjectsDoc = graphql(`
   query ProjectsForReadFilter($input: ProjectListInput) {
     projects(input: $input) {
@@ -162,6 +306,44 @@ const PartnershipsDoc = graphql(`
       items {
         id
       }
+    }
+  }
+`);
+
+const PartnersDoc = graphql(`
+  query PartnersForReadFilter($input: PartnerListInput) {
+    partners(input: $input) {
+      items {
+        id
+      }
+    }
+  }
+`);
+
+const OrganizationsDoc = graphql(`
+  query OrganizationsForReadFilter($input: OrganizationListInput) {
+    organizations(input: $input) {
+      items {
+        id
+      }
+    }
+  }
+`);
+
+const UsersDoc = graphql(`
+  query UsersForReadFilter($input: UserListInput) {
+    users(input: $input) {
+      items {
+        id
+      }
+    }
+  }
+`);
+
+const ProjectByIdDoc = graphql(`
+  query ProjectByIdForReadFilter($id: ID!) {
+    project(id: $id) {
+      id
     }
   }
 `);

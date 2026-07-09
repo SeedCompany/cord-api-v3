@@ -143,8 +143,26 @@ export class ProjectDrizzleRepository extends DrizzleDtoRepository<
     // view collapses to the canonical row — the arg is silently ignored.
     if (ids.length === 0) return [];
     const userId = this.identity.current.userId;
+    // Mirror the Neo4j readMany's `filterToReadable`: without this, member-
+    // gated roles could resolve non-member projects by id. The policy's
+    // condition SQL references literal table names, so it runs over a plain
+    // id-select rather than inside the relational query; survivors hydrate
+    // through the normal path.
+    const readConditions: SQL[] = [
+      inArray(projects.id, [...ids]),
+      isNull(projects.deletedAt),
+    ];
+    if (!this.executor.applyReadFilter(this.resource, readConditions)) {
+      return [];
+    }
+    const readable = await this.db
+      .select({ id: projects.id })
+      .from(projects)
+      .where(and(...readConditions));
+    if (readable.length === 0) return [];
+    const readableIds = readable.map((row) => row.id);
     const rows = await this.db.query.projects.findMany({
-      where: (p) => and(inArray(p.id, [...ids]), isNull(p.deletedAt)),
+      where: (p) => inArray(p.id, readableIds),
     });
     if (rows.length === 0) return [];
 

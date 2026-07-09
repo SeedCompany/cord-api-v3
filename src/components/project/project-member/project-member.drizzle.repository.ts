@@ -89,8 +89,25 @@ export class ProjectMemberDrizzleRepository extends DrizzleDtoRepository<
     ids: readonly ID[],
   ): Promise<Array<UnsecuredDto<ProjectMember>>> {
     if (ids.length === 0) return [];
+    // Mirror the Neo4j readMany's `filterManyToReadable`: run the policy read
+    // filter over a plain id-select (its condition SQL references literal
+    // table names, so it can't live inside the relational query), then
+    // hydrate survivors through the normal path.
+    const readConditions: SQL[] = [
+      inArray(projectMembers.id, [...ids]),
+      isNull(projectMembers.deletedAt),
+    ];
+    if (!this.executor.applyReadFilter(this.resource, readConditions)) {
+      return [];
+    }
+    const readable = await this.db
+      .select({ id: projectMembers.id })
+      .from(projectMembers)
+      .where(and(...readConditions));
+    if (readable.length === 0) return [];
+    const readableIds = readable.map((row) => row.id);
     const rows = await this.db.query.projectMembers.findMany({
-      where: (m) => and(inArray(m.id, [...ids]), isNull(m.deletedAt)),
+      where: (m) => inArray(m.id, readableIds),
       with: {
         project: { columns: { id: true, type: true, sensitivity: true } },
         user: { with: { globalRoles: true } },
