@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from '@jest/globals';
-import { type ID, Role } from '~/common';
+import { CalendarDate, type ID, Role } from '~/common';
 import { graphql } from '~/graphql';
 import {
   createLanguage,
@@ -44,6 +44,11 @@ describe('Read-filter hides restricted rows from a non-privileged requester', ()
   let projectId: ID;
   let partnershipId: ID;
 
+  // Engagement date overrides must stay inside the project's MOU window, so
+  // pin both to the same explicit dates.
+  const mouStart = CalendarDate.local(2023, 1, 1).toISO();
+  const mouEnd = CalendarDate.local(2024, 1, 1).toISO();
+
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
@@ -51,7 +56,7 @@ describe('Read-filter hides restricted rows from a non-privileged requester', ()
     // as the positive control (sees everything).
     await registerUser(app, { roles: [Role.Administrator] });
 
-    const project = await createProject(app);
+    const project = await createProject(app, { mouStart, mouEnd });
     projectId = project.id;
 
     const partnership = await createPartnership(app, { project: projectId });
@@ -82,12 +87,19 @@ describe('Read-filter hides restricted rows from a non-privileged requester', ()
   (isPostgres ? it.skip : it)(
     'hides a non-member engagement from the engagements list',
     async () => {
-      const language = await runAsAdmin(app, createLanguage);
-      const engagement = await createLanguageEngagement(app, {
-        project: projectId,
-        language: language.id,
+      // Fixture setup must run as admin: the ambient session at this point is
+      // the outsider Intern (registerUser logs the session in as the new user),
+      // who can't even read the project.
+      const engagementId = await runAsAdmin(app, async () => {
+        const language = await createLanguage(app);
+        const engagement = await createLanguageEngagement(app, {
+          project: projectId,
+          language: language.id,
+          startDateOverride: mouStart,
+          endDateOverride: mouEnd,
+        });
+        return engagement.id;
       });
-      const engagementId = engagement.id;
 
       const admin = await runAsAdmin(
         app,
