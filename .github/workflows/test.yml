@@ -6,6 +6,11 @@ on:
       - master
       - develop
 
+# Jobs only check out code and run tests; the github-actions Jest reporter
+# annotates via stdout workflow commands, which need no write scopes.
+permissions:
+  contents: read
+
 # One active run per branch/PR — a force-push cancels the now-stale run
 # instead of letting it occupy runners for its full duration. Guarded to
 # pull_request so develop/master push runs always complete.
