@@ -45,8 +45,8 @@ export class NotificationDrizzleRepository {
 
   async create(
     recipients: ReadonlyArray<ID<'User'>> | Nil,
-    type: ResourceShape<any>,
-    input: Record<string, any>,
+    type: ResourceShape<Notification>,
+    input: Record<string, unknown>,
   ) {
     const strategy = this.service.getStrategy(type);
     const extra = omit(input, [...EnhancedResource.of(Notification).props]);
