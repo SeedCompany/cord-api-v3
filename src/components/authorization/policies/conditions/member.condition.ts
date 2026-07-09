@@ -94,12 +94,6 @@ class MemberCondition<
             and "pm"."inactive_at" is null
             and "pm"."deleted_at" is null
         )`;
-      case 'Language':
-        // Mirrors mono: member-visible through ANY project engaging the
-        // language. migration-todo (Engagement recut): restore the
-        // engaging-projects subquery — until `engagements` exists no
-        // membership can be satisfied, so `false` is exact, not a stub.
-        return sql`false`;
       case 'User':
       case 'Unavailability':
         // Neo4j's user list binds no `project` variable, so the cypher is
@@ -247,6 +241,22 @@ const projectIdRefForResource = (resource: EnhancedResource<any>): SQL => {
     case 'BudgetRecord':
       return sql.raw(
         `(select "b"."project_id" from "budgets" "b" where "b"."id" = "budget_records"."budget_id")`,
+      );
+    case 'Engagement':
+    case 'LanguageEngagement':
+    case 'InternshipEngagement':
+      return sql.raw(`"engagements"."project_id"`);
+    case 'Ceremony':
+      return sql.raw(
+        `(select "e"."project_id" from "engagements" "e" where "e"."id" = "ceremonies"."engagement_id")`,
+      );
+    case 'Language':
+      // A language is "member-visible" through ANY project engaging it.
+      // `pm.project_id = any(array(...))` keeps the shared `= ${ref}` template
+      // working with a multi-row subquery.
+      return sql.raw(
+        `any(array(select "e"."project_id" from "engagements" "e"
+          where "e"."language_id" = "languages"."id" and "e"."deleted_at" is null))`,
       );
     // migration-todo: re-add a case per domain as it ports to Postgres
     // (Engagement/Ceremony/Language each dereference to

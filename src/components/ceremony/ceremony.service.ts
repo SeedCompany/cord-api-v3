@@ -25,8 +25,14 @@ export class CeremonyService {
     private readonly repo: CeremonyRepository,
   ) {}
 
-  async create(input: CreateCeremony): Promise<ID> {
-    const { id } = await this.repo.create(input);
+  async create(
+    input: CreateCeremony,
+    engagementId?: ID<'Engagement'>,
+  ): Promise<ID> {
+    // engagementId is only meaningful under postgres (NOT NULL FK); the
+    // Neo4j repo ignores it and the caller wires the relationship after.
+    // migration-todo: make it required at Phase 7 cutover.
+    const { id } = await this.repo.create(input, engagementId);
 
     this.channels.publishToAll('created', {
       ceremony: id,
@@ -81,13 +87,15 @@ export class CeremonyService {
     // Only called internally, not exposed directly to users
     // this.privileges.for( Ceremony, object).verifyCan('delete');
 
-    const { at } = await this.repo.deleteNode(object).catch((exception) => {
+    try {
+      await this.repo.delete(object.id);
+    } catch (exception) {
       throw new ServerException('Failed to delete Ceremony', exception);
-    });
+    }
 
     this.channels.publishToAll('deleted', {
       ceremony: id,
-      at,
+      at: DateTime.now(),
     });
   }
 }

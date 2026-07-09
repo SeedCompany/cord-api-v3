@@ -2,6 +2,7 @@
 import { Injectable } from '@nestjs/common';
 import { type NonEmptyArray, setOf } from '@seedcompany/common';
 import { node, relation } from 'cypher-query-builder';
+import { desc, eq } from 'drizzle-orm';
 import { first, intersection } from 'lodash';
 import {
   type ID,
@@ -10,6 +11,13 @@ import {
   UnauthorizedException,
 } from '~/common';
 import { Identity } from '~/core/authentication';
+import { ConfigService } from '~/core/config';
+import { DrizzleService } from '~/core/drizzle/drizzle.service';
+import {
+  engagements,
+  engagementStatusHistory,
+  projects,
+} from '~/core/drizzle/schema';
 import { ILogger, Logger } from '~/core/logger';
 import { DatabaseService } from '~/core/neo4j';
 import { ACTIVE, INACTIVE } from '~/core/neo4j/query';
@@ -35,6 +43,8 @@ const rolesThatCanBypassWorkflow = setOf<Role>([Role.Administrator]);
 export class EngagementRules {
   constructor(
     private readonly db: DatabaseService,
+    private readonly drizzle: DrizzleService,
+    private readonly config: ConfigService,
     private readonly identity: Identity,
     // eslint-disable-next-line @seedcompany/no-unused-vars
     @Logger('engagement:rules') private readonly logger: ILogger,
@@ -387,6 +397,19 @@ export class EngagementRules {
   }
 
   private async getCurrentStatus(id: ID, changeset?: ID) {
+    // migration-todo: collapse this engine-check at Phase 7 cutover — keep
+    // only the postgres branch.
+    if (this.config.databaseEngine === 'postgres') {
+      const [row] = await this.drizzle.client
+        .select({ status: engagements.status })
+        .from(engagements)
+        .where(eq(engagements.id, id as ID<'Engagement'>));
+      if (!row) {
+        throw new ServerException('current status not found');
+      }
+      return row.status;
+    }
+
     let currentStatus;
 
     if (changeset) {
@@ -426,6 +449,19 @@ export class EngagementRules {
   }
 
   private async getCurrentProjectStep(engagementId: ID, changeset?: ID) {
+    // migration-todo: collapse this engine-check at Phase 7 cutover.
+    if (this.config.databaseEngine === 'postgres') {
+      const [row] = await this.drizzle.client
+        .select({ step: projects.step })
+        .from(projects)
+        .innerJoin(engagements, eq(engagements.projectId, projects.id))
+        .where(eq(engagements.id, engagementId as ID<'Engagement'>));
+      if (!row) {
+        throw new ServerException(`Could not find project's step`);
+      }
+      return row.step;
+    }
+
     const result = await this.db
       .query()
       .match([
@@ -490,6 +526,18 @@ export class EngagementRules {
 
   /** A list of the engagement's previous status ordered most recent to furthest in the past */
   private async getPreviousStatus(id: ID) {
+    // migration-todo: collapse this engine-check at Phase 7 cutover.
+    if (this.config.databaseEngine === 'postgres') {
+      const rows = await this.drizzle.client
+        .select({ status: engagementStatusHistory.status })
+        .from(engagementStatusHistory)
+        .where(eq(engagementStatusHistory.engagementId, id as ID<'Engagement'>))
+        .orderBy(desc(engagementStatusHistory.at));
+      return rows.map(
+        (r) => r.status,
+      ) as unknown as NonEmptyArray<EngagementStatus>;
+    }
+
     const result = await this.db
       .query()
       .match([

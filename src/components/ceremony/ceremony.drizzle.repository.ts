@@ -1,0 +1,173 @@
+import { Injectable } from '@nestjs/common';
+import { and, eq, inArray, isNull, type SQL } from 'drizzle-orm';
+import { DateTime } from 'luxon';
+import {
+  CalendarDate,
+  generateId,
+  type ID,
+  ServerException,
+  type UnsecuredDto,
+} from '~/common';
+import { Identity } from '~/core/authentication';
+import {
+  DrizzleDtoRepository,
+  resolveOrderBy,
+  type SortMap,
+} from '~/core/drizzle';
+import { DrizzleService } from '~/core/drizzle/drizzle.service';
+import { ceremonies } from '~/core/drizzle/schema';
+import { type ScopedRole } from '../authorization/dto/role.dto';
+import { requesterScopeByProject } from '../project/project-member/membership-scope';
+import {
+  Ceremony,
+  type CeremonyListInput,
+  type CreateCeremony,
+  type UpdateCeremony,
+} from './dto';
+
+type CeremonyRow = typeof ceremonies.$inferSelect & {
+  engagement?: {
+    id: ID<'Engagement'>;
+    project?: { id: ID<'Project'>; sensitivity: string } | null;
+  } | null;
+};
+
+@Injectable()
+export class CeremonyDrizzleRepository extends DrizzleDtoRepository<
+  typeof ceremonies,
+  Ceremony
+> {
+  constructor(
+    db: DrizzleService,
+    private readonly identity: Identity,
+  ) {
+    super(db, ceremonies, Ceremony);
+  }
+
+  async create(
+    input: CreateCeremony,
+    engagementId?: ID<'Engagement'>,
+  ): Promise<{ id: ID }> {
+    if (!engagementId) {
+      // The Neo4j flow creates the node then connects it from the caller;
+      // under postgres the FK is NOT NULL so the caller must pass it.
+      throw new ServerException(
+        'Ceremony creation under postgres requires the engagement id',
+      );
+    }
+    const id = await generateId<ID<'Ceremony'>>();
+    await this.db.insert(ceremonies).values({
+      id,
+      engagementId,
+      type: input.type,
+      planned: input.planned ?? false,
+      estimatedDate: input.estimatedDate?.toSQLDate() ?? null,
+      actualDate: input.actualDate?.toSQLDate() ?? null,
+    });
+    return { id };
+  }
+
+  override async readMany(
+    ids: readonly ID[],
+  ): Promise<Array<UnsecuredDto<Ceremony>>> {
+    if (ids.length === 0) return [];
+    const rows = await this.db.query.ceremonies.findMany({
+      where: (c) => and(inArray(c.id, [...ids]), isNull(c.deletedAt)),
+      with: {
+        engagement: {
+          columns: { id: true },
+          with: { project: { columns: { id: true, sensitivity: true } } },
+        },
+      },
+    });
+    const scopeByProject = await requesterScopeByProject(
+      this.db,
+      this.identity.current.userId,
+      rows.flatMap((r) => r.engagement?.project?.id ?? []),
+    );
+    return (rows as CeremonyRow[]).map((row) =>
+      this.toDto(
+        row,
+        row.engagement?.project
+          ? (scopeByProject.get(row.engagement.project.id) ?? [])
+          : [],
+      ),
+    );
+  }
+
+  async update(
+    changes: UpdateCeremony & { id: ID },
+  ): Promise<UnsecuredDto<Ceremony>> {
+    const { id, ...fields } = changes;
+    await this.updateColumns(id, {
+      planned: fields.planned,
+      ...(fields.estimatedDate !== undefined && {
+        estimatedDate: fields.estimatedDate?.toSQLDate() ?? null,
+      }),
+      ...(fields.actualDate !== undefined && {
+        actualDate: fields.actualDate?.toSQLDate() ?? null,
+      }),
+    });
+    return await this.readOne(id);
+  }
+
+  async delete(id: ID): Promise<void> {
+    await this.softDelete(id);
+  }
+
+  async list(input: CeremonyListInput) {
+    const conditions: SQL[] = [isNull(ceremonies.deletedAt)];
+    if (input.filter?.type) {
+      conditions.push(eq(ceremonies.type, input.filter.type));
+    }
+    const sortColumns = {
+      type: ceremonies.type,
+      planned: ceremonies.planned,
+      estimatedDate: ceremonies.estimatedDate,
+      actualDate: ceremonies.actualDate,
+      createdAt: ceremonies.createdAt,
+    } satisfies SortMap<keyof Ceremony>;
+    const { rows, total, hasMore } = await this.paginatedSelect({
+      predicate: and(...conditions),
+      orderBy: resolveOrderBy(input, sortColumns, ceremonies.createdAt),
+      page: input.page,
+      count: input.count,
+    });
+    if (rows.length === 0) return { total, items: [], hasMore };
+    const items = await this.readMany(rows.map((r) => r.id));
+    const byId = new Map(items.map((i) => [i.id, i]));
+    return {
+      total,
+      items: rows.map((r) => byId.get(r.id)!).filter(Boolean),
+      hasMore,
+    };
+  }
+
+  protected toDto(
+    row: CeremonyRow,
+    scope: ScopedRole[] = [],
+  ): UnsecuredDto<Ceremony> {
+    if (!row.engagement?.project) {
+      throw new Error(
+        `Ceremony ${row.id} has no parent engagement/project row — FK invariant violated`,
+      );
+    }
+    const dto: unknown = {
+      id: row.id,
+      __typename: 'Ceremony',
+      createdAt: DateTime.fromJSDate(row.createdAt),
+      type: row.type,
+      planned: row.planned,
+      estimatedDate: row.estimatedDate
+        ? CalendarDate.fromISO(row.estimatedDate)
+        : null,
+      actualDate: row.actualDate ? CalendarDate.fromISO(row.actualDate) : null,
+      sensitivity: row.engagement.project.sensitivity,
+      engagement: { id: row.engagement.id },
+      parent: { id: row.engagement.id },
+      canDelete: true,
+      scope,
+    };
+    return dto as UnsecuredDto<Ceremony>;
+  }
+}

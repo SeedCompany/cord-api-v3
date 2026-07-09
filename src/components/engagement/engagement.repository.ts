@@ -490,6 +490,10 @@ export class EngagementRepository extends CommonRepository {
     return (await this.readOne(id)) as UnsecuredDto<InternshipEngagement>;
   }
 
+  async delete(id: ID, changeset?: ID): Promise<void> {
+    await this.deleteNode(id, { changeset });
+  }
+
   async list(input: EngagementListInput, changeset?: ID) {
     const result = await this.db
       .query()
