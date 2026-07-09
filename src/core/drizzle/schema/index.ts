@@ -1427,3 +1427,70 @@ export const partnershipsRelations = relations(partnerships, ({ one }) => ({
     references: [partners.id],
   }),
 }));
+
+// ─── Notifications ─────────────────────────────────────────────────────────
+
+export const notificationTypeEnum = pgEnum('notification_type', [
+  'System',
+  'CommentViaMention',
+]);
+
+/**
+ * Single-table inheritance over notification subtypes. The discriminator
+ * (`type`) ⟷ the strategy registered for that DTO (its name minus the
+ * `Notification` suffix), and each subtype's extra fields live in nullable
+ * columns guarded by the `notifications_shape` CHECK. Per-recipient read
+ * state lives in `notification_recipients`, so `unread` is computed against
+ * the requesting user, not stored on the notification.
+ */
+export const notifications = pgTable(
+  'notifications',
+  {
+    id: text('id').$type<ID<'Notification'>>().primaryKey(),
+    type: notificationTypeEnum('type').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    creatorId: text('creator_id')
+      .$type<ID<'User'>>()
+      .references(() => users.id, { onDelete: 'set null' }),
+    // System
+    message: text('message'),
+    // CommentViaMention. FK-less for now — the comments table lands in a later
+    // Phase 6 migration.
+    // migration-todo: add `.references(() => comments.id, { onDelete: 'cascade' })`
+    // once the comments table exists (Comments domain port).
+    commentId: text('comment_id').$type<ID<'Comment'>>(),
+  },
+  (t) => [
+    index('notifications_created_at_idx').on(t.createdAt),
+    // FK + deferred-FK indexes (mono added these later in 0028; recut
+    // includes them up front per the index-every-FK standard).
+    index('notifications_creator_id_idx').on(t.creatorId),
+    index('notifications_comment_id_idx').on(t.commentId),
+    check(
+      'notifications_shape',
+      sql`(${t.type} = 'System' AND ${t.message} IS NOT NULL AND ${t.commentId} IS NULL)
+        OR (${t.type} = 'CommentViaMention' AND ${t.commentId} IS NOT NULL AND ${t.message} IS NULL)`,
+    ),
+  ],
+);
+
+export const notificationRecipients = pgTable(
+  'notification_recipients',
+  {
+    notificationId: text('notification_id')
+      .$type<ID<'Notification'>>()
+      .notNull()
+      .references(() => notifications.id, { onDelete: 'cascade' }),
+    userId: text('user_id')
+      .$type<ID<'User'>>()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    readAt: timestamp('read_at', { withTimezone: true }),
+  },
+  (t) => [
+    primaryKey({ columns: [t.notificationId, t.userId] }),
+    index('notification_recipients_user_id_idx').on(t.userId),
+  ],
+);
