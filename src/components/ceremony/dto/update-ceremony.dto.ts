@@ -1,6 +1,5 @@
-import { Field, InputType, ObjectType } from '@nestjs/graphql';
+import { Field, InputType } from '@nestjs/graphql';
 import { type CalendarDate, DateField, type ID, IdField } from '~/common';
-import { Ceremony } from './ceremony.dto';
 
 @InputType()
 export abstract class UpdateCeremony {
@@ -15,10 +14,4 @@ export abstract class UpdateCeremony {
 
   @DateField({ nullable: true })
   readonly actualDate?: CalendarDate | null;
-}
-
-@ObjectType()
-export abstract class CeremonyUpdated {
-  @Field()
-  readonly ceremony: Ceremony;
 }
