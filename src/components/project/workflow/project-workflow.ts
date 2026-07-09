@@ -24,9 +24,7 @@ import { EmailDistro, FinancialApprovers } from './transitions/notifiers';
 // "Back" transitions should come before/above "forward" transitions.
 
 const Distros = {
-  Projects: EmailDistro('projects@tsco.org'),
   Approval: EmailDistro('project_approval@tsco.org'),
-  Extension: EmailDistro('project_extension@tsco.org'),
   Revision: EmailDistro('project_revision@tsco.org'),
   Suspension: EmailDistro('project_suspension@tsco.org'),
   Termination: EmailDistro('project_termination@tsco.org'),
@@ -239,7 +237,7 @@ export const ProjectWorkflow = defineWorkflow({
     to: Step.Active,
     label: 'Confirm Project 🎉',
     type: Type.Approve,
-    notifiers: [Distros.Approval, Distros.Projects],
+    notifiers: Distros.Approval,
   },
   'Finance Requests Multiplication Changes': {
     from: Step.PendingFinanceConfirmation,
@@ -283,21 +281,21 @@ export const ProjectWorkflow = defineWorkflow({
     to: Step.DiscussingChangeToPlan,
     label: 'Discuss Change to Plan',
     type: Type.Neutral,
-    notifiers: [Distros.Extension, Distros.Revision],
+    notifiers: Distros.Revision,
   },
   'Discuss Terminating Active Project': {
     from: [Step.Active, Step.ActiveChangedPlan],
     to: Step.DiscussingTermination,
     label: 'Discuss Termination',
     type: Type.Neutral,
-    notifiers: [Distros.Extension, Distros.Revision],
+    notifiers: Distros.Revision,
   },
   'Finalize Completion': {
     from: [Step.Active, Step.ActiveChangedPlan],
     to: Step.FinalizingCompletion,
     label: 'Finalize Completion',
     type: Type.Approve,
-    notifiers: [Distros.Extension, Distros.Revision],
+    notifiers: Distros.Revision,
   },
 
   'Request Change To Plan Approval': {
@@ -305,28 +303,28 @@ export const ProjectWorkflow = defineWorkflow({
     to: Step.PendingChangeToPlanApproval,
     label: 'Submit for RD Approval',
     type: Type.Approve,
-    notifiers: [Distros.Extension, Distros.Revision],
+    notifiers: Distros.Revision,
   },
   'Request Change To Plan Finance Confirmation': {
     from: Step.DiscussingChangeToPlan,
     to: Step.PendingChangeToPlanConfirmation,
     label: 'Submit for Finance Confirmation',
     type: Type.Approve,
-    notifiers: [Distros.Extension, Distros.Revision],
+    notifiers: [FinancialApprovers, Distros.Revision],
   },
   'Discuss Suspension out of Change to Plan Discussion': {
     from: Step.DiscussingChangeToPlan,
     to: Step.DiscussingSuspension,
     label: 'Discuss Suspension',
     type: Type.Neutral,
-    notifiers: [Distros.Extension, Distros.Revision],
+    notifiers: Distros.Revision,
   },
   'End Change To Plan Discussion': {
     from: Step.DiscussingChangeToPlan,
     to: BackToActive,
     label: 'Will Not Change Plan',
     type: Type.Neutral,
-    notifiers: [Distros.Extension, Distros.Revision],
+    notifiers: Distros.Revision,
   },
 
   'Retract Change To Plan Approval Request': {
@@ -360,21 +358,21 @@ export const ProjectWorkflow = defineWorkflow({
     to: Step.DiscussingChangeToPlan,
     label: 'Send Back for Corrections',
     type: Type.Reject,
-    notifiers: [Distros.Extension, Distros.Revision],
+    notifiers: Distros.Revision,
   },
   'Approve Change To Plan': {
     from: Step.PendingChangeToPlanApproval,
     to: Step.PendingChangeToPlanConfirmation,
     label: 'Approve Change to Plan',
     type: Type.Approve,
-    notifiers: [FinancialApprovers, Distros.Extension, Distros.Revision],
+    notifiers: [FinancialApprovers, Distros.Revision],
   },
   'Reject Change To Plan': {
     from: Step.PendingChangeToPlanApproval,
     to: BackToActive,
     label: 'Reject Change to Plan',
     type: Type.Reject,
-    notifiers: [Distros.Extension, Distros.Revision],
+    notifiers: Distros.Revision,
   },
 
   'Finance Requests Changes for Change To Plan': {
@@ -382,21 +380,21 @@ export const ProjectWorkflow = defineWorkflow({
     to: Step.DiscussingChangeToPlan,
     label: 'Send Back for Corrections',
     type: Type.Reject,
-    notifiers: [Distros.Extension, Distros.Revision],
+    notifiers: Distros.Revision,
   },
   'Finance Approves Change To Plan': {
     from: Step.PendingChangeToPlanConfirmation,
     to: Step.ActiveChangedPlan,
     label: 'Approve Change to Plan',
     type: Type.Approve,
-    notifiers: [Distros.Extension, Distros.Revision],
+    notifiers: Distros.Revision,
   },
   'Finance Rejects Change To Plan': {
     from: Step.PendingChangeToPlanConfirmation,
     to: BackToActive,
     label: 'Reject Change to Plan',
     type: Type.Reject,
-    notifiers: [Distros.Extension, Distros.Revision],
+    notifiers: Distros.Revision,
   },
 
   'Request Suspension Approval': {
