@@ -27,6 +27,29 @@ export const fetchIds = async (
   return rows.map((r) => r.id);
 };
 
+/**
+ * The set of ids that actually LANDED in a Postgres target table — the truth
+ * source for dangling-FK guards. Neo4j liveness isn't enough: a live source
+ * row can be silently dropped by `onConflictDoNothing` (unique-dup class,
+ * prod-finding #3), and anything referencing it must be nulled/dropped too.
+ *
+ * Dry-run inserts nothing, so fall back to the Neo4j id set there — mapped
+ * counts can differ slightly from a real run when dups exist.
+ */
+export const liveTargetIds = async (
+  ctx: CutoverContext,
+  label: string,
+  table: PgTable & { id: any },
+): Promise<ReadonlySet<string>> => {
+  if (ctx.dryRun) {
+    return new Set(await fetchIds(ctx, label));
+  }
+  const rows: Array<{ id: unknown }> = await ctx.db
+    .select({ id: table.id })
+    .from(table);
+  return new Set(rows.map((row) => String(row.id)));
+};
+
 /** Run an arbitrary read Cypher and return the rows (junction extraction). */
 export const cypher = async <T>(
   ctx: CutoverContext,
