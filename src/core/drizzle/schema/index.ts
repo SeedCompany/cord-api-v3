@@ -541,7 +541,7 @@ export const fundingAccounts = pgTable(
     accountNumber: integer('account_number').notNull(),
     // Deterministic from accountNumber (see blockOfAccount in the funding
     // account repos); SetDepartmentId resolves project → primary location →
-    // funding account → block through this FK. Added in 0013.
+    // funding account → block through this FK. Added in 0014.
     departmentIdBlockId: text('department_id_block_id')
       .$type<ID>()
       .references((): AnyPgColumn => departmentIdBlocks.id),
@@ -1548,7 +1548,15 @@ export const budgets = pgTable(
       .defaultNow(),
     deletedAt: timestamp('deleted_at', { withTimezone: true }),
   },
-  (t) => [index('budgets_project_id_idx').on(t.projectId)],
+  (t) => [
+    index('budgets_project_id_idx').on(t.projectId),
+    // Indexed up front so the File domain can add the REFERENCES clause
+    // without a CREATE INDEX CONCURRENTLY backfill — same convention as
+    // partnerships.mou_id/agreement_id.
+    index('budgets_universal_template_file_id_idx').on(
+      t.universalTemplateFileId,
+    ),
+  ],
 );
 
 export const budgetsRelations = relations(budgets, ({ one, many }) => ({

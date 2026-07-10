@@ -199,6 +199,10 @@ const sensitivityRefForResource = (
     // their parent project; Partner has its own derived column — mono has the
     // arms). Kept stripped so an unmigrated domain routed through Drizzle fails
     // loud here instead of emitting SQL against a missing table.
+    //
+    // migration-todo: these subselects don't check `projects.deleted_at` —
+    // same soft-deleted-project liveness class as projectIdRefForResource in
+    // member.condition.ts; disposition together at the pre-cutover audit.
     default:
       throw new Error(
         `SensitivityCondition.asDrizzleCondition: resource ${resource.name} not configured for Drizzle yet; add a case when it migrates.`,

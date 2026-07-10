@@ -145,6 +145,11 @@ class MemberWithRolesCondition<
  * dereference to `projects.id` directly. Project-scoped child resources
  * reference their FK column. Add cases here as each domain ports to Postgres.
  */
+// migration-todo: no membership/sensitivity EXISTS arm correlates
+// `projects.deleted_at`, so members of a soft-deleted project retain access
+// to its child rows under PG — Neo4j severs these chains via Deleted_ label
+// rewrites. Disposition at the pre-cutover audit: liveness joins per-arm, or
+// cascade project soft-delete to project_members/partnerships.
 const projectIdRefForResource = (resource: EnhancedResource<any>): SQL => {
   switch (resource.name) {
     case 'Project':

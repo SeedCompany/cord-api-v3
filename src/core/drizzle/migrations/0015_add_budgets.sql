@@ -28,6 +28,11 @@ CREATE TABLE "budgets" (
 
 CREATE INDEX "budgets_project_id_idx" ON "budgets" ("project_id");
 
+-- Indexed up front so the File domain can add the REFERENCES clause without a
+-- CREATE INDEX CONCURRENTLY backfill — same convention as partnerships.mou_id.
+CREATE INDEX "budgets_universal_template_file_id_idx"
+  ON "budgets" ("universal_template_file_id");
+
 CREATE TABLE "budget_records" (
   "id"                   text PRIMARY KEY,
   "budget_id"            text NOT NULL REFERENCES "budgets"("id") ON DELETE CASCADE,

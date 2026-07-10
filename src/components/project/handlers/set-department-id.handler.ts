@@ -130,7 +130,9 @@ export class SetDepartmentId {
             select b.range
             from projects p
             join locations l on l.id = p.primary_location_id
+              and l.deleted_at is null
             join funding_accounts fa on fa.id = l.funding_account_id
+              and fa.deleted_at is null
             join department_id_blocks b on b.id = fa.department_id_block_id
             where p.id = ${projectId}
           ),

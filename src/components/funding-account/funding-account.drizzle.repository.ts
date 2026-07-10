@@ -139,14 +139,10 @@ export class FundingAccountDrizzleRepository extends DrizzleDtoRepository<
   protected toDto(
     row: typeof fundingAccounts.$inferSelect,
   ): UnsecuredDto<FundingAccount> {
-    // migration-todo: departmentIdBlock is deferred to the Project-domain
-    // migration. The Neo4j repo links a DepartmentIdBlock node and the Gel
-    // schema requires one, but the shared IdBlock representation (and its
-    // ProjectType enum) belongs with Project. Nothing reads it in PG mode yet:
-    // its only consumer, SetDepartmentId, is Neo4j-only. When ported, the block
-    // is deterministic from accountNumber:
-    //   range(accountNumber * 10000 + 11 .. (accountNumber + 1) * 10000 - 1)
-    //   programs: [MomentumTranslation, Internship]
+    // departmentIdBlock is intentionally not hydrated: FundingAccount doesn't
+    // expose the block over GraphQL. The block rows ARE live under PG — this
+    // repo writes them (deterministic from accountNumber) and SetDepartmentId
+    // reads them via its own SQL, not through this DTO.
     return {
       id: row.id,
       __typename: 'FundingAccount',
