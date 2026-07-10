@@ -13,11 +13,11 @@ import { createTestApp, type TestApp } from './utility';
 // whole suite is skipped (the schema doesn't exist there).
 // migration-todo: drop the engine gate at Phase 7 cutover (always postgres).
 const isPostgres = process.env.DATABASE === 'postgres';
-const d = isPostgres ? describe : describe.skip;
+const describePg = isPostgres ? describe : describe.skip;
 
 const migrationsDir = resolve(process.cwd(), 'src/core/drizzle/migrations');
 
-d('Postgres schema invariants', () => {
+describePg('Postgres schema invariants', () => {
   let app: TestApp;
   let db: DrizzleDb;
 
