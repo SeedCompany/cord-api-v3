@@ -309,6 +309,10 @@ export const locations = pgTable(
     index('locations_default_marketing_region_id_idx').on(
       t.defaultMarketingRegionId,
     ),
+    // FK indexes backfilled in 0013 — these columns predate the
+    // index-every-FK standard (flagged by postgres-schema.e2e's invariant).
+    index('locations_default_field_region_id_idx').on(t.defaultFieldRegionId),
+    index('locations_funding_account_id_idx').on(t.fundingAccountId),
   ],
 );
 
@@ -1409,6 +1413,10 @@ export const partnerships = pgTable(
     uniqueIndex('partnerships_project_primary_active_unique')
       .on(t.projectId)
       .where(sql`${t.primary} = true AND ${t.deletedAt} IS NULL`),
+    // Full FK index — the partial uniques above lead with project_id but
+    // can't serve FK-maintenance scans (cascades consider soft-deleted rows).
+    // Backfilled in 0013; same gap class as project_members_project_id_idx.
+    index('partnerships_project_id_idx').on(t.projectId),
     index('partnerships_partner_id_idx').on(t.partnerId),
     // Deferred-FK columns indexed now to avoid CREATE INDEX CONCURRENTLY when
     // a REFERENCES clause is later added.
