@@ -5,8 +5,12 @@ import { fieldRegionExtractor } from './field-region.extractor';
 import { fieldZoneExtractor } from './field-zone.extractor';
 import { fundingAccountExtractor } from './funding-account.extractor';
 import { locationExtractor } from './location.extractor';
+import { notificationExtractor } from './notification.extractor';
 import { organizationExtractor } from './organization.extractor';
 import { partnerExtractor } from './partner.extractor';
+import { partnershipExtractor } from './partnership.extractor';
+import { projectMemberExtractor } from './project-member.extractor';
+import { projectExtractor } from './project.extractor';
 import { toolExtractor } from './tool.extractor';
 import { userExtractor } from './user.extractor';
 
@@ -14,8 +18,9 @@ import { userExtractor } from './user.extractor';
  * All firm-domain extractors, in no particular order — the harness
  * topologically sorts by each extractor's `dependsOn`.
  *
- * Covers the domains already merged to develop. Project / Partnership / File
- * (tree) / and the rest of the waves drop in here as they land (see README.md).
+ * Covers the domains already merged to develop. File (tree) / Budget /
+ * Language / Engagement and the rest of the waves drop in here as they land
+ * (see README.md).
  */
 export const extractors: readonly Extractor[] = [
   userExtractor,
@@ -28,4 +33,8 @@ export const extractors: readonly Extractor[] = [
   locationExtractor,
   organizationExtractor,
   partnerExtractor,
+  projectExtractor,
+  projectMemberExtractor,
+  partnershipExtractor,
+  notificationExtractor,
 ];
