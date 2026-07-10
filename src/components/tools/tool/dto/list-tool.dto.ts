@@ -16,6 +16,9 @@ export abstract class ToolFilters {
 
   @OptionalField()
   readonly name?: string;
+
+  @OptionalField()
+  readonly aiBased?: boolean;
 }
 
 @InputType()

@@ -178,4 +178,28 @@ describe('Tool e2e', () => {
 
     expect(tools.items.length).toBeGreaterThanOrEqual(numTools);
   });
+
+  it('list filtered by aiBased', async () => {
+    const aiTool = await createTool(app, { aiBased: true });
+    const nonAiTool = await createTool(app, { aiBased: false });
+
+    const { tools } = await app.graphql.query(
+      graphql(
+        `
+          query {
+            tools(input: { count: 25, filter: { aiBased: true } }) {
+              items {
+                ...tool
+              }
+            }
+          }
+        `,
+        [fragments.tool],
+      ),
+    );
+
+    const ids = tools.items.map((tool) => tool.id);
+    expect(ids).toContain(aiTool.id);
+    expect(ids).not.toContain(nonAiTool.id);
+  });
 });
