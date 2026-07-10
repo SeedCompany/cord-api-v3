@@ -43,14 +43,14 @@ describe('Ceremony e2e', () => {
     );
     const ceremony = read.ceremony.value;
     expect(ceremony).toBeDefined();
-    return ceremony!;
+    return { ceremony: ceremony!, engagementId: engagement.id };
   }
 
   // `updateCeremony` returns a `CeremonyUpdated` mutation event — the same
   // payload the `ceremonyUpdated` subscription emits. These lock in that shape.
   describe('updateCeremony mutation event', () => {
     it('reports the changed input fields in updatedKeys', async () => {
-      const ceremony = await createCeremony();
+      const { ceremony } = await createCeremony();
 
       const { updatedKeys } = await updateCeremonyReturning(app, {
         id: ceremony.id,
@@ -65,7 +65,7 @@ describe('Ceremony e2e', () => {
     });
 
     it('carries new values in `updated` and prior values in `previous`', async () => {
-      const ceremony = await createCeremony();
+      const { ceremony } = await createCeremony();
       const date = '2020-05-13';
 
       const {
@@ -90,7 +90,7 @@ describe('Ceremony e2e', () => {
     });
 
     it('resolves the acting actor in `by`', async () => {
-      const ceremony = await createCeremony();
+      const { ceremony } = await createCeremony();
 
       const { by } = await updateCeremonyReturning(app, {
         id: ceremony.id,
@@ -101,8 +101,22 @@ describe('Ceremony e2e', () => {
       expect(by.value?.id).toBeDefined();
     });
 
+    // This linkage is what lets consumers (e.g. the Salesforce syncer) resolve
+    // the owning engagement from a `ceremonyUpdated` event, which otherwise only
+    // identifies the ceremony.
+    it('resolves the owning engagement on the ceremony', async () => {
+      const { ceremony, engagementId } = await createCeremony();
+
+      const { ceremony: result } = await updateCeremonyReturning(app, {
+        id: ceremony.id,
+        planned: true,
+      });
+
+      expect(result.engagement.id).toBe(engagementId);
+    });
+
     it('reports no changes when nothing actually changes', async () => {
-      const ceremony = await createCeremony();
+      const { ceremony } = await createCeremony();
 
       // Set planned:true once...
       await updateCeremonyReturning(app, { id: ceremony.id, planned: true });
@@ -147,6 +161,9 @@ const UpdateCeremonyReturningDoc = graphql(`
         }
         estimatedDate {
           value
+        }
+        engagement {
+          id
         }
       }
       by {

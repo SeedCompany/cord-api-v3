@@ -1,6 +1,7 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { splitDb } from '~/core/database';
 import { AuthorizationModule } from '../authorization/authorization.module';
+import { CeremonyEngagementConnectionResolver } from './ceremony-engagement-connection.resolver';
 import { CeremonyMutationActorResolver } from './ceremony-mutation-actor.resolver';
 import { CeremonyMutationSubscriptionsResolver } from './ceremony-mutation-subscriptions.resolver';
 import { CeremonyUpdatedResolver } from './ceremony-updated.resolver';
@@ -18,6 +19,7 @@ import * as handlers from './handlers';
     CeremonyResolver,
     CeremonyMutationSubscriptionsResolver,
     CeremonyMutationActorResolver,
+    CeremonyEngagementConnectionResolver,
     CeremonyUpdatedResolver,
     CeremonyService,
     CeremonyChannels,
