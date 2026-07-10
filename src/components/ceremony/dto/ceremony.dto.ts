@@ -9,7 +9,7 @@ import {
   SensitivityField,
 } from '~/common';
 import { e } from '~/core/gel';
-import { RegisterResource } from '~/core/resources';
+import { type LinkTo, RegisterResource } from '~/core/resources';
 import { CeremonyType } from './ceremony-type.enum';
 
 @RegisterResource({ db: e.Engagement.Ceremony })
@@ -20,6 +20,8 @@ import { CeremonyType } from './ceremony-type.enum';
 export class Ceremony extends Resource {
   static readonly Parent = () =>
     import('../../engagement/dto').then((m) => m.IEngagement);
+
+  readonly engagement: LinkTo<'Engagement'>;
 
   @Field(() => CeremonyType)
   readonly type: CeremonyType;

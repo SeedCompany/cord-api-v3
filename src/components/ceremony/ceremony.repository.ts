@@ -6,6 +6,7 @@ import {
   ACTIVE,
   createNode,
   matchPropsAndProjectSensAndScopedRoles,
+  merge,
   oncePerProject,
   paginate,
   sorting,
@@ -51,12 +52,16 @@ export class CeremonyRepository extends DtoRepository(Ceremony) {
         .match([
           node('project', 'Project'),
           relation('out', '', 'engagement'),
-          node('', 'Engagement'),
+          node('engagement', 'Engagement'),
           relation('out', '', ACTIVE),
           node('node'),
         ])
         .apply(matchPropsAndProjectSensAndScopedRoles())
-        .return<{ dto: UnsecuredDto<Ceremony> }>('props as dto');
+        .return<{ dto: UnsecuredDto<Ceremony> }>(
+          merge('props', {
+            engagement: 'engagement { .id }',
+          }).as('dto'),
+        );
   }
 
   async list({ filter, ...input }: CeremonyListInput) {
