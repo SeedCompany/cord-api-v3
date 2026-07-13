@@ -34,7 +34,8 @@ export class DrizzleTransactionalMutationsInterceptor extends TransactionalMutat
     // markForRetry() is a no-op under postgres. Same semantics as Neo4j
     // retryable transactions: the mutation body may execute multiple times.
     let attemptsLeft = 3;
-    while (attemptsLeft > 0) {
+    // eslint-disable-next-line no-constant-condition,@typescript-eslint/no-unnecessary-condition
+    while (true) {
       attemptsLeft--;
       try {
         return await this.drizzle.inTx(fn);
@@ -45,7 +46,6 @@ export class DrizzleTransactionalMutationsInterceptor extends TransactionalMutat
         throw error;
       }
     }
-    throw new Error('unreachable: retry loop exhausted without throwing');
   }
 
   private markedForRetry(error: unknown): boolean {
