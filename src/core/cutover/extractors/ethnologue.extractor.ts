@@ -22,17 +22,40 @@ export const ethnologueExtractor: Extractor = {
       'Ethnologue.Language',
       EthnologueLanguageRepository,
     );
+    // CHECK-constraint guard (audit ETH1, prod-finding #1 class): the PG
+    // format/range CHECKs have no Neo4j counterpart and DTO validators only
+    // guarded NEW writes — one legacy bad value would abort a whole insert
+    // chunk. The CHECKs are NULL-tolerant, so null + log instead of dropping.
+    const CODE_RE = /^[a-z]{3}$/;
+    let nulledValues = 0;
+    const conform = (value: string | null | undefined): string | null => {
+      if (value == null) return null;
+      if (CODE_RE.test(value)) return value;
+      nulledValues++;
+      return null;
+    };
+
     // EthnologueLanguage is an embedded value type (no Resource createdAt on
     // the Neo4j side); let the table's createdAt/updatedAt defaults apply.
-    const rows = dtos.map((e) => ({
-      id: e.id,
-      languageId: null,
-      code: e.code ?? null,
-      provisionalCode: e.provisionalCode ?? null,
-      name: e.name ?? null,
-      population: e.population ?? null,
-      deletedAt: null,
-    }));
+    const rows = dtos.map((e) => {
+      const population =
+        e.population != null && e.population >= 0 ? e.population : null;
+      if (e.population != null && population == null) nulledValues++;
+      return {
+        id: e.id,
+        languageId: null,
+        code: conform(e.code),
+        provisionalCode: conform(e.provisionalCode),
+        name: e.name ?? null,
+        population,
+        deletedAt: null,
+      };
+    });
+    if (nulledValues) {
+      ctx.log(
+        `    ⚠ nulled ${nulledValues} ethnologue value(s) violating PG CHECK constraints (bad code format / negative population — audit ETH1)`,
+      );
+    }
     return one(
       'ethnologue_languages',
       dtos.length,
