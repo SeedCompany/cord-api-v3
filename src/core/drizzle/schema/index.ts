@@ -85,6 +85,8 @@ export const users = pgTable('users', {
   about: text('about'),
   title: text('title'),
   gender: genderEnum('gender').$type<Gender>(),
+  // migration-todo(cutover): deferred FK — see partnerships.mou_id for the
+  // decided plan (DEFERRABLE INITIALLY DEFERRED at cutover).
   photoId: text('photo_id').$type<ID<'File'>>(),
   createdAt: timestamp('created_at', { withTimezone: true })
     .notNull()
@@ -1433,9 +1435,15 @@ export const partnerships = pgTable(
       .$type<PartnershipAgreementStatus>()
       .notNull()
       .default('NotAttached'),
-    // migration-todo: plain text (not FK) because create() inserts this row
-    // before files.createDefinedFile() makes the file nodes. Add REFERENCES
-    // file_nodes(id) only if create() is reordered to write the files first.
+    // migration-todo(cutover): plain text (not FK) because create() inserts
+    // this row before files.createDefinedFile() makes the file nodes — the
+    // ordering is pinned by Neo4j parity until the flip. DECIDED 2026-07-13:
+    // at cutover, add REFERENCES file_nodes(id) DEFERRABLE INITIALLY DEFERRED
+    // (drizzle can't express DEFERRABLE — hand-patch the genesis SQL). The
+    // creation order stays as-is; the FK checks at COMMIT, which is safe since
+    // mutations run in one transaction. Same decision applies to every
+    // insert-before-createDefinedFile column (users.photo_id,
+    // budgets.universal_template_file_id).
     mouId: text('mou_id').$type<ID<'File'>>(),
     agreementId: text('agreement_id').$type<ID<'File'>>(),
     mouStartOverride: date('mou_start_override'),
