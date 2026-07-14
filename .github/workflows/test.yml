@@ -115,7 +115,12 @@ jobs:
         # one file's end would destroy a concurrently-running file's data.
         # Runner core-counts already made this effectively serial; pin it so a
         # beefier runner can't silently reintroduce the race.
-        run: yarn test:e2e --maxWorkers=1 --shard=${{ matrix.shard }}/${{ matrix.total || 6 }} --reporters=github-actions ${{ matrix.test-args }}
+        # --workerIdleMemoryLimit: with one worker, EVERY spec file's app runs
+        # in the same long-lived process — teardown leaks accumulate and blow
+        # V8's default 4GB heap cap late in the shard (all-shards OOM,
+        # 2026-07-14). Recycling the worker between files when it bloats keeps
+        # serial semantics with bounded memory.
+        run: yarn test:e2e --maxWorkers=1 --workerIdleMemoryLimit=1500MB --shard=${{ matrix.shard }}/${{ matrix.total || 6 }} --reporters=github-actions ${{ matrix.test-args }}
         env:
           NEO4J_VERSION: ${{ matrix.neo4j-version }}
           DATABASE: ${{ matrix.database }}
