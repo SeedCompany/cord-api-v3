@@ -360,7 +360,13 @@ export class FileDrizzleRepository {
   }
 
   async delete(fileNode: FileNode): Promise<void> {
-    // Soft-delete the node and its whole subtree.
+    // Soft-delete the node and its whole subtree. DELIBERATE divergence from
+    // Neo4j, which soft-deletes only the target node and leaves descendants
+    // alive-but-detached (fetchable by direct ID). Accepted as the new truth
+    // 2026-07-14 (pre-cutover audit F1): nothing app-side reads descendants of
+    // a deleted directory, and cascade matches user expectation. S3 objects
+    // are untouched either way. Delete e2e legs (currently it.skip) get ported
+    // at cutover validation.
     const deleted = await this.db.execute<{ id: ID; type: FileNodeType }>(sql`
       WITH RECURSIVE subtree AS (
         SELECT id FROM ${fileNodes} WHERE id = ${fileNode.id}
