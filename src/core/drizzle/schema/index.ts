@@ -85,8 +85,8 @@ export const users = pgTable('users', {
   about: text('about'),
   title: text('title'),
   gender: genderEnum('gender').$type<Gender>(),
-  // migration-todo(cutover): deferred FK — see partnerships.mou_id for the
-  // decided plan (DEFERRABLE INITIALLY DEFERRED at cutover).
+  // migration-todo(cutover-cleanup): deferred FK — see partnerships.mou_id
+  // for the plan (reorder createDefinedFile → plain FK at cutover cleanup).
   photoId: text('photo_id').$type<ID<'File'>>(),
   createdAt: timestamp('created_at', { withTimezone: true })
     .notNull()
@@ -1435,15 +1435,18 @@ export const partnerships = pgTable(
       .$type<PartnershipAgreementStatus>()
       .notNull()
       .default('NotAttached'),
-    // migration-todo(cutover): plain text (not FK) because create() inserts
-    // this row before files.createDefinedFile() makes the file nodes — the
-    // ordering is pinned by Neo4j parity until the flip. DECIDED 2026-07-13:
-    // at cutover, add REFERENCES file_nodes(id) DEFERRABLE INITIALLY DEFERRED
-    // (drizzle can't express DEFERRABLE — hand-patch the genesis SQL). The
-    // creation order stays as-is; the FK checks at COMMIT, which is safe since
-    // mutations run in one transaction. Same decision applies to every
-    // insert-before-createDefinedFile column (users.photo_id,
-    // budgets.universal_template_file_id).
+    // migration-todo(cutover-cleanup): plain text (not FK) because create()
+    // inserts this row before files.createDefinedFile() makes the file nodes.
+    // The ordering can't flip while Neo4j lives — its createDefinedFile
+    // attaches the file to the parent node, so the parent must exist first;
+    // PG's FK direction wants the opposite. FINAL plan (2026-07-14): do
+    // nothing until cutover, then as a cutover-cleanup item reorder the
+    // createDefinedFile fan-out (file node FIRST, then the referencing row)
+    // and add plain immediate REFERENCES file_nodes(id) — the from-scratch
+    // relational design. (A DEFERRABLE interim was considered and dropped.)
+    // Same plan applies to every insert-before-createDefinedFile column
+    // (users.photo_id, budgets.universal_template_file_id, + Engagement's
+    // pnp_id / growth_plan_id when that lands).
     mouId: text('mou_id').$type<ID<'File'>>(),
     agreementId: text('agreement_id').$type<ID<'File'>>(),
     mouStartOverride: date('mou_start_override'),
