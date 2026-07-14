@@ -8,6 +8,7 @@ import {
   createSession,
   createTestApp,
   createZone,
+  errors,
   fragments,
   loginAsAdmin,
   type TestApp,
@@ -106,6 +107,34 @@ describe('Field Zone e2e', () => {
     expect(updated).toBeTruthy();
     expect(updated.id).toBe(fieldZone.id);
     expect(updated.name.value).toBe(newName);
+  });
+
+  it('restricts removing the director role while they still direct a zone', async () => {
+    const zoneDirector = await createPerson(app, {
+      roles: ['FieldOperationsDirector'],
+    });
+    await createZone(app, { director: zoneDirector.id });
+
+    await expect(
+      app.graphql.mutate(
+        graphql(`
+          mutation updateUser($input: UpdateUser!) {
+            updateUser(input: $input) {
+              user {
+                id
+              }
+            }
+          }
+        `),
+        { input: { id: zoneDirector.id, roles: [] } },
+      ),
+    ).rejects.toThrowGqlError(
+      errors.input({
+        message: expect.stringContaining(
+          'still a director for these field zones',
+        ),
+      }),
+    );
   });
 
   // This function in location service should be updated because one session couldn't be connected to several users at a time.

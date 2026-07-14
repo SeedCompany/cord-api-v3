@@ -8,6 +8,7 @@ import {
   createSession,
   createTestApp,
   createZone,
+  errors,
   fragments,
   loginAsAdmin,
   type TestApp,
@@ -37,6 +38,37 @@ describe('Region e2e', () => {
       fieldZone: fieldZone.id,
     });
     expect(region.id).toBeDefined();
+  });
+
+  it('restricts removing the director role while they still direct a region', async () => {
+    const regionDirector = await createPerson(app, {
+      roles: [Role.RegionalDirector],
+    });
+    await createRegion(app, {
+      director: regionDirector.id,
+      fieldZone: fieldZone.id,
+    });
+
+    await expect(
+      app.graphql.mutate(
+        graphql(`
+          mutation updateUser($input: UpdateUser!) {
+            updateUser(input: $input) {
+              user {
+                id
+              }
+            }
+          }
+        `),
+        { input: { id: regionDirector.id, roles: [] } },
+      ),
+    ).rejects.toThrowGqlError(
+      errors.input({
+        message: expect.stringContaining(
+          'still a director for these field regions',
+        ),
+      }),
+    );
   });
 
   it.skip('should have unique name', async () => {
