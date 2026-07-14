@@ -1,5 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { type MaybeAsync, setOf } from '@seedcompany/common';
+import { DateTime } from 'luxon';
 import {
   type ID,
   InputException,
@@ -191,9 +192,10 @@ export class ProjectMemberService {
 
     this.privileges.for(ProjectMember, object).verifyCan('delete');
 
-    const { at } = await this.repo.deleteNode(object).catch((e) => {
+    await this.repo.delete(id).catch((e) => {
       throw new ServerException('Failed to delete project member', e);
     });
+    const at = DateTime.now();
 
     return this.channels.publishToAll('deleted', {
       program: object.project.type,

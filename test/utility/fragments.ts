@@ -1077,6 +1077,34 @@ export const fundingAccount = graphql(`
 `);
 export type fundingAccount = FragmentOf<typeof fundingAccount>;
 
+export const tool = graphql(`
+  fragment tool on Tool {
+    id
+    name {
+      value
+      canRead
+      canEdit
+    }
+    description {
+      value
+      canRead
+      canEdit
+    }
+    aiBased {
+      value
+      canRead
+      canEdit
+    }
+    key {
+      value
+      canRead
+      canEdit
+    }
+    createdAt
+  }
+`);
+export type tool = FragmentOf<typeof tool>;
+
 export const locationName = graphql(`
   fragment locationName on Location {
     id

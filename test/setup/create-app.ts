@@ -9,6 +9,8 @@ import { LogLevel } from '~/core/logger';
 import { LevelMatcher } from '~/core/logger/level-matcher';
 import { AppModule } from '../../src/app.module';
 import { ephemeralGel } from './gel-setup';
+import { wipeNeo4jAfterFile } from './neo4j-wipe';
+import { ephemeralPg } from './pg-setup';
 
 export type TestApp = Pick<NestHttpApplication, 'get'>;
 
@@ -17,6 +19,10 @@ afterAll(async () => {
   for (const app of appsToClose) {
     await app.close();
   }
+  // Gel/PG are ephemeral per-file DBs (cleaned per app above); Neo4j is one
+  // shared instance per CI job, so it gets wiped here instead. No-op unless
+  // NEO4J_TEST_WIPE is explicitly set (only the CI workflow sets it).
+  await wipeNeo4jAfterFile();
 });
 
 export const createApp = async ({
@@ -29,7 +35,12 @@ export const createApp = async ({
   providers?: Provider[];
   overrides?: (builder: TestingModuleBuilder) => TestingModuleBuilder;
 } & Pick<ModuleMetadata, 'imports' | 'providers'> = {}): Promise<TestApp> => {
-  const db = await ephemeralGel();
+  const gel = await ephemeralGel();
+  const pg = await ephemeralPg();
+  const cleanupDb = async () => {
+    await gel?.cleanup();
+    await pg?.cleanup();
+  };
 
   let app;
   try {
@@ -37,13 +48,16 @@ export const createApp = async ({
       imports: [AppModule, ...(imports ?? [])],
       providers: [
         ...(config ? [ConfigService.providePart(config)] : []),
+        ...(pg
+          ? [ConfigService.providePart({ postgres: { url: pg.url } })]
+          : []),
         ...(providers ?? []),
       ],
     })
       .overrideProvider(LevelMatcher)
       .useValue(new LevelMatcher([], LogLevel.ERROR))
       .overrideProvider('GEL_CONNECT')
-      .useValue(db?.options);
+      .useValue(gel?.options);
     if (overrides) {
       builder = overrides?.(builder);
     }
@@ -53,12 +67,12 @@ export const createApp = async ({
       new HttpAdapter(),
     );
   } catch (e) {
-    await db?.cleanup();
+    await cleanupDb();
     throw e;
   }
 
   andCall(app, 'close', async () => {
-    await db?.cleanup();
+    await cleanupDb();
   });
 
   try {

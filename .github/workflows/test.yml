@@ -6,6 +6,18 @@ on:
       - master
       - develop
 
+# Jobs only check out code and run tests; the github-actions Jest reporter
+# annotates via stdout workflow commands, which need no write scopes.
+permissions:
+  contents: read
+
+# One active run per branch/PR — a force-push cancels the now-stale run
+# instead of letting it occupy runners for its full duration. Guarded to
+# pull_request so develop/master push runs always complete.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   Unit:
     runs-on: ubuntu-latest
@@ -25,7 +37,7 @@ jobs:
         run: yarn test --reporters=github-actions
 
   E2E:
-    name: E2E Tests (${{ matrix.database }} ${{ matrix.shard }}/6)
+    name: E2E Tests (${{ matrix.database }} ${{ matrix.shard }}/${{ matrix.total || 6 }})
     runs-on: ubuntu-latest
 
     services:
@@ -46,6 +58,20 @@ jobs:
           --health-retries 20
           --health-interval 10s
           --health-start-period 30s
+      # Needed for the postgres matrix entries; idle for the neo4j ones.
+      postgres:
+        image: postgres:16-alpine
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_DB: cord
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
 
     strategy:
       matrix:
@@ -53,6 +79,24 @@ jobs:
         database:
           - neo4j
 #          - gel
+        include:
+          # Postgres runs only the suites for domains that have a Drizzle repo
+          # on this branch — unmigrated domains fall back to Neo4j via splitDb
+          # and hit cross-engine boundaries. Each entry below MUST have a
+          # matching *.drizzle.repository.ts; add a domain here only in the same
+          # PR that lands its repo. Widen as each phase lands. migration-todo:
+          # drop the filter entirely at Phase 7 cutover so postgres runs the
+          # full suite (and re-shard it to match neo4j).
+          #
+          # Single shard on purpose: the migrated-domain subset is only a few
+          # minutes of tests — six jobs paying the full setup cost for ~1.5 min
+          # of tests each was pure runner waste. Bump `total` (and add shard
+          # entries) as the subset grows.
+          - database: postgres
+            shard: 1
+            total: 1
+            test-args: >-
+              --testPathPatterns "test/(authentication|user|education|unavailability|file|location|organization|region|zone|funding-account|partner|partnership|project-member|tool|notification|postgres-schema|auth-read-filter|budget)\."
       fail-fast: false
     steps:
       - uses: actions/checkout@v4
@@ -66,8 +110,30 @@ jobs:
         run: yarn start -- --gen-schema && yarn gql-tada generate output
 
       - name: E2E Tests
-        run: yarn test:e2e --shard=${{ matrix.shard }}/6 --reporters=github-actions
+        # --maxWorkers=1: the per-file Neo4j wipe requires spec files to run
+        # sequentially — the shard's Neo4j container is shared, so a wipe at
+        # one file's end would destroy a concurrently-running file's data.
+        # Runner core-counts already made this effectively serial; pin it so a
+        # beefier runner can't silently reintroduce the race.
+        # --workerIdleMemoryLimit: with one worker, EVERY spec file's app runs
+        # in the same long-lived process — teardown leaks accumulate and blow
+        # V8's default 4GB heap cap late in the shard (all-shards OOM,
+        # 2026-07-14). Recycling the worker between files when it bloats keeps
+        # serial semantics with bounded memory.
+        run: yarn test:e2e --maxWorkers=1 --workerIdleMemoryLimit=1500MB --shard=${{ matrix.shard }}/${{ matrix.total || 6 }} --reporters=github-actions ${{ matrix.test-args }}
         env:
           NEO4J_VERSION: ${{ matrix.neo4j-version }}
           DATABASE: ${{ matrix.database }}
-        continue-on-error: ${{ matrix.database == 'gel' }}
+          POSTGRES_URL: postgresql://postgres:postgres@localhost:5432/cord
+          # Opt-in for the between-spec-file Neo4j wipe (test/setup/neo4j-wipe.ts).
+          # The wipe additionally refuses any non-loopback NEO4J_URL. Only set
+          # this where Neo4j is an ephemeral per-job service container.
+          NEO4J_TEST_WIPE: true
+        # neo4j is the production engine → blocking (required to merge).
+        # postgres is dev-only until the cutover, so keep it running for
+        # migration signal but DON'T gate merges on it — a PG failure on a
+        # migrated domain shouldn't block an unrelated PR. (gel is likewise
+        # advisory.) migration-todo: flip postgres back to a required gate
+        # (narrow this to `== 'gel'`) once the migration is further along /
+        # approaching cutover.
+        continue-on-error: ${{ matrix.database != 'neo4j' }}

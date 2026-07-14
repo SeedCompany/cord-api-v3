@@ -7,7 +7,9 @@ module default {
     skippedReason: str;
     
     reportFile: File;
+    narrativeFile: File;
     receivedDate: cal::local_date;
+    narrativeReceivedDate: cal::local_date;
   }
   
   type FinancialReport extending PeriodicReport, Project::Child {

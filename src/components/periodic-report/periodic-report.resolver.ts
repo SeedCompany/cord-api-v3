@@ -76,6 +76,16 @@ export class PeriodicReportResolver {
   }
 
   @Mutation(() => IPeriodicReport, {
+    description: 'Update the narrative file for a periodic report',
+  })
+  async uploadPeriodicReportNarrativeFile(
+    @Args('input')
+    { report: id, file: narrativeFile }: UploadPeriodicReportFile,
+  ): Promise<IPeriodicReport> {
+    return await this.service.update({ id, narrativeFile });
+  }
+
+  @Mutation(() => IPeriodicReport, {
     description: 'Update a report',
   })
   async updatePeriodicReport(
@@ -90,5 +100,13 @@ export class PeriodicReportResolver {
     @Loader(FileNodeLoader) files: LoaderOf<FileNodeLoader>,
   ): Promise<SecuredFile> {
     return await resolveDefinedFile(files, report.reportFile);
+  }
+
+  @ResolveField(() => SecuredFile)
+  async narrativeFile(
+    @Parent() report: IPeriodicReport,
+    @Loader(FileNodeLoader) files: LoaderOf<FileNodeLoader>,
+  ): Promise<SecuredFile> {
+    return await resolveDefinedFile(files, report.narrativeFile);
   }
 }

@@ -20,7 +20,11 @@ import {
   type SortMap,
 } from '~/core/drizzle';
 import { type DrizzleDb, DrizzleService } from '~/core/drizzle/drizzle.service';
-import { userGlobalRoles, users } from '~/core/drizzle/schema';
+import {
+  userGlobalRoles,
+  userOrganizations,
+  users,
+} from '~/core/drizzle/schema';
 import { PolicyExecutor } from '../authorization/policy/executor/policy-executor';
 import { FileService } from '../file';
 import { type FileId } from '../file/dto';
@@ -252,19 +256,70 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
     return row ? this.toDto(row) : null;
   }
 
-  // migration-todo: implement when Organization domain is migrated to PG
-  assignOrganizationToUser(_args: AssignOrganizationToUser): Promise<void> {
-    throw new NotImplementedException().with(_args);
+  async assignOrganizationToUser({
+    user,
+    org,
+    primary,
+  }: AssignOrganizationToUser): Promise<void> {
+    if (primary) {
+      // Enforce one primary org per user (also backed by the
+      // user_organizations_one_primary_per_user partial unique index).
+      await this.db
+        .update(userOrganizations)
+        .set({ primary: false })
+        .where(
+          and(
+            eq(userOrganizations.userId, user),
+            eq(userOrganizations.primary, true),
+          ),
+        );
+    }
+    try {
+      await this.db
+        .insert(userOrganizations)
+        .values({
+          userId: user,
+          organizationId: org,
+          primary: primary ?? false,
+        })
+        .onConflictDoUpdate({
+          target: [userOrganizations.userId, userOrganizations.organizationId],
+          set: { primary: primary ?? false },
+        });
+    } catch (exception) {
+      throw new ServerException(
+        'Failed to assign organization to user',
+        exception,
+      );
+    }
   }
 
-  // migration-todo: implement when Organization domain is migrated to PG
-  removeOrganizationFromUser(_args: RemoveOrganizationFromUser): Promise<void> {
-    throw new NotImplementedException().with(_args);
+  async removeOrganizationFromUser({
+    user,
+    org,
+  }: RemoveOrganizationFromUser): Promise<void> {
+    await this.db
+      .delete(userOrganizations)
+      .where(
+        and(
+          eq(userOrganizations.userId, user),
+          eq(userOrganizations.organizationId, org),
+        ),
+      );
   }
 
   // migration-todo: remove when the Neo4j UserRepository is retired
   hydrateAsNeo4j(): never {
     throw new NotImplementedException();
+  }
+
+  /**
+   * Public wrapper around `toDto` so other domains' repos (e.g. ProjectMember)
+   * can hydrate a User from a raw row without duplicating logic. The row should
+   * be loaded with `globalRoles`.
+   */
+  mapRowToDto(row: UserRow): UnsecuredDto<User> {
+    return this.toDto(row);
   }
 
   protected toDto(row: UserRow): UnsecuredDto<User> {

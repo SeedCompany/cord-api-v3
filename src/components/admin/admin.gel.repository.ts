@@ -31,7 +31,7 @@ export class AdminGelRepository {
     await callback();
   }
 
-  async doesRootUserExist() {
+  async findRootUser() {
     const rootAlias = e.select(e.Alias, () => ({
       filter_single: { name: RootUserAlias },
     }));

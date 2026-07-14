@@ -165,14 +165,17 @@ export class LocationDrizzleRepository extends DrizzleDtoRepository<
     throw new NotImplementedException();
   }
 
-  // migration-todo: implement when location-node relationships are migrated to PG
-  listLocationsFromNodeNoSecGroups(
+  // migration-todo: implement when location-node relationships are migrated
+  // to PG. Edges can't be written yet (addLocationToNode above throws), so an
+  // empty page is accurate for PG-resident resources — and it keeps reads
+  // (e.g. user.locations in e2e fragments) from hard-failing.
+  async listLocationsFromNodeNoSecGroups(
     _label: string,
     _rel: string,
     _id: ID,
     _input: LocationListInput,
   ): Promise<LocationListOutput> {
-    throw new NotImplementedException();
+    return EMPTY_PAGE;
   }
 
   protected toDto(row: typeof locations.$inferSelect): UnsecuredDto<Location> {
@@ -196,6 +199,17 @@ export class LocationDrizzleRepository extends DrizzleDtoRepository<
     };
   }
 }
+
+/**
+ * Sortable columns on `locations`. Exported for cross-domain sort
+ * (Project sorts by `primaryLocation.*`), parallel to `*FilterClauses`.
+ */
+export const locationSortColumns = {
+  name: locations.name,
+  type: locations.type,
+  isoAlpha3: locations.isoAlpha3,
+  createdAt: locations.createdAt,
+} satisfies SortMap<keyof Location>;
 
 /**
  * Build the column-level WHERE clauses for a `LocationFilters` input against

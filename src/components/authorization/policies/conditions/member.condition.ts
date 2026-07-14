@@ -1,11 +1,14 @@
 import { type NonEmptyArray } from '@seedcompany/common';
 import { type Query } from 'cypher-query-builder';
+import { type SQL, sql } from 'drizzle-orm';
 import { intersection } from 'lodash';
 import { inspect, type InspectOptionsStylized } from 'util';
-import { type ResourceShape, type Role } from '~/common';
+import { type EnhancedResource, type ResourceShape, type Role } from '~/common';
 import { matchProjectScopedRoles } from '~/core/neo4j/query';
 import { rolesForScope, type ScopedRole, splitScope } from '../../dto/role.dto';
 import {
+  type AsCypherParams,
+  type AsDrizzleParams,
   type AsEdgeQLParams,
   type Condition,
   eqlDoesIntersect,
@@ -32,8 +35,90 @@ class MemberCondition<
     return getScope(object).includes('member:true');
   }
 
-  asCypherCondition() {
+  asCypherCondition(
+    _query: Query,
+    { resource }: AsCypherParams<TResourceStatic>,
+  ) {
+    // The User/Unavailability list queries bind no `project` variable, and
+    // Neo4j 5 rejects pattern expressions that introduce one (42N29). An
+    // anonymous start node keeps the "member of ANY project" semantics
+    // (matching the Drizzle arm's User/Unavailability branch) without
+    // introducing a variable.
+    if (resource.name === 'User' || resource.name === 'Unavailability') {
+      return 'exists(()-[:member { active: true }]->(:ProjectMember)-[:user]->(:User { id: $currentUser }))';
+    }
     return 'exists((project)-[:member { active: true }]->(:ProjectMember)-[:user]->(:User { id: $currentUser }))';
+  }
+
+  asDrizzleCondition({ resource, session }: AsDrizzleParams<TResourceStatic>) {
+    // Resources that aren't project-scoped rows need bespoke membership SQL —
+    // each mirrors its Neo4j list query's `wrapContext` pattern (see the
+    // corresponding *.repository.ts) instead of a `project_id` column ref.
+    //
+    // Deliberate tightening vs the cypher, all arms: `pm.inactive_at is null`
+    // excludes replaced/inactive memberships that Neo4j's
+    // `[:member { active: true }]` still honors (the rel stays active; only
+    // inactiveAt is set). Matches membership-scope semantics. Recorded in the
+    // pre-cutover audit ledger — do not loosen to match Neo4j.
+    switch (resource.name) {
+      case 'Partner':
+        // partner.repository.ts list(): member of any project connected via a
+        // partnership. Deliberate tightenings vs the cypher: soft-deleted
+        // partnerships and soft-deleted projects don't grant membership here
+        // (Neo4j severs deleted projects via label rewrites; PG must correlate
+        // liveness explicitly).
+        return sql`exists (
+          select 1 from "partnerships" "ps"
+          join "projects" "pj" on "pj"."id" = "ps"."project_id"
+            and "pj"."deleted_at" is null
+          join "project_members" "pm" on "pm"."project_id" = "ps"."project_id"
+          where "ps"."partner_id" = "partners"."id"
+            and "ps"."deleted_at" is null
+            and "pm"."user_id" = ${session.userId}
+            and "pm"."inactive_at" is null
+            and "pm"."deleted_at" is null
+        )`;
+      case 'Organization':
+        // organization.repository.ts list(): the partner chain extended one
+        // hop (project → partnership → partner → organization).
+        return sql`exists (
+          select 1 from "partners" "p"
+          join "partnerships" "ps" on "ps"."partner_id" = "p"."id"
+          join "projects" "pj" on "pj"."id" = "ps"."project_id"
+            and "pj"."deleted_at" is null
+          join "project_members" "pm" on "pm"."project_id" = "ps"."project_id"
+          where "p"."organization_id" = "organizations"."id"
+            and "p"."deleted_at" is null
+            and "ps"."deleted_at" is null
+            and "pm"."user_id" = ${session.userId}
+            and "pm"."inactive_at" is null
+            and "pm"."deleted_at" is null
+        )`;
+      case 'User':
+      case 'Unavailability':
+        // Neo4j's user list binds no `project` variable, so the cypher is
+        // existentially unbound = "requester is an active member of ANY
+        // project" — a requester property, uncorrelated with the target row.
+        // This arm intentionally matches Neo4j. The EdgeQL stub for User is an
+        // always-true TODO (`exists { "…" }` over a literal set) — a known
+        // Gel-vs-PG divergence for the shadow-diff audit, not parity.
+        return sql`exists (
+          select 1 from "project_members" "pm"
+          where "pm"."user_id" = ${session.userId}
+            and "pm"."inactive_at" is null
+            and "pm"."deleted_at" is null
+        )`;
+      default:
+        break; // project-scoped resources fall through to the ref map below
+    }
+    const projectIdRef = projectIdRefForResource(resource);
+    return sql`exists (
+      select 1 from "project_members" "pm"
+      where "pm"."project_id" = ${projectIdRef}
+        and "pm"."user_id" = ${session.userId}
+        and "pm"."inactive_at" is null
+        and "pm"."deleted_at" is null
+    )`;
   }
 
   setupEdgeQLContext({
@@ -98,6 +183,24 @@ class MemberWithRolesCondition<
     return `size(apoc.coll.intersection(${CQL_VAR}, ${String(required)})) > 0`;
   }
 
+  asDrizzleCondition({ resource, session }: AsDrizzleParams<TResourceStatic>) {
+    const projectIdRef = projectIdRefForResource(resource);
+    // ARRAY[...]::role[] intersection — true when membership shares at least
+    // one role with the required set. Mirrors `apoc.coll.intersection` >0 in
+    // Cypher and `intersect` in EdgeQL.
+    const requiredRoles = sql.raw(
+      `array[${this.roles.map((r) => `'${r}'`).join(', ')}]::"role"[]`,
+    );
+    return sql`exists (
+      select 1 from "project_members" "pm"
+      where "pm"."project_id" = ${projectIdRef}
+        and "pm"."user_id" = ${session.userId}
+        and "pm"."inactive_at" is null
+        and "pm"."deleted_at" is null
+        and "pm"."roles" && ${requiredRoles}
+    )`;
+  }
+
   asEdgeQLCondition({ namespace }: AsEdgeQLParams<TResourceStatic>) {
     const Role = fqnRelativeTo('default::Role', namespace);
     return eqlDoesIntersect('.membership.roles', this.roles, Role);
@@ -107,6 +210,53 @@ class MemberWithRolesCondition<
     return `Member with ${this.roles.join(', ')}`;
   }
 }
+
+/**
+ * Resolve the SQL fragment that locates the parent project's `id` for the
+ * given resource. Project subtypes (Momentum/Multiplication/Internship)
+ * dereference to `projects.id` directly. Project-scoped child resources
+ * reference their FK column. Add cases here as each domain ports to Postgres.
+ */
+// migration-todo: the project-scoped base arms below (and the sensitivity
+// subselects) don't correlate `projects.deleted_at`, so members of a
+// soft-deleted project retain access to its child rows under PG — Neo4j
+// severs these chains via Deleted_ label rewrites. The bespoke Partner/Org
+// arms above DO join project liveness. Disposition for the rest at the
+// pre-cutover audit: liveness joins per-arm, or cascade project soft-delete
+// to project_members/partnerships.
+const projectIdRefForResource = (resource: EnhancedResource<any>): SQL => {
+  switch (resource.name) {
+    case 'Project':
+    case 'TranslationProject':
+    case 'MomentumTranslationProject':
+    case 'MultiplicationTranslationProject':
+    case 'InternshipProject':
+      return sql.raw(`"projects"."id"`);
+    case 'ProjectMember':
+      return sql.raw(`"project_members"."project_id"`);
+    case 'Partnership':
+      return sql.raw(`"partnerships"."project_id"`);
+    case 'Budget':
+      return sql.raw(`"budgets"."project_id"`);
+    case 'BudgetRecord':
+      return sql.raw(
+        `(select "b"."project_id" from "budgets" "b" where "b"."id" = "budget_records"."budget_id")`,
+      );
+    // migration-todo: re-add a case per domain as it ports to Postgres
+    // (Engagement/Ceremony/Language each dereference to
+    // their `project_id` FK — mono has the arms). Kept stripped so an
+    // unmigrated domain routed through Drizzle fails loud here instead of
+    // emitting SQL against a non-existent table.
+    //
+    // Partner/Organization/User are NOT project-scoped rows — their member
+    // checks are bespoke EXISTS branches in asDrizzleCondition above, not
+    // project_id refs here.
+    default:
+      throw new Error(
+        `MemberCondition.asDrizzleCondition: resource ${resource.name} not configured for Drizzle yet; add a case when it migrates.`,
+      );
+  }
+};
 
 /**
  * The following actions only apply if the requester has any "member" scoped roles.

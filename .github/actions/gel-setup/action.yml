@@ -12,10 +12,40 @@ runs:
       shell: bash
       run: gel project init --no-migrations --non-interactive
 
+    # The migrated (empty) database and the generated TS client are pure
+    # functions of dbschema/ + the generator deps, but rebuilding them takes
+    # ~15-20 min per job. Cache a dump of the migrated DB + the generated
+    # files; on a hit, `gel restore` (seconds) replaces `gel migrate` and the
+    # restored files skip `yarn gel:gen` entirely.
+    - name: Restore migrated-DB dump & generated client
+      id: gel-cache
+      uses: actions/cache@v4
+      with:
+        path: |
+          .gel-cache
+          src/core/gel/generated-client
+          src/core/gel/schema.ts
+          src/**/*.edgeql.ts
+        key: gel-setup-${{ runner.os }}-${{ hashFiles('dbschema/**', 'gel.toml', 'yarn.lock') }}
+
     - name: Migrate Gel Schema
+      if: steps.gel-cache.outputs.cache-hit != 'true'
       shell: bash
       run: gel migrate --single-transaction
 
     - name: Generate Gel TS files
+      if: steps.gel-cache.outputs.cache-hit != 'true'
       shell: bash
       run: yarn gel:gen
+
+    - name: Dump migrated DB for cache
+      if: steps.gel-cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        mkdir -p .gel-cache
+        gel dump .gel-cache/main.dump
+
+    - name: Restore migrated DB from cache
+      if: steps.gel-cache.outputs.cache-hit == 'true'
+      shell: bash
+      run: gel restore .gel-cache/main.dump

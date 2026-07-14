@@ -1,5 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { type Many } from '@seedcompany/common';
+import { DateTime } from 'luxon';
 import {
   type CalendarDate,
   ClientException,
@@ -401,9 +402,10 @@ export class ProjectService {
 
     this.privileges.for(IProject, object).verifyCan('delete');
 
-    const { at } = await this.repo.deleteNode(object).catch((e) => {
+    await this.repo.delete(id).catch((e) => {
       throw new ServerException('Failed to delete project', e);
     });
+    const at = DateTime.now();
 
     await this.hooks.run(new ProjectDeletedHook(object));
 

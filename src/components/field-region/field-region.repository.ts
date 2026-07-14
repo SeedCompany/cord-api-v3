@@ -111,6 +111,10 @@ export class FieldRegionRepository extends DtoRepository(FieldRegion) {
         );
   }
 
+  async delete(id: ID): Promise<void> {
+    await this.deleteNode(id);
+  }
+
   async list(input: FieldRegionListInput) {
     if (!this.privileges.can('read')) {
       return SecuredList.Redacted;

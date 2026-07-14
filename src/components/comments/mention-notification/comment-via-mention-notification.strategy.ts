@@ -1,8 +1,10 @@
 import { node, type Query, relation } from 'cypher-query-builder';
+import { type ID } from '~/common';
 import { createRelationships, exp } from '~/core/neo4j/query';
 import {
   INotificationStrategy,
   type InputOf,
+  type NotificationRow,
   NotificationStrategy,
 } from '../../notifications';
 import { CommentViaMentionNotification } from './comment-via-mention-notification.dto';
@@ -31,5 +33,13 @@ export class CommentViaMentionNotificationStrategy extends INotificationStrategy
             comment: 'comment { .id }',
           }).as(outVar),
         );
+  }
+
+  override saveForDrizzle(input: InputOf<CommentViaMentionNotification>) {
+    return { commentId: input.comment };
+  }
+
+  override hydrateExtraForDrizzle(row: NotificationRow) {
+    return { comment: { id: row.commentId as ID<'Comment'> } };
   }
 }

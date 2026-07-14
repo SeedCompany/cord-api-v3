@@ -42,7 +42,7 @@ export class AdminGelService implements OnApplicationBootstrap {
   private async setupRootUser(): Promise<void> {
     const root = this.config.rootUser;
 
-    const existing = await this.repo.doesRootUserExist();
+    const existing = await this.repo.findRootUser();
     if (!existing) {
       this.logger.notice('Setting up root user');
       const hashed = await this.crypto.hash(root.password);
