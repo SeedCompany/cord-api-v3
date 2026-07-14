@@ -21,6 +21,7 @@ import {
 } from '~/core/drizzle';
 import { type DrizzleDb, DrizzleService } from '~/core/drizzle/drizzle.service';
 import {
+  engagements,
   userGlobalRoles,
   userOrganizations,
   users,
@@ -41,6 +42,7 @@ import {
 
 type UserRow = typeof users.$inferSelect & {
   globalRoles?: Array<typeof userGlobalRoles.$inferSelect>;
+  isIntern?: boolean;
 };
 
 const catchEmailUnique = catchUniqueViolation(
@@ -63,21 +65,46 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
     super(db, users, User);
   }
 
-  // migration-todo: populate `isIntern` on toDto() (subquery against the
-  // internship_engagements table where intern_id = users.id), and add an
-  // `asDrizzleCondition` to IsInternCondition for the DB-level filter.
   override async readMany(
     ids: readonly ID[],
   ): Promise<Array<UnsecuredDto<User>>> {
-    const rows = await this.db.query.users.findMany({
-      where: (user) => and(inArray(user.id, [...ids]), isNull(user.deletedAt)),
-      with: { globalRoles: true },
-    });
-    return rows.map((row) => this.toDto(row));
+    const [rows, interns] = await Promise.all([
+      this.db.query.users.findMany({
+        where: (user) =>
+          and(inArray(user.id, [...ids]), isNull(user.deletedAt)),
+        with: { globalRoles: true },
+      }),
+      this.internUserIds(ids),
+    ]);
+    return rows.map((row) =>
+      this.toDto({ ...row, isIntern: interns.has(row.id) }),
+    );
+  }
+
+  /**
+   * The subset of `ids` who are the intern on ≥1 live InternshipEngagement —
+   * feeds the `isIntern` flag the IsIntern policy condition reads. Must stay
+   * in lockstep with IsInternCondition.asDrizzleCondition (same predicate).
+   */
+  private async internUserIds(
+    ids: readonly ID[],
+  ): Promise<ReadonlySet<string>> {
+    if (ids.length === 0) return new Set();
+    const rows = await this.db
+      .selectDistinct({ id: engagements.internId })
+      .from(engagements)
+      .where(
+        and(
+          inArray(engagements.internId, [...ids]),
+          eq(engagements.type, 'Internship'),
+          isNull(engagements.deletedAt),
+        ),
+      );
+    return new Set(rows.flatMap((row) => (row.id ? [row.id] : [])));
   }
 
   async readManyActors(ids: readonly ID[]) {
-    const [userRows, agentRows] = await Promise.all([
+    const [userRows, agentRows, interns] = await Promise.all([
       this.db.query.users.findMany({
         where: (user) =>
           and(inArray(user.id, [...ids]), isNull(user.deletedAt)),
@@ -86,11 +113,12 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
       this.db.query.systemAgents.findMany({
         where: (agent) => inArray(agent.id, [...ids]),
       }),
+      this.internUserIds(ids),
     ]);
     return [
-      ...(userRows.map((row) => this.toDto(row)) as Array<
-        UnsecuredDto<User | SystemAgent>
-      >),
+      ...(userRows.map((row) =>
+        this.toDto({ ...row, isIntern: interns.has(row.id) }),
+      ) as Array<UnsecuredDto<User | SystemAgent>>),
       ...agentRows.map(
         (row) =>
           // migration-todo: SystemAgent is abstract; cast bridges plain row → class shape
@@ -217,19 +245,25 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
     });
 
     const ids = rows.map((row) => row.id);
-    const allRoles =
+    const [allRoles, interns] = await Promise.all([
       ids.length > 0
-        ? await this.db
+        ? this.db
             .select()
             .from(userGlobalRoles)
             .where(inArray(userGlobalRoles.userId, ids))
-        : [];
+        : [],
+      this.internUserIds(ids),
+    ]);
     const rolesByUser = groupBy(allRoles, (row) => row.userId);
 
     return {
       total,
       items: rows.map((row) =>
-        this.toDto({ ...row, globalRoles: rolesByUser[row.id] ?? [] }),
+        this.toDto({
+          ...row,
+          globalRoles: rolesByUser[row.id] ?? [],
+          isIntern: interns.has(row.id),
+        }),
       ),
       hasMore,
     };
@@ -253,7 +287,9 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
       where: and(...conditions),
       with: { globalRoles: true },
     });
-    return row ? this.toDto(row) : null;
+    if (!row) return null;
+    const interns = await this.internUserIds([row.id]);
+    return this.toDto({ ...row, isIntern: interns.has(row.id) });
   }
 
   async assignOrganizationToUser({
@@ -316,7 +352,8 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
   /**
    * Public wrapper around `toDto` so other domains' repos (e.g. ProjectMember)
    * can hydrate a User from a raw row without duplicating logic. The row should
-   * be loaded with `globalRoles`.
+   * be loaded with `globalRoles`. `isIntern` stays unset here — embedded users
+   * aren't edit targets, so the IsIntern policy condition never reads them.
    */
   mapRowToDto(row: UserRow): UnsecuredDto<User> {
     return this.toDto(row);
@@ -342,6 +379,7 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
       photo: row.photoId ? { id: row.photoId } : null,
       // migration-todo: pinned is per-requesting-user state, not stored on the user row
       pinned: false,
+      isIntern: row.isIntern,
     };
   }
 }

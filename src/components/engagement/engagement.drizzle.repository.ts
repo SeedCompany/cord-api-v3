@@ -9,6 +9,7 @@ import {
   type ID,
   InputException,
   NotFoundException,
+  NotImplementedException,
   type ObjectView,
   ServerException,
   type UnsecuredDto,
@@ -102,6 +103,9 @@ export class EngagementDrizzleRepository extends DrizzleDtoRepository<
     private readonly identity: Identity,
     private readonly files: FileService,
   ) {
+    // migration-todo: as-any bridges the IEngagement interface class into the
+    // concrete-resource slot DrizzleDtoRepository expects (same bridge as
+    // project.module's splitDb cast) — dies with the base-class rework at cutover.
     super(db, engagements, IEngagement as any);
   }
 
@@ -163,6 +167,7 @@ export class EngagementDrizzleRepository extends DrizzleDtoRepository<
         input.disbursementCompleteDate?.toSQLDate() ?? null,
       startDateOverride: input.startDateOverride?.toSQLDate() ?? null,
       endDateOverride: input.endDateOverride?.toSQLDate() ?? null,
+      historicGoal: input.historicGoal ?? null,
       milestonePlanned: input.milestonePlanned ?? 'Unknown',
       usingAIAssistedTranslation: input.usingAIAssistedTranslation ?? 'Unknown',
       pnpId,
@@ -206,7 +211,8 @@ export class EngagementDrizzleRepository extends DrizzleDtoRepository<
       position: input.position ?? null,
       methodologies: input.methodologies ? [...input.methodologies] : [],
       countryOfOriginId: input.countryOfOrigin ?? null,
-      marketable: false,
+      marketable: input.marketable ?? false,
+      webId: input.webId ?? null,
       completeDate: input.completeDate?.toSQLDate() ?? null,
       disbursementCompleteDate:
         input.disbursementCompleteDate?.toSQLDate() ?? null,
@@ -247,6 +253,10 @@ export class EngagementDrizzleRepository extends DrizzleDtoRepository<
       await this.verifyFirstScripture({ engagementId: id });
     }
 
+    // migration-todo: the `(simple as any)` reads bridge fields the service's
+    // getActualChanges diff carries beyond the Update DTO's declared type
+    // (rev79CommunityId / initialEndDate / milestoneReached / modifiedAt) —
+    // type the changes shape properly when the Neo4j repo retires.
     await this.updateColumns(id, {
       firstScripture: simple.firstScripture,
       lukePartnership: simple.lukePartnership,
@@ -273,6 +283,7 @@ export class EngagementDrizzleRepository extends DrizzleDtoRepository<
           )?.toSQLDate() ?? null,
       }),
       description: simple.description as any,
+      historicGoal: simple.historicGoal,
       milestonePlanned: simple.milestonePlanned,
       milestoneReached: (simple as any).milestoneReached,
       usingAIAssistedTranslation: simple.usingAIAssistedTranslation,
@@ -315,12 +326,15 @@ export class EngagementDrizzleRepository extends DrizzleDtoRepository<
       });
     }
 
+    // migration-todo: same `(simple as any)` bridge as updateLanguage above.
     await this.updateColumns(id, {
       ...(mentor !== undefined && { mentorId: mentor }),
       ...(countryOfOrigin !== undefined && {
         countryOfOriginId: countryOfOrigin,
       }),
       position: simple.position,
+      marketable: simple.marketable,
+      webId: simple.webId,
       ...(simple.methodologies !== undefined && {
         methodologies: [...simple.methodologies],
       }),
@@ -384,7 +398,10 @@ export class EngagementDrizzleRepository extends DrizzleDtoRepository<
         status: next,
         statusModifiedAt: now,
         ...(next === 'Suspended' && { lastSuspendedAt: now }),
-        ...(prev === 'Suspended' && { lastReactivatedAt: now }),
+        // Only a true reactivation (Suspended → Active) — Suspended →
+        // Terminated etc. must NOT stamp it (mirrors SetLastStatusDate).
+        ...(prev === 'Suspended' &&
+          next === 'Active' && { lastReactivatedAt: now }),
       })
       .where(eq(engagements.id, id as ID<'Engagement'>));
     await this.db.insert(engagementStatusHistory).values({
@@ -762,10 +779,14 @@ export class EngagementDrizzleRepository extends DrizzleDtoRepository<
 
 /**
  * Column-level WHERE clauses for `EngagementFilters`. Implemented: type,
- * status, project id, languageId, partnerId. migration-todo: name /
- * engagedName full-text, startDate/endDate ranges, project/language/intern
- * sub-filters, milestone/AI filters, tool sub-filter (ToolUsage not
- * migrated), marketable.
+ * status, project id, languageId, partnerId, marketable, milestoneReached,
+ * milestonePlanned, usingAIAssistedTranslation. The rest THROW rather than
+ * silently ignore (the discoverability convention — a silently-dropped filter
+ * returns the full unfiltered set and nothing catches it).
+ * migration-todo: implement the throwing ones as their domains land —
+ * name/engagedName (language/user name joins), startDate/endDate ranges
+ * (COALESCE with the project mou window), project/language/intern sub-filter
+ * composition, tool sub-filter (ToolUsage not migrated).
  */
 export const engagementFilterClauses = (
   filter: EngagementListInput['filter'],
@@ -783,8 +804,16 @@ export const engagementFilterClauses = (
   if (filter.status?.length) {
     conditions.push(inArray(engagements.status, [...filter.status]));
   }
-  if (filter.project?.id) {
-    conditions.push(eq(engagements.projectId, filter.project.id));
+  if (filter.project) {
+    const { id: projectId, ...projectRest } = filter.project;
+    if (projectId) {
+      conditions.push(eq(engagements.projectId, projectId));
+    }
+    if (Object.values(projectRest).some((value) => value !== undefined)) {
+      throw new NotImplementedException(
+        'EngagementFilters.project sub-filters beyond `id` are not implemented for postgres yet',
+      );
+    }
   }
   if (filter.languageId) {
     conditions.push(eq(engagements.languageId, filter.languageId));
@@ -798,6 +827,40 @@ export const engagementFilterClauses = (
           and "ps"."deleted_at" is null
       )`,
     );
+  }
+  if (filter.marketable !== undefined) {
+    conditions.push(eq(engagements.marketable, filter.marketable));
+  }
+  if (filter.milestoneReached !== undefined) {
+    conditions.push(eq(engagements.milestoneReached, filter.milestoneReached));
+  }
+  if (filter.milestonePlanned?.length) {
+    conditions.push(
+      inArray(engagements.milestonePlanned, [...filter.milestonePlanned]),
+    );
+  }
+  if (filter.usingAIAssistedTranslation?.length) {
+    conditions.push(
+      inArray(engagements.usingAIAssistedTranslation, [
+        ...filter.usingAIAssistedTranslation,
+      ]),
+    );
+  }
+  const unimplemented = {
+    name: filter.name,
+    engagedName: filter.engagedName,
+    startDate: filter.startDate,
+    endDate: filter.endDate,
+    language: filter.language,
+    intern: filter.intern,
+    tool: filter.tool,
+  };
+  for (const [key, value] of Object.entries(unimplemented)) {
+    if (value !== undefined) {
+      throw new NotImplementedException(
+        `EngagementFilters.${key} is not implemented for postgres yet`,
+      );
+    }
   }
   return conditions;
 };

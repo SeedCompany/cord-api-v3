@@ -1698,8 +1698,6 @@ export const ethnologueLanguagesRelations = relations(
 
 // ─── Engagements ───────────────────────────────────────────────────────────
 
-// ─── Engagements ───────────────────────────────────────────────────────────
-
 export const engagementTypeEnum = pgEnum('engagement_type', [
   'Language',
   'Internship',
@@ -1852,8 +1850,6 @@ export const engagements = pgTable(
     index('engagements_intern_id_idx').on(t.internId),
     index('engagements_mentor_id_idx').on(t.mentorId),
     index('engagements_country_of_origin_id_idx').on(t.countryOfOriginId),
-    index('engagements_country_of_origin_id_idx').on(t.countryOfOriginId),
-    index('engagements_mentor_id_idx').on(t.mentorId),
   ],
 );
 

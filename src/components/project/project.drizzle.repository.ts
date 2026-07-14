@@ -219,9 +219,8 @@ export class ProjectDrizzleRepository extends DrizzleDtoRepository<
     const engagementTotalByProject = new Map(
       engagementCounts.map((c) => [c.projectId, c.total]),
     );
-    // migration-todo: engagementTotal is stubbed to 0 until Engagement migrates
-    // (the `engagements` table isn't on develop yet). `pinned` dropped — Pin
-    // isn't migrated; re-add the pinnedByRequester batch when the pin domain ports.
+    // migration-todo: `pinned` dropped — Pin isn't migrated; re-add the
+    // pinnedByRequester batch when the pin domain ports.
     return rows.map((row): UnsecuredDto<Project> => {
       const enriched: ProjectRow = {
         ...row,
