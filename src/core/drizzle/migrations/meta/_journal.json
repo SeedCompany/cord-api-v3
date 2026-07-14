@@ -99,6 +99,20 @@
       "when": 1751500800000,
       "tag": "0013_add_fk_index_backfill",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1751501000000,
+      "tag": "0014_add_funding_account_department_id_block",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1751501200000,
+      "tag": "0015_add_budgets",
+      "breakpoints": true
     }
   ]
 }

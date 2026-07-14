@@ -152,7 +152,8 @@ export class BudgetService {
       'budget.universalTemplateFile',
       universalTemplateFile,
     );
-    return await this.budgetRepo.update(budget, simpleChanges);
+    const updated = await this.budgetRepo.update(budget, simpleChanges);
+    return updated;
   }
 
   async updateRecord(
@@ -186,7 +187,7 @@ export class BudgetService {
     await Promise.all(budget.records.map((br) => this.deleteRecord(br.id)));
 
     try {
-      await this.budgetRepo.deleteNode(budget);
+      await this.budgetRepo.delete(budget.id);
     } catch (e) {
       throw new ServerException('Failed to delete budget', e);
     }
@@ -194,7 +195,7 @@ export class BudgetService {
 
   async deleteRecord(id: ID, changeset?: ID): Promise<void> {
     try {
-      await this.budgetRecordsRepo.deleteNode(id, { changeset });
+      await this.budgetRecordsRepo.delete(id, changeset);
     } catch (e) {
       throw new ServerException('Failed to delete Budget Record', e);
     }

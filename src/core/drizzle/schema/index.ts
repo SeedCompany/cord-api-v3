@@ -17,6 +17,7 @@ import {
   uniqueIndex,
 } from 'drizzle-orm/pg-core';
 import { type ID, type Role } from '~/common';
+import { type BudgetStatus } from '../../../components/budget/dto/budget-status.enum';
 import { type FileNodeType } from '../../../components/file/dto/file-node-type.enum';
 import { type LocationType } from '../../../components/location/dto/location-type.enum';
 import { type OrganizationReach } from '../../../components/organization/dto/organization-reach.dto';
@@ -538,6 +539,12 @@ export const fundingAccounts = pgTable(
     id: text('id').$type<ID<'FundingAccount'>>().primaryKey(),
     name: text('name').notNull(),
     accountNumber: integer('account_number').notNull(),
+    // Deterministic from accountNumber (see blockOfAccount in the funding
+    // account repos); SetDepartmentId resolves project → primary location →
+    // funding account → block through this FK. Added in 0014.
+    departmentIdBlockId: text('department_id_block_id')
+      .$type<ID>()
+      .references((): AnyPgColumn => departmentIdBlocks.id),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -552,6 +559,9 @@ export const fundingAccounts = pgTable(
     uniqueIndex('funding_accounts_name_active_unique')
       .on(t.name)
       .where(sql`${t.deletedAt} IS NULL`),
+    index('funding_accounts_department_id_block_id_idx').on(
+      t.departmentIdBlockId,
+    ),
     check(
       'funding_accounts_account_number_range_chk',
       sql`${t.accountNumber} >= 0 AND ${t.accountNumber} <= 9`,
@@ -1502,3 +1512,105 @@ export const notificationRecipients = pgTable(
     index('notification_recipients_user_id_idx').on(t.userId),
   ],
 );
+
+// ─── Budgets ───────────────────────────────────────────────────────────────
+
+export const budgetStatusEnum = pgEnum('budget_status', [
+  'Pending',
+  'Current',
+  'Superceded',
+  'Rejected',
+]);
+
+export const budgets = pgTable(
+  'budgets',
+  {
+    id: text('id').$type<ID<'Budget'>>().primaryKey(),
+    projectId: text('project_id')
+      .$type<ID<'Project'>>()
+      .notNull()
+      .references(() => projects.id, { onDelete: 'cascade' }),
+    status: budgetStatusEnum('status')
+      .$type<BudgetStatus>()
+      .notNull()
+      .default('Pending'),
+    // Deferred FK → files(id): kept plain text (not REFERENCES) because
+    // create() inserts this row BEFORE the service's createDefinedFile makes
+    // the file node — same ordering as partnerships.mou_id/agreement_id.
+    universalTemplateFileId: text('universal_template_file_id').$type<
+      ID<'File'>
+    >(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (t) => [
+    index('budgets_project_id_idx').on(t.projectId),
+    // Indexed up front so the File domain can add the REFERENCES clause
+    // without a CREATE INDEX CONCURRENTLY backfill — same convention as
+    // partnerships.mou_id/agreement_id.
+    index('budgets_universal_template_file_id_idx').on(
+      t.universalTemplateFileId,
+    ),
+  ],
+);
+
+export const budgetsRelations = relations(budgets, ({ one, many }) => ({
+  project: one(projects, {
+    fields: [budgets.projectId],
+    references: [projects.id],
+  }),
+  records: many(budgetRecords),
+}));
+
+export const budgetRecords = pgTable(
+  'budget_records',
+  {
+    id: text('id').$type<ID<'BudgetRecord'>>().primaryKey(),
+    budgetId: text('budget_id')
+      .$type<ID<'Budget'>>()
+      .notNull()
+      .references(() => budgets.id, { onDelete: 'cascade' }),
+    organizationId: text('organization_id')
+      .$type<ID<'Organization'>>()
+      .notNull()
+      .references(() => organizations.id),
+    fiscalYear: integer('fiscal_year').notNull(),
+    amount: doublePrecision('amount'),
+    initialAmount: doublePrecision('initial_amount'),
+    preApprovedAmount: doublePrecision('pre_approved_amount'),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (t) => [
+    // One record per (budget, partner org, fiscal year) among live rows —
+    // DB backstop for the service's verifyRecordUniqueness check.
+    uniqueIndex('budget_records_budget_org_fy_active_unique')
+      .on(t.budgetId, t.organizationId, t.fiscalYear)
+      .where(sql`${t.deletedAt} IS NULL`),
+    // Full FK index — the partial unique above leads with budget_id but can't
+    // serve FK-maintenance scans (soft-deleted rows excluded).
+    index('budget_records_budget_id_idx').on(t.budgetId),
+    index('budget_records_organization_id_idx').on(t.organizationId),
+  ],
+);
+
+export const budgetRecordsRelations = relations(budgetRecords, ({ one }) => ({
+  budget: one(budgets, {
+    fields: [budgetRecords.budgetId],
+    references: [budgets.id],
+  }),
+  organization: one(organizations, {
+    fields: [budgetRecords.organizationId],
+    references: [organizations.id],
+  }),
+}));

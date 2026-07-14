@@ -124,6 +124,10 @@ export class BudgetRecordRepository extends DtoRepository<
     return result.dto;
   }
 
+  async delete(id: ID, changeset?: ID): Promise<void> {
+    await this.deleteNode(id, { changeset });
+  }
+
   async list(input: BudgetRecordListInput, view?: ObjectView) {
     const { budgetId } = input.filter ?? {};
     const result = await this.db

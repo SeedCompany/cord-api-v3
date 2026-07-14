@@ -49,15 +49,6 @@ export class SetDepartmentId {
       return;
     }
 
-    // migration-todo: the PG path (assignDepartmentIdPg, below) is implemented
-    // but needs funding_accounts.department_id_block_id + populated blocks,
-    // which land with the FundingAccount↔department_id_block migration. No-op
-    // under postgres until then; delete this guard to enable the PG path (the
-    // engine-check below already routes to it).
-    if (this.config.databaseEngine === 'postgres') {
-      return;
-    }
-
     const project =
       event instanceof ProjectTransitionedHook ? event.project : event.updated;
 
@@ -139,7 +130,9 @@ export class SetDepartmentId {
             select b.range
             from projects p
             join locations l on l.id = p.primary_location_id
+              and l.deleted_at is null
             join funding_accounts fa on fa.id = l.funding_account_id
+              and fa.deleted_at is null
             join department_id_blocks b on b.id = fa.department_id_block_id
             where p.id = ${projectId}
           ),

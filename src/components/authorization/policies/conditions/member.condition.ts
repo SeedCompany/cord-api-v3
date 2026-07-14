@@ -145,6 +145,11 @@ class MemberWithRolesCondition<
  * dereference to `projects.id` directly. Project-scoped child resources
  * reference their FK column. Add cases here as each domain ports to Postgres.
  */
+// migration-todo: no membership/sensitivity EXISTS arm correlates
+// `projects.deleted_at`, so members of a soft-deleted project retain access
+// to its child rows under PG — Neo4j severs these chains via Deleted_ label
+// rewrites. Disposition at the pre-cutover audit: liveness joins per-arm, or
+// cascade project soft-delete to project_members/partnerships.
 const projectIdRefForResource = (resource: EnhancedResource<any>): SQL => {
   switch (resource.name) {
     case 'Project':
@@ -157,8 +162,14 @@ const projectIdRefForResource = (resource: EnhancedResource<any>): SQL => {
       return sql.raw(`"project_members"."project_id"`);
     case 'Partnership':
       return sql.raw(`"partnerships"."project_id"`);
+    case 'Budget':
+      return sql.raw(`"budgets"."project_id"`);
+    case 'BudgetRecord':
+      return sql.raw(
+        `(select "b"."project_id" from "budgets" "b" where "b"."id" = "budget_records"."budget_id")`,
+      );
     // migration-todo: re-add a case per domain as it ports to Postgres
-    // (Budget/Engagement/Ceremony/Language/BudgetRecord each dereference to
+    // (Engagement/Ceremony/Language each dereference to
     // their `project_id` FK — mono has the arms). Kept stripped so an
     // unmigrated domain routed through Drizzle fails loud here instead of
     // emitting SQL against a non-existent table.
