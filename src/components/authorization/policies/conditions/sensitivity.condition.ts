@@ -194,11 +194,19 @@ const sensitivityRefForResource = (
         join "budgets" "b" on "b"."project_id" = "p"."id"
         where "b"."id" = "budget_records"."budget_id"
       ) <= ${accessLiteral}`;
+    case 'Partner':
+      // Own denormalized column. Statically 'High' on create until Language
+      // migrates and wires the real derivation — fail-closed in the interim
+      // (sens-gated roles see nothing rather than everything).
+      return sql`"partners"."sensitivity" <= ${accessLiteral}`;
+    case 'Organization':
+      // Same interim story as Partner.
+      return sql`"organizations"."sensitivity" <= ${accessLiteral}`;
     // migration-todo: re-add a case per domain as it ports to Postgres
     // (Engagement/Ceremony/Language read sensitivity via
-    // their parent project; Partner has its own derived column — mono has the
-    // arms). Kept stripped so an unmigrated domain routed through Drizzle fails
-    // loud here instead of emitting SQL against a missing table.
+    // their parent project). Kept stripped so an unmigrated domain routed
+    // through Drizzle fails loud here instead of emitting SQL against a
+    // missing table.
     //
     // migration-todo: these subselects don't check `projects.deleted_at` —
     // same soft-deleted-project liveness class as projectIdRefForResource in
