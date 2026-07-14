@@ -1,4 +1,5 @@
 import { type ID, type Role } from '~/common';
+import { ConfigService } from '~/core/config';
 import {
   authIdentities,
   educations,
@@ -47,12 +48,15 @@ export const userExtractor: Extractor = {
 
     // ── users ──────────────────────────────────────────────────────────────
     const userDtos = await readAllViaRepo<User>(ctx, 'User', UserRepository);
+    // Root must be flagged here: with is_root=false everywhere, the admin
+    // bootstrap's createRootUser conflicts with the migrated row and
+    // waitForRootUserId polls forever (first PG boot on an ETL'd DB hangs —
+    // shadow-diff maiden-run finding, ledger S5).
+    const rootEmail = ctx.moduleRef.get(ConfigService, { strict: false })
+      .rootUser.email;
     const userRows = userDtos.map((u) => ({
       id: u.id,
-      // migration-todo: root flag defaulted false. The admin bootstrap
-      // re-establishes root on first postgres boot; alternatively detect the
-      // Neo4j root by the configured root-admin email and set true here.
-      isRoot: false,
+      isRoot: u.email === rootEmail,
       // NOT NULL columns whose Property node may be missing in Neo4j — coalesce
       // to the schema default (real load surfaced null `status` on legacy rows).
       status: orDefault(u.status, 'Active'),
