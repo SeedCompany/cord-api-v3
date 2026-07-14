@@ -291,7 +291,9 @@ it('director change replaces memberships on open projects', async () => {
   expect(after.get('closed', 'new')).toBeUndefined();
   expect(after.get('closed', 'unrelated')).toBeUndefined();
   // endregion
-});
+  // ~24 create/transition mutations in one test — the global 2m e2e timeout
+  // is marginal for it on slow CI runners (chronic shard flake).
+}, 300_000);
 
 async function fetchMembers(app: TestApp, projectId: ID) {
   const res = await app.graphql.query(

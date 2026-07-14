@@ -115,6 +115,10 @@ jobs:
           NEO4J_VERSION: ${{ matrix.neo4j-version }}
           DATABASE: ${{ matrix.database }}
           POSTGRES_URL: postgresql://postgres:postgres@localhost:5432/cord
+          # Opt-in for the between-spec-file Neo4j wipe (test/setup/neo4j-wipe.ts).
+          # The wipe additionally refuses any non-loopback NEO4J_URL. Only set
+          # this where Neo4j is an ephemeral per-job service container.
+          NEO4J_TEST_WIPE: true
         # neo4j is the production engine → blocking (required to merge).
         # postgres is dev-only until the cutover, so keep it running for
         # migration signal but DON'T gate merges on it — a PG failure on a
