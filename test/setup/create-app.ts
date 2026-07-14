@@ -9,6 +9,7 @@ import { LogLevel } from '~/core/logger';
 import { LevelMatcher } from '~/core/logger/level-matcher';
 import { AppModule } from '../../src/app.module';
 import { ephemeralGel } from './gel-setup';
+import { wipeNeo4jAfterFile } from './neo4j-wipe';
 import { ephemeralPg } from './pg-setup';
 
 export type TestApp = Pick<NestHttpApplication, 'get'>;
@@ -18,6 +19,9 @@ afterAll(async () => {
   for (const app of appsToClose) {
     await app.close();
   }
+  // Gel/PG are ephemeral per-file DBs (cleaned per app above); Neo4j is one
+  // shared instance per CI job, so it gets wiped here instead. No-op locally.
+  await wipeNeo4jAfterFile();
 });
 
 export const createApp = async ({
