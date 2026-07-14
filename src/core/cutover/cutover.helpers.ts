@@ -76,6 +76,20 @@ export const readAllViaRepo = async <T extends { id: ID }>(
   for (const ids_ of chunk(ids, ctx.batchSize)) {
     out.push(...(await repo.readMany(ids_)));
   }
+  // Hydrate-drop guard (finding #8): readMany silently omits nodes whose
+  // required matches fail (e.g. a partnership whose [:partner] rel was
+  // deactivated by its Partner's soft-delete). Reconciliation can't catch it —
+  // the read stat counts hydrated DTOs — so surface the delta here.
+  if (out.length !== ids.length) {
+    const hydrated = new Set<string>(out.map((dto) => String(dto.id)));
+    const missing = ids.filter((id) => !hydrated.has(id));
+    ctx.log(
+      `    ⚠ ${label}: ${missing.length} node(s) enumerated but NOT hydrated by readMany ` +
+        `(broken required rels — prod-finding #2 class): ${missing
+          .slice(0, 10)
+          .join(', ')}${missing.length > 10 ? ', …' : ''}`,
+    );
+  }
   return out;
 };
 
