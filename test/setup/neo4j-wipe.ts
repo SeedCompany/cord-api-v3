@@ -14,15 +14,15 @@ import * as Neo from 'neo4j-driver';
  * Safety — this deletes EVERY node in the target database, so two independent
  * gates keep it away from real data (the local compose `db` is a long-lived
  * dev database and the cutover-ETL source; prod runs Neo4j until the PG flip):
- * 1. `NEO4J_TEST_WIPE` must be explicitly set — only the CI workflow sets it.
- *    Nothing keys off ambient env like `CI`, so self-hosted runners or local
- *    shells can't trip it by accident.
+ * 1. `NEO4J_TEST_WIPE` must be explicitly set to `true` — only the CI
+ *    workflow sets it. Nothing keys off ambient env like `CI`, so self-hosted
+ *    runners or local shells can't trip it by accident.
  * 2. The target host must be loopback. A wipe opt-in pointed at a remote host
  *    is always a misconfiguration — we throw loudly instead of silently
  *    skipping, so the flake this exists to fix can't quietly return.
  */
 export const wipeNeo4jAfterFile = async () => {
-  if (!process.env.NEO4J_TEST_WIPE) return;
+  if (process.env.NEO4J_TEST_WIPE !== 'true') return;
   const url = process.env.NEO4J_URL ?? 'bolt://localhost';
   const host = new URL(url).hostname;
   const loopback = new Set(['localhost', '127.0.0.1', '::1', '[::1]']);

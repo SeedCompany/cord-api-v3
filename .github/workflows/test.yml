@@ -110,7 +110,12 @@ jobs:
         run: yarn start -- --gen-schema && yarn gql-tada generate output
 
       - name: E2E Tests
-        run: yarn test:e2e --shard=${{ matrix.shard }}/${{ matrix.total || 6 }} --reporters=github-actions ${{ matrix.test-args }}
+        # --maxWorkers=1: the per-file Neo4j wipe requires spec files to run
+        # sequentially — the shard's Neo4j container is shared, so a wipe at
+        # one file's end would destroy a concurrently-running file's data.
+        # Runner core-counts already made this effectively serial; pin it so a
+        # beefier runner can't silently reintroduce the race.
+        run: yarn test:e2e --maxWorkers=1 --shard=${{ matrix.shard }}/${{ matrix.total || 6 }} --reporters=github-actions ${{ matrix.test-args }}
         env:
           NEO4J_VERSION: ${{ matrix.neo4j-version }}
           DATABASE: ${{ matrix.database }}
