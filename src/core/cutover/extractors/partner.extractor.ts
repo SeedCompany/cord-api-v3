@@ -94,7 +94,9 @@ export const partnerExtractor: Extractor = {
         // migration-todo: denormalized from projects; 'High' until Project migrates.
         sensitivity: p.sensitivity,
         createdAt: tsReq(p.createdAt),
-        updatedAt: tsReq(p.createdAt),
+        // S7 (decided 2026-07-14): carry Neo4j's computed modifiedAt (max
+        // property timestamp) — history-accurate + BI-continuous.
+        updatedAt: tsReq(p.modifiedAt),
         deletedAt: null,
       };
     });
