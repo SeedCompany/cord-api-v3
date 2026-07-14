@@ -131,7 +131,7 @@ export class UserService {
     };
     const updated = await this.userRepo.update(input);
 
-    const event = new UserUpdatedHook(user, updated, input);
+    const event = new UserUpdatedHook(updated, user, input);
     await this.hooks.run(event);
 
     return this.secure(updated);
