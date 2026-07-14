@@ -48,6 +48,40 @@ export const knownDeltas: readonly KnownDeltaRule[] = [
     path: /(^|\.)photo(\.|$)/,
   },
   {
+    ref: 'S6',
+    reason:
+      'ETL orDefault coalescing accepted as new truth (decided 2026-07-14): ' +
+      'legacy partners missing the active / globalInnovationsClient ' +
+      'properties load as false — the schema default the DTO contract ' +
+      'always declared non-null.',
+    op: /^partner/,
+    persona: /./,
+    path: /(^|\.)(active|globalInnovationsClient)(\.|$)/,
+  },
+  {
+    ref: 'S6',
+    reason:
+      'ETL orDefault coalescing accepted as new truth (decided 2026-07-14): ' +
+      'legacy users missing status / timezone properties load as Active / ' +
+      'America/Chicago — the schema defaults the DTO contract always ' +
+      'declared non-null.',
+    op: /^user/,
+    persona: /./,
+    path: /(^|\.)(status|timezone)(\.|$)/,
+  },
+  {
+    ref: 'S8',
+    reason:
+      'Orphaned-partnership phantom counts (decided 2026-07-14, drop-and-log): ' +
+      'partnerships whose Partner was soft-deleted are unreadable under Neo4j ' +
+      '(counted in list total, absent from items) and are dropped by the ETL, ' +
+      'so Postgres totals run lower by exactly the orphan count — and are the ' +
+      'consistent ones.',
+    op: /^partnerships\.list/,
+    persona: /./,
+    path: /(^|\.)(total|hasMore)$/,
+  },
+  {
     ref: 'collation — enable only after inspecting',
     reason:
       'ORDER-only differences on name sorts can stem from Neo4j vs Postgres ' +
