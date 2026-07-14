@@ -1,4 +1,5 @@
 import { type Extractor } from '../cutover.types';
+import { budgetExtractor } from './budget.extractor';
 import { departmentIdBlockExtractor } from './department-id-block.extractor';
 import { ethnologueExtractor } from './ethnologue.extractor';
 import { fieldRegionExtractor } from './field-region.extractor';
@@ -18,8 +19,8 @@ import { userExtractor } from './user.extractor';
  * All firm-domain extractors, in no particular order — the harness
  * topologically sorts by each extractor's `dependsOn`.
  *
- * Covers the domains already merged to develop. File (tree) / Budget /
- * Language / Engagement and the rest of the waves drop in here as they land
+ * Covers the domains already merged to develop. File (tree) / Language /
+ * Engagement and the rest of the waves drop in here as they land
  * (see README.md).
  */
 export const extractors: readonly Extractor[] = [
@@ -37,4 +38,5 @@ export const extractors: readonly Extractor[] = [
   projectMemberExtractor,
   partnershipExtractor,
   notificationExtractor,
+  budgetExtractor,
 ];

@@ -94,7 +94,9 @@ Rollback is instant at any point before the flip: Neo4j is untouched.
 user (+ global_roles, educations, unavailabilities, system_agents,
 auth_identities) · tool · fundingAccount · ethnologue · departmentIdBlock ·
 fieldZone · fieldRegion · location · organization (+ 2 junctions) · partner
-(+ 3 junctions).
+(+ 3 junctions) · project (+ workflow events, step re-assert 2-pass) ·
+projectMember · partnership · notification (+ recipients) · budget
+(+ budget_records).
 
 **Deliberately NOT migrated (transient):** `auth_sessions`,
 `auth_password_reset_tokens` — users re-authenticate post-cutover.
@@ -105,11 +107,9 @@ fieldZone · fieldRegion · location · organization (+ 2 junctions) · partner
   topological insert (parents before children) + a two-pass for the denormalized
   `latest_version_id`; Media's app-level port isn't on develop. Wants its own
   focused pass. (S3 blobs never migrate — metadata only.)
-- **Project / Partnership** and all later-wave domains — add an extractor here
+- **Language / Engagement** and all later-wave domains — add an extractor here
   as each lands on develop (that's the "build the data script incrementally"
   plan). New extractors just implement `Extractor` and register in `index.ts`;
   the harness handles ordering + reconciliation.
 - **`ethnologue_languages.language_id`** — left null (deferred FK); backfill in
   the Language wave.
-- **`users.isRoot`** — defaulted false; the admin bootstrap re-establishes root
-  on first postgres boot, or detect the Neo4j root by configured email.
