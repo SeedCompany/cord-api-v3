@@ -368,7 +368,24 @@ export class LanguageDrizzleRepository extends DrizzleDtoRepository<
   }
 
   async delete(id: ID): Promise<void> {
+    // Capture engaging projects BEFORE the soft-delete: the denormalized
+    // projects.sensitivity must be recomputed once this language stops
+    // counting (Neo4j computes sensitivity live, so its delete needs no
+    // equivalent). Same recipe as update()'s sensitivity-change path.
+    const engaged = await this.db
+      .select({ projectId: engagements.projectId })
+      .from(engagements)
+      .where(
+        and(
+          eq(engagements.languageId, id as ID<'Language'>),
+          isNull(engagements.deletedAt),
+        ),
+      );
     await this.softDelete(id);
+    await recomputeProjectSensitivity(
+      this.db,
+      engaged.map((row) => row.projectId),
+    );
   }
 
   protected toDto(

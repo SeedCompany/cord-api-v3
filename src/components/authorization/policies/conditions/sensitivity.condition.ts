@@ -219,6 +219,13 @@ const sensitivityRefForResource = (
       // Effective sensitivity: lowest across projects engaging the language,
       // falling back to the language's own (user-set) sensitivity when
       // unengaged — mirror of the Neo4j hydrate's rankSens ASC pick.
+      // DELIBERATE divergence from Neo4j's DB-level filter: matchProjectSens
+      // hard-codes 'High' for the no-project case, so an unengaged Low
+      // language is invisible to a sens-gated read under Neo4j but visible
+      // here. The own-sensitivity fallback matches Gel + the hydrate (and
+      // Neo4j's own TODO); currently unreachable since no policy sens-gates
+      // Language object reads — if one ever does, this is the intended
+      // behavior, not a bug.
       return sql`coalesce((
         select min("p"."sensitivity") from "projects" "p"
         join "engagements" "e" on "e"."project_id" = "p"."id"

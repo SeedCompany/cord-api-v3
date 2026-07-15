@@ -5,6 +5,7 @@ import { DateTime } from 'luxon';
 import {
   CalendarDate,
   DuplicateException,
+  EnhancedResource,
   generateId,
   type ID,
   InputException,
@@ -34,6 +35,7 @@ import {
 import { type ScopedRole } from '../authorization/dto/role.dto';
 import { PolicyExecutor } from '../authorization/policy/executor/policy-executor';
 import { FileService } from '../file';
+import { IProject } from '../project/dto';
 import { requesterScopeByProject } from '../project/project-member/membership-scope';
 import { recomputeProjectSensitivity } from '../project/project.drizzle.repository';
 import {
@@ -144,8 +146,37 @@ export class EngagementDrizzleRepository extends DrizzleDtoRepository<
   ): Promise<Array<UnsecuredDto<Engagement>>> {
     // View accepted for splitDb signature parity; PCR/Changeset is excluded.
     if (ids.length === 0) return [];
+    // Mirror the Neo4j readMany, which gates by-id reads on the PARENT
+    // PROJECT's readability (privileges.for(IProject).filterToReadable) —
+    // while list() gates by IEngagement, matching the same asymmetry in the
+    // Neo4j repo. The Project condition SQL references the literal
+    // "projects" table, so it runs inside an EXISTS over the unaliased
+    // table correlated on project_id; survivors hydrate normally.
+    const projectConditions: SQL[] = [isNull(projects.deletedAt)];
+    if (
+      !this.executor.applyReadFilter(
+        EnhancedResource.of(IProject),
+        projectConditions,
+      )
+    ) {
+      return [];
+    }
+    const readable = await this.db
+      .select({ id: engagements.id })
+      .from(engagements)
+      .where(
+        and(
+          inArray(engagements.id, [...ids]),
+          isNull(engagements.deletedAt),
+          sql`exists (select 1 from "projects" where "projects"."id" = ${
+            engagements.projectId
+          } and ${and(...projectConditions)})`,
+        ),
+      );
+    if (readable.length === 0) return [];
+    const readableIds = readable.map((row) => row.id);
     const rows = await this.db.query.engagements.findMany({
-      where: (e) => and(inArray(e.id, [...ids]), isNull(e.deletedAt)),
+      where: (e) => inArray(e.id, readableIds),
       with: RELATIONS,
     });
     return await this.mapRows(rows as EngagementRow[]);
