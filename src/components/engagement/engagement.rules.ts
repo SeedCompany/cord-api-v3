@@ -398,7 +398,10 @@ export class EngagementRules {
 
   private async getCurrentStatus(id: ID, changeset?: ID) {
     // migration-todo: collapse this engine-check at Phase 7 cutover — keep
-    // only the postgres branch.
+    // only the postgres branch. The postgres branch intentionally ignores
+    // `changeset`: PCR/Changeset is excluded from the migration, so no
+    // changeset can exist under postgres and the committed row is always
+    // the right answer. Revisit if changesets are ever ported to PG.
     if (this.config.databaseEngine === 'postgres') {
       const [row] = await this.drizzle.client
         .select({ status: engagements.status })
@@ -449,7 +452,9 @@ export class EngagementRules {
   }
 
   private async getCurrentProjectStep(engagementId: ID, changeset?: ID) {
-    // migration-todo: collapse this engine-check at Phase 7 cutover.
+    // migration-todo: collapse this engine-check at Phase 7 cutover. Like
+    // getCurrentStatus, the postgres branch ignores `changeset` — none can
+    // exist under postgres (PCR excluded from the migration).
     if (this.config.databaseEngine === 'postgres') {
       const [row] = await this.drizzle.client
         .select({ step: projects.step })

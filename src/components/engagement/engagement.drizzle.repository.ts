@@ -17,6 +17,7 @@ import {
 import { Identity } from '~/core/authentication';
 import { getChanges } from '~/core/database/changes';
 import {
+  catchUniqueViolation,
   DrizzleDtoRepository,
   EMPTY_PAGE,
   resolveOrderBy,
@@ -47,6 +48,20 @@ import {
   type UpdateInternshipEngagement,
   type UpdateLanguageEngagement,
 } from './dto';
+
+// Backstops for the partial unique indexes when a concurrent create slips
+// past verifyRelationshipEligibility's pre-flight — same field + message so
+// both paths surface the identical DuplicateException.
+const catchDuplicateLanguageEngagement = catchUniqueViolation(
+  'engagements_project_language_active_unique',
+  'language',
+  'Engagement for this project and language already exists',
+);
+const catchDuplicateInternEngagement = catchUniqueViolation(
+  'engagements_project_intern_active_unique',
+  'intern',
+  'Engagement for this project and person already exists',
+);
 
 type EngagementRow = typeof engagements.$inferSelect & {
   project?: Pick<
@@ -151,27 +166,31 @@ export class EngagementDrizzleRepository extends DrizzleDtoRepository<
 
     const id = await generateId<ID<'Engagement'>>();
     const pnpId = await generateId();
-    await this.db.insert(engagements).values({
-      id,
-      projectId: input.project,
-      type: 'Language',
-      status: input.status ?? 'InDevelopment',
-      languageId: input.language,
-      firstScripture: input.firstScripture ?? null,
-      lukePartnership: input.lukePartnership ?? null,
-      openToInvestorVisit: input.openToInvestorVisit ?? null,
-      paratextRegistryId: input.paratextRegistryId ?? null,
-      rev79CommunityId: input.rev79CommunityId ?? null,
-      completeDate: input.completeDate?.toSQLDate() ?? null,
-      disbursementCompleteDate:
-        input.disbursementCompleteDate?.toSQLDate() ?? null,
-      startDateOverride: input.startDateOverride?.toSQLDate() ?? null,
-      endDateOverride: input.endDateOverride?.toSQLDate() ?? null,
-      historicGoal: input.historicGoal ?? null,
-      milestonePlanned: input.milestonePlanned ?? 'Unknown',
-      usingAIAssistedTranslation: input.usingAIAssistedTranslation ?? 'Unknown',
-      pnpId,
-    });
+    await this.db
+      .insert(engagements)
+      .values({
+        id,
+        projectId: input.project,
+        type: 'Language',
+        status: input.status ?? 'InDevelopment',
+        languageId: input.language,
+        firstScripture: input.firstScripture ?? null,
+        lukePartnership: input.lukePartnership ?? null,
+        openToInvestorVisit: input.openToInvestorVisit ?? null,
+        paratextRegistryId: input.paratextRegistryId ?? null,
+        rev79CommunityId: input.rev79CommunityId ?? null,
+        completeDate: input.completeDate?.toSQLDate() ?? null,
+        disbursementCompleteDate:
+          input.disbursementCompleteDate?.toSQLDate() ?? null,
+        startDateOverride: input.startDateOverride?.toSQLDate() ?? null,
+        endDateOverride: input.endDateOverride?.toSQLDate() ?? null,
+        historicGoal: input.historicGoal ?? null,
+        milestonePlanned: input.milestonePlanned ?? 'Unknown',
+        usingAIAssistedTranslation:
+          input.usingAIAssistedTranslation ?? 'Unknown',
+        pnpId,
+      })
+      .catch(catchDuplicateLanguageEngagement);
 
     await this.files.createDefinedFile(pnpId, `PNP`, id, 'pnp', input.pnp);
 
@@ -201,25 +220,28 @@ export class EngagementDrizzleRepository extends DrizzleDtoRepository<
 
     const id = await generateId<ID<'Engagement'>>();
     const growthPlanId = await generateId();
-    await this.db.insert(engagements).values({
-      id,
-      projectId: input.project,
-      type: 'Internship',
-      status: input.status ?? 'InDevelopment',
-      internId: input.intern,
-      mentorId: input.mentor ?? null,
-      position: input.position ?? null,
-      methodologies: input.methodologies ? [...input.methodologies] : [],
-      countryOfOriginId: input.countryOfOrigin ?? null,
-      marketable: input.marketable ?? false,
-      webId: input.webId ?? null,
-      completeDate: input.completeDate?.toSQLDate() ?? null,
-      disbursementCompleteDate:
-        input.disbursementCompleteDate?.toSQLDate() ?? null,
-      startDateOverride: input.startDateOverride?.toSQLDate() ?? null,
-      endDateOverride: input.endDateOverride?.toSQLDate() ?? null,
-      growthPlanId,
-    });
+    await this.db
+      .insert(engagements)
+      .values({
+        id,
+        projectId: input.project,
+        type: 'Internship',
+        status: input.status ?? 'InDevelopment',
+        internId: input.intern,
+        mentorId: input.mentor ?? null,
+        position: input.position ?? null,
+        methodologies: input.methodologies ? [...input.methodologies] : [],
+        countryOfOriginId: input.countryOfOrigin ?? null,
+        marketable: input.marketable ?? false,
+        webId: input.webId ?? null,
+        completeDate: input.completeDate?.toSQLDate() ?? null,
+        disbursementCompleteDate:
+          input.disbursementCompleteDate?.toSQLDate() ?? null,
+        startDateOverride: input.startDateOverride?.toSQLDate() ?? null,
+        endDateOverride: input.endDateOverride?.toSQLDate() ?? null,
+        growthPlanId,
+      })
+      .catch(catchDuplicateInternEngagement);
 
     await this.files.createDefinedFile(
       growthPlanId,
@@ -381,10 +403,14 @@ export class EngagementDrizzleRepository extends DrizzleDtoRepository<
    * transitions).
    */
   private async applyStatusChange(id: ID, next: EngagementStatus, at?: Date) {
+    // Row lock so concurrent status changes serialize: each transition reads
+    // the true previous status before writing its history row (the mutation
+    // interceptor already has us inside a transaction).
     const [current] = await this.db
       .select({ status: engagements.status })
       .from(engagements)
-      .where(eq(engagements.id, id as ID<'Engagement'>));
+      .where(eq(engagements.id, id as ID<'Engagement'>))
+      .for('update');
     const prev = current?.status;
     if (!prev || prev === next) return;
 

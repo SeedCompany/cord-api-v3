@@ -11,12 +11,14 @@ import {
 import { Identity } from '~/core/authentication';
 import {
   DrizzleDtoRepository,
+  EMPTY_PAGE,
   resolveOrderBy,
   type SortMap,
 } from '~/core/drizzle';
 import { DrizzleService } from '~/core/drizzle/drizzle.service';
 import { ceremonies } from '~/core/drizzle/schema';
 import { type ScopedRole } from '../authorization/dto/role.dto';
+import { PolicyExecutor } from '../authorization/policy/executor/policy-executor';
 import { requesterScopeByProject } from '../project/project-member/membership-scope';
 import {
   Ceremony,
@@ -39,6 +41,7 @@ export class CeremonyDrizzleRepository extends DrizzleDtoRepository<
 > {
   constructor(
     db: DrizzleService,
+    private readonly executor: PolicyExecutor,
     private readonly identity: Identity,
   ) {
     super(db, ceremonies, Ceremony);
@@ -117,6 +120,13 @@ export class CeremonyDrizzleRepository extends DrizzleDtoRepository<
 
   async list(input: CeremonyListInput) {
     const conditions: SQL[] = [isNull(ceremonies.deletedAt)];
+    // Mirror the Neo4j list()'s `filterToReadable` — without it, member/
+    // sensitivity-gated roles could list ceremonies of unreadable projects.
+    // (readMany stays unfiltered: the Neo4j readMany uses the base's opt-in
+    // no-op filterManyToReadable, so unfiltered there is parity.)
+    if (!this.executor.applyReadFilter(this.resource, conditions)) {
+      return EMPTY_PAGE;
+    }
     if (input.filter?.type) {
       conditions.push(eq(ceremonies.type, input.filter.type));
     }
