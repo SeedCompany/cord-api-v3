@@ -113,6 +113,13 @@
       "when": 1751501200000,
       "tag": "0015_add_budgets",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1752019200000,
+      "tag": "0016_add_languages",
+      "breakpoints": true
     }
   ]
 }

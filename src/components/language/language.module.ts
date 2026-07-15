@@ -14,6 +14,7 @@ import { LanguageMutationSubscriptionsResolver } from './language-mutation-subsc
 import { LanguageUpdateLinksResolver } from './language-update-links.resolver';
 import { LanguageUpdatedResolver } from './language-updated.resolver';
 import { LanguageChannels } from './language.channels';
+import { LanguageDrizzleRepository } from './language.drizzle.repository';
 import { LanguageGelRepository } from './language.gel.repository';
 import { LanguageLoader } from './language.loader';
 import { LanguageRepository } from './language.repository';
@@ -40,11 +41,14 @@ import { RegistryOfDialectToRegistryOfLanguageVarietiesMigration } from './migra
     EthnologueLanguageService,
     splitDb(EthnologueLanguageRepository, {
       gel: EthnologueLanguageGelRepository,
-      // migration-todo: remove `as any` once splitDb types accept drizzle repos directly
+      // migration-todo: `as any` removed at Phase 7 cutover when splitDb
+      // disappears with the Neo4j path.
       postgres: EthnologueLanguageDrizzleRepository as any,
     }),
     splitDb(LanguageRepository, {
       gel: LanguageGelRepository,
+      // migration-todo: same as above.
+      postgres: LanguageDrizzleRepository as any,
     }),
     LanguageLoader,
     InternalFirstScriptureResolver,

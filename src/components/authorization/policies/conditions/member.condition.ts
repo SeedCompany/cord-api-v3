@@ -94,6 +94,12 @@ class MemberCondition<
             and "pm"."inactive_at" is null
             and "pm"."deleted_at" is null
         )`;
+      case 'Language':
+        // Mirrors mono: member-visible through ANY project engaging the
+        // language. migration-todo (Engagement recut): restore the
+        // engaging-projects subquery — until `engagements` exists no
+        // membership can be satisfied, so `false` is exact, not a stub.
+        return sql`false`;
       case 'User':
       case 'Unavailability':
         // Neo4j's user list binds no `project` variable, so the cypher is

@@ -602,7 +602,9 @@ export const ethnologueLanguages = pgTable(
     // surfaces only because `secure()` injects it as standard Resource
     // boilerplate, and the `.delete` policy bit is never exercised. Prune
     // both in a follow-up PR.
-    languageId: text('language_id').$type<ID<'Language'>>(),
+    languageId: text('language_id')
+      .$type<ID<'Language'>>()
+      .references((): AnyPgColumn => languages.id),
     code: text('code'),
     provisionalCode: text('provisional_code'),
     name: text('name'),
@@ -631,6 +633,9 @@ export const ethnologueLanguages = pgTable(
     uniqueIndex('ethnologue_languages_language_id_unique')
       .on(t.languageId)
       .where(sql`${t.deletedAt} IS NULL`),
+    // Full FK index — the partial unique above can't serve FK-maintenance
+    // scans. Added in 0016 alongside the REFERENCES attach.
+    index('ethnologue_languages_language_id_idx').on(t.languageId),
     uniqueIndex('ethnologue_languages_code_unique')
       .on(t.code)
       .where(sql`${t.code} IS NOT NULL AND ${t.deletedAt} IS NULL`),
@@ -638,11 +643,6 @@ export const ethnologueLanguages = pgTable(
       .on(t.provisionalCode)
       .where(sql`${t.provisionalCode} IS NOT NULL AND ${t.deletedAt} IS NULL`),
   ],
-);
-
-export const ethnologueLanguagesRelations = relations(
-  ethnologueLanguages,
-  () => ({}),
 );
 
 // ─── Tools ─────────────────────────────────────────────────────────────────
@@ -1614,3 +1614,79 @@ export const budgetRecordsRelations = relations(budgetRecords, ({ one }) => ({
     references: [organizations.id],
   }),
 }));
+
+// ─── Languages ─────────────────────────────────────────────────────────────
+
+export const languages = pgTable(
+  'languages',
+  {
+    id: text('id').$type<ID<'Language'>>().primaryKey(),
+    name: text('name').notNull(),
+    displayName: text('display_name').notNull(),
+    displayNamePronunciation: text('display_name_pronunciation'),
+    // User-settable. `effectiveSensitivity` is computed at read time as the
+    // lowest sensitivity across projects engaging this language (mirror of
+    // the Neo4j hydrate); falls back to this column when unengaged.
+    sensitivity: sensitivityEnum('sensitivity').notNull().default('High'),
+    isDialect: boolean('is_dialect').notNull().default(false),
+    populationOverride: integer('population_override'),
+    registryOfLanguageVarietiesCode: text(
+      'registry_of_language_varieties_code',
+    ),
+    leastOfThese: boolean('least_of_these').notNull().default(false),
+    leastOfTheseReason: text('least_of_these_reason'),
+    isSignLanguage: boolean('is_sign_language').notNull().default(false),
+    signLanguageCode: text('sign_language_code'),
+    sponsorEstimatedEndDate: date('sponsor_estimated_end_date'),
+    hasExternalFirstScripture: boolean('has_external_first_scripture')
+      .notNull()
+      .default(false),
+    tags: text('tags').array().$type<readonly string[]>().notNull().default([]),
+    isAvailableForReporting: boolean('is_available_for_reporting')
+      .notNull()
+      .default(false),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (t) => [
+    // Partial uniques scoped to live rows — mirror of the Neo4j LanguageName /
+    // LanguageDisplayName / RegistryOfLanguageAndVariantsCode constraints.
+    uniqueIndex('languages_name_active_unique')
+      .on(t.name)
+      .where(sql`${t.deletedAt} IS NULL`),
+    uniqueIndex('languages_display_name_active_unique')
+      .on(t.displayName)
+      .where(sql`${t.deletedAt} IS NULL`),
+    uniqueIndex('languages_rolv_code_active_unique')
+      .on(t.registryOfLanguageVarietiesCode)
+      .where(
+        sql`${t.registryOfLanguageVarietiesCode} IS NOT NULL AND ${t.deletedAt} IS NULL`,
+      ),
+  ],
+);
+
+export const languagesRelations = relations(languages, ({ one }) => ({
+  // 1:1 — the FK lives on ethnologue_languages.language_id (soft attachment;
+  // see that table's comment for the future global-pool model).
+  ethnologue: one(ethnologueLanguages, {
+    fields: [languages.id],
+    references: [ethnologueLanguages.languageId],
+  }),
+}));
+
+export const ethnologueLanguagesRelations = relations(
+  ethnologueLanguages,
+  ({ one }) => ({
+    language: one(languages, {
+      fields: [ethnologueLanguages.languageId],
+      references: [languages.id],
+    }),
+  }),
+);
+
+// ─── Engagements ───────────────────────────────────────────────────────────

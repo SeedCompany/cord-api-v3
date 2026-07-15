@@ -202,6 +202,13 @@ const sensitivityRefForResource = (
     case 'Organization':
       // Same interim story as Partner.
       return sql`"organizations"."sensitivity" <= ${accessLiteral}`;
+    case 'Language':
+      // Effective sensitivity = lowest across engaging projects, falling back
+      // to the language's own column when unengaged (mono's coalesce).
+      // migration-todo (Engagement recut): restore the engaging-projects MIN —
+      // with no engagements possible, the fallback is the only live branch, so
+      // the own-column compare is exact.
+      return sql`"languages"."sensitivity" <= ${accessLiteral}`;
     // migration-todo: re-add a case per domain as it ports to Postgres
     // (Engagement/Ceremony/Language read sensitivity via
     // their parent project). Kept stripped so an unmigrated domain routed
