@@ -150,8 +150,26 @@ export class LanguageDrizzleRepository extends DrizzleDtoRepository<
     _view?: ObjectView,
   ): Promise<Array<UnsecuredDto<Language>>> {
     if (ids.length === 0) return [];
+    // Mirror the Neo4j readMany's `filterManyToReadable`: without this,
+    // member/sensitivity-gated roles could resolve unreadable languages by
+    // id (readOne delegates here too). The condition SQL references literal
+    // table names, so it runs over a plain id-select rather than inside the
+    // relational query; survivors hydrate through the normal path.
+    const readConditions: SQL[] = [
+      inArray(languages.id, [...ids]),
+      isNull(languages.deletedAt),
+    ];
+    if (!this.executor.applyReadFilter(this.resource, readConditions)) {
+      return [];
+    }
+    const readable = await this.db
+      .select({ id: languages.id })
+      .from(languages)
+      .where(and(...readConditions));
+    if (readable.length === 0) return [];
+    const readableIds = readable.map((row) => row.id);
     const rows = await this.db.query.languages.findMany({
-      where: (l) => and(inArray(l.id, [...ids]), isNull(l.deletedAt)),
+      where: (l) => inArray(l.id, readableIds),
       with: { ethnologue: true },
     });
     // migration-todo (Engagement recut): restore the engagementDerived()
