@@ -5,6 +5,18 @@ import { graphql, type InputOf } from '~/graphql';
 import { type TestApp } from './create-app';
 import * as fragments from './fragments';
 
+// Deal 3-letter codes from a sequential counter (random start) instead of
+// sampling — the unique constraints on ethnologue code/provisional_code make
+// random draws collide across a spec file (26³ combos, birthday math). Same
+// deck idea as create-location's isoAlpha3.
+let ethCodeCounter = faker.number.int({ max: 26 ** 3 - 1 });
+const nextEthCode = () => {
+  const n = ethCodeCounter++ % 26 ** 3;
+  return [(n / 676) | 0, (n / 26) | 0, n]
+    .map((part) => String.fromCharCode(97 + (part % 26)))
+    .join('');
+};
+
 export async function createLanguage(
   app: TestApp,
   input: Partial<InputOf<typeof CreateLanguageDoc>> = {},
@@ -20,8 +32,8 @@ export async function createLanguage(
     leastOfThese: faker.datatype.boolean(),
     leastOfTheseReason: faker.lorem.sentence(),
     ethnologue: {
-      code: faker.helpers.replaceSymbols('???').toLowerCase(),
-      provisionalCode: faker.helpers.replaceSymbols('???').toLowerCase(),
+      code: nextEthCode(),
+      provisionalCode: nextEthCode(),
       name: faker.person.firstName(),
       // this represents the largest number that is less than the 32-bit max for GraphQL
       population: faker.number.int({ max: 2147483647 }),
