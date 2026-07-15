@@ -7,6 +7,7 @@ import { AuthenticationGelRepository } from './authentication.gel.repository';
 import { AuthenticationRepository } from './authentication.repository';
 import { AuthenticationService } from './authentication.service';
 import { CryptoService } from './crypto.service';
+import { DeletedUserLogsThemOutHandler } from './handlers/deleted-user-logs-them-out.handler';
 import { DisablingUserLogsThemOutHandler } from './handlers/disabling-user-logs-them-out.handler';
 import { Identity } from './identity.service';
 import { JwtService } from './jwt.service';
@@ -47,6 +48,7 @@ import { SessionManager } from './session/session.manager';
     CryptoService,
 
     DisablingUserLogsThemOutHandler,
+    DeletedUserLogsThemOutHandler,
   ],
   exports: [Identity],
 })

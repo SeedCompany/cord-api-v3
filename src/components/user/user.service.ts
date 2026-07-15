@@ -41,6 +41,7 @@ import {
   type EducationListInput,
   type SecuredEducationList,
 } from './education/dto';
+import { UserDeletedHook } from './hooks/user-deleted.hook';
 import { UserUpdatedHook } from './hooks/user-updated.hook';
 import { KnownLanguageRepository } from './known-language.repository';
 import { UnavailabilityService } from './unavailability';
@@ -140,6 +141,9 @@ export class UserService {
   async delete(id: ID): Promise<void> {
     const object = await this.readOne(id);
     await this.userRepo.delete(id, object);
+    // Same-transaction side effects (e.g. session revocation — a deleted
+    // user must not keep live sessions).
+    await this.hooks.run(new UserDeletedHook(object.id));
   }
 
   async list(input: UserListInput): Promise<UserListOutput> {

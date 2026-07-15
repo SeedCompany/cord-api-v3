@@ -95,6 +95,49 @@ describe('Authentication e2e', () => {
     });
   });
 
+  it('deleted users are logged out, cannot login, and cannot reset their password', async () => {
+    const sendEmail = jest.spyOn(app.get(MailerService), 'send');
+    const tester = createTester(app);
+    const admin = await getRootTester(app);
+    const user = await tester.apply(registerUser());
+    const email = user.email.value!;
+
+    // Capture a reset token while the account is still live, to prove the
+    // token dies with the account.
+    await tester.apply(forgotPassword(email));
+    const lastMail = sendEmail.mock.calls.at(-1)![0]! as ForgotPasswordMsg;
+    const { token } = lastMail.body.props;
+    expect(token).toEqual(expect.any(String));
+
+    // Confirm they're logged in, then delete them.
+    const before = await tester.apply(currentUser());
+    expect(before?.id).toBe(user.id);
+    await admin.apply(deleteUser(user.id));
+
+    // Their existing session no longer resolves to them.
+    const after = await tester.apply(currentUser());
+    expect(after).toBeNull();
+
+    // Login is refused — same error as unknown credentials, no
+    // deleted-account oracle.
+    await expect(
+      tester.apply(login({ email, password: user.password })),
+    ).rejects.toThrowGqlError({
+      message: 'Invalid credentials',
+    });
+
+    // The pre-delete reset token cannot be consumed...
+    await expect(
+      tester.apply(resetPassword(token, faker.internet.password())),
+    ).rejects.toThrow();
+    // ...and the account stays locked regardless of what was attempted.
+    await expect(
+      tester.apply(login({ email, password: user.password })),
+    ).rejects.toThrowGqlError({
+      message: 'Invalid credentials',
+    });
+  });
+
   it('Password changed', async () => {
     const tester = createTester(app);
 
@@ -155,6 +198,19 @@ const changePassword =
       { oldPassword, newPassword },
     );
   };
+
+const deleteUser = (userId: ID) => async (tester: Tester) => {
+  await tester.run(
+    graphql(`
+      mutation DeleteUser($id: ID!) {
+        deleteUser(id: $id) {
+          __typename
+        }
+      }
+    `),
+    { id: userId },
+  );
+};
 
 const disableUser = (userId: ID) => async (tester: Tester) => {
   await tester.run(
