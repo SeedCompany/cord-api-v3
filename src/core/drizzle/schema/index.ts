@@ -17,7 +17,7 @@ import {
   timestamp,
   uniqueIndex,
 } from 'drizzle-orm/pg-core';
-import { type ID, type Role } from '~/common';
+import { type ID, type Range, type Role } from '~/common';
 import { type BudgetStatus } from '../../../components/budget/dto/budget-status.enum';
 import { type CeremonyType } from '../../../components/ceremony/dto/ceremony-type.enum';
 import { type InternshipPosition } from '../../../components/engagement/dto/intern-position.enum';
@@ -32,7 +32,11 @@ import { type PartnerType } from '../../../components/partner/dto/partner-type.e
 import { type FinancialReportingType } from '../../../components/partnership/dto/financial-reporting-type.enum';
 import { type PartnershipAgreementStatus } from '../../../components/partnership/dto/partnership-agreement-status.enum';
 import { type ReportPeriod } from '../../../components/periodic-report/dto/report-period.enum';
+import { type ProductMedium } from '../../../components/product/dto/product-medium.enum';
 import { type ProductMethodology } from '../../../components/product/dto/product-methodology.enum';
+import { type ProductPurpose } from '../../../components/product/dto/product-purpose.enum';
+import { type ProductStep } from '../../../components/product/dto/product-step.enum';
+import { type ProgressMeasurement } from '../../../components/product/dto/progress-measurement.enum';
 import { type ProjectStatus } from '../../../components/project/dto/project-status.enum';
 import { type ProjectStep } from '../../../components/project/dto/project-step.enum';
 import { type ProjectType } from '../../../components/project/dto/project-type.enum';
@@ -1696,6 +1700,66 @@ export const ethnologueLanguagesRelations = relations(
   }),
 );
 
+// ─── Product vocabulary enums ──────────────────────────────────────────────
+// Declared ahead of the Engagements section because engagements.methodologies
+// shares product_methodology. Value sets mirror the app enums in
+// src/components/product/dto (postgres-schema.e2e enforces parity) and Gel's
+// Product::Medium/Purpose/Step/Methodology scalars.
+
+export const productMediumEnum = pgEnum('product_medium', [
+  'Print',
+  'Web',
+  'EBook',
+  'App',
+  'TrainedStoryTellers',
+  'Audio',
+  'Video',
+  'Other',
+]);
+
+export const productPurposeEnum = pgEnum('product_purpose', [
+  'EvangelismChurchPlanting',
+  'ChurchLife',
+  'ChurchMaturity',
+  'SocialIssues',
+  'Discipleship',
+]);
+
+export const productStepEnum = pgEnum('product_step', [
+  'ExegesisAndFirstDraft',
+  'TeamCheck',
+  'CommunityTesting',
+  'BackTranslation',
+  'ConsultantCheck',
+  'InternalizationAndDrafting',
+  'PeerRevision',
+  'ConsistencyCheckAndFinalEdits',
+  'Craft',
+  'Test',
+  'Check',
+  'Record',
+  'Develop',
+  'Translate',
+  'Completed',
+]);
+
+export const productMethodologyEnum = pgEnum('product_methodology', [
+  'Paratext',
+  'OtherWritten',
+  'Render',
+  'Audacity',
+  'AdobeAudition',
+  'OtherOralTranslation',
+  'StoryTogether',
+  'SeedCompanyMethod',
+  'OneStory',
+  'Craft2Tell',
+  'OtherOralStories',
+  'Film',
+  'SignLanguage',
+  'OtherVisual',
+]);
+
 // ─── Engagements ───────────────────────────────────────────────────────────
 
 export const engagementTypeEnum = pgEnum('engagement_type', [
@@ -1746,9 +1810,9 @@ export const aiAssistedTranslationEnum = pgEnum('ai_assisted_translation', [
  * same approach as projects. The `type` discriminator matches the parent
  * project's type (Language ⟷ Translation projects, Internship ⟷ Internship
  * projects); the CHECK below keeps the per-type columns coherent.
- * `position` and `methodologies` are text-typed: large open-ended enums whose
- * semantics live in the app (methodologies' canonical enum lands with the
- * Product domain).
+ * `position` is text-typed (InternshipPosition lives in the app; convert with
+ * the internship vocab if ever needed). `methodologies` uses the
+ * product_methodology enum declared above with the product vocabulary.
  */
 export const engagements = pgTable(
   'engagements',
@@ -1809,7 +1873,7 @@ export const engagements = pgTable(
       .$type<ID<'User'>>()
       .references(() => users.id),
     position: text('position').$type<InternshipPosition>(),
-    methodologies: text('methodologies')
+    methodologies: productMethodologyEnum('methodologies')
       .array()
       .$type<readonly ProductMethodology[]>()
       .notNull()
@@ -1853,8 +1917,8 @@ export const engagements = pgTable(
   ],
 );
 
-// migration-todo (Product recut): restore `products: many(products)`.
-export const engagementsRelations = relations(engagements, ({ one }) => ({
+export const engagementsRelations = relations(engagements, ({ one, many }) => ({
+  products: many(products),
   project: one(projects, {
     fields: [engagements.projectId],
     references: [projects.id],
@@ -1948,3 +2012,197 @@ export const ceremoniesRelations = relations(ceremonies, ({ one }) => ({
     references: [engagements.id],
   }),
 }));
+
+// ─── Producibles ───────────────────────────────────────────────────────────
+
+export const producibleTypeEnum = pgEnum('producible_type', [
+  'Film',
+  'Story',
+  'EthnoArt',
+]);
+
+/**
+ * Film / Story / EthnoArt share one table — they are shape-identical
+ * (name + scripture references); the discriminator stands in for the Neo4j
+ * label. Scripture references are stored as the same `{start, end}` verse-id
+ * pairs Neo4j stores on ScriptureRange nodes; they are only ever read/written
+ * as a whole list, so jsonb over a child table.
+ */
+export const producibles = pgTable(
+  'producibles',
+  {
+    id: text('id').$type<ID>().primaryKey(),
+    type: producibleTypeEnum('type').notNull(),
+    name: text('name').notNull(),
+    scriptureReferences: jsonb('scripture_references')
+      .$type<ReadonlyArray<Range<number>>>()
+      .notNull()
+      .default([]),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (t) => [
+    // Name is unique per type among live rows (matches Neo4j per-label check).
+    uniqueIndex('producibles_type_name_active_unique')
+      .on(t.type, t.name)
+      .where(sql`${t.deletedAt} IS NULL`),
+  ],
+);
+
+// ─── Products ──────────────────────────────────────────────────────────────
+
+export const productTypeEnum = pgEnum('product_type', [
+  'DirectScripture',
+  'Derivative',
+  'Other',
+]);
+
+export const progressMeasurementEnum = pgEnum('progress_measurement', [
+  'Number',
+  'Percent',
+  'Boolean',
+]);
+
+/**
+ * Single-table inheritance over DirectScriptureProduct /
+ * DerivativeScriptureProduct / OtherProduct (same approach as projects and
+ * engagements). mediums/purposes/steps/methodology use the product vocabulary
+ * pgEnums (declared above the Engagements section), mirroring Gel's scalars.
+ *
+ * Scripture columns mirror how the DTOs distinguish the subtypes:
+ * - Direct: `scriptureReferences` (or the unspecified-portion pair for legacy
+ *   data where only a verse total is known).
+ * - Derivative: `scriptureReferencesOverride`; null means "not overriding"
+ *   (use the producible's list) — this replaces Neo4j's `isOverriding` flag.
+ */
+export const products = pgTable(
+  'products',
+  {
+    id: text('id').$type<ID<'Product'>>().primaryKey(),
+    engagementId: text('engagement_id')
+      .$type<ID<'Engagement'>>()
+      .notNull()
+      .references(() => engagements.id, { onDelete: 'cascade' }),
+    type: productTypeEnum('type').notNull(),
+    mediums: productMediumEnum('mediums')
+      .array()
+      .$type<readonly ProductMedium[]>()
+      .notNull()
+      .default([]),
+    purposes: productPurposeEnum('purposes')
+      .array()
+      .$type<readonly ProductPurpose[]>()
+      .notNull()
+      .default([]),
+    methodology:
+      productMethodologyEnum('methodology').$type<ProductMethodology>(),
+    steps: productStepEnum('steps')
+      .array()
+      .$type<readonly ProductStep[]>()
+      .notNull()
+      .default([]),
+    describeCompletion: text('describe_completion'),
+    placeholderDescription: text('placeholder_description'),
+    progressStepMeasurement: progressMeasurementEnum(
+      'progress_step_measurement',
+    )
+      .$type<ProgressMeasurement>()
+      .notNull()
+      .default('Percent'),
+    progressTarget: doublePrecision('progress_target').notNull().default(100),
+
+    scriptureReferences: jsonb('scripture_references')
+      .$type<ReadonlyArray<Range<number>>>()
+      .notNull()
+      .default([]),
+    scriptureReferencesOverride: jsonb('scripture_references_override').$type<
+      ReadonlyArray<Range<number>>
+    >(),
+    unspecifiedScriptureBook: text('unspecified_scripture_book'),
+    unspecifiedScriptureTotalVerses: integer(
+      'unspecified_scripture_total_verses',
+    ),
+    totalVerses: integer('total_verses').notNull().default(0),
+    totalVerseEquivalents: doublePrecision('total_verse_equivalents')
+      .notNull()
+      .default(0),
+
+    // ── DerivativeScriptureProduct only ──
+    producesId: text('produces_id')
+      .$type<ID>()
+      .references(() => producibles.id),
+    composite: boolean('composite'),
+
+    // ── OtherProduct only ──
+    title: text('title'),
+    description: text('description'),
+
+    pnpIndex: integer('pnp_index'),
+
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (t) => [
+    check(
+      'products_type_shape_chk',
+      sql`(${t.type} = 'DirectScripture' AND ${t.producesId} IS NULL AND ${t.title} IS NULL)
+        OR (${t.type} = 'Derivative' AND ${t.producesId} IS NOT NULL AND ${t.title} IS NULL)
+        OR (${t.type} = 'Other' AND ${t.title} IS NOT NULL AND ${t.producesId} IS NULL)`,
+    ),
+    check(
+      'products_unspecified_scripture_chk',
+      sql`(${t.unspecifiedScriptureBook} IS NULL) = (${t.unspecifiedScriptureTotalVerses} IS NULL)`,
+    ),
+    index('products_engagement_id_idx').on(t.engagementId),
+    index('products_produces_id_idx').on(t.producesId),
+  ],
+);
+
+export const productsRelations = relations(products, ({ one }) => ({
+  engagement: one(engagements, {
+    fields: [products.engagementId],
+    references: [engagements.id],
+  }),
+  produces: one(producibles, {
+    fields: [products.producesId],
+    references: [producibles.id],
+  }),
+}));
+
+/**
+ * Suggestion store for `describeCompletion` — merged on every product
+ * create/update that sets one (mirror of the Neo4j full-text-indexed
+ * ProductCompletionDescription nodes; suggestions use ILIKE here).
+ */
+export const productCompletionDescriptions = pgTable(
+  'product_completion_descriptions',
+  {
+    id: bigserial('id', { mode: 'number' }).primaryKey(),
+    value: text('value').notNull(),
+    methodology: productMethodologyEnum('methodology')
+      .$type<ProductMethodology>()
+      .notNull(),
+    lastUsedAt: timestamp('last_used_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex('product_completion_descriptions_value_methodology_unique').on(
+      t.value,
+      t.methodology,
+    ),
+  ],
+);

@@ -627,10 +627,9 @@ export class ProductService {
 
     this.privileges.for(Product, object).verifyCan('delete');
 
-    const { at } = await this.repo
-      .deleteNode(object, {
-        resource: resolveProductType(object),
-      })
+    const at = DateTime.now();
+    await this.repo
+      .delete(object.id, resolveProductType(object))
       .catch((exception) => {
         throw new ServerException('Failed to delete', exception);
       });

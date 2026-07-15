@@ -5,6 +5,12 @@ import { resolve } from 'node:path';
 import { type MadeEnum, Role, Sensitivity } from '~/common';
 import { type DrizzleDb, DrizzleService } from '~/core/drizzle';
 import { PartnerType } from '../src/components/partner/dto';
+import {
+  ProductMedium,
+  ProductMethodology,
+  ProductPurpose,
+  ProductStep,
+} from '../src/components/product/dto';
 import { ProjectStep, stepToStatus } from '../src/components/project/dto';
 import { createTestApp, type TestApp } from './utility';
 
@@ -142,6 +148,10 @@ describePg('Postgres schema invariants', () => {
     ['partner_type', PartnerType],
     ['role', Role],
     ['sensitivity', Sensitivity],
+    ['product_medium', ProductMedium],
+    ['product_purpose', ProductPurpose],
+    ['product_step', ProductStep],
+    ['product_methodology', ProductMethodology],
   ];
 
   it.each(enumPairs)(

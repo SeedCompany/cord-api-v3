@@ -67,7 +67,7 @@ export class StoryService {
     this.privileges.for(Story, story).verifyCan('delete');
 
     try {
-      await this.repo.deleteNode(story);
+      await this.repo.delete(story.id);
     } catch (exception) {
       throw new ServerException('Failed to delete', exception);
     }
