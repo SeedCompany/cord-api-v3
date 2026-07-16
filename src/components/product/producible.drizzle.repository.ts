@@ -4,6 +4,7 @@ import { DateTime } from 'luxon';
 import {
   generateId,
   type ID,
+  NotFoundException,
   type Order,
   type PaginatedListType,
   type Range,
@@ -70,12 +71,36 @@ export abstract class ProducibleDrizzleRepository<
     return await this.readOne(id);
   }
 
+  /**
+   * Neo4j scoped every mutation by label; on the shared table the base
+   * `updateColumns`/`softDelete` helpers filter by id alone, so without this
+   * guard a Film mutation could hit a Story row via a cross-type id. Fails
+   * closed with NotFound, matching the Neo4j no-label-match behavior.
+   */
+  private async verifyType(id: ID): Promise<void> {
+    const rows = await this.db
+      .select({ id: producibles.id })
+      .from(producibles)
+      .where(
+        and(
+          eq(producibles.id, id),
+          eq(producibles.type, this.type),
+          isNull(producibles.deletedAt),
+        ),
+      )
+      .limit(1);
+    if (rows.length === 0) {
+      throw new NotFoundException(`Could not find ${this.type}`);
+    }
+  }
+
   async update(changes: {
     id: ID;
     name?: string;
     scriptureReferences?: readonly ScriptureRangeInput[] | null;
   }): Promise<UnsecuredDto<TDto>> {
     const { id, name, scriptureReferences } = changes;
+    await this.verifyType(id);
     await this.updateColumns(id, {
       name,
       ...(scriptureReferences !== undefined && {
@@ -111,6 +136,7 @@ export abstract class ProducibleDrizzleRepository<
   }
 
   async delete(id: ID): Promise<void> {
+    await this.verifyType(id);
     await this.softDelete(id);
   }
 

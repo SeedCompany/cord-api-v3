@@ -590,6 +590,11 @@ export class ProductDrizzleRepository {
       isNull(products.deletedAt),
     ];
     const mapped = type ? PRODUCT_TYPE_BY_LABEL[type] : undefined;
+    // An unrecognized label matches nothing on Neo4j (label filter), so an
+    // unmapped type must return empty rather than silently dropping the filter.
+    if (type && !mapped) {
+      return [];
+    }
     if (mapped) {
       conditions.push(eq(products.type, mapped));
     }
