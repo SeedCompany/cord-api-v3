@@ -1,4 +1,5 @@
 import { type NonEmptyArray } from '@seedcompany/common';
+import { sql } from 'drizzle-orm';
 import { inspect, type InspectOptionsStylized } from 'util';
 import { type User } from '../../../user/dto';
 import {
@@ -31,8 +32,20 @@ class IsInternCondition<
     return `exists .<intern[is ${InternshipEngagement}]`;
   }
 
-  // migration-todo: add asDrizzleCondition when User is ported to Postgres —
-  // subquery on internship_engagements where intern_id = users.id.
+  asDrizzleCondition() {
+    // Mirrors the cypher: the user row is the intern on ≥1 InternshipEngagement.
+    // Engagement liveness (`deleted_at`) replaces Neo4j's Deleted_ label
+    // rewrite. No project-liveness join on purpose — Neo4j doesn't sever an
+    // engagement's `intern` edge when its project is deleted, and the hydrate
+    // side (user.drizzle.repository.ts `internUserIds`) must stay in lockstep
+    // with this predicate.
+    return sql`exists (
+      select 1 from "engagements" "e"
+      where "e"."intern_id" = "users"."id"
+        and "e"."type" = 'Internship'
+        and "e"."deleted_at" is null
+    )`;
+  }
 
   union(this: void, conditions: NonEmptyArray<this>) {
     return conditions[0];

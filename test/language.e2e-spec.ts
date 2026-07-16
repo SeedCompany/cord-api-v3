@@ -16,12 +16,6 @@ import {
   type TestApp,
 } from './utility';
 
-// migration-todo: these legs create language engagements, which are Neo4j-only
-// until the Engagement port lands — flip back to `it` under postgres in that PR
-// (the engagement-derived fields they assert are wired read-time against
-// language_engagements).
-const itPgPending = process.env.DATABASE === 'postgres' ? it.skip : it;
-
 describe('Language e2e', () => {
   let app: TestApp;
 
@@ -231,104 +225,98 @@ describe('Language e2e', () => {
     expect(languages.items.length).toBeGreaterThan(numLanguages);
   });
 
-  itPgPending(
-    'List with projects -> engagements -> engagement status should not error',
-    async () => {
-      const lang = await createLanguage(app);
-      const project = await createProject(app);
-      await app.graphql.mutate(
-        graphql(`
-          mutation createLanguageEngagement($input: CreateLanguageEngagement!) {
-            createLanguageEngagement(input: $input) {
-              engagement {
-                status {
-                  transitions {
-                    to
-                  }
+  it('List with projects -> engagements -> engagement status should not error', async () => {
+    const lang = await createLanguage(app);
+    const project = await createProject(app);
+    await app.graphql.mutate(
+      graphql(`
+        mutation createLanguageEngagement($input: CreateLanguageEngagement!) {
+          createLanguageEngagement(input: $input) {
+            engagement {
+              status {
+                transitions {
+                  to
                 }
               }
             }
           }
-        `),
-        {
-          input: {
-            language: lang.id,
-            project: project.id,
-          },
+        }
+      `),
+      {
+        input: {
+          language: lang.id,
+          project: project.id,
         },
-      );
-      // test reading new lang
-      const result = await app.graphql.query(
-        graphql(`
-          query {
-            languages {
-              items {
-                projects {
-                  items {
-                    engagements {
-                      items {
-                        status {
-                          transitions {
-                            to
-                          }
+      },
+    );
+    // test reading new lang
+    const result = await app.graphql.query(
+      graphql(`
+        query {
+          languages {
+            items {
+              projects {
+                items {
+                  engagements {
+                    items {
+                      status {
+                        transitions {
+                          to
                         }
                       }
                     }
                   }
                 }
               }
-              hasMore
-              total
             }
+            hasMore
+            total
           }
-        `),
-      );
-      expect(result).toBeTruthy();
-    },
-  );
+        }
+      `),
+    );
+    expect(result).toBeTruthy();
+  });
 
-  itPgPending(
-    'The list of projects the language is engagement in',
-    async () => {
-      const numProjects = 1;
-      const language = await createLanguage(app);
-      const project = await createProject(app);
+  it('The list of projects the language is engagement in', async () => {
+    const numProjects = 1;
+    const language = await createLanguage(app);
+    const project = await createProject(app);
 
-      await Promise.all(
-        times(numProjects).map(() =>
-          createLanguageEngagement(app, {
-            project: project.id,
-            language: language.id,
-          }),
-        ),
-      );
+    await Promise.all(
+      times(numProjects).map(() =>
+        createLanguageEngagement(app, {
+          project: project.id,
+          language: language.id,
+        }),
+      ),
+    );
 
-      const queryProject = await app.graphql.query(
-        graphql(
-          `
-            query language($id: ID!) {
-              language(id: $id) {
-                ...language
-                projects {
-                  items {
-                    ...project
-                  }
-                  hasMore
-                  total
+    const queryProject = await app.graphql.query(
+      graphql(
+        `
+          query language($id: ID!) {
+            language(id: $id) {
+              ...language
+              projects {
+                items {
+                  ...project
                 }
+                hasMore
+                total
               }
             }
-          `,
-          [fragments.language, fragments.project],
-        ),
-        {
-          id: language.id,
-        },
-      );
-      expect(queryProject.language.projects.items.length).toBe(numProjects);
-      expect(queryProject.language.projects.total).toBe(numProjects);
-    },
-  );
+          }
+        `,
+        [fragments.language, fragments.project],
+      ),
+      {
+        id: language.id,
+      },
+    );
+    expect(queryProject.language.projects.items.length).toBe(numProjects);
+    expect(queryProject.language.projects.total).toBe(numProjects);
+  });
 
   it('should throw error if signLanguageCode is not valid', async () => {
     const signLanguageCode = 'XXX1';
@@ -343,64 +331,58 @@ describe('Language e2e', () => {
     );
   });
 
-  itPgPending(
-    'should throw error if trying to set hasExternalFirstScripture=true while language has engagements that have firstScripture=true',
-    async () => {
-      const language = await createLanguage(app);
-      await createLanguageEngagement(app, {
-        language: language.id,
-        firstScripture: true,
-      });
+  it('should throw error if trying to set hasExternalFirstScripture=true while language has engagements that have firstScripture=true', async () => {
+    const language = await createLanguage(app);
+    await createLanguageEngagement(app, {
+      language: language.id,
+      firstScripture: true,
+    });
 
-      await expect(
-        app.graphql.mutate(
-          graphql(
-            `
-              mutation updateLanguage($input: UpdateLanguage!) {
-                updateLanguage(input: $input) {
-                  language {
-                    ...language
-                  }
+    await expect(
+      app.graphql.mutate(
+        graphql(
+          `
+            mutation updateLanguage($input: UpdateLanguage!) {
+              updateLanguage(input: $input) {
+                language {
+                  ...language
                 }
               }
-            `,
-            [fragments.language],
-          ),
-          {
-            input: {
-              id: language.id,
-              hasExternalFirstScripture: true,
-            },
-          },
+            }
+          `,
+          [fragments.language],
         ),
-      ).rejects.toThrowGqlError(
-        errors.input({
-          message:
-            'hasExternalFirstScripture can be set to true if the language has no engagements that have firstScripture=true',
-          field: 'hasExternalFirstScripture',
-        }),
-      );
-    },
-  );
+        {
+          input: {
+            id: language.id,
+            hasExternalFirstScripture: true,
+          },
+        },
+      ),
+    ).rejects.toThrowGqlError(
+      errors.input({
+        message:
+          'hasExternalFirstScripture can be set to true if the language has no engagements that have firstScripture=true',
+        field: 'hasExternalFirstScripture',
+      }),
+    );
+  });
 
-  itPgPending(
-    'can set hasExternalFirstScripture=true if language has no engagements that have firstScripture=true',
-    async () => {
-      const language = await createLanguage(app);
-      await createLanguageEngagement(app, {
-        language: language.id,
-        firstScripture: false,
-      });
+  it('can set hasExternalFirstScripture=true if language has no engagements that have firstScripture=true', async () => {
+    const language = await createLanguage(app);
+    await createLanguageEngagement(app, {
+      language: language.id,
+      firstScripture: false,
+    });
 
-      const updated = await updateLanguage(app, {
-        id: language.id,
-        hasExternalFirstScripture: true,
-      });
-      expect(updated.hasExternalFirstScripture.value).toBe(true);
-    },
-  );
+    const updated = await updateLanguage(app, {
+      id: language.id,
+      hasExternalFirstScripture: true,
+    });
+    expect(updated.hasExternalFirstScripture.value).toBe(true);
+  });
 
-  itPgPending('presetInventory flag', async () => {
+  it('presetInventory flag', async () => {
     const project = await createProject(app, { presetInventory: true });
     const language = await createLanguage(app);
     await createLanguageEngagement(app, {
@@ -427,7 +409,7 @@ describe('Language e2e', () => {
     expect(actual.presetInventory.value).toBe(true);
   });
 
-  itPgPending('List view of languages by presetInventory flag', async () => {
+  it('List view of languages by presetInventory flag', async () => {
     const numLanguages = 2;
 
     await Promise.all(times(numLanguages).map(() => createLanguage(app)));

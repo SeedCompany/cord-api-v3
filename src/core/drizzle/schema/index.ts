@@ -2,6 +2,7 @@ import { relations, sql } from 'drizzle-orm';
 import {
   type AnyPgColumn,
   bigint,
+  bigserial,
   boolean,
   check,
   date,
@@ -18,7 +19,12 @@ import {
 } from 'drizzle-orm/pg-core';
 import { type ID, type Role } from '~/common';
 import { type BudgetStatus } from '../../../components/budget/dto/budget-status.enum';
+import { type CeremonyType } from '../../../components/ceremony/dto/ceremony-type.enum';
+import { type InternshipPosition } from '../../../components/engagement/dto/intern-position.enum';
+import { type EngagementStatus } from '../../../components/engagement/dto/status.enum';
 import { type FileNodeType } from '../../../components/file/dto/file-node-type.enum';
+import { type AIAssistedTranslation } from '../../../components/language/dto/ai-assisted-translation.enum';
+import { type LanguageMilestone } from '../../../components/language/dto/language-milestone.enum';
 import { type LocationType } from '../../../components/location/dto/location-type.enum';
 import { type OrganizationReach } from '../../../components/organization/dto/organization-reach.dto';
 import { type OrganizationType } from '../../../components/organization/dto/organization-type.dto';
@@ -26,6 +32,7 @@ import { type PartnerType } from '../../../components/partner/dto/partner-type.e
 import { type FinancialReportingType } from '../../../components/partnership/dto/financial-reporting-type.enum';
 import { type PartnershipAgreementStatus } from '../../../components/partnership/dto/partnership-agreement-status.enum';
 import { type ReportPeriod } from '../../../components/periodic-report/dto/report-period.enum';
+import { type ProductMethodology } from '../../../components/product/dto/product-methodology.enum';
 import { type ProjectStatus } from '../../../components/project/dto/project-status.enum';
 import { type ProjectStep } from '../../../components/project/dto/project-step.enum';
 import { type ProjectType } from '../../../components/project/dto/project-type.enum';
@@ -1690,3 +1697,254 @@ export const ethnologueLanguagesRelations = relations(
 );
 
 // ─── Engagements ───────────────────────────────────────────────────────────
+
+export const engagementTypeEnum = pgEnum('engagement_type', [
+  'Language',
+  'Internship',
+]);
+
+export const engagementStatusEnum = pgEnum('engagement_status', [
+  'InDevelopment',
+  'DidNotDevelop',
+  'Rejected',
+  'Active',
+  'ActiveChangedPlan',
+  'DiscussingTermination',
+  'DiscussingReactivation',
+  'DiscussingChangeToPlan',
+  'DiscussingSuspension',
+  'Suspended',
+  'FinalizingCompletion',
+  'Terminated',
+  'Completed',
+  // Legacy — only used in historic data.
+  'Converted',
+  'Unapproved',
+  'Transferred',
+  'NotRenewed',
+]);
+
+export const languageMilestoneEnum = pgEnum('language_milestone', [
+  'Unknown',
+  'None',
+  'OldTestament',
+  'NewTestament',
+  'FullBible',
+]);
+
+export const aiAssistedTranslationEnum = pgEnum('ai_assisted_translation', [
+  'Unknown',
+  'None',
+  'Draft',
+  'Check',
+  'DraftAndCheck',
+  'Other',
+]);
+
+/**
+ * Single-table inheritance over LanguageEngagement / InternshipEngagement —
+ * same approach as projects. The `type` discriminator matches the parent
+ * project's type (Language ⟷ Translation projects, Internship ⟷ Internship
+ * projects); the CHECK below keeps the per-type columns coherent.
+ * `position` and `methodologies` are text-typed: large open-ended enums whose
+ * semantics live in the app (methodologies' canonical enum lands with the
+ * Product domain).
+ */
+export const engagements = pgTable(
+  'engagements',
+  {
+    id: text('id').$type<ID<'Engagement'>>().primaryKey(),
+    projectId: text('project_id')
+      .$type<ID<'Project'>>()
+      .notNull()
+      .references(() => projects.id, { onDelete: 'cascade' }),
+    type: engagementTypeEnum('type').notNull(),
+    status: engagementStatusEnum('status')
+      .$type<EngagementStatus>()
+      .notNull()
+      .default('InDevelopment'),
+    statusModifiedAt: timestamp('status_modified_at', { withTimezone: true }),
+    lastSuspendedAt: timestamp('last_suspended_at', { withTimezone: true }),
+    lastReactivatedAt: timestamp('last_reactivated_at', { withTimezone: true }),
+    completeDate: date('complete_date'),
+    disbursementCompleteDate: date('disbursement_complete_date'),
+    startDateOverride: date('start_date_override'),
+    endDateOverride: date('end_date_override'),
+    initialEndDate: date('initial_end_date'),
+    description: jsonb('description'),
+
+    // ── LanguageEngagement only ──
+    languageId: text('language_id')
+      .$type<ID<'Language'>>()
+      .references(() => languages.id),
+    // Nullable to mirror Neo4j semantics — unset is distinct from false and
+    // surfaces as null in the API.
+    firstScripture: boolean('first_scripture'),
+    lukePartnership: boolean('luke_partnership'),
+    openToInvestorVisit: boolean('open_to_investor_visit'),
+    paratextRegistryId: text('paratext_registry_id'),
+    rev79CommunityId: text('rev79_community_id'),
+    // migration-todo: deferred FK → files(id); populate when File migrates
+    // (Phase 7). Null until then.
+    pnpId: text('pnp_id').$type<ID<'File'>>(),
+    sentPrintingDate: date('sent_printing_date'),
+    historicGoal: text('historic_goal'),
+    milestonePlanned: languageMilestoneEnum('milestone_planned')
+      .$type<LanguageMilestone>()
+      .notNull()
+      .default('Unknown'),
+    milestoneReached: boolean('milestone_reached'),
+    usingAIAssistedTranslation: aiAssistedTranslationEnum(
+      'using_ai_assisted_translation',
+    )
+      .$type<AIAssistedTranslation>()
+      .notNull()
+      .default('Unknown'),
+
+    // ── InternshipEngagement only ──
+    internId: text('intern_id')
+      .$type<ID<'User'>>()
+      .references(() => users.id),
+    mentorId: text('mentor_id')
+      .$type<ID<'User'>>()
+      .references(() => users.id),
+    position: text('position').$type<InternshipPosition>(),
+    methodologies: text('methodologies')
+      .array()
+      .$type<readonly ProductMethodology[]>()
+      .notNull()
+      .default([]),
+    countryOfOriginId: text('country_of_origin_id')
+      .$type<ID<'Location'>>()
+      .references(() => locations.id),
+    // migration-todo: deferred FK → files(id); Phase 7.
+    growthPlanId: text('growth_plan_id').$type<ID<'File'>>(),
+    marketable: boolean('marketable').notNull().default(false),
+    webId: text('web_id'),
+
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    modifiedAt: timestamp('modified_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (t) => [
+    check(
+      'engagements_type_shape_chk',
+      sql`(${t.type} = 'Language' AND ${t.languageId} IS NOT NULL AND ${t.internId} IS NULL)
+        OR (${t.type} = 'Internship' AND ${t.internId} IS NOT NULL AND ${t.languageId} IS NULL)`,
+    ),
+    uniqueIndex('engagements_project_language_active_unique')
+      .on(t.projectId, t.languageId)
+      .where(sql`${t.languageId} IS NOT NULL AND ${t.deletedAt} IS NULL`),
+    uniqueIndex('engagements_project_intern_active_unique')
+      .on(t.projectId, t.internId)
+      .where(sql`${t.internId} IS NOT NULL AND ${t.deletedAt} IS NULL`),
+    index('engagements_project_id_idx').on(t.projectId),
+    index('engagements_language_id_idx').on(t.languageId),
+    index('engagements_intern_id_idx').on(t.internId),
+    index('engagements_mentor_id_idx').on(t.mentorId),
+    index('engagements_country_of_origin_id_idx').on(t.countryOfOriginId),
+  ],
+);
+
+// migration-todo (Product recut): restore `products: many(products)`.
+export const engagementsRelations = relations(engagements, ({ one }) => ({
+  project: one(projects, {
+    fields: [engagements.projectId],
+    references: [projects.id],
+  }),
+  language: one(languages, {
+    fields: [engagements.languageId],
+    references: [languages.id],
+  }),
+  intern: one(users, {
+    fields: [engagements.internId],
+    references: [users.id],
+  }),
+  mentor: one(users, {
+    fields: [engagements.mentorId],
+    references: [users.id],
+  }),
+  countryOfOrigin: one(locations, {
+    fields: [engagements.countryOfOriginId],
+    references: [locations.id],
+  }),
+  ceremony: one(ceremonies, {
+    fields: [engagements.id],
+    references: [ceremonies.engagementId],
+  }),
+}));
+
+/**
+ * Previous statuses, newest first — drives the rules engine's "BackTo"
+ * dynamic transitions (mirror of Neo4j's inactive status Property history).
+ * The repo appends the OLD status whenever status changes.
+ */
+export const engagementStatusHistory = pgTable(
+  'engagement_status_history',
+  {
+    id: bigserial('id', { mode: 'number' }).primaryKey(),
+    engagementId: text('engagement_id')
+      .$type<ID<'Engagement'>>()
+      .notNull()
+      .references(() => engagements.id, { onDelete: 'cascade' }),
+    status: engagementStatusEnum('status').$type<EngagementStatus>().notNull(),
+    at: timestamp('at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index('engagement_status_history_engagement_id_at_idx').on(
+      t.engagementId,
+      t.at,
+    ),
+  ],
+);
+
+// ─── Ceremonies ────────────────────────────────────────────────────────────
+
+export const ceremonyTypeEnum = pgEnum('ceremony_type', [
+  'Dedication',
+  'Certification',
+]);
+
+export const ceremonies = pgTable(
+  'ceremonies',
+  {
+    id: text('id').$type<ID<'Ceremony'>>().primaryKey(),
+    engagementId: text('engagement_id')
+      .$type<ID<'Engagement'>>()
+      .notNull()
+      .references(() => engagements.id, { onDelete: 'cascade' }),
+    type: ceremonyTypeEnum('type').$type<CeremonyType>().notNull(),
+    planned: boolean('planned').notNull().default(false),
+    estimatedDate: date('estimated_date'),
+    actualDate: date('actual_date'),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (t) => [
+    // 1:1 with engagement among live rows (Gel: exclusive on .engagement).
+    uniqueIndex('ceremonies_engagement_active_unique')
+      .on(t.engagementId)
+      .where(sql`${t.deletedAt} IS NULL`),
+    // Full FK index — the partial unique above can't serve FK-maintenance scans.
+    index('ceremonies_engagement_id_idx').on(t.engagementId),
+  ],
+);
+
+export const ceremoniesRelations = relations(ceremonies, ({ one }) => ({
+  engagement: one(engagements, {
+    fields: [ceremonies.engagementId],
+    references: [engagements.id],
+  }),
+}));

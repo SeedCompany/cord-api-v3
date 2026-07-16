@@ -16,6 +16,7 @@ import {
 } from './engagement-update-links.resolver';
 import { EngagementUpdatedResolver } from './engagement-updated.resolver';
 import { EngagementChannels } from './engagement.channels';
+import { EngagementDrizzleRepository } from './engagement.drizzle.repository';
 import { EngagementGelRepository } from './engagement.gel.repository';
 import { EngagementLoader } from './engagement.loader';
 import { EngagementRepository } from './engagement.repository';
@@ -59,6 +60,9 @@ import { EngagementProductConnectionResolver } from './product-connection.resolv
     EngagementChannels,
     splitDb(EngagementRepository, {
       gel: EngagementGelRepository,
+      // migration-todo: `as any` removed at Phase 7 cutover when splitDb
+      // disappears with the Neo4j path.
+      postgres: EngagementDrizzleRepository as any,
     }),
     EngagementLoader,
     ...Object.values(handlers),

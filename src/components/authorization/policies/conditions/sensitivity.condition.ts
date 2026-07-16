@@ -202,13 +202,37 @@ const sensitivityRefForResource = (
     case 'Organization':
       // Same interim story as Partner.
       return sql`"organizations"."sensitivity" <= ${accessLiteral}`;
+    case 'Engagement':
+    case 'LanguageEngagement':
+    case 'InternshipEngagement':
+      return sql`(
+        select "p"."sensitivity" from "projects" "p"
+        where "p"."id" = "engagements"."project_id"
+      ) <= ${accessLiteral}`;
+    case 'Ceremony':
+      return sql`(
+        select "p"."sensitivity" from "projects" "p"
+        join "engagements" "e" on "e"."project_id" = "p"."id"
+        where "e"."id" = "ceremonies"."engagement_id"
+      ) <= ${accessLiteral}`;
     case 'Language':
-      // Effective sensitivity = lowest across engaging projects, falling back
-      // to the language's own column when unengaged (mono's coalesce).
-      // migration-todo (Engagement recut): restore the engaging-projects MIN —
-      // with no engagements possible, the fallback is the only live branch, so
-      // the own-column compare is exact.
-      return sql`"languages"."sensitivity" <= ${accessLiteral}`;
+      // Effective sensitivity: lowest across projects engaging the language,
+      // falling back to the language's own (user-set) sensitivity when
+      // unengaged — mirror of the Neo4j hydrate's rankSens ASC pick.
+      // DELIBERATE divergence from Neo4j's DB-level filter: matchProjectSens
+      // hard-codes 'High' for the no-project case, so an unengaged Low
+      // language is invisible to a sens-gated read under Neo4j but visible
+      // here. The own-sensitivity fallback matches Gel + the hydrate (and
+      // Neo4j's own TODO); currently unreachable since no policy sens-gates
+      // Language object reads — if one ever does, this is the intended
+      // behavior, not a bug.
+      return sql`coalesce((
+        select min("p"."sensitivity") from "projects" "p"
+        join "engagements" "e" on "e"."project_id" = "p"."id"
+        where "e"."language_id" = "languages"."id"
+          and "e"."deleted_at" is null
+          and "p"."deleted_at" is null
+      ), "languages"."sensitivity") <= ${accessLiteral}`;
     // migration-todo: re-add a case per domain as it ports to Postgres
     // (Engagement/Ceremony/Language read sensitivity via
     // their parent project). Kept stripped so an unmigrated domain routed

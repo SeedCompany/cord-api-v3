@@ -44,6 +44,10 @@ import {
   transitionProject,
 } from './utility/transition-project';
 
+// migration-todo: this leg creates products, which are Neo4j-only until the
+// Product port lands — flip back to `it` under postgres in that PR.
+const itPgPending = process.env.DATABASE === 'postgres' ? it.skip : it;
+
 describe('Engagement e2e', () => {
   let app: TestApp;
   let project: fragments.project;
@@ -457,51 +461,54 @@ describe('Engagement e2e', () => {
       .expectError(errors.notFound());
   });
 
-  it('returns the correct products in language engagement', async () => {
-    project = await createProject(app);
-    language = await runAsAdmin(app, createLanguage);
-    const languageEngagement = await createLanguageEngagement(app, {
-      language: language.id,
-      project: project.id,
-    });
+  itPgPending(
+    'returns the correct products in language engagement',
+    async () => {
+      project = await createProject(app);
+      language = await runAsAdmin(app, createLanguage);
+      const languageEngagement = await createLanguageEngagement(app, {
+        language: language.id,
+        project: project.id,
+      });
 
-    const product1 = await createDirectProduct(app, {
-      engagement: languageEngagement.id,
-    });
-    const product2 = await createDirectProduct(app, {
-      engagement: languageEngagement.id,
-    });
-    const result = await app.graphql.query(
-      graphql(
-        `
-          query engagement($id: ID!) {
-            engagement: languageEngagement(id: $id) {
-              ...languageEngagement
+      const product1 = await createDirectProduct(app, {
+        engagement: languageEngagement.id,
+      });
+      const product2 = await createDirectProduct(app, {
+        engagement: languageEngagement.id,
+      });
+      const result = await app.graphql.query(
+        graphql(
+          `
+            query engagement($id: ID!) {
+              engagement: languageEngagement(id: $id) {
+                ...languageEngagement
+              }
             }
-          }
-        `,
-        [fragments.languageEngagement],
-      ),
-      {
-        id: languageEngagement.id,
-      },
-    );
-    expect(result.engagement.products.total).toEqual(2);
-    expect(result.engagement.products.items).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          id: product1.id,
-        }),
-      ]),
-    );
-    expect(result.engagement.products.items).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          id: product2.id,
-        }),
-      ]),
-    );
-  });
+          `,
+          [fragments.languageEngagement],
+        ),
+        {
+          id: languageEngagement.id,
+        },
+      );
+      expect(result.engagement.products.total).toEqual(2);
+      expect(result.engagement.products.items).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: product1.id,
+          }),
+        ]),
+      );
+      expect(result.engagement.products.items).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: product2.id,
+          }),
+        ]),
+      );
+    },
+  );
 
   it('creates ceremony upon engagement creation', async () => {
     project = await createProject(app);

@@ -27,6 +27,19 @@ export class CreateEngagementDefaultCeremonyHandler {
     if (this.config.databaseEngine === 'gel') {
       return;
     }
+
+    // Under postgres the FK on ceremonies.engagement_id carries the
+    // relationship — no separate connect step. migration-todo: at Phase 7
+    // cutover drop the Neo4j branch below and keep only this path.
+    if (this.config.databaseEngine === 'postgres') {
+      const ceremonyId = await this.ceremonies.create(input, engagement.id);
+      event.engagement = {
+        ...engagement,
+        ceremony: { id: ceremonyId },
+      };
+      return;
+    }
+
     const ceremonyId = await this.ceremonies.create(input);
 
     // connect ceremonyId to engagement

@@ -1,4 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { DateTime } from 'luxon';
 import {
   type CalendarDate,
   type ID,
@@ -373,10 +374,8 @@ export class EngagementService {
       .verifyCan('delete');
 
     await this.hooks.run(new EngagementWillDeleteHook(object));
-    const { at } = await this.repo.deleteNode(object, {
-      resource: resolveEngagementType(object),
-      changeset,
-    });
+    await this.repo.delete(object.id, changeset);
+    const at = DateTime.now();
 
     const payload = this.channels.publishToAll(
       resolveEngagementType(object) === LanguageEngagement

@@ -42,6 +42,7 @@ import {
 } from '~/core/drizzle';
 import { type DrizzleDb, DrizzleService } from '~/core/drizzle/drizzle.service';
 import {
+  engagements,
   fieldRegions,
   locations,
   projectMembers,
@@ -82,7 +83,7 @@ const catchDepartmentIdUnique = catchUniqueViolation(
 /**
  * Hydrated Project row: the projects table row + the current user's membership
  * (id, roles, inactive_at) if any. Pulled together in a single SELECT for
- * `readMany`. Cross-domain stubs (engagementTotal, usesRev79, primaryPartnership,
+ * `readMany`. Cross-domain stubs (usesRev79, primaryPartnership,
  * rootDirectory) live in `toDto`.
  */
 type ProjectRow = typeof projects.$inferSelect & {
@@ -199,15 +200,33 @@ export class ProjectDrizzleRepository extends DrizzleDtoRepository<
     const stepChangedByProject = new Map(
       latestEvents.map((e) => [e.projectId, e.at]),
     );
-    // migration-todo: engagementTotal is stubbed to 0 until Engagement migrates
-    // (the `engagements` table isn't on develop yet). `pinned` dropped — Pin
-    // isn't migrated; re-add the pinnedByRequester batch when the pin domain ports.
+    const engagementCounts = await this.db
+      .select({
+        projectId: engagements.projectId,
+        total: count(engagements.id),
+      })
+      .from(engagements)
+      .where(
+        and(
+          inArray(
+            engagements.projectId,
+            rows.map((r) => r.id),
+          ),
+          isNull(engagements.deletedAt),
+        ),
+      )
+      .groupBy(engagements.projectId);
+    const engagementTotalByProject = new Map(
+      engagementCounts.map((c) => [c.projectId, c.total]),
+    );
+    // migration-todo: `pinned` dropped — Pin isn't migrated; re-add the
+    // pinnedByRequester batch when the pin domain ports.
     return rows.map((row): UnsecuredDto<Project> => {
       const enriched: ProjectRow = {
         ...row,
         membership: membershipByProject.get(row.id) ?? null,
         stepChangedAt: stepChangedByProject.get(row.id) ?? null,
-        engagementTotal: 0,
+        engagementTotal: engagementTotalByProject.get(row.id) ?? 0,
       };
       return this.toDto(enriched);
     });
@@ -631,7 +650,7 @@ const resolveCrossDomainSort = (
  * `projects`. Exported for sub-delegation from other domains (Engagement and
  * Partnership both filter-sub-delegate into projectFilterClauses).
  *
- * Cross-domain stubs (languageId, partnerId, partnerships, primaryPartnership,
+ * Cross-domain stubs (partnerId, partnerships, primaryPartnership,
  * tool, onlyMultipleEngagements, usesRev79) throw NotImplementedException
  * until their target domain migrates — discovery mechanism, not silent skip.
  */
@@ -817,10 +836,13 @@ export const projectFilterClauses = (
     conditions.push(inArray(projects.id, memberSub));
   }
   if (filter.languageId) {
-    // migration-todo: exists-over-engagements; Engagement isn't on develop.
-    // Throw so the gap is discoverable (matches partnerId/partnerships below).
-    throw new NotImplementedException(
-      'ProjectFilters.languageId requires Engagement migration.',
+    conditions.push(
+      sql`exists (
+        select 1 from "engagements" "e"
+        where "e"."project_id" = ${projects.id}
+          and "e"."language_id" = ${filter.languageId}
+          and "e"."deleted_at" is null
+      )`,
     );
   }
   // Cross-domain filters — throw until wired so the gap is discoverable in

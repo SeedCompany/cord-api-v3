@@ -1,12 +1,20 @@
 import { Injectable } from '@nestjs/common';
-import { and, eq, ilike, inArray, isNull, or, type SQL } from 'drizzle-orm';
+import {
+  and,
+  eq,
+  ilike,
+  inArray,
+  isNull,
+  or,
+  sql,
+  type SQL,
+} from 'drizzle-orm';
 import { DateTime } from 'luxon';
 import {
   CalendarDate,
   generateId,
   type ID,
   NotFoundException,
-  NotImplementedException,
   type ObjectView,
   type PaginatedListType,
   type UnsecuredDto,
@@ -21,9 +29,16 @@ import {
   type SortMap,
 } from '~/core/drizzle';
 import { type DrizzleDb, DrizzleService } from '~/core/drizzle/drizzle.service';
-import { ethnologueLanguages, languages } from '~/core/drizzle/schema';
+import {
+  engagements,
+  ethnologueLanguages,
+  languages,
+  projects,
+} from '~/core/drizzle/schema';
 import { type ScopedRole } from '../authorization/dto/role.dto';
 import { PolicyExecutor } from '../authorization/policy/executor/policy-executor';
+import { requesterScopeByProject } from '../project/project-member/membership-scope';
+import { recomputeProjectSensitivity } from '../project/project.drizzle.repository';
 import {
   type CreateLanguage,
   type EthnologueLanguage,
@@ -137,10 +152,23 @@ export class LanguageDrizzleRepository extends DrizzleDtoRepository<
       .catch(catchDisplayNameUnique)
       .catch(catchRolvUnique);
 
-    // migration-todo (Engagement recut): restore the project-sensitivity
-    // recompute over engaging projects (mono queries `engagements` +
-    // recomputeProjectSensitivity). No engagements can exist until that
-    // table lands, so there is nothing to recompute here yet.
+    if (fields.sensitivity !== undefined) {
+      // Mirror of Gel's recalculateProjectSens trigger: keep engaging
+      // translation projects' denormalized sensitivity current.
+      const engaged = await this.db
+        .select({ projectId: engagements.projectId })
+        .from(engagements)
+        .where(
+          and(
+            eq(engagements.languageId, id as ID<'Language'>),
+            isNull(engagements.deletedAt),
+          ),
+        );
+      await recomputeProjectSensitivity(
+        this.db,
+        engaged.map((e) => e.projectId),
+      );
+    }
 
     return await this.readOne(id);
   }
@@ -172,16 +200,83 @@ export class LanguageDrizzleRepository extends DrizzleDtoRepository<
       where: (l) => inArray(l.id, readableIds),
       with: { ethnologue: true },
     });
-    // migration-todo (Engagement recut): restore the engagementDerived()
-    // batch — effectiveSensitivity/presetInventory/usesAIAssistance/
-    // firstScriptureEngagement/scope all derive from engaging projects, so
-    // toDto's fallbacks (own sensitivity, false, null, []) are exact while
-    // no engagements can exist.
+    const derived = await this.engagementDerived(rows.map((r) => r.id));
     // migration-todo (Pin recut): restore the pinnedByRequester batch;
     // pinned hardcodes false until then.
     return (rows as LanguageRow[]).map((row) =>
-      this.toDto({ ...row, pinned: false }),
+      this.toDto({ ...row, pinned: false }, derived.get(row.id)),
     );
+  }
+
+  /**
+   * Engagement-derived read-time info per language: the projects engaging it
+   * (effective sensitivity = lowest project sensitivity; requester scope is
+   * the dedup'd union across them; presetInventory = any InDevelopment/Active
+   * project flagged), whether any engagement uses AI-assisted translation,
+   * and the firstScripture engagement. Mirror of the Neo4j hydrate.
+   */
+  private async engagementDerived(languageIds: ReadonlyArray<ID<'Language'>>) {
+    const out = new Map<ID<'Language'>, EngagementDerived>();
+    if (languageIds.length === 0) return out;
+    const rows = await this.db
+      .select({
+        languageId: engagements.languageId,
+        engagementId: engagements.id,
+        firstScripture: engagements.firstScripture,
+        usingAI: engagements.usingAIAssistedTranslation,
+        projectId: projects.id,
+        sensitivity: projects.sensitivity,
+        status: projects.status,
+        presetInventory: projects.presetInventory,
+      })
+      .from(engagements)
+      .innerJoin(projects, eq(engagements.projectId, projects.id))
+      .where(
+        and(
+          inArray(engagements.languageId, [...languageIds]),
+          isNull(engagements.deletedAt),
+          isNull(projects.deletedAt),
+        ),
+      );
+    const scopeByProject = await requesterScopeByProject(
+      this.db,
+      this.identity.current.userId,
+      rows.map((r) => r.projectId),
+    );
+    const sensRank = { Low: 1, Medium: 2, High: 3 } as const;
+    for (const row of rows) {
+      const languageId = row.languageId!;
+      const entry = out.get(languageId) ?? {
+        effectiveSensitivity: undefined,
+        presetInventory: false,
+        usesAIAssistance: false,
+        firstScriptureEngagement: null,
+        scope: new Set<ScopedRole>(),
+      };
+      if (
+        !entry.effectiveSensitivity ||
+        sensRank[row.sensitivity] < sensRank[entry.effectiveSensitivity]
+      ) {
+        entry.effectiveSensitivity = row.sensitivity;
+      }
+      if (
+        row.presetInventory &&
+        (row.status === 'InDevelopment' || row.status === 'Active')
+      ) {
+        entry.presetInventory = true;
+      }
+      if (row.usingAI !== 'None' && row.usingAI !== 'Unknown') {
+        entry.usesAIAssistance = true;
+      }
+      if (row.firstScripture && !entry.firstScriptureEngagement) {
+        entry.firstScriptureEngagement = { id: row.engagementId };
+      }
+      for (const role of scopeByProject.get(row.projectId) ?? []) {
+        entry.scope.add(role);
+      }
+      out.set(languageId, entry);
+    }
+    return out;
   }
 
   async readOneByEth(ethnologueId: ID): Promise<UnsecuredDto<Language>> {
@@ -244,21 +339,53 @@ export class LanguageDrizzleRepository extends DrizzleDtoRepository<
     };
   }
 
-  // migration-todo (Engagement recut): query `engagements` for real. Until
-  // that table lands no engagements can exist, so an empty list is exact —
-  // and it keeps the service's delete guard permissive, correctly.
-  async getEngagementIdsForLanguage(_language: Language): Promise<ID[]> {
-    return [];
+  async getEngagementIdsForLanguage(language: Language): Promise<ID[]> {
+    const rows = await this.db
+      .select({ id: engagements.id })
+      .from(engagements)
+      .where(
+        and(
+          eq(engagements.languageId, language.id as ID<'Language'>),
+          isNull(engagements.deletedAt),
+        ),
+      );
+    return rows.map((r) => r.id);
   }
 
-  // migration-todo (Engagement recut): query `engagements.first_scripture`
-  // for real. Exact while no engagements can exist.
-  async hasFirstScriptureEngagement(_id: ID): Promise<boolean> {
-    return false;
+  async hasFirstScriptureEngagement(id: ID): Promise<boolean> {
+    const [row] = await this.db
+      .select({ id: engagements.id })
+      .from(engagements)
+      .where(
+        and(
+          eq(engagements.languageId, id as ID<'Language'>),
+          eq(engagements.firstScripture, true),
+          isNull(engagements.deletedAt),
+        ),
+      )
+      .limit(1);
+    return !!row;
   }
 
   async delete(id: ID): Promise<void> {
+    // Capture engaging projects BEFORE the soft-delete: the denormalized
+    // projects.sensitivity must be recomputed once this language stops
+    // counting (Neo4j computes sensitivity live, so its delete needs no
+    // equivalent). Same recipe as update()'s sensitivity-change path.
+    const engaged = await this.db
+      .select({ projectId: engagements.projectId })
+      .from(engagements)
+      .where(
+        and(
+          eq(engagements.languageId, id as ID<'Language'>),
+          isNull(engagements.deletedAt),
+        ),
+      );
     await this.softDelete(id);
+    await recomputeProjectSensitivity(
+      this.db,
+      engaged.map((row) => row.projectId),
+    );
   }
 
   protected toDto(
@@ -342,8 +469,7 @@ export const languageFilterClauses = (
   const conditions: SQL[] = [];
   if (!filter) return conditions;
   // migration-todo (Pin recut): restore the pinnedFilter branch; until the
-  // pins table lands the filter is ignored (matches the Project/Partner
-  // recut posture — the pinned e2e stays red at the Pin boundary).
+  // pins table lands the filter is ignored (Project/Partner recut posture).
 
   if (filter.name) {
     const pattern = `%${escapeLikePattern(filter.name)}%`;
@@ -390,11 +516,15 @@ export const languageFilterClauses = (
     );
   }
   if (filter.partnerId) {
-    // migration-todo (Engagement recut): restore the engagements→partnerships
-    // EXISTS. Raw SQL would compile but crash at runtime against the missing
-    // table — fail loud instead.
-    throw new NotImplementedException(
-      'LanguageFilters.partnerId requires the Engagement migration',
+    conditions.push(
+      sql`exists (
+        select 1 from "engagements" "e"
+        join "partnerships" "ps" on "ps"."project_id" = "e"."project_id"
+        where "e"."language_id" = ${languages.id}
+          and "ps"."partner_id" = ${filter.partnerId}
+          and "e"."deleted_at" is null
+          and "ps"."deleted_at" is null
+      )`,
     );
   }
   if (filter.ethnologue) {
