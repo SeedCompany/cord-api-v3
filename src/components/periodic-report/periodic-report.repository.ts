@@ -482,7 +482,7 @@ export class PeriodicReportRepository extends DtoRepository<
  * base64url string (66 bits of SHA-256), which is enough to avoid accidental
  * collisions while being deterministic enough to detect intentional duplicates.
  */
-const deterministicReportId = (
+export const deterministicReportId = (
   parentId: ID,
   type: string,
   start: CalendarDate,

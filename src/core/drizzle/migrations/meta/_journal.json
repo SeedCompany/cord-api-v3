@@ -134,6 +134,27 @@
       "when": 1752192000000,
       "tag": "0018_add_products",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1752278400000,
+      "tag": "0019_add_periodic_reports",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1752364800000,
+      "tag": "0020_add_prompt_variant_responses",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1752451200000,
+      "tag": "0021_add_product_progress",
+      "breakpoints": true
     }
   ]
 }

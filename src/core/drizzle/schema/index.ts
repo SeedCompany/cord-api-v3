@@ -32,11 +32,13 @@ import { type PartnerType } from '../../../components/partner/dto/partner-type.e
 import { type FinancialReportingType } from '../../../components/partnership/dto/financial-reporting-type.enum';
 import { type PartnershipAgreementStatus } from '../../../components/partnership/dto/partnership-agreement-status.enum';
 import { type ReportPeriod } from '../../../components/periodic-report/dto/report-period.enum';
+import { type ReportType } from '../../../components/periodic-report/dto/report-type.enum';
 import { type ProductMedium } from '../../../components/product/dto/product-medium.enum';
 import { type ProductMethodology } from '../../../components/product/dto/product-methodology.enum';
 import { type ProductPurpose } from '../../../components/product/dto/product-purpose.enum';
 import { type ProductStep } from '../../../components/product/dto/product-step.enum';
 import { type ProgressMeasurement } from '../../../components/product/dto/progress-measurement.enum';
+import { type ProgressReportStatus } from '../../../components/progress-report/dto/progress-report-status.enum';
 import { type ProjectStatus } from '../../../components/project/dto/project-status.enum';
 import { type ProjectStep } from '../../../components/project/dto/project-step.enum';
 import { type ProjectType } from '../../../components/project/dto/project-type.enum';
@@ -2203,6 +2205,305 @@ export const productCompletionDescriptions = pgTable(
     uniqueIndex('product_completion_descriptions_value_methodology_unique').on(
       t.value,
       t.methodology,
+    ),
+  ],
+);
+
+// ─── Periodic Reports ──────────────────────────────────────────────────────
+
+export const reportTypeEnum = pgEnum('report_type', [
+  'Financial',
+  'Narrative',
+  'Progress',
+]);
+
+export const progressReportStatusEnum = pgEnum('progress_report_status', [
+  'NotStarted',
+  'InProgress',
+  'PendingTranslation',
+  'InReview',
+  'Approved',
+  'Published',
+]);
+
+/**
+ * Single table over FinancialReport / NarrativeReport / ProgressReport.
+ * Financial+Narrative hang off projects; Progress hangs off (language)
+ * engagements — the CHECK keeps the parent FK coherent with the type.
+ *
+ * The id is deterministic — sha256(parent:type:start:end), same derivation as
+ * Neo4j — so concurrent syncs computing rows for the same interval collide on
+ * the PK and resolve via ON CONFLICT DO NOTHING. Deletion is a REAL delete
+ * (no deleted_at): eligible rows carry no user data (no file, NotStarted),
+ * and a soft-deleted row would block the deterministic id from ever being
+ * recreated when dates change back.
+ *
+ * `status` is ProgressReport-only (workflow-driven; plain column like
+ * engagement.status).
+ */
+export const periodicReports = pgTable(
+  'periodic_reports',
+  {
+    id: text('id').$type<ID>().primaryKey(),
+    type: reportTypeEnum('type').$type<ReportType>().notNull(),
+    projectId: text('project_id')
+      .$type<ID<'Project'>>()
+      .references(() => projects.id, { onDelete: 'cascade' }),
+    engagementId: text('engagement_id')
+      .$type<ID<'Engagement'>>()
+      .references(() => engagements.id, { onDelete: 'cascade' }),
+    start: date('start').notNull(),
+    end: date('end').notNull(),
+    receivedDate: date('received_date'),
+    skippedReason: text('skipped_reason'),
+    // migration-todo(cutover-cleanup): plain text, no FK — S4 class. The
+    // file_nodes table exists (0008), but the createDefinedFile fan-out
+    // inserts this row before its file rows; real FKs land with the S4
+    // option-2 reorder at cutover cleanup.
+    reportFileId: text('report_file_id').$type<ID<'File'>>(),
+    // Columns-mono-style per Rob 2026-07-16 (periodic_report_files join-table
+    // redesign = post-cutover ticket). Same S4 deferred-FK class as above.
+    narrativeFileId: text('narrative_file_id').$type<ID<'File'>>(),
+    narrativeReceivedDate: date('narrative_received_date'),
+    status: progressReportStatusEnum('status').$type<ProgressReportStatus>(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    check(
+      'periodic_reports_parent_shape_chk',
+      sql`(${t.type} IN ('Financial', 'Narrative') AND ${t.projectId} IS NOT NULL AND ${t.engagementId} IS NULL)
+        OR (${t.type} = 'Progress' AND ${t.engagementId} IS NOT NULL AND ${t.projectId} IS NULL)`,
+    ),
+    check(
+      'periodic_reports_status_shape_chk',
+      sql`(${t.type} = 'Progress') = (${t.status} IS NOT NULL)`,
+    ),
+    index('periodic_reports_project_id_idx').on(t.projectId),
+    index('periodic_reports_engagement_id_idx').on(t.engagementId),
+  ],
+);
+
+export const periodicReportsRelations = relations(
+  periodicReports,
+  ({ one }) => ({
+    project: one(projects, {
+      fields: [periodicReports.projectId],
+      references: [projects.id],
+    }),
+    engagement: one(engagements, {
+      fields: [periodicReports.engagementId],
+      references: [engagements.id],
+    }),
+  }),
+);
+
+// ─── Prompt Variant Responses ──────────────────────────────────────────────
+
+/**
+ * Generic prompt-response container shared by every PromptVariantResponse
+ * subtype (ProgressReport team news / highlights / community stories; more
+ * later). `resource_type` is the concrete DTO name (stands in for the Neo4j
+ * label); `parent_id` is intentionally FK-less — parents span tables
+ * (periodic_reports today, others as domains migrate). Prompts are
+ * code-defined; only the chosen prompt id is stored.
+ */
+export const promptVariantResponses = pgTable(
+  'prompt_variant_responses',
+  {
+    id: text('id').$type<ID>().primaryKey(),
+    resourceType: text('resource_type').notNull(),
+    parentId: text('parent_id').$type<ID>().notNull(),
+    prompt: text('prompt').notNull(),
+    creatorId: text('creator_id')
+      .$type<ID<'User'>>()
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    modifiedAt: timestamp('modified_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (t) => [
+    index('prompt_variant_responses_parent_id_idx').on(t.parentId),
+    index('prompt_variant_responses_creator_id_idx').on(t.creatorId),
+  ],
+);
+
+/**
+ * One row per (response, variant) — the actual rich-text answers. Edits
+ * within the permanent-after window update in place; later edits soft-delete
+ * the old row and insert a new one (mirror of Neo4j's deactivate+create
+ * history chain).
+ */
+export const promptVariantResponseEntries = pgTable(
+  'prompt_variant_response_entries',
+  {
+    id: bigserial('id', { mode: 'number' }).primaryKey(),
+    responseId: text('response_id')
+      .$type<ID>()
+      .notNull()
+      .references(() => promptVariantResponses.id, { onDelete: 'cascade' }),
+    variant: text('variant').notNull(),
+    response: jsonb('response'),
+    creatorId: text('creator_id')
+      .$type<ID<'User'>>()
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    modifiedAt: timestamp('modified_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (t) => [
+    uniqueIndex(
+      'prompt_variant_response_entries_response_variant_active_unique',
+    )
+      .on(t.responseId, t.variant)
+      .where(sql`${t.deletedAt} IS NULL`),
+    // Full FK index — the partial unique can't serve FK-maintenance scans.
+    index('prompt_variant_response_entries_response_id_idx').on(t.responseId),
+    index('prompt_variant_response_entries_creator_id_idx').on(t.creatorId),
+  ],
+);
+
+export const promptVariantResponsesRelations = relations(
+  promptVariantResponses,
+  ({ many }) => ({
+    entries: many(promptVariantResponseEntries),
+  }),
+);
+
+export const promptVariantResponseEntriesRelations = relations(
+  promptVariantResponseEntries,
+  ({ one }) => ({
+    parent: one(promptVariantResponses, {
+      fields: [promptVariantResponseEntries.responseId],
+      references: [promptVariantResponses.id],
+    }),
+  }),
+);
+
+// ─── Product Progress + Progress Summaries ─────────────────────────────────
+
+/**
+ * Progress container per (product, report, variant) — exists once any step
+ * progress is reported. Step rows hang off it; unreported steps surface as
+ * placeholders at read time, ordered by the product's declared steps.
+ */
+export const productProgress = pgTable(
+  'product_progress',
+  {
+    id: text('id').$type<ID>().primaryKey(),
+    productId: text('product_id')
+      .$type<ID<'Product'>>()
+      .notNull()
+      .references(() => products.id, { onDelete: 'cascade' }),
+    reportId: text('report_id')
+      .$type<ID>()
+      .notNull()
+      .references(() => periodicReports.id, { onDelete: 'cascade' }),
+    variant: text('variant').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex('product_progress_product_report_variant_unique').on(
+      t.productId,
+      t.reportId,
+      t.variant,
+    ),
+    index('product_progress_report_id_idx').on(t.reportId),
+  ],
+);
+
+export const stepProgress = pgTable(
+  'step_progress',
+  {
+    id: text('id').$type<ID>().primaryKey(),
+    progressId: text('progress_id')
+      .$type<ID>()
+      .notNull()
+      .references(() => productProgress.id, { onDelete: 'cascade' }),
+    // product_step enum — matches products.steps (mono had no enum type).
+    step: productStepEnum('step').$type<ProductStep>().notNull(),
+    completed: doublePrecision('completed'),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex('step_progress_progress_step_unique').on(t.progressId, t.step),
+  ],
+);
+
+export const productProgressRelations = relations(
+  productProgress,
+  ({ many }) => ({
+    steps: many(stepProgress),
+  }),
+);
+
+export const stepProgressRelations = relations(stepProgress, ({ one }) => ({
+  progress: one(productProgress, {
+    fields: [stepProgress.progressId],
+    references: [productProgress.id],
+  }),
+}));
+
+export const summaryPeriodEnum = pgEnum('summary_period', [
+  'ReportPeriod',
+  'FiscalYearSoFar',
+  'Cumulative',
+]);
+
+/**
+ * Extracted planned/actual figures per (progress report, period) — written
+ * by the PnP extractor on report file upload (File domain, Phase 7); the
+ * read path serves the ProgressReport summary fields.
+ */
+export const progressSummaries = pgTable(
+  'progress_summaries',
+  {
+    id: bigserial('id', { mode: 'number' }).primaryKey(),
+    reportId: text('report_id')
+      .$type<ID>()
+      .notNull()
+      .references(() => periodicReports.id, { onDelete: 'cascade' }),
+    period: summaryPeriodEnum('period').notNull(),
+    planned: doublePrecision('planned').notNull(),
+    actual: doublePrecision('actual').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex('progress_summaries_report_period_unique').on(
+      t.reportId,
+      t.period,
     ),
   ],
 );

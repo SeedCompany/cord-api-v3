@@ -236,6 +236,10 @@ export const PromptVariantResponseRepository = <
         .executeAndLogStats();
     }
 
+    async delete(id: ID) {
+      await this.deleteNode(id);
+    }
+
     async changePrompt(input: ChangePrompt) {
       // @ts-expect-error uhhhh yolo ¯\_(ツ)_/¯
       const resource: typeof PromptVariantResponse = this.resource.type;
