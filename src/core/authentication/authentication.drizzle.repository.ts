@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { and, eq, ne } from 'drizzle-orm';
+import { and, eq, isNull, ne } from 'drizzle-orm';
 import { DateTime } from 'luxon';
 import { type ID, type PublicOf, ServerException } from '~/common';
 import {
@@ -34,16 +34,24 @@ export class AuthenticationDrizzleRepository implements PublicOf<AuthenticationR
     });
     if (!row) return null;
 
-    const roles = (row.user?.globalRoles ?? []).map(
+    // User-liveness: Neo4j enforces this structurally (deleting a user
+    // relabels the node, so the session→user match fails and the session
+    // degrades to anonymous). Mirror that: a soft-deleted user's session
+    // resolves as anonymous instead of retaining its identity. The
+    // delete→revoke-sessions hook deactivates these outright; this guards
+    // any session the hook missed (e.g. created before the hook shipped).
+    const user = row.user && !row.user.deletedAt ? row.user : null;
+    const roles = (user?.globalRoles ?? []).map(
       (globalRole) => globalRole.role,
     );
+    const userId = user ? row.userId : null;
 
     if (!impersonatee) {
-      return { userId: row.userId, roles };
+      return { userId, roles };
     }
 
     const impersonateeRoles = await this.rolesForUser(impersonatee);
-    return { userId: row.userId, roles, impersonateeRoles };
+    return { userId, roles, impersonateeRoles };
   }
 
   async disconnectUserFromSession(token: string) {
@@ -56,7 +64,7 @@ export class AuthenticationDrizzleRepository implements PublicOf<AuthenticationR
 
   async connectSessionToUser(input: LoginInput, session: Session) {
     const user = await this.drizzle.client.query.users.findFirst({
-      where: (user) => eq(user.email, input.email),
+      where: (user) => and(eq(user.email, input.email), isNull(user.deletedAt)),
     });
     if (!user) return undefined;
 
@@ -147,7 +155,7 @@ export class AuthenticationDrizzleRepository implements PublicOf<AuthenticationR
       })
       .from(users)
       .innerJoin(authIdentities, eq(authIdentities.userId, users.id))
-      .where(eq(users.email, email))
+      .where(and(eq(users.email, email), isNull(users.deletedAt)))
       .limit(1);
 
     return rows[0]
@@ -159,8 +167,14 @@ export class AuthenticationDrizzleRepository implements PublicOf<AuthenticationR
   }
 
   async doesEmailAddressExist(email: string) {
+    // Liveness matters here: Neo4j relabels the EmailAddress property node to
+    // Deleted_EmailAddress on user delete, so its existence check is false for
+    // deleted users and forgotPassword silently skips them — same void
+    // response either way, no deletion oracle. savePasswordResetToken below
+    // stays liveness-blind because this gate makes it unreachable for
+    // deleted emails.
     const row = await this.drizzle.client.query.users.findFirst({
-      where: (user) => eq(user.email, email),
+      where: (user) => and(eq(user.email, email), isNull(user.deletedAt)),
     });
     return !!row;
   }
@@ -181,23 +195,30 @@ export class AuthenticationDrizzleRepository implements PublicOf<AuthenticationR
     const row =
       await this.drizzle.client.query.authPasswordResetTokens.findFirst({
         where: (resetToken) => eq(resetToken.token, token),
+        with: { user: { columns: { id: true, deletedAt: true } } },
       });
-    return row
-      ? {
-          email: row.email,
-          token: row.token,
-          userId: row.userId,
-          createdOn: DateTime.fromJSDate(row.createdOn),
-        }
-      : null;
+    // A token whose user has since been soft-deleted is dead — completing
+    // the reset would overwrite the deleted account's identity hash
+    // (account takeover on any future restore). Same invalid-token path as
+    // an unknown token. (savePasswordResetToken stays liveness-blind on
+    // purpose: forgotPassword must not error differently for deleted
+    // emails, and the token can never be consumed.)
+    if (!row?.user || row.user.deletedAt) return null;
+    return {
+      email: row.email,
+      token: row.token,
+      userId: row.userId,
+      createdOn: DateTime.fromJSDate(row.createdOn),
+    };
   }
 
   async updatePasswordViaEmailToken(
     { email }: { email: string },
     passwordHash: string,
   ) {
+    // Liveness backstop for findPasswordResetToken's check above.
     const user = await this.drizzle.client.query.users.findFirst({
-      where: (user) => eq(user.email, email),
+      where: (user) => and(eq(user.email, email), isNull(user.deletedAt)),
     });
     if (!user) {
       throw new ServerException(
@@ -217,9 +238,16 @@ export class AuthenticationDrizzleRepository implements PublicOf<AuthenticationR
   }
 
   async rolesForUser(user: ID) {
+    // Liveness join — Neo4j starts from a `:User` match, so a deleted user
+    // yields [] there; mirror that so stale roles can't feed sessionForUser
+    // / impersonation merges.
     const rows = await this.drizzle.client
       .select({ role: userGlobalRoles.role })
       .from(userGlobalRoles)
+      .innerJoin(
+        users,
+        and(eq(users.id, userGlobalRoles.userId), isNull(users.deletedAt)),
+      )
       .where(eq(userGlobalRoles.userId, user));
     return rows.map((row) => row.role);
   }
