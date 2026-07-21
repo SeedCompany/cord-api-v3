@@ -54,6 +54,11 @@ export class Rev79DrizzleRepository {
         and(
           eq(engagements.projectId, projectId),
           eq(engagements.rev79CommunityId, rev79CommunityId),
+          // Constrain to LanguageEngagements — the Neo4j repo matches the
+          // `:LanguageEngagement` label. The shared engagements table doesn't
+          // enforce rev79CommunityId is null for Internships, so without this
+          // an Internship id could be returned as an ID<'LanguageEngagement'>.
+          isNotNull(engagements.languageId),
           isNull(engagements.deletedAt),
         ),
       );

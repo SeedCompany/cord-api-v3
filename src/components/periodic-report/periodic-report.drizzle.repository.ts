@@ -101,6 +101,11 @@ export class PeriodicReportDrizzleRepository extends DrizzleDtoRepository<
    * ON CONFLICT DO NOTHING. Returns only the rows actually created.
    */
   async merge(input: MergePeriodicReports) {
+    // Nothing to sync — drizzle's `.values([])` is a runtime error, and there
+    // are no rows to create files for, so short-circuit.
+    if (input.intervals.length === 0) {
+      return [];
+    }
     const isProgress = input.type === 'Progress';
     // Each report owns a `reportFile` DefinedFile placeholder. The FK is stored
     // here; the (version-less) file node is created by createDefinedFile after

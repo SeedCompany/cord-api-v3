@@ -91,9 +91,16 @@ export const PromptVariantResponseDrizzleRepository = <
           ),
         with: { entries: true },
         orderBy: (r) => [asc(r.createdAt), asc(r.id)],
+        // Mirror the Neo4j repo's paginate({ count: 25, page: 1 }): cap the
+        // page and probe one extra row for hasMore rather than returning every
+        // row (which also bounds the payload).
+        limit: 26,
       });
-      const items = rows.map((row) => this.toDto(row as ResponseRow));
-      return { items, total: items.length, hasMore: false };
+      const hasMore = rows.length > 25;
+      const items = rows
+        .slice(0, 25)
+        .map((row) => this.toDto(row as ResponseRow));
+      return { items, total: items.length, hasMore };
     }
 
     async readOne(
@@ -128,6 +135,14 @@ export const PromptVariantResponseDrizzleRepository = <
       return await this.readOne(id);
     }
 
+    // migration-todo: this read-then-write is not serialized. Two concurrent
+    // submits for the same (response_id, variant) can both see no active entry
+    // (or both retire the same one) and then race into the partial unique
+    // index — the loser fails with a unique-violation (no bad data lands; the
+    // index is the fail-safe). The Neo4j path is atomic in a single query.
+    // Deferred: serialize with a tx + `SELECT ... FOR UPDATE` on the parent
+    // response, or a conflict-aware upsert. Low-priority given the backstop and
+    // the rarity of concurrent same-variant submits.
     async submitResponse(input: UpdatePromptVariantResponse<TVariant>) {
       const now = new Date();
       const [entry] = await this.db
