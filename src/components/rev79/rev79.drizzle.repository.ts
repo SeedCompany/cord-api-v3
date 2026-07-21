@@ -38,6 +38,10 @@ export class Rev79DrizzleRepository {
           eq(engagements.projectId, projectId),
           isNotNull(engagements.rev79CommunityId),
           isNull(engagements.deletedAt),
+          // Exclude soft-deleted languages — Neo4j matches the `:Language`
+          // label, which excludes deleted (relabeled) nodes. Without this an
+          // active engagement joined to a deleted language leaks that community.
+          isNull(languages.deletedAt),
         ),
       );
     return rows.map((row) => ({ id: row.id!, name: row.name }));
