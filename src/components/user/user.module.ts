@@ -10,6 +10,7 @@ import { TimeZoneModule } from '../timezone';
 import { ActorLoader } from './actor.loader';
 import { AssignableRolesResolver } from './assignable-roles.resolver';
 import { EducationModule } from './education/education.module';
+import { KnownLanguageDrizzleRepository } from './known-language.drizzle.repository';
 import { KnownLanguageRepository } from './known-language.repository';
 import { KnownLanguageResolver } from './known-language.resolver';
 import { AddActorLabelMigration } from './migrations/add-actor-label.migration';
@@ -52,7 +53,10 @@ import { UserService } from './user.service';
       // migration-todo: remove `as any` once splitDb types accept drizzle repos directly
       postgres: UserDrizzleRepository as any,
     }),
-    KnownLanguageRepository,
+    splitDb(KnownLanguageRepository, {
+      // migration-todo: `as any` + the Neo4j path removed at Phase 7 cutover.
+      postgres: KnownLanguageDrizzleRepository as any,
+    }),
     {
       ...splitDb(SystemAgentNeo4jRepository, {
         neo4j: SystemAgentNeo4jRepository,

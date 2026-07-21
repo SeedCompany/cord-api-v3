@@ -25,6 +25,7 @@ import {
   type PaginatedListType,
   type UnsecuredDto,
 } from '~/common';
+import { Identity } from '~/core/authentication';
 import {
   catchForeignKeyViolation,
   catchUniqueViolation,
@@ -51,6 +52,7 @@ import {
   organizationFilterClauses,
   organizationSortColumns,
 } from '../organization/organization.drizzle.repository';
+import { pinnedByRequester, pinnedFilter } from '../pin/pinned-by-requester';
 import {
   type CreatePartner,
   Partner,
@@ -65,6 +67,7 @@ type PartnerRow = typeof partners.$inferSelect & {
   countries: Array<{ locationId: ID<'Location'> }>;
   languagesOfConsulting: Array<{ languageId: ID<'Language'> }>;
   departmentIdBlock: typeof departmentIdBlocks.$inferSelect | null;
+  pinned?: boolean;
 };
 
 @Injectable()
@@ -75,6 +78,7 @@ export class PartnerDrizzleRepository extends DrizzleDtoRepository<
   constructor(
     db: DrizzleService,
     private readonly executor: PolicyExecutor,
+    private readonly identity: Identity,
   ) {
     super(db, partners, Partner);
   }
@@ -269,7 +273,14 @@ export class PartnerDrizzleRepository extends DrizzleDtoRepository<
         departmentIdBlock: true,
       },
     });
-    return rows.map((row) => this.toDto(row));
+    const pinnedSet = await pinnedByRequester(
+      this.db,
+      this.identity.current.userId,
+      rows.map((r) => r.id),
+    );
+    return rows.map((row) =>
+      this.toDto({ ...row, pinned: pinnedSet.has(row.id) }),
+    );
   }
 
   async list(
@@ -280,7 +291,13 @@ export class PartnerDrizzleRepository extends DrizzleDtoRepository<
       return EMPTY_PAGE;
     }
 
-    conditions.push(...partnerFilterClauses(this.db, input.filter));
+    conditions.push(
+      ...partnerFilterClauses(
+        this.db,
+        input.filter,
+        this.identity.current.userId,
+      ),
+    );
     const predicate = and(...conditions);
 
     // Cast to string because `name` / `organization.*` aren't in `keyof
@@ -591,10 +608,9 @@ export class PartnerDrizzleRepository extends DrizzleDtoRepository<
           : null,
       // migration-todo: derived from project sensitivity; 'High' until Project migrates.
       sensitivity: row.sensitivity,
-      // migration-todo: pinned is per-requesting-user state, not stored on the
-      // partner row. Re-add the requesterId param + pinnedByRequester batch
-      // when the Pin domain migrates to Postgres.
-      pinned: false,
+      // Per-requester pin state — populated by readMany/list via
+      // pinnedByRequester; other internal paths leave it false.
+      pinned: row.pinned ?? false,
     };
   }
 }
@@ -623,6 +639,7 @@ export const partnerSortColumns = {
 export const partnerFilterClauses = (
   db: DrizzleDb,
   filter: PartnerFilters | undefined,
+  requesterId?: ID<'User'>,
 ): SQL[] => {
   const conditions: SQL[] = [];
   if (!filter) return conditions;
@@ -694,8 +711,8 @@ export const partnerFilterClauses = (
       );
     }
   }
-  // migration-todo: `filter.pinned` is unsupported until the Pin domain
-  // migrates to Postgres (it needs the per-requester `pinnedFilter` helper).
-  // Re-add the `requesterId` param + the `pinnedFilter` branch then.
+  if (filter.pinned !== undefined) {
+    conditions.push(pinnedFilter(requesterId, partners.id, filter.pinned));
+  }
   return conditions;
 };
