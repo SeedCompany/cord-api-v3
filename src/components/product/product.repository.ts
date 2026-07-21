@@ -34,6 +34,7 @@ import {
   paginate,
   sorting,
 } from '~/core/neo4j/query';
+import { type ResourceLike } from '~/core/resources';
 import { ScriptureReferenceRepository } from '../scripture';
 import {
   ScriptureRange as RawScriptureRange,
@@ -80,6 +81,10 @@ export type HydratedProductRow = Merge<
 export class ProductRepository extends CommonRepository {
   constructor(private readonly scriptureRefs: ScriptureReferenceRepository) {
     super();
+  }
+
+  async delete(id: ID, resource?: ResourceLike) {
+    await this.deleteNode(id, { resource });
   }
 
   async readMany(ids: readonly ID[]) {

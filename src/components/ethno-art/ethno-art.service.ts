@@ -71,7 +71,7 @@ export class EthnoArtService {
     this.privileges.for(EthnoArt, ethnoArt).verifyCan('delete');
 
     try {
-      await this.repo.deleteNode(ethnoArt);
+      await this.repo.delete(ethnoArt.id);
     } catch (exception) {
       throw new ServerException('Failed to delete', exception);
     }
