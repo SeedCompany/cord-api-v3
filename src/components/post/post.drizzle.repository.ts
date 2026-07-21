@@ -170,6 +170,7 @@ export class PostDrizzleRepository extends DrizzleDtoRepository<
       where ${projectMembers.projectId} = ${posts.parentId}
         and ${projectMembers.userId} = ${userId}
         and ${projectMembers.deletedAt} is null
+        and ${projectMembers.inactiveAt} is null
     ))`;
   }
 }

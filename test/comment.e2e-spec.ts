@@ -109,7 +109,13 @@ describe('Comment e2e', () => {
       });
       const language = await createLanguage(a);
       const { createEng } = await a.graphql.mutate(CreateLangEngForCommentDoc, {
-        input: { project: project.id, language: language.id },
+        input: {
+          project: project.id,
+          language: language.id,
+          // Match the project MOU window so progress reports land in-window.
+          startDateOverride: CalendarDate.local(2023, 1, 1).toISO(),
+          endDateOverride: CalendarDate.local(2024, 1, 1).toISO(),
+        },
       });
       const reportId = createEng.engagement.progressReports.items[0]!.id;
       expect(reportId).toBeTruthy();
