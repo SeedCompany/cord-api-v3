@@ -18,7 +18,6 @@ export const mapCommentRow = (
     creator: row.creatorId,
     body: row.body,
     modifiedAt: DateTime.fromJSDate(row.modifiedAt),
-    canDelete: true,
   };
   return dto as UnsecuredDto<Comment>;
 };

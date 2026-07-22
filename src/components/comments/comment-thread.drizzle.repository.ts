@@ -165,7 +165,6 @@ export class CommentThreadDrizzleRepository {
       creator: row.creatorId,
       firstComment: first ? mapCommentRow(first) : undefined,
       latestComment: latest ? mapCommentRow(latest) : undefined,
-      canDelete: true,
     };
     return dto as UnsecuredDto<CommentThread>;
   }
