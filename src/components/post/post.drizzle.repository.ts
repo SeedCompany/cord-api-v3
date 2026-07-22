@@ -51,7 +51,6 @@ export class PostDrizzleRepository extends DrizzleDtoRepository<
       shareability: row.shareability,
       body: row.body,
       modifiedAt: DateTime.fromJSDate(row.modifiedAt),
-      canDelete: true,
     };
     return dto as UnsecuredDto<Post>;
   }

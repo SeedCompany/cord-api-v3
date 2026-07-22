@@ -711,7 +711,7 @@ export const partnerFilterClauses = (
       );
     }
   }
-  if (filter.pinned !== undefined) {
+  if (filter.pinned != null) {
     conditions.push(pinnedFilter(requesterId, partners.id, filter.pinned));
   }
   return conditions;
