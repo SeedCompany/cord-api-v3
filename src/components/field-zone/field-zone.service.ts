@@ -9,6 +9,7 @@ import {
 } from '~/common';
 import { Hooks } from '~/core/hooks';
 import { HandleIdLookup } from '~/core/resources';
+import { ResourceMutatedHook } from '../audit/resource-mutated.hook';
 import { Privileges } from '../authorization';
 import { type ProjectListInput, type SecuredProjectList } from '../project/dto';
 import { ProjectService } from '../project/project.service';
@@ -37,6 +38,9 @@ export class FieldZoneService {
     this.privileges.for(FieldZone).verifyCan('create');
     await this.validateDirectorRole(input.director);
     const dto = await this.repo.create(input);
+    await this.hooks.run(
+      new ResourceMutatedHook('FieldZone', dto.id, 'Create'),
+    );
     return this.secure(dto);
   }
 
@@ -77,6 +81,10 @@ export class FieldZoneService {
     });
     await this.hooks.run(event);
 
+    await this.hooks.run(
+      new ResourceMutatedHook('FieldZone', input.id, 'Update', changes),
+    );
+
     return this.secure(updated);
   }
 
@@ -109,6 +117,8 @@ export class FieldZoneService {
     } catch (exception) {
       throw new ServerException('Failed to delete', exception);
     }
+
+    await this.hooks.run(new ResourceMutatedHook('FieldZone', id, 'Delete'));
   }
 
   async list(input: FieldZoneListInput): Promise<FieldZoneListOutput> {

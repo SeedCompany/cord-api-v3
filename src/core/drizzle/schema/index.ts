@@ -2688,3 +2688,43 @@ export const posts = pgTable(
     index('posts_creator_id_idx').on(t.creatorId),
   ],
 );
+
+// ─── Audit log ───────────────────────────────────────────────────────────
+
+export const mutationActionEnum = pgEnum('mutation_action', [
+  'Create',
+  'Update',
+  'Delete',
+]);
+
+/**
+ * Append-only log of resource mutations (the general audit log). One row per
+ * create/update/delete, written by an in-transaction hook so it's atomic with
+ * the mutation. `resource_id` is FK-less/polymorphic (spans every resource
+ * table); `actor_id` set-null on user delete so history outlives the actor.
+ * `role_at_time` snapshots the actor's roles at write time (plain text, not the
+ * live role enum). `changes` holds the diffed field set (jsonb).
+ */
+export const resourceMutations = pgTable(
+  'resource_mutations',
+  {
+    id: bigserial('id', { mode: 'number' }).primaryKey(),
+    resourceType: text('resource_type').notNull(),
+    resourceId: text('resource_id').$type<ID>().notNull(),
+    action: mutationActionEnum('action').notNull(),
+    actorId: text('actor_id')
+      .$type<ID<'User'>>()
+      .references(() => users.id, { onDelete: 'set null' }),
+    roleAtTime: text('role_at_time').array().notNull().default([]),
+    changes: jsonb('changes'),
+    at: timestamp('at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index('resource_mutations_resource_idx').on(
+      t.resourceType,
+      t.resourceId,
+      t.at,
+    ),
+    index('resource_mutations_actor_id_idx').on(t.actorId),
+  ],
+);

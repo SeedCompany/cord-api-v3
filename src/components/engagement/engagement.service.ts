@@ -20,6 +20,7 @@ import { Hooks } from '~/core/hooks';
 import { LiveQueryStore } from '~/core/live-query';
 import { ILogger, Logger } from '~/core/logger';
 import { HandleIdLookup, ResourceLoader } from '~/core/resources';
+import { ResourceMutatedHook } from '../audit/resource-mutated.hook';
 import { Privileges } from '../authorization';
 import { CeremonyService } from '../ceremony';
 import { FileNodeLoader } from '../file';
@@ -88,6 +89,13 @@ export class EngagementService {
 
     const event = new EngagementCreatedHook(engagement, input);
     await this.hooks.run(event);
+    await this.hooks.run(
+      new ResourceMutatedHook(
+        'LanguageEngagement',
+        event.engagement.id,
+        'Create',
+      ),
+    );
 
     this.liveQueryStore.invalidate([
       resolveProjectType(engagement.project),
@@ -121,6 +129,13 @@ export class EngagementService {
 
     const event = new EngagementCreatedHook(engagement, input);
     await this.hooks.run(event);
+    await this.hooks.run(
+      new ResourceMutatedHook(
+        'InternshipEngagement',
+        event.engagement.id,
+        'Create',
+      ),
+    );
 
     this.liveQueryStore.invalidate([
       resolveProjectType(engagement.project),
@@ -244,6 +259,14 @@ export class EngagementService {
       ...changes,
     });
     await this.hooks.run(event);
+    await this.hooks.run(
+      new ResourceMutatedHook(
+        'LanguageEngagement',
+        updated.id,
+        'Update',
+        changes,
+      ),
+    );
 
     const { pnp, ...simplePrevious } = previous;
     const { pnp: newPnp, ...simpleChanges } = changes;
@@ -332,6 +355,14 @@ export class EngagementService {
       ...changes,
     });
     await this.hooks.run(event);
+    await this.hooks.run(
+      new ResourceMutatedHook(
+        'InternshipEngagement',
+        updated.id,
+        'Update',
+        changes,
+      ),
+    );
 
     const { growthPlan, ...simplePrevious } = previous;
     const { growthPlan: newGrowthPlan, ...simpleChanges } = changes;
@@ -375,6 +406,9 @@ export class EngagementService {
 
     await this.hooks.run(new EngagementWillDeleteHook(object));
     await this.repo.delete(object.id, changeset);
+    await this.hooks.run(
+      new ResourceMutatedHook(resolveEngagementType(object).name, id, 'Delete'),
+    );
     const at = DateTime.now();
 
     const payload = this.channels.publishToAll(

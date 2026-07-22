@@ -11,8 +11,10 @@ import {
   ServerException,
   type UnsecuredDto,
 } from '~/common';
+import { Hooks } from '~/core/hooks';
 import { ILogger, Logger } from '~/core/logger';
 import { HandleIdLookup, ResourceLoader } from '~/core/resources';
+import { ResourceMutatedHook } from '../audit/resource-mutated.hook';
 import { Privileges } from '../authorization';
 import { EngagementLoader, EngagementService } from '../engagement';
 import { type EngagementListInput, EngagementStatus } from '../engagement/dto';
@@ -52,6 +54,7 @@ export class LanguageService {
     private readonly loaders: ResourceLoader,
     private readonly channels: LanguageChannels,
     private readonly repo: LanguageRepository,
+    private readonly hooks: Hooks,
     @Logger('language:service') private readonly logger: ILogger,
   ) {}
 
@@ -64,6 +67,10 @@ export class LanguageService {
       language: resultLanguage.id,
       at: resultLanguage.createdAt,
     });
+
+    await this.hooks.run(
+      new ResourceMutatedHook('Language', resultLanguage.id, 'Create'),
+    );
 
     return this.secure(resultLanguage);
   }
@@ -153,6 +160,10 @@ export class LanguageService {
       },
     });
 
+    await this.hooks.run(
+      new ResourceMutatedHook('Language', updated.id, 'Update', changes),
+    );
+
     return {
       language: this.secure(updated),
       payload: updatedPayload,
@@ -168,6 +179,8 @@ export class LanguageService {
       throw new ServerException('Failed to delete', exception);
     });
     const at = DateTime.now();
+
+    await this.hooks.run(new ResourceMutatedHook('Language', id, 'Delete'));
 
     return this.channels.publishToAll('deleted', {
       language: id,

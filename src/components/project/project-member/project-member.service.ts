@@ -10,8 +10,10 @@ import {
   UnauthorizedException,
   type UnsecuredDto,
 } from '~/common';
+import { Hooks } from '~/core/hooks';
 import { LiveQueryStore } from '~/core/live-query';
 import { HandleIdLookup, ResourceLoader } from '~/core/resources';
+import { ResourceMutatedHook } from '../../audit/resource-mutated.hook';
 import { Privileges } from '../../authorization';
 import { UserService } from '../../user';
 import { type User } from '../../user/dto';
@@ -38,6 +40,7 @@ export class ProjectMemberService {
     private readonly privileges: Privileges,
     private readonly channels: ProjectMemberChannels,
     private readonly repo: ProjectMemberRepository,
+    private readonly hooks: Hooks,
   ) {}
 
   async create(
@@ -72,6 +75,10 @@ export class ProjectMemberService {
       member: created.id,
       at: created.createdAt,
     });
+
+    await this.hooks.run(
+      new ResourceMutatedHook('ProjectMember', created.id, 'Create'),
+    );
 
     return this.secure(created);
   }
@@ -150,6 +157,10 @@ export class ProjectMemberService {
       previous: ProjectMemberUpdate.pickPrevious(object, changes),
     });
 
+    await this.hooks.run(
+      new ResourceMutatedHook('ProjectMember', input.id, 'Update', changes),
+    );
+
     return {
       member: this.secure(updated),
       payload: updatedPayload,
@@ -196,6 +207,10 @@ export class ProjectMemberService {
       throw new ServerException('Failed to delete project member', e);
     });
     const at = DateTime.now();
+
+    await this.hooks.run(
+      new ResourceMutatedHook('ProjectMember', id, 'Delete'),
+    );
 
     return this.channels.publishToAll('deleted', {
       program: object.project.type,

@@ -12,8 +12,10 @@ import {
   type UnsecuredDto,
 } from '~/common';
 import { Identity } from '~/core/authentication';
+import { Hooks } from '~/core/hooks';
 import { type BaseNode, isBaseNode } from '~/core/neo4j/results';
 import { ResourceLoader, ResourcesHost } from '~/core/resources';
+import { ResourceMutatedHook } from '../audit/resource-mutated.hook';
 import { Privileges } from '../authorization';
 import { CommentRepository } from './comment.repository';
 import {
@@ -40,6 +42,7 @@ export class CommentService {
     private readonly resourcesHost: ResourcesHost,
     private readonly identity: Identity,
     private readonly mentionNotificationService: CommentViaMentionNotificationService,
+    private readonly hooks: Hooks,
   ) {}
 
   async create(input: CreateComment) {
@@ -66,6 +69,8 @@ export class CommentService {
 
     const mentionees = this.mentionNotificationService.extract(dto);
     await this.mentionNotificationService.notify(mentionees, dto);
+
+    await this.hooks.run(new ResourceMutatedHook('Comment', dto.id, 'Create'));
 
     return this.secureComment(dto);
   }
@@ -133,6 +138,10 @@ export class CommentService {
     this.privileges.for(Comment, object).verifyChanges(changes);
     await this.repo.update(object, changes);
 
+    await this.hooks.run(
+      new ResourceMutatedHook('Comment', input.id, 'Update', changes),
+    );
+
     const updated = await this.repo.readOne(object.id);
 
     const prevMentionees = this.mentionNotificationService.extract(object);
@@ -157,6 +166,8 @@ export class CommentService {
     } catch (exception) {
       throw new ServerException('Failed to delete comment', exception);
     }
+
+    await this.hooks.run(new ResourceMutatedHook('Comment', id, 'Delete'));
   }
 
   async getThreadCount(parent: Commentable) {

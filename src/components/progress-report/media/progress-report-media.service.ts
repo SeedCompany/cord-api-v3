@@ -6,7 +6,9 @@ import {
   type UnsecuredDto,
 } from '~/common';
 import { type DbTypeOf } from '~/core/database';
+import { Hooks } from '~/core/hooks';
 import { ResourceLoader } from '~/core/resources';
+import { ResourceMutatedHook } from '../../audit/resource-mutated.hook';
 import { Privileges, withVariant } from '../../authorization';
 import { FileService } from '../../file';
 import { MediaService } from '../../file/media/media.service';
@@ -29,6 +31,7 @@ export class ProgressReportMediaService {
     private readonly mediaService: MediaService,
     private readonly resources: ResourceLoader,
     private readonly repo: ProgressReportMediaRepository,
+    private readonly hooks: Hooks,
   ) {}
 
   async listForReport(
@@ -82,6 +85,9 @@ export class ProgressReportMediaService {
       input.file,
       ReportMedia.PublicVariants.has(input.variant.key),
     );
+    await this.hooks.run(
+      new ResourceMutatedHook('ProgressReportMedia', initialDto.id, 'Create'),
+    );
   }
 
   async update(input: UpdateMedia): Promise<ReportMedia> {
@@ -105,6 +111,9 @@ export class ProgressReportMediaService {
       category: category !== undefined ? category : existing.category,
     };
     loader.prime(id, updated);
+    await this.hooks.run(
+      new ResourceMutatedHook('ProgressReportMedia', input.id, 'Update'),
+    );
 
     return updated;
   }
@@ -117,6 +126,9 @@ export class ProgressReportMediaService {
 
     await this.repo.deleteNode(id);
     await this.repo.deleteVariantGroupIfEmpty(media.variantGroup);
+    await this.hooks.run(
+      new ResourceMutatedHook('ProgressReportMedia', id, 'Delete'),
+    );
 
     return media.report;
   }

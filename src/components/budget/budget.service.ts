@@ -9,8 +9,10 @@ import {
   ServerException,
   viewOfChangeset,
 } from '~/common';
+import { Hooks } from '~/core/hooks';
 import { mapListResults } from '~/core/neo4j/results';
 import { HandleIdLookup, ResourceResolver } from '~/core/resources';
+import { ResourceMutatedHook } from '../audit/resource-mutated.hook';
 import { Privileges } from '../authorization';
 import { FileService } from '../file';
 import { type FileId } from '../file/dto';
@@ -39,6 +41,7 @@ export class BudgetService {
     private readonly budgetRepo: BudgetRepository,
     private readonly budgetRecordsRepo: BudgetRecordRepository,
     private readonly resources: ResourceResolver,
+    private readonly hooks: Hooks,
   ) {}
 
   async create(input: CreateBudget): Promise<Budget> {
@@ -56,6 +59,10 @@ export class BudgetService {
         budgetId,
         'universalTemplateFile',
         input.universalTemplateFile,
+      );
+
+      await this.hooks.run(
+        new ResourceMutatedHook('Budget', budgetId, 'Create'),
       );
 
       return await this.readOne(budgetId);
@@ -76,6 +83,10 @@ export class BudgetService {
       const budgetRecord = await this.readOneRecord(
         recordId,
         viewOfChangeset(changeset),
+      );
+
+      await this.hooks.run(
+        new ResourceMutatedHook('BudgetRecord', recordId, 'Create'),
       );
 
       return budgetRecord;
@@ -153,6 +164,9 @@ export class BudgetService {
       universalTemplateFile,
     );
     const updated = await this.budgetRepo.update(budget, simpleChanges);
+    await this.hooks.run(
+      new ResourceMutatedHook('Budget', input.id, 'Update', changes),
+    );
     return updated;
   }
 
@@ -177,6 +191,9 @@ export class BudgetService {
     }
 
     const updated = await this.budgetRecordsRepo.update(br, changes, changeset);
+    await this.hooks.run(
+      new ResourceMutatedHook('BudgetRecord', id, 'Update', changes),
+    );
     return this.privileges.for(BudgetRecord).secure(updated);
   }
 
@@ -191,6 +208,8 @@ export class BudgetService {
     } catch (e) {
       throw new ServerException('Failed to delete budget', e);
     }
+
+    await this.hooks.run(new ResourceMutatedHook('Budget', id, 'Delete'));
   }
 
   async deleteRecord(id: ID, changeset?: ID): Promise<void> {
@@ -199,6 +218,8 @@ export class BudgetService {
     } catch (e) {
       throw new ServerException('Failed to delete Budget Record', e);
     }
+
+    await this.hooks.run(new ResourceMutatedHook('BudgetRecord', id, 'Delete'));
   }
 
   async list(
