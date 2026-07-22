@@ -4,13 +4,16 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { type MadeEnum, Role, Sensitivity } from '~/common';
 import { type DrizzleDb, DrizzleService } from '~/core/drizzle';
+import { EngagementStatus } from '../src/components/engagement/dto';
 import { PartnerType } from '../src/components/partner/dto';
+import { ReportType } from '../src/components/periodic-report/dto';
 import {
   ProductMedium,
   ProductMethodology,
   ProductPurpose,
   ProductStep,
 } from '../src/components/product/dto';
+import { ProgressReportStatus } from '../src/components/progress-report/dto';
 import { ProjectStep, stepToStatus } from '../src/components/project/dto';
 import { createTestApp, type TestApp } from './utility';
 
@@ -138,11 +141,6 @@ describePg('Postgres schema invariants', () => {
   // must equal its TypeScript counterpart's value set — a value present on one
   // side but not the other is a write that fails at runtime or a filter that
   // silently never matches.
-  // migration-todo: restore ['engagement_status', EngagementStatus],
-  // ['progress_report_status', ProgressReportStatus], and
-  // ['report_type', ReportType] (mono's full curated list) as the Engagement
-  // and Report-cluster domains recut onto develop — their pg enums don't
-  // exist here yet.
   const enumPairs: ReadonlyArray<[pgName: string, tsEnum: MadeEnum<string>]> = [
     ['project_step', ProjectStep],
     ['partner_type', PartnerType],
@@ -152,6 +150,9 @@ describePg('Postgres schema invariants', () => {
     ['product_purpose', ProductPurpose],
     ['product_step', ProductStep],
     ['product_methodology', ProductMethodology],
+    ['engagement_status', EngagementStatus],
+    ['report_type', ReportType],
+    ['progress_report_status', ProgressReportStatus],
   ];
 
   it.each(enumPairs)(
