@@ -1545,6 +1545,56 @@ export const budgetStatusEnum = pgEnum('budget_status', [
   'Rejected',
 ]);
 
+/**
+ * Field-budget reference/lookup data (POC — budget-line-items-poc). Pure
+ * reference rows seeded once from the prototype's refdata.json; no soft
+ * delete since nothing here is real user-entered data. Still keyed by a
+ * generateId() text id (not bigserial) so a future admin-edit mutation can
+ * address a specific row without a schema change.
+ */
+export const budgetReferenceCountries = pgTable('budget_reference_countries', {
+  id: text('id').$type<ID<'BudgetReferenceCountry'>>().primaryKey(),
+  name: text('name').notNull(),
+  region: text('region'),
+  // Name of the OTHER country whose keystone salary rates this country
+  // benchmarks against, e.g. Afghanistan's keystone_country_name is
+  // "Pakistan". Free text join key into budget_reference_keystone_rates,
+  // not a FK — the keystone rate table only ever tracks the keystone
+  // country's own name, not every country that benchmarks against it.
+  keystoneCountryName: text('keystone_country_name'),
+  currencyCode: text('currency_code'),
+  costOfLivingIndex: doublePrecision('cost_of_living_index'),
+  indexMethodology: text('index_methodology'),
+  adminFeeCap: doublePrecision('admin_fee_cap'),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+/**
+ * Keystone weekly salary benchmark rates by (keystone country, role) — pure
+ * append-only lookup, never addressed by a public ID argument, so bigserial
+ * per convention rather than generateId().
+ */
+export const budgetReferenceKeystoneRates = pgTable(
+  'budget_reference_keystone_rates',
+  {
+    id: bigserial('id', { mode: 'number' }).primaryKey(),
+    keystoneCountryName: text('keystone_country_name').notNull(),
+    role: text('role').notNull(),
+    weeklyRateUsd: doublePrecision('weekly_rate_usd').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+);
+
 export const budgets = pgTable(
   'budgets',
   {
@@ -1563,6 +1613,18 @@ export const budgets = pgTable(
     universalTemplateFileId: text('universal_template_file_id').$type<
       ID<'File'>
     >(),
+    // ── budget-line-items-poc additions ──
+    countryId: text('country_id')
+      .$type<ID<'BudgetReferenceCountry'>>()
+      .references(() => budgetReferenceCountries.id),
+    // 'USD' | 'Local' — plain text per the small-fixed-value-set convention
+    // (matches how `variant` is stored elsewhere), not a pg enum.
+    entryCurrencyMode: text('entry_currency_mode').notNull().default('USD'),
+    displayCurrencyMode: text('display_currency_mode').notNull().default('USD'),
+    exchangeRate: doublePrecision('exchange_rate').notNull().default(1),
+    inflationRate: doublePrecision('inflation_rate').notNull().default(0.03),
+    adminFeePercent: doublePrecision('admin_fee_percent').notNull().default(0),
+    languageCount: integer('language_count').notNull().default(1),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -1579,6 +1641,7 @@ export const budgets = pgTable(
     index('budgets_universal_template_file_id_idx').on(
       t.universalTemplateFileId,
     ),
+    index('budgets_country_id_idx').on(t.countryId),
   ],
 );
 
@@ -1587,7 +1650,13 @@ export const budgetsRelations = relations(budgets, ({ one, many }) => ({
     fields: [budgets.projectId],
     references: [projects.id],
   }),
+  country: one(budgetReferenceCountries, {
+    fields: [budgets.countryId],
+    references: [budgetReferenceCountries.id],
+  }),
   records: many(budgetRecords),
+  lineItems: many(budgetLineItems),
+  otherPartnerContributions: many(otherPartnerContributions),
 }));
 
 export const budgetRecords = pgTable(
@@ -1637,6 +1706,125 @@ export const budgetRecordsRelations = relations(budgetRecords, ({ one }) => ({
     references: [organizations.id],
   }),
 }));
+
+/**
+ * Line-item grid rows for the budget-line-items-poc field-budget calculator.
+ * `account` is freeform text matching whatever the field's chart-of-accounts
+ * list surfaces client-side (no dedicated chart-of-accounts table exists yet
+ * for BudgetRecord/FundingAccount to key off of). `fiscal_year_amounts` is a
+ * JSON object keyed by fiscal year number as a string, e.g.
+ * `{ "2025": 3000000, "2026": 4000000 }`.
+ */
+export const budgetLineItems = pgTable(
+  'budget_line_items',
+  {
+    id: text('id').$type<ID<'BudgetLineItem'>>().primaryKey(),
+    budgetId: text('budget_id')
+      .$type<ID<'Budget'>>()
+      .notNull()
+      .references(() => budgets.id, { onDelete: 'cascade' }),
+    account: text('account').notNull(),
+    description: text('description'),
+    // 'Cash' | 'In-Kind' — plain text, see entry_currency_mode note above.
+    costType: text('cost_type').notNull().default('Cash'),
+    // 'Field Budget' | 'Direct Charge to Funder'
+    budgetCategory: text('budget_category').notNull().default('Field Budget'),
+    // 'Bible Translation' | 'Other Costs' — nullable (not every line is
+    // classified).
+    activity: text('activity'),
+    serviceProviderOrgId: text('service_provider_org_id')
+      .$type<ID<'Organization'>>()
+      .references(() => organizations.id),
+    funderOrgId: text('funder_org_id')
+      .$type<ID<'Organization'>>()
+      .references(() => organizations.id),
+    fiscalYearAmounts: jsonb('fiscal_year_amounts')
+      .$type<Record<string, number>>()
+      .notNull()
+      .default({}),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (t) => [
+    index('budget_line_items_budget_id_idx').on(t.budgetId),
+    index('budget_line_items_service_provider_org_id_idx').on(
+      t.serviceProviderOrgId,
+    ),
+    index('budget_line_items_funder_org_id_idx').on(t.funderOrgId),
+  ],
+);
+
+export const budgetLineItemsRelations = relations(
+  budgetLineItems,
+  ({ one }) => ({
+    budget: one(budgets, {
+      fields: [budgetLineItems.budgetId],
+      references: [budgets.id],
+    }),
+    serviceProvider: one(organizations, {
+      fields: [budgetLineItems.serviceProviderOrgId],
+      references: [organizations.id],
+    }),
+    funder: one(organizations, {
+      fields: [budgetLineItems.funderOrgId],
+      references: [organizations.id],
+    }),
+  }),
+);
+
+/**
+ * Contributions from partners other than the budget's primary funder —
+ * subtracted out when computing net-to-funder. Same fiscal_year_amounts
+ * shape as budget_line_items.
+ */
+export const otherPartnerContributions = pgTable(
+  'other_partner_contributions',
+  {
+    id: text('id').$type<ID<'OtherPartnerContribution'>>().primaryKey(),
+    budgetId: text('budget_id')
+      .$type<ID<'Budget'>>()
+      .notNull()
+      .references(() => budgets.id, { onDelete: 'cascade' }),
+    donorOrgId: text('donor_org_id')
+      .$type<ID<'Organization'>>()
+      .references(() => organizations.id),
+    description: text('description'),
+    fiscalYearAmounts: jsonb('fiscal_year_amounts')
+      .$type<Record<string, number>>()
+      .notNull()
+      .default({}),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (t) => [
+    index('other_partner_contributions_budget_id_idx').on(t.budgetId),
+    index('other_partner_contributions_donor_org_id_idx').on(t.donorOrgId),
+  ],
+);
+
+export const otherPartnerContributionsRelations = relations(
+  otherPartnerContributions,
+  ({ one }) => ({
+    budget: one(budgets, {
+      fields: [otherPartnerContributions.budgetId],
+      references: [budgets.id],
+    }),
+    donor: one(organizations, {
+      fields: [otherPartnerContributions.donorOrgId],
+      references: [organizations.id],
+    }),
+  }),
+);
 
 // ─── Languages ─────────────────────────────────────────────────────────────
 

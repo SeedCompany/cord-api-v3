@@ -1,0 +1,2355 @@
+{
+  "countries": [
+    {
+      "country": "Afghanistan",
+      "region": "Eurasia",
+      "keystone": "Pakistan",
+      "ccy": "AFN",
+      "index": 2.77,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "Albania",
+      "region": "Eurasia",
+      "keystone": "Russia",
+      "ccy": "ALL",
+      "index": 0.62,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "Algeria",
+      "region": "Eurasia",
+      "keystone": "Egypt",
+      "ccy": "DZD",
+      "index": 0.79,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "Angola",
+      "region": "Africa-Southern",
+      "keystone": "Mozambique",
+      "ccy": "AOA",
+      "index": 3.19,
+      "indexUsed": "CPI+Rent",
+      "cap": 30000
+    },
+    {
+      "country": "Argentina",
+      "region": "Americas",
+      "keystone": "Brazil",
+      "ccy": "ARS",
+      "index": 1.16,
+      "indexUsed": "CPI+Rent",
+      "cap": 25000
+    },
+    {
+      "country": "Armenia",
+      "region": "Eurasia",
+      "keystone": "Russia",
+      "ccy": "AMD",
+      "index": 0.73,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "Australia",
+      "region": "Pacific",
+      "keystone": "Papua New Guinea",
+      "ccy": "AUD",
+      "index": 0.78,
+      "indexUsed": "CPI+Rent",
+      "cap": 22000
+    },
+    {
+      "country": "Austria",
+      "region": "Eurasia",
+      "keystone": "Germany",
+      "ccy": "EUR",
+      "index": 1.07,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "Azerbaijan",
+      "region": "Eurasia",
+      "keystone": "Germany",
+      "ccy": "AZN",
+      "index": 0.71,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "Bahrain",
+      "region": "Eurasia",
+      "keystone": "Germany",
+      "ccy": "BHD",
+      "index": 0.92,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "Bangladesh",
+      "region": "Asia South",
+      "keystone": "India",
+      "ccy": "BDT",
+      "index": 1.36,
+      "indexUsed": "CPI+Rent",
+      "cap": 23000
+    },
+    {
+      "country": "Belarus",
+      "region": "Eurasia",
+      "keystone": "Russia",
+      "ccy": "BYR",
+      "index": 0.88,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "Belgium",
+      "region": "Eurasia",
+      "keystone": "Germany",
+      "ccy": "EUR",
+      "index": 1.27,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "Belize",
+      "region": "Americas",
+      "keystone": "Mexico",
+      "ccy": "BZD",
+      "index": 1.35,
+      "indexUsed": "CPI+Rent",
+      "cap": 25000
+    },
+    {
+      "country": "Benin",
+      "region": "Africa-Francophone",
+      "keystone": "Cameroon",
+      "ccy": "CFA",
+      "index": 0.67,
+      "indexUsed": "GDP per capita",
+      "cap": 33000
+    },
+    {
+      "country": "Bhutan",
+      "region": "Asia Mainland",
+      "keystone": "China",
+      "ccy": "BTN",
+      "index": 0.6508,
+      "indexUsed": "CPI+Rent",
+      "cap": 25000
+    },
+    {
+      "country": "Bolivia",
+      "region": "Americas",
+      "keystone": "Brazil",
+      "ccy": "BOB",
+      "index": 0.63,
+      "indexUsed": "CPI+Rent",
+      "cap": 25000
+    },
+    {
+      "country": "Bosnia And Herzegovina",
+      "region": "Eurasia",
+      "keystone": "Pakistan",
+      "ccy": "BAM",
+      "index": 1.32,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "Botswana",
+      "region": "Africa-Southern",
+      "keystone": "Mozambique",
+      "ccy": "BWP",
+      "index": 0.8,
+      "indexUsed": "CPI+Rent",
+      "cap": 30000
+    },
+    {
+      "country": "Brazil",
+      "region": "Americas",
+      "keystone": "Brazil",
+      "ccy": "BRL",
+      "index": 1,
+      "indexUsed": "Keystone",
+      "cap": 25000
+    },
+    {
+      "country": "Brunei",
+      "region": "Asia Islands",
+      "keystone": "Indonesia",
+      "ccy": "BND",
+      "index": 1.71,
+      "indexUsed": "CPI+Rent",
+      "cap": 23000
+    },
+    {
+      "country": "Bulgaria",
+      "region": "Eurasia",
+      "keystone": "Russia",
+      "ccy": "BGN",
+      "index": 0.67,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "Burkina Faso",
+      "region": "Africa-Francophone",
+      "keystone": "Cameroon",
+      "ccy": "CFA",
+      "index": 0.63,
+      "indexUsed": "GDP per capita",
+      "cap": 33000
+    },
+    {
+      "country": "Cambodia",
+      "region": "Asia Mainland",
+      "keystone": "China",
+      "ccy": "KHR",
+      "index": 0.93,
+      "indexUsed": "CPI+Rent",
+      "cap": 25000
+    },
+    {
+      "country": "Cameroon",
+      "region": "Africa-Francophone",
+      "keystone": "Cameroon",
+      "ccy": "CFA",
+      "index": 1,
+      "indexUsed": "Keystone",
+      "cap": 33000
+    },
+    {
+      "country": "Canada",
+      "region": "Americas",
+      "keystone": "Brazil",
+      "ccy": "CAD",
+      "index": 1.3167,
+      "indexUsed": "CPI+Rent",
+      "cap": 25000
+    },
+    {
+      "country": "Cape Verde",
+      "region": "Africa-Southern",
+      "keystone": "Mozambique",
+      "ccy": "CVE",
+      "index": 0.72,
+      "indexUsed": "CPI+Rent",
+      "cap": 30000
+    },
+    {
+      "country": "Central African Republic",
+      "region": "Africa-Francophone",
+      "keystone": "Cameroon",
+      "ccy": "XAF",
+      "index": 0.29,
+      "indexUsed": "GDP per capita",
+      "cap": 42000
+    },
+    {
+      "country": "Chad",
+      "region": "Africa-Francophone",
+      "keystone": "Cameroon",
+      "ccy": "XAF",
+      "index": 1.04,
+      "indexUsed": "GDP per capita",
+      "cap": 33000
+    },
+    {
+      "country": "Chile",
+      "region": "Americas",
+      "keystone": "Brazil",
+      "ccy": "CLP",
+      "index": 0.95,
+      "indexUsed": "CPI+Rent",
+      "cap": 25000
+    },
+    {
+      "country": "China",
+      "region": "Asia Mainland",
+      "keystone": "China",
+      "ccy": "CNY",
+      "index": 1,
+      "indexUsed": "Keystone",
+      "cap": 25000
+    },
+    {
+      "country": "Colombia",
+      "region": "Americas",
+      "keystone": "Brazil",
+      "ccy": "COL",
+      "index": 0.7,
+      "indexUsed": "CPI+Rent",
+      "cap": 25000
+    },
+    {
+      "country": "Comoros",
+      "region": "Africa-Southern",
+      "keystone": "Mozambique",
+      "ccy": "KMF",
+      "index": 1.08,
+      "indexUsed": "GDP per capita",
+      "cap": 30000
+    },
+    {
+      "country": "Congo",
+      "region": "Africa-Francophone",
+      "keystone": "Cameroon",
+      "ccy": "XAF",
+      "index": 2,
+      "indexUsed": "GDP per capita",
+      "cap": 42000
+    },
+    {
+      "country": "Cook Islands",
+      "region": "Pacific",
+      "keystone": "Papua New Guinea",
+      "ccy": "PGK",
+      "index": 0.97,
+      "indexUsed": "Grocery Index",
+      "cap": 22000
+    },
+    {
+      "country": "Costa Rica",
+      "region": "Americas",
+      "keystone": "Mexico",
+      "ccy": "CRC",
+      "index": 1.52,
+      "indexUsed": "CPI+Rent",
+      "cap": 25000
+    },
+    {
+      "country": "Côte D'Ivoire",
+      "region": "Africa-Francophone",
+      "keystone": "Cameroon",
+      "ccy": "CFA",
+      "index": 1.27,
+      "indexUsed": "CPI+Rent",
+      "cap": 33000
+    },
+    {
+      "country": "Croatia",
+      "region": "Eurasia",
+      "keystone": "Pakistan",
+      "ccy": "HRK",
+      "index": 1.83,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "Cyprus",
+      "region": "Eurasia",
+      "keystone": "Germany",
+      "ccy": "EUR",
+      "index": 0.87,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "Czech Republic",
+      "region": "Eurasia",
+      "keystone": "Germany",
+      "ccy": "CZK",
+      "index": 0.63,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "Dem Rep Congo",
+      "region": "Africa-Francophone",
+      "keystone": "Cameroon",
+      "ccy": "CFA",
+      "index": 1.63,
+      "indexUsed": "CPI+Rent",
+      "cap": 42000
+    },
+    {
+      "country": "Denmark",
+      "region": "Eurasia",
+      "keystone": "Germany",
+      "ccy": "DKK",
+      "index": 1.31,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "Dominican Republic",
+      "region": "Americas",
+      "keystone": "Mexico",
+      "ccy": "DOP",
+      "index": 1.21,
+      "indexUsed": "CPI+Rent",
+      "cap": 25000
+    },
+    {
+      "country": "East Timor",
+      "region": "Pacific",
+      "keystone": "Papua New Guinea",
+      "ccy": "PGK",
+      "index": 1.23,
+      "indexUsed": "CPI",
+      "cap": 22000
+    },
+    {
+      "country": "Ecuador",
+      "region": "Americas",
+      "keystone": "Brazil",
+      "ccy": "ECS",
+      "index": 0.76,
+      "indexUsed": "CPI+Rent",
+      "cap": 25000
+    },
+    {
+      "country": "Egypt",
+      "region": "Eurasia",
+      "keystone": "Egypt",
+      "ccy": "EGP",
+      "index": 1,
+      "indexUsed": "Keystone",
+      "cap": 52000
+    },
+    {
+      "country": "El Salvador",
+      "region": "Americas",
+      "keystone": "Mexico",
+      "ccy": "SVC",
+      "index": 1.02,
+      "indexUsed": "CPI+Rent",
+      "cap": 25000
+    },
+    {
+      "country": "Equatorial Guinea",
+      "region": "Africa-Francophone",
+      "keystone": "Cameroon",
+      "ccy": "XAF",
+      "index": 1.12,
+      "indexUsed": "CPI",
+      "cap": 33000
+    },
+    {
+      "country": "Estonia",
+      "region": "Eurasia",
+      "keystone": "Russia",
+      "ccy": "EEK",
+      "index": 1.01,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "Ethiopia",
+      "region": "Africa-Anglophone East",
+      "keystone": "Tanzania",
+      "ccy": "ETB",
+      "index": 0.85,
+      "indexUsed": "CPI+Rent",
+      "cap": 31000
+    },
+    {
+      "country": "Eswatini",
+      "region": "Africa-Southern",
+      "keystone": "Mozambique",
+      "ccy": "SZL",
+      "index": 3.48,
+      "indexUsed": "GDP per capita",
+      "cap": 30000
+    },
+    {
+      "country": "Fiji",
+      "region": "Pacific",
+      "keystone": "Papua New Guinea",
+      "ccy": "FJD",
+      "index": 0.37,
+      "indexUsed": "CPI+Rent",
+      "cap": 22000
+    },
+    {
+      "country": "Finland",
+      "region": "Eurasia",
+      "keystone": "Germany",
+      "ccy": "EUR",
+      "index": 1.15,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "France",
+      "region": "Eurasia",
+      "keystone": "Germany",
+      "ccy": "EUR",
+      "index": 1.15,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "French Polynesia",
+      "region": "Pacific",
+      "keystone": "Papua New Guinea",
+      "ccy": "PGK",
+      "index": 0.83,
+      "indexUsed": "CPI+Rent",
+      "cap": 22000
+    },
+    {
+      "country": "Gabon",
+      "region": "Africa-Francophone",
+      "keystone": "Cameroon",
+      "ccy": "XAF",
+      "index": 1.21,
+      "indexUsed": "CPI+Rent",
+      "cap": 42000
+    },
+    {
+      "country": "Gambia",
+      "region": "Africa-Francophone",
+      "keystone": "Cameroon",
+      "ccy": "GMD",
+      "index": 0.6696,
+      "indexUsed": "GDP per capita",
+      "cap": 33000
+    },
+    {
+      "country": "Georgia",
+      "region": "Eurasia",
+      "keystone": "Germany",
+      "ccy": "GEL",
+      "index": 0.47,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "Germany",
+      "region": "Eurasia",
+      "keystone": "Germany",
+      "ccy": "EUR",
+      "index": 1,
+      "indexUsed": "Keystone",
+      "cap": 52000
+    },
+    {
+      "country": "Ghana",
+      "region": "Africa-Anglophone West",
+      "keystone": "Nigeria",
+      "ccy": "GHS",
+      "index": 1.76,
+      "indexUsed": "CPI+Rent",
+      "cap": 30000
+    },
+    {
+      "country": "Greece",
+      "region": "Eurasia",
+      "keystone": "Russia",
+      "ccy": "EUR",
+      "index": 1.06,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "Guatemala",
+      "region": "Americas",
+      "keystone": "Mexico",
+      "ccy": "GTQ",
+      "index": 1.22,
+      "indexUsed": "CPI+Rent",
+      "cap": 25000
+    },
+    {
+      "country": "Guinea",
+      "region": "Africa-Francophone",
+      "keystone": "Cameroon",
+      "ccy": "GNF",
+      "index": 0.46,
+      "indexUsed": "GDP per capita",
+      "cap": 33000
+    },
+    {
+      "country": "Guinea-Bissau",
+      "region": "Africa-Francophone",
+      "keystone": "Cameroon",
+      "ccy": "XOF",
+      "index": 0.5,
+      "indexUsed": "GDP per capita",
+      "cap": 33000
+    },
+    {
+      "country": "Guyana",
+      "region": "Americas",
+      "keystone": "Brazil",
+      "ccy": "GYD",
+      "index": 0.88,
+      "indexUsed": "CPI+Rent",
+      "cap": 25000
+    },
+    {
+      "country": "Honduras",
+      "region": "Americas",
+      "keystone": "Mexico",
+      "ccy": "HNL",
+      "index": 1.22,
+      "indexUsed": "CPI+Rent",
+      "cap": 25000
+    },
+    {
+      "country": "Hong Kong",
+      "region": "Asia Mainland",
+      "keystone": "China",
+      "ccy": "HKD",
+      "index": 2.49,
+      "indexUsed": "CPI+Rent",
+      "cap": 25000
+    },
+    {
+      "country": "Hungary",
+      "region": "Eurasia",
+      "keystone": "Russia",
+      "ccy": "HUF",
+      "index": 0.77,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "Iceland",
+      "region": "Eurasia",
+      "keystone": "Germany",
+      "ccy": "ISK",
+      "index": 1.43,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "India",
+      "region": "Asia South",
+      "keystone": "India",
+      "ccy": "INR",
+      "index": 1,
+      "indexUsed": "Keystone",
+      "cap": 23000
+    },
+    {
+      "country": "Indonesia",
+      "region": "Asia Islands",
+      "keystone": "Indonesia",
+      "ccy": "IDR",
+      "index": 1,
+      "indexUsed": "Keystone",
+      "cap": 23000
+    },
+    {
+      "country": "Iran",
+      "region": "Eurasia",
+      "keystone": "Pakistan",
+      "ccy": "IRR",
+      "index": 1.95,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "Iraq",
+      "region": "Eurasia",
+      "keystone": "Pakistan",
+      "ccy": "IQD",
+      "index": 2.05,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "Ireland",
+      "region": "Eurasia",
+      "keystone": "Germany",
+      "ccy": "EUR",
+      "index": 1.29,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "Israel",
+      "region": "Eurasia",
+      "keystone": "Germany",
+      "ccy": "ILS",
+      "index": 1.17,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "Italy",
+      "region": "Eurasia",
+      "keystone": "Germany",
+      "ccy": "EUR",
+      "index": 1.06,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "Jamaica",
+      "region": "Americas",
+      "keystone": "Mexico",
+      "ccy": "JMD",
+      "index": 1.29,
+      "indexUsed": "CPI+Rent",
+      "cap": 25000
+    },
+    {
+      "country": "Japan",
+      "region": "Asia Mainland",
+      "keystone": "China",
+      "ccy": "JPY",
+      "index": 1.51,
+      "indexUsed": "CPI+Rent",
+      "cap": 25000
+    },
+    {
+      "country": "Jordan",
+      "region": "Eurasia",
+      "keystone": "Germany",
+      "ccy": "JOD",
+      "index": 0.77,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "Kazakhstan",
+      "region": "Eurasia",
+      "keystone": "Russia",
+      "ccy": "KZT",
+      "index": 0.95,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "Kenya",
+      "region": "Africa-Anglophone East",
+      "keystone": "Tanzania",
+      "ccy": "KES",
+      "index": 0.71,
+      "indexUsed": "CPI+Rent",
+      "cap": 31000
+    },
+    {
+      "country": "Kuwait",
+      "region": "Eurasia",
+      "keystone": "Egypt",
+      "ccy": "KWD",
+      "index": 2.85,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "Kyrgyzstan",
+      "region": "Eurasia",
+      "keystone": "Pakistan",
+      "ccy": "KGS",
+      "index": 1.68,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "Laos",
+      "region": "Asia Mainland",
+      "keystone": "China",
+      "ccy": "LAK",
+      "index": 1.02,
+      "indexUsed": "CPI+Rent",
+      "cap": 25000
+    },
+    {
+      "country": "Latvia",
+      "region": "Eurasia",
+      "keystone": "Russia",
+      "ccy": "LVL",
+      "index": 0.94,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "Lebanon",
+      "region": "Eurasia",
+      "keystone": "Germany",
+      "ccy": "LBP",
+      "index": 1.14,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "Liberia",
+      "region": "Africa-Francophone",
+      "keystone": "Cameroon",
+      "ccy": "LRD",
+      "index": 3.9514,
+      "indexUsed": "Grocery Index",
+      "cap": 33000
+    },
+    {
+      "country": "Libya",
+      "region": "Eurasia",
+      "keystone": "Egypt",
+      "ccy": "LYD",
+      "index": 1.16,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "Lithuania",
+      "region": "Eurasia",
+      "keystone": "Russia",
+      "ccy": "LTL",
+      "index": 0.9,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "Luxemborg",
+      "region": "Eurasia",
+      "keystone": "Germany",
+      "ccy": "EUR",
+      "index": 1.52,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "Macau (Macao)",
+      "region": "Asia Mainland",
+      "keystone": "China",
+      "ccy": "MOP",
+      "index": 1.62,
+      "indexUsed": "CPI+Rent",
+      "cap": 25000
+    },
+    {
+      "country": "Macedonia",
+      "region": "Eurasia",
+      "keystone": "Egypt",
+      "ccy": "MKD",
+      "index": 0.83,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "Madagascar",
+      "region": "Africa-Southern",
+      "keystone": "Mozambique",
+      "ccy": "MGA",
+      "index": 0.78,
+      "indexUsed": "CPI+Rent",
+      "cap": 30000
+    },
+    {
+      "country": "Malawi",
+      "region": "Africa-Southern",
+      "keystone": "Mozambique",
+      "ccy": "MGA",
+      "index": 0.75,
+      "indexUsed": "GDP per capita",
+      "cap": 30000
+    },
+    {
+      "country": "Malaysia",
+      "region": "Asia Islands",
+      "keystone": "Indonesia",
+      "ccy": "MYR",
+      "index": 1.12,
+      "indexUsed": "CPI+Rent",
+      "cap": 23000
+    },
+    {
+      "country": "Mali",
+      "region": "Africa-Francophone",
+      "keystone": "Cameroon",
+      "ccy": "XOF",
+      "index": 0.46,
+      "indexUsed": "GDP per capita",
+      "cap": 33000
+    },
+    {
+      "country": "Malta",
+      "region": "Eurasia",
+      "keystone": "Germany",
+      "ccy": "EUR",
+      "index": 0.96,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "Mauritania",
+      "region": "Eurasia",
+      "keystone": "Egypt",
+      "ccy": "MRO",
+      "index": 0.33,
+      "indexUsed": "GDP per capita",
+      "cap": 52000
+    },
+    {
+      "country": "Mauritius",
+      "region": "Africa-Southern",
+      "keystone": "Mozambique",
+      "ccy": "MUR",
+      "index": 0.82,
+      "indexUsed": "CPI+Rent",
+      "cap": 30000
+    },
+    {
+      "country": "Mexico",
+      "region": "Americas",
+      "keystone": "Mexico",
+      "ccy": "MXN",
+      "index": 1,
+      "indexUsed": "Keystone",
+      "cap": 25000
+    },
+    {
+      "country": "Micronesia",
+      "region": "Pacific",
+      "keystone": "Papua New Guinea",
+      "ccy": "PGK",
+      "index": 0.63,
+      "indexUsed": "Grocery Index",
+      "cap": 22000
+    },
+    {
+      "country": "Moldova",
+      "region": "Eurasia",
+      "keystone": "Egypt",
+      "ccy": "MDL",
+      "index": 0.76,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "Mongolia",
+      "region": "Asia Mainland",
+      "keystone": "China",
+      "ccy": "MNT",
+      "index": 1.53,
+      "indexUsed": "CPI+Rent",
+      "cap": 25000
+    },
+    {
+      "country": "Morocco",
+      "region": "Eurasia",
+      "keystone": "Egypt",
+      "ccy": "MAD",
+      "index": 0.98,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "Mozambique",
+      "region": "Africa-Southern",
+      "keystone": "Mozambique",
+      "ccy": "MZN",
+      "index": 1,
+      "indexUsed": "Keystone",
+      "cap": 30000
+    },
+    {
+      "country": "Myanmar (Burma)",
+      "region": "Asia Mainland",
+      "keystone": "China",
+      "ccy": "MMK",
+      "index": 1.09,
+      "indexUsed": "CPI+Rent",
+      "cap": 25000
+    },
+    {
+      "country": "N Mariana Islands",
+      "region": "Pacific",
+      "keystone": "Papua New Guinea",
+      "ccy": "PGK",
+      "index": 0.72,
+      "indexUsed": "Grocery Index",
+      "cap": 22000
+    },
+    {
+      "country": "Namibia",
+      "region": "Africa-Southern",
+      "keystone": "Mozambique",
+      "ccy": "NAD",
+      "index": 0.89,
+      "indexUsed": "CPI+Rent",
+      "cap": 30000
+    },
+    {
+      "country": "Nepal",
+      "region": "Asia South",
+      "keystone": "India",
+      "ccy": "NPR",
+      "index": 1,
+      "indexUsed": "CPI+Rent",
+      "cap": 23000
+    },
+    {
+      "country": "Netherlands",
+      "region": "Eurasia",
+      "keystone": "Germany",
+      "ccy": "ANG",
+      "index": 1.18,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "New Caledonia",
+      "region": "Pacific",
+      "keystone": "Papua New Guinea",
+      "ccy": "PGK",
+      "index": 0.83,
+      "indexUsed": "CPI+Rent",
+      "cap": 22000
+    },
+    {
+      "country": "New Zealand",
+      "region": "Pacific",
+      "keystone": "Papua New Guinea",
+      "ccy": "NZD",
+      "index": 0.87,
+      "indexUsed": "CPI+Rent",
+      "cap": 22000
+    },
+    {
+      "country": "Nicaragua",
+      "region": "Americas",
+      "keystone": "Mexico",
+      "ccy": "NIO",
+      "index": 1.06,
+      "indexUsed": "CPI+Rent",
+      "cap": 25000
+    },
+    {
+      "country": "Niger",
+      "region": "Africa-Francophone",
+      "keystone": "Cameroon",
+      "ccy": "CFA",
+      "index": 0.33,
+      "indexUsed": "GDP per capita",
+      "cap": 33000
+    },
+    {
+      "country": "Nigeria",
+      "region": "Africa-Anglophone West",
+      "keystone": "Nigeria",
+      "ccy": "NGN",
+      "index": 1,
+      "indexUsed": "Keystone",
+      "cap": 30000
+    },
+    {
+      "country": "Norway",
+      "region": "Eurasia",
+      "keystone": "Germany",
+      "ccy": "NOK",
+      "index": 1.72,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "Oman",
+      "region": "Eurasia",
+      "keystone": "Pakistan",
+      "ccy": "OMR",
+      "index": 2.44,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "Pakistan",
+      "region": "Eurasia",
+      "keystone": "Pakistan",
+      "ccy": "PKR",
+      "index": 1,
+      "indexUsed": "Keystone",
+      "cap": 52000
+    },
+    {
+      "country": "Palau",
+      "region": "Pacific",
+      "keystone": "Papua New Guinea",
+      "ccy": "PGK",
+      "index": 1.07,
+      "indexUsed": "CPI",
+      "cap": 22000
+    },
+    {
+      "country": "Panama",
+      "region": "Americas",
+      "keystone": "Mexico",
+      "ccy": "PAB",
+      "index": 0.59,
+      "indexUsed": "CPI+Rent",
+      "cap": 25000
+    },
+    {
+      "country": "Papua New Guinea",
+      "region": "Pacific",
+      "keystone": "Papua New Guinea",
+      "ccy": "PGK",
+      "index": 1,
+      "indexUsed": "Keystone",
+      "cap": 22000
+    },
+    {
+      "country": "Paraguay",
+      "region": "Americas",
+      "keystone": "Brazil",
+      "ccy": "PYG",
+      "index": 0.59,
+      "indexUsed": "CPI+Rent",
+      "cap": 25000
+    },
+    {
+      "country": "Peru",
+      "region": "Americas",
+      "keystone": "Brazil",
+      "ccy": "PEN",
+      "index": 0.9,
+      "indexUsed": "CPI+Rent",
+      "cap": 25000
+    },
+    {
+      "country": "Philippines",
+      "region": "Asia Islands",
+      "keystone": "Indonesia",
+      "ccy": "PHP",
+      "index": 0.91,
+      "indexUsed": "CPI+Rent",
+      "cap": 23000
+    },
+    {
+      "country": "Poland",
+      "region": "Eurasia",
+      "keystone": "Germany",
+      "ccy": "PLN",
+      "index": 0.59,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "Portugal",
+      "region": "Eurasia",
+      "keystone": "Germany",
+      "ccy": "EUR",
+      "index": 0.74,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "Puerto Rico",
+      "region": "Americas",
+      "keystone": "Mexico",
+      "ccy": "COL",
+      "index": 1.58,
+      "indexUsed": "CPI+Rent",
+      "cap": 25000
+    },
+    {
+      "country": "Qatar",
+      "region": "Eurasia",
+      "keystone": "Egypt",
+      "ccy": "QAR",
+      "index": 3.38,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "Romania",
+      "region": "Eurasia",
+      "keystone": "Germany",
+      "ccy": "RON",
+      "index": 0.51,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "Russian Federation",
+      "region": "Eurasia",
+      "keystone": "Russia",
+      "ccy": "RUB",
+      "index": 1,
+      "indexUsed": "Keystone",
+      "cap": 52000
+    },
+    {
+      "country": "Rwanda",
+      "region": "Africa-Anglophone East",
+      "keystone": "Tanzania",
+      "ccy": "RWF",
+      "index": 0.73,
+      "indexUsed": "CPI+Rent",
+      "cap": 31000
+    },
+    {
+      "country": "Sao Tome",
+      "region": "Africa-Southern",
+      "keystone": "Mozambique",
+      "ccy": "STD",
+      "index": 1.83,
+      "indexUsed": "GDP per capita",
+      "cap": 30000
+    },
+    {
+      "country": "Saudi Arabia",
+      "region": "Eurasia",
+      "keystone": "Germany",
+      "ccy": "SAR",
+      "index": 0.7,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "Senegal",
+      "region": "Africa-Francophone",
+      "keystone": "Cameroon",
+      "ccy": "CFA",
+      "index": 0.88,
+      "indexUsed": "GDP per capita",
+      "cap": 33000
+    },
+    {
+      "country": "Serbia",
+      "region": "Eurasia",
+      "keystone": "Pakistan",
+      "ccy": "RSD",
+      "index": 1.29,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "Seychelles",
+      "region": "Africa-Southern",
+      "keystone": "Mozambique",
+      "ccy": "SCR",
+      "index": 1.14,
+      "indexUsed": "CPI+Rent",
+      "cap": 30000
+    },
+    {
+      "country": "Sierra Leone",
+      "region": "Africa-Francophone",
+      "keystone": "Cameroon",
+      "ccy": "SLL",
+      "index": 0.8446,
+      "indexUsed": "GDP per capita",
+      "cap": 33000
+    },
+    {
+      "country": "Singapore",
+      "region": "Asia Islands",
+      "keystone": "Indonesia",
+      "ccy": "SGD",
+      "index": 3.49,
+      "indexUsed": "CPI+Rent",
+      "cap": 23000
+    },
+    {
+      "country": "Slovakia",
+      "region": "Eurasia",
+      "keystone": "Russia",
+      "ccy": "SKK",
+      "index": 0.91,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "Slovenia",
+      "region": "Eurasia",
+      "keystone": "Germany",
+      "ccy": "SIT",
+      "index": 0.8,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "Solomon Islands",
+      "region": "Pacific",
+      "keystone": "Papua New Guinea",
+      "ccy": "SBD",
+      "index": 0.8,
+      "indexUsed": "Grocery Index",
+      "cap": 22000
+    },
+    {
+      "country": "South Africa",
+      "region": "Africa-Southern",
+      "keystone": "Mozambique",
+      "ccy": "ZAR",
+      "index": 0.74,
+      "indexUsed": "CPI+Rent",
+      "cap": 30000
+    },
+    {
+      "country": "South Korea",
+      "region": "Asia Mainland",
+      "keystone": "China",
+      "ccy": "KRW",
+      "index": 1.68,
+      "indexUsed": "CPI+Rent",
+      "cap": 25000
+    },
+    {
+      "country": "South Sudan",
+      "region": "Africa-Anglophone East",
+      "keystone": "Tanzania",
+      "ccy": "SDG",
+      "index": 0.82,
+      "indexUsed": "GDP per capita",
+      "cap": 31000
+    },
+    {
+      "country": "Spain",
+      "region": "Eurasia",
+      "keystone": "Germany",
+      "ccy": "EUR",
+      "index": 0.83,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "Sri Lanka",
+      "region": "Asia South",
+      "keystone": "India",
+      "ccy": "LKR",
+      "index": 1.51,
+      "indexUsed": "CPI+Rent",
+      "cap": 23000
+    },
+    {
+      "country": "St. Lucia",
+      "region": "Americas",
+      "keystone": "Mexico",
+      "ccy": "COL",
+      "index": 1.37,
+      "indexUsed": "CPI+Rent",
+      "cap": 25000
+    },
+    {
+      "country": "Sudan",
+      "region": "Eurasia",
+      "keystone": "Egypt",
+      "ccy": "SDD",
+      "index": 0.39,
+      "indexUsed": "GDP per capita",
+      "cap": 52000
+    },
+    {
+      "country": "Suriname",
+      "region": "Americas",
+      "keystone": "Brazil",
+      "ccy": "SRD",
+      "index": 1.18,
+      "indexUsed": "CPI+Rent",
+      "cap": 25000
+    },
+    {
+      "country": "Sweden",
+      "region": "Eurasia",
+      "keystone": "Germany",
+      "ccy": "SEK",
+      "index": 1.11,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "Switzerland",
+      "region": "Eurasia",
+      "keystone": "Germany",
+      "ccy": "CHF",
+      "index": 2.06,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "Syria",
+      "region": "Eurasia",
+      "keystone": "Pakistan",
+      "ccy": "SYP",
+      "index": 1.34,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "Taiwan",
+      "region": "Asia Mainland",
+      "keystone": "China",
+      "ccy": "TWD",
+      "index": 1.1,
+      "indexUsed": "CPI+Rent",
+      "cap": 25000
+    },
+    {
+      "country": "Tajikistan",
+      "region": "Eurasia",
+      "keystone": "Pakistan",
+      "ccy": "TJS",
+      "index": 1.1,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "Tanzania",
+      "region": "Africa-Anglophone East",
+      "keystone": "Tanzania",
+      "ccy": "TZS",
+      "index": 1,
+      "indexUsed": "Keystone",
+      "cap": 31000
+    },
+    {
+      "country": "Thailand",
+      "region": "Asia Mainland",
+      "keystone": "China",
+      "ccy": "THB",
+      "index": 0.85,
+      "indexUsed": "CPI+Rent",
+      "cap": 25000
+    },
+    {
+      "country": "The Gambia",
+      "region": "Africa-Francophone",
+      "keystone": "Cameroon",
+      "ccy": "GMD",
+      "index": 0.6696,
+      "indexUsed": "GDP per capita",
+      "cap": 33000
+    },
+    {
+      "country": "Togo",
+      "region": "Africa-Francophone",
+      "keystone": "Cameroon",
+      "ccy": "CFA",
+      "index": 0.75,
+      "indexUsed": "GDP per capita",
+      "cap": 33000
+    },
+    {
+      "country": "Tonga",
+      "region": "Pacific",
+      "keystone": "Papua New Guinea",
+      "ccy": "TOP",
+      "index": 0.97,
+      "indexUsed": "CPI",
+      "cap": 22000
+    },
+    {
+      "country": "Trinidad & Tobago",
+      "region": "Americas",
+      "keystone": "Brazil",
+      "ccy": "TTD",
+      "index": 1.08,
+      "indexUsed": "CPI+Rent",
+      "cap": 25000
+    },
+    {
+      "country": "Tunisia",
+      "region": "Eurasia",
+      "keystone": "Egypt",
+      "ccy": "TND",
+      "index": 0.85,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "Turkey",
+      "region": "Eurasia",
+      "keystone": "Germany",
+      "ccy": "TRY",
+      "index": 0.61,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "Turkmenistan",
+      "region": "Eurasia",
+      "keystone": "Pakistan",
+      "ccy": "TMM",
+      "index": 1.73,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "Uganda",
+      "region": "Africa-Anglophone East",
+      "keystone": "Tanzania",
+      "ccy": "UGX",
+      "index": 0.57,
+      "indexUsed": "CPI+Rent",
+      "cap": 31000
+    },
+    {
+      "country": "Ukraine",
+      "region": "Eurasia",
+      "keystone": "Russia",
+      "ccy": "UAH",
+      "index": 0.61,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "United Arab Emirates",
+      "region": "Eurasia",
+      "keystone": "Germany",
+      "ccy": "AED",
+      "index": 1.47,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "United Kingdom",
+      "region": "Eurasia",
+      "keystone": "Germany",
+      "ccy": "GBP",
+      "index": 1.38,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "United States",
+      "region": "Americas",
+      "keystone": "Brazil",
+      "ccy": "USD",
+      "index": 1.5234,
+      "indexUsed": "CPI+Rent",
+      "cap": 25000
+    },
+    {
+      "country": "Uruguay",
+      "region": "Americas",
+      "keystone": "Brazil",
+      "ccy": "UYU",
+      "index": 1.04,
+      "indexUsed": "CPI+Rent",
+      "cap": 25000
+    },
+    {
+      "country": "Uzbekistan",
+      "region": "Eurasia",
+      "keystone": "Pakistan",
+      "ccy": "UZS",
+      "index": 1.95,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "Vanuatu",
+      "region": "Pacific",
+      "keystone": "Papua New Guinea",
+      "ccy": "VUV",
+      "index": 0.91,
+      "indexUsed": "CPI",
+      "cap": 22000
+    },
+    {
+      "country": "Venezuela",
+      "region": "Americas",
+      "keystone": "Brazil",
+      "ccy": "VEF",
+      "index": 1.42,
+      "indexUsed": "CPI+Rent",
+      "cap": 25000
+    },
+    {
+      "country": "Vietnam",
+      "region": "Asia Mainland",
+      "keystone": "China",
+      "ccy": "VND",
+      "index": 0.77,
+      "indexUsed": "CPI+Rent",
+      "cap": 25000
+    },
+    {
+      "country": "Yemen",
+      "region": "Eurasia",
+      "keystone": "Pakistan",
+      "ccy": "AED",
+      "index": 1.59,
+      "indexUsed": "CPI+Rent",
+      "cap": 52000
+    },
+    {
+      "country": "Zambia",
+      "region": "Africa-Anglophone East",
+      "keystone": "Tanzania",
+      "ccy": "ZMW",
+      "index": 0.91,
+      "indexUsed": "CPI+Rent",
+      "cap": 31000
+    },
+    {
+      "country": "Zimbabwe",
+      "region": "Africa-Southern",
+      "keystone": "Mozambique",
+      "ccy": "ZWD",
+      "index": 0.99,
+      "indexUsed": "CPI+Rent",
+      "cap": 30000
+    },
+    {
+      "country": "Private",
+      "region": null,
+      "keystone": null,
+      "ccy": "Local",
+      "index": 0,
+      "indexUsed": null,
+      "cap": null
+    }
+  ],
+  "keystone": [
+    {
+      "key": "Brazil-Sr. Translation Consultant",
+      "keystone": "Brazil",
+      "role": "Sr. Translation Consultant",
+      "weekly": 426.958333333333
+    },
+    {
+      "key": "Brazil-Independent Translation Consultant",
+      "keystone": "Brazil",
+      "role": "Independent Translation Consultant",
+      "weekly": 341.566666666667
+    },
+    {
+      "key": "Brazil-Dependent Consultant (CiT)",
+      "keystone": "Brazil",
+      "role": "Dependent Consultant (CiT)",
+      "weekly": 170.783333333333
+    },
+    {
+      "key": "Brazil-Facilitator/Trainer/Lead Translator",
+      "keystone": "Brazil",
+      "role": "Facilitator/Trainer/Lead Translator",
+      "weekly": 240.16
+    },
+    {
+      "key": "Brazil-Translator",
+      "keystone": "Brazil",
+      "role": "Translator",
+      "weekly": 200.133333333333
+    },
+    {
+      "key": "Brazil-Financial Services",
+      "keystone": "Brazil",
+      "role": "Financial Services",
+      "weekly": 254.94
+    },
+    {
+      "key": "Brazil-IT Services",
+      "keystone": "Brazil",
+      "role": "IT Services",
+      "weekly": 324.73
+    },
+    {
+      "key": "Brazil-HR Services",
+      "keystone": "Brazil",
+      "role": "HR Services",
+      "weekly": 221.853333333333
+    },
+    {
+      "key": "Brazil-Program Management Support",
+      "keystone": "Brazil",
+      "role": "Program Management Support",
+      "weekly": 391.608
+    },
+    {
+      "key": "Cameroon-Sr. Translation Consultant",
+      "keystone": "Cameroon",
+      "role": "Sr. Translation Consultant",
+      "weekly": 328
+    },
+    {
+      "key": "Cameroon-Independent Translation Consultant",
+      "keystone": "Cameroon",
+      "role": "Independent Translation Consultant",
+      "weekly": 262.4
+    },
+    {
+      "key": "Cameroon-Dependent Consultant (CiT)",
+      "keystone": "Cameroon",
+      "role": "Dependent Consultant (CiT)",
+      "weekly": 131.2
+    },
+    {
+      "key": "Cameroon-Facilitator/Trainer/Lead Translator",
+      "keystone": "Cameroon",
+      "role": "Facilitator/Trainer/Lead Translator",
+      "weekly": 160.72
+    },
+    {
+      "key": "Cameroon-Translator",
+      "keystone": "Cameroon",
+      "role": "Translator",
+      "weekly": 133.933333333333
+    },
+    {
+      "key": "Cameroon-Financial Services",
+      "keystone": "Cameroon",
+      "role": "Financial Services",
+      "weekly": 115.733333333333
+    },
+    {
+      "key": "Cameroon-IT Services",
+      "keystone": "Cameroon",
+      "role": "IT Services",
+      "weekly": 281.26
+    },
+    {
+      "key": "Cameroon-HR Services",
+      "keystone": "Cameroon",
+      "role": "HR Services",
+      "weekly": 178.126666666667
+    },
+    {
+      "key": "Cameroon-Program Management Support",
+      "keystone": "Cameroon",
+      "role": "Program Management Support",
+      "weekly": 551.04
+    },
+    {
+      "key": "China-Sr. Translation Consultant",
+      "keystone": "China",
+      "role": "Sr. Translation Consultant",
+      "weekly": 177.583333333333
+    },
+    {
+      "key": "China-Independent Translation Consultant",
+      "keystone": "China",
+      "role": "Independent Translation Consultant",
+      "weekly": 142.066666666667
+    },
+    {
+      "key": "China-Dependent Consultant (CiT)",
+      "keystone": "China",
+      "role": "Dependent Consultant (CiT)",
+      "weekly": 71.0333333333333
+    },
+    {
+      "key": "China-Facilitator/Trainer/Lead Translator",
+      "keystone": "China",
+      "role": "Facilitator/Trainer/Lead Translator",
+      "weekly": 191.08
+    },
+    {
+      "key": "China-Translator",
+      "keystone": "China",
+      "role": "Translator",
+      "weekly": 159.233333333333
+    },
+    {
+      "key": "China-Financial Services",
+      "keystone": "China",
+      "role": "Financial Services",
+      "weekly": 172.62
+    },
+    {
+      "key": "China-IT Services",
+      "keystone": "China",
+      "role": "IT Services",
+      "weekly": 206.99
+    },
+    {
+      "key": "China-HR Services",
+      "keystone": "China",
+      "role": "HR Services",
+      "weekly": 149.193333333333
+    },
+    {
+      "key": "China-Program Management Support",
+      "keystone": "China",
+      "role": "Program Management Support",
+      "weekly": 241.248
+    },
+    {
+      "key": "Egypt-Sr. Translation Consultant",
+      "keystone": "Egypt",
+      "role": "Sr. Translation Consultant",
+      "weekly": 304.583333333333
+    },
+    {
+      "key": "Egypt-Independent Translation Consultant",
+      "keystone": "Egypt",
+      "role": "Independent Translation Consultant",
+      "weekly": 243.666666666667
+    },
+    {
+      "key": "Egypt-Dependent Consultant (CiT)",
+      "keystone": "Egypt",
+      "role": "Dependent Consultant (CiT)",
+      "weekly": 121.833333333333
+    },
+    {
+      "key": "Egypt-Facilitator/Trainer/Lead Translator",
+      "keystone": "Egypt",
+      "role": "Facilitator/Trainer/Lead Translator",
+      "weekly": 173.76
+    },
+    {
+      "key": "Egypt-Translator",
+      "keystone": "Egypt",
+      "role": "Translator",
+      "weekly": 144.8
+    },
+    {
+      "key": "Egypt-Financial Services",
+      "keystone": "Egypt",
+      "role": "Financial Services",
+      "weekly": 197.026666666667
+    },
+    {
+      "key": "Egypt-IT Services",
+      "keystone": "Egypt",
+      "role": "IT Services",
+      "weekly": 313.39
+    },
+    {
+      "key": "Egypt-HR Services",
+      "keystone": "Egypt",
+      "role": "HR Services",
+      "weekly": 202.44
+    },
+    {
+      "key": "Egypt-Program Management Support",
+      "keystone": "Egypt",
+      "role": "Program Management Support",
+      "weekly": 352.576
+    },
+    {
+      "key": "Germany-Sr. Translation Consultant",
+      "keystone": "Germany",
+      "role": "Sr. Translation Consultant",
+      "weekly": 1715.41666666667
+    },
+    {
+      "key": "Germany-Independent Translation Consultant",
+      "keystone": "Germany",
+      "role": "Independent Translation Consultant",
+      "weekly": 1372.33333333333
+    },
+    {
+      "key": "Germany-Dependent Consultant (CiT)",
+      "keystone": "Germany",
+      "role": "Dependent Consultant (CiT)",
+      "weekly": 686.166666666667
+    },
+    {
+      "key": "Germany-Facilitator/Trainer/Lead Translator",
+      "keystone": "Germany",
+      "role": "Facilitator/Trainer/Lead Translator",
+      "weekly": 1416.8
+    },
+    {
+      "key": "Germany-Translator",
+      "keystone": "Germany",
+      "role": "Translator",
+      "weekly": 1180.66666666667
+    },
+    {
+      "key": "Germany-Financial Services",
+      "keystone": "Germany",
+      "role": "Financial Services",
+      "weekly": 1847.16
+    },
+    {
+      "key": "Germany-IT Services",
+      "keystone": "Germany",
+      "role": "IT Services",
+      "weekly": 2569.98
+    },
+    {
+      "key": "Germany-HR Services",
+      "keystone": "Germany",
+      "role": "HR Services",
+      "weekly": 1601.22666666667
+    },
+    {
+      "key": "Germany-Program Management Support",
+      "keystone": "Germany",
+      "role": "Program Management Support",
+      "weekly": 2091.096
+    },
+    {
+      "key": "India-Sr. Translation Consultant",
+      "keystone": "India",
+      "role": "Sr. Translation Consultant",
+      "weekly": 230.458333333333
+    },
+    {
+      "key": "India-Independent Translation Consultant",
+      "keystone": "India",
+      "role": "Independent Translation Consultant",
+      "weekly": 184.366666666667
+    },
+    {
+      "key": "India-Dependent Consultant (CiT)",
+      "keystone": "India",
+      "role": "Dependent Consultant (CiT)",
+      "weekly": 92.1833333333333
+    },
+    {
+      "key": "India-Facilitator/Trainer/Lead Translator",
+      "keystone": "India",
+      "role": "Facilitator/Trainer/Lead Translator",
+      "weekly": 101.08
+    },
+    {
+      "key": "India-Translator",
+      "keystone": "India",
+      "role": "Translator",
+      "weekly": 84.2333333333333
+    },
+    {
+      "key": "India-Financial Services",
+      "keystone": "India",
+      "role": "Financial Services",
+      "weekly": 248.966666666667
+    },
+    {
+      "key": "India-IT Services",
+      "keystone": "India",
+      "role": "IT Services",
+      "weekly": 330.33
+    },
+    {
+      "key": "India-HR Services",
+      "keystone": "India",
+      "role": "HR Services",
+      "weekly": 151.62
+    },
+    {
+      "key": "India-Program Management Support",
+      "keystone": "India",
+      "role": "Program Management Support",
+      "weekly": 261.688
+    },
+    {
+      "key": "Indonesia-Sr. Translation Consultant",
+      "keystone": "Indonesia",
+      "role": "Sr. Translation Consultant",
+      "weekly": 118.75
+    },
+    {
+      "key": "Indonesia-Independent Translation Consultant",
+      "keystone": "Indonesia",
+      "role": "Independent Translation Consultant",
+      "weekly": 95
+    },
+    {
+      "key": "Indonesia-Dependent Consultant (CiT)",
+      "keystone": "Indonesia",
+      "role": "Dependent Consultant (CiT)",
+      "weekly": 47.5
+    },
+    {
+      "key": "Indonesia-Facilitator/Trainer/Lead Translator",
+      "keystone": "Indonesia",
+      "role": "Facilitator/Trainer/Lead Translator",
+      "weekly": 90.8
+    },
+    {
+      "key": "Indonesia-Translator",
+      "keystone": "Indonesia",
+      "role": "Translator",
+      "weekly": 75.6666666666667
+    },
+    {
+      "key": "Indonesia-Financial Services",
+      "keystone": "Indonesia",
+      "role": "Financial Services",
+      "weekly": 86.24
+    },
+    {
+      "key": "Indonesia-IT Services",
+      "keystone": "Indonesia",
+      "role": "IT Services",
+      "weekly": 155.26
+    },
+    {
+      "key": "Indonesia-HR Services",
+      "keystone": "Indonesia",
+      "role": "HR Services",
+      "weekly": 114.893333333333
+    },
+    {
+      "key": "Indonesia-Program Management Support",
+      "keystone": "Indonesia",
+      "role": "Program Management Support",
+      "weekly": 193.368
+    },
+    {
+      "key": "Mexico-Sr. Translation Consultant",
+      "keystone": "Mexico",
+      "role": "Sr. Translation Consultant",
+      "weekly": 331.666666666667
+    },
+    {
+      "key": "Mexico-Independent Translation Consultant",
+      "keystone": "Mexico",
+      "role": "Independent Translation Consultant",
+      "weekly": 265.333333333333
+    },
+    {
+      "key": "Mexico-Dependent Consultant (CiT)",
+      "keystone": "Mexico",
+      "role": "Dependent Consultant (CiT)",
+      "weekly": 132.666666666667
+    },
+    {
+      "key": "Mexico-Facilitator/Trainer/Lead Translator",
+      "keystone": "Mexico",
+      "role": "Facilitator/Trainer/Lead Translator",
+      "weekly": 251.92
+    },
+    {
+      "key": "Mexico-Translator",
+      "keystone": "Mexico",
+      "role": "Translator",
+      "weekly": 209.933333333333
+    },
+    {
+      "key": "Mexico-Financial Services",
+      "keystone": "Mexico",
+      "role": "Financial Services",
+      "weekly": 239.213333333333
+    },
+    {
+      "key": "Mexico-IT Services",
+      "keystone": "Mexico",
+      "role": "IT Services",
+      "weekly": 401.17
+    },
+    {
+      "key": "Mexico-HR Services",
+      "keystone": "Mexico",
+      "role": "HR Services",
+      "weekly": 302.493333333333
+    },
+    {
+      "key": "Mexico-Program Management Support",
+      "keystone": "Mexico",
+      "role": "Program Management Support",
+      "weekly": 610.96
+    },
+    {
+      "key": "Mozambique-Sr. Translation Consultant",
+      "keystone": "Mozambique",
+      "role": "Sr. Translation Consultant",
+      "weekly": 339.475833333333
+    },
+    {
+      "key": "Mozambique-Independent Translation Consultant",
+      "keystone": "Mozambique",
+      "role": "Independent Translation Consultant",
+      "weekly": 271.580666666667
+    },
+    {
+      "key": "Mozambique-Dependent Consultant (CiT)",
+      "keystone": "Mozambique",
+      "role": "Dependent Consultant (CiT)",
+      "weekly": 135.790333333333
+    },
+    {
+      "key": "Mozambique-Facilitator/Trainer/Lead Translator",
+      "keystone": "Mozambique",
+      "role": "Facilitator/Trainer/Lead Translator",
+      "weekly": 139.60324
+    },
+    {
+      "key": "Mozambique-Translator",
+      "keystone": "Mozambique",
+      "role": "Translator",
+      "weekly": 116.336033333333
+    },
+    {
+      "key": "Mozambique-Financial Services",
+      "keystone": "Mozambique",
+      "role": "Financial Services",
+      "weekly": 136.94352
+    },
+    {
+      "key": "Mozambique-IT Services",
+      "keystone": "Mozambique",
+      "role": "IT Services",
+      "weekly": 240.5781
+    },
+    {
+      "key": "Mozambique-HR Services",
+      "keystone": "Mozambique",
+      "role": "HR Services",
+      "weekly": 208.265773333333
+    },
+    {
+      "key": "Mozambique-Program Management Support",
+      "keystone": "Mozambique",
+      "role": "Program Management Support",
+      "weekly": 267.540224
+    },
+    {
+      "key": "Nigeria-Sr. Translation Consultant",
+      "keystone": "Nigeria",
+      "role": "Sr. Translation Consultant",
+      "weekly": 382.875
+    },
+    {
+      "key": "Nigeria-Independent Translation Consultant",
+      "keystone": "Nigeria",
+      "role": "Independent Translation Consultant",
+      "weekly": 306.3
+    },
+    {
+      "key": "Nigeria-Dependent Consultant (CiT)",
+      "keystone": "Nigeria",
+      "role": "Dependent Consultant (CiT)",
+      "weekly": 153.15
+    },
+    {
+      "key": "Nigeria-Facilitator/Trainer/Lead Translator",
+      "keystone": "Nigeria",
+      "role": "Facilitator/Trainer/Lead Translator",
+      "weekly": 367.56
+    },
+    {
+      "key": "Nigeria-Translator",
+      "keystone": "Nigeria",
+      "role": "Translator",
+      "weekly": 306.3
+    },
+    {
+      "key": "Nigeria-Financial Services",
+      "keystone": "Nigeria",
+      "role": "Financial Services",
+      "weekly": 150.406666666667
+    },
+    {
+      "key": "Nigeria-IT Services",
+      "keystone": "Nigeria",
+      "role": "IT Services",
+      "weekly": 273.49
+    },
+    {
+      "key": "Nigeria-HR Services",
+      "keystone": "Nigeria",
+      "role": "HR Services",
+      "weekly": 103.18
+    },
+    {
+      "key": "Nigeria-Program Management Support",
+      "keystone": "Nigeria",
+      "role": "Program Management Support",
+      "weekly": 257.432
+    },
+    {
+      "key": "Pakistan-Sr. Translation Consultant",
+      "keystone": "Pakistan",
+      "role": "Sr. Translation Consultant",
+      "weekly": 193.397083333333
+    },
+    {
+      "key": "Pakistan-Independent Translation Consultant",
+      "keystone": "Pakistan",
+      "role": "Independent Translation Consultant",
+      "weekly": 154.717666666667
+    },
+    {
+      "key": "Pakistan-Dependent Consultant (CiT)",
+      "keystone": "Pakistan",
+      "role": "Dependent Consultant (CiT)",
+      "weekly": 77.3588333333333
+    },
+    {
+      "key": "Pakistan-Facilitator/Trainer/Lead Translator",
+      "keystone": "Pakistan",
+      "role": "Facilitator/Trainer/Lead Translator",
+      "weekly": 62.8344
+    },
+    {
+      "key": "Pakistan-Translator",
+      "keystone": "Pakistan",
+      "role": "Translator",
+      "weekly": 52.362
+    },
+    {
+      "key": "Pakistan-Financial Services",
+      "keystone": "Pakistan",
+      "role": "Financial Services",
+      "weekly": 68.6098
+    },
+    {
+      "key": "Pakistan-IT Services",
+      "keystone": "Pakistan",
+      "role": "IT Services",
+      "weekly": 138.0428
+    },
+    {
+      "key": "Pakistan-HR Services",
+      "keystone": "Pakistan",
+      "role": "HR Services",
+      "weekly": 101.213
+    },
+    {
+      "key": "Pakistan-Program Management Support",
+      "keystone": "Pakistan",
+      "role": "Program Management Support",
+      "weekly": 131.41968
+    },
+    {
+      "key": "Papua New Guinea-Sr. Translation Consultant",
+      "keystone": "Papua New Guinea",
+      "role": "Sr. Translation Consultant",
+      "weekly": 945
+    },
+    {
+      "key": "Papua New Guinea-Independent Translation Consultant",
+      "keystone": "Papua New Guinea",
+      "role": "Independent Translation Consultant",
+      "weekly": 756
+    },
+    {
+      "key": "Papua New Guinea-Dependent Consultant (CiT)",
+      "keystone": "Papua New Guinea",
+      "role": "Dependent Consultant (CiT)",
+      "weekly": 378
+    },
+    {
+      "key": "Papua New Guinea-Facilitator/Trainer/Lead Translator",
+      "keystone": "Papua New Guinea",
+      "role": "Facilitator/Trainer/Lead Translator",
+      "weekly": 348.92
+    },
+    {
+      "key": "Papua New Guinea-Translator",
+      "keystone": "Papua New Guinea",
+      "role": "Translator",
+      "weekly": 290.766666666667
+    },
+    {
+      "key": "Papua New Guinea-Financial Services",
+      "keystone": "Papua New Guinea",
+      "role": "Financial Services",
+      "weekly": 293.113333333333
+    },
+    {
+      "key": "Papua New Guinea-IT Services",
+      "keystone": "Papua New Guinea",
+      "role": "IT Services",
+      "weekly": 549.57
+    },
+    {
+      "key": "Papua New Guinea-HR Services",
+      "keystone": "Papua New Guinea",
+      "role": "HR Services",
+      "weekly": 341.973333333333
+    },
+    {
+      "key": "Papua New Guinea-Program Management Support",
+      "keystone": "Papua New Guinea",
+      "role": "Program Management Support",
+      "weekly": 879.312
+    },
+    {
+      "key": "Russia-Sr. Translation Consultant",
+      "keystone": "Russia",
+      "role": "Sr. Translation Consultant",
+      "weekly": 150.105416666667
+    },
+    {
+      "key": "Russia-Independent Translation Consultant",
+      "keystone": "Russia",
+      "role": "Independent Translation Consultant",
+      "weekly": 120.084333333333
+    },
+    {
+      "key": "Russia-Dependent Consultant (CiT)",
+      "keystone": "Russia",
+      "role": "Dependent Consultant (CiT)",
+      "weekly": 60.0421666666667
+    },
+    {
+      "key": "Russia-Facilitator/Trainer/Lead Translator",
+      "keystone": "Russia",
+      "role": "Facilitator/Trainer/Lead Translator",
+      "weekly": 169.45
+    },
+    {
+      "key": "Russia-Translator",
+      "keystone": "Russia",
+      "role": "Translator",
+      "weekly": 141.208333333333
+    },
+    {
+      "key": "Russia-Financial Services",
+      "keystone": "Russia",
+      "role": "Financial Services",
+      "weekly": 146.552933333333
+    },
+    {
+      "key": "Russia-IT Services",
+      "keystone": "Russia",
+      "role": "IT Services",
+      "weekly": 350.7105
+    },
+    {
+      "key": "Russia-HR Services",
+      "keystone": "Russia",
+      "role": "HR Services",
+      "weekly": 145.635
+    },
+    {
+      "key": "Russia-Program Management Support",
+      "keystone": "Russia",
+      "role": "Program Management Support",
+      "weekly": 232.73152
+    },
+    {
+      "key": "Tanzania-Sr. Translation Consultant",
+      "keystone": "Tanzania",
+      "role": "Sr. Translation Consultant",
+      "weekly": 243.916666666667
+    },
+    {
+      "key": "Tanzania-Independent Translation Consultant",
+      "keystone": "Tanzania",
+      "role": "Independent Translation Consultant",
+      "weekly": 195.133333333333
+    },
+    {
+      "key": "Tanzania-Dependent Consultant (CiT)",
+      "keystone": "Tanzania",
+      "role": "Dependent Consultant (CiT)",
+      "weekly": 97.5666666666667
+    },
+    {
+      "key": "Tanzania-Facilitator/Trainer/Lead Translator",
+      "keystone": "Tanzania",
+      "role": "Facilitator/Trainer/Lead Translator",
+      "weekly": 99.48
+    },
+    {
+      "key": "Tanzania-Translator",
+      "keystone": "Tanzania",
+      "role": "Translator",
+      "weekly": 82.9
+    },
+    {
+      "key": "Tanzania-Financial Services",
+      "keystone": "Tanzania",
+      "role": "Financial Services",
+      "weekly": 171.593333333333
+    },
+    {
+      "key": "Tanzania-IT Services",
+      "keystone": "Tanzania",
+      "role": "IT Services",
+      "weekly": 240.59
+    },
+    {
+      "key": "Tanzania-HR Services",
+      "keystone": "Tanzania",
+      "role": "HR Services",
+      "weekly": 141.82
+    },
+    {
+      "key": "Tanzania-Program Management Support",
+      "keystone": "Tanzania",
+      "role": "Program Management Support",
+      "weekly": 170.184
+    }
+  ]
+}

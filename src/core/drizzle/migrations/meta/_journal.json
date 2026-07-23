@@ -183,6 +183,13 @@
       "when": 1752796800000,
       "tag": "0025_add_posts",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1784825034251,
+      "tag": "0026_add_budget_line_items",
+      "breakpoints": true
     }
   ]
 }

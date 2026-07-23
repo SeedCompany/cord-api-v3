@@ -24,6 +24,7 @@
     "gel:migration": "yarn console gel migration",
     "migrate:generate": "drizzle-kit generate",
     "migrate:apply": "drizzle-kit migrate",
+    "drizzle:seed-budget-reference-data": "yarn start --entryFile core/drizzle/seeds/seed-budget-reference-data.run",
     "lint": "eslint --ext .ts,.tsx --fix --max-warnings 0 .",
     "test": "yarn test:base --selectProjects Unit",
     "test:e2e": "yarn test:base --selectProjects E2E",
