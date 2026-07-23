@@ -13,7 +13,7 @@ export class ProgressReportUpdateMediaMetadataCheckHandler {
 
   async handle(event: CanUpdateMediaUserMetadataHook) {
     const attached = event.getAttachedResource();
-    if (!attached.is(ReportMedia)) {
+    if (!event.media.attachedTo || !attached?.is(ReportMedia)) {
       return;
     }
     const reportMediaId = event.media.attachedTo[0].properties.id;

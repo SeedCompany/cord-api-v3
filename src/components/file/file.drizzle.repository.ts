@@ -19,6 +19,7 @@ import {
   FileNodeType,
   FileVersion,
 } from './dto';
+import { reverseAttachmentByRootIds } from './resolve-file-attachment';
 
 type FileNodeRow = typeof fileNodes.$inferSelect;
 
@@ -441,6 +442,14 @@ export class FileDrizzleRepository {
       .map((r) => r.id);
     const aggregates = await this.computeDirectoryAggregates(dirIds);
 
+    // The resource each node's tree root is attached to (reverse-lookup across
+    // the consuming DefinedFile FK columns). Batched over distinct roots.
+    const distinctRootIds = [...new Set([...roots.values()].map((r) => r.id))];
+    const attachmentByRoot = await reverseAttachmentByRootIds(
+      this.db,
+      distinctRootIds,
+    );
+
     return rows.map((row) => {
       const root = roots.get(row.id);
       const rootNode = root
@@ -454,12 +463,14 @@ export class FileDrizzleRepository {
         createdAt: toDateTime(row.createdAt),
         createdById: row.createdById,
         root: rootNode,
-        // rootAttachedTo: nothing points at file nodes until consuming FKs land
-        // in PR #2. Point it at the root node itself (a Directory) — its type is
-        // never ProgressReportMedia, so the file-is-media-check handler that
-        // destructures this on every upload short-circuits cleanly.
-        // migration-todo (PR #2): reverse-lookup across consuming FK columns.
-        rootAttachedTo: [rootNode, 'dir'] as [BaseNode, string],
+        // The resource holding the tree root. Falls back to the root node
+        // itself (a Directory — never ProgressReportMedia, so the upload-time
+        // file-is-media check short-circuits) when nothing references it, e.g.
+        // a test root dir or a free-floating tree.
+        rootAttachedTo: attachmentByRoot.get(root?.id ?? row.id) ?? [
+          rootNode,
+          'dir',
+        ],
         canDelete: true,
       };
 
