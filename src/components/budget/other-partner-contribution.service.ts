@@ -14,12 +14,14 @@ import {
   type UpdateOtherPartnerContribution,
 } from './dto';
 import { OtherPartnerContributionRepository } from './other-partner-contribution.repository';
+import { SyncLineItemsToBudgetRecordsService } from './sync-line-items-to-budget-records.service';
 
 @Injectable()
 export class OtherPartnerContributionService {
   constructor(
     private readonly privileges: Privileges,
     private readonly repo: OtherPartnerContributionRepository,
+    private readonly sync: SyncLineItemsToBudgetRecordsService,
   ) {}
 
   /**
@@ -33,6 +35,13 @@ export class OtherPartnerContributionService {
       const id = await this.repo.create(input);
       const opc = await this.readOne(id);
       this.privileges.for(OtherPartnerContribution, opc).verifyCan('create');
+      // budget-line-items-poc phase 3: wired per the task's explicit
+      // "after each BudgetLineItem/OtherPartnerContribution create/update
+      // /delete" — currently a no-op for OPC specifically, since
+      // sync-line-items-to-budget-records.service.ts's algorithm only sums
+      // `BudgetLineItem.funder` amounts, not OPC's `donor`. See that file's
+      // doc comment.
+      await this.sync.syncForBudget(input.budget);
       return opc;
     } catch (exception) {
       throw new CreationFailed(OtherPartnerContribution, {
@@ -74,13 +83,19 @@ export class OtherPartnerContributionService {
       .for(OtherPartnerContribution, existing)
       .verifyChanges(changes);
     await this.repo.update(input.id, changes);
-    return await this.readOne(input.id);
+    const updated = await this.readOne(input.id);
+    // budget-line-items-poc phase 3: see create()'s comment.
+    await this.sync.syncForBudget(await this.repo.getBudgetId(input.id));
+    return updated;
   }
 
   async delete(id: ID): Promise<void> {
     const existing = await this.readOne(id);
     this.privileges.for(OtherPartnerContribution, existing).verifyCan('delete');
+    const budgetId = await this.repo.getBudgetId(id);
     await this.repo.delete(id);
+    // budget-line-items-poc phase 3: see create()'s comment.
+    await this.sync.syncForBudget(budgetId);
   }
 
   private secure(

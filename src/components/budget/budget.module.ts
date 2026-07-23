@@ -1,6 +1,7 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { splitDb } from '~/core/database';
 import { AuthorizationModule } from '../authorization/authorization.module';
+import { EngagementModule } from '../engagement/engagement.module';
 import { FileModule } from '../file/file.module';
 import { LocationModule } from '../location/location.module';
 import { OrganizationModule } from '../organization/organization.module';
@@ -10,6 +11,7 @@ import { EducationModule } from '../user/education/education.module';
 import { UnavailabilityModule } from '../user/unavailability/unavailability.module';
 import { UserModule } from '../user/user.module';
 import { BudgetCalculationService } from './budget-calculation.service';
+import { BudgetDerivedFieldsService } from './budget-derived-fields.service';
 import { BudgetLineItemLoader } from './budget-line-item.loader';
 import { BudgetLineItemRepository } from './budget-line-item.repository';
 import { BudgetLineItemResolver } from './budget-line-item.resolver';
@@ -21,6 +23,7 @@ import { BudgetRecordResolver } from './budget-record.resolver';
 import { BudgetReferenceCountryLoader } from './budget-reference-country.loader';
 import { BudgetReferenceCountryRepository } from './budget-reference-country.repository';
 import { BudgetReferenceCountryResolver } from './budget-reference-country.resolver';
+import { BudgetReferenceKeystoneRateRepository } from './budget-reference-keystone-rate.repository';
 import { BudgetDrizzleRepository } from './budget.drizzle.repository';
 import { BudgetLoader } from './budget.loader';
 import { BudgetRepository } from './budget.repository';
@@ -32,6 +35,7 @@ import { OtherPartnerContributionLoader } from './other-partner-contribution.loa
 import { OtherPartnerContributionRepository } from './other-partner-contribution.repository';
 import { OtherPartnerContributionResolver } from './other-partner-contribution.resolver';
 import { OtherPartnerContributionService } from './other-partner-contribution.service';
+import { SyncLineItemsToBudgetRecordsService } from './sync-line-items-to-budget-records.service';
 
 @Module({
   imports: [
@@ -42,6 +46,7 @@ import { OtherPartnerContributionService } from './other-partner-contribution.se
     forwardRef(() => PartnershipModule),
     forwardRef(() => OrganizationModule),
     forwardRef(() => ProjectModule),
+    forwardRef(() => EngagementModule),
     UnavailabilityModule,
     forwardRef(() => UserModule),
   ],
@@ -78,6 +83,10 @@ import { OtherPartnerContributionService } from './other-partner-contribution.se
     BudgetReferenceCountryResolver,
     BudgetReferenceCountryRepository,
     BudgetReferenceCountryLoader,
+    // ── budget-line-items-poc phase 3 additions ──
+    BudgetDerivedFieldsService,
+    BudgetReferenceKeystoneRateRepository,
+    SyncLineItemsToBudgetRecordsService,
   ],
   exports: [BudgetService],
 })

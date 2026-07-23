@@ -94,13 +94,19 @@ export class BudgetDrizzleRepository extends DrizzleDtoRepository<
     await this.updateColumns(existing.id, {
       status: simpleChanges.status,
       // ── budget-line-items-poc additions ──
-      countryId: simpleChanges.country,
+      //
+      // `countryId`/`languageCount` are deliberately NOT written here as of
+      // phase 3 — both `Budget.country` and `Budget.languageCount` are now
+      // purely server-derived (see their doc comments in `dto/budget.dto.ts`)
+      // and were removed from `UpdateBudget`, so `simpleChanges` can never
+      // carry them anymore. The `country_id`/`language_count` columns
+      // themselves are left in place (unused going forward) — no
+      // down-migration.
       entryCurrencyMode: simpleChanges.entryCurrencyMode,
       displayCurrencyMode: simpleChanges.displayCurrencyMode,
       exchangeRate: simpleChanges.exchangeRate,
       inflationRate: simpleChanges.inflationRate,
       adminFeePercent: simpleChanges.adminFeePercent,
-      languageCount: simpleChanges.languageCount,
     });
     return { ...existing, ...simpleChanges };
   }
@@ -218,7 +224,23 @@ export class BudgetDrizzleRepository extends DrizzleDtoRepository<
       lineItems: [],
       otherPartnerContributions: [],
       // ── budget-line-items-poc additions ──
-      country: row.countryId,
+      //
+      // `country` is deliberately NOT populated from `row.countryId` as of
+      // phase 3 (per the task ask to "stop reading/writing
+      // budgets.country_id") — `Budget.country` is resolved fresh by
+      // `BudgetResolver.country` (via `BudgetDerivedFieldsService
+      // .resolveCountry`), not from this raw dto property. Leaving it out
+      // here means `budget.country.value` on the underlying (unsecured) dto
+      // is always `undefined`; nothing should read it directly anymore
+      // (`calculationSummary` was updated to call the same derived-fields
+      // service instead of reading it off the parent dto).
+      //
+      // `languageCount` IS still read from `row.languageCount` below —
+      // unlike `country`, the task only asked to stop WRITING it. It's now
+      // unused by anything GraphQL-facing (`Budget.languageCount` is
+      // resolved fresh by `BudgetResolver.languageCount`, and
+      // `calculationSummary` was updated the same way as `country` above),
+      // but is kept populated here for dto/schema shape parity.
       entryCurrencyMode: row.entryCurrencyMode,
       displayCurrencyMode: row.displayCurrencyMode,
       exchangeRate: row.exchangeRate,

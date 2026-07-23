@@ -14,12 +14,14 @@ import {
   type CreateBudgetLineItem,
   type UpdateBudgetLineItem,
 } from './dto';
+import { SyncLineItemsToBudgetRecordsService } from './sync-line-items-to-budget-records.service';
 
 @Injectable()
 export class BudgetLineItemService {
   constructor(
     private readonly privileges: Privileges,
     private readonly repo: BudgetLineItemRepository,
+    private readonly sync: SyncLineItemsToBudgetRecordsService,
   ) {}
 
   /**
@@ -33,6 +35,10 @@ export class BudgetLineItemService {
       const id = await this.repo.create(input);
       const lineItem = await this.readOne(id);
       this.privileges.for(BudgetLineItem, lineItem).verifyCan('create');
+      // budget-line-items-poc phase 3: keep budget_records.amount in sync —
+      // see sync-line-items-to-budget-records.service.ts's doc comment for
+      // the full design (what it does and does not attribute).
+      await this.sync.syncForBudget(input.budget);
       return lineItem;
     } catch (exception) {
       throw new CreationFailed(BudgetLineItem, { cause: exception });
@@ -66,13 +72,19 @@ export class BudgetLineItemService {
     const changes = this.repo.getActualChanges(existing, input);
     this.privileges.for(BudgetLineItem, existing).verifyChanges(changes);
     await this.repo.update(input.id, changes);
-    return await this.readOne(input.id);
+    const updated = await this.readOne(input.id);
+    // budget-line-items-poc phase 3: see create()'s comment.
+    await this.sync.syncForBudget(await this.repo.getBudgetId(input.id));
+    return updated;
   }
 
   async delete(id: ID): Promise<void> {
     const existing = await this.readOne(id);
     this.privileges.for(BudgetLineItem, existing).verifyCan('delete');
+    const budgetId = await this.repo.getBudgetId(id);
     await this.repo.delete(id);
+    // budget-line-items-poc phase 3: see create()'s comment.
+    await this.sync.syncForBudget(budgetId);
   }
 
   private secure(dto: UnsecuredDto<BudgetLineItem>): BudgetLineItem {

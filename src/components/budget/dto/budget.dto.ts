@@ -82,19 +82,31 @@ export class Budget extends Interfaces {
   // ── budget-line-items-poc additions ──
 
   /**
+   * budget-line-items-poc phase 3: now purely SERVER-DERIVED from
+   * `Project.primaryLocation` (see `BudgetDerivedFieldsService.resolveCountry`
+   * / `BudgetResolver.country`) — no longer manually set. `@Calculated()` is
+   * therefore the CORRECT decorator again here, matching how
+   * `BudgetLineItem.serviceProvider`/`funder` (also server-managed,
+   * never user-set) already use it.
+   *
+   * History: an earlier phase of this POC made `country` directly settable
+   * via `UpdateBudget.country` and deliberately did NOT mark it
+   * `@Calculated()` — `@Calculated()` wires into `CalculatedCondition`,
+   * which hardcodes `isAllowed() { return false; }` for ANY role including
+   * Administrator, so marking a genuinely user-settable field that way made
+   * it permanently uneditable regardless of policy grants (caught by
+   * hand-testing `updateBudget` end-to-end; schema/type-check/lint can't
+   * catch an authorization-condition mistake like this). Now that the field
+   * is purely derived and `country` has been removed from `UpdateBudget`
+   * entirely, that concern no longer applies.
+   *
    * Not `@Field()`'d directly — the `BudgetReferenceCountry` object is
-   * hydrated by `BudgetResolver.country` via a loader, matching how
-   * `BudgetRecord.organization` is declared (bare `Secured<ID>` here, full
-   * object resolved in the resolver). Deliberately NOT `@Calculated()` —
-   * unlike `BudgetRecord.organization` (server-managed, never user-set),
-   * this field IS meant to be directly settable via `UpdateBudget.country`.
-   * `@Calculated()` wires into `CalculatedCondition`, which hardcodes
-   * `isAllowed() { return false; }` for ANY role including Administrator —
-   * marking this field that way made it permanently uneditable regardless
-   * of policy grants, caught by hand-testing `updateBudget` end-to-end
-   * (schema/type-check/lint can't catch an authorization-condition mistake
-   * like this).
+   * resolved by `BudgetResolver.country` (which calls
+   * `BudgetDerivedFieldsService.resolveCountry`, not the raw value below),
+   * matching how `BudgetRecord.organization` is declared (bare `Secured<ID>`
+   * here, full object resolved in the resolver).
    */
+  @Calculated()
   readonly country: Secured<ID<'BudgetReferenceCountry'> | null>;
 
   @Field({
@@ -132,10 +144,18 @@ export class Budget extends Interfaces {
   })
   readonly adminFeePercent: SecuredFloat;
 
-  @Field({
-    description:
-      'Number of languages this budget covers — used for cost-per-language.',
-  })
+  /**
+   * budget-line-items-poc phase 3: now purely SERVER-DERIVED from the
+   * count of the project's Language Engagements (see
+   * `BudgetDerivedFieldsService.countLanguageEngagements` /
+   * `BudgetResolver.languageCount`) — no longer manually set, mirroring
+   * `country`'s same "derived, not manually set" change above (and for the
+   * same reason, `@Calculated()` here too rather than left editable via a
+   * field nobody can ever actually change through `UpdateBudget` anymore).
+   * Not `@Field()`'d directly, for the same reason as `country` — see that
+   * field's comment.
+   */
+  @Calculated()
   readonly languageCount: SecuredInt;
 
   @Field(() => [BudgetLineItem])

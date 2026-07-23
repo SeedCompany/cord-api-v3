@@ -23,6 +23,57 @@ export const ADMIN_FEE_ACCOUNT = 'Project Administration Fee';
 /** The one activity value that counts toward Bible-Translation %. */
 export const BIBLE_TRANSLATION_ACTIVITY = 'Bible Translation';
 
+/**
+ * Account-to-role classification for the benchmark/keystone calculator
+ * (budget-line-items-poc phase 3) — ported verbatim from the field-budget
+ * prototype's `src/app.js` (`SERVICE_ACCTS`/`SALARY_ACCTS`/`KEYSTONE_ACCTS`/
+ * `ROLE_MAP` near the top of that file). Exported so the frontend can import/
+ * mirror the same account list for its own "Benchmark calculator" button
+ * (only shown for `KEYSTONE_ACCTS`) and consultant-subtype dropdown, rather
+ * than hand-copying these lists a second time.
+ */
+export const SERVICE_ACCTS = [
+  'Financial Services',
+  'HR Services',
+  'IT Services',
+  'Program Mgt Support',
+] as const;
+
+export const SALARY_ACCTS = [
+  'Salary/Stipend - Translator',
+  'Salary/Stipend - Non Translator',
+  'Salary/Stipend - Consultant',
+] as const;
+
+export const KEYSTONE_ACCTS = [...SALARY_ACCTS, ...SERVICE_ACCTS] as const;
+
+/**
+ * Maps an account (or, for "Salary/Stipend - Consultant", one of the 3
+ * consultant sub-role labels below) to the role label used as the join key
+ * into `budget_reference_keystone_rates.role`. Ported verbatim from the
+ * prototype's `ROLE_MAP`.
+ */
+export const ROLE_MAP: Readonly<Record<string, string>> = {
+  'Salary/Stipend - Translator': 'Translator',
+  'Salary/Stipend - Non Translator': 'Facilitator/Trainer/Lead Translator',
+  'Financial Services': 'Financial Services',
+  'HR Services': 'HR Services',
+  'IT Services': 'IT Services',
+  'Program Mgt Support': 'Program Management Support',
+  // consultant subtypes resolved by the caller (the account itself is always
+  // "Salary/Stipend - Consultant"; the actual role label comes from one of
+  // these 3, chosen via `BudgetBenchmarkInput.consultantType`):
+  'Sr. Translation Consultant': 'Sr. Translation Consultant',
+  'Independent Translation Consultant': 'Independent Translation Consultant',
+  'Dependent Consultant (CiT)': 'Dependent Consultant (CiT)',
+};
+
+/** The account whose role is resolved via `consultantType` rather than directly via `ROLE_MAP[account]`. */
+export const CONSULTANT_ACCOUNT = 'Salary/Stipend - Consultant';
+
+/** Default consultant sub-role when `consultantType` is omitted — matches the prototype's `<select>` default option. */
+export const DEFAULT_CONSULTANT_TYPE = 'Sr. Translation Consultant';
+
 export interface BudgetCalcCountry {
   readonly costOfLivingIndex: number | null;
   readonly adminFeeCap: number | null;
@@ -106,8 +157,12 @@ const zeros = (n: number): number[] => Array<number>(n).fill(0);
 const range = (n: number): number[] => Array.from({ length: n }, (_, i) => i);
 
 /** Pads/truncates a fiscal-year amounts array to exactly `length`, like the
- * prototype's `ensureFyLen`. */
-const padToLength = (arr: readonly number[], length: number): number[] => {
+ * prototype's `ensureFyLen`. Exported so `budgetBenchmark`'s resolver can
+ * apply the same defensive padding to `weeksPerFiscalYear`. */
+export const padToLength = (
+  arr: readonly number[],
+  length: number,
+): number[] => {
   const out = arr.slice(0, length);
   while (out.length < length) out.push(0);
   return out;

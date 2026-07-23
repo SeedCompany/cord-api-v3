@@ -16,3 +16,4 @@ export * from './create-other-partner-contribution.dto';
 export * from './update-other-partner-contribution.dto';
 export * from './delete-other-partner-contribution.dto';
 export * from './budget-calculation-summary.dto';
+export * from './budget-benchmark.dto';

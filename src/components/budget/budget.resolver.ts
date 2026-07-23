@@ -3,11 +3,13 @@ import {
   Float,
   Mutation,
   Parent,
+  Query,
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
+import { stripIndent } from 'common-tags';
 import { sumBy } from 'lodash';
-import { type ID, mapSecuredValue } from '~/common';
+import { type ID, SecuredInt } from '~/common';
 import { Loader, type LoaderOf } from '~/core/data-loader';
 import { BudgetService } from '../budget';
 import { FileNodeLoader, resolveDefinedFile } from '../file';
@@ -18,12 +20,20 @@ import {
   type BudgetCalcLine,
   type BudgetCalcOtherPartnerContribution,
   BudgetCalculationService,
+  CONSULTANT_ACCOUNT,
   type CostType,
   type CurrencyMode,
+  DEFAULT_CONSULTANT_TYPE,
+  padToLength,
+  ROLE_MAP,
+  SALARY_ACCTS,
 } from './budget-calculation.service';
-import { BudgetReferenceCountryLoader } from './budget-reference-country.loader';
+import { BudgetDerivedFieldsService } from './budget-derived-fields.service';
+import { BudgetReferenceKeystoneRateRepository } from './budget-reference-keystone-rate.repository';
 import {
   Budget,
+  BudgetBenchmarkInput,
+  BudgetBenchmarkResult,
   BudgetCalculationSummary,
   BudgetSummary,
   BudgetUpdated,
@@ -37,6 +47,8 @@ export class BudgetResolver {
   constructor(
     private readonly service: BudgetService,
     private readonly calc: BudgetCalculationService,
+    private readonly derived: BudgetDerivedFieldsService,
+    private readonly keystoneRates: BudgetReferenceKeystoneRateRepository,
   ) {}
 
   @ResolveField(() => Float)
@@ -80,13 +92,45 @@ export class BudgetResolver {
 
   // ── budget-line-items-poc additions ──
 
-  @ResolveField(() => SecuredBudgetReferenceCountry)
+  @ResolveField(() => SecuredBudgetReferenceCountry, {
+    description: stripIndent`
+      Purely derived from the project's \`primaryLocation\` — no longer
+      directly settable (see the doc comment on the underlying \`country\`
+      property in \`dto/budget.dto.ts\`). Null if the project has no
+      \`primaryLocation\`, that location isn't a \`Country\`-type location,
+      its \`isoAlpha3\` is unset, or no matching \`budget_reference_countries\`
+      row exists for that ISO code.
+    `,
+  })
   async country(
     @Parent() budget: Budget,
-    @Loader(BudgetReferenceCountryLoader)
-    countries: LoaderOf<BudgetReferenceCountryLoader>,
   ): Promise<SecuredBudgetReferenceCountry> {
-    return await mapSecuredValue(budget.country, (id) => countries.load(id));
+    const { canRead, canEdit } = budget.country;
+    if (!canRead) {
+      return { canRead, canEdit };
+    }
+    const projectId = budget.parent.properties.id as ID<'Project'>;
+    const value = await this.derived.resolveCountry(projectId);
+    return { canRead, canEdit, value };
+  }
+
+  @ResolveField(() => SecuredInt, {
+    description: stripIndent`
+      Number of languages this budget covers — used for cost-per-language.
+      Purely derived from the count of the project's Language Engagements
+      (\`type: "language"\`), no longer directly settable. Falls back to 1 in
+      \`BudgetCalculationService\` when this is 0 (a project with no language
+      engagements yet).
+    `,
+  })
+  async languageCount(@Parent() budget: Budget): Promise<SecuredInt> {
+    const { canRead, canEdit } = budget.languageCount;
+    if (!canRead) {
+      return { canRead, canEdit };
+    }
+    const projectId = budget.parent.properties.id as ID<'Project'>;
+    const value = await this.derived.countLanguageEngagements(projectId);
+    return { canRead, canEdit, value };
   }
 
   /**
@@ -108,8 +152,6 @@ export class BudgetResolver {
   async calculationSummary(
     @Parent() budget: Budget,
     @Loader(() => ProjectLoader) projects: LoaderOf<ProjectLoader>,
-    @Loader(BudgetReferenceCountryLoader)
-    countries: LoaderOf<BudgetReferenceCountryLoader>,
   ): Promise<BudgetCalculationSummary | null> {
     // `parent` is the Neo4j-era `BaseNode` shape (`.properties.id`) —
     // `BudgetDrizzleRepository.toDto` constructs a real BaseNode-shaped value
@@ -142,8 +184,13 @@ export class BudgetResolver {
         (_, i) => amounts?.[String(fy.startFiscalYear + i)] ?? 0,
       );
 
-    const countryId = budget.country.value;
-    const country = countryId ? await countries.load(countryId) : null;
+    // Both derived fresh here rather than read off `budget.country.value` /
+    // `budget.languageCount.value` — those raw dto properties are stale
+    // (`country`) or simply the old stored default (`languageCount`) now
+    // that both fields are purely server-derived (see `BudgetDerivedFieldsService`).
+    const country = await this.derived.resolveCountry(projectId);
+    const languageCount =
+      (await this.derived.countLanguageEngagements(projectId)) || 1;
 
     const config: BudgetCalcConfig = {
       // `Project.primaryPartnership` is stubbed to `null` under the
@@ -172,7 +219,7 @@ export class BudgetResolver {
         (budget.entryCurrencyMode.value as CurrencyMode | undefined) ?? 'USD',
       displayCurrencyMode:
         (budget.displayCurrencyMode.value as CurrencyMode | undefined) ?? 'USD',
-      languageCount: budget.languageCount.value ?? 1,
+      languageCount,
       adminFeePercent: budget.adminFeePercent.value ?? 0,
     };
 
@@ -196,5 +243,117 @@ export class BudgetResolver {
       otherPartnerContributions,
     );
     return result ? toBudgetCalculationSummary(result) : null;
+  }
+
+  /**
+   * Server-side benchmark/keystone calculator (budget-line-items-poc phase
+   * 3) — the GraphQL equivalent of the prototype's benchmark-calculator
+   * modal (`resolveCalcParams()` / `previewKeystone()` / `applyModal()` in
+   * its `src/app.js`). Never exposes the underlying reference country/rate
+   * data itself (see `BudgetReferenceKeystoneRateRepository`'s doc comment)
+   * — only the computed figures.
+   *
+   * Sensitivity masking is intentionally NOT applied here — see
+   * `BudgetBenchmarkResult`'s doc comment.
+   */
+  @Query(() => BudgetBenchmarkResult, {
+    nullable: true,
+    description: stripIndent`
+      Server-side benchmark/keystone calculator. Null when: the budget's
+      project has no start/end dates yet; the budget has no resolvable
+      country (see \`Budget.country\`) or that country has no cost-of-living
+      index configured; \`input.account\` (or, for the consultant account,
+      \`input.consultantType\`) doesn't map to a known role; or no keystone
+      rate is seeded for that (country, role) pair. All are expected,
+      recoverable "can't compute this yet" states, not errors.
+    `,
+  })
+  async budgetBenchmark(
+    @Args('input') input: BudgetBenchmarkInput,
+    @Loader(() => ProjectLoader) projects: LoaderOf<ProjectLoader>,
+  ): Promise<BudgetBenchmarkResult | null> {
+    const budget = await this.service.readOne(input.budget);
+    const projectId = budget.parent.properties.id as ID<'Project'>;
+
+    const project = await projects.load({
+      id: projectId,
+      view: { active: true },
+    });
+    const startDate = project.mouStart.value;
+    const endDate = project.mouEnd.value;
+    if (!startDate || !endDate) {
+      return null;
+    }
+    const fy = this.calc.computeFiscalYears(
+      startDate.toISODate()!,
+      endDate.toISODate()!,
+    );
+    if (!fy) {
+      return null;
+    }
+
+    const country = await this.derived.resolveCountry(projectId);
+    if (!country?.keystoneCountryName) {
+      return null;
+    }
+    if (country.costOfLivingIndex == null) {
+      return null;
+    }
+
+    const roleLabel =
+      input.account === CONSULTANT_ACCOUNT
+        ? ROLE_MAP[input.consultantType ?? DEFAULT_CONSULTANT_TYPE]
+        : ROLE_MAP[input.account];
+    if (!roleLabel) {
+      return null;
+    }
+
+    const weeklyRateUsd = await this.keystoneRates.findRate(
+      country.keystoneCountryName,
+      roleLabel,
+    );
+    if (weeklyRateUsd == null) {
+      return null;
+    }
+
+    const entryCurrencyMode =
+      (budget.entryCurrencyMode.value as CurrencyMode | undefined) ?? 'USD';
+    const exchangeRate = budget.exchangeRate.value ?? 1;
+    const inflationRate = budget.inflationRate.value ?? 0;
+
+    const figure = this.calc.keystoneFigure(
+      country.costOfLivingIndex,
+      weeklyRateUsd,
+      entryCurrencyMode,
+      exchangeRate,
+    );
+
+    const isSalary = (SALARY_ACCTS as readonly string[]).includes(
+      input.account,
+    );
+
+    let weeklyOrAnnualFigure: number;
+    let amounts: number[];
+    if (isSalary) {
+      const weeks = padToLength(input.weeksPerFiscalYear ?? [], fy.duration);
+      amounts = this.calc.spreadKeystoneSalary(weeks, figure, inflationRate);
+      weeklyOrAnnualFigure = figure;
+    } else {
+      // SERVICE_ACCTS: annual figure = keystone figure × languageCount, then
+      // spread across fiscal years the same way any other annual amount is
+      // (`spreadAnnual`, already ported in `BudgetCalculationService`).
+      const languageCount =
+        (await this.derived.countLanguageEngagements(projectId)) || 1;
+      const annual = figure * languageCount;
+      amounts = this.calc.spreadAnnual(annual, fy, inflationRate);
+      weeklyOrAnnualFigure = annual;
+    }
+
+    const fiscalYearAmounts: Record<string, number> = {};
+    amounts.forEach((amount, i) => {
+      fiscalYearAmounts[String(fy.startFiscalYear + i)] = amount;
+    });
+
+    return { weeklyOrAnnualFigure, fiscalYearAmounts };
   }
 }

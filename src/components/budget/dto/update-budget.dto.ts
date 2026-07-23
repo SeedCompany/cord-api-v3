@@ -1,4 +1,4 @@
-import { Field, Float, InputType, Int, ObjectType } from '@nestjs/graphql';
+import { Field, Float, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { type ID, IdField, OptionalField } from '~/common';
@@ -24,9 +24,11 @@ export abstract class UpdateBudget {
   readonly universalTemplateFile?: CreateDefinedFileVersion;
 
   // ── budget-line-items-poc additions ──
-
-  @IdField({ nullable: true })
-  readonly country?: ID<'BudgetReferenceCountry'> | null;
+  //
+  // `country` and `languageCount` were removed from here in phase 3 — both
+  // are now purely server-derived (see their doc comments on `Budget` in
+  // `budget.dto.ts`) rather than client-settable. `country` in particular
+  // used to be settable here; it no longer is.
 
   @OptionalField(() => String, {
     description:
@@ -45,9 +47,6 @@ export abstract class UpdateBudget {
 
   @OptionalField(() => Float)
   readonly adminFeePercent?: number;
-
-  @OptionalField(() => Int)
-  readonly languageCount?: number;
 }
 
 @ObjectType()
