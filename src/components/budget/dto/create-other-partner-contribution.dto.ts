@@ -11,7 +11,7 @@ export abstract class CreateOtherPartnerContribution {
   @IdField({ nullable: true })
   readonly donor?: ID<'Organization'>;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   readonly description?: string;
 
   @Field(() => GraphQLJSONObject, { nullable: true })

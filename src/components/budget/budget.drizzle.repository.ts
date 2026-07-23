@@ -21,6 +21,7 @@ import { budgets } from '~/core/drizzle/schema';
 import { type ScopedRole } from '../authorization/dto/role.dto';
 import { PolicyExecutor } from '../authorization/policy/executor/policy-executor';
 import { type FileId } from '../file/dto';
+import { type ProjectType } from '../project/dto/project-type.enum';
 import { requesterScopeByProject } from '../project/project-member/membership-scope';
 import { type BudgetRecordDrizzleRepository } from './budget-record.drizzle.repository';
 import { BudgetRecordRepository } from './budget-record.repository';
@@ -32,8 +33,23 @@ import {
 } from './dto';
 
 type BudgetRow = typeof budgets.$inferSelect & {
-  project?: { id: ID<'Project'>; sensitivity: string } | null;
+  project?: {
+    id: ID<'Project'>;
+    sensitivity: string;
+    type: ProjectType;
+  } | null;
 };
+
+// Maps the projects.type column to the concrete GraphQL/resource class name
+// for that project (see src/components/project/dto/project.dto.ts) — needed
+// to build a BaseNode-shaped `parent` (see toDto() below); the abstract
+// `Project` interface itself isn't a concrete GraphQLObjectType.
+const projectTypeToResourceName = (type: ProjectType): string =>
+  ({
+    MomentumTranslation: 'MomentumTranslationProject',
+    MultiplicationTranslation: 'MultiplicationTranslationProject',
+    Internship: 'InternshipProject',
+  })[type];
 
 @Injectable()
 export class BudgetDrizzleRepository extends DrizzleDtoRepository<
@@ -99,7 +115,7 @@ export class BudgetDrizzleRepository extends DrizzleDtoRepository<
     const rows = await this.db.query.budgets.findMany({
       where: (b) => and(inArray(b.id, [...ids]), isNull(b.deletedAt)),
       with: {
-        project: { columns: { id: true, sensitivity: true } },
+        project: { columns: { id: true, sensitivity: true, type: true } },
       },
     });
     const scopeByProject = await requesterScopeByProject(
@@ -209,7 +225,27 @@ export class BudgetDrizzleRepository extends DrizzleDtoRepository<
       inflationRate: row.inflationRate,
       adminFeePercent: row.adminFeePercent,
       languageCount: row.languageCount,
-      parent: { id: row.project.id },
+      // ChangesetAwareResolver.parent() expects a Neo4j-shaped BaseNode
+      // ({labels, properties.id}), not a plain {id} ref — pre-existing gap in
+      // this repository predating budget-line-items-poc; a plain {id} object
+      // crashes loadByBaseNode() with "Cannot read properties of undefined
+      // (reading 'id')" the first time Budget.parent is actually resolved
+      // under DATABASE=postgres. The label must be the concrete
+      // GraphQLObjectType name (resourceResolver.doResolveType() rejects the
+      // abstract `Project` interface itself — "Could not determine GraphQL
+      // object from type: Project" — since it's not a GraphQLObjectType),
+      // hence mapping ProjectType -> concrete class name below.
+      // `properties.createdAt` isn't read by that code path, so the Budget's
+      // own createdAt is a safe placeholder (the project row's real
+      // createdAt isn't selected by this query).
+      parent: {
+        identity: row.project.id,
+        labels: [projectTypeToResourceName(row.project.type)],
+        properties: {
+          id: row.project.id,
+          createdAt: DateTime.fromJSDate(row.createdAt),
+        },
+      },
       // PCR is excluded; resolver navigation marker stays undefined.
       changeset: undefined,
       canDelete: true,

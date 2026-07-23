@@ -28,13 +28,13 @@ export abstract class UpdateBudget {
   @IdField({ nullable: true })
   readonly country?: ID<'BudgetReferenceCountry'> | null;
 
-  @OptionalField({
+  @OptionalField(() => String, {
     description:
       "'USD' or 'Local' — see BudgetLineItem.costType for why this isn't an enum.",
   })
   readonly entryCurrencyMode?: string;
 
-  @OptionalField()
+  @OptionalField(() => String)
   readonly displayCurrencyMode?: string;
 
   @OptionalField(() => Float)

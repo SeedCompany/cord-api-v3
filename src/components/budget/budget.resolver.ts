@@ -111,13 +111,12 @@ export class BudgetResolver {
     @Loader(BudgetReferenceCountryLoader)
     countries: LoaderOf<BudgetReferenceCountryLoader>,
   ): Promise<BudgetCalculationSummary | null> {
-    // `parent` is typed as the Neo4j-era `BaseNode` (`.properties.id`), but
-    // under the Postgres/Drizzle path (`BudgetDrizzleRepository.toDto`) it's
-    // actually stored as the plain `{ id }` shape already used by every
-    // other Drizzle-ported repo's `parent`/relation stubs — same pre-existing
-    // type/runtime mismatch as the `splitDb(..., { postgres: ... as any })`
-    // casts elsewhere in this module, not something introduced here.
-    const projectId = (budget.parent as unknown as { id: ID<'Project'> }).id;
+    // `parent` is the Neo4j-era `BaseNode` shape (`.properties.id`) —
+    // `BudgetDrizzleRepository.toDto` constructs a real BaseNode-shaped value
+    // here (see its comments) specifically so `ChangesetAwareResolver.parent`
+    // (a separate, generic `@ResolveField` shared by every ChangesetAware
+    // resource) can resolve it without crashing.
+    const projectId = budget.parent.properties.id as ID<'Project'>;
     const project = await projects.load({
       id: projectId,
       view: { active: true },

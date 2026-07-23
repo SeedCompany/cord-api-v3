@@ -11,22 +11,22 @@ export abstract class CreateBudgetLineItem {
   @Field()
   readonly account: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   readonly description?: string;
 
-  @Field({
+  @Field(() => String, {
     nullable: true,
     description: "Defaults to 'Cash' if omitted.",
   })
   readonly costType?: string;
 
-  @Field({
+  @Field(() => String, {
     nullable: true,
     description: "Defaults to 'Field Budget' if omitted.",
   })
   readonly budgetCategory?: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   readonly activity?: string;
 
   @IdField({ nullable: true })

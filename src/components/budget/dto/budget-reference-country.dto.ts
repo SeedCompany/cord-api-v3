@@ -21,10 +21,10 @@ export class BudgetReferenceCountry {
   @Field()
   readonly name: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   readonly region: string | null;
 
-  @Field({
+  @Field(() => String, {
     nullable: true,
     description: stripIndent`
       The name of the OTHER country whose keystone weekly salary rates this
@@ -34,13 +34,13 @@ export class BudgetReferenceCountry {
   })
   readonly keystoneCountryName: string | null;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   readonly currencyCode: string | null;
 
   @Field(() => Float, { nullable: true })
   readonly costOfLivingIndex: number | null;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   readonly indexMethodology: string | null;
 
   @Field(() => Float, {

@@ -85,9 +85,16 @@ export class Budget extends Interfaces {
    * Not `@Field()`'d directly — the `BudgetReferenceCountry` object is
    * hydrated by `BudgetResolver.country` via a loader, matching how
    * `BudgetRecord.organization` is declared (bare `Secured<ID>` here, full
-   * object resolved in the resolver).
+   * object resolved in the resolver). Deliberately NOT `@Calculated()` —
+   * unlike `BudgetRecord.organization` (server-managed, never user-set),
+   * this field IS meant to be directly settable via `UpdateBudget.country`.
+   * `@Calculated()` wires into `CalculatedCondition`, which hardcodes
+   * `isAllowed() { return false; }` for ANY role including Administrator —
+   * marking this field that way made it permanently uneditable regardless
+   * of policy grants, caught by hand-testing `updateBudget` end-to-end
+   * (schema/type-check/lint can't catch an authorization-condition mistake
+   * like this).
    */
-  @Calculated()
   readonly country: Secured<ID<'BudgetReferenceCountry'> | null>;
 
   @Field({

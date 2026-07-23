@@ -14,13 +14,13 @@ export abstract class UpdateBudgetLineItem {
   @NameField({ nullable: true })
   readonly description?: string | null;
 
-  @OptionalField()
+  @OptionalField(() => String)
   readonly costType?: string;
 
-  @OptionalField()
+  @OptionalField(() => String)
   readonly budgetCategory?: string;
 
-  @OptionalField({ nullable: true })
+  @OptionalField(() => String, { nullable: true })
   readonly activity?: string | null;
 
   @IdField({ nullable: true })
