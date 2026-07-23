@@ -9,10 +9,18 @@ import { ProjectModule } from '../project/project.module';
 import { EducationModule } from '../user/education/education.module';
 import { UnavailabilityModule } from '../user/unavailability/unavailability.module';
 import { UserModule } from '../user/user.module';
+import { BudgetCalculationService } from './budget-calculation.service';
+import { BudgetLineItemLoader } from './budget-line-item.loader';
+import { BudgetLineItemRepository } from './budget-line-item.repository';
+import { BudgetLineItemResolver } from './budget-line-item.resolver';
+import { BudgetLineItemService } from './budget-line-item.service';
 import { BudgetRecordDrizzleRepository } from './budget-record.drizzle.repository';
 import { BudgetRecordLoader } from './budget-record.loader';
 import { BudgetRecordRepository } from './budget-record.repository';
 import { BudgetRecordResolver } from './budget-record.resolver';
+import { BudgetReferenceCountryLoader } from './budget-reference-country.loader';
+import { BudgetReferenceCountryRepository } from './budget-reference-country.repository';
+import { BudgetReferenceCountryResolver } from './budget-reference-country.resolver';
 import { BudgetDrizzleRepository } from './budget.drizzle.repository';
 import { BudgetLoader } from './budget.loader';
 import { BudgetRepository } from './budget.repository';
@@ -20,6 +28,10 @@ import { BudgetResolver } from './budget.resolver';
 import { BudgetService } from './budget.service';
 import * as handlers from './handlers';
 import { MigrateInitialAmountMigration } from './migrations/migrate-adjusted-amount.migration';
+import { OtherPartnerContributionLoader } from './other-partner-contribution.loader';
+import { OtherPartnerContributionRepository } from './other-partner-contribution.repository';
+import { OtherPartnerContributionResolver } from './other-partner-contribution.resolver';
+import { OtherPartnerContributionService } from './other-partner-contribution.service';
 
 @Module({
   imports: [
@@ -50,6 +62,22 @@ import { MigrateInitialAmountMigration } from './migrations/migrate-adjusted-amo
     BudgetRecordLoader,
     MigrateInitialAmountMigration,
     ...Object.values(handlers),
+    // ── budget-line-items-poc additions ──
+    // No `splitDb(...)` wrapping below: these are brand-new resources with no
+    // Neo4j/Gel counterpart to split against (unlike everything above), so
+    // each is registered as a single, direct provider.
+    BudgetCalculationService,
+    BudgetLineItemResolver,
+    BudgetLineItemService,
+    BudgetLineItemRepository,
+    BudgetLineItemLoader,
+    OtherPartnerContributionResolver,
+    OtherPartnerContributionService,
+    OtherPartnerContributionRepository,
+    OtherPartnerContributionLoader,
+    BudgetReferenceCountryResolver,
+    BudgetReferenceCountryRepository,
+    BudgetReferenceCountryLoader,
   ],
   exports: [BudgetService],
 })

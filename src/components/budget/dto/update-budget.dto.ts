@@ -1,7 +1,7 @@
-import { Field, Float, InputType, ObjectType } from '@nestjs/graphql';
+import { Field, Float, InputType, Int, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { type ID, IdField } from '~/common';
+import { type ID, IdField, OptionalField } from '~/common';
 import { ChangesetIdField } from '../../changeset';
 import { CreateDefinedFileVersion } from '../../file/dto';
 import { BudgetRecord } from './budget-record.dto';
@@ -22,6 +22,32 @@ export abstract class UpdateBudget {
   @Type(() => CreateDefinedFileVersion)
   @ValidateNested()
   readonly universalTemplateFile?: CreateDefinedFileVersion;
+
+  // ── budget-line-items-poc additions ──
+
+  @IdField({ nullable: true })
+  readonly country?: ID<'BudgetReferenceCountry'> | null;
+
+  @OptionalField({
+    description:
+      "'USD' or 'Local' — see BudgetLineItem.costType for why this isn't an enum.",
+  })
+  readonly entryCurrencyMode?: string;
+
+  @OptionalField()
+  readonly displayCurrencyMode?: string;
+
+  @OptionalField(() => Float)
+  readonly exchangeRate?: number;
+
+  @OptionalField(() => Float)
+  readonly inflationRate?: number;
+
+  @OptionalField(() => Float)
+  readonly adminFeePercent?: number;
+
+  @OptionalField(() => Int)
+  readonly languageCount?: number;
 }
 
 @ObjectType()

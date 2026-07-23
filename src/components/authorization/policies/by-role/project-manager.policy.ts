@@ -84,6 +84,14 @@ export const momentumProjectsTransitions = () =>
         .many('amount', 'initialAmount')
         .read.whenAll(member, field('status', 'Pending')).edit,
     ]),
+    // budget-line-items-poc: equivalent grant to Budget's own read/edit
+    // above (BudgetRecord's field-specific Pending-only-edit nuance has no
+    // analog here — BudgetLineItem/OtherPartnerContribution have no status
+    // field), extended to create/delete since these two resources get real
+    // CRUD mutations — see the final report's "reintroduces line-item-level
+    // CRUD" note.
+    r.BudgetLineItem.read.when(member).edit.create.delete,
+    r.OtherPartnerContribution.read.when(member).edit.create.delete,
     r.Ceremony.read.when(member).edit,
     r.Education.read.create,
     inherit(

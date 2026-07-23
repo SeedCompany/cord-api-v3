@@ -5,6 +5,12 @@ import * as FA from './financial-analyst.policy';
 @Policy([Role.LeadFinancialAnalyst, Role.Controller], (r) => [
   r.Budget.edit,
   r.BudgetRecord.edit.specifically((p) => [p.preApprovedAmount.read]),
+  // budget-line-items-poc: equivalent grant to Budget/BudgetRecord above,
+  // extended to create/delete since these two resources get real CRUD
+  // mutations — see the final report's "reintroduces line-item-level CRUD"
+  // note.
+  r.BudgetLineItem.edit.create.delete,
+  r.OtherPartnerContribution.edit.create.delete,
   r.Engagement.specifically(
     (p) =>
       p.many(

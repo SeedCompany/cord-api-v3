@@ -77,6 +77,14 @@ export class BudgetDrizzleRepository extends DrizzleDtoRepository<
   ) {
     await this.updateColumns(existing.id, {
       status: simpleChanges.status,
+      // ── budget-line-items-poc additions ──
+      countryId: simpleChanges.country,
+      entryCurrencyMode: simpleChanges.entryCurrencyMode,
+      displayCurrencyMode: simpleChanges.displayCurrencyMode,
+      exchangeRate: simpleChanges.exchangeRate,
+      inflationRate: simpleChanges.inflationRate,
+      adminFeePercent: simpleChanges.adminFeePercent,
+      languageCount: simpleChanges.languageCount,
     });
     return { ...existing, ...simpleChanges };
   }
@@ -189,8 +197,18 @@ export class BudgetDrizzleRepository extends DrizzleDtoRepository<
       universalTemplateFile: row.universalTemplateFileId
         ? { id: row.universalTemplateFileId }
         : null,
-      // Assembled by the service via listRecords.
+      // Assembled by the service via listRecords / lineItems / otherPartnerContributions.
       records: [],
+      lineItems: [],
+      otherPartnerContributions: [],
+      // ── budget-line-items-poc additions ──
+      country: row.countryId,
+      entryCurrencyMode: row.entryCurrencyMode,
+      displayCurrencyMode: row.displayCurrencyMode,
+      exchangeRate: row.exchangeRate,
+      inflationRate: row.inflationRate,
+      adminFeePercent: row.adminFeePercent,
+      languageCount: row.languageCount,
       parent: { id: row.project.id },
       // PCR is excluded; resolver navigation marker stays undefined.
       changeset: undefined,

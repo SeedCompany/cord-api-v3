@@ -4,6 +4,12 @@ import { field, Policy, Role } from '../util';
 @Policy(Role.FieldOperationsDirector, (r) => [
   r.Budget.edit,
   r.BudgetRecord.edit,
+  // budget-line-items-poc: equivalent grant to Budget/BudgetRecord above,
+  // extended to create/delete since these two resources get real CRUD
+  // mutations — see the final report's "reintroduces line-item-level CRUD"
+  // note.
+  r.BudgetLineItem.edit.create.delete,
+  r.OtherPartnerContribution.edit.create.delete,
   r.Ceremony.edit,
   r.Education.edit,
   r.Engagement.edit.specifically((p) => p.disbursementCompleteDate.read),

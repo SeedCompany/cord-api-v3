@@ -15,6 +15,7 @@ import { Privileges } from '../authorization';
 import { FileService } from '../file';
 import { type FileId } from '../file/dto';
 import { ProjectChangeRequest } from '../project-change-request/dto';
+import { BudgetLineItemService } from './budget-line-item.service';
 import { BudgetRecordRepository } from './budget-record.repository';
 import { BudgetRepository } from './budget.repository';
 import {
@@ -30,6 +31,7 @@ import {
   type UpdateBudget,
   type UpdateBudgetRecord,
 } from './dto';
+import { OtherPartnerContributionService } from './other-partner-contribution.service';
 
 @Injectable()
 export class BudgetService {
@@ -38,6 +40,8 @@ export class BudgetService {
     private readonly privileges: Privileges,
     private readonly budgetRepo: BudgetRepository,
     private readonly budgetRecordsRepo: BudgetRecordRepository,
+    private readonly lineItems: BudgetLineItemService,
+    private readonly otherPartnerContributions: OtherPartnerContributionService,
     private readonly resources: ResourceResolver,
   ) {}
 
@@ -118,12 +122,26 @@ export class BudgetService {
       ? await this.resources.lookup(ProjectChangeRequest, view.changeset)
       : undefined;
 
+    // budget-line-items-poc additions — same read-gating pattern as `records`
+    // above; empty list (not an error) when the requester can't read them.
+    const lineItems = privs.can('read', 'lineItems')
+      ? await this.lineItems.listByBudget(id)
+      : [];
+    const otherPartnerContributions = privs.can(
+      'read',
+      'otherPartnerContributions',
+    )
+      ? await this.otherPartnerContributions.listByBudget(id)
+      : [];
+
     return {
       ...privs.secure(result),
       // Show budget status as Pending, to allow budget record changes,
       // if we are in an editable change request.
       status: changeRequest?.canEdit ? BudgetStatus.Pending : result.status,
       records: records?.items || [],
+      lineItems,
+      otherPartnerContributions,
     };
   }
 

@@ -24,6 +24,13 @@ export const projectTransitions = () =>
     r.BudgetRecord.read
       .when(member)
       .edit.specifically((p) => [p.preApprovedAmount.read]),
+    // budget-line-items-poc: equivalent read/edit grant to Budget/BudgetRecord
+    // above, extended to also cover create/delete since these two resources
+    // (unlike Budget/BudgetRecord, see commit 430eeda0f) DO get CRUD
+    // mutations — see the final report's "reintroduces line-item-level CRUD"
+    // note.
+    r.BudgetLineItem.read.when(member).edit.create.delete,
+    r.OtherPartnerContribution.read.when(member).edit.create.delete,
     r.Ceremony.read,
     r.Directory.read.when(member).edit,
     r.Education.read,

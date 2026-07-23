@@ -4,3 +4,15 @@ export * from './list-budget.dto';
 export * from './budget.dto';
 export * from './budget-record.dto';
 export * from './update-budget.dto';
+// ── budget-line-items-poc additions ──
+export * from './budget-reference-country.dto';
+export * from './budget-shared.dto';
+export * from './budget-line-item.dto';
+export * from './create-budget-line-item.dto';
+export * from './update-budget-line-item.dto';
+export * from './delete-budget-line-item.dto';
+export * from './other-partner-contribution.dto';
+export * from './create-other-partner-contribution.dto';
+export * from './update-other-partner-contribution.dto';
+export * from './delete-other-partner-contribution.dto';
+export * from './budget-calculation-summary.dto';
