@@ -47,6 +47,13 @@ export interface BudgetCalcConfig {
 }
 
 export interface BudgetCalcLine {
+  /**
+   * `'header'` rows are visual section-dividers (description-only, no
+   * `account`) and are skipped entirely before contributing to any sum —
+   * ported 1:1 from the prototype's `compute()`: `if(ln.type==="header")
+   * return;`. Omit (or pass `'line'`) for normal calculation-bearing rows.
+   */
+  readonly type?: 'line' | 'header';
   readonly account: string;
   readonly costType: CostType;
   /** e.g. "Bible Translation" | "Other Costs" | null. */
@@ -302,6 +309,7 @@ export class BudgetCalculationService {
     const nonPrimaryCash = zeros(duration);
 
     for (const line of lines) {
+      if (line.type === 'header') continue;
       const amounts = padToLength(line.fiscalYearAmounts, duration);
       const isAdmin = line.account === ADMIN_FEE_ACCOUNT;
       const isCash = line.costType === 'Cash';

@@ -8,8 +8,11 @@ export abstract class UpdateBudgetLineItem {
   @IdField()
   readonly id: ID;
 
-  @NameField({ optional: true })
-  readonly account?: string;
+  @OptionalField(() => String)
+  readonly type?: string;
+
+  @NameField({ nullable: true })
+  readonly account?: string | null;
 
   @NameField({ nullable: true })
   readonly description?: string | null;

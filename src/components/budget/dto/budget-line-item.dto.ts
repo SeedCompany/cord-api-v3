@@ -5,6 +5,7 @@ import {
   type ID,
   Resource,
   type Secured,
+  SecuredInt,
   SecuredString,
   SecuredStringNullable,
 } from '~/common';
@@ -34,9 +35,27 @@ export class BudgetLineItem extends Resource {
   static readonly Parent = () => import('./budget.dto').then((m) => m.Budget);
 
   @Field({
-    description: 'The chart-of-accounts line this cost is booked to',
+    description: stripIndent`
+      Freeform, matching the field's fixed set of allowed values: \`line\` or
+      \`header\`. \`header\` rows are visual section dividers in the grid —
+      they carry only a \`description\` (\`account\` is null, and all other
+      fields are ignored) and contribute nothing to any calculated total. Not
+      a GraphQL enum — see \`costType\` for why.
+    `,
   })
-  readonly account: SecuredString;
+  readonly type: SecuredString;
+
+  @Field({
+    description:
+      'Stable ordering position within the budget, lowest first. Assigned server-side (current-max-plus-one) on create — not settable directly.',
+  })
+  readonly position: SecuredInt;
+
+  @Field({
+    description:
+      'The chart-of-accounts line this cost is booked to. Null for `header` rows.',
+  })
+  readonly account: SecuredStringNullable;
 
   @Field()
   readonly description: SecuredStringNullable;

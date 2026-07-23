@@ -266,4 +266,56 @@ describe('BudgetCalculationService', () => {
       expect(result?.grandTotal).toEqual([1500]);
     });
   });
+
+  describe('header lines', () => {
+    it('contributes nothing to any total, matching the prototype\'s `if(ln.type==="header") return;` early-exit', () => {
+      const config: BudgetCalcConfig = {
+        primaryFunderId: 'Seed Company',
+        startDate: '2025-10-01',
+        endDate: '2026-09-30',
+        sensitivity: 'Low',
+        country: null,
+        inflationRate: 0,
+        exchangeRate: 1,
+        entryCurrencyMode: 'USD',
+        displayCurrencyMode: 'USD',
+        languageCount: 1,
+        adminFeePercent: 0,
+      };
+      // A header row carries only a description in the prototype (no
+      // account, and — per this port's schema — no fiscal-year amounts
+      // either) but is asserted here with a nonzero amount and even the
+      // admin-fee account name to prove it's skipped unconditionally, not
+      // just incidentally zeroed out.
+      const headerLine: BudgetCalcLine = {
+        type: 'header',
+        account: ADMIN_FEE_ACCOUNT,
+        costType: 'Cash',
+        activity: 'Bible Translation',
+        funderId: 'Seed Company',
+        fiscalYearAmounts: [999999],
+      };
+      const normalLine: BudgetCalcLine = {
+        type: 'line',
+        account: 'Travel Expense',
+        costType: 'Cash',
+        activity: 'Other Costs',
+        funderId: null,
+        fiscalYearAmounts: [1000],
+      };
+
+      const withHeader = service.computeBudget(
+        config,
+        [headerLine, normalLine],
+        [],
+      );
+      const withoutHeader = service.computeBudget(config, [normalLine], []);
+
+      expect(withHeader?.grandTotal).toEqual([1000]);
+      expect(withHeader?.cash).toEqual([1000]);
+      expect(withHeader?.admin).toEqual([0]);
+      expect(withHeader?.bibleTranslationPercent).toBe(0);
+      expect(withHeader).toEqual(withoutHeader);
+    });
+  });
 });

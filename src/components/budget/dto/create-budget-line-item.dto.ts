@@ -8,8 +8,19 @@ export abstract class CreateBudgetLineItem {
   @IdField()
   readonly budget: ID<'Budget'>;
 
-  @Field()
-  readonly account: string;
+  @Field(() => String, {
+    nullable: true,
+    description:
+      "Defaults to 'line' if omitted. Use 'header' for a visual, description-only section-divider row.",
+  })
+  readonly type?: string;
+
+  @Field(() => String, {
+    nullable: true,
+    description:
+      'The chart-of-accounts line this cost is booked to. Omit for `header` rows.',
+  })
+  readonly account?: string;
 
   @Field(() => String, { nullable: true })
   readonly description?: string;

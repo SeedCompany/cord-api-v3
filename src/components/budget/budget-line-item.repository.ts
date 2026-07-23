@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { and, eq, inArray, isNull } from 'drizzle-orm';
+import { and, eq, inArray, isNull, max } from 'drizzle-orm';
 import { DateTime } from 'luxon';
 import {
   generateId,
@@ -43,10 +43,13 @@ export class BudgetLineItemRepository extends DrizzleDtoRepository<
 
   async create(input: CreateBudgetLineItem): Promise<ID> {
     const id = await generateId<ID<'BudgetLineItem'>>();
+    const position = await this.nextPosition(input.budget);
     await this.db.insert(budgetLineItems).values({
       id,
       budgetId: input.budget,
-      account: input.account,
+      type: input.type ?? 'line',
+      position,
+      account: input.account ?? null,
       description: input.description ?? null,
       costType: input.costType ?? 'Cash',
       budgetCategory: input.budgetCategory ?? 'Field Budget',
@@ -58,11 +61,30 @@ export class BudgetLineItemRepository extends DrizzleDtoRepository<
     return id;
   }
 
+  /**
+   * Current-max-plus-one ordering position for a new row in this budget —
+   * never accepted from the client (see `CreateBudgetLineItem`), assigned
+   * here to keep it a real, server-maintained ordered list.
+   */
+  private async nextPosition(budgetId: ID<'Budget'>): Promise<number> {
+    const [row] = await this.db
+      .select({ max: max(budgetLineItems.position) })
+      .from(budgetLineItems)
+      .where(
+        and(
+          eq(budgetLineItems.budgetId, budgetId),
+          isNull(budgetLineItems.deletedAt),
+        ),
+      );
+    return (row?.max ?? 0) + 1;
+  }
+
   async update(
     id: ID,
     changes: ChangesOf<BudgetLineItem, UpdateBudgetLineItem>,
   ): Promise<void> {
     await this.updateColumns(id, {
+      type: changes.type,
       account: changes.account,
       description: changes.description,
       costType: changes.costType,
@@ -106,7 +128,7 @@ export class BudgetLineItemRepository extends DrizzleDtoRepository<
           with: { project: { columns: { id: true } } },
         },
       },
-      orderBy: (li, { asc }) => [asc(li.createdAt), asc(li.id)],
+      orderBy: (li, { asc }) => [asc(li.position), asc(li.id)],
     });
     return await this.mapRows(rows as BudgetLineItemRow[]);
   }
@@ -146,6 +168,8 @@ export class BudgetLineItemRepository extends DrizzleDtoRepository<
       id: row.id,
       __typename: 'BudgetLineItem',
       createdAt: DateTime.fromJSDate(row.createdAt),
+      type: row.type,
+      position: row.position,
       account: row.account,
       description: row.description,
       costType: row.costType,

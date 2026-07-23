@@ -1566,6 +1566,16 @@ export const budgetReferenceCountries = pgTable('budget_reference_countries', {
   costOfLivingIndex: doublePrecision('cost_of_living_index'),
   indexMethodology: text('index_methodology'),
   adminFeeCap: doublePrecision('admin_fee_cap'),
+  // ISO 3166-1 alpha-3 code (e.g. "AFG"). Nullable — backfilled one-time by
+  // `drizzle:backfill-budget-reference-country-iso` (budget-line-items-poc
+  // phase 2) via `iso-3166-1`'s reverse name lookup, hand-resolved where the
+  // name doesn't match ISO's official short name (see that script's
+  // `MANUAL_ISO_ALPHA3_OVERRIDES` map for the full list and reasoning). This
+  // becomes the join key to derive a budget's country from
+  // `Project.primaryLocation.isoAlpha3` in a later phase — this table's own
+  // `name` does not reliably match ISO country names, so name-matching at
+  // query time isn't viable.
+  isoAlpha3: text('iso_alpha3'),
   createdAt: timestamp('created_at', { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -1714,6 +1724,21 @@ export const budgetRecordsRelations = relations(budgetRecords, ({ one }) => ({
  * for BudgetRecord/FundingAccount to key off of). `fiscal_year_amounts` is a
  * JSON object keyed by fiscal year number as a string, e.g.
  * `{ "2025": 3000000, "2026": 4000000 }`.
+ *
+ * `type` distinguishes normal calculation-bearing rows ("line") from
+ * visual-divider/section-header rows ("header") — matching the prototype's
+ * header rows, which carry only a `description` and no other data and are
+ * skipped entirely by the calc engine (see
+ * `BudgetCalculationService.computeBudget`). Plain text, not a pg enum, per
+ * the fixed-value-set convention noted above for `cost_type` etc.
+ *
+ * `position` is a stable, client-assigned-order integer maintained by the
+ * service layer (current-max-plus-one per budget on create) — never accepted
+ * directly from the client, same reasoning as any real ordered list.
+ *
+ * `account` is nullable: header rows have no account (matching the
+ * prototype's `acct: ""` convention, but stored as `NULL` here rather than
+ * empty string).
  */
 export const budgetLineItems = pgTable(
   'budget_line_items',
@@ -1723,7 +1748,10 @@ export const budgetLineItems = pgTable(
       .$type<ID<'Budget'>>()
       .notNull()
       .references(() => budgets.id, { onDelete: 'cascade' }),
-    account: text('account').notNull(),
+    // 'line' | 'header' — see doc comment above.
+    type: text('type').notNull().default('line'),
+    position: integer('position').notNull(),
+    account: text('account'),
     description: text('description'),
     // 'Cash' | 'In-Kind' — plain text, see entry_currency_mode note above.
     costType: text('cost_type').notNull().default('Cash'),

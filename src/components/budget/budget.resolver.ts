@@ -177,6 +177,7 @@ export class BudgetResolver {
     };
 
     const lines: BudgetCalcLine[] = budget.lineItems.map((li) => ({
+      type: (li.type.value as 'line' | 'header' | undefined) ?? 'line',
       account: li.account.value ?? '',
       costType: (li.costType.value as CostType | undefined) ?? 'Cash',
       activity: li.activity.value ?? null,
