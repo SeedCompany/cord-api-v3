@@ -161,7 +161,10 @@ export class LanguageService {
     });
 
     await this.hooks.run(
-      new ResourceMutatedHook('Language', updated.id, 'Update', changes),
+      new ResourceMutatedHook('Language', updated.id, 'Update', {
+        ...changes,
+        ...(ethnologueUpdate ? { ethnologue: ethnologueUpdate.updated } : {}),
+      }),
     );
 
     return {

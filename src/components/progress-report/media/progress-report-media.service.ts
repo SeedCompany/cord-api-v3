@@ -112,7 +112,12 @@ export class ProgressReportMediaService {
     };
     loader.prime(id, updated);
     await this.hooks.run(
-      new ResourceMutatedHook('ProgressReportMedia', input.id, 'Update'),
+      new ResourceMutatedHook(
+        'ProgressReportMedia',
+        input.id,
+        'Update',
+        category !== undefined ? { category } : undefined,
+      ),
     );
 
     return updated;

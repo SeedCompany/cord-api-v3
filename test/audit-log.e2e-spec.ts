@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from '@jest/globals';
 import { sql } from 'drizzle-orm';
-import { generateId, Role } from '~/common';
+import { CalendarDate, generateId, Role } from '~/common';
 import { DrizzleService } from '~/core/drizzle';
 import { graphql } from '~/graphql';
 import { ResourceMutationRepository } from '../src/components/audit/resource-mutation.repository';
@@ -134,6 +134,8 @@ describe('Audit log (resource_mutations) e2e', () => {
     const engagement = await createLanguageEngagement(app, {
       project: project.id,
       language: language.id,
+      startDateOverride: CalendarDate.fromISO('1991-01-01').toISO(),
+      endDateOverride: CalendarDate.fromISO('1992-01-01').toISO(),
     });
 
     const { engagement: read } = await app.graphql.query(EngagementHistoryDoc, {
@@ -155,6 +157,8 @@ describe('Audit log (resource_mutations) e2e', () => {
     const engagement = await createLanguageEngagement(app, {
       project: project.id,
       language: language.id,
+      startDateOverride: CalendarDate.fromISO('1991-01-01').toISO(),
+      endDateOverride: CalendarDate.fromISO('1992-01-01').toISO(),
     });
     const product = await createDirectProduct(app, {
       engagement: engagement.id,

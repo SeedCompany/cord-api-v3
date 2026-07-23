@@ -67,10 +67,12 @@ export class CommentService {
       throw new CreationFailed(Comment, { cause: exception });
     }
 
+    // Audit the creation before firing downstream notifications, so a
+    // notification failure can't prevent the mutation from being recorded.
+    await this.hooks.run(new ResourceMutatedHook('Comment', dto.id, 'Create'));
+
     const mentionees = this.mentionNotificationService.extract(dto);
     await this.mentionNotificationService.notify(mentionees, dto);
-
-    await this.hooks.run(new ResourceMutatedHook('Comment', dto.id, 'Create'));
 
     return this.secureComment(dto);
   }

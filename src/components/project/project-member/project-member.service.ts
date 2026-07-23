@@ -76,9 +76,13 @@ export class ProjectMemberService {
       at: created.createdAt,
     });
 
-    await this.hooks.run(
-      new ResourceMutatedHook('ProjectMember', created.id, 'Create'),
-    );
+    // Only audit user-driven memberships; system-created ones (enforcePerms
+    // false) aren't part of the user-facing mutation history.
+    if (enforcePerms) {
+      await this.hooks.run(
+        new ResourceMutatedHook('ProjectMember', created.id, 'Create'),
+      );
+    }
 
     return this.secure(created);
   }

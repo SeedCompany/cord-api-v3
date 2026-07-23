@@ -27,6 +27,16 @@ export class AuditService {
     if (this.config.databaseEngine !== 'postgres') {
       return;
     }
+    // A no-op update (nothing actually changed) isn't worth an audit row.
+    // Centralized here so every firing service is covered without each having
+    // to guard its own empty-changes case. Creates/deletes always record —
+    // they carry no change set by design.
+    if (
+      hook.action === 'Update' &&
+      (hook.changes == null || Object.keys(hook.changes).length === 0)
+    ) {
+      return;
+    }
     // Only a logged-in *user* is a valid actor. Anonymous sessions carry the
     // Anonymous SystemAgent's id (registration/bootstrap flows), which lives in
     // `system_agents`, not `users` — storing it would violate the actor FK.
