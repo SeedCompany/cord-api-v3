@@ -96,7 +96,6 @@ export class BudgetResolver {
    * Reusing that name for the calc engine's rollup would either collide with
    * or silently change that existing field's type, which is a bigger,
    * unrequested breaking change than adding a clearly-named sibling field.
-   * See the final report's deviations section.
    */
   @ResolveField(() => BudgetCalculationSummary, {
     nullable: true,
@@ -157,7 +156,7 @@ export class BudgetResolver {
       // fallback); only lines that set an explicit, different `funder`
       // would be mis-treated, and none can be today since nothing can ever
       // equal this placeholder. Wire this through once primaryPartnership
-      // hydration lands upstream — flagged in the final report.
+      // hydration lands upstream (see project.drizzle.repository.ts).
       primaryFunderId: '',
       startDate: startDate.toISODate()!,
       endDate: endDate.toISODate()!,
