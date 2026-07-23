@@ -1732,7 +1732,7 @@ export const budgetRecordsRelations = relations(budgetRecords, ({ one }) => ({
  * `BudgetCalculationService.computeBudget`). Plain text, not a pg enum, per
  * the fixed-value-set convention noted above for `cost_type` etc.
  *
- * `position` is a stable, client-assigned-order integer maintained by the
+ * `position` is a stable, server-assigned ordering integer maintained by the
  * service layer (current-max-plus-one per budget on create) — never accepted
  * directly from the client, same reasoning as any real ordered list.
  *
