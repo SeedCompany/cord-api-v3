@@ -103,9 +103,11 @@ describe('Comment e2e', () => {
   // ProgressReport and rejected this valid commentable under DATABASE=postgres.
   it('creates a comment on a ProgressReport parent', async () => {
     await runAsAdmin(app, async (a) => {
+      const mouStart = CalendarDate.local(2023, 1, 1);
+      const mouEnd = mouStart.plus({ years: 1 });
       const project = await createProject(a, {
-        mouStart: CalendarDate.local(2023, 1, 1).toISO(),
-        mouEnd: CalendarDate.local(2024, 1, 1).toISO(),
+        mouStart: mouStart.toISO(),
+        mouEnd: mouEnd.toISO(),
       });
       const language = await createLanguage(a);
       const { createEng } = await a.graphql.mutate(CreateLangEngForCommentDoc, {
@@ -113,8 +115,8 @@ describe('Comment e2e', () => {
           project: project.id,
           language: language.id,
           // Match the project MOU window so progress reports land in-window.
-          startDateOverride: CalendarDate.local(2023, 1, 1).toISO(),
-          endDateOverride: CalendarDate.local(2024, 1, 1).toISO(),
+          startDateOverride: mouStart.toISO(),
+          endDateOverride: mouEnd.toISO(),
         },
       });
       const reportId = createEng.engagement.progressReports.items[0]!.id;

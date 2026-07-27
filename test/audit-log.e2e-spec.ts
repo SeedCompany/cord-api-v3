@@ -27,6 +27,10 @@ const isPostgres = process.env.DATABASE === 'postgres';
 describe('Audit log (resource_mutations) e2e', () => {
   let app: TestApp;
   let project: fragments.project;
+  // Engagement window shared by the polymorphic-history cases below; the end is
+  // derived from the start so the two dates can't drift apart.
+  const engStart = CalendarDate.local(1991, 1, 1);
+  const engEnd = engStart.plus({ years: 1 });
 
   beforeAll(async () => {
     app = await createTestApp();
@@ -134,8 +138,8 @@ describe('Audit log (resource_mutations) e2e', () => {
     const engagement = await createLanguageEngagement(app, {
       project: project.id,
       language: language.id,
-      startDateOverride: CalendarDate.fromISO('1991-01-01').toISO(),
-      endDateOverride: CalendarDate.fromISO('1992-01-01').toISO(),
+      startDateOverride: engStart.toISO(),
+      endDateOverride: engEnd.toISO(),
     });
 
     const { engagement: read } = await app.graphql.query(EngagementHistoryDoc, {
@@ -157,8 +161,8 @@ describe('Audit log (resource_mutations) e2e', () => {
     const engagement = await createLanguageEngagement(app, {
       project: project.id,
       language: language.id,
-      startDateOverride: CalendarDate.fromISO('1991-01-01').toISO(),
-      endDateOverride: CalendarDate.fromISO('1992-01-01').toISO(),
+      startDateOverride: engStart.toISO(),
+      endDateOverride: engEnd.toISO(),
     });
     const product = await createDirectProduct(app, {
       engagement: engagement.id,
