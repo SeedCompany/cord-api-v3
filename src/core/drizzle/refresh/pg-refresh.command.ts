@@ -64,6 +64,16 @@ export class PgRefreshCommand extends Command {
       return 1;
     }
 
+    // Gate before any destructive step: with no loaders a refresh would drop
+    // the data and reload nothing, leaving the database empty.
+    if (!this.etl.ready) {
+      this.context.stdout.write(
+        'Refusing to run: no ETL domain loaders are registered, so a refresh ' +
+          'would wipe the database and load nothing.\n',
+      );
+      return 1;
+    }
+
     if (this.fresh) {
       this.context.stdout.write(
         'Dropping schema (data + migration history)…\n',

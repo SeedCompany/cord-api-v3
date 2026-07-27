@@ -50,18 +50,24 @@ export class PgEtlService {
    *
    * TODO(cutover): implement a `DomainLoader` per ported domain and add it
    * here (or refactor to discover them from the feature modules, like the
-   * command discovery does). Until then this list is empty and `run()` copies
-   * nothing — so the command still exercises the wipe + migrate path safely.
+   * command discovery does). While this list is empty, {@link ready} is false
+   * and the refresh command refuses to run — a refresh that dropped the data
+   * and reloaded nothing would be worse than not running at all.
    */
   private readonly loaders: DomainLoader[] = [];
 
+  /**
+   * Whether any domain loaders are registered. When false a refresh would wipe
+   * the database and load nothing, so callers must refuse before dropping.
+   */
+  get ready(): boolean {
+    return this.loaders.length > 0;
+  }
+
   async run(source: EtlSource): Promise<void> {
-    if (this.loaders.length === 0) {
-      this.logger.warning(
-        'No domain loaders registered — schema was rebuilt but NO data was copied. ' +
-          'Implement DomainLoader(s) and register them in PgEtlService.loaders.',
-      );
-      return;
+    if (!this.ready) {
+      // Defensive: callers gate on `ready` before dropping the schema.
+      throw new Error('No ETL domain loaders registered');
     }
 
     this.logger.info('Starting Neo4j → Postgres load', {
