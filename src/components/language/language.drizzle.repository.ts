@@ -37,6 +37,7 @@ import {
 } from '~/core/drizzle/schema';
 import { type ScopedRole } from '../authorization/dto/role.dto';
 import { PolicyExecutor } from '../authorization/policy/executor/policy-executor';
+import { pinnedByRequester, pinnedFilter } from '../pin/pinned-by-requester';
 import { requesterScopeByProject } from '../project/project-member/membership-scope';
 import { recomputeProjectSensitivity } from '../project/project.drizzle.repository';
 import {
@@ -201,10 +202,16 @@ export class LanguageDrizzleRepository extends DrizzleDtoRepository<
       with: { ethnologue: true },
     });
     const derived = await this.engagementDerived(rows.map((r) => r.id));
-    // migration-todo (Pin recut): restore the pinnedByRequester batch;
-    // pinned hardcodes false until then.
+    const pinnedSet = await pinnedByRequester(
+      this.db,
+      this.identity.current.userId,
+      rows.map((r) => r.id),
+    );
     return (rows as LanguageRow[]).map((row) =>
-      this.toDto({ ...row, pinned: false }, derived.get(row.id)),
+      this.toDto(
+        { ...row, pinned: pinnedSet.has(row.id) },
+        derived.get(row.id),
+      ),
     );
   }
 
@@ -464,13 +471,13 @@ interface EngagementDerived {
 export const languageFilterClauses = (
   db: DrizzleDb,
   filter: LanguageFilters | undefined,
-  _requesterId?: ID<'User'>,
+  requesterId?: ID<'User'>,
 ): SQL[] => {
   const conditions: SQL[] = [];
   if (!filter) return conditions;
-  // migration-todo (Pin recut): restore the pinnedFilter branch; until the
-  // pins table lands the filter is ignored (Project/Partner recut posture).
-
+  if (filter.pinned != null) {
+    conditions.push(pinnedFilter(requesterId, languages.id, filter.pinned));
+  }
   if (filter.name) {
     const pattern = `%${escapeLikePattern(filter.name)}%`;
     conditions.push(

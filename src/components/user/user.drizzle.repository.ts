@@ -29,6 +29,7 @@ import {
 import { PolicyExecutor } from '../authorization/policy/executor/policy-executor';
 import { FileService } from '../file';
 import { type FileId } from '../file/dto';
+import { pinnedByRequester } from '../pin/pinned-by-requester';
 import {
   type AssignOrganizationToUser,
   type CreatePerson,
@@ -43,6 +44,7 @@ import {
 type UserRow = typeof users.$inferSelect & {
   globalRoles?: Array<typeof userGlobalRoles.$inferSelect>;
   isIntern?: boolean;
+  pinned?: boolean;
 };
 
 const catchEmailUnique = catchUniqueViolation(
@@ -76,8 +78,17 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
       }),
       this.internUserIds(ids),
     ]);
+    const pinnedSet = await pinnedByRequester(
+      this.db,
+      this.identity.currentMaybe?.userId,
+      rows.map((r) => r.id),
+    );
     return rows.map((row) =>
-      this.toDto({ ...row, isIntern: interns.has(row.id) }),
+      this.toDto({
+        ...row,
+        isIntern: interns.has(row.id),
+        pinned: pinnedSet.has(row.id),
+      }),
     );
   }
 
@@ -255,6 +266,11 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
       this.internUserIds(ids),
     ]);
     const rolesByUser = groupBy(allRoles, (row) => row.userId);
+    const pinnedSet = await pinnedByRequester(
+      this.db,
+      this.identity.currentMaybe?.userId,
+      ids,
+    );
 
     return {
       total,
@@ -263,6 +279,7 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
           ...row,
           globalRoles: rolesByUser[row.id] ?? [],
           isIntern: interns.has(row.id),
+          pinned: pinnedSet.has(row.id),
         }),
       ),
       hasMore,
@@ -377,8 +394,9 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
       title: row.title ?? null,
       gender: row.gender ?? null,
       photo: row.photoId ? { id: row.photoId } : null,
-      // migration-todo: pinned is per-requesting-user state, not stored on the user row
-      pinned: false,
+      // Per-requester pin state — populated by readMany/list via
+      // pinnedByRequester; other internal paths (actors, byEmail) leave it false.
+      pinned: row.pinned ?? false,
       isIntern: row.isIntern,
     };
   }

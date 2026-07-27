@@ -16,6 +16,12 @@ export class CommentViaMentionNotificationService {
     mentionees: ReadonlyArray<ID<'User'>>,
     comment: UnsecuredDto<Comment>,
   ) {
+    // Nothing to notify — skip the no-op create. (The Neo4j notification repo
+    // returns undefined for an empty recipient set, which would otherwise throw
+    // in NotificationService.create.)
+    if (mentionees.length === 0) {
+      return;
+    }
     await this.notifications.create(CommentViaMentionNotification, mentionees, {
       comment: comment.id,
     });

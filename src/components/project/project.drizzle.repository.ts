@@ -59,6 +59,7 @@ import {
   locationFilterClauses,
   locationSortColumns,
 } from '../location/location.drizzle.repository';
+import { pinnedByRequester, pinnedFilter } from '../pin/pinned-by-requester';
 import {
   type CreateProject,
   IProject,
@@ -88,6 +89,7 @@ const catchDepartmentIdUnique = catchUniqueViolation(
  */
 type ProjectRow = typeof projects.$inferSelect & {
   engagementTotal?: number;
+  pinned?: boolean;
   /** Latest workflow-event `at`, if any — batched in `readMany`. */
   stepChangedAt?: Date | null;
   membership?: {
@@ -219,14 +221,18 @@ export class ProjectDrizzleRepository extends DrizzleDtoRepository<
     const engagementTotalByProject = new Map(
       engagementCounts.map((c) => [c.projectId, c.total]),
     );
-    // migration-todo: `pinned` dropped — Pin isn't migrated; re-add the
-    // pinnedByRequester batch when the pin domain ports.
+    const pinnedSet = await pinnedByRequester(
+      this.db,
+      userId,
+      rows.map((r) => r.id),
+    );
     return rows.map((row): UnsecuredDto<Project> => {
       const enriched: ProjectRow = {
         ...row,
         membership: membershipByProject.get(row.id) ?? null,
         stepChangedAt: stepChangedByProject.get(row.id) ?? null,
         engagementTotal: engagementTotalByProject.get(row.id) ?? 0,
+        pinned: pinnedSet.has(row.id),
       };
       return this.toDto(enriched);
     });
@@ -520,9 +526,9 @@ export class ProjectDrizzleRepository extends DrizzleDtoRepository<
       // context, not stored on the row. PCR is excluded from the migration,
       // so it stays undefined here.
       changeset: undefined,
-      // migration-todo: Pin not migrated; pinned is false until the pin domain
-      // ports (then re-add the pinnedByRequester batch in readMany).
-      pinned: false,
+      // Per-requester pin state — populated by readMany via pinnedByRequester;
+      // other internal paths leave it false.
+      pinned: row.pinned ?? false,
       // canDelete is populated by the policy layer in the service.
       canDelete: true,
       // Scoped roles from the requesting user's active membership — the
@@ -657,9 +663,7 @@ const resolveCrossDomainSort = (
 export const projectFilterClauses = (
   db: DrizzleDb,
   filter: ProjectFilters | undefined,
-  // migration-todo: dead after the pin strip; kept for signature stability.
-  // list() still passes identity.current.userId harmlessly. Re-consume when Pin ports.
-  _requesterId?: ID<'User'>,
+  requesterId?: ID<'User'>,
 ): SQL[] => {
   const conditions: SQL[] = [];
   if (!filter) return conditions;
@@ -886,12 +890,7 @@ export const projectFilterClauses = (
     );
   }
   if (filter.pinned != null) {
-    // migration-todo: Pin not migrated. Re-add
-    // `conditions.push(pinnedFilter(_requesterId, projects.id, filter.pinned))`
-    // when the pin domain ports. Throw for now (matches the branches above).
-    throw new NotImplementedException(
-      'ProjectFilters.pinned requires Pin migration.',
-    );
+    conditions.push(pinnedFilter(requesterId, projects.id, filter.pinned));
   }
   return conditions;
 };
