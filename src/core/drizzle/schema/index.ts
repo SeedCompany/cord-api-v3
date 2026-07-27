@@ -17,7 +17,12 @@ import {
   timestamp,
   uniqueIndex,
 } from 'drizzle-orm/pg-core';
-import { type ID, type Range, type Role } from '~/common';
+import {
+  type ID,
+  type Range,
+  type RichTextDocument,
+  type Role,
+} from '~/common';
 import { type BudgetStatus } from '../../../components/budget/dto/budget-status.enum';
 import { type CeremonyType } from '../../../components/ceremony/dto/ceremony-type.enum';
 import { type InternshipPosition } from '../../../components/engagement/dto/intern-position.enum';
@@ -33,6 +38,8 @@ import { type FinancialReportingType } from '../../../components/partnership/dto
 import { type PartnershipAgreementStatus } from '../../../components/partnership/dto/partnership-agreement-status.enum';
 import { type ReportPeriod } from '../../../components/periodic-report/dto/report-period.enum';
 import { type ReportType } from '../../../components/periodic-report/dto/report-type.enum';
+import { type PostType } from '../../../components/post/dto/post-type.enum';
+import { type PostShareability } from '../../../components/post/dto/shareability.dto';
 import { type ProductMedium } from '../../../components/product/dto/product-medium.enum';
 import { type ProductMethodology } from '../../../components/product/dto/product-methodology.enum';
 import { type ProductPurpose } from '../../../components/product/dto/product-purpose.enum';
@@ -44,6 +51,7 @@ import { type ProjectStep } from '../../../components/project/dto/project-step.e
 import { type ProjectType } from '../../../components/project/dto/project-type.enum';
 import { type ToolKey } from '../../../components/tools/tool/dto/tool-key.enum';
 import { type Gender } from '../../../components/user/dto/gender.enum';
+import { type LanguageProficiency } from '../../../components/user/dto/language-proficiency.enum';
 import { int4multirange } from '../int4-multirange';
 
 export const userStatusEnum = pgEnum('user_status', ['Active', 'Disabled']);
@@ -1488,10 +1496,12 @@ export const notifications = pgTable(
     // System
     message: text('message'),
     // CommentViaMention. FK-less for now — the comments table lands in a later
-    // Phase 6 migration.
-    // migration-todo: add `.references(() => comments.id, { onDelete: 'cascade' })`
-    // once the comments table exists (Comments domain port).
-    commentId: text('comment_id').$type<ID<'Comment'>>(),
+    // Phase 6 migration. FK to comments added with the Comments migration
+    // (0024) — a deferred (thunked) reference since `comments` is declared
+    // later in this file.
+    commentId: text('comment_id')
+      .$type<ID<'Comment'>>()
+      .references(() => comments.id, { onDelete: 'cascade' }),
   },
   (t) => [
     index('notifications_created_at_idx').on(t.createdAt),
@@ -2505,5 +2515,176 @@ export const progressSummaries = pgTable(
       t.reportId,
       t.period,
     ),
+  ],
+);
+
+// ─── Pins ──────────────────────────────────────────────────────────────────
+
+/**
+ * Per-user pins over any resource. `resource_id` is FK-less because a user can
+ * pin any Pinnable (Project, Language, Partner, User, …) which span tables —
+ * same rationale as prompt_variant_responses.parent_id. The composite PK makes
+ * pin/unpin idempotent and the per-requester `pinned` field lookup a PK hit.
+ */
+export const pins = pgTable(
+  'pins',
+  {
+    userId: text('user_id')
+      .$type<ID<'User'>>()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    resourceId: text('resource_id').$type<ID>().notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.resourceId] })],
+);
+
+// ─── Known Languages ─────────────────────────────────────────────────────────
+
+export const languageProficiencyEnum = pgEnum('language_proficiency', [
+  'Beginner',
+  'Conversational',
+  'Skilled',
+  'Fluent',
+]);
+
+/**
+ * A user's known languages, at a proficiency level. A user may know a
+ * language at more than one proficiency (the Neo4j create only replaces the
+ * exact (user, language, proficiency) edge), so the PK spans all three and
+ * create is an idempotent ON CONFLICT DO NOTHING.
+ */
+export const knownLanguages = pgTable(
+  'known_languages',
+  {
+    userId: text('user_id')
+      .$type<ID<'User'>>()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    languageId: text('language_id')
+      .$type<ID<'Language'>>()
+      .notNull()
+      .references(() => languages.id, { onDelete: 'cascade' }),
+    proficiency: languageProficiencyEnum('proficiency')
+      .$type<LanguageProficiency>()
+      .notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.userId, t.languageId, t.proficiency] }),
+    index('known_languages_user_id_idx').on(t.userId),
+    index('known_languages_language_id_idx').on(t.languageId),
+  ],
+);
+
+// ─── Comments ────────────────────────────────────────────────────────────────
+
+/**
+ * A comment thread attached to any Commentable resource. `parent_id` is
+ * FK-less and polymorphic (User/Language/Partner/Project/Engagement/
+ * ProgressReport span tables, same rationale as
+ * prompt_variant_responses.parent_id); `parent_type` is the discriminator used
+ * to rebuild the parent's fake BaseNode at read time.
+ */
+export const commentThreads = pgTable(
+  'comment_threads',
+  {
+    id: text('id').$type<ID<'CommentThread'>>().primaryKey(),
+    parentId: text('parent_id').$type<ID>().notNull(),
+    parentType: text('parent_type').notNull(),
+    creatorId: text('creator_id')
+      .$type<ID<'User'>>()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index('comment_threads_parent_id_idx').on(t.parentId),
+    index('comment_threads_creator_id_idx').on(t.creatorId),
+  ],
+);
+
+/**
+ * Comments hang off a thread. Hard DELETE (no soft-delete): deleting the
+ * thread's first comment deletes the thread row, and the cascade removes the
+ * rest — matching CommentService.delete.
+ */
+export const comments = pgTable(
+  'comments',
+  {
+    id: text('id').$type<ID<'Comment'>>().primaryKey(),
+    threadId: text('thread_id')
+      .$type<ID<'CommentThread'>>()
+      .notNull()
+      .references(() => commentThreads.id, { onDelete: 'cascade' }),
+    creatorId: text('creator_id')
+      .$type<ID<'User'>>()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    body: jsonb('body').$type<RichTextDocument>().notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    modifiedAt: timestamp('modified_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index('comments_thread_id_idx').on(t.threadId),
+    index('comments_creator_id_idx').on(t.creatorId),
+  ],
+);
+
+// ─── Posts ───────────────────────────────────────────────────────────────────
+
+export const postTypeEnum = pgEnum('post_type', ['Note', 'Story', 'Prayer']);
+
+// 5-value to match Neo4j exactly: 'ProjectTeam' is a deprecated alias for
+// 'Membership' and is stored verbatim.
+// migration-todo: post-cutover, consider collapsing 'ProjectTeam' -> 'Membership'.
+export const postShareabilityEnum = pgEnum('post_shareability', [
+  'Membership',
+  'ProjectTeam',
+  'Internal',
+  'AskToShareExternally',
+  'External',
+]);
+
+/**
+ * Posts attach to any Postable resource (Language/Partner/Project) via a
+ * polymorphic FK-less parent_id + parent_type discriminator. Membership
+ * shareability is enforced in the repo against project_members.
+ */
+export const posts = pgTable(
+  'posts',
+  {
+    id: text('id').$type<ID<'Post'>>().primaryKey(),
+    parentId: text('parent_id').$type<ID>().notNull(),
+    parentType: text('parent_type').notNull(),
+    creatorId: text('creator_id')
+      .$type<ID<'User'>>()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    type: postTypeEnum('type').$type<PostType>().notNull(),
+    shareability: postShareabilityEnum('shareability')
+      .$type<PostShareability>()
+      .notNull(),
+    body: text('body').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    modifiedAt: timestamp('modified_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index('posts_parent_id_idx').on(t.parentId),
+    index('posts_creator_id_idx').on(t.creatorId),
   ],
 );
