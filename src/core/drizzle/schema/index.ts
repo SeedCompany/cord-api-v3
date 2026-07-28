@@ -2582,6 +2582,45 @@ export const knownLanguages = pgTable(
   ],
 );
 
+// ─── Partnership Producing Mediums ───────────────────────────────────────────
+
+/**
+ * Which Partnership is responsible for producing each ProductMedium on a
+ * LanguageEngagement. In Neo4j this is a `PartnershipProducingMedium`
+ * relationship carrying `medium` as a relationship property; here it is a plain
+ * association row.
+ *
+ * Hard-deleted on reassignment (no `deleted_at`) — it's a pure assignment and
+ * the Neo4j deactivation was relationship-property history, not retention.
+ * The composite PK enforces one partnership per (engagement, medium).
+ *
+ * The set of *available* mediums is not stored: it's derived at read time from
+ * the engagement's products' `mediums` arrays.
+ */
+export const partnershipProducingMediums = pgTable(
+  'partnership_producing_mediums',
+  {
+    engagementId: text('engagement_id')
+      .$type<ID<'Engagement'>>()
+      .notNull()
+      .references(() => engagements.id, { onDelete: 'cascade' }),
+    medium: productMediumEnum('medium').$type<ProductMedium>().notNull(),
+    partnershipId: text('partnership_id')
+      .$type<ID<'Partnership'>>()
+      .notNull()
+      .references(() => partnerships.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.engagementId, t.medium] }),
+    index('partnership_producing_mediums_partnership_id_idx').on(
+      t.partnershipId,
+    ),
+  ],
+);
+
 // ─── Comments ────────────────────────────────────────────────────────────────
 
 /**
