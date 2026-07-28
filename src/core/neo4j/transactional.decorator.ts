@@ -1,10 +1,10 @@
 import { Inject } from '@nestjs/common';
-import { Connection } from 'cypher-query-builder';
+import { TransactionRunner } from '~/core/database/transaction-runner';
 import { type TransactionOptions } from './transaction';
 
 type AsyncFn = (...args: any[]) => Promise<any>;
 
-const ConnKey = Symbol('DbConnectionForTransactions');
+const RunnerKey = Symbol('DbTransactionRunner');
 
 /**
  * Ensure the method is ran in a transaction.
@@ -13,7 +13,10 @@ const ConnKey = Symbol('DbConnectionForTransactions');
  * Note that code can be executed multiple times when retrying transient errors.
  * The code executed should be idempotent.
  *
- * This is just a shortcut for calling `Connection.runInTransaction()`.
+ * The transaction is established on whichever database engine is active — see
+ * {@link TransactionRunner}. This previously injected the Neo4j `Connection`
+ * directly, which meant decorated methods hit Neo4j regardless of `DATABASE`,
+ * bypassing `splitDb`.
  */
 export function Transactional(options?: TransactionOptions) {
   return ((
@@ -21,12 +24,12 @@ export function Transactional(options?: TransactionOptions) {
     methodName: string | symbol,
     descriptor: TypedPropertyDescriptor<AsyncFn>,
   ) => {
-    // Use property-based injection to get access to the db connection object
-    // at a known location.
-    if (target[ConnKey] === undefined) {
-      Inject(Connection)(target, ConnKey);
+    // Use property-based injection to get access to the runner at a known
+    // location.
+    if (target[RunnerKey] === undefined) {
+      Inject(TransactionRunner)(target, RunnerKey);
       // ensure prop injection is only done once.
-      target[ConnKey] = null;
+      target[RunnerKey] = null;
     }
 
     const clsName: string = target.constructor.name;
@@ -36,21 +39,18 @@ export function Transactional(options?: TransactionOptions) {
         : methodName;
     const initiator = `${clsName}.${methodDescription}`;
 
-    // Wrap the method in a runInTransaction call
+    // Wrap the method in a transaction
     const origMethod = descriptor.value!;
     descriptor.value = async function (...args: any[]) {
       // @ts-expect-error this works but TS still has problems with indexing on symbols
-      const connection: Connection = this[ConnKey];
-      return await connection.runInTransaction(
-        () => origMethod.apply(this, args),
-        {
-          ...options,
-          metadata: {
-            initiator,
-            ...options?.metadata,
-          },
+      const runner: TransactionRunner = this[RunnerKey];
+      return await runner.inTx(() => origMethod.apply(this, args), {
+        ...options,
+        metadata: {
+          initiator,
+          ...options?.metadata,
         },
-      );
+      });
     };
   }) as MethodDecorator;
 }
