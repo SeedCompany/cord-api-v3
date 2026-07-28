@@ -2,6 +2,7 @@ import { Info, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { Fields, IsOnlyId, Resource } from '~/common';
 import { Identity } from '~/core/authentication';
+import { isBaseNode } from '~/core/neo4j/results';
 import { ResourceLoader, ResourceResolver } from '~/core/resources';
 import { ChangesetResolver } from './changeset.resolver';
 import { Changeset, ChangesetAware, ChangesetDiff } from './dto';
@@ -33,14 +34,26 @@ export class ChangesetAwareResolver {
     if (!object.parent) {
       return null;
     }
+    // migration-todo: drop this normalization at Phase 7 cutover — it exists
+    // only because the Neo4j/Gel repos hand over a raw graph node. Postgres
+    // repos already emit the typed ref, so under PG this is a no-op.
+    const ref = isBaseNode(object.parent)
+      ? {
+          __typename: this.resourceResolver.resolveTypeByBaseNode(
+            object.parent,
+          ),
+          id: object.parent.properties.id,
+        }
+      : object.parent;
+
     if (isOnlyId) {
       return {
-        __typename: this.resourceResolver.resolveTypeByBaseNode(object.parent),
-        id: object.parent.properties.id,
+        __typename: ref.__typename,
+        id: ref.id,
         changeset: object.changeset,
       };
     }
-    return await this.resources.loadByBaseNode(object.parent);
+    return await this.resources.loadByRef(ref);
   }
 
   @ResolveField(() => ChangesetDiff, {
