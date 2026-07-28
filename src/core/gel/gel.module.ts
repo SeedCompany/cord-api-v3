@@ -64,7 +64,9 @@ import './errors';
     splitDb(IdResolver, { gel: AliasIdResolver }),
     GelWarningHandler,
   ],
-  exports: [Gel, Client, IdResolver],
+  // TransactionContext is exported so the engine-agnostic TransactionRunner
+  // can inject it.
+  exports: [Gel, Client, IdResolver, TransactionContext],
 })
 export class GelModule implements OnModuleDestroy {
   constructor(private readonly client: Client) {}
