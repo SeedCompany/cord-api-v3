@@ -2582,6 +2582,63 @@ export const knownLanguages = pgTable(
   ],
 );
 
+// ─── Tool Usages ─────────────────────────────────────────────────────────────
+
+/**
+ * A container (Project or Engagement) using a Tool. The Neo4j ToolUsage node
+ * plus its `uses`/`tool`/`creator` relationships collapse to this row.
+ *
+ * `containerId` is polymorphic and FK-less (spans projects + engagements, same
+ * rationale as commentThreads.parentId); `containerType` holds the CONCRETE
+ * __typename (e.g. 'LanguageEngagement') so reads emit a typed resource ref
+ * without probing candidate tables. The GraphQL `ToolContainerType` enum is the
+ * normalized bucket ('Engagement' | 'Project') and is derived from this, not
+ * stored.
+ */
+export const toolUsages = pgTable(
+  'tool_usages',
+  {
+    id: text('id').$type<ID<'ToolUsage'>>().primaryKey(),
+    containerId: text('container_id').$type<ID>().notNull(),
+    containerType: text('container_type').notNull(),
+    toolId: text('tool_id')
+      .$type<ID<'Tool'>>()
+      .notNull()
+      .references(() => tools.id),
+    creatorId: text('creator_id')
+      .$type<ID<'User'>>()
+      .notNull()
+      .references(() => users.id),
+    startDate: date('start_date'),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (t) => [
+    uniqueIndex('tool_usages_container_tool_unique')
+      .on(t.containerId, t.toolId)
+      .where(sql`${t.deletedAt} is null`),
+    index('tool_usages_container_id_idx').on(t.containerId),
+    index('tool_usages_tool_id_idx').on(t.toolId),
+    index('tool_usages_creator_id_idx').on(t.creatorId),
+  ],
+);
+
+export const toolUsagesRelations = relations(toolUsages, ({ one }) => ({
+  tool: one(tools, {
+    fields: [toolUsages.toolId],
+    references: [tools.id],
+  }),
+  creator: one(users, {
+    fields: [toolUsages.creatorId],
+    references: [users.id],
+  }),
+}));
+
 // ─── Partnership Producing Mediums ───────────────────────────────────────────
 
 /**
