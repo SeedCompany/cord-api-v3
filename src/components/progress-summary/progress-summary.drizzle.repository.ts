@@ -30,7 +30,12 @@ export class ProgressSummaryDrizzleRepository {
         engagementId: periodicReports.engagementId,
       })
       .from(periodicReports)
-      .where(inArray(periodicReports.id, [...reportIds]));
+      .where(
+        and(
+          inArray(periodicReports.id, [...reportIds]),
+          isNull(periodicReports.deletedAt),
+        ),
+      );
     const engagementIds = [
       ...new Set(reports.flatMap((r) => r.engagementId ?? [])),
     ];

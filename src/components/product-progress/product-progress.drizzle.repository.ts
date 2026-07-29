@@ -68,6 +68,7 @@ export class ProductProgressDrizzleRepository {
       .from(periodicReports)
       .where(
         and(
+          isNull(periodicReports.deletedAt),
           eq(periodicReports.engagementId, product.engagementId),
           eq(periodicReports.type, 'Progress'),
           lt(periodicReports.end, CalendarDate.local().toISODate()),
@@ -91,6 +92,7 @@ export class ProductProgressDrizzleRepository {
         .from(periodicReports)
         .where(
           and(
+            isNull(periodicReports.deletedAt),
             eq(periodicReports.engagementId, product.engagementId),
             eq(periodicReports.type, 'Progress'),
           ),
@@ -129,7 +131,12 @@ export class ProductProgressDrizzleRepository {
           engagementId: periodicReports.engagementId,
         })
         .from(periodicReports)
-        .where(eq(periodicReports.id, input.report.id));
+        .where(
+          and(
+            eq(periodicReports.id, input.report.id),
+            isNull(periodicReports.deletedAt),
+          ),
+        );
       if (!report?.engagementId) continue;
       const engagementProducts = await this.db
         .select({ id: products.id, steps: products.steps })
@@ -170,7 +177,12 @@ export class ProductProgressDrizzleRepository {
     const [report] = await this.db
       .select({ id: periodicReports.id })
       .from(periodicReports)
-      .where(eq(periodicReports.id, input.report));
+      .where(
+        and(
+          eq(periodicReports.id, input.report),
+          isNull(periodicReports.deletedAt),
+        ),
+      );
     if (!product || !report) {
       throw new NotFoundException(
         'Could not find product or report to add progress to',
