@@ -2306,6 +2306,10 @@ export const periodicReports = pgTable(
     updatedAt: timestamp('updated_at', { withTimezone: true })
       .notNull()
       .defaultNow(),
+    // Soft delete, matching Neo4j's `deleteBaseNode` relabel (migration 0032).
+    // Removing a report from a shrunken date window must not destroy its media,
+    // variance explanation or workflow events.
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
   },
   (t) => [
     check(
@@ -2319,6 +2323,21 @@ export const periodicReports = pgTable(
     ),
     index('periodic_reports_project_id_idx').on(t.projectId),
     index('periodic_reports_engagement_id_idx').on(t.engagementId),
+    index('periodic_reports_deleted_at_idx').on(t.deletedAt),
+    // At most one LIVE report per (parent, type, interval). This — not the
+    // deterministic id — is the dedup guarantee under soft delete, since a dead
+    // row can hold the deterministic id and force a fresh one.
+    // Keyed on the coalesced parent: indexing both parent columns would leave a
+    // NULL in every row, and NULLs compare DISTINCT in a unique index, so it
+    // would silently enforce nothing. @see migration 0032
+    uniqueIndex('periodic_reports_live_interval_uniq')
+      .on(
+        sql`(coalesce(${t.projectId}, ${t.engagementId}))`,
+        t.type,
+        t.start,
+        t.end,
+      )
+      .where(sql`${t.deletedAt} is null`),
   ],
 );
 

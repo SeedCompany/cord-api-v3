@@ -79,12 +79,17 @@ export const resolveResourceBaseNode = async (
         )
         .limit(1),
       // ProgressReport is a periodic_reports row (type='Progress'); it's
-      // Commentable. periodic_reports has no deleted_at (real-delete design).
+      // Commentable. Soft-deleted as of migration 0032, so filter liveness —
+      // a comment thread must not resolve against a removed report.
       db
         .select({ createdAt: periodicReports.createdAt })
         .from(periodicReports)
         .where(
-          and(eq(periodicReports.id, id), eq(periodicReports.type, 'Progress')),
+          and(
+            eq(periodicReports.id, id),
+            eq(periodicReports.type, 'Progress'),
+            isNull(periodicReports.deletedAt),
+          ),
         )
         .limit(1),
     ]);

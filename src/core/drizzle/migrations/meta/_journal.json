@@ -246,6 +246,13 @@
       "when": 1753228800000,
       "tag": "0030_add_tool_usages",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1753315200000,
+      "tag": "0031_periodic_reports_soft_delete",
+      "breakpoints": true
     }
   ]
 }
