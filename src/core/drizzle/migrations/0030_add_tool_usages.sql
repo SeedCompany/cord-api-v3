@@ -1,16 +1,35 @@
--- Tool Usages (Phase 7). Records that a container (Project or Engagement) uses
--- a Tool, with the date usage started.
+-- Tool Usages (Phase 7). Records that a container resource uses a Tool, with
+-- the date usage started.
 --
 -- Neo4j models this as a ToolUsage node with three relationships:
 --   container -[:uses]-> usage -[:tool]-> Tool,  usage -[:creator]-> Actor
 -- Here the node becomes a row and the relationships become columns.
 --
 -- container_id is polymorphic and therefore FK-less (same rationale as
--- comment_threads.parent_id / prompt_variant_responses.parent_id — the target
--- spans the projects and engagements tables). container_type is the
--- discriminator, storing the CONCRETE __typename (e.g. 'LanguageEngagement',
--- 'MomentumTranslationProject') so reads can hand the service a typed resource
--- ref without probing every candidate table.
+-- comment_threads.parent_id / prompt_variant_responses.parent_id). The target
+-- is ANY resource, not just Project/Engagement: `CreateToolUsage.container` is
+-- an `ID<'Resource'>`, the Cypher matches any `BaseNode`, and `Resource.tools`
+-- is a field on the Resource interface. Only Project and Engagement containers
+-- are written today, but the domain was built open and is expected to stay that
+-- way (Rob, 2026-07-29).
+--
+-- FK-less is therefore DELIBERATE, and both alternatives were considered and
+-- rejected on 2026-07-29 — do not re-propose without reading this:
+--   * Exclusive arc (one nullable FK column + CHECK arm per target table) is
+--     the right shape for 2-3 known targets, and untenable for "any resource".
+--   * A `resources(id, type)` supertype table that every resource FKs into
+--     would give real referential integrity, but reintroduces a table of all
+--     nodes — i.e. it walks back toward the graph database this migration is
+--     leaving (Rob's call). Accepted cost: no referential integrity on this
+--     column. Dangling container_ids are caught by the cutover ETL, which
+--     already tracks dangling refs as a known data class.
+--
+-- container_type is the discriminator, storing the CONCRETE __typename (e.g.
+-- 'LanguageEngagement', 'MomentumTranslationProject'). Reads key off it to
+-- query only the tables actually referenced, and — because the target set is
+-- open — to tell a DELETED container apart from one whose type the Drizzle
+-- resource-table registry does not yet cover. The latter is a registry gap that
+-- gets logged, not silently dropped.
 --
 -- Note the GraphQL `ToolContainerType` enum is the NORMALIZED bucket
 -- ('Engagement' | 'Project'), not this column. The bucket is derived from
