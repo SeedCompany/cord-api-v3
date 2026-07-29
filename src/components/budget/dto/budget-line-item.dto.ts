@@ -88,6 +88,18 @@ export class BudgetLineItem extends Resource {
   })
   readonly activity: SecuredStringNullable;
 
+  @Field({
+    description:
+      "SIL's chart-of-accounts name for this line's `account`, when the field has mapped it. A real user choice (cascading dropdowns or manual free-text) — not a computed lookup.",
+  })
+  readonly partnerAccountName: SecuredStringNullable;
+
+  @Field({
+    description:
+      "SIL's chart-of-accounts number for this line's `account`, when the field has mapped it. A real user choice (cascading dropdowns or manual free-text) — not a computed lookup.",
+  })
+  readonly partnerAccountNumber: SecuredStringNullable;
+
   @Calculated()
   readonly serviceProvider: Secured<ID<'Organization'> | null>;
 

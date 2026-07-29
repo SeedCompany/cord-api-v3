@@ -40,6 +40,12 @@ export abstract class CreateBudgetLineItem {
   @Field(() => String, { nullable: true })
   readonly activity?: string;
 
+  @Field(() => String, { nullable: true })
+  readonly partnerAccountName?: string;
+
+  @Field(() => String, { nullable: true })
+  readonly partnerAccountNumber?: string;
+
   @IdField({ nullable: true })
   readonly serviceProvider?: ID<'Organization'>;
 

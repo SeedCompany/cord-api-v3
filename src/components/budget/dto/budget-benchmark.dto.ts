@@ -46,6 +46,33 @@ export abstract class BudgetBenchmarkInput {
     `,
   })
   readonly weeksPerFiscalYear?: readonly number[];
+
+  @OptionalField(() => Float, {
+    description: stripIndent`
+      Skips the entire country/role/keystone-rate lookup and spreads this
+      flat annual figure across the budget's fiscal years directly (via
+      \`BudgetCalculationService.spreadAnnual\`) — the equivalent of the
+      prototype modal's "Spread an annual amount" mode. Works for ANY
+      \`account\`, not just \`KEYSTONE_ACCTS\`. When set, \`consultantType\`,
+      \`weeksPerFiscalYear\`, and \`countryId\` are all ignored, and the
+      result's \`weeklyOrAnnualFigure\` just echoes this value back.
+    `,
+  })
+  readonly annualAmount?: number;
+
+  @IdField({
+    optional: true,
+    description: stripIndent`
+      Overrides the budget's derived country (see \`Budget.country\`) for
+      this calculation only — doesn't change the budget itself. One of
+      \`budgetReferenceCountries\`' ids. Only meaningful for the keystone
+      salary/service path (ignored entirely when \`annualAmount\` is set);
+      use this when the project has no resolvable country (or a
+      different one is wanted for this benchmark) — matching the
+      prototype modal's "Country for this calculation" override select.
+    `,
+  })
+  readonly countryId?: ID<'BudgetReferenceCountry'>;
 }
 
 /**

@@ -23,6 +23,7 @@ import { PolicyExecutor } from '../authorization/policy/executor/policy-executor
 import { type FileId } from '../file/dto';
 import { type ProjectType } from '../project/dto/project-type.enum';
 import { requesterScopeByProject } from '../project/project-member/membership-scope';
+import { projectTypeToResourceName } from '../project/project-type-to-resource-name';
 import { type BudgetRecordDrizzleRepository } from './budget-record.drizzle.repository';
 import { BudgetRecordRepository } from './budget-record.repository';
 import {
@@ -39,17 +40,6 @@ type BudgetRow = typeof budgets.$inferSelect & {
     type: ProjectType;
   } | null;
 };
-
-// Maps the projects.type column to the concrete GraphQL/resource class name
-// for that project (see src/components/project/dto/project.dto.ts) — needed
-// to build a BaseNode-shaped `parent` (see toDto() below); the abstract
-// `Project` interface itself isn't a concrete GraphQLObjectType.
-const projectTypeToResourceName = (type: ProjectType): string =>
-  ({
-    MomentumTranslation: 'MomentumTranslationProject',
-    MultiplicationTranslation: 'MultiplicationTranslationProject',
-    Internship: 'InternshipProject',
-  })[type];
 
 @Injectable()
 export class BudgetDrizzleRepository extends DrizzleDtoRepository<

@@ -26,6 +26,12 @@ export abstract class UpdateBudgetLineItem {
   @OptionalField(() => String, { nullable: true })
   readonly activity?: string | null;
 
+  @NameField({ nullable: true })
+  readonly partnerAccountName?: string | null;
+
+  @NameField({ nullable: true })
+  readonly partnerAccountNumber?: string | null;
+
   @IdField({ nullable: true })
   readonly serviceProvider?: ID<'Organization'> | null;
 

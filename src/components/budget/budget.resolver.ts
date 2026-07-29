@@ -29,6 +29,7 @@ import {
   SALARY_ACCTS,
 } from './budget-calculation.service';
 import { BudgetDerivedFieldsService } from './budget-derived-fields.service';
+import { BudgetReferenceCountryRepository } from './budget-reference-country.repository';
 import { BudgetReferenceKeystoneRateRepository } from './budget-reference-keystone-rate.repository';
 import {
   Budget,
@@ -49,6 +50,7 @@ export class BudgetResolver {
     private readonly calc: BudgetCalculationService,
     private readonly derived: BudgetDerivedFieldsService,
     private readonly keystoneRates: BudgetReferenceKeystoneRateRepository,
+    private readonly countries: BudgetReferenceCountryRepository,
   ) {}
 
   @ResolveField(() => Float)
@@ -191,19 +193,17 @@ export class BudgetResolver {
     const country = await this.derived.resolveCountry(projectId);
     const languageCount =
       (await this.derived.countLanguageEngagements(projectId)) || 1;
+    // `Project.primaryPartnership` is now wired under Postgres (see
+    // project.drizzle.repository.ts) — resolves the real chain:
+    // Project.primaryPartnership -> Partnership.partner -> Partner.organization.
+    // Falls back to '' (a placeholder nothing can equal) if the project has
+    // no primary partnership set, matching the prior always-'' behavior for
+    // that case.
+    const primaryFunderId =
+      await this.derived.resolvePrimaryFunderId(projectId);
 
     const config: BudgetCalcConfig = {
-      // `Project.primaryPartnership` is stubbed to `null` under the
-      // Postgres/Drizzle path today (see project.drizzle.repository.ts) —
-      // there's no reliable organization id to compare funder lines
-      // against yet. Every line without an explicit `funder` is still
-      // correctly treated as the primary funder's (see
-      // BudgetCalculationService.computeBudget's `?? config.primaryFunderId`
-      // fallback); only lines that set an explicit, different `funder`
-      // would be mis-treated, and none can be today since nothing can ever
-      // equal this placeholder. Wire this through once primaryPartnership
-      // hydration lands upstream (see project.drizzle.repository.ts).
-      primaryFunderId: '',
+      primaryFunderId,
       startDate: startDate.toISODate()!,
       endDate: endDate.toISODate()!,
       sensitivity: budget.sensitivity,
@@ -260,9 +260,11 @@ export class BudgetResolver {
     nullable: true,
     description: stripIndent`
       Server-side benchmark/keystone calculator. Null when: the budget's
-      project has no start/end dates yet; the budget has no resolvable
-      country (see \`Budget.country\`) or that country has no cost-of-living
-      index configured; \`input.account\` (or, for the consultant account,
+      project has no start/end dates yet; or — unless \`input.annualAmount\`
+      is set, which skips all of the following — the budget has no
+      resolvable country (see \`Budget.country\`, overridable via
+      \`input.countryId\`) or that country has no cost-of-living index
+      configured; \`input.account\` (or, for the consultant account,
       \`input.consultantType\`) doesn't map to a known role; or no keystone
       rate is seeded for that (country, role) pair. All are expected,
       recoverable "can't compute this yet" states, not errors.
@@ -292,7 +294,34 @@ export class BudgetResolver {
       return null;
     }
 
-    const country = await this.derived.resolveCountry(projectId);
+    const inflationRate = budget.inflationRate.value ?? 0;
+
+    // `annualAmount` bypasses the entire country/role/keystone-rate
+    // resolution below — it works for ANY account, not just
+    // `KEYSTONE_ACCTS`, and only needs the fiscal-year info + inflation
+    // rate already computed above (see `BudgetBenchmarkInput.annualAmount`'s
+    // doc comment).
+    if (input.annualAmount != null) {
+      const amounts = this.calc.spreadAnnual(
+        input.annualAmount,
+        fy,
+        inflationRate,
+      );
+      const fiscalYearAmounts: Record<string, number> = {};
+      amounts.forEach((amount, i) => {
+        fiscalYearAmounts[String(fy.startFiscalYear + i)] = amount;
+      });
+      return { weeklyOrAnnualFigure: input.annualAmount, fiscalYearAmounts };
+    }
+
+    // `countryId` overrides the budget's derived country for this
+    // calculation only (see `BudgetBenchmarkInput.countryId`'s doc comment).
+    // `readOne` throws `NotFoundException` for a genuinely bad id — same
+    // "invalid input errors, missing data resolves to null" split as
+    // `input.budget` above, not a "no country resolved" case.
+    const country = input.countryId
+      ? await this.countries.readOne(input.countryId)
+      : await this.derived.resolveCountry(projectId);
     if (!country?.keystoneCountryName) {
       return null;
     }
@@ -319,7 +348,6 @@ export class BudgetResolver {
     const entryCurrencyMode =
       (budget.entryCurrencyMode.value as CurrencyMode | undefined) ?? 'USD';
     const exchangeRate = budget.exchangeRate.value ?? 1;
-    const inflationRate = budget.inflationRate.value ?? 0;
 
     const figure = this.calc.keystoneFigure(
       country.costOfLivingIndex,

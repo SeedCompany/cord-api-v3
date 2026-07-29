@@ -43,6 +43,7 @@ import {
   partnerSortColumns,
 } from '../partner/partner.drizzle.repository';
 import { requesterScopeByProject } from '../project/project-member/membership-scope';
+import { projectTypeToResourceName } from '../project/project-type-to-resource-name';
 import {
   type CreatePartnership,
   Partnership,
@@ -519,9 +520,19 @@ export class PartnershipDrizzleRepository extends DrizzleDtoRepository<
       // The requester's project-scoped roles — `member` policy conditions
       // read these for field-level permissions.
       scope,
-      // Required by the `parent` field on the DTO. The service constructs a
-      // BaseNode-shaped object; here we just pass the project id through.
-      parent: { id: row.project.id },
+      // BaseNode-shaped for `ChangesetAwareResolver.parent()` — see
+      // `projectTypeToResourceName`'s doc comment for why the label must be
+      // the concrete class name, not the abstract `Project` interface.
+      // `properties.createdAt` isn't read by that code path, so this
+      // partnership's own createdAt is a safe placeholder.
+      parent: {
+        identity: row.project.id,
+        labels: [projectTypeToResourceName(row.project.type)],
+        properties: {
+          id: row.project.id,
+          createdAt: DateTime.fromJSDate(row.createdAt),
+        },
+      },
     };
     return dto as UnsecuredDto<Partnership>;
   }

@@ -4,6 +4,8 @@ import { EngagementService } from '../engagement';
 import { EngagementListInput } from '../engagement/dto';
 import { LocationService } from '../location';
 import { LocationType } from '../location/dto';
+import { PartnerService } from '../partner';
+import { PartnershipService } from '../partnership';
 import { ProjectService } from '../project';
 import { BudgetReferenceCountryRepository } from './budget-reference-country.repository';
 import { type BudgetReferenceCountry } from './dto';
@@ -41,6 +43,8 @@ export class BudgetDerivedFieldsService {
     private readonly locations: LocationService,
     private readonly countries: BudgetReferenceCountryRepository,
     private readonly engagements: EngagementService,
+    private readonly partnerships: PartnershipService,
+    private readonly partners: PartnerService,
   ) {}
 
   /**
@@ -91,5 +95,35 @@ export class BudgetDerivedFieldsService {
     });
     const list = await this.engagements.list(input);
     return list.total;
+  }
+
+  /**
+   * The budget's primary funder organization id, for `BudgetCalcConfig.
+   * primaryFunderId` — used to decide whether a line's (or the whole
+   * budget's default) funder counts as "primary" for netToFunder /
+   * funderBibleTranslationPercent / non-primary-cash-as-OPC purposes.
+   *
+   * Previously always `''` (a placeholder nothing could ever equal) because
+   * `Project.primaryPartnership` was stubbed `null` under Postgres — that's
+   * now wired (see `project.drizzle.repository.ts`), so this resolves the
+   * real chain: Project.primaryPartnership -> Partnership.partner ->
+   * Partner.organization. Returns `''` (same placeholder as before) if the
+   * project has no primary partnership set, or if the chain somehow can't
+   * resolve — never throws, matching `resolveCountry`'s "missing = null/empty,
+   * not an error" convention.
+   */
+  async resolvePrimaryFunderId(projectId: ID<'Project'>): Promise<string> {
+    const project = await this.projects.readOne(projectId);
+    const partnershipId = project.primaryPartnership.value?.id;
+    if (!partnershipId) {
+      return '';
+    }
+    const partnership = await this.partnerships.readOne(partnershipId);
+    const partnerId = partnership.partner.value?.id;
+    if (!partnerId) {
+      return '';
+    }
+    const partner = await this.partners.readOne(partnerId);
+    return partner.organization.value?.id ?? '';
   }
 }

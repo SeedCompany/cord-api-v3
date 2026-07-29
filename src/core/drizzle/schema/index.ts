@@ -1760,6 +1760,11 @@ export const budgetLineItems = pgTable(
     // 'Bible Translation' | 'Other Costs' — nullable (not every line is
     // classified).
     activity: text('activity'),
+    // SIL chart-of-accounts mapping for this line's `account` — a real user
+    // choice (cascading dropdowns or manual free-text), not a computed
+    // lookup, so both are stored. See migration 0024.
+    partnerAccountName: text('partner_account_name'),
+    partnerAccountNumber: text('partner_account_number'),
     serviceProviderOrgId: text('service_provider_org_id')
       .$type<ID<'Organization'>>()
       .references(() => organizations.id),

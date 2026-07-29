@@ -37,6 +37,7 @@ import { PolicyExecutor } from '../authorization/policy/executor/policy-executor
 import { FileService } from '../file';
 import { IProject } from '../project/dto';
 import { requesterScopeByProject } from '../project/project-member/membership-scope';
+import { projectTypeToResourceName } from '../project/project-type-to-resource-name';
 import { recomputeProjectSensitivity } from '../project/project.drizzle.repository';
 import {
   type CreateInternshipEngagement,
@@ -751,7 +752,19 @@ export class EngagementDrizzleRepository extends DrizzleDtoRepository<
         : 'default::InternshipEngagement',
       createdAt: DateTime.fromJSDate(row.createdAt),
       modifiedAt: DateTime.fromJSDate(row.modifiedAt),
-      parent: { id: row.project.id },
+      // BaseNode-shaped for `ChangesetAwareResolver.parent()` — see
+      // `projectTypeToResourceName`'s doc comment for why the label must be
+      // the concrete class name, not the abstract `Project` interface.
+      // `properties.createdAt` isn't read by that code path, so this
+      // engagement's own createdAt is a safe placeholder.
+      parent: {
+        identity: row.project.id,
+        labels: [projectTypeToResourceName(row.project.type)],
+        properties: {
+          id: row.project.id,
+          createdAt: DateTime.fromJSDate(row.createdAt),
+        },
+      },
       project: {
         id: row.project.id,
         type: row.project.type,

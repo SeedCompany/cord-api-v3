@@ -45,6 +45,7 @@ import {
   engagements,
   fieldRegions,
   locations,
+  partnerships,
   projectMembers,
   projects,
   projectWorkflowEvents,
@@ -97,6 +98,13 @@ type ProjectRow = typeof projects.$inferSelect & {
     roles: readonly string[];
     inactiveAt: Date | null;
   } | null;
+  /**
+   * The project's primary partnership id, if any — batched in `readMany`.
+   * Wires `Project.primaryPartnership` (see `toDto`), previously stubbed
+   * null under Postgres. `partnerships_project_primary_active_unique`
+   * guarantees at most one live row with `primary = true` per project.
+   */
+  primaryPartnershipId?: ID<'Partnership'> | null;
 };
 
 @Injectable()
@@ -226,6 +234,26 @@ export class ProjectDrizzleRepository extends DrizzleDtoRepository<
       userId,
       rows.map((r) => r.id),
     );
+    // Batched primary-partnership lookup — wires `Project.primaryPartnership`
+    // (see `toDto`), previously stubbed null under Postgres. The partial
+    // unique index guarantees at most one row per project here, so no
+    // ordering/ranking is needed.
+    const primaryPartnerships = await this.db
+      .select({ id: partnerships.id, projectId: partnerships.projectId })
+      .from(partnerships)
+      .where(
+        and(
+          inArray(
+            partnerships.projectId,
+            rows.map((r) => r.id),
+          ),
+          eq(partnerships.primary, true),
+          isNull(partnerships.deletedAt),
+        ),
+      );
+    const primaryPartnershipByProject = new Map(
+      primaryPartnerships.map((p) => [p.projectId, p.id]),
+    );
     return rows.map((row): UnsecuredDto<Project> => {
       const enriched: ProjectRow = {
         ...row,
@@ -233,6 +261,7 @@ export class ProjectDrizzleRepository extends DrizzleDtoRepository<
         stepChangedAt: stepChangedByProject.get(row.id) ?? null,
         engagementTotal: engagementTotalByProject.get(row.id) ?? 0,
         pinned: pinnedSet.has(row.id),
+        primaryPartnershipId: primaryPartnershipByProject.get(row.id) ?? null,
       };
       return this.toDto(enriched);
     });
@@ -505,10 +534,13 @@ export class ProjectDrizzleRepository extends DrizzleDtoRepository<
       fieldRegion: linkOrNull(row.fieldRegionId),
       owningOrganization: linkOrNull(row.owningOrganizationId),
       rootDirectory: linkOrNull(row.rootDirectoryId),
-      // migration-todo: Partnership is on develop, but per-project
-      // primaryPartnership hydration is not yet wired (mono stubs it null too).
-      // Wire via a `partnerships` subquery (primary = true) as a follow-up.
-      primaryPartnership: null,
+      // Wired via a batched `partnerships` subquery (primary = true) in
+      // `readMany` above — bare {id} LinkTo, matching
+      // `Project.primaryPartnership`'s DTO type; the resolver hydrates the
+      // full Partnership on demand like any other LinkTo field.
+      primaryPartnership: row.primaryPartnershipId
+        ? { id: row.primaryPartnershipId }
+        : null,
       engagementTotal: row.engagementTotal ?? 0,
       // migration-todo: ToolUsage not migrated; usesRev79 always false until
       // the tool-usage layer ports.

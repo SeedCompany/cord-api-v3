@@ -5,6 +5,7 @@ import { EngagementModule } from '../engagement/engagement.module';
 import { FileModule } from '../file/file.module';
 import { LocationModule } from '../location/location.module';
 import { OrganizationModule } from '../organization/organization.module';
+import { PartnerModule } from '../partner/partner.module';
 import { PartnershipModule } from '../partnership/partnership.module';
 import { ProjectModule } from '../project/project.module';
 import { EducationModule } from '../user/education/education.module';
@@ -44,6 +45,7 @@ import { SyncLineItemsToBudgetRecordsService } from './sync-line-items-to-budget
     EducationModule,
     forwardRef(() => LocationModule),
     forwardRef(() => PartnershipModule),
+    forwardRef(() => PartnerModule),
     forwardRef(() => OrganizationModule),
     forwardRef(() => ProjectModule),
     forwardRef(() => EngagementModule),
