@@ -2961,6 +2961,84 @@ export const progressReportMedia = pgTable(
   ],
 );
 
+// ─── Progress Report Workflow ────────────────────────────────────────────────
+
+/**
+ * At most ONE variance explanation per report — the PK on `report_id` encodes
+ * Neo4j's MERGE-on-relationship semantics, so writes are a plain upsert.
+ *
+ * `reasons` is text[] rather than an enum on purpose: the option set lives in
+ * `ProgressReportVarianceExplanationReasonOptions`, which carries an explicit
+ * `deprecated` list so old values stay *readable* while being blocked for new
+ * writes. An enum couldn't express that, and would need a migration per wording
+ * change. App-level `@IsIn` remains the gate. See migration 0031.
+ */
+export const progressReportVarianceExplanations = pgTable(
+  'progress_report_variance_explanations',
+  {
+    reportId: text('report_id')
+      .$type<ID<'ProgressReport'>>()
+      .primaryKey()
+      .references(() => periodicReports.id, { onDelete: 'cascade' }),
+    reasons: text('reasons').array().notNull().default([]),
+    comments: jsonb('comments'), // RichText
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+);
+
+/**
+ * Append-only status-transition history for a progress report. Immutable
+ * facts — no soft delete, no `updated_at`.
+ *
+ * `transition_key` is null when the workflow was bypassed (status set directly).
+ * Unlike `project_workflow_events`, no trigger syncs the parent's status;
+ * `periodic_reports.status` is written app-side by `changeStatus` to stay
+ * faithful to Neo4j (see migration 0031 for the promotion candidate).
+ */
+export const progressReportWorkflowEvents = pgTable(
+  'progress_report_workflow_events',
+  {
+    id: text('id').$type<ID<'ProgressReportWorkflowEvent'>>().primaryKey(),
+    reportId: text('report_id')
+      .$type<ID<'ProgressReport'>>()
+      .notNull()
+      .references(() => periodicReports.id, { onDelete: 'cascade' }),
+    who: text('who')
+      .$type<ID<'User'>>()
+      .notNull()
+      .references(() => users.id),
+    status: progressReportStatusEnum('status')
+      .$type<ProgressReportStatus>()
+      .notNull(),
+    transitionKey: text('transition_key'),
+    notes: jsonb('notes'), // RichText
+    at: timestamp('at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    // Lists read oldest-first, matching the Neo4j repo's createdAt ASC sort.
+    index('progress_report_workflow_events_report_id_at_idx').on(
+      t.reportId,
+      t.at,
+    ),
+    index('progress_report_workflow_events_who_idx').on(t.who),
+  ],
+);
+
+export const progressReportWorkflowEventsRelations = relations(
+  progressReportWorkflowEvents,
+  ({ one }) => ({
+    report: one(periodicReports, {
+      fields: [progressReportWorkflowEvents.reportId],
+      references: [periodicReports.id],
+    }),
+  }),
+);
+
 // ─── PnP Extraction Results ──────────────────────────────────────────────────
 
 /**
