@@ -253,6 +253,13 @@
       "when": 1753315200000,
       "tag": "0031_periodic_reports_soft_delete",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1753401600000,
+      "tag": "0032_add_progress_report_workflow",
+      "breakpoints": true
     }
   ]
 }
