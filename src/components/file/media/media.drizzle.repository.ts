@@ -65,6 +65,11 @@ export class MediaDrizzleRepository {
     return await Promise.all(rows.map((row) => this.toDto(row)));
   }
 
+  // No live-query invalidation, deliberately: the Neo4j `save` is raw Cypher
+  // that reaches none of CommonRepository's announcing helpers, so it is silent
+  // too. Matching it keeps this a pre-existing product gap on every engine
+  // rather than a cutover regression. Media is also always read through its
+  // FileVersion, which the file repo does announce.
   async save(input: SaveInput): Promise<AnyMedia> {
     if (input.__typename) {
       // Detection result — upsert the full media row keyed on the file version.

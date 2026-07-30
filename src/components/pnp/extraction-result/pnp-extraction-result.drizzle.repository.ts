@@ -81,6 +81,11 @@ export class PnpExtractionResultDrizzleRepository {
     });
   }
 
+  // No live-query invalidation, deliberately: the Neo4j `save` is raw Cypher
+  // that reaches none of CommonRepository's announcing helpers, so it is silent
+  // too — matching it keeps this a pre-existing gap on every engine rather than
+  // a cutover regression. In practice this runs during upload, right before the
+  // file repo announces the new version anyway.
   async save(
     file: ID<'FileVersion'>,
     result: PnpExtractionResult,

@@ -18,6 +18,7 @@ import {
   progressReportMedia,
   projects,
 } from '~/core/drizzle/schema';
+import { LiveQueryStore } from '~/core/live-query';
 import { requesterScopeByProject } from '../../project/project-member/membership-scope';
 import { type ProgressReport as Report } from '../dto';
 import {
@@ -50,6 +51,7 @@ export class ProgressReportMediaDrizzleRepository {
   constructor(
     private readonly drizzle: DrizzleService,
     private readonly identity: Identity,
+    private readonly liveQueryStore: LiveQueryStore,
   ) {}
 
   protected get db() {
@@ -175,6 +177,10 @@ export class ProgressReportMediaDrizzleRepository {
     } as unknown as Omit<Row, 'media' | 'file'>;
   }
 
+  // No live-query invalidation here, deliberately: the Neo4j `update` is a raw
+  // `setValues()` rather than `db.updateProperties`, so it does not announce
+  // either. Matching it keeps this a pre-existing product gap on every engine
+  // instead of a cutover regression.
   async update({ id, category }: UpdateMedia) {
     if (category === undefined) return;
     await this.db
@@ -185,6 +191,11 @@ export class ProgressReportMediaDrizzleRepository {
 
   async deleteNode(objectOrId: { id: ID } | ID) {
     const id = typeof objectOrId === 'string' ? objectOrId : objectOrId.id;
+    // Unlike `update` above, the Neo4j arm DOES announce here: it inherits
+    // DtoRepository.deleteNode, which defaults `resource` to `this.resource` and
+    // invalidates before deleting. This override bypasses that base entirely, so
+    // it has to do it itself.
+    this.liveQueryStore.invalidate([ReportMedia, id]);
     await this.db
       .update(progressReportMedia)
       .set({ deletedAt: new Date() })
