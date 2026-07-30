@@ -71,9 +71,13 @@ verified — that is the only thing that exercises the constraints. Two real FK
 bugs (`auth_identities`, `user_organizations`) and three unique-drop mismatches
 were invisible to dry-runs and surfaced on the first real scratch run.
 
+Each statement needs its own `-c`: you cannot DROP/CREATE a database inside a
+multi-statement (implicitly transactional) batch. There is no local `psql` on the
+dev machine — it lives in the compose container.
+
 ```bash
-psql -U postgres -c 'DROP DATABASE IF EXISTS cutover_scratch'
-psql -U postgres -c 'CREATE DATABASE cutover_scratch'
+docker exec cord-api-v3-postgres-1 psql -U postgres -c 'DROP DATABASE IF EXISTS cutover_scratch'
+docker exec cord-api-v3-postgres-1 psql -U postgres -c 'CREATE DATABASE cutover_scratch'
 DATABASE=neo4j POSTGRES_URL=postgresql://postgres:postgres@localhost:5432/cutover_scratch \
   yarn start --entryFile core/cutover.run
 ```
@@ -125,15 +129,27 @@ Rollback is instant at any point before the flip: Neo4j is untouched.
    — replace the drop with an explicit per-enum value map once the team decides.
 5. **`deleted_at` rows.** `readMany` returns live rows only; soft-deleted nodes
    aren't carried. Confirm that's intended per domain before cutover.
+6. **A drop at the root is not a drop of one row — measure the subtree.** The
+   19 languages lost to finding #3 locally cost, transitively: 32
+   LanguageEngagements → 32 ceremonies → 88 products → **514 periodic reports**
+   → 148 product-progress rows → 605 step-progress rows → 18 progress
+   summaries. Roughly 1,400 rows from 19. Per-table reconciliation reports each
+   of these as its own ⚠, which reads like seven unrelated problems rather than
+   one; the "counts reconcile but N dropped" summary line exists to stop that
+   being mistaken for a clean load. **Fix the root before the dry run**, and
+   re-measure downstream after: the deeper waves are where the loss shows up,
+   and they did not exist when finding #3 was first written.
 
 ## Domains covered (firm / merged to develop)
 
 user (+ global_roles, educations, unavailabilities, system_agents,
-auth_identities) · tool · fundingAccount · ethnologue · departmentIdBlock ·
-fieldZone · fieldRegion · location · organization (+ 2 junctions) · partner
-(+ 3 junctions) · project (+ workflow events, step re-assert 2-pass) ·
-projectMember · partnership · notification (+ recipients) · budget
-(+ budget_records).
+auth_identities) · tool · fundingAccount · ethnologue · language ·
+departmentIdBlock · fieldZone · fieldRegion · location · organization
+(+ 2 junctions) · partner (+ 3 junctions) · project (+ workflow events, step
+re-assert 2-pass) · projectMember · partnership · engagement (+ status history,
+ceremonies) · product (+ producibles, completion descriptions) · periodic-report
+· prompt-variant-response (+ entries) · product-progress (+ step progress) ·
+progress-summary · notification (+ recipients) · budget (+ budget_records).
 
 **Deliberately NOT migrated (transient):** `auth_sessions`,
 `auth_password_reset_tokens` — users re-authenticate post-cutover.
@@ -142,11 +158,18 @@ projectMember · partnership · notification (+ recipients) · budget
 
 - **File + Media** — deferred. `file_nodes` is a single-table tree needing a
   topological insert (parents before children) + a two-pass for the denormalized
-  `latest_version_id`; Media's app-level port isn't on develop. Wants its own
-  focused pass. (S3 blobs never migrate — metadata only.)
-- **Language / Engagement** and all later-wave domains — add an extractor here
-  as each lands on develop (that's the "build the data script incrementally"
-  plan). New extractors just implement `Extractor` and register in `index.ts`;
-  the harness handles ordering + reconciliation.
-- **`ethnologue_languages.language_id`** — left null (deferred FK); backfill in
-  the Language wave.
+  `latest_version_id`. Wants its own focused pass. (S3 blobs never migrate —
+  metadata only.) Note `periodic_reports.report_file_id`/`narrative_file_id`
+  ARE already populated with the ids this wave will insert — they're plain text
+  with no FK, so they cost nothing to carry early and save a backfill.
+- **The leaves** — pins, known languages, comments/comment threads, posts,
+  progress-report media, PnP extraction results.
+- **ProgressReportWorkflowEvent** (192 nodes locally) and
+  **ProgressReportVarianceExplanation** (2) have **no Postgres table yet** —
+  neither domain is ported, so there is nowhere to load them. A progress
+  report's *current* `status` carries over; its transition history does not.
+  Add extractors when those domains land.
+- **ProgressReportHighlight** exists as a code path in the
+  prompt-variant-response extractor but has **zero instances locally**, so that
+  branch is written and unexercised. Same class as OtherProduct / Film /
+  EthnoArt and `engagement_status_history` — needs a real dataset to validate.

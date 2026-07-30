@@ -12,9 +12,13 @@ import { notificationExtractor } from './notification.extractor';
 import { organizationExtractor } from './organization.extractor';
 import { partnerExtractor } from './partner.extractor';
 import { partnershipExtractor } from './partnership.extractor';
+import { periodicReportExtractor } from './periodic-report.extractor';
+import { productProgressExtractor } from './product-progress.extractor';
 import { productExtractor } from './product.extractor';
+import { progressSummaryExtractor } from './progress-summary.extractor';
 import { projectMemberExtractor } from './project-member.extractor';
 import { projectExtractor } from './project.extractor';
+import { promptVariantResponseExtractor } from './prompt-variant-response.extractor';
 import { toolExtractor } from './tool.extractor';
 import { userExtractor } from './user.extractor';
 
@@ -42,6 +46,10 @@ export const extractors: readonly Extractor[] = [
   partnershipExtractor,
   engagementExtractor,
   productExtractor,
+  periodicReportExtractor,
+  promptVariantResponseExtractor,
+  productProgressExtractor,
+  progressSummaryExtractor,
   notificationExtractor,
   budgetExtractor,
 ];
