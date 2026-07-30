@@ -24,6 +24,8 @@ export class ResourceMutationRepository {
       resourceId: input.resourceId,
       action: input.action,
       actorId: input.actorId,
+      actorSystemAgent: input.actorSystemAgent,
+      impersonatorId: input.impersonatorId,
       roleAtTime: [...input.roleAtTime],
       changes: input.changes ?? null,
     });
@@ -58,6 +60,8 @@ export class ResourceMutationRepository {
       action: row.action,
       at: DateTime.fromJSDate(row.at),
       actor: row.actorId ? { id: row.actorId } : null,
+      actorSystemAgent: row.actorSystemAgent,
+      impersonator: row.impersonatorId ? { id: row.impersonatorId } : null,
       roleAtTime: row.roleAtTime ?? [],
       changes: (row.changes as Record<string, unknown> | null) ?? null,
     }));

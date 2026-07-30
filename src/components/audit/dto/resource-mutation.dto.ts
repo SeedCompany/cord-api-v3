@@ -34,6 +34,22 @@ export class ResourceMutation {
   /** Resolved to a User by the resolver; null for system/anonymous actors. */
   readonly actor: LinkTo<'User'> | null;
 
+  @Field(() => String, {
+    nullable: true,
+    description:
+      'The name of the system agent that performed the mutation (e.g. ' +
+      '"Ghost", "Anonymous"), when it was not a user. Stored as a name ' +
+      'snapshot rather than a reference, for the same reason as `roleAtTime`. ' +
+      'Mutually exclusive with `actor`.',
+  })
+  readonly actorSystemAgent: string | null;
+
+  /**
+   * Resolved to a User by the resolver; null unless the actor was being
+   * impersonated.
+   */
+  readonly impersonator: LinkTo<'User'> | null;
+
   @Field(() => [String], {
     description:
       'The role(s) the actor held at the moment of the mutation. Stored as a ' +
@@ -60,7 +76,10 @@ export interface RecordMutationInput {
   readonly resourceType: string;
   readonly resourceId: ID;
   readonly action: MutationAction;
+  /** Mutually exclusive with {@link actorSystemAgent} (enforced by CHECK). */
   readonly actorId: ID<'User'> | null;
+  readonly actorSystemAgent: string | null;
+  readonly impersonatorId: ID<'User'> | null;
   readonly roleAtTime: readonly string[];
   readonly changes?: Record<string, unknown> | null;
 }
