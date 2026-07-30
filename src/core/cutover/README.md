@@ -35,19 +35,56 @@ here (migrations run) before loading, so it can point at an empty DB.
 
 ## Running
 
+**`DATABASE=neo4j` IS MANDATORY, not optional.** It is what makes `splitDb`
+resolve the Neo4j repositories — the readers. Omit it and, if your env sets
+`DATABASE=postgres`, `readMany` hydrates from the *target* Postgres instead of
+the source: ids still enumerate from Neo4j (raw Cypher), so every domain reports
+"N enumerated but NOT hydrated" and loads **zero rows**, and reconciliation says
+`0 == 0 == 0 ✓`. A completely empty migration that reports success. The banner
+line prints `engine=` — **check it says `neo4j` before trusting any run.**
+
 ```bash
-# dry-run: read + map everything, write nothing (surfaces mapping errors)
-POSTGRES_URL=postgresql://postgres:postgres@localhost:5432/cord_cutover \
+# dry-run: read + map only. Writes NOTHING and its ✓ is tautological
+# (see "What a dry-run does and does not prove" below).
+DATABASE=neo4j POSTGRES_URL=postgresql://postgres:postgres@localhost:5432/cord_cutover \
   yarn start --entryFile core/cutover.run -- --dry-run
 
 # real load of one domain
-POSTGRES_URL=... yarn start --entryFile core/cutover.run -- --only=tool
+DATABASE=neo4j POSTGRES_URL=... yarn start --entryFile core/cutover.run -- --only=tool
 
 # full load (migrates the target first, then loads)
-POSTGRES_URL=... yarn start --entryFile core/cutover.run
+DATABASE=neo4j POSTGRES_URL=... yarn start --entryFile core/cutover.run
 ```
 
 Flags: `--dry-run` · `--only=a,b,c` · `--batch=N` (default 500) · `--no-migrate`.
+
+### What a dry-run does and does not prove
+
+`--dry-run` validates **reads, hydration and mapping**. It does **not** touch the
+database: `bulkInsert` returns early before inserting, and the harness sets
+`count = inserted` with `ok = true` unconditionally, so its ✓ column *cannot
+fail*. It therefore proves nothing about NOT NULL, CHECK, FK or unique-index
+satisfaction.
+
+Every new wave needs a **real run against a throwaway database** to be called
+verified — that is the only thing that exercises the constraints. Two real FK
+bugs (`auth_identities`, `user_organizations`) and three unique-drop mismatches
+were invisible to dry-runs and surfaced on the first real scratch run.
+
+```bash
+psql -U postgres -c 'DROP DATABASE IF EXISTS cutover_scratch'
+psql -U postgres -c 'CREATE DATABASE cutover_scratch'
+DATABASE=neo4j POSTGRES_URL=postgresql://postgres:postgres@localhost:5432/cutover_scratch \
+  yarn start --entryFile core/cutover.run
+```
+
+### `--only` and the CASCADE truncate
+
+The truncate is `TRUNCATE <targets> RESTART IDENTITY CASCADE`, so it also empties
+tables holding an FK *to* a target even when that table belongs to an unselected
+extractor. `--only=language` alone wipes `ethnologue_languages` (its
+`language_id` references `languages.id`) and then has nothing to backfill. Select
+dependencies explicitly: `--only=ethnologue,language`.
 
 The load is **idempotent**: it TRUNCATEs every target table (CASCADE) before
 loading, so dry-runs and retries start clean. Inserts use `onConflictDoNothing`.

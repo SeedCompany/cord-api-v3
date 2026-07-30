@@ -19,7 +19,12 @@ export const ethnologueExtractor: Extractor = {
   async run(ctx) {
     const dtos = await readAllViaRepo<EthnologueLanguage>(
       ctx,
-      'Ethnologue.Language',
+      // The Neo4j label is `EthnologueLanguage`. It was `Ethnologue.Language`
+      // here — the GEL module path (`e.Ethnologue.Language`), which is not a
+      // Neo4j label at all, so this extractor read ZERO rows and reconciliation
+      // reported ✓ because 0 read = 0 inserted = 0 count. See the label guard in
+      // cutover.helpers.fetchIds, added so a wrong label can't be silent again.
+      'EthnologueLanguage',
       EthnologueLanguageRepository,
     );
     // CHECK-constraint guard (audit ETH1, prod-finding #1 class): the PG
