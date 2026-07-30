@@ -1,6 +1,12 @@
 import { type Type } from '@nestjs/common';
+import { sql } from 'drizzle-orm';
 import { type PgTable } from 'drizzle-orm/pg-core';
-import { type CalendarDate, type ID, type UnsecuredDto } from '~/common';
+import {
+  type CalendarDate,
+  type ID,
+  RichTextDocument,
+  type UnsecuredDto,
+} from '~/common';
 import { type CutoverContext, type TableStat } from './cutover.types';
 
 /** Split an array into fixed-size chunks. */
@@ -67,6 +73,50 @@ const warnIfLabelUnknown = async (ctx: CutoverContext, label: string) => {
       `    ⚠⚠ label "${label}" is NOT in db.labels() and matched 0 nodes — either the domain is ` +
         `genuinely empty, or the label is wrong. Neo4j labels are PascalCase with NO dots; a Gel ` +
         `module path (e.g. "Ethnologue.Language", "File.Version") silently matches nothing.`,
+    );
+  }
+};
+
+/** Relationship types actually in use in the source graph. Fetched once per run. */
+let knownRelTypes: ReadonlySet<string> | undefined;
+
+/**
+ * The {@link warnIfLabelUnknown} guard, for RELATIONSHIP types.
+ *
+ * The label guard covers nodes only, and several domains are stored purely as
+ * edges — `(:User)-[:pinned]->(:BaseNode)`,
+ * `(:User)-[:knownLanguage { value }]->(:Language)`. A misspelled rel type in a
+ * raw `cypher()` query returns zero rows exactly like an empty domain and
+ * reconciles `0 == 0 == 0 ✓`: the same silent failure as the ethnologue label
+ * bug, in a dimension the existing guard cannot see.
+ *
+ * This is not hypothetical. `knownLanguage` has **zero** edges in the local
+ * graph, so a correct query and a typo produce byte-identical output, and
+ * nothing else in the harness can tell them apart.
+ *
+ * Warns rather than throws — a genuinely empty domain whose rel type was never
+ * minted also yields zero, and that is legitimate.
+ */
+export const warnIfRelTypeUnknown = async (
+  ctx: CutoverContext,
+  relType: string,
+) => {
+  knownRelTypes ??= new Set(
+    (
+      await ctx.neo4j
+        .query<{
+          relationshipType: string;
+        }>(
+          'CALL db.relationshipTypes() YIELD relationshipType RETURN relationshipType',
+        )
+        .run()
+    ).map((row) => row.relationshipType),
+  );
+  if (!knownRelTypes.has(relType)) {
+    ctx.log(
+      `    ⚠⚠ relationship type "${relType}" is NOT in db.relationshipTypes() and matched 0 rows — ` +
+        `either the domain is genuinely empty, or the type name is wrong. Node labels have their own ` +
+        `guard (warnIfLabelUnknown); edge-stored domains like pins and known languages need this one.`,
     );
   }
 };
@@ -285,6 +335,95 @@ export const dateStr = (d: ISODateish): string | null => {
  */
 export const orDefault = <T>(value: T | null | undefined, fallback: T): T =>
   value ?? fallback;
+
+/**
+ * The stored rich-text value → the plain object a `jsonb` column takes.
+ *
+ * Neo4j stores rich text as a NUL-delimited tagged string
+ * (`'\0RichText\0' + JSON` — see RichTextDocument.serializedPrefix). The Neo4j
+ * read transformer (`core/neo4j/transformer.ts`) parses it back into a
+ * RichTextDocument on the way out, so the first branch is the normal path; the
+ * serialized branch covers a value the transformer did not reach (nested inside
+ * a map, say).
+ *
+ * Handling that second case is not optional politeness. **Postgres text and
+ * jsonb cannot store a NUL byte at all**, so letting the serialized form through
+ * is a hard insert failure, not a cosmetically-wrong row.
+ *
+ * `undefined` = present but unusable (the caller decides: null the column, or
+ * drop the row if it is NOT NULL); `null` = genuinely empty at the source.
+ */
+export const richText = (value: unknown): object | null | undefined => {
+  if (value == null) return null;
+  if (RichTextDocument.isSerialized(value)) {
+    try {
+      return { ...RichTextDocument.fromSerialized(value) };
+    } catch {
+      return undefined;
+    }
+  }
+  if (typeof value === 'object') return { ...value };
+  return undefined;
+};
+
+/**
+ * Batched mirror of `resolveResourceBaseNode` (`~/core/drizzle`): resolve
+ * polymorphic parent ids to the **concrete typename** the read path expects in
+ * a `parent_type` discriminator column (`comment_threads`, `posts`).
+ *
+ * Why mirror instead of reusing it: that function issues six queries per id, and
+ * these domains resolve one parent per row. This resolves the whole distinct set
+ * in six queries total.
+ *
+ * Why not read the Neo4j labels instead: `labels(parent)` is unordered and
+ * carries interface noise — a project comes back as
+ * `["BaseNode","Project","MomentumTranslationProject"]` and a language as
+ * `["BaseNode","Language","Commentable"]`, so neither the first nor the last
+ * entry is the answer. The PG read path rebuilds the parent as
+ * `labels: [parent_type, 'BaseNode']`, so the column must hold exactly the
+ * string the resolver would have produced.
+ *
+ * ⚠ The precedence order below MUST match `resolveResourceBaseNode`'s
+ * (user → language → partner → project → engagement → progressReport). An id
+ * absent from the returned map either did not land or is soft-deleted, which
+ * makes this double as the landed-parent guard.
+ */
+export const resolveParentTypes = async (
+  ctx: CutoverContext,
+  ids: readonly string[],
+): Promise<Map<string, string>> => {
+  const out = new Map<string, string>();
+  const distinct = [...new Set(ids)];
+  if (distinct.length === 0) return out;
+  const list = sql.join(
+    distinct.map((id) => sql`${id}`),
+    sql`, `,
+  );
+  // Lowest precedence first, so a higher-precedence match overwrites it.
+  // EVERY leg must alias the type expression `AS t`. Postgres names an
+  // unaliased expression `?column?`, so a missing alias makes `row.t` undefined
+  // — and `out.set(id, undefined)` still creates the KEY, which silently defeats
+  // any `keepLanded` guard built from `.keys()` and then fails downstream on a
+  // NOT NULL discriminator. That is exactly how this shipped the first time; the
+  // filter below is the structural backstop so an alias slip can only ever lose
+  // a row loudly, never write a null.
+  const legs = [
+    sql`SELECT id, 'ProgressReport' AS t FROM periodic_reports WHERE id IN (${list}) AND type = 'Progress'`,
+    sql`SELECT id, type || 'Engagement' AS t FROM engagements WHERE id IN (${list}) AND deleted_at IS NULL`,
+    sql`SELECT id, type || 'Project' AS t FROM projects WHERE id IN (${list}) AND deleted_at IS NULL`,
+    sql`SELECT id, 'Partner' AS t FROM partners WHERE id IN (${list}) AND deleted_at IS NULL`,
+    sql`SELECT id, 'Language' AS t FROM languages WHERE id IN (${list}) AND deleted_at IS NULL`,
+    sql`SELECT id, 'User' AS t FROM users WHERE id IN (${list}) AND deleted_at IS NULL`,
+  ];
+  for (const leg of legs) {
+    const res = await ctx.db.execute<{ id: string; t: string }>(leg);
+    for (const row of res.rows) {
+      if (!row.t) continue;
+      out.set(row.id, row.t);
+    }
+  }
+  return out;
+};
 
 /** LinkTo<T> | { id } | null → the id string, or null. */
 export const linkId = <T extends string>(
