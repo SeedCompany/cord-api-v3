@@ -1,10 +1,12 @@
 import { type Extractor } from '../cutover.types';
 import { budgetExtractor } from './budget.extractor';
 import { departmentIdBlockExtractor } from './department-id-block.extractor';
+import { engagementExtractor } from './engagement.extractor';
 import { ethnologueExtractor } from './ethnologue.extractor';
 import { fieldRegionExtractor } from './field-region.extractor';
 import { fieldZoneExtractor } from './field-zone.extractor';
 import { fundingAccountExtractor } from './funding-account.extractor';
+import { languageExtractor } from './language.extractor';
 import { locationExtractor } from './location.extractor';
 import { notificationExtractor } from './notification.extractor';
 import { organizationExtractor } from './organization.extractor';
@@ -19,15 +21,15 @@ import { userExtractor } from './user.extractor';
  * All firm-domain extractors, in no particular order — the harness
  * topologically sorts by each extractor's `dependsOn`.
  *
- * Covers the domains already merged to develop. File (tree) / Language /
- * Engagement and the rest of the waves drop in here as they land
- * (see README.md).
+ * Covers the domains already merged to develop. File (tree) / Engagement and
+ * the rest of the waves drop in here as they land (see README.md).
  */
 export const extractors: readonly Extractor[] = [
   userExtractor,
   toolExtractor,
   fundingAccountExtractor,
   ethnologueExtractor,
+  languageExtractor,
   departmentIdBlockExtractor,
   fieldZoneExtractor,
   fieldRegionExtractor,
@@ -37,6 +39,7 @@ export const extractors: readonly Extractor[] = [
   projectExtractor,
   projectMemberExtractor,
   partnershipExtractor,
+  engagementExtractor,
   notificationExtractor,
   budgetExtractor,
 ];

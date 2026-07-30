@@ -1,0 +1,378 @@
+import { type ID } from '~/common';
+import {
+  ceremonies,
+  ceremonyTypeEnum,
+  engagements,
+  engagementStatusEnum,
+  engagementStatusHistory,
+  languages,
+  locations,
+  productMethodologyEnum,
+  projects,
+  users,
+} from '~/core/drizzle/schema';
+import { CeremonyRepository } from '../../../components/ceremony/ceremony.repository';
+import { type Ceremony } from '../../../components/ceremony/dto';
+import { type Engagement } from '../../../components/engagement/dto';
+import { EngagementRepository } from '../../../components/engagement/engagement.repository';
+import {
+  bulkInsert,
+  cypher,
+  dateStr,
+  fetchIds,
+  keepLanded,
+  linkId,
+  liveTargetIds,
+  orDefault,
+  readAllViaRepo,
+  sanitizeEnum,
+  stat,
+  ts,
+  tsReq,
+} from '../cutover.helpers';
+import { type Extractor, type TableStat } from '../cutover.types';
+
+/**
+ * Engagement cluster — engagements (single-table inheritance over
+ * LanguageEngagement / InternshipEngagement) + engagement_status_history +
+ * ceremonies (1:1).
+ *
+ * This wave has more ways to fail than any before it, because `engagements`
+ * carries a type-shape CHECK on top of five FKs to tables that legitimately drop
+ * rows:
+ *
+ *   engagements_type_shape_chk:
+ *     Language   ⟹ language_id NOT NULL AND intern_id IS NULL
+ *     Internship ⟹ intern_id   NOT NULL AND language_id IS NULL
+ *
+ * So for a Language engagement whose language never landed there is no
+ * null-and-continue option — the CHECK forbids it and the row must be DROPPED.
+ * Same for an Internship whose intern never landed. That is real data loss, so
+ * both are counted and logged with ids rather than absorbed. `mentor_id` and
+ * `country_of_origin_id` ARE nullable, so those get nulled instead.
+ *
+ * Type comes from the Neo4j label (`LanguageEngagement` / `InternshipEngagement`)
+ * rather than the DTO's `__typename` string, which is prefixed `default::` for
+ * Gel's benefit and is a fragile thing to parse.
+ *
+ * `pnp_id` / `growth_plan_id` stay null — deferred FKs to file_nodes, populated
+ * by the File wave (Phase 7).
+ */
+export const engagementExtractor: Extractor = {
+  name: 'engagement',
+  targetTables: ['engagements', 'engagement_status_history', 'ceremonies'],
+  dependsOn: ['project', 'language', 'user', 'location'],
+  async run(ctx) {
+    const out: Record<string, TableStat> = {};
+
+    const dtos = await readAllViaRepo<Engagement>(
+      ctx,
+      'Engagement',
+      EngagementRepository,
+    );
+
+    // Label-driven discriminator — see the docblock.
+    const languageEngagementIds = new Set<string>(
+      await fetchIds(ctx, 'LanguageEngagement'),
+    );
+
+    const landedProjects = await liveTargetIds(ctx, 'Project', projects);
+    const landedLanguages = await liveTargetIds(ctx, 'Language', languages);
+    const landedUsers = await liveTargetIds(ctx, 'User', users);
+    const landedLocations = await liveTargetIds(ctx, 'Location', locations);
+
+    const droppedForProject: string[] = [];
+    const droppedForLanguage: string[] = [];
+    const droppedForIntern: string[] = [];
+    const nulledEnums = new Set<string>();
+    let nulledMentors = 0;
+    let nulledCountries = 0;
+
+    const rows = dtos.flatMap((eng) => {
+      const isLanguage = languageEngagementIds.has(eng.id);
+      const projectId = eng.project?.id;
+      if (!projectId || !landedProjects.has(projectId)) {
+        droppedForProject.push(eng.id);
+        return [];
+      }
+
+      // migration-todo: the DTO splits Language/Internship fields by subtype, so
+      // reading the other half needs a cast. The shape is guaranteed by the
+      // label check above.
+      const lang = eng as unknown as Record<string, any>;
+
+      const languageId = isLanguage
+        ? (linkId(lang.language as { id: ID<'Language'> } | null) ?? null)
+        : null;
+      if (isLanguage && (!languageId || !landedLanguages.has(languageId))) {
+        droppedForLanguage.push(eng.id);
+        return [];
+      }
+
+      const internId = !isLanguage
+        ? (linkId(lang.intern as { id: ID<'User'> } | null) ?? null)
+        : null;
+      if (!isLanguage && (!internId || !landedUsers.has(internId))) {
+        droppedForIntern.push(eng.id);
+        return [];
+      }
+
+      let mentorId = !isLanguage
+        ? (linkId(lang.mentor as { id: ID<'User'> } | null) ?? null)
+        : null;
+      if (mentorId && !landedUsers.has(mentorId)) {
+        mentorId = null;
+        nulledMentors++;
+      }
+      let countryOfOriginId = !isLanguage
+        ? (linkId(lang.countryOfOrigin as { id: ID<'Location'> } | null) ??
+          null)
+        : null;
+      if (countryOfOriginId && !landedLocations.has(countryOfOriginId)) {
+        countryOfOriginId = null;
+        nulledCountries++;
+      }
+
+      const status = sanitizeEnum(
+        [orDefault(eng.status as string, 'InDevelopment')],
+        engagementStatusEnum.enumValues,
+      );
+      if (status.dropped.length > 0) {
+        for (const value of status.dropped) nulledEnums.add(`status=${value}`);
+      }
+      const methodologies = sanitizeEnum(
+        [...((lang.methodologies as string[] | undefined) ?? [])],
+        productMethodologyEnum.enumValues,
+      );
+      for (const value of methodologies.dropped) {
+        nulledEnums.add(`methodology=${value}`);
+      }
+
+      const type: 'Language' | 'Internship' = isLanguage
+        ? 'Language'
+        : 'Internship';
+      return [
+        {
+          id: eng.id,
+          projectId,
+          type,
+          // A legacy status outside the enum falls back to the column default
+          // rather than aborting the chunk.
+          status: status.kept[0] ?? ('InDevelopment' as const),
+          statusModifiedAt: ts(eng.statusModifiedAt),
+          lastSuspendedAt: ts(eng.lastSuspendedAt),
+          lastReactivatedAt: ts(eng.lastReactivatedAt),
+          completeDate: dateStr(eng.completeDate),
+          disbursementCompleteDate: dateStr(eng.disbursementCompleteDate),
+          startDateOverride: dateStr(lang.startDateOverride),
+          endDateOverride: dateStr(lang.endDateOverride),
+          initialEndDate: dateStr(eng.initialEndDate),
+          description: eng.description ?? null,
+
+          // ── LanguageEngagement ──
+          languageId,
+          firstScripture: (lang.firstScripture as boolean | null) ?? null,
+          lukePartnership: (lang.lukePartnership as boolean | null) ?? null,
+          openToInvestorVisit:
+            (lang.openToInvestorVisit as boolean | null) ?? null,
+          paratextRegistryId:
+            (lang.paratextRegistryId as string | null) ?? null,
+          rev79CommunityId: (lang.rev79CommunityId as string | null) ?? null,
+          // Deferred FK — the File wave fills these.
+          pnpId: null,
+          sentPrintingDate: dateStr(lang.sentPrintingDate),
+          historicGoal: (lang.historicGoal as string | null) ?? null,
+          milestonePlanned: orDefault(
+            lang.milestonePlanned,
+            'Unknown' as const,
+          ),
+          milestoneReached: (lang.milestoneReached as boolean | null) ?? null,
+          usingAIAssistedTranslation: orDefault(
+            lang.usingAIAssistedTranslation,
+            'Unknown' as const,
+          ),
+
+          // ── InternshipEngagement ──
+          internId,
+          mentorId,
+          position: lang.position ?? null,
+          methodologies: methodologies.kept as any,
+          countryOfOriginId,
+          growthPlanId: null,
+          marketable: orDefault(lang.marketable as boolean, false),
+          webId: (lang.webId as string | null) ?? null,
+
+          createdAt: tsReq(eng.createdAt),
+          modifiedAt: tsReq(eng.modifiedAt),
+          updatedAt: tsReq(eng.modifiedAt),
+          deletedAt: null,
+        },
+      ];
+    });
+
+    for (const [reason, ids] of [
+      ['their project never landed', droppedForProject],
+      [
+        'they are a LanguageEngagement whose language never landed (type-shape CHECK forbids a null language_id)',
+        droppedForLanguage,
+      ],
+      [
+        'they are an InternshipEngagement whose intern never landed (type-shape CHECK forbids a null intern_id)',
+        droppedForIntern,
+      ],
+    ] as const) {
+      if (ids.length > 0) {
+        ctx.log(
+          `    ⚠ DROPPED ${ids.length} engagement(s) because ${reason}: ` +
+            `${ids.slice(0, 10).join(', ')}${ids.length > 10 ? ', …' : ''}`,
+        );
+      }
+    }
+    if (nulledMentors > 0 || nulledCountries > 0) {
+      ctx.log(
+        `    ⚠ nulled ${nulledMentors} mentor + ${nulledCountries} countryOfOrigin ref(s) whose target never landed`,
+      );
+    }
+    if (nulledEnums.size > 0) {
+      ctx.log(
+        `    ⚠ dropped unknown engagement enum value(s): ${[...nulledEnums].join(', ')} — migration-todo: map, don't drop`,
+      );
+    }
+
+    // Live-unique pre-warning: (project, language) and (project, intern) are
+    // unique among live rows, and everything here is live.
+    for (const [label, key] of [
+      ['(project, language)', (r: (typeof rows)[number]) => r.languageId],
+      ['(project, intern)', (r: (typeof rows)[number]) => r.internId],
+    ] as const) {
+      const seen = new Map<string, ID>();
+      const collisions: string[] = [];
+      for (const row of rows) {
+        const other = key(row);
+        if (other == null) continue;
+        const composite = `${row.projectId}::${other}`;
+        const first = seen.get(composite);
+        if (first) collisions.push(`${row.id} (dup of ${first})`);
+        else seen.set(composite, row.id);
+      }
+      if (collisions.length > 0) {
+        ctx.log(
+          `    ⚠ ${collisions.length} engagement(s) collide on the ${label} live-unique index and will be ` +
+            `DROPPED by onConflictDoNothing: ${collisions.slice(0, 10).join(', ')}` +
+            (collisions.length > 10 ? ', …' : ''),
+        );
+      }
+    }
+
+    out.engagements = stat(
+      dtos.length,
+      await bulkInsert(ctx, engagements, rows),
+    );
+
+    // ── engagement_status_history ────────────────────────────────────────────
+    // Neo4j keeps status history as DEACTIVATED `status` property rels
+    // (`deactivateProperty` flips active:false and stamps deletedAt); the live
+    // status is the one active rel. Newest-first ordering is the consumer's job
+    // (the rules engine's BackTo transitions read this table), so just carry the
+    // timestamps faithfully.
+    const historyRows = await cypher<{
+      engagementId: ID<'Engagement'>;
+      status: string;
+      at: string | null;
+    }>(
+      ctx,
+      `MATCH (e:Engagement)-[r:status { active: false }]->(p:Property)
+       RETURN e.id AS engagementId, p.value AS status,
+              toString(coalesce(r.deletedAt, r.createdAt, p.createdAt)) AS at`,
+    );
+    const landedEngagements = await liveTargetIds(
+      ctx,
+      'Engagement',
+      engagements,
+    );
+    const knownStatuses = new Set<string>(engagementStatusEnum.enumValues);
+    const history = keepLanded(
+      historyRows.filter((row) => knownStatuses.has(row.status)),
+      [[landedEngagements, (row) => row.engagementId]],
+    );
+    if (history.skipped > 0) {
+      ctx.log(
+        `    ⚠ skipped ${history.skipped} status-history row(s) whose engagement never landed`,
+      );
+    }
+    out.engagement_status_history = stat(
+      historyRows.length,
+      await bulkInsert(
+        ctx,
+        engagementStatusHistory,
+        history.kept.map((row) => ({
+          engagementId: row.engagementId,
+          status: row.status as any,
+          // `at` is NOT NULL with a defaultNow(); a history rel with no usable
+          // timestamp is better dated now than dropped.
+          at: row.at ? new Date(row.at) : new Date(),
+        })),
+      ),
+    );
+
+    // ── ceremonies (1:1 with engagement) ────────────────────────────────────
+    const ceremonyDtos = await readAllViaRepo<Ceremony>(
+      ctx,
+      'Ceremony',
+      CeremonyRepository,
+    );
+    const ceremonyPairs = await cypher<{
+      cid: ID<'Ceremony'>;
+      eid: ID<'Engagement'>;
+    }>(
+      ctx,
+      `MATCH (e:Engagement)-[:ceremony { active: true }]->(c:Ceremony)
+       RETURN c.id AS cid, e.id AS eid`,
+    );
+    const engagementOf = new Map(ceremonyPairs.map((p) => [p.cid, p.eid]));
+    const knownCeremonyTypes = new Set<string>(ceremonyTypeEnum.enumValues);
+    let ceremoniesWithoutEngagement = 0;
+    let ceremoniesBadType = 0;
+    const ceremonyRows = ceremonyDtos.flatMap((cer) => {
+      const engagementId = engagementOf.get(cer.id);
+      if (!engagementId || !landedEngagements.has(engagementId)) {
+        // engagement_id is NOT NULL, so an orphan ceremony cannot be written.
+        ceremoniesWithoutEngagement++;
+        return [];
+      }
+      if (!knownCeremonyTypes.has(cer.type)) {
+        ceremoniesBadType++;
+        return [];
+      }
+      return [
+        {
+          id: cer.id,
+          engagementId,
+          type: cer.type,
+          planned: orDefault(cer.planned, false),
+          estimatedDate: dateStr(cer.estimatedDate),
+          actualDate: dateStr(cer.actualDate),
+          createdAt: tsReq(cer.createdAt),
+          updatedAt: tsReq(cer.createdAt),
+          deletedAt: null,
+        },
+      ];
+    });
+    if (ceremoniesWithoutEngagement > 0) {
+      ctx.log(
+        `    ⚠ skipped ${ceremoniesWithoutEngagement} ceremony(ies) with no landed engagement (engagement_id is NOT NULL)`,
+      );
+    }
+    if (ceremoniesBadType > 0) {
+      ctx.log(
+        `    ⚠ skipped ${ceremoniesBadType} ceremony(ies) with a type outside the ceremony_type enum`,
+      );
+    }
+    out.ceremonies = stat(
+      ceremonyDtos.length,
+      await bulkInsert(ctx, ceremonies, ceremonyRows),
+    );
+
+    return out;
+  },
+};
