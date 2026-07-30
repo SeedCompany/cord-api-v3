@@ -96,7 +96,7 @@ jobs:
             shard: 1
             total: 1
             test-args: >-
-              --testPathPatterns "test/(authentication|user|education|unavailability|file|location|organization|region|zone|funding-account|partner|partnership|project-member|tool|notification|postgres-schema|auth-read-filter|budget|language|engagement|engagement-workflow|ceremony|product|film|story|project-workflow|periodic-report|rev79|pin|known-language|comment|post|audit-log|progress-report-media|search)\."
+              --testPathPatterns "test/(authentication|user|education|unavailability|file|location|organization|region|zone|funding-account|partner|partnership|project-member|tool|notification|postgres-schema|auth-read-filter|budget|language|engagement|engagement-workflow|ceremony|product|film|story|project-workflow|periodic-report|rev79|pin|known-language|comment|post|audit-log|progress-report-media|search|live-query-invalidation)\."
       fail-fast: false
     steps:
       - uses: actions/checkout@v4
