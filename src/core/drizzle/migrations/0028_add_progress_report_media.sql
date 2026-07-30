@@ -25,3 +25,17 @@ CREATE TABLE "progress_report_media" (
 CREATE INDEX "progress_report_media_report_id_idx" ON "progress_report_media" ("report_id");
 CREATE INDEX "progress_report_media_variant_group_id_idx" ON "progress_report_media" ("variant_group_id");
 CREATE INDEX "progress_report_media_creator_id_idx" ON "progress_report_media" ("creator_id");
+
+-- One live row per (variant_group, variant). The repository checks this with a
+-- SELECT before its INSERT, which is a TOCTOU race — two concurrent uploads to
+-- the same group and variant can both pass the check. This index is the
+-- fail-safe, and it goes BEYOND Neo4j, which has no such constraint (its only
+-- ProgressReportMedia constraint is on id).
+--
+-- Adding a uniqueness rule the source never enforced is normally how a load
+-- silently sheds rows, so it was checked first: production has 8076 media rows
+-- and ZERO duplicate (group, variant) pairs, so nothing is dropped by adopting
+-- it. Partial, scoped to live rows, per the soft-delete convention.
+CREATE UNIQUE INDEX "progress_report_media_group_variant_active_unique"
+  ON "progress_report_media" ("variant_group_id", "variant")
+  WHERE "deleted_at" IS NULL;

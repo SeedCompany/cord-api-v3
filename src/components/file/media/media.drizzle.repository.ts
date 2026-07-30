@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { eq, inArray, or, type SQL } from 'drizzle-orm';
+import { DateTime } from 'luxon';
 import type { Except, RequireAtLeastOne } from 'type-fest';
 import {
   generateId,
@@ -10,7 +11,10 @@ import {
 import { DrizzleService } from '~/core/drizzle';
 import { fileNodes, media } from '~/core/drizzle/schema';
 import { type BaseNode } from '~/core/neo4j/results';
-import { resolveFileRootAttachment } from '../resolve-file-attachment';
+import {
+  type Attachment,
+  resolveFileRootAttachments,
+} from '../resolve-file-attachment';
 import { type AnyMedia } from './media.dto';
 
 type MediaRow = typeof media.$inferSelect;
@@ -62,7 +66,16 @@ export class MediaDrizzleRepository {
       .select()
       .from(media)
       .where(conditions.length === 1 ? conditions[0] : or(...conditions));
-    return await Promise.all(rows.map((row) => this.toDto(row)));
+    // Resolve every row's attachment in ONE pass. Doing it inside toDto meant a
+    // recursive ancestor CTE plus the 11-branch UNION per row — 2N round trips
+    // on the path a DataLoader batches.
+    const attachments = await resolveFileRootAttachments(
+      this.db,
+      rows.map((row) => row.fileVersionId),
+    );
+    return rows.map((row) =>
+      this.toDto(row, attachments.get(row.fileVersionId)),
+    );
   }
 
   // No live-query invalidation, deliberately: the Neo4j `save` is raw Cypher
@@ -139,15 +152,15 @@ export class MediaDrizzleRepository {
     return {
       identity: id,
       labels: [label, 'BaseNode'],
-      properties: { id },
+      // createdAt was selected but dropped here, while BaseNode.properties
+      // declares it required — the cast hid the gap. Current callers only test
+      // truthiness, so it was a latent undefined-read rather than a live bug.
+      properties: { id, createdAt: DateTime.fromJSDate(row.createdAt) },
     } as unknown as BaseNode;
   }
 
-  private async toDto(row: MediaRow): Promise<AnyMedia> {
-    const attachedTo = await resolveFileRootAttachment(
-      this.db,
-      row.fileVersionId,
-    );
+  /** Synchronous: the caller resolves attachments in one batch beforehand. */
+  private toDto(row: MediaRow, attachedTo: Attachment | undefined): AnyMedia {
     const base = {
       __typename: row.type,
       id: row.id,

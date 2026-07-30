@@ -10,6 +10,7 @@ import {
 import { Identity } from '~/core/authentication';
 import { type DbTypeOf } from '~/core/database';
 import { DrizzleService } from '~/core/drizzle/drizzle.service';
+import { catchUniqueViolation } from '~/core/drizzle/errors';
 import {
   engagements,
   fileNodes,
@@ -156,15 +157,30 @@ export class ProgressReportMediaDrizzleRepository {
 
     const id = await generateId<ID<'ProgressReportMedia'>>();
     const creatorId = this.identity.current.userId;
-    await this.db.insert(progressReportMedia).values({
-      id,
-      reportId: input.report,
-      variant: input.variant.key,
-      category: input.category ?? null,
-      variantGroupId,
-      fileId,
-      creatorId,
-    });
+    await this.db
+      .insert(progressReportMedia)
+      .values({
+        id,
+        reportId: input.report,
+        variant: input.variant.key,
+        category: input.category ?? null,
+        variantGroupId,
+        fileId,
+        creatorId,
+      })
+      // The `existing.some(...)` check above is a SELECT before this INSERT, so
+      // two concurrent uploads to the same group+variant can both pass it. The
+      // partial unique index is the fail-safe; map its violation to the SAME
+      // error the check raises (DuplicateException extends InputException with
+      // the same `field`), so a race is indistinguishable from the common case
+      // rather than surfacing as a 500.
+      .catch(
+        catchUniqueViolation(
+          'progress_report_media_group_variant_active_unique',
+          'variant',
+          'Variant group already has this variant',
+        ),
+      );
     return {
       id,
       createdAt: DateTime.now(),

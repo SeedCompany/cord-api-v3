@@ -4,7 +4,7 @@ import { type ID } from '~/common';
 import { type DrizzleDb } from '~/core/drizzle';
 import { type BaseNode } from '~/core/neo4j/results';
 
-type Attachment = [resource: BaseNode, relation: string];
+export type Attachment = [resource: BaseNode, relation: string];
 
 /**
  * Reverse of {@link resolveResourceBaseNode}: given file tree *root* ids, find
@@ -97,27 +97,64 @@ export async function reverseAttachmentByRootIds(
 }
 
 /**
- * Single-file convenience: walk from a file node to its tree root, then resolve
- * the attached resource. Backs `Media.attachedTo`. Returns undefined when
- * nothing references the root (e.g. a test root dir, or a free-floating tree).
+ * BATCHED: walk many file nodes to their tree roots, then resolve each root's
+ * attached resource — two queries total regardless of input size.
+ *
+ * The per-node version below is a wrapper over this one. Media's `readMany` is
+ * the batch path a DataLoader feeds, and calling the single version per row cost
+ * a recursive ancestor CTE **plus** the 11-branch UNION for every media row —
+ * 2N round trips for one page.
+ */
+export async function resolveFileRootAttachments(
+  db: DrizzleDb,
+  startFileNodeIds: readonly ID[],
+): Promise<Map<ID, Attachment>> {
+  const out = new Map<ID, Attachment>();
+  const starts = [...new Set(startFileNodeIds)];
+  if (starts.length === 0) {
+    return out;
+  }
+  const ids = sql.join(
+    starts.map((id) => sql`${id}`),
+    sql`, `,
+  );
+  // Carry the originating id through the recursion so one walk serves every
+  // start node; DISTINCT ON picks each start's deepest ancestor, i.e. its root.
+  const rootRes = await db.execute<{ startId: ID; rootId: ID }>(sql`
+    WITH RECURSIVE ancestors AS (
+      SELECT id AS start_id, id, parent_id, 0 AS depth
+        FROM file_nodes WHERE id IN (${ids})
+      UNION ALL
+      SELECT a.start_id, p.id, p.parent_id, a.depth + 1
+        FROM ancestors a JOIN file_nodes p ON p.id = a.parent_id
+    )
+    SELECT DISTINCT ON (start_id) start_id AS "startId", id AS "rootId"
+      FROM ancestors ORDER BY start_id, depth DESC
+  `);
+  const rootByStart = new Map(
+    rootRes.rows.map((row) => [row.startId, row.rootId]),
+  );
+  const attachmentByRoot = await reverseAttachmentByRootIds(db, [
+    ...new Set(rootByStart.values()),
+  ]);
+  for (const [startId, rootId] of rootByStart) {
+    const attachment = attachmentByRoot.get(rootId);
+    if (attachment) {
+      out.set(startId, attachment);
+    }
+  }
+  return out;
+}
+
+/**
+ * Single-file convenience over {@link resolveFileRootAttachments}. Backs
+ * `Media.attachedTo` on the single-read paths. Returns undefined when nothing
+ * references the root (e.g. a test root dir, or a free-floating tree).
  */
 export async function resolveFileRootAttachment(
   db: DrizzleDb,
   startFileNodeId: ID,
 ): Promise<Attachment | undefined> {
-  const rootRes = await db.execute<{ rootId: ID }>(sql`
-    WITH RECURSIVE ancestors AS (
-      SELECT id, parent_id, 0 AS depth FROM file_nodes WHERE id = ${startFileNodeId}
-      UNION ALL
-      SELECT p.id, p.parent_id, a.depth + 1
-      FROM ancestors a JOIN file_nodes p ON p.id = a.parent_id
-    )
-    SELECT id AS "rootId" FROM ancestors ORDER BY depth DESC LIMIT 1
-  `);
-  const rootId = rootRes.rows[0]?.rootId;
-  if (!rootId) {
-    return undefined;
-  }
-  const map = await reverseAttachmentByRootIds(db, [rootId]);
-  return map.get(rootId);
+  const map = await resolveFileRootAttachments(db, [startFileNodeId]);
+  return map.get(startFileNodeId);
 }

@@ -2809,6 +2809,13 @@ export const progressReportMedia = pgTable(
     index('progress_report_media_report_id_idx').on(t.reportId),
     index('progress_report_media_variant_group_id_idx').on(t.variantGroupId),
     index('progress_report_media_creator_id_idx').on(t.creatorId),
+    // One live row per (variant_group, variant) — the DB fail-safe behind the
+    // repository's SELECT-then-INSERT check, which is a TOCTOU race on its own.
+    // Goes beyond Neo4j, which has no equivalent constraint; safe to adopt
+    // because prod carries 8076 media rows with zero duplicate pairs.
+    uniqueIndex('progress_report_media_group_variant_active_unique')
+      .on(t.variantGroupId, t.variant)
+      .where(sql`${t.deletedAt} IS NULL`),
   ],
 );
 
@@ -2821,7 +2828,17 @@ export const progressReportMedia = pgTable(
  * resource's file this is, resolved by the consuming field's type.
  */
 export const pnpExtractionResults = pgTable('pnp_extraction_results', {
-  fileId: text('file_id').$type<ID<'File'>>().primaryKey(),
+  // An extraction result has no life of its own without its File, so the
+  // lifetime follows it. Note what CASCADE does and does not buy: file_nodes is
+  // SOFT-deleted, so ordinary deletion sets deleted_at and this never fires —
+  // the result simply becomes unreachable, since every read arrives via the
+  // file. The cascade earns its keep on a real DELETE (a hard purge, or a
+  // rollback), and the FK itself is what stops a result pointing at no file.
+  // The problems table already cascades from here, so the chain completes.
+  fileId: text('file_id')
+    .$type<ID<'File'>>()
+    .primaryKey()
+    .references(() => fileNodes.id, { onDelete: 'cascade' }),
   createdAt: timestamp('created_at', { withTimezone: true })
     .notNull()
     .defaultNow(),
