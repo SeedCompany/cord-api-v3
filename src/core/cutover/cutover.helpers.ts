@@ -10,8 +10,14 @@ export const chunk = <T>(items: readonly T[], size: number): T[][] =>
   );
 
 /**
- * Enumerate the ids of every node with `label`. Backticks the label so dotted
- * labels (e.g. `Ethnologue.Language`, `File.Version`) work.
+ * Enumerate the ids of every node with `label`.
+ *
+ * `label` must be an actual NEO4J label — PascalCase, no dots. The label is
+ * backticked so a dotted name is syntactically legal, which is precisely the
+ * trap: `Ethnologue.Language` and `File.Version` are **Gel** module paths and
+ * match nothing. This docblock used to cite them as working examples; it was
+ * wrong and the ethnologue extractor shipped that way, migrating zero rows with
+ * a green ✓. See {@link warnIfLabelUnknown}.
  *
  * migration-todo: this reads ALL nodes including soft-deleted ones if the
  * Neo4j model keeps them. The per-domain hydrate/readMany typically filters to
@@ -24,7 +30,45 @@ export const fetchIds = async (
   const rows = await ctx.neo4j
     .query<{ id: ID }>(`MATCH (n:\`${label}\`) RETURN n.id AS id`)
     .run();
+  if (rows.length === 0) {
+    await warnIfLabelUnknown(ctx, label);
+  }
   return rows.map((r) => r.id);
+};
+
+/** Labels actually in use in the source graph. Fetched once per run. */
+let knownLabels: ReadonlySet<string> | undefined;
+
+/**
+ * A wrong label is the worst failure this harness has, because it is SILENT:
+ * `MATCH (n:\`Nope\`)` returns zero rows exactly like an empty domain, so the
+ * extractor reports 0 and reconciliation confirms 0 == 0 == 0 with a ✓.
+ *
+ * This actually happened — `ethnologue` queried `Ethnologue.Language`, which is
+ * the **Gel** module path (`e.Ethnologue.Language`) and not a Neo4j label. The
+ * whole domain migrated as zero rows and every check passed. The docblock on
+ * this file even suggested `File.Version` as an example, so later waves would
+ * have inherited it.
+ *
+ * Warn rather than throw: a genuinely empty domain whose label was never created
+ * also yields zero, and that is legitimate. The point is to make the ambiguity
+ * loud instead of invisible.
+ */
+const warnIfLabelUnknown = async (ctx: CutoverContext, label: string) => {
+  knownLabels ??= new Set(
+    (
+      await ctx.neo4j
+        .query<{ label: string }>('CALL db.labels() YIELD label RETURN label')
+        .run()
+    ).map((row) => row.label),
+  );
+  if (!knownLabels.has(label)) {
+    ctx.log(
+      `    ⚠⚠ label "${label}" is NOT in db.labels() and matched 0 nodes — either the domain is ` +
+        `genuinely empty, or the label is wrong. Neo4j labels are PascalCase with NO dots; a Gel ` +
+        `module path (e.g. "Ethnologue.Language", "File.Version") silently matches nothing.`,
+    );
+  }
 };
 
 /**
@@ -48,6 +92,40 @@ export const liveTargetIds = async (
     .select({ id: table.id })
     .from(table);
   return new Set(rows.map((row) => String(row.id)));
+};
+
+/**
+ * Drop junction/child rows whose referenced parent never LANDED in Postgres.
+ *
+ * This is the harness's most common real-load failure and it is a HARD one — a
+ * `*_fkey` violation aborts the whole run. It happens because junctions are read
+ * with raw Cypher over ALL nodes of a label, which is a superset of what landed:
+ * `readMany` silently omits nodes with broken required rels, and
+ * `onConflictDoNothing` drops unique-conflicts. Neither is visible to the
+ * junction query.
+ *
+ * Pass one entry per FK column. Returns the surviving rows plus a skip count to
+ * log — never drop silently.
+ *
+ * Found by a real (non-dry) scratch-DB run: dry-run cannot surface this class at
+ * all, because it never inserts.
+ */
+export const keepLanded = <T>(
+  rows: readonly T[],
+  refs: ReadonlyArray<
+    readonly [
+      landed: ReadonlySet<string>,
+      idOf: (row: T) => string | null | undefined,
+    ]
+  >,
+): { kept: T[]; skipped: number } => {
+  const kept = rows.filter((row) =>
+    refs.every(([landed, idOf]) => {
+      const id = idOf(row);
+      return id != null && landed.has(id);
+    }),
+  );
+  return { kept, skipped: rows.length - kept.length };
 };
 
 /** Run an arbitrary read Cypher and return the rows (junction extraction). */
@@ -108,8 +186,12 @@ export const bulkInsert = async <T extends PgTable>(
   if (ctx.dryRun) return rows.length;
   let n = 0;
   for (const c of chunk(rows, ctx.batchSize)) {
-    await ctx.db.insert(table).values(c).onConflictDoNothing();
-    n += c.length;
+    // Count what Postgres ACTUALLY wrote, not what we handed it. Adding
+    // `c.length` here reported attempted-not-written, so a unique-conflict drop
+    // showed as `inserted 69` against `pgCount 50` and the "inserted" column was
+    // simply false. Only the pgCount comparison caught it; now both agree.
+    const res = await ctx.db.insert(table).values(c).onConflictDoNothing();
+    n += (res as { rowCount?: number | null }).rowCount ?? c.length;
   }
   return n;
 };

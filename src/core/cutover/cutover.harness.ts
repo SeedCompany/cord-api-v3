@@ -101,22 +101,42 @@ export const runCutover = async (
   ctx.log('\n─── Reconciliation ───');
   ctx.log('  table                              read  inserted   pgCount  ok');
   let allOk = true;
+  let totalDropped = 0;
   for (const e of selected) {
     for (const table of e.targetTables) {
       const s = results.get(e.name)?.[table] ?? { read: 0, inserted: 0 };
       const count = ctx.dryRun ? s.inserted : await pgCount(ctx, table);
-      const ok = ctx.dryRun || count === s.inserted;
-      if (!ok) allOk = false;
+      // TWO distinct failures, deliberately not collapsed:
+      //  · inserted ≠ pgCount → a write did not land. Broken.
+      //  · read ≠ inserted    → rows were DROPPED (unique conflict, guard skip).
+      //    Not corrupt, but it is silent data loss and must never read as ✓.
+      //    `inserted` counts what Postgres actually wrote, so it equals pgCount
+      //    on a healthy run — which means the drop signal lives in read-vs-
+      //    inserted and nowhere else.
+      const countMatches = ctx.dryRun || count === s.inserted;
+      const dropped = ctx.dryRun ? 0 : s.read - s.inserted;
+      if (!countMatches) allOk = false;
+      totalDropped += Math.max(0, dropped);
+      const verdict = !countMatches
+        ? '✗ MISMATCH'
+        : dropped > 0
+          ? `⚠ DROPPED ${dropped}`
+          : '✓';
       ctx.log(
         `  ${table.padEnd(34)} ${String(s.read).padStart(5)} ` +
           `${String(s.inserted).padStart(9)} ${String(count).padStart(9)}  ` +
-          `${ok ? '✓' : '✗ MISMATCH'}`,
+          verdict,
       );
     }
   }
   ctx.log(
     `\nCutover ${ctx.dryRun ? 'dry-run' : 'load'} complete — ${
-      allOk ? 'all tables reconciled ✓' : 'MISMATCHES above ✗'
+      !allOk
+        ? 'MISMATCHES above ✗'
+        : totalDropped > 0
+          ? `counts reconcile, but ${totalDropped} row(s) were DROPPED — see the ⚠ lines and the per-domain warnings above. ` +
+            'A root-entity drop takes its whole subtree with it; do not treat this as a clean load.'
+          : 'all tables reconciled, zero rows dropped ✓'
     }`,
   );
 };

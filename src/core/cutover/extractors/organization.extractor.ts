@@ -1,16 +1,20 @@
 import { type ID } from '~/common';
 import {
+  locations,
   organizationLocations,
   organizationReachEnum,
   organizations,
   organizationTypeEnum,
   userOrganizations,
+  users,
 } from '~/core/drizzle/schema';
 import { type Organization } from '../../../components/organization/dto';
 import { OrganizationRepository } from '../../../components/organization/organization.repository';
 import {
   bulkInsert,
   cypher,
+  keepLanded,
+  liveTargetIds,
   readAllViaRepo,
   sanitizeEnum,
   stat,
@@ -82,13 +86,26 @@ export const organizationExtractor: Extractor = {
       `MATCH (o:Organization)-[:locations { active: true }]->(l:Location)
        RETURN o.id AS orgId, l.id AS locId`,
     );
+    // Both junctions below FK to parents that can be absent — see keepLanded.
+    const landedOrgs = await liveTargetIds(ctx, 'Organization', organizations);
+    const landedLocs = await liveTargetIds(ctx, 'Location', locations);
+    const landedUsers = await liveTargetIds(ctx, 'User', users);
+
+    const orgLocRows = keepLanded(
+      orgLocs.map((r) => ({ organizationId: r.orgId, locationId: r.locId })),
+      [
+        [landedOrgs, (row) => row.organizationId],
+        [landedLocs, (row) => row.locationId],
+      ],
+    );
+    if (orgLocRows.skipped > 0) {
+      ctx.log(
+        `    ⚠ skipped ${orgLocRows.skipped} organization_locations row(s) — org or location never landed`,
+      );
+    }
     out.organization_locations = stat(
       orgLocs.length,
-      await bulkInsert(
-        ctx,
-        organizationLocations,
-        orgLocs.map((r) => ({ organizationId: r.orgId, locationId: r.locId })),
-      ),
+      await bulkInsert(ctx, organizationLocations, orgLocRows.kept),
     );
 
     const userOrgs = await cypher<{
@@ -101,17 +118,25 @@ export const organizationExtractor: Extractor = {
        RETURN u.id AS userId, o.id AS orgId,
               exists((u)-[:primaryOrganization { active: true }]->(o)) AS primary`,
     );
+    const userOrgRows = keepLanded(
+      userOrgs.map((r) => ({
+        userId: r.userId,
+        organizationId: r.orgId,
+        primary: r.primary,
+      })),
+      [
+        [landedUsers, (row) => row.userId],
+        [landedOrgs, (row) => row.organizationId],
+      ],
+    );
+    if (userOrgRows.skipped > 0) {
+      ctx.log(
+        `    ⚠ skipped ${userOrgRows.skipped} user_organizations row(s) — user or org never landed`,
+      );
+    }
     out.user_organizations = stat(
       userOrgs.length,
-      await bulkInsert(
-        ctx,
-        userOrganizations,
-        userOrgs.map((r) => ({
-          userId: r.userId,
-          organizationId: r.orgId,
-          primary: r.primary,
-        })),
-      ),
+      await bulkInsert(ctx, userOrganizations, userOrgRows.kept),
     );
 
     return out;

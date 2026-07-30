@@ -18,6 +18,7 @@ import {
   bulkInsert,
   cypher,
   linkId,
+  liveTargetIds,
   orDefault,
   readAllViaRepo,
   stat,
@@ -78,6 +79,19 @@ export const userExtractor: Extractor = {
     }));
     out.users = stat(userDtos.length, await bulkInsert(ctx, users, userRows));
 
+    // Every table below FKs to users.id, and the three built from raw Cypher
+    // below enumerate ALL `:User` nodes — a superset of what actually LANDED.
+    // readMany silently drops nodes with broken required rels (49 locally), and
+    // onConflictDoNothing can drop more, so an unfiltered child insert dies on
+    // `*_user_id_fkey`. This is the truth source; skips are counted, not silent.
+    const landedUsers = await liveTargetIds(ctx, 'User', users);
+    let orphanedChildren = 0;
+    const userLanded = (userId: ID): boolean => {
+      if (landedUsers.has(userId)) return true;
+      orphanedChildren++;
+      return false;
+    };
+
     // ── user_global_roles ───────────────────────────────────────────────────
     const roleRows = userDtos.flatMap((u) =>
       (u.roles ?? []).map((role) => ({ userId: u.id, role })),
@@ -103,7 +117,7 @@ export const userExtractor: Extractor = {
     const eduUser = new Map(eduPairs.map((p) => [p.eid, p.uid]));
     const eduRows = eduDtos.flatMap((e) => {
       const userId = eduUser.get(e.id);
-      return userId
+      return userId && userLanded(userId)
         ? [
             {
               id: e.id,
@@ -137,7 +151,7 @@ export const userExtractor: Extractor = {
     const unavailUser = new Map(unavailPairs.map((p) => [p.xid, p.uid]));
     const unavailRows = unavailDtos.flatMap((x) => {
       const userId = unavailUser.get(x.id);
-      return userId
+      return userId && userLanded(userId)
         ? [
             {
               id: x.id,
@@ -181,14 +195,23 @@ export const userExtractor: Extractor = {
       `MATCH (u:User)-[:password { active: true }]->(p:Property)
        RETURN u.id AS userId, p.value AS hash`,
     );
+    const pwLanded = pwRows.filter((p) => userLanded(p.userId));
     out.auth_identities = stat(
       pwRows.length,
       await bulkInsert(
         ctx,
         authIdentities,
-        pwRows.map((p) => ({ userId: p.userId, passwordHash: p.hash })),
+        pwLanded.map((p) => ({ userId: p.userId, passwordHash: p.hash })),
       ),
     );
+
+    if (orphanedChildren > 0) {
+      ctx.log(
+        `    ⚠ skipped ${orphanedChildren} education/unavailability/auth-identity row(s) whose user never ` +
+          `landed in \`users\` (hydrate-drop or conflict-drop). Each skipped auth_identity is a user who ` +
+          `CANNOT log in post-cutover — reconcile the users hydrate-drop list before the real load.`,
+      );
+    }
 
     return out;
   },
