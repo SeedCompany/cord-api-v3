@@ -19,6 +19,7 @@ import {
   promptVariantResponseEntries,
   promptVariantResponses,
 } from '~/core/drizzle/schema';
+import { LiveQueryStore } from '~/core/live-query';
 import { defaultPermanentAfter } from '~/core/neo4j/query/properties/update-property';
 import { type BaseNode } from '~/core/neo4j/results';
 import { type EdgePrivileges, Privileges } from '../authorization';
@@ -59,6 +60,8 @@ export const PromptVariantResponseDrizzleRepository = <
     protected readonly identity: Identity;
     @Inject(DrizzleService)
     protected readonly drizzle: DrizzleService;
+    @Inject(LiveQueryStore)
+    protected readonly liveQueryStore: LiveQueryStore;
 
     protected get db() {
       return this.drizzle.client;
@@ -194,6 +197,11 @@ export const PromptVariantResponseDrizzleRepository = <
     }
 
     async delete(id: ID) {
+      // Mirrors the Neo4j arm, whose `this.deleteNode(id)` invalidates via the
+      // shared base with `this.resource`. `submitResponse`/`changePrompt` are
+      // deliberately NOT invalidated here: their Neo4j counterparts use raw
+      // Cypher with no invalidation either, so leaving them alone is parity.
+      this.liveQueryStore.invalidate([this.resource, id]);
       await this.db
         .update(promptVariantResponses)
         .set({ deletedAt: new Date() })

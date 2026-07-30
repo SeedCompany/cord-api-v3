@@ -35,7 +35,9 @@ import {
   productCompletionDescriptions,
   products,
 } from '~/core/drizzle/schema';
+import { LiveQueryStore } from '~/core/live-query';
 import { type BaseNode } from '~/core/neo4j/results';
+import { type ResourceLike } from '~/core/resources';
 import { type ScopedRole } from '../authorization/dto/role.dto';
 import { requesterScopeByProject } from '../project/project-member/membership-scope';
 import {
@@ -115,6 +117,7 @@ export class ProductDrizzleRepository {
   constructor(
     private readonly drizzle: DrizzleService,
     private readonly identity: Identity,
+    private readonly liveQueryStore: LiveQueryStore,
   ) {}
 
   // Transaction-aware client — see DrizzleDtoRepository.db for why a getter.
@@ -354,10 +357,15 @@ export class ProductDrizzleRepository {
     }
   }
 
+  // Each of these invalidates with its CONCRETE subtype, matching what the Neo4j
+  // arm passes to `db.updateProperties({ type })` — the store keys on
+  // `${resource.name}:${id}`, so invalidating a generic `Product` here would
+  // emit a key nothing subscribes to and read as a silent no-op.
   async updateProperties(
     object: DirectScriptureProduct,
     changes: DbChanges<DirectScriptureProduct>,
   ) {
+    this.liveQueryStore.invalidate([DirectScriptureProduct, object.id]);
     return await this.applyChanges(object, changes);
   }
 
@@ -365,10 +373,12 @@ export class ProductDrizzleRepository {
     object: DerivativeScriptureProduct,
     changes: DbChanges<DerivativeScriptureProduct>,
   ) {
+    this.liveQueryStore.invalidate([DerivativeScriptureProduct, object.id]);
     return await this.applyChanges(object, changes);
   }
 
   async updateOther(object: OtherProduct, changes: DbChanges<OtherProduct>) {
+    this.liveQueryStore.invalidate([OtherProduct, object.id]);
     return await this.applyChanges(object, changes);
   }
 
@@ -425,7 +435,13 @@ export class ProductDrizzleRepository {
       .where(eq(products.id, productId));
   }
 
-  async delete(id: ID, _resource?: unknown) {
+  async delete(id: ID, resource?: ResourceLike) {
+    // Conditional on `resource` exactly like the Neo4j `deleteNode` it mirrors;
+    // the service passes `resolveProductType(object)`, so it is populated in
+    // practice and carries the concrete subtype.
+    if (resource) {
+      this.liveQueryStore.invalidate([resource, id]);
+    }
     await this.db
       .update(products)
       .set({ deletedAt: new Date(), updatedAt: new Date() })

@@ -6,10 +6,12 @@ import {
   it,
   jest,
 } from '@jest/globals';
-import { Role } from '~/common';
+import { type ID, Role } from '~/common';
 import { LiveQueryStore } from '~/core/live-query';
 import { graphql } from '~/graphql';
 import {
+  createDirectProduct,
+  createLanguageEngagement,
   createOrganization,
   createSession,
   createTestApp,
@@ -56,11 +58,17 @@ const keyOf = (identifier: Identifier): string => {
  */
 describe('Live-query invalidation (Drizzle base) e2e', () => {
   let app: TestApp;
+  let engagement: { id: ID };
 
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    await registerUser(app, { roles: [Role.Administrator] });
+    await registerUser(app, {
+      roles: [Role.Administrator, Role.ProjectManager],
+    });
+    if (isPostgres) {
+      engagement = await createLanguageEngagement(app);
+    }
   });
 
   afterEach(() => {
@@ -119,6 +127,26 @@ describe('Live-query invalidation (Drizzle base) e2e', () => {
       `Organization:${org.id}`,
     );
   });
+
+  // Product hand-rolls its own writes, so it invalidates itself rather than
+  // inheriting from the base. The interesting part is the KEY: the store keys on
+  // `${resource.name}:${id}`, and the Neo4j arm passes the CONCRETE subtype
+  // (DirectScriptureProduct, not Product). A generic `Product:` key would emit
+  // something nothing subscribes to — an invalidation that exists and does
+  // nothing, which is worse than none because it looks fixed.
+  it('invalidates a product under its concrete subtype, not the interface', async () => {
+    if (!isPostgres) return;
+    const product = await createDirectProduct(app, {
+      engagement: engagement.id,
+    });
+    const spy = watchInvalidations();
+
+    await app.graphql.mutate(UpdateDirectProductDoc, { id: product.id });
+
+    const keys = spy.mock.calls.map(([arg]) => keyOf(arg));
+    expect(keys).toContain(`DirectScriptureProduct:${product.id}`);
+    expect(keys).not.toContain(`Product:${product.id}`);
+  });
 });
 
 const UpdateOrgDoc = graphql(`
@@ -138,6 +166,16 @@ const DeleteOrgDoc = graphql(`
   mutation DeleteOrgForLiveQuery($id: ID!) {
     deleteOrganization(id: $id) {
       __typename
+    }
+  }
+`);
+
+const UpdateDirectProductDoc = graphql(`
+  mutation UpdateDirectProductForLiveQuery($id: ID!) {
+    updateDirectScriptureProduct(input: { id: $id, describeCompletion: "lq" }) {
+      product {
+        id
+      }
     }
   }
 `);
