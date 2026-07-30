@@ -13,6 +13,7 @@ import { Hooks } from '~/core/hooks';
 import { ILogger, Logger } from '~/core/logger';
 import { type Variable } from '~/core/neo4j/query';
 import { HandleIdLookup } from '~/core/resources';
+import { ResourceMutatedHook } from '../audit/resource-mutated.hook';
 import { Privileges } from '../authorization';
 import { FileService } from '../file';
 import { ProgressReport } from '../progress-report/dto';
@@ -95,6 +96,19 @@ export class PeriodicReportService {
         narrativeFile,
       );
     }
+
+    // User-driven report edit (received date, skipped reason, uploaded file) —
+    // audited. The date-driven merge()/delete() sync paths are NOT (system
+    // actions with no actor). resolveReportType(...).name is the concrete
+    // subtype: FinancialReport / NarrativeReport / ProgressReport.
+    await this.hooks.run(
+      new ResourceMutatedHook(
+        resolveReportType(current).name,
+        input.id,
+        'Update',
+        changes,
+      ),
+    );
 
     return updated;
   }

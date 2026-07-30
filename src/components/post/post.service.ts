@@ -12,10 +12,12 @@ import {
   type UnsecuredDto,
 } from '~/common';
 import { Identity } from '~/core/authentication';
+import { Hooks } from '~/core/hooks';
 import { LiveQueryStore } from '~/core/live-query';
 import { ILogger, Logger } from '~/core/logger';
 import { type BaseNode, isBaseNode } from '~/core/neo4j/results';
 import { ResourceLoader, ResourcesHost } from '~/core/resources';
+import { ResourceMutatedHook } from '../audit/resource-mutated.hook';
 import { Privileges } from '../authorization';
 import { type CreatePost, Post, Postable, type UpdatePost } from './dto';
 import { type PostListInput, type SecuredPostList } from './dto/list-posts.dto';
@@ -34,6 +36,7 @@ export class PostService {
     private readonly resourcesHost: ResourcesHost,
     private readonly liveQueryStore: LiveQueryStore,
     @Logger('post:service') private readonly logger: ILogger,
+    private readonly hooks: Hooks,
   ) {}
 
   async create(input: CreatePost): Promise<Post> {
@@ -48,6 +51,10 @@ export class PostService {
 
       const postable = perms.context as ConcretePostable;
       this.liveQueryStore.invalidate([postable.__typename, postable.id]);
+
+      await this.hooks.run(
+        new ResourceMutatedHook('Post', result.dto.id, 'Create'),
+      );
 
       return this.secure(result.dto);
     } catch (exception) {
@@ -70,6 +77,10 @@ export class PostService {
     this.privileges.for(Post, object).verifyChanges(changes);
     const updated = await this.repo.update(object, changes);
 
+    await this.hooks.run(
+      new ResourceMutatedHook('Post', input.id, 'Update', changes),
+    );
+
     return this.secure(updated);
   }
 
@@ -87,6 +98,8 @@ export class PostService {
 
       throw new ServerException('Failed to delete post', exception);
     }
+
+    await this.hooks.run(new ResourceMutatedHook('Post', id, 'Delete'));
   }
 
   async securedList(

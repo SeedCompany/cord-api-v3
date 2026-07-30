@@ -2688,3 +2688,66 @@ export const posts = pgTable(
     index('posts_creator_id_idx').on(t.creatorId),
   ],
 );
+
+// ─── Audit log ───────────────────────────────────────────────────────────
+
+export const mutationActionEnum = pgEnum('mutation_action', [
+  'Create',
+  'Update',
+  'Delete',
+]);
+
+/**
+ * Append-only log of resource mutations (the general audit log). One row per
+ * create/update/delete, written by an in-transaction hook so it's atomic with
+ * the mutation. `resource_id` is FK-less/polymorphic (spans every resource
+ * table); `actor_id` set-null on user delete so history outlives the actor.
+ * `role_at_time` snapshots the actor's roles at write time (plain text, not the
+ * live role enum). `changes` holds the diffed field set (jsonb).
+ *
+ * The actor is EITHER a user or a system agent, never both — see migration 0027
+ * for why the agent side stores a name snapshot instead of an FK, and why
+ * `impersonator_id` needs no such treatment.
+ */
+export const resourceMutations = pgTable(
+  'resource_mutations',
+  {
+    id: bigserial('id', { mode: 'number' }).primaryKey(),
+    resourceType: text('resource_type').notNull(),
+    resourceId: text('resource_id').$type<ID>().notNull(),
+    action: mutationActionEnum('action').notNull(),
+    actorId: text('actor_id')
+      .$type<ID<'User'>>()
+      .references(() => users.id, { onDelete: 'set null' }),
+    /**
+     * The SystemAgent that acted, by NAME ('Ghost' | 'Anonymous' | ...), when
+     * the actor was not a user. A snapshot, not a reference — same reasoning as
+     * `role_at_time`.
+     */
+    actorSystemAgent: text('actor_system_agent'),
+    /**
+     * The real, requesting user when `actor_id` is being impersonated. Always a
+     * user (an impersonator can't be a system agent), so a plain FK suffices.
+     */
+    impersonatorId: text('impersonator_id')
+      .$type<ID<'User'>>()
+      .references(() => users.id, { onDelete: 'set null' }),
+    roleAtTime: text('role_at_time').array().notNull().default([]),
+    changes: jsonb('changes'),
+    at: timestamp('at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    // `<= 1`, not `= 1`: a write with no session in context has no actor at all.
+    check(
+      'resource_mutations_actor_shape_chk',
+      sql`num_nonnulls(${t.actorId}, ${t.actorSystemAgent}) <= 1`,
+    ),
+    index('resource_mutations_resource_idx').on(
+      t.resourceType,
+      t.resourceId,
+      t.at,
+    ),
+    index('resource_mutations_actor_id_idx').on(t.actorId),
+    index('resource_mutations_impersonator_id_idx').on(t.impersonatorId),
+  ],
+);

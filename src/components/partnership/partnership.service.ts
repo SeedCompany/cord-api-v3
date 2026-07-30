@@ -18,6 +18,7 @@ import { Hooks } from '~/core/hooks';
 import { LiveQueryStore } from '~/core/live-query';
 import { ILogger, Logger } from '~/core/logger';
 import { HandleIdLookup, ResourceLoader } from '~/core/resources';
+import { ResourceMutatedHook } from '../audit/resource-mutated.hook';
 import { Privileges } from '../authorization';
 import { FileService } from '../file';
 import { PartnerService } from '../partner';
@@ -114,6 +115,9 @@ export class PartnershipService {
       this.privileges.for(Partnership, partnership).verifyCan('create');
 
       await this.hooks.run(new PartnershipCreatedHook(partnership));
+      await this.hooks.run(
+        new ResourceMutatedHook('Partnership', partnership.id, 'Create'),
+      );
 
       this.liveQueryStore.invalidate([resolveProjectType(project), project.id]);
 
@@ -217,6 +221,9 @@ export class PartnershipService {
     const partnership = await this.readOne(input.id, view);
     const event = new PartnershipUpdatedHook(partnership, object, input);
     await this.hooks.run(event);
+    await this.hooks.run(
+      new ResourceMutatedHook('Partnership', input.id, 'Update', changes),
+    );
     return event.updated;
   }
 
@@ -236,6 +243,7 @@ export class PartnershipService {
     }
 
     await this.hooks.run(new PartnershipWillDeleteHook(object));
+    await this.hooks.run(new ResourceMutatedHook('Partnership', id, 'Delete'));
 
     try {
       await this.repo.deleteNode(object, { changeset });

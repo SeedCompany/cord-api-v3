@@ -7,8 +7,10 @@ import {
   ServerException,
   type UnsecuredDto,
 } from '~/common';
+import { Hooks } from '~/core/hooks';
 import { HandleIdLookup } from '~/core/resources';
 import { type ResourceNameLike } from '~/core/resources';
+import { ResourceMutatedHook } from '../audit/resource-mutated.hook';
 import { Privileges, type UserEdgePrivileges } from '../authorization';
 import { type PropAction } from '../authorization/policy/actions';
 import {
@@ -26,12 +28,15 @@ export class LocationService {
   constructor(
     private readonly privileges: Privileges,
     private readonly repo: LocationRepository,
+    private readonly hooks: Hooks,
   ) {}
 
   async create(input: CreateLocation): Promise<Location> {
     this.privileges.for(Location).verifyCan('create');
 
     const dto = await this.repo.create(input);
+
+    await this.hooks.run(new ResourceMutatedHook('Location', dto.id, 'Create'));
 
     return this.secure(dto);
   }
@@ -58,6 +63,11 @@ export class LocationService {
     this.privileges.for(Location, location).verifyChanges(changes);
 
     const updated = await this.repo.update({ id: input.id, ...changes });
+
+    await this.hooks.run(
+      new ResourceMutatedHook('Location', input.id, 'Update', changes),
+    );
+
     return this.secure(updated);
   }
 
@@ -71,6 +81,8 @@ export class LocationService {
     } catch (exception) {
       throw new ServerException('Failed to delete', exception);
     }
+
+    await this.hooks.run(new ResourceMutatedHook('Location', id, 'Delete'));
   }
 
   async list(input: LocationListInput): Promise<LocationListOutput> {

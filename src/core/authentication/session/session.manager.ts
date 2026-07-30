@@ -90,6 +90,10 @@ export class SessionManager {
       issuedAt: DateTime.fromMillis(iat),
       userId: result.userId ?? anon.id,
       anonymous: !result.userId,
+      // No user resolved -> the userId above is the Anonymous agent's, not a
+      // user's. Recorded here so consumers don't have to compare ids to find
+      // out; see Session.systemAgentName.
+      systemAgentName: result.userId ? undefined : anon.name,
       roles: result.roles,
     });
 
@@ -97,6 +101,10 @@ export class SessionManager {
       ? requesterSession.with({
           userId: impersonatee.id ?? requesterSession.userId,
           roles: impersonatee.roles,
+          // Ghost is the one impersonatee that is an agent rather than a user;
+          // undefined otherwise clears the requester's own value (impersonation
+          // requires a logged-in requester, so it is always already undefined).
+          systemAgentName: ghost?.name,
           impersonator: requesterSession,
           impersonatee,
         })

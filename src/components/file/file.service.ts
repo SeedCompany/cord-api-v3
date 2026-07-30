@@ -31,6 +31,7 @@ import { Hooks } from '~/core/hooks';
 import { LiveQueryStore } from '~/core/live-query';
 import { ILogger, Logger } from '~/core/logger';
 import { type LinkTo } from '~/core/resources';
+import { ResourceMutatedHook } from '../audit/resource-mutated.hook';
 import { FileBucket } from './bucket';
 import {
   type CreateDefinedFileVersion,
@@ -262,6 +263,11 @@ export class FileService {
 
     parentId && this.liveQueryStore.invalidate(['Directory', parentId]);
 
+    // Not audited: createDirectory is dominated by the auto-created default
+    // project subdirs (Approval Documents/Photos/etc.) fired from
+    // AttachProjectRootDirectoryHandler — auditing it would spam a Directory
+    // Create per project. The high-value file events (upload/rename/move/delete)
+    // are audited below.
     return await this.getDirectory(id);
   }
 
@@ -431,6 +437,10 @@ export class FileService {
     const file = await this.getFile(fileId);
 
     await this.hooks.run(new AfterFileUploadHook(file, fv));
+    // A new version uploaded to the file — audited as a File Update.
+    await this.hooks.run(
+      new ResourceMutatedHook('File', fileId, 'Update', { version: fv.id }),
+    );
 
     return { ...file, newVersion: fv };
   }
@@ -568,6 +578,14 @@ export class FileService {
     const fileNode = await this.repo.getById(input.id);
     if (fileNode.name !== input.name) {
       await this.repo.rename(fileNode, input.name);
+      // fileNode.type is the concrete discriminator (Directory/File/FileVersion).
+      // No-op renames (e.g. the name-sync inside createFileVersion when the name
+      // already matches) don't reach here, so uploads don't double-record.
+      await this.hooks.run(
+        new ResourceMutatedHook(fileNode.type, input.id, 'Update', {
+          name: input.name,
+        }),
+      );
     }
   }
 
@@ -587,11 +605,19 @@ export class FileService {
       ]);
     }
 
+    await this.hooks.run(
+      new ResourceMutatedHook(fileNode.type, input.id, 'Update', {
+        parent: input.parent,
+        ...(input.name ? { name: input.name } : {}),
+      }),
+    );
+
     return await this.getFileNode(input.id);
   }
 
   async delete(id: ID): Promise<void> {
     const fileNode = await this.repo.getById(id);
     await this.repo.delete(fileNode);
+    await this.hooks.run(new ResourceMutatedHook(fileNode.type, id, 'Delete'));
   }
 }

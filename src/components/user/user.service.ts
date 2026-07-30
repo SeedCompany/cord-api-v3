@@ -11,6 +11,7 @@ import { Identity } from '~/core/authentication';
 import { Hooks } from '~/core/hooks';
 import { ILogger, Logger } from '~/core/logger';
 import { HandleIdLookup } from '~/core/resources';
+import { ResourceMutatedHook } from '../audit/resource-mutated.hook';
 import { Privileges } from '../authorization';
 import { AssignableRoles } from '../authorization/dto/assignable-roles.dto';
 import { LocationService } from '../location';
@@ -79,6 +80,7 @@ export class UserService {
     }
 
     const { id } = await this.userRepo.create(input);
+    await this.hooks.run(new ResourceMutatedHook('User', id, 'Create'));
     return id;
   }
 
@@ -134,6 +136,9 @@ export class UserService {
 
     const event = new UserUpdatedHook(updated, user, input);
     await this.hooks.run(event);
+    await this.hooks.run(
+      new ResourceMutatedHook('User', user.id, 'Update', changes),
+    );
 
     return this.secure(updated);
   }
@@ -144,6 +149,7 @@ export class UserService {
     // Same-transaction side effects (e.g. session revocation — a deleted
     // user must not keep live sessions).
     await this.hooks.run(new UserDeletedHook(object.id));
+    await this.hooks.run(new ResourceMutatedHook('User', id, 'Delete'));
   }
 
   async list(input: UserListInput): Promise<UserListOutput> {

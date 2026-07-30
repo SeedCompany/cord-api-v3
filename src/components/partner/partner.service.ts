@@ -8,7 +8,9 @@ import {
   ServerException,
   type UnsecuredDto,
 } from '~/common';
+import { Hooks } from '~/core/hooks';
 import { HandleIdLookup, ResourceLoader } from '~/core/resources';
+import { ResourceMutatedHook } from '../audit/resource-mutated.hook';
 import { Privileges } from '../authorization';
 import { EngagementService } from '../engagement';
 import { type EngagementListInput } from '../engagement/dto';
@@ -53,6 +55,7 @@ export class PartnerService {
     private readonly userService: UserService & {},
     private readonly repo: PartnerRepository,
     private readonly resourceLoader: ResourceLoader,
+    private readonly hooks: Hooks,
   ) {}
 
   async create(input: CreatePartner): Promise<Partner> {
@@ -68,6 +71,10 @@ export class PartnerService {
     const created = await this.repo.create(input);
 
     this.privileges.for(Partner, created).verifyCan('create');
+
+    await this.hooks.run(
+      new ResourceMutatedHook('Partner', created.id, 'Create'),
+    );
 
     return this.secure(created);
   }
@@ -150,6 +157,10 @@ export class PartnerService {
       ...changes,
     });
 
+    await this.hooks.run(
+      new ResourceMutatedHook('Partner', partner.id, 'Update', changes),
+    );
+
     return this.secure(updated);
   }
 
@@ -163,6 +174,8 @@ export class PartnerService {
     } catch (exception: any) {
       throw new ServerException('Failed to delete', exception);
     }
+
+    await this.hooks.run(new ResourceMutatedHook('Partner', id, 'Delete'));
   }
 
   async list(input: PartnerListInput): Promise<PartnerListOutput> {

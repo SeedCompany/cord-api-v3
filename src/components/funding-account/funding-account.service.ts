@@ -10,8 +10,10 @@ import {
   ServerException,
   type UnsecuredDto,
 } from '~/common';
+import { Hooks } from '~/core/hooks';
 import { mapListResults } from '~/core/neo4j/results';
 import { HandleIdLookup } from '~/core/resources';
+import { ResourceMutatedHook } from '../audit/resource-mutated.hook';
 import { Privileges } from '../authorization';
 import {
   type CreateFundingAccount,
@@ -27,6 +29,7 @@ export class FundingAccountService {
   constructor(
     private readonly privileges: Privileges,
     private readonly repo: FundingAccountRepository,
+    private readonly hooks: Hooks,
   ) {}
 
   async create(input: CreateFundingAccount): Promise<FundingAccount> {
@@ -47,6 +50,10 @@ export class FundingAccountService {
     if (!result) {
       throw new CreationFailed(FundingAccount);
     }
+
+    await this.hooks.run(
+      new ResourceMutatedHook('FundingAccount', result.id, 'Create'),
+    );
 
     return await this.readOne(result.id).catch((e) => {
       throw e instanceof NotFoundException
@@ -78,6 +85,9 @@ export class FundingAccountService {
     const changes = this.repo.getActualChanges(fundingAccount, input);
     this.privileges.for(FundingAccount, fundingAccount).verifyChanges(changes);
     const updated = await this.repo.update({ id: input.id, ...changes });
+    await this.hooks.run(
+      new ResourceMutatedHook('FundingAccount', input.id, 'Update', changes),
+    );
     return await this.secure(updated);
   }
 
@@ -91,6 +101,10 @@ export class FundingAccountService {
     } catch (exception) {
       throw new ServerException('Failed to delete', exception);
     }
+
+    await this.hooks.run(
+      new ResourceMutatedHook('FundingAccount', id, 'Delete'),
+    );
   }
 
   async list(
