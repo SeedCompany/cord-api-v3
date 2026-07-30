@@ -147,10 +147,27 @@ export const readAllViaRepo = async <T extends { id: ID }>(
   repoClass: Type<{
     readMany: (ids: readonly ID[]) => Promise<ReadonlyArray<UnsecuredDto<T>>>;
   }>,
-): Promise<Array<UnsecuredDto<T>>> => {
+): Promise<Array<UnsecuredDto<T>>> =>
+  await readAllRowsViaRepo<UnsecuredDto<T>>(ctx, label, repoClass);
+
+/**
+ * Same as {@link readAllViaRepo}, but for repositories whose `readMany` returns
+ * a purpose-built ROW type rather than an `UnsecuredDto<T>` — Product's
+ * `HydratedProductRow` is the case in point (it carries `isOverriding` and raw
+ * ScriptureRange nodes the DTO does not have). Kept as a sibling rather than
+ * loosening `readAllViaRepo`'s generic, which would silently change what the ten
+ * existing `readAllViaRepo<Foo>()` call sites resolve to.
+ */
+export const readAllRowsViaRepo = async <TRow extends { id: ID }>(
+  ctx: CutoverContext,
+  label: string,
+  repoClass: Type<{
+    readMany: (ids: readonly ID[]) => Promise<readonly TRow[]>;
+  }>,
+): Promise<TRow[]> => {
   const repo = ctx.moduleRef.get(repoClass, { strict: false });
   const ids = await fetchIds(ctx, label);
-  const out: Array<UnsecuredDto<T>> = [];
+  const out: TRow[] = [];
   for (const ids_ of chunk(ids, ctx.batchSize)) {
     out.push(...(await repo.readMany(ids_)));
   }
@@ -159,7 +176,7 @@ export const readAllViaRepo = async <T extends { id: ID }>(
   // deactivated by its Partner's soft-delete). Reconciliation can't catch it —
   // the read stat counts hydrated DTOs — so surface the delta here.
   if (out.length !== ids.length) {
-    const hydrated = new Set<string>(out.map((dto) => String(dto.id)));
+    const hydrated = new Set<string>(out.map((row) => String(row.id)));
     const missing = ids.filter((id) => !hydrated.has(id));
     ctx.log(
       `    ⚠ ${label}: ${missing.length} node(s) enumerated but NOT hydrated by readMany ` +

@@ -12,6 +12,7 @@ import { notificationExtractor } from './notification.extractor';
 import { organizationExtractor } from './organization.extractor';
 import { partnerExtractor } from './partner.extractor';
 import { partnershipExtractor } from './partnership.extractor';
+import { productExtractor } from './product.extractor';
 import { projectMemberExtractor } from './project-member.extractor';
 import { projectExtractor } from './project.extractor';
 import { toolExtractor } from './tool.extractor';
@@ -40,6 +41,7 @@ export const extractors: readonly Extractor[] = [
   projectMemberExtractor,
   partnershipExtractor,
   engagementExtractor,
+  productExtractor,
   notificationExtractor,
   budgetExtractor,
 ];
