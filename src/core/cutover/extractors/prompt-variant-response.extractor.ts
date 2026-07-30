@@ -1,4 +1,4 @@
-import { type ID, RichTextDocument } from '~/common';
+import { type ID } from '~/common';
 import {
   periodicReports,
   promptVariantResponseEntries,
@@ -14,6 +14,7 @@ import {
   fetchIds,
   keepLanded,
   liveTargetIds,
+  richText,
   stat,
 } from '../cutover.helpers';
 import { type Extractor, type TableStat } from '../cutover.types';
@@ -43,8 +44,8 @@ import { type Extractor, type TableStat } from '../cutover.types';
  *   NUL-delimited tagged string (`\0RichText\0{…}` — see RichTextDocument), while
  *   the column is jsonb. Passing the stored form through would not merely be
  *   wrong, it would be rejected: Postgres text/jsonb cannot hold a NUL byte. The
- *   read transformer normally parses this on the way out, so richText() below is
- *   the belt to that braces.
+ *   read transformer normally parses this on the way out, so the shared
+ *   `richText()` helper is the belt to that braces (comments need it too).
  */
 const PVR_TYPES = [
   ProgressReportTeamNews,
@@ -212,30 +213,4 @@ export const promptVariantResponseExtractor: Extractor = {
 
     return out;
   },
-};
-
-/**
- * The stored rich-text value → the plain object the jsonb column takes.
- *
- * The Neo4j read transformer already turns `\0RichText\0{…}` into a
- * RichTextDocument, so the first branch is the normal path; the serialized branch
- * covers a value the transformer did not reach (nested in a map, say). Handling it
- * is not optional politeness — the serialized form contains NUL bytes, which
- * Postgres jsonb cannot store at all, so a miss here is a hard insert failure
- * rather than a cosmetic one.
- *
- * `undefined` means "was present but unusable" (caller warns); `null` means the
- * source was genuinely empty, which 10 of 109 answers are locally.
- */
-const richText = (value: unknown): object | null | undefined => {
-  if (value == null) return null;
-  if (RichTextDocument.isSerialized(value)) {
-    try {
-      return { ...RichTextDocument.fromSerialized(value) };
-    } catch {
-      return undefined;
-    }
-  }
-  if (typeof value === 'object') return { ...value };
-  return undefined;
 };
