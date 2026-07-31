@@ -5,7 +5,7 @@
 -- never destroys anything — a removed report's media, variance explanation and
 -- workflow events all survive, merely unreachable. Postgres was doing a REAL
 -- DELETE with only Neo4j's `status = NotStarted` eligibility rule, which was
--- never a data-loss guard because in Neo4j it never had to be one. Once 0027
+-- never a data-loss guard because in Neo4j it never had to be one. Once 0028
 -- gave progress reports media, `progress_report_media`'s NO ACTION FK was the
 -- only accidental thing preventing an engagement date change from destroying
 -- user uploads (it surfaced as an FK 500 instead). See ledger PC-14.

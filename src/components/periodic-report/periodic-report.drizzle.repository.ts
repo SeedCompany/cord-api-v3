@@ -116,7 +116,7 @@ export class PeriodicReportDrizzleRepository extends DrizzleDtoRepository<
     // DefinedFiles per report (develop's narrativeFile PR postdates mono).
     const narrativeFileIds = new Map<ID, ID<'File'>>();
     // The deterministic id is a *first choice*, not a guarantee, now that
-    // reports soft-delete (0032): a dead row can still hold it, and Neo4j in
+    // reports soft-delete (0034): a dead row can still hold it, and Neo4j in
     // that situation creates a brand-new report rather than reviving the old one
     // (its soft delete strips the label the uniqueness constraint is scoped to,
     // so it can even reuse the id string — we can't, `id` is the PK). Mirror the
@@ -385,7 +385,7 @@ export class PeriodicReportDrizzleRepository extends DrizzleDtoRepository<
   /**
    * Soft-deletes reports of type under the parent — same as Neo4j, whose
    * `deleteBaseNode` sets `deletedAt` and relabels to `Deleted_*` rather than
-   * removing anything (migration 0031, ledger PC-14).
+   * removing anything (migration 0034, ledger PC-14).
    *
    * Because nothing is destroyed, the eligibility rules can now be exactly
    * Neo4j's, with no extra content guard: progress reports only while still
@@ -439,7 +439,7 @@ export class PeriodicReportDrizzleRepository extends DrizzleDtoRepository<
   /**
    * Every caller wants LIVE reports, `delete()` included (re-removing an
    * already-dead report is a no-op, not a second event), so liveness lives here
-   * rather than being repeated at seven call sites. @see migration 0031
+   * rather than being repeated at seven call sites. @see migration 0034
    */
   private parentCondition(parentId: ID, type: ReportType) {
     return and(

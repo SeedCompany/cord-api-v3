@@ -66,7 +66,7 @@ export class ProgressReportVarianceExplanationDrizzleRepository {
           inArray(periodicReports.id, [...reportIds]),
           eq(periodicReports.type, 'Progress'),
           // Neo4j anchors on the `:ProgressReport` label, which a soft-deleted
-          // report loses (migration 0031).
+          // report loses (migration 0034).
           isNull(periodicReports.deletedAt),
         ),
       );
