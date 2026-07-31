@@ -8,6 +8,7 @@ import {
   projectStepEnum,
   projectWorkflowEvents,
   reportPeriodEnum,
+  systemAgents,
   users,
 } from '~/core/drizzle/schema';
 import {
@@ -152,10 +153,18 @@ export const projectExtractor: Extractor = {
     out.projects = stat(dtos.length, await bulkInsert(ctx, projects, rows));
 
     // ── Workflow events ────────────────────────────────────────────────────
-    // `who` is FK → users; Neo4j actors can be SystemAgents, which have no
-    // users row. Those events are dropped + logged — migration-todo(cutover):
-    // decide mapping (relax FK vs attribute to root) before prod.
+    // Neo4j's `who` edge points at an :Actor, which is a User OR a SystemAgent —
+    // and in production the agents are the MAJORITY: 18,054 of 27,244 events.
+    // Migration 0031 gave the table one column per kind with a CHECK that
+    // exactly one is set, so each actor is routed to the column matching what it
+    // actually is. Before that, `who` was a NOT NULL FK to users and every
+    // agent-driven event was dropped — two thirds of each project's step
+    // history, silently, since a dropped row raises nothing.
+    //
+    // `system_agents` is loaded by the `user` extractor, which is already a
+    // declared dependency, so both id sets are populated by the time we read.
     const userIds = await liveTargetIds(ctx, 'User', users);
+    const agentIds = await liveTargetIds(ctx, 'SystemAgent', systemAgents);
 
     const events = await cypher<{
       projectId: ID;
@@ -181,8 +190,27 @@ export const projectExtractor: Extractor = {
     const knownSteps = new Set<string>(projectStepEnum.enumValues);
     const projectIds = new Set(rows.map((row) => row.id));
     let droppedActors = 0;
+    let agentActors = 0;
     let droppedSteps = 0;
     let unusableNotes = 0;
+    /**
+     * Which actor column this event belongs in, or null if the actor cannot be
+     * placed at all.
+     *
+     * Both sets are read from the *Postgres* tables in a real run, so an actor
+     * whose own row was dropped upstream (a soft-deleted user, say) is caught
+     * here rather than failing the insert. Production has none of either — 0
+     * absent actors, 0 that resolve to neither table — so this returning null is
+     * itself worth logging rather than passing over.
+     */
+    const resolveActor = (
+      who: ID | null,
+    ): { who: ID | null; whoSystemAgentId: ID | null } | null => {
+      if (!who) return null;
+      if (userIds.has(who)) return { who, whoSystemAgentId: null };
+      if (agentIds.has(who)) return { who: null, whoSystemAgentId: who };
+      return null;
+    };
     const lastStepByProject = new Map<ID, string>();
     const eventRows = events.flatMap((event) => {
       // Advance the per-project step chain over EVERY Neo4j event, in order,
@@ -202,10 +230,12 @@ export const projectExtractor: Extractor = {
       if (knownSteps.has(event.toStep)) {
         lastStepByProject.set(event.projectId, event.toStep);
       }
-      if (!event.who || !userIds.has(event.who)) {
+      const actor = resolveActor(event.who);
+      if (!actor) {
         droppedActors++;
         return [];
       }
+      if (actor.whoSystemAgentId) agentActors++;
       if (!knownSteps.has(event.toStep) || !projectIds.has(event.projectId)) {
         droppedSteps++;
         return [];
@@ -229,7 +259,7 @@ export const projectExtractor: Extractor = {
         {
           id: event.id,
           projectId: event.projectId,
-          who: event.who,
+          ...actor,
           // Runtime-validated against projectStepEnum above.
           fromStep: fromStep as ProjectStep | null,
           toStep: event.toStep as ProjectStep,
@@ -239,9 +269,14 @@ export const projectExtractor: Extractor = {
         },
       ];
     });
+    if (agentActors) {
+      ctx.log(
+        `    attributed ${agentActors} workflow event(s) to system agents (who_system_agent_id)`,
+      );
+    }
     if (droppedActors) {
       ctx.log(
-        `    ⚠ dropped ${droppedActors} workflow event(s) with SystemAgent/absent actors (who FK → users) — migration-todo(cutover): decide mapping`,
+        `    ⚠ dropped ${droppedActors} workflow event(s) whose actor is neither a live user nor a live system agent`,
       );
     }
     if (droppedSteps) {
