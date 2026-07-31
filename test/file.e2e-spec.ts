@@ -7,6 +7,7 @@ import {
   describe,
   expect,
   it,
+  jest,
 } from '@jest/globals';
 import got from 'got';
 import { startCase, times } from 'lodash';
@@ -17,6 +18,7 @@ import {
   Settings,
 } from 'luxon';
 import { type ID, Role } from '~/common';
+import { LiveQueryStore } from '~/core/live-query';
 import { DatabaseService } from '~/core/neo4j';
 import { graphql } from '~/graphql';
 import { FileBucket, type LocalBucket } from '../src/components/file/bucket';
@@ -288,6 +290,113 @@ describe('File e2e', () => {
           message: 'Cannot move a node into its own descendant',
         }),
       );
+  });
+
+  /**
+   * The Neo4j file repo announces mutations to the live-query store through its
+   * shared helpers — `db.updateProperties` on rename, `deleteNode` on delete.
+   * The Drizzle repo is a standalone `@Injectable()` and reaches neither, so it
+   * has to announce for itself. Without it, cord-field's `@live` file documents
+   * kept showing the old name / a deleted node until a manual refresh.
+   *
+   * Spy on `invalidateAll` rather than `invalidate`: the singular form delegates
+   * to it, so one spy catches both call styles.
+   *
+   * NOTE: restore in `afterEach`, never in a `finally` ahead of the assertions.
+   * `mockRestore()` clears `mock.calls`, which makes the positive cases fail and
+   * any negative case pass vacuously.
+   */
+  describe('live-query invalidation', () => {
+    // Postgres-only: the Neo4j arm gets this from its base helpers and is
+    // unchanged.
+    const isPostgres = process.env.DATABASE === 'postgres';
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    type Identifier = Parameters<LiveQueryStore['invalidate']>[0];
+
+    /** Spy on the exact store instance the DI container hands the repository. */
+    const watchInvalidations = () =>
+      jest.spyOn(app.get(LiveQueryStore), 'invalidateAll');
+
+    /** Resolve announced identifiers to the keys that reach the store. */
+    const keysFrom = (spy: ReturnType<typeof watchInvalidations>): string[] =>
+      spy.mock.calls.flatMap(([identifiers]) =>
+        [...identifiers].map((identifier: Identifier) => {
+          if (typeof identifier === 'string') return identifier;
+          const [res, id] = identifier;
+          const name =
+            typeof res === 'string' ? res : (res as { name: string }).name;
+          return `${name}:${id}`;
+        }),
+      );
+
+    it('announces a rename under the concrete type, not the interface', async () => {
+      if (!isPostgres) return;
+      const dir = await createDirectory(app, root.id);
+      const spy = watchInvalidations();
+
+      const newName = startCase(faker.lorem.words());
+      const renamed = await app.graphql.mutate(
+        graphql(`
+          mutation renameFileNode($input: RenameFile!) {
+            renameFileNode(input: $input) {
+              id
+              name
+            }
+          }
+        `),
+        { input: { id: dir.id, name: newName } },
+      );
+
+      // Control: proves the mutation landed, so a missing key can only mean the
+      // announcement itself is absent.
+      expect(renamed.renameFileNode.name).toBe(newName);
+
+      const keys = keysFrom(spy);
+      // The store keys on `${resource.name}:${id}` and cord-field subscribes to
+      // the concrete type. `FileNode:` — the interface — would announce
+      // something nothing listens for: worse than silence, because it reads as
+      // correct in review.
+      expect(keys).toContain(`Directory:${dir.id}`);
+      expect(keys).not.toContain(`FileNode:${dir.id}`);
+    });
+
+    it('announces the whole subtree when a directory is deleted', async () => {
+      if (!isPostgres) return;
+      const dir = await createDirectory(app, root.id);
+      const file = await uploadFile(app, dir.id);
+      const spy = watchInvalidations();
+
+      await deleteNode(app, dir.id);
+
+      const keys = keysFrom(spy);
+      expect(keys).toContain(`Directory:${dir.id}`);
+      // The descendants were soft-deleted by the same statement, so RETURNING
+      // hands them over for free. Neo4j announces only the top node; this is a
+      // deliberate improvement, not a divergence to revert.
+      expect(keys).toContain(`File:${file.id}`);
+    });
+
+    it('announces the parent File when its latest version is deleted', async () => {
+      if (!isPostgres) return;
+      const firstUpload = await requestFileUpload(app);
+      const file = await uploadFile(app, root.id, {}, firstUpload);
+      const secondUpload = await requestFileUpload(app);
+      await uploadFile(app, file.id, {}, secondUpload);
+      const spy = watchInvalidations();
+
+      await deleteNode(app, secondUpload.id);
+
+      const keys = keysFrom(spy);
+      expect(keys).toContain(`FileVersion:${secondUpload.id}`);
+      // The File survives but its surfaced mimeType/size/modifiedAt just moved
+      // back to the earlier version, and it is not in the deleted subtree — so
+      // it needs its own announcement.
+      expect(keys).toContain(`File:${file.id}`);
+    });
   });
 
   it.skip('delete file', async () => {

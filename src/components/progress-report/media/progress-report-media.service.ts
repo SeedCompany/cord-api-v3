@@ -74,9 +74,11 @@ export class ProgressReportMediaService {
       .for(ReportMedia, withVariant(context, input.variant))
       .verifyCan('create');
 
-    const initialDto = await this.repo.create(input);
+    // Generate the file id up front so the repo can store the FK (Postgres);
+    // the Neo4j repo ignores it and links via the createDefinedFile edge.
+    const fileId = await generateId<ID<'File'>>();
+    const initialDto = await this.repo.create(input, fileId);
 
-    const fileId = await generateId();
     await this.files.createDefinedFile(
       fileId,
       input.file.name,
@@ -85,6 +87,7 @@ export class ProgressReportMediaService {
       input.file,
       ReportMedia.PublicVariants.has(input.variant.key),
     );
+
     await this.hooks.run(
       new ResourceMutatedHook('ProgressReportMedia', initialDto.id, 'Create'),
     );
@@ -111,6 +114,7 @@ export class ProgressReportMediaService {
       category: category !== undefined ? category : existing.category,
     };
     loader.prime(id, updated);
+
     await this.hooks.run(
       new ResourceMutatedHook(
         'ProgressReportMedia',
@@ -131,6 +135,7 @@ export class ProgressReportMediaService {
 
     await this.repo.deleteNode(id);
     await this.repo.deleteVariantGroupIfEmpty(media.variantGroup);
+
     await this.hooks.run(
       new ResourceMutatedHook('ProgressReportMedia', id, 'Delete'),
     );

@@ -46,6 +46,7 @@ import { type ProductPurpose } from '../../../components/product/dto/product-pur
 import { type ProductStep } from '../../../components/product/dto/product-step.enum';
 import { type ProgressMeasurement } from '../../../components/product/dto/progress-measurement.enum';
 import { type ProgressReportStatus } from '../../../components/progress-report/dto/progress-report-status.enum';
+import { type MediaCategory } from '../../../components/progress-report/media/media-category.enum';
 import { type ProjectStatus } from '../../../components/project/dto/project-status.enum';
 import { type ProjectStep } from '../../../components/project/dto/project-step.enum';
 import { type ProjectType } from '../../../components/project/dto/project-type.enum';
@@ -2750,4 +2751,115 @@ export const resourceMutations = pgTable(
     index('resource_mutations_actor_id_idx').on(t.actorId),
     index('resource_mutations_impersonator_id_idx').on(t.impersonatorId),
   ],
+);
+
+// ─── Progress Report Media ───────────────────────────────────────────────────
+
+export const progressReportMediaCategoryEnum = pgEnum(
+  'progress_report_media_category',
+  [
+    'Team',
+    'WorkInProgress',
+    'CommunityEngagement',
+    'LifeInCommunity',
+    'Events',
+    'SceneryLandscape',
+    'Other',
+  ],
+);
+
+/**
+ * Media (image/video/audio) attached to a ProgressReport. Each row carries one
+ * `variant` (draft/translated/fpm/published); rows sharing a `variant_group_id`
+ * are the "same image" across variants (≤1 row per (group, variant)). The
+ * `file_id` is a DefinedFile placeholder created by FileService.createDefinedFile
+ * after the row lands (so it's FK-less here, like other defined-file columns);
+ * the media sidecar is reached via that file's latest FileVersion.
+ *
+ * The Neo4j VariantGroup node collapses to a plain `variant_group_id` here — a
+ * group "exists" exactly as long as some media references it (matching the
+ * Neo4j deleteVariantGroupIfEmpty cleanup).
+ */
+export const progressReportMedia = pgTable(
+  'progress_report_media',
+  {
+    id: text('id').$type<ID>().primaryKey(),
+    reportId: text('report_id')
+      .$type<ID<'ProgressReport'>>()
+      .notNull()
+      .references(() => periodicReports.id),
+    variant: text('variant').notNull(),
+    category:
+      progressReportMediaCategoryEnum('category').$type<MediaCategory>(),
+    variantGroupId: text('variant_group_id')
+      .$type<ID<'ProgressReportMediaVariantGroup'>>()
+      .notNull(),
+    // DefinedFile placeholder; created by createDefinedFile after this row.
+    fileId: text('file_id').$type<ID<'File'>>(),
+    creatorId: text('creator_id')
+      .$type<ID<'User'>>()
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (t) => [
+    index('progress_report_media_report_id_idx').on(t.reportId),
+    index('progress_report_media_variant_group_id_idx').on(t.variantGroupId),
+    index('progress_report_media_creator_id_idx').on(t.creatorId),
+    // One live row per (variant_group, variant) — the DB fail-safe behind the
+    // repository's SELECT-then-INSERT check, which is a TOCTOU race on its own.
+    // Goes beyond Neo4j, which has no equivalent constraint; safe to adopt
+    // because prod carries 8076 media rows with zero duplicate pairs.
+    uniqueIndex('progress_report_media_group_variant_active_unique')
+      .on(t.variantGroupId, t.variant)
+      .where(sql`${t.deletedAt} IS NULL`),
+  ],
+);
+
+// ─── PnP Extraction Results ──────────────────────────────────────────────────
+
+/**
+ * Result of parsing a PnP spreadsheet, keyed by the File it was extracted from
+ * (one result per File — a LanguageEngagement.pnp or ProgressReport.reportFile).
+ * The concrete Planning/Progress flavor isn't stored — it's implied by which
+ * resource's file this is, resolved by the consuming field's type.
+ */
+export const pnpExtractionResults = pgTable('pnp_extraction_results', {
+  // An extraction result has no life of its own without its File, so the
+  // lifetime follows it. Note what CASCADE does and does not buy: file_nodes is
+  // SOFT-deleted, so ordinary deletion sets deleted_at and this never fires —
+  // the result simply becomes unreachable, since every read arrives via the
+  // file. The cascade earns its keep on a real DELETE (a hard purge, or a
+  // rollback), and the FK itself is what stops a result pointing at no file.
+  // The problems table already cascades from here, so the chain completes.
+  fileId: text('file_id')
+    .$type<ID<'File'>>()
+    .primaryKey()
+    .references(() => fileNodes.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+/**
+ * Problems found during extraction. `type` is a PnpProblemType uuid (its
+ * severity + render live in code, not the DB); `source` is "Sheet!A1"; context
+ * is the type-specific render input.
+ */
+export const pnpExtractionResultProblems = pgTable(
+  'pnp_extraction_result_problems',
+  {
+    id: text('id').$type<ID>().primaryKey(),
+    fileId: text('file_id')
+      .$type<ID<'File'>>()
+      .notNull()
+      .references(() => pnpExtractionResults.fileId, { onDelete: 'cascade' }),
+    type: text('type').notNull(),
+    source: text('source').notNull(),
+    context: jsonb('context').$type<Record<string, unknown>>().notNull(),
+  },
+  (t) => [index('pnp_extraction_result_problems_file_id_idx').on(t.fileId)],
 );

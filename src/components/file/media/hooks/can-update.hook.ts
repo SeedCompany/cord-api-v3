@@ -20,8 +20,14 @@ export class CanUpdateMediaUserMetadataHook {
   ) {}
 
   @Once() getAttachedResource() {
+    const attachedTo = this.media.attachedTo;
+    if (!attachedTo) {
+      // No resolvable owner → can't attribute the media, so no handler can
+      // authorize the update. Callers treat this as "abstain" (fail closed).
+      return undefined;
+    }
     const attachedResName = this.resourceResolver.resolveTypeByBaseNode(
-      this.media.attachedTo[0],
+      attachedTo[0],
     );
     const attachedResource = this.resourceHost.getByName(attachedResName);
     return attachedResource;

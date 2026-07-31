@@ -1,6 +1,15 @@
-import { beforeAll, beforeEach, describe, expect, it } from '@jest/globals';
+import {
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from '@jest/globals';
 import got from 'got';
 import { CalendarDate, type ID, isIdLike } from '~/common';
+import { LiveQueryStore } from '~/core/live-query';
 import { graphql, type InputOf } from '~/graphql';
 import {
   type UpdateProgressReportMedia,
@@ -230,6 +239,17 @@ describe('ProgressReport Media e2e', () => {
     });
   });
 
+  // The Neo4j repo inherits DtoRepository.deleteNode, which defaults `resource`
+  // to `this.resource` and announces to the live-query store before deleting.
+  // The Drizzle repo overrides deleteNode outright and so reaches none of that —
+  // it has to announce for itself, or cord-field's `@live` progress-report
+  // document keeps rendering media that is already gone.
+  // Restore in afterEach, never in a finally ahead of the assertion:
+  // mockRestore() clears mock.calls.
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   it('Delete', async () => {
     const upload = await requestFileUpload(app);
     await uploadFileContents(app, upload.url, image);
@@ -242,6 +262,10 @@ describe('ProgressReport Media e2e', () => {
         name: 'A picture',
       },
     });
+
+    const mediaId = report.media.items[0]!.id;
+    // `invalidate` delegates to `invalidateAll`, so this one spy catches both.
+    const invalidations = jest.spyOn(app.get(LiveQueryStore), 'invalidateAll');
 
     const { report: updated } = await app.graphql.mutate(
       graphql(
@@ -261,12 +285,25 @@ describe('ProgressReport Media e2e', () => {
         `,
         [reportMediaFrag],
       ),
-      { id: report.media.items[0]!.id },
+      { id: mediaId },
     );
 
     expect(updated.id).toBe(reportId);
     expect(updated.media.items).toHaveLength(0);
     expect(updated.media.total).toBe(0);
+
+    const keys = invalidations.mock.calls.flatMap(([identifiers]) =>
+      [...identifiers].map((identifier) =>
+        typeof identifier === 'string'
+          ? identifier
+          : `${
+              typeof identifier[0] === 'string'
+                ? identifier[0]
+                : (identifier[0] as { name: string }).name
+            }:${identifier[1]}`,
+      ),
+    );
+    expect(keys).toContain(`ProgressReportMedia:${mediaId}`);
   });
 
   it('Progress report file is anonymous for multiplication projects', async () => {

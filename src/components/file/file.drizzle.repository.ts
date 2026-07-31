@@ -11,6 +11,7 @@ import {
 import { Identity } from '~/core/authentication';
 import { DrizzleService, resolveOrderBy } from '~/core/drizzle';
 import { fileNodes } from '~/core/drizzle/schema';
+import { LiveQueryStore } from '~/core/live-query';
 import { type BaseNode } from '~/core/neo4j/results';
 import {
   FileListInput,
@@ -18,7 +19,9 @@ import {
   type FileNode,
   FileNodeType,
   FileVersion,
+  resolveFileNode,
 } from './dto';
+import { reverseAttachmentByRootIds } from './resolve-file-attachment';
 
 type FileNodeRow = typeof fileNodes.$inferSelect;
 
@@ -41,6 +44,7 @@ export class FileDrizzleRepository {
   constructor(
     private readonly drizzle: DrizzleService,
     private readonly identity: Identity,
+    private readonly liveQueryStore: LiveQueryStore,
   ) {}
 
   protected get db() {
@@ -288,6 +292,12 @@ export class FileDrizzleRepository {
   }
 
   async rename(fileNode: FileNode, newName: string): Promise<void> {
+    // Mirrors the Neo4j arm, where `db.updateProperties({ type:
+    // resolveFileNode(fileNode) })` announces under the CONCRETE type. The store
+    // keys on `${resource.name}:${id}`, so `FileNode:` — the interface — would
+    // emit something nothing subscribes to. FileService.rename() already skips
+    // the call when the name is unchanged, so this never fires as a no-op.
+    this.liveQueryStore.invalidate([resolveFileNode(fileNode), fileNode.id]);
     await this.db
       .update(fileNodes)
       .set({ name: newName })
@@ -351,7 +361,7 @@ export class FileDrizzleRepository {
 
   async delete(fileNode: FileNode): Promise<void> {
     // Soft-delete the node and its whole subtree.
-    await this.db.execute(sql`
+    const deleted = await this.db.execute<{ id: ID; type: FileNodeType }>(sql`
       WITH RECURSIVE subtree AS (
         SELECT id FROM ${fileNodes} WHERE id = ${fileNode.id}
         UNION ALL
@@ -359,14 +369,24 @@ export class FileDrizzleRepository {
       )
       UPDATE ${fileNodes} SET deleted_at = now()
       WHERE id IN (SELECT id FROM subtree)
+      RETURNING id, type
     `);
+    // The Neo4j arm's `deleteNode(fileNode, { resource: resolveFileNode(...) })`
+    // announces the top node only. RETURNING gives us the whole subtree for free
+    // — no extra round trip — so a live query watching a file *inside* a deleted
+    // directory is told as well. Deliberately better than Neo4j here rather than
+    // a divergence to be reverted. FileNodeType's values are exactly the
+    // registered resource names, so the row's `type` is the key we want.
+    this.liveQueryStore.invalidateAll(
+      deleted.rows.map((row) => [row.type, row.id] as const),
+    );
     // Neo4j computes a File's latest version dynamically from its *active*
     // versions, so deleting the current version falls back to the previous one
     // (or none). We denormalize latest_version_id, so repoint any surviving
     // File whose latest version was just soft-deleted to its newest remaining
     // version — or null, which makes it a version-less placeholder (not-found),
     // matching Neo4j's "no active version" state.
-    await this.db.execute(sql`
+    const repointed = await this.db.execute<{ id: ID<'File'> }>(sql`
       UPDATE ${fileNodes} f
       SET latest_version_id = (
         SELECT v.id FROM ${fileNodes} v
@@ -383,7 +403,15 @@ export class FileDrizzleRepository {
           SELECT lv.deleted_at FROM ${fileNodes} lv
           WHERE lv.id = f.latest_version_id
         ) IS NOT NULL
+      RETURNING f.id
     `);
+    // These Files survived, but their surfaced mimeType/size/modifiedAt just
+    // changed with the repoint, and they are not in the subtree above. Same
+    // free-RETURNING reasoning; deleting a FileVersion otherwise left the parent
+    // File's open page showing the removed version's metadata.
+    this.liveQueryStore.invalidateAll(
+      repointed.rows.map((row) => [FileNodeType.File, row.id] as const),
+    );
   }
 
   // ─── hydration ─────────────────────────────────────────────────────────────
@@ -441,6 +469,14 @@ export class FileDrizzleRepository {
       .map((r) => r.id);
     const aggregates = await this.computeDirectoryAggregates(dirIds);
 
+    // The resource each node's tree root is attached to (reverse-lookup across
+    // the consuming DefinedFile FK columns). Batched over distinct roots.
+    const distinctRootIds = [...new Set([...roots.values()].map((r) => r.id))];
+    const attachmentByRoot = await reverseAttachmentByRootIds(
+      this.db,
+      distinctRootIds,
+    );
+
     return rows.map((row) => {
       const root = roots.get(row.id);
       const rootNode = root
@@ -454,12 +490,14 @@ export class FileDrizzleRepository {
         createdAt: toDateTime(row.createdAt),
         createdById: row.createdById,
         root: rootNode,
-        // rootAttachedTo: nothing points at file nodes until consuming FKs land
-        // in PR #2. Point it at the root node itself (a Directory) — its type is
-        // never ProgressReportMedia, so the file-is-media-check handler that
-        // destructures this on every upload short-circuits cleanly.
-        // migration-todo (PR #2): reverse-lookup across consuming FK columns.
-        rootAttachedTo: [rootNode, 'dir'] as [BaseNode, string],
+        // The resource holding the tree root. Falls back to the root node
+        // itself (a Directory — never ProgressReportMedia, so the upload-time
+        // file-is-media check short-circuits) when nothing references it, e.g.
+        // a test root dir or a free-floating tree.
+        rootAttachedTo: attachmentByRoot.get(root?.id ?? row.id) ?? [
+          rootNode,
+          'dir',
+        ],
         canDelete: true,
       };
 
