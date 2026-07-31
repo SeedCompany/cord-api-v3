@@ -7,6 +7,7 @@ import {
   type UnsecuredDto,
 } from '~/common';
 import { Hooks } from '~/core/hooks';
+import { ResourceMutatedHook } from '../../audit/resource-mutated.hook';
 import { Privileges } from '../../authorization';
 import {
   type ProgressReport,
@@ -83,6 +84,16 @@ export class ProgressReportWorkflowService {
       unsecuredEvent,
     );
     await this.hooks.run(event);
+
+    // Status transitions/bypasses are user-driven mutations → audited as a
+    // ProgressReport Update with the new status.
+    const newStatus = isTransition ? next.to : next;
+    await this.hooks.run(
+      new ResourceMutatedHook('ProgressReport', reportId, 'Update', {
+        status: newStatus,
+        previousStatus: currentStatus,
+      }),
+    );
   }
 
   private validateExecutionInput(

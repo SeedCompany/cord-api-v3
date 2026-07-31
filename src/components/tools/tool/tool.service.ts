@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { type ID, ServerException, type UnsecuredDto } from '~/common';
+import { Hooks } from '~/core/hooks';
 import { HandleIdLookup } from '~/core/resources';
+import { ResourceMutatedHook } from '../../audit/resource-mutated.hook';
 import { Privileges } from '../../authorization';
 import {
   type CreateTool,
@@ -16,6 +18,7 @@ export class ToolService {
   constructor(
     private readonly privileges: Privileges,
     private readonly repo: ToolRepository,
+    private readonly hooks: Hooks,
   ) {}
 
   @HandleIdLookup(Tool)
@@ -44,6 +47,7 @@ export class ToolService {
   async create(input: CreateTool): Promise<Tool> {
     const dto = await this.repo.create(input);
     this.privileges.for(Tool, dto).verifyCan('create');
+    await this.hooks.run(new ResourceMutatedHook('Tool', dto.id, 'Create'));
     return this.secure(dto);
   }
 
@@ -53,6 +57,9 @@ export class ToolService {
     this.privileges.for(Tool, tool).verifyChanges(changes);
 
     const updated = await this.repo.update({ id: input.id, ...changes });
+    await this.hooks.run(
+      new ResourceMutatedHook('Tool', input.id, 'Update', changes),
+    );
     return this.secure(updated);
   }
 
@@ -64,5 +71,6 @@ export class ToolService {
     } catch (exception) {
       throw new ServerException('Failed to delete', exception);
     }
+    await this.hooks.run(new ResourceMutatedHook('Tool', id, 'Delete'));
   }
 }

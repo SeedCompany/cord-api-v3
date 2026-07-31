@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import process from 'node:process';
 import { AdminModule } from './components/admin/admin.module';
+import { AuditModule } from './components/audit/audit.module';
 import { AuthorizationModule } from './components/authorization/authorization.module';
 import { BudgetModule } from './components/budget/budget.module';
 import { CeremonyModule } from './components/ceremony/ceremony.module';
@@ -58,6 +59,7 @@ if (process.env.NODE_ENV !== 'production') {
     AuthorizationModule,
     BudgetModule,
     CeremonyModule,
+    AuditModule,
     CommentModule,
     EthnoArtModule,
     FileModule,

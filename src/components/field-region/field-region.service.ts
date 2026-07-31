@@ -9,6 +9,7 @@ import {
 } from '~/common';
 import { Hooks } from '~/core/hooks';
 import { HandleIdLookup } from '~/core/resources';
+import { ResourceMutatedHook } from '../audit/resource-mutated.hook';
 import { Privileges } from '../authorization';
 import {
   IProject,
@@ -41,6 +42,9 @@ export class FieldRegionService {
     this.privileges.for(FieldRegion).verifyCan('create');
     await this.validateDirectorRole(input.director);
     const dto = await this.repo.create(input);
+    await this.hooks.run(
+      new ResourceMutatedHook('FieldRegion', dto.id, 'Create'),
+    );
     return this.secure(dto);
   }
 
@@ -80,6 +84,9 @@ export class FieldRegionService {
       ...changes,
     });
     await this.hooks.run(event);
+    await this.hooks.run(
+      new ResourceMutatedHook('FieldRegion', input.id, 'Update', changes),
+    );
 
     return this.secure(updated);
   }
@@ -113,6 +120,8 @@ export class FieldRegionService {
     } catch (exception) {
       throw new ServerException('Failed to delete', exception);
     }
+
+    await this.hooks.run(new ResourceMutatedHook('FieldRegion', id, 'Delete'));
   }
 
   async list(input: FieldRegionListInput): Promise<FieldRegionListOutput> {

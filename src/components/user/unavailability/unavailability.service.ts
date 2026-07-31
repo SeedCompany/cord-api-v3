@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { type ID, type ObjectView, type UnsecuredDto } from '~/common';
 import { Identity } from '~/core/authentication';
+import { Hooks } from '~/core/hooks';
 import { HandleIdLookup } from '~/core/resources';
+import { ResourceMutatedHook } from '../../audit/resource-mutated.hook';
 import { Privileges } from '../../authorization';
 import {
   type CreateUnavailability,
@@ -18,11 +20,15 @@ export class UnavailabilityService {
     private readonly privileges: Privileges,
     private readonly identity: Identity,
     private readonly repo: UnavailabilityRepository,
+    private readonly hooks: Hooks,
   ) {}
 
   async create(input: CreateUnavailability): Promise<Unavailability> {
     this.privileges.for(Unavailability).verifyCan('create');
     const result = await this.repo.create(input);
+    await this.hooks.run(
+      new ResourceMutatedHook('Unavailability', result.id, 'Create'),
+    );
     return this.secure(result);
   }
 
@@ -52,12 +58,18 @@ export class UnavailabilityService {
         .verifyChanges(changes);
     }
     const updated = await this.repo.update({ id: input.id, ...changes });
+    await this.hooks.run(
+      new ResourceMutatedHook('Unavailability', input.id, 'Update', changes),
+    );
     return this.secure(updated);
   }
 
   async delete(id: ID): Promise<void> {
     await this.repo.readOne(id);
     await this.repo.delete(id);
+    await this.hooks.run(
+      new ResourceMutatedHook('Unavailability', id, 'Delete'),
+    );
   }
 
   async list(
