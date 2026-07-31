@@ -71,15 +71,42 @@ const proseLike = (value: string): string => {
  * database stores. Anything unparseable comes back as a plain prose replacement:
  * a value we cannot read is still a value we must not leave in place.
  */
-const richTextLike = (stored: string): string => {
-  if (!RichTextDocument.isSerialized(stored)) return proseLike(stored);
-  let doc: RichTextDocument;
-  try {
-    doc = RichTextDocument.fromSerialized(stored);
-  } catch {
-    return proseLike(stored);
+const richTextLike = (original: unknown): string => {
+  // Resolve to a document object, from whichever of the three shapes arrived.
+  //
+  // THE OBJECT CASE IS THE NORMAL ONE, and missing it was a real bug: the Neo4j
+  // connection installs a read transformer, so a stored rich-text string arrives
+  // here as a RichTextDocument *object*. The first version only handled strings
+  // and fell through to `String(original)` — which, because the class sets a
+  // toStringTag, yields the constant '[object RichText]' for every row. Every
+  // body in the graph collapsed to the same generated text and lost its
+  // structure, and the ETL then dropped 30 of 32 comments because it could no
+  // longer parse them. Exactly the mistake the project extractor's notes field
+  // had, made again one layer down.
+  let raw: { blocks?: unknown[] } | undefined;
+  if (original !== null && typeof original === 'object') {
+    raw = original as { blocks?: unknown[] };
+  } else if (RichTextDocument.isSerialized(original)) {
+    try {
+      raw = RichTextDocument.fromSerialized(original) as unknown as {
+        blocks?: unknown[];
+      };
+    } catch {
+      raw = undefined;
+    }
   }
-  const raw = doc as unknown as { blocks?: unknown[] };
+
+  // Anything with no usable document — a plain string, or JSON we couldn't read —
+  // becomes a VALID single-block document rather than bare text. A rich-text
+  // column has to hold rich text: emitting a plain string is what made the value
+  // unloadable in the first place. This also repairs a field previously mangled
+  // by that bug, instead of leaving it permanently unparseable.
+  if (!raw || !Array.isArray(raw.blocks)) {
+    const text = typeof original === 'string' ? original : '';
+    return RichTextDocument.serialize(
+      RichTextDocument.fromText(proseLike(text || 'placeholder')),
+    );
+  }
   const blocks = Array.isArray(raw.blocks) ? raw.blocks : [];
   const scrubbedBlocks = blocks.map((block) => {
     if (block === null || typeof block !== 'object') return block;
@@ -113,9 +140,25 @@ export const fakeValue = (
   original: unknown,
 ): string | null => {
   if (strategy === 'credential') return null;
+  // richText BEFORE the string coercion below. It is the one strategy whose input
+  // legitimately arrives as an object, and `String()`-ing that object is what
+  // collapsed every document to one value and destroyed the structure.
+  if (strategy === 'richText') {
+    return original == null ? null : richTextLike(original);
+  }
   const value =
     typeof original === 'string' ? original : String(original ?? '');
   if (value === '') return value;
+  // A non-string that survives to here would be silently stringified — which is
+  // how the richText bug hid. Nothing else is expected to be an object, so say so
+  // loudly rather than generating from '[object Object]'.
+  if (typeof original === 'object') {
+    throw new Error(
+      `Strategy '${strategy}' received an object, not a string. Values arriving ` +
+        `as objects need explicit handling (see richText) — generating from a ` +
+        `stringified object silently collapses every row to one value.`,
+    );
+  }
 
   switch (strategy) {
     case 'personName':
@@ -161,10 +204,10 @@ export const fakeValue = (
 
     case 'prose':
       return proseLike(value);
-
-    case 'richText':
-      return richTextLike(value);
   }
+  // No `richText` case: it returns above, before the string coercion, because its
+  // input is legitimately an object. TypeScript enforces that this switch is
+  // exhaustive over what remains.
 };
 
 /**
