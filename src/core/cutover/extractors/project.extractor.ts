@@ -180,6 +180,23 @@ export const projectExtractor: Extractor = {
     let droppedSteps = 0;
     const lastStepByProject = new Map<ID, string>();
     const eventRows = events.flatMap((event) => {
+      // Advance the per-project step chain over EVERY Neo4j event, in order,
+      // BEFORE any drop check — `from_step` is DERIVED here (Neo4j doesn't store
+      // it), so a dropped event must still contribute its `to`.
+      //
+      // Otherwise the corruption is worse than the drop: with B→C dropped, the
+      // next surviving event reported `from: B` and claimed a B→D transition
+      // that never happened. Advancing unconditionally yields `from: C` — the
+      // missing event becomes a visible discontinuity between consecutive rows
+      // instead of invented history. A gap you can see beats a lie you can't.
+      //
+      // Only KNOWN steps advance it: an unrecognized value would flow into a
+      // later row's enum-typed `from_step` and fail the insert, so the chain
+      // holds at the last known step, which is the best available truth.
+      const fromStep = lastStepByProject.get(event.projectId) ?? null;
+      if (knownSteps.has(event.toStep)) {
+        lastStepByProject.set(event.projectId, event.toStep);
+      }
       if (!event.who || !userIds.has(event.who)) {
         droppedActors++;
         return [];
@@ -188,8 +205,6 @@ export const projectExtractor: Extractor = {
         droppedSteps++;
         return [];
       }
-      const fromStep = lastStepByProject.get(event.projectId) ?? null;
-      lastStepByProject.set(event.projectId, event.toStep);
       let notes: unknown = null;
       if (event.notes) {
         try {
