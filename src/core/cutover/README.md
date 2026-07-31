@@ -98,6 +98,39 @@ loading, so dry-runs and retries start clean. Inserts use `onConflictDoNothing`.
 `read`/`pgCount` gap means `onConflictDoNothing` dropped rows on a UNIQUE
 conflict — **investigate, don't ignore**.
 
+## Pre-flight: `preflight-uniques.cypher` — RUN THIS AGAINST PROD FIRST
+
+22 read-only legs, one per Postgres unique index that can shed rows, Tier 1 (root
+entities, where a drop takes a subtree) then Tier 2 (junctions, one row each).
+
+```bash
+docker exec -i <neo4j-container> cypher-shell -u neo4j -p <pw> --format plain \
+  < src/core/cutover/preflight-uniques.cypher
+```
+
+Columns: `scannedKeys` (distinct live key values — **zero means a BROKEN LEG, not a
+clean result**), `dupGroups`, `rowsWouldDrop`. On a Tier 1 row read
+`rowsWouldDrop` as a **subtree**, not a row count — see findings #6 and #9.
+
+Three conventions in this file exist because each one caught a real bug:
+
+- **Aggregate to scalars first, attach the leg's label literal after.** A literal
+  in the aggregating clause is a grouping key, and a grouping key over zero input
+  rows yields zero output rows — so a clean leg would vanish and read exactly like
+  a broken pattern.
+- **`scannedKeys: 0` is a broken leg.** That convention immediately caught one:
+  the `user_organizations` primary check tested `r.primary = true` on the
+  `organization` edge, but primary is a **separate `primaryOrganization` relationship
+  type**.
+- **Never group by `labels(n)[i]`.** For producibles `labels(n)[0]` is `"BaseNode"`
+  (`["BaseNode","Story","Producible"]`), so grouping by it would fold a Film and a
+  Story sharing a name into one group and report a **false** duplicate. Use an
+  explicit `CASE WHEN n:Film …`.
+
+Validated against local data: every leg matches real rows, and its predictions
+reproduce what the loader actually drops (`iso_alpha3` → 9 locations, ethnologue
+`code` + `provisional_code` → 2). Locally only those two constraints are dirty.
+
 ## Cutover runbook (production)
 
 1. Freeze Neo4j writes (maintenance window) + take a final snapshot.
