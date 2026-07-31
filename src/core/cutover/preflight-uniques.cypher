@@ -13,6 +13,13 @@
 //
 // rowsWouldDrop is NOT a row count — for a root entity it is a SUBTREE count.
 // Measured example: 19 dropped languages cost ~1,400 rows downstream.
+//
+// Legs marked "RELAXED 0030" no longer drop anything: that migration dropped the
+// unique indexes behind them (language name + displayName, ethnologue code +
+// provisionalCode, locations isoAlpha3) because the source never enforced them.
+// Their legs are kept because the duplicate COUNT is still worth knowing — it is
+// how the 37 production name groups were found — but read rowsWouldDrop as
+// "rows that used to be shed", not as a prediction.
 // ═══════════════════════════════════════════════════════════════════════════════
 
 // ── TIER 1 — root entities: a drop here takes its whole subtree ───────────────
@@ -35,7 +42,7 @@ UNION ALL
 MATCH (n:Location)-[:isoAlpha3 {active:true}]->(p:Property) WHERE p.value IS NOT NULL
 WITH p.value AS v, count(*) AS c
 WITH count(*) AS k, sum(CASE WHEN c>1 THEN 1 ELSE 0 END) AS g, sum(CASE WHEN c>1 THEN c-1 ELSE 0 END) AS d
-RETURN 'locations.isoAlpha3 (non-null) <-- the real cause of the dev 9-row drop' AS check, k AS scannedKeys, g AS dupGroups, d AS rowsWouldDrop
+RETURN 'locations.isoAlpha3 (non-null) — RELAXED 0030, informational' AS check, k AS scannedKeys, g AS dupGroups, d AS rowsWouldDrop
 UNION ALL
 MATCH (n:Organization)-[:name {active:true}]->(p:Property)
 WITH p.value AS v, count(*) AS c
@@ -60,12 +67,20 @@ UNION ALL
 MATCH (n:EthnologueLanguage)-[:code {active:true}]->(p:Property) WHERE p.value IS NOT NULL
 WITH p.value AS v, count(*) AS c
 WITH count(*) AS k, sum(CASE WHEN c>1 THEN 1 ELSE 0 END) AS g, sum(CASE WHEN c>1 THEN c-1 ELSE 0 END) AS d
-RETURN 'ethnologue.code (non-null)' AS check, k AS scannedKeys, g AS dupGroups, d AS rowsWouldDrop
+RETURN 'ethnologue.code (non-null) — RELAXED 0030, informational' AS check, k AS scannedKeys, g AS dupGroups, d AS rowsWouldDrop
 UNION ALL
 MATCH (n:EthnologueLanguage)-[:provisionalCode {active:true}]->(p:Property) WHERE p.value IS NOT NULL
 WITH p.value AS v, count(*) AS c
 WITH count(*) AS k, sum(CASE WHEN c>1 THEN 1 ELSE 0 END) AS g, sum(CASE WHEN c>1 THEN c-1 ELSE 0 END) AS d
-RETURN 'ethnologue.provisionalCode (non-null)' AS check, k AS scannedKeys, g AS dupGroups, d AS rowsWouldDrop
+RETURN 'ethnologue.provisionalCode (non-null) — RELAXED 0030, informational' AS check, k AS scannedKeys, g AS dupGroups, d AS rowsWouldDrop
+UNION ALL
+// The ROLV code is the ONE unique still enforced on a language, and it had no leg
+// here while the three relaxed above did — the instrument was measuring the
+// constraints that no longer drop and not the one that does.
+MATCH (n:Language)-[:registryOfLanguageVarietiesCode {active:true}]->(p:Property) WHERE p.value IS NOT NULL
+WITH p.value AS v, count(*) AS c
+WITH count(*) AS k, sum(CASE WHEN c>1 THEN 1 ELSE 0 END) AS g, sum(CASE WHEN c>1 THEN c-1 ELSE 0 END) AS d
+RETURN 'languages.rolvCode (non-null)' AS check, k AS scannedKeys, g AS dupGroups, d AS rowsWouldDrop
 UNION ALL
 MATCH (org:Organization)<-[:organization {active:true}]-(n:Partner)
 WITH org.id AS v, count(*) AS c

@@ -103,13 +103,18 @@ export const languageExtractor: Extractor = {
       );
     }
 
-    // Unique-dup pre-warning (prod-finding #3 class). Three partial uniques
-    // scope to live rows, and every row this wave writes is live — so any
-    // duplicate among them is silently swallowed by onConflictDoNothing and the
-    // reconciliation count alone won't say which. Surface it before inserting.
+    // Unique-dup pre-warning (prod-finding #3 class). The ROLV code is the one
+    // remaining partial unique on this table, it scopes to live rows, and every
+    // row this wave writes is live — so a duplicate among them is silently
+    // swallowed by onConflictDoNothing and the reconciliation count alone won't
+    // say which. Surface it before inserting.
+    //
+    // `name` and `displayName` were checked here too until migration 0030 dropped
+    // their unique indexes. Leaving them in printed "19 language(s) … will be
+    // DROPPED" on every run while all 69 loaded fine — a warning that is not true
+    // is worse than no warning, because it teaches the reader to skim the ⚠ lines
+    // that are.
     for (const [label, key] of [
-      ['name', (r: (typeof rows)[number]) => r.name],
-      ['displayName', (r: (typeof rows)[number]) => r.displayName],
       [
         'registryOfLanguageVarietiesCode',
         (r: (typeof rows)[number]) => r.registryOfLanguageVarietiesCode,

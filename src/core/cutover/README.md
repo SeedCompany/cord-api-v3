@@ -128,8 +128,17 @@ Three conventions in this file exist because each one caught a real bug:
   explicit `CASE WHEN n:Film …`.
 
 Validated against local data: every leg matches real rows, and its predictions
-reproduce what the loader actually drops (`iso_alpha3` → 9 locations, ethnologue
-`code` + `provisional_code` → 2). Locally only those two constraints are dirty.
+reproduced what the loader actually dropped (`iso_alpha3` → 9 locations,
+ethnologue `code` + `provisional_code` → 2).
+
+**Those three legs no longer predict anything.** Migration 0030 dropped their
+unique indexes — along with the language `name` / `display_name` pair — because
+Neo4j never enforced any of them, so Postgres was rejecting data the source
+accepts. Their legs are relabelled `RELAXED 0030, informational` and kept for the
+duplicate count alone. A ROLV-code leg was added in the same pass: it is the one
+language unique still enforced, and it had no leg at all, so the instrument was
+measuring three constraints that no longer drop and missing the one that does.
+Locally it reads 8 keys / 0 duplicates, and production reads 3,430 / 0.
 
 ## Cutover runbook (production)
 
@@ -152,9 +161,17 @@ Rollback is instant at any point before the flip: Neo4j is untouched.
    migrate soft-deleted parents too, or scrub these refs. NOT-NULL dangling FKs
    (e.g. a partner's org) can't be nulled — they'd need the parent migrated or
    the row skipped.
-3. **Dropped rows on UNIQUE conflicts.** `onConflictDoNothing` drops 9 locations
-   (reconciliation flags read 26 / pgCount 17). Prod needs dedup or the
-   partial-unique relaxed.
+3. **Dropped rows on UNIQUE conflicts.** ✅ **CLOSED by migration 0030** — the five
+   offending indexes are gone (language `name` + `display_name`, ethnologue `code`
+   + `provisional_code`, `locations.iso_alpha3`), because Neo4j never enforced any
+   of them. A full local load now reports `locations 26/26`, `languages 69/69` and
+   `ethnologue_languages 69/69`, where it previously shed 9 locations and 19
+   languages plus their ~1,400-row subtree. Total drops on that dataset fell from
+   ~1,500 to 206, and every remaining drop is a genuine soft-deleted-parent case
+   rather than a constraint the source does not have.
+   *History, kept because the reasoning is the lesson:*
+   `onConflictDoNothing` dropped 9 locations (reconciliation flagged read 26 /
+   pgCount 17).
    **Corrected 2026-07-30 — this finding named the wrong column for weeks.** The
    culprit is `locations_iso_alpha3_active_unique`, NOT
    `locations_name_active_unique`: live location names have **zero** duplicates
