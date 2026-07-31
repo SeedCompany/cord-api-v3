@@ -175,7 +175,22 @@ Rollback is instant at any point before the flip: Neo4j is untouched.
    `warnIfRelTypeUnknown` closes it and earned its place on its first run:
    `knownLanguage` has **zero** edges locally, so a correct query and a typo
    produce byte-identical output and nothing else could distinguish them.
-9. **Alias every expression column in a raw `sql` leg.** `resolveParentTypes`
+9. **🔴 A dropped row can break a whole LIST QUERY, not just lose data (ETH1).**
+   The worst consequence found so far, and it is qualitatively different from
+   finding #6's subtree arithmetic. The 2 `ethnologue_languages` rows dropped to
+   the `code` / `provisional_code` unique indexes leave their 2 languages with no
+   ethnologue row — and the Postgres language repo treats that as a hard
+   invariant: *"Language iaJWie869fn has no attached EthnologueLanguage —
+   create-flow invariant violated"*. Neo4j tolerates the same shape and answers
+   normally. Measured by the shadow-diff run of 2026-07-30: this **fails
+   `languages.list` outright for an Administrator** — the entire query, not one
+   row — plus `engagement.byId` for any engagement on an affected language.
+   So the ordering of consequences for a unique-dup drop is: (1) the row, (2) its
+   subtree, (3) **any query whose result set would have contained it, if a
+   downstream repo asserts an invariant the source never enforced.** Prod exposure
+   is unmeasured; the `ethnologue.code` / `provisionalCode` legs of the unique
+   pre-flight are what size it, and they must be run before the dry-run window.
+10. **Alias every expression column in a raw `sql` leg.** `resolveParentTypes`
    shipped with `AS t` on only its first leg; Postgres names an unaliased
    expression `?column?`, so five of six legs mapped their ids to `undefined`.
    That still created the map KEY, which defeated the `keepLanded` guard built

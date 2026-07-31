@@ -746,6 +746,635 @@ const notificationsList = /* GraphQL */ `
 
 // ─── the corpus ──────────────────────────────────────────────────────────────
 
+// ─── languages ───────────────────────────────────────────────────────────────
+// Added 2026-07-30. Excluded and why:
+//   tools           — ToolUsage has no table on this branch.
+//   history         — resource_mutations exists but the ETL does not load it, so
+//                     Postgres would be empty against a populated Neo4j.
+//   firstScripture  — union over engagement/product derivation; covered
+//                     indirectly by hasExternalFirstScripture (a stored bool).
+//   usesAIAssistance — derived, and carries a known Neo4j 42N07 shadowing fault
+//                     on the filter+sort combination (transition-only, won't fix).
+// pinned IS included — it is how this corpus covers the Pin domain at all.
+const languageFields = /* GraphQL */ `
+  id
+  createdAt
+  avatarLetters
+  sensitivity
+  pinned
+  name { value canRead canEdit }
+  displayName { value canRead canEdit }
+  displayNamePronunciation { value canRead canEdit }
+  isDialect { value canRead canEdit }
+  isSignLanguage { value canRead canEdit }
+  signLanguageCode { value canRead canEdit }
+  population { value canRead canEdit }
+  populationOverride { value canRead canEdit }
+  registryOfLanguageVarietiesCode { value canRead canEdit }
+  leastOfThese { value canRead canEdit }
+  leastOfTheseReason { value canRead canEdit }
+  sponsorStartDate { value canRead canEdit }
+  sponsorEstimatedEndDate { value canRead canEdit }
+  isAvailableForReporting { value canRead canEdit }
+  presetInventory { value canRead canEdit }
+  hasExternalFirstScripture { value canRead canEdit }
+  tags { value canRead canEdit }
+  ethnologue {
+    sensitivity
+    code { value canRead canEdit }
+    provisionalCode { value canRead canEdit }
+    name { value canRead canEdit }
+    population { value canRead canEdit }
+  }
+`;
+
+const languagesList = /* GraphQL */ `
+  query ShadowLanguages($input: LanguageListInput) {
+    languages(input: $input) {
+      total
+      hasMore
+      items {
+        id
+      }
+    }
+  }
+`;
+
+const languageById = /* GraphQL */ `
+  query ShadowLanguageById($id: ID!) {
+    language(id: $id) {
+      ${languageFields}
+      posts { total hasMore canRead canCreate items { id type shareability } }
+      commentThreads { total hasMore canRead canCreate items { id } }
+    }
+  }
+`;
+
+// ─── engagements ─────────────────────────────────────────────────────────────
+// Read through `engagement(id)` (the interface) rather than
+// `languageEngagement(id)`, so one document covers BOTH subtypes and the
+// sampled id set does not have to be split by type.
+// Excluded: pnp / pnpExtractionResult (File wave), partnershipsProducingMediums
+// (no table on this branch), changeset + changesetDiff (changesets are not
+// carried forward), tools, history, usingAIAssistedTranslation (tool-derived).
+const engagementsList = /* GraphQL */ `
+  query ShadowEngagements($input: EngagementListInput) {
+    engagements(input: $input) {
+      total
+      hasMore
+      items {
+        id
+      }
+    }
+  }
+`;
+
+const engagementById = /* GraphQL */ `
+  query ShadowEngagementById($id: ID!) {
+    engagement(id: $id) {
+      __typename
+      id
+      createdAt
+      modifiedAt
+      sensitivity
+      status {
+        value
+        canRead
+        canEdit
+      }
+      statusModifiedAt {
+        value
+        canRead
+        canEdit
+      }
+      lastSuspendedAt {
+        value
+        canRead
+        canEdit
+      }
+      lastReactivatedAt {
+        value
+        canRead
+        canEdit
+      }
+      completeDate {
+        value
+        canRead
+        canEdit
+      }
+      disbursementCompleteDate {
+        value
+        canRead
+        canEdit
+      }
+      startDate {
+        value
+        canRead
+        canEdit
+      }
+      endDate {
+        value
+        canRead
+        canEdit
+      }
+      startDateOverride {
+        value
+        canRead
+        canEdit
+      }
+      endDateOverride {
+        value
+        canRead
+        canEdit
+      }
+      initialEndDate {
+        value
+        canRead
+        canEdit
+      }
+      description {
+        value
+        canRead
+        canEdit
+      }
+      ceremony {
+        canRead
+        canEdit
+        value {
+          id
+        }
+      }
+      ... on LanguageEngagement {
+        historicGoal {
+          value
+          canRead
+          canEdit
+        }
+        lukePartnership {
+          value
+          canRead
+          canEdit
+        }
+        openToInvestorVisit {
+          value
+          canRead
+          canEdit
+        }
+        firstScripture {
+          value
+          canRead
+          canEdit
+        }
+        paratextRegistryId {
+          value
+          canRead
+          canEdit
+        }
+        milestonePlanned {
+          value
+          canRead
+          canEdit
+        }
+        milestoneReached {
+          value
+          canRead
+          canEdit
+        }
+        sentPrintingDate {
+          value
+          canRead
+          canEdit
+        }
+        rev79CommunityId {
+          value
+          canRead
+          canEdit
+        }
+        language {
+          canRead
+          canEdit
+          value {
+            id
+          }
+        }
+        products {
+          total
+          hasMore
+          canRead
+          canCreate
+          items {
+            id
+          }
+        }
+        progressReports {
+          total
+          hasMore
+          items {
+            id
+          }
+        }
+      }
+      ... on InternshipEngagement {
+        methodologies {
+          value
+          canRead
+          canEdit
+        }
+        position {
+          value
+          canRead
+          canEdit
+        }
+        intern {
+          canRead
+          canEdit
+          value {
+            id
+          }
+        }
+        mentor {
+          canRead
+          canEdit
+          value {
+            id
+          }
+        }
+        countryOfOrigin {
+          canRead
+          canEdit
+          value {
+            id
+          }
+        }
+      }
+    }
+  }
+`;
+
+// ─── products ────────────────────────────────────────────────────────────────
+// Product is an interface; the three concrete types carry the fields that the
+// single-table-inheritance CHECKs are built around, so each gets a fragment.
+// Excluded: tools, history, project/engagement back-refs (covered from the
+// engagement side), progressReport* (covered via the ProgressReport document).
+const productsList = /* GraphQL */ `
+  query ShadowProducts($input: ProductListInput) {
+    products(input: $input) {
+      total
+      hasMore
+      items {
+        id
+      }
+    }
+  }
+`;
+
+const productById = /* GraphQL */ `
+  query ShadowProductById($id: ID!) {
+    product(id: $id) {
+      __typename
+      id
+      createdAt
+      sensitivity
+      approach
+      category
+      availableSteps
+      mediums {
+        value
+        canRead
+        canEdit
+      }
+      purposes {
+        value
+        canRead
+        canEdit
+      }
+      methodology {
+        value
+        canRead
+        canEdit
+      }
+      steps {
+        value
+        canRead
+        canEdit
+      }
+      describeCompletion {
+        value
+        canRead
+        canEdit
+      }
+      placeholderDescription {
+        value
+        canRead
+        canEdit
+      }
+      progressStepMeasurement {
+        value
+        canRead
+        canEdit
+      }
+      progressTarget {
+        value
+        canRead
+        canEdit
+      }
+      scriptureReferences {
+        canRead
+        canEdit
+        value {
+          start {
+            book
+            chapter
+            verse
+          }
+          end {
+            book
+            chapter
+            verse
+          }
+        }
+      }
+      ... on DirectScriptureProduct {
+        unspecifiedScripture {
+          canRead
+          canEdit
+          value {
+            book
+            totalVerses
+          }
+        }
+        totalVerses
+        totalVerseEquivalents
+      }
+      ... on DerivativeScriptureProduct {
+        composite {
+          value
+          canRead
+          canEdit
+        }
+        totalVerses
+        totalVerseEquivalents
+        scriptureReferencesOverride {
+          canRead
+          canEdit
+          value {
+            start {
+              book
+              chapter
+              verse
+            }
+            end {
+              book
+              chapter
+              verse
+            }
+          }
+        }
+        produces {
+          canRead
+          canEdit
+          value {
+            id
+            __typename
+          }
+        }
+      }
+      ... on OtherProduct {
+        title {
+          value
+          canRead
+          canEdit
+        }
+        description {
+          value
+          canRead
+          canEdit
+        }
+      }
+    }
+  }
+`;
+
+// ─── periodic + progress reports ─────────────────────────────────────────────
+// Excluded: reportFile / narrativeFile (File wave — the ids are carried but the
+// file_nodes rows are not, so both engines would answer from different truths),
+// media / featuredMedia / pnpExtractionResult (File-keyed), varianceExplanation
+// and workflowEvents (NO Postgres table exists for either — a real gap, see
+// src/core/cutover/README.md), tools, history.
+const periodicReportsList = /* GraphQL */ `
+  query ShadowPeriodicReports($input: PeriodicReportListInput) {
+    periodicReports(input: $input) {
+      total
+      hasMore
+      items {
+        id
+        __typename
+        type
+        start
+        end
+        due
+      }
+    }
+  }
+`;
+
+const periodicReportById = /* GraphQL */ `
+  query ShadowPeriodicReportById($id: ID!) {
+    periodicReport(id: $id) {
+      __typename
+      id
+      createdAt
+      type
+      start
+      end
+      due
+      sensitivity
+      receivedDate {
+        value
+        canRead
+        canEdit
+      }
+      narrativeReceivedDate {
+        value
+        canRead
+        canEdit
+      }
+      skippedReason {
+        value
+        canRead
+        canEdit
+      }
+      parent {
+        id
+      }
+      ... on ProgressReport {
+        status {
+          value
+          canRead
+          canEdit
+          transitions {
+            id
+            label
+            to
+            type
+          }
+        }
+        cumulativeSummary {
+          planned
+          actual
+          variance
+          scheduleStatus
+        }
+        fiscalYearSummary {
+          planned
+          actual
+          variance
+          scheduleStatus
+        }
+        periodSummary {
+          planned
+          actual
+          variance
+          scheduleStatus
+        }
+        teamNews {
+          total
+          hasMore
+          canRead
+          canCreate
+          items {
+            id
+            prompt {
+              value {
+                id
+              }
+            }
+          }
+        }
+        highlights {
+          total
+          hasMore
+          canRead
+          canCreate
+          items {
+            id
+          }
+        }
+        communityStories {
+          total
+          hasMore
+          canRead
+          canCreate
+          items {
+            id
+          }
+        }
+        progress {
+          variant {
+            key
+          }
+          steps {
+            step
+            completed {
+              value
+              canRead
+              canEdit
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
+const progressReportsList = /* GraphQL */ `
+  query ShadowProgressReports($input: ProgressReportListInput) {
+    progressReports(input: $input) {
+      total
+      hasMore
+      canRead
+      canCreate
+      items {
+        id
+        start
+        end
+        status {
+          value
+        }
+      }
+    }
+  }
+`;
+
+// ─── comments + posts (the leaves) ───────────────────────────────────────────
+// `commentThreads(resource:)` needs a parent id, so threads are covered by-id
+// instead; the comments list hangs off the thread document.
+const commentThreadById = /* GraphQL */ `
+  query ShadowCommentThreadById($id: ID!) {
+    commentThread(id: $id) {
+      id
+      createdAt
+      creator {
+        id
+      }
+      parent {
+        id
+      }
+      firstComment {
+        id
+        createdAt
+      }
+      latestComment {
+        id
+        createdAt
+      }
+      comments {
+        total
+        hasMore
+        canRead
+        canCreate
+        items {
+          id
+          createdAt
+          modifiedAt
+          creator {
+            id
+          }
+          body {
+            value
+            canRead
+            canEdit
+          }
+        }
+      }
+    }
+  }
+`;
+
+const postById = /* GraphQL */ `
+  query ShadowPostById($id: ID!) {
+    post(id: $id) {
+      id
+      createdAt
+      modifiedAt
+      type
+      shareability
+      body {
+        value
+        canRead
+        canEdit
+      }
+      creator {
+        canRead
+        canEdit
+        value {
+          id
+        }
+      }
+    }
+  }
+`;
+
 export const corpus: readonly CorpusEntry[] = [
   // users — default sort is `id`
   { key: 'users.list.default', document: usersList },
@@ -934,4 +1563,100 @@ export const corpus: readonly CorpusEntry[] = [
     document: notificationsList,
     variables: { input: { filter: { unread: true } } },
   },
+  // ─── languages (added 2026-07-30) ──────────────────────────────────────────
+  { key: 'languages.list.default', document: languagesList },
+  {
+    key: 'languages.list.sort-name-desc',
+    document: languagesList,
+    variables: { input: { sort: 'name', order: 'DESC' } },
+  },
+  {
+    key: 'languages.list.sort-createdAt-asc',
+    document: languagesList,
+    variables: { input: { sort: 'createdAt', order: 'ASC' } },
+  },
+  {
+    key: 'languages.list.filter-isDialect',
+    document: languagesList,
+    variables: { input: { filter: { isDialect: true } } },
+  },
+  {
+    key: 'languages.list.filter-presetInventory',
+    document: languagesList,
+    variables: { input: { filter: { presetInventory: true } } },
+  },
+  { key: 'language.byId', document: languageById, idsFrom: 'languages' },
+
+  // ─── engagements ──────────────────────────────────────────────────────────
+  { key: 'engagements.list.default', document: engagementsList },
+  {
+    key: 'engagements.list.sort-createdAt-desc',
+    document: engagementsList,
+    variables: { input: { sort: 'createdAt', order: 'DESC' } },
+  },
+  {
+    key: 'engagements.list.filter-status-active',
+    document: engagementsList,
+    variables: { input: { filter: { status: ['Active'] } } },
+  },
+  {
+    key: 'engagements.list.filter-type-language',
+    document: engagementsList,
+    variables: { input: { filter: { type: 'language' } } },
+  },
+  { key: 'engagement.byId', document: engagementById, idsFrom: 'engagements' },
+
+  // ─── products ─────────────────────────────────────────────────────────────
+  { key: 'products.list.default', document: productsList },
+  {
+    key: 'products.list.sort-createdAt-desc',
+    document: productsList,
+    variables: { input: { sort: 'createdAt', order: 'DESC' } },
+  },
+  {
+    key: 'products.list.filter-methodology',
+    document: productsList,
+    variables: { input: { filter: { methodology: 'OtherWritten' } } },
+  },
+  { key: 'product.byId', document: productById, idsFrom: 'products' },
+
+  // ─── periodic + progress reports ──────────────────────────────────────────
+  { key: 'periodicReports.list.default', document: periodicReportsList },
+  {
+    key: 'periodicReports.list.filter-type-progress',
+    document: periodicReportsList,
+    variables: { input: { type: 'Progress' } },
+  },
+  {
+    key: 'periodicReports.list.sort-end-desc',
+    document: periodicReportsList,
+    variables: { input: { sort: 'end', order: 'DESC' } },
+  },
+  {
+    key: 'periodicReport.byId',
+    document: periodicReportById,
+    idsFrom: 'periodicReports',
+  },
+  // Same document, but over ids sampled from type='Progress' only — this is what
+  // actually exercises the ProgressReport fragment (status, the three summaries,
+  // prompt responses, product progress).
+  {
+    key: 'progressReport.byId',
+    document: periodicReportById,
+    idsFrom: 'progressReports',
+  },
+  { key: 'progressReports.list.default', document: progressReportsList },
+  {
+    key: 'progressReports.list.filter-status-notStarted',
+    document: progressReportsList,
+    variables: { input: { filter: { status: ['NotStarted'] } } },
+  },
+
+  // ─── comments + posts ─────────────────────────────────────────────────────
+  {
+    key: 'commentThread.byId',
+    document: commentThreadById,
+    idsFrom: 'commentThreads',
+  },
+  { key: 'post.byId', document: postById, idsFrom: 'posts' },
 ];
