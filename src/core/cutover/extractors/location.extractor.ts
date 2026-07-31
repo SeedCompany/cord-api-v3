@@ -46,7 +46,9 @@ export const locationExtractor: Extractor = {
     // Pass 2: self-ref marketing region. Guard against targets that aren't
     // actually in the table — a live location can point at a soft-deleted
     // marketing region, OR its row was dropped by onConflictDoNothing on a
-    // UNIQUE (dup name/iso) conflict. Query the present ids, not the read set.
+    // UNIQUE conflict. Only `name` can conflict now: migration 0030 dropped the
+    // iso_alpha3 unique, which is what the 9 local drops used to be. Query the
+    // present ids, not the read set.
     // See README "Dangling references & dropped rows".
     if (!ctx.dryRun) {
       const migrated = new Set(
