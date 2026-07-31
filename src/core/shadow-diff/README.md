@@ -160,7 +160,53 @@ live location names dropped by `onConflictDoNothing` — see
 (`total` mismatches etc.) until the ETL findings are resolved — that's the
 harness doing its job, not a harness bug.
 
-## Latest run — 2026-07-30, after the Language / Engagement / Product / report / leaves waves
+## Latest run — 2026-07-30, EXTENDED corpus (83 → 135 ops/persona, 810 pairs)
+
+**612 of 810 identical · 146 pairs with unsuppressed diffs · 52 suppressed-only.**
+The corpus now covers the five waves it previously ignored: languages (+ethnologue),
+engagements (both subtypes via the interface), products (all three fragments),
+periodic reports, progress reports (status, all three summaries, prompt responses,
+product progress), comment threads + comments, and posts. Pins are covered via
+`Language.pinned`.
+
+**The headline is that every new BY-ID document is clean.** Zero diffs on
+`language.byId`, `product.byId`, `periodicReport.byId`, `progressReport.byId`,
+`commentThread.byId` and `post.byId` across all six personas — so the report
+cluster and the leaves read identically field-for-field, including the summaries,
+prompt-response entries and step progress. That is the strongest parity evidence
+this harness has produced for the newly-migrated domains.
+
+The new-domain diffs are 14 ops / 674 entries and almost entirely **list** totals
+and item windows, i.e. the ETL's known row drops showing through (languages 69→50,
+engagements 117→80, products 363→275, periodic reports 2383→1869). Two exceptions
+matter:
+
+**🔴 NEW AND SERIOUS — a 2-row ethnologue drop breaks the whole language list.**
+Postgres throws where Neo4j answers:
+
+```
+Language iaJWie869fn has no attached EthnologueLanguage — create-flow invariant violated
+```
+
+This kills `languages.list.default`, `languages.list.sort-createdAt-asc`,
+`languages.list.filter-presetInventory` **entirely** (not one row — the whole query,
+for Administrator), plus `engagement.byId` for any engagement whose language is
+affected. Cause: the ETL drops 2 `ethnologue_languages` rows to the
+code/provisional_code unique indexes, leaving `iaJWie869fn` and `Dw5mcfubJUG` with
+no ethnologue row, and the Postgres language repo treats that as a hard invariant
+while Neo4j tolerates it. This is the **ETH1** concern with a concrete
+reproduction, and it escalates the unique-dup class: a dropped row is not only lost
+data, it can make an entire list query fail. Prod exposure is unmeasured — the
+`ethnologue.code` / `provisionalCode` legs of the cutover pre-flight are what size
+it.
+
+**`engagements.list.filter-status-active` (27 entries)** — differs by more than the
+row drops; worth separating from the drop noise on a dataset without them.
+
+The 23 pre-existing ops with diffs are unchanged from the run below, and none is a
+newly-broken repository.
+
+## Previous run — 2026-07-30, original 83-op corpus
 
 **350 of 498 identical · 96 op×persona pairs with unsuppressed diffs · 52
 suppressed-only.** Loaded into a dedicated `cord_shadow` database (NOT the dev

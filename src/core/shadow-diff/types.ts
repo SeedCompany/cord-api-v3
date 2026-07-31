@@ -30,7 +30,19 @@ export type SampledDomain =
   | 'organizations'
   | 'partners'
   | 'projects'
-  | 'partnerships';
+  | 'partnerships'
+  // Added 2026-07-30 with the Language / Engagement / Product / report / leaves
+  // waves. `progressReports` is periodic_reports narrowed to type='Progress' —
+  // a separate domain rather than a filter, because the ProgressReport
+  // selection set (summaries, prompt responses, product progress) does not
+  // exist on the Financial/Narrative siblings.
+  | 'languages'
+  | 'engagements'
+  | 'products'
+  | 'periodicReports'
+  | 'progressReports'
+  | 'commentThreads'
+  | 'posts';
 
 /** One hand-enumerated corpus operation (see corpus.ts). */
 export interface CorpusEntry {
