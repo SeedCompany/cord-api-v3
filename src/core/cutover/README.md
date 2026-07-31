@@ -119,9 +119,22 @@ Rollback is instant at any point before the flip: Neo4j is untouched.
    migrate soft-deleted parents too, or scrub these refs. NOT-NULL dangling FKs
    (e.g. a partner's org) can't be nulled — they'd need the parent migrated or
    the row skipped.
-3. **Dropped rows on UNIQUE conflicts.** Dev Neo4j has duplicate live location
-   names → `onConflictDoNothing` dropped 9 (reconciliation flagged read 26 /
-   pgCount 17). Prod needs dedup or the partial-unique relaxed.
+3. **Dropped rows on UNIQUE conflicts.** `onConflictDoNothing` drops 9 locations
+   (reconciliation flags read 26 / pgCount 17). Prod needs dedup or the
+   partial-unique relaxed.
+   **Corrected 2026-07-30 — this finding named the wrong column for weeks.** The
+   culprit is `locations_iso_alpha3_active_unique`, NOT
+   `locations_name_active_unique`: live location names have **zero** duplicates
+   locally (26 distinct over 26 rows), while `iso_alpha3` has 3 distinct non-null
+   values spread over 12 rows — exactly the 9 drops observed. The index carries no
+   `NULLS NOT DISTINCT`, so Postgres treats NULLs as distinct and the 19 null-coded
+   locations do not collide; only the non-null groups do, which is why the non-null
+   count matches the drop count precisely.
+   The general lesson is bigger than the typo: **attribute a drop to a named
+   constraint by measuring that constraint's key, not by assuming.** Two of these
+   findings have now blamed a name column that turned out innocent (see the
+   language case in finding #6 / migration 0030). A per-constraint pre-flight
+   query is the instrument; a plausible guess is not.
 4. **Legacy/renamed enum values.** Neo4j `organizations.types` carries
    `TranslationOrganization`, absent from the PG `organization_type` enum.
    `sanitizeEnum` currently **drops** unknowns (logged). **migration-todo:** some
