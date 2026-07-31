@@ -23,6 +23,7 @@ import {
   liveTargetIds,
   orDefault,
   readAllViaRepo,
+  richText,
   stat,
   ts,
   tsReq,
@@ -162,7 +163,10 @@ export const projectExtractor: Extractor = {
       at: string;
       transitionKey: string | null;
       toStep: string;
-      notes: string | null;
+      // NOT `string`: the read transformer turns the stored `'\0RichText\0'`
+      // form into a RichTextDocument object. Typing it as a string is what
+      // invited JSON.parse and silently emptied every note.
+      notes: unknown;
       who: ID | null;
     }>(
       ctx,
@@ -178,6 +182,7 @@ export const projectExtractor: Extractor = {
     const projectIds = new Set(rows.map((row) => row.id));
     let droppedActors = 0;
     let droppedSteps = 0;
+    let unusableNotes = 0;
     const lastStepByProject = new Map<ID, string>();
     const eventRows = events.flatMap((event) => {
       // Advance the per-project step chain over EVERY Neo4j event, in order,
@@ -205,14 +210,21 @@ export const projectExtractor: Extractor = {
         droppedSteps++;
         return [];
       }
-      let notes: unknown = null;
-      if (event.notes) {
-        try {
-          notes = JSON.parse(event.notes);
-        } catch {
-          notes = null;
-        }
-      }
+      // `notes` is RichText. It must go through `richText()`, NOT JSON.parse:
+      // the Neo4j connection installs a read transformer (`cypher.factory.ts`
+      // sets `conn.transformer = new MyTransformer()`), which recognizes the
+      // `'\0RichText\0'` prefix and hands back a RichTextDocument OBJECT. Calling
+      // JSON.parse on an object stringifies it to '[object Object]' and throws,
+      // and the catch turned that into null — so EVERY note was silently
+      // discarded. Nothing failed; the column just came out empty.
+      //
+      // `richText()` also covers the case the transformer misses (a value nested
+      // inside a map still arrives serialized), which matters because Postgres
+      // jsonb cannot hold a NUL byte at all — passing the serialized form
+      // through is a hard insert failure, not a cosmetic one.
+      const parsedNotes = richText(event.notes);
+      if (parsedNotes === undefined) unusableNotes++;
+      const notes = parsedNotes ?? null;
       return [
         {
           id: event.id,
@@ -235,6 +247,11 @@ export const projectExtractor: Extractor = {
     if (droppedSteps) {
       ctx.log(
         `    ⚠ dropped ${droppedSteps} workflow event(s) with unknown steps or absent projects`,
+      );
+    }
+    if (unusableNotes) {
+      ctx.log(
+        `    ⚠ nulled ${unusableNotes} unparseable workflow-event note(s) — row kept, notes empty`,
       );
     }
     out.project_workflow_events = stat(
