@@ -1,0 +1,110 @@
+-- Drop five unique indexes that enforce uniqueness the source data does not have.
+--
+-- WHERE THEY CAME FROM — two different stories, and the distinction matters to
+-- anyone tempted to put them back:
+--
+--   * The two LANGUAGE NAME columns were a misreading of Neo4j. The comment above
+--     them claimed to mirror `LanguageName` / `LanguageDisplayName` constraints.
+--     Those constraints DO NOT EXIST — nothing in the Neo4j constraint set covers
+--     a language name or a display name, and the Gel schema does not constrain
+--     them either.
+--   * The LOCATION iso_alpha3 and both ETHNOLOGUE CODE columns came from Gel,
+--     which this schema was ported from and which STILL DECLARES THEM EXCLUSIVE
+--     today — `dbschema/location.gel` (isoAlpha3) and `dbschema/language.gel`
+--     (code, provisionalCode). For the ethnologue pair that traces to the planned
+--     global-pool model, which wanted codes unique across the whole pool; see the
+--     note on the table in schema/index.ts.
+--
+-- So Postgres has been rejecting data Neo4j accepts on all five columns, and on
+-- three of them Gel is now the copy that is out of step — the same source data
+-- could not have loaded into Gel either. **If you arrive here intending to restore
+-- uniqueness because you found it declared in `dbschema/`, that declaration is the
+-- stale one, not this migration.**
+--
+-- This is a correctness fix, not an accommodation for the data migration. It
+-- breaks two different ways, and each alone would justify the change:
+--
+--   1. FUNCTIONALLY WRONG, TODAY, INDEPENDENT OF ANY MIGRATION. Language names
+--      are not unique in this domain — two genuinely distinct languages can
+--      share a name, and real data contains such groups. Every one was checked:
+--      each is distinguishable, with at most one null ROLV code per group, i.e.
+--      distinct languages that happen to share a name, not accidental
+--      duplicates. Ethnologue codes are shared far more widely still, and
+--      nearly every duplicate-code group is separable by ROLV code. Under these
+--      indexes the next person creating a legitimately distinct language with an
+--      existing name is simply refused, on either engine, forever.
+--
+--   2. SILENT DATA LOSS AT LOAD. The loader cannot insert a row that violates a
+--      unique index, so it drops it — and then everything hanging off it, since
+--      `engagements_type_shape_chk` forbids a null language_id. Verified end to
+--      end against a real dataset: a dropped language cascades through its
+--      engagements, ceremonies, products, periodic reports, product progress,
+--      step progress, and summaries, so a modest number of rejected languages
+--      removes orders of magnitude more rows than it looks like. Reconciliation
+--      reports each table separately, so one root cause reads as seven
+--      unrelated problems.
+--
+-- WHAT IS DELIBERATELY KEPT, and why the distinction matters:
+--
+--   * `languages_rolv_code_active_unique` — the ROLV code IS the unique natural
+--     key for a language, and real data agrees: no duplicates among live codes,
+--     so the cleanup done a few months back held. This is the constraint that
+--     was always meant; the two name indexes were never it.
+--   * `locations_name_active_unique` — untouched. Only iso_alpha3 is dropped
+--     here; nothing has shown location names to be non-unique.
+--   * `ethnologue_languages_language_id_unique` — structural (one ethnologue row
+--     per language), not a natural key.
+--
+-- All five remain partial (`WHERE deleted_at IS NULL`), so dropping them changes
+-- nothing about the soft-delete convention; the columns simply stop being keys.
+--
+-- NO PLAIN INDEXES REPLACE THEM, deliberately — but the reason is table size, not
+-- the columns being unused. Stating it precisely matters here, because a loose
+-- claim about how these columns are read is exactly what got the uniqueness
+-- written in the first place:
+--
+--   * As PREDICATES they are unservable by a b-tree. Language name/display-name
+--     and both ethnologue codes are only ever matched with `ILIKE '%pattern%'`,
+--     and nothing filters on `locations.iso_alpha3` at all — it is projected,
+--     written, and resolved to an ISO country in application code.
+--   * As SORT KEYS three of them are live and client-selectable: `languages.name`
+--     and `languages.display_name` (the `sortColumns` map in
+--     language.drizzle.repository.ts) and `locations.iso_alpha3` (the same map in
+--     location.drizzle.repository.ts). The GraphQL `sort` argument is a plain
+--     string, so `sort: "displayName"` or `sort: "isoAlpha3"` is a request the API
+--     accepts today, on both engines. Not hypothetical.
+--
+-- Replacements are still not worth it, because of the tables and the query shape
+-- rather than the columns: both tables are small, and the list path issues an
+-- unconditional `count(*)` over the whole table alongside every page query, so
+-- the table gets scanned no matter what index exists. Measured on a scratch table
+-- of comparable size, dropping the index moved the paged sort from an incremental
+-- sort over an index scan to a sort over a sequential scan — a sub-millisecond
+-- difference. Real, and negligible.
+--
+-- If sorting one of these lists ever becomes a hot path, add a PLAIN non-unique
+-- b-tree. Do not restore the uniqueness: the data does not have it (see above).
+--
+-- SEARCH INDEXING IS NOT AT PARITY. This is a Postgres-only gap that arms at
+-- cutover, not behaviour shared with the current engine — worth stating plainly,
+-- because an earlier draft of this header claimed the opposite:
+--
+--   * The two LANGUAGE columns ARE indexed on Neo4j: a Lucene full-text index
+--     (`LanguageName`, analyzer `standard-folding`, declared in
+--     language.repository.ts) reached through the `fullText` filter. Postgres runs
+--     `ILIKE '%pattern%'` over both columns with no text index at all — the only
+--     GIN index in the entire schema is on the project-member roles array. And
+--     beyond speed: a tokenising, diacritic-folding analyzer and a raw substring
+--     match DO NOT RETURN THE SAME ROWS, so this is a behavioural difference in
+--     search, not merely a slower one. Global search takes the same substring path.
+--   * The two ETHNOLOGUE CODE columns are unindexed on both engines.
+--
+-- Tracked as a follow-up: either trigram/GIN indexes, or an accepted difference
+-- that gets written down. Dropping the uniques above neither causes nor worsens
+-- it — a unique b-tree could not serve a leading-wildcard match either.
+
+DROP INDEX "languages_name_active_unique";
+DROP INDEX "languages_display_name_active_unique";
+DROP INDEX "ethnologue_languages_code_unique";
+DROP INDEX "ethnologue_languages_provisional_code_unique";
+DROP INDEX "locations_iso_alpha3_active_unique";

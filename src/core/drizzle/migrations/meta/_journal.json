@@ -211,6 +211,20 @@
       "when": 1753142400000,
       "tag": "0029_add_pnp_extraction_results",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1753228800000,
+      "tag": "0030_relax_name_and_code_uniqueness",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1753315200000,
+      "tag": "0031_workflow_event_system_agent_actor",
+      "breakpoints": true
     }
   ]
 }

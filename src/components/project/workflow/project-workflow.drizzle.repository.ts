@@ -15,7 +15,7 @@ import {
  * PostgreSQL implementation of the canonical `ProjectWorkflowRepository`.
  *
  * `projects.step` is kept in sync by an `AFTER INSERT` trigger on
- * `project_workflow_events` (see migration 0009 — `sync_project_step_from_event`).
+ * `project_workflow_events` (see migration 0010 — `sync_project_step_from_event`).
  * App code never writes to `projects.step` directly; insert an event and the
  * trigger does the rest. `modified_at` is bumped in the same trigger.
  *
@@ -79,13 +79,13 @@ export class ProjectWorkflowDrizzleRepository {
     const fromStep: ProjectStep | null = projectRow?.step ?? null;
 
     const id = await generateId<ID<'ProjectWorkflowEvent'>>();
-    const who = this.identity.current.userId;
+    const actor = this.resolveActor();
     const at = new Date();
 
     await this.db.insert(projectWorkflowEvents).values({
       id,
       projectId: input.project,
-      who,
+      ...actor,
       fromStep,
       toStep: input.to,
       transitionKey: input.transition ?? null,
@@ -96,7 +96,7 @@ export class ProjectWorkflowDrizzleRepository {
     return this.toDto({
       id,
       projectId: input.project,
-      who,
+      ...actor,
       fromStep,
       toStep: input.to,
       transitionKey: input.transition ?? null,
@@ -108,6 +108,63 @@ export class ProjectWorkflowDrizzleRepository {
         step: fromStep ?? input.to,
       },
     });
+  }
+
+  /**
+   * Which actor column this event belongs in.
+   *
+   * `identity.current.userId` holds a SystemAgent's id whenever the session
+   * resolved to an agent rather than a person: an anonymous session (the Anonymous
+   * agent) or Ghost impersonation. Both set `systemAgentName` in
+   * `SessionManager.resumeSession`, which is what makes the discriminator below
+   * work, and the audit writer discriminates on the same field.
+   *
+   * Do NOT read a population claim from this method. The agent-actored events
+   * already in the data did not arrive through here — they came from the
+   * step-history backfill, which writes directly and never calls `recordEvent`.
+   * Migration 0031's header is the single source for that. (The Neo4j writer
+   * cannot produce one at all: it builds the `who` relationship against the `User`
+   * label, which system agents never carry.)
+   *
+   * Exactly one column is returned non-null, satisfying
+   * `project_workflow_events_actor_shape_chk` (migration 0031).
+   *
+   * migration-todo: TWO session shapes slip past the discriminator, and in both the
+   * failure is the foreign key to `users` — never the actor-shape CHECK, so that
+   * constraint is not what protects this.
+   *
+   * 1. REACHABLE TODAY, over a request header. `resumeSession` resolves the Ghost
+   *    agent only when the impersonatee id is the literal `'ghost'`; any other id
+   *    passes straight through, and `systemAgentName` is set from `ghost?.name`.
+   *    So a requester who sends a SystemAgent's REAL id as the impersonatee gets a
+   *    session whose `userId` is that agent while `systemAgentName` stays
+   *    undefined. The branch below reads it as a person, writes the agent id into
+   *    `who`, fails the FK, and rolls the whole transition back. Nothing validates
+   *    that the impersonatee is a live user. The underlying gap is pre-existing,
+   *    engine-independent, and mirrored in the audit writer, so it is not this
+   *    migration's to fix — but it is not hypothetical either.
+   * 2. Unreachable today. `SessionManager.asRole` builds a session with the literal
+   *    placeholder `userId: 'anonymous'`, `anonymous: false`, and no
+   *    `systemAgentName`. Both call sites are read-only permission serializers
+   *    (`policy-dumper.ts`, `permission.serializer.ts`), and `executeTransition`
+   *    does no identity switching around `recordEvent`. The fix belongs in
+   *    `asRole`.
+   *
+   * A safer shape for this method would be to treat an id that is not a live user
+   * as an agent, or to fail with a domain error naming the session shape, rather
+   * than handing an unresolvable id to the FK. Note this copy also omits the audit
+   * writer's `session.anonymous ||` half — equivalent today, and it would catch
+   * neither shape above (shape 2 sets `anonymous: false`; shape 1 has a real
+   * logged-in requester).
+   */
+  private resolveActor(): {
+    who: ID<'User'> | null;
+    whoSystemAgentId: ID<'SystemAgent'> | null;
+  } {
+    const session = this.identity.current;
+    return session.systemAgentName
+      ? { who: null, whoSystemAgentId: session.userId as ID<'SystemAgent'> }
+      : { who: session.userId as ID<'User'>, whoSystemAgentId: null };
   }
 
   /**
@@ -154,7 +211,11 @@ export class ProjectWorkflowDrizzleRepository {
       __typename: 'ProjectWorkflowEvent',
       createdAt: DateTime.fromJSDate(row.at),
       at: DateTime.fromJSDate(row.at),
-      who: { id: row.who },
+      // Exactly one actor column is set (CHECK, migration 0031). The resolver
+      // hydrates whichever id through `ActorLoader`, which resolves users and
+      // system agents alike and returns `SecuredActor` — so nothing downstream
+      // needs to know which of the two it got.
+      who: { id: (row.who ?? row.whoSystemAgentId)! },
       // `transition` is the transition key (a string id resolved to a
       // WorkflowTransition object at the resolver layer). null when the
       // transition was bypassed or dynamic.
