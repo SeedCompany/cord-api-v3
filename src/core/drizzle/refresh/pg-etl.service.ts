@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable, Optional } from '@nestjs/common';
 import neo4j, { type Session } from 'neo4j-driver';
 import { ILogger, Logger } from '~/core/logger';
 import { type DrizzleDb, DrizzleService } from '../drizzle.service';
@@ -34,27 +34,37 @@ export interface EtlSource {
 }
 
 /**
+ * DI token for registering domain loaders. Concrete loaders are provided as
+ * multi-providers (in DrizzleModule, or a module it imports):
+ *
+ *   { provide: PG_ETL_LOADERS, useClass: MyDomainLoader, multi: true }
+ *
+ * and PgEtlService receives all of them, in registration order, as an array.
+ */
+export const PG_ETL_LOADERS = Symbol('PG_ETL_LOADERS');
+
+/**
  * Orchestrates the Neo4j → Postgres data load for `pg refresh`.
  *
  * The connect/session/teardown/logging plumbing lives here; the actual
- * per-domain conversion lives in the {@link DomainLoader}s registered below.
+ * per-domain conversion lives in the {@link DomainLoader}s injected via
+ * {@link PG_ETL_LOADERS}.
+ *
+ * TODO(cutover): no concrete loaders exist yet — implementing a `DomainLoader`
+ * per ported domain is the remaining ETL work. Until at least one is
+ * registered, {@link ready} is false and the refresh command refuses to run
+ * (dropping the data and reloading nothing is worse than not running).
  */
 @Injectable()
 export class PgEtlService {
   @Logger('postgres:etl') private readonly logger: ILogger;
 
-  constructor(private readonly drizzle: DrizzleService) {}
-
-  /**
-   * Registered domain loaders, run in array order.
-   *
-   * TODO(cutover): implement a `DomainLoader` per ported domain and add it
-   * here (or refactor to discover them from the feature modules, like the
-   * command discovery does). While this list is empty, {@link ready} is false
-   * and the refresh command refuses to run — a refresh that dropped the data
-   * and reloaded nothing would be worse than not running at all.
-   */
-  private readonly loaders: DomainLoader[] = [];
+  constructor(
+    private readonly drizzle: DrizzleService,
+    @Optional()
+    @Inject(PG_ETL_LOADERS)
+    private readonly loaders: DomainLoader[] = [],
+  ) {}
 
   /**
    * Whether any domain loaders are registered. When false a refresh would wipe
