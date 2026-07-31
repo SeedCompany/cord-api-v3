@@ -32,6 +32,7 @@ import {
 import { isGqlContext } from '~/core/graphql/gql-context.host';
 import { corpus } from './corpus';
 import { resolvePersonas } from './personas';
+import { redactCaptured, redactMessage } from './redact';
 import {
   type CaptureFile,
   type CaptureRunContext,
@@ -170,7 +171,7 @@ const expandCorpus = (
 
 /** Strip GraphQL errors to a comparable shape — message + code + path only. */
 const normalizeError = (error: GraphQLError): NormalizedError => ({
-  message: error.message,
+  message: redactMessage(error.message),
   ...(typeof error.extensions.code === 'string'
     ? { code: error.extensions.code }
     : {}),
@@ -230,8 +231,12 @@ const executeAs = async (
           }),
       ),
   );
+  // Redact BEFORE anything is retained: capture files previously held names,
+  // emails, phone numbers, comment/post bodies and 213 sensitivity=High records
+  // in plain text. Hashing preserves the parity check (same value -> same digest
+  // on both engines) while storing nothing readable. See redact.ts.
   return {
-    data: result.data ?? null,
+    data: redactCaptured(result.data ?? null),
     errors: (result.errors ?? []).map(normalizeError),
   };
 };
