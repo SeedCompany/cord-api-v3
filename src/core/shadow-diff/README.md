@@ -200,8 +200,14 @@ data, it can make an entire list query fail. Prod exposure is unmeasured — the
 `ethnologue.code` / `provisionalCode` legs of the cutover pre-flight are what size
 it.
 
-**`engagements.list.filter-status-active` (27 entries)** — differs by more than the
-row drops; worth separating from the drop noise on a dataset without them.
+**`engagements.list.filter-status-active` — investigated and fully accounted for.**
+Neo4j total 8, Postgres 7, and the single missing engagement is `c6UpBhwNe4Q`,
+named explicitly in the ETL's own "DROPPED 32 engagement(s) … whose language never
+landed" warning. The arithmetic closes on the unfiltered list too: Neo4j 112 −
+32 = Postgres 80. So every engagement list diff is the language cascade showing
+through, with nothing left over. (An earlier draft of this section claimed it
+differed by *more* than the row drops — that was wrong, and measuring the sets
+rather than the diff count is what settled it.)
 
 The 23 pre-existing ops with diffs are unchanged from the run below, and none is a
 newly-broken repository.
