@@ -120,6 +120,24 @@ async function runCaptureMode(dir: string) {
       );
     }
 
+    // Scrub gate. Capture WRITES every response it reads to a file, so an
+    // unscrubbed source means protected values land on disk — which is the
+    // failure redact.ts exists to bound, and this is the layer that stops it
+    // happening at all.
+    //
+    // Only the neo4j capture is checked, because only it reads Neo4j directly.
+    // The postgres capture reads a database the ETL loaded, and the ETL is gated
+    // on the same check — so prod data cannot reach Postgres unmarked either.
+    if (engine === 'neo4j') {
+      const { DatabaseService } = await import('~/core/neo4j');
+      const { checkScrubGate } = await import('./scrub/provenance');
+      const gate = await checkScrubGate(app.get(DatabaseService));
+      if (!gate.allowed) {
+        throw new Error(`Capture refused — ${gate.reason}`);
+      }
+      log(`Source: ${gate.reason}`);
+    }
+
     // Warm the root session so CLI-mode loaders (ResourceLoader.readyForCli)
     // don't race the admin bootstrap.
     await app.get(SessionManager).lazySessionForRootUser();
