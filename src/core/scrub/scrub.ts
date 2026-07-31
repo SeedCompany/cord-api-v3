@@ -48,19 +48,76 @@ interface ValueRow {
   readonly value: unknown;
 }
 
+/**
+ * Page through matching rows, handing each page to `handle` before reading the
+ * next. Returns the total number of rows processed.
+ *
+ * PAGINATED BY NODE ID, not SKIP/LIMIT, and the difference is correctness rather
+ * than taste. The match predicate includes `value IS NOT NULL`, and the credential
+ * pass sets values TO null — so rows leave the result set as we work, and every
+ * subsequent SKIP would step over rows that were never processed. Seeking on
+ * `id(p) > $after` is immune: ids don't change, so a page boundary means the same
+ * thing before and after a write.
+ *
+ * It also bounds memory to one page. The first version read a whole field's rows
+ * up front, which was fine against the 21,110 values a local graph holds and
+ * would not have been against the millions a production copy does — `name` alone
+ * spans every named record in the system.
+ */
+const forEachPage = async (
+  ctx: ScrubContext,
+  buildQuery: (
+    after: number,
+    pageSize: number,
+  ) => readonly [cypher: string, params: object],
+  handle: (rows: readonly ValueRow[]) => Promise<void>,
+): Promise<number> => {
+  // Inlined into the Cypher rather than bound as a parameter: LIMIT demands an
+  // integer, and the driver serializes a JS number as a float ('1000.0 is not a
+  // valid value'). Safe to interpolate because it is validated as an integer
+  // here and never comes from user input.
+  const pageSize = Math.trunc(ctx.batchSize);
+  if (!Number.isSafeInteger(pageSize) || pageSize < 1) {
+    throw new Error(
+      `Batch size must be a positive integer (got ${ctx.batchSize})`,
+    );
+  }
+  let after = -1;
+  let total = 0;
+  let page = 0;
+  // A short page means the end — so a field that fits in one page costs one query
+  // rather than two, which matters across 40-odd fields.
+  do {
+    const [cypher, params] = buildQuery(after, pageSize);
+    const rows = [...(await ctx.neo4j.query<ValueRow>(cypher, params).run())];
+    page = rows.length;
+    if (page > 0) {
+      await handle(rows);
+      total += page;
+      after = rows[page - 1]!.nodeId;
+    }
+  } while (page === pageSize);
+  return total;
+};
+
 /** Field records reachable through one link name, live and soft-deleted alike. */
-const readFieldValues = async (
+const eachFieldValuePage = async (
   ctx: ScrubContext,
   link: string,
-): Promise<ValueRow[]> =>
-  await ctx.neo4j
-    .query<ValueRow>(
+  handle: (rows: readonly ValueRow[]) => Promise<void>,
+): Promise<number> =>
+  await forEachPage(
+    ctx,
+    (after, pageSize) => [
       `MATCH ()-[:\`${link}\`]->(p)
        WHERE (p:Property OR p:Deleted_Property) AND p.value IS NOT NULL
-       RETURN id(p) AS nodeId, p.value AS value`,
-    )
-    .run()
-    .then((rows) => [...rows]);
+         AND id(p) > $after
+       RETURN id(p) AS nodeId, p.value AS value
+       ORDER BY id(p) LIMIT ${pageSize}`,
+      { after },
+    ],
+    handle,
+  );
 
 const writeFieldValues = async (
   ctx: ScrubContext,
@@ -79,17 +136,21 @@ const writeFieldValues = async (
   }
 };
 
-const readNodeProperty = async (
+const eachNodePropertyPage = async (
   ctx: ScrubContext,
   key: string,
-): Promise<ValueRow[]> =>
-  await ctx.neo4j
-    .query<ValueRow>(
-      `MATCH (n) WHERE n.\`${key}\` IS NOT NULL
-       RETURN id(n) AS nodeId, n.\`${key}\` AS value`,
-    )
-    .run()
-    .then((rows) => [...rows]);
+  handle: (rows: readonly ValueRow[]) => Promise<void>,
+): Promise<number> =>
+  await forEachPage(
+    ctx,
+    (after, pageSize) => [
+      `MATCH (n) WHERE n.\`${key}\` IS NOT NULL AND id(n) > $after
+       RETURN id(n) AS nodeId, n.\`${key}\` AS value
+       ORDER BY id(n) LIMIT ${pageSize}`,
+      { after },
+    ],
+    handle,
+  );
 
 const writeNodeProperty = async (
   ctx: ScrubContext,
@@ -193,35 +254,35 @@ export const runScrub = async (ctx: ScrubContext): Promise<ScrubReport> => {
   ctx.log('Pass 1 — credentials');
   for (const [link, action] of Object.entries(links)) {
     if (!isScrub(action) || action.as !== 'credential') continue;
-    const rows = await readFieldValues(ctx, link);
     // Passwords become one known dev hash so the copy is usable; every other
     // credential is emptied.
     const replacement = link === 'password' ? ctx.devPasswordHash : null;
-    if (!ctx.dryRun && rows.length > 0) {
+    const count = await eachFieldValuePage(ctx, link, async (rows) => {
+      if (ctx.dryRun) return;
       await writeFieldValues(
         ctx,
         rows.map((row) => ({ nodeId: row.nodeId, value: replacement })),
       );
-    }
-    credentialsCleared += rows.length;
-    perField.push({ field: `${link} (link)`, replaced: rows.length });
+    });
+    credentialsCleared += count;
+    perField.push({ field: `${link} (link)`, replaced: count });
     ctx.log(
-      `  ${link} (link): ${rows.length}${link === 'password' ? ' → dev password' : ' → emptied'}`,
+      `  ${link} (link): ${count}${link === 'password' ? ' → dev password' : ' → emptied'}`,
     );
   }
   for (const [key, action] of Object.entries(properties)) {
     if (!isScrub(action) || action.as !== 'credential') continue;
-    const rows = await readNodeProperty(ctx, key);
-    if (!ctx.dryRun && rows.length > 0) {
+    const count = await eachNodePropertyPage(ctx, key, async (rows) => {
+      if (ctx.dryRun) return;
       await writeNodeProperty(
         ctx,
         key,
         rows.map((row) => ({ nodeId: row.nodeId, value: null })),
       );
-    }
-    credentialsCleared += rows.length;
-    perField.push({ field: `${key} (field)`, replaced: rows.length });
-    ctx.log(`  ${key} (field): ${rows.length} → emptied`);
+    });
+    credentialsCleared += count;
+    perField.push({ field: `${key} (field)`, replaced: count });
+    ctx.log(`  ${key} (field): ${count} → emptied`);
   }
 
   // ── Pass 2: dead keys ────────────────────────────────────────────────────
@@ -238,35 +299,33 @@ export const runScrub = async (ctx: ScrubContext): Promise<ScrubReport> => {
   ctx.log('\nPass 3 — values replaced');
   for (const [link, action] of Object.entries(links)) {
     if (!isScrub(action) || action.as === 'credential') continue;
-    const rows = await readFieldValues(ctx, link);
-    if (rows.length === 0) {
-      ctx.log(`  ${link} (link): 0`);
-      continue;
+    const count = await eachFieldValuePage(ctx, link, async (rows) => {
+      const updates = rows.map((row) => ({
+        nodeId: row.nodeId,
+        value: fakeValue(action.as, row.value),
+      }));
+      if (!ctx.dryRun) await writeFieldValues(ctx, updates);
+    });
+    scrubbedValues += count;
+    if (count > 0) {
+      perField.push({ field: `${link} (link)`, replaced: count });
     }
-    const updates = rows.map((row) => ({
-      nodeId: row.nodeId,
-      value: fakeValue(action.as, row.value),
-    }));
-    if (!ctx.dryRun) await writeFieldValues(ctx, updates);
-    scrubbedValues += updates.length;
-    perField.push({ field: `${link} (link)`, replaced: updates.length });
-    ctx.log(`  ${link} (link): ${updates.length} → ${action.as}`);
+    ctx.log(`  ${link} (link): ${count}${count ? ` → ${action.as}` : ''}`);
   }
   for (const [key, action] of Object.entries(properties)) {
     if (!isScrub(action) || action.as === 'credential') continue;
-    const rows = await readNodeProperty(ctx, key);
-    if (rows.length === 0) {
-      ctx.log(`  ${key} (field): 0`);
-      continue;
+    const count = await eachNodePropertyPage(ctx, key, async (rows) => {
+      const updates = rows.map((row) => ({
+        nodeId: row.nodeId,
+        value: fakeValue(action.as, row.value),
+      }));
+      if (!ctx.dryRun) await writeNodeProperty(ctx, key, updates);
+    });
+    scrubbedValues += count;
+    if (count > 0) {
+      perField.push({ field: `${key} (field)`, replaced: count });
     }
-    const updates = rows.map((row) => ({
-      nodeId: row.nodeId,
-      value: fakeValue(action.as, row.value),
-    }));
-    if (!ctx.dryRun) await writeNodeProperty(ctx, key, updates);
-    scrubbedValues += updates.length;
-    perField.push({ field: `${key} (field)`, replaced: updates.length });
-    ctx.log(`  ${key} (field): ${updates.length} → ${action.as}`);
+    ctx.log(`  ${key} (field): ${count}${count ? ` → ${action.as}` : ''}`);
   }
 
   // `sortValueFor` is referenced so the derived-key rule stays visible to anyone
