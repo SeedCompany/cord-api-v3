@@ -37,10 +37,23 @@ const PROBES = {
     where: `p.value =~ '.*[0-9]{3}[^0-9]?[0-9]{4}.*' AND NOT p.value CONTAINS '555 01'`,
     describes: 'phone-shaped and not in the reserved block',
   },
-  /** The NUL-prefixed stored form leaking into a scrubbed field. */
-  serializedRichText: {
-    where: `p.value STARTS WITH '\\u0000RichText\\u0000'`,
-    describes: 'still serialized rich text',
+  /**
+   * A rich-text field NOT holding a serialized document.
+   *
+   * This probe started out inverted — it flagged the NUL-prefixed form as a
+   * violation, reasoning that a leftover serialized value meant unscrubbed data.
+   * Backwards: a correctly scrubbed rich-text field MUST still be a serialized
+   * document, because that is the only shape the column can hold. So the probe
+   * reported clean on genuinely broken data and would have failed on correct data.
+   *
+   * It now checks what actually goes wrong. When the scrub mishandled the object
+   * form, every body became a bare string, the structure was lost, and the ETL
+   * dropped 30 of 32 comments as unparseable — with verification reporting no
+   * violations throughout. This is the probe that catches that.
+   */
+  nonDocumentRichText: {
+    where: `NOT p.value STARTS WITH '\\u0000RichText\\u0000'`,
+    describes: 'rich-text field holding a bare string, not a document',
   },
 } as const;
 
@@ -108,7 +121,7 @@ export const runVerify = async (
     const applicable: Array<keyof typeof PROBES> = [];
     if (action.as === 'email') applicable.push('realEmail');
     if (action.as === 'phone') applicable.push('realPhone');
-    if (action.as === 'richText') applicable.push('serializedRichText');
+    if (action.as === 'richText') applicable.push('nonDocumentRichText');
 
     for (const probe of applicable) {
       const count = await countFieldMatches(neo4j, link, PROBES[probe].where);

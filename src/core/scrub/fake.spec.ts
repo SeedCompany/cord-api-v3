@@ -154,6 +154,65 @@ describe('scrub fake values', () => {
       );
     });
 
+    it('handles the OBJECT form, which is what the database read actually yields', () => {
+      // The regression that mattered. The Neo4j read transformer converts a stored
+      // rich-text string into a RichTextDocument object, so this — not the string
+      // above — is the shape production data arrives in. The first version
+      // stringified it to the constant '[object RichText]', so every document in
+      // the graph collapsed to the same generated text and lost its blocks, and
+      // the ETL then dropped 30 of 32 comments as unparseable.
+      const asObject = RichTextDocument.fromSerialized(stored);
+      const scrubbed = fakeValue('richText', asObject)!;
+
+      expect(RichTextDocument.isSerialized(scrubbed)).toBe(true);
+      const doc = RichTextDocument.fromSerialized(scrubbed) as unknown as {
+        blocks: Array<{ id: string; data: { text: string } }>;
+      };
+      expect(doc.blocks).toHaveLength(2);
+      expect(doc.blocks.map((block) => block.id)).toEqual(['one', 'two']);
+      expect(scrubbed).not.toContain('Sensitive');
+      expect(scrubbed).not.toContain('object RichText');
+    });
+
+    it('gives two different documents two different results', () => {
+      // The symptom that would have caught the bug from the outside: every row
+      // collapsing to one value. Distinct inputs must stay distinct even as objects.
+      const first = RichTextDocument.fromSerialized(stored);
+      const second = RichTextDocument.fromSerialized(
+        RichTextDocument.serialize(
+          RichTextDocument.from({
+            version: '2.25.0',
+            time: 1700000000000,
+            blocks: [
+              {
+                id: 'x',
+                type: 'paragraph',
+                data: { text: 'Totally other text.' },
+              },
+            ],
+          }),
+        ),
+      );
+      expect(fakeValue('richText', first)).not.toBe(
+        fakeValue('richText', second),
+      );
+    });
+
+    it('turns a plain string into a VALID document, not bare text', () => {
+      // A rich-text column has to hold rich text. Emitting a plain string is what
+      // made the value unloadable, so the fallback repairs the shape.
+      const scrubbed = fakeValue('richText', 'just a plain string')!;
+      expect(RichTextDocument.isSerialized(scrubbed)).toBe(true);
+      expect(scrubbed).not.toContain('just a plain string');
+    });
+
+    it('refuses to stringify an object for a non-richText strategy', () => {
+      // The guard that stops this class of bug recurring on another field.
+      expect(() => fakeValue('prose', { some: 'object' })).toThrow(
+        /received an object/,
+      );
+    });
+
     it('still replaces a value it cannot parse', () => {
       // A field we cannot read is still a field we must not leave in place.
       const notJson = '\0RichText\0{ this is not valid json';
