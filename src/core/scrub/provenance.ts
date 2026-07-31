@@ -50,12 +50,18 @@ export const MARKER_PROPERTY_KEYS: readonly string[] = [
 /**
  * Above this node count, a graph is treated as production-derived.
  *
- * Calibration: production has ~5,264 projects and millions of field records;
- * local test data is a few dozen entities. Any threshold in between works, so
- * this is deliberately far above realistic seeded data and far below real. Uses
- * the count store, so it is O(1) regardless of graph size.
+ * MEASURED, not guessed — the first version used 100,000 on the assumption that
+ * local test data is "a few dozen entities". It is not: a local graph measured
+ * **100,771 nodes**, because every field is its own node and every edit adds
+ * another version of it. That put the threshold exactly at local scale, so an
+ * ordinary dev database would have been refused — and a gate that blocks routine
+ * work is a gate someone turns off, which is worse than having none.
+ *
+ * 1,000,000 is ~10x that measurement, with production (5,264 projects, 2,353
+ * users, and the field records behind them) comfortably above it. Uses the count
+ * store, so it stays O(1) however large the graph is.
  */
-const PROD_SCALE_NODE_COUNT = 100_000;
+const PROD_SCALE_NODE_COUNT = 1_000_000;
 
 export interface Provenance {
   readonly scrubbedAt: string;

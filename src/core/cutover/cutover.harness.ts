@@ -1,4 +1,5 @@
 import { sql } from 'drizzle-orm';
+import { checkScrubGate } from '../scrub/provenance';
 import {
   type CutoverContext,
   type Extractor,
@@ -58,6 +59,18 @@ export const runCutover = async (
   extractors: readonly Extractor[],
   opts: { only?: readonly string[] } = {},
 ): Promise<void> => {
+  // Scrub gate, checked here rather than at the entry point because THIS is the
+  // thing that reads the graph in bulk and persists what it reads. An entry-point
+  // check is bypassed by any other caller; this one is not.
+  //
+  // Allows a small unmarked graph through (local test data) and refuses a
+  // production-scale one that carries no scrub marker. See scrub/provenance.ts.
+  const gate = await checkScrubGate(ctx.neo4j);
+  if (!gate.allowed) {
+    throw new Error(`Cutover refused — ${gate.reason}`);
+  }
+  ctx.log(`Source: ${gate.reason}`);
+
   const ordered = orderExtractors(extractors);
   const selected = opts.only?.length
     ? ordered.filter((e) => opts.only!.includes(e.name))
