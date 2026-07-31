@@ -145,6 +145,36 @@ Seeded rules: `S1` (inactive-membership visibility on project reads under
 member personas), `U14` (user.photo null shape), and a **disabled** collation
 placeholder for order-only diffs on name sorts (enable only after inspecting).
 
+## Value redaction — and the residual question (2026-07-31)
+
+Capture files previously held person names, email addresses, phone numbers,
+user-authored comment and post bodies, and language names, alongside **213 records
+marked `sensitivity: High`**. Under Seed Company's AI protocol, high-sensitivity
+project data and linguistic data held in confidence are **Restricted**, and PII is
+at least Confidential. Those files sat in plain text at the repo root.
+
+`redact.ts` now hashes every string under a sensitive field name before anything is
+written. **Hashing rather than dropping the field is deliberate:** parity is the
+point of this harness, so if the two engines disagree the run must fail — drop the
+field and that check goes with it, hash it and the check survives while nothing
+readable is stored. Verified on a fresh capture: 269 sensitive values, all hashed,
+zero readable, zero email-shaped strings. A diff shows `#a1b2c3…`, so triage looks
+the record up locally by id — which is all it needs, since the report still names
+which field of which record disagrees.
+
+⚠ **What redaction does NOT settle.** The captures still contain data *derived from*
+high-sensitivity records: ids, enums, dates, numeric fields, and the `sensitivity`
+marker itself (which must stay — it drives authorization and is exactly what parity
+should test). §4 defines Restricted as "all data from high-sensitivity
+projects/partners", so redacted-but-derived may still qualify, and §4 also warns
+that combined fields and indirect identifiers must not enable re-identification.
+**Do not treat a redacted capture as certified clean.**
+
+The stricter option, not taken because it costs real coverage: exclude
+`sensitivity = 'High'` records from `sampledTables` so no high-sensitivity data is
+captured at all. That removes the exposure but also removes parity testing for the
+records whose authorization behaviour matters most. Open decision.
+
 ## Reading the report
 
 - `report.md` — summary table (operation × persona: `✓` / `D<n>` unsuppressed
