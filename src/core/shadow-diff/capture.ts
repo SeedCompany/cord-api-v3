@@ -1,4 +1,4 @@
-import { asc, isNull } from 'drizzle-orm';
+import { and, asc, eq, isNull, type SQL } from 'drizzle-orm';
 import { type AnyPgColumn, type PgTable } from 'drizzle-orm/pg-core';
 import {
   graphql,
@@ -12,13 +12,19 @@ import * as path from 'node:path';
 import { type GqlContextType, type ID } from '~/common';
 import { type DrizzleDb } from '~/core/drizzle/drizzle.service';
 import {
+  commentThreads,
+  engagements,
   fieldRegions,
   fieldZones,
   fundingAccounts,
+  languages,
   locations,
   organizations,
   partners,
   partnerships,
+  periodicReports,
+  posts,
+  products,
   projects,
   tools,
   users,
@@ -41,7 +47,14 @@ const SAMPLE_SIZE = 5;
 interface SampledTable {
   readonly table: PgTable;
   readonly id: AnyPgColumn;
-  readonly deletedAt: AnyPgColumn;
+  /**
+   * Optional because not every migrated table is soft-deleted: `periodic_reports`
+   * deliberately has NO `deleted_at` (deterministic ids + real deletes), so
+   * requiring one here would have forced a fake column to sample it.
+   */
+  readonly deletedAt?: AnyPgColumn;
+  /** Extra narrowing, e.g. progress reports = periodic_reports type='Progress'. */
+  readonly predicate?: SQL;
 }
 
 /**
@@ -84,6 +97,26 @@ const sampledTables: Readonly<Record<SampledDomain, SampledTable>> = {
     id: partnerships.id,
     deletedAt: partnerships.deletedAt,
   },
+  languages: {
+    table: languages,
+    id: languages.id,
+    deletedAt: languages.deletedAt,
+  },
+  engagements: {
+    table: engagements,
+    id: engagements.id,
+    deletedAt: engagements.deletedAt,
+  },
+  products: { table: products, id: products.id, deletedAt: products.deletedAt },
+  // No deletedAt — periodic_reports is real-delete by design.
+  periodicReports: { table: periodicReports, id: periodicReports.id },
+  progressReports: {
+    table: periodicReports,
+    id: periodicReports.id,
+    predicate: eq(periodicReports.type, 'Progress'),
+  },
+  commentThreads: { table: commentThreads, id: commentThreads.id },
+  posts: { table: posts, id: posts.id },
 };
 
 const sampleIds = async (
@@ -93,10 +126,14 @@ const sampleIds = async (
   for (const [domain, spec] of Object.entries(sampledTables) as Array<
     [SampledDomain, SampledTable]
   >) {
+    const conditions = [
+      ...(spec.deletedAt ? [isNull(spec.deletedAt)] : []),
+      ...(spec.predicate ? [spec.predicate] : []),
+    ];
     const rows = await db
       .select({ id: spec.id })
       .from(spec.table)
-      .where(isNull(spec.deletedAt))
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
       .orderBy(asc(spec.id))
       .limit(SAMPLE_SIZE);
     out[domain] = rows.map((row) => String(row.id));
