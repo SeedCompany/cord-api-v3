@@ -82,6 +82,26 @@ export const knownDeltas: readonly KnownDeltaRule[] = [
     path: /(^|\.)(total|hasMore)$/,
   },
   {
+    ref: 'S6-cardinality — NOT a suppression, a decision to re-open',
+    reason:
+      'The S6 rule above suppresses the orDefault status VALUE, but not its ' +
+      'consequence on a FILTERED LIST TOTAL, and the two are different sizes of ' +
+      'decision. Measured 2026-07-30: users.list.filter-status-active returns ' +
+      'total 32 under Neo4j and 48 under Postgres, because 16 of 49 users carry ' +
+      'no status Property at all and the ETL coalesces them to Active. So ' +
+      '"Active users" becomes a 50% larger set — which is product meaning ' +
+      '(who appears in pickers, assignment lists, reports), not a null-shape ' +
+      'nicety. The 2026-07-14 decision was taken when the visible effect was a ' +
+      'field reading Active instead of null; nobody had measured the list ' +
+      'effect. Deliberately DISABLED so the diff stays red: it needs a call on ' +
+      'whether statusless legacy users should be Active, or a distinct value / ' +
+      'nullable column. Enable only after that call.',
+    op: /^users\.list\.filter-status/,
+    persona: /./,
+    path: /(^|\.)(total|hasMore)$|items\[\d+\]/,
+    disabled: true,
+  },
+  {
     ref: 'collation — enable only after inspecting',
     reason:
       'ORDER-only differences on name sorts can stem from Neo4j vs Postgres ' +

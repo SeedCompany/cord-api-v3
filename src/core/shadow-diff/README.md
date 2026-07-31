@@ -160,6 +160,57 @@ live location names dropped by `onConflictDoNothing` — see
 (`total` mismatches etc.) until the ETL findings are resolved — that's the
 harness doing its job, not a harness bug.
 
+## Latest run — 2026-07-30, after the Language / Engagement / Product / report / leaves waves
+
+**350 of 498 identical · 96 op×persona pairs with unsuppressed diffs · 52
+suppressed-only.** Loaded into a dedicated `cord_shadow` database (NOT the dev
+`cord` DB, which the ETL's TRUNCATE would otherwise wipe) from the same local
+Neo4j, 46 tables reconciling. Both captures exited 0 — no recurrence of the S5
+root-user hang.
+
+⚠ **Read this number with the corpus in mind.** `corpus.ts` is hand-enumerated and
+has not grown since 2026-07-14, while five domain waves have landed since. So this
+run is a **regression check over the old surface**, not coverage of the new one:
+periodic reports, progress reports, prompt responses, product progress, progress
+summaries, comments, posts and pins are all migrated and **not queried by a single
+operation here**. Treating 350/498 as a parity certificate would be a mistake —
+the gate cannot certify what it does not ask about.
+
+All 96 fall into five classes, none of them a newly-broken repository:
+
+1. **Order-only** (`tools`, `fieldRegions`, `fieldZones`, `projects`, and the
+   page-window shifts that follow in `organizations`/`users`) — identical SET and
+   identical `total`, different sequence. This is the inspection the `collation`
+   rule was waiting on, and for these ops it passes. Still left disabled, because
+   suppressing it would also mask the second sub-case: PG repos lacking an `id`
+   tie-break on equal sort keys is a real determinism defect, not a collation
+   difference, and the two are indistinguishable from the diff alone. **Open
+   question:** separate them before enabling.
+2. **`locations` — real ETL data loss.** total 26 → 17. This is the
+   `locations_iso_alpha3_active_unique` drop (cutover README finding #3, whose
+   attribution was corrected the same day — it was blamed on `name` for weeks).
+   It cascades: every `locations.list` page and total, plus
+   `location.byId.defaultMarketingRegion` going null because the referenced
+   location is one of the nine dropped.
+3. **`project.byId` ×5 — PG errors where Neo4j returns data:** *"Could not find
+   root directory associated to this project"*. Expected until File+Media loads
+   `root_directory_id`; it should clear entirely with that wave, and is worth
+   re-checking as a signal that the wave worked.
+4. **NEW — `users.list.filter-status-active` totals 32 (Neo4j) vs 48 (Postgres).**
+   Not a filter bug (`eq(users.status, filter.status)` is correct) — a data
+   consequence of the ETL's `orDefault(status, 'Active')`. Locally 32 users have an
+   Active status Property, **16 have none at all**, and 1 is Disabled; the ETL
+   coalesces those 16 to Active, so "Active users" becomes a 50% larger set. The S6
+   known-delta covers the status *value* but not a filtered list's *cardinality* —
+   see the `S6-cardinality` rule, deliberately disabled so this stays red pending
+   a call.
+5. **NEW (minor, Neo4j-side, self-resolving) — sorting by a Property a node lacks
+   drops that node from the result.** `sort-displayLastName` yields a Neo4j total of
+   48 against 49 elsewhere, because the AnonUser node carries only
+   gender/photo/status Properties and the sorter's match is required. Postgres
+   keeps the row (`ORDER BY` on a null column). **Postgres is the correct one** — a
+   sort must not change cardinality — so this needs no fix and dies at cutover.
+
 ## File map
 
 - `../shadow-diff.run.ts` — entry (flags, boot, capture/diff dispatch).
