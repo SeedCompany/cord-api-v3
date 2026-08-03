@@ -13,12 +13,24 @@ import { join, posix, relative, sep } from 'node:path';
  * test.
  *
  * So: enumerate every `*.drizzle.repository.ts` that writes, and require each to
- * either route through the base helpers or mention `liveQueryStore`. Anything
- * else must be listed below WITH A REASON. A new repository that writes without
+ * either route through the base helpers or actually call the store. Anything else
+ * must be listed below WITH A REASON. A new repository that writes without
  * invalidating fails this test rather than shipping.
  *
  * Same shape as the enum-sync invariant in `postgres-schema.e2e-spec.ts`: pin the
  * known set so drift is loud.
+ *
+ * Two known limits of a source-text guard, both deliberate:
+ *
+ * - It is file-granular, not method-granular. A repository that invalidates in
+ *   one method satisfies the check even if a sibling method doesn't. Catching
+ *   that needs per-method analysis; the exemption reasons carry the per-method
+ *   detail in the meantime.
+ * - It only sees files named `*.drizzle.repository.ts`. A Postgres-only
+ *   repository that skips the `.drizzle.` infix is invisible to it —
+ *   `src/components/audit/resource-mutation.repository.ts` is the one such file
+ *   today (append-only audit trail, nothing subscribes to it, so nothing to
+ *   invalidate). Renaming it to match the convention is tracked separately.
  */
 
 /**
@@ -45,6 +57,12 @@ const EXEMPT: Record<string, string> = {
     'parity — known-language.repository.ts calls no invalidating base method',
   'src/components/project/workflow/project-workflow.drizzle.repository.ts':
     'parity — append-only workflow events; no update/delete path to invalidate',
+  'src/components/file/media/media.drizzle.repository.ts':
+    'parity — sole writer is save() (an upsert); media.repository.ts extends ' +
+    'CommonRepository but never calls one of its invalidating helpers',
+  'src/components/pnp/extraction-result/pnp-extraction-result.drizzle.repository.ts':
+    'parity — sole writer is save() (an upsert); ' +
+    'pnp-extraction-result.neo4j.repository.ts never invalidates',
 
   // --- create-only / bootstrap paths ---
   'src/components/notifications/notification.drizzle.repository.ts':
@@ -53,12 +71,6 @@ const EXEMPT: Record<string, string> = {
     'bootstrap upsert of the three fixed system agents',
   'src/components/admin/admin.drizzle.repository.ts':
     'bootstrap only (root user / default org), runs before anything can subscribe',
-
-  // --- genuinely pending ---
-  'src/components/file/file.drizzle.repository.ts':
-    'PENDING: the Neo4j arm DOES invalidate (file.repository.ts:517 update, :569 delete). ' +
-    'Held out only because this file is modified by an in-flight branch; fix it there or ' +
-    'immediately after that merges. This is the one entry here that is a real defect.',
 };
 
 const COMPONENTS = 'src/components';
@@ -69,11 +81,45 @@ const walk = (dir: string): string[] =>
     return entry.isDirectory() ? walk(path) : [path];
   });
 
+/**
+ * Blank out comments and quoted strings so a mere mention can't satisfy any
+ * check below. Template literals are left intact on purpose — `RAW_SQL_WRITE`
+ * has to see inside them.
+ */
+const toCode = (source: string) =>
+  source
+    .replace(/\/\*[\s\S]*?\*\//g, ' ')
+    .replace(/(^|[^:])\/\/[^\n]*/g, '$1')
+    .replace(/'(?:[^'\\\n]|\\.)*'/g, "''")
+    .replace(/"(?:[^"\\\n]|\\.)*"/g, '""');
+
 /** Method declarations whose names imply a write. */
 const WRITE_METHOD =
   /\n\s{2,6}(?:protected |private )?async (?:create|update|delete|remove|add|set|assign|upsert|save|merge)\w*\(/i;
 /** Raw drizzle writes, for repos whose method names don't follow the convention. */
 const RAW_WRITE = /\.\s*(?:update|insert|delete)\s*\(/;
+/**
+ * Raw SQL writes — `db.execute(sql\`UPDATE …\`)` carries no method call the two
+ * patterns above can see, so without this a repository could do every one of its
+ * writes in raw SQL and never register as a writer at all.
+ */
+const RAW_SQL_WRITE =
+  /sql`[^`]*\b(?:update\b|insert\s+into\b|delete\s+from\b)/is;
+
+const writes = (code: string) =>
+  WRITE_METHOD.test(code) || RAW_WRITE.test(code) || RAW_SQL_WRITE.test(code);
+
+/**
+ * Require an actual call. The bare identifier `liveQueryStore` used to satisfy
+ * this, which meant a comment explaining why a method does NOT invalidate
+ * counted as invalidating — the check could be passed by writing prose about it.
+ */
+const INVALIDATE_CALL = /\bliveQueryStore\s*\.\s*invalidate(?:All)?\s*\(/;
+
+const invalidates = (code: string) =>
+  code.includes('this.updateColumns(') ||
+  code.includes('this.softDelete(') ||
+  INVALIDATE_CALL.test(code);
 
 describe('LQ-1 structural guard: drizzle repositories invalidate live queries', () => {
   const repos = walk(COMPONENTS)
@@ -81,8 +127,13 @@ describe('LQ-1 structural guard: drizzle repositories invalidate live queries', 
     .map((path) => ({
       // POSIX-normalized so the pinned keys above are stable across platforms.
       key: relative('.', path).split(sep).join(posix.sep),
-      source: readFileSync(path, 'utf8'),
+      code: toCode(readFileSync(path, 'utf8')),
     }));
+
+  const writers = repos.filter(({ code }) => writes(code));
+  const offenders = writers
+    .filter(({ code }) => !invalidates(code))
+    .map(({ key }) => key);
 
   it('finds repositories to check (guards against a broken glob)', () => {
     // If the walk silently matched nothing, every assertion below would pass
@@ -90,35 +141,27 @@ describe('LQ-1 structural guard: drizzle repositories invalidate live queries', 
     expect(repos.length).toBeGreaterThan(20);
   });
 
-  it('every writing repository either uses the base helpers or invalidates itself', () => {
-    const offenders = repos
-      .filter(
-        ({ source }) => WRITE_METHOD.test(source) || RAW_WRITE.test(source),
-      )
-      .filter(
-        ({ source }) =>
-          !source.includes('this.updateColumns(') &&
-          !source.includes('this.softDelete(') &&
-          !source.includes('liveQueryStore'),
-      )
-      .map(({ key }) => key);
+  it('detects both writers and invalidators (guards against a broken strip)', () => {
+    // `toCode` blanking too much would empty every source and make the offender
+    // list trivially empty. Assert both halves of the classification still find
+    // things, so the guard can't pass by seeing nothing.
+    expect(writers.length).toBeGreaterThan(20);
+    expect(
+      repos.filter(({ code }) => invalidates(code)).length,
+    ).toBeGreaterThan(5);
+  });
 
+  it('every writing repository either uses the base helpers or invalidates itself', () => {
     const unexplained = offenders.filter((key) => !(key in EXEMPT));
     expect(unexplained).toEqual([]);
   });
 
   it('has no stale exemptions', () => {
-    // An exemption for a repo that now invalidates (or no longer exists) is
-    // misleading documentation — make removing it mandatory.
-    const stale = Object.keys(EXEMPT).filter((key) => {
-      const repo = repos.find((candidate) => candidate.key === key);
-      if (!repo) return true;
-      return (
-        repo.source.includes('this.updateColumns(') ||
-        repo.source.includes('this.softDelete(') ||
-        repo.source.includes('liveQueryStore')
-      );
-    });
+    // An exemption is only honest while the repo is still an offender. This
+    // catches all three ways one rots: the file is gone, it now invalidates, or
+    // it no longer writes at all — the last of which a "does it invalidate?"
+    // check on its own would miss.
+    const stale = Object.keys(EXEMPT).filter((key) => !offenders.includes(key));
     expect(stale).toEqual([]);
   });
 });

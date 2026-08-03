@@ -8,8 +8,8 @@ import {
   type ResourceShape,
   type UnsecuredDto,
 } from '~/common';
+import { LiveQueryStore } from '~/core/live-query';
 import { getChanges } from '../database/changes';
-import { LiveQueryStore } from '../live-query';
 import { type DrizzleService } from './drizzle.service';
 
 /**
