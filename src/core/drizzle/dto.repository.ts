@@ -1,3 +1,4 @@
+import { Inject } from '@nestjs/common';
 import { and, asc, count, eq, inArray, isNull, type SQL } from 'drizzle-orm';
 import { type AnyPgColumn, type PgTable } from 'drizzle-orm/pg-core';
 import {
@@ -7,6 +8,7 @@ import {
   type ResourceShape,
   type UnsecuredDto,
 } from '~/common';
+import { LiveQueryStore } from '~/core/live-query';
 import { getChanges } from '../database/changes';
 import { type DrizzleService } from './drizzle.service';
 
@@ -30,6 +32,28 @@ export const EMPTY_PAGE = {
  *
  * Repos that need related rows (e.g. `with: { globalRoles: true }`) override
  * `readMany` and call `toDto` themselves — the base only handles flat tables.
+ *
+ * ## Live-query invalidation
+ *
+ * `updateColumns()` and `softDelete()` invalidate the mutated resource, matching
+ * what the Neo4j and Gel bases do generically. Without it, the ~12 cord-field
+ * documents carrying `@live` — the detail page of nearly every domain — stay
+ * stale after an edit until the user refreshes manually.
+ *
+ * The call is safe to make inside the mutation transaction: `LiveQueryStoreImpl`
+ * defers the actual work to `TransactionHooks.afterCommit`, which the Drizzle
+ * mutation interceptor runs (it inherits `runAndClear()` from
+ * `TransactionalMutationsInterceptor`). So a rolled-back mutation never
+ * invalidates, and re-execution never reads pre-commit state.
+ *
+ * NOT covered, deliberately:
+ * - **`create`** — a brand-new id has nothing watching it yet. Neither other
+ *   engine invalidates on create either, so this is parity. List-level queries
+ *   (`Query.users`) do go stale on create on ALL THREE engines; that's a
+ *   pre-existing gap, not one this base introduces.
+ * - **Subclass-owned writes** — a repo that hand-rolls its own `update`/`delete`
+ *   instead of going through these two helpers still has to invalidate itself,
+ *   exactly as on the other engines.
  */
 export abstract class DrizzleDtoRepository<
   TTable extends PgTable & {
@@ -40,6 +64,13 @@ export abstract class DrizzleDtoRepository<
   TDto extends { id: ID },
 > {
   protected readonly resource: EnhancedResource<ResourceShape<TDto>>;
+
+  /**
+   * Property-injected, not a constructor param, so no subclass has to thread it
+   * through `super()` — same pattern as the Neo4j and Gel bases, which inject it
+   * the same way.
+   */
+  @Inject() protected readonly liveQueryStore: LiveQueryStore;
 
   /**
    * Diff an existing DTO against an `Update*` input and return only fields
@@ -127,6 +158,7 @@ export abstract class DrizzleDtoRepository<
    * but doesn't require it).
    */
   protected async softDelete(id: ID): Promise<void> {
+    this.liveQueryStore.invalidate([this.resource, id]);
     await this.db
       .update(this.table as PgTable)
       .set({ deletedAt: new Date() })
@@ -144,6 +176,8 @@ export abstract class DrizzleDtoRepository<
   ): Promise<void> {
     const entries = Object.entries(changes).filter(([, v]) => v !== undefined);
     if (entries.length === 0) return;
+    // After the no-op guard: nothing changed means nothing to invalidate.
+    this.liveQueryStore.invalidate([this.resource, id]);
     const set = Object.fromEntries(entries);
     if (this.table.updatedAt) {
       set.updatedAt = new Date();
