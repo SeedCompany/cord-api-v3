@@ -1,3 +1,4 @@
+import { parse } from 'dotenv';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
@@ -31,32 +32,41 @@ import { resolve } from 'node:path';
 // Matches ConfigService's default: env.string('DATABASE').optional('neo4j')
 const APP_DEFAULT_ENGINE = 'neo4j';
 
-// Later files do NOT override earlier ones — first match wins, mirroring
-// dotenv's own "don't clobber what's already set" behaviour.
-const DOTENV_FILES = ['.env.local', '.env'];
+/**
+ * The same files EnvironmentService reads, in the same order — including the
+ * NODE_ENV-specific pair. A `DATABASE` in `.env.development.local` decides what
+ * the app boots, so a resolver that skipped it would reintroduce the exact
+ * disagreement this file exists to remove.
+ *
+ * Earlier files win, and that is checked rather than assumed: the app seeds its
+ * accumulator from `process.env` and expands each file into it, leaving any
+ * already-set key alone. It also drops empty values between files, so an empty
+ * `DATABASE=` does not shadow a later file — hence the truthiness test below.
+ */
+const dotenvFiles = () => {
+  const env = process.env.NODE_ENV || 'development';
+  return [`.env.${env}.local`, `.env.${env}`, '.env.local', '.env'];
+};
 
 const readEngineFromDotenv = (): string | undefined => {
-  for (const file of DOTENV_FILES) {
+  for (const file of dotenvFiles()) {
     let contents: string;
     try {
       contents = readFileSync(resolve(process.cwd(), file), 'utf8');
     } catch {
       continue; // absent or unreadable is normal, not an error
     }
-    for (const rawLine of contents.split('\n')) {
-      const line = rawLine.trim();
-      if (!line || line.startsWith('#')) continue;
-      const match = /^(?:export\s+)?DATABASE\s*=\s*(.*)$/.exec(line);
-      const captured = match?.[1];
-      if (captured === undefined) continue;
-      // Strip surrounding quotes and any trailing comment on an unquoted value.
-      const value = captured
-        .trim()
-        .replace(/^(['"])(.*)\1$/, '$2')
-        .replace(/\s+#.*$/, '')
-        .trim();
-      if (value) return value.toLowerCase();
-    }
+    // Parsed by dotenv itself — the same function EnvironmentService uses — so
+    // quoting, `export ` prefixes and inline comments resolve exactly as they
+    // will for the app. Hand-rolling this got one case wrong: a `#` inside a
+    // quoted value is content, not the start of a comment.
+    //
+    // `${...}` expansion is deliberately NOT mirrored. The app applies
+    // dotenv-expand as well, but an engine name has nothing to interpolate, and
+    // reproducing it here means reproducing the `process.env` swap it needs.
+    // Lowercased because ConfigService reads this same value with .toLowerCase().
+    const value = parse(contents).DATABASE?.trim();
+    if (value) return value.toLowerCase();
   }
   return undefined;
 };
