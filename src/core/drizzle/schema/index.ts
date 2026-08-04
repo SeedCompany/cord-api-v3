@@ -2306,7 +2306,7 @@ export const periodicReports = pgTable(
     updatedAt: timestamp('updated_at', { withTimezone: true })
       .notNull()
       .defaultNow(),
-    // Soft delete, matching Neo4j's `deleteBaseNode` relabel (migration 0031).
+    // Soft delete, matching Neo4j's `deleteBaseNode` relabel (migration 0035).
     // Removing a report from a shrunken date window must not destroy its media,
     // variance explanation or workflow events.
     deletedAt: timestamp('deleted_at', { withTimezone: true }),
@@ -2329,7 +2329,7 @@ export const periodicReports = pgTable(
     // row can hold the deterministic id and force a fresh one.
     // Keyed on the coalesced parent: indexing both parent columns would leave a
     // NULL in every row, and NULLs compare DISTINCT in a unique index, so it
-    // would silently enforce nothing. @see migration 0031
+    // would silently enforce nothing. @see migration 0035
     uniqueIndex('periodic_reports_live_interval_uniq')
       .on(
         sql`(coalesce(${t.projectId}, ${t.engagementId}))`,
@@ -2971,7 +2971,7 @@ export const progressReportMedia = pgTable(
  * `ProgressReportVarianceExplanationReasonOptions`, which carries an explicit
  * `deprecated` list so old values stay *readable* while being blocked for new
  * writes. An enum couldn't express that, and would need a migration per wording
- * change. App-level `@IsIn` remains the gate. See migration 0032.
+ * change. App-level `@IsIn` remains the gate. See migration 0036.
  */
 export const progressReportVarianceExplanations = pgTable(
   'progress_report_variance_explanations',
@@ -2998,7 +2998,7 @@ export const progressReportVarianceExplanations = pgTable(
  * `transition_key` is null when the workflow was bypassed (status set directly).
  * Unlike `project_workflow_events`, no trigger syncs the parent's status;
  * `periodic_reports.status` is written app-side by `changeStatus` to stay
- * faithful to Neo4j (see migration 0032 for the promotion candidate).
+ * faithful to Neo4j (see migration 0036 for the promotion candidate).
  */
 export const progressReportWorkflowEvents = pgTable(
   'progress_report_workflow_events',

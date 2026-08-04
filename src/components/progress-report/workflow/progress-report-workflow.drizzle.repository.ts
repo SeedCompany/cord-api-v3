@@ -35,7 +35,7 @@ import { type ProgressReportWorkflowEvent as WorkflowEvent } from './dto/workflo
  * from the event history (hence its `changeStatus` being a no-op). Keeping an
  * explicit column write is the faithful-to-Neo4j choice for the migration; the
  * trigger-maintained alternative (as `project_workflow_events` does for
- * `projects.step`) is noted in migration 0032 as a DB-invariants-pass candidate.
+ * `projects.step`) is noted in migration 0036 as a DB-invariants-pass candidate.
  */
 // migration-todo: no `implements PublicOf<Neo4jRepository>` — that base widens to
 // DtoRepository's privileges/getBaseNode/etc. Same trade as every other Drizzle
@@ -118,7 +118,7 @@ export class ProgressReportWorkflowDrizzleRepository {
           eq(periodicReports.id, reportId),
           eq(periodicReports.type, 'Progress'),
           // A soft-deleted report loses its `:ProgressReport` label in Neo4j
-          // (migration 0031), so it reads as missing — same here.
+          // (migration 0035), so it reads as missing — same here.
           isNull(periodicReports.deletedAt),
         ),
       )
