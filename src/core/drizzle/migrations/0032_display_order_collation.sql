@@ -7,8 +7,18 @@
 --   * punctuation
 --      and spaces   -> `[a!-b]` sorts as `ab`, and `A ignore` as `Aignore`
 --
--- That is exactly how Neo4j orders names today, so lists do not silently
+-- That is exactly how Neo4j orders NAMES today, so name lists do not silently
 -- reorder when a domain moves to Postgres.
+--
+-- Note where Neo4j's folding comes from, because it is easy to assume it is the
+-- database: it is not. Neo4j's own string ordering is raw code points. The
+-- folding comes from `@NameField`, which attaches a sort transformer running
+-- `apoc.text.clean`, and Neo4j's `sorting()` applies that only to fields
+-- carrying it. So this collation belongs on name columns and NOT on plain text
+-- like an address or a description, which Neo4j orders by code point. The list of
+-- columns that get it lives in `NAME_COLUMNS` in src/core/drizzle/order-by.ts —
+-- inferring it from the column's type instead silently folds nine columns Neo4j
+-- leaves alone.
 --
 -- Why not just use the database's default collation: the default depends on
 -- which C library the Postgres image was built against, and the two disagree.
