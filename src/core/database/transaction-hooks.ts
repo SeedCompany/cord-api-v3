@@ -58,4 +58,11 @@ export class CallbackManager {
       functions.delete(fn);
     }
   }
+
+  /**
+   * Throw the stored functions away without calling them.
+   */
+  clear() {
+    this.functions.clear();
+  }
 }
