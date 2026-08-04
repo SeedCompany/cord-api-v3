@@ -5,8 +5,8 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { ConfigService } from '~/core/config';
+import { TransactionRunner } from '~/core/database/transaction-runner';
 import { TransactionalMutationsInterceptor } from '../database/abstract-transactional-mutations.interceptor';
-import { TransactionRunner } from '../database/transaction-runner';
 
 @Injectable()
 export class GelTransactionalMutationsInterceptor extends TransactionalMutationsInterceptor {

@@ -96,7 +96,8 @@ describe('Partnership e2e', () => {
    * `loadByBaseNode` path, which returns the real DTO (with `type`) and works —
    * which is why normal client queries never hit this.
    */
-  it.skip('resolves parent (id-only branch)', async () => {
+  // Named so the reason shows up in the test output, not just in the note above.
+  it.skip('resolves parent (id-only branch) — skipped: pre-existing on every engine, Project.resolveType reads `type` and ignores `__typename`', async () => {
     const partnership = await createPartnership(app, { project: project.id });
 
     const onlyId = await app.graphql.query(

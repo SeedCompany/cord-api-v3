@@ -17,6 +17,11 @@ const RunnerKey = Symbol('DbTransactionRunner');
  * {@link TransactionRunner}. This previously injected the Neo4j `Connection`
  * directly, which meant decorated methods hit Neo4j regardless of `DATABASE`,
  * bypassing `splitDb`.
+ *
+ * migration-todo: this decorator no longer has anything to do with Neo4j, so it
+ * belongs in `~/core/database` rather than here. Left in place for now because
+ * moving it rewrites the import in every consumer, which would bury the actual
+ * change in this PR. Move it at Phase 7 cutover when the Neo4j folder is emptied.
  */
 export function Transactional(options?: TransactionOptions) {
   return ((
