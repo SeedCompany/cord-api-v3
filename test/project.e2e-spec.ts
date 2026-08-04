@@ -328,10 +328,23 @@ describe('Project e2e', () => {
       .expectError(errors.notFound());
   });
 
-  // migration-todo: the expected ordering here is Neo4j's space/punctuation-
-  // insensitive sort. Decision (2026-06-12): PG keeps its plain collation —
-  // update these expectations to match when this spec joins the postgres CI
-  // subset (Phase 5) or at Phase 7 cutover, whichever comes first.
+  // ONE expectation for both databases. A note here used to say Postgres
+  // ordered names differently and that the difference was accepted (decision of
+  // 2026-06-12). That was measured against the `postgres:16-alpine` image and
+  // was wrong twice over: alpine links musl, which has no locale-aware
+  // collation, so `en_US.utf8` there falls back to raw byte ordering — and a
+  // glibc Postgres with the same collation name orders names exactly as Neo4j
+  // does. So the "difference" was a property of the image, not of Postgres.
+  //
+  // Rather than depend on the image, every text sort now names the
+  // `display_order` collation explicitly (migration 0032, applied by
+  // displayOrder() in src/core/drizzle/order-by.ts). That produces this ordering
+  // on alpine, on glibc, and across OS upgrades — so this asserts that the two
+  // databases genuinely agree, rather than making a separate claim about each.
+  //
+  // If this starts failing with capitals grouped ahead of lowercase and `Ñot a
+  // project` last, a text sort lost that collation. Check that before changing
+  // these expectations.
   it('List of projects sorted by name to be alphabetical', async () => {
     const unsorted = [
       'A ignore spaces',

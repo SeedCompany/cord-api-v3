@@ -26,6 +26,7 @@ import {
 } from '~/common';
 import { Identity } from '~/core/authentication';
 import {
+  displayOrder,
   DrizzleDtoRepository,
   EMPTY_PAGE,
   isUniqueViolation,
@@ -403,7 +404,10 @@ export class PartnershipDrizzleRepository extends DrizzleDtoRepository<
           .from(partnerships)
           .innerJoin(partners, eq(partnerships.partnerId, partners.id))
           .where(predicate)
-          .orderBy(direction(partnerSortColumn), asc(partnerships.id))
+          .orderBy(
+            direction(displayOrder(partnerSortColumn)),
+            asc(partnerships.id),
+          )
           .limit(input.count)
           .offset(offset),
       ]);
