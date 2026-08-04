@@ -321,13 +321,14 @@ export const locations = pgTable(
     deletedAt: timestamp('deleted_at', { withTimezone: true }),
   },
   (t) => [
-    // Partial unique indexes scoped to live rows so soft-deleted records
-    // don't block reuse of their name / iso_alpha3.
+    // Partial unique index scoped to live rows so soft-deleted records don't
+    // block reuse of their name. `iso_alpha3` is deliberately NOT unique —
+    // Neo4j never constrained it, and nothing *filters* on it (the resolver reads
+    // the value and resolves the ISO country in app code). It IS a selectable
+    // sort key though, so it is not unread; there is simply no index behind that
+    // sort, which this table's size makes fine. See migration 0030.
     uniqueIndex('locations_name_active_unique')
       .on(t.name)
-      .where(sql`${t.deletedAt} IS NULL`),
-    uniqueIndex('locations_iso_alpha3_active_unique')
-      .on(t.isoAlpha3)
       .where(sql`${t.deletedAt} IS NULL`),
     index('locations_default_marketing_region_id_idx').on(
       t.defaultMarketingRegionId,
@@ -599,24 +600,33 @@ export const ethnologueLanguages = pgTable(
   'ethnologue_languages',
   {
     id: text('id').$type<ID<'EthnologueLanguage'>>().primaryKey(),
-    // migration-todo: add REFERENCES languages(id) ON DELETE SET NULL when
-    // Language migrates in Phase 3&4. Deliberately NOT `ON DELETE CASCADE`
-    // and `language_id` is nullable — preserves the path to the planned
-    // future model where EthnologueLanguage is a global pool of canonical
-    // language records and `language_id` is a *soft attachment* (a new
-    // Language hooks into an existing pool entry by code, rather than
-    // creating its own Ethnologue). Deleting a Language should release the
-    // attachment, not destroy the pool entry. The Apollo client already
-    // treats EthnologueLanguage as a value object (`typePolicies.base.ts:43`
-    // — `keyFields: false`), and no codepath calls a delete on it.
+    // The reference to `languages(id)` ALREADY EXISTS — added by migration 0016
+    // and fully enforced. (An earlier version of this comment still asked for it
+    // to be added "when Language migrates"; Language migrated, and the FK came
+    // with it.)
     //
-    // The `code` / `provisional_code` partial uniques stay GLOBAL (not
-    // scoped to attached rows) because the future global-pool model
-    // requires codes to be unique across the entire pool — orphaned and
-    // attached alike. Today that means deleting a Language and then
-    // creating a new one with the same code throws on the unique index;
-    // that error path is the seed of the future "attach existing pool
-    // entry by code" logic.
+    // migration-todo: only the `ON DELETE SET NULL` half is outstanding.
+    // Deliberately NOT `ON DELETE CASCADE`, and `language_id` stays nullable —
+    // that preserves the path to the planned future model where
+    // EthnologueLanguage is a global pool of canonical language records and
+    // `language_id` is a *soft attachment* (a new Language hooks into an existing
+    // pool entry by code rather than creating its own Ethnologue). Deleting a
+    // Language should release the attachment, not destroy the pool entry. The
+    // Apollo client already treats EthnologueLanguage as a value object
+    // (`typePolicies.base.ts:43` — `keyFields: false`), and no codepath calls a
+    // delete on it.
+    //
+    // Codes are NOT unique — see migration 0030 and the note further down this
+    // table. An earlier version of this comment said the `code` /
+    // `provisional_code` uniques stayed GLOBAL to support that pool model, and
+    // that recreating a Language with an existing code would throw on the unique
+    // index. Neither is true any more: ethnologue codes are shared across a large
+    // share of languages, so a pool keyed uniquely by code cannot exist, and 0030
+    // drops both indexes along with the handlers that translated their
+    // violations. So when the pool model is built, "attach to the existing entry
+    // by code" has to disambiguate MULTIPLE candidates per code in application
+    // code — a single-row lookup by code is not something the database can
+    // guarantee.
     //
     // Separate-ticket cleanup (out of scope here): `EthnologueLanguage.canDelete`
     // (on the DTO) and the `r.EthnologueLanguage.create.read.edit.delete`
@@ -658,12 +668,10 @@ export const ethnologueLanguages = pgTable(
     // Full FK index — the partial unique above can't serve FK-maintenance
     // scans. Added in 0016 alongside the REFERENCES attach.
     index('ethnologue_languages_language_id_idx').on(t.languageId),
-    uniqueIndex('ethnologue_languages_code_unique')
-      .on(t.code)
-      .where(sql`${t.code} IS NOT NULL AND ${t.deletedAt} IS NULL`),
-    uniqueIndex('ethnologue_languages_provisional_code_unique')
-      .on(t.provisionalCode)
-      .where(sql`${t.provisionalCode} IS NOT NULL AND ${t.deletedAt} IS NULL`),
+    // `code` and `provisional_code` are deliberately NOT unique. Languages share
+    // ethnologue codes routinely, and Neo4j never constrained either column. The
+    // unique key for a language is its ROLV code, over on `languages`. See
+    // migration 0030.
   ],
 );
 
@@ -1285,10 +1293,18 @@ export const projectWorkflowEvents = pgTable(
       .$type<ID<'Project'>>()
       .notNull()
       .references(() => projects.id, { onDelete: 'cascade' }),
+    // Exactly one of `who` / `who_system_agent_id` is set — a transition always
+    // has an actor, but it is a User or a SystemAgent. Most events are
+    // agent-driven, and Neo4j has always matched `node('who','Actor')`.
+    // See migration 0031, and `resource_mutations` for the same arc on the audit
+    // log (which stores the agent's name, not an FK — the reasoning for the
+    // difference is in 0031's header).
     who: text('who')
       .$type<ID<'User'>>()
-      .notNull()
       .references(() => users.id),
+    whoSystemAgentId: text('who_system_agent_id')
+      .$type<ID<'SystemAgent'>>()
+      .references(() => systemAgents.id),
     // Nullable for synthetic/initial events; populated for normal transitions.
     fromStep: projectStepEnum('from_step').$type<ProjectStep>(),
     toStep: projectStepEnum('to_step').$type<ProjectStep>().notNull(),
@@ -1305,6 +1321,13 @@ export const projectWorkflowEvents = pgTable(
       t.at.desc(),
     ),
     index('project_workflow_events_who_idx').on(t.who),
+    index('project_workflow_events_who_system_agent_id_idx').on(
+      t.whoSystemAgentId,
+    ),
+    check(
+      'project_workflow_events_actor_shape_chk',
+      sql`num_nonnulls(${t.who}, ${t.whoSystemAgentId}) = 1`,
+    ),
   ],
 );
 
@@ -1678,14 +1701,13 @@ export const languages = pgTable(
     deletedAt: timestamp('deleted_at', { withTimezone: true }),
   },
   (t) => [
-    // Partial uniques scoped to live rows — mirror of the Neo4j LanguageName /
-    // LanguageDisplayName / RegistryOfLanguageAndVariantsCode constraints.
-    uniqueIndex('languages_name_active_unique')
-      .on(t.name)
-      .where(sql`${t.deletedAt} IS NULL`),
-    uniqueIndex('languages_display_name_active_unique')
-      .on(t.displayName)
-      .where(sql`${t.deletedAt} IS NULL`),
+    // The ROLV code is the unique natural key for a language; the names
+    // deliberately are NOT. Distinct languages legitimately share a name — real
+    // data contains such groups, each separable by ROLV — and Neo4j never
+    // constrained them. The comment that used to sit here claimed these mirrored
+    // Neo4j `LanguageName` / `LanguageDisplayName` constraints; those constraints
+    // do not exist, and the claim misled two separate pieces of work. Partial,
+    // scoped to live rows. See migration 0030.
     uniqueIndex('languages_rolv_code_active_unique')
       .on(t.registryOfLanguageVarietiesCode)
       .where(

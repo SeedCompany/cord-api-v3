@@ -56,16 +56,9 @@ type LanguageRow = typeof languages.$inferSelect & {
   pinned?: boolean;
 };
 
-const catchNameUnique = catchUniqueViolation(
-  'languages_name_active_unique',
-  'name',
-  'name with this value already exists',
-);
-const catchDisplayNameUnique = catchUniqueViolation(
-  'languages_display_name_active_unique',
-  'displayName',
-  'displayName with this value already exists',
-);
+// No name / displayName equivalents: those columns are not unique (migration
+// 0030 — distinct languages legitimately share a name), so there is no violation
+// to map.
 const catchRolvUnique = catchUniqueViolation(
   'languages_rolv_code_active_unique',
   'registryOfLanguageVarietiesCode',
@@ -112,8 +105,6 @@ export class LanguageDrizzleRepository extends DrizzleDtoRepository<
         tags: input.tags ? [...input.tags] : [],
         isAvailableForReporting: input.isAvailableForReporting ?? false,
       })
-      .catch(catchNameUnique)
-      .catch(catchDisplayNameUnique)
       .catch(catchRolvUnique);
 
     // Mirror of Gel's connectEthnologue trigger: the Language row exists
@@ -148,10 +139,7 @@ export class LanguageDrizzleRepository extends DrizzleDtoRepository<
       hasExternalFirstScripture: fields.hasExternalFirstScripture,
       ...(fields.tags !== undefined && { tags: [...fields.tags] }),
       isAvailableForReporting: fields.isAvailableForReporting,
-    })
-      .catch(catchNameUnique)
-      .catch(catchDisplayNameUnique)
-      .catch(catchRolvUnique);
+    }).catch(catchRolvUnique);
 
     if (fields.sensitivity !== undefined) {
       // Mirror of Gel's recalculateProjectSens trigger: keep engaging
