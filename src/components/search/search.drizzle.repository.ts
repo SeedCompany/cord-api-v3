@@ -82,15 +82,17 @@ export class SearchDrizzleRepository {
     // pairs — the column is ILIKE-matched and the DTO field name is what lands
     // in `matchedProps` for the read-perm gate.
     // A `cols` of [] makes an id-only branch (exact-id parity, matchedProps =
-    // ['id']) for searchable types with no human-text column. `softDelete:
-    // false` is for tables without a `deleted_at` column (periodic_reports).
+    // ['id']) for searchable types with no human-text column.
+    // Every searchable table soft-deletes, so every branch filters on it. There
+    // used to be an opt-out for periodic_reports; migration 0035 gave that table
+    // a `deleted_at` too, and the opt-out went with it.
     const branch = (
       kind: string,
       table: string,
       cols: ReadonlyArray<readonly [column: string, prop: string]>,
-      opts: { subtypeCol?: string; softDelete?: boolean } = {},
+      opts: { subtypeCol?: string } = {},
     ): SQL => {
-      const { subtypeCol, softDelete = true } = opts;
+      const { subtypeCol } = opts;
       const cases = [
         sql`case when id = ${q} then 'id' end`,
         ...cols.map(
@@ -108,7 +110,7 @@ export class SearchDrizzleRepository {
         ? sql`${sql.raw(subtypeCol)}::text`
         : sql`null::text`;
       const match = sql`(${sql.join(conds, sql` or `)})`;
-      const where = softDelete ? sql`deleted_at is null and ${match}` : match;
+      const where = sql`deleted_at is null and ${match}`;
       return sql`
         select id as id, ${kind} as kind, ${subtype} as subtype,
           created_at as "createdAt",
@@ -125,11 +127,9 @@ export class SearchDrizzleRepository {
       table: string,
       cols: ReadonlyArray<readonly [column: string, prop: string]>,
       subtypes: readonly string[],
-      softDelete = true,
     ): SQL => {
       const base = branch(kind, table, cols, {
         subtypeCol: 'type',
-        softDelete,
       });
       const list = sql.join(
         subtypes.map((s) => sql`${s}`),
@@ -243,15 +243,8 @@ export class SearchDrizzleRepository {
       ['Financial', 'Narrative', 'Progress'] as const
     ).filter((s) => types.has(`${s}Report`));
     if (reportSubtypes.length) {
-      // periodic_reports has no deleted_at (real-delete design).
       branches.push(
-        typedBranch(
-          'PeriodicReport',
-          'periodic_reports',
-          [],
-          reportSubtypes,
-          false,
-        ),
+        typedBranch('PeriodicReport', 'periodic_reports', [], reportSubtypes),
       );
     }
 

@@ -2266,11 +2266,19 @@ export const progressReportStatusEnum = pgEnum('progress_report_status', [
  * engagements — the CHECK keeps the parent FK coherent with the type.
  *
  * The id is deterministic — sha256(parent:type:start:end), same derivation as
- * Neo4j — so concurrent syncs computing rows for the same interval collide on
- * the PK and resolve via ON CONFLICT DO NOTHING. Deletion is a REAL delete
- * (no deleted_at): eligible rows carry no user data (no file, NotStarted),
- * and a soft-deleted row would block the deterministic id from ever being
- * recreated when dates change back.
+ * Neo4j — but it is a FIRST CHOICE, not a guarantee. Deletion is a soft delete
+ * as of migration 0035, matching Neo4j (whose own delete relabels rather than
+ * removing), so a dead row can still be holding the deterministic id. When it
+ * is, the repository takes a fresh id for the new live row rather than reviving
+ * the dead one — again what Neo4j does.
+ *
+ * Because of that, dedup between concurrent syncs comes from the partial unique
+ * index over LIVE rows, not from the primary key, and the insert's
+ * `onConflictDoNothing()` is deliberately untargeted: a loser can conflict on
+ * either the id or that index.
+ *
+ * Read paths must therefore filter `deleted_at`, including where this table is
+ * the joined side rather than the driving one.
  *
  * `status` is ProgressReport-only (workflow-driven; plain column like
  * engagement.status).
@@ -2323,14 +2331,15 @@ export const periodicReports = pgTable(
     ),
     index('periodic_reports_project_id_idx').on(t.projectId),
     index('periodic_reports_engagement_id_idx').on(t.engagementId),
-    index('periodic_reports_deleted_at_idx').on(t.deletedAt),
+    // No bare index on deleted_at — every read narrows by parent id first, and
+    // the two above lead that. @see migration 0035
     // At most one LIVE report per (parent, type, interval). This — not the
     // deterministic id — is the dedup guarantee under soft delete, since a dead
     // row can hold the deterministic id and force a fresh one.
     // Keyed on the coalesced parent: indexing both parent columns would leave a
     // NULL in every row, and NULLs compare DISTINCT in a unique index, so it
     // would silently enforce nothing. @see migration 0035
-    uniqueIndex('periodic_reports_live_interval_uniq')
+    uniqueIndex('periodic_reports_live_interval_unique')
       .on(
         sql`(coalesce(${t.projectId}, ${t.engagementId}))`,
         t.type,
