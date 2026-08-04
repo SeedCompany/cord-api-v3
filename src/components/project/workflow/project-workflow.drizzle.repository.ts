@@ -1,5 +1,14 @@
 import { Injectable } from '@nestjs/common';
-import { and, desc, eq, inArray } from 'drizzle-orm';
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  getTableColumns,
+  inArray,
+  isNull,
+  type SQL,
+} from 'drizzle-orm';
 import { DateTime } from 'luxon';
 import { generateId, type ID, type UnsecuredDto } from '~/common';
 import { Identity } from '~/core/authentication';
@@ -41,23 +50,76 @@ export class ProjectWorkflowDrizzleRepository {
     return this.drizzle.client;
   }
 
+  /**
+   * Events, with their project, and only while that project is still live.
+   *
+   * The Neo4j repo gets the liveness from a label: `matchEvent()` requires
+   * `node('project', 'Project')`, and soft delete relabels to `Deleted_Project`,
+   * so an event under a removed project matches nothing. Migration 0010's
+   * `ON DELETE CASCADE` is no substitute, because the project row never leaves.
+   *
+   * A plain join, not the relational `with:` plus an EXISTS. The first version of
+   * this used a correlated EXISTS inside `db.query.…findMany`, and it returned
+   * nothing at all: the relational builder aliases the table it is querying, so
+   * the subquery's reference to the outer column did not bind to it. That is a
+   * silent wrong answer rather than an error — the workflow-event list simply came
+   * back empty — so the join is both correct and the shape whose behaviour is
+   * obvious from reading it.
+   */
+  private eventsUnderLiveProject(...narrowing: SQL[]) {
+    return this.db
+      .select({
+        ...getTableColumns(projectWorkflowEvents),
+        // Exactly the three columns the DTO reads off the parent.
+        project: {
+          id: projects.id,
+          type: projects.type,
+          step: projects.step,
+        },
+      })
+      .from(projectWorkflowEvents)
+      .innerJoin(projects, eq(projects.id, projectWorkflowEvents.projectId))
+      .where(and(isNull(projects.deletedAt), ...narrowing));
+  }
+
+  // migration-todo: the Neo4j repo also applies `privileges.filterToReadable()`
+  // in both methods (project-workflow.neo4j.repository.ts:31 and :43) and this
+  // class still does not. The sibling ProgressReport repo now does, so this is
+  // the last of the pair.
+  //
+  // It is NOT a one-line addition here, which is why it is still open. Roles with
+  // no read grant would be handled correctly for free — `applyReadFilter`
+  // resolves those to plain false and never consults the condition. But roles
+  // whose read is granted per-transition (Project Manager and Marketing on the
+  // ProgressReport side; the same shape here) resolve to a TransitionCondition,
+  // and `PolicyExecutor.drizzleFilter` THROWS on a condition with no
+  // `asDrizzleCondition`. So adding the call without porting the condition would
+  // replace a disclosure with a hard error on a page those roles use daily.
+  //
+  // The condition cannot be ported the way ProgressReport's was. That one is a
+  // class local to its own workflow, so it can name its table directly. This one
+  // is the shared generic `TransitionCondition<W>` in
+  // src/components/workflow/workflow.granter.ts, used by the Project AND
+  // Engagement workflows, and a generic condition has no way to reach its
+  // Drizzle column: `AsDrizzleParams` carries the EnhancedResource, and there is
+  // no resource -> table map anywhere in the codebase. Porting it means adding
+  // one, or having each workflow definition carry its own transition column.
+  // That is a design choice about shared authorization infrastructure and wants
+  // its own change, not a hurried one bundled here.
   async readMany(
     ids: readonly ID[],
   ): Promise<Array<UnsecuredDto<WorkflowEvent>>> {
     if (ids.length === 0) return [];
-    const rows = await this.db.query.projectWorkflowEvents.findMany({
-      where: (e) => inArray(e.id, [...ids]),
-      with: { project: { columns: { id: true, type: true, step: true } } },
-    });
+    const rows = await this.eventsUnderLiveProject(
+      inArray(projectWorkflowEvents.id, [...ids]),
+    );
     return rows.map((row) => this.toDto(row));
   }
 
   async list(projectId: ID): Promise<Array<UnsecuredDto<WorkflowEvent>>> {
-    const rows = await this.db.query.projectWorkflowEvents.findMany({
-      where: (e) => eq(e.projectId, projectId),
-      with: { project: { columns: { id: true, type: true, step: true } } },
-      orderBy: (e, { asc }) => [asc(e.at)],
-    });
+    const rows = await this.eventsUnderLiveProject(
+      eq(projectWorkflowEvents.projectId, projectId),
+    ).orderBy(asc(projectWorkflowEvents.at));
     return rows.map((row) => this.toDto(row));
   }
 
