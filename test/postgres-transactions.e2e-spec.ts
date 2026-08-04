@@ -115,4 +115,42 @@ describePg('Postgres transaction scoping', () => {
 
     expect(await probeIds()).toEqual([]);
   });
+
+  /**
+   * Work started inside a transaction but not awaited keeps seeing the
+   * transaction's async context after it has settled and its pool connection has
+   * been handed back. Both entry points must say so rather than letting the
+   * query fail somewhere unrelated with "Cannot use a released client".
+   *
+   * Built with an explicit gate rather than a timer: the continuation has to be
+   * registered INSIDE the transaction, so it inherits the context, but must not
+   * run until the transaction has finished. A timer cannot promise that ordering,
+   * since committing is itself a round trip.
+   */
+  const escapedWork = async (work: () => Promise<unknown>) => {
+    let release: (() => void) | undefined;
+    let detached: Promise<unknown> | undefined;
+
+    await drizzle.inTx(async () => {
+      const gate = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      detached = gate.then(work);
+    });
+
+    release!(); // only now — the transaction is already settled
+    return await detached!;
+  };
+
+  it('refuses a query from work that outlived its transaction', async () => {
+    await expect(escapedWork(() => probeIds())).rejects.toThrow(
+      /escaped its transaction/,
+    );
+  });
+
+  it('refuses a nested transaction from work that outlived its transaction', async () => {
+    await expect(
+      escapedWork(async () => await drizzle.inTx(async () => await probeIds())),
+    ).rejects.toThrow(/escaped its transaction/);
+  });
 });
