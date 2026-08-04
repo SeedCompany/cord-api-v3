@@ -153,7 +153,7 @@ const RESOURCE_TABLES: readonly ResourceTable[] = [
   },
   {
     // ProgressReport is a periodic_reports row with type='Progress'.
-    // Soft-deleted as of migration 0031, hence the liveness filter.
+    // Soft-deleted as of migration 0035, hence the liveness filter.
     typenames: ['ProgressReport'],
     fetch: async (db, ids) =>
       (
