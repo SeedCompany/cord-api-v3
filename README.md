@@ -82,10 +82,20 @@ export POSTGRES_URL=postgresql://postgres:postgres@localhost:5432/cord
 DATABASE=postgres yarn test:e2e
 ```
 
-That is deliberate, not an oversight. The end-to-end setup creates and drops
-databases, and it also sweeps leftover `cord_e2e_*` databases on whichever server
-it connects to. Making you pass the URL explicitly keeps that from ever running
-against a server inherited from a file you had forgotten about.
+> [!WARNING]
+> Point this at a **dedicated, disposable PostgreSQL server** — the local
+> `docker compose` one is what it is meant for. Never a production or shared
+> server.
+
+The end-to-end setup needs rights to create and drop databases, and on each run
+it also clears its own leftovers: any database named `cord_e2e_*` more than an
+hour old is dropped `with (force)`, which disconnects whatever is attached to it.
+The sweep is scoped to that prefix and cannot reach application data, but on a
+server someone else is using it can still end their test run.
+
+Requiring the URL to be passed explicitly, rather than reading it from `.env.local`
+alongside everything else, is what keeps all of that from pointing at a server
+inherited from a file you had forgotten about.
 
 ## Documentation
 
