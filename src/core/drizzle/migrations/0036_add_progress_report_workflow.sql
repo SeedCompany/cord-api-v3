@@ -36,7 +36,8 @@ CREATE TABLE "progress_report_variance_explanations" (
 
 -- ---------------------------------------------------------------------------
 -- Workflow events — append-only history, mirroring project_workflow_events
--- (0009/0010) closely enough that the two read the same way.
+-- (created in 0010, later altered by 0031) closely enough that the two read the
+-- same way.
 --
 -- Differences from the Project analogue, both driven by the DTO:
 --   * one `status` column, not from_step/to_step. ProgressReportWorkflowEvent

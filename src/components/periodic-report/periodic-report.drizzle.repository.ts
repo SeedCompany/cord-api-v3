@@ -97,9 +97,15 @@ export class PeriodicReportDrizzleRepository extends DrizzleDtoRepository<
 
   /**
    * Idempotent bulk-create. Ids are deterministic per
-   * (parent, type, start, end) — identical to the Neo4j derivation — so
-   * existing intervals and concurrent duplicate syncs both resolve via
+   * (parent, type, start, end) — identical to the Neo4j derivation — so existing
+   * intervals and concurrent duplicate syncs both resolve via
    * ON CONFLICT DO NOTHING. Returns only the rows actually created.
+   *
+   * The deterministic id is a first choice rather than a guarantee: since
+   * migration 0035 a soft-deleted row can still be holding it, and the fallback
+   * below takes a fresh id in that case. So the conflict target is left
+   * unspecified — a loser can collide on either the id or the partial unique
+   * index over live rows.
    */
   async merge(input: MergePeriodicReports) {
     // Nothing to sync — drizzle's `.values([])` is a runtime error, and there
@@ -116,13 +122,13 @@ export class PeriodicReportDrizzleRepository extends DrizzleDtoRepository<
     // DefinedFiles per report (develop's narrativeFile PR postdates mono).
     const narrativeFileIds = new Map<ID, ID<'File'>>();
     // The deterministic id is a *first choice*, not a guarantee, now that
-    // reports soft-delete (0032): a dead row can still hold it, and Neo4j in
+    // reports soft-delete (0035): a dead row can still hold it, and Neo4j in
     // that situation creates a brand-new report rather than reviving the old one
     // (its soft delete strips the label the uniqueness constraint is scoped to,
     // so it can even reuse the id string — we can't, `id` is the PK). Mirror the
     // behaviour, not the id: dead row keeps its id and content, the new live row
     // takes a fresh one. Liveness dedup comes from
-    // `periodic_reports_live_interval_uniq`, not from the id.
+    // `periodic_reports_live_interval_unique`, not from the id.
     const wanted = input.intervals.map((interval) =>
       deterministicReportId(
         input.parent,

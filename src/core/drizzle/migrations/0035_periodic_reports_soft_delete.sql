@@ -42,15 +42,21 @@ ALTER TABLE "periodic_reports" ADD COLUMN "deleted_at" timestamptz;
 -- two is non-null, so the coalesce is always the parent id and never null.
 -- (`NULLS NOT DISTINCT` would also work on PG >= 15, but this needs no version
 -- floor and reads as what it means.)
-CREATE UNIQUE INDEX "periodic_reports_live_interval_uniq"
+CREATE UNIQUE INDEX "periodic_reports_live_interval_unique"
   ON "periodic_reports" (
     (coalesce("project_id", "engagement_id")), "type", "start", "end"
   )
   WHERE "deleted_at" IS NULL;
 
--- Every read path filters on this; reports are listed by parent + date window.
-CREATE INDEX "periodic_reports_deleted_at_idx"
-  ON "periodic_reports" ("deleted_at");
+-- No index on `deleted_at` alone, deliberately. Liveness is never the only filter
+-- on a read here: every path narrows by parent id, and usually type and date
+-- window too (parentCondition/list/readMany in periodic-report.drizzle.repository),
+-- and `periodic_reports_project_id_idx` / `_engagement_id_idx` above already lead
+-- those. A bare b-tree on `deleted_at` could not help anyway — reports are soft
+-- deleted only when a date window shrinks, so `deleted_at IS NULL` matches nearly
+-- every row and the planner would not choose it. The selective direction
+-- (`IS NOT NULL`) has no caller in the app at all. Matches the convention noted in
+-- migration 0013; no other soft-deleted table here indexes the column by itself.
 
 -- migration-todo(cutover-etl): prod Neo4j holds `Deleted_*Report` nodes that
 -- SHARE an id string with a live report for the same interval (see the label
