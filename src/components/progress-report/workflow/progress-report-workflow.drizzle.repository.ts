@@ -1,8 +1,18 @@
 import { Injectable } from '@nestjs/common';
-import { and, asc, eq, inArray, isNotNull, isNull } from 'drizzle-orm';
+import {
+  and,
+  asc,
+  eq,
+  getTableColumns,
+  inArray,
+  isNotNull,
+  isNull,
+  type SQL,
+} from 'drizzle-orm';
 import { DateTime } from 'luxon';
 import { type SetRequired } from 'type-fest';
 import {
+  EnhancedResource,
   generateId,
   type ID,
   NotFoundException,
@@ -21,9 +31,10 @@ import {
   users,
   progressReportWorkflowEvents as workflowEvents,
 } from '~/core/drizzle/schema';
+import { PolicyExecutor } from '../../authorization/policy/executor/policy-executor';
 import { type ProgressReportStatus as Status } from '../dto';
 import { type ExecuteProgressReportTransition } from './dto/execute-progress-report-transition.input';
-import { type ProgressReportWorkflowEvent as WorkflowEvent } from './dto/workflow-event.dto';
+import { ProgressReportWorkflowEvent as WorkflowEvent } from './dto/workflow-event.dto';
 
 /**
  * Postgres implementation of `ProgressReportWorkflowRepository`.
@@ -42,45 +53,87 @@ import { type ProgressReportWorkflowEvent as WorkflowEvent } from './dto/workflo
 // repo; collapses at Phase 7 cutover.
 @Injectable()
 export class ProgressReportWorkflowDrizzleRepository {
+  private readonly resource = EnhancedResource.of(WorkflowEvent);
+
   constructor(
     private readonly drizzle: DrizzleService,
     private readonly identity: Identity,
+    private readonly executor: PolicyExecutor,
   ) {}
 
   protected get db() {
     return this.drizzle.client;
   }
 
-  // migration-todo: the Neo4j repo applies `privileges.filterToReadable()` here
-  // and in `list()`, scoped by the project matched in `matchEvent()`. This class
-  // omits it — the same gap the audit logged as PW-1 against the Project
-  // workflow repo. Two things make it non-exploitable on the live paths rather
-  // than merely unnoticed: `list()` is only ever reached through an
-  // already-authorized ProgressReport (the resolver's parent), and
-  // `ProgressReportWorkflowService.secure()` evaluates the WorkflowEvent policy
-  // with NO context object, so the Neo4j filter's project scope contributes
-  // nothing that secure() would otherwise apply. Fix alongside PW-1 rather than
-  // inventing a one-off condition here.
+  /**
+   * What the reader is allowed to see, plus the ancestry Neo4j requires.
+   *
+   * Two separate rules, both of which the Neo4j repo gets and this one used to
+   * skip.
+   *
+   * Permission: `filterToReadable()` there, `applyReadFilter` here. Read on a
+   * workflow event is granted only through the per-transition condition, and to
+   * few roles — Field Partner and Translator get execute with no read at all, so
+   * Neo4j resolves their read permission to false and returns nothing. Securing
+   * the DTO does not stand in for this: only `who` and `notes` are secured, so
+   * `id`, `at`, `status` and `transition` would pass through untouched and hand a
+   * report's whole internal review-and-reject history to anyone who can read the
+   * report. Returns false when the reader has no read grant, and then we return
+   * nothing rather than asking the database.
+   *
+   * Ancestry: Neo4j's `matchEvent()` is a required match up through
+   * `:ProgressReport` ← `:Engagement` ← `:Project`, and its soft delete relabels
+   * to `Deleted_*`, so an event under any removed ancestor matches nothing. The
+   * join chain here is the same walk `getProjectMemberInfoByReportId` below
+   * already does. Migration 0036's `ON DELETE CASCADE` is no substitute: 0035
+   * made the report soft-delete, so the constraint never fires.
+   */
+  private readableEvents(...narrowing: SQL[]) {
+    const conditions: SQL[] = [
+      isNull(periodicReports.deletedAt),
+      isNull(engagements.deletedAt),
+      isNull(projects.deletedAt),
+      ...narrowing,
+    ];
+    // The caller's own conditions go in this ONE array with everything else.
+    // Chaining a second `.where()` onto the built query would REPLACE this
+    // clause, not add to it — silently dropping the read filter.
+    if (!this.executor.applyReadFilter(this.resource, conditions)) {
+      return null;
+    }
+    // Select the event's own columns so the row stays flat and `toDto` takes it
+    // unchanged; a bare `.select()` over joins nests each table under its name.
+    return this.db
+      .select(getTableColumns(workflowEvents))
+      .from(workflowEvents)
+      .innerJoin(
+        periodicReports,
+        eq(periodicReports.id, workflowEvents.reportId),
+      )
+      .innerJoin(engagements, eq(engagements.id, periodicReports.engagementId))
+      .innerJoin(projects, eq(projects.id, engagements.projectId))
+      .where(and(...conditions));
+  }
+
   async readMany(
     ids: readonly ID[],
   ): Promise<Array<UnsecuredDto<WorkflowEvent>>> {
     if (ids.length === 0) return [];
-    const rows = await this.db
-      .select()
-      .from(workflowEvents)
-      .where(
-        inArray(workflowEvents.id, [...ids] as Array<
-          ID<'ProgressReportWorkflowEvent'>
-        >),
-      );
-    return rows.map((row) => this.toDto(row));
+    const query = this.readableEvents(
+      inArray(workflowEvents.id, [...ids] as Array<
+        ID<'ProgressReportWorkflowEvent'>
+      >),
+    );
+    if (!query) return [];
+    return (await query).map((row) => this.toDto(row));
   }
 
   async list(reportId: ID): Promise<Array<UnsecuredDto<WorkflowEvent>>> {
-    const rows = await this.db
-      .select()
-      .from(workflowEvents)
-      .where(eq(workflowEvents.reportId, reportId as ID<'ProgressReport'>))
+    const query = this.readableEvents(
+      eq(workflowEvents.reportId, reportId as ID<'ProgressReport'>),
+    );
+    if (!query) return [];
+    const rows = await query
       // Neo4j sorts by createdAt ASC; `at` is this table's createdAt.
       .orderBy(asc(workflowEvents.at), asc(workflowEvents.id));
     return rows.map((row) => this.toDto(row));

@@ -1,7 +1,9 @@
 import { entries, type NonEmptyArray } from '@seedcompany/common';
 import { type Query } from 'cypher-query-builder';
+import { inArray } from 'drizzle-orm';
 import { inspect, type InspectOptionsStylized } from 'util';
 import { type ID, isIdLike, type Many } from '~/common';
+import { progressReportWorkflowEvents } from '~/core/drizzle/schema';
 import { Granter, ResourceGranter } from '../../authorization';
 import { action } from '../../authorization/policy/builder/perm-granter';
 import { type PropsGranterFn } from '../../authorization/policy/builder/resource-granter';
@@ -137,6 +139,17 @@ class TransitionCondition implements Condition<typeof Event> {
     );
     // If no transition then false
     return `((${transitionAllowed}) ?? false)`;
+  }
+
+  asDrizzleCondition() {
+    // TODO bypasses to statuses won't work with this. How should these be filtered?
+    //
+    // An event with no transition must not match, the same answer `isAllowed`
+    // gives above. `in` already does that: `null in (…)` evaluates to NULL,
+    // which a WHERE clause treats as not matching — so no explicit null check.
+    return inArray(progressReportWorkflowEvents.transitionKey, [
+      ...this.allowedTransitionIds,
+    ]);
   }
 
   union(this: void, conditions: NonEmptyArray<this>) {
