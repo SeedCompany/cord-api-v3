@@ -19,6 +19,14 @@ export class TransactionContext
   }
 
   async inTx<R>(fn: () => Promise<R>): Promise<R> {
+    // Continue an already-open transaction rather than starting a second,
+    // independent one — same reason as DrizzleService.inTx: an inner write
+    // would otherwise survive an outer rollback. Neo4j's equivalent has always
+    // continued.
+    if (this.getStore()) {
+      return await fn();
+    }
+
     const errorMap = new WeakMap<Error, Error>();
 
     try {

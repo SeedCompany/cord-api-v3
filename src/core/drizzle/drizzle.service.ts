@@ -34,7 +34,33 @@ export class DrizzleService implements OnModuleDestroy {
     return client;
   }
 
+  /**
+   * Whether this async context is already running inside a transaction.
+   *
+   * Callers that decide whether to open one need this: nothing about a Drizzle
+   * client tells you which of the two it is, since {@link client} silently
+   * falls back to the pool.
+   */
+  get inTransaction(): boolean {
+    return !!this.als.getStore();
+  }
+
+  /**
+   * Run `fn` inside a transaction, continuing one that is already open rather
+   * than starting a second.
+   *
+   * The continuation is not a nicety. Without it a nested call takes ANOTHER
+   * connection out of the pool and begins a transaction that commits and rolls
+   * back independently — so an inner write survives an outer rollback, and each
+   * nested call holds two pool connections at once, which deadlocks the pool
+   * under concurrency rather than failing. Neo4j's equivalent has always
+   * continued (`runInTransaction` returns the inner call directly when a
+   * transaction is open), so this also keeps the engines behaving the same.
+   */
   async inTx<R>(fn: () => Promise<R>): Promise<R> {
+    if (this.inTransaction) {
+      return await fn();
+    }
     return await this.baseDb.transaction((tx) =>
       this.als.run(tx as DrizzleDb, fn),
     );

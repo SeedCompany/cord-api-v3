@@ -40,8 +40,19 @@ export class TransactionRunner {
     options?: TransactionOptions,
   ): Promise<R> {
     switch (this.config.databaseEngine) {
-      case 'postgres':
-        return await this.inDrizzleTx(fn);
+      case 'postgres': {
+        const drizzle = this.required(this.drizzle, 'postgres');
+        // Already inside a transaction: continue in it, and deliberately return
+        // BEFORE the retry loop below rather than relying on inTx to continue.
+        // Entering the loop while nested would multiply the retry budget — the
+        // outer unit's three attempts times this one's — so one markForRetry()
+        // could re-run the body, and every hook it fires, up to nine times.
+        // Neo4j has one retry scope per mutation; keep it that way.
+        if (drizzle.inTransaction) {
+          return await fn();
+        }
+        return await this.inDrizzleTx(drizzle, fn);
+      }
       case 'gel':
         return await this.required(this.gel, 'gel').inTx(fn);
       case 'neo4j':
@@ -63,8 +74,10 @@ export class TransactionRunner {
    * Same semantics as Neo4j retryable transactions — the body may run more
    * than once, so it must be idempotent.
    */
-  private async inDrizzleTx<R>(fn: () => Promise<R>): Promise<R> {
-    const drizzle = this.required(this.drizzle, 'postgres');
+  private async inDrizzleTx<R>(
+    drizzle: DrizzleService,
+    fn: () => Promise<R>,
+  ): Promise<R> {
     let attemptsLeft = 3;
     // eslint-disable-next-line no-constant-condition,@typescript-eslint/no-unnecessary-condition
     while (true) {
