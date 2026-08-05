@@ -184,15 +184,20 @@ export class BudgetDrizzleRepository extends DrizzleDtoRepository<
         `Budget ${row.id} has no parent project row — FK invariant violated`,
       );
     }
-    const dto: unknown = {
+    // Not laundered through `unknown` before the cast below: that stops
+    // TypeScript comparing this object to the DTO at all, which is how a field
+    // can go missing or take the wrong shape unnoticed. The direct cast still
+    // allows the service-layer overlays (canDelete, scope) and the fields the
+    // service fills in later.
+    const dto = {
       id: row.id,
       __typename: 'Budget',
       createdAt: DateTime.fromJSDate(row.createdAt),
       status: row.status,
       sensitivity: row.project.sensitivity,
-      universalTemplateFile: row.universalTemplateFileId
-        ? { id: row.universalTemplateFileId }
-        : null,
+      // The bare id, matching both the Neo4j repo and the declared DefinedFile
+      // type. The resolver accepts a null here and yields no file.
+      universalTemplateFile: row.universalTemplateFileId,
       // Assembled by the service via listRecords.
       records: [],
       parent: {
