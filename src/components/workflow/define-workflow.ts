@@ -1,4 +1,5 @@
 import { entries, many, setOf } from '@seedcompany/common';
+import { type AnyPgColumn } from 'drizzle-orm/pg-core';
 import * as uuid from 'uuid';
 import {
   type EnumType,
@@ -26,6 +27,25 @@ export const defineWorkflow =
     name: Name;
     states: StateEnum;
     event: EventResource;
+    /**
+     * The column on this workflow's event table holding the transition's key.
+     *
+     * Only the authorization layer reads it, and only to answer one question in
+     * SQL: "which of these events did a transition this reader is allowed to
+     * see?" A permission can be granted per-transition, so filtering rows in the
+     * database requires naming the column the keys live in.
+     *
+     * Declared here rather than resolved from the resource because
+     * `TransitionCondition` is generic over the workflow, so the same class
+     * serves every workflow's event table. It is handed the resource type and
+     * nothing else, and nothing maps a resource type to its table — see the
+     * post-cutover item on giving that lookup one home. Until then the workflow
+     * says where its own keys are.
+     *
+     * Required on purpose: a workflow that omits it compiles today and throws
+     * later, and only for readers whose grant is per-transition.
+     */
+    eventTransitionColumn: AnyPgColumn;
     /**
      * Declare the context type here.
      * @example
@@ -129,6 +149,8 @@ export interface Workflow<
   /** type only */
   readonly event: EventResource['prototype'];
   readonly eventResource: EventResource;
+  /** Where this workflow's event table stores the transition key. */
+  readonly eventTransitionColumn: AnyPgColumn;
   /** type only */
   readonly state: State;
   readonly states: StateEnum;
