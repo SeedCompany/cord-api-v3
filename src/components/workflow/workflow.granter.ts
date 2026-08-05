@@ -1,5 +1,7 @@
 import { type NonEmptyArray } from '@seedcompany/common';
 import { type Query } from 'cypher-query-builder';
+import { inArray } from 'drizzle-orm';
+import { type AnyPgColumn } from 'drizzle-orm/pg-core';
 import { inspect, type InspectOptionsStylized } from 'util';
 import { type ID, type Many } from '~/common';
 import { ResourceGranter } from '../authorization';
@@ -91,6 +93,12 @@ export class TransitionCondition<W extends Workflow> implements Condition<
 
   protected constructor(
     private readonly checks: ReadonlyArray<TransitionCheck<W>>,
+    /**
+     * Kept only so {@link asDrizzleCondition} can name it. Every other engine
+     * reads the transition off the node it already has; SQL has to say which
+     * column, and this class is generic over the workflow, so it can't know.
+     */
+    private readonly transitionColumn: AnyPgColumn,
   ) {
     this.allowedTransitionKeys = new Set(checks.flatMap((c) => c.key));
   }
@@ -105,6 +113,7 @@ export class TransitionCondition<W extends Workflow> implements Condition<
         name,
         key: [workflow.transitionByName(name).key],
       })),
+      workflow.eventTransitionColumn,
     );
   }
 
@@ -121,6 +130,7 @@ export class TransitionCondition<W extends Workflow> implements Condition<
           .filter((t) => typeof t.to === 'string' && allowed.has(t.to))
           .map((t) => t.key),
       })),
+      workflow.eventTransitionColumn,
     );
   }
 
@@ -157,6 +167,19 @@ export class TransitionCondition<W extends Workflow> implements Condition<
     return `((${transitionAllowed}) ?? false)`;
   }
 
+  asDrizzleCondition() {
+    // TODO bypasses to statuses won't work with this. How should these be filtered?
+    //
+    // An event with no transition key must not match, which is the answer
+    // `isAllowed` gives above. `in` does that already: `null in (…)` is NULL,
+    // and a WHERE clause treats NULL as no match — so no explicit null check.
+    //
+    // A grant carrying no transitions at all renders as `false` rather than
+    // empty SQL (drizzle's `inArray` special-cases the empty list), which again
+    // matches `isAllowed`.
+    return inArray(this.transitionColumn, [...this.allowedTransitionKeys]);
+  }
+
   union(this: void, conditions: NonEmptyArray<this>) {
     const checks = [
       ...new Map(
@@ -170,7 +193,10 @@ export class TransitionCondition<W extends Workflow> implements Condition<
           }),
       ).values(),
     ];
-    return new TransitionCondition(checks);
+    // Any condition in the group will do: the policy engine only combines
+    // conditions granted on the same resource, and a resource belongs to one
+    // workflow, so they all carry the same column.
+    return new TransitionCondition(checks, conditions[0].transitionColumn);
   }
 
   intersect(this: void, conditions: NonEmptyArray<this>) {
@@ -182,7 +208,8 @@ export class TransitionCondition<W extends Workflow> implements Condition<
         ),
       ),
     );
-    return new TransitionCondition(checks);
+    // Same reasoning as `union` above.
+    return new TransitionCondition(checks, conditions[0].transitionColumn);
   }
 
   [inspect.custom](_depth: number, _options: InspectOptionsStylized) {

@@ -234,6 +234,8 @@ const projectIdRefForResource = (resource: EnhancedResource<any>): SQL => {
       return sql.raw(`"projects"."id"`);
     case 'ProjectMember':
       return sql.raw(`"project_members"."project_id"`);
+    case 'ProjectWorkflowEvent':
+      return sql.raw(`"project_workflow_events"."project_id"`);
     case 'Partnership':
       return sql.raw(`"partnerships"."project_id"`);
     case 'Budget':
