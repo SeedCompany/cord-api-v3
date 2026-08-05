@@ -29,6 +29,7 @@ import { Identity } from '~/core/authentication';
 import {
   catchForeignKeyViolation,
   catchUniqueViolation,
+  displayOrder,
   DrizzleDtoRepository,
   EMPTY_PAGE,
   resolveOrderBy,
@@ -350,7 +351,7 @@ export class PartnerDrizzleRepository extends DrizzleDtoRepository<
             eq(partners.organizationId, organizations.id),
           )
           .where(predicate)
-          .orderBy(direction(orgSortColumn), asc(partners.id))
+          .orderBy(direction(displayOrder(orgSortColumn)), asc(partners.id))
           .limit(input.count)
           .offset(offset),
       ]);

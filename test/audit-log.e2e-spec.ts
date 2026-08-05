@@ -31,6 +31,18 @@ import {
 // history is expected to be empty there.
 const isPostgres = process.env.DATABASE === 'postgres';
 
+// Cases that read `resource_mutations` itself have nothing to check under neo4j —
+// the table has no counterpart there. Declaring them with these instead of
+// returning early inside the body makes jest report them as SKIPPED. A test that
+// returns before it asserts anything still counts as a pass, which reads as
+// coverage that does not exist.
+//
+// The `expect(history.total).toBe(0)` branches further down are deliberately NOT
+// converted: those assert real neo4j behaviour (the writer stays inert and the
+// history query still resolves), so they earn their pass on both engines.
+const itPostgresOnly = isPostgres ? it : it.skip;
+const describePostgresOnly = isPostgres ? describe : describe.skip;
+
 describe('Audit log (resource_mutations) e2e', () => {
   let app: TestApp;
   let project: fragments.project;
@@ -216,50 +228,51 @@ describe('Audit log (resource_mutations) e2e', () => {
   // Audit writes happen inside the triggering mutation's transaction, so if the
   // mutation later fails the audit row must roll back with it — no orphaned
   // "this happened" record for something that didn't.
-  it('rolls back the audit row when the surrounding transaction fails', async () => {
-    if (!isPostgres) return;
+  itPostgresOnly(
+    'rolls back the audit row when the surrounding transaction fails',
+    async () => {
+      const drizzle = app.get(DrizzleService);
+      const repo = app.get(ResourceMutationRepository);
+      const committedId = await generateId();
+      const rolledBackId = await generateId();
+      // The repo's insert uses the ambient (ALS) transaction client, so this
+      // exercises the same in-transaction write path the audit hook takes —
+      // without needing a session context for the actor lookup.
+      const mutation = (resourceId: typeof committedId) => ({
+        resourceType: 'Project',
+        resourceId,
+        action: 'Update' as const,
+        actorId: null,
+        actorSystemAgent: null,
+        impersonatorId: null,
+        roleAtTime: [],
+        changes: { a: 1 },
+      });
 
-    const drizzle = app.get(DrizzleService);
-    const repo = app.get(ResourceMutationRepository);
-    const committedId = await generateId();
-    const rolledBackId = await generateId();
-    // The repo's insert uses the ambient (ALS) transaction client, so this
-    // exercises the same in-transaction write path the audit hook takes —
-    // without needing a session context for the actor lookup.
-    const mutation = (resourceId: typeof committedId) => ({
-      resourceType: 'Project',
-      resourceId,
-      action: 'Update' as const,
-      actorId: null,
-      actorSystemAgent: null,
-      impersonatorId: null,
-      roleAtTime: [],
-      changes: { a: 1 },
-    });
+      // Positive control: a record written in a committed tx persists.
+      await drizzle.inTx(async () => {
+        await repo.record(mutation(committedId));
+      });
 
-    // Positive control: a record written in a committed tx persists.
-    await drizzle.inTx(async () => {
-      await repo.record(mutation(committedId));
-    });
+      // The record is written, then the surrounding tx throws -> it must vanish.
+      await expect(
+        drizzle.inTx(async () => {
+          await repo.record(mutation(rolledBackId));
+          throw new Error('boom: force rollback');
+        }),
+      ).rejects.toThrow('boom');
 
-    // The record is written, then the surrounding tx throws -> it must vanish.
-    await expect(
-      drizzle.inTx(async () => {
-        await repo.record(mutation(rolledBackId));
-        throw new Error('boom: force rollback');
-      }),
-    ).rejects.toThrow('boom');
-
-    const db = drizzle.client;
-    const countFor = async (id: string) => {
-      const res = await db.execute<{ n: number } & Record<string, unknown>>(
-        sql`select count(*)::int as n from resource_mutations where resource_id = ${id}`,
-      );
-      return res.rows[0]!.n;
-    };
-    expect(await countFor(committedId)).toBe(1);
-    expect(await countFor(rolledBackId)).toBe(0);
-  });
+      const db = drizzle.client;
+      const countFor = async (id: string) => {
+        const res = await db.execute<{ n: number } & Record<string, unknown>>(
+          sql`select count(*)::int as n from resource_mutations where resource_id = ${id}`,
+        );
+        return res.rows[0]!.n;
+      };
+      expect(await countFor(committedId)).toBe(1);
+      expect(await countFor(rolledBackId)).toBe(0);
+    },
+  );
 
   // `Identity.currentMaybe` hands back the EFFECTIVE session, so all three of
   // these used to go wrong in the same place: an impersonated mutation was
@@ -270,7 +283,10 @@ describe('Audit log (resource_mutations) e2e', () => {
   // header-based and the e2e client exposes no per-request headers; sessions are
   // still built by the real SessionManager path (including its 'ghost' literal
   // swap and the CanImpersonateHook gate) rather than hand-assembled.
-  describe('actor attribution', () => {
+  // Every case here reads the actor columns on `resource_mutations`, so the whole
+  // block is postgres-only. `describe.skip` also stops the beforeAll below from
+  // running, which is why that hook no longer needs its own engine check.
+  describePostgresOnly('actor attribution', () => {
     let audit: AuditService;
     let sessions: SessionManager;
     let host: SessionHost;
@@ -280,7 +296,6 @@ describe('Audit log (resource_mutations) e2e', () => {
     let impersonatee: TestUser;
 
     beforeAll(async () => {
-      if (!isPostgres) return;
       audit = app.get(AuditService);
       sessions = app.get(SessionManager);
       host = app.get(SessionHost);
@@ -322,7 +337,6 @@ describe('Audit log (resource_mutations) e2e', () => {
     };
 
     it('records the actor with no impersonator when acting as themselves', async () => {
-      if (!isPostgres) return;
       const row = await recordAs(await sessions.resumeSession(adminToken));
       expect(row.actorId).toBe(adminId);
       expect(row.impersonatorId).toBeNull();
@@ -333,7 +347,6 @@ describe('Audit log (resource_mutations) e2e', () => {
     // is who actually did it. Before 0027 only the former was stored, so the
     // log affirmatively blamed the impersonatee.
     it('records both the impersonatee and the real requester', async () => {
-      if (!isPostgres) return;
       const row = await recordAs(
         await sessions.resumeSession(adminToken, {
           id: impersonatee.id,
@@ -350,7 +363,6 @@ describe('Audit log (resource_mutations) e2e', () => {
     // Role-only impersonation legitimately yields impersonator == actor. Pinned
     // so it reads as intended rather than as a bug the next time someone looks.
     it('records impersonator == actor for role-only impersonation', async () => {
-      if (!isPostgres) return;
       const row = await recordAs(
         await sessions.resumeSession(adminToken, {
           roles: setOf([Role.Consultant]),
@@ -367,7 +379,6 @@ describe('Audit log (resource_mutations) e2e', () => {
     // mutation down. Now the agent is recorded by name, and the admin behind it
     // is still attributed.
     it('records a ghost-impersonated mutation by agent name (no FK violation)', async () => {
-      if (!isPostgres) return;
       const row = await recordAs(
         await sessions.resumeSession(adminToken, {
           id: 'ghost' as ID,
@@ -382,7 +393,6 @@ describe('Audit log (resource_mutations) e2e', () => {
     // The two actor columns are mutually exclusive at the DB level, so a future
     // writer can't half-fill them regardless of what the service does.
     it('rejects a row naming both a user and a system agent as actor', async () => {
-      if (!isPostgres) return;
       const resourceId = await generateId();
       const failure = await db.client
         .execute(

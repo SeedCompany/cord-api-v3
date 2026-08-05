@@ -81,7 +81,21 @@ const activeProject = async (app: TestApp) => {
   return project;
 };
 
-describe('Partnership Changeset Aware e2e', () => {
+// Changesets are not being carried forward to Postgres, so every test here
+// fails at ProjectChangeRequestRepository.create — the repository is Neo4j-only
+// by design, and the Postgres shim answers reads truthfully but refuses writes.
+//
+// Switched off here in the test file rather than left out of a list in the CI
+// workflow, on purpose: a test that switches itself off is reported as skipped
+// and says why, while a test missing from a list is indistinguishable from one
+// that passed.
+//
+// migration-todo: remove this condition and this whole spec at Phase 7 cutover,
+// when the changeset feature and its `changeset: ID` arguments are removed.
+const describeNeo4jOnly =
+  process.env.DATABASE === 'postgres' ? describe.skip : describe;
+
+describeNeo4jOnly('Partnership Changeset Aware e2e', () => {
   let app: TestApp;
 
   beforeAll(async () => {

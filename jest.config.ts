@@ -33,6 +33,12 @@ export default async (): Promise<Config> => {
     // Once per file.
     setupFiles: [
       ...base.setupFiles,
+      // Must come before anything that reads process.env.DATABASE: a test file
+      // decides which database it is testing when it loads, before any app
+      // starts, so it never sees a DATABASE set only in .env.local. This makes
+      // the test files agree with the database the app will actually use. An
+      // explicitly set variable still wins.
+      './test/setup/resolve-engine-env.ts',
       // Set longer timeout.
       // Cannot be done at project level config.
       // Don't want to override cli arg or timeout set below for debugging either.

@@ -491,6 +491,15 @@ export class EngagementDrizzleRepository extends DrizzleDtoRepository<
       // migration-todo: nameProjectFirst/nameProjectLast, sensitivity,
       // language.* / project.* delegated sorts, currentProgressReportDue.*.
       // Unknown keys fall back to createdAt.
+      //
+      // ⚠️ Whoever adds nameProjectFirst/nameProjectLast: they sort by TEXT and
+      // they have to be `sql` expressions (Neo4j builds them by concatenating a
+      // project's name with its language names, so there is no single column to
+      // point at). `displayOrder()` cannot see inside an expression — it
+      // collates COLUMNS — so an expression comes back uncollated with no error
+      // and nothing failing, and would order differently from every other list
+      // in the app. Write `collate "display_order"` inline in the expression.
+      // The two entries above are exempt only because they sort dates.
     } as unknown as SortMap<keyof Engagement>;
 
     const { rows, total, hasMore } = await this.paginatedSelect({

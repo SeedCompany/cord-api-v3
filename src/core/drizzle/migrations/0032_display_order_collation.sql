@@ -1,0 +1,39 @@
+-- A collation for ordering text the way people read it, which does not change
+-- with the host operating system.
+--
+-- It ignores three things when comparing:
+--   * case          -> `apple` and `Apple` sort together
+--   * accents       -> `Ñot` sorts as `Not`, between `never` and `zap`
+--   * punctuation
+--      and spaces   -> `[a!-b]` sorts as `ab`, and `A ignore` as `Aignore`
+--
+-- That is exactly how Neo4j orders names today, so lists do not silently
+-- reorder when a domain moves to Postgres.
+--
+-- Why not just use the database's default collation: the default depends on
+-- which C library the Postgres image was built against, and the two disagree.
+-- The alpine image links musl, which does not implement locale-aware
+-- collation at all, so `en_US.utf8` there quietly degrades to raw byte order —
+-- every capital ahead of every lowercase letter, and accented characters after
+-- `z`. A Debian/glibc image with the SAME collation name is locale-aware and
+-- matches Neo4j. So relying on the default means ordering differs between CI
+-- and production depending on their images, with nothing reporting it. It can
+-- also shift under a glibc upgrade, which invalidates text indexes. Naming an
+-- ICU collation explicitly gives identical ordering on every platform and
+-- across OS upgrades.
+--
+-- ⚠️ USE THIS IN `ORDER BY` ONLY — NEVER AS A COLUMN'S COLLATION.
+-- It is non-deterministic (required, so that strings differing only by case or
+-- accent can compare equal for ordering). Postgres refuses `LIKE`/`ILIKE` on a
+-- non-deterministic collation: "nondeterministic collations are not supported
+-- for ILIKE". Global search runs ILIKE against these same name columns, so
+-- attaching this to a column would break search. Applying it per-ORDER BY is
+-- allowed and is what `displayOrder()` in src/core/drizzle/order-by.ts does.
+--
+-- `ka-shifted` is what makes punctuation and spaces ignorable; `ks-level1` is
+-- what makes case and accents ignorable.
+CREATE COLLATION display_order (
+  provider = icu,
+  locale = 'und-u-ka-shifted-ks-level1',
+  deterministic = false
+);

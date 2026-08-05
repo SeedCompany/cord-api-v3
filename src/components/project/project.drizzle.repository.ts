@@ -33,6 +33,7 @@ import { Identity } from '~/core/authentication';
 import { ConfigService } from '~/core/config';
 import {
   catchUniqueViolation,
+  displayOrder,
   DrizzleDtoRepository,
   EMPTY_PAGE,
   escapeLikePattern,
@@ -401,7 +402,7 @@ export class ProjectDrizzleRepository extends DrizzleDtoRepository<
           .from(projects)
           .leftJoin(joinSort.table, eq(joinSort.fkColumn, joinSort.table.id))
           .where(allConditions)
-          .orderBy(direction(joinSort.column), asc(projects.id))
+          .orderBy(direction(displayOrder(joinSort.column)), asc(projects.id))
           .limit(input.count)
           .offset(offset),
       ]);
