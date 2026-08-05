@@ -21,7 +21,11 @@
 -- leaves alone.
 --
 -- Because of that scope, the non-name text sorts DO still depend on the database's
--- default collation, and so on the image's C library — see the note in
+-- default collation, and so on the image's C library. That is intentional and
+-- settled: we run a musl image (alpine), whose byte comparison IS code-point
+-- order, which is exactly how Neo4j orders those columns. A glibc image would
+-- case-fold them and ignore leading spaces — nicer to read, but a divergence from
+-- Neo4j, and parity is the rule here. See the note in docker-compose.yml and
 -- .github/workflows/test.yml. The paragraph below is about the name columns this
 -- collation is for, not about every text sort in the app.
 --
