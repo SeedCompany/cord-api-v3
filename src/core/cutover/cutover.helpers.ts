@@ -223,17 +223,40 @@ export const readAllRowsViaRepo = async <TRow extends { id: ID }>(
   }
   // Hydrate-drop guard (finding #8): readMany silently omits nodes whose
   // required matches fail (e.g. a partnership whose [:partner] rel was
-  // deactivated by its Partner's soft-delete). Reconciliation can't catch it —
-  // the read stat counts hydrated DTOs — so surface the delta here.
+  // deactivated by its Partner's soft-delete).
+  //
+  // These rows are lost BEFORE an extractor counts anything, so the per-table
+  // read stat — which counts hydrated DTOs — equals inserted and the table
+  // reconciles with a clean ✓ while rows are missing. Logging the delta is not
+  // enough on its own: a real load ticked ✓ on tables that were short a
+  // noticeable fraction of their source rows. So record it on the context too,
+  // and let the harness add it to the run's total.
   if (out.length !== ids.length) {
     const hydrated = new Set<string>(out.map((row) => String(row.id)));
     const missing = ids.filter((id) => !hydrated.has(id));
+    ctx.notHydrated.set(
+      label,
+      (ctx.notHydrated.get(label) ?? 0) + missing.length,
+    );
     ctx.log(
-      `    ⚠ ${label}: ${missing.length} node(s) enumerated but NOT hydrated by readMany ` +
-        `(broken required rels — prod-finding #2 class): ${missing
+      `    ⚠ ${label}: ${missing.length} of ${ids.length} node(s) enumerated but NOT hydrated ` +
+        `by readMany (broken required rels — prod-finding #2 class): ${missing
           .slice(0, 10)
           .join(', ')}${missing.length > 10 ? ', …' : ''}`,
     );
+    // Every node failing is a different problem from some nodes failing: it is
+    // what hydrating against the wrong database looks like. The readers come
+    // from `splitDb`, so `DATABASE` has to be neo4j — set it to postgres and
+    // every repository resolves to Drizzle and reads the empty target instead.
+    // Called out separately because the message above reads like a data-quality
+    // finding, which is the wrong place to start looking.
+    if (missing.length === ids.length) {
+      ctx.log(
+        `    🔴 ${label}: NONE of the ${ids.length} node(s) hydrated. Check that ` +
+          `DATABASE=neo4j (so the Neo4j repositories are the readers) before ` +
+          `treating this as a data problem.`,
+      );
+    }
   }
   return out;
 };
@@ -264,14 +287,21 @@ export const bulkInsert = async <T extends PgTable>(
 };
 
 /**
- * Keep only enum values the target pgEnum actually declares. Real Neo4j data
- * can carry legacy/renamed enum values (e.g. `TranslationOrganization`) that
- * the Postgres enum rejects.
+ * Keep only enum values the target pgEnum actually declares, returning
+ * `{ kept, dropped }` so callers can warn about what fell out.
  *
- * migration-todo: this DROPS unknown values (data loss). Some are renames that
- * should MAP, not drop (likely `TranslationOrganization` → `Translation`).
- * Replace with an explicit value-map per enum once the team decides. Returns
- * `{ kept, dropped }` so callers can warn.
+ * This DROPS unknown values rather than mapping them. That was written as a
+ * placeholder against the possibility of renamed values in the source, on the
+ * evidence of a local database that carried one. **A production check has since
+ * compared every stored value of every enum-bearing property against the pgEnum
+ * that receives it, and found no value that would be dropped** — the renamed
+ * value existed only in local test data. So there is no value map to write, and
+ * a warning from here means either new data or a source other than production.
+ *
+ * Worth knowing about the opposite case: enum columns whose extractor does NOT
+ * call this cast the value straight through, so an unrecognised value there
+ * fails the whole load rather than being dropped and reported. The two failure
+ * modes are both fine, but they look completely different when they happen.
  */
 export const sanitizeEnum = <T extends string>(
   values: readonly string[],
