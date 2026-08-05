@@ -15,6 +15,7 @@ import { mediaExtractor } from './media.extractor';
 import { notificationExtractor } from './notification.extractor';
 import { organizationExtractor } from './organization.extractor';
 import { partnerExtractor } from './partner.extractor';
+import { partnershipProducingMediumExtractor } from './partnership-producing-medium.extractor';
 import { partnershipExtractor } from './partnership.extractor';
 import { periodicReportExtractor } from './periodic-report.extractor';
 import { pinExtractor } from './pin.extractor';
@@ -23,10 +24,13 @@ import { postExtractor } from './post.extractor';
 import { productProgressExtractor } from './product-progress.extractor';
 import { productExtractor } from './product.extractor';
 import { progressReportMediaExtractor } from './progress-report-media.extractor';
+import { progressReportVarianceExplanationExtractor } from './progress-report-variance-explanation.extractor';
+import { progressReportWorkflowEventExtractor } from './progress-report-workflow-event.extractor';
 import { progressSummaryExtractor } from './progress-summary.extractor';
 import { projectMemberExtractor } from './project-member.extractor';
 import { projectExtractor } from './project.extractor';
 import { promptVariantResponseExtractor } from './prompt-variant-response.extractor';
+import { toolUsageExtractor } from './tool-usage.extractor';
 import { toolExtractor } from './tool.extractor';
 import { userExtractor } from './user.extractor';
 
@@ -34,12 +38,12 @@ import { userExtractor } from './user.extractor';
  * All firm-domain extractors, in no particular order — the harness
  * topologically sorts by each extractor's `dependsOn`.
  *
- * Covers every domain merged to develop, File + Media + PnP included.
- *
- * Still outstanding, and NOT writable here: the four tables that exist only on
- * `pg-app-enablement` — `tool_usages`, `progress_report_workflow_events`,
- * `progress_report_variance_explanations`, `partnership_producing_mediums`. Their
- * schema is not in this branch, so an extractor importing it would not compile.
+ * Covers every domain merged to develop, File + Media + PnP included, plus the four
+ * tables that arrive with the app-enablement branch this now sits on:
+ * `tool_usages`, `progress_report_workflow_events`,
+ * `progress_report_variance_explanations` and `partnership_producing_mediums`. Those
+ * four could not be written before — their schema was not in this branch, so an
+ * extractor importing it would not compile.
  *
  * Three tables are intentionally never filled and need no extractor:
  * `auth_sessions` + `auth_password_reset_tokens` (transient — users re-authenticate
@@ -78,4 +82,8 @@ export const extractors: readonly Extractor[] = [
   mediaExtractor,
   pnpExtractionResultExtractor,
   progressReportMediaExtractor,
+  partnershipProducingMediumExtractor,
+  toolUsageExtractor,
+  progressReportVarianceExplanationExtractor,
+  progressReportWorkflowEventExtractor,
 ];
