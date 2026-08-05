@@ -103,6 +103,7 @@ async function bootstrap() {
           moduleRef,
           dryRun: flags.dryRun,
           batchSize: flags.batchSize,
+          notHydrated: new Map(),
           log,
         },
         extractors,

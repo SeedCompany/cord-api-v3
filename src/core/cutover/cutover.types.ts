@@ -20,6 +20,16 @@ export interface CutoverContext {
   readonly moduleRef: ModuleRef;
   /** When true: read + map (to surface errors) but do NOT write or truncate. */
   readonly dryRun: boolean;
+  /**
+   * Nodes found in Neo4j that never reached the mapper, keyed by node label.
+   * Written by `readAllRowsViaRepo`, reported by the harness.
+   *
+   * Lives here rather than in {@link TableStat} because the loss happens while
+   * reading, before the extractor knows which table the row would have filled —
+   * which is also why these rows are invisible to per-table reconciliation and
+   * have to be totalled separately.
+   */
+  readonly notHydrated: Map<string, number>;
   /** Read/insert chunk size. */
   readonly batchSize: number;
   readonly log: (msg: string) => void;

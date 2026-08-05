@@ -71,9 +71,16 @@ export const organizationExtractor: Extractor = {
         deletedAt: null,
       };
     });
+    // Kept as a guard, not as an outstanding task: production carries no value
+    // that either enum rejects (checked against the source before the real
+    // load). A hit here means data this check has not seen, so it is worth
+    // saying out loud — the organization row still lands, only the value is
+    // lost, which no row count can show.
     if (droppedEnums.size) {
       ctx.log(
-        `    ⚠ dropped unknown organization enum value(s): ${[...droppedEnums].join(', ')} — migration-todo: map, don't drop`,
+        `    ⚠ dropped unknown organization type/reach value(s): ${[
+          ...droppedEnums,
+        ].join(', ')} — the org row still landed WITHOUT them`,
       );
     }
     out.organizations = stat(
