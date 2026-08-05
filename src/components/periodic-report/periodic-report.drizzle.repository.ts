@@ -15,6 +15,7 @@ import {
   type SQL,
   sql,
 } from 'drizzle-orm';
+import { unionAll } from 'drizzle-orm/pg-core';
 import { DateTime } from 'luxon';
 import {
   CalendarDate,
@@ -107,6 +108,41 @@ export class PeriodicReportDrizzleRepository extends DrizzleDtoRepository<
    * unspecified — a loser can collide on either the id or the partial unique
    * index over live rows.
    */
+  /**
+   * Of these ids, the ones whose whole parent chain is still live.
+   *
+   * A report's own `deleted_at` says nothing about its parents: soft-deleting a
+   * project or an engagement leaves every report under it untouched. Neo4j's
+   * hydrate requires a live `:Project`, so there it returns nothing — this is the
+   * equivalent. Financial and Narrative reports hang off a project directly;
+   * Progress reports reach one through their engagement, so both routes are
+   * checked and a report needs exactly one of them.
+   */
+  private async liveReportIds(ids: readonly ID[]): Promise<ID[]> {
+    if (ids.length === 0) return [];
+    const viaProject = this.db
+      .select({ id: periodicReports.id })
+      .from(periodicReports)
+      .innerJoin(projects, eq(projects.id, periodicReports.projectId))
+      .where(
+        and(inArray(periodicReports.id, [...ids]), isNull(projects.deletedAt)),
+      );
+    const viaEngagement = this.db
+      .select({ id: periodicReports.id })
+      .from(periodicReports)
+      .innerJoin(engagements, eq(engagements.id, periodicReports.engagementId))
+      .innerJoin(projects, eq(projects.id, engagements.projectId))
+      .where(
+        and(
+          inArray(periodicReports.id, [...ids]),
+          isNull(engagements.deletedAt),
+          isNull(projects.deletedAt),
+        ),
+      );
+    const rows = await unionAll(viaProject, viaEngagement);
+    return rows.map((row) => row.id);
+  }
+
   async merge(input: MergePeriodicReports) {
     // Nothing to sync — drizzle's `.values([])` is a runtime error, and there
     // are no rows to create files for, so short-circuit.
@@ -274,9 +310,17 @@ export class PeriodicReportDrizzleRepository extends DrizzleDtoRepository<
     ids: readonly ID[],
   ): Promise<Array<UnsecuredDto<PeriodicReport>>> {
     if (ids.length === 0) return [];
+    // Own liveness is not enough: a soft-deleted project or engagement leaves
+    // its reports' `deleted_at` untouched, while Neo4j's hydrate requires a live
+    // `:Project` and so returns nothing. Checked as EXISTS rather than joins so
+    // the relational `with: RELATIONS` the hydrate needs stays intact — and as a
+    // subquery on ids rather than a correlated reference, which the relational
+    // builder's aliasing does not bind.
+    const live = await this.liveReportIds(ids);
+    if (live.length === 0) return [];
     const rows = await this.db.query.periodicReports.findMany({
       where: (report) =>
-        and(inArray(report.id, [...ids]), isNull(report.deletedAt)),
+        and(inArray(report.id, [...live]), isNull(report.deletedAt)),
       with: RELATIONS,
     });
     return await this.hydrate(rows as ReportRow[]);

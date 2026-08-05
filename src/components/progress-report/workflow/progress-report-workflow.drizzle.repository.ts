@@ -93,6 +93,17 @@ export class ProgressReportWorkflowDrizzleRepository {
       isNull(periodicReports.deletedAt),
       isNull(engagements.deletedAt),
       isNull(projects.deletedAt),
+      // The author too. Neo4j's `hydrate()` opens with a REQUIRED match on
+      // `(node)-[:who]->(who:User)`, and soft-deleting a user relabels it to
+      // `Deleted_User`, so the event simply does not come back there — one fewer
+      // event, no error. Postgres keeps the row (the delete is soft, so the FK
+      // never fires) and then `who` cannot be loaded: the user loader filters
+      // soft-deleted users, `mapSecuredValue` has no not-found handling, and
+      // because `who` is non-null inside a non-null list the failure nulls the
+      // event, then the whole list, then its parent. Deleting a departed staff
+      // member would take out the workflow history of every report they ever
+      // touched. Hiding the event matches Neo4j rather than inventing a contract.
+      isNull(users.deletedAt),
       ...narrowing,
     ];
     // The caller's own conditions go in this ONE array with everything else.
@@ -112,6 +123,7 @@ export class ProgressReportWorkflowDrizzleRepository {
       )
       .innerJoin(engagements, eq(engagements.id, periodicReports.engagementId))
       .innerJoin(projects, eq(projects.id, engagements.projectId))
+      .innerJoin(users, eq(users.id, workflowEvents.who))
       .where(and(...conditions));
   }
 

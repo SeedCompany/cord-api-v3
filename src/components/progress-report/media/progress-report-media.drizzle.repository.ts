@@ -260,6 +260,15 @@ export class ProgressReportMediaDrizzleRepository {
           // `projectFromProgressReportChild`, which requires the
           // `:ProgressReport` label, and soft delete relabels it.
           isNull(periodicReports.deletedAt),
+          // …and its engagement and project, which is the rest of what the
+          // Cypher requires. `projectFromProgressReportChild` is a required
+          // match naming all three labels — :Project -> :Engagement ->
+          // :ProgressReport -> node — and neither engine cascades a soft delete
+          // to descendants, so deleting a PROJECT leaves a live engagement,
+          // report and media underneath it. Neo4j then returns no media; without
+          // these two, Postgres returns them.
+          isNull(engagements.deletedAt),
+          isNull(projects.deletedAt),
         ),
       );
 

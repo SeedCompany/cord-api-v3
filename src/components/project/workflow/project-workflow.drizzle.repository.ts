@@ -82,6 +82,17 @@ export class ProjectWorkflowDrizzleRepository {
       .where(and(isNull(projects.deletedAt), ...narrowing));
   }
 
+  // migration-todo: the actor's liveness is also missing here, the same gap the
+  // sibling ProgressReport repo just closed. Neo4j's `hydrate()` requires
+  // `node('who', 'Actor')`, and soft delete prefixes every label including
+  // `Actor`, so an event whose actor was deleted does not come back there. Here
+  // the row survives and the actor cannot be loaded, which nulls the event and
+  // then the whole list. NOT the identical one-liner: `who` is nullable on this
+  // table because an event can be attributed to a system agent instead
+  // (`who_system_agent_id`, migration 0031), so it needs to allow a live user OR
+  // a system agent rather than inner-joining users. Fix with the read filter
+  // below, in the same change.
+  //
   // migration-todo: the Neo4j repo also applies `privileges.filterToReadable()`
   // in both methods (project-workflow.neo4j.repository.ts:31 and :43) and this
   // class still does not. The sibling ProgressReport repo now does, so this is

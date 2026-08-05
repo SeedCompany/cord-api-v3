@@ -20,6 +20,11 @@
 -- inferring it from the column's type instead silently folds nine columns Neo4j
 -- leaves alone.
 --
+-- Because of that scope, the non-name text sorts DO still depend on the database's
+-- default collation, and so on the image's C library — see the note in
+-- .github/workflows/test.yml. The paragraph below is about the name columns this
+-- collation is for, not about every text sort in the app.
+--
 -- Why not just use the database's default collation: the default depends on
 -- which C library the Postgres image was built against, and the two disagree.
 -- The alpine image links musl, which does not implement locale-aware

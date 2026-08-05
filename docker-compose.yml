@@ -15,12 +15,14 @@ services:
       NEO4J_dbms_security_auth__minimum__password__length: 1
 
   postgres:
-    # alpine is fine BECAUSE text ordering no longer depends on the image: every
-    # text sort names the `display_order` collation explicitly (migration 0032,
-    # applied by displayOrder() in src/core/drizzle/order-by.ts). Without that,
-    # this image would order text differently from a glibc one — alpine links
-    # musl, which has no locale-aware collation and falls back to raw byte
-    # order. Do not sort text without that collation.
+    # ⚠️ Match production's image FAMILY. This used to say alpine was fine
+    # because every text sort named the `display_order` collation explicitly —
+    # true when written, no longer true. That collation now applies to NAME
+    # columns only (NAME_COLUMNS in src/core/drizzle/order-by.ts), because that is
+    # the set Neo4j folds. Other text sorts fall back to the database default,
+    # which behaves differently per C library: musl here orders by raw bytes,
+    # glibc orders case-insensitively under the same collation name. So local
+    # ordering of those columns will not match a glibc production image.
     image: postgres:16-alpine
     ports:
       - 5432:5432
