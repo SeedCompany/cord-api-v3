@@ -98,6 +98,43 @@ loading, so dry-runs and retries start clean. Inserts use `onConflictDoNothing`.
 `read`/`pgCount` gap means `onConflictDoNothing` dropped rows on a UNIQUE
 conflict — **investigate, don't ignore**.
 
+## Pre-flight: `preflight-enums.cypher` — RUN THIS AGAINST PROD FIRST
+
+39 read-only legs, one per stored enum value that has to fit a Postgres enum. The
+allowed lists are generated from `drizzle/schema`, so they cannot drift from it by
+hand-editing.
+
+```bash
+# against a local container
+docker exec -i <neo4j-container> cypher-shell -u neo4j -p <pw> --format plain \
+  < src/core/cutover/preflight-enums.cypher
+
+# against a remote (prod/staged) instance, using a container's client binary so
+# nothing needs installing locally — `-a` targets the address
+docker exec -i <neo4j-container> cypher-shell -a neo4j+s://<host> -u <user> -p <pw> \
+  --format plain < src/core/cutover/preflight-enums.cypher
+```
+
+Rows are ordered so anything wrong is at the top. Two signals:
+
+- **`wouldDrop` non-empty** — the source holds a value the target enum does not
+  declare. For a sanitised column the row still lands *without* that value, which
+  no row count can show. For an unsanitised one the cast fails and the load stops.
+- **`distinctValues = 0`** — the leg matched nothing. Treat as a WRONG LEG first
+  and an empty domain second. That convention immediately caught one: media
+  category is stored **on the node**, and the leg was written as a `Property` node
+  walk, so it read 0 while holding values.
+
+Storage shape is stated per row because a sweep that only walks `Property` nodes
+misses every enum held on the node itself (progress summary period, step progress
+step, workflow event status, media category) or on a relationship (known-language
+proficiency). All three shapes exist; only the first is obvious.
+
+Expected on production, from a value dump taken 2026-08-05: every leg above should
+report `distinctValues > 0` **except** possibly `KnownLanguage.proficiency`, which
+is the one leg no run has yet exercised. A zero anywhere else means the leg is
+wrong, not that the data is empty.
+
 ## Pre-flight: `preflight-uniques.cypher` — RUN THIS AGAINST PROD FIRST
 
 22 read-only legs, one per Postgres unique index that can shed rows, Tier 1 (root
@@ -185,11 +222,15 @@ Rollback is instant at any point before the flip: Neo4j is untouched.
    findings have now blamed a name column that turned out innocent (see the
    language case in finding #6 / migration 0030). A per-constraint pre-flight
    query is the instrument; a plausible guess is not.
-4. **Legacy/renamed enum values.** Neo4j `organizations.types` carries
-   `TranslationOrganization`, absent from the PG `organization_type` enum.
-   `sanitizeEnum` currently **drops** unknowns (logged). **migration-todo:** some
-   are renames that should MAP (likely `TranslationOrganization` → `Translation`)
-   — replace the drop with an explicit per-enum value map once the team decides.
+4. **Legacy/renamed enum values — CHECKED AND CLEAR.** `sanitizeEnum` drops
+   values the target pgEnum does not declare, which raised the question of
+   whether any stored value is a rename that should be mapped instead. Every
+   enum-bearing property in production was compared against the pgEnum that
+   receives it: **no stored value would be dropped.** The one renamed value that
+   prompted the concern turned out to exist only in local test data. No value map
+   is needed. Note the reverse case, though: enum columns whose extractor does
+   not call `sanitizeEnum` cast straight through, so an unknown value there fails
+   the load instead of being dropped — a different failure to recognise.
 5. **`deleted_at` rows.** `readMany` returns live rows only; soft-deleted nodes
    aren't carried. Confirm that's intended per domain before cutover.
 6. **A drop at the root is not a drop of one row — measure the subtree.** The

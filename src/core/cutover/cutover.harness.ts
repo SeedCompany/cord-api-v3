@@ -142,14 +142,35 @@ export const runCutover = async (
       );
     }
   }
+  // Rows lost during hydration, which the table above cannot show: they are
+  // gone before `read` counts them, so their tables tick ✓. Reported as its own
+  // block, keyed by node label rather than table, because that is the only
+  // thing known at the point the row disappears.
+  const totalNotHydrated = [...ctx.notHydrated.values()].reduce(
+    (sum, n) => sum + n,
+    0,
+  );
+  if (totalNotHydrated > 0) {
+    ctx.log(
+      '\n─── Not hydrated (found in Neo4j, never reached the mapper) ───\n' +
+        '  These do NOT appear in the table above — their tables read ✓.',
+    );
+    for (const [label, count] of ctx.notHydrated) {
+      ctx.log(`  ${label.padEnd(34)} ${String(count).padStart(5)}`);
+    }
+  }
+
+  const totalLost = totalDropped + totalNotHydrated;
   ctx.log(
     `\nCutover ${ctx.dryRun ? 'dry-run' : 'load'} complete — ${
       !allOk
         ? 'MISMATCHES above ✗'
-        : totalDropped > 0
-          ? `counts reconcile, but ${totalDropped} row(s) were DROPPED — see the ⚠ lines and the per-domain warnings above. ` +
-            'A root-entity drop takes its whole subtree with it; do not treat this as a clean load.'
-          : 'all tables reconciled, zero rows dropped ✓'
+        : totalLost > 0
+          ? `counts reconcile, but ${totalLost} row(s) did not make it: ` +
+            `${totalDropped} dropped by a guard, ${totalNotHydrated} lost while reading. ` +
+            'See the ⚠ lines and the per-domain warnings above. A root-entity drop takes ' +
+            'its whole subtree with it; do not treat this as a clean load.'
+          : 'all tables reconciled, zero rows lost ✓'
     }`,
   );
 };
