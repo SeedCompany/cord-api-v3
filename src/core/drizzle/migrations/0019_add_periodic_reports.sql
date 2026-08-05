@@ -10,6 +10,15 @@
 -- createDefinedFile fan-out inserts this row before its file rows; real FKs
 -- land with the S4 option-2 reorder at cutover cleanup. status is
 -- ProgressReport-only, driven by the progress-report workflow.
+--
+-- SUPERSEDED BY 0035 — the two claims above about deletion no longer hold. That
+-- migration adds `deleted_at`, so deletion became soft (matching Neo4j, whose own
+-- delete relabels rather than removing), and moved the dedup guarantee off the
+-- primary key onto `periodic_reports_live_interval_unique`, a partial unique index
+-- over live rows. A revived interval therefore takes a FRESH id rather than being
+-- blocked, and the insert's ON CONFLICT is deliberately untargeted because a
+-- concurrent writer can lose on either constraint. Text above kept as the record
+-- of what this migration did at the time.
 
 CREATE TYPE "report_type" AS ENUM ('Financial', 'Narrative', 'Progress');
 

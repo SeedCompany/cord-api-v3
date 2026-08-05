@@ -60,11 +60,24 @@ jobs:
           --health-start-period 30s
       # Needed for the postgres matrix entries; idle for the neo4j ones.
       postgres:
-        # alpine is fine BECAUSE text ordering no longer depends on the image:
-        # every text sort names the `display_order` collation explicitly
-        # (migration 0032). That makes ordering identical here, on a glibc
-        # Postgres, and across OS upgrades — so CI proves the ordering
-        # production will actually have, whatever image it runs.
+        # ⚠️ Use the SAME image family as production. This used to say alpine was
+        # fine because every text sort named the `display_order` collation
+        # explicitly — true when written, no longer true. That collation is now
+        # applied only to NAME columns, the set Neo4j folds (see NAME_COLUMNS in
+        # src/core/drizzle/order-by.ts). Every other text sort — two address
+        # fields, a post body, two product descriptions and more — falls back to
+        # whatever collation the database was created with, and ephemeral test
+        # databases are created with no LOCALE clause, so they inherit initdb's
+        # choice. That choice behaves differently per C library: alpine links musl,
+        # which has no locale-aware collation and orders by raw bytes; a
+        # Debian/glibc image with the same collation NAME orders case-insensitively
+        # and ignores leading spaces. So CI on one family does not prove the
+        # ordering production gets on the other.
+        #
+        # migration-todo: emitting `collate "C"` for non-name text sorts would
+        # remove the dependence entirely and match Neo4j (which orders these by
+        # code point) on any image. Not done — it changes ordering on glibc, so
+        # it is a deliberate call, not a cleanup.
         image: postgres:16-alpine
         ports:
           - 5432:5432

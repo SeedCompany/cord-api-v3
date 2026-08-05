@@ -5,6 +5,7 @@ import {
   educations,
   fieldRegions,
   fieldZones,
+  fileNodes,
   fundingAccounts,
   languages,
   locations,
@@ -93,6 +94,9 @@ const NAME_COLUMNS: ReadonlySet<AnyPgColumn> = new Set<AnyPgColumn>([
   users.displayLastName,
   educations.major,
   educations.institution,
+  // Also the DEFAULT sort of FileListInput, so this covers every unsorted
+  // file and directory listing, not just an explicit sort request.
+  fileNodes.name,
 ]);
 
 /**

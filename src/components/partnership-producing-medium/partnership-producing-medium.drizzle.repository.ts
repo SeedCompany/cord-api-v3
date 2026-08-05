@@ -36,7 +36,16 @@ export class PartnershipProducingMediumDrizzleRepository {
   async read(engagementId: ID): Promise<Record<ProductMedium, ID | null>> {
     const engagement = await this.drizzle.client.query.engagements.findFirst({
       columns: { id: true },
-      where: (eng) => and(eq(eng.id, engagementId), isNull(eng.deletedAt)),
+      // Language only. Both engagement kinds share one table here, while the
+      // Cypher anchors on the `:LanguageEngagement` label — so an internship id
+      // matches nothing there and must 404 here too, rather than reading as an
+      // engagement that simply has no mediums.
+      where: (eng) =>
+        and(
+          eq(eng.id, engagementId),
+          eq(eng.type, 'Language'),
+          isNull(eng.deletedAt),
+        ),
     });
     if (!engagement) {
       throw new NotFoundException('Engagement not found');
@@ -60,6 +69,18 @@ export class PartnershipProducingMediumDrizzleRepository {
           partnershipId: partnershipProducingMediums.partnershipId,
         })
         .from(partnershipProducingMediums)
+        // The partnership has to still be live. Its row here survives a soft
+        // delete (the cascade never fires, because the row never leaves), and
+        // handing back a dead id makes the field resolve to null WITH an error
+        // where Neo4j returns a clean null. The other two halves of this method
+        // already filter liveness the same way.
+        .innerJoin(
+          partnerships,
+          and(
+            eq(partnerships.id, partnershipProducingMediums.partnershipId),
+            isNull(partnerships.deletedAt),
+          ),
+        )
         .where(eq(partnershipProducingMediums.engagementId, engagementId)),
     ]);
 

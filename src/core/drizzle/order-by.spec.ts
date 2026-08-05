@@ -5,6 +5,7 @@ import {
   budgetRecords,
   educations,
   engagements,
+  fileNodes,
   languages,
   locations,
   organizations,
@@ -47,6 +48,9 @@ describe('displayOrder', () => {
     expect(isCollated(users.realLastName)).toBe(true);
     expect(isCollated(languages.displayName)).toBe(true);
     expect(isCollated(educations.institution)).toBe(true);
+    // The default sort of every file and directory listing, so leaving it out
+    // reorders those lists without anyone asking for a sort at all.
+    expect(isCollated(fileNodes.name)).toBe(true);
   });
 
   /**
