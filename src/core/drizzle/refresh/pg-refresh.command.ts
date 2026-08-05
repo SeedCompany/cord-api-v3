@@ -46,6 +46,12 @@ export class PgRefreshCommand extends Command {
   sourcePassword = Option.String('--source-password', {
     description: 'Source Neo4j password (defaults to NEO4J_PASSWORD)',
   });
+  // Without this, pointing --source at another server still took the database
+  // name from local config, so a source holding more than one database would be
+  // read from the wrong one with nothing to indicate it.
+  sourceDatabase = Option.String('--source-database', {
+    description: 'Source Neo4j database name (defaults to NEO4J_DATABASE)',
+  });
 
   constructor(
     private readonly config: ConfigService,
@@ -93,7 +99,7 @@ export class PgRefreshCommand extends Command {
       url: this.source ?? neo4j.url,
       username: this.sourceUser ?? neo4j.username,
       password: this.sourcePassword ?? neo4j.password,
-      database: neo4j.database,
+      database: this.sourceDatabase ?? neo4j.database,
     });
 
     this.context.stdout.write('Refresh complete.\n');

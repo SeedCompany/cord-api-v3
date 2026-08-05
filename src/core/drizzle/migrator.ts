@@ -4,13 +4,7 @@ import path from 'path';
 import { ConfigService } from '~/core/config';
 import { ILogger, Logger } from '~/core/logger';
 import { DrizzleService } from './drizzle.service';
-
-/** True when the process was launched as `console pg refresh`. */
-const isPgRefreshInvocation = () => {
-  const args = process.argv.slice(2);
-  const pg = args.indexOf('pg');
-  return pg !== -1 && args[pg + 1] === 'refresh';
-};
+import { isPgRefreshInvocation } from './refresh/is-pg-refresh-invocation';
 
 @Injectable()
 export class DrizzleMigrator implements OnModuleInit {
@@ -26,7 +20,14 @@ export class DrizzleMigrator implements OnModuleInit {
     // The `pg refresh` command owns wipe + migrate itself and must be able to
     // start even when a boot-time migration would fail (a broken schema is
     // exactly what it repairs). So don't auto-migrate on that command path.
-    if (isPgRefreshInvocation()) return;
+    // Said out loud, because "migrations silently did not run" is otherwise
+    // indistinguishable from "migrations ran and there was nothing to do".
+    if (isPgRefreshInvocation()) {
+      this.logger.info(
+        'Skipping startup migrations — `pg refresh` applies them itself',
+      );
+      return;
+    }
     await this.run();
   }
 

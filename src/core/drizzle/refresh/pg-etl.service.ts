@@ -50,10 +50,16 @@ export const PG_ETL_LOADERS = Symbol('PG_ETL_LOADERS');
  * per-domain conversion lives in the {@link DomainLoader}s injected via
  * {@link PG_ETL_LOADERS}.
  *
- * TODO(cutover): no concrete loaders exist yet — implementing a `DomainLoader`
- * per ported domain is the remaining ETL work. Until at least one is
- * registered, {@link ready} is false and the refresh command refuses to run
- * (dropping the data and reloading nothing is worse than not running).
+ * TODO(cutover): do NOT write loaders against this interface. The per-domain
+ * conversion already exists and lands separately as the cutover ETL, which
+ * additionally reports rows-read against rows-written per table — the only
+ * signal that rows were dropped on the way through, which a single "rows
+ * written" count cannot express. When it lands, {@link run} should hand off to
+ * it and this loader registry should go away.
+ *
+ * Until something is registered, {@link ready} is false and the refresh command
+ * refuses to run (dropping the data and reloading nothing is worse than not
+ * running).
  */
 @Injectable()
 export class PgEtlService {
@@ -90,7 +96,14 @@ export class PgEtlService {
       neo4j.auth.basic(source.username, source.password),
     );
     try {
-      const session = driver.session({ database: source.database });
+      // Read-only, and stated to the driver rather than only in a comment: the
+      // source is production or a staged copy of it, and no loader has any
+      // business writing to it. A default session is a WRITE session, which
+      // would also send every read to the cluster leader instead of a follower.
+      const session = driver.session({
+        database: source.database,
+        defaultAccessMode: neo4j.session.READ,
+      });
       try {
         const ctx: EtlContext = {
           neo4j: session,
