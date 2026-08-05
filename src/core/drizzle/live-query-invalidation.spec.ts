@@ -31,6 +31,13 @@ import { join, posix, relative, sep } from 'node:path';
  *   `src/components/audit/resource-mutation.repository.ts` is the one such file
  *   today (append-only audit trail, nothing subscribes to it, so nothing to
  *   invalidate). Renaming it to match the convention is tracked separately.
+ *
+ * The walk covers `src/components` AND `src/core`: Postgres repos aren't only
+ * under `src/components` (`src/core/authentication/authentication.drizzle.repository.ts`
+ * and the webhooks repos below live under `src/core`), and scoping the walk to
+ * `src/components` alone would silently exempt every one of them from this
+ * check — the exact same blind spot that let the whole Webhooks domain go
+ * unported with no tracker row in the first place.
  */
 
 /**
@@ -98,9 +105,20 @@ const EXEMPT: Record<string, string> = {
     'never writes — changesets are not carried forward, so create(), update() ' +
     'and deleteNode() each throw NotImplementedException and there is no ' +
     'insert/update/delete anywhere in the file; reads answer empty',
+
+  // --- src/core repos (pre-existing blind spot, see the walk comment above) ---
+  'src/core/authentication/authentication.drizzle.repository.ts':
+    'sessions / password-reset tokens are auth internals with no live-query ' +
+    'subscriber; nothing in the Neo4j session/identity path invalidates either',
+  'src/core/webhooks/management/webhooks.drizzle.repository.ts':
+    'parity — webhooks.repository.ts (Neo4j) hand-rolls save/deleteBy/rotateSecret ' +
+    'in raw Cypher and never calls an invalidating base method',
+  'src/core/webhooks/channels/webhook-channel.drizzle.repository.ts':
+    'parity — webhook-channel.repository.ts (Neo4j) extends CommonRepository ' +
+    'but writes with hand-built Cypher, never one of its invalidating helpers',
 };
 
-const COMPONENTS = 'src/components';
+const SCAN_ROOTS = ['src/components', 'src/core'];
 
 const walk = (dir: string): string[] =>
   readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -149,7 +167,7 @@ const invalidates = (code: string) =>
   INVALIDATE_CALL.test(code);
 
 describe('LQ-1 structural guard: drizzle repositories invalidate live queries', () => {
-  const repos = walk(COMPONENTS)
+  const repos = SCAN_ROOTS.flatMap(walk)
     .filter((path) => path.endsWith('.drizzle.repository.ts'))
     .map((path) => ({
       // POSIX-normalized so the pinned keys above are stable across platforms.

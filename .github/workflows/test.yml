@@ -117,8 +117,9 @@ jobs:
           # check), so they are reported as skipped, appear in the run output,
           # and state their reason — instead of being invisible. Currently: the
           # three *-changeset-aware specs (changesets are not being carried
-          # forward) and webhooks (not ported yet). Add that condition to the
-          # test file — never a filter here.
+          # forward). Add that condition to the test file — never a filter
+          # here. (Webhooks used to be listed here too — ported 2026-08-05,
+          # its spec now runs unconditionally on both engines.)
           #
           # Single shard on purpose: the full suite is ~10 min serial, and six
           # jobs each paying the full setup cost was pure runner waste. Bump

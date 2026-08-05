@@ -2,7 +2,7 @@ import { afterAll } from '@jest/globals';
 import type { ModuleMetadata, Provider } from '@nestjs/common';
 import { Test, type TestingModuleBuilder } from '@nestjs/testing';
 import type { DeepPartial } from 'ts-essentials';
-import { andCall } from '~/common';
+import { andCall, mergeDeep } from '~/common';
 import { ConfigService } from '~/core/config';
 import { HttpAdapter, type NestHttpApplication } from '~/core/http';
 import { LogLevel } from '~/core/logger';
@@ -36,20 +36,31 @@ export const createApp = async ({
   overrides?: (builder: TestingModuleBuilder) => TestingModuleBuilder;
 } & Pick<ModuleMetadata, 'imports' | 'providers'> = {}): Promise<TestApp> => {
   const gel = await ephemeralGel();
-  const pg = await ephemeralPg();
+  // A caller sharing another app's db (config.postgres.url already set, e.g.
+  // to run a second app instance against the same ephemeral database) means:
+  // reuse it, don't spin up — and later drop — a second one out from under it.
+  const pg = config?.postgres?.url ? undefined : await ephemeralPg();
   const cleanupDb = async () => {
     await gel?.cleanup();
     await pg?.cleanup();
   };
+
+  // A single 'CONFIG_PART' provider, not two: ConfigModule's factory collects
+  // same-token providers with `moduleRef.get(token, {each: true})`, but that
+  // only sees ACROSS-module registrations — two providers for the same token
+  // declared in this one array collapse to just the last one, silently
+  // dropping the caller's `config` whenever `pg` is also set. Merge first.
+  const configOverride: DeepPartial<ConfigService> = pg
+    ? mergeDeep(config ?? {}, { postgres: { url: pg.url } })
+    : (config ?? {});
 
   let app;
   try {
     let builder = Test.createTestingModule({
       imports: [AppModule, ...(imports ?? [])],
       providers: [
-        ...(config ? [ConfigService.providePart(config)] : []),
-        ...(pg
-          ? [ConfigService.providePart({ postgres: { url: pg.url } })]
+        ...(Object.keys(configOverride).length > 0
+          ? [ConfigService.providePart(configOverride)]
           : []),
         ...(providers ?? []),
       ],

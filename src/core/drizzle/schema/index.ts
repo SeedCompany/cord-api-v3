@@ -3092,3 +3092,111 @@ export const pnpExtractionResultProblems = pgTable(
   },
   (t) => [index('pnp_extraction_result_problems_file_id_idx').on(t.fileId)],
 );
+
+// ─── Webhooks ─────────────────────────────────────────────────────────────────
+
+/**
+ * Holds the signing `secret` for all of a user's webhooks. One row per user,
+ * created lazily the first time they save a webhook. The secret lives here
+ * rather than on `webhooks` because Neo4j models it the same way: rotating
+ * rotates for every webhook the user owns, not one at a time.
+ */
+export const webhookExecutors = pgTable('webhook_executors', {
+  userId: text('user_id')
+    .$type<ID<'User'>>()
+    .primaryKey()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  secret: text('secret').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+/**
+ * A user's subscription to a GraphQL operation, POSTed to a url on matching
+ * events. `key` is user-provided (defaults to the operation name) and is only
+ * unique per-owner — the Neo4j graph achieves this implicitly by always
+ * traversing from the current user; here it's an explicit composite unique
+ * index. No soft delete: the Neo4j `deleteBy` hard-deletes (`detachDelete`),
+ * so this matches.
+ */
+export const webhooks = pgTable(
+  'webhooks',
+  {
+    id: text('id').$type<ID<'Webhook'>>().primaryKey(),
+    ownerId: text('owner_id')
+      .$type<ID<'User'>>()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    // Branded as an ID like the rest of the codebase types it (see
+    // Webhook.key's own comment), even though it's plain user-provided text,
+    // not one of our generated IDs.
+    key: text('key').$type<ID<'Webhook'>>().notNull(),
+    name: text('name').notNull(),
+    subscription: text('subscription').notNull(),
+    variables: jsonb('variables').$type<Record<string, unknown>>(),
+    url: text('url').notNull(),
+    metadata: jsonb('metadata').$type<Record<string, unknown>>(),
+    valid: boolean('valid').notNull().default(true),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    modifiedAt: timestamp('modified_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    // Leading column also covers owner_id for FK-maintenance scans, so no
+    // separate index on owner_id is needed.
+    uniqueIndex('webhooks_owner_key_unique').on(t.ownerId, t.key),
+  ],
+);
+
+/**
+ * A named event bucket a webhook can observe (e.g. `project:created`).
+ * Global/shared across all users — same channel name, one row — matching the
+ * Neo4j `BroadcastChannel` unique-constrained-by-name node. No properties
+ * besides the name itself, so the name is the primary key.
+ */
+export const broadcastChannels = pgTable('broadcast_channels', {
+  name: text('name').primaryKey(),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+/**
+ * Which channels a webhook currently observes, and when that was last
+ * (re)evaluated. Recomputed wholesale on every save (webhook config changes
+ * can change which channels apply) and on a `SubscriptionChannelVersion` bump
+ * (app schema changes can too) — `evaluated_at` is what lets the migration
+ * find webhooks that need re-evaluating after such a bump.
+ *
+ * `channel_name` has no `onDelete` cascade: a `broadcast_channels` row is only
+ * ever removed once nothing observes it (checked explicitly by the
+ * application), so the FK is a correctness backstop, not a path expected to
+ * fire.
+ */
+export const webhookChannelObservations = pgTable(
+  'webhook_channel_observations',
+  {
+    webhookId: text('webhook_id')
+      .$type<ID<'Webhook'>>()
+      .notNull()
+      .references(() => webhooks.id, { onDelete: 'cascade' }),
+    channelName: text('channel_name')
+      .notNull()
+      .references(() => broadcastChannels.name),
+    evaluatedAt: timestamp('evaluated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    // Leading column also covers webhook_id for FK-maintenance scans.
+    primaryKey({ columns: [t.webhookId, t.channelName] }),
+    index('webhook_channel_observations_channel_name_idx').on(t.channelName),
+  ],
+);
