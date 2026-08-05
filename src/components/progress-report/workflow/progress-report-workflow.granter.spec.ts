@@ -7,14 +7,22 @@ import { ProgressReportWorkflowEventGranter } from './progress-report-workflow.g
 import { type TransitionName, Transitions } from './transitions';
 
 /**
- * Read on a progress-report workflow event is granted per transition, so the
- * read filter the repository applies is only as good as the SQL this condition
- * produces. Two ways of getting it wrong are silent: naming the wrong column
- * gives valid SQL that filters nothing useful, and letting an event with no
- * transition match hands out rows that `isAllowed` refuses in memory.
+ * The per-transition condition, as SQL.
  *
- * The Cypher and EdgeQL arms of this condition have carried a `transition IN …`
- * shape for a long time. This pins the Drizzle arm against them.
+ * Read is that this condition does NOT currently gate any read. An action getter
+ * captures whatever condition is staged at that moment, and every policy writes
+ * `.read` before staging one, so read resolves to a plain boolean and the staged
+ * condition governs the following `execute`. `applyReadFilter` is the only caller
+ * of `drizzleFilter` and always asks for `read`, so nothing reaches the arm this
+ * file tests.
+ *
+ * It is still worth pinning. The Cypher and EdgeQL arms have carried a
+ * `transition IN …` shape for a long time, this one has to agree with them, and
+ * the day a policy is written condition-first (`.transitions(...).read`) it
+ * becomes the thing standing between a reader and a report's whole internal
+ * review-and-reject history. Two ways of getting it wrong are silent: naming the
+ * wrong column gives valid SQL that filters nothing useful, and letting an event
+ * with no transition match hands out rows `isAllowed` refuses in memory.
  */
 describe('progress-report workflow transition condition, as SQL', () => {
   const dialect = new PgDialect();

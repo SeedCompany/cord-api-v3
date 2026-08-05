@@ -71,11 +71,15 @@ export class ProgressReportWorkflowDrizzleRepository {
    * Two separate rules, both of which the Neo4j repo gets and this one used to
    * skip.
    *
-   * Permission: `filterToReadable()` there, `applyReadFilter` here. Read on a
-   * workflow event is granted only through the per-transition condition, and to
-   * few roles — Field Partner and Translator get execute with no read at all, so
-   * Neo4j resolves their read permission to false and returns nothing. Securing
-   * the DTO does not stand in for this: only `who` and `notes` are secured, so
+   * Permission: `filterToReadable()` there, `applyReadFilter` here. Read
+   * resolves to a plain boolean, not to the per-transition condition: an action
+   * getter captures whatever condition is staged *at that moment*
+   * (`perm-granter.ts` `[action]`, `stagedCondition ?? true`), and every policy
+   * writes `.read` before staging, so the condition it stages governs the
+   * following `execute` instead. Read is therefore granted outright to a handful
+   * of roles and absent for Field Partner and Translator, who get execute only —
+   * Neo4j resolves their read to false and returns nothing. Securing the DTO does
+   * not stand in for this: only `who` and `notes` are secured, so
    * `id`, `at`, `status` and `transition` would pass through untouched and hand a
    * report's whole internal review-and-reject history to anyone who can read the
    * report. Returns false when the reader has no read grant, and then we return

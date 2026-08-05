@@ -10,14 +10,20 @@ import {
   type SQL,
 } from 'drizzle-orm';
 import { DateTime } from 'luxon';
-import { generateId, type ID, type UnsecuredDto } from '~/common';
+import {
+  EnhancedResource,
+  generateId,
+  type ID,
+  type UnsecuredDto,
+} from '~/common';
 import { Identity } from '~/core/authentication';
 import { DrizzleService } from '~/core/drizzle/drizzle.service';
 import { projects, projectWorkflowEvents } from '~/core/drizzle/schema';
+import { PolicyExecutor } from '../../authorization/policy/executor/policy-executor';
 import { type ProjectStep } from '../dto';
 import {
   type ExecuteProjectTransition,
-  type ProjectWorkflowEvent as WorkflowEvent,
+  ProjectWorkflowEvent as WorkflowEvent,
 } from './dto';
 
 /**
@@ -41,9 +47,12 @@ import {
 // time and lose compile-time enforcement here. Collapses at Phase 7 cutover.
 @Injectable()
 export class ProjectWorkflowDrizzleRepository {
+  private readonly resource = EnhancedResource.of(WorkflowEvent);
+
   constructor(
     private readonly drizzle: DrizzleService,
     private readonly identity: Identity,
+    private readonly executor: PolicyExecutor,
   ) {}
 
   protected get db() {
@@ -51,12 +60,22 @@ export class ProjectWorkflowDrizzleRepository {
   }
 
   /**
-   * Events, with their project, and only while that project is still live.
+   * What the reader is allowed to see, plus the ancestry Neo4j requires.
    *
-   * The Neo4j repo gets the liveness from a label: `matchEvent()` requires
-   * `node('project', 'Project')`, and soft delete relabels to `Deleted_Project`,
-   * so an event under a removed project matches nothing. Migration 0010's
-   * `ON DELETE CASCADE` is no substitute, because the project row never leaves.
+   * Permission: `filterToReadable()` there, `applyReadFilter` here. Read on a
+   * project workflow event is granted outright to some roles and not at all to
+   * others — Marketing, Fundraising and StaffMember can read a project but hold
+   * no grant on its events, so Neo4j resolves their permission to false and
+   * returns nothing. Securing the DTO is not a substitute: only `who` and `notes`
+   * are secured, so `id`, `at`, `to` and `transition` would pass through
+   * untouched and hand over the project's whole approval-and-rejection history,
+   * timestamps included. Returns null when the reader has no grant, and the
+   * callers answer with an empty list rather than asking the database.
+   *
+   * Ancestry: `matchEvent()` there requires `node('project', 'Project')`, and
+   * soft delete relabels to `Deleted_Project`, so an event under a removed
+   * project matches nothing. Migration 0010's `ON DELETE CASCADE` is no
+   * substitute, because the project row never leaves.
    *
    * A plain join, not the relational `with:` plus an EXISTS. The first version of
    * this used a correlated EXISTS inside `db.query.…findMany`, and it returned
@@ -66,7 +85,14 @@ export class ProjectWorkflowDrizzleRepository {
    * back empty — so the join is both correct and the shape whose behaviour is
    * obvious from reading it.
    */
-  private eventsUnderLiveProject(...narrowing: SQL[]) {
+  private readableEventsUnderLiveProject(...narrowing: SQL[]) {
+    const conditions: SQL[] = [isNull(projects.deletedAt), ...narrowing];
+    // The caller's own conditions go in this ONE array with everything else.
+    // Chaining a second `.where()` onto the built query would REPLACE this
+    // clause, not add to it — silently dropping the read filter.
+    if (!this.executor.applyReadFilter(this.resource, conditions)) {
+      return null;
+    }
     return this.db
       .select({
         ...getTableColumns(projectWorkflowEvents),
@@ -79,58 +105,39 @@ export class ProjectWorkflowDrizzleRepository {
       })
       .from(projectWorkflowEvents)
       .innerJoin(projects, eq(projects.id, projectWorkflowEvents.projectId))
-      .where(and(isNull(projects.deletedAt), ...narrowing));
+      .where(and(...conditions));
   }
 
-  // migration-todo: the actor's liveness is also missing here, the same gap the
-  // sibling ProgressReport repo just closed. Neo4j's `hydrate()` requires
+  // migration-todo: the actor's liveness is still missing, the same gap the
+  // sibling ProgressReport repo closed. Neo4j's `hydrate()` requires
   // `node('who', 'Actor')`, and soft delete prefixes every label including
   // `Actor`, so an event whose actor was deleted does not come back there. Here
   // the row survives and the actor cannot be loaded, which nulls the event and
-  // then the whole list. NOT the identical one-liner: `who` is nullable on this
-  // table because an event can be attributed to a system agent instead
-  // (`who_system_agent_id`, migration 0031), so it needs to allow a live user OR
-  // a system agent rather than inner-joining users. Fix with the read filter
-  // below, in the same change.
-  //
-  // migration-todo: the Neo4j repo also applies `privileges.filterToReadable()`
-  // in both methods (project-workflow.neo4j.repository.ts:31 and :43) and this
-  // class still does not. The sibling ProgressReport repo now does, so this is
-  // the last of the pair.
-  //
-  // It is NOT a one-line addition here, which is why it is still open. Roles with
-  // no read grant would be handled correctly for free — `applyReadFilter`
-  // resolves those to plain false and never consults the condition. But roles
-  // whose read is granted per-transition (Project Manager and Marketing on the
-  // ProgressReport side; the same shape here) resolve to a TransitionCondition,
-  // and `PolicyExecutor.drizzleFilter` THROWS on a condition with no
-  // `asDrizzleCondition`. So adding the call without porting the condition would
-  // replace a disclosure with a hard error on a page those roles use daily.
-  //
-  // The condition cannot be ported the way ProgressReport's was. That one is a
-  // class local to its own workflow, so it can name its table directly. This one
-  // is the shared generic `TransitionCondition<W>` in
-  // src/components/workflow/workflow.granter.ts, used by the Project AND
-  // Engagement workflows, and a generic condition has no way to reach its
-  // Drizzle column: `AsDrizzleParams` carries the EnhancedResource, and there is
-  // no resource -> table map anywhere in the codebase. Porting it means adding
-  // one, or having each workflow definition carry its own transition column.
-  // That is a design choice about shared authorization infrastructure and wants
-  // its own change, not a hurried one bundled here.
+  // then the whole list. NOT the identical one-liner the sibling used: `who` is
+  // nullable on this table because an event can be attributed to a system agent
+  // instead (`who_system_agent_id`, migration 0031), so it has to allow a live
+  // user OR an agent rather than inner-joining users. Left open deliberately —
+  // it needs a Neo4j-side fact checked first (whether a SystemAgent node carries
+  // the `Actor` label, which decides whether Neo4j keeps agent-actored events at
+  // all), and that question is independent of the read filter above.
   async readMany(
     ids: readonly ID[],
   ): Promise<Array<UnsecuredDto<WorkflowEvent>>> {
     if (ids.length === 0) return [];
-    const rows = await this.eventsUnderLiveProject(
+    const query = this.readableEventsUnderLiveProject(
       inArray(projectWorkflowEvents.id, [...ids]),
     );
+    if (!query) return [];
+    const rows = await query;
     return rows.map((row) => this.toDto(row));
   }
 
   async list(projectId: ID): Promise<Array<UnsecuredDto<WorkflowEvent>>> {
-    const rows = await this.eventsUnderLiveProject(
+    const query = this.readableEventsUnderLiveProject(
       eq(projectWorkflowEvents.projectId, projectId),
-    ).orderBy(asc(projectWorkflowEvents.at));
+    );
+    if (!query) return [];
+    const rows = await query.orderBy(asc(projectWorkflowEvents.at));
     return rows.map((row) => this.toDto(row));
   }
 
