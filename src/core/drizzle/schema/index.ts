@@ -50,6 +50,7 @@ import { type MediaCategory } from '../../../components/progress-report/media/me
 import { type ProjectStatus } from '../../../components/project/dto/project-status.enum';
 import { type ProjectStep } from '../../../components/project/dto/project-step.enum';
 import { type ProjectType } from '../../../components/project/dto/project-type.enum';
+import { type Prompt } from '../../../components/prompts/dto/prompt.dto';
 import { type ToolKey } from '../../../components/tools/tool/dto/tool-key.enum';
 import { type Gender } from '../../../components/user/dto/gender.enum';
 import { type LanguageProficiency } from '../../../components/user/dto/language-proficiency.enum';
@@ -2351,7 +2352,9 @@ export const promptVariantResponses = pgTable(
     id: text('id').$type<ID>().primaryKey(),
     resourceType: text('resource_type').notNull(),
     parentId: text('parent_id').$type<ID>().notNull(),
-    prompt: text('prompt').notNull(),
+    // Holds a Prompt's id, not its text — prompts are defined in app code
+    // rather than a table, which is why there's no FK to point at.
+    prompt: text('prompt').$type<ID<Prompt>>().notNull(),
     creatorId: text('creator_id')
       .$type<ID<'User'>>()
       .notNull()

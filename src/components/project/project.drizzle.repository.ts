@@ -93,6 +93,11 @@ type ProjectRow = typeof projects.$inferSelect & {
   pinned?: boolean;
   /** Latest workflow-event `at`, if any — batched in `readMany`. */
   stepChangedAt?: Date | null;
+  /**
+   * The marketing location's default region — batched in `readMany`. Feeds
+   * `marketingRegion`, which falls back to this when there's no override.
+   */
+  inheritedMarketingRegionId?: ID<'Location'> | null;
   membership?: {
     id: ID<'ProjectMember'>;
     roles: readonly string[];
@@ -222,6 +227,34 @@ export class ProjectDrizzleRepository extends DrizzleDtoRepository<
     const engagementTotalByProject = new Map(
       engagementCounts.map((c) => [c.projectId, c.total]),
     );
+    // A project with no marketing region override inherits the one its
+    // marketing location points at — the same fallback the Neo4j repo does with
+    // `coalesce`. Soft-deleted locations contribute nothing, matching Neo4j,
+    // where a deleted location's link is no longer active.
+    const marketingLocationIds = [
+      ...new Set(
+        rows
+          .map((row) => row.marketingLocationId)
+          .filter((id): id is ID<'Location'> => id !== null),
+      ),
+    ];
+    const marketingLocations = marketingLocationIds.length
+      ? await this.db
+          .select({
+            id: locations.id,
+            defaultMarketingRegionId: locations.defaultMarketingRegionId,
+          })
+          .from(locations)
+          .where(
+            and(
+              inArray(locations.id, marketingLocationIds),
+              isNull(locations.deletedAt),
+            ),
+          )
+      : [];
+    const inheritedRegionByLocation = new Map(
+      marketingLocations.map((loc) => [loc.id, loc.defaultMarketingRegionId]),
+    );
     const pinnedSet = await pinnedByRequester(
       this.db,
       userId,
@@ -234,6 +267,9 @@ export class ProjectDrizzleRepository extends DrizzleDtoRepository<
         stepChangedAt: stepChangedByProject.get(row.id) ?? null,
         engagementTotal: engagementTotalByProject.get(row.id) ?? 0,
         pinned: pinnedSet.has(row.id),
+        inheritedMarketingRegionId: row.marketingLocationId
+          ? (inheritedRegionByLocation.get(row.marketingLocationId) ?? null)
+          : null,
       };
       return this.toDto(enriched);
     });
@@ -461,12 +497,13 @@ export class ProjectDrizzleRepository extends DrizzleDtoRepository<
   protected toDto(row: ProjectRow): UnsecuredDto<Project> {
     const linkOrNull = <T extends string>(id: ID<T> | null | undefined) =>
       id ? { id } : null;
-    // DTO shape includes a few service-layer overlays (canDelete, scope,
-    // pinned) and stub fields the repo can't compute under DATABASE=postgres
-    // yet (primaryPartnership, engagementTotal, usesRev79). Build the dto as
-    // `unknown` first so the lint stays clean — service runs
-    // `privileges.secure()` after this anyway.
-    const dto: unknown = {
+    // Deliberately NOT laundered through `unknown` before the cast below: that
+    // stops TypeScript comparing this object to the DTO at all, and is what let
+    // `marketingRegion` go missing here unnoticed. The direct cast still allows
+    // the service-layer overlays (canDelete, scope, pinned) and the stub fields
+    // this repo can't compute yet, while catching a field that is absent or the
+    // wrong shape.
+    const dto = {
       id: row.id,
       __typename:
         row.type === 'Internship'
@@ -503,6 +540,11 @@ export class ProjectDrizzleRepository extends DrizzleDtoRepository<
       primaryLocation: linkOrNull(row.primaryLocationId),
       marketingLocation: linkOrNull(row.marketingLocationId),
       marketingRegionOverride: linkOrNull(row.marketingRegionOverrideId),
+      // Effective region: the override if set, else the marketing location's
+      // default (batched in readMany). Matches the Neo4j repo's coalesce.
+      marketingRegion: linkOrNull(
+        row.marketingRegionOverrideId ?? row.inheritedMarketingRegionId,
+      ),
       fieldRegion: linkOrNull(row.fieldRegionId),
       owningOrganization: linkOrNull(row.owningOrganizationId),
       rootDirectory: linkOrNull(row.rootDirectoryId),
