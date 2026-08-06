@@ -50,6 +50,17 @@ export type Strategy =
   /** A RichTextDocument. Structure preserved, block text replaced. */
   | 'richText'
   /**
+   * Either of the two above, chosen per value rather than per field.
+   *
+   * Needed because the classification keys on the LINK name and Neo4j reuses one
+   * link name across node types that disagree about the value's type. The known
+   * case is `description`: rich text on an engagement, a plain string on a
+   * product, a tool and an unavailability. A replacement has to match the shape
+   * it replaces — writing a document where a string was would break reading it
+   * back — so the choice can only be made from the value itself.
+   */
+  | 'proseOrRichText'
+  /**
    * Emptied, not faked. Fake credentials still read as credentials, and a
    * plausible-looking one invites someone to try it. See `credentialLinks`.
    */
@@ -90,8 +101,12 @@ export const links: Readonly<Record<string, Action>> = {
   phone: scrub('phone'),
   about: scrub('prose', 'User bio, free text'),
   title: scrub('prose', 'job title'),
-  position: scrub('prose'),
-  degree: scrub('prose', 'Education'),
+  // Enums, so LEAVE THEM — the same rule `status`/`step`/`sensitivity` follow.
+  // Classified as prose originally, which replaced enum members with invented
+  // words and made the API refuse to serialize them. Repaired by inverting the
+  // deterministic fake; see core/repair-scrubbed-enums.run.ts.
+  position: safe('enum — InternshipPosition'),
+  degree: safe('enum — Degree, on Education'),
   major: scrub('prose', 'Education'),
   institution: scrub('entityName', 'Education'),
   timezone: safe('IANA zone name, coarse and non-identifying'),
@@ -109,12 +124,15 @@ export const links: Readonly<Record<string, Action>> = {
   displayNamePronunciation: scrub('languageName'),
 
   // ── Free text people wrote ────────────────────────────────────────────────
-  body: scrub(
-    'richText',
-    'Comment body — Post.body is plain text, same handler',
-  ),
+  // Rich text on a comment, a plain string on a post — same link name, two
+  // value types, chosen per value. Using the rich-text handler for both turned
+  // every post body into a serialized document: no error, and not undone by
+  // re-scrubbing, since the replacement reads back as an object the second time.
+  body: scrub('proseOrRichText'),
   comments: scrub('richText', 'variance explanation'),
-  description: scrub('prose'),
+  // Rich text on an engagement, a plain string on a product, a tool and an
+  // unavailability — same link name, two value types. Chosen per value.
+  description: scrub('proseOrRichText'),
   describeCompletion: scrub('prose'),
   historicGoal: scrub('prose'),
   leastOfTheseReason: scrub('prose'),
