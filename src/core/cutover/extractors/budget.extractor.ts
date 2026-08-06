@@ -6,6 +6,7 @@ import {
   organizations,
   projects,
 } from '~/core/drizzle/schema';
+import { isBaseNode } from '~/core/neo4j/results';
 import { BudgetRepository } from '../../../components/budget/budget.repository';
 import { type Budget, type BudgetStatus } from '../../../components/budget/dto';
 import {
@@ -58,7 +59,14 @@ export const budgetExtractor: Extractor = {
 
     const budgetRows = dtos.flatMap((dto) => {
       // `parent` is the raw project node (readMany merges the Cypher variable
-      // directly), so the id sits under `properties`.
+      // directly), so the id sits under `properties`. This extractor only ever
+      // reads through the Neo4j repo, so it's always a raw node here — the
+      // `BaseNode | LinkToUnknown` union on the DTO type is for other engines.
+      if (!isBaseNode(dto.parent)) {
+        throw new Error(
+          `Expected budget ${dto.id}'s parent to be a raw Neo4j node`,
+        );
+      }
       const projectId = dto.parent.properties.id;
       if (!projectId || !liveProjects.has(projectId)) {
         droppedDangling++;
