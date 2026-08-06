@@ -22,6 +22,10 @@ import {
 // The Drizzle repository base is only in play under postgres; under the other
 // engines their own bases already invalidate and are unchanged by this fix.
 const isPostgres = process.env.DATABASE === 'postgres';
+// Neo4j and Gel invalidate generically from their own bases (see the docblock
+// below), so these cases don't apply there. `it.skip` reports that honestly;
+// an early `return` inside the body would report the same run as PASSED.
+const itPostgresOnly = isPostgres ? it : it.skip;
 
 type Identifier = Parameters<LiveQueryStore['invalidate']>[0];
 
@@ -79,8 +83,7 @@ describe('Live-query invalidation (Drizzle base) e2e', () => {
   const watchInvalidations = () =>
     jest.spyOn(app.get(LiveQueryStore), 'invalidate');
 
-  it('invalidates the mutated resource on update', async () => {
-    if (!isPostgres) return;
+  itPostgresOnly('invalidates the mutated resource on update', async () => {
     const org = await createOrganization(app);
     const spy = watchInvalidations();
 
@@ -98,35 +101,39 @@ describe('Live-query invalidation (Drizzle base) e2e', () => {
     );
   });
 
-  it('invalidates the mutated resource on soft delete', async () => {
-    if (!isPostgres) return;
-    const org = await createOrganization(app);
-    const spy = watchInvalidations();
+  itPostgresOnly(
+    'invalidates the mutated resource on soft delete',
+    async () => {
+      const org = await createOrganization(app);
+      const spy = watchInvalidations();
 
-    await app.graphql.mutate(DeleteOrgDoc, { id: org.id });
+      await app.graphql.mutate(DeleteOrgDoc, { id: org.id });
 
-    expect(spy.mock.calls.map(([arg]) => keyOf(arg))).toContain(
-      `Organization:${org.id}`,
-    );
-  });
+      expect(spy.mock.calls.map(([arg]) => keyOf(arg))).toContain(
+        `Organization:${org.id}`,
+      );
+    },
+  );
 
   // The no-op guard in updateColumns() returns before touching the DB; it must
   // return before invalidating too, or every empty update wakes every live query
   // watching that resource for no reason.
-  it('does not invalidate when an update changes nothing', async () => {
-    if (!isPostgres) return;
-    const org = await createOrganization(app);
-    const spy = watchInvalidations();
+  itPostgresOnly(
+    'does not invalidate when an update changes nothing',
+    async () => {
+      const org = await createOrganization(app);
+      const spy = watchInvalidations();
 
-    // Same name it already has -> getActualChanges yields an empty change set.
-    await app.graphql.mutate(UpdateOrgDoc, {
-      input: { id: org.id, name: org.name.value ?? 'Org' },
-    });
+      // Same name it already has -> getActualChanges yields an empty change set.
+      await app.graphql.mutate(UpdateOrgDoc, {
+        input: { id: org.id, name: org.name.value ?? 'Org' },
+      });
 
-    expect(spy.mock.calls.map(([arg]) => keyOf(arg))).not.toContain(
-      `Organization:${org.id}`,
-    );
-  });
+      expect(spy.mock.calls.map(([arg]) => keyOf(arg))).not.toContain(
+        `Organization:${org.id}`,
+      );
+    },
+  );
 
   // Product hand-rolls its own writes, so it invalidates itself rather than
   // inheriting from the base. The interesting part is the KEY: the store keys on
@@ -134,19 +141,21 @@ describe('Live-query invalidation (Drizzle base) e2e', () => {
   // (DirectScriptureProduct, not Product). A generic `Product:` key would emit
   // something nothing subscribes to — an invalidation that exists and does
   // nothing, which is worse than none because it looks fixed.
-  it('invalidates a product under its concrete subtype, not the interface', async () => {
-    if (!isPostgres) return;
-    const product = await createDirectProduct(app, {
-      engagement: engagement.id,
-    });
-    const spy = watchInvalidations();
+  itPostgresOnly(
+    'invalidates a product under its concrete subtype, not the interface',
+    async () => {
+      const product = await createDirectProduct(app, {
+        engagement: engagement.id,
+      });
+      const spy = watchInvalidations();
 
-    await app.graphql.mutate(UpdateDirectProductDoc, { id: product.id });
+      await app.graphql.mutate(UpdateDirectProductDoc, { id: product.id });
 
-    const keys = spy.mock.calls.map(([arg]) => keyOf(arg));
-    expect(keys).toContain(`DirectScriptureProduct:${product.id}`);
-    expect(keys).not.toContain(`Product:${product.id}`);
-  });
+      const keys = spy.mock.calls.map(([arg]) => keyOf(arg));
+      expect(keys).toContain(`DirectScriptureProduct:${product.id}`);
+      expect(keys).not.toContain(`Product:${product.id}`);
+    },
+  );
 });
 
 const UpdateOrgDoc = graphql(`
