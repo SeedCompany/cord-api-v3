@@ -19,7 +19,7 @@ import {
   resolveResourceBaseNodes,
   resolveResourceBaseNodesByType,
 } from '~/core/drizzle/resolve-resource-base-node';
-import { type tools, toolUsages, users } from '~/core/drizzle/schema';
+import { tools, toolUsages, users } from '~/core/drizzle/schema';
 import { ILogger, Logger } from '~/core/logger';
 import { type BaseNode } from '~/core/neo4j/results';
 import {
@@ -328,6 +328,19 @@ export class ToolUsageDrizzleRepository extends DrizzleDtoRepository<
     }
     // labels are [Concrete, Interface, 'BaseNode'] — the concrete one is first.
     const containerType = container.labels[0]!;
+
+    // The foreign key proves only that the tool row exists, and a soft-deleted
+    // tool still satisfies it. Neo4j's create matches `:Tool`, and deleting a
+    // tool there renames the label to `Deleted_Tool`, so a deleted tool matches
+    // nothing and the whole create fails. Without this check Postgres would
+    // happily store a usage pointing at a tool no read can return.
+    const [liveTool] = await this.db
+      .select({ id: tools.id })
+      .from(tools)
+      .where(and(eq(tools.id, input.tool), isNull(tools.deletedAt)));
+    if (!liveTool) {
+      throw new CreationFailed(ToolUsage);
+    }
 
     const id = await generateId<ID<'ToolUsage'>>();
     const [row] = await this.db

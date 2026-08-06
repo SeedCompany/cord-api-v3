@@ -1,7 +1,7 @@
 import { describe, expect, it } from '@jest/globals';
 import { type CallHandler, type ExecutionContext } from '@nestjs/common';
 import { lastValueFrom, of } from 'rxjs';
-import { type GqlContextHost } from '../graphql';
+import { type GqlContextHost } from '~/core/graphql';
 import { TransactionalMutationsInterceptor } from './abstract-transactional-mutations.interceptor';
 import { TransactionHooks } from './transaction-hooks';
 

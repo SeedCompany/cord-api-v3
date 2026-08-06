@@ -116,6 +116,13 @@ export class PartnershipProducingMediumDrizzleRepository {
   ) {
     if (input.length === 0) return;
 
+    // A medium appearing twice would break the upsert below — one statement may
+    // not touch the same row twice, so `ON CONFLICT DO UPDATE` would refuse with
+    // "command cannot affect row a second time". It cannot get here: the service
+    // rejects a repeated medium with an InputException before calling this, and
+    // that check sits above the engine split so it applies to both. Do not add a
+    // dedup here on the theory that it might — pinned by
+    // test/partnership-producing-medium.e2e-spec.ts on both engines.
     const requested = input
       .map((pair) => pair.partnership)
       .filter((id): id is ID => !!id);
