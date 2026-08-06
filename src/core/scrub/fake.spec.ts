@@ -219,5 +219,43 @@ describe('scrub fake values', () => {
       const scrubbed = fakeValue('richText', notJson)!;
       expect(scrubbed).not.toContain('not valid json');
     });
+
+    describe('one link name, two value types', () => {
+      // `description` is rich text on an engagement and a plain string on a
+      // product, a tool and an unavailability. The classification keys on the
+      // link name, so a single strategy serves all of them and has to decide from
+      // the value. Getting this wrong is not cosmetic: a document written where a
+      // string was, or the reverse, breaks every read of that field.
+      it('keeps the document shape when the value is rich text', () => {
+        const scrubbed = fakeValue(
+          'proseOrRichText',
+          RichTextDocument.fromSerialized(stored),
+        )!;
+
+        expect(RichTextDocument.isSerialized(scrubbed)).toBe(true);
+        const doc = RichTextDocument.fromSerialized(scrubbed) as unknown as {
+          blocks: Array<{ id: string; data: { text: string } }>;
+        };
+        expect(doc.blocks.map((block) => block.id)).toEqual(['one', 'two']);
+        expect(scrubbed).not.toContain('Sensitive');
+      });
+
+      it('returns a plain string when the value is a plain string', () => {
+        const scrubbed = fakeValue('proseOrRichText', 'A tool description.')!;
+
+        expect(typeof scrubbed).toBe('string');
+        expect(RichTextDocument.isSerialized(scrubbed)).toBe(false);
+        expect(scrubbed).not.toContain('tool description');
+      });
+
+      it('does not throw on the object form the plain strategy refuses', () => {
+        // The failure this strategy exists to fix: `prose` guards against objects
+        // on purpose, and pointing it at `description` stopped a full scrub run
+        // partway through.
+        expect(() =>
+          fakeValue('proseOrRichText', RichTextDocument.fromSerialized(stored)),
+        ).not.toThrow();
+      });
+    });
   });
 });

@@ -1,12 +1,11 @@
 /**
  * Scrub a restored production copy so it is safe to develop and rehearse against.
  *
- * WHY THIS EXISTS. The production pre-flight showed roughly 35,000 records flow
- * through migration code that has never executed once — 23,815 prompt answers,
- * 7,803 posts, 2,560 producibles, 903 status-history rows, all of which are zero
- * or near-zero locally. No amount of running against local test data changes that.
- * A scrubbed production copy exercises every one of those paths, and doubles as a
- * dev environment that resembles reality.
+ * WHY THIS EXISTS. Several domains — prompt answers, posts, producibles, status
+ * history — carry real volume in production and are empty or near-empty locally,
+ * so their migration code has never actually executed. No amount of running
+ * against local test data changes that. A scrubbed production copy exercises
+ * those paths, and doubles as a dev environment that resembles reality.
  *
  * Boots with `DATABASE=neo4j` so the Neo4j connection is the one in play. This
  * writes to that graph in place, so point it at a RESTORED COPY, never at
@@ -22,7 +21,13 @@
  *   # verify an already-scrubbed copy (safe to re-run any time)
  *   yarn start --entryFile core/scrub.run -- --verify-only
  *
- * Flags: --dry-run | --verify-only | --batch=N
+ * Flags: --dry-run | --verify-only | --restamp | --batch=N
+ *
+ * `--restamp` re-records the marker with the CURRENT classification hash, without
+ * touching any value. Only correct when the classification changed and the copy
+ * already satisfies the new version — e.g. a field was reclassified as an enum to
+ * leave alone, and its values were separately restored. It is not a way to silence
+ * a stale-copy refusal: if the data does not match the classification, re-scrub.
  */
 import { NestFactory } from '@nestjs/core';
 import { exit } from 'node:process';
@@ -35,6 +40,7 @@ const parseFlags = (argv: readonly string[]) => {
   return {
     dryRun: has('dry-run'),
     verifyOnly: has('verify-only'),
+    restamp: has('restamp'),
     batchSize: get('batch') ? Number(get('batch')) : 1000,
   };
 };
@@ -52,7 +58,8 @@ async function bootstrap() {
     await import('~/core/authentication/crypto.service');
   const { runScrub } = await import('./scrub/scrub');
   const { runVerify } = await import('./scrub/verify');
-  const { readProvenance } = await import('./scrub/provenance');
+  const { readProvenance, stampProvenance } =
+    await import('./scrub/provenance');
 
   const app = await NestFactory.createApplicationContext(AppModule, {
     logger: ['error', 'warn'],
@@ -63,7 +70,27 @@ async function bootstrap() {
   const log = (msg: string) => console.log(msg);
 
   try {
-    if (flags.verifyOnly) {
+    if (flags.restamp) {
+      const before = await readProvenance(neo4j);
+      if (!before) {
+        throw new Error(
+          'Refusing to restamp: this graph carries no scrub marker, so there is ' +
+            'nothing to re-record. Run the scrub.',
+        );
+      }
+      await stampProvenance(neo4j, {
+        scrubbedValues: before.scrubbedValues,
+        deletedKeys: before.deletedKeys,
+        at: new Date().toISOString(),
+      });
+      const after = await readProvenance(neo4j);
+      log(
+        `\nRe-recorded the marker: classification ${
+          before.classificationHash
+        } -> ${after?.classificationHash ?? '(marker unreadable)'}\n` +
+          'No values were touched.\n',
+      );
+    } else if (flags.verifyOnly) {
       const provenance = await readProvenance(neo4j);
       log(
         provenance

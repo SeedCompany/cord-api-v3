@@ -146,6 +146,16 @@ export const fakeValue = (
   if (strategy === 'richText') {
     return original == null ? null : richTextLike(original);
   }
+  // Also before the coercion, and for the same reason: this one's input may or
+  // may not be an object, so it decides from the value in hand. The replacement
+  // must keep the shape it replaces — a document written where a string was would
+  // break every read of that field.
+  if (strategy === 'proseOrRichText') {
+    if (original == null) return null;
+    return typeof original === 'object'
+      ? richTextLike(original)
+      : proseLike(String(original));
+  }
   const value =
     typeof original === 'string' ? original : String(original ?? '');
   if (value === '') return value;
