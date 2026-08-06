@@ -223,7 +223,11 @@ export const PromptVariantResponseDrizzleRepository = <
           createdAt: DateTime.fromJSDate(row.createdAt),
         },
       };
-      const dto: unknown = {
+      // `canDelete` is intersected in because `UnsecuredDto` deliberately drops
+      // it — the policy layer in the service decides it.
+      const dto: UnsecuredDto<PromptVariantResponse<TVariant>> & {
+        canDelete: boolean;
+      } = {
         id: row.id,
         createdAt: DateTime.fromJSDate(row.createdAt),
         modifiedAt: DateTime.fromJSDate(row.modifiedAt),
@@ -231,16 +235,21 @@ export const PromptVariantResponseDrizzleRepository = <
         parent,
         prompt: row.prompt,
         responses: row.entries
-          .filter((e) => !e.deletedAt)
-          .map((e) => ({
-            variant: e.variant,
-            response: e.response,
-            creator: { id: e.creatorId },
-            modifiedAt: DateTime.fromJSDate(e.modifiedAt ?? e.createdAt),
+          .filter((entry) => !entry.deletedAt)
+          .map((entry) => ({
+            // The column is plain text; which variants are valid depends on the
+            // subtype this repository was built for, which isn't knowable here.
+            // Narrowed deliberately, and only for this field.
+            variant: entry.variant as TVariant,
+            response: entry.response,
+            creator: { id: entry.creatorId },
+            modifiedAt: DateTime.fromJSDate(
+              entry.modifiedAt ?? entry.createdAt,
+            ),
           })),
         canDelete: true,
       };
-      return dto as UnsecuredDto<PromptVariantResponse<TVariant>>;
+      return dto;
     }
   }
 
