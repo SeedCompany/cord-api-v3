@@ -12,6 +12,7 @@ import {
 } from '~/common';
 import { e } from '~/core/gel';
 import { type BaseNode } from '~/core/neo4j/results';
+import { type LinkToUnknown } from '~/core/resources';
 import { RegisterResource } from '~/core/resources';
 import { ChangesetAware } from '../../changeset/dto';
 import { type BudgetStatus } from './budget-status.enum';
@@ -28,7 +29,7 @@ export class BudgetRecord extends Interfaces {
   static readonly Parent = () => import('./budget.dto').then((m) => m.Budget);
 
   @Field(() => Budget)
-  declare readonly parent: BaseNode;
+  declare readonly parent: LinkToUnknown | BaseNode;
 
   @Calculated()
   readonly organization: Secured<ID>;

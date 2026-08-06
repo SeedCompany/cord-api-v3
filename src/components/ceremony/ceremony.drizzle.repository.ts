@@ -16,7 +16,11 @@ import {
   type SortMap,
 } from '~/core/drizzle';
 import { DrizzleService } from '~/core/drizzle/drizzle.service';
-import { ceremonies } from '~/core/drizzle/schema';
+import {
+  ceremonies,
+  type engagements,
+  type projects,
+} from '~/core/drizzle/schema';
 import { type ScopedRole } from '../authorization/dto/role.dto';
 import { PolicyExecutor } from '../authorization/policy/executor/policy-executor';
 import { requesterScopeByProject } from '../project/project-member/membership-scope';
@@ -28,10 +32,9 @@ import {
 } from './dto';
 
 type CeremonyRow = typeof ceremonies.$inferSelect & {
-  engagement?: {
-    id: ID<'Engagement'>;
-    project?: { id: ID<'Project'>; sensitivity: string } | null;
-  } | null;
+  engagement?: Pick<typeof engagements.$inferSelect, 'id' | 'type'> & {
+    project?: Pick<typeof projects.$inferSelect, 'id' | 'sensitivity'> | null;
+  };
 };
 
 @Injectable()
@@ -78,7 +81,8 @@ export class CeremonyDrizzleRepository extends DrizzleDtoRepository<
       where: (c) => and(inArray(c.id, [...ids]), isNull(c.deletedAt)),
       with: {
         engagement: {
-          columns: { id: true },
+          // `type` feeds the parent ref's __typename (`${type}Engagement`).
+          columns: { id: true, type: true },
           with: { project: { columns: { id: true, sensitivity: true } } },
         },
       },
@@ -174,7 +178,10 @@ export class CeremonyDrizzleRepository extends DrizzleDtoRepository<
       actualDate: row.actualDate ? CalendarDate.fromISO(row.actualDate) : null,
       sensitivity: row.engagement.project.sensitivity,
       engagement: { id: row.engagement.id },
-      parent: { id: row.engagement.id },
+      parent: {
+        id: row.engagement.id,
+        __typename: `${row.engagement.type}Engagement`,
+      },
       canDelete: true,
       scope,
     };

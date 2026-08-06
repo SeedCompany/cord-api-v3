@@ -25,7 +25,11 @@ import {
 } from '~/common';
 import { e } from '~/core/gel';
 import { type BaseNode } from '~/core/neo4j/results';
-import { type LinkTo, RegisterResource } from '~/core/resources';
+import {
+  type LinkTo,
+  type LinkToUnknown,
+  RegisterResource,
+} from '~/core/resources';
 import { ChangesetAware } from '../../changeset/dto';
 import { Commentable } from '../../comments/dto';
 import { SecuredLanguageMilestone } from '../../language/dto';
@@ -86,7 +90,7 @@ class Engagement extends Interfaces {
     Pick<UnsecuredDto<IProject>, 'status' | 'step' | 'type'>;
 
   @Field(() => IProject)
-  declare readonly parent: BaseNode;
+  declare readonly parent: LinkToUnknown | BaseNode;
 
   readonly label: Readonly<{
     project: string;
@@ -178,7 +182,7 @@ export class LanguageEngagement extends Engagement {
   declare readonly __typename: DBNames<typeof e.LanguageEngagement>;
 
   @Field(() => TranslationProject)
-  declare readonly parent: BaseNode;
+  declare readonly parent: LinkToUnknown | BaseNode;
 
   readonly language: Secured<LinkTo<'Language'>>;
 
@@ -233,7 +237,7 @@ export class InternshipEngagement extends Engagement {
   declare readonly __typename: DBNames<typeof e.InternshipEngagement>;
 
   @Field(() => InternshipProject)
-  declare readonly parent: BaseNode;
+  declare readonly parent: LinkToUnknown | BaseNode;
 
   @RequiredWhenNotInDev()
   readonly countryOfOrigin: Secured<LinkTo<'Location'> | null>;

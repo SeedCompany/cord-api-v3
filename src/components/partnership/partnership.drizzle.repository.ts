@@ -525,7 +525,10 @@ export class PartnershipDrizzleRepository extends DrizzleDtoRepository<
       scope,
       // Required by the `parent` field on the DTO. The service constructs a
       // BaseNode-shaped object; here we just pass the project id through.
-      parent: { id: row.project.id },
+      parent: {
+        id: row.project.id,
+        __typename: `${row.project.type}Project`,
+      },
     };
     return dto as UnsecuredDto<Partnership>;
   }

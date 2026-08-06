@@ -13,7 +13,11 @@ import {
 } from '~/common';
 import { e } from '~/core/gel';
 import { type BaseNode } from '~/core/neo4j/results';
-import { type LinkTo, RegisterResource } from '~/core/resources';
+import {
+  type LinkTo,
+  type LinkToUnknown,
+  RegisterResource,
+} from '~/core/resources';
 import { ChangesetAware } from '../../changeset/dto';
 import { Organization } from '../../organization/dto';
 import { SecuredPartnerTypes } from '../../partner/dto';
@@ -39,7 +43,7 @@ export class Partnership extends Interfaces {
   readonly project: LinkTo<'Project'>;
 
   @Field(() => IProject)
-  declare readonly parent: BaseNode;
+  declare readonly parent: LinkToUnknown | BaseNode;
 
   @Field()
   readonly agreementStatus: SecuredPartnershipAgreementStatus;

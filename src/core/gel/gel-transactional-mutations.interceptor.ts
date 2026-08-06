@@ -5,12 +5,12 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { ConfigService } from '~/core/config';
+import { TransactionRunner } from '~/core/database/transaction-runner';
 import { TransactionalMutationsInterceptor } from '../database/abstract-transactional-mutations.interceptor';
-import { TransactionContext } from './transaction.context';
 
 @Injectable()
 export class GelTransactionalMutationsInterceptor extends TransactionalMutationsInterceptor {
-  @Inject(TransactionContext) context: TransactionContext;
+  @Inject(TransactionRunner) runner: TransactionRunner;
   @Inject(ConfigService) config: ConfigService;
 
   async intercept(context: ExecutionContext, next: CallHandler) {
@@ -21,6 +21,6 @@ export class GelTransactionalMutationsInterceptor extends TransactionalMutations
   }
 
   protected async inTx<R>(fn: () => Promise<R>) {
-    return await this.context.inTx(fn);
+    return await this.runner.inTx(fn);
   }
 }

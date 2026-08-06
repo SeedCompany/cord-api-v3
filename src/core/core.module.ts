@@ -14,6 +14,7 @@ import { CliModule } from './cli/cli.module';
 import { ConfigModule } from './config/config.module';
 import { CoreController } from './core.controller';
 import { DataLoaderConfig } from './data-loader/data-loader.config';
+import { TransactionRunner } from './database';
 import { DrizzleModule } from './drizzle/drizzle.module';
 import { EmailConfig } from './email/email.config';
 import { ExceptionFilter } from './exception/exception.filter';
@@ -63,6 +64,7 @@ import { WebhooksModule } from './webhooks/webhooks.module';
   ],
   providers: [
     AwsS3Factory,
+    TransactionRunner,
     ExceptionNormalizer,
     ExceptionFilter,
     { provide: APP_FILTER, useExisting: ExceptionFilter },
@@ -75,6 +77,7 @@ import { WebhooksModule } from './webhooks/webhooks.module';
   exports: [
     HttpModule,
     AwsS3Factory,
+    TransactionRunner,
     ConfigModule,
     CacheModule,
     BroadcasterModule,

@@ -19,6 +19,23 @@ export class TransactionContext
   }
 
   async inTx<R>(fn: () => Promise<R>): Promise<R> {
+    // Continue an already-open transaction rather than starting a second,
+    // independent one — same reason as DrizzleService.inTx: an inner write
+    // would otherwise survive an outer rollback. Neo4j's equivalent has always
+    // continued.
+    //
+    // Unlike DrizzleService this deliberately does NOT track whether the
+    // transaction is still open, so work that escapes its transaction (started
+    // inside it but never awaited) continues against a settled executor rather
+    // than being refused. That asymmetry is a choice, not an oversight: the
+    // `current` getter below has always handed out a retained store the same
+    // way, this engine has no CI coverage to catch a mistake in the tracking,
+    // and the whole Gel arm is dropped at Phase 7 cutover. Not worth changing
+    // untested code that is scheduled for deletion.
+    if (this.getStore()) {
+      return await fn();
+    }
+
     const errorMap = new WeakMap<Error, Error>();
 
     try {

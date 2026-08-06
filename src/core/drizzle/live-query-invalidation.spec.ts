@@ -42,6 +42,11 @@ import { join, posix, relative, sep } from 'node:path';
  *
  * `create-only` — nothing is watching a brand-new id yet, and no engine
  * invalidates on create.
+ *
+ * `never writes` — the repository has methods NAMED like writes, but every one of
+ * them only throws. This check classifies by method name (see WRITE_METHOD), so a
+ * domain that is not being carried forward to Postgres still reads as a writer
+ * even though it stores nothing. There is no write to invalidate after.
  */
 const EXEMPT: Record<string, string> = {
   // --- parity: verified the Neo4j counterpart has no invalidation either ---
@@ -71,6 +76,12 @@ const EXEMPT: Record<string, string> = {
     'bootstrap upsert of the three fixed system agents',
   'src/components/admin/admin.drizzle.repository.ts':
     'bootstrap only (root user / default org), runs before anything can subscribe',
+
+  // --- named like a writer, but nothing is ever stored ---
+  'src/components/project-change-request/project-change-request.drizzle.repository.ts':
+    'never writes — changesets are not carried forward, so create(), update() ' +
+    'and deleteNode() each throw NotImplementedException and there is no ' +
+    'insert/update/delete anywhere in the file; reads answer empty',
 };
 
 const COMPONENTS = 'src/components';
