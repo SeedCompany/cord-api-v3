@@ -24,6 +24,7 @@ import {
   readAllRowsViaRepo,
   sanitizeEnum,
   stat,
+  ts,
   tsReq,
 } from '../cutover.helpers';
 import { type Extractor, type TableStat } from '../cutover.types';
@@ -89,7 +90,7 @@ export const productExtractor: Extractor = {
           id: row.id,
           type,
           name: row.name,
-          createdAt: new Date(row.createdAt),
+          createdAt: tsReq(row.createdAt),
         });
       }
     }
@@ -381,8 +382,8 @@ export const productExtractor: Extractor = {
         descKept.map((row) => ({
           value: row.value,
           methodology: row.methodology as any,
-          lastUsedAt: row.lastUsedAt ? new Date(row.lastUsedAt) : new Date(),
-          createdAt: row.createdAt ? new Date(row.createdAt) : new Date(),
+          lastUsedAt: ts(row.lastUsedAt) ?? new Date(),
+          createdAt: ts(row.createdAt) ?? new Date(),
         })),
       ),
     );

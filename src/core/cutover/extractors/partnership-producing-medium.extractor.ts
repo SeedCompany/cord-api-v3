@@ -11,6 +11,7 @@ import {
   keepLanded,
   liveTargetIds,
   one,
+  ts,
   warnIfRelTypeUnknown,
 } from '../cutover.helpers';
 import { type Extractor } from '../cutover.types';
@@ -160,7 +161,7 @@ export const partnershipProducingMediumExtractor: Extractor = {
           engagementId: row.engagementId,
           medium: row.medium as ProductMedium,
           partnershipId: row.partnershipId,
-          createdAt: row.createdAt ? new Date(row.createdAt) : new Date(),
+          createdAt: ts(row.createdAt) ?? new Date(),
         },
       ];
     });

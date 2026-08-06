@@ -265,7 +265,7 @@ export const projectExtractor: Extractor = {
           toStep: event.toStep as ProjectStep,
           transitionKey: event.transitionKey ?? null,
           notes,
-          at: new Date(event.at),
+          at: tsReq(event.at),
         },
       ];
     });

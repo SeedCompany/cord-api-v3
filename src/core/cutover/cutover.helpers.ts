@@ -1,6 +1,7 @@
 import { type Type } from '@nestjs/common';
 import { sql } from 'drizzle-orm';
 import { type PgTable } from 'drizzle-orm/pg-core';
+import { DateTime } from 'luxon';
 import {
   type CalendarDate,
   type ID,
@@ -338,22 +339,86 @@ export const one = (
 // UnsecuredDto dates are Luxon; Postgres `timestamp` columns (mode 'date')
 // take a JS Date, `date` columns (mode 'string') take an ISO date string.
 
-type Luxonish = { toJSDate: () => Date } | null | undefined;
+type Luxonish = { toJSDate: () => Date } | Date | string | null | undefined;
 type ISODateish =
   | CalendarDate
   | { toISO: () => string | null }
+  | Date
+  | string
   | null
   | undefined;
 
+/**
+ * Anything date-shaped that production actually holds → a JS Date.
+ *
+ * ⚠ NOT every stored timestamp is a temporal type. `ProjectMember.inactiveAt`
+ * is a ZONED DATETIME for the overwhelming majority of rows and a plain STRING
+ * for a handful — so the driver hands back a Luxon DateTime most of the time and
+ * a bare string the rest, and a truthiness check alone then calls `.toJSDate()`
+ * on a string and throws. Found by the first load at production volume; no local
+ * dataset contains the string form.
+ *
+ * A string is converted rather than dropped: the target column is a timestamp,
+ * and the value is a real date that happens to be stored in the wrong type.
+ */
+const toDate = (value: Luxonish): Date | null => {
+  if (value == null) return null;
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value;
+  }
+  if (typeof value === 'string') {
+    // Neo4j's `toString()` on a zoned datetime appends the zone in brackets
+    // (`2020-01-01T00:00:00Z[UTC]`), which neither `new Date()` nor Luxon's ISO
+    // parser accepts. Roughly half of one edge-stored domain's timestamps carry
+    // it and the rest do not, so the format parses fine right up until it does
+    // not. Strip the suffix; the offset ahead of it already fixes the instant.
+    const parsed = DateTime.fromISO(value.replace(/\[[^\]]*\]$/, ''));
+    if (!parsed.isValid) {
+      throw new Error(
+        `Cannot read a timestamp from a string (${parsed.invalidReason ?? 'invalid'})`,
+      );
+    }
+    return parsed.toJSDate();
+  }
+  // A Luxon value can be INVALID (`isValid === false`) and still answer
+  // `toJSDate()` — with a Date whose time is NaN. Postgres then fails at
+  // serialization, far from the field that caused it, as `RangeError: Invalid
+  // time value`. Refuse it here, and name the shape received so the stack points
+  // at the extractor field rather than at the driver.
+  const asDate = value.toJSDate();
+  // migration-todo: an unusable value becomes null here and is therefore
+  // INVISIBLE — nothing counts it. Thread the context through so the harness can
+  // report a per-field tally, the way it reports rows that failed to hydrate.
+  // Returning null rather than throwing is deliberate: one malformed timestamp
+  // should not abort a twenty-domain load, and `tsReq` still refuses when the
+  // column cannot take a null.
+  return Number.isNaN(asDate.getTime()) ? null : asDate;
+};
+
 /** Luxon DateTime → JS Date for `timestamp` columns. */
-export const ts = (dt: Luxonish): Date | null => (dt ? dt.toJSDate() : null);
+export const ts = (dt: Luxonish): Date | null => toDate(dt);
 
 /** Non-null variant for NOT NULL timestamp columns (e.g. createdAt). */
-export const tsReq = (dt: { toJSDate: () => Date }): Date => dt.toJSDate();
+export const tsReq = (dt: NonNullable<Luxonish>): Date => {
+  const date = toDate(dt);
+  if (!date) {
+    throw new Error('Required timestamp was empty');
+  }
+  return date;
+};
 
 /** CalendarDate / DateTime → 'YYYY-MM-DD' for `date` columns. */
 export const dateStr = (d: ISODateish): string | null => {
   if (!d) return null;
+  // Same mixed-storage problem as `toDate` above: a date column's source value
+  // may arrive as a bare string rather than a temporal type.
+  if (typeof d === 'string') {
+    const parsed = DateTime.fromISO(d);
+    return parsed.isValid ? parsed.toISODate() : null;
+  }
+  if (d instanceof Date) {
+    return DateTime.fromJSDate(d).toISODate();
+  }
   const iso = d.toISO();
   return iso ? iso.slice(0, 10) : null;
 };

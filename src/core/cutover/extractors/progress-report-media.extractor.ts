@@ -12,6 +12,7 @@ import {
   keepLanded,
   liveTargetIds,
   one,
+  ts,
   warnIfRelTypeUnknown,
 } from '../cutover.helpers';
 import { type Extractor } from '../cutover.types';
@@ -154,7 +155,7 @@ export const progressReportMediaExtractor: Extractor = {
           ? row.fileId
           : null,
       creatorId: row.creatorId,
-      createdAt: row.createdAt ? row.createdAt.toJSDate() : new Date(0),
+      createdAt: ts(row.createdAt) ?? new Date(0),
       deletedAt: null,
     }));
 

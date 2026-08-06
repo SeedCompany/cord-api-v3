@@ -14,6 +14,7 @@ import {
   one,
   resolveParentTypes,
   sanitizeEnum,
+  tsReq,
 } from '../cutover.helpers';
 import { type Extractor } from '../cutover.types';
 
@@ -126,8 +127,8 @@ export const postExtractor: Extractor = {
           type: type.kept[0],
           shareability: shareability.kept[0],
           body: row.body,
-          createdAt: new Date(row.createdAt),
-          modifiedAt: new Date(row.modifiedAt ?? row.createdAt),
+          createdAt: tsReq(row.createdAt),
+          modifiedAt: tsReq(row.modifiedAt ?? row.createdAt),
         },
       ];
     });

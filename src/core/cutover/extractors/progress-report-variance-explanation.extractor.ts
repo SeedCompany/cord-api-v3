@@ -10,6 +10,7 @@ import {
   liveTargetIds,
   one,
   richText,
+  ts,
   warnIfRelTypeUnknown,
 } from '../cutover.helpers';
 import { type Extractor } from '../cutover.types';
@@ -90,7 +91,7 @@ export const progressReportVarianceExplanationExtractor: Extractor = {
       }
       seen.add(row.reportId);
       if (!row.createdAt) undated.push(row.reportId);
-      const created = row.createdAt ? new Date(row.createdAt) : new Date();
+      const created = ts(row.createdAt) ?? new Date();
       return [
         {
           reportId: row.reportId,
@@ -105,7 +106,7 @@ export const progressReportVarianceExplanationExtractor: Extractor = {
           // it from createdAt matches what the other extractors do for the same
           // NOT NULL column, and is truthful: never edited means unchanged since
           // creation.
-          updatedAt: row.modifiedAt ? new Date(row.modifiedAt) : created,
+          updatedAt: ts(row.modifiedAt) ?? created,
         },
       ];
     });
