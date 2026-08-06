@@ -8,6 +8,7 @@ import {
 import { ProgressReportCommunityStory } from '../../../components/progress-report/dto/community-stories.dto';
 import { ProgressReportHighlight } from '../../../components/progress-report/dto/highlights.dto';
 import { ProgressReportTeamNews } from '../../../components/progress-report/dto/team-news.dto';
+import { type Prompt } from '../../../components/prompts/dto/prompt.dto';
 import {
   bulkInsert,
   cypher,
@@ -59,7 +60,9 @@ interface PvrRow {
   id: ID;
   parentId: ID;
   creatorId: ID<'User'>;
-  prompt: string;
+  // The Cypher property already holds a Prompt id, not its text — see the
+  // schema comment on `promptVariantResponses.prompt`.
+  prompt: ID<Prompt>;
   createdAt: string;
   modifiedAt: string | null;
 }
