@@ -209,6 +209,58 @@ describe('Resource.tools answers for containers of any type', () => {
     expect(after.items).toEqual([]);
   });
 
+  it('refuses to record a usage against a deleted tool, on either engine', async () => {
+    const org = await createOrganization(app);
+    const tool = await createTool(app);
+
+    await app.graphql.mutate(
+      graphql(`
+        mutation deleteToolFirst($id: ID!) {
+          deleteTool(id: $id) {
+            __typename
+          }
+        }
+      `),
+      { id: tool.id },
+    );
+
+    // Neo4j refuses because its create matches `:Tool` and deleting relabels the
+    // node, so the pattern finds nothing. Postgres has only the foreign key,
+    // which a soft-deleted row still satisfies — so it needs an explicit check to
+    // answer the same way. Without one it stores a usage pointing at a tool that
+    // no read can return.
+    await expect(
+      app.graphql.mutate(
+        graphql(`
+          mutation createUsageOnDeletedTool($container: ID!, $tool: ID!) {
+            createToolUsage(input: { container: $container, tool: $tool }) {
+              toolUsage {
+                id
+              }
+            }
+          }
+        `),
+        { container: org.id, tool: tool.id },
+      ),
+    ).rejects.toThrow();
+
+    // And nothing was stored — a create that half-succeeded would leave the
+    // usage visible even though the mutation reported failure.
+    const result = await app.graphql.query(
+      graphql(`
+        query orgToolsAfterRefusedCreate($id: ID!) {
+          organization(id: $id) {
+            tools {
+              total
+            }
+          }
+        }
+      `),
+      { id: org.id },
+    );
+    expect(result.organization.tools.total).toBe(0);
+  });
+
   /**
    * Deleting the person who recorded a usage must not take the page down with
    * them.

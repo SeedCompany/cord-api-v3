@@ -69,4 +69,14 @@ describe('progress-report workflow transition condition, as SQL', () => {
     // true, or a negated form, would change that, so assert the operator.
     expect(toSql(['Start']).text.toLowerCase()).toContain(' in (');
   });
+
+  it('renders false when the grant allows no transitions', () => {
+    // Reachable for an end state nothing transitions to. An empty allowed set
+    // must DENY, and the only reason it does is that drizzle renders `inArray`
+    // with an empty list as the constant false rather than throwing or emitting
+    // nothing — emitting nothing would widen the filter to every row. That is
+    // library behaviour this arm depends on, so pin it here as well as on the
+    // generic arm rather than trusting the two to stay in step.
+    expect(toSql([]).text.toLowerCase()).toContain('false');
+  });
 });
