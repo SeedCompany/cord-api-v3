@@ -223,7 +223,11 @@ export const PromptVariantResponseDrizzleRepository = <
           createdAt: DateTime.fromJSDate(row.createdAt),
         },
       };
-      const dto = {
+      // `canDelete` is intersected in because `UnsecuredDto` deliberately drops
+      // it — the policy layer in the service decides it.
+      const dto: UnsecuredDto<PromptVariantResponse<TVariant>> & {
+        canDelete: boolean;
+      } = {
         id: row.id,
         createdAt: DateTime.fromJSDate(row.createdAt),
         modifiedAt: DateTime.fromJSDate(row.modifiedAt),
@@ -245,7 +249,7 @@ export const PromptVariantResponseDrizzleRepository = <
           })),
         canDelete: true,
       };
-      return dto as UnsecuredDto<PromptVariantResponse<TVariant>>;
+      return dto;
     }
   }
 

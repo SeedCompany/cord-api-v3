@@ -100,7 +100,10 @@ type ProjectRow = typeof projects.$inferSelect & {
   inheritedMarketingRegionId?: ID<'Location'> | null;
   membership?: {
     id: ID<'ProjectMember'>;
-    roles: readonly string[];
+    // `Role`, not `string` — the column is a role enum array, and the DTO's
+    // `membership.roles` is typed from it. Declaring this loosely meant the DTO
+    // needed a cast to get the type back, which is what hid the mismatch.
+    roles: readonly Role[];
     inactiveAt: Date | null;
   } | null;
 };
@@ -497,13 +500,14 @@ export class ProjectDrizzleRepository extends DrizzleDtoRepository<
   protected toDto(row: ProjectRow): UnsecuredDto<Project> {
     const linkOrNull = <T extends string>(id: ID<T> | null | undefined) =>
       id ? { id } : null;
-    // Deliberately NOT laundered through `unknown` before the cast below: that
-    // stops TypeScript comparing this object to the DTO at all, and is what let
-    // `marketingRegion` go missing here unnoticed. The direct cast still allows
-    // the service-layer overlays (canDelete, scope, pinned) and the stub fields
-    // this repo can't compute yet, while catching a field that is absent or the
-    // wrong shape.
-    const dto = {
+    // Typed here rather than asserted on the way out. An earlier version built
+    // this as `unknown` and asserted it, which stops TypeScript comparing the
+    // object to the DTO at all — that is how `marketingRegion` went missing
+    // unnoticed. Declaring the type checks every field where it is written, so a
+    // missing or wrong-shaped one is reported by name. `canDelete` is
+    // intersected in because `UnsecuredDto` drops it on purpose: the policy layer
+    // in the service decides it, but every repository still sets it.
+    const dto: UnsecuredDto<Project> & { canDelete: boolean } = {
       id: row.id,
       __typename:
         row.type === 'Internship'
@@ -582,13 +586,11 @@ export class ProjectDrizzleRepository extends DrizzleDtoRepository<
         row.membership && !row.membership.inactiveAt
           ? [
               'member:true' as const,
-              ...(row.membership.roles as readonly Role[]).map(
-                rolesForScope('project'),
-              ),
+              ...row.membership.roles.map(rolesForScope('project')),
             ]
           : [],
     };
-    return dto as UnsecuredDto<Project>;
+    return dto;
   }
 }
 

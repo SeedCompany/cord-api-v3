@@ -2391,7 +2391,9 @@ export const promptVariantResponseEntries = pgTable(
       .notNull()
       .references(() => promptVariantResponses.id, { onDelete: 'cascade' }),
     variant: text('variant').notNull(),
-    response: jsonb('response'),
+    // Always a rich-text document, so say so — untyped jsonb reads back as
+    // `unknown`, which then needs a cast at every use.
+    response: jsonb('response').$type<RichTextDocument | null>(),
     creatorId: text('creator_id')
       .$type<ID<'User'>>()
       .notNull()

@@ -928,62 +928,80 @@ describe('Project e2e', () => {
     });
   });
 
-  it('takes marketingRegion from the marketing location, and lets the override win', async () => {
-    await runAsAdmin(app, async () => {
-      const inheritedRegion = await createLocation(app);
+  describe('marketingRegion', () => {
+    const readMarketingRegion = async (id: ID) => {
+      const result = await app.graphql.query(
+        graphql(`
+          query projectMarketingRegion($id: ID!) {
+            project(id: $id) {
+              marketingRegion {
+                canRead
+                value {
+                  id
+                }
+              }
+            }
+          }
+        `),
+        { id },
+      );
+      return result.project.marketingRegion;
+    };
+
+    /** A project whose marketing location carries a default region. */
+    const createProjectWithMarketingLocation = async () => {
+      const locationDefaultRegion = await createLocation(app);
       const marketingLocation = await createLocation(app, {
-        defaultMarketingRegion: inheritedRegion.id,
+        defaultMarketingRegion: locationDefaultRegion.id,
       });
       const project = await createProject(app, {
         marketingLocation: marketingLocation.id,
         fieldRegion: fieldRegion.id,
       });
+      return { project, locationDefaultRegion };
+    };
 
-      const readMarketingRegion = async () => {
-        const result = await app.graphql.query(
+    it('comes from the marketing location when nothing overrides it', async () => {
+      await runAsAdmin(app, async () => {
+        const { project, locationDefaultRegion } =
+          await createProjectWithMarketingLocation();
+
+        const marketingRegion = await readMarketingRegion(project.id);
+        expect(marketingRegion.canRead).toBe(true);
+        expect(marketingRegion.value?.id).toBe(locationDefaultRegion.id);
+      });
+    });
+
+    it('uses the override in place of the marketing location default', async () => {
+      await runAsAdmin(app, async () => {
+        const { project, locationDefaultRegion } =
+          await createProjectWithMarketingLocation();
+        const overrideRegion = await createLocation(app);
+
+        await app.graphql.mutate(
           graphql(`
-            query projectMarketingRegion($id: ID!) {
-              project(id: $id) {
-                marketingRegion {
-                  canRead
-                  value {
-                    id
-                  }
+            mutation setMarketingRegionOverride($input: UpdateProject!) {
+              updateProject(input: $input) {
+                project {
+                  id
                 }
               }
             }
           `),
-          { id: project.id },
-        );
-        return result.project.marketingRegion;
-      };
-
-      // Nothing overrides it, so it comes from the marketing location's default.
-      const inherited = await readMarketingRegion();
-      expect(inherited.canRead).toBe(true);
-      expect(inherited.value?.id).toBe(inheritedRegion.id);
-
-      const overrideRegion = await createLocation(app);
-      await app.graphql.mutate(
-        graphql(`
-          mutation setMarketingRegionOverride($input: UpdateProject!) {
-            updateProject(input: $input) {
-              project {
-                id
-              }
-            }
-          }
-        `),
-        {
-          input: {
-            id: project.id,
-            marketingRegionOverride: overrideRegion.id,
+          {
+            input: {
+              id: project.id,
+              marketingRegionOverride: overrideRegion.id,
+            },
           },
-        },
-      );
+        );
 
-      const overridden = await readMarketingRegion();
-      expect(overridden.value?.id).toBe(overrideRegion.id);
+        // The marketing location still has its own default, so this is about
+        // which one wins rather than whether the override can be read at all.
+        const marketingRegion = await readMarketingRegion(project.id);
+        expect(marketingRegion.value?.id).toBe(overrideRegion.id);
+        expect(marketingRegion.value?.id).not.toBe(locationDefaultRegion.id);
+      });
     });
   });
 
