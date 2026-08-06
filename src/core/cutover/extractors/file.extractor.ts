@@ -8,6 +8,7 @@ import {
   keepLanded,
   liveTargetIds,
   one,
+  ts,
 } from '../cutover.helpers';
 import { type CutoverContext, type Extractor } from '../cutover.types';
 
@@ -309,7 +310,7 @@ export const fileExtractor: Extractor = {
       size: isVersion(row) ? toNum(row.size) : null,
       // Second pass; see the docblock.
       latestVersionId: null,
-      createdAt: row.createdAt ? row.createdAt.toJSDate() : new Date(0),
+      createdAt: ts(row.createdAt) ?? new Date(0),
       deletedAt: null,
     }));
 

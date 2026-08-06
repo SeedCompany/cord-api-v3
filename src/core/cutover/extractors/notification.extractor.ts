@@ -11,6 +11,8 @@ import {
   cypher,
   liveTargetIds,
   stat,
+  ts,
+  tsReq,
   warnIfRelTypeUnknown,
 } from '../cutover.helpers';
 import { type Extractor, type TableStat } from '../cutover.types';
@@ -91,7 +93,7 @@ export const notificationExtractor: Extractor = {
         {
           id: n.id,
           type: n.type as (typeof notificationTypeEnum.enumValues)[number],
-          createdAt: new Date(n.createdAt),
+          createdAt: tsReq(n.createdAt),
           creatorId,
           message: n.message,
           commentId: n.commentId,
@@ -142,7 +144,7 @@ export const notificationExtractor: Extractor = {
             {
               notificationId: r.notificationId,
               userId: r.userId,
-              readAt: r.readAt ? new Date(r.readAt) : null,
+              readAt: ts(r.readAt),
             },
           ]
         : [],

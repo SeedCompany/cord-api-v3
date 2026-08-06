@@ -12,6 +12,7 @@ import {
   liveTargetIds,
   one,
   sanitizeEnum,
+  ts,
   warnIfRelTypeUnknown,
 } from '../cutover.helpers';
 import { type Extractor } from '../cutover.types';
@@ -91,7 +92,7 @@ export const knownLanguageExtractor: Extractor = {
           userId: row.userId,
           languageId: row.languageId,
           proficiency: proficiency.kept[0],
-          createdAt: row.createdAt ? new Date(row.createdAt) : new Date(),
+          createdAt: ts(row.createdAt) ?? new Date(),
         },
       ];
     });

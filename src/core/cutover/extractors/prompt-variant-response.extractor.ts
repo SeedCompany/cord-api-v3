@@ -16,6 +16,8 @@ import {
   liveTargetIds,
   richText,
   stat,
+  ts,
+  tsReq,
 } from '../cutover.helpers';
 import { type Extractor, type TableStat } from '../cutover.types';
 
@@ -135,11 +137,11 @@ export const promptVariantResponseExtractor: Extractor = {
           parentId: row.parentId,
           prompt: row.prompt,
           creatorId: row.creatorId,
-          createdAt: new Date(row.createdAt),
+          createdAt: tsReq(row.createdAt),
           // NOT NULL here, optional in Neo4j — coalesce to createdAt, which is
           // what the Neo4j hydrate does for the entry rows.
-          modifiedAt: new Date(row.modifiedAt ?? row.createdAt),
-          updatedAt: new Date(row.modifiedAt ?? row.createdAt),
+          modifiedAt: tsReq(row.modifiedAt ?? row.createdAt),
+          updatedAt: tsReq(row.modifiedAt ?? row.createdAt),
           // No soft-deleted state to carry: Neo4j relabels a deleted PVR, so
           // `MATCH (n:ProgressReportTeamNews)` never returns one, and the read
           // path filters deleted_at IS NULL anyway. Same visibility either way.
@@ -197,9 +199,9 @@ export const promptVariantResponseExtractor: Extractor = {
               variant: row.variant,
               response: response ?? null,
               creatorId: row.creatorId,
-              createdAt: new Date(row.createdAt),
-              modifiedAt: new Date(row.modifiedAt ?? row.createdAt),
-              deletedAt: row.deletedAt ? new Date(row.deletedAt) : null,
+              createdAt: tsReq(row.createdAt),
+              modifiedAt: tsReq(row.modifiedAt ?? row.createdAt),
+              deletedAt: ts(row.deletedAt),
             };
           }),
       ),

@@ -12,6 +12,7 @@ import {
   liveTargetIds,
   one,
   richText,
+  ts,
   warnIfRelTypeUnknown,
 } from '../cutover.helpers';
 import { type Extractor } from '../cutover.types';
@@ -128,7 +129,7 @@ export const progressReportWorkflowEventExtractor: Extractor = {
           // which is a legitimate state rather than missing data.
           transitionKey: row.transitionKey ?? null,
           notes: richText(row.notes) ?? null,
-          at: row.at ? new Date(row.at) : new Date(),
+          at: ts(row.at) ?? new Date(),
         },
       ];
     });

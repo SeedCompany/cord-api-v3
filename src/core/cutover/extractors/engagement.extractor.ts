@@ -310,7 +310,14 @@ export const engagementExtractor: Extractor = {
           status: row.status as any,
           // `at` is NOT NULL with a defaultNow(); a history rel with no usable
           // timestamp is better dated now than dropped.
-          at: row.at ? new Date(row.at) : new Date(),
+          //
+          // Must go through `ts`, NOT `new Date(row.at)`. Raw Cypher results are
+          // still passed through the connection's transformer, so `at` arrives as
+          // a Luxon value — and `new Date(<object>)` yields an INVALID date rather
+          // than failing, which Postgres only rejects later, as a RangeError from
+          // deep inside the driver. This path has no rows locally, so it went
+          // unexercised until a production-volume load.
+          at: ts(row.at) ?? new Date(),
         })),
       ),
     );

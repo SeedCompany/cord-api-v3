@@ -96,7 +96,7 @@ export const commentExtractor: Extractor = {
           parentId: row.parentId,
           parentType: parentTypes.get(row.parentId)!,
           creatorId: row.creatorId,
-          createdAt: new Date(row.createdAt),
+          createdAt: tsReq(row.createdAt),
         })),
       ),
     );
