@@ -14,6 +14,7 @@ import {
   liveTargetIds,
   sanitizeEnum,
   stat,
+  tsReq,
 } from '../cutover.helpers';
 import { type Extractor, type TableStat } from '../cutover.types';
 
@@ -98,8 +99,8 @@ export const productProgressExtractor: Extractor = {
           productId: row.productId,
           reportId: row.reportId,
           variant: row.variant,
-          createdAt: new Date(row.createdAt),
-          updatedAt: new Date(row.createdAt),
+          createdAt: tsReq(row.createdAt),
+          updatedAt: tsReq(row.createdAt),
         })),
       ),
     );
@@ -146,8 +147,8 @@ export const productProgressExtractor: Extractor = {
           progressId: row.progressId,
           step: step.kept[0],
           completed: row.completed == null ? null : Number(row.completed),
-          createdAt: new Date(row.createdAt),
-          updatedAt: new Date(row.createdAt),
+          createdAt: tsReq(row.createdAt),
+          updatedAt: tsReq(row.createdAt),
         },
       ];
     });

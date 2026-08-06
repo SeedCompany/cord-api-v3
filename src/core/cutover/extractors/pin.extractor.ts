@@ -7,6 +7,7 @@ import {
   liveTargetIds,
   one,
   resolveParentTypes,
+  ts,
   warnIfRelTypeUnknown,
 } from '../cutover.helpers';
 import { type Extractor } from '../cutover.types';
@@ -71,7 +72,7 @@ export const pinExtractor: Extractor = {
         {
           userId: row.userId,
           resourceId: row.resourceId,
-          createdAt: row.createdAt ? new Date(row.createdAt) : new Date(),
+          createdAt: ts(row.createdAt) ?? new Date(),
         },
       ];
     });

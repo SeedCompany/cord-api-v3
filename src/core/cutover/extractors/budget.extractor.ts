@@ -145,8 +145,8 @@ export const budgetExtractor: Extractor = {
           amount: rec.amount,
           initialAmount: rec.initialAmount,
           preApprovedAmount: rec.preApprovedAmount,
-          createdAt: new Date(rec.createdAt),
-          updatedAt: new Date(rec.createdAt),
+          createdAt: tsReq(rec.createdAt),
+          updatedAt: tsReq(rec.createdAt),
           deletedAt: null,
         },
       ];

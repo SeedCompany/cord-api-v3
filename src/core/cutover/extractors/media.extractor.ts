@@ -6,6 +6,7 @@ import {
   keepLanded,
   liveTargetIds,
   one,
+  ts,
   warnIfRelTypeUnknown,
 } from '../cutover.helpers';
 import { type Extractor } from '../cutover.types';
@@ -149,7 +150,7 @@ export const mediaExtractor: Extractor = {
       width: row.width ?? null,
       height: row.height ?? null,
       duration: row.duration ?? null,
-      createdAt: row.createdAt ? row.createdAt.toJSDate() : new Date(0),
+      createdAt: ts(row.createdAt) ?? new Date(0),
     }));
 
     const inserted = await bulkInsert(ctx, media, rows);

@@ -10,6 +10,7 @@ import {
   keepLanded,
   liveTargetIds,
   stat,
+  ts,
   warnIfRelTypeUnknown,
 } from '../cutover.helpers';
 import { type Extractor, type TableStat } from '../cutover.types';
@@ -115,7 +116,7 @@ export const pnpExtractionResultExtractor: Extractor = {
 
     const resultRows = kept.map((row) => ({
       fileId: row.fileId,
-      createdAt: row.fileCreatedAt ? row.fileCreatedAt.toJSDate() : new Date(0),
+      createdAt: ts(row.fileCreatedAt) ?? new Date(0),
     }));
     const resultsInserted = await bulkInsert(
       ctx,

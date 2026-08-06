@@ -7,6 +7,7 @@ import {
   liveTargetIds,
   one,
   resolveParentTypes,
+  ts,
   warnIfRelTypeUnknown,
 } from '../cutover.helpers';
 import { type Extractor } from '../cutover.types';
@@ -134,7 +135,7 @@ export const toolUsageExtractor: Extractor = {
         unresolved.push(row.containerId);
         return [];
       }
-      const created = row.createdAt ? new Date(row.createdAt) : new Date();
+      const created = ts(row.createdAt) ?? new Date();
       return [
         {
           id: row.id,
@@ -149,7 +150,7 @@ export const toolUsageExtractor: Extractor = {
           // characters are the calendar date either way.
           startDate: row.startDate ? row.startDate.slice(0, 10) : null,
           createdAt: created,
-          updatedAt: row.modifiedAt ? new Date(row.modifiedAt) : created,
+          updatedAt: ts(row.modifiedAt) ?? created,
           // The ETL is live-only; nothing arrives already deleted.
           deletedAt: null,
         },
