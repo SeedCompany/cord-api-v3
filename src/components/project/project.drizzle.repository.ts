@@ -46,6 +46,7 @@ import {
   engagements,
   fieldRegions,
   locations,
+  partnerships,
   projectMembers,
   projects,
   projectWorkflowEvents,
@@ -60,6 +61,7 @@ import {
   locationFilterClauses,
   locationSortColumns,
 } from '../location/location.drizzle.repository';
+import { partnershipFilterClauses } from '../partnership/partnership.drizzle.repository';
 import { pinnedByRequester, pinnedFilter } from '../pin/pinned-by-requester';
 import {
   type CreateProject,
@@ -656,9 +658,16 @@ export const projectSortColumns = {
  * `resolveCrossDomainSort(sort, prefix, sortColumns)` helper alongside
  * `paginatedSelectWithJoin` (mirror of `*FilterClauses` emergence).
  *
- * migration-todo: `primaryPartnership.*` sort is not implemented. Partnership
- * is on develop now, but mono leaves this sort stubbed too; wire it as a
- * follow-up. Throw `NotImplementedException` so callers discover the gap.
+ * migration-todo: `primaryPartnership.*` sort is not implemented. Unlike the
+ * partnerId/partnerships/primaryPartnership FILTERS (wired below now that
+ * Partnership has landed), this doesn't fit the `{table, fkColumn, column}` +
+ * `leftJoin(table, eq(table.id, fkColumn))` shape this helper's caller uses —
+ * partnerships.project_id points AT projects, so the join runs the other way
+ * (`eq(partnerships.projectId, projects.id)`), which would mean widening this
+ * helper's return shape for one caller. No confirmed cord-field usage of this
+ * specific sort key either (unlike the filters, which are). Deferred rather
+ * than forced into a shape that doesn't fit — throw `NotImplementedException`
+ * so callers discover the gap.
  */
 const resolveCrossDomainSort = (
   sort: string,
@@ -701,9 +710,10 @@ const resolveCrossDomainSort = (
  * `projects`. Exported for sub-delegation from other domains (Engagement and
  * Partnership both filter-sub-delegate into projectFilterClauses).
  *
- * Cross-domain stubs (partnerId, partnerships, primaryPartnership,
- * tool, onlyMultipleEngagements, usesRev79) throw NotImplementedException
- * until their target domain migrates — discovery mechanism, not silent skip.
+ * partnerId/partnerships/primaryPartnership/onlyMultipleEngagements are wired
+ * below now that Partnership and Engagement have landed. `tool` and
+ * `usesRev79` still throw NotImplementedException — genuinely blocked on
+ * ToolUsage's live query repo, not just unwired.
  */
 export const projectFilterClauses = (
   db: DrizzleDb,
@@ -855,18 +865,37 @@ export const projectFilterClauses = (
     conditions.push(inArray(projects.id, sub));
   }
   if (filter.membership) {
-    // Note: the `user: { id: $currentUser }` constraint is applied by the
-    // resolver/transform layer (see ProjectFilters.membership transform).
-    const sub = db
-      .selectDistinct({ id: projectMembers.projectId })
-      .from(projectMembers)
-      .where(
-        and(
-          isNull(projectMembers.deletedAt),
-          ...projectMemberFilterClauses(db, filter.membership),
+    // BUG FIX (found live 2026-08-07, impersonating Financial Analyst: 5240
+    // projects locally vs 116 in prod for the same `mine` filter). The old
+    // comment here was wrong — no transform injects the current user. On
+    // Neo4j, `membership`'s match HARDCODES `currentUser` directly into the
+    // path (project-filters.query.ts) — it always means "the REQUESTER's own
+    // membership", unlike `members` above (any user's). Without that
+    // constraint, `membership.active = true` (what `mine`/`isMember` set)
+    // matched any project with ANY active member at all — for a role whose
+    // Project.read is unconditional (Financial Analyst's policy has no
+    // `.when(member)` on the base read grant), that's nearly every project.
+    // Fail closed rather than open when there's no requester to scope to —
+    // same convention as `pinnedFilter`.
+    if (!requesterId) {
+      conditions.push(sql`false`);
+    } else {
+      conditions.push(
+        inArray(
+          projects.id,
+          db
+            .selectDistinct({ id: projectMembers.projectId })
+            .from(projectMembers)
+            .where(
+              and(
+                isNull(projectMembers.deletedAt),
+                eq(projectMembers.userId, requesterId),
+                ...projectMemberFilterClauses(db, filter.membership),
+              ),
+            ),
         ),
       );
-    conditions.push(inArray(projects.id, sub));
+    }
   }
   // `userId`: project where user is a member OR engagement intern. Intern path
   // is gated on Engagement migration — partial support: member only.
@@ -894,26 +923,57 @@ export const projectFilterClauses = (
       )`,
     );
   }
-  // Cross-domain filters — throw until wired so the gap is discoverable in
-  // tests instead of silently returning all projects.
-  //
-  // migration-todo: Partnership is on develop now, so these three can be wired
-  // via `subFilter(db, projects.id, partnerships, [...])` reusing the exported
-  // `partnershipFilterClauses`. Mono leaves them stubbed too, so kept deferred
-  // to a follow-up rather than writing new (untested-on-mono) filter SQL here.
+  // Reverse relationship — partnerships.project_id points AT projects, so
+  // this is the same `IN (SELECT parent_fk FROM child WHERE ...)` shape as
+  // members/membership above, not `subFilter` (which assumes the FK lives on
+  // the outer table, pointing forward at the sub-table's own id).
   if (filter.partnerId) {
-    throw new NotImplementedException(
-      'ProjectFilters.partnerId is not yet wired under Postgres.',
+    conditions.push(
+      inArray(
+        projects.id,
+        db
+          .selectDistinct({ id: partnerships.projectId })
+          .from(partnerships)
+          .where(
+            and(
+              isNull(partnerships.deletedAt),
+              eq(partnerships.partnerId, filter.partnerId),
+            ),
+          ),
+      ),
     );
   }
   if (filter.partnerships) {
-    throw new NotImplementedException(
-      'ProjectFilters.partnerships is not yet wired under Postgres.',
+    conditions.push(
+      inArray(
+        projects.id,
+        db
+          .selectDistinct({ id: partnerships.projectId })
+          .from(partnerships)
+          .where(
+            and(
+              isNull(partnerships.deletedAt),
+              ...partnershipFilterClauses(db, filter.partnerships),
+            ),
+          ),
+      ),
     );
   }
   if (filter.primaryPartnership) {
-    throw new NotImplementedException(
-      'ProjectFilters.primaryPartnership is not yet wired under Postgres.',
+    conditions.push(
+      inArray(
+        projects.id,
+        db
+          .selectDistinct({ id: partnerships.projectId })
+          .from(partnerships)
+          .where(
+            and(
+              isNull(partnerships.deletedAt),
+              eq(partnerships.primary, true),
+              ...partnershipFilterClauses(db, filter.primaryPartnership),
+            ),
+          ),
+      ),
     );
   }
   if (filter.tool) {
@@ -923,9 +983,26 @@ export const projectFilterClauses = (
     );
   }
   if (filter.onlyMultipleEngagements != null) {
-    // migration-todo: wire when Engagement migrates (count-over-engagements).
-    throw new NotImplementedException(
-      'ProjectFilters.onlyMultipleEngagements requires Engagement migration (Phase 5).',
+    // Mirrors project-filters.query.ts's Cypher exactly: a REQUIRED match
+    // through the engagement edge means a project with zero engagements
+    // never enters the aggregation, so it matches neither true nor false —
+    // `false` means "exactly one", not "zero or one". GROUP BY reproduces
+    // that same required-match behavior (a project with no live engagements
+    // never produces a row to filter on).
+    conditions.push(
+      inArray(
+        projects.id,
+        db
+          .select({ id: engagements.projectId })
+          .from(engagements)
+          .where(isNull(engagements.deletedAt))
+          .groupBy(engagements.projectId)
+          .having(
+            filter.onlyMultipleEngagements
+              ? sql`count(*) > 1`
+              : sql`count(*) = 1`,
+          ),
+      ),
     );
   }
   if (filter.usesRev79 != null) {

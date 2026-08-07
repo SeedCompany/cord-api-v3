@@ -1238,4 +1238,137 @@ describe('Project e2e', () => {
       );
     });
   });
+
+  // Placed at the end of the file, not alongside the other filter tests
+  // above: these create extra projects with no explicit sensitivity (default
+  // High), which threw off "List of projects sorted by Sensitivity"'s exact
+  // top-of-list assertion when they ran earlier in file order.
+  it('isMember filter scopes to the CURRENT user, not any project with any active member', async () => {
+    // Found live 2026-08-07 impersonating a Financial Analyst: `mine`
+    // returned 5240 projects locally vs 116 in prod for the same persona.
+    // FinancialAnalystPolicy grants unconditional Project.read (no
+    // `.when(member)`), so unlike most roles — where the read-filter itself
+    // already restricts every row to "projects I'm a member of" and made the
+    // missing constraint invisible — this role exposed it directly.
+    const myProject = await createProject(app, { fieldRegion: fieldRegion.id });
+    const otherProject = await createProject(app, {
+      fieldRegion: fieldRegion.id,
+    });
+
+    // registerUser leaves the ambient session as the new user afterward (by
+    // design — many tests rely on it), so it and the member-adding both go
+    // inside ONE runAsAdmin call: it restores whatever was ambient (director)
+    // BEFORE this call started, undoing that churn, rather than leaving the
+    // analyst as ambient for every test after this one.
+    const analyst = await runAsAdmin(app, async () => {
+      const user = await registerUser(app, {
+        roles: [Role.FinancialAnalyst],
+      });
+      await createProjectMember(app, {
+        project: myProject.id,
+        user: user.id,
+      });
+      // otherProject already has director as an active member — createProject
+      // auto-adds its creator — which is exactly the case that must NOT match:
+      // some other user's active membership, not this requester's.
+      return user;
+    });
+
+    const mine = await analyst.runAs(() =>
+      listProjects(app, { filter: { isMember: true } }),
+    );
+    const ids = mine.items.map((p) => p.id);
+    expect(ids).toContain(myProject.id);
+    expect(ids).not.toContain(otherProject.id);
+  });
+
+  it('filters projects by onlyMultipleEngagements — false means exactly one, not zero-or-one', async () => {
+    const noEngagements = await createProject(app, {
+      fieldRegion: fieldRegion.id,
+    });
+    const oneEngagement = await createProject(app, {
+      fieldRegion: fieldRegion.id,
+    });
+    const twoEngagements = await createProject(app, {
+      fieldRegion: fieldRegion.id,
+    });
+
+    const [languageA, languageB] = await runAsAdmin(app, async () => [
+      await createLanguage(app),
+      await createLanguage(app),
+    ]);
+
+    await createLanguageEngagement(app, {
+      project: oneEngagement.id,
+      language: languageA.id,
+    });
+    await createLanguageEngagement(app, {
+      project: twoEngagements.id,
+      language: languageA.id,
+    });
+    await createLanguageEngagement(app, {
+      project: twoEngagements.id,
+      language: languageB.id,
+    });
+
+    const multiple = await listProjects(app, {
+      filter: { onlyMultipleEngagements: true },
+    });
+    const multipleIds = multiple.items.map((p) => p.id);
+    expect(multipleIds).toContain(twoEngagements.id);
+    expect(multipleIds).not.toContain(oneEngagement.id);
+    expect(multipleIds).not.toContain(noEngagements.id);
+
+    const exactlyOne = await listProjects(app, {
+      filter: { onlyMultipleEngagements: false },
+    });
+    const exactlyOneIds = exactlyOne.items.map((p) => p.id);
+    expect(exactlyOneIds).toContain(oneEngagement.id);
+    expect(exactlyOneIds).not.toContain(twoEngagements.id);
+    expect(exactlyOneIds).not.toContain(noEngagements.id);
+  });
+
+  it("filters a partner's projects to those with a partnership to that partner", async () => {
+    // ProjectFilters.partnerId has no GraphQL field — it's injected by the
+    // Partner.projects resolver, same as cord-field's PartnerProjects.graphql
+    // (partner(id) { projects(input) }), not settable directly by a client.
+    const matchingPartner = await createPartner(app);
+    const otherPartner = await createPartner(app);
+
+    const matchingProject = await createProject(app, {
+      fieldRegion: fieldRegion.id,
+    });
+    const otherProject = await createProject(app, {
+      fieldRegion: fieldRegion.id,
+    });
+
+    await createPartnership(app, {
+      project: matchingProject.id,
+      partner: matchingPartner.id,
+    });
+    await createPartnership(app, {
+      project: otherProject.id,
+      partner: otherPartner.id,
+    });
+
+    const { partner } = await app.graphql.query(
+      graphql(`
+        query ($id: ID!) {
+          partner(id: $id) {
+            id
+            projects(input: {}) {
+              items {
+                id
+              }
+            }
+          }
+        }
+      `),
+      { id: matchingPartner.id },
+    );
+
+    const ids = partner.projects.items.map((p) => p.id);
+    expect(ids).toContain(matchingProject.id);
+    expect(ids).not.toContain(otherProject.id);
+  });
 });

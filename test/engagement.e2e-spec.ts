@@ -705,6 +705,45 @@ describe('Engagement e2e', () => {
     ).toBeTruthy();
   });
 
+  it('filters engagements by a project sub-filter field beyond id', async () => {
+    const translationProject = await createProject(app);
+    const internProject = await createProject(app, {
+      type: ProjectType.Internship,
+    });
+
+    const languageEngagement = await createLanguageEngagement(app, {
+      language: language.id,
+      project: translationProject.id,
+    });
+    const internshipEngagement = await createInternshipEngagement(app, {
+      project: internProject.id,
+      countryOfOrigin: location.id,
+      intern: intern.id,
+      mentor: mentor.id,
+    });
+
+    const { engagements } = await app.graphql.query(
+      graphql(`
+        query ($input: EngagementListInput) {
+          engagements(input: $input) {
+            items {
+              id
+            }
+          }
+        }
+      `),
+      {
+        input: {
+          filter: { project: { type: [ProjectType.Internship] } },
+        },
+      },
+    );
+
+    const ids = engagements.items.map((e) => e.id);
+    expect(ids).toContain(internshipEngagement.id);
+    expect(ids).not.toContain(languageEngagement.id);
+  });
+
   it('internship engagement creation fails and lets you know why if your ids are bad', async () => {
     internshipProject = await createProject(app, {
       type: ProjectType.Internship,
