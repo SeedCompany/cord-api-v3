@@ -5,9 +5,10 @@ production DB) and inserts it into the corresponding **Postgres** (Drizzle)
 tables, **ID-preserving**, with **no service/hook side-effects**. Separate from
 the schema migrations (those build empty tables; this fills them).
 
-> Status: **draft covering the firm (already-merged-to-develop) domains.** Built
-> + validated end-to-end against a local Neo4j (`yarn` dev DB). NOT yet run
-> against production data. See _Findings_ and _Not covered yet_.
+> Status: **all 55 loadable tables covered (the 3 remaining are uncoverable by
+> design — see below).** Built + validated end-to-end against a local Neo4j
+> (`yarn` dev DB). NOT yet run against production data. See _Findings_ and
+> _Not covered_.
 
 ## Strategy
 
@@ -291,6 +292,8 @@ Rollback is instant at any point before the flip: Neo4j is untouched.
 
 ## Domains covered (firm / merged to develop)
 
+**55 of 58 Postgres tables, which is the ceiling — see below.**
+
 user (+ global_roles, educations, unavailabilities, system_agents,
 auth_identities) · tool · fundingAccount · ethnologue · language ·
 departmentIdBlock · fieldZone · fieldRegion · location · organization
@@ -299,26 +302,30 @@ re-assert 2-pass) · projectMember · partnership · engagement (+ status histor
 ceremonies) · product (+ producibles, completion descriptions) · periodic-report
 · prompt-variant-response (+ entries) · product-progress (+ step progress) ·
 progress-summary · notification (+ recipients) · budget (+ budget_records) ·
-pin · known-language · comment (+ threads) · post.
+pin · known-language · comment (+ threads) · post · file (+ media, PnP
+extraction results + problems, progress-report media) · tool-usage ·
+progress-report-workflow-event · progress-report-variance-explanation ·
+partnership-producing-medium.
 
-**Deliberately NOT migrated (transient):** `auth_sessions`,
-`auth_password_reset_tokens` — users re-authenticate post-cutover.
+`project.rootDirectoryId` and `engagement.{pnpId,growthPlanId}` are backfilled
+from the DTO fields the live repos already hydrate (`rootDirectory` relation,
+`props.pnp`/`props.growthPlan`) now that `file` is a declared dependency of
+both — no separate second pass needed, the id was sitting on the row the
+whole time.
 
-## Not covered yet (add as domains land / as follow-ups)
+## Not covered (by design — this is the correct end state, not a gap)
 
-- **File + Media** — deferred. `file_nodes` is a single-table tree needing a
-  topological insert (parents before children) + a two-pass for the denormalized
-  `latest_version_id`. Wants its own focused pass. (S3 blobs never migrate —
-  metadata only.) Note `periodic_reports.report_file_id`/`narrative_file_id`
-  ARE already populated with the ids this wave will insert — they're plain text
-  with no FK, so they cost nothing to carry early and save a backfill.
-- **progress-report media + PnP extraction results** — both are file-keyed, so
-  they belong with the File wave rather than with the other leaves.
-- **ProgressReportWorkflowEvent** (192 nodes locally) and
-  **ProgressReportVarianceExplanation** (2) have **no Postgres table yet** —
-  neither domain is ported, so there is nowhere to load them. A progress
-  report's *current* `status` carries over; its transition history does not.
-  Add extractors when those domains land.
+- **`auth_sessions`, `auth_password_reset_tokens`** — transient; users
+  re-authenticate post-cutover.
+- **`resource_mutations`** — the audit log. Postgres-only surface with no
+  Neo4j counterpart to read; starts empty and accumulates from the first
+  post-flip mutation. Writing an extractor for it isn't hard, it's impossible.
+
+Do not chase 58/58 — the three above cannot and should not be filled from
+Neo4j.
+
+## Thin/unexercised paths worth a second look with real data
+
 - **ProgressReportHighlight** exists as a code path in the
   prompt-variant-response extractor but has **zero instances locally**, so that
   branch is written and unexercised. Same class as OtherProduct / Film /

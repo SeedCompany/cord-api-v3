@@ -5,6 +5,7 @@ import {
   engagements,
   engagementStatusEnum,
   engagementStatusHistory,
+  fileNodes,
   languages,
   locations,
   productMethodologyEnum,
@@ -55,13 +56,16 @@ import { type Extractor, type TableStat } from '../cutover.types';
  * rather than the DTO's `__typename` string, which is prefixed `default::` for
  * Gel's benefit and is a fragile thing to parse.
  *
- * `pnp_id` / `growth_plan_id` stay null — deferred FKs to file_nodes, populated
- * by the File wave (Phase 7).
+ * `pnp_id` / `growth_plan_id` are backfilled from the same `pnp`/`growthPlan`
+ * properties the live repo already hydrates (`props.pnp` / `props.growthPlan` —
+ * plain DefinedFile placeholder ids, not a graph relationship). `file` is added
+ * to `dependsOn` so file_nodes has landed by the time these are checked for
+ * liveness.
  */
 export const engagementExtractor: Extractor = {
   name: 'engagement',
   targetTables: ['engagements', 'engagement_status_history', 'ceremonies'],
-  dependsOn: ['project', 'language', 'user', 'location'],
+  dependsOn: ['project', 'language', 'user', 'location', 'file'],
   async run(ctx) {
     const out: Record<string, TableStat> = {};
 
@@ -80,6 +84,7 @@ export const engagementExtractor: Extractor = {
     const landedLanguages = await liveTargetIds(ctx, 'Language', languages);
     const landedUsers = await liveTargetIds(ctx, 'User', users);
     const landedLocations = await liveTargetIds(ctx, 'Location', locations);
+    const landedFileNodes = await liveTargetIds(ctx, 'FileNode', fileNodes);
 
     const droppedForProject: string[] = [];
     const droppedForLanguage: string[] = [];
@@ -87,6 +92,14 @@ export const engagementExtractor: Extractor = {
     const nulledEnums = new Set<string>();
     let nulledMentors = 0;
     let nulledCountries = 0;
+    let nulledFileRefs = 0;
+    const liveFileRefOrNull = (id: ID | null): ID | null => {
+      if (id && !landedFileNodes.has(id)) {
+        nulledFileRefs++;
+        return null;
+      }
+      return id;
+    };
 
     const rows = dtos.flatMap((eng) => {
       const isLanguage = languageEngagementIds.has(eng.id);
@@ -178,8 +191,7 @@ export const engagementExtractor: Extractor = {
           paratextRegistryId:
             (lang.paratextRegistryId as string | null) ?? null,
           rev79CommunityId: (lang.rev79CommunityId as string | null) ?? null,
-          // Deferred FK — the File wave fills these.
-          pnpId: null,
+          pnpId: liveFileRefOrNull(linkId(lang.pnp)),
           sentPrintingDate: dateStr(lang.sentPrintingDate),
           historicGoal: (lang.historicGoal as string | null) ?? null,
           milestonePlanned: orDefault(
@@ -198,7 +210,7 @@ export const engagementExtractor: Extractor = {
           position: lang.position ?? null,
           methodologies: methodologies.kept as any,
           countryOfOriginId,
-          growthPlanId: null,
+          growthPlanId: liveFileRefOrNull(linkId(lang.growthPlan)),
           marketable: orDefault(lang.marketable as boolean, false),
           webId: (lang.webId as string | null) ?? null,
 
@@ -231,6 +243,11 @@ export const engagementExtractor: Extractor = {
     if (nulledMentors > 0 || nulledCountries > 0) {
       ctx.log(
         `    ⚠ nulled ${nulledMentors} mentor + ${nulledCountries} countryOfOrigin ref(s) whose target never landed`,
+      );
+    }
+    if (nulledFileRefs > 0) {
+      ctx.log(
+        `    ⚠ nulled ${nulledFileRefs} pnp/growthPlan ref(s) whose file never landed`,
       );
     }
     if (nulledEnums.size > 0) {
