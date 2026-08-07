@@ -733,8 +733,15 @@ const resolveCrossDomainSort = (
     return { table: fieldRegions, fkColumn: projects.fieldRegionId, column };
   }
   if (sort.startsWith('primaryPartnership.')) {
+    // Partnership HAS landed (its filters are wired below) — this message
+    // used to blame that, which is now misleading. The real blockers are
+    // the ones in this function's docblock: the FK points the other way
+    // (partnerships.project_id, not a column on projects), so it doesn't fit
+    // this helper's {table, fkColumn, column} shape, and there's still no
+    // confirmed cord-field usage of this specific sort key.
     throw new NotImplementedException(
-      `Sorting projects by '${sort}' is not yet supported under DATABASE=postgres — pending Partnership migration.`,
+      `Sorting projects by '${sort}' is not supported — the partner FK points ` +
+        "the other way, so it needs its own join shape rather than this helper's.",
     );
   }
   return null;
