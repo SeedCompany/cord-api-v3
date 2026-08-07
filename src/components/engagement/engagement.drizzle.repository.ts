@@ -31,6 +31,8 @@ import {
   engagementStatusHistory,
   languages,
   projects,
+  tools,
+  toolUsages,
   users,
 } from '~/core/drizzle/schema';
 import { type ScopedRole } from '../authorization/dto/role.dto';
@@ -43,6 +45,7 @@ import {
   projectFilterClauses,
   recomputeProjectSensitivity,
 } from '../project/project.drizzle.repository';
+import { toolFilterClauses } from '../tools/tool/tool.drizzle.repository';
 import { userFilterClauses } from '../user/user.drizzle.repository';
 import {
   type CreateInternshipEngagement,
@@ -942,12 +945,31 @@ export const engagementFilterClauses = (
       ),
     );
   }
+  if (filter.tool) {
+    conditions.push(
+      inArray(
+        engagements.id,
+        db
+          .selectDistinct({ id: toolUsages.containerId })
+          .from(toolUsages)
+          .innerJoin(
+            tools,
+            and(eq(tools.id, toolUsages.toolId), isNull(tools.deletedAt)),
+          )
+          .where(
+            and(
+              isNull(toolUsages.deletedAt),
+              ...toolFilterClauses(db, filter.tool),
+            ),
+          ),
+      ),
+    );
+  }
   const unimplemented = {
     name: filter.name,
     engagedName: filter.engagedName,
     startDate: filter.startDate,
     endDate: filter.endDate,
-    tool: filter.tool,
   };
   for (const [key, value] of Object.entries(unimplemented)) {
     if (value !== undefined) {

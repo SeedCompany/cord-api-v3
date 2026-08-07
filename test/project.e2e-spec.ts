@@ -31,6 +31,7 @@ import {
   createRegion,
   createSession,
   createTestApp,
+  createTool,
   createZone,
   errors,
   fragments,
@@ -298,6 +299,109 @@ describe('Project e2e', () => {
 
     expect(result.updateProject.project.id).toBe(project.id);
     expect(result.updateProject.project.name.value).toBe(namenew);
+  });
+
+  it('toggles usesRev79 and filters by it and by tool', async () => {
+    // usesRev79 delegates to a ToolUsage against whichever Tool carries the
+    // Rev79 key, so a project can't turn it on until that Tool exists.
+    const rev79Tool = await runAsAdmin(
+      app,
+      async () => await createTool(app, { key: 'Rev79' }),
+    );
+    const project = await createProject(app, {
+      type: ProjectType.MomentumTranslation,
+      fieldRegion: fieldRegion.id,
+    });
+    const usesRev79Of = async (id: ID) => {
+      const result = await app.graphql.query(
+        graphql(`
+          query projectUsesRev79($id: ID!) {
+            project(id: $id) {
+              usesRev79 {
+                value
+              }
+            }
+          }
+        `),
+        { id },
+      );
+      return result.project.usesRev79.value;
+    };
+    expect(await usesRev79Of(project.id)).toBe(false);
+
+    const enabled = await app.graphql.mutate(
+      graphql(`
+        mutation enableRev79($id: ID!) {
+          updateProject(input: { id: $id, usesRev79: true }) {
+            project {
+              usesRev79 {
+                value
+              }
+            }
+          }
+        }
+      `),
+      { id: project.id },
+    );
+    expect(enabled.updateProject.project.usesRev79.value).toBe(true);
+
+    const rev79Filtered = await app.graphql.query(
+      graphql(`
+        query projectsUsingRev79 {
+          projects(input: { filter: { usesRev79: true } }) {
+            items {
+              id
+            }
+          }
+        }
+      `),
+    );
+    expect(rev79Filtered.projects.items.map((p) => p.id)).toContain(project.id);
+
+    const toolFiltered = await app.graphql.query(
+      graphql(`
+        query projectsByTool($id: ID!) {
+          projects(input: { filter: { tool: { id: $id } } }) {
+            items {
+              id
+            }
+          }
+        }
+      `),
+      { id: rev79Tool.id },
+    );
+    expect(toolFiltered.projects.items.map((p) => p.id)).toContain(project.id);
+
+    const disabled = await app.graphql.mutate(
+      graphql(`
+        mutation disableRev79($id: ID!) {
+          updateProject(input: { id: $id, usesRev79: false }) {
+            project {
+              usesRev79 {
+                value
+              }
+            }
+          }
+        }
+      `),
+      { id: project.id },
+    );
+    expect(disabled.updateProject.project.usesRev79.value).toBe(false);
+
+    const rev79FilteredAfter = await app.graphql.query(
+      graphql(`
+        query projectsUsingRev79After {
+          projects(input: { filter: { usesRev79: true } }) {
+            items {
+              id
+            }
+          }
+        }
+      `),
+    );
+    expect(rev79FilteredAfter.projects.items.map((p) => p.id)).not.toContain(
+      project.id,
+    );
   });
 
   it('delete project', async () => {

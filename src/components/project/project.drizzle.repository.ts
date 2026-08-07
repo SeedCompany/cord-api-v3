@@ -13,6 +13,7 @@ import {
   lt,
   lte,
   max,
+  notInArray,
   sql,
   type SQL,
 } from 'drizzle-orm';
@@ -50,6 +51,8 @@ import {
   projectMembers,
   projects,
   projectWorkflowEvents,
+  tools,
+  toolUsages,
 } from '~/core/drizzle/schema';
 import { rolesForScope } from '../authorization/dto/role.dto';
 import { PolicyExecutor } from '../authorization/policy/executor/policy-executor';
@@ -63,6 +66,8 @@ import {
 } from '../location/location.drizzle.repository';
 import { partnershipFilterClauses } from '../partnership/partnership.drizzle.repository';
 import { pinnedByRequester, pinnedFilter } from '../pin/pinned-by-requester';
+import { ToolKey } from '../tools/tool/dto/tool-key.enum';
+import { toolFilterClauses } from '../tools/tool/tool.drizzle.repository';
 import {
   type CreateProject,
   IProject,
@@ -100,6 +105,8 @@ type ProjectRow = typeof projects.$inferSelect & {
    * `marketingRegion`, which falls back to this when there's no override.
    */
   inheritedMarketingRegionId?: ID<'Location'> | null;
+  /** Has a live ToolUsage for the Rev79 tool — batched in `readMany`. */
+  usesRev79?: boolean;
   membership?: {
     id: ID<'ProjectMember'>;
     // `Role`, not `string` — the column is a role enum array, and the DTO's
@@ -265,6 +272,32 @@ export class ProjectDrizzleRepository extends DrizzleDtoRepository<
       userId,
       rows.map((r) => r.id),
     );
+    // Rev79 usage — one row per project with a live ToolUsage against the
+    // Rev79 tool. Same containerId-only join as the filter clauses below;
+    // Rev79 usage is unique per project (tool_usages_container_tool_unique).
+    const rev79Usages = await this.db
+      .select({ projectId: toolUsages.containerId })
+      .from(toolUsages)
+      .innerJoin(
+        tools,
+        and(
+          eq(tools.id, toolUsages.toolId),
+          eq(tools.key, ToolKey.Rev79),
+          isNull(tools.deletedAt),
+        ),
+      )
+      .where(
+        and(
+          inArray(
+            toolUsages.containerId,
+            rows.map((r) => r.id),
+          ),
+          isNull(toolUsages.deletedAt),
+        ),
+      );
+    const usesRev79ByProject = new Set(
+      rev79Usages.map((r) => r.projectId as ID<'Project'>),
+    );
     return rows.map((row): UnsecuredDto<Project> => {
       const enriched: ProjectRow = {
         ...row,
@@ -275,6 +308,7 @@ export class ProjectDrizzleRepository extends DrizzleDtoRepository<
         inheritedMarketingRegionId: row.marketingLocationId
           ? (inheritedRegionByLocation.get(row.marketingLocationId) ?? null)
           : null,
+        usesRev79: usesRev79ByProject.has(row.id),
       };
       return this.toDto(enriched);
     });
@@ -395,9 +429,10 @@ export class ProjectDrizzleRepository extends DrizzleDtoRepository<
       modifiedAt: new Date(),
     }).catch(catchDepartmentIdUnique);
 
-    // migration-todo: usesRev79 toggle delegates to ToolUsage service (not
-    // migrated yet). When ToolUsage ports, wire the create/remove of the
-    // Rev79 ToolUsage row here.
+    // usesRev79 is deliberately dropped here, not written: project.service.ts's
+    // update() handles the toggle itself, via `this.toolUsage.setUsageByKey`
+    // (create/remove the Rev79 ToolUsage row), then re-reads this repo to pick
+    // up the recomputed value. Nothing repo-side to do.
 
     // The service runs RequiredWhen.calc against this return value, so it
     // must be the full updated DTO — not a stub.
@@ -559,9 +594,9 @@ export class ProjectDrizzleRepository extends DrizzleDtoRepository<
       // Wire via a `partnerships` subquery (primary = true) as a follow-up.
       primaryPartnership: null,
       engagementTotal: row.engagementTotal ?? 0,
-      // migration-todo: ToolUsage not migrated; usesRev79 always false until
-      // the tool-usage layer ports.
-      usesRev79: false,
+      // Batched in readMany — whether the project has a live ToolUsage
+      // against the Rev79 tool.
+      usesRev79: row.usesRev79 ?? false,
       membership: row.membership
         ? {
             id: row.membership.id,
@@ -712,8 +747,10 @@ const resolveCrossDomainSort = (
  *
  * partnerId/partnerships/primaryPartnership/onlyMultipleEngagements are wired
  * below now that Partnership and Engagement have landed. `tool` and
- * `usesRev79` still throw NotImplementedException — genuinely blocked on
- * ToolUsage's live query repo, not just unwired.
+ * `usesRev79` are wired too now that ToolUsage has landed (migration 0034) —
+ * both go through `tool_usages`, matched by `containerId` since a Project's
+ * usages carry no separate `containerType` predicate (ids are globally
+ * unique, same assumption `tool-usage.drizzle.repository.ts` already makes).
  */
 export const projectFilterClauses = (
   db: DrizzleDb,
@@ -977,9 +1014,23 @@ export const projectFilterClauses = (
     );
   }
   if (filter.tool) {
-    // migration-todo: wire when ToolUsage migrates (exists-over-tool_usages).
-    throw new NotImplementedException(
-      'ProjectFilters.tool requires ToolUsage migration.',
+    conditions.push(
+      inArray(
+        projects.id,
+        db
+          .selectDistinct({ id: toolUsages.containerId })
+          .from(toolUsages)
+          .innerJoin(
+            tools,
+            and(eq(tools.id, toolUsages.toolId), isNull(tools.deletedAt)),
+          )
+          .where(
+            and(
+              isNull(toolUsages.deletedAt),
+              ...toolFilterClauses(db, filter.tool),
+            ),
+          ),
+      ),
     );
   }
   if (filter.onlyMultipleEngagements != null) {
@@ -1006,9 +1057,22 @@ export const projectFilterClauses = (
     );
   }
   if (filter.usesRev79 != null) {
-    // migration-todo: wire when ToolUsage migrates (Rev79 tool usage check).
-    throw new NotImplementedException(
-      'ProjectFilters.usesRev79 requires ToolUsage migration.',
+    const usesRev79Sub = db
+      .selectDistinct({ id: toolUsages.containerId })
+      .from(toolUsages)
+      .innerJoin(
+        tools,
+        and(
+          eq(tools.id, toolUsages.toolId),
+          eq(tools.key, ToolKey.Rev79),
+          isNull(tools.deletedAt),
+        ),
+      )
+      .where(isNull(toolUsages.deletedAt));
+    conditions.push(
+      filter.usesRev79
+        ? inArray(projects.id, usesRev79Sub)
+        : notInArray(projects.id, usesRev79Sub),
     );
   }
   if (filter.pinned != null) {
