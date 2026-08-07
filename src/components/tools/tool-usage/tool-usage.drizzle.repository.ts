@@ -19,7 +19,7 @@ import {
   resolveResourceBaseNodes,
   resolveResourceBaseNodesByType,
 } from '~/core/drizzle/resolve-resource-base-node';
-import { type tools, toolUsages } from '~/core/drizzle/schema';
+import { type tools, toolUsages, users } from '~/core/drizzle/schema';
 import { ILogger, Logger } from '~/core/logger';
 import { type BaseNode } from '~/core/neo4j/results';
 import {
@@ -50,6 +50,18 @@ const bucketOf = (containerType: string): ToolContainerType | null =>
     : CONTAINER_TYPES.Engagement.includes(containerType)
       ? 'Engagement'
       : null;
+
+/**
+ * A usage whose creator has since been soft-deleted is dropped, matching
+ * Neo4j: its query requires the creator to match, so a removed creator makes
+ * the usage disappear over there instead of surfacing with a blank field.
+ * `creator` is a `one()` relation, which drizzle-orm doesn't let a nested
+ * `where` filter — so the liveness check happens here instead, against the
+ * `deletedAt` column fetched alongside it.
+ */
+const hasLiveCreator = (row: {
+  creator?: { deletedAt: Date | null } | null;
+}): boolean => row.creator != null && row.creator.deletedAt == null;
 
 type ToolUsageRow = typeof toolUsages.$inferSelect & {
   tool?: typeof tools.$inferSelect | null;
@@ -112,15 +124,16 @@ export class ToolUsageDrizzleRepository extends DrizzleDtoRepository<
     const rows = await this.db.query.toolUsages.findMany({
       where: (usage) =>
         and(inArray(usage.id, [...ids]), isNull(usage.deletedAt)),
-      with: { tool: true },
+      with: { tool: true, creator: { columns: { deletedAt: true } } },
     });
-    const containers = await this.containerBaseNodesFor(rows);
+    const live = rows.filter(hasLiveCreator);
+    const containers = await this.containerBaseNodesFor(live);
     // A usage whose container no longer resolves is dropped, not returned with a
     // hole: the Cypher's `node(container, 'BaseNode')` match was required, so
     // Neo4j never yielded such a row either. Returning it would hand the service
     // an unloadable container and surface as NotFoundException on a non-null
     // field. Callers see a missing id, which readOne turns into NotFound.
-    return rows.flatMap((row) => {
+    return live.flatMap((row) => {
       const container = containers.get(row.containerId);
       return container ? [this.toDto(row as ToolUsageRow, container)] : [];
     });
@@ -176,14 +189,15 @@ export class ToolUsageDrizzleRepository extends DrizzleDtoRepository<
           inArray(usage.containerId, [...containers]),
           isNull(usage.deletedAt),
         ),
-      with: { tool: true },
+      with: { tool: true, creator: { columns: { deletedAt: true } } },
     });
+    const live = rows.filter(hasLiveCreator);
     // Only ids are given here, with no discriminator to key off — the caller
     // asks about containers that may hold no usages at all. So probe by id
     // instead: one query per registry table, flat as the page grows.
     const nodes = await resolveResourceBaseNodes(this.db, containers);
     const byContainer = new Map<ID, Array<UnsecuredDto<ToolUsage>>>();
-    for (const row of rows) {
+    for (const row of live) {
       const container = nodes.get(row.containerId);
       if (!container) continue;
       const list = byContainer.get(row.containerId) ?? [];
@@ -220,11 +234,12 @@ export class ToolUsageDrizzleRepository extends DrizzleDtoRepository<
     }
     const rows = await this.db.query.toolUsages.findMany({
       where: () => and(...conditions),
-      with: { tool: true },
+      with: { tool: true, creator: { columns: { deletedAt: true } } },
     });
-    const nodes = await this.containerBaseNodesFor(rows);
+    const live = rows.filter(hasLiveCreator);
+    const nodes = await this.containerBaseNodesFor(live);
     const byTool = new Map<ID, Array<UnsecuredDto<ToolUsage>>>();
-    for (const row of rows) {
+    for (const row of live) {
       // Drop rather than emit a container-less usage — one dead container would
       // otherwise null out every tool in the list via non-null propagation.
       const container = nodes.get(row.containerId);
@@ -256,6 +271,11 @@ export class ToolUsageDrizzleRepository extends DrizzleDtoRepository<
         total: sql<number>`count(*)::int`,
       })
       .from(toolUsages)
+      // A dead creator drops the usage from the count too — see hasLiveCreator.
+      .innerJoin(
+        users,
+        and(eq(users.id, toolUsages.creatorId), isNull(users.deletedAt)),
+      )
       .where(
         and(
           inArray(toolUsages.toolId, [...toolIds]),
@@ -290,9 +310,9 @@ export class ToolUsageDrizzleRepository extends DrizzleDtoRepository<
           eq(usage.toolId, tool),
           isNull(usage.deletedAt),
         ),
-      with: { tool: true },
+      with: { tool: true, creator: { columns: { deletedAt: true } } },
     });
-    if (!row) return null;
+    if (!row || !hasLiveCreator(row)) return null;
     const nodes = await this.containerBaseNodesFor([row]);
     const containerNode = nodes.get(row.containerId);
     // No live container means the Cypher would have matched nothing — the

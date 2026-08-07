@@ -5,13 +5,7 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import {
-  type ID,
-  IdArg,
-  loadManyIgnoreMissingThrowAny,
-  Resource,
-  ServerException,
-} from '~/common';
+import { type ID, IdArg, Resource, ServerException } from '~/common';
 import { Loader, type LoaderOf } from '~/core/data-loader';
 import { ResourceLoader } from '~/core/resources';
 import { ActorLoader } from '../../user/actor.loader';
@@ -45,36 +39,24 @@ export class ToolUsageResolver {
   }
 
   /**
-   * Who recorded this usage, or null once that person has been removed.
+   * Who recorded this usage.
    *
-   * Nullable is Rob's call (2026-07-30). The `creator_id` column is NOT NULL and
-   * always holds an id, but soft-deleting a user leaves the row pointing at
-   * someone the actor loader deliberately no longer returns. This field used to be
-   * non-null and simply loaded the id, so that raised "could not find" — and
-   * because a non-null field cannot report the failure in place, GraphQL nulls the
-   * usage, then the usage list, then whatever object holds it. `Resource.tools` is
-   * declared on the `Resource` interface, so a departed staff member took out
-   * pages across dozens of types that have nothing to do with tools.
-   *
-   * A deliberate difference from Neo4j, not an oversight: its query requires the
-   * creator to match and soft delete relabels the node, so over there the usage
-   * disappears entirely. Keeping the usage and blanking the creator shows MORE
-   * than Neo4j does, which is the right way round — the usage is a true fact about
-   * the resource, and who recorded it is the part that has gone.
-   *
-   * `loadManyIgnoreMissingThrowAny` rather than a bare try/catch, so only
-   * not-found turns into null; any other error still throws instead of being
-   * quietly reported as "no creator".
+   * Kept non-null on purpose (2026-08-07 reversal of the 2026-07-30 nullable
+   * attempt): flipping this to nullable is a real breaking schema change for
+   * every GraphQL consumer, and that's a conversation to have on its own
+   * timeline, not something to fold into the migration cutover. Parity with
+   * Neo4j is what the cutover needs, and Neo4j's query requires the creator to
+   * match, so a soft-deleted creator makes the whole usage disappear over
+   * there rather than surfacing with a blank field. The repository now does
+   * the same — it drops any usage whose creator has been removed before this
+   * resolver ever runs — so the actor here is guaranteed to still exist.
    */
-  @ResolveField(() => Actor, { nullable: true })
+  @ResolveField(() => Actor)
   async creator(
     @Parent() toolUsage: ToolUsage,
     @Loader(ActorLoader) actors: LoaderOf<ActorLoader>,
   ) {
-    const [creator] = await loadManyIgnoreMissingThrowAny(actors, [
-      toolUsage.creator.id,
-    ]);
-    return creator ?? null;
+    return await actors.load(toolUsage.creator.id);
   }
 
   @Mutation(() => ToolUsageCreated)

@@ -13,8 +13,6 @@ import {
   type TestApp,
 } from './utility';
 
-const isPostgres = process.env.DATABASE === 'postgres';
-
 /**
  * `tools` is declared once on the `Resource` interface, and Nest copies an
  * interface field resolver onto every type that implements it — 40 concrete
@@ -34,9 +32,7 @@ const isPostgres = process.env.DATABASE === 'postgres';
  * every resource, so it has to answer for every resource.
  *
  * Runs on BOTH engines on purpose. These are parity tests, and they are only
- * meaningful if the Neo4j arm is asserted too. The last case is the one
- * exception, and says so: the engines answer it differently by design, so it
- * asserts each for what it actually does.
+ * meaningful if the Neo4j arm is asserted too.
  */
 describe('Resource.tools answers for containers of any type', () => {
   let app: TestApp;
@@ -215,21 +211,21 @@ describe('Resource.tools answers for containers of any type', () => {
    *
    * `creator_id` is NOT NULL and keeps its value forever — soft delete leaves the
    * row alone — but the actor loader stops returning a removed user on purpose.
-   * `creator` used to be a non-null field that just loaded that id, so the load
+   * A naive port kept `creator` non-null and just loaded that id, so the load
    * raised "could not find", and a non-null field cannot report a failure in
    * place: GraphQL nulls the usage, then the list, then the object holding it.
    * `Resource.tools` lives on the `Resource` interface, so one departed staff
    * member broke pages across dozens of unrelated types.
    *
-   * The two engines legitimately answer differently here, so each is asserted for
-   * what it actually does rather than being forced to agree:
+   * Both engines answer the same way (2026-08-07 — Postgres previously kept the
+   * usage and blanked `creator` instead, which was a real improvement on Neo4j
+   * but also a breaking GraphQL schema change; deferred post-migration so it can
+   * be coordinated with API consumers on its own timeline rather than folded
+   * into cutover parity):
    *
-   * - Postgres keeps the usage and blanks the creator (Rob's call 2026-07-30).
-   * - Neo4j drops the usage entirely, because its query requires the creator to
-   *   match and soft delete relabels the node.
-   *
-   * What matters on both is the same, and is the real subject of this test:
-   * asking for the field succeeds, and the surrounding object survives.
+   * the usage disappears entirely, matching Neo4j's query requiring the creator
+   * to match. The repository drops it before the `creator` field resolver ever
+   * runs, so that field stays non-null.
    */
   it('survives the deletion of the user who recorded the usage', async () => {
     const org = await createOrganization(app);
@@ -292,14 +288,7 @@ describe('Resource.tools answers for containers of any type', () => {
 
     // The object holding the list resolved at all — this is what used to break.
     expect(result.organization.id).toBe(org.id);
-    const usages = result.organization.tools.items;
-    expect(usages).not.toBeNull();
-
-    if (isPostgres) {
-      expect(usages).toHaveLength(1);
-      expect(usages[0]!.creator).toBeNull();
-    } else {
-      expect(usages).toHaveLength(0);
-    }
+    expect(result.organization.tools.total).toBe(0);
+    expect(result.organization.tools.items).toHaveLength(0);
   });
 });
