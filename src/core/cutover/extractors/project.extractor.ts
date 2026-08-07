@@ -2,6 +2,7 @@ import { inArray } from 'drizzle-orm';
 import { type ID } from '~/common';
 import {
   fieldRegions,
+  fileNodes,
   locations,
   organizations,
   projects,
@@ -41,9 +42,12 @@ import { type Extractor, type TableStat } from '../cutover.types';
  *    should equal the row's step. A post-pass re-asserts the Neo4j step where
  *    history disagrees (legacy projects stepped outside the workflow).
  *
- * `root_directory_id` stays NULL — file_nodes isn't ETL'd yet; the File wave
- * backfills it (same IDs carry over). `department_id_block_id` has no Neo4j
- * source (the PG handler doesn't write it either) — NULL.
+ * `root_directory_id` is backfilled from the same `rootDirectory` relationship
+ * the live repo hydrates — the File wave landed `file_nodes` with identical ids
+ * carried over from Neo4j, so no second pass is needed: `file` just has to run
+ * before `project` (added to `dependsOn` below) and the id is already sitting
+ * on the DTO. `department_id_block_id` has no Neo4j source (the PG handler
+ * doesn't write it either) — NULL.
  */
 export const projectExtractor: Extractor = {
   name: 'project',
@@ -54,6 +58,7 @@ export const projectExtractor: Extractor = {
     'fieldRegion',
     'organization',
     'departmentIdBlock',
+    'file',
   ],
   async run(ctx) {
     const out: Record<string, TableStat> = {};
@@ -70,6 +75,10 @@ export const projectExtractor: Extractor = {
     const liveLocations = await liveTargetIds(ctx, 'Location', locations);
     const liveRegions = await liveTargetIds(ctx, 'FieldRegion', fieldRegions);
     const liveOrgs = await liveTargetIds(ctx, 'Organization', organizations);
+    // 'FileNode' matches Directory/File/FileVersion alike, same as file.extractor.ts's
+    // own read — a rootDirectory only ever points at a Directory, but checking the
+    // shared label is what the `file` extractor's landed set actually supports.
+    const liveFileNodes = await liveTargetIds(ctx, 'FileNode', fileNodes);
     let danglingRefs = 0;
     const liveOrNull = <T extends string>(
       id: T | null,
@@ -124,8 +133,7 @@ export const projectExtractor: Extractor = {
           linkId(p.owningOrganization),
           liveOrgs,
         ),
-        // migration-todo(cutover): backfill from file_nodes in the File wave.
-        rootDirectoryId: null,
+        rootDirectoryId: liveOrNull(linkId(p.rootDirectory), liveFileNodes),
         mouStart: dateStr(p.mouStart),
         mouEnd: dateStr(p.mouEnd),
         initialMouEnd: dateStr(p.initialMouEnd),
@@ -147,7 +155,7 @@ export const projectExtractor: Extractor = {
     }
     if (danglingRefs) {
       ctx.log(
-        `    ⚠ nulled ${danglingRefs} dangling project ref(s) to soft-deleted locations/regions/orgs (prod-finding #2)`,
+        `    ⚠ nulled ${danglingRefs} dangling project ref(s) to soft-deleted/dropped locations/regions/orgs/root-directories (prod-finding #2)`,
       );
     }
     out.projects = stat(dtos.length, await bulkInsert(ctx, projects, rows));
@@ -182,7 +190,7 @@ export const projectExtractor: Extractor = {
       `MATCH (p:Project)-[:workflowEvent { active: true }]->(e:ProjectWorkflowEvent)
        OPTIONAL MATCH (e)-[:who]->(w)
        RETURN p.id AS projectId, e.id AS id, toString(e.createdAt) AS at,
-              e.transitionKey AS transitionKey, e.to AS toStep,
+              e.transition AS transitionKey, e.to AS toStep,
               e.notes AS notes, w.id AS who
        ORDER BY p.id, e.createdAt ASC`,
     );
