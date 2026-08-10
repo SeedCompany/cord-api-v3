@@ -101,12 +101,11 @@ export class ProgressReportWorkflowDrizzleRepository {
       // `(node)-[:who]->(who:User)`, and soft-deleting a user relabels it to
       // `Deleted_User`, so the event simply does not come back there — one fewer
       // event, no error. Postgres keeps the row (the delete is soft, so the FK
-      // never fires) and then `who` cannot be loaded: the user loader filters
-      // soft-deleted users, `mapSecuredValue` has no not-found handling, and
-      // because `who` is non-null inside a non-null list the failure nulls the
-      // event, then the whole list, then its parent. Deleting a departed staff
-      // member would take out the workflow history of every report they ever
-      // touched. Hiding the event matches Neo4j rather than inventing a contract.
+      // never fires), and `mapSecuredValue` now degrades a missing `who` to a
+      // null field rather than throwing — so without this filter the event
+      // would still render, just with an authorless `who`. That's a new shape
+      // Neo4j never produces. Hiding the event matches Neo4j rather than
+      // inventing a contract.
       isNull(users.deletedAt),
       ...narrowing,
     ];

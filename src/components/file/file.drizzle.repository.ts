@@ -9,7 +9,11 @@ import {
   NotFoundException,
 } from '~/common';
 import { Identity } from '~/core/authentication';
-import { DrizzleService, resolveOrderBy } from '~/core/drizzle';
+import {
+  DrizzleService,
+  escapeLikePattern,
+  resolveOrderBy,
+} from '~/core/drizzle';
 import { fileNodes } from '~/core/drizzle/schema';
 import { LiveQueryStore } from '~/core/live-query';
 import { type BaseNode } from '~/core/neo4j/results';
@@ -116,7 +120,9 @@ export class FileDrizzleRepository {
       sql`${fileNodes.deletedAt} is null`,
     ];
     if (input.filter?.name) {
-      conditions.push(ilike(fileNodes.name, `%${input.filter.name}%`));
+      conditions.push(
+        ilike(fileNodes.name, `%${escapeLikePattern(input.filter.name)}%`),
+      );
     }
     if (input.filter?.type) {
       conditions.push(eq(fileNodes.type, input.filter.type));

@@ -16,11 +16,7 @@ import {
   type SortMap,
 } from '~/core/drizzle';
 import { DrizzleService } from '~/core/drizzle/drizzle.service';
-import {
-  ceremonies,
-  type engagements,
-  type projects,
-} from '~/core/drizzle/schema';
+import { ceremonies, engagements, projects } from '~/core/drizzle/schema';
 import { type ScopedRole } from '../authorization/dto/role.dto';
 import { PolicyExecutor } from '../authorization/policy/executor/policy-executor';
 import { requesterScopeByProject } from '../project/project-member/membership-scope';
@@ -73,12 +69,41 @@ export class CeremonyDrizzleRepository extends DrizzleDtoRepository<
     return { id };
   }
 
+  /**
+   * Of these ids, the ones whose engagement and project are both still live.
+   *
+   * A ceremony's own `deletedAt` says nothing about its parents: soft-deleting
+   * the engagement or project leaves the ceremony's row untouched. Neo4j's
+   * `hydrate()` requires a REQUIRED match up through `:Project`->`:Engagement`
+   * (ACTIVE relationships), and soft delete there relabels to `Deleted_*`, so a
+   * dead ancestor hides the ceremony entirely rather than returning it with a
+   * dangling parent ref.
+   */
+  private async liveCeremonyIds(ids: readonly ID[]): Promise<ID[]> {
+    if (ids.length === 0) return [];
+    const rows = await this.db
+      .select({ id: ceremonies.id })
+      .from(ceremonies)
+      .innerJoin(engagements, eq(engagements.id, ceremonies.engagementId))
+      .innerJoin(projects, eq(projects.id, engagements.projectId))
+      .where(
+        and(
+          inArray(ceremonies.id, [...ids]),
+          isNull(engagements.deletedAt),
+          isNull(projects.deletedAt),
+        ),
+      );
+    return rows.map((row) => row.id);
+  }
+
   override async readMany(
     ids: readonly ID[],
   ): Promise<Array<UnsecuredDto<Ceremony>>> {
     if (ids.length === 0) return [];
+    const live = await this.liveCeremonyIds(ids);
+    if (live.length === 0) return [];
     const rows = await this.db.query.ceremonies.findMany({
-      where: (c) => and(inArray(c.id, [...ids]), isNull(c.deletedAt)),
+      where: (c) => and(inArray(c.id, [...live]), isNull(c.deletedAt)),
       with: {
         engagement: {
           // `type` feeds the parent ref's __typename (`${type}Engagement`).

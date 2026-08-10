@@ -215,6 +215,15 @@ const sensitivityRefForResource = (
         join "engagements" "e" on "e"."project_id" = "p"."id"
         where "e"."id" = "ceremonies"."engagement_id"
       ) <= ${accessLiteral}`;
+    case 'ProgressReport':
+      // Progress rows on the shared periodic_reports table are always
+      // engagement-parented (never project-parented directly) — see
+      // PeriodicReportDrizzleRepository.parentCondition.
+      return sql`(
+        select "p"."sensitivity" from "projects" "p"
+        join "engagements" "e" on "e"."project_id" = "p"."id"
+        where "e"."id" = "periodic_reports"."engagement_id"
+      ) <= ${accessLiteral}`;
     case 'Language':
       // Effective sensitivity: lowest across projects engaging the language,
       // falling back to the language's own (user-set) sensitivity when

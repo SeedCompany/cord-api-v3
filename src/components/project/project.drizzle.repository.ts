@@ -17,7 +17,7 @@ import {
   sql,
   type SQL,
 } from 'drizzle-orm';
-import { type AnyPgColumn } from 'drizzle-orm/pg-core';
+import { type AnyPgColumn, unionAll } from 'drizzle-orm/pg-core';
 import { DateTime } from 'luxon';
 import {
   CalendarDate,
@@ -273,28 +273,59 @@ export class ProjectDrizzleRepository extends DrizzleDtoRepository<
       rows.map((r) => r.id),
     );
     // Rev79 usage — one row per project with a live ToolUsage against the
-    // Rev79 tool. Same containerId-only join as the filter clauses below;
-    // Rev79 usage is unique per project (tool_usages_container_tool_unique).
-    const rev79Usages = await this.db
-      .select({ projectId: toolUsages.containerId })
-      .from(toolUsages)
-      .innerJoin(
-        tools,
-        and(
-          eq(tools.id, toolUsages.toolId),
-          eq(tools.key, ToolKey.Rev79),
-          isNull(tools.deletedAt),
-        ),
-      )
-      .where(
-        and(
-          inArray(
-            toolUsages.containerId,
-            rows.map((r) => r.id),
+    // Rev79 tool, either attached directly to the project or to one of its
+    // (Language) engagements — `containerId` is polymorphic, so a usage
+    // scoped to an engagement never equals a project id directly and needs
+    // the join through `engagements` to resolve back to its project.
+    const rev79Usages = await unionAll(
+      this.db
+        .select({ projectId: toolUsages.containerId })
+        .from(toolUsages)
+        .innerJoin(
+          tools,
+          and(
+            eq(tools.id, toolUsages.toolId),
+            eq(tools.key, ToolKey.Rev79),
+            isNull(tools.deletedAt),
           ),
-          isNull(toolUsages.deletedAt),
+        )
+        .where(
+          and(
+            inArray(
+              toolUsages.containerId,
+              rows.map((r) => r.id),
+            ),
+            isNull(toolUsages.deletedAt),
+          ),
         ),
-      );
+      this.db
+        .select({ projectId: engagements.projectId })
+        .from(toolUsages)
+        .innerJoin(
+          tools,
+          and(
+            eq(tools.id, toolUsages.toolId),
+            eq(tools.key, ToolKey.Rev79),
+            isNull(tools.deletedAt),
+          ),
+        )
+        .innerJoin(
+          engagements,
+          and(
+            eq(engagements.id, toolUsages.containerId),
+            isNull(engagements.deletedAt),
+          ),
+        )
+        .where(
+          and(
+            inArray(
+              engagements.projectId,
+              rows.map((r) => r.id),
+            ),
+            isNull(toolUsages.deletedAt),
+          ),
+        ),
+    );
     const usesRev79ByProject = new Set(
       rev79Usages.map((r) => r.projectId as ID<'Project'>),
     );
@@ -1064,18 +1095,35 @@ export const projectFilterClauses = (
     );
   }
   if (filter.usesRev79 != null) {
-    const usesRev79Sub = db
-      .selectDistinct({ id: toolUsages.containerId })
-      .from(toolUsages)
-      .innerJoin(
-        tools,
-        and(
-          eq(tools.id, toolUsages.toolId),
-          eq(tools.key, ToolKey.Rev79),
-          isNull(tools.deletedAt),
-        ),
-      )
-      .where(isNull(toolUsages.deletedAt));
+    // Same containerId-is-polymorphic problem as readMany's rev79Usages
+    // above: a usage scoped to an engagement never equals a project id
+    // directly, so it needs the join through `engagements` to resolve back
+    // to its project. Union rather than one subquery so both project-direct
+    // and engagement-scoped usages count.
+    const rev79ToolJoin = and(
+      eq(tools.id, toolUsages.toolId),
+      eq(tools.key, ToolKey.Rev79),
+      isNull(tools.deletedAt),
+    );
+    const usesRev79Sub = unionAll(
+      db
+        .selectDistinct({ id: toolUsages.containerId })
+        .from(toolUsages)
+        .innerJoin(tools, rev79ToolJoin)
+        .where(isNull(toolUsages.deletedAt)),
+      db
+        .selectDistinct({ id: engagements.projectId })
+        .from(toolUsages)
+        .innerJoin(tools, rev79ToolJoin)
+        .innerJoin(
+          engagements,
+          and(
+            eq(engagements.id, toolUsages.containerId),
+            isNull(engagements.deletedAt),
+          ),
+        )
+        .where(isNull(toolUsages.deletedAt)),
+    );
     conditions.push(
       filter.usesRev79
         ? inArray(projects.id, usesRev79Sub)

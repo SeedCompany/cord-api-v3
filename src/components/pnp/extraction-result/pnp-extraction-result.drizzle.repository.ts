@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray, isNull } from 'drizzle-orm';
 import { type ID } from '~/common';
 import { DrizzleService } from '~/core/drizzle/drizzle.service';
 import {
@@ -48,6 +48,17 @@ export class PnpExtractionResultDrizzleRepository {
       this.db
         .select({ fileId: pnpExtractionResults.fileId })
         .from(pnpExtractionResults)
+        // The file has to still be live — a soft-deleted File's row survives
+        // (the cascade never fires, since the delete is soft), and without
+        // this join a removed report's PnP result would keep resolving where
+        // Neo4j's parent-required match returns nothing.
+        .innerJoin(
+          fileNodes,
+          and(
+            eq(fileNodes.id, pnpExtractionResults.fileId),
+            isNull(fileNodes.deletedAt),
+          ),
+        )
         .where(inArray(pnpExtractionResults.fileId, ids)),
       this.db
         .select()

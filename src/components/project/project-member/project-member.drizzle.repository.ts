@@ -96,6 +96,11 @@ export class ProjectMemberDrizzleRepository extends DrizzleDtoRepository<
     const readConditions: SQL[] = [
       inArray(projectMembers.id, [...ids]),
       isNull(projectMembers.deletedAt),
+      // A soft-deleted project leaves its members' rows untouched. Neo4j's
+      // hydrate requires a live `:Project`, so a dead one hides every
+      // membership under it rather than returning a full row (id, roles,
+      // scope, the embedded user) pointing at a project that's gone.
+      isNull(projects.deletedAt),
     ];
     if (!this.executor.applyReadFilter(this.resource, readConditions)) {
       return [];
@@ -103,6 +108,7 @@ export class ProjectMemberDrizzleRepository extends DrizzleDtoRepository<
     const readable = await this.db
       .select({ id: projectMembers.id })
       .from(projectMembers)
+      .innerJoin(projects, eq(projects.id, projectMembers.projectId))
       .where(and(...readConditions));
     if (readable.length === 0) return [];
     const readableIds = readable.map((row) => row.id);

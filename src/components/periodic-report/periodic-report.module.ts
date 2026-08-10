@@ -37,6 +37,14 @@ import { PeriodicReportService } from './periodic-report.service';
     BackfillPeriodicReportNarrativeFileMigration,
     ...Object.values(handlers),
   ],
-  exports: [PeriodicReportService],
+  exports: [
+    PeriodicReportService,
+    // Needed by ProgressReportDrizzleRepository — after computing its own
+    // filtered/paginated id set, it hydrates through the shared
+    // periodic_reports read path rather than duplicating toDto/scope/parent
+    // logic. Same cross-module pattern as UserModule exporting UserRepository
+    // for ProjectMemberDrizzleRepository.
+    PeriodicReportRepository,
+  ],
 })
 export class PeriodicReportModule {}

@@ -26,6 +26,7 @@ import {
   userOrganizations,
   users,
 } from '~/core/drizzle/schema';
+import { Privileges } from '../authorization';
 import { PolicyExecutor } from '../authorization/policy/executor/policy-executor';
 import { FileService } from '../file';
 import { type FileId } from '../file/dto';
@@ -61,6 +62,7 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
   constructor(
     db: DrizzleService,
     private readonly executor: PolicyExecutor,
+    private readonly privileges: Privileges,
     private readonly files: FileService,
     private readonly identity: Identity,
   ) {
@@ -228,7 +230,8 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
     return await this.readOne(id);
   }
 
-  async delete(id: ID, _object: User): Promise<void> {
+  async delete(id: ID, object: User): Promise<void> {
+    this.privileges.for(User, object).verifyCan('delete');
     await this.softDelete(id);
   }
 

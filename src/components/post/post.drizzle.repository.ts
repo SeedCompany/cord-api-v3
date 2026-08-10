@@ -150,6 +150,10 @@ export class PostDrizzleRepository extends DrizzleDtoRepository<
   async deleteNode(objectOrId: { id: ID } | ID): Promise<void> {
     const id = typeof objectOrId === 'string' ? objectOrId : objectOrId.id;
     await this.db.delete(posts).where(eq(posts.id, id as ID<'Post'>));
+    // Hand-rolled delete (a hard delete, not the base's softDelete()), so it
+    // has to invalidate itself — see the base class's doc comment on why
+    // updateColumns()/softDelete() can't cover this for us.
+    this.liveQueryStore.invalidate([this.resource, id]);
   }
 
   /**

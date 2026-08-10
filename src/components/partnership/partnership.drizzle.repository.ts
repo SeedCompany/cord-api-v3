@@ -108,7 +108,10 @@ export class PartnershipDrizzleRepository extends DrizzleDtoRepository<
    * `changeset` accepted for splitDb signature parity; PCR/Changeset is
    * excluded from the migration entirely, so it's silently ignored.
    */
-  async create(input: CreatePartnership, _changeset?: ID): Promise<{ id: ID }> {
+  async create(
+    input: CreatePartnership,
+    _changeset?: ID,
+  ): Promise<{ id: ID; primary: boolean }> {
     await this.verifyRelationshipEligibility(input.project, input.partner);
 
     const id = await generateId<ID<'Partnership'>>();
@@ -132,6 +135,13 @@ export class PartnershipDrizzleRepository extends DrizzleDtoRepository<
       financialReportingType: input.financialReportingType ?? null,
       primary: input.primary ?? false,
     };
+    // Reported back to the caller so PartnershipService.create() can key off
+    // the actual persisted value instead of its own pre-computed guess — the
+    // catch block below can flip this to false after the fact, and the
+    // service's decision to strip primary from every OTHER partnership must
+    // follow that outcome, not the request. See T1-8: trusting the request
+    // here previously let a losing race wipe the winner's primary too.
+    let primary = values.primary;
     try {
       // Nested transaction = savepoint, so a primary-race conflict below
       // doesn't poison the surrounding mutation transaction.
@@ -152,6 +162,7 @@ export class PartnershipDrizzleRepository extends DrizzleDtoRepository<
           .catch((e2) => {
             throw new CreationFailed(Partnership, { cause: e2 as Error });
           });
+        primary = false;
       } else {
         throw new CreationFailed(Partnership, { cause: e as Error });
       }
@@ -166,7 +177,7 @@ export class PartnershipDrizzleRepository extends DrizzleDtoRepository<
       input.agreement,
     );
 
-    return { id };
+    return { id, primary };
   }
 
   /**

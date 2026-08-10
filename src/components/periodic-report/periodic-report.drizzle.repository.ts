@@ -605,7 +605,9 @@ const hasUploadedFileVersion = () =>
       and fv.deleted_at is null
   )`;
 
-const dateFilterConditions = (
+// Exported for reuse by ProgressReportDrizzleRepository, which filters the
+// same `start`/`end` columns on this same table under its own filter shape.
+export const dateFilterConditions = (
   column: typeof periodicReports.start | typeof periodicReports.end,
   filter: DateFilter | undefined,
 ): SQL[] => {

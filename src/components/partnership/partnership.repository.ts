@@ -110,7 +110,12 @@ export class PartnershipRepository extends DtoRepository<
       input.agreement,
     );
 
-    return result;
+    // No unique-constraint race here — Neo4j has no DB-level "at most one
+    // primary" backstop, so the requested flag always lands as-is. Reported
+    // back so the service can key off the actual outcome rather than its own
+    // pre-computed guess, matching the Postgres repo's contract (whose
+    // create() can silently fall back to false on a primary-race conflict).
+    return { ...result, primary: input.primary ?? false };
   }
 
   async update(
