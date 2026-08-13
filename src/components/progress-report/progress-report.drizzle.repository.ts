@@ -15,6 +15,7 @@ import {
   type PaginatedListType,
   type UnsecuredDto,
 } from '~/common';
+import { Identity } from '~/core/authentication';
 import {
   EMPTY_PAGE,
   resolveOrderBy,
@@ -68,6 +69,7 @@ export class ProgressReportDrizzleRepository {
   constructor(
     private readonly drizzle: DrizzleService,
     private readonly executor: PolicyExecutor,
+    private readonly identity: Identity,
     @Inject(PeriodicReportRepository)
     private readonly periodicReportRepo: PeriodicReportDrizzleRepository,
   ) {}
@@ -112,7 +114,11 @@ export class ProgressReportDrizzleRepository {
           this.db,
           periodicReports.engagementId,
           engagements,
-          engagementFilterClauses(this.db, filter.engagement),
+          engagementFilterClauses(
+            this.db,
+            filter.engagement,
+            this.identity.current.userId,
+          ),
         ),
       );
     }

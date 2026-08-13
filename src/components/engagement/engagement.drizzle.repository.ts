@@ -481,7 +481,13 @@ export class EngagementDrizzleRepository extends DrizzleDtoRepository<
     if (!this.executor.applyReadFilter(this.resource, conditions)) {
       return EMPTY_PAGE;
     }
-    conditions.push(...engagementFilterClauses(this.db, input.filter));
+    conditions.push(
+      ...engagementFilterClauses(
+        this.db,
+        input.filter,
+        this.identity.current.userId,
+      ),
+    );
 
     const sortColumns = {
       status: engagements.status,
@@ -870,6 +876,7 @@ export class EngagementDrizzleRepository extends DrizzleDtoRepository<
 export const engagementFilterClauses = (
   db: DrizzleDb,
   filter: EngagementListInput['filter'],
+  requesterId?: ID<'User'>,
 ): SQL[] => {
   const conditions: SQL[] = [];
   if (!filter) return conditions;
@@ -890,7 +897,7 @@ export const engagementFilterClauses = (
         db,
         engagements.projectId,
         projects,
-        projectFilterClauses(db, filter.project),
+        projectFilterClauses(db, filter.project, requesterId),
       ),
     );
   }
@@ -931,7 +938,7 @@ export const engagementFilterClauses = (
         db,
         engagements.languageId,
         languages,
-        languageFilterClauses(db, filter.language),
+        languageFilterClauses(db, filter.language, requesterId),
       ),
     );
   }

@@ -934,7 +934,7 @@ export const projectFilterClauses = (
       .where(
         and(
           isNull(projectMembers.deletedAt),
-          ...projectMemberFilterClauses(db, filter.members),
+          ...projectMemberFilterClauses(db, filter.members, requesterId),
         ),
       );
     conditions.push(inArray(projects.id, sub));
@@ -965,7 +965,11 @@ export const projectFilterClauses = (
               and(
                 isNull(projectMembers.deletedAt),
                 eq(projectMembers.userId, requesterId),
-                ...projectMemberFilterClauses(db, filter.membership),
+                ...projectMemberFilterClauses(
+                  db,
+                  filter.membership,
+                  requesterId,
+                ),
               ),
             ),
         ),

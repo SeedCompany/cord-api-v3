@@ -172,7 +172,13 @@ export class ProjectMemberDrizzleRepository extends DrizzleDtoRepository<
     if (!this.executor.applyReadFilter(this.resource, conditions)) {
       return EMPTY_PAGE;
     }
-    conditions.push(...projectMemberFilterClauses(this.db, input.filter));
+    conditions.push(
+      ...projectMemberFilterClauses(
+        this.db,
+        input.filter,
+        this.identity.current.userId,
+      ),
+    );
 
     const sortColumns = {
       createdAt: projectMembers.createdAt,
@@ -482,6 +488,7 @@ export class ProjectMemberDrizzleRepository extends DrizzleDtoRepository<
 export const projectMemberFilterClauses = (
   db: DrizzleDb,
   filter: ProjectMemberFilters | undefined,
+  requesterId?: ID<'User'>,
 ): SQL[] => {
   const conditions: SQL[] = [];
   if (!filter) return conditions;
@@ -516,7 +523,7 @@ export const projectMemberFilterClauses = (
       .where(
         and(
           isNull(projects.deletedAt),
-          ...projectFilterClauses(db, filter.project),
+          ...projectFilterClauses(db, filter.project, requesterId),
         ),
       );
     conditions.push(inArray(projectMembers.projectId, sub));
