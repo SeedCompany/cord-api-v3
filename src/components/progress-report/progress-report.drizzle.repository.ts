@@ -135,6 +135,10 @@ export class ProgressReportDrizzleRepository {
       receivedDate: periodicReports.receivedDate,
       narrativeReceivedDate: periodicReports.narrativeReceivedDate,
       createdAt: periodicReports.createdAt,
+      // migration-todo: engagement.*, pnpExtractionResult.*, cumulativeSummary,
+      // fiscalYearSummary, periodSummary delegated/cross-domain sorts — same
+      // shape as the Engagement repo's own deferred sort keys (see its
+      // migration-todo comment). Unknown keys fall back to `start`.
     } satisfies SortMap<string>;
 
     const predicate = and(...conditions);
