@@ -37,6 +37,7 @@ import { Identity } from '~/core/authentication';
 import { Broadcaster } from '~/core/broadcast';
 import { ConfigService } from '~/core/config';
 import { DatabaseMigrationCommand } from '~/core/neo4j/migration/migration.command';
+import { WebhookChannelSyncMigration } from '~/core/webhooks/channels/channel-sync.migration';
 import { WebhookChannelRepository } from '~/core/webhooks/channels/webhook-channel.repository';
 import { WebhooksRepository } from '~/core/webhooks/management/webhooks.repository';
 import { WebhookListener } from '~/core/webhooks/processor/webhook.listener';
@@ -61,34 +62,26 @@ import { GqlError } from './setup/gql-client/gql-result';
 
 const SHORT = +Duration.from('30s');
 
-// Webhooks has NOT been ported to Postgres: WebhooksRepository extends the
-// Neo4j DtoRepository and builds Cypher, with no Drizzle counterpart and no
-// splitDb routing. Under Postgres the save matches nothing and returns
-// undefined, so WebhookSender.verify dereferences undefined — 51 of the 61
-// tests here fail from that one fault.
-//
-// Switched off here in the test file, rather than left out of a list in the CI
-// workflow, on purpose: this suite used to be missing from that list, which is
-// exactly why nobody noticed the feature had no Postgres implementation. A test
-// that switches itself off is reported as skipped and shows up in the output.
-// A test left out of a list shows up nowhere.
-//
-// What that costs, said plainly rather than buried: 8 tests in this file DO pass
-// under Postgres and no longer run. Seven check that malformed subscription
-// documents are rejected — they pass because bad input is refused before any
-// data is stored — plus one that reads an empty list. They are not switched off
-// one at a time because nine OTHER tests in that same validation group fail, so
-// the group is mixed and per-test conditions would be noisy and fragile in a
-// file that loses this condition entirely once webhooks is ported. All 8 stay
-// covered under Neo4j, which is the database serving production today.
-//
-// migration-todo: webhooks IS being ported (not retired) — remove this condition
-// as part of that port. It has to happen before cutover: Neo4j goes away then,
-// and this feature stops working in production until it is ported. When the
-// condition goes, check that those 8 tests are running again rather than
-// assuming it.
-const describeNeo4jOnly =
-  process.env.DATABASE === 'postgres' ? describe.skip : describe;
+const isPostgres = process.env.DATABASE === 'postgres';
+
+/**
+ * `DatabaseMigrationCommand` runs every registered migration through
+ * `MigrationRunner`, which tracks the schema version as a `:SchemaVersion`
+ * node in Neo4j — raw Cypher, no engine split. That's fine at real app
+ * bootstrap, which guards it to Neo4j only (`migration.module.ts`) precisely
+ * because it has no Postgres counterpart and never will (it's gone at
+ * cutover along with the rest of that module).
+ *
+ * These two tests call the command directly to simulate "a deploy just
+ * happened," bypassing that guard. Under Postgres there's nothing for it to
+ * track, so go straight to the one migration these tests actually care
+ * about — which is already properly split — instead of the Neo4j-only
+ * version bookkeeping around it.
+ */
+const runDeployMigrations = async (app: TestApp) =>
+  isPostgres
+    ? await app.get(WebhookChannelSyncMigration).up()
+    : await app.get(DatabaseMigrationCommand).execute();
 
 describe('Move to Generic Subscriptions Tests', () => {
   it.todo(
@@ -98,7 +91,7 @@ describe('Move to Generic Subscriptions Tests', () => {
   it.todo('should only access data webhook owner has permission to see');
 });
 
-describeNeo4jOnly('Webhooks', () => {
+describe('Webhooks', () => {
   let app: TestApp;
   let tester: IdentifiedTester;
 
@@ -1764,7 +1757,7 @@ describeNeo4jOnly('Webhooks', () => {
       // established in the ephemeral tests db.
       // It would probably be better to move this to db setup as it would
       // mirror prod more closely.
-      await isolatedApp.get(DatabaseMigrationCommand).execute();
+      await runDeployMigrations(isolatedApp);
 
       // Create a webhook with a valid subscription
       const webhook = await isolatedTester.apply(
@@ -1787,8 +1780,11 @@ describeNeo4jOnly('Webhooks', () => {
       const newVersion = DateTime.now();
       const newApp = await createApp({
         config: {
-          // Share db with the suite app
+          // Share db with the suite app. Both are passed regardless of which
+          // engine is active — the one that matters takes effect, and the
+          // other is an inert unused field on the given engine.
           neo4j: isolatedApp.get(ConfigService).neo4j,
+          postgres: isolatedApp.get(ConfigService).postgres,
         },
         overrides: (builder) =>
           builder
@@ -1810,7 +1806,7 @@ describeNeo4jOnly('Webhooks', () => {
 
       // region Act
       // Call db migrate, as would happen on deployment, which should trigger webhook migration
-      await newApp.get(DatabaseMigrationCommand).execute();
+      await runDeployMigrations(newApp);
       // endregion
 
       // region Assert
@@ -1843,7 +1839,7 @@ describeNeo4jOnly('Webhooks', () => {
       // established in the ephemeral tests db.
       // It would probably be better to move this to db setup as it would
       // mirror prod more closely.
-      await isolatedApp.get(DatabaseMigrationCommand).execute();
+      await runDeployMigrations(isolatedApp);
 
       // Create a webhook with a valid subscription
       const webhook = await isolatedTester.apply(
@@ -1866,8 +1862,11 @@ describeNeo4jOnly('Webhooks', () => {
       const newVersion = DateTime.now();
       const newApp = await createApp({
         config: {
-          // Share db with the suite app
+          // Share db with the suite app. Both are passed regardless of which
+          // engine is active — the one that matters takes effect, and the
+          // other is an inert unused field on the given engine.
           neo4j: isolatedApp.get(ConfigService).neo4j,
+          postgres: isolatedApp.get(ConfigService).postgres,
         },
         overrides: (builder) =>
           builder
@@ -1890,7 +1889,7 @@ describeNeo4jOnly('Webhooks', () => {
       const waitingForWebhook = firstValueFrom(events.pipe(timeout(SHORT)));
 
       // Call db migrate, as would happen on deployment, which should trigger webhook migration
-      await newApp.get(DatabaseMigrationCommand).execute();
+      await runDeployMigrations(newApp);
       // endregion
 
       // region Assert
