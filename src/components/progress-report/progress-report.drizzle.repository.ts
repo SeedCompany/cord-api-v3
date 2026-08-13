@@ -28,6 +28,7 @@ import {
   periodicReports,
   pnpExtractionResultProblems,
   progressSummaries,
+  projects,
 } from '~/core/drizzle/schema';
 import { PolicyExecutor } from '../authorization/policy/executor/policy-executor';
 import { engagementFilterClauses } from '../engagement/engagement.drizzle.repository';
@@ -84,6 +85,17 @@ export class ProgressReportDrizzleRepository {
     const conditions: SQL[] = [
       isNull(periodicReports.deletedAt),
       eq(periodicReports.type, 'Progress'),
+      // Keep this page/total in sync with PeriodicReportRepository.readMany()'s
+      // own liveness gate (liveReportIds) — without it, a report under a
+      // soft-deleted engagement/project inflates `total` and consumes a page
+      // slot that readMany() then silently drops, short-changing the page.
+      sql`exists (
+        select 1 from ${engagements}
+        inner join ${projects} on ${projects.id} = ${engagements.projectId}
+        where ${engagements.id} = ${periodicReports.engagementId}
+          and ${engagements.deletedAt} is null
+          and ${projects.deletedAt} is null
+      )`,
     ];
     if (!this.executor.applyReadFilter(this.resource, conditions)) {
       return EMPTY_PAGE;

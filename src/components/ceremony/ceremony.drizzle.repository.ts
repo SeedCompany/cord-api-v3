@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { and, eq, inArray, isNull, type SQL } from 'drizzle-orm';
+import { and, eq, inArray, isNull, sql, type SQL } from 'drizzle-orm';
 import { DateTime } from 'luxon';
 import {
   CalendarDate,
@@ -148,7 +148,20 @@ export class CeremonyDrizzleRepository extends DrizzleDtoRepository<
   }
 
   async list(input: CeremonyListInput) {
-    const conditions: SQL[] = [isNull(ceremonies.deletedAt)];
+    const conditions: SQL[] = [
+      isNull(ceremonies.deletedAt),
+      // Keep this page/total in sync with liveCeremonyIds() below — without
+      // it, a ceremony under a soft-deleted engagement/project inflates
+      // `total` and consumes a page slot that readMany() then silently
+      // drops, short-changing the page.
+      sql`exists (
+        select 1 from ${engagements}
+        inner join ${projects} on ${projects.id} = ${engagements.projectId}
+        where ${engagements.id} = ${ceremonies.engagementId}
+          and ${engagements.deletedAt} is null
+          and ${projects.deletedAt} is null
+      )`,
+    ];
     // Mirror the Neo4j list()'s `filterToReadable` — without it, member/
     // sensitivity-gated roles could list ceremonies of unreadable projects.
     // (readMany stays unfiltered: the Neo4j readMany uses the base's opt-in

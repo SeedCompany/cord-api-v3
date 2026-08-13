@@ -168,7 +168,18 @@ export class ProjectMemberDrizzleRepository extends DrizzleDtoRepository<
   async list(
     input: ProjectMemberListInput,
   ): Promise<PaginatedListType<UnsecuredDto<ProjectMember>>> {
-    const conditions: SQL[] = [isNull(projectMembers.deletedAt)];
+    const conditions: SQL[] = [
+      isNull(projectMembers.deletedAt),
+      // Keep this page/total in sync with readMany()'s own liveness gate
+      // below — without it, a member under a soft-deleted project inflates
+      // `total` and consumes a page slot that readMany() then silently drops,
+      // short-changing the page.
+      sql`exists (
+        select 1 from ${projects}
+        where ${projects.id} = ${projectMembers.projectId}
+          and ${projects.deletedAt} is null
+      )`,
+    ];
     if (!this.executor.applyReadFilter(this.resource, conditions)) {
       return EMPTY_PAGE;
     }
