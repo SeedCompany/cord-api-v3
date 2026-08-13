@@ -19,6 +19,7 @@ import {
   createProject,
   createSession,
   createTestApp,
+  errors,
   type fragments,
   registerUser,
   runAsAdmin,
@@ -60,6 +61,19 @@ describe('Audit log (resource_mutations) e2e', () => {
     project = await createProject(app);
   });
 
+  it('rejects a non-admin from viewing resource history', async () => {
+    // The acting session here is FieldOperationsDirector + Controller (see
+    // beforeAll) — neither is an admin, so this pins the new gate itself,
+    // not just the admin-wrapped happy paths every other case below uses.
+    await expect(
+      app.graphql.query(ProjectHistoryDoc, { id: project.id }),
+    ).rejects.toThrowGqlError(
+      errors.unauthorized({
+        message: 'Only administrators can view resource history',
+      }),
+    );
+  });
+
   it('records create + update mutations in a resource history', async () => {
     const partnership = await createPartnership(app, { project: project.id });
 
@@ -67,9 +81,11 @@ describe('Audit log (resource_mutations) e2e', () => {
       input: { id: partnership.id, agreementStatus: 'Signed' },
     });
 
-    const { partnership: read } = await app.graphql.query(HistoryDoc, {
-      id: partnership.id,
-    });
+    // Resource history is admin-only (an interim gate — see the resolver);
+    // read it under an isolated admin session rather than the acting user's.
+    const { partnership: read } = await runAsAdmin(app, () =>
+      app.graphql.query(HistoryDoc, { id: partnership.id }),
+    );
     const history = read.history;
 
     if (!isPostgres) {
@@ -102,9 +118,9 @@ describe('Audit log (resource_mutations) e2e', () => {
       input: { id: org.id, name: newName },
     });
 
-    const { organization: read } = await app.graphql.query(OrgHistoryDoc, {
-      id: org.id,
-    });
+    const { organization: read } = await runAsAdmin(app, () =>
+      app.graphql.query(OrgHistoryDoc, { id: org.id }),
+    );
     const history = read.history;
 
     if (!isPostgres) {
@@ -132,9 +148,9 @@ describe('Audit log (resource_mutations) e2e', () => {
       input: { id: proj.id, name: newName },
     });
 
-    const { project: read } = await app.graphql.query(ProjectHistoryDoc, {
-      id: proj.id,
-    });
+    const { project: read } = await runAsAdmin(app, () =>
+      app.graphql.query(ProjectHistoryDoc, { id: proj.id }),
+    );
     const history = read.history;
 
     if (!isPostgres) {
@@ -161,9 +177,9 @@ describe('Audit log (resource_mutations) e2e', () => {
       endDateOverride: engEnd.toISO(),
     });
 
-    const { engagement: read } = await app.graphql.query(EngagementHistoryDoc, {
-      id: engagement.id,
-    });
+    const { engagement: read } = await runAsAdmin(app, () =>
+      app.graphql.query(EngagementHistoryDoc, { id: engagement.id }),
+    );
 
     if (!isPostgres) {
       expect(read.history.total).toBe(0);
@@ -187,9 +203,9 @@ describe('Audit log (resource_mutations) e2e', () => {
       engagement: engagement.id,
     });
 
-    const { product: read } = await app.graphql.query(ProductHistoryDoc, {
-      id: product.id,
-    });
+    const { product: read } = await runAsAdmin(app, () =>
+      app.graphql.query(ProductHistoryDoc, { id: product.id }),
+    );
 
     if (!isPostgres) {
       expect(read.history.total).toBe(0);
@@ -209,9 +225,9 @@ describe('Audit log (resource_mutations) e2e', () => {
       registerUser(app, { roles: [] }),
     );
 
-    const { user: read } = await app.graphql.query(UserHistoryDoc, {
-      id: newUser.id,
-    });
+    const { user: read } = await runAsAdmin(app, () =>
+      app.graphql.query(UserHistoryDoc, { id: newUser.id }),
+    );
 
     if (!isPostgres) {
       expect(read.history.total).toBe(0);
