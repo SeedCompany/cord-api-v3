@@ -2,7 +2,7 @@ import { faker } from '@faker-js/faker';
 import { beforeAll, describe, expect, it } from '@jest/globals';
 import { some } from 'lodash';
 import { DateTime, Interval } from 'luxon';
-import { generateId, type ID, Role } from '~/common';
+import { CalendarDate, generateId, type ID, Role } from '~/common';
 import { graphql } from '~/graphql';
 import {
   EngagementStatus,
@@ -711,15 +711,23 @@ describe('Engagement e2e', () => {
       type: ProjectType.Internship,
     });
 
+    // Match createProject()'s default MOU window (1991–1992) instead of
+    // letting these fall back to today's date, which sits outside it.
+    const startDateOverride = CalendarDate.fromISO('1991-01-01').toISO();
+    const endDateOverride = CalendarDate.fromISO('1992-01-01').toISO();
     const languageEngagement = await createLanguageEngagement(app, {
       language: language.id,
       project: translationProject.id,
+      startDateOverride,
+      endDateOverride,
     });
     const internshipEngagement = await createInternshipEngagement(app, {
       project: internProject.id,
       countryOfOrigin: location.id,
       intern: intern.id,
       mentor: mentor.id,
+      startDateOverride,
+      endDateOverride,
     });
 
     const { engagements } = await app.graphql.query(

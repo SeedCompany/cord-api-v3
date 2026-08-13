@@ -1402,17 +1402,27 @@ describe('Project e2e', () => {
       await createLanguage(app),
     ]);
 
+    // Match createProject()'s default MOU window (1991–1992) instead of
+    // letting these fall back to today's date, which sits outside it.
+    const startDateOverride = CalendarDate.fromISO('1991-01-01').toISO();
+    const endDateOverride = CalendarDate.fromISO('1992-01-01').toISO();
     await createLanguageEngagement(app, {
       project: oneEngagement.id,
       language: languageA.id,
+      startDateOverride,
+      endDateOverride,
     });
     await createLanguageEngagement(app, {
       project: twoEngagements.id,
       language: languageA.id,
+      startDateOverride,
+      endDateOverride,
     });
     await createLanguageEngagement(app, {
       project: twoEngagements.id,
       language: languageB.id,
+      startDateOverride,
+      endDateOverride,
     });
 
     const multiple = await listProjects(app, {
