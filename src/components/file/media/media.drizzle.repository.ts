@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { and, desc, eq, inArray, ne, or, type SQL } from 'drizzle-orm';
+import { and, desc, eq, inArray, isNull, ne, or, type SQL } from 'drizzle-orm';
 import { DateTime } from 'luxon';
 import type { Except, RequireAtLeastOne } from 'type-fest';
 import {
@@ -147,11 +147,11 @@ export class MediaDrizzleRepository {
   }
 
   /**
-   * The altText/caption of the most recently created OTHER FileVersion under
-   * the same parent File that has its own media row — the carryover source
-   * for a newly uploaded version. Mirrors Neo4j's `prevMedia` match
+   * The altText/caption of the most recently created OTHER live FileVersion
+   * under the same parent File that has its own media row — the carryover
+   * source for a newly uploaded version. Mirrors Neo4j's `prevMedia` match
    * (`fv -> parent -> file <- parent - fvs -> media -> prevMedia`, latest
-   * `fvs.createdAt` wins).
+   * `fvs.createdAt` wins, `id` breaking ties on equal timestamps).
    */
   private async previousVersionMetadata(
     fileVersionId: ID,
@@ -172,9 +172,10 @@ export class MediaDrizzleRepository {
         and(
           eq(fileNodes.parentId, current.parentId),
           ne(fileNodes.id, fileVersionId),
+          isNull(fileNodes.deletedAt),
         ),
       )
-      .orderBy(desc(fileNodes.createdAt))
+      .orderBy(desc(fileNodes.createdAt), desc(fileNodes.id))
       .limit(1);
     return previous;
   }
