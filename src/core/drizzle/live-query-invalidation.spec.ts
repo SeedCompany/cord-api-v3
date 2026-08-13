@@ -68,6 +68,22 @@ const EXEMPT: Record<string, string> = {
   'src/components/pnp/extraction-result/pnp-extraction-result.drizzle.repository.ts':
     'parity — sole writer is save() (an upsert); ' +
     'pnp-extraction-result.neo4j.repository.ts never invalidates',
+  'src/components/partnership-producing-medium/partnership-producing-medium.drizzle.repository.ts':
+    'parity — partnership-producing-medium.repository.ts extends CommonRepository ' +
+    'but writes with hand-built queries, never one of its invalidating methods ' +
+    '(updateRelation / updateRelationList / deleteNode)',
+  'src/components/progress-report/variance-explanation/variance-explanation.drizzle.repository.ts':
+    'parity — variance-explanation.repository.ts writes through the standalone ' +
+    '`updateProperties` QUERY helper, which does not invalidate; only the ' +
+    'repository base methods do',
+  'src/components/progress-report/workflow/progress-report-workflow.drizzle.repository.ts':
+    'parity — events are append-only, and the one real update, changeStatus(), ' +
+    'goes through `this.db.updateProperties` in ' +
+    'progress-report-workflow.repository.ts. That is the Connection helper, not ' +
+    'the invalidating base method, so Neo4j does not invalidate a status change ' +
+    'either. Same category as its Project sibling above. Worth revisiting on its ' +
+    'merits after cutover: a status change arguably SHOULD refresh a live report ' +
+    'page. It is a gap on every engine, so not a migration regression',
 
   // --- create-only / bootstrap paths ---
   'src/components/notifications/notification.drizzle.repository.ts':

@@ -1,6 +1,20 @@
 import { asc, desc, sql, type SQL, type SQLWrapper } from 'drizzle-orm';
 import { type AnyPgColumn } from 'drizzle-orm/pg-core';
 import { type Order } from '~/common';
+import {
+  educations,
+  fieldRegions,
+  fieldZones,
+  fileNodes,
+  fundingAccounts,
+  languages,
+  locations,
+  organizations,
+  producibles,
+  projects,
+  tools,
+  users,
+} from './schema';
 
 /**
  * One sort entry: a single column, or a column list expressing tiebreakers
@@ -35,35 +49,84 @@ const DISPLAY_ORDER_COLLATION = 'display_order';
 const COLLATABLE_COLUMN_TYPES = new Set(['PgText', 'PgVarchar', 'PgChar']);
 
 /**
- * Order a column the way a reader expects, when it holds display text.
+ * The columns that hold a display NAME, and so are the only ones collated.
  *
- * Text columns get the {@link DISPLAY_ORDER_COLLATION}; dates and numbers are
- * returned untouched and keep their natural ordering.
+ * This has to be a list, because the thing being matched is not a property of
+ * the column. Neo4j does not fold text because it is text — its own string
+ * ordering is raw code points, where capitals sort before lower case and spaces
+ * count. The folding comes from `@NameField`, which attaches a sort transformer
+ * running `apoc.text.clean`, and `sorting()` applies that only where the
+ * transformer exists. So "does Neo4j fold this column" means "is its DTO field
+ * `@NameField`" — nothing about the column's type can answer it.
  *
- * Two kinds of text column are deliberately left alone:
+ * Inferring from the type instead is what this replaces, and it silently folded
+ * nine columns Neo4j leaves alone: two address fields, a post body, two product
+ * descriptions, an ISO code, a PMC entity code, a department id and an
+ * unavailability description. Those are exactly the sorts that would have
+ * reordered under a reader at the flip.
  *
- * * **Columns constrained to a fixed set of values.** Those hold codes rather
- *   than prose — a status or a step — so their ordering should stay exactly as
- *   written and not depend on how the collation treats an underscore.
- *   (Enum-typed columns additionally cannot be collated at all.)
- * * **Primary keys.** They hold opaque generated identifiers, not display text.
- *   Every id in this schema is a `text` column, so without this they would be
- *   case-folded like prose. That is not harmless: the user list's default sort
- *   key is its id, so collating it both reorders that list away from what Neo4j
- *   returns AND stops the ordering being read off the primary key index,
- *   turning every page of the default user list into a full scan plus a sort.
+ * Entries are the columns behind `@NameField` DTO fields. Add a column here when
+ * you add a sort key whose DTO field is `@NameField`; leave it out otherwise. The
+ * default — not collated — matches Neo4j for every plain `@Field()`, so the cost
+ * of forgetting is one list ordering by code point rather than a divergence
+ * everywhere.
  *
- * ⚠️ This can only inspect a COLUMN. A sort written as a raw `sql` expression
- * has no column type, so it falls through here and comes back uncollated — with
- * no error and nothing failing. A text sort built as an expression has to write
+ * migration-todo: at Phase 7 cutover this whole question can be revisited on its
+ * merits rather than as parity. Folding case and punctuation is arguably better
+ * for an address or a description than code-point order; it is simply not what
+ * Neo4j does today, and the migration is not the place to change what users see.
+ */
+const NAME_COLUMNS: ReadonlySet<AnyPgColumn> = new Set<AnyPgColumn>([
+  fieldRegions.name,
+  fieldZones.name,
+  fundingAccounts.name,
+  languages.name,
+  languages.displayName,
+  locations.name,
+  organizations.name,
+  organizations.acronym,
+  producibles.name,
+  projects.name,
+  tools.name,
+  users.realFirstName,
+  users.realLastName,
+  users.displayFirstName,
+  users.displayLastName,
+  educations.major,
+  educations.institution,
+  // Also the DEFAULT sort of FileListInput, so this covers every unsorted
+  // file and directory listing, not just an explicit sort request.
+  fileNodes.name,
+]);
+
+/**
+ * Order a column the way a reader expects.
+ *
+ * A column listed in {@link NAME_COLUMNS} gets the
+ * {@link DISPLAY_ORDER_COLLATION}, because that is the set Neo4j folds.
+ * Everything else — dates, numbers, enums, ids, and plain text like an address or
+ * a description — is returned untouched, which is also what Neo4j does with it.
+ *
+ * The type checks that remain are a safety net rather than the decision: a
+ * non-text column cannot be collated at all (Postgres raises "collations are not
+ * supported by type" for enum and uuid), so a wrong entry in the list fails loudly
+ * instead of producing broken SQL at run time. Primary keys are excluded for the
+ * same belt-and-braces reason — every id here is a `text` column, and the user
+ * list's default sort key is its id, where collating would both reorder the list
+ * and stop the ordering being read off the primary key index.
+ *
+ * ⚠️ This can only inspect a COLUMN. A sort written as a raw `sql` expression has
+ * no column to look up, so it falls through here and comes back uncollated — with
+ * no error and nothing failing. A name sort built as an expression has to write
  * `collate display_order` inline itself.
  *
- * Use this at every text sort, including ones built by hand rather than through
+ * Use this at every name sort, including ones built by hand rather than through
  * {@link resolveOrderBy} — the three list queries that sort by a joined table's
- * name (partner, partnership, project) do exactly that, and would otherwise
- * order differently from every other list in the app.
+ * name (partner, partnership, project) do exactly that, and would otherwise order
+ * differently from every other list in the app.
  */
 export const displayOrder = (col: AnyPgColumn): SQLWrapper =>
+  NAME_COLUMNS.has(col) &&
   COLLATABLE_COLUMN_TYPES.has(col.columnType) &&
   !col.enumValues?.length &&
   !col.primary

@@ -1,3 +1,4 @@
+import { projectWorkflowEvents } from '~/core/drizzle/schema';
 import { defineContext, defineWorkflow } from '../../workflow/define-workflow';
 import { TransitionType as Type } from '../../workflow/dto';
 import { type Notifier } from '../../workflow/transitions/notifiers';
@@ -36,6 +37,7 @@ export const ProjectWorkflow = defineWorkflow({
   name: 'Project',
   states: Step,
   event: ProjectWorkflowEvent,
+  eventTransitionColumn: projectWorkflowEvents.transitionKey,
   context: defineContext<ResolveParams>,
   transitionEnhancers: [
     ImplicitlyNotifyTeamMembers, //

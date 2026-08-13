@@ -7,6 +7,7 @@ import {
   gt,
   gte,
   inArray,
+  isNull,
   lt,
   lte,
   not,
@@ -14,6 +15,7 @@ import {
   type SQL,
   sql,
 } from 'drizzle-orm';
+import { unionAll } from 'drizzle-orm/pg-core';
 import { DateTime } from 'luxon';
 import {
   CalendarDate,
@@ -96,10 +98,51 @@ export class PeriodicReportDrizzleRepository extends DrizzleDtoRepository<
 
   /**
    * Idempotent bulk-create. Ids are deterministic per
-   * (parent, type, start, end) — identical to the Neo4j derivation — so
-   * existing intervals and concurrent duplicate syncs both resolve via
+   * (parent, type, start, end) — identical to the Neo4j derivation — so existing
+   * intervals and concurrent duplicate syncs both resolve via
    * ON CONFLICT DO NOTHING. Returns only the rows actually created.
+   *
+   * The deterministic id is a first choice rather than a guarantee: since
+   * migration 0035 a soft-deleted row can still be holding it, and the fallback
+   * below takes a fresh id in that case. So the conflict target is left
+   * unspecified — a loser can collide on either the id or the partial unique
+   * index over live rows.
    */
+  /**
+   * Of these ids, the ones whose whole parent chain is still live.
+   *
+   * A report's own `deleted_at` says nothing about its parents: soft-deleting a
+   * project or an engagement leaves every report under it untouched. Neo4j's
+   * hydrate requires a live `:Project`, so there it returns nothing — this is the
+   * equivalent. Financial and Narrative reports hang off a project directly;
+   * Progress reports reach one through their engagement, so both routes are
+   * checked and a report needs exactly one of them.
+   */
+  private async liveReportIds(ids: readonly ID[]): Promise<ID[]> {
+    if (ids.length === 0) return [];
+    const viaProject = this.db
+      .select({ id: periodicReports.id })
+      .from(periodicReports)
+      .innerJoin(projects, eq(projects.id, periodicReports.projectId))
+      .where(
+        and(inArray(periodicReports.id, [...ids]), isNull(projects.deletedAt)),
+      );
+    const viaEngagement = this.db
+      .select({ id: periodicReports.id })
+      .from(periodicReports)
+      .innerJoin(engagements, eq(engagements.id, periodicReports.engagementId))
+      .innerJoin(projects, eq(projects.id, engagements.projectId))
+      .where(
+        and(
+          inArray(periodicReports.id, [...ids]),
+          isNull(engagements.deletedAt),
+          isNull(projects.deletedAt),
+        ),
+      );
+    const rows = await unionAll(viaProject, viaEngagement);
+    return rows.map((row) => row.id);
+  }
+
   async merge(input: MergePeriodicReports) {
     // Nothing to sync — drizzle's `.values([])` is a runtime error, and there
     // are no rows to create files for, so short-circuit.
@@ -114,14 +157,36 @@ export class PeriodicReportDrizzleRepository extends DrizzleDtoRepository<
     // narrativeFile placeholder mirrors the Neo4j merge, which creates both
     // DefinedFiles per report (develop's narrativeFile PR postdates mono).
     const narrativeFileIds = new Map<ID, ID<'File'>>();
+    // The deterministic id is a *first choice*, not a guarantee, now that
+    // reports soft-delete (0035): a dead row can still hold it, and Neo4j in
+    // that situation creates a brand-new report rather than reviving the old one
+    // (its soft delete strips the label the uniqueness constraint is scoped to,
+    // so it can even reuse the id string — we can't, `id` is the PK). Mirror the
+    // behaviour, not the id: dead row keeps its id and content, the new live row
+    // takes a fresh one. Liveness dedup comes from
+    // `periodic_reports_live_interval_unique`, not from the id.
+    const wanted = input.intervals.map((interval) =>
+      deterministicReportId(
+        input.parent,
+        input.type,
+        interval.start,
+        interval.end,
+      ),
+    );
+    const taken = new Set(
+      (
+        await this.db
+          .select({ id: periodicReports.id })
+          .from(periodicReports)
+          .where(inArray(periodicReports.id, wanted))
+      ).map((row) => row.id),
+    );
     const values = await Promise.all(
-      input.intervals.map(async (interval) => {
-        const id = deterministicReportId(
-          input.parent,
-          input.type,
-          interval.start,
-          interval.end,
-        );
+      input.intervals.map(async (interval, i) => {
+        const preferred = wanted[i]!;
+        const id = taken.has(preferred)
+          ? await generateId<ID<'PeriodicReport'>>()
+          : preferred;
         const reportFileId = await generateId<ID<'File'>>();
         reportFileIds.set(id, reportFileId);
         const narrativeFileId = await generateId<ID<'File'>>();
@@ -142,7 +207,11 @@ export class PeriodicReportDrizzleRepository extends DrizzleDtoRepository<
     const inserted = await this.db
       .insert(periodicReports)
       .values(values)
-      .onConflictDoNothing({ target: periodicReports.id })
+      // Untargeted: a concurrent writer can now lose on EITHER the id PK (both
+      // picked the same free deterministic id) or the live-interval unique index
+      // (both fell back to fresh ids for the same revived interval). Targeting
+      // only the id would let the second case throw.
+      .onConflictDoNothing()
       .returning({
         id: periodicReports.id,
         start: periodicReports.start,
@@ -241,15 +310,24 @@ export class PeriodicReportDrizzleRepository extends DrizzleDtoRepository<
     ids: readonly ID[],
   ): Promise<Array<UnsecuredDto<PeriodicReport>>> {
     if (ids.length === 0) return [];
+    // Own liveness is not enough: a soft-deleted project or engagement leaves
+    // its reports' `deleted_at` untouched, while Neo4j's hydrate requires a live
+    // `:Project` and so returns nothing. Checked as EXISTS rather than joins so
+    // the relational `with: RELATIONS` the hydrate needs stays intact — and as a
+    // subquery on ids rather than a correlated reference, which the relational
+    // builder's aliasing does not bind.
+    const live = await this.liveReportIds(ids);
+    if (live.length === 0) return [];
     const rows = await this.db.query.periodicReports.findMany({
-      where: (r) => inArray(r.id, [...ids]),
+      where: (report) =>
+        and(inArray(report.id, [...live]), isNull(report.deletedAt)),
       with: RELATIONS,
     });
     return await this.hydrate(rows as ReportRow[]);
   }
 
   async list(input: PeriodicReportListInput) {
-    const conditions: SQL[] = [];
+    const conditions: SQL[] = [isNull(periodicReports.deletedAt)];
     if (input.type) {
       conditions.push(eq(periodicReports.type, input.type));
     }
@@ -355,14 +433,15 @@ export class PeriodicReportDrizzleRepository extends DrizzleDtoRepository<
   }
 
   /**
-   * Deletes reports of type under the parent. Mirrors the Neo4j eligibility
-   * rules (periodic-report.repository.ts): progress reports only while still
-   * NotStarted; non-progress reports only while no file has been uploaded
-   * (neither reportFile nor narrativeFile has an active FileVersion).
+   * Soft-deletes reports of type under the parent — same as Neo4j, whose
+   * `deleteBaseNode` sets `deletedAt` and relabels to `Deleted_*` rather than
+   * removing anything (migration 0035, ledger PC-14).
    *
-   * A REAL delete — see the schema note on deterministic ids. The
-   * no-uploaded-file guard is what keeps that safe: a report carrying user
-   * data (an uploaded file) is never hard-deleted.
+   * Because nothing is destroyed, the eligibility rules can now be exactly
+   * Neo4j's, with no extra content guard: progress reports only while still
+   * NotStarted; non-progress reports only while no file has been uploaded to
+   * either DefinedFile. A report's media, variance explanation and workflow
+   * events all survive the removal, attached to the dead row.
    */
   async delete(
     baseNodeId: ID,
@@ -389,18 +468,17 @@ export class PeriodicReportDrizzleRepository extends DrizzleDtoRepository<
     });
     if (intervalConditions.length === 0) return { count: 0 };
     const deleted = await this.db
-      .delete(periodicReports)
+      .update(periodicReports)
+      .set({ deletedAt: new Date(), updatedAt: new Date() })
       .where(
         and(
           this.parentCondition(baseNodeId, type),
           or(...intervalConditions),
           ...(type === 'Progress'
             ? [eq(periodicReports.status, ProgressReportStatus.NotStarted)]
-            : // Non-progress reports are deletable only while no file has been
+            : // Non-progress reports are removable only while no file has been
               // uploaded to EITHER DefinedFile — mirrors the Neo4j
-              // reportFileNode + narrativeFileNode FileVersion guards. Without
-              // this, a Financial/Narrative report with an uploaded file
-              // (real user data) would be hard-DELETEd.
+              // reportFileNode + narrativeFileNode FileVersion guards.
               [not(hasUploadedFileVersion())]),
         ),
       )
@@ -408,8 +486,14 @@ export class PeriodicReportDrizzleRepository extends DrizzleDtoRepository<
     return { count: deleted.length };
   }
 
+  /**
+   * Every caller wants LIVE reports, `delete()` included (re-removing an
+   * already-dead report is a no-op, not a second event), so liveness lives here
+   * rather than being repeated at seven call sites. @see migration 0035
+   */
   private parentCondition(parentId: ID, type: ReportType) {
     return and(
+      isNull(periodicReports.deletedAt),
       eq(periodicReports.type, type),
       type === 'Progress'
         ? eq(periodicReports.engagementId, parentId as ID<'Engagement'>)

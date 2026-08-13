@@ -248,7 +248,29 @@ export class ProgressReportMediaDrizzleRepository {
       .innerJoin(projects, eq(projects.id, engagements.projectId))
       .leftJoin(fileNodes, eq(fileNodes.id, progressReportMedia.fileId))
       .leftJoin(media, eq(media.fileVersionId, fileNodes.latestVersionId))
-      .where(and(...conditions, isNull(progressReportMedia.deletedAt)));
+      .where(
+        and(
+          ...conditions,
+          isNull(progressReportMedia.deletedAt),
+          // The report itself has to still be live. Before migration 0035 this
+          // state could not arise — the foreign key has no ON DELETE action, so
+          // it blocked the removal outright. Now the report soft-deletes and the
+          // row stays, so media under a removed report kept resolving here.
+          // Neo4j hides them: every one of its reads goes through
+          // `projectFromProgressReportChild`, which requires the
+          // `:ProgressReport` label, and soft delete relabels it.
+          isNull(periodicReports.deletedAt),
+          // …and its engagement and project, which is the rest of what the
+          // Cypher requires. `projectFromProgressReportChild` is a required
+          // match naming all three labels — :Project -> :Engagement ->
+          // :ProgressReport -> node — and neither engine cascades a soft delete
+          // to descendants, so deleting a PROJECT leaves a live engagement,
+          // report and media underneath it. Neo4j then returns no media; without
+          // these two, Postgres returns them.
+          isNull(engagements.deletedAt),
+          isNull(projects.deletedAt),
+        ),
+      );
 
     const scopeByProject = await requesterScopeByProject(
       this.db,

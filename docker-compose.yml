@@ -15,12 +15,28 @@ services:
       NEO4J_dbms_security_auth__minimum__password__length: 1
 
   postgres:
-    # alpine is fine BECAUSE text ordering no longer depends on the image: every
-    # text sort names the `display_order` collation explicitly (migration 0032,
-    # applied by displayOrder() in src/core/drizzle/order-by.ts). Without that,
-    # this image would order text differently from a glibc one — alpine links
-    # musl, which has no locale-aware collation and falls back to raw byte
-    # order. Do not sort text without that collation.
+    # Alpine, deliberately, and the reason is parity with Neo4j — not weight.
+    #
+    # Two groups of text column, each matched a different way:
+    #  * NAME columns name the `display_order` collation explicitly (migration
+    #    0032, applied by displayOrder() in src/core/drizzle/order-by.ts). Those
+    #    order identically on any image.
+    #  * Everything else — two address fields, a post body, two product
+    #    descriptions, an ISO code, a PMC entity code, a department id and an
+    #    unavailability description — falls back to the database default. Neo4j
+    #    orders those by raw code points, and UTF-8 byte order IS code-point
+    #    order, so musl (which has no locale-aware comparison and compares bytes)
+    #    reproduces Neo4j exactly. A glibc image would case-fold them and ignore
+    #    leading spaces, which reads nicer but is NOT what Neo4j does.
+    #
+    # So alpine is the parity-preserving choice for those nine columns, which is
+    # why it is pinned rather than tolerated.
+    #
+    # migration-todo: those nine still depend on the image, so a glibc production
+    # server orders them differently from here. Emitting `collate "C"` for
+    # non-name text sorts would remove the dependence entirely and match Neo4j on
+    # any image. Not done yet: it changes ordering on glibc, so it is a decision
+    # rather than a cleanup.
     image: postgres:16-alpine
     ports:
       - 5432:5432

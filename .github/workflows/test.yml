@@ -60,11 +60,28 @@ jobs:
           --health-start-period 30s
       # Needed for the postgres matrix entries; idle for the neo4j ones.
       postgres:
-        # alpine is fine BECAUSE text ordering no longer depends on the image:
-        # every text sort names the `display_order` collation explicitly
-        # (migration 0032). That makes ordering identical here, on a glibc
-        # Postgres, and across OS upgrades — so CI proves the ordering
-        # production will actually have, whatever image it runs.
+        # Alpine, deliberately, because it is what matches Neo4j.
+        #
+        # Name columns do not care which image this is — they name the
+        # `display_order` collation explicitly (migration 0032), so they order
+        # identically anywhere. Every OTHER text sort falls back to the collation
+        # the database was created with, and ephemeral test databases are created
+        # with no LOCALE clause, so they inherit initdb's choice — which behaves
+        # differently per C library. musl has no locale-aware comparison and so
+        # compares raw bytes; glibc case-folds and ignores a leading space.
+        #
+        # Neo4j orders those columns by raw code points, and UTF-8 byte order IS
+        # code-point order, so musl reproduces Neo4j and glibc would diverge from
+        # it. Parity is the rule for this migration, so CI runs the family that
+        # has it. The columns concerned are two address fields, a post body, two
+        # product descriptions, an ISO code, a PMC entity code, a department id
+        # and an unavailability description (see NAME_COLUMNS in
+        # src/core/drizzle/order-by.ts for the collated set).
+        #
+        # migration-todo: emitting `collate "C"` for non-name text sorts would
+        # remove the dependence on the image entirely and match Neo4j anywhere,
+        # including on a glibc production server. Not done — it changes ordering
+        # on glibc, so it is a deliberate call, not a cleanup.
         image: postgres:16-alpine
         ports:
           - 5432:5432

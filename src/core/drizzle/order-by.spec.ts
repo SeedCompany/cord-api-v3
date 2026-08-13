@@ -3,8 +3,17 @@ import { asc, desc, sql } from 'drizzle-orm';
 import { PgDialect } from 'drizzle-orm/pg-core';
 import {
   budgetRecords,
+  educations,
   engagements,
+  fileNodes,
+  languages,
+  locations,
   organizations,
+  partners,
+  posts,
+  products,
+  projects,
+  unavailabilities,
   users,
 } from '~/core/drizzle/schema';
 import { displayOrder } from './order-by';
@@ -33,9 +42,41 @@ describe('displayOrder', () => {
   const isCollated = (col: Parameters<typeof displayOrder>[0]) =>
     toSql(col).includes('collate "display_order"');
 
-  it('collates display text', () => {
+  it('collates name columns', () => {
     expect(isCollated(organizations.name)).toBe(true);
+    expect(isCollated(organizations.acronym)).toBe(true);
     expect(isCollated(users.realLastName)).toBe(true);
+    expect(isCollated(languages.displayName)).toBe(true);
+    expect(isCollated(educations.institution)).toBe(true);
+    // The default sort of every file and directory listing, so leaving it out
+    // reorders those lists without anyone asking for a sort at all.
+    expect(isCollated(fileNodes.name)).toBe(true);
+  });
+
+  /**
+   * The nine that used to be collated because they are text, and are not.
+   *
+   * Neo4j's own string ordering is raw code points; the folding comes from
+   * `@NameField`, and every field below is a plain `@Field()`. Collating them
+   * ordered these lists differently from Neo4j — visibly so for the two address
+   * fields, the descriptions and the post body, where values differ in case and
+   * punctuation. `sort` is a free string on the list inputs, so a client can ask
+   * for any of them on either engine.
+   */
+  it('does NOT collate plain text that Neo4j leaves alone', () => {
+    for (const col of [
+      organizations.address,
+      partners.address,
+      partners.pmcEntityCode,
+      locations.isoAlpha3,
+      posts.body,
+      products.describeCompletion,
+      products.placeholderDescription,
+      projects.departmentId,
+      unavailabilities.description,
+    ]) {
+      expect(isCollated(col)).toBe(false);
+    }
   });
 
   it('does NOT collate a primary key, which holds an opaque id', () => {

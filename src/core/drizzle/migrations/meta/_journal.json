@@ -232,6 +232,34 @@
       "when": 1753401600000,
       "tag": "0032_display_order_collation",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1753488000000,
+      "tag": "0033_add_partnership_producing_mediums",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1753574400000,
+      "tag": "0034_add_tool_usages",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1753660800000,
+      "tag": "0035_periodic_reports_soft_delete",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1753747200000,
+      "tag": "0036_add_progress_report_workflow",
+      "breakpoints": true
     }
   ]
 }

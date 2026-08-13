@@ -17,7 +17,7 @@ import {
   type SortMap,
 } from '~/core/drizzle';
 import { type DrizzleDb, DrizzleService } from '~/core/drizzle/drizzle.service';
-import { tools } from '~/core/drizzle/schema';
+import { tools, toolUsages } from '~/core/drizzle/schema';
 import { PolicyExecutor } from '../../authorization/policy/executor/policy-executor';
 import {
   type CreateTool,
@@ -80,8 +80,42 @@ export class ToolDrizzleRepository extends DrizzleDtoRepository<
     return await this.readOne(id);
   }
 
+  /**
+   * Soft-delete the tool, and every usage of it along with it.
+   *
+   * Rob's call 2026-08-05: a deleted tool's usages are deleted too. The
+   * alternative was to leave the usage rows live and filter them out on every
+   * read by joining `tools` — four call sites, each of which has to remember. All
+   * five read paths in the usage repository already exclude
+   * `tool_usages.deleted_at`, so cascading here makes those reads correct with no
+   * change to them at all, and it makes the data true rather than only the
+   * queries.
+   *
+   * The same statement reports what it changed, so announcing the usages to live
+   * queries costs no extra round trip — the shape `FileDrizzleRepository.delete`
+   * already uses for a deleted directory's subtree. A database trigger was the
+   * other option and is the wrong one here specifically because it is invisible
+   * to the application: nothing would tell the live-query store, so a page
+   * showing a resource's tools would sit there stale.
+   *
+   * Neo4j does NOT do this — it leaves the usage live and its `hydrate()` drops
+   * the row because the required `node('tool','Tool')` match fails. Reads agree
+   * either way, so this is a divergence in stored state only, and the direction
+   * that survives the cutover.
+   *
+   * Both statements run inside the mutation's transaction, so a tool cannot end
+   * up deleted with its usages still live.
+   */
   async delete(id: ID): Promise<void> {
     await this.softDelete(id);
+    const usages = await this.db
+      .update(toolUsages)
+      .set({ deletedAt: new Date() })
+      .where(and(eq(toolUsages.toolId, id), isNull(toolUsages.deletedAt)))
+      .returning({ id: toolUsages.id });
+    this.liveQueryStore.invalidateAll(
+      usages.map((usage) => ['ToolUsage', usage.id] as const),
+    );
   }
 
   async list(

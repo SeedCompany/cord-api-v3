@@ -71,13 +71,13 @@ export async function reverseAttachmentByRootIds(
     UNION ALL
     -- reportFile + narrativeFile live on the base PeriodicReport, so the label
     -- is the concrete report type: 'Progress'/'Financial'/'Narrative' || 'Report'.
-    -- No deleted_at filter — periodic_reports isn't soft-deleted (it cascades
-    -- from its parent project/engagement), so the column doesn't exist.
+    -- periodic_reports gained deleted_at in migration 0035 (soft delete,
+    -- matching Neo4j) — filter it like every other arm here.
     SELECT report_file_id, id, type || 'Report', 'reportFile', created_at
-      FROM periodic_reports WHERE report_file_id IN (${ids})
+      FROM periodic_reports WHERE report_file_id IN (${ids}) AND deleted_at IS NULL
     UNION ALL
     SELECT narrative_file_id, id, type || 'Report', 'narrativeFile', created_at
-      FROM periodic_reports WHERE narrative_file_id IN (${ids})
+      FROM periodic_reports WHERE narrative_file_id IN (${ids}) AND deleted_at IS NULL
   `);
   for (const r of rows.rows) {
     const baseNode: BaseNode = {

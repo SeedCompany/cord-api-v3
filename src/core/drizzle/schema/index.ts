@@ -2266,11 +2266,19 @@ export const progressReportStatusEnum = pgEnum('progress_report_status', [
  * engagements — the CHECK keeps the parent FK coherent with the type.
  *
  * The id is deterministic — sha256(parent:type:start:end), same derivation as
- * Neo4j — so concurrent syncs computing rows for the same interval collide on
- * the PK and resolve via ON CONFLICT DO NOTHING. Deletion is a REAL delete
- * (no deleted_at): eligible rows carry no user data (no file, NotStarted),
- * and a soft-deleted row would block the deterministic id from ever being
- * recreated when dates change back.
+ * Neo4j — but it is a FIRST CHOICE, not a guarantee. Deletion is a soft delete
+ * as of migration 0035, matching Neo4j (whose own delete relabels rather than
+ * removing), so a dead row can still be holding the deterministic id. When it
+ * is, the repository takes a fresh id for the new live row rather than reviving
+ * the dead one — again what Neo4j does.
+ *
+ * Because of that, dedup between concurrent syncs comes from the partial unique
+ * index over LIVE rows, not from the primary key, and the insert's
+ * `onConflictDoNothing()` is deliberately untargeted: a loser can conflict on
+ * either the id or that index.
+ *
+ * Read paths must therefore filter `deleted_at`, including where this table is
+ * the joined side rather than the driving one.
  *
  * `status` is ProgressReport-only (workflow-driven; plain column like
  * engagement.status).
@@ -2306,6 +2314,10 @@ export const periodicReports = pgTable(
     updatedAt: timestamp('updated_at', { withTimezone: true })
       .notNull()
       .defaultNow(),
+    // Soft delete, matching Neo4j's `deleteBaseNode` relabel (migration 0035).
+    // Removing a report from a shrunken date window must not destroy its media,
+    // variance explanation or workflow events.
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
   },
   (t) => [
     check(
@@ -2319,6 +2331,22 @@ export const periodicReports = pgTable(
     ),
     index('periodic_reports_project_id_idx').on(t.projectId),
     index('periodic_reports_engagement_id_idx').on(t.engagementId),
+    // No bare index on deleted_at — every read narrows by parent id first, and
+    // the two above lead that. @see migration 0035
+    // At most one LIVE report per (parent, type, interval). This — not the
+    // deterministic id — is the dedup guarantee under soft delete, since a dead
+    // row can hold the deterministic id and force a fresh one.
+    // Keyed on the coalesced parent: indexing both parent columns would leave a
+    // NULL in every row, and NULLs compare DISTINCT in a unique index, so it
+    // would silently enforce nothing. @see migration 0035
+    uniqueIndex('periodic_reports_live_interval_unique')
+      .on(
+        sql`(coalesce(${t.projectId}, ${t.engagementId}))`,
+        t.type,
+        t.start,
+        t.end,
+      )
+      .where(sql`${t.deletedAt} is null`),
   ],
 );
 
@@ -2609,6 +2637,102 @@ export const knownLanguages = pgTable(
   ],
 );
 
+// ─── Tool Usages ─────────────────────────────────────────────────────────────
+
+/**
+ * A container (Project or Engagement) using a Tool. The Neo4j ToolUsage node
+ * plus its `uses`/`tool`/`creator` relationships collapse to this row.
+ *
+ * `containerId` is polymorphic and FK-less (spans projects + engagements, same
+ * rationale as commentThreads.parentId); `containerType` holds the CONCRETE
+ * __typename (e.g. 'LanguageEngagement') so reads emit a typed resource ref
+ * without probing candidate tables. The GraphQL `ToolContainerType` enum is the
+ * normalized bucket ('Engagement' | 'Project') and is derived from this, not
+ * stored.
+ */
+export const toolUsages = pgTable(
+  'tool_usages',
+  {
+    id: text('id').$type<ID<'ToolUsage'>>().primaryKey(),
+    containerId: text('container_id').$type<ID>().notNull(),
+    containerType: text('container_type').notNull(),
+    toolId: text('tool_id')
+      .$type<ID<'Tool'>>()
+      .notNull()
+      .references(() => tools.id),
+    creatorId: text('creator_id')
+      .$type<ID<'User'>>()
+      .notNull()
+      .references(() => users.id),
+    startDate: date('start_date'),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (t) => [
+    uniqueIndex('tool_usages_container_tool_unique')
+      .on(t.containerId, t.toolId)
+      .where(sql`${t.deletedAt} is null`),
+    index('tool_usages_container_id_idx').on(t.containerId),
+    index('tool_usages_tool_id_idx').on(t.toolId),
+    index('tool_usages_creator_id_idx').on(t.creatorId),
+  ],
+);
+
+export const toolUsagesRelations = relations(toolUsages, ({ one }) => ({
+  tool: one(tools, {
+    fields: [toolUsages.toolId],
+    references: [tools.id],
+  }),
+  creator: one(users, {
+    fields: [toolUsages.creatorId],
+    references: [users.id],
+  }),
+}));
+
+// ─── Partnership Producing Mediums ───────────────────────────────────────────
+
+/**
+ * Which Partnership is responsible for producing each ProductMedium on a
+ * LanguageEngagement. In Neo4j this is a `PartnershipProducingMedium`
+ * relationship carrying `medium` as a relationship property; here it is a plain
+ * association row.
+ *
+ * Hard-deleted on reassignment (no `deleted_at`) — it's a pure assignment and
+ * the Neo4j deactivation was relationship-property history, not retention.
+ * The composite PK enforces one partnership per (engagement, medium).
+ *
+ * The set of *available* mediums is not stored: it's derived at read time from
+ * the engagement's products' `mediums` arrays.
+ */
+export const partnershipProducingMediums = pgTable(
+  'partnership_producing_mediums',
+  {
+    engagementId: text('engagement_id')
+      .$type<ID<'Engagement'>>()
+      .notNull()
+      .references(() => engagements.id, { onDelete: 'cascade' }),
+    medium: productMediumEnum('medium').$type<ProductMedium>().notNull(),
+    partnershipId: text('partnership_id')
+      .$type<ID<'Partnership'>>()
+      .notNull()
+      .references(() => partnerships.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.engagementId, t.medium] }),
+    index('partnership_producing_mediums_partnership_id_idx').on(
+      t.partnershipId,
+    ),
+  ],
+);
+
 // ─── Comments ────────────────────────────────────────────────────────────────
 
 /**
@@ -2844,6 +2968,84 @@ export const progressReportMedia = pgTable(
       .on(t.variantGroupId, t.variant)
       .where(sql`${t.deletedAt} IS NULL`),
   ],
+);
+
+// ─── Progress Report Workflow ────────────────────────────────────────────────
+
+/**
+ * At most ONE variance explanation per report — the PK on `report_id` encodes
+ * Neo4j's MERGE-on-relationship semantics, so writes are a plain upsert.
+ *
+ * `reasons` is text[] rather than an enum on purpose: the option set lives in
+ * `ProgressReportVarianceExplanationReasonOptions`, which carries an explicit
+ * `deprecated` list so old values stay *readable* while being blocked for new
+ * writes. An enum couldn't express that, and would need a migration per wording
+ * change. App-level `@IsIn` remains the gate. See migration 0036.
+ */
+export const progressReportVarianceExplanations = pgTable(
+  'progress_report_variance_explanations',
+  {
+    reportId: text('report_id')
+      .$type<ID<'ProgressReport'>>()
+      .primaryKey()
+      .references(() => periodicReports.id, { onDelete: 'cascade' }),
+    reasons: text('reasons').array().notNull().default([]),
+    comments: jsonb('comments'), // RichText
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+);
+
+/**
+ * Append-only status-transition history for a progress report. Immutable
+ * facts — no soft delete, no `updated_at`.
+ *
+ * `transition_key` is null when the workflow was bypassed (status set directly).
+ * Unlike `project_workflow_events`, no trigger syncs the parent's status;
+ * `periodic_reports.status` is written app-side by `changeStatus` to stay
+ * faithful to Neo4j (see migration 0036 for the promotion candidate).
+ */
+export const progressReportWorkflowEvents = pgTable(
+  'progress_report_workflow_events',
+  {
+    id: text('id').$type<ID<'ProgressReportWorkflowEvent'>>().primaryKey(),
+    reportId: text('report_id')
+      .$type<ID<'ProgressReport'>>()
+      .notNull()
+      .references(() => periodicReports.id, { onDelete: 'cascade' }),
+    who: text('who')
+      .$type<ID<'User'>>()
+      .notNull()
+      .references(() => users.id),
+    status: progressReportStatusEnum('status')
+      .$type<ProgressReportStatus>()
+      .notNull(),
+    transitionKey: text('transition_key'),
+    notes: jsonb('notes'), // RichText
+    at: timestamp('at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    // Lists read oldest-first, matching the Neo4j repo's createdAt ASC sort.
+    index('progress_report_workflow_events_report_id_at_idx').on(
+      t.reportId,
+      t.at,
+    ),
+    index('progress_report_workflow_events_who_idx').on(t.who),
+  ],
+);
+
+export const progressReportWorkflowEventsRelations = relations(
+  progressReportWorkflowEvents,
+  ({ one }) => ({
+    report: one(periodicReports, {
+      fields: [progressReportWorkflowEvents.reportId],
+      references: [periodicReports.id],
+    }),
+  }),
 );
 
 // ─── PnP Extraction Results ──────────────────────────────────────────────────
