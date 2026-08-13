@@ -145,6 +145,7 @@ export class UserService {
 
   async delete(id: ID): Promise<void> {
     const object = await this.readOne(id);
+    this.privileges.for(User, object).verifyCan('delete');
     await this.userRepo.delete(id, object);
     // Same-transaction side effects (e.g. session revocation — a deleted
     // user must not keep live sessions).
