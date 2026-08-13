@@ -36,12 +36,18 @@ export class WebhooksDrizzleRepository {
     return this.drizzle.client;
   }
 
-  private async getSecret(userId: ID<'User'>): Promise<string> {
+  /**
+   * Neo4j's hydrate() matches `WebhookExecutor -> owner -> Webhook` as one
+   * required pattern, so a webhook whose owner has no executor row never
+   * comes back from any query there. Returning `undefined` here (instead of
+   * a fallback secret) lets every call site drop the row the same way.
+   */
+  private async getSecret(userId: ID<'User'>): Promise<string | undefined> {
     const [row] = await this.db
       .select({ secret: webhookExecutors.secret })
       .from(webhookExecutors)
       .where(eq(webhookExecutors.userId, userId));
-    return row?.secret ?? '';
+    return row?.secret;
   }
 
   private toDto(row: WebhookRow, secret: string): Webhook {
@@ -69,7 +75,9 @@ export class WebhooksDrizzleRepository {
       .from(webhooks)
       .where(and(eq(webhooks.ownerId, userId), eq(webhooks.key, key)));
     if (!row) return undefined;
-    return this.toDto(row, await this.getSecret(userId));
+    const secret = await this.getSecret(userId);
+    if (secret === undefined) return undefined;
+    return this.toDto(row, secret);
   }
 
   async listForUser(): Promise<Webhook[]> {
@@ -80,6 +88,7 @@ export class WebhooksDrizzleRepository {
       .where(eq(webhooks.ownerId, userId));
     if (rows.length === 0) return [];
     const secret = await this.getSecret(userId);
+    if (secret === undefined) return [];
     return rows.map((row) => this.toDto(row, secret));
   }
 
@@ -99,9 +108,10 @@ export class WebhooksDrizzleRepository {
     const secretByOwner = new Map(
       executors.map((row) => [row.userId, row.secret]),
     );
-    return rows.map((row) =>
-      this.toDto(row, secretByOwner.get(row.ownerId) ?? ''),
-    );
+    return rows.flatMap((row) => {
+      const secret = secretByOwner.get(row.ownerId);
+      return secret === undefined ? [] : [this.toDto(row, secret)];
+    });
   }
 
   /**
@@ -150,7 +160,10 @@ export class WebhooksDrizzleRepository {
       })
       .returning();
 
-    return this.toDto(row!, await this.getSecret(userId));
+    // The insert above just bootstrapped the executor row if it didn't
+    // already exist, so a secret is guaranteed here.
+    const secret = await this.getSecret(userId);
+    return this.toDto(row!, secret!);
   }
 
   async deleteBy(
@@ -183,6 +196,7 @@ export class WebhooksDrizzleRepository {
     );
 
     const secret = await this.getSecret(userId);
+    if (secret === undefined) return [];
     return rows.map((row) => this.toDto(row, secret));
   }
 
