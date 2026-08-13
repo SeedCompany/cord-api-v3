@@ -115,7 +115,13 @@ export class PartnershipRepository extends DtoRepository<
     // back so the service can key off the actual outcome rather than its own
     // pre-computed guess, matching the Postgres repo's contract (whose
     // create() can silently fall back to false on a primary-race conflict).
-    return { ...result, primary: input.primary ?? false };
+    //
+    // `displaced` is always empty here — unlike Postgres, this repo doesn't
+    // clear other partnerships itself; the service's separate post-create
+    // `removePrimaryFromOtherPartnerships` call still does that for Neo4j.
+    // The field exists purely so the service can read it uniformly across
+    // engines instead of branching on which one is active.
+    return { ...result, primary: input.primary ?? false, displaced: [] };
   }
 
   async update(

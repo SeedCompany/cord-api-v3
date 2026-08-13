@@ -102,11 +102,20 @@ export class PartnershipService {
       // request alone would wipe the actual winner's flag too, leaving the
       // project with zero primaries.
       if (result.primary) {
+        // Postgres already displaced the old primary atomically inside
+        // create() (see its docs for why); this call is a no-op there since
+        // there's nothing left to clear. Neo4j/Gel have no such backstop and
+        // still rely on this call to actually do the clearing. Union both so
+        // every displaced partnership gets its live queries invalidated
+        // regardless of which engine handled it.
         const other = await this.repo.removePrimaryFromOtherPartnerships(
           result.id,
         );
+        const displaced = new Map(
+          [...result.displaced, ...other].map((r) => [r.id, r]),
+        );
         this.liveQueryStore.invalidateAll(
-          other.map((r) => ['Partnership', r.id]),
+          [...displaced.values()].map((r) => ['Partnership', r.id]),
         );
       }
 

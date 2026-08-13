@@ -40,8 +40,9 @@ export class PartnershipGelRepository
       agreement: undefined, // TODO
     });
     // No unique-constraint race here, same as the Neo4j repo — see its
-    // create() for the full rationale on why this is reported back.
-    return { ...result, primary: input.primary ?? false };
+    // create() for the full rationale on why this is reported back, and on
+    // why `displaced` is always empty for this engine.
+    return { ...result, primary: input.primary ?? false, displaced: [] };
   }
 
   async readManyByProjectAndPartner(

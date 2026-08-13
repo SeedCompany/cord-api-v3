@@ -111,7 +111,7 @@ export class PartnershipDrizzleRepository extends DrizzleDtoRepository<
   async create(
     input: CreatePartnership,
     _changeset?: ID,
-  ): Promise<{ id: ID; primary: boolean }> {
+  ): Promise<{ id: ID; primary: boolean; displaced: Array<{ id: ID }> }> {
     await this.verifyRelationshipEligibility(input.project, input.partner);
 
     const id = await generateId<ID<'Partnership'>>();
@@ -142,10 +142,32 @@ export class PartnershipDrizzleRepository extends DrizzleDtoRepository<
     // follow that outcome, not the request. See T1-8: trusting the request
     // here previously let a losing race wipe the winner's primary too.
     let primary = values.primary;
+    let displaced: Array<{ id: ID }> = [];
     try {
       // Nested transaction = savepoint, so a primary-race conflict below
       // doesn't poison the surrounding mutation transaction.
       await this.db.transaction(async (tx) => {
+        if (values.primary) {
+          // Claim primary atomically: clear whoever currently holds it for
+          // this project *before* inserting, in the same transaction — the
+          // ordinary sequential case (a caller just asking a new partnership
+          // to become primary) is not a race, and treating it like one used
+          // to always lose to the existing holder (unique-index violation
+          // on insert, silently caught, downgraded to non-primary). A true
+          // concurrent create still conflicts on the insert below and falls
+          // through to the catch, same as before.
+          displaced = (await tx
+            .update(partnerships)
+            .set({ primary: false, updatedAt: new Date() })
+            .where(
+              and(
+                eq(partnerships.projectId, input.project),
+                eq(partnerships.primary, true),
+                isNull(partnerships.deletedAt),
+              ),
+            )
+            .returning({ id: partnerships.id })) as Array<{ id: ID }>;
+        }
         await tx.insert(partnerships).values(values);
       });
     } catch (e) {
@@ -154,8 +176,11 @@ export class PartnershipDrizzleRepository extends DrizzleDtoRepository<
         isUniqueViolation(e, 'partnerships_project_primary_active_unique')
       ) {
         // Lost the primary race — a concurrent create on the same project
-        // already claimed primary (the service's isFirstPartnership check
-        // isn't atomic). Yield and create this one as non-primary.
+        // claimed primary between our clear above and our insert (the
+        // service's isFirstPartnership check isn't atomic either). The
+        // failed transaction rolled the clear back too, so nothing was
+        // actually displaced. Yield and create this one as non-primary.
+        displaced = [];
         await this.db
           .insert(partnerships)
           .values({ ...values, primary: false })
@@ -177,7 +202,7 @@ export class PartnershipDrizzleRepository extends DrizzleDtoRepository<
       input.agreement,
     );
 
-    return { id, primary };
+    return { id, primary, displaced };
   }
 
   /**
