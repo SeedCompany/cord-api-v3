@@ -292,20 +292,30 @@ Rollback is instant at any point before the flip: Neo4j is untouched.
 
 ## Domains covered (firm / merged to develop)
 
-**55 of 58 Postgres tables, which is the ceiling — see below.**
+**58 of 61 Postgres tables, which is the ceiling — see below.**
+
+(2026-08-14: `user_locations`, `language_locations`, and
+`project_other_locations` are three NEW junction tables — the app-side
+`addLocationToNode`/`removeLocationFromNode` gap they fill was found and
+fixed on `location-node-edges-postgres`, not yet on develop. This count and
+the extractors below assume that migration has landed; until this branch is
+rebased past it, `userLocation`/`language`/`project`'s new Cypher legs
+reference tables that don't exist in the schema on disk yet — see those
+commits for detail.)
 
 user (+ global_roles, educations, unavailabilities, system_agents,
-auth_identities) · tool · fundingAccount · ethnologue · language ·
+auth_identities) · **userLocation** (`user_locations`) · tool ·
+fundingAccount · ethnologue · language (+ **locations** junction) ·
 departmentIdBlock · fieldZone · fieldRegion · location · organization
 (+ 2 junctions) · partner (+ 3 junctions) · project (+ workflow events, step
-re-assert 2-pass) · projectMember · partnership · engagement (+ status history,
-ceremonies) · product (+ producibles, completion descriptions) · periodic-report
-· prompt-variant-response (+ entries) · product-progress (+ step progress) ·
-progress-summary · notification (+ recipients) · budget (+ budget_records) ·
-pin · known-language · comment (+ threads) · post · file (+ media, PnP
-extraction results + problems, progress-report media) · tool-usage ·
-progress-report-workflow-event · progress-report-variance-explanation ·
-partnership-producing-medium.
+re-assert 2-pass, **otherLocations** junction) · projectMember · partnership ·
+engagement (+ status history, ceremonies) · product (+ producibles, completion
+descriptions) · periodic-report · prompt-variant-response (+ entries) ·
+product-progress (+ step progress) · progress-summary · notification
+(+ recipients) · budget (+ budget_records) · pin · known-language · comment
+(+ threads) · post · file (+ media, PnP extraction results + problems,
+progress-report media) · tool-usage · progress-report-workflow-event ·
+progress-report-variance-explanation · partnership-producing-medium.
 
 `project.rootDirectoryId` and `engagement.{pnpId,growthPlanId}` are backfilled
 from the DTO fields the live repos already hydrate (`rootDirectory` relation,
