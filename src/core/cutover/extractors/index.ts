@@ -32,6 +32,7 @@ import { projectExtractor } from './project.extractor';
 import { promptVariantResponseExtractor } from './prompt-variant-response.extractor';
 import { toolUsageExtractor } from './tool-usage.extractor';
 import { toolExtractor } from './tool.extractor';
+import { userLocationExtractor } from './user-location.extractor';
 import { userExtractor } from './user.extractor';
 
 /**
@@ -53,6 +54,7 @@ import { userExtractor } from './user.extractor';
  */
 export const extractors: readonly Extractor[] = [
   userExtractor,
+  userLocationExtractor,
   toolExtractor,
   fundingAccountExtractor,
   ethnologueExtractor,
