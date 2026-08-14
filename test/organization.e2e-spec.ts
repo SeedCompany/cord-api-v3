@@ -4,12 +4,14 @@ import { times } from 'lodash';
 import { generateId, type ID, isValidId, Role } from '~/common';
 import { graphql } from '~/graphql';
 import {
+  createLocation,
   createOrganization,
   createSession,
   createTestApp,
   errors,
   fragments,
   registerUser,
+  runAsAdmin,
   type TestApp,
 } from './utility';
 
@@ -292,6 +294,62 @@ describe('Organization e2e', () => {
     );
 
     expect(actual.name.canEdit).toBe(true);
+  });
+
+  it('adds and removes a location from an organization', async () => {
+    const org = await createOrganization(app);
+    const location = await runAsAdmin(app, () => createLocation(app));
+
+    const OrgLocations = graphql(`
+      query org($id: ID!) {
+        organization(id: $id) {
+          locations {
+            items {
+              id
+            }
+          }
+        }
+      }
+    `);
+
+    await app.graphql.mutate(
+      graphql(`
+        mutation addLocationToOrganization($organization: ID!, $location: ID!) {
+          addLocationToOrganization(
+            organization: $organization
+            location: $location
+          ) {
+            id
+          }
+        }
+      `),
+      { organization: org.id, location: location.id },
+    );
+
+    const afterAdd = await app.graphql.query(OrgLocations, { id: org.id });
+    expect(afterAdd.organization.locations.items.map((l) => l.id)).toEqual([
+      location.id,
+    ]);
+
+    await app.graphql.mutate(
+      graphql(`
+        mutation removeLocationFromOrganization(
+          $organization: ID!
+          $location: ID!
+        ) {
+          removeLocationFromOrganization(
+            organization: $organization
+            location: $location
+          ) {
+            id
+          }
+        }
+      `),
+      { organization: org.id, location: location.id },
+    );
+
+    const afterRemove = await app.graphql.query(OrgLocations, { id: org.id });
+    expect(afterRemove.organization.locations.items).toHaveLength(0);
   });
 
   const Organizations = graphql(`

@@ -7,6 +7,7 @@ import {
   createLanguage,
   createLanguageEngagement,
   createLanguageMinimal,
+  createLocation,
   createProject,
   createSession,
   createTestApp,
@@ -196,6 +197,57 @@ describe('Language e2e', () => {
         },
       )
       .expectError(errors.notFound());
+  });
+
+  it('adds and removes a location from a language', async () => {
+    const language = await createLanguage(app);
+    const location = await createLocation(app);
+
+    const LanguageLocations = graphql(`
+      query language($id: ID!) {
+        language(id: $id) {
+          locations {
+            items {
+              id
+            }
+          }
+        }
+      }
+    `);
+
+    await app.graphql.mutate(
+      graphql(`
+        mutation addLocationToLanguage($language: ID!, $location: ID!) {
+          addLocationToLanguage(language: $language, location: $location) {
+            id
+          }
+        }
+      `),
+      { language: language.id, location: location.id },
+    );
+
+    const afterAdd = await app.graphql.query(LanguageLocations, {
+      id: language.id,
+    });
+    expect(afterAdd.language.locations.items.map((l) => l.id)).toEqual([
+      location.id,
+    ]);
+
+    await app.graphql.mutate(
+      graphql(`
+        mutation removeLocationFromLanguage($language: ID!, $location: ID!) {
+          removeLocationFromLanguage(language: $language, location: $location) {
+            id
+          }
+        }
+      `),
+      { language: language.id, location: location.id },
+    );
+
+    const afterRemove = await app.graphql.query(LanguageLocations, {
+      id: language.id,
+    });
+    expect(afterRemove.language.locations.items).toHaveLength(0);
   });
 
   // LIST Languages

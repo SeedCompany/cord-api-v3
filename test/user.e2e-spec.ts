@@ -5,6 +5,7 @@ import { firstLettersOfWords, isValidId } from '~/common';
 import { graphql, type InputOf, type VariablesOf } from '~/graphql';
 import { UserStatus } from '../src/components/user/dto';
 import {
+  createLocation,
   createOrganization,
   createPerson,
   createSession,
@@ -208,6 +209,59 @@ describe('User e2e', () => {
     );
 
     expect(users.items.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('adds and removes a location from a user', async () => {
+    const user = await createPerson(app);
+    const location = await createLocation(app);
+
+    const UserLocations = graphql(`
+      query user($id: ID!) {
+        user(id: $id) {
+          locations {
+            items {
+              id
+            }
+          }
+        }
+      }
+    `);
+
+    await app.graphql.mutate(
+      graphql(`
+        mutation addLocationToUser($user: ID!, $location: ID!) {
+          addLocationToUser(user: $user, location: $location) {
+            user {
+              id
+            }
+          }
+        }
+      `),
+      { user: user.id, location: location.id },
+    );
+
+    const afterAdd = await app.graphql.query(UserLocations, { id: user.id });
+    expect(afterAdd.user.locations.items.map((l) => l.id)).toEqual([
+      location.id,
+    ]);
+
+    await app.graphql.mutate(
+      graphql(`
+        mutation removeLocationFromUser($user: ID!, $location: ID!) {
+          removeLocationFromUser(user: $user, location: $location) {
+            user {
+              id
+            }
+          }
+        }
+      `),
+      { user: user.id, location: location.id },
+    );
+
+    const afterRemove = await app.graphql.query(UserLocations, {
+      id: user.id,
+    });
+    expect(afterRemove.user.locations.items).toHaveLength(0);
   });
 
   it('assign organization to user', async () => {

@@ -267,6 +267,13 @@
       "when": 1753833600000,
       "tag": "0037_add_webhooks",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1753920000000,
+      "tag": "0038_add_location_edges",
+      "breakpoints": true
     }
   ]
 }
