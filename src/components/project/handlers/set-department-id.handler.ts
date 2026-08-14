@@ -173,10 +173,12 @@ export class SetDepartmentId {
             where p.id = ${projectId}
           ),
           enumerated as (
-            select case
-              when id < 10000 then lpad(id::text, 5, '0')
-              else id::text
-            end as dept_id
+            select
+              id,
+              case
+                when id < 10000 then lpad(id::text, 5, '0')
+                else id::text
+              end as dept_id
             from block_range,
                  unnest(block_range.range) as r,
                  lateral generate_series(lower(r), upper(r) - 1) as id
@@ -189,7 +191,7 @@ export class SetDepartmentId {
           )
           select dept_id as "nextId" from enumerated
           where dept_id not in (select department_id from used)
-          order by dept_id asc
+          order by id asc
           limit 1
         `,
       );
