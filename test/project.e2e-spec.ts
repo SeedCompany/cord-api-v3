@@ -39,7 +39,10 @@ import {
   runAsAdmin,
   type TestApp,
 } from './utility';
-import { forceProjectTo } from './utility/transition-project';
+import {
+  forceProjectTo,
+  transitionProject,
+} from './utility/transition-project';
 
 const deleteProject =
   (app: TestApp) => async (id: ID | string | { id: ID | string }) =>
@@ -77,6 +80,22 @@ const ProjectListDoc = graphql(
   `,
   [fragments.project],
 );
+
+const readDepartmentId = async (app: TestApp, id: ID) => {
+  const { project } = await app.graphql.query(
+    graphql(`
+      query ProjectDepartmentId($id: ID!) {
+        project(id: $id) {
+          departmentId {
+            value
+          }
+        }
+      }
+    `),
+    { id },
+  );
+  return project.departmentId.value;
+};
 
 describe('Project e2e', () => {
   let app: TestApp;
@@ -1542,5 +1561,80 @@ describe('Project e2e', () => {
     const ids = partner.projects.items.map((p) => p.id);
     expect(ids).toContain(matchingProject.id);
     expect(ids).not.toContain(otherProject.id);
+  });
+
+  it('assigns a department id to a MultiplicationTranslation project via its primary partnership', async () => {
+    await runAsAdmin(app, async () => {
+      const partner = await createPartner(app, {
+        departmentIdBlock: { blocks: '500000-500009' },
+      });
+      const project = await createProject(app, {
+        type: ProjectType.MultiplicationTranslation,
+        fieldRegion: fieldRegion.id,
+      });
+      await createPartnership(app, {
+        project: project.id,
+        partner: partner.id,
+      });
+
+      await forceProjectTo(app, project.id, 'PendingFinanceConfirmation');
+      const departmentId = await readDepartmentId(app, project.id);
+
+      expect(departmentId).toBeTruthy();
+      expect(Number(departmentId)).toBeGreaterThanOrEqual(500000);
+      expect(Number(departmentId)).toBeLessThanOrEqual(500009);
+    });
+  });
+
+  it('does not assign the same department id to two MultiplicationTranslation projects sharing a partner', async () => {
+    await runAsAdmin(app, async () => {
+      const partner = await createPartner(app, {
+        departmentIdBlock: { blocks: '500100-500109' },
+      });
+
+      const createAndUpdateProject = async (name: string) => {
+        const project = await createProject(app, {
+          name,
+          type: ProjectType.MultiplicationTranslation,
+          fieldRegion: fieldRegion.id,
+        });
+        await createPartnership(app, {
+          project: project.id,
+          partner: partner.id,
+        });
+        // Not forceProjectTo here: it opens its own isolated admin session,
+        // which races with the shared app.graphql.authToken when two of
+        // these run concurrently under Promise.all below. The outer
+        // runAsAdmin already has us authenticated, so transition directly.
+        await transitionProject(app, {
+          project: project.id,
+          bypassTo: 'PendingFinanceConfirmation',
+        });
+        return await readDepartmentId(app, project.id);
+      };
+      const [departmentId1, departmentId2] = await Promise.all(
+        ['multi-1', 'multi-2'].map(
+          async (name) => await createAndUpdateProject(name),
+        ),
+      );
+
+      expect(departmentId1).not.toBe(departmentId2);
+    });
+  });
+
+  it('throws a clear error transitioning a MultiplicationTranslation project with no primary partnership', async () => {
+    await runAsAdmin(app, async () => {
+      const project = await createProject(app, {
+        type: ProjectType.MultiplicationTranslation,
+        fieldRegion: fieldRegion.id,
+      });
+
+      await expect(
+        forceProjectTo(app, project.id, 'PendingFinanceConfirmation'),
+      ).rejects.toThrowGqlError({
+        code: 'Client',
+        message: 'Project must have a partnership to continue',
+      });
+    });
   });
 });
