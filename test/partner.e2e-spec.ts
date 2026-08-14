@@ -190,6 +190,7 @@ describe('Partner e2e', () => {
     });
 
     const otherUser = await createPerson(app);
+    const unrelatedUser = await createPerson(app);
     await runAsAdmin(app, async () => {
       await app.graphql.mutate(AssignOrgToUserDoc, {
         org: org.id,
@@ -227,9 +228,9 @@ describe('Partner e2e', () => {
 
     const list = result.partner.people;
     expect(list.canRead).toBe(true);
-    expect(list.total).toBeGreaterThanOrEqual(2);
     const userIds = list.items.map((u) => u.id);
     expect(userIds).toEqual(expect.arrayContaining([poc.id, otherUser.id]));
+    expect(userIds).not.toContain(unrelatedUser.id);
     expect(result.partner.pointOfContact.value?.id).toBe(poc.id);
   });
 });
