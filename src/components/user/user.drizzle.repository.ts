@@ -242,11 +242,12 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
     conditions.push(...userFilterClauses(this.db, input.filter));
 
     const sortColumns = {
+      fullName: [users.realFirstName, users.realLastName],
       realLastName: [users.realLastName, users.realFirstName],
       displayLastName: [users.displayLastName, users.displayFirstName],
       realFirstName: [users.realFirstName, users.realLastName],
       displayFirstName: [users.displayFirstName, users.displayLastName],
-    } satisfies SortMap<keyof User>;
+    } satisfies SortMap<keyof User | 'fullName'>;
 
     const { rows, total, hasMore } = await this.paginatedSelect({
       predicate: and(...conditions),

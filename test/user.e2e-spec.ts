@@ -1,7 +1,7 @@
 import { faker } from '@faker-js/faker';
 import { beforeAll, describe, expect, it } from '@jest/globals';
 import { times } from 'lodash';
-import { firstLettersOfWords, isValidId } from '~/common';
+import { firstLettersOfWords, generateId, isValidId } from '~/common';
 import { graphql, type InputOf, type VariablesOf } from '~/graphql';
 import { UserStatus } from '../src/components/user/dto';
 import {
@@ -262,6 +262,34 @@ describe('User e2e', () => {
       id: user.id,
     });
     expect(afterRemove.user.locations.items).toHaveLength(0);
+  });
+
+  it('lists users sorted by full name by default', async () => {
+    const prefix = 'ZzzSortTest' + (await generateId());
+    await createPerson(app, { realFirstName: `${prefix}_Charlie` });
+    await createPerson(app, { realFirstName: `${prefix}_Alice` });
+    await createPerson(app, { realFirstName: `${prefix}_Bob` });
+
+    const { users } = await app.graphql.query(
+      graphql(`
+        query ($prefix: String!) {
+          users(input: { count: 25, page: 1, filter: { name: $prefix } }) {
+            items {
+              realFirstName {
+                value
+              }
+            }
+          }
+        }
+      `),
+      { prefix },
+    );
+
+    expect(users.items.map((user) => user.realFirstName.value)).toEqual([
+      `${prefix}_Alice`,
+      `${prefix}_Bob`,
+      `${prefix}_Charlie`,
+    ]);
   });
 
   it('assign organization to user', async () => {
