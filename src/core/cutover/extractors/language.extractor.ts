@@ -1,11 +1,20 @@
 import { eq, inArray } from 'drizzle-orm';
 import { type ID } from '~/common';
-import { ethnologueLanguages, languages } from '~/core/drizzle/schema';
+import {
+  ethnologueLanguages,
+  languageLocations,
+  languages,
+  locations,
+} from '~/core/drizzle/schema';
 import { type Language } from '../../../components/language/dto';
 import { LanguageRepository } from '../../../components/language/language.repository';
 import {
   bulkInsert,
+  cypher,
   dateStr,
+  keepLanded,
+  liveTargetIds,
+  one,
   orDefault,
   readAllViaRepo,
   stat,
@@ -32,12 +41,12 @@ import { type Extractor } from '../cutover.types';
  * ⚠ `--only=language` ALONE IS UNSAFE. The harness truncates target tables with
  * CASCADE, and `ethnologue_languages.language_id` references `languages.id`, so
  * truncating `languages` truncates the ethnologue rows this wave then wants to
- * backfill. Use `--only=ethnologue,language`.
+ * backfill. Use `--only=ethnologue,location,language`.
  */
 export const languageExtractor: Extractor = {
   name: 'language',
-  targetTables: ['languages'],
-  dependsOn: ['ethnologue'],
+  targetTables: ['languages', 'language_locations'],
+  dependsOn: ['ethnologue', 'location'],
   async run(ctx) {
     const dtos = await readAllViaRepo<Language>(
       ctx,
@@ -190,8 +199,33 @@ export const languageExtractor: Extractor = {
       }
     }
 
+    // ── language_locations ─────────────────────────────────────────────────
+    // Mirrors organization.extractor.ts's `organization_locations` junction —
+    // same relationship name (`locations`), same landed-both-sides guard.
+    const locPairs = await cypher<{ languageId: ID; locationId: ID }>(
+      ctx,
+      `MATCH (lang:Language)-[:locations { active: true }]->(l:Location)
+       RETURN lang.id AS languageId, l.id AS locationId`,
+    );
+    const landedLanguages = await liveTargetIds(ctx, 'Language', languages);
+    const landedLocations = await liveTargetIds(ctx, 'Location', locations);
+    const locRows = keepLanded(locPairs, [
+      [landedLanguages, (row) => row.languageId],
+      [landedLocations, (row) => row.locationId],
+    ]);
+    if (locRows.skipped > 0) {
+      ctx.log(
+        `    ⚠ skipped ${locRows.skipped} language_locations row(s) — language or location never landed`,
+      );
+    }
+
     return {
       languages: stat(dtos.length, inserted),
+      ...one(
+        'language_locations',
+        locPairs.length,
+        await bulkInsert(ctx, languageLocations, locRows.kept),
+      ),
       // Not a target table — reported for visibility, not reconciled.
       'ethnologue_languages.language_id (backfill)': stat(
         pairs.length,

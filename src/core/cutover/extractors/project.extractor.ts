@@ -5,6 +5,7 @@ import {
   fileNodes,
   locations,
   organizations,
+  projectOtherLocations,
   projects,
   projectStepEnum,
   projectWorkflowEvents,
@@ -21,6 +22,7 @@ import {
   bulkInsert,
   cypher,
   dateStr,
+  keepLanded,
   linkId,
   liveTargetIds,
   orDefault,
@@ -51,7 +53,11 @@ import { type Extractor, type TableStat } from '../cutover.types';
  */
 export const projectExtractor: Extractor = {
   name: 'project',
-  targetTables: ['projects', 'project_workflow_events'],
+  targetTables: [
+    'projects',
+    'project_workflow_events',
+    'project_other_locations',
+  ],
   dependsOn: [
     'user',
     'location',
@@ -325,6 +331,34 @@ export const projectExtractor: Extractor = {
         );
       }
     }
+
+    // ── project_other_locations ────────────────────────────────────────────
+    // The plural `otherLocations` edge — distinct from the singular
+    // primaryLocation/marketingLocation FKs mapped above. Mirrors
+    // organization.extractor.ts's `organization_locations` junction, same
+    // landed-both-sides guard. Reads Postgres truth for `Project` (not the
+    // `dtos`/`rows` read set) since onConflictDoNothing can drop a project
+    // this wave otherwise assumed landed — same reasoning as `landedUsers` in
+    // user.extractor.ts.
+    const otherLocPairs = await cypher<{ projectId: ID; locationId: ID }>(
+      ctx,
+      `MATCH (p:Project)-[:otherLocations { active: true }]->(l:Location)
+       RETURN p.id AS projectId, l.id AS locationId`,
+    );
+    const landedProjects = await liveTargetIds(ctx, 'Project', projects);
+    const otherLocRows = keepLanded(otherLocPairs, [
+      [landedProjects, (row) => row.projectId],
+      [liveLocations, (row) => row.locationId],
+    ]);
+    if (otherLocRows.skipped > 0) {
+      ctx.log(
+        `    ⚠ skipped ${otherLocRows.skipped} project_other_locations row(s) — project or location never landed`,
+      );
+    }
+    out.project_other_locations = stat(
+      otherLocPairs.length,
+      await bulkInsert(ctx, projectOtherLocations, otherLocRows.kept),
+    );
 
     return out;
   },
