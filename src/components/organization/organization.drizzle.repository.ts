@@ -7,6 +7,7 @@ import {
   type PaginatedListType,
   type UnsecuredDto,
 } from '~/common';
+import { Identity } from '~/core/authentication';
 import {
   catchUniqueViolation,
   DrizzleDtoRepository,
@@ -21,7 +22,9 @@ import {
   organizations,
   userOrganizations,
 } from '~/core/drizzle/schema';
+import { type ScopedRole } from '../authorization/dto/role.dto';
 import { PolicyExecutor } from '../authorization/policy/executor/policy-executor';
+import { requesterScopeByOrganization } from '../project/project-member/membership-scope';
 import {
   type CreateOrganization,
   Organization,
@@ -44,8 +47,39 @@ export class OrganizationDrizzleRepository extends DrizzleDtoRepository<
   constructor(
     db: DrizzleService,
     private readonly executor: PolicyExecutor,
+    private readonly identity: Identity,
   ) {
     super(db, organizations, Organization);
+  }
+
+  /**
+   * Attaches each org's `scope` — the requesting user's project-membership
+   * roles unioned across every project reachable via a live Partnership. The
+   * base class's `readMany` doesn't know about this, so it's overridden here
+   * (mirroring Ceremony/ProjectMember's overrides for their own extra joins).
+   * Without it, `member`-gated policies (e.g. FinancialAnalyst reading a
+   * High-sensitivity org) throw `MissingContextException` instead of
+   * evaluating membership, because `getScope()` finds no `scope` on the DTO.
+   */
+  override async readMany(
+    ids: readonly ID[],
+  ): Promise<Array<UnsecuredDto<Organization>>> {
+    if (ids.length === 0) return [];
+    const rows = await this.db
+      .select()
+      .from(organizations)
+      .where(
+        and(
+          inArray(organizations.id, [...ids]),
+          isNull(organizations.deletedAt),
+        ),
+      );
+    const scopeByOrg = await requesterScopeByOrganization(
+      this.db,
+      this.identity.current.userId,
+      rows.map((row) => row.id),
+    );
+    return rows.map((row) => this.toDto(row, scopeByOrg.get(row.id) ?? []));
   }
 
   async create(input: CreateOrganization): Promise<UnsecuredDto<Organization>> {
@@ -115,17 +149,21 @@ export class OrganizationDrizzleRepository extends DrizzleDtoRepository<
       page: input.page,
       count: input.count,
     });
+    if (rows.length === 0) return { total, items: [], hasMore };
+    const items = await this.readMany(rows.map((row) => row.id));
+    const byId = new Map(items.map((item) => [item.id, item]));
     return {
       total,
-      items: rows.map((row) => this.toDto(row)),
+      items: rows.map((row) => byId.get(row.id)!).filter(Boolean),
       hasMore,
     };
   }
 
   protected toDto(
     row: typeof organizations.$inferSelect,
+    scope: ScopedRole[] = [],
   ): UnsecuredDto<Organization> {
-    return {
+    const dto: unknown = {
       id: row.id,
       __typename: 'Organization',
       createdAt: DateTime.fromJSDate(row.createdAt),
@@ -135,7 +173,9 @@ export class OrganizationDrizzleRepository extends DrizzleDtoRepository<
       types: row.types,
       reach: row.reach,
       sensitivity: row.sensitivity,
+      scope,
     };
+    return dto as UnsecuredDto<Organization>;
   }
 }
 

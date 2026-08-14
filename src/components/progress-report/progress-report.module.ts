@@ -16,6 +16,7 @@ import { DropDuplicateMultiplicationProgressReportsMigration } from './migration
 import { DropInternshipProgressReportsMigration } from './migrations/drop-internship-progress-reports.migration';
 import { ReextractPnpProgressReportsMigration } from './migrations/reextract-all-progress-reports.migration';
 import { ProgressReportExtraForPeriodicInterfaceRepository } from './progress-report-extra-for-periodic-interface.repository';
+import { ProgressReportDrizzleRepository } from './progress-report.drizzle.repository';
 import { ProgressReportRepository } from './progress-report.repository';
 import { ProgressReportService } from './progress-report.service';
 import { ProgressReportEngagementConnectionResolver } from './resolvers/progress-report-engagement-connection.resolver';
@@ -62,7 +63,14 @@ import { ProgressReportWorkflowModule } from './workflow/progress-report-workflo
       postgres: ProgressReportCommunityStoryDrizzleRepository as any,
     }),
     ProgressReportService,
-    ProgressReportRepository,
+    splitDb(ProgressReportRepository, {
+      // migration-todo: `as any` removed at Phase 7 cutover when splitDb
+      // disappears with the Neo4j path. ProgressReportDrizzleRepository only
+      // implements `.list()` (the only method the service calls) — the rest
+      // of the Neo4j interface (readOne/create/update/delete) is unused here
+      // since those all route through PeriodicReportRepository instead.
+      postgres: ProgressReportDrizzleRepository as any,
+    }),
     ProgressReportExtraForPeriodicInterfaceRepository,
     BackfillMultiplicationProgressReportFilePublicMigration,
     DropDuplicateMultiplicationProgressReportsMigration,

@@ -10,6 +10,7 @@ import {
   createSession,
   createTestApp,
   createUnavailability,
+  errors,
   fragments,
   generateRegisterInput,
   generateRequireFieldsRegisterInput,
@@ -158,6 +159,31 @@ describe('User e2e', () => {
     expect(actual).toBeTruthy();
 
     return true;
+  });
+
+  it('rejects a non-admin from deleting another user', async () => {
+    const target = await createPerson(app);
+
+    await runInIsolatedSession(app, async () => {
+      await registerUser(app); // defaults to ProjectManager + Consultant, neither admin
+
+      await expect(
+        app.graphql.mutate(
+          graphql(`
+            mutation deleteUser($id: ID!) {
+              deleteUser(id: $id) {
+                __typename
+              }
+            }
+          `),
+          { id: target.id },
+        ),
+      ).rejects.toThrowGqlError(
+        errors.unauthorized({
+          message: 'You do not have the permission to delete this user',
+        }),
+      );
+    });
   });
 
   // LIST USERS

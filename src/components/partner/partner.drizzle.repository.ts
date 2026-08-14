@@ -46,6 +46,7 @@ import {
   partners,
   userOrganizations,
 } from '~/core/drizzle/schema';
+import { type ScopedRole } from '../authorization/dto/role.dto';
 import { PolicyExecutor } from '../authorization/policy/executor/policy-executor';
 import { type FinanceDepartmentIdBlock } from '../finance/department/dto/id-blocks.dto';
 import { type FinanceDepartmentIdBlockInput } from '../finance/department/dto/id-blocks.input';
@@ -54,6 +55,7 @@ import {
   organizationSortColumns,
 } from '../organization/organization.drizzle.repository';
 import { pinnedByRequester, pinnedFilter } from '../pin/pinned-by-requester';
+import { requesterScopeByPartner } from '../project/project-member/membership-scope';
 import {
   type CreatePartner,
   Partner,
@@ -69,6 +71,7 @@ type PartnerRow = typeof partners.$inferSelect & {
   languagesOfConsulting: Array<{ languageId: ID<'Language'> }>;
   departmentIdBlock: typeof departmentIdBlocks.$inferSelect | null;
   pinned?: boolean;
+  scope?: ScopedRole[];
 };
 
 @Injectable()
@@ -274,13 +277,28 @@ export class PartnerDrizzleRepository extends DrizzleDtoRepository<
         departmentIdBlock: true,
       },
     });
-    const pinnedSet = await pinnedByRequester(
-      this.db,
-      this.identity.current.userId,
-      rows.map((r) => r.id),
-    );
+    const [pinnedSet, scopeByPartner] = await Promise.all([
+      pinnedByRequester(
+        this.db,
+        this.identity.current.userId,
+        rows.map((r) => r.id),
+      ),
+      // Attaches `scope` so `member`-gated policies (e.g. FinancialAnalyst
+      // reading a High-sensitivity partner) can evaluate membership instead
+      // of throwing `MissingContextException` — see the Organization repo's
+      // sibling override for the full rationale.
+      requesterScopeByPartner(
+        this.db,
+        this.identity.current.userId,
+        rows.map((r) => r.id),
+      ),
+    ]);
     return rows.map((row) =>
-      this.toDto({ ...row, pinned: pinnedSet.has(row.id) }),
+      this.toDto({
+        ...row,
+        pinned: pinnedSet.has(row.id),
+        scope: scopeByPartner.get(row.id) ?? [],
+      }),
     );
   }
 
@@ -564,7 +582,7 @@ export class PartnerDrizzleRepository extends DrizzleDtoRepository<
    * relational shape. `readMany` always passes the enriched row.
    */
   protected toDto(row: PartnerRow): UnsecuredDto<Partner> {
-    return {
+    const dto: unknown = {
       id: row.id,
       __typename: 'Partner',
       createdAt: DateTime.fromJSDate(row.createdAt),
@@ -612,7 +630,11 @@ export class PartnerDrizzleRepository extends DrizzleDtoRepository<
       // Per-requester pin state — populated by readMany/list via
       // pinnedByRequester; other internal paths leave it false.
       pinned: row.pinned ?? false,
+      // Populated by readMany via requesterScopeByPartner; other internal
+      // paths (none currently bypass readMany) would leave it empty.
+      scope: row.scope ?? [],
     };
+    return dto as UnsecuredDto<Partner>;
   }
 }
 

@@ -228,7 +228,7 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
     return await this.readOne(id);
   }
 
-  async delete(id: ID, _object: User): Promise<void> {
+  async delete(id: ID): Promise<void> {
     await this.softDelete(id);
   }
 

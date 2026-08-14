@@ -23,21 +23,30 @@ import {
   EMPTY_PAGE,
   resolveOrderBy,
   type SortMap,
+  subFilter,
 } from '~/core/drizzle';
-import { DrizzleService } from '~/core/drizzle/drizzle.service';
+import { type DrizzleDb, DrizzleService } from '~/core/drizzle/drizzle.service';
 import {
   engagements,
   engagementStatusHistory,
   languages,
   projects,
+  tools,
+  toolUsages,
   users,
 } from '~/core/drizzle/schema';
 import { type ScopedRole } from '../authorization/dto/role.dto';
 import { PolicyExecutor } from '../authorization/policy/executor/policy-executor';
 import { FileService } from '../file';
+import { languageFilterClauses } from '../language/language.drizzle.repository';
 import { IProject } from '../project/dto';
 import { requesterScopeByProject } from '../project/project-member/membership-scope';
-import { recomputeProjectSensitivity } from '../project/project.drizzle.repository';
+import {
+  projectFilterClauses,
+  recomputeProjectSensitivity,
+} from '../project/project.drizzle.repository';
+import { toolFilterClauses } from '../tools/tool/tool.drizzle.repository';
+import { userFilterClauses } from '../user/user.drizzle.repository';
 import {
   type CreateInternshipEngagement,
   type CreateLanguageEngagement,
@@ -472,7 +481,13 @@ export class EngagementDrizzleRepository extends DrizzleDtoRepository<
     if (!this.executor.applyReadFilter(this.resource, conditions)) {
       return EMPTY_PAGE;
     }
-    conditions.push(...engagementFilterClauses(input.filter));
+    conditions.push(
+      ...engagementFilterClauses(
+        this.db,
+        input.filter,
+        this.identity.current.userId,
+      ),
+    );
 
     const sortColumns = {
       status: engagements.status,
@@ -854,11 +869,14 @@ export class EngagementDrizzleRepository extends DrizzleDtoRepository<
  * returns the full unfiltered set and nothing catches it).
  * migration-todo: implement the throwing ones as their domains land —
  * name/engagedName (language/user name joins), startDate/endDate ranges
- * (COALESCE with the project mou window), project/language/intern sub-filter
- * composition, tool sub-filter (ToolUsage not migrated).
+ * (COALESCE with the project mou window), tool sub-filter (ToolUsage not
+ * migrated). project/language/intern sub-filter composition is wired below,
+ * now that Project/Language/User have all landed.
  */
 export const engagementFilterClauses = (
+  db: DrizzleDb,
   filter: EngagementListInput['filter'],
+  requesterId?: ID<'User'>,
 ): SQL[] => {
   const conditions: SQL[] = [];
   if (!filter) return conditions;
@@ -874,15 +892,14 @@ export const engagementFilterClauses = (
     conditions.push(inArray(engagements.status, [...filter.status]));
   }
   if (filter.project) {
-    const { id: projectId, ...projectRest } = filter.project;
-    if (projectId) {
-      conditions.push(eq(engagements.projectId, projectId));
-    }
-    if (Object.values(projectRest).some((value) => value !== undefined)) {
-      throw new NotImplementedException(
-        'EngagementFilters.project sub-filters beyond `id` are not implemented for postgres yet',
-      );
-    }
+    conditions.push(
+      subFilter(
+        db,
+        engagements.projectId,
+        projects,
+        projectFilterClauses(db, filter.project, requesterId),
+      ),
+    );
   }
   if (filter.languageId) {
     conditions.push(eq(engagements.languageId, filter.languageId));
@@ -915,14 +932,51 @@ export const engagementFilterClauses = (
       ]),
     );
   }
+  if (filter.language) {
+    conditions.push(
+      subFilter(
+        db,
+        engagements.languageId,
+        languages,
+        languageFilterClauses(db, filter.language, requesterId),
+      ),
+    );
+  }
+  if (filter.intern) {
+    conditions.push(
+      subFilter(
+        db,
+        engagements.internId,
+        users,
+        userFilterClauses(db, filter.intern),
+      ),
+    );
+  }
+  if (filter.tool) {
+    conditions.push(
+      inArray(
+        engagements.id,
+        db
+          .selectDistinct({ id: toolUsages.containerId })
+          .from(toolUsages)
+          .innerJoin(
+            tools,
+            and(eq(tools.id, toolUsages.toolId), isNull(tools.deletedAt)),
+          )
+          .where(
+            and(
+              isNull(toolUsages.deletedAt),
+              ...toolFilterClauses(db, filter.tool),
+            ),
+          ),
+      ),
+    );
+  }
   const unimplemented = {
     name: filter.name,
     engagedName: filter.engagedName,
     startDate: filter.startDate,
     endDate: filter.endDate,
-    language: filter.language,
-    intern: filter.intern,
-    tool: filter.tool,
   };
   for (const [key, value] of Object.entries(unimplemented)) {
     if (value !== undefined) {

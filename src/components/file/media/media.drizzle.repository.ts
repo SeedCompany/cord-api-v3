@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { eq, inArray, or, type SQL } from 'drizzle-orm';
+import { and, desc, eq, inArray, isNull, ne, or, type SQL } from 'drizzle-orm';
 import { DateTime } from 'luxon';
 import type { Except, RequireAtLeastOne } from 'type-fest';
 import {
@@ -90,6 +90,14 @@ export class MediaDrizzleRepository {
         throw new ServerException('Media save requires a file version');
       }
       const values = toDbValues(input);
+      // A brand-new FileVersion's media row starts with no altText/caption of
+      // its own — carry forward the most recent sibling version's, same as
+      // Neo4j's save() (`prevMedia` sourced from the parent File's other
+      // FileVersions). Only fills the INSERT branch: an explicit value in
+      // `values` still overrides it below, and a conflict (re-run of the same
+      // upload) only re-applies `values`, never re-pulls carryover over a
+      // meanwhile-edited row.
+      const previous = await this.previousVersionMetadata(input.file);
       await this.db
         .insert(media)
         .values({
@@ -97,6 +105,8 @@ export class MediaDrizzleRepository {
           fileVersionId: input.file,
           type: input.__typename,
           mimeType: input.mimeType ?? '',
+          altText: previous?.altText ?? null,
+          caption: previous?.caption ?? null,
           ...values,
         })
         .onConflictDoUpdate({ target: media.fileVersionId, set: values });
@@ -134,6 +144,40 @@ export class MediaDrizzleRepository {
     return await this.readOne(
       input.id ? { id: input.id } : { file: input.file! },
     );
+  }
+
+  /**
+   * The altText/caption of the most recently created OTHER live FileVersion
+   * under the same parent File that has its own media row — the carryover
+   * source for a newly uploaded version. Mirrors Neo4j's `prevMedia` match
+   * (`fv -> parent -> file <- parent - fvs -> media -> prevMedia`, latest
+   * `fvs.createdAt` wins, `id` breaking ties on equal timestamps).
+   */
+  private async previousVersionMetadata(
+    fileVersionId: ID,
+  ): Promise<Pick<MediaRow, 'altText' | 'caption'> | undefined> {
+    const [current] = await this.db
+      .select({ parentId: fileNodes.parentId })
+      .from(fileNodes)
+      .where(eq(fileNodes.id, fileVersionId))
+      .limit(1);
+    if (!current?.parentId) {
+      return undefined;
+    }
+    const [previous] = await this.db
+      .select({ altText: media.altText, caption: media.caption })
+      .from(fileNodes)
+      .innerJoin(media, eq(media.fileVersionId, fileNodes.id))
+      .where(
+        and(
+          eq(fileNodes.parentId, current.parentId),
+          ne(fileNodes.id, fileVersionId),
+          isNull(fileNodes.deletedAt),
+        ),
+      )
+      .orderBy(desc(fileNodes.createdAt), desc(fileNodes.id))
+      .limit(1);
+    return previous;
   }
 
   async getBaseNode(

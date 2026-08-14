@@ -9,7 +9,11 @@ import {
   NotFoundException,
 } from '~/common';
 import { Identity } from '~/core/authentication';
-import { DrizzleService, resolveOrderBy } from '~/core/drizzle';
+import {
+  DrizzleService,
+  escapeLikePattern,
+  resolveOrderBy,
+} from '~/core/drizzle';
 import { fileNodes } from '~/core/drizzle/schema';
 import { LiveQueryStore } from '~/core/live-query';
 import { type BaseNode } from '~/core/neo4j/results';
@@ -116,7 +120,9 @@ export class FileDrizzleRepository {
       sql`${fileNodes.deletedAt} is null`,
     ];
     if (input.filter?.name) {
-      conditions.push(ilike(fileNodes.name, `%${input.filter.name}%`));
+      conditions.push(
+        ilike(fileNodes.name, `%${escapeLikePattern(input.filter.name)}%`),
+      );
     }
     if (input.filter?.type) {
       conditions.push(eq(fileNodes.type, input.filter.type));
@@ -205,10 +211,13 @@ export class FileDrizzleRepository {
     public: isPublic,
   }: {
     // `resource` + `relation` describe the attachment point in Neo4j (an
-    // incoming `[relation]` edge from the owning BaseNode). Under PG there is no
-    // back-edge yet — rootAttachedTo is resolved by reverse-lookup in PR #2 once
-    // the consuming FK columns (projects.root_directory_id, …) land.
-    // migration-todo (PR #2): wire the attachment so rootAttachedTo resolves.
+    // incoming `[relation]` edge from the owning BaseNode). Under PG this is a
+    // no-op: the consuming domain's own repo writes the FK column directly
+    // (e.g. `project.drizzle.repository.ts` sets `rootDirectoryId`), and
+    // `resolveFileRootAttachments` resolves `rootAttachedTo` at read time by
+    // reverse-looking-up which row's FK points at this id — see
+    // `resolve-file-attachment.ts`. Kept only for interface parity with the
+    // Neo4j repo's signature.
     resource: unknown;
     relation: string;
     name: string;
@@ -238,10 +247,10 @@ export class FileDrizzleRepository {
     fileId: ID;
     name: string;
     parentId?: ID;
-    // propOfNode is a no-op under PG in PR #1: the consuming-domain FK is written
-    // by that domain in PR #2 (file_nodes has no back-edge). createDefinedFile
-    // isn't exercised under PG until then.
-    // migration-todo (PR #2): honor propOfNode via the consuming FK column.
+    // propOfNode is a no-op under PG, same reasoning as `resource`/`relation`
+    // on `createRootDirectory` above: the consuming domain's own repo writes
+    // its FK column directly, and reverse-lookup resolves the attachment at
+    // read time. Kept only for interface parity with the Neo4j repo.
     propOfNode?: [baseNodeId: ID, propertyName: string];
     public?: boolean;
   }): Promise<ID> {

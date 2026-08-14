@@ -96,6 +96,11 @@ export class ProjectMemberDrizzleRepository extends DrizzleDtoRepository<
     const readConditions: SQL[] = [
       inArray(projectMembers.id, [...ids]),
       isNull(projectMembers.deletedAt),
+      // A soft-deleted project leaves its members' rows untouched. Neo4j's
+      // hydrate requires a live `:Project`, so a dead one hides every
+      // membership under it rather than returning a full row (id, roles,
+      // scope, the embedded user) pointing at a project that's gone.
+      isNull(projects.deletedAt),
     ];
     if (!this.executor.applyReadFilter(this.resource, readConditions)) {
       return [];
@@ -103,6 +108,7 @@ export class ProjectMemberDrizzleRepository extends DrizzleDtoRepository<
     const readable = await this.db
       .select({ id: projectMembers.id })
       .from(projectMembers)
+      .innerJoin(projects, eq(projects.id, projectMembers.projectId))
       .where(and(...readConditions));
     if (readable.length === 0) return [];
     const readableIds = readable.map((row) => row.id);
@@ -162,11 +168,28 @@ export class ProjectMemberDrizzleRepository extends DrizzleDtoRepository<
   async list(
     input: ProjectMemberListInput,
   ): Promise<PaginatedListType<UnsecuredDto<ProjectMember>>> {
-    const conditions: SQL[] = [isNull(projectMembers.deletedAt)];
+    const conditions: SQL[] = [
+      isNull(projectMembers.deletedAt),
+      // Keep this page/total in sync with readMany()'s own liveness gate
+      // below — without it, a member under a soft-deleted project inflates
+      // `total` and consumes a page slot that readMany() then silently drops,
+      // short-changing the page.
+      sql`exists (
+        select 1 from ${projects}
+        where ${projects.id} = ${projectMembers.projectId}
+          and ${projects.deletedAt} is null
+      )`,
+    ];
     if (!this.executor.applyReadFilter(this.resource, conditions)) {
       return EMPTY_PAGE;
     }
-    conditions.push(...projectMemberFilterClauses(this.db, input.filter));
+    conditions.push(
+      ...projectMemberFilterClauses(
+        this.db,
+        input.filter,
+        this.identity.current.userId,
+      ),
+    );
 
     const sortColumns = {
       createdAt: projectMembers.createdAt,
@@ -476,6 +499,7 @@ export class ProjectMemberDrizzleRepository extends DrizzleDtoRepository<
 export const projectMemberFilterClauses = (
   db: DrizzleDb,
   filter: ProjectMemberFilters | undefined,
+  requesterId?: ID<'User'>,
 ): SQL[] => {
   const conditions: SQL[] = [];
   if (!filter) return conditions;
@@ -510,7 +534,7 @@ export const projectMemberFilterClauses = (
       .where(
         and(
           isNull(projects.deletedAt),
-          ...projectFilterClauses(db, filter.project),
+          ...projectFilterClauses(db, filter.project, requesterId),
         ),
       );
     conditions.push(inArray(projectMembers.projectId, sub));

@@ -252,6 +252,13 @@ const projectIdRefForResource = (resource: EnhancedResource<any>): SQL => {
       return sql.raw(
         `(select "e"."project_id" from "engagements" "e" where "e"."id" = "ceremonies"."engagement_id")`,
       );
+    case 'ProgressReport':
+      // Progress rows on the shared periodic_reports table are always
+      // engagement-parented (never project-parented directly) — see
+      // PeriodicReportDrizzleRepository.parentCondition.
+      return sql.raw(
+        `(select "e"."project_id" from "engagements" "e" where "e"."id" = "periodic_reports"."engagement_id")`,
+      );
     case 'Language':
       // A language is "member-visible" through ANY project engaging it.
       // `pm.project_id = any(array(...))` keeps the shared `= ${ref}` template

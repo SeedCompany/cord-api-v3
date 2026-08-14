@@ -2,7 +2,7 @@ import { faker } from '@faker-js/faker';
 import { beforeAll, describe, expect, it } from '@jest/globals';
 import { some } from 'lodash';
 import { DateTime, Interval } from 'luxon';
-import { generateId, type ID, Role } from '~/common';
+import { CalendarDate, generateId, type ID, Role } from '~/common';
 import { graphql } from '~/graphql';
 import {
   EngagementStatus,
@@ -703,6 +703,53 @@ describe('Engagement e2e', () => {
         __typename: 'LanguageEngagement',
       }),
     ).toBeTruthy();
+  });
+
+  it('filters engagements by a project sub-filter field beyond id', async () => {
+    const translationProject = await createProject(app);
+    const internProject = await createProject(app, {
+      type: ProjectType.Internship,
+    });
+
+    // Match createProject()'s default MOU window (1991–1992) instead of
+    // letting these fall back to today's date, which sits outside it.
+    const startDateOverride = CalendarDate.fromISO('1991-01-01').toISO();
+    const endDateOverride = CalendarDate.fromISO('1992-01-01').toISO();
+    const languageEngagement = await createLanguageEngagement(app, {
+      language: language.id,
+      project: translationProject.id,
+      startDateOverride,
+      endDateOverride,
+    });
+    const internshipEngagement = await createInternshipEngagement(app, {
+      project: internProject.id,
+      countryOfOrigin: location.id,
+      intern: intern.id,
+      mentor: mentor.id,
+      startDateOverride,
+      endDateOverride,
+    });
+
+    const { engagements } = await app.graphql.query(
+      graphql(`
+        query ($input: EngagementListInput) {
+          engagements(input: $input) {
+            items {
+              id
+            }
+          }
+        }
+      `),
+      {
+        input: {
+          filter: { project: { type: [ProjectType.Internship] } },
+        },
+      },
+    );
+
+    const ids = engagements.items.map((e) => e.id);
+    expect(ids).toContain(internshipEngagement.id);
+    expect(ids).not.toContain(languageEngagement.id);
   });
 
   it('internship engagement creation fails and lets you know why if your ids are bad', async () => {

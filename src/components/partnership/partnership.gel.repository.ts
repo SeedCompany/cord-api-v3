@@ -32,13 +32,17 @@ export class PartnershipGelRepository
 {
   async create(input: CreatePartnership) {
     const project = e.cast(e.Project, e.uuid(input.project));
-    return await this.defaults.create({
+    const result = await this.defaults.create({
       ...input,
       project,
       projectContext: project.projectContext,
       mou: undefined, // TODO
       agreement: undefined, // TODO
     });
+    // No unique-constraint race here, same as the Neo4j repo — see its
+    // create() for the full rationale on why this is reported back, and on
+    // why `displaced` is always empty for this engine.
+    return { ...result, primary: input.primary ?? false, displaced: [] };
   }
 
   async readManyByProjectAndPartner(

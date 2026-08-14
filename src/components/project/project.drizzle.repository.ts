@@ -13,10 +13,11 @@ import {
   lt,
   lte,
   max,
+  notInArray,
   sql,
   type SQL,
 } from 'drizzle-orm';
-import { type AnyPgColumn } from 'drizzle-orm/pg-core';
+import { type AnyPgColumn, unionAll } from 'drizzle-orm/pg-core';
 import { DateTime } from 'luxon';
 import {
   CalendarDate,
@@ -46,9 +47,12 @@ import {
   engagements,
   fieldRegions,
   locations,
+  partnerships,
   projectMembers,
   projects,
   projectWorkflowEvents,
+  tools,
+  toolUsages,
 } from '~/core/drizzle/schema';
 import { rolesForScope } from '../authorization/dto/role.dto';
 import { PolicyExecutor } from '../authorization/policy/executor/policy-executor';
@@ -60,7 +64,10 @@ import {
   locationFilterClauses,
   locationSortColumns,
 } from '../location/location.drizzle.repository';
+import { partnershipFilterClauses } from '../partnership/partnership.drizzle.repository';
 import { pinnedByRequester, pinnedFilter } from '../pin/pinned-by-requester';
+import { ToolKey } from '../tools/tool/dto/tool-key.enum';
+import { toolFilterClauses } from '../tools/tool/tool.drizzle.repository';
 import {
   type CreateProject,
   IProject,
@@ -98,6 +105,8 @@ type ProjectRow = typeof projects.$inferSelect & {
    * `marketingRegion`, which falls back to this when there's no override.
    */
   inheritedMarketingRegionId?: ID<'Location'> | null;
+  /** Has a live ToolUsage for the Rev79 tool — batched in `readMany`. */
+  usesRev79?: boolean;
   membership?: {
     id: ID<'ProjectMember'>;
     // `Role`, not `string` — the column is a role enum array, and the DTO's
@@ -263,6 +272,63 @@ export class ProjectDrizzleRepository extends DrizzleDtoRepository<
       userId,
       rows.map((r) => r.id),
     );
+    // Rev79 usage — one row per project with a live ToolUsage against the
+    // Rev79 tool, either attached directly to the project or to one of its
+    // (Language) engagements — `containerId` is polymorphic, so a usage
+    // scoped to an engagement never equals a project id directly and needs
+    // the join through `engagements` to resolve back to its project.
+    const rev79Usages = await unionAll(
+      this.db
+        .select({ projectId: toolUsages.containerId })
+        .from(toolUsages)
+        .innerJoin(
+          tools,
+          and(
+            eq(tools.id, toolUsages.toolId),
+            eq(tools.key, ToolKey.Rev79),
+            isNull(tools.deletedAt),
+          ),
+        )
+        .where(
+          and(
+            inArray(
+              toolUsages.containerId,
+              rows.map((r) => r.id),
+            ),
+            isNull(toolUsages.deletedAt),
+          ),
+        ),
+      this.db
+        .select({ projectId: engagements.projectId })
+        .from(toolUsages)
+        .innerJoin(
+          tools,
+          and(
+            eq(tools.id, toolUsages.toolId),
+            eq(tools.key, ToolKey.Rev79),
+            isNull(tools.deletedAt),
+          ),
+        )
+        .innerJoin(
+          engagements,
+          and(
+            eq(engagements.id, toolUsages.containerId),
+            isNull(engagements.deletedAt),
+          ),
+        )
+        .where(
+          and(
+            inArray(
+              engagements.projectId,
+              rows.map((r) => r.id),
+            ),
+            isNull(toolUsages.deletedAt),
+          ),
+        ),
+    );
+    const usesRev79ByProject = new Set(
+      rev79Usages.map((r) => r.projectId as ID<'Project'>),
+    );
     return rows.map((row): UnsecuredDto<Project> => {
       const enriched: ProjectRow = {
         ...row,
@@ -273,6 +339,7 @@ export class ProjectDrizzleRepository extends DrizzleDtoRepository<
         inheritedMarketingRegionId: row.marketingLocationId
           ? (inheritedRegionByLocation.get(row.marketingLocationId) ?? null)
           : null,
+        usesRev79: usesRev79ByProject.has(row.id),
       };
       return this.toDto(enriched);
     });
@@ -393,9 +460,10 @@ export class ProjectDrizzleRepository extends DrizzleDtoRepository<
       modifiedAt: new Date(),
     }).catch(catchDepartmentIdUnique);
 
-    // migration-todo: usesRev79 toggle delegates to ToolUsage service (not
-    // migrated yet). When ToolUsage ports, wire the create/remove of the
-    // Rev79 ToolUsage row here.
+    // usesRev79 is deliberately dropped here, not written: project.service.ts's
+    // update() handles the toggle itself, via `this.toolUsage.setUsageByKey`
+    // (create/remove the Rev79 ToolUsage row), then re-reads this repo to pick
+    // up the recomputed value. Nothing repo-side to do.
 
     // The service runs RequiredWhen.calc against this return value, so it
     // must be the full updated DTO — not a stub.
@@ -557,9 +625,9 @@ export class ProjectDrizzleRepository extends DrizzleDtoRepository<
       // Wire via a `partnerships` subquery (primary = true) as a follow-up.
       primaryPartnership: null,
       engagementTotal: row.engagementTotal ?? 0,
-      // migration-todo: ToolUsage not migrated; usesRev79 always false until
-      // the tool-usage layer ports.
-      usesRev79: false,
+      // Batched in readMany — whether the project has a live ToolUsage
+      // against the Rev79 tool.
+      usesRev79: row.usesRev79 ?? false,
       membership: row.membership
         ? {
             id: row.membership.id,
@@ -656,9 +724,16 @@ export const projectSortColumns = {
  * `resolveCrossDomainSort(sort, prefix, sortColumns)` helper alongside
  * `paginatedSelectWithJoin` (mirror of `*FilterClauses` emergence).
  *
- * migration-todo: `primaryPartnership.*` sort is not implemented. Partnership
- * is on develop now, but mono leaves this sort stubbed too; wire it as a
- * follow-up. Throw `NotImplementedException` so callers discover the gap.
+ * migration-todo: `primaryPartnership.*` sort is not implemented. Unlike the
+ * partnerId/partnerships/primaryPartnership FILTERS (wired below now that
+ * Partnership has landed), this doesn't fit the `{table, fkColumn, column}` +
+ * `leftJoin(table, eq(table.id, fkColumn))` shape this helper's caller uses —
+ * partnerships.project_id points AT projects, so the join runs the other way
+ * (`eq(partnerships.projectId, projects.id)`), which would mean widening this
+ * helper's return shape for one caller. No confirmed cord-field usage of this
+ * specific sort key either (unlike the filters, which are). Deferred rather
+ * than forced into a shape that doesn't fit — throw `NotImplementedException`
+ * so callers discover the gap.
  */
 const resolveCrossDomainSort = (
   sort: string,
@@ -689,8 +764,15 @@ const resolveCrossDomainSort = (
     return { table: fieldRegions, fkColumn: projects.fieldRegionId, column };
   }
   if (sort.startsWith('primaryPartnership.')) {
+    // Partnership HAS landed (its filters are wired below) — this message
+    // used to blame that, which is now misleading. The real blockers are
+    // the ones in this function's docblock: the FK points the other way
+    // (partnerships.project_id, not a column on projects), so it doesn't fit
+    // this helper's {table, fkColumn, column} shape, and there's still no
+    // confirmed cord-field usage of this specific sort key.
     throw new NotImplementedException(
-      `Sorting projects by '${sort}' is not yet supported under DATABASE=postgres — pending Partnership migration.`,
+      `Sorting projects by '${sort}' is not supported — the partner FK points ` +
+        "the other way, so it needs its own join shape rather than this helper's.",
     );
   }
   return null;
@@ -701,9 +783,12 @@ const resolveCrossDomainSort = (
  * `projects`. Exported for sub-delegation from other domains (Engagement and
  * Partnership both filter-sub-delegate into projectFilterClauses).
  *
- * Cross-domain stubs (partnerId, partnerships, primaryPartnership,
- * tool, onlyMultipleEngagements, usesRev79) throw NotImplementedException
- * until their target domain migrates — discovery mechanism, not silent skip.
+ * partnerId/partnerships/primaryPartnership/onlyMultipleEngagements are wired
+ * below now that Partnership and Engagement have landed. `tool` and
+ * `usesRev79` are wired too now that ToolUsage has landed (migration 0034) —
+ * both go through `tool_usages`, matched by `containerId` since a Project's
+ * usages carry no separate `containerType` predicate (ids are globally
+ * unique, same assumption `tool-usage.drizzle.repository.ts` already makes).
  */
 export const projectFilterClauses = (
   db: DrizzleDb,
@@ -849,24 +934,47 @@ export const projectFilterClauses = (
       .where(
         and(
           isNull(projectMembers.deletedAt),
-          ...projectMemberFilterClauses(db, filter.members),
+          ...projectMemberFilterClauses(db, filter.members, requesterId),
         ),
       );
     conditions.push(inArray(projects.id, sub));
   }
   if (filter.membership) {
-    // Note: the `user: { id: $currentUser }` constraint is applied by the
-    // resolver/transform layer (see ProjectFilters.membership transform).
-    const sub = db
-      .selectDistinct({ id: projectMembers.projectId })
-      .from(projectMembers)
-      .where(
-        and(
-          isNull(projectMembers.deletedAt),
-          ...projectMemberFilterClauses(db, filter.membership),
+    // BUG FIX (found live 2026-08-07, impersonating Financial Analyst: 5240
+    // projects locally vs 116 in prod for the same `mine` filter). The old
+    // comment here was wrong — no transform injects the current user. On
+    // Neo4j, `membership`'s match HARDCODES `currentUser` directly into the
+    // path (project-filters.query.ts) — it always means "the REQUESTER's own
+    // membership", unlike `members` above (any user's). Without that
+    // constraint, `membership.active = true` (what `mine`/`isMember` set)
+    // matched any project with ANY active member at all — for a role whose
+    // Project.read is unconditional (Financial Analyst's policy has no
+    // `.when(member)` on the base read grant), that's nearly every project.
+    // Fail closed rather than open when there's no requester to scope to —
+    // same convention as `pinnedFilter`.
+    if (!requesterId) {
+      conditions.push(sql`false`);
+    } else {
+      conditions.push(
+        inArray(
+          projects.id,
+          db
+            .selectDistinct({ id: projectMembers.projectId })
+            .from(projectMembers)
+            .where(
+              and(
+                isNull(projectMembers.deletedAt),
+                eq(projectMembers.userId, requesterId),
+                ...projectMemberFilterClauses(
+                  db,
+                  filter.membership,
+                  requesterId,
+                ),
+              ),
+            ),
         ),
       );
-    conditions.push(inArray(projects.id, sub));
+    }
   }
   // `userId`: project where user is a member OR engagement intern. Intern path
   // is gated on Engagement migration — partial support: member only.
@@ -894,44 +1002,136 @@ export const projectFilterClauses = (
       )`,
     );
   }
-  // Cross-domain filters — throw until wired so the gap is discoverable in
-  // tests instead of silently returning all projects.
-  //
-  // migration-todo: Partnership is on develop now, so these three can be wired
-  // via `subFilter(db, projects.id, partnerships, [...])` reusing the exported
-  // `partnershipFilterClauses`. Mono leaves them stubbed too, so kept deferred
-  // to a follow-up rather than writing new (untested-on-mono) filter SQL here.
+  // Reverse relationship — partnerships.project_id points AT projects, so
+  // this is the same `IN (SELECT parent_fk FROM child WHERE ...)` shape as
+  // members/membership above, not `subFilter` (which assumes the FK lives on
+  // the outer table, pointing forward at the sub-table's own id).
   if (filter.partnerId) {
-    throw new NotImplementedException(
-      'ProjectFilters.partnerId is not yet wired under Postgres.',
+    conditions.push(
+      inArray(
+        projects.id,
+        db
+          .selectDistinct({ id: partnerships.projectId })
+          .from(partnerships)
+          .where(
+            and(
+              isNull(partnerships.deletedAt),
+              eq(partnerships.partnerId, filter.partnerId),
+            ),
+          ),
+      ),
     );
   }
   if (filter.partnerships) {
-    throw new NotImplementedException(
-      'ProjectFilters.partnerships is not yet wired under Postgres.',
+    conditions.push(
+      inArray(
+        projects.id,
+        db
+          .selectDistinct({ id: partnerships.projectId })
+          .from(partnerships)
+          .where(
+            and(
+              isNull(partnerships.deletedAt),
+              ...partnershipFilterClauses(db, filter.partnerships),
+            ),
+          ),
+      ),
     );
   }
   if (filter.primaryPartnership) {
-    throw new NotImplementedException(
-      'ProjectFilters.primaryPartnership is not yet wired under Postgres.',
+    conditions.push(
+      inArray(
+        projects.id,
+        db
+          .selectDistinct({ id: partnerships.projectId })
+          .from(partnerships)
+          .where(
+            and(
+              isNull(partnerships.deletedAt),
+              eq(partnerships.primary, true),
+              ...partnershipFilterClauses(db, filter.primaryPartnership),
+            ),
+          ),
+      ),
     );
   }
   if (filter.tool) {
-    // migration-todo: wire when ToolUsage migrates (exists-over-tool_usages).
-    throw new NotImplementedException(
-      'ProjectFilters.tool requires ToolUsage migration.',
+    conditions.push(
+      inArray(
+        projects.id,
+        db
+          .selectDistinct({ id: toolUsages.containerId })
+          .from(toolUsages)
+          .innerJoin(
+            tools,
+            and(eq(tools.id, toolUsages.toolId), isNull(tools.deletedAt)),
+          )
+          .where(
+            and(
+              isNull(toolUsages.deletedAt),
+              ...toolFilterClauses(db, filter.tool),
+            ),
+          ),
+      ),
     );
   }
   if (filter.onlyMultipleEngagements != null) {
-    // migration-todo: wire when Engagement migrates (count-over-engagements).
-    throw new NotImplementedException(
-      'ProjectFilters.onlyMultipleEngagements requires Engagement migration (Phase 5).',
+    // Mirrors project-filters.query.ts's Cypher exactly: a REQUIRED match
+    // through the engagement edge means a project with zero engagements
+    // never enters the aggregation, so it matches neither true nor false —
+    // `false` means "exactly one", not "zero or one". GROUP BY reproduces
+    // that same required-match behavior (a project with no live engagements
+    // never produces a row to filter on).
+    conditions.push(
+      inArray(
+        projects.id,
+        db
+          .select({ id: engagements.projectId })
+          .from(engagements)
+          .where(isNull(engagements.deletedAt))
+          .groupBy(engagements.projectId)
+          .having(
+            filter.onlyMultipleEngagements
+              ? sql`count(*) > 1`
+              : sql`count(*) = 1`,
+          ),
+      ),
     );
   }
   if (filter.usesRev79 != null) {
-    // migration-todo: wire when ToolUsage migrates (Rev79 tool usage check).
-    throw new NotImplementedException(
-      'ProjectFilters.usesRev79 requires ToolUsage migration.',
+    // Same containerId-is-polymorphic problem as readMany's rev79Usages
+    // above: a usage scoped to an engagement never equals a project id
+    // directly, so it needs the join through `engagements` to resolve back
+    // to its project. Union rather than one subquery so both project-direct
+    // and engagement-scoped usages count.
+    const rev79ToolJoin = and(
+      eq(tools.id, toolUsages.toolId),
+      eq(tools.key, ToolKey.Rev79),
+      isNull(tools.deletedAt),
+    );
+    const usesRev79Sub = unionAll(
+      db
+        .selectDistinct({ id: toolUsages.containerId })
+        .from(toolUsages)
+        .innerJoin(tools, rev79ToolJoin)
+        .where(isNull(toolUsages.deletedAt)),
+      db
+        .selectDistinct({ id: engagements.projectId })
+        .from(toolUsages)
+        .innerJoin(tools, rev79ToolJoin)
+        .innerJoin(
+          engagements,
+          and(
+            eq(engagements.id, toolUsages.containerId),
+            isNull(engagements.deletedAt),
+          ),
+        )
+        .where(isNull(toolUsages.deletedAt)),
+    );
+    conditions.push(
+      filter.usesRev79
+        ? inArray(projects.id, usesRev79Sub)
+        : notInArray(projects.id, usesRev79Sub),
     );
   }
   if (filter.pinned != null) {
