@@ -199,6 +199,64 @@ describe('Project e2e', () => {
     );
   });
 
+  it('adds and removes an other-location from a project', async () => {
+    const project = await createProject(app);
+    const location = await runAsAdmin(app, () => createLocation(app));
+
+    const ProjectOtherLocations = graphql(`
+      query project($id: ID!) {
+        project(id: $id) {
+          otherLocations {
+            items {
+              id
+            }
+          }
+        }
+      }
+    `);
+
+    await app.graphql.mutate(
+      graphql(`
+        mutation addOtherLocationToProject($project: ID!, $location: ID!) {
+          addOtherLocationToProject(project: $project, location: $location) {
+            project {
+              id
+            }
+          }
+        }
+      `),
+      { project: project.id, location: location.id },
+    );
+
+    const afterAdd = await app.graphql.query(ProjectOtherLocations, {
+      id: project.id,
+    });
+    expect(afterAdd.project.otherLocations.items.map((l) => l.id)).toEqual([
+      location.id,
+    ]);
+
+    await app.graphql.mutate(
+      graphql(`
+        mutation removeOtherLocationFromProject($project: ID!, $location: ID!) {
+          removeOtherLocationFromProject(
+            project: $project
+            location: $location
+          ) {
+            project {
+              id
+            }
+          }
+        }
+      `),
+      { project: project.id, location: location.id },
+    );
+
+    const afterRemove = await app.graphql.query(ProjectOtherLocations, {
+      id: project.id,
+    });
+    expect(afterRemove.project.otherLocations.items).toHaveLength(0);
+  });
+
   it('create & read project with budget and field region by id', async () => {
     const res = await app.graphql.mutate(
       graphql(

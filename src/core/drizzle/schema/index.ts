@@ -105,6 +105,7 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   }),
   educations: many(educations),
   unavailabilities: many(unavailabilities),
+  locations: many(userLocations),
 }));
 
 export const userGlobalRoles = pgTable(
@@ -341,7 +342,38 @@ export const locations = pgTable(
   ],
 );
 
-export const locationsRelations = relations(locations, () => ({}));
+export const locationsRelations = relations(locations, ({ many }) => ({
+  users: many(userLocations),
+}));
+
+export const userLocations = pgTable(
+  'user_locations',
+  {
+    userId: text('user_id')
+      .$type<ID<'User'>>()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    locationId: text('location_id')
+      .$type<ID<'Location'>>()
+      .notNull()
+      .references(() => locations.id, { onDelete: 'cascade' }),
+  },
+  (t) => [
+    primaryKey({ columns: [t.userId, t.locationId] }),
+    index('user_locations_location_id_idx').on(t.locationId),
+  ],
+);
+
+export const userLocationsRelations = relations(userLocations, ({ one }) => ({
+  user: one(users, {
+    fields: [userLocations.userId],
+    references: [users.id],
+  }),
+  location: one(locations, {
+    fields: [userLocations.locationId],
+    references: [locations.id],
+  }),
+}));
 
 // ─── Organizations ─────────────────────────────────────────────────────────
 
@@ -1366,7 +1398,40 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
   }),
   members: many(projectMembers),
   workflowEvents: many(projectWorkflowEvents),
+  otherLocations: many(projectOtherLocations),
 }));
+
+export const projectOtherLocations = pgTable(
+  'project_other_locations',
+  {
+    projectId: text('project_id')
+      .$type<ID<'Project'>>()
+      .notNull()
+      .references(() => projects.id, { onDelete: 'cascade' }),
+    locationId: text('location_id')
+      .$type<ID<'Location'>>()
+      .notNull()
+      .references(() => locations.id, { onDelete: 'cascade' }),
+  },
+  (t) => [
+    primaryKey({ columns: [t.projectId, t.locationId] }),
+    index('project_other_locations_location_id_idx').on(t.locationId),
+  ],
+);
+
+export const projectOtherLocationsRelations = relations(
+  projectOtherLocations,
+  ({ one }) => ({
+    project: one(projects, {
+      fields: [projectOtherLocations.projectId],
+      references: [projects.id],
+    }),
+    location: one(locations, {
+      fields: [projectOtherLocations.locationId],
+      references: [locations.id],
+    }),
+  }),
+);
 
 export const projectMembersRelations = relations(projectMembers, ({ one }) => ({
   project: one(projects, {
@@ -1717,14 +1782,47 @@ export const languages = pgTable(
   ],
 );
 
-export const languagesRelations = relations(languages, ({ one }) => ({
+export const languagesRelations = relations(languages, ({ one, many }) => ({
   // 1:1 — the FK lives on ethnologue_languages.language_id (soft attachment;
   // see that table's comment for the future global-pool model).
   ethnologue: one(ethnologueLanguages, {
     fields: [languages.id],
     references: [ethnologueLanguages.languageId],
   }),
+  locations: many(languageLocations),
 }));
+
+export const languageLocations = pgTable(
+  'language_locations',
+  {
+    languageId: text('language_id')
+      .$type<ID<'Language'>>()
+      .notNull()
+      .references(() => languages.id, { onDelete: 'cascade' }),
+    locationId: text('location_id')
+      .$type<ID<'Location'>>()
+      .notNull()
+      .references(() => locations.id, { onDelete: 'cascade' }),
+  },
+  (t) => [
+    primaryKey({ columns: [t.languageId, t.locationId] }),
+    index('language_locations_location_id_idx').on(t.locationId),
+  ],
+);
+
+export const languageLocationsRelations = relations(
+  languageLocations,
+  ({ one }) => ({
+    language: one(languages, {
+      fields: [languageLocations.languageId],
+      references: [languages.id],
+    }),
+    location: one(locations, {
+      fields: [languageLocations.locationId],
+      references: [locations.id],
+    }),
+  }),
+);
 
 export const ethnologueLanguagesRelations = relations(
   ethnologueLanguages,
