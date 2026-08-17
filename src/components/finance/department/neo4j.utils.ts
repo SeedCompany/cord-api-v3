@@ -3,17 +3,26 @@ import { node, type Pattern, type Query, relation } from 'cypher-query-builder';
 import { ACTIVE, apoc, collect, merge, variable } from '~/core/neo4j/query';
 import { type FinanceDepartmentIdBlockInput as Input } from './dto/id-blocks.input';
 
-const defaultRel = [
+// A fresh pair must be built on every use. cypher-query-builder's
+// useParameterBag() mutates a pattern's parameterBag reference in place
+// (parameter-container.ts), so a single shared instance reused across
+// separate query builds ends up carrying forward — and re-merging — the
+// previous build's accumulated parameters every time it's touched, which
+// silently doubles the query's parameter count on each reuse for the
+// lifetime of the process. A `const` array (even `as const`) only makes the
+// TypeScript type readonly; the underlying NodePattern/Relation instances
+// are still stateful and mutated by the library.
+const defaultRel = (): NonEmptyArray<Pattern> => [
   node('node'),
   relation('out', '', 'departmentIdBlock', ACTIVE),
-] as const;
+];
 interface Options {
   input?: NonEmptyArray<Pattern>;
   output?: string;
 }
 
 export const hydrate =
-  ({ input = defaultRel, output }: Options = {}) =>
+  ({ input = defaultRel(), output }: Options = {}) =>
   (query: Query) =>
     query.subQuery(input[0].getNameString(), (sub) =>
       sub
@@ -33,7 +42,7 @@ export const createMaybe =
     !input ? query : query.apply(create(input, options));
 
 export const create =
-  (input: Input, { input: inputRel = defaultRel, output }: Options = {}) =>
+  (input: Input, { input: inputRel = defaultRel(), output }: Options = {}) =>
   (query: Query) =>
     query.subQuery(inputRel[0].getNameString(), (sub) =>
       sub
@@ -55,7 +64,7 @@ export const setMaybe =
 export const set =
   (
     input: Input | null,
-    { input: inputRel = defaultRel, output }: Options = {},
+    { input: inputRel = defaultRel(), output }: Options = {},
   ) =>
   (query: Query) =>
     input
@@ -68,7 +77,7 @@ export const set =
         );
 
 export const upsert =
-  (input: Input, { input: inputRel = defaultRel, output }: Options = {}) =>
+  (input: Input, { input: inputRel = defaultRel(), output }: Options = {}) =>
   (query: Query) =>
     query.subQuery(inputRel[0].getNameString(), (sub) =>
       sub
