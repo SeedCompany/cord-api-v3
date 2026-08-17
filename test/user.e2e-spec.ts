@@ -266,9 +266,24 @@ describe('User e2e', () => {
 
   it('lists users sorted by full name by default', async () => {
     const prefix = 'ZzzSortTest' + (await generateId());
-    await createPerson(app, { realFirstName: `${prefix}_Charlie` });
-    await createPerson(app, { realFirstName: `${prefix}_Alice` });
-    await createPerson(app, { realFirstName: `${prefix}_Bob` });
+    await createPerson(app, {
+      realFirstName: `${prefix}_Charlie`,
+      realLastName: 'Smith',
+    });
+    await createPerson(app, {
+      realFirstName: `${prefix}_Alice`,
+      realLastName: 'Smith',
+    });
+    // Same first name, different last names — verifies fullName sorting
+    // breaks ties on last name instead of stopping at first name.
+    await createPerson(app, {
+      realFirstName: `${prefix}_Bob`,
+      realLastName: 'Young',
+    });
+    await createPerson(app, {
+      realFirstName: `${prefix}_Bob`,
+      realLastName: 'Adams',
+    });
 
     const { users } = await app.graphql.query(
       graphql(`
@@ -278,6 +293,9 @@ describe('User e2e', () => {
               realFirstName {
                 value
               }
+              realLastName {
+                value
+              }
             }
           }
         }
@@ -285,10 +303,15 @@ describe('User e2e', () => {
       { prefix },
     );
 
-    expect(users.items.map((user) => user.realFirstName.value)).toEqual([
-      `${prefix}_Alice`,
-      `${prefix}_Bob`,
-      `${prefix}_Charlie`,
+    expect(
+      users.items.map(
+        (user) => `${user.realFirstName.value!} ${user.realLastName.value!}`,
+      ),
+    ).toEqual([
+      `${prefix}_Alice Smith`,
+      `${prefix}_Bob Adams`,
+      `${prefix}_Bob Young`,
+      `${prefix}_Charlie Smith`,
     ]);
   });
 
