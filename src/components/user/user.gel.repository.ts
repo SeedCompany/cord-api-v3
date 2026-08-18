@@ -1,6 +1,17 @@
 import { Injectable } from '@nestjs/common';
-import { type ID, NotImplementedException, type PublicOf } from '~/common';
-import { disableAccessPolicies, e, RepoFor, type ScopeOf } from '~/core/gel';
+import {
+  type ID,
+  NotImplementedException,
+  type PublicOf,
+  type SortablePaginationInput,
+} from '~/common';
+import {
+  disableAccessPolicies,
+  e,
+  type OrderByExpression,
+  RepoFor,
+  type ScopeOf,
+} from '~/core/gel';
 import {
   type AssignOrganizationToUser,
   type CreatePerson,
@@ -76,6 +87,19 @@ export class UserGelRepository
     }));
 
     return this.db.run(query);
+  }
+
+  protected orderBy(
+    scope: ScopeOf<typeof e.User>,
+    input: SortablePaginationInput,
+  ): OrderByExpression {
+    if (input.sort === 'fullName') {
+      return [
+        { expression: scope.realFirstName, direction: input.order },
+        { expression: scope.realLastName, direction: input.order },
+      ];
+    }
+    return super.orderBy(scope, input);
   }
 
   protected listFilters(user: ScopeOf<typeof e.User>, input: UserListInput) {

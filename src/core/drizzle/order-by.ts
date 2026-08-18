@@ -111,9 +111,9 @@ const NAME_COLUMNS: ReadonlySet<AnyPgColumn> = new Set<AnyPgColumn>([
  * non-text column cannot be collated at all (Postgres raises "collations are not
  * supported by type" for enum and uuid), so a wrong entry in the list fails loudly
  * instead of producing broken SQL at run time. Primary keys are excluded for the
- * same belt-and-braces reason — every id here is a `text` column, and the user
- * list's default sort key is its id, where collating would both reorder the list
- * and stop the ordering being read off the primary key index.
+ * same belt-and-braces reason — every id column here is `text`, and collating an
+ * id would both reorder a list by an opaque generated value and stop the ordering
+ * being read off the primary key index, for any list that falls back to id sorting.
  *
  * ⚠️ This can only inspect a COLUMN. A sort written as a raw `sql` expression has
  * no column to look up, so it falls through here and comes back uncollated — with

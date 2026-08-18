@@ -1,7 +1,7 @@
 import { faker } from '@faker-js/faker';
 import { beforeAll, describe, expect, it } from '@jest/globals';
 import { times } from 'lodash';
-import { firstLettersOfWords, isValidId } from '~/common';
+import { firstLettersOfWords, generateId, isValidId } from '~/common';
 import { graphql, type InputOf, type VariablesOf } from '~/graphql';
 import { UserStatus } from '../src/components/user/dto';
 import {
@@ -262,6 +262,57 @@ describe('User e2e', () => {
       id: user.id,
     });
     expect(afterRemove.user.locations.items).toHaveLength(0);
+  });
+
+  it('lists users sorted by full name by default', async () => {
+    const prefix = 'ZzzSortTest' + (await generateId());
+    await createPerson(app, {
+      realFirstName: `${prefix}_Charlie`,
+      realLastName: 'Smith',
+    });
+    await createPerson(app, {
+      realFirstName: `${prefix}_Alice`,
+      realLastName: 'Smith',
+    });
+    // Same first name, different last names — verifies fullName sorting
+    // breaks ties on last name instead of stopping at first name.
+    await createPerson(app, {
+      realFirstName: `${prefix}_Bob`,
+      realLastName: 'Young',
+    });
+    await createPerson(app, {
+      realFirstName: `${prefix}_Bob`,
+      realLastName: 'Adams',
+    });
+
+    const { users } = await app.graphql.query(
+      graphql(`
+        query ($prefix: String!) {
+          users(input: { count: 25, page: 1, filter: { name: $prefix } }) {
+            items {
+              realFirstName {
+                value
+              }
+              realLastName {
+                value
+              }
+            }
+          }
+        }
+      `),
+      { prefix },
+    );
+
+    expect(
+      users.items.map(
+        (user) => `${user.realFirstName.value!} ${user.realLastName.value!}`,
+      ),
+    ).toEqual([
+      `${prefix}_Alice Smith`,
+      `${prefix}_Bob Adams`,
+      `${prefix}_Bob Young`,
+      `${prefix}_Charlie Smith`,
+    ]);
   });
 
   it('assign organization to user', async () => {
