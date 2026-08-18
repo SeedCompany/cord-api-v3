@@ -22,6 +22,7 @@ import {
 import { type DrizzleDb, DrizzleService } from '~/core/drizzle/drizzle.service';
 import {
   engagements,
+  partners,
   userGlobalRoles,
   userOrganizations,
   users,
@@ -439,6 +440,19 @@ export const userFilterClauses = (
       .from(userGlobalRoles)
       .where(inArray(userGlobalRoles.role, filter.roles));
     conditions.push(inArray(users.id, roleSubq));
+  }
+  if (filter.partnerId) {
+    const partnerUserIdsSubq = db
+      .selectDistinct({ userId: userOrganizations.userId })
+      .from(userOrganizations)
+      .innerJoin(
+        partners,
+        eq(partners.organizationId, userOrganizations.organizationId),
+      )
+      .where(
+        and(eq(partners.id, filter.partnerId), isNull(partners.deletedAt)),
+      );
+    conditions.push(inArray(users.id, partnerUserIdsSubq));
   }
   return conditions;
 };
