@@ -1,9 +1,23 @@
 import { Injectable } from '@nestjs/common';
-import { and, eq, inArray, isNull, sql, type SQL } from 'drizzle-orm';
+import {
+  and,
+  eq,
+  gt,
+  gte,
+  ilike,
+  inArray,
+  isNull,
+  lt,
+  lte,
+  or,
+  sql,
+  type SQL,
+} from 'drizzle-orm';
 import { difference } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   CalendarDate,
+  type DateFilter,
   DuplicateException,
   EnhancedResource,
   generateId,
@@ -21,6 +35,7 @@ import {
   catchUniqueViolation,
   DrizzleDtoRepository,
   EMPTY_PAGE,
+  escapeLikePattern,
   resolveOrderBy,
   type SortMap,
   subFilter,
@@ -495,14 +510,8 @@ export class EngagementDrizzleRepository extends DrizzleDtoRepository<
       modifiedAt: engagements.modifiedAt,
       type: engagements.type,
       // startDate/endDate coalesce with the project's mou window.
-      startDate: sql`coalesce(${engagements.startDateOverride}, (
-        select "p"."mou_start" from "projects" "p"
-        where "p"."id" = ${engagements.projectId}
-      ))`,
-      endDate: sql`coalesce(${engagements.endDateOverride}, (
-        select "p"."mou_end" from "projects" "p"
-        where "p"."id" = ${engagements.projectId}
-      ))`,
+      startDate: effectiveStartDate,
+      endDate: effectiveEndDate,
       // migration-todo: nameProjectFirst/nameProjectLast, sensitivity,
       // language.* / project.* delegated sorts, currentProgressReportDue.*.
       // Unknown keys fall back to createdAt.
@@ -861,17 +870,55 @@ export class EngagementDrizzleRepository extends DrizzleDtoRepository<
   }
 }
 
+// Neo4j falls back from an override to the project's MOU date when the
+// override isn't set; these mirror that COALESCE so sorting and filtering
+// see the same "effective" date on both engines.
+const effectiveStartDate = sql`coalesce(${engagements.startDateOverride}, (
+  select "p"."mou_start" from "projects" "p"
+  where "p"."id" = ${engagements.projectId}
+))`;
+const effectiveEndDate = sql`coalesce(${engagements.endDateOverride}, (
+  select "p"."mou_end" from "projects" "p"
+  where "p"."id" = ${engagements.projectId}
+))`;
+
+const engagementDateFilterConditions = (
+  effectiveDate: SQL,
+  fieldName: 'startDate' | 'endDate',
+  filter: DateFilter | undefined,
+): SQL[] => {
+  if (!filter) return [];
+  if (filter.isNull != null) {
+    throw new NotImplementedException(
+      `EngagementFilters.${fieldName}.isNull is not implemented for postgres yet`,
+    );
+  }
+  return [
+    ...(filter.after ? [gt(effectiveDate, filter.after.toISODate())] : []),
+    ...(filter.afterInclusive
+      ? [gte(effectiveDate, filter.afterInclusive.toISODate())]
+      : []),
+    ...(filter.before ? [lt(effectiveDate, filter.before.toISODate())] : []),
+    ...(filter.beforeInclusive
+      ? [lte(effectiveDate, filter.beforeInclusive.toISODate())]
+      : []),
+  ];
+};
+
+// Intern name-match, reused by both `name` (also matches the project and
+// language name) and `engagedName` (engaged entity only).
+const engagedEntityUserNameMatch = (term: string) =>
+  or(
+    ilike(users.realFirstName, term),
+    ilike(users.realLastName, term),
+    ilike(users.displayFirstName, term),
+    ilike(users.displayLastName, term),
+  )!;
+
 /**
- * Column-level WHERE clauses for `EngagementFilters`. Implemented: type,
- * status, project id, languageId, partnerId, marketable, milestoneReached,
- * milestonePlanned, usingAIAssistedTranslation. The rest THROW rather than
- * silently ignore (the discoverability convention — a silently-dropped filter
- * returns the full unfiltered set and nothing catches it).
- * migration-todo: implement the throwing ones as their domains land —
- * name/engagedName (language/user name joins), startDate/endDate ranges
- * (COALESCE with the project mou window), tool sub-filter (ToolUsage not
- * migrated). project/language/intern sub-filter composition is wired below,
- * now that Project/Language/User have all landed.
+ * Column-level WHERE clauses for `EngagementFilters`. All fields are
+ * implemented, including the project/language/intern sub-filter composition
+ * and the tool sub-filter (via `toolUsages`).
  */
 export const engagementFilterClauses = (
   db: DrizzleDb,
@@ -972,18 +1019,60 @@ export const engagementFilterClauses = (
       ),
     );
   }
-  const unimplemented = {
-    name: filter.name,
-    engagedName: filter.engagedName,
-    startDate: filter.startDate,
-    endDate: filter.endDate,
-  };
-  for (const [key, value] of Object.entries(unimplemented)) {
-    if (value !== undefined) {
-      throw new NotImplementedException(
-        `EngagementFilters.${key} is not implemented for postgres yet`,
+  if (filter.name) {
+    const term = `%${escapeLikePattern(filter.name)}%`;
+    const matchingProjectIds = db
+      .select({ id: projects.id })
+      .from(projects)
+      .where(ilike(projects.name, term));
+    const matchingLanguageIds = db
+      .select({ id: languages.id })
+      .from(languages)
+      .where(
+        or(ilike(languages.name, term), ilike(languages.displayName, term)),
       );
-    }
+    const matchingInternIds = db
+      .select({ id: users.id })
+      .from(users)
+      .where(engagedEntityUserNameMatch(term));
+    conditions.push(
+      or(
+        inArray(engagements.projectId, matchingProjectIds),
+        inArray(engagements.languageId, matchingLanguageIds),
+        inArray(engagements.internId, matchingInternIds),
+      )!,
+    );
   }
+  if (filter.engagedName) {
+    const term = `%${escapeLikePattern(filter.engagedName)}%`;
+    const matchingLanguageIds = db
+      .select({ id: languages.id })
+      .from(languages)
+      .where(
+        or(ilike(languages.name, term), ilike(languages.displayName, term)),
+      );
+    const matchingInternIds = db
+      .select({ id: users.id })
+      .from(users)
+      .where(engagedEntityUserNameMatch(term));
+    conditions.push(
+      or(
+        inArray(engagements.languageId, matchingLanguageIds),
+        inArray(engagements.internId, matchingInternIds),
+      )!,
+    );
+  }
+  conditions.push(
+    ...engagementDateFilterConditions(
+      effectiveStartDate,
+      'startDate',
+      filter.startDate,
+    ),
+    ...engagementDateFilterConditions(
+      effectiveEndDate,
+      'endDate',
+      filter.endDate,
+    ),
+  );
   return conditions;
 };
