@@ -7,6 +7,7 @@ import { ModuleRef } from '@nestjs/core';
 import { LazyGetter as Once } from 'lazy-get-decorator';
 import { CryptoService } from '~/core/authentication/crypto.service';
 import { ConfigService } from '~/core/config';
+import { isPgRefreshInvocation } from '~/core/drizzle/refresh/is-pg-refresh-invocation';
 import { ILogger, Logger } from '~/core/logger';
 import { AdminDrizzleRepository } from './admin.drizzle.repository';
 import { AdminRepository } from './admin.repository';
@@ -25,6 +26,13 @@ export class AdminDrizzleService implements OnApplicationBootstrap {
   }
 
   async onApplicationBootstrap(): Promise<void> {
+    // Skip when `pg refresh` is running: it wipes and reloads the whole
+    // database, these rows included. Doing it here too is a race — startup
+    // doesn't wait for this work, so an insert can land in the schema the
+    // command just rebuilt and then collide with the same id coming from
+    // the reload, stopping it partway with the old data already gone.
+    if (isPgRefreshInvocation()) return;
+
     const finishing = this.repo.finishing(async () => {
       await this.setupRootUser();
       await this.setupDefaultOrg();
