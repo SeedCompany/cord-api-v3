@@ -1320,10 +1320,13 @@ describe('Engagement e2e', () => {
       project: namedProject.id,
       language: language.id,
     });
+    const unrelatedEngagement = await createLanguageEngagement(app);
 
     const result = await listEngagements(app, { filter: { name: term } });
 
-    expect(result.items.map((item) => item.id)).toContain(engagement.id);
+    const ids = result.items.map((item) => item.id);
+    expect(ids).toContain(engagement.id);
+    expect(ids).not.toContain(unrelatedEngagement.id);
   });
 
   it('filters engagements by name matching the engaged language name', async () => {
@@ -1336,10 +1339,13 @@ describe('Engagement e2e', () => {
       project: project.id,
       language: namedLanguage.id,
     });
+    const unrelatedEngagement = await createLanguageEngagement(app);
 
     const result = await listEngagements(app, { filter: { name: term } });
 
-    expect(result.items.map((item) => item.id)).toContain(engagement.id);
+    const ids = result.items.map((item) => item.id);
+    expect(ids).toContain(engagement.id);
+    expect(ids).not.toContain(unrelatedEngagement.id);
   });
 
   it('filters engagements by engagedName, excluding project-name-only matches', async () => {
