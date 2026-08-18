@@ -16,7 +16,11 @@ export class DrizzleMigrator implements OnModuleInit {
 
   async onModuleInit() {
     if (this.config.databaseEngine !== 'postgres') return;
+    await this.run();
+  }
 
+  /** Apply all pending Drizzle migrations. Safe to call repeatedly. */
+  async run() {
     this.logger.info('Running PostgreSQL migrations');
     // NOTE: our migrations are hand-written, but drizzle's migrator only runs
     // files listed in `migrations/meta/_journal.json`. Adding a .sql file

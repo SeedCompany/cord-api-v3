@@ -32,6 +32,13 @@ export interface CutoverContext {
   readonly notHydrated: Map<string, number>;
   /** Read/insert chunk size. */
   readonly batchSize: number;
+  /**
+   * When true, bypass the scrub gate that normally refuses a production-scale
+   * Neo4j graph without a scrub marker. Set this for the real cutover, where
+   * loading production data is the entire point. Leave it false (the default)
+   * for ongoing QA refreshes, which should always run against scrubbed data.
+   */
+  readonly allowProductionSource?: boolean;
   readonly log: (msg: string) => void;
 }
 

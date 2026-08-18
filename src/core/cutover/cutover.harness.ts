@@ -66,7 +66,7 @@ export const runCutover = async (
   // Allows a small unmarked graph through (local test data) and refuses a
   // production-scale one that carries no scrub marker. See scrub/provenance.ts.
   const gate = await checkScrubGate(ctx.neo4j);
-  if (!gate.allowed) {
+  if (!gate.allowed && !ctx.allowProductionSource) {
     throw new Error(`Cutover refused — ${gate.reason}`);
   }
   ctx.log(`Source: ${gate.reason}`);
