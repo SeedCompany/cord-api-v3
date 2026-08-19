@@ -11,6 +11,7 @@ import {
   linkId,
   liveTargetIds,
   one,
+  orDefault,
   readAllViaRepo,
   sanitizeEnum,
   ts,
@@ -54,7 +55,13 @@ export const projectMemberExtractor: Extractor = {
         droppedDangling++;
         return [];
       }
-      const roles = sanitizeEnum([...m.roles], roleEnum.enumValues);
+      // orDefault, not a bare spread — see the organization extractor: a member
+      // whose roles were never written arrives undefined despite the DTO's array
+      // type, and spreading it ends the whole run rather than dropping this row.
+      const roles = sanitizeEnum(
+        [...orDefault(m.roles, [])],
+        roleEnum.enumValues,
+      );
       roles.dropped.forEach((role) => droppedRoles.add(role));
       return [
         {

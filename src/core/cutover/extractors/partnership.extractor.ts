@@ -72,7 +72,13 @@ export const partnershipExtractor: Extractor = {
         droppedDangling++;
         return [];
       }
-      const types = sanitizeEnum([...p.types], partnerTypeEnum.enumValues);
+      // orDefault, not a bare spread — see the organization extractor: a field
+      // Neo4j never wrote arrives undefined despite the DTO's array type, and
+      // spreading it ends the whole run rather than dropping this row.
+      const types = sanitizeEnum(
+        [...orDefault(p.types, [])],
+        partnerTypeEnum.enumValues,
+      );
       types.dropped.forEach((value) => dropped.add(value));
       const frt =
         p.financialReportingType &&
