@@ -9,6 +9,7 @@ import {
   keepLanded,
   liveTargetIds,
   readAllViaRepo,
+  recordReadLoss,
   resolveParentTypes,
   richText,
   stat,
@@ -63,12 +64,13 @@ export const commentExtractor: Extractor = {
     // `Deleted_BaseNode`) — 1 of 28 locally, under a deleted project. Enumerate
     // separately so that loss is stated rather than inferred.
     const allThreadIds = await fetchIds(ctx, 'CommentThread');
-    if (allThreadIds.length !== threadRows.length) {
-      ctx.log(
-        `    ⚠ CommentThread: ${allThreadIds.length} node(s) enumerated but ${threadRows.length} had a live ` +
-          `parent + creator — ${allThreadIds.length - threadRows.length} hang off a soft-deleted parent`,
-      );
-    }
+    recordReadLoss(
+      ctx,
+      'CommentThread',
+      allThreadIds.length - threadRows.length,
+      `${threadRows.length} of ${allThreadIds.length} had a live parent + creator, ` +
+        `the rest hang off a soft-deleted parent or creator`,
+    );
 
     const landedUsers = await liveTargetIds(ctx, 'User', users);
     const parentTypes = await resolveParentTypes(

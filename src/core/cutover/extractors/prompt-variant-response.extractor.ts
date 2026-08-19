@@ -15,6 +15,7 @@ import {
   fetchIds,
   keepLanded,
   liveTargetIds,
+  recordReadLoss,
   richText,
   stat,
   ts,
@@ -108,12 +109,13 @@ export const promptVariantResponseExtractor: Extractor = {
       // the joins above are all required, and a silent inner-join loss would
       // otherwise reconcile ✓.
       const ids = await fetchIds(ctx, type.name);
-      if (ids.length !== rows.length) {
-        ctx.log(
-          `    ⚠ ${type.name}: ${ids.length} node(s) enumerated but ${rows.length} matched the ` +
-            `parent + creator + active-prompt joins — ${ids.length - rows.length} lost to a broken required rel`,
-        );
-      }
+      recordReadLoss(
+        ctx,
+        type.name,
+        ids.length - rows.length,
+        `${rows.length} of ${ids.length} matched the parent + creator + active-prompt joins, ` +
+          `the rest are lost to a broken required rel`,
+      );
       for (const row of rows) {
         read.push({ ...row, resourceType: type.name });
       }

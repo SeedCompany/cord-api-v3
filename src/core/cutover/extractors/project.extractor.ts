@@ -202,7 +202,13 @@ export const projectExtractor: Extractor = {
     );
 
     const knownSteps = new Set<string>(projectStepEnum.enumValues);
-    const projectIds = new Set(rows.map((row) => row.id));
+    // Postgres truth rather than the mapped `rows`, for the same reason the
+    // other_locations junction below reads it: a project that mapped fine can
+    // still have been dropped by onConflictDoNothing, and its events would then
+    // FK-abort. `rows` only catches the hydrate-drop half of that.
+    const projectIds = ctx.dryRun
+      ? new Set(rows.map((row) => row.id))
+      : await liveTargetIds(ctx, 'Project', projects);
     let droppedActors = 0;
     let agentActors = 0;
     let droppedSteps = 0;
@@ -308,26 +314,66 @@ export const projectExtractor: Extractor = {
       await bulkInsert(ctx, projectWorkflowEvents, eventRows),
     );
 
-    // ── Step re-assert ─────────────────────────────────────────────────────
-    // The step-sync trigger set `projects.step` to each project's last event.
-    // Where Neo4j's current step disagrees with its own event history (steps
-    // taken outside the workflow), Neo4j wins — it's the live value.
+    // ── Step + modifiedAt re-assert ────────────────────────────────────────
+    // Inserting the events fired the step-sync trigger, which sets BOTH
+    // `projects.step` AND `projects.modified_at` from the newest event
+    // (`sync_project_step_from_event`, 0010_add_projects.sql). Two distinct
+    // corrections are needed, and the second is easy to miss:
+    //
+    //   step — where Neo4j's current step disagrees with its own event history
+    //     (steps taken outside the workflow), Neo4j wins, it is the live value.
+    //
+    //   modified_at — the trigger REGRESSES it to the last transition's
+    //     timestamp, discarding the Neo4j value this extractor deliberately
+    //     carries (S7). A project last transitioned in 2023 but edited in 2026
+    //     would land claiming it had not been touched since 2023, and the
+    //     Postgres read side both returns and sorts/filters on this column.
+    //     Every project with at least one event is affected, so this is not an
+    //     edge case. `updated_at` keeps the carried value either way, which is
+    //     the cheapest way to spot the divergence if it ever regresses again.
     if (!ctx.dryRun) {
-      const stepById = new Map(rows.map((row) => [row.id, row.step]));
+      const wantById = new Map(
+        rows.map((row) => [
+          row.id,
+          { step: row.step, modifiedAt: row.modifiedAt },
+        ]),
+      );
       const live = await ctx.db
-        .select({ id: projects.id, step: projects.step })
+        .select({
+          id: projects.id,
+          step: projects.step,
+          modifiedAt: projects.modifiedAt,
+        })
         .from(projects)
-        .where(inArray(projects.id, [...stepById.keys()]));
-      const drifted = live.filter((row) => stepById.get(row.id) !== row.step);
+        .where(inArray(projects.id, [...wantById.keys()]));
+
+      let stepDrift = 0;
+      let modifiedDrift = 0;
+      const drifted = live.filter((row) => {
+        const want = wantById.get(row.id);
+        if (!want) return false;
+        const stepOff = want.step !== row.step;
+        const modifiedOff =
+          want.modifiedAt.getTime() !== row.modifiedAt.getTime();
+        if (stepOff) stepDrift++;
+        if (modifiedOff) modifiedDrift++;
+        return stepOff || modifiedOff;
+      });
       for (const row of drifted) {
+        const want = wantById.get(row.id)!;
         await ctx.db
           .update(projects)
-          .set({ step: stepById.get(row.id)! })
+          .set({ step: want.step, modifiedAt: want.modifiedAt })
           .where(inArray(projects.id, [row.id]));
       }
-      if (drifted.length) {
+      if (stepDrift) {
         ctx.log(
-          `    ⚠ re-asserted step on ${drifted.length} project(s) where event history disagreed with the live Neo4j step`,
+          `    ⚠ re-asserted step on ${stepDrift} project(s) where event history disagreed with the live Neo4j step`,
+        );
+      }
+      if (modifiedDrift) {
+        ctx.log(
+          `    ⚠ restored modifiedAt on ${modifiedDrift} project(s) that the step-sync trigger had set to their last transition time`,
         );
       }
     }

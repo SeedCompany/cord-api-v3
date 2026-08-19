@@ -12,6 +12,7 @@ import {
   liveTargetIds,
   one,
   orDefault,
+  recordReadLoss,
   sanitizeEnum,
 } from '../cutover.helpers';
 import { type Extractor } from '../cutover.types';
@@ -46,12 +47,12 @@ export const progressSummaryExtractor: Extractor = {
     // The report edge is required, so summaries under a soft-deleted report drop
     // out of the match entirely — 3 of 48 locally. Enumerate to say so.
     const allIds = await fetchIds(ctx, 'ProgressSummary');
-    if (allIds.length !== rows.length) {
-      ctx.log(
-        `    ⚠ ProgressSummary: ${allIds.length} node(s) enumerated but ${rows.length} had a live ` +
-          `report — ${allIds.length - rows.length} hang off a soft-deleted one`,
-      );
-    }
+    recordReadLoss(
+      ctx,
+      'ProgressSummary',
+      allIds.length - rows.length,
+      `${rows.length} of ${allIds.length} had a live report, the rest hang off a soft-deleted one`,
+    );
 
     const landedReports = await liveTargetIds(
       ctx,

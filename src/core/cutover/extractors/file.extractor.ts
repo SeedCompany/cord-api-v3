@@ -334,6 +334,11 @@ export const fileExtractor: Extractor = {
       ctx.log(`    ✓ latest_version_id set on ${pairs.length} File(s)`);
     }
 
-    return one('file_nodes', rows.length, inserted);
+    // `read` is the count BEFORE the typeless / shapeless / unlanded-creator
+    // filters above, so every one of those drops shows up as a read-vs-inserted
+    // gap in the reconciliation table. Passing `rows.length` (the post-filter
+    // count) would make read equal inserted and print ✓ on a table that shed
+    // rows, while the ⚠ lines above said otherwise.
+    return one('file_nodes', raw.length, inserted);
   },
 };

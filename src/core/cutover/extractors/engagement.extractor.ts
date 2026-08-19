@@ -287,34 +287,109 @@ export const engagementExtractor: Extractor = {
     );
 
     // ── engagement_status_history ────────────────────────────────────────────
-    // Neo4j keeps status history as DEACTIVATED `status` property rels
-    // (`deactivateProperty` flips active:false and stamps deletedAt); the live
+    // Neo4j keeps status history as DEACTIVATED `status` property rels; the live
     // status is the one active rel. Newest-first ordering is the consumer's job
     // (the rules engine's BackTo transitions read this table), so just carry the
     // timestamps faithfully.
+    //
+    // DO NOT put a `:Property` label filter on the target node. Superseding a
+    // property relabels its node — `deactivateProperty` and `commitChangesetProps`
+    // both call `prefixNodeLabelsWithDeleted`, which REMOVES every label and
+    // re-adds it prefixed — so a superseded status node is `Deleted_Property` and
+    // matches `:Property` never again. This mirrors the app's own Neo4j read in
+    // `engagement.rules.ts` (`getPreviousStatus`), which is label-free for the same
+    // reason and defines what "previous statuses" means here.
+    //
+    // MEASURED ON PRODUCTION 2026-08-19, because the filter's cost is not obvious
+    // from reading it — it does not read zero, it reads a misleading minority:
+    //   13,558 rows on `Deleted_Property` (superseded — invisible to the filter)
+    //      903 rows on a bare `Property`  (visible to the filter)
+    // and 5,136 of 8,235 engagements have history while the filtered query finds
+    // it for only 502 of them. So the filtered read carried ~6% of the history and
+    // reconciled ✓, because read and inserted agree when the read itself is short.
+    //
+    // The 903 bare-`Property` rows are NOT pending changeset drafts — production
+    // has zero of those (no row had a `:changeset` edge). The full label census
+    // splits them, and the split is readable because `createProperty` gives a
+    // property its domain label (`EngagementStatus`) only when it is created
+    // OUTSIDE a changeset:
+    //   ["Deleted_Property","Deleted_EngagementStatus"] 12,893 — ordinary history
+    //   ["Deleted_Property"]                               665 — began as a
+    //       changeset proposal, was committed, later superseded — still history
+    //   ["Property","EngagementStatus"]                    401 — deactivated but
+    //       never relabelled, i.e. history predating the label-prefixing behaviour
+    //   ["Property"]                                       502 — began as a
+    //       changeset proposal and was never committed (rejecting a changeset
+    //       removes the `:changeset` edge but leaves the node)
+    // Only that last group is arguably not history. It is carried anyway, because
+    // Neo4j's own `getPreviousStatus` counts it and the cutover's job is to agree
+    // with the source, not to improve on it — but it is counted and reported so
+    // the question can be settled post-cutover on a real number.
+    //
+    // `deletedAt` is stamped on the property NODE, never on the rel, so `at`
+    // comes from `p.deletedAt` — the moment the status was superseded, which is
+    // what the Postgres write side records going forward (the drizzle repo
+    // inserts the OLD status and lets `at` default to now at change time). The
+    // remaining arms are begin-time fallbacks for rows that predate that.
     const historyRows = await cypher<{
       engagementId: ID<'Engagement'>;
       status: string;
       at: string | null;
+      neverCommitted: boolean;
     }>(
       ctx,
-      `MATCH (e:Engagement)-[r:status { active: false }]->(p:Property)
+      `MATCH (e:Engagement)-[r:status { active: false }]->(p)
        RETURN e.id AS engagementId, p.value AS status,
-              toString(coalesce(r.deletedAt, r.createdAt, p.createdAt)) AS at`,
+              toString(coalesce(p.deletedAt, r.createdAt, p.createdAt)) AS at,
+              (NOT p:Deleted_Property AND NOT p:EngagementStatus) AS neverCommitted`,
     );
     const landedEngagements = await liveTargetIds(
       ctx,
       'Engagement',
       engagements,
     );
+    // Statuses that only ever existed as an uncommitted changeset proposal — see
+    // the label census above. Carried, not dropped, so Postgres agrees with the
+    // source, but counted so the "should a rejected proposal count as history"
+    // question can be answered post-cutover against a real number (502 in prod).
+    const neverCommitted = historyRows.filter(
+      (row) => row.neverCommitted,
+    ).length;
+    if (neverCommitted > 0) {
+      ctx.log(
+        `    ℹ ${neverCommitted} status-history row(s) only ever existed as an uncommitted ` +
+          `changeset proposal — carried because Neo4j's own BackTo read counts them too ` +
+          `(engagement.rules.ts getPreviousStatus). migration-todo(post-cutover): decide ` +
+          `whether a rejected proposal belongs in an engagement's status history.`,
+      );
+    }
+
     const knownStatuses = new Set<string>(engagementStatusEnum.enumValues);
-    const history = keepLanded(
-      historyRows.filter((row) => knownStatuses.has(row.status)),
-      [[landedEngagements, (row) => row.engagementId]],
+    const typedHistory = historyRows.filter((row) =>
+      knownStatuses.has(row.status),
     );
+    const untypedStatuses = historyRows.length - typedHistory.length;
+    if (untypedStatuses > 0) {
+      const offenders = [
+        ...new Set(
+          historyRows
+            .filter((row) => !knownStatuses.has(row.status))
+            .map((row) => String(row.status)),
+        ),
+      ];
+      ctx.log(
+        `    ⚠ DROPPED ${untypedStatuses} status-history row(s) carrying a status outside ` +
+          `engagement_status: ${offenders.slice(0, 10).join(', ')}` +
+          (offenders.length > 10 ? ', …' : ''),
+      );
+    }
+
+    const history = keepLanded(typedHistory, [
+      [landedEngagements, (row) => row.engagementId],
+    ]);
     if (history.skipped > 0) {
       ctx.log(
-        `    ⚠ skipped ${history.skipped} status-history row(s) whose engagement never landed`,
+        `    ⚠ DROPPED ${history.skipped} status-history row(s) whose engagement never landed`,
       );
     }
     out.engagement_status_history = stat(

@@ -54,11 +54,19 @@ const pgCount = async (ctx: CutoverContext, table: string): Promise<number> => {
  * 3. Run each extractor.
  * 4. Reconcile: compare rows-read vs rows-inserted vs the live `count(*)`.
  */
+export interface CutoverResult {
+  /** False when a table's inserted count disagreed with its live `count(*)`. */
+  allOk: boolean;
+  totalDropped: number;
+  totalNotHydrated: number;
+  totalLost: number;
+}
+
 export const runCutover = async (
   ctx: CutoverContext,
   extractors: readonly Extractor[],
   opts: { only?: readonly string[] } = {},
-): Promise<void> => {
+): Promise<CutoverResult> => {
   // Scrub gate, checked here rather than at the entry point because THIS is the
   // thing that reads the graph in bulk and persists what it reads. An entry-point
   // check is bypassed by any other caller; this one is not.
@@ -72,13 +80,32 @@ export const runCutover = async (
   ctx.log(`Source: ${gate.reason}`);
 
   const ordered = orderExtractors(extractors);
+  // An unknown --only name is a typo, not a request for nothing. Silently
+  // running the subset that DID match is the worst outcome: `--only=user,engagment`
+  // would load users, print a clean reconciliation, and never mention that the
+  // domain the operator actually cared about was skipped.
+  if (opts.only?.length) {
+    const known = new Set(ordered.map((e) => e.name));
+    const unknown = opts.only.filter((name) => !known.has(name));
+    if (unknown.length > 0) {
+      throw new Error(
+        `Cutover: --only names no such extractor: ${unknown.join(', ')}. ` +
+          `Known: ${ordered.map((e) => e.name).join(', ')}`,
+      );
+    }
+  }
   const selected = opts.only?.length
     ? ordered.filter((e) => opts.only!.includes(e.name))
     : ordered;
 
   if (selected.length === 0) {
     ctx.log('Cutover: no extractors selected.');
-    return;
+    return {
+      allOk: true,
+      totalDropped: 0,
+      totalNotHydrated: 0,
+      totalLost: 0,
+    };
   }
 
   ctx.log(
@@ -173,4 +200,10 @@ export const runCutover = async (
           : 'all tables reconciled, zero rows lost ✓'
     }`,
   );
+
+  // Returned rather than only printed, so the caller can set an exit code. A
+  // load that MISMATCHed used to end in exit 0 exactly like a clean one, which
+  // makes the run unusable as an automated gate and puts the entire weight of
+  // catching a broken load on someone reading scrollback.
+  return { allOk, totalDropped, totalNotHydrated, totalLost };
 };

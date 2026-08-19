@@ -55,6 +55,17 @@ CALL {
   RETURN 'Engagement.status' AS property, 'Property node' AS storedAs, size(vals) AS distinctValues,
          [x IN vals WHERE NOT x IN ['InDevelopment', 'DidNotDevelop', 'Rejected', 'Active', 'ActiveChangedPlan', 'DiscussingTermination', 'DiscussingReactivation', 'DiscussingChangeToPlan', 'DiscussingSuspension', 'Suspended', 'FinalizingCompletion', 'Terminated', 'Completed', 'Converted', 'Unapproved', 'Transferred', 'NotRenewed']] AS wouldDrop
   UNION ALL
+  // Superseded statuses feed engagement_status_history and are a SEPARATE value
+  // domain from the live one above -- a status retired years ago survives only
+  // here. No label filter on p, and active:false, exactly matching what the
+  // engagement extractor reads (a superseded property node is Deleted_Property).
+  MATCH (n:Engagement)-[r:status { active: false }]->(p)
+  WHERE NOT any(l IN labels(n) WHERE l STARTS WITH 'Deleted_') AND p.value IS NOT NULL
+  UNWIND (CASE WHEN p.value IS :: LIST<ANY> THEN p.value ELSE [p.value] END) AS v
+  WITH collect(DISTINCT toString(v)) AS vals
+  RETURN 'Engagement.status (superseded/history)' AS property, 'Property node' AS storedAs, size(vals) AS distinctValues,
+         [x IN vals WHERE NOT x IN ['InDevelopment', 'DidNotDevelop', 'Rejected', 'Active', 'ActiveChangedPlan', 'DiscussingTermination', 'DiscussingReactivation', 'DiscussingChangeToPlan', 'DiscussingSuspension', 'Suspended', 'FinalizingCompletion', 'Terminated', 'Completed', 'Converted', 'Unapproved', 'Transferred', 'NotRenewed']] AS wouldDrop
+  UNION ALL
   MATCH (n:Engagement)-[r:methodologies { active: true }]->(p:Property)
   WHERE NOT any(l IN labels(n) WHERE l STARTS WITH 'Deleted_') AND p.value IS NOT NULL
   UNWIND (CASE WHEN p.value IS :: LIST<ANY> THEN p.value ELSE [p.value] END) AS v

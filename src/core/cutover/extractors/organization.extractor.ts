@@ -119,17 +119,64 @@ export const organizationExtractor: Extractor = {
       userId: ID;
       orgId: ID;
       primary: boolean;
+      primaryAt: string | null;
     }>(
       ctx,
       `MATCH (u:User)-[:organization { active: true }]->(o:Organization)
+       OPTIONAL MATCH (u)-[pr:primaryOrganization { active: true }]->(o)
        RETURN u.id AS userId, o.id AS orgId,
-              exists((u)-[:primaryOrganization { active: true }]->(o)) AS primary`,
+              pr IS NOT NULL AS primary,
+              toString(pr.createdAt) AS primaryAt`,
     );
+
+    // A user can carry MORE THAN ONE active primaryOrganization rel. The Neo4j
+    // write side only deactivates the previous primary when the new assignment
+    // targets the SAME organization (`user.repository.ts` binds `org` to the org
+    // being assigned before matching the rel to deactivate), so changing a user's
+    // primary from A to B leaves both rels active.
+    //
+    // Postgres has `user_organizations_one_primary_per_user` (unique on user_id
+    // WHERE primary), and bulkInsert's onConflictDoNothing has no conflict target,
+    // so the loser would not merely lose its flag — the ENTIRE membership row is
+    // discarded and the user silently loses that organization.
+    //
+    // Keep the most recently assigned primary (the intended current one) and
+    // demote the rest to ordinary memberships, so every membership survives.
+    // Ties break on organization id purely so the choice is reproducible.
+    const primariesByUser = new Map<string, typeof userOrgs>();
+    for (const row of userOrgs) {
+      if (!row.primary) continue;
+      const list = primariesByUser.get(row.userId) ?? [];
+      list.push(row);
+      primariesByUser.set(row.userId, list);
+    }
+    const demoted = new Set<string>();
+    let multiPrimaryUsers = 0;
+    for (const [userId, list] of primariesByUser) {
+      if (list.length < 2) continue;
+      multiPrimaryUsers++;
+      // Non-empty by the length check above.
+      const winner = [...list].sort((a, b) => {
+        const at = (a.primaryAt ?? '').localeCompare(b.primaryAt ?? '');
+        return at !== 0 ? -at : a.orgId.localeCompare(b.orgId);
+      })[0]!;
+      for (const row of list) {
+        if (row.orgId !== winner.orgId) demoted.add(`${userId}::${row.orgId}`);
+      }
+    }
+    if (multiPrimaryUsers) {
+      ctx.log(
+        `    ⚠ ${multiPrimaryUsers} user(s) had multiple active primaryOrganization rels — ` +
+          `kept the most recent as primary and demoted ${demoted.size} to ordinary membership(s), ` +
+          `which preserves every membership row`,
+      );
+    }
+
     const userOrgRows = keepLanded(
       userOrgs.map((r) => ({
         userId: r.userId,
         organizationId: r.orgId,
-        primary: r.primary,
+        primary: r.primary && !demoted.has(`${r.userId}::${r.orgId}`),
       })),
       [
         [landedUsers, (row) => row.userId],
