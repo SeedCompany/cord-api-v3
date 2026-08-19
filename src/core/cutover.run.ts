@@ -11,18 +11,32 @@
  * whenever the url is set, regardless of engine). The target's schema is
  * applied here (migrations) before loading, so it can point at an empty DB.
  *
+ * `DATABASE=neo4j` is MANDATORY on every invocation below and is not a default —
+ * `.env`/`.env.local` commonly set it to postgres, and with that in effect
+ * `splitDb` resolves the DRIZZLE repositories, so every read hydrates from the
+ * EMPTY TARGET instead of the source. Ids still enumerate from Neo4j via raw
+ * Cypher, so the run loads zero rows and reconciles `0 == 0 == 0 ✓` — an empty
+ * migration that declares success. The banner prints `engine=`: check it.
+ *
  * Usage (see README for the cutover runbook — freeze, load, validate, flip):
  *   # dry-run: read + map everything, write nothing (surfaces mapping errors)
+ *   DATABASE=neo4j \
  *   POSTGRES_URL=postgresql://postgres:postgres@localhost:5432/cord_cutover \
  *     yarn start --entryFile core/cutover.run -- --dry-run
  *
  *   # real load of one domain
- *   POSTGRES_URL=... yarn start --entryFile core/cutover.run -- --only=tool
+ *   DATABASE=neo4j POSTGRES_URL=... \
+ *     yarn start --entryFile core/cutover.run -- --only=tool
  *
- *   # full load
- *   POSTGRES_URL=... yarn start --entryFile core/cutover.run
+ *   # full load (--batch=100 at production volume: 500 exceeds Neo4j's
+ *   # dbms.memory.transaction.total.max)
+ *   DATABASE=neo4j POSTGRES_URL=... \
+ *     yarn start --entryFile core/cutover.run -- --batch=100
  *
- * Flags: --dry-run | --only=a,b,c | --batch=N | --no-migrate
+ * Flags: --dry-run | --only=a,b,c | --batch=N | --no-migrate | --strict
+ *
+ * Exit codes: 0 clean, 1 a table MISMATCHed (a write did not land) or the run
+ * threw, 2 under --strict when rows were lost but nothing broke.
  */
 import { NestFactory } from '@nestjs/core';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
@@ -34,11 +48,27 @@ const parseFlags = (argv: readonly string[]) => {
   const get = (name: string) =>
     argv.find((a) => a.startsWith(`--${name}=`))?.split('=')[1];
   const has = (name: string) => argv.includes(`--${name}`);
+  // A bad --batch must not be allowed through: `chunk(ids, NaN)` yields no
+  // chunks at all, so the run would read and insert NOTHING and still reconcile,
+  // and a value large enough overruns the driver's 65,535 bind parameters
+  // mid-load. Fail here instead, where the message can say why.
+  const rawBatch = get('batch');
+  let batchSize = 500;
+  if (rawBatch != null) {
+    batchSize = Number(rawBatch);
+    if (!Number.isInteger(batchSize) || batchSize < 1 || batchSize > 1000) {
+      throw new Error(
+        `--batch must be a whole number between 1 and 1000 (got ${rawBatch}). ` +
+          `Use --batch=100 at production volume.`,
+      );
+    }
+  }
   return {
     dryRun: has('dry-run'),
     migrate: !has('no-migrate'),
+    strict: has('strict'),
     only: get('only')?.split(',').filter(Boolean),
-    batchSize: get('batch') ? Number(get('batch')) : 500,
+    batchSize,
   };
 };
 
@@ -48,6 +78,19 @@ async function bootstrap() {
   // pg-seed.run.ts / repl.ts.
   const flags = parseFlags(process.argv.slice(2));
   process.argv.push('console');
+
+  // The ETL must never WRITE to the source graph. Booting the full AppModule
+  // starts AdminService.onApplicationBootstrap, which outside jest runs
+  // `setupRootObjects()` in the BACKGROUND (unawaited) against Neo4j — and if
+  // this box's ROOT_USER/PASSWORD_SECRET differ from production's, it rewrites
+  // the root user's email and password hash. That is a write into the graph the
+  // runbook has just frozen, it races the user extractor's read, and it would
+  // break root login on the Neo4j rollback path. The flag defaults to TRUE
+  // whenever NODE_ENV is not development, which is exactly the cutover box.
+  // Set before the AppModule import below, since ConfigService reads env once.
+  process.env.DB_ROOT_OBJECTS_SYNC = 'false';
+  // Same reasoning for index creation: it is DDL against the source.
+  process.env.DB_CREATE_INDEXES = 'false';
 
   // AppModule FIRST, then dynamic imports (circular-dep ordering).
   const { AppModule } = await import('../app.module');
@@ -65,6 +108,7 @@ async function bootstrap() {
   });
   // eslint-disable-next-line no-console
   const log = (msg: string) => console.log(msg);
+  let result: Awaited<ReturnType<typeof runCutover>> | undefined;
   try {
     await app.init();
 
@@ -95,8 +139,8 @@ async function bootstrap() {
     }
 
     const rootSession = await sessions.lazySessionForRootUser();
-    await sessions.asUser(rootSession, async () => {
-      await runCutover(
+    result = await sessions.asUser(rootSession, async () => {
+      return await runCutover(
         {
           neo4j,
           db: drizzle.client,
@@ -112,6 +156,19 @@ async function bootstrap() {
     });
   } finally {
     await app.close();
+  }
+
+  // A MISMATCH means a write did not land — the load is broken, so say so in the
+  // exit code rather than only in scrollback. Row LOSS is different: guard drops
+  // are expected and documented (a soft-deleted parent takes its children), so
+  // it stays a success by default and only fails under --strict.
+  if (!result?.allOk) {
+    log('\nExiting 1 — a table MISMATCHed, so the load is not usable.');
+    exit(1);
+  }
+  if (flags.strict && result.totalLost > 0) {
+    log(`\nExiting 2 (--strict) — ${result.totalLost} row(s) did not make it.`);
+    exit(2);
   }
   exit();
 }

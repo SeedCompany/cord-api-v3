@@ -101,9 +101,26 @@ conflict — **investigate, don't ignore**.
 
 ## Pre-flight: `preflight-enums.cypher` — RUN THIS AGAINST PROD FIRST
 
-39 read-only legs, one per stored enum value that has to fit a Postgres enum. The
-allowed lists are generated from `drizzle/schema`, so they cannot drift from it by
-hand-editing.
+40 read-only legs covering stored enum values that have to fit a Postgres enum.
+
+⚠ **The allowed lists are hand-maintained, and the leg list is NOT complete.**
+This section used to claim the lists were "generated from `drizzle/schema`, so they
+cannot drift" — there is no generator, and they can. Two consequences to hold:
+
+- Each leg's allowed list is a copy of a `pgEnum`'s values at the time it was
+  written. Re-check a leg against `schema/index.ts` before trusting it.
+- Columns with **no leg at all** are the bigger gap, because a missing leg looks
+  exactly like a clean one. Known-missing: `projects.type`,
+  `department_id_blocks.programs`, `engagements.using_ai_assisted_translation`,
+  `products.methodology`, `products.progress_step_measurement`,
+  `product_completion_descriptions.methodology`,
+  `partnership_producing_mediums.medium`, `project_workflow_events.to_step`.
+  Add them before relying on this as a full sweep.
+
+A leg was added for `Engagement.status (superseded/history)`: the live-status leg
+scans `{active: true}` only, so it cannot see the retired values that
+`engagement_status_history` now migrates — a status retired years ago exists
+nowhere else.
 
 ```bash
 # against a local container
@@ -138,8 +155,18 @@ wrong, not that the data is empty.
 
 ## Pre-flight: `preflight-uniques.cypher` — RUN THIS AGAINST PROD FIRST
 
-22 read-only legs, one per Postgres unique index that can shed rows, Tier 1 (root
-entities, where a drop takes a subtree) then Tier 2 (junctions, one row each).
+22 read-only legs, Tier 1 (root entities, where a drop takes a subtree) then Tier 2
+(junctions, one row each).
+
+⚠ **Not one leg per shed-capable index — eight enforced unique indexes have no leg**,
+and a missing leg is indistinguishable from a clean one. Missing:
+`periodic_reports_live_interval_unique`, `media_file_version_id_unique`,
+`prompt_variant_response_entries_response_variant_active_unique`,
+`product_progress_product_report_variant_unique`, `step_progress_progress_step_unique`,
+`tool_usages`' natural key, and the two `user_organizations` /
+`progress_report_media` variant keys. Five of those shed a row at load with only an
+unattributed read-vs-inserted gap to show for it. Worth closing before the prod
+dry-run; until then, do not read a clean sweep as "no duplicates anywhere".
 
 ```bash
 docker exec -i <neo4j-container> cypher-shell -u neo4j -p <pw> --format plain \
@@ -180,13 +207,83 @@ Locally it reads 8 keys / 0 duplicates, and production reads 3,430 / 0.
 
 ## Cutover runbook (production)
 
-1. Freeze Neo4j writes (maintenance window) + take a final snapshot.
-2. Point `POSTGRES_URL` at the fresh target; run the full load.
-3. Check the reconciliation report — every table `✓`, no dropped-row gaps.
+> **The harness REFUSES to read an unscrubbed production-scale graph, and that is
+> not bypassable from the command line.** `runCutover` calls `checkScrubGate`
+> before anything else (in the harness, not the entry point, so no caller can skip
+> it), and it rejects any graph of ≥1,000,000 nodes that carries no current
+> `DataProvenance` scrub marker. Production is ~22M nodes. Discovering this inside
+> the maintenance window means burning the window, so settle the source question
+> BEFORE the freeze — either run against a scrubbed copy, or agree the marker
+> story for the real load in advance. Do not add an env-var bypass.
+
+0. **Run the pre-flight probes** (below) against production and read the results.
+   These size the losses in advance; several classes are invisible until they have
+   already happened.
+1. Freeze Neo4j writes (maintenance window) + take a final snapshot. The event
+   tables grow continuously, so a copy taken while writes continue will not match
+   what was validated.
+2. Point `POSTGRES_URL` at the fresh target; run the full load with
+   `DATABASE=neo4j` and `--batch=100`.
+3. Check the reconciliation report — every table `✓`, no dropped-row gaps, and the
+   "Not hydrated" block empty. The process now exits non-zero on a MISMATCH, and
+   `--strict` also fails the run when any row was lost, so this step can be
+   automated rather than read by eye.
 4. Flip `DATABASE=postgres`; smoke-test.
 5. Keep Neo4j as read-only fallback for a few days, then tear down.
 
-Rollback is instant at any point before the flip: Neo4j is untouched.
+Rollback is instant at any point before the flip: Neo4j is untouched — and the
+run deliberately disables root-object sync and index creation so that stays true
+(booting the AppModule would otherwise write to the source graph in the
+background).
+
+### Cheap probes worth running at immediate pre-flight
+
+All are O(1) or near it, and each answers "is there data here we do not migrate,
+or that would stop the load?"
+
+```cypher
+// Field zones / regions: director and zone are OPTIONAL in Neo4j and NOT NULL in
+// Postgres, so a missing one stops the load. The extractors now fail fast naming
+// the ids rather than letting the driver reject a null mid-run. These are small
+// tables, so this should read 0 -- the point is to know before the window.
+// `scanned` is reported so a 0 cannot be confused with a query that matched
+// nothing.
+MATCH (z:FieldZone)
+WITH count(z) AS total,
+     sum(CASE WHEN EXISTS { MATCH (z)-[:director { active: true }]->(:User) } THEN 0 ELSE 1 END) AS broken
+RETURN 'FieldZone.director' AS check, total AS scanned, broken AS wouldFailLoad
+UNION ALL
+MATCH (r:FieldRegion)
+WITH count(r) AS total,
+     sum(CASE WHEN EXISTS { MATCH (r)-[:director { active: true }]->(:User) } THEN 0 ELSE 1 END) AS broken
+RETURN 'FieldRegion.director' AS check, total AS scanned, broken AS wouldFailLoad
+UNION ALL
+MATCH (r:FieldRegion)
+WITH count(r) AS total,
+     sum(CASE WHEN EXISTS { MATCH (r)-[:zone { active: true }]->(:FieldZone) } THEN 0 ELSE 1 END) AS broken
+RETURN 'FieldRegion.zone' AS check, total AS scanned, broken AS wouldFailLoad
+```
+
+⚠ The region-to-zone relationship is `:zone`, NOT `:fieldZone` -- `fieldZone` is
+the DTO field name only. Matching the DTO name here would report a clean 0 while
+scanning nothing.
+
+```cypher
+// Webhooks: no extractor exists because prod has no webhook data (2026-08-18).
+// This is a point-in-time fact — if the feature gets used before the flip, that
+// data would be silently left behind.
+MATCH (n:Webhook) RETURN count(n);
+
+// Tool-usage containers: container_type is NOT NULL and is resolved through
+// resolveParentTypes, which covers only progress report / engagement / project /
+// partner / language / user. A usage on any other resource type is DROPPED. This
+// reports what container types actually exist, so the gap can be sized before the
+// load rather than counted in its warnings.
+MATCH (:ToolUsage)-[:container]->(c)
+RETURN [l IN labels(c) WHERE NOT l STARTS WITH 'Deleted_' AND l <> 'BaseNode'] AS containerLabels,
+       count(*) AS usages
+ORDER BY usages DESC;
+```
 
 ## Findings (surfaced by the real-load validation — real cutover concerns)
 
@@ -330,8 +427,13 @@ whole time.
 - **`resource_mutations`** — the audit log. Postgres-only surface with no
   Neo4j counterpart to read; starts empty and accumulates from the first
   post-flip mutation. Writing an extractor for it isn't hard, it's impossible.
+- **The four webhook tables** (migration 0037) — **prod carries no webhook data**
+  (confirmed 2026-08-18), so there is nothing to move. Deliberately skipped-empty
+  rather than uncovered, and the same category as `known-language`: unproven code
+  that would move zero rows costs nothing at cutover. ⚠ Point-in-time, so the
+  count probe in the runbook above is worth one second at immediate pre-flight.
 
-Do not chase 58/58 — the three above cannot and should not be filled from
+Do not chase 58/58 — the items above cannot and should not be filled from
 Neo4j.
 
 ## Thin/unexercised paths worth a second look with real data

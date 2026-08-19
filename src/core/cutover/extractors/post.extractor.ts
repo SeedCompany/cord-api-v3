@@ -12,6 +12,7 @@ import {
   keepLanded,
   liveTargetIds,
   one,
+  recordReadLoss,
   resolveParentTypes,
   sanitizeEnum,
   tsReq,
@@ -72,13 +73,13 @@ export const postExtractor: Extractor = {
     // Every match above is required, so a post missing any of them vanishes from
     // the result exactly like an empty domain. Enumerate to make that visible.
     const allIds = await fetchIds(ctx, 'Post');
-    if (allIds.length !== rows.length) {
-      ctx.log(
-        `    ⚠ Post: ${allIds.length} node(s) enumerated but ${rows.length} matched the parent + creator + ` +
-          `type/shareability/body joins — ${allIds.length - rows.length} lost to a soft-deleted parent or a ` +
-          `missing required property`,
-      );
-    }
+    recordReadLoss(
+      ctx,
+      'Post',
+      allIds.length - rows.length,
+      `${rows.length} of ${allIds.length} matched the parent + creator + type/shareability/body joins, ` +
+        `the rest are lost to a soft-deleted parent or creator, or a missing required property`,
+    );
 
     const landedUsers = await liveTargetIds(ctx, 'User', users);
     const parentTypes = await resolveParentTypes(

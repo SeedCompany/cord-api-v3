@@ -167,6 +167,8 @@ export const progressReportMediaExtractor: Extractor = {
           `Neo4j has no equivalent constraint for`,
       );
     }
-    return one('progress_report_media', rows.length, inserted);
+    // PRE-drop count, so the variantless / unknown-category / dangling-file-ref
+    // drops above show as a read-vs-inserted gap rather than reconciling ✓.
+    return one('progress_report_media', raw.length, inserted);
   },
 };

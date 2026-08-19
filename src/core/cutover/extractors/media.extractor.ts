@@ -154,6 +154,8 @@ export const mediaExtractor: Extractor = {
     }));
 
     const inserted = await bulkInsert(ctx, media, rows);
-    return one('media', rows.length, inserted);
+    // PRE-drop count, so the unlanded-file-version, unknown-type and mimeless
+    // drops above show as a read-vs-inserted gap rather than reconciling ✓.
+    return one('media', raw.length, inserted);
   },
 };

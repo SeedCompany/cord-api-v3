@@ -53,11 +53,23 @@ export const userExtractor: Extractor = {
     // bootstrap's createRootUser conflicts with the migrated row and
     // waitForRootUserId polls forever (first PG boot on an ETL'd DB hangs —
     // shadow-diff maiden-run finding, ledger S5).
+    //
+    // The authoritative marker in Neo4j is the `:RootUser` LABEL (admin.repository
+    // sets it and reads it back), not the configured email — this box's ROOT_USER
+    // need not match the source graph's. The email is kept only as a fallback for
+    // a graph where the label was never applied.
     const rootEmail = ctx.moduleRef.get(ConfigService, { strict: false })
       .rootUser.email;
+    const labelledRoots = new Set(
+      (
+        await cypher<{ id: ID }>(ctx, `MATCH (n:RootUser) RETURN n.id AS id`)
+      ).map((row) => row.id),
+    );
+    const isRootUser = (u: { id: ID; email?: string | null }) =>
+      labelledRoots.size > 0 ? labelledRoots.has(u.id) : u.email === rootEmail;
     const userRows = userDtos.map((u) => ({
       id: u.id,
-      isRoot: u.email === rootEmail,
+      isRoot: isRootUser(u),
       // NOT NULL columns whose Property node may be missing in Neo4j — coalesce
       // to the schema default (real load surfaced null `status` on legacy rows).
       status: orDefault(u.status, 'Active'),
@@ -77,6 +89,23 @@ export const userExtractor: Extractor = {
       updatedAt: tsReq(u.createdAt),
       deletedAt: null,
     }));
+    // Assert the outcome rather than assuming it. Landing ZERO root users is the
+    // exact S5 failure this flag exists to prevent — the first Postgres boot on
+    // the loaded DB then tries to create a root user, conflicts with the migrated
+    // row on its primary key, and `waitForRootUserId` polls forever. Landing more
+    // than one is equally wrong and would be invisible. Neither shows up in any
+    // row count, so the run has to say it out loud.
+    const rootCount = userRows.filter((row) => row.isRoot).length;
+    if (rootCount !== 1) {
+      ctx.log(
+        `    ⚠⚠ ${rootCount} user(s) flagged is_root — expected exactly 1. ` +
+          (rootCount === 0
+            ? `Neither a :RootUser label nor a user with the configured ROOT_USER email ` +
+              `(${rootEmail}) was found in the source. The first Postgres boot on this ` +
+              `database will HANG in waitForRootUserId (ledger S5).`
+            : `More than one root will make the bootstrap's root lookup ambiguous.`),
+      );
+    }
     out.users = stat(userDtos.length, await bulkInsert(ctx, users, userRows));
 
     // Every table below FKs to users.id, and the three built from raw Cypher
@@ -132,8 +161,24 @@ export const userExtractor: Extractor = {
           ]
         : [];
     });
+    // `read` is the PRE-guard count, so a dropped row shows up as a read-vs-
+    // inserted gap. Counting `eduRows.length` here would make the guard's own
+    // drops invisible — read would equal inserted and the table would tick ✓.
+    const eduOrphans = eduDtos.filter((e) => !eduUser.get(e.id)).length;
+    const eduUnlanded = eduDtos.length - eduRows.length - eduOrphans;
+    if (eduOrphans > 0) {
+      ctx.log(
+        `    ⚠ DROPPED ${eduOrphans} education(s) with no active [:education] edge from any live user ` +
+          `(the owning user is soft-deleted, or the edge was deactivated)`,
+      );
+    }
+    if (eduUnlanded > 0) {
+      ctx.log(
+        `    ⚠ DROPPED ${eduUnlanded} education(s) whose user never landed in Postgres`,
+      );
+    }
     out.educations = stat(
-      eduRows.length,
+      eduDtos.length,
       await bulkInsert(ctx, educations, eduRows),
     );
 
@@ -166,8 +211,24 @@ export const userExtractor: Extractor = {
           ]
         : [];
     });
+    const unavailOrphans = unavailDtos.filter(
+      (x) => !unavailUser.get(x.id),
+    ).length;
+    const unavailUnlanded =
+      unavailDtos.length - unavailRows.length - unavailOrphans;
+    if (unavailOrphans > 0) {
+      ctx.log(
+        `    ⚠ DROPPED ${unavailOrphans} unavailability(s) with no active [:unavailability] edge from ` +
+          `any live user (the owning user is soft-deleted, or the edge was deactivated)`,
+      );
+    }
+    if (unavailUnlanded > 0) {
+      ctx.log(
+        `    ⚠ DROPPED ${unavailUnlanded} unavailability(s) whose user never landed in Postgres`,
+      );
+    }
     out.unavailabilities = stat(
-      unavailRows.length,
+      unavailDtos.length,
       await bulkInsert(ctx, unavailabilities, unavailRows),
     );
 

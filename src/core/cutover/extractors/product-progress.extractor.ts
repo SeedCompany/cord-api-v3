@@ -12,6 +12,7 @@ import {
   fetchIds,
   keepLanded,
   liveTargetIds,
+  recordReadLoss,
   sanitizeEnum,
   stat,
   tsReq,
@@ -64,13 +65,13 @@ export const productProgressExtractor: Extractor = {
     // required edges, so nodes whose product or report is soft-deleted simply
     // vanish from it. Without this the loss reconciles ✓.
     const allProgressIds = await fetchIds(ctx, 'ProductProgress');
-    if (allProgressIds.length !== progressRows.length) {
-      ctx.log(
-        `    ⚠ ProductProgress: ${allProgressIds.length} node(s) enumerated but ${progressRows.length} ` +
-          `had both a live product and a live report — ${allProgressIds.length - progressRows.length} hang off ` +
-          `a soft-deleted parent`,
-      );
-    }
+    recordReadLoss(
+      ctx,
+      'ProductProgress',
+      allProgressIds.length - progressRows.length,
+      `${progressRows.length} of ${allProgressIds.length} had both a live product and a live ` +
+        `report, the rest hang off a soft-deleted parent`,
+    );
 
     const landedProducts = await liveTargetIds(ctx, 'Product', products);
     const landedReports = await liveTargetIds(
@@ -120,17 +121,38 @@ export const productProgressExtractor: Extractor = {
               value.value AS completed, toString(step.createdAt) AS createdAt`,
     );
 
-    // Built from what this extractor just kept rather than via liveTargetIds,
-    // whose dry-run fallback would enumerate the dropped parents too.
-    const landedProgress = new Set<string>(
-      progressKept.kept.map((row) => row.id),
-    );
+    // In a REAL run this must be Postgres truth, not the pre-insert kept set:
+    // `product_progress_product_report_variant_unique` can conflict-drop a row
+    // that `progressKept` believes landed, and its step rows would then pass this
+    // guard and FK-abort the whole load. Dry-run is the only case where the kept
+    // set is right — nothing was inserted, and liveTargetIds' own dry-run
+    // fallback enumerates every Neo4j node including the parents just dropped.
+    const landedProgress = ctx.dryRun
+      ? new Set<string>(progressKept.kept.map((row) => row.id))
+      : await liveTargetIds(ctx, 'ProductProgress', productProgress);
     const stepsKept = keepLanded(stepRows, [
       [landedProgress, (row) => row.progressId],
     ]);
     if (stepsKept.skipped > 0) {
+      // Split by CAUSE. The step read above anchors on `(progress:ProductProgress)`
+      // with no liveness constraint, so it returns steps for every progress node in
+      // the graph — including the ones the progress read inner-joined away because
+      // their product or report is soft-deleted. Those are the overwhelming
+      // majority, and reporting the whole gap as "belonging to a dropped progress
+      // row" points at the wrong thing: on the 2026-08-19 production run it read as
+      // 82,664 steps lost to 283 dropped rows (292 each, against an average of 4.3)
+      // when in fact ~19,535 unread progress nodes accounted for nearly all of it.
+      const readProgressIds = new Set(progressRows.map((row) => row.id));
+      const lostToSoftDeletedParent = stepRows.filter(
+        (row) =>
+          !landedProgress.has(row.progressId) &&
+          !readProgressIds.has(row.progressId),
+      ).length;
+      const lostToGuard = stepsKept.skipped - lostToSoftDeletedParent;
       ctx.log(
-        `    ⚠ DROPPED ${stepsKept.skipped} step row(s) belonging to a dropped progress row`,
+        `    ⚠ DROPPED ${stepsKept.skipped} step row(s): ${lostToSoftDeletedParent} under a progress ` +
+          `node whose product or report is soft-deleted (never read — the live-only policy working), ` +
+          `${lostToGuard} under a progress row this wave dropped or that failed to land`,
       );
     }
 

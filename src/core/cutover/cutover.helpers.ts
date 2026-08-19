@@ -239,9 +239,19 @@ export const readAllRowsViaRepo = async <TRow extends { id: ID }>(
       label,
       (ctx.notHydrated.get(label) ?? 0) + missing.length,
     );
+    // The dominant cause is a DELETED ANCESTOR, not corruption, and saying so
+    // matters because this block reads alarming otherwise. Measured on production
+    // 2026-08-19: of 7,011 unhydrated PeriodicReports, 6,897 hang off a
+    // soft-deleted engagement or project, and all 1,878 unhydrated Products lack a
+    // live Project→Engagement→Product chain. Those rows SHOULD NOT migrate — it is
+    // the live-only policy arriving through a channel no counter tracks. Hydrates
+    // reach further up the tree than their own node: PeriodicReport's requires a
+    // reachable live `:Project`, so deleting a project silently makes every report
+    // under every one of its engagements unreadable.
     ctx.log(
       `    ⚠ ${label}: ${missing.length} of ${ids.length} node(s) enumerated but NOT hydrated ` +
-        `by readMany (broken required rels — prod-finding #2 class): ${missing
+        `by readMany. Expected cause is a soft-deleted ancestor (the hydrate requires the ` +
+        `whole chain live), which is correct to drop — anything else is a real finding: ${missing
           .slice(0, 10)
           .join(', ')}${missing.length > 10 ? ', …' : ''}`,
     );
@@ -260,6 +270,34 @@ export const readAllRowsViaRepo = async <TRow extends { id: ID }>(
     }
   }
   return out;
+};
+
+/**
+ * Record rows lost while READING, for extractors that read with raw Cypher.
+ *
+ * `readAllViaRepo`/`readAllRowsViaRepo` get this for free, but a raw-Cypher
+ * extractor loses rows in a way no counter sees: its MATCH inner-joins the
+ * things it needs (a creator, a parent, a required property), so a node missing
+ * any of them never enters the result set at all. `read` then counts what came
+ * back, which equals `inserted`, so the table reconciles ✓ and the run-end
+ * summary can claim "zero rows lost" while rows were lost — the exact failure
+ * mode the hydrate-drop guard was added to close for repo-backed reads.
+ *
+ * Enumerate the label separately, compare, and pass the shortfall here so it
+ * joins the same total. Logging alone is not enough: an inline ⚠ scrolls past
+ * and the footer still says clean.
+ */
+export const recordReadLoss = (
+  ctx: CutoverContext,
+  label: string,
+  lost: number,
+  reason: string,
+): void => {
+  if (lost <= 0) return;
+  ctx.notHydrated.set(label, (ctx.notHydrated.get(label) ?? 0) + lost);
+  ctx.log(
+    `    ⚠ ${label}: ${lost} node(s) enumerated but never read — ${reason}`,
+  );
 };
 
 /**

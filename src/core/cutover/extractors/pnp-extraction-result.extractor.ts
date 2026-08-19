@@ -141,6 +141,10 @@ export const pnpExtractionResultExtractor: Extractor = {
 
     let unusableContext = 0;
     let incomplete = 0;
+    // Counted BEFORE any drop below, so the reconciliation's read-vs-inserted gap
+    // reflects the problems that existed rather than the ones that survived.
+    let problemsSeen = 0;
+    let droppedForFile = 0;
     const problemRows: Array<{
       id: ID;
       fileId: ID<'File'>;
@@ -149,9 +153,14 @@ export const pnpExtractionResultExtractor: Extractor = {
       context: Record<string, unknown>;
     }> = [];
     for (const row of kept) {
-      if (!landedResultFiles.has(row.fileId)) continue;
+      const fileLanded = landedResultFiles.has(row.fileId);
       for (const problem of row.problems) {
         if (problem.id == null && problem.type == null) continue; // the null map
+        problemsSeen++;
+        if (!fileLanded) {
+          droppedForFile++;
+          continue;
+        }
         if (
           problem.id == null ||
           problem.type == null ||
@@ -192,11 +201,15 @@ export const pnpExtractionResultExtractor: Extractor = {
       problemRows,
     );
 
-    out.pnp_extraction_results = stat(resultRows.length, resultsInserted);
-    out.pnp_extraction_result_problems = stat(
-      problemRows.length,
-      problemsInserted,
-    );
+    if (droppedForFile > 0) {
+      ctx.log(
+        `    ⚠ DROPPED ${droppedForFile} PnP problem(s) whose extraction-result file never landed`,
+      );
+    }
+    // Both reads are PRE-drop counts — see the file extractor for why the
+    // post-filter count would make a lossy table reconcile ✓.
+    out.pnp_extraction_results = stat(raw.length, resultsInserted);
+    out.pnp_extraction_result_problems = stat(problemsSeen, problemsInserted);
     return out;
   },
 };

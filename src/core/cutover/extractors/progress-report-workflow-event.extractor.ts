@@ -8,9 +8,11 @@ import { type ProgressReportStatus } from '../../../components/progress-report/d
 import {
   bulkInsert,
   cypher,
+  fetchIds,
   keepLanded,
   liveTargetIds,
   one,
+  recordReadLoss,
   richText,
   ts,
   warnIfRelTypeUnknown,
@@ -69,6 +71,22 @@ export const progressReportWorkflowEventExtractor: Extractor = {
       // so out loud rather than reporting a clean empty run.
       await warnIfRelTypeUnknown(ctx, 'workflowEvent');
     }
+    // `report:ProgressReport` is a required match, so events whose report was
+    // soft-deleted (every label relabelled `Deleted_`) never enter `rows` at all.
+    // Dropping them is the live-only policy working as intended; the problem is
+    // that they would leave NO trace — unlike the keepLanded drops below, they
+    // are gone before `read` counts them, so this table would reconcile ✓ and the
+    // footer would claim zero rows lost. Every sibling in this cluster
+    // (progress-summary, PVR, post, comment) enumerates and compares for exactly
+    // this reason; this one did not.
+    const allEventIds = await fetchIds(ctx, 'ProgressReportWorkflowEvent');
+    recordReadLoss(
+      ctx,
+      'ProgressReportWorkflowEvent',
+      allEventIds.length - rows.length,
+      `${rows.length} of ${allEventIds.length} hang off a live report, ` +
+        `the rest are under a soft-deleted one`,
+    );
 
     // Both are real foreign keys, so a row referencing something that never landed
     // cannot be carried. `who` is NOT NULL as well, which makes the actor guard a
