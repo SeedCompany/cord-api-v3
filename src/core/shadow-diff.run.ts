@@ -83,6 +83,25 @@ async function runCaptureMode(dir: string) {
   // loader caching is disabled. Same trick as cutover.run.ts / pg-seed.run.ts.
   process.argv.push('console');
 
+  // A capture must not WRITE to what it is measuring, and merely booting the
+  // AppModule does. Observed on 2026-08-19 while scrubbing the production copy:
+  // `[admin:service] Updating root user to match app configuration` — the
+  // background root-objects bootstrap had rewritten the root user's email and
+  // password hash to match this box's config. In a capture that is worse than
+  // untidy: the neo4j run is the ORACLE the postgres run is compared against, so
+  // a boot-time write means the two engines are no longer being asked about the
+  // same graph, and against a frozen source it is a write the runbook forbids.
+  // Index creation is DDL for the same reason. Both default ON outside a local
+  // development box, which is exactly the machine a rehearsal runs on.
+  //
+  // Set before the AppModule import below, since ConfigService reads env once.
+  // Consequence worth knowing: `lazySessionForRootUser()` further down no longer
+  // has a bootstrap to fall back on, so a capture against a database with no
+  // root user now FAILS instead of quietly creating one. That is the intended
+  // trade — an absent root user is a load defect the capture should surface.
+  process.env.DB_ROOT_OBJECTS_SYNC = 'false';
+  process.env.DB_CREATE_INDEXES = 'false';
+
   // AppModule FIRST, then dynamic imports (circular-dep ordering — same as
   // main.ts / cutover.run.ts / pg-seed.run.ts).
   const { AppModule } = await import('../app.module');
