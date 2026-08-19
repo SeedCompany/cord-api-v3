@@ -112,6 +112,27 @@ export const knownDeltas: readonly KnownDeltaRule[] = [
     path: /^data\.[A-Za-z]+\.items\[\d+\]/,
     disabled: true,
   },
+  {
+    ref: 'U-fullName-fold',
+    reason:
+      'user list fullName ordering: both engines now compare the SAME string ' +
+      '(first and last concatenated — the two-column form was fixed 2026-08-19), ' +
+      'but they fold it differently and that part is deliberate. `fullName` is a ' +
+      'resolver field, not a @NameField, so DbSort finds no transformer and Neo4j ' +
+      'orders it by raw code points — capitals before lower case, accented ' +
+      'initials after `z`. Postgres keeps the display_order collation instead ' +
+      '(Rob, 2026-08-19) so the list reads the way people expect and agrees with ' +
+      'every other name sort in the app. Exact parity would mean `collate "C"`. ' +
+      '⚠ STILL DISABLED, and not because the delta is unconfirmed: the same ' +
+      'path also carries the anonymous-user difference (Postgres returns 2376 ' +
+      'users to Neo4j`s 2375 — `anonuserid` is labelled AnonUser and Neo4j drops ' +
+      'it, Postgres lists it). Enabling this now would hide that. Enable once the ' +
+      'user list excludes the anonymous user.',
+    op: /^users\.list\.default$/,
+    persona: /./,
+    path: /^data\.users\.items\[\d+\]/,
+    disabled: true,
+  },
 ];
 
 export const matchKnownDelta = (

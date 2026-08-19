@@ -1,5 +1,15 @@
 import { Injectable } from '@nestjs/common';
-import { and, eq, ilike, inArray, isNull, ne, or, type SQL } from 'drizzle-orm';
+import {
+  and,
+  eq,
+  ilike,
+  inArray,
+  isNull,
+  ne,
+  or,
+  type SQL,
+  sql,
+} from 'drizzle-orm';
 import { groupBy } from 'lodash';
 import { DateTime } from 'luxon';
 import {
@@ -14,6 +24,7 @@ import { Identity } from '~/core/authentication';
 import { ConfigService } from '~/core/config';
 import {
   catchUniqueViolation,
+  collateDisplayOrder,
   DrizzleDtoRepository,
   EMPTY_PAGE,
   escapeLikePattern,
@@ -265,7 +276,29 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
     );
 
     const sortColumns = {
-      fullName: [users.realFirstName, users.realLastName],
+      // ONE concatenated string, not two columns with a tiebreaker. Neo4j's
+      // matching sorter is `coalesce(realFirstName,"") + coalesce(realLastName,"")`
+      // (multiPropsAsSortString in user.repository.ts), and ordering by that is
+      // not the same as ordering by first name then last name — they disagree
+      // whenever one first name is a prefix of another, which real names do
+      // constantly:
+      //   concatenated  -> "annabrown" < "annsmith"  => Anna Brown, Ann Smith
+      //   two columns   -> "Ann"       < "Anna"      => Ann Smith, Anna Brown
+      // Same for Jon/Jonathan, Dan/Daniel, Sam/Samuel. No separator between the
+      // two, and coalesce to '' rather than leaving NULL, both to match Neo4j.
+      //
+      // ⚠️ Deliberately still COLLATED, which Neo4j is NOT for this key: `fullName`
+      // is a resolver field, not a `@NameField` DTO field, so `DbSort.get` finds no
+      // transformer and Neo4j orders it by raw code points — capitals before lower
+      // case, accented initials after `z`. Matching that exactly would mean
+      // `collate "C"`; keeping display_order was chosen instead (2026-08-19) so the
+      // list reads the way people expect and agrees with every other name sort in
+      // this app. The residual ordering difference is a registered known delta in
+      // the shadow-diff suppression registry — do not "fix" it by dropping the
+      // collation without moving that entry too.
+      fullName: collateDisplayOrder(
+        sql`coalesce(${users.realFirstName}, '') || coalesce(${users.realLastName}, '')`,
+      ),
       realLastName: [users.realLastName, users.realFirstName],
       displayLastName: [users.displayLastName, users.displayFirstName],
       realFirstName: [users.realFirstName, users.realLastName],

@@ -17,10 +17,24 @@ import {
 } from './schema';
 
 /**
- * One sort entry: a single column, or a column list expressing tiebreakers
- * (e.g. `[lastName, firstName]`).
+ * One thing to order by: a column, or an expression built with {@link sql}.
+ *
+ * An expression is needed when Neo4j's matching sorter does not order by a
+ * single stored value — `User.fullName` is the case that forced this: Neo4j
+ * concatenates first and last name into ONE string and orders that, which is not
+ * the same as ordering by first name then last name (see the user repository).
+ *
+ * ⚠️ An expression is returned from {@link displayOrder} UNCOLLATED, because
+ * there is no column to look up in {@link NAME_COLUMNS}. Build name expressions
+ * with {@link collateDisplayOrder} so the collation cannot be forgotten.
  */
-export type SortColumns = AnyPgColumn | SQL | ReadonlyArray<AnyPgColumn | SQL>;
+export type SortEntry = AnyPgColumn | SQL;
+
+/**
+ * One sort entry: a single column or expression, or a list expressing
+ * tiebreakers (e.g. `[lastName, firstName]`).
+ */
+export type SortColumns = SortEntry | readonly SortEntry[];
 
 /**
  * Map of supported sort keys to columns, narrowed to the DTO's fields:
@@ -116,19 +130,24 @@ const NAME_COLUMNS: ReadonlySet<AnyPgColumn> = new Set<AnyPgColumn>([
  * being read off the primary key index, for any list that falls back to id sorting.
  *
  * ⚠️ This can only inspect a COLUMN. A sort written as a raw `sql` expression has
- * no column to look up, so it falls through here and comes back uncollated — with
- * no error and nothing failing. A name sort built as an expression has to write
- * `collate display_order` inline itself.
+ * no column to look up, so it is returned unchanged — with no error and nothing
+ * failing. That pass-through is deliberate rather than accidental: an expression
+ * is the only way to express a sort Neo4j builds from more than one stored value,
+ * and only its author knows whether the result is a name. Build those with
+ * {@link collateDisplayOrder} rather than by hand, so the collation travels with
+ * the expression instead of being something to remember.
  *
  * Use this at every name sort, including ones built by hand rather than through
  * {@link resolveOrderBy} — the three list queries that sort by a joined table's
  * name (partner, partnership, project) do exactly that, and would otherwise order
  * differently from every other list in the app.
  */
-export const displayOrder = (col: AnyPgColumn | SQL): SQLWrapper =>
+export const displayOrder = (col: SortEntry): SQLWrapper =>
   // An expression rather than a column — a value computed in the query, such
-  // as a partner's sensitivity derived from its projects. There is no column
-  // to look up in NAME_COLUMNS and nothing to collate, so it orders as-is.
+  // as a partner's sensitivity derived from its projects, or a name built
+  // from more than one column. There is no column to look up in NAME_COLUMNS,
+  // so it orders as-is; name expressions arrive pre-collated via
+  // {@link collateDisplayOrder}.
   col instanceof SQL
     ? col
     : NAME_COLUMNS.has(col) &&
@@ -137,6 +156,17 @@ export const displayOrder = (col: AnyPgColumn | SQL): SQLWrapper =>
         !col.primary
       ? sql`${col} collate ${sql.identifier(DISPLAY_ORDER_COLLATION)}`
       : col;
+
+/**
+ * Collate a multi-column name EXPRESSION the way {@link displayOrder} collates a
+ * name column, so both order the same way.
+ *
+ * Postgres applies a collation to the result of the whole expression, so this
+ * wraps rather than collating each part — `(a || b) collate display_order`, not
+ * `(a collate display_order) || b`, which would not compile.
+ */
+export const collateDisplayOrder = (expr: SQL): SQL =>
+  sql`(${expr}) collate ${sql.identifier(DISPLAY_ORDER_COLLATION)}`;
 
 /**
  * Resolve a list-input's `sort` key to an ORDER BY clause. Unmatched keys
