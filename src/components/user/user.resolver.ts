@@ -7,6 +7,7 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
+import { DateTime } from 'luxon';
 import {
   firstLettersOfWords,
   type ID,
@@ -54,6 +55,7 @@ import {
   SecuredUnavailabilityList,
   UnavailabilityListInput,
 } from './unavailability/dto';
+import { type UserChannels } from './user.channels';
 import { UserLoader } from './user.loader';
 import { UserService } from './user.service';
 
@@ -217,30 +219,76 @@ export class UserResolver {
   @Mutation(() => UserCreated, {
     description: 'Create a person',
   })
-  async createPerson(@Args('input') input: CreatePerson): Promise<UserCreated> {
-    const userId = await this.userService.create(input);
-    const user = await this.userService.readOne(userId).catch((e) => {
+  async createPerson(
+    @Args('input') input: CreatePerson,
+    @Loader(UserLoader) loader: LoaderOf<UserLoader>,
+  ): Promise<UserCreated> {
+    const { id, payload } = await this.userService.create(input);
+    // Still read here, rather than leaving it to the `user` resolve-field, to
+    // keep ReadAfterCreationFailed instead of a bare NotFoundException. Priming
+    // the loader means the field resolution does not read a second time.
+    const user = await this.userService.readOne(id).catch((e) => {
       throw e instanceof NotFoundException
         ? new ReadAfterCreationFailed(User)
         : e;
     });
-    return { user };
+    loader.prime(id, user);
+    return { __typename: 'UserCreated', userId: id, ...payload };
   }
 
   @Mutation(() => UserUpdated, {
     description: 'Update a user',
   })
-  async updateUser(@Args('input') input: UpdateUser): Promise<UserUpdated> {
-    const user = await this.userService.update(input);
-    return { user };
+  async updateUser(
+    @Args('input') input: UpdateUser,
+    @Loader(UserLoader) loader: LoaderOf<UserLoader>,
+  ): Promise<UserUpdated> {
+    const {
+      user,
+      payload = {
+        updated: {},
+        previous: {},
+        at: DateTime.now(),
+        by: this.identity.current.userId,
+      },
+    } = await this.userService.update(input);
+    // `prime` is a no-op when the key is already cached, so an earlier read in
+    // the same request would otherwise leave the `user` field resolving to the
+    // pre-update snapshot. Clear first to make the fresh DTO win.
+    loader.clear(user.id).prime(user.id, user);
+    return { __typename: 'UserUpdated', userId: user.id, ...payload };
   }
 
   @Mutation(() => UserDeleted, {
     description: 'Delete a user',
   })
   async deleteUser(@IdArg() id: ID): Promise<UserDeleted> {
-    await this.userService.delete(id);
-    return {};
+    const payload = await this.userService.delete(id);
+    return { __typename: 'UserDeleted', userId: id, ...payload };
+  }
+
+  /**
+   * Shapes a `UserUpdated` response for the mutations that change a user
+   * through a link rather than through `updateUser`.
+   *
+   * `changed` is undefined when the service found nothing to do — the link was
+   * already in the requested state. `at`/`by` are non-null on the event type,
+   * so a no-op still has to name an instant; there is no way to express "no
+   * change" here. Mirrors ProjectResolver.addOtherLocationToProject.
+   */
+  private updatedEvent(
+    user: ID<'User'>,
+    changed: ReturnType<UserChannels['publishToAll']> | undefined,
+  ): UserUpdated {
+    return {
+      __typename: 'UserUpdated',
+      userId: user,
+      by: this.identity.current.userId,
+      previous: {},
+      updated: {},
+      ...changed,
+      at: changed?.at ?? DateTime.now(),
+    };
   }
 
   @Mutation(() => UserUpdated, {
@@ -249,9 +297,11 @@ export class UserResolver {
   async addLocationToUser(
     @Args() args: ModifyLocationArgs,
   ): Promise<UserUpdated> {
-    await this.userService.addLocation(args.user, args.location);
-    const user = await this.userService.readOne(args.user);
-    return { user };
+    const changed = await this.userService.addLocation(
+      args.user,
+      args.location,
+    );
+    return this.updatedEvent(args.user, changed);
   }
 
   @Mutation(() => UserUpdated, {
@@ -260,9 +310,11 @@ export class UserResolver {
   async removeLocationFromUser(
     @Args() args: ModifyLocationArgs,
   ): Promise<UserUpdated> {
-    await this.userService.removeLocation(args.user, args.location);
-    const user = await this.userService.readOne(args.user);
-    return { user };
+    const changed = await this.userService.removeLocation(
+      args.user,
+      args.location,
+    );
+    return this.updatedEvent(args.user, changed);
   }
 
   @Mutation(() => UserUpdated, {
@@ -272,8 +324,8 @@ export class UserResolver {
     @Args() input: AssignOrganizationToUser,
   ): Promise<UserUpdated> {
     await this.userService.assignOrganizationToUser(input);
-    const user = await this.userService.readOne(input.user);
-    return { user };
+    // No event yet — see the TODO on UserService.assignOrganizationToUser.
+    return this.updatedEvent(input.user, undefined);
   }
 
   @Mutation(() => UserUpdated, {
@@ -283,8 +335,8 @@ export class UserResolver {
     @Args() input: RemoveOrganizationFromUser,
   ): Promise<UserUpdated> {
     await this.userService.removeOrganizationFromUser(input);
-    const user = await this.userService.readOne(input.user);
-    return { user };
+    // No event yet — see the TODO on UserService.assignOrganizationToUser.
+    return this.updatedEvent(input.user, undefined);
   }
 
   @Mutation(() => User, {

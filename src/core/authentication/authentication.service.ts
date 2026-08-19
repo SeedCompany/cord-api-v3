@@ -51,7 +51,7 @@ export class AuthenticationService {
 
     const userMod = await import('../../components/user');
     const users = this.moduleRef.get(userMod.UserService, { strict: false });
-    const userId = await this.gel.usingOptions(
+    const { id: userId } = await this.gel.usingOptions(
       disableAccessPolicies,
       async () => await users.create(input),
     );
