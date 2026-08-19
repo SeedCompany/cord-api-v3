@@ -103,13 +103,19 @@ export const partnerExtractor: Extractor = {
       const blockId = blockByPartner.get(p.id) ?? null;
       const blockLanded = blockId && landedBlocks.has(blockId);
       if (blockId && !blockLanded) nulledBlocks++;
-      const types = sanitizeEnum([...p.types], partnerTypeEnum.enumValues);
+      // orDefault, not a bare spread — see the organization extractor: the DTO
+      // types these as arrays, but a field Neo4j never wrote arrives undefined
+      // and spreading it throws, ending the whole run rather than this row.
+      const types = sanitizeEnum(
+        [...orDefault(p.types, [])],
+        partnerTypeEnum.enumValues,
+      );
       const frt = sanitizeEnum(
-        [...p.financialReportingTypes],
+        [...orDefault(p.financialReportingTypes, [])],
         financialReportingTypeEnum.enumValues,
       );
       const programs = sanitizeEnum(
-        [...p.approvedPrograms],
+        [...orDefault(p.approvedPrograms, [])],
         projectTypeEnum.enumValues,
       );
       [...types.dropped, ...frt.dropped, ...programs.dropped].forEach((d) =>

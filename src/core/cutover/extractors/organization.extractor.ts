@@ -15,6 +15,7 @@ import {
   cypher,
   keepLanded,
   liveTargetIds,
+  orDefault,
   readAllViaRepo,
   sanitizeEnum,
   stat,
@@ -50,9 +51,18 @@ export const organizationExtractor: Extractor = {
     );
     const droppedEnums = new Set<string>();
     const rows = dtos.map((o) => {
-      const types = sanitizeEnum([...o.types], organizationTypeEnum.enumValues);
+      // orDefault, not a bare spread: the DTO types these as arrays but Neo4j
+      // has no Property node when the field was never written, so the value
+      // arrives undefined and spreading it throws — which aborts the WHOLE run,
+      // not just this row. Confirmed locally: the DefaultOrganization that
+      // setupRootObjects creates (id hardcoded in config.service.ts) is written
+      // with a `name` and nothing else, so it has neither of these.
+      const types = sanitizeEnum(
+        [...orDefault(o.types, [])],
+        organizationTypeEnum.enumValues,
+      );
       const reach = sanitizeEnum(
-        [...o.reach],
+        [...orDefault(o.reach, [])],
         organizationReachEnum.enumValues,
       );
       [...types.dropped, ...reach.dropped].forEach((d) => droppedEnums.add(d));
