@@ -161,7 +161,7 @@ const toNum = (value: unknown): number | null => {
 const rowKey = (row: RawFileNode) =>
   [row.parentId, row.name, row.createdById, row.public, row.mimeType, row.size]
     .map((value) => (value == null ? '' : String(value)))
-    .join(' ');
+    .join('\u0000');
 
 /** When this row's NAME was written; 0 when the source never stamped it. */
 const nameWrittenAt = (row: RawFileNode) =>
