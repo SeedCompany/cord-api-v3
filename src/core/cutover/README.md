@@ -33,6 +33,9 @@ here (migrations run) before loading, so it can point at an empty DB.
   TRUNCATE targets, run each extractor, reconcile row counts.
 - `extractors/*.extractor.ts` — one per domain (`extractors/index.ts` registry).
 - `../cutover.run.ts` — the entry point (boot + arg parsing + target migration).
+- `verify.ts` — the post-load check, run through `../cutover-verify.run.ts`.
+  Reads only Postgres and only what the database cannot enforce for itself; the
+  complement to reconciliation, which counts rows but never looks at the result.
 
 ## Running
 
@@ -228,8 +231,24 @@ Locally it reads 8 keys / 0 duplicates, and production reads 3,430 / 0.
    "Not hydrated" block empty. The process now exits non-zero on a MISMATCH, and
    `--strict` also fails the run when any row was lost, so this step can be
    automated rather than read by eye.
-4. Flip `DATABASE=postgres`; smoke-test.
-5. Keep Neo4j as read-only fallback for a few days, then tear down.
+4. **Run `core/cutover-verify.run` against the target and require exit 0.**
+   Reconciliation proves everything arrived; it cannot prove what arrived is
+   coherent, because it only ever compares its own two numbers. This reads the
+   loaded database instead — dangling references with no FK behind them, live rows
+   whose target is soft-deleted, foreign keys landing on the wrong subtype. Only
+   `POSTGRES_URL` is needed; the run forces `DATABASE=neo4j` on itself so the
+   migrator cannot write DDL to the database it is certifying.
+
+   ```
+   POSTGRES_URL=... yarn start --entryFile core/cutover-verify.run
+   ```
+
+   Read the verdict line, not just the exit code: it prints how many rows were
+   checked, and "no violations" over a database that never loaded would otherwise
+   look identical to a perfect load. The watchlist section is expected to be
+   non-empty and never affects the exit code.
+5. Flip `DATABASE=postgres`; smoke-test.
+6. Keep Neo4j as read-only fallback for a few days, then tear down.
 
 Rollback is instant at any point before the flip: Neo4j is untouched — and the
 run deliberately disables root-object sync and index creation so that stays true
