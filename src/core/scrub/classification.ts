@@ -29,6 +29,35 @@
  *    bookmarks and screenshots still make sense) and two runs stay comparable.
  */
 
+/**
+ * Cypher predicate matching a field record at ANY soft-delete depth.
+ *
+ * Neo4j's soft delete does not set a flag, it PREFIXES every label — so a
+ * deleted field record is `:Deleted_Property`, and one deleted twice is
+ * `:Deleted_Deleted_Property`. Both the scrub and its verifier used to spell the
+ * set out as `(p:Property OR p:Deleted_Property)`, which silently stops at depth
+ * one.
+ *
+ * That cost real exposure. Found 2026-08-20 in the production copy: 16 field
+ * records sat at depth 2 and 3, every one of them a file name, and every one
+ * still holding its original production value — one is a fiscal-year report
+ * naming a specific minority language. The scrub skipped them because they
+ * matched neither label, and **the verifier reported `0 violations` because it
+ * carried the identical blind spot**, which is why a run could look clean for
+ * months. Two checks are only two checks if they disagree about something.
+ *
+ * Matching on the label SUFFIX makes the depth irrelevant, so a third or fourth
+ * prefix cannot reopen this. Nothing else in the schema mints a `*_Property`
+ * label, so the widened match cannot pull in anything unintended.
+ *
+ * Not part of {@link classificationHash} — that hashes classification DECISIONS,
+ * and this is how the graph is walked. Worth knowing, because it means a copy
+ * scrubbed before this fix and one scrubbed after are indistinguishable by their
+ * marker: the only way to tell is to re-scrub.
+ */
+export const isFieldRecord = (variable: string) =>
+  `any(lbl IN labels(${variable}) WHERE lbl = 'Property' OR lbl ENDS WITH '_Property')`;
+
 /** How a replacement value is generated. All are deterministic in the input. */
 export type Strategy =
   /** Person names — first/last/display, and the derived initials. */

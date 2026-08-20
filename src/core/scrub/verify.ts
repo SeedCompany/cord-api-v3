@@ -1,5 +1,5 @@
 import { type DatabaseService } from '~/core/neo4j';
-import { links, properties } from './classification';
+import { isFieldRecord, links, properties } from './classification';
 
 /**
  * The independent check that the scrub worked.
@@ -65,7 +65,7 @@ const countFieldMatches = async (
   const rows = await neo4j
     .query<{ total: number }>(
       `MATCH ()-[:\`${link}\`]->(p)
-       WHERE (p:Property OR p:Deleted_Property)
+       WHERE ${isFieldRecord('p')}
          AND p.value IS NOT NULL AND ${where}
        RETURN count(p) AS total`,
     )
