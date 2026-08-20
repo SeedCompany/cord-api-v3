@@ -179,6 +179,55 @@ export const promptVariantResponseExtractor: Extractor = {
       );
     }
 
+    // Only ONE answer per (response, variant) may be live — the unique index is
+    // `(response_id, variant) WHERE deleted_at IS NULL`. The source already
+    // models a superseded answer by stamping `deletedAt`, and does so 4,301
+    // times, so the shape is well established. Exactly one pair never got
+    // stamped: response UW2vHYXF0hV / variant `fpm`, two answers by the same
+    // person 7ms apart, both reading "NA" — a double submit.
+    //
+    // Retiring the older one is strictly better than letting the insert refuse
+    // it. `onConflictDoNothing` discarded a row silently and kept whichever
+    // arrived first; this keeps BOTH rows, with the loser shaped exactly like
+    // every other superseded answer in the table. Nothing is lost and the index
+    // is satisfied.
+    //
+    // Retired at the winner's createdAt — "superseded when the newer answer was
+    // written" — rather than now(), which would be a load-time date with no
+    // meaning. Ordered by real timestamps, not the ISO strings: Neo4j hands some
+    // of these back with a `[UTC]` suffix and some without, so a lexical compare
+    // is not reliable across formats.
+    const liveByPair = new Map<string, EntryRow[]>();
+    for (const row of entriesKept.kept) {
+      if (row.deletedAt != null) continue;
+      const key = `${row.responseId}\u0000${row.variant}`;
+      const held = liveByPair.get(key);
+      if (held) held.push(row);
+      else liveByPair.set(key, [row]);
+    }
+    const retired: string[] = [];
+    for (const group of liveByPair.values()) {
+      if (group.length === 1) continue;
+      const ordered = [...group].sort(
+        (a, b) => tsReq(a.createdAt).getTime() - tsReq(b.createdAt).getTime(),
+      );
+      const keep = ordered[ordered.length - 1]!;
+      for (const row of ordered.slice(0, -1)) {
+        row.deletedAt = keep.createdAt;
+        retired.push(`${row.responseId}/${row.variant}`);
+      }
+    }
+    if (retired.length > 0) {
+      ctx.log(
+        `    ℹ retired ${retired.length} superseded answer(s) rather than letting ` +
+          `the unique index refuse them — more than one answer was live for the ` +
+          `same (response, variant), which the source normally records by ` +
+          `stamping deletedAt. Both rows are kept; the older is marked deleted at ` +
+          `the newer one's createdAt: ${retired.slice(0, 10).join(', ')}` +
+          `${retired.length > 10 ? ', …' : ''}`,
+      );
+    }
+
     const unparsedResponses: string[] = [];
     out.prompt_variant_response_entries = stat(
       entryRows.length,
