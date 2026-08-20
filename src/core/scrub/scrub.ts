@@ -3,6 +3,7 @@ import { type DatabaseService } from '~/core/neo4j';
 import {
   type Action,
   findUnclassified,
+  isFieldRecord,
   links,
   properties,
 } from './classification';
@@ -110,7 +111,7 @@ const eachFieldValuePage = async (
     ctx,
     (after, pageSize) => [
       `MATCH ()-[:\`${link}\`]->(p)
-       WHERE (p:Property OR p:Deleted_Property) AND p.value IS NOT NULL
+       WHERE ${isFieldRecord('p')} AND p.value IS NOT NULL
          AND id(p) > $after
        RETURN id(p) AS nodeId, p.value AS value
        ORDER BY id(p) LIMIT ${pageSize}`,
