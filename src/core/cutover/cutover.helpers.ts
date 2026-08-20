@@ -1,5 +1,5 @@
 import { type Type } from '@nestjs/common';
-import { sql } from 'drizzle-orm';
+import { getTableName, sql } from 'drizzle-orm';
 import { type PgTable } from 'drizzle-orm/pg-core';
 import { DateTime } from 'luxon';
 import {
@@ -305,6 +305,22 @@ export const recordReadLoss = (
  * `onConflictDoNothing` (idempotent re-runs). No-op write in dry-run — the
  * mapping still runs, so mapping errors still surface. Returns rows written
  * (or would-be-written in dry-run).
+ *
+ * ## Why a conflict now WARNS
+ *
+ * `onConflictDoNothing` is what makes a re-run idempotent, and it is also a
+ * silencer: a row rejected for violating a unique constraint leaves no trace
+ * except a smaller `inserted`. The reader then has to work out, from a
+ * subtraction, that something was refused — and which rows, and why, is nowhere.
+ *
+ * That is not hypothetical. `system_agents` read 3 and inserted 2 for weeks,
+ * carried in the notes as "cause unconfirmed". It turned out two agents shared
+ * the name `Anonymous` while the column is UNIQUE, so Postgres dropped one and
+ * said nothing. Every table here has the same exposure. Naming the table and the
+ * count turns a subtraction someone has to notice into a line someone can read.
+ *
+ * Deliberately a warning and not an error: a conflict is legitimate on a re-run
+ * over an already-loaded table, which is the whole point of the clause.
  */
 export const bulkInsert = async <T extends PgTable>(
   ctx: CutoverContext,
@@ -321,6 +337,15 @@ export const bulkInsert = async <T extends PgTable>(
     // simply false. Only the pgCount comparison caught it; now both agree.
     const res = await ctx.db.insert(table).values(c).onConflictDoNothing();
     n += (res as { rowCount?: number | null }).rowCount ?? c.length;
+  }
+  const refused = rows.length - n;
+  if (refused > 0) {
+    ctx.log(
+      `    ⚠ ${getTableName(table)}: Postgres refused ${refused} of ` +
+        `${rows.length} row(s) on a conflict — a duplicate primary key, or a ` +
+        `unique constraint the source data does not satisfy. Expected on a ` +
+        `re-run over a loaded table; on a fresh load it is a real finding.`,
+    );
   }
   return n;
 };
