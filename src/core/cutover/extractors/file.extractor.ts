@@ -56,6 +56,25 @@ import { type CutoverContext, type Extractor } from '../cutover.types';
  * the inbound `parent` rel was deactivated) — those become roots, and the count
  * is logged rather than left silent.
  *
+ * ## The read fans out, so rows are NOT nodes
+ *
+ * Every `OPTIONAL MATCH` below multiplies rows when a node holds more than one
+ * ACTIVE edge of that type, and production holds plenty: 164 FileNodes have 2–5
+ * active `parent` rels and 72 have 2+ active `name` rels, which is 284 duplicate
+ * rows on a 1.56M-row read. That is bad data in Neo4j — a property written
+ * without deactivating the old one — not a query bug, and it cannot be fixed
+ * here. Only some of it costs anything: all 164 duplicate parents point at the
+ * SAME directory, so collapsing them loses nothing, while 52 of the 72 duplicate
+ * names genuinely disagree and one of the two has to be dropped.
+ *
+ * It has to be handled here anyway, because the duplicates used to travel all
+ * the way to the insert and get swallowed by `onConflictDoNothing`. That made
+ * `read` an inflated ROW count while `inserted` was a NODE count, so the
+ * reconciliation table subtracted two different units: the 2026-08-19 prod run
+ * reported 373 file_nodes dropped when the real loss was 89. Collapsing the
+ * fan-out up front makes both columns count nodes, and gives the ambiguity its
+ * own warning instead of letting a conflict clause hide it.
+ *
  * ## Rows this DROPS (loudly — never silently)
  *
  * - **FileVersion with no `mimeType` or `size`.** The `file_nodes_shape` CHECK
@@ -97,13 +116,15 @@ interface RawFileNode {
   parentId: ID | null;
   createdById: ID<'User'> | null;
   createdAt: { toJSDate: () => Date } | null;
+  /** When the NAME was written — only used to break a name conflict. */
+  nameCreatedAt: { toJSDate: () => Date } | null;
 }
 
 const READ = `
   MATCH (n:FileNode)
   OPTIONAL MATCH (n)-[:parent { active: true }]->(p:FileNode)
   OPTIONAL MATCH (n)-[:createdBy { active: true }]->(cb:User)
-  OPTIONAL MATCH (n)-[:name { active: true }]->(nameProp:Property)
+  OPTIONAL MATCH (n)-[nameRel:name { active: true }]->(nameProp:Property)
   OPTIONAL MATCH (n)-[:public { active: true }]->(pubProp:Property)
   OPTIONAL MATCH (n)-[:mimeType { active: true }]->(mimeProp:Property)
   OPTIONAL MATCH (n)-[:size { active: true }]->(sizeProp:Property)
@@ -115,7 +136,8 @@ const READ = `
          sizeProp.value AS size,
          p.id AS parentId,
          cb.id AS createdById,
-         n.createdAt AS createdAt
+         n.createdAt AS createdAt,
+         nameRel.createdAt AS nameCreatedAt
 `;
 
 /** Neo4j may hand back an Integer wrapper rather than a JS number. */
@@ -127,6 +149,124 @@ const toNum = (value: unknown): number | null => {
     return (value as { toNumber: () => number }).toNumber();
   }
   return Number(value);
+};
+
+/**
+ * Total order over the fields the fan-out can vary, so the row kept for a
+ * duplicated node is the SAME row on every run. Neo4j returns the rows of a
+ * fan-out in no defined order, so picking "the first one" would let a file land
+ * in one folder during a rehearsal and a different folder at cutover — a
+ * difference nothing downstream could explain.
+ */
+const rowKey = (row: RawFileNode) =>
+  [row.parentId, row.name, row.createdById, row.public, row.mimeType, row.size]
+    .map((value) => (value == null ? '' : String(value)))
+    .join(' ');
+
+/** When this row's NAME was written; 0 when the source never stamped it. */
+const nameWrittenAt = (row: RawFileNode) =>
+  row.nameCreatedAt ? row.nameCreatedAt.toJSDate().getTime() : 0;
+
+/**
+ * Pick the surviving row for a node whose duplicates DISAGREE.
+ *
+ * The app's own rule decides it: `createFileVersion` ends by renaming the File
+ * to the version just uploaded (file.service.ts, "Change the file's name to
+ * match the latest version name"). So a File carrying several live names is a
+ * rename history that was never retired, and the right name is the one matching
+ * its newest FileVersion. Measured on the production copy 2026-08-20: that name
+ * is present among the competing values for 49 of the 52 conflicting Files.
+ *
+ * Falls back to the most recently WRITTEN name for the other 3, where the latest
+ * version's name is not among the candidates at all. Deliberately not the
+ * alphabetically-first value, and deliberately not the newest name property
+ * everywhere: the newest name agrees with the app's rule in only 30 of the 52,
+ * so using it alone would get 22 of them wrong.
+ */
+const resolveConflict = (
+  rows: readonly RawFileNode[],
+  latestVersionName: string | undefined,
+): { row: RawFileNode; fromVersion: boolean } => {
+  if (latestVersionName != null) {
+    const match = rows.find((row) => row.name === latestVersionName);
+    if (match) return { row: match, fromVersion: true };
+  }
+  // `rows` arrives in the stable rowKey order, and `>` keeps the incumbent, so
+  // a tie on the timestamp still resolves the same way on every run.
+  const newest = rows.reduce((best, row) =>
+    nameWrittenAt(row) > nameWrittenAt(best) ? row : best,
+  );
+  return { row: newest, fromVersion: false };
+};
+
+/**
+ * Collapse the read's fan-out to one row per node — see the docblock.
+ *
+ * Splits the duplicates into two very different populations, because lumping
+ * them together over-reports the problem by 4x. A node with two ACTIVE `parent`
+ * edges pointing at the SAME directory loses nothing when collapsed; a node with
+ * two ACTIVE `name` properties holding DIFFERENT strings loses one of them, for
+ * good. Measured on the production copy 2026-08-20: 164 nodes have duplicate
+ * parent edges and every single one repeats the same target, while 72 have
+ * duplicate names of which 52 genuinely disagree.
+ */
+const collapseFanOut = (raw: readonly RawFileNode[]) => {
+  const groups = new Map<ID, RawFileNode[]>();
+  for (const row of raw) {
+    const held = groups.get(row.id);
+    if (held) held.push(row);
+    else groups.set(row.id, [row]);
+  }
+
+  // A provisional representative for every node, chosen deterministically. Only
+  // needed to build the version index below — a FileVersion can itself be
+  // duplicated, and its own name conflict (if any) is resolved on its own turn.
+  const byRowKey = (a: RawFileNode, b: RawFileNode) =>
+    rowKey(a).localeCompare(rowKey(b));
+  const provisional = [...groups.values()].map((group) =>
+    group.length === 1 ? group[0]! : [...group].sort(byRowKey)[0]!,
+  );
+
+  // Newest FileVersion name per parent File — the value {@link resolveConflict}
+  // prefers. Built from the whole read, not just the conflicting nodes, because
+  // the version that carries the right name is usually not itself in conflict.
+  const latestVersionName = new Map<ID, { name: string; at: number }>();
+  for (const row of provisional) {
+    if (
+      row.type !== 'FileVersion' ||
+      row.parentId == null ||
+      row.name == null
+    ) {
+      continue;
+    }
+    const at = row.createdAt ? row.createdAt.toJSDate().getTime() : 0;
+    const held = latestVersionName.get(row.parentId);
+    if (!held || at > held.at) {
+      latestVersionName.set(row.parentId, { name: row.name, at });
+    }
+  }
+
+  const conflicting: ID[] = [];
+  const namedFromVersion: ID[] = [];
+  let repeated = 0;
+  const nodes: RawFileNode[] = [];
+  for (const [id, group] of groups) {
+    if (group.length === 1) {
+      nodes.push(group[0]!);
+      continue;
+    }
+    const sorted = [...group].sort(byRowKey);
+    if (rowKey(sorted[0]!) === rowKey(sorted.at(-1)!)) {
+      repeated++;
+      nodes.push(sorted[0]!);
+      continue;
+    }
+    conflicting.push(id);
+    const picked = resolveConflict(sorted, latestVersionName.get(id)?.name);
+    if (picked.fromVersion) namedFromVersion.push(id);
+    nodes.push(picked.row);
+  }
+  return { nodes, conflicting, repeated, namedFromVersion };
 };
 
 /**
@@ -209,13 +349,38 @@ export const fileExtractor: Extractor = {
     const raw = await cypher<RawFileNode>(ctx, READ);
     const userIds = await liveTargetIds(ctx, 'User', users);
 
-    const typeless = raw.filter((row) => row.type == null);
+    // Before ANY count is taken — see the fan-out section of the docblock.
+    const { nodes, conflicting, repeated, namedFromVersion } =
+      collapseFanOut(raw);
+    if (repeated > 0) {
+      ctx.log(
+        `    ℹ ${repeated} FileNode(s) carry a duplicate ACTIVE edge whose copies ` +
+          `all agree (the same parent directory named twice, say) — collapsed to ` +
+          `one row, nothing lost.`,
+      );
+    }
+    if (conflicting.length > 0) {
+      const guessed = conflicting.length - namedFromVersion.length;
+      ctx.log(
+        `    ⚠ ${conflicting.length} FileNode(s) hold two or more ACTIVE values ` +
+          `that DISAGREE — a file carrying several live names because an upload ` +
+          `renamed it without retiring the previous name. Postgres stores one ` +
+          `name, so ${namedFromVersion.length} took the name of their newest ` +
+          `FileVersion, which is the rule the app itself applies on upload. The ` +
+          `other ${guessed} had no candidate matching their newest version and ` +
+          `fell back to the most recently written name — those are the guesses. ` +
+          `Ids: ${conflicting.slice(0, 10).join(', ')}` +
+          `${conflicting.length > 10 ? ', …' : ''}`,
+      );
+    }
+
+    const typeless = nodes.filter((row) => row.type == null);
     if (typeless.length > 0) {
       ctx.log(
         `    ⚠ ${typeless.length} FileNode(s) carry none of Directory/File/FileVersion — dropped`,
       );
     }
-    const typed = raw.filter(
+    const typed = nodes.filter(
       (row): row is RawFileNode & { type: NonNullable<RawFileNode['type']> } =>
         row.type != null,
     );
@@ -339,6 +504,11 @@ export const fileExtractor: Extractor = {
     // gap in the reconciliation table. Passing `rows.length` (the post-filter
     // count) would make read equal inserted and print ✓ on a table that shed
     // rows, while the ⚠ lines above said otherwise.
-    return one('file_nodes', raw.length, inserted);
+    //
+    // `nodes.length`, NOT `raw.length`: `inserted` is what Postgres wrote, i.e.
+    // a count of nodes, so `read` has to be nodes too or the subtraction is
+    // between two different units. `raw.length` counted fan-out rows and made
+    // this table report 373 dropped against a real loss of 89.
+    return one('file_nodes', nodes.length, inserted);
   },
 };

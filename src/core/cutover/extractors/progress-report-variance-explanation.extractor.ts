@@ -35,6 +35,24 @@ import { type Extractor } from '../cutover.types';
  * repository substitutes `reasons: []` / `comments: null` when absent), so a row
  * with neither is a real state and is carried as the same empty defaults the
  * Postgres column already declares.
+ *
+ * ## There is no timestamp anywhere in the source
+ *
+ * `created_at` / `updated_at` are NOT NULL here, and nothing in Neo4j can fill
+ * them. Measured on the production copy 2026-08-20: all 5,729 explanation nodes
+ * carry ZERO properties — `keys(node)` is empty, so no `createdAt`, no
+ * `modifiedAt`, not even an `id` — and the `varianceExplanation` relationship
+ * carries only `active`.
+ *
+ * So this falls back to the PARENT REPORT's `createdAt`, which every report has
+ * (0 of 5,729 are missing it). It is not the moment the explanation was written,
+ * but it is a real date, it orders correctly relative to other reports, and it
+ * cannot be later than the explanation's own creation.
+ *
+ * It previously fell back to `new Date()`, which stamped every row in the table
+ * with the same load time. That is worse than imprecise: it silently destroyed
+ * ordering, and because it applied to 100% of rows there was no surviving signal
+ * to notice it by.
  */
 export const progressReportVarianceExplanationExtractor: Extractor = {
   name: 'progress-report-variance-explanation',
@@ -47,6 +65,7 @@ export const progressReportVarianceExplanationExtractor: Extractor = {
       comments: unknown;
       createdAt: string | null;
       modifiedAt: string | null;
+      reportCreatedAt: string | null;
     }>(
       ctx,
       `MATCH (report:ProgressReport)-[:varianceExplanation { active: true }]->(node:ProgressReportVarianceExplanation)
@@ -56,7 +75,8 @@ export const progressReportVarianceExplanationExtractor: Extractor = {
               reasons.value AS reasons,
               comments.value AS comments,
               toString(node.createdAt) AS createdAt,
-              toString(node.modifiedAt) AS modifiedAt`,
+              toString(node.modifiedAt) AS modifiedAt,
+              toString(report.createdAt) AS reportCreatedAt`,
     );
     if (rows.length === 0) {
       await warnIfRelTypeUnknown(ctx, 'varianceExplanation');
@@ -83,15 +103,21 @@ export const progressReportVarianceExplanationExtractor: Extractor = {
     // is worth knowing on its own.
     const seen = new Set<string>();
     const duplicated: string[] = [];
-    const undated: string[] = [];
+    const borrowedFromReport: string[] = [];
+    const stampedNow: string[] = [];
     const values = kept.kept.flatMap((row) => {
       if (seen.has(row.reportId)) {
         duplicated.push(row.reportId);
         return [];
       }
       seen.add(row.reportId);
-      if (!row.createdAt) undated.push(row.reportId);
-      const created = ts(row.createdAt) ?? new Date();
+      if (!row.createdAt) {
+        (row.reportCreatedAt ? borrowedFromReport : stampedNow).push(
+          row.reportId,
+        );
+      }
+      const created =
+        ts(row.createdAt) ?? ts(row.reportCreatedAt) ?? new Date();
       return [
         {
           reportId: row.reportId,
@@ -118,10 +144,20 @@ export const progressReportVarianceExplanationExtractor: Extractor = {
           `Kept the first of each; investigate the source rows.`,
       );
     }
-    if (undated.length > 0) {
+    if (borrowedFromReport.length > 0) {
       ctx.log(
-        `    ⚠ ${undated.length} variance explanation(s) had no createdAt under a NOT ` +
-          `NULL column — stamped now()`,
+        `    ℹ ${borrowedFromReport.length} of ${values.length} variance ` +
+          `explanation(s) carry no createdAt of their own — the source stores no ` +
+          `timestamp for them anywhere, so created_at/updated_at come from the ` +
+          `parent report. Expect this to be ALL of them; see the docblock.`,
+      );
+    }
+    if (stampedNow.length > 0) {
+      ctx.log(
+        `    ⚠ ${stampedNow.length} variance explanation(s) had no createdAt AND ` +
+          `their report has none either — stamped now(), which is a load-time date ` +
+          `with no meaning. Every report in the 2026-08-20 production copy had one, ` +
+          `so a non-zero count here is a new finding worth chasing.`,
       );
     }
 
