@@ -36,6 +36,11 @@ here (migrations run) before loading, so it can point at an empty DB.
 - `verify.ts` — the post-load check, run through `../cutover-verify.run.ts`.
   Reads only Postgres and only what the database cannot enforce for itself; the
   complement to reconciliation, which counts rows but never looks at the result.
+- `coverage-manifest.ts` + `coverage.ts` — the coverage check, run through
+  `../cutover-coverage.run.ts`. The SOURCE enumerates itself and every label,
+  relationship type and property key must be claimed with a disposition; migrated
+  labels are also counted source-vs-target with written-down shortfalls. The only
+  check that can catch a domain or field nobody thought to migrate.
 
 ## Running
 
@@ -224,9 +229,16 @@ Locally it reads 8 keys / 0 duplicates, and production reads 3,430 / 0.
    already happened.
 1. Freeze Neo4j writes (maintenance window) + take a final snapshot. The event
    tables grow continuously, so a copy taken while writes continue will not match
-   what was validated.
+   what was validated. **Stop the app first and let the BullMQ queues drain** —
+   two reasons: the workers deliver whatever Redis still holds, and the ETL
+   process itself boots the full app module, so its own run would start
+   processing any jobs left in the queue it is pointed at.
 2. Point `POSTGRES_URL` at the fresh target; run the full load with
-   `DATABASE=neo4j` and `--batch=100`.
+   `DATABASE=neo4j` and `--batch=100`, and give node a real heap:
+   `NODE_OPTIONS=--max-old-space-size=12288` — the file domain (1.5M nodes) blows
+   the default ~4GB heap, and `yarn start` has been seen swallowing that crash's
+   exit code, so judge the load by its final reconciliation summary, never by
+   `$?` alone.
 3. Check the reconciliation report — every table `✓`, no dropped-row gaps, and the
    "Not hydrated" block empty. The process now exits non-zero on a MISMATCH, and
    `--strict` also fails the run when any row was lost, so this step can be
@@ -247,8 +259,24 @@ Locally it reads 8 keys / 0 duplicates, and production reads 3,430 / 0.
    checked, and "no violations" over a database that never loaded would otherwise
    look identical to a perfect load. The watchlist section is expected to be
    non-empty and never affects the exit code.
-5. Flip `DATABASE=postgres`; smoke-test.
-6. Keep Neo4j as read-only fallback for a few days, then tear down.
+5. **Run `core/cutover-coverage.run` against BOTH databases and require exit 0.**
+   The inverse of every check above: instead of confirming what our lists name,
+   the SOURCE enumerates itself (`db.labels()`, `db.relationshipTypes()`,
+   `db.propertyKeys()`) and every name must be claimed in
+   `cutover/coverage-manifest.ts` — so a domain, edge, or FIELD nobody thought
+   about cannot slip through silently. It also counts every migrated label from
+   the source's side against the target table, requiring any gap to match the
+   manifest's written-down shortfall. Shortfall counts are snapshot-pinned on
+   purpose: on a fresh snapshot the run goes red until each delta's REASON is
+   re-verified — that is the designed behavior, not noise. Open `review` entries
+   (undecided exclusions) also fail the run.
+
+   ```
+   POSTGRES_URL=... yarn start --entryFile core/cutover-coverage.run
+   ```
+
+6. Flip `DATABASE=postgres`; smoke-test.
+7. Keep Neo4j as read-only fallback for a few days, then tear down.
 
 Rollback is instant at any point before the flip: Neo4j is untouched — and the
 run deliberately disables root-object sync and index creation so that stays true
