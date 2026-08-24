@@ -50,6 +50,13 @@ import { type Extractor, type TableStat } from '../cutover.types';
  *   wrong, it would be rejected: Postgres text/jsonb cannot hold a NUL byte. The
  *   read transformer normally parses this on the way out, so the shared
  *   `richText()` helper is the belt to that braces (comments need it too).
+ *
+ * · The creator comes from the [:creator] edge OR the `creator` node property.
+ *   5,368 of the 9,995 retired answers predate the edge and store the creator
+ *   id as a property; requiring the edge silently dropped 54% of the history
+ *   this carry exists to keep (found by cutover-coverage 2026-08-24 — a
+ *   500-node sample of the property values all resolve to live users). The
+ *   edge wins when both exist, matching what the app reads today.
  */
 const PVR_TYPES = [
   ProgressReportTeamNews,
@@ -72,7 +79,9 @@ interface EntryRow {
   responseId: ID;
   variant: string;
   response: unknown;
-  creatorId: ID<'User'>;
+  // Null when the entry has neither a [:creator] edge nor a creator property —
+  // see the docblock; those rows cannot satisfy the NOT NULL column.
+  creatorId: ID<'User'> | null;
   createdAt: string;
   modifiedAt: string | null;
   deletedAt: string | null;
@@ -162,17 +171,32 @@ export const promptVariantResponseExtractor: Extractor = {
       ctx,
       `MATCH (n:PromptVariantResponse)-[:child]->(entry)
        WHERE entry:VariantResponse OR entry:Deleted_VariantResponse
-       MATCH (entry)-[:creator]->(creator:User)
+       OPTIONAL MATCH (entry)-[:creator]->(creator:User)
        RETURN n.id AS responseId, entry.variant AS variant, entry.response AS response,
-              creator.id AS creatorId, toString(entry.createdAt) AS createdAt,
+              coalesce(creator.id, entry.creator) AS creatorId,
+              toString(entry.createdAt) AS createdAt,
               toString(entry.modifiedAt) AS modifiedAt, toString(entry.deletedAt) AS deletedAt`,
     );
 
+    const creatorless = entryRows.filter((row) => row.creatorId == null).length;
+    if (creatorless > 0) {
+      ctx.log(
+        `    ⚠ DROPPED ${creatorless} answer(s) with neither a [:creator] edge nor a ` +
+          `creator property — creator_id is NOT NULL and there is nothing to resolve`,
+      );
+    }
+
     const landedPvrs = new Set<string>(pvrKept.kept.map((row) => row.id));
-    const entriesKept = keepLanded(entryRows, [
-      [landedPvrs, (row) => row.responseId],
-      [landedUsers, (row) => row.creatorId],
-    ]);
+    const entriesKept = keepLanded(
+      entryRows.filter(
+        (row): row is EntryRow & { creatorId: ID<'User'> } =>
+          row.creatorId != null,
+      ),
+      [
+        [landedPvrs, (row) => row.responseId],
+        [landedUsers, (row) => row.creatorId],
+      ],
+    );
     if (entriesKept.skipped > 0) {
       ctx.log(
         `    ⚠ DROPPED ${entriesKept.skipped} answer(s) whose prompt response or creator never landed`,
