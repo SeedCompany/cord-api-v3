@@ -9,10 +9,77 @@ const TEST_DB_PREFIX = 'cord_e2e_';
  * Creates an empty, uniquely named database for the current spec file.
  * The app applies migrations (DrizzleMigrator) and root objects
  * (AdminDrizzleService) itself on boot, so no template/seeding is needed here.
+ *
+ * Unless {@link E2E_REUSE_DB} says otherwise — see below.
  */
+
+/**
+ * Run the specs against an EXISTING database instead of a fresh empty one.
+ *
+ * Set it to a database name and every spec in the run connects to that database
+ * and never drops it:
+ *
+ *   DATABASE=postgres POSTGRES_URL=postgresql://postgres:postgres@localhost:5432/postgres \
+ *   E2E_REUSE_DB=cord_e2e_loaded yarn test:e2e --testPathPatterns 'project'
+ *
+ * (`--testPathPatterns` with the s — jest 30 renamed it, and the old spelling is
+ * rejected outright rather than ignored.)
+ *
+ * ⚠ Across the whole suite use `--maxWorkers=1 --workerIdleMemoryLimit=2GB`, NOT
+ * `--runInBand`: in-band puts all 49 spec files in one process, each booting a
+ * full app against millions of rows, and it exhausts an 8GB heap around the 34th.
+ * One worker is still sequential — which a shared database needs — but recycles.
+ *
+ * This exists to answer one question the cutover ETL cannot answer about itself:
+ * a load can pass `cutover-verify.run` — every reference resolves, nothing points
+ * at a deleted row — and the APPLICATION can still fail on it, because the
+ * verifier checks the shape of the data and not the queries that read it. Only
+ * running the real suite against real loaded rows tests that.
+ *
+ * ⚠ **The specs write.** They create, update and delete, and nothing here rolls
+ * that back. Point this at a THROWAWAY COPY, never at the load itself:
+ *
+ *   create database cord_e2e_loaded template cord_cutover_verify;
+ *
+ * ⚠ Also expect legitimate failures that are not defects. A spec that asserts on
+ * a whole list, or on a count, is written against a database holding only what it
+ * just created; against five million pre-existing rows it fails by design. Those
+ * are worth reading one at a time — the interesting ones are queries that BREAK
+ * (timeouts, wrong joins, unique collisions with real data), not assertions that
+ * merely counted something bigger than they expected.
+ *
+ * Deliberately a separate variable rather than "reuse whatever POSTGRES_URL
+ * names". POSTGRES_URL is already required here (and points at a server, with
+ * ephemeral databases created beside it), so overloading it would mean a stray
+ * export silently turns every e2e run into a run against a real database that it
+ * then mutates. This has to be asked for by name.
+ *
+ * migration-todo(cutover-cleanup): keep past cutover — it is how a rehearsal load
+ * gets exercised — but the Neo4j-shaped bits around it go with the rest.
+ */
+const REUSE_DB = process.env.E2E_REUSE_DB;
+
 export const ephemeralPg = async () => {
   if (process.env.DATABASE !== 'postgres') {
     return undefined;
+  }
+
+  if (REUSE_DB) {
+    if (!process.env.POSTGRES_URL) {
+      throw new Error(
+        'POSTGRES_URL is required alongside E2E_REUSE_DB (it supplies the ' +
+          'host and credentials; E2E_REUSE_DB supplies the database name)',
+      );
+    }
+    const reused = new URL(process.env.POSTGRES_URL);
+    reused.pathname = `/${REUSE_DB}`;
+    // No cleanup: dropping the database the caller asked us to reuse would
+    // destroy the thing under test, and on a shared run would do it while other
+    // spec files are still connected.
+    const keep = async () => {
+      // Intentionally nothing.
+    };
+    return { url: reused.toString(), cleanup: keep };
   }
 
   // Mirror the app's DrizzleService, which refuses to guess a connection when
