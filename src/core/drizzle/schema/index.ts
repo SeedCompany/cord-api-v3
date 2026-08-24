@@ -870,6 +870,50 @@ export const departmentIdBlocks = pgTable('department_id_blocks', {
     .default([]),
 });
 
+/**
+ * Finance-approver config: "user X approves finances for project type Y" —
+ * read by the project workflow to notify approvers on financial-plan
+ * transitions. Ported (not retired) per Rob 2026-08-24: without it those
+ * notifications silently stop at cutover.
+ *
+ * One row per user: Neo4j merges one ProjectTypeFinancialApprover node per
+ * [:financialApprover] user and Gel makes the link exclusive. The source node
+ * holds ONLY the projectTypes array — no id, no timestamps — so the user IS
+ * the row identity.
+ */
+export const financialApprovers = pgTable(
+  'financial_approvers',
+  {
+    userId: text('user_id')
+      .$type<ID<'User'>>()
+      .primaryKey()
+      .references(() => users.id),
+    projectTypes: projectTypeEnum('project_types')
+      .array()
+      .$type<readonly [ProjectType, ...ProjectType[]]>()
+      .notNull(),
+  },
+  (t) => [
+    // An approver with no project types is a delete, not a row — the write
+    // path removes the row when the list empties (matching Neo4j's
+    // detachDelete), and the DB refuses the meaningless state outright.
+    check(
+      'financial_approvers_types_not_empty',
+      sql`cardinality(${t.projectTypes}) > 0`,
+    ),
+  ],
+);
+
+export const financialApproversRelations = relations(
+  financialApprovers,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [financialApprovers.userId],
+      references: [users.id],
+    }),
+  }),
+);
+
 export const partners = pgTable(
   'partners',
   {
