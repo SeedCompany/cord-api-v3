@@ -2,6 +2,7 @@ import { beforeAll, describe, expect, it } from '@jest/globals';
 import { Role } from '~/common';
 import { graphql } from '~/graphql';
 import {
+  createPerson,
   createPin,
   createProject,
   createSession,
@@ -44,5 +45,40 @@ describe('Pin e2e', () => {
     const actual = result.project;
     expect(actual.id).toBe(project.id);
     expect(actual.pinned).toBe(true);
+  });
+
+  it('filters the users list to those pinned by the requester', async () => {
+    const pinnedPerson = await createPerson(app);
+    const unpinnedPerson = await createPerson(app);
+    await createPin(app, pinnedPerson.id, true);
+
+    const UsersByPinnedDoc = graphql(`
+      query usersByPinned($pinned: Boolean!) {
+        users(input: { count: 25, page: 1, filter: { pinned: $pinned } }) {
+          items {
+            id
+            pinned
+          }
+          total
+        }
+      }
+    `);
+
+    const pinnedOnly = await app.graphql.query(UsersByPinnedDoc, {
+      pinned: true,
+    });
+    // Only the person this requester pinned — the project pinned in the test
+    // above must not leak in, and nobody else is pinned.
+    expect(pinnedOnly.users.items.map((item) => item.id)).toEqual([
+      pinnedPerson.id,
+    ]);
+    expect(pinnedOnly.users.items[0]!.pinned).toBe(true);
+
+    const unpinned = await app.graphql.query(UsersByPinnedDoc, {
+      pinned: false,
+    });
+    const unpinnedIds = unpinned.users.items.map((item) => item.id);
+    expect(unpinnedIds).not.toContain(pinnedPerson.id);
+    expect(unpinnedIds).toContain(unpinnedPerson.id);
   });
 });

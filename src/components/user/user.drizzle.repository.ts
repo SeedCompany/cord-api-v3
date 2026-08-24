@@ -30,7 +30,7 @@ import {
 import { PolicyExecutor } from '../authorization/policy/executor/policy-executor';
 import { FileService } from '../file';
 import { type FileId } from '../file/dto';
-import { pinnedByRequester } from '../pin/pinned-by-requester';
+import { pinnedByRequester, pinnedFilter } from '../pin/pinned-by-requester';
 import {
   type AssignOrganizationToUser,
   type CreatePerson,
@@ -240,7 +240,13 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
     if (!this.executor.applyReadFilter(this.resource, conditions)) {
       return EMPTY_PAGE;
     }
-    conditions.push(...userFilterClauses(this.db, input.filter));
+    conditions.push(
+      ...userFilterClauses(
+        this.db,
+        input.filter,
+        this.identity.currentMaybe?.userId,
+      ),
+    );
 
     const sortColumns = {
       fullName: [users.realFirstName, users.realLastName],
@@ -409,15 +415,21 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
  * `users` table. Reusable from sub-filters in other domains (e.g. FieldZone's
  * `director` filter) — the caller composes these with their own join/lookup.
  *
- * Note: `pinned` is not stored on the user row (per-requester state), so it is
- * intentionally not handled here — same migration-todo as the user list itself.
+ * `pinned` is per-requester state, so it needs `requesterId` — the user list
+ * passes it; sub-filter callers currently don't, and for them a `pinned`
+ * filter matches nothing (same as an anonymous requester — the semantics
+ * `pinnedFilter` already defines).
  */
 export const userFilterClauses = (
   db: DrizzleDb,
   filter: UserFilters | undefined,
+  requesterId?: ID<'User'>,
 ): SQL[] => {
   const conditions: SQL[] = [];
   if (!filter) return conditions;
+  if (filter.pinned != null) {
+    conditions.push(pinnedFilter(requesterId, users.id, filter.pinned));
+  }
   if (filter.id) conditions.push(eq(users.id, filter.id));
   if (filter.status) conditions.push(eq(users.status, filter.status));
   if (filter.name) {
