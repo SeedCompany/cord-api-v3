@@ -274,6 +274,13 @@
       "when": 1753920000000,
       "tag": "0038_add_location_edges",
       "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1754006400000,
+      "tag": "0039_add_financial_approvers",
+      "breakpoints": true
     }
   ]
 }
