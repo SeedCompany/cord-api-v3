@@ -59,6 +59,14 @@ const EXEMPT: Record<string, string> = {
   // --- parity: verified the Neo4j counterpart has no invalidation either ---
   'src/components/pin/pin.drizzle.repository.ts':
     'parity — pin.repository.ts extends no invalidating base and never invalidates',
+  'src/components/project/financial-approver/financial-approver.drizzle.repository.ts':
+    'parity — financial-approver-neo4j.repository.ts extends CommonRepository but ' +
+    'writes with hand-built queries (merge / setValues / detachDelete), never one of ' +
+    'its invalidating methods, so Neo4j does not announce an approver change either. ' +
+    'Note the canonical `financial-approver.repository.ts` in this folder is the GEL ' +
+    'arm, not the Neo4j one — the Neo4j arm carries the `-neo4j` infix here, unlike ' +
+    'most domains. Adding invalidation to the Postgres arm alone would introduce a ' +
+    'divergence rather than remove one',
   'src/components/product-progress/product-progress.drizzle.repository.ts':
     'parity — product-progress.repository.ts extends no invalidating base',
   'src/components/progress-summary/progress-summary.drizzle.repository.ts':
