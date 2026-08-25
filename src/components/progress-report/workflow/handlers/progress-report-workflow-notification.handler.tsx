@@ -11,7 +11,10 @@ import { LanguageService } from '../../../language';
 import { PeriodicReportService } from '../../../periodic-report';
 import { ProjectService } from '../../../project';
 import { UserService } from '../../../user';
-import { type ProgressReportStatus as Status } from '../../dto';
+import {
+  type ProgressReport,
+  type ProgressReportStatus as Status,
+} from '../../dto';
 import { type ProgressReportWorkflowEvent } from '../dto/workflow-event.dto';
 import {
   type ProgressReportStatusChangedProps as EmailReportStatusNotification,
@@ -147,7 +150,13 @@ export class ProgressReportWorkflowNotificationHandler {
 
       const project = await this.projectService.readOne(projectId);
       const language = await this.languageService.readOne(languageId);
-      const report = await this.reportService.readOne(reportId);
+      // This handler only ever runs for progress reports (it is wired to the
+      // ProgressReport workflow), but it reads through the generic
+      // PeriodicReportService, whose union no longer agrees on `status` now
+      // that GTL reports carry their own status enum.
+      const report = (await this.reportService.readOne(
+        reportId,
+      )) as ProgressReport;
       // The template only names the actor for human changes — automated ones
       // carry the reason sentence instead — so skip the read entirely there.
       // An agent or unloadable actor degrades to the actor-less sentence.

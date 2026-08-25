@@ -9,10 +9,9 @@ import {
   type UserRefProps,
 } from '~/core/email';
 import { type Language } from '../../../language/dto';
-import { type PeriodicReport } from '../../../periodic-report/dto';
 import { type Project } from '../../../project/dto';
 import { type User } from '../../../user/dto';
-import { ProgressReportStatus } from '../../dto';
+import { type ProgressReport, ProgressReportStatus } from '../../dto';
 import { type ProgressReportWorkflowEvent } from '../dto/workflow-event.dto';
 
 export interface ProgressReportStatusChangedProps {
@@ -27,7 +26,11 @@ export interface ProgressReportStatusChangedProps {
   >;
   project: Pick<Project, 'id' | 'name'>;
   language: Pick<Language, 'id' | 'name' | 'displayName'>;
-  report: Pick<PeriodicReport, 'id' | 'status' | 'start' | 'type'>;
+  // This template only ever renders a Momentum progress report, so it picks
+  // from the concrete type rather than the PeriodicReport union — whose
+  // members no longer agree on `status` now that GTL reports carry their own
+  // status enum.
+  report: Pick<ProgressReport, 'id' | 'status' | 'start' | 'type'>;
   newStatusVal?: ProgressReportStatus;
   previousStatusVal?: ProgressReportStatus;
   workflowEvent: ProgressReportWorkflowEvent;

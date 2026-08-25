@@ -3,7 +3,7 @@ import { type EnumType, makeEnum } from '~/common';
 export type ReportType = EnumType<typeof ReportType>;
 export const ReportType = makeEnum({
   name: 'ReportType',
-  values: ['Financial', 'Progress', 'Narrative'],
+  values: ['Financial', 'Progress', 'Narrative', 'GTL'],
 });
 
 /**
@@ -15,7 +15,10 @@ export const ReportType = makeEnum({
  * app-side counterpart, so a new engagement-parented report type is a one-line
  * change here rather than a hunt through the repository.
  */
-export const engagementParentedReportTypes = new Set<ReportType>(['Progress']);
+export const engagementParentedReportTypes = new Set<ReportType>([
+  'Progress',
+  'GTL',
+]);
 
 export const isEngagementParented = (type: ReportType) =>
   engagementParentedReportTypes.has(type);

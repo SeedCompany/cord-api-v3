@@ -5,6 +5,7 @@ import { resolve } from 'node:path';
 import { type MadeEnum, Role, Sensitivity } from '~/common';
 import { type DrizzleDb, DrizzleService } from '~/core/drizzle';
 import { EngagementStatus } from '../src/components/engagement/dto';
+import { GtlReportStatus } from '../src/components/gtl-report/dto';
 import { PartnerType } from '../src/components/partner/dto';
 import { ReportType } from '../src/components/periodic-report/dto';
 import {
@@ -193,6 +194,7 @@ describePg('Postgres schema invariants', () => {
     ['engagement_status', EngagementStatus],
     ['report_type', ReportType],
     ['progress_report_status', ProgressReportStatus],
+    ['gtl_report_status', GtlReportStatus],
   ];
 
   it.each(enumPairs)(
