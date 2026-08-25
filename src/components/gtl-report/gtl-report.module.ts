@@ -5,10 +5,19 @@ import { PeriodicReportModule } from '../periodic-report/periodic-report.module'
 import { GtlReportGoalDrizzleRepository } from './goals/gtl-report-goal.drizzle.repository';
 import { GtlReportGoalService } from './goals/gtl-report-goal.service';
 import { GtlReportEngagementConnectionResolver } from './gtl-report-engagement-connection.resolver';
+import { GtlReportProseResolver } from './gtl-report-prose.resolver';
 import { GtlReportSectionsResolver } from './gtl-report-sections.resolver';
 import { SyncGtlReportToEngagementDateRange } from './handlers/sync-gtl-report-to-engagement.handler';
 import { GtlReportPracticumDrizzleRepository } from './practicums/gtl-report-practicum.drizzle.repository';
 import { GtlReportPracticumService } from './practicums/gtl-report-practicum.service';
+import { GtlProgressExplanationRepository } from './progress-explanation/gtl-progress-explanation.repository';
+import { GtlProgressExplanationResolver } from './progress-explanation/gtl-progress-explanation.resolver';
+import { GtlReportCommunityImpactDrizzleRepository } from './prose/gtl-report-community-impact.drizzle.repository';
+import { GtlReportCommunityImpactService } from './prose/gtl-report-community-impact.service';
+import { GtlReportPetitionDrizzleRepository } from './prose/gtl-report-petition.drizzle.repository';
+import { GtlReportPetitionService } from './prose/gtl-report-petition.service';
+import { GtlReportPraiseDrizzleRepository } from './prose/gtl-report-praise.drizzle.repository';
+import { GtlReportPraiseService } from './prose/gtl-report-praise.service';
 
 /**
  * GTL (Global Translation Leader) quarterly narrative reports.
@@ -32,6 +41,15 @@ import { GtlReportPracticumService } from './practicums/gtl-report-practicum.ser
     GtlReportGoalService,
     GtlReportPracticumDrizzleRepository,
     GtlReportPracticumService,
+    GtlReportProseResolver,
+    GtlReportCommunityImpactDrizzleRepository,
+    GtlReportCommunityImpactService,
+    GtlReportPraiseDrizzleRepository,
+    GtlReportPraiseService,
+    GtlReportPetitionDrizzleRepository,
+    GtlReportPetitionService,
+    GtlProgressExplanationResolver,
+    GtlProgressExplanationRepository,
     SyncGtlReportToEngagementDateRange,
   ],
 })

@@ -6,3 +6,5 @@ export * from './gtl-report-practicum.dto';
 export * from './gtl-report-status.enum';
 export * from './gtl-report.dto';
 export * from './update-gtl-report-goal.dto';
+export * from './gtl-report-prose.dto';
+export * from './gtl-progress-explanation.dto';

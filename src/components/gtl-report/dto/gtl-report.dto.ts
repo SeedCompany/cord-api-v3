@@ -15,6 +15,11 @@ import { InternshipEngagement } from '../../engagement/dto';
 import { type DefinedFile } from '../../file/dto';
 import { IPeriodicReport } from '../../periodic-report/dto/periodic-report.dto';
 import {
+  GtlReportCommunityImpact,
+  GtlReportPetition,
+  GtlReportPraise,
+} from './gtl-report-prose.dto';
+import {
   SecuredGtlReportStatus as SecuredStatus,
   GtlReportStatus as Status,
 } from './gtl-report-status.enum';
@@ -54,6 +59,9 @@ export class GTLReport extends Interfaces {
 
   static readonly Relations = (() => ({
     ...Resource.Relations(),
+    communityImpact: [GtlReportCommunityImpact],
+    praises: [GtlReportPraise],
+    petitions: [GtlReportPetition],
     ...Commentable.Relations(),
   })) satisfies ResourceRelationsShape;
 
