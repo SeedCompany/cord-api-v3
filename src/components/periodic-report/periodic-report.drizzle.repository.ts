@@ -43,6 +43,7 @@ import {
 import { type BaseNode } from '~/core/neo4j/results';
 import { type ScopedRole } from '../authorization/dto/role.dto';
 import { FileService } from '../file';
+import { GtlReportStatus } from '../gtl-report/dto/gtl-report-status.enum';
 import { ProgressReportStatus } from '../progress-report/dto';
 import { requesterScopeByProject } from '../project/project-member/membership-scope';
 import {
@@ -154,6 +155,14 @@ export class PeriodicReportDrizzleRepository extends DrizzleDtoRepository<
     }
     const isProgress = input.type === 'Progress';
     const engagementParented = isEngagementParented(input.type);
+    // Which status column a new report initialises, if any. The two workflows
+    // run on different enums in different columns, and `periodic_reports`
+    // enforces one biconditional per column — leaving the wrong one null is a
+    // CHECK violation, not a silent no-op. @see migration 0039
+    const initialStatus = {
+      status: isProgress ? ProgressReportStatus.NotStarted : null,
+      gtlStatus: input.type === 'GTL' ? GtlReportStatus.NotStarted : null,
+    };
     // Each report owns a `reportFile` DefinedFile placeholder. The FK is stored
     // here; the (version-less) file node is created by createDefinedFile after
     // the rows land, only for those actually inserted.
@@ -206,7 +215,7 @@ export class PeriodicReportDrizzleRepository extends DrizzleDtoRepository<
             : null,
           start: interval.start.toISODate(),
           end: interval.end.toISODate(),
-          status: isProgress ? ProgressReportStatus.NotStarted : null,
+          ...initialStatus,
           reportFileId,
           narrativeFileId,
         };
@@ -586,6 +595,10 @@ export class PeriodicReportDrizzleRepository extends DrizzleDtoRepository<
       id: row.id,
       type: row.type,
       ...(isProgress && { __typename: 'ProgressReport', status: row.status }),
+      ...(row.type === 'GTL' && {
+        __typename: 'GTLReport',
+        status: row.gtlStatus,
+      }),
       parent,
       start: CalendarDate.fromISO(row.start),
       end: CalendarDate.fromISO(row.end),

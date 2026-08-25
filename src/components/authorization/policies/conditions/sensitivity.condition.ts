@@ -228,8 +228,10 @@ const sensitivityRefForResource = (
         where "e"."id" = "ceremonies"."engagement_id"
       ) <= ${accessLiteral}`;
     case 'ProgressReport':
-      // Progress rows on the shared periodic_reports table are always
+    case 'GTLReport':
+      // Both live on the shared periodic_reports table and are always
       // engagement-parented (never project-parented directly) — see
+      // `engagementParentedReportTypes` and
       // PeriodicReportDrizzleRepository.parentCondition.
       return sql`(
         select "p"."sensitivity" from "projects" "p"

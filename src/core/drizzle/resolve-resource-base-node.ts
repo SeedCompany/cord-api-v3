@@ -212,6 +212,7 @@ const RESOURCE_TABLES: readonly ResourceTable[] = [
     Progress: 'ProgressReport',
     Financial: 'FinancialReport',
     Narrative: 'NarrativeReport',
+    GTL: 'GTLReport',
   }),
   ofSeveralTypes(products, {
     DirectScripture: 'DirectScriptureProduct',
