@@ -161,7 +161,7 @@ export class ProjectResolver {
   }
 
   @Query(() => InternshipProjectListOutput, {
-    description: 'Look up internship projects',
+    description: 'Look up Global Translation Leader projects',
   })
   async internshipProjects(
     @ListArg(ProjectListInput) input: ProjectListInput,

@@ -12,7 +12,10 @@ export const ProjectType = makeEnum({
   values: [
     { value: 'MomentumTranslation', label: 'Momentum' },
     { value: 'MultiplicationTranslation', label: 'Multiplication' },
-    'Internship',
+    // The stored value stays `Internship` — it is a Postgres enum value, a
+    // GraphQL enum value, and a discriminator in ~14 app-level literals.
+    // Only the display label becomes the program's real name.
+    { value: 'Internship', label: 'Global Translation Leaders' },
   ],
   exposeOrder: true,
 });

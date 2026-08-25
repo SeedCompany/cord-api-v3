@@ -30,7 +30,7 @@ class InternshipPositionOptions {
 export class InternshipPositionResolver {
   @ResolveField(() => [InternshipPositionOptions], {
     description:
-      'The available position options for the internship engagement.',
+      'The available position options for the Global Translation Leader engagement.',
   })
   options(): InternshipPositionOptions[] {
     return InternshipPosition.entries
