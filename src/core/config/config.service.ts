@@ -255,7 +255,10 @@ export const makeConfig = (env: EnvironmentService) =>
     };
 
     anonUser = {
-      id: 'anonuserid',
+      // Typed as a User id, not a bare string: it is compared against
+      // `users.id` (which carries `ID<'User'>`) to keep the anonymous system
+      // record out of people lists. Same treatment as defaultOrg.id above.
+      id: 'anonuserid' as ID<'User'>,
     };
 
     cors = (() => {
