@@ -346,6 +346,19 @@ const UNENFORCED: readonly UnenforcedReference[] = [
     why: 'a finance department NUMBER allocated out of a department_id_block, not a row id',
   },
   {
+    table: 'external_department_ids',
+    column: 'department_id',
+    kind: 'not-a-reference',
+    // The same kind of value as projects.department_id above, which is why it
+    // sits beside it — and here it is also the primary key, because the
+    // reservation IS the number. There is deliberately nothing to point at: the
+    // whole purpose of the table is to name department numbers that Intacct
+    // holds and CORD has no row for.
+    why:
+      'a finance department NUMBER that Intacct already holds — reserved so ' +
+      'CORD never hands the same one out, not a row id',
+  },
+  {
     table: 'periodic_reports',
     column: 'report_file_id',
     kind: 'points-at',
