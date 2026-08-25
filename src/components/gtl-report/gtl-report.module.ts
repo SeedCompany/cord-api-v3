@@ -9,6 +9,7 @@ import { GtlReportProseResolver } from './gtl-report-prose.resolver';
 import { GtlReportSectionsResolver } from './gtl-report-sections.resolver';
 import { SyncGtlReportToEngagementDateRange } from './handlers/sync-gtl-report-to-engagement.handler';
 import { GtlReportPracticumDrizzleRepository } from './practicums/gtl-report-practicum.drizzle.repository';
+import { GtlReportPracticumResolver } from './practicums/gtl-report-practicum.resolver';
 import { GtlReportPracticumService } from './practicums/gtl-report-practicum.service';
 import { GtlProgressExplanationRepository } from './progress-explanation/gtl-progress-explanation.repository';
 import { GtlProgressExplanationResolver } from './progress-explanation/gtl-progress-explanation.resolver';
@@ -43,6 +44,7 @@ import { GtlReportWorkflowService } from './workflow/gtl-report-workflow.service
     GtlReportGoalDrizzleRepository,
     GtlReportGoalService,
     GtlReportPracticumDrizzleRepository,
+    GtlReportPracticumResolver,
     GtlReportPracticumService,
     GtlReportProseResolver,
     GtlReportCommunityImpactDrizzleRepository,
