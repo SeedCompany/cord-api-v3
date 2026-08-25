@@ -11,6 +11,9 @@ import {
   Role,
   Sensitivity,
 } from '~/common';
+import { DrizzleService } from '~/core/drizzle';
+import { externalDepartmentIds } from '~/core/drizzle/schema';
+import { DatabaseService } from '~/core/neo4j';
 import { graphql, type InputOf } from '~/graphql';
 import { BudgetStatus } from '../src/components/budget/dto';
 import { PartnerType } from '../src/components/partner/dto';
@@ -1619,6 +1622,67 @@ describe('Project e2e', () => {
       );
 
       expect(departmentId1).not.toBe(departmentId2);
+    });
+  });
+
+  it('skips a department id that Intacct already holds', async () => {
+    // Deliberately NOT gated to one engine. The bug this guards against is the
+    // two engines disagreeing: Neo4j has unioned the externally reserved ids
+    // into the unavailable set since 2025-09, and the Postgres path shipped
+    // without that arm. A Postgres-only test would pass on either behaviour of
+    // the Neo4j path and so could not have caught the divergence.
+    //
+    // The reservation is seeded directly because there is no API for it — it is
+    // a flat list loaded from an Intacct export, with no resolver, service or
+    // DTO on either engine.
+    const reserved = '500200';
+    await runAsAdmin(app, async () => {
+      const partner = await createPartner(app, {
+        // The reserved id is the FIRST in the block, so the allocator returns it
+        // unless it is excluded. Without the exclusion this test reads 500200.
+        departmentIdBlock: { blocks: '500200-500209' },
+      });
+
+      if (process.env.DATABASE === 'postgres') {
+        await app
+          .get(DrizzleService)
+          .client.insert(externalDepartmentIds)
+          .values({ departmentId: reserved, name: 'Reserved in Intacct' })
+          .onConflictDoNothing();
+      } else {
+        await app
+          .get(DatabaseService)
+          .query()
+          .raw(
+            `CREATE (:ExternalDepartmentId {
+               id: $id, departmentId: $departmentId,
+               name: $name, createdAt: datetime()
+             })`,
+            {
+              id: await generateId(),
+              departmentId: reserved,
+              name: 'Reserved in Intacct',
+            },
+          )
+          .run();
+      }
+
+      const project = await createProject(app, {
+        type: ProjectType.MultiplicationTranslation,
+        fieldRegion: fieldRegion.id,
+      });
+      await createPartnership(app, {
+        project: project.id,
+        partner: partner.id,
+      });
+
+      await forceProjectTo(app, project.id, 'PendingFinanceConfirmation');
+      const departmentId = await readDepartmentId(app, project.id);
+
+      expect(departmentId).not.toBe(reserved);
+      // Exactly the next one, not merely "something else" — that pins the
+      // allocator to skipping only the reserved id rather than the whole block.
+      expect(departmentId).toBe('500201');
     });
   });
 
