@@ -5,7 +5,13 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { CalendarDate, DateField, ListArg } from '~/common';
+import {
+  CalendarDate,
+  DateField,
+  DateInterval,
+  ListArg,
+  SecuredFloatNullable,
+} from '~/common';
 import { Loader, type LoaderOf } from '~/core/data-loader';
 import { type Engagement, InternshipEngagement } from '../engagement/dto';
 import {
@@ -47,6 +53,42 @@ export class GtlReportEngagementConnectionResolver {
     });
     periodicReports.primeAll(list.items);
     return list as GtlReportList;
+  }
+
+  @ResolveField(() => SecuredFloatNullable, {
+    description: `
+      How far through the program this Global Translation Leader is, 0-100.
+
+      Purely elapsed time between the engagement's start and end — it says
+      nothing about how much of the growth plan is done. Null until both dates
+      are known. Computed, never stored.
+    `,
+  })
+  programProgress(@Parent() engagement: Engagement): SecuredFloatNullable {
+    // The parent here is the SECURED dto, so its dates are wrapped — this can't
+    // use `engagementRange`, which takes the unsecured shape.
+    const range = DateInterval.tryFrom(
+      engagement.startDate.value,
+      engagement.endDate.value,
+    );
+    if (!range?.isValid) {
+      return { canEdit: false, canRead: true, value: null };
+    }
+    const total = range.length('days');
+    if (total <= 0) {
+      return { canEdit: false, canRead: true, value: null };
+    }
+    // Clamped rather than interval-based: an engagement that has not started
+    // yet would make an inverted interval, and one that has run over would make
+    // an out-of-range one. Both are ordinary states, not errors.
+    const now = CalendarDate.now();
+    const elapsed = now.diff(range.start, 'days').days;
+    const pct = (elapsed / total) * 100;
+    return {
+      canEdit: false,
+      canRead: true,
+      value: Math.round(Math.min(100, Math.max(0, pct))),
+    };
   }
 
   @ResolveField(() => SecuredGTLReport)

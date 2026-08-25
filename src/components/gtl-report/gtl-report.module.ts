@@ -18,6 +18,9 @@ import { GtlReportPetitionDrizzleRepository } from './prose/gtl-report-petition.
 import { GtlReportPetitionService } from './prose/gtl-report-petition.service';
 import { GtlReportPraiseDrizzleRepository } from './prose/gtl-report-praise.drizzle.repository';
 import { GtlReportPraiseService } from './prose/gtl-report-praise.service';
+import { GtlReportWorkflowRepository } from './workflow/gtl-report-workflow.repository';
+import { GtlReportWorkflowResolver } from './workflow/gtl-report-workflow.resolver';
+import { GtlReportWorkflowService } from './workflow/gtl-report-workflow.service';
 
 /**
  * GTL (Global Translation Leader) quarterly narrative reports.
@@ -50,6 +53,9 @@ import { GtlReportPraiseService } from './prose/gtl-report-praise.service';
     GtlReportPetitionService,
     GtlProgressExplanationResolver,
     GtlProgressExplanationRepository,
+    GtlReportWorkflowResolver,
+    GtlReportWorkflowService,
+    GtlReportWorkflowRepository,
     SyncGtlReportToEngagementDateRange,
   ],
 })
