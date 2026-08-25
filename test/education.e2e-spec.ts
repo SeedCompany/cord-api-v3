@@ -80,7 +80,7 @@ describe('Education e2e', () => {
   });
 
   // DELETE EDUCATION
-  it.skip('delete education', async () => {
+  it('delete education', async () => {
     const education = await user.apply(createEducation());
 
     const result = await user.run(

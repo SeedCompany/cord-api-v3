@@ -83,7 +83,7 @@ describe('Unavailability e2e', () => {
   });
 
   // DELETE UNAVAILABILITY
-  it.skip('delete unavailability', async () => {
+  it('delete unavailability', async () => {
     const unavailability = await createUnavailability(app, { user: user.id });
 
     const result = await app.graphql.mutate(

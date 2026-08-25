@@ -631,7 +631,7 @@ describe('Product e2e', () => {
     );
   });
 
-  it.skip('delete product', async () => {
+  it('delete product', async () => {
     const product = await createDirectProduct(app, {
       engagement: engagement.id,
     });

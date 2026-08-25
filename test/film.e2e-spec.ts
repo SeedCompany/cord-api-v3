@@ -97,6 +97,11 @@ describe('Film e2e', () => {
   });
 
   // DELETE FILM
+  //
+  // Skipped for the same reason as `delete story`, which carries the full
+  // explanation: no role is granted delete on Producible, so this mutation is
+  // reachable by nobody. Same on both engines, so it is a product question
+  // rather than a migration one.
   it.skip('delete film', async () => {
     const fm = await createFilm(app);
     const result = await app.graphql.mutate(

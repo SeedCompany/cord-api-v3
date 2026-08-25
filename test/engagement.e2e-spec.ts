@@ -436,7 +436,7 @@ describe('Engagement e2e', () => {
     expect(parseInt(difference)).toBeGreaterThan(0);
   });
 
-  it.skip('deletes engagement', async () => {
+  it('deletes engagement', async () => {
     project = await createProject(app);
     const languageEngagement = await createLanguageEngagement(app, {
       project: project.id,

@@ -97,6 +97,22 @@ describe('Story e2e', () => {
   });
 
   // DELETE STORY
+  //
+  // Still skipped, but no longer without a reason — this was one of a batch
+  // switched off in 2020 ("tests were harmed. skipping them to get this in.
+  // will make an unskip ticket") and the ticket was never made.
+  //
+  // It fails because NO ROLE CAN DELETE A PRODUCIBLE. Every grant in
+  // policies/by-role is `r.Producible.edit.create` — read, edit and create,
+  // never delete — while the line directly below it in the same file reads
+  // `r.Product.edit.create.delete`. So `deleteStory` (and `deleteFilm`, and
+  // `deleteEthnoArt`) exist in the API and are reachable by nobody.
+  //
+  // Identical on Neo4j and Postgres, so this is not a migration question. It
+  // needs a product answer first: either producibles are deliberately
+  // undeletable because products reference them, in which case this test
+  // should assert the refusal and the mutations should probably go, or the
+  // missing `.delete` is an oversight in the policy. Not guessing here.
   it.skip('delete story', async () => {
     const st = await createStory(app);
     const result = await app.graphql.mutate(
