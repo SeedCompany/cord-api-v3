@@ -15,6 +15,12 @@ import { BackfillMultiplicationProgressReportFilePublicMigration } from './migra
 import { DropDuplicateMultiplicationProgressReportsMigration } from './migrations/drop-duplicate-multiplication-progress-reports.migration';
 import { DropInternshipProgressReportsMigration } from './migrations/drop-internship-progress-reports.migration';
 import { ReextractPnpProgressReportsMigration } from './migrations/reextract-all-progress-reports.migration';
+import { ProgressReportNextQuarterPlansDrizzleRepository } from './next-quarter-plans/progress-report-next-quarter-plans.drizzle.repository';
+import { ProgressReportNextQuarterPlansResolver } from './next-quarter-plans/progress-report-next-quarter-plans.resolver';
+import { ProgressReportNextQuarterPlansService } from './next-quarter-plans/progress-report-next-quarter-plans.service';
+import { ProgressReportOtherActivitiesDrizzleRepository } from './other-activities/progress-report-other-activities.drizzle.repository';
+import { ProgressReportOtherActivitiesResolver } from './other-activities/progress-report-other-activities.resolver';
+import { ProgressReportOtherActivitiesService } from './other-activities/progress-report-other-activities.service';
 import { ProgressReportExtraForPeriodicInterfaceRepository } from './progress-report-extra-for-periodic-interface.repository';
 import { ProgressReportDrizzleRepository } from './progress-report.drizzle.repository';
 import { ProgressReportRepository } from './progress-report.repository';
@@ -43,6 +49,13 @@ import { ProgressReportWorkflowModule } from './workflow/progress-report-workflo
     ProgressReportParentResolver,
     ProgressReportEngagementConnectionResolver,
     ReextractPnpResolver,
+    // Postgres-only, so registered directly rather than through splitDb.
+    ProgressReportOtherActivitiesResolver,
+    ProgressReportOtherActivitiesService,
+    ProgressReportOtherActivitiesDrizzleRepository,
+    ProgressReportNextQuarterPlansResolver,
+    ProgressReportNextQuarterPlansService,
+    ProgressReportNextQuarterPlansDrizzleRepository,
     ProgressReportTeamNewsResolver,
     ProgressReportTeamNewsService,
     splitDb(ProgressReportTeamNewsRepository, {
@@ -81,6 +94,8 @@ import { ProgressReportWorkflowModule } from './workflow/progress-report-workflo
     ProgressReportExtraForPeriodicInterfaceRepository,
     ProgressReportTeamNewsService,
     ProgressReportCommunityStoryService,
+    ProgressReportOtherActivitiesService,
+    ProgressReportNextQuarterPlansService,
     ProgressReportMediaModule,
   ],
 })

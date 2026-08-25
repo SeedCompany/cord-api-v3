@@ -16,6 +16,10 @@ import { Policy, Role, variant } from '../util';
       r.ProgressReportCommunityStory,
       r.ProgressReportHighlight,
       r.ProgressReportTeamNews,
+      r.ProgressReportOtherActivities,
+      r.ProgressReportNextQuarterPlans,
+      r.ProgressReportOtherActivities,
+      r.ProgressReportNextQuarterPlans,
     ].map((it) =>
       it.read.specifically((p) => p.responses.when(variant('published')).read),
     ),

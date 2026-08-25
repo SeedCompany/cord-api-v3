@@ -27,6 +27,8 @@ import { member, Policy, Role, variant } from '../util';
     r.ProgressReportCommunityStory,
     r.ProgressReportHighlight,
     r.ProgressReportTeamNews,
+    r.ProgressReportOtherActivities,
+    r.ProgressReportNextQuarterPlans,
   ].flatMap((it) => [
     it.when(member).create.read,
     it.specifically((p) => [
