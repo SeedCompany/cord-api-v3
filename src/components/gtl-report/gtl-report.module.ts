@@ -4,6 +4,7 @@ import { EngagementModule } from '../engagement/engagement.module';
 import { PeriodicReportModule } from '../periodic-report/periodic-report.module';
 import { GtlReportGoalDrizzleRepository } from './goals/gtl-report-goal.drizzle.repository';
 import { GtlReportGoalService } from './goals/gtl-report-goal.service';
+import { GtlGrowthPlanResolver } from './gtl-growth-plan.resolver';
 import { GtlReportEngagementConnectionResolver } from './gtl-report-engagement-connection.resolver';
 import { GtlReportProseResolver } from './gtl-report-prose.resolver';
 import { GtlReportSectionsResolver } from './gtl-report-sections.resolver';
@@ -43,6 +44,7 @@ import { GtlReportWorkflowService } from './workflow/gtl-report-workflow.service
     // Registered bare — Postgres-only, no splitDb. @see components/audit
     GtlReportGoalDrizzleRepository,
     GtlReportGoalService,
+    GtlGrowthPlanResolver,
     GtlReportPracticumDrizzleRepository,
     GtlReportPracticumResolver,
     GtlReportPracticumService,

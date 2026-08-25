@@ -28,6 +28,12 @@ export class GtlReportGoalService {
     return (await this.repo.readMany(ids)).map((dto) => this.secure(dto));
   }
 
+  async listForEngagement(engagementId: ID) {
+    return (await this.repo.listForEngagement(engagementId)).map((dto) =>
+      this.secure(dto),
+    );
+  }
+
   async listSetIn(reportId: ID) {
     return (await this.repo.listSetIn(reportId)).map((dto) => this.secure(dto));
   }

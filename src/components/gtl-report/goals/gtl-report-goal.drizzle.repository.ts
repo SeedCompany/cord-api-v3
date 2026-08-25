@@ -115,6 +115,44 @@ export class GtlReportGoalDrizzleRepository extends DrizzleDtoRepository<
     return this.hydrate(rows);
   }
 
+  /**
+   * Every goal across an engagement's reports — the growth plan as it has
+   * actually accumulated, quarter by quarter.
+   *
+   * Ordered by the setting report's period so the list reads as a timeline
+   * rather than by insertion.
+   */
+  async listForEngagement(engagementId: ID) {
+    const rows = await this.db
+      .select({
+        goal: gtlReportGoals,
+        sensitivity: projects.sensitivity,
+        setInStart: periodicReports.start,
+      })
+      .from(gtlReportGoals)
+      .innerJoin(
+        periodicReports,
+        and(
+          eq(periodicReports.id, gtlReportGoals.setInReportId),
+          isNull(periodicReports.deletedAt),
+        ),
+      )
+      .innerJoin(engagements, eq(engagements.id, periodicReports.engagementId))
+      .innerJoin(projects, eq(projects.id, engagements.projectId))
+      .where(
+        and(
+          eq(periodicReports.engagementId, engagementId as ID<'Engagement'>),
+          isNull(gtlReportGoals.deletedAt),
+        ),
+      )
+      .orderBy(
+        asc(periodicReports.start),
+        asc(gtlReportGoals.order),
+        asc(gtlReportGoals.id),
+      );
+    return this.hydrate(rows);
+  }
+
   async create(input: CreateGtlReportGoal) {
     const id = await generateId<ID<'GtlReportGoal'>>();
     await this.db.insert(gtlReportGoals).values({
