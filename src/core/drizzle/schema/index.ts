@@ -869,6 +869,27 @@ export const departmentIdBlocks = pgTable('department_id_blocks', {
 });
 
 /**
+ * Department IDs that already exist in Intacct, the accounting system, and so
+ * must never be assigned to a CORD project.
+ *
+ * A reservation list rather than an entity: nothing references these rows and
+ * they reference nothing. Their whole purpose is to be subtracted from the pool
+ * of available IDs when set-department-id.handler.ts picks the next one. The
+ * department ID is the primary key because the reservation is the identity —
+ * the source nodes carry an apoc-generated uuid that names nothing.
+ *
+ * See migration 0040 for why there is no CHECK on the code's shape and no
+ * deleted_at.
+ */
+export const externalDepartmentIds = pgTable('external_department_ids', {
+  departmentId: text('department_id').primaryKey(),
+  name: text('name').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+/**
  * Finance-approver config: "user X approves finances for project type Y" —
  * read by the project workflow to notify approvers on financial-plan
  * transitions. Ported (not retired) per Rob 2026-08-24: without it those

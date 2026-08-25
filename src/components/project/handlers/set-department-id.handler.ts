@@ -106,9 +106,10 @@ export class SetDepartmentId {
    * generate_series` over the `int4multirange` don't have a clean
    * query-builder form.
    *
-   * `external_department_ids` exclusion is dropped — that table is part of an
-   * unmigrated domain. migration-todo: re-add the exclusion when that domain
-   * ports (probably with the broader Finance/Admin work).
+   * `external_department_ids` — the IDs Intacct already holds — is unioned into
+   * the used set exactly as the Neo4j path does. It is a flat reservation list
+   * with no owner and no lifecycle, so it needs no domain of its own; see
+   * migration 0040.
    */
   private async assignDepartmentIdPg(project: UnsecuredDto<Project>) {
     const isMultiplication = project.type === 'MultiplicationTranslation';
@@ -186,8 +187,12 @@ export class SetDepartmentId {
           used as (
             select department_id from projects
             where department_id is not null and deleted_at is null
-            -- migration-todo: also exclude external_department_ids when that
-            -- table migrates (likely Admin domain).
+            -- Same union the Neo4j path builds: an ID Intacct already holds is
+            -- as unavailable as one a project already has. Dropping this arm is
+            -- silent — CORD cannot see an Intacct collision, and the unique
+            -- index on projects.department_id will not catch one either.
+            union
+            select department_id from external_department_ids
           )
           select dept_id as "nextId" from enumerated
           where dept_id not in (select department_id from used)
