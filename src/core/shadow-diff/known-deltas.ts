@@ -70,6 +70,48 @@ export const knownDeltas: readonly KnownDeltaRule[] = [
     path: /(^|\.)(status|timezone)(\.|$)/,
   },
   {
+    ref: 'S6',
+    reason:
+      'ETL orDefault coalescing accepted as new truth — same class as the ' +
+      '2026-07-14 decision, extended to project.presetInventory 2026-08-25 ' +
+      'after measuring the field. It marks a project as exposed to major ' +
+      'investors to fund directly, and it has been retired in practice since ' +
+      'early 2024: both Gel repositories hardcode false ("Not implemented ' +
+      'going forward"), the last true was written 2024-03-28 and the last ' +
+      'false 2024-01-31, while nulls are still being written today ' +
+      '(2026-08-18). So the 2,185 null-or-absent projects are simply the ones ' +
+      'created after the feature stopped being maintained — never decided ' +
+      'false, never asked — and both answers mean "not in the preset ' +
+      'inventory". The column is NOT NULL DEFAULT false by design ' +
+      '(migration 0010) and the DTO declares a plain SecuredBoolean.',
+    op: /^project/,
+    persona: /./,
+    path: /(^|\.)presetInventory(\.|$)/,
+  },
+  {
+    // Deliberately NOT folded into the rule above. That one says "the property
+    // was missing"; this project's was not — it has TWO simultaneously-active
+    // presetInventory properties, true at 18:26:22.331 and false 357ms later,
+    // which the Neo4j model does not allow for a single-valued field. Neo4j's
+    // read returns the OLDER (true); the ETL took the newer (false), which is
+    // what the last write actually said. Filing it under "coalescing" would
+    // hide a source data-integrity bug behind an accepted decision.
+    //
+    // Measured 2026-08-25: exactly ONE project has duplicate active
+    // presetInventory properties, so this is an anomaly and not a class. If a
+    // later snapshot makes it more than one, this rule stops matching by id
+    // and the run goes red — which is the intent.
+    ref: 'S6-dup — a source anomaly, not a coalescing decision',
+    reason:
+      'project ZBTs8pD2lPx holds two active presetInventory properties in ' +
+      'Neo4j (true, then false 357ms later). Neo4j reads the older, the ETL ' +
+      'carried the newer. The ETL value is the defensible one; the source row ' +
+      'is what needs fixing.',
+    op: /^project\.byId:ZBTs8pD2lPx/,
+    persona: /./,
+    path: /(^|\.)presetInventory(\.|$)/,
+  },
+  {
     ref: 'S8',
     reason:
       'Orphaned-partnership phantom counts (decided 2026-07-14, drop-and-log): ' +
@@ -126,8 +168,14 @@ export const knownDeltas: readonly KnownDeltaRule[] = [
       '⚠ STILL DISABLED, and not because the delta is unconfirmed: the same ' +
       'path also carries the anonymous-user difference (Postgres returns 2376 ' +
       'users to Neo4j`s 2375 — `anonuserid` is labelled AnonUser and Neo4j drops ' +
-      'it, Postgres lists it). Enabling this now would hide that. Enable once the ' +
-      'user list excludes the anonymous user.',
+      'it, Postgres lists it). Enabling this now would hide that. ' +
+      'UPDATE 2026-08-25: the user-list fix is written and lands on develop via ' +
+      'branch `pg-exclude-anon-user` (the list now excludes config.anonUser.id, ' +
+      'since there is no AnonUser marker column to read — see the manifest ' +
+      'entry). It is NOT on this lineage yet; it arrives with the next catch-up ' +
+      'merge. Enable this rule then, and confirm on a fresh capture that the ' +
+      'users list totals match before trusting it — enabling it early would ' +
+      'restore exactly the masking this note exists to prevent.',
     op: /^users\.list\.default$/,
     persona: /./,
     path: /^data\.users\.items\[\d+\]/,

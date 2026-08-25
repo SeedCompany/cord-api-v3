@@ -116,8 +116,25 @@ export const labels: Readonly<Record<string, Disposition>> = {
   // ── Interface / marker labels — carried implicitly ─────────────────────────
   BaseNode: structural('the universal interface label every entity carries'),
   Actor: structural('interface over User + SystemAgent (2,376 + 2 = 2,378)'),
-  AnonUser: structural(
-    'marker on the anonymous user; the node itself migrates via its User label',
+  // Reclassified from `structural` 2026-08-25. That was wrong, and the wrong
+  // way round: `structural` promises the information is carried implicitly by
+  // the target schema's shape, and this one is not carried at all. Compare
+  // RootUser directly below, which genuinely is — the extractor reads the label
+  // and writes users.is_root. There is no equivalent column for this one, so
+  // after the load nothing in the database can say which row is the anonymous
+  // user. That is exactly what let it show up in the people list on Postgres
+  // where Neo4j had left it out (found by shadow-diff as a 2,376-vs-2,375
+  // difference in the user list total).
+  AnonUser: excluded(
+    'the marker on the anonymous user. The USER ROW migrates via its User ' +
+      'label; the marker itself does not, and does not need to — the ' +
+      'anonymous user is a fixed configured id (config.anonUser.id, ' +
+      "'anonuserid'), which is what both engines actually identify it by, and " +
+      'the id is preserved. Consumers must use that constant rather than look ' +
+      'for a column: the people list now excludes the row that way ' +
+      '(user.drizzle.repository.ts). Nothing else in src/ reads the id except ' +
+      'the Neo4j bootstrap that creates the node, so the record has no other ' +
+      'reader to break.',
   ),
   RootUser: structural(
     'marker on the root user; carried as users.is_root = true (the user extractor reads this label)',
