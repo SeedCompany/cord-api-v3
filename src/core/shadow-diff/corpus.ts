@@ -21,12 +21,40 @@ import { type CorpusEntry } from './types';
  *
  * Field selections cover MIGRATED-BACKED fields only. Every exclusion is
  * commented with why, so re-adding at each domain land is a grep away.
+ *
+ * ⚠ That last sentence was true and nobody acted on it. Between 2026-07-30 and
+ * 2026-08-25 every domain named in an exclusion landed — Language, Engagement,
+ * Pin, Location, Partnership, Budget — and the exclusions stayed, so the gate
+ * kept reporting a clean comparison over a corpus that had quietly stopped
+ * asking about the fields most likely to differ. An exclusion here is a debt
+ * with no due date attached, which is why it went unpaid.
+ *
+ * So: when a domain lands, grep this file for its name and re-add. And when
+ * you change anything here, run
+ *
+ *     node src/core/shadow-diff/validate-corpus.ts
+ *
+ * BEFORE spending a capture run. An invalid selection fails on BOTH engines,
+ * so the two captures record matching errors and the diff reports them as
+ * identical — a broken corpus entry looks exactly like a passing one. That
+ * validator caught three mistakes in this file's own widening pass.
  */
 
 // ─── users ───────────────────────────────────────────────────────────────────
-// Excluded: isIntern (engagement-derived; PG stubs it — migration-todo in
-//   user.drizzle.repository.ts), pinned (Pin domain not migrated).
-// Excluded: knownLanguages (Language not landed).
+// `pinned` IS now covered — it was excluded as an unmigrated domain and the
+// Pin domain has since landed and loads (1,201 rows).
+//
+// `isIntern` is NOT here, and cannot be: it is not exposed in GraphQL at all.
+// It is an internal DTO field feeding a Marketing policy condition, so the old
+// note calling it an exclusion was misleading — there is no query that could
+// have selected it. It is still worth knowing that Postgres now computes it
+// from the engagement join rather than stubbing it, because a wrong value
+// changes what Marketing users are allowed to see; that shows up here only
+// indirectly, through Marketing-persona reads.
+//
+// `knownLanguages` is also not selected: the source graph has no
+// `knownLanguage` relationship at all (verified against prod), so both engines
+// return an empty list and the comparison would assert nothing.
 // photo IS included (File-domain boundary resolves via the Neo4j file repo on
 //   both engines); its null-shape difference is registered as known-delta U14.
 const userFields = /* GraphQL */ `
@@ -47,6 +75,7 @@ const userFields = /* GraphQL */ `
   roles { value canRead canEdit }
   title { value canRead canEdit }
   photo { canRead canEdit value { id } }
+  pinned
 `;
 
 const userById = /* GraphQL */ `
@@ -73,14 +102,17 @@ const userById = /* GraphQL */ `
           end { value canRead canEdit }
         }
       }
-      # items excluded on the three lists below:
-      # - organizations/partners: userId-filtered from-user reads are not
-      #   validated on PG yet; can* perms are policy-driven (engine-agnostic).
-      # - locations: PG listLocationsFromNode is an EMPTY_PAGE stub
-      #   (migration-todo in location.drizzle.repository.ts).
+      # locations now selects its items: listLocationsFromNode is a real query
+      # on Postgres, not the EMPTY_PAGE stub the old note described.
+      # organizations/partners still take perms only — userId-filtered
+      # from-user reads are not validated on PG yet, and the can* fields are
+      # policy-driven and so engine-agnostic either way.
       organizations { canRead canCreate }
       partners { canRead canCreate }
-      locations { canRead canCreate }
+      locations {
+        canRead canCreate total hasMore
+        items { id name { value canRead canEdit } }
+      }
     }
   }
 `;
@@ -307,8 +339,8 @@ const fieldRegionsList = /* GraphQL */ `
 `;
 
 // ─── organizations ───────────────────────────────────────────────────────────
-// Excluded: locations sub-list (PG listLocationsFromNode is an EMPTY_PAGE
-//   stub — migration-todo in location.drizzle.repository.ts).
+// The locations sub-list IS now covered — `listLocationsFromNode` is a real
+// query on Postgres, not the EMPTY_PAGE stub the old note described.
 const organizationById = /* GraphQL */ `
   query ShadowOrganizationById($id: ID!) {
     organization(id: $id) {
@@ -340,6 +372,20 @@ const organizationById = /* GraphQL */ `
         canRead
         canEdit
       }
+      locations(input: { count: 25 }) {
+        canRead
+        canCreate
+        total
+        hasMore
+        items {
+          id
+          name {
+            value
+            canRead
+            canEdit
+          }
+        }
+      }
     }
   }
 `;
@@ -357,11 +403,12 @@ const organizationsList = /* GraphQL */ `
 `;
 
 // ─── partners ────────────────────────────────────────────────────────────────
-// Excluded: languageOfWiderCommunication / languageOfReporting /
-//   languagesOfConsulting (Language not landed on PG).
-// Excluded: pinned (Pin domain not migrated; PG stubs false).
-// Excluded: projects / languages / engagements / people sub-lists — cross-
-//   domain lists; projects has its own corpus entries, the rest aren't landed.
+// The three language links and `pinned` ARE now covered — Language and Pin
+// have both landed, so the reasons those were excluded are gone.
+// Still excluded: projects / languages / engagements / people sub-lists —
+//   cross-domain lists. Projects has its own corpus entries, engagements is
+//   covered from the engagement side, and `people` is filtered by organization
+//   membership, which reads through a path this corpus covers elsewhere.
 const partnerById = /* GraphQL */ `
   query ShadowPartnerById($id: ID!) {
     partner(id: $id) {
@@ -446,6 +493,28 @@ const partnerById = /* GraphQL */ `
           id
         }
       }
+      languageOfWiderCommunication {
+        canRead
+        canEdit
+        value {
+          id
+        }
+      }
+      languageOfReporting {
+        canRead
+        canEdit
+        value {
+          id
+        }
+      }
+      languagesOfConsulting {
+        canRead
+        canEdit
+        value {
+          id
+        }
+      }
+      pinned
     }
   }
 `;
@@ -463,10 +532,18 @@ const partnersList = /* GraphQL */ `
 `;
 
 // ─── projects (+ projectMembers via team) ────────────────────────────────────
-// Excluded: pinned (Pin stub), engagementTotal (stubbed 0 until Engagement
-//   migrates), engagements (Engagement not landed), primaryPartnership (PG
-//   hydrates null — migration-todo in project.drizzle.repository.ts),
-//   budget/changeRequests (Budget/PCR not landed / excluded from migration).
+// `pinned`, `engagements` and `budget` ARE now covered — Pin, Engagement and
+// Budget have all landed. `engagements.total` also covers what the old note
+// called `engagementTotal`, which is an internal field with no GraphQL
+// counterpart; it is no longer stubbed at 0 either way.
+//
+// STILL EXCLUDED — `primaryPartnership`, and this one is a real gap rather
+// than a stale note: Postgres returns a hardcoded null
+// (project.drizzle.repository.ts) while Neo4j hydrates it AND supports
+// filtering on it. Partnership has migrated, so the blocker is gone and only
+// the wiring is missing. Selecting it here would just record a known
+// difference on every project; it needs the repository fixed first.
+// Still excluded: changeRequests — changesets are not carried forward.
 // rootDirectory value is id-only (File-domain boundary; column parity only).
 const projectById = /* GraphQL */ `
   query ShadowProjectById($id: ID!) {
@@ -613,6 +690,24 @@ const projectById = /* GraphQL */ `
           }
         }
       }
+      pinned
+      budget {
+        canRead
+        canEdit
+        value {
+          id
+        }
+      }
+      engagements(input: { count: 25 }) {
+        canRead
+        canCreate
+        total
+        hasMore
+        items {
+          id
+          __typename
+        }
+      }
     }
   }
 `;
@@ -748,7 +843,10 @@ const notificationsList = /* GraphQL */ `
 
 // ─── languages ───────────────────────────────────────────────────────────────
 // Added 2026-07-30. Excluded and why:
-//   tools           — ToolUsage has no table on this branch.
+//   tools           — NOW COVERED. It was excluded because ToolUsage had no
+//                     table; `tool_usages` now exists and loads (1,033 rows),
+//                     and the field resolves through a tool-usage loader that
+//                     never touches the audit trail.
 //   history         — resource_mutations exists but the ETL does not load it, so
 //                     Postgres would be empty against a populated Neo4j.
 //   firstScripture  — union over engagement/product derivation; covered
@@ -786,6 +884,10 @@ const languageFields = /* GraphQL */ `
     name { value canRead canEdit }
     population { value canRead canEdit }
   }
+  tools {
+    canRead canCreate total hasMore
+    items { id tool { id } }
+  }
 `;
 
 const languagesList = /* GraphQL */ `
@@ -814,9 +916,15 @@ const languageById = /* GraphQL */ `
 // Read through `engagement(id)` (the interface) rather than
 // `languageEngagement(id)`, so one document covers BOTH subtypes and the
 // sampled id set does not have to be split by type.
-// Excluded: pnp / pnpExtractionResult (File wave), partnershipsProducingMediums
-// (no table on this branch), changeset + changesetDiff (changesets are not
-// carried forward), tools, history, usingAIAssistedTranslation (tool-derived).
+// partnershipsProducingMediums IS now covered — it had no table when this was
+// written and now loads (1,906 rows).
+// Still excluded: pnp / pnpExtractionResult — `pnp_extraction_results` does
+//   load now, but the field hangs off the PnP FILE, which still answers from
+//   the Neo4j file repository on both engines, so it would compare one source
+//   with itself.
+// Still excluded: changeset + changesetDiff (changesets are not carried
+//   forward), history (`resource_mutations` is not loaded by the ETL),
+//   usingAIAssistedTranslation (tool-derived).
 const engagementsList = /* GraphQL */ `
   query ShadowEngagements($input: EngagementListInput) {
     engagements(input: $input) {
@@ -1007,6 +1115,20 @@ const engagementById = /* GraphQL */ `
           }
         }
       }
+      ... on LanguageEngagement {
+        partnershipsProducingMediums {
+          canRead
+          canCreate
+          total
+          hasMore
+          items {
+            medium
+            partnership {
+              id
+            }
+          }
+        }
+      }
     }
   }
 `;
@@ -1156,11 +1278,19 @@ const productById = /* GraphQL */ `
 `;
 
 // ─── periodic + progress reports ─────────────────────────────────────────────
-// Excluded: reportFile / narrativeFile (File wave — the ids are carried but the
-// file_nodes rows are not, so both engines would answer from different truths),
-// media / featuredMedia / pnpExtractionResult (File-keyed), varianceExplanation
-// and workflowEvents (NO Postgres table exists for either — a real gap, see
-// src/core/cutover/README.md), tools, history.
+// varianceExplanation and workflowEvents ARE now covered. They were excluded
+// because no Postgres table existed for either, which the note called a real
+// gap; both tables now exist and load (5,725 and 47,498 rows). This is exactly
+// the case the header warns about — an exclusion that outlived its reason.
+//
+// Still excluded: reportFile / narrativeFile / media / featuredMedia /
+// pnpExtractionResult — file_nodes DOES load now, but a DefinedFile answers
+// through the Neo4j file repository on both engines, so these compare the same
+// source twice and prove nothing about the migration. Revisit when the file
+// domain reads from Postgres.
+// Still excluded: tools, history — `resource_mutations` exists as a table but
+// the ETL does not load it (verified against the 2026-08-25 load), so Postgres
+// would answer empty against a populated Neo4j.
 const periodicReportsList = /* GraphQL */ `
   query ShadowPeriodicReports($input: PeriodicReportListInput) {
     periodicReports(input: $input) {
@@ -1280,6 +1410,31 @@ const periodicReportById = /* GraphQL */ `
               canRead
               canEdit
             }
+          }
+        }
+        varianceExplanation {
+          reasons {
+            value
+            canRead
+            canEdit
+          }
+          scheduleStatus
+        }
+        workflowEvents {
+          id
+          at
+          status
+          transition {
+            id
+            label
+            to
+            type
+          }
+          who {
+            value {
+              id
+            }
+            canRead
           }
         }
       }
