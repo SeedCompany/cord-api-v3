@@ -19,7 +19,14 @@ import { type BaseNode, isBaseNode } from '~/core/neo4j/results';
 import { ResourceLoader, ResourcesHost } from '~/core/resources';
 import { ResourceMutatedHook } from '../audit/resource-mutated.hook';
 import { Privileges } from '../authorization';
-import { type CreatePost, Post, Postable, type UpdatePost } from './dto';
+import {
+  type CreatePost,
+  Post,
+  Postable,
+  type PostShareability,
+  reachesAtLeast,
+  type UpdatePost,
+} from './dto';
 import { type PostListInput, type SecuredPostList } from './dto/list-posts.dto';
 import { PostRepository } from './post.repository';
 
@@ -82,6 +89,69 @@ export class PostService {
     );
 
     return this.secure(updated);
+  }
+
+  /**
+   * Record a moderator's clearance on one or more posts.
+   *
+   * Two checks, and they are different questions:
+   *  * may this person moderate at all — edit access to `approvedShareability`,
+   *    which is what ModeratePostsPolicy grants;
+   *  * is the requested clearance within what the author asked for — a
+   *    moderator may narrow a post's reach or confirm it, never widen it.
+   *
+   * The second is not a permissions question. Widening someone else's
+   * disclosure is a different act from approving it, and it should not be
+   * reachable by fat-fingering a dropdown on a queue screen.
+   */
+  async moderate(
+    ids: ReadonlyArray<ID<'Post'>>,
+    shareability: PostShareability,
+  ): Promise<Post[]> {
+    const objects = await this.repo.readMany(ids);
+    if (objects.length !== ids.length) {
+      throw new NotFoundException('Could not find every post', 'ids');
+    }
+
+    for (const object of objects) {
+      this.privileges
+        .for(Post, object)
+        .verifyCan('edit', 'approvedShareability');
+
+      if (
+        reachesAtLeast(shareability, object.shareability) &&
+        shareability !== object.shareability
+      ) {
+        throw new InputException(
+          `Cannot clear a post wider than its author asked for` +
+            ` (requested ${object.shareability})`,
+          'shareability',
+        );
+      }
+    }
+
+    const updated = await this.repo.moderate(ids, shareability);
+
+    for (const object of updated) {
+      await this.hooks.run(
+        new ResourceMutatedHook('Post', object.id, 'Update', {
+          approvedShareability: shareability,
+        }),
+      );
+    }
+
+    return updated.map((dto) => this.secure(dto));
+  }
+
+  /**
+   * Posts on these parents that nobody has cleared yet.
+   *
+   * Reach that never needed review was cleared on insert, so an unreviewed row
+   * is by construction one that does need a human.
+   */
+  async listAwaitingModeration(parentIds: readonly ID[]): Promise<Post[]> {
+    const results = await this.repo.listAwaitingModeration(parentIds);
+    return results.map((dto) => this.secure(dto));
   }
 
   async delete(id: ID): Promise<void> {
