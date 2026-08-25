@@ -47,7 +47,10 @@
  * measured and root-caused against the 2026-08-24 production copy, loaded from
  * current HEAD into `cord_cutover_r2` (2026-08-24; supersedes the 2026-08-20
  * `cord_cutover_verify` load, which predates the creator-fallback fix and
- * migrations 0039/0040). On a newer snapshot the numbers WILL drift and the run
+ * migration 0039). That load also built a `pnp_data` table, from a migration
+ * since withdrawn — see the PnpData entry. It is harmless: nothing counts a
+ * table the schema no longer declares, so no reload is owed on its account.
+ * On a newer snapshot the numbers WILL drift and the run
  * WILL go red — that is the designed behavior: an unexplained delta blocks
  * until someone re-verifies the reason still holds and updates the number.
  * Never update a count without re-verifying its reason.
@@ -973,24 +976,23 @@ export const labels: Readonly<Record<string, Disposition>> = {
       'array, so the user is the row identity). Ported, not retired: the project workflow ' +
       'notifies these approvers on five transitions (Rob, 2026-08-24)',
   },
-  PnpData: {
-    kind: 'migrated',
-    extractor: 'pnp-data',
-    table: 'pnp_data',
-    to:
-      'pnp_data (ARCHIVE — no app reader): per-quarter figures on language engagements, the ' +
-      'retired predecessor of ProgressSummary. Carried verbatim, importer bugs included ' +
-      '(15 year-0 rows). Archived rather than dropped (Rob, 2026-08-24)',
-    shortfall: [
-      {
-        count: 1,
-        reason:
-          'the one node whose owning engagement is soft-deleted — the engagement never lands ' +
-          'and engagement_id is NOT NULL (measured 2026-08-24; the other 69 owning engagements ' +
-          'all land, verified by the 104/105 load into cord_cutover_r2)',
-      },
-    ],
-  },
+  PnpData: excluded(
+    '105 nodes of per-quarter planned/actual figures written onto language engagements by the ' +
+      'pre-2022 PnP importer — the retired predecessor of ProgressSummary. Nothing in src/ reads ' +
+      'or writes them. Dropped, and this entry states what that gives up rather than pretending ' +
+      'it is nothing: 90 rows carry a real year (2020-2021) and the other 15 are importer junk ' +
+      '(year and quarter both 0; 6 of the 90 also have an unstamped quarter). They are NOT ' +
+      'duplicates of the modern model — checked 2026-08-24 by joining each (engagement, fiscal ' +
+      'quarter) to its ProgressReport: only 31 of the 90 have modern ProgressSummary figures at ' +
+      'all (just 56 even have the report), and sampled covered rows disagree in value (the ' +
+      'modern numbers are later re-extractions, on a 0-1 scale where these are 0-100). So this ' +
+      'is a real loss of ~90 historical figures, taken knowingly: management confirmed the ' +
+      'legacy figures are not needed (Rob, 2026-08-25), superseding the 2026-08-24 decision to ' +
+      'archive them into a pnp_data table. The archive work (migration 0040 + pnp-data.extractor) ' +
+      'was written and is recoverable at tag archive/pnp-data if that call is ever reversed. ' +
+      'NOTE: this is the retired PnpData label ONLY. The live PnP extraction model is untouched ' +
+      '— PnpExtractionResult, engagements.pnp_id, and products.pnp_index all still migrate.',
+  ),
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1136,8 +1138,8 @@ export const relationshipTypes: Readonly<Record<string, Disposition>> = {
       'records hold NULL (count(p.value) = 0, probed 2026-08-24), so dropping it loses ' +
       'literally nothing. Decided: drop (Rob, 2026-08-24)',
   ),
-  pnpData: carried(
-    'pnp_data rows — the owning edge becomes pnp_data.engagement_id (the archive table)',
+  pnpData: excluded(
+    'the LanguageEngagement→PnpData edges — dropped with the PnpData label (Rob, 2026-08-25)',
   ),
   token: excluded(
     'the User→Token session edges (223,387) — dropped with the Token label (Rob, 2026-08-24)',
@@ -1574,12 +1576,15 @@ export const propertyKeys: Readonly<Record<string, Disposition>> = {
     'as countError — zero occurrences; problems live on [:problem] edges',
   ),
 
-  // ── PnpData figures — archived with the PnpData label (Rob, 2026-08-24) ────
-  quarter: carried('pnp_data.quarter'),
-  year: carried('pnp_data.year'),
-  progressActual: carried('pnp_data.progress_actual'),
-  progressPlanned: carried('pnp_data.progress_planned'),
-  variance: carried('pnp_data.variance'),
+  // ── PnpData figures — dropped with the PnpData label (Rob, 2026-08-25) ─────
+  // All five live ONLY on PnpData nodes: no other extractor reads any of them,
+  // and the modern equivalents are separate keys on ProgressSummary/Product.
+  // The figures themselves are the loss the PnpData label entry describes.
+  quarter: excluded('a PnpData figure — dropped with that label'),
+  year: excluded('a PnpData figure — dropped with that label'),
+  progressActual: excluded('a PnpData figure — dropped with that label'),
+  progressPlanned: excluded('a PnpData figure — dropped with that label'),
+  variance: excluded('a PnpData figure — dropped with that label'),
 
   // ── Config nodes ────────────────────────────────────────────────────────────
   projectTypes: carried(
