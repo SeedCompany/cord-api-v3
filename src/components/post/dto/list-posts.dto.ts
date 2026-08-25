@@ -2,23 +2,34 @@ import { InputType, ObjectType } from '@nestjs/graphql';
 import {
   FilterField,
   type ID,
+  OptionalField,
   Order,
   PaginatedList,
   SecuredList,
   SortablePaginationInput,
 } from '~/common';
-import { type PostType } from './post-type.enum';
+import { PostType } from './post-type.enum';
 import { Post } from './post.dto';
 
 @InputType()
 export abstract class PostFilters {
+  /**
+   * Server-side only — no `@Field`, so callers cannot set it. The Postable
+   * resolver always overwrites it with the parent it is resolving for.
+   */
   readonly parentId?: ID;
 
-  /**
-   * Internal, like `parentId`: set by a resolver that owns a single kind of
-   * post — GTL's prayer section — never by a caller.
-   */
-  readonly type?: PostType;
+  @OptionalField(() => [PostType], {
+    description: `
+      Only these kinds of post.
+
+      Exists so a surface dedicated to one kind — an engagement's prayer feed,
+      say — can page through just that kind. Filtering after the fetch instead
+      would make page sizes lie, since the server would count and slice over
+      everything.
+    `,
+  })
+  readonly types?: readonly PostType[];
 }
 
 @InputType()
@@ -26,7 +37,7 @@ export class PostListInput extends SortablePaginationInput<keyof Post>({
   defaultSort: 'createdAt',
   defaultOrder: Order.DESC,
 }) {
-  @FilterField(() => PostFilters, { internal: true })
+  @FilterField(() => PostFilters)
   readonly filter?: PostFilters;
 }
 

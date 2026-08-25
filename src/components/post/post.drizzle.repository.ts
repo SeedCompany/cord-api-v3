@@ -18,13 +18,7 @@ import {
 } from '~/core/drizzle';
 import { engagements, posts, projectMembers } from '~/core/drizzle/schema';
 import { type BaseNode } from '~/core/neo4j/results';
-import {
-  type CreatePost,
-  needsModeration,
-  Post,
-  type PostShareability,
-  type UpdatePost,
-} from './dto';
+import { type CreatePost, needsModeration, Post, type UpdatePost } from './dto';
 import { type PostListInput } from './dto/list-posts.dto';
 
 @Injectable()
@@ -108,10 +102,6 @@ export class PostDrizzleRepository extends DrizzleDtoRepository<
       type: c.type,
       shareability: c.shareability,
       body: c.body,
-      // Injected by getActualChanges upstream of both engines; Neo4j persists
-      // it via its generic property write, so enumerating columns here without
-      // it froze every post's modifiedAt at creation (audit LPOST-1).
-      modifiedAt: changes.modifiedAt?.toJSDate(),
       // `report` is explicitly nullable: passing null detaches from the report
       // and leaves the post on its engagement. `undefined` means "don't touch".
       ...('report' in changes
@@ -145,8 +135,8 @@ export class PostDrizzleRepository extends DrizzleDtoRepository<
     if (filter?.parentId) {
       conditions.push(eq(posts.parentId, filter.parentId));
     }
-    if (filter?.type) {
-      conditions.push(eq(posts.type, filter.type));
+    if (filter?.types?.length) {
+      conditions.push(inArray(posts.type, [...filter.types]));
     }
     const predicate = and(...conditions);
     const offset = (input.page - 1) * input.count;
@@ -179,57 +169,6 @@ export class PostDrizzleRepository extends DrizzleDtoRepository<
       total,
       hasMore: offset + rows.length < total,
     };
-  }
-
-  /**
-   * Record a moderator's clearance on one or more posts.
-   *
-   * Written in a single statement rather than per-post, because the queue's
-   * normal interaction is clearing a batch — looping would turn one round trip
-   * into dozens and make partial failure a real state.
-   */
-  async moderate(
-    ids: ReadonlyArray<ID<'Post'>>,
-    shareability: PostShareability,
-  ): Promise<Array<UnsecuredDto<Post>>> {
-    if (ids.length === 0) return [];
-    await this.db
-      .update(posts)
-      .set({
-        approvedShareability: shareability,
-        approvedById: this.identity.current.userId,
-        approvedAt: new Date(),
-      })
-      .where(inArray(posts.id, ids as Array<ID<'Post'>>));
-    for (const id of ids) {
-      this.liveQueryStore.invalidate([this.resource, id]);
-    }
-    return await this.readMany(ids);
-  }
-
-  /**
-   * Posts on the given parents that nobody has reviewed yet.
-   *
-   * Drives the moderation queue. Filters on the parent set rather than taking a
-   * reviewer id, because who may review is a policy question the service
-   * answers — the repository only needs to know which engagements to look at.
-   */
-  async listAwaitingModeration(
-    parentIds: readonly ID[],
-  ): Promise<Array<UnsecuredDto<Post>>> {
-    if (parentIds.length === 0) return [];
-    const rows = await this.db
-      .select()
-      .from(posts)
-      .where(
-        and(
-          inArray(posts.parentId, parentIds as ID[]),
-          sql`${posts.approvedShareability} is null`,
-          this.authFilter(),
-        ),
-      )
-      .orderBy(asc(posts.createdAt), asc(posts.id));
-    return rows.map((row) => this.toDto(row));
   }
 
   async getBaseNode(id: ID): Promise<BaseNode | undefined> {

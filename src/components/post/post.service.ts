@@ -28,6 +28,7 @@ import {
   type UpdatePost,
 } from './dto';
 import { type PostListInput, type SecuredPostList } from './dto/list-posts.dto';
+import { PostModerationDrizzleRepository } from './post-moderation.drizzle.repository';
 import { PostRepository } from './post.repository';
 
 type ConcretePostable = Postable & { __typename: string };
@@ -39,6 +40,7 @@ export class PostService {
     private readonly identity: Identity,
     private readonly privileges: Privileges,
     private readonly repo: PostRepository,
+    private readonly moderationRepo: PostModerationDrizzleRepository,
     private readonly resources: ResourceLoader,
     private readonly resourcesHost: ResourcesHost,
     private readonly liveQueryStore: LiveQueryStore,
@@ -130,16 +132,19 @@ export class PostService {
       }
     }
 
-    const updated = await this.repo.moderate(ids, shareability);
+    await this.moderationRepo.clear(ids, shareability);
 
-    for (const object of updated) {
+    for (const id of ids) {
       await this.hooks.run(
-        new ResourceMutatedHook('Post', object.id, 'Update', {
+        new ResourceMutatedHook('Post', id, 'Update', {
           approvedShareability: shareability,
         }),
       );
     }
 
+    // Re-read through the normal path so the returned posts are hydrated and
+    // secured exactly like any other read, rather than by a second code path.
+    const updated = await this.repo.readMany(ids);
     return updated.map((dto) => this.secure(dto));
   }
 
@@ -150,7 +155,8 @@ export class PostService {
    * is by construction one that does need a human.
    */
   async listAwaitingModeration(parentIds: readonly ID[]): Promise<Post[]> {
-    const results = await this.repo.listAwaitingModeration(parentIds);
+    const ids = await this.moderationRepo.findAwaitingReview(parentIds);
+    const results = await this.repo.readMany(ids);
     return results.map((dto) => this.secure(dto));
   }
 

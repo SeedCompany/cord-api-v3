@@ -2,6 +2,7 @@ import { forwardRef, Module } from '@nestjs/common';
 import { splitDb } from '~/core/database';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { UserModule } from '../user/user.module';
+import { PostModerationDrizzleRepository } from './post-moderation.drizzle.repository';
 import { PostDrizzleRepository } from './post.drizzle.repository';
 import { PostLoader } from './post.loader';
 import { PostRepository } from './post.repository';
@@ -23,6 +24,8 @@ import { PostableResolver } from './postable.resolver';
     }),
     PostableResolver,
     PostLoader,
+    // Not split by backend: moderation is Postgres-only by design.
+    PostModerationDrizzleRepository,
   ],
   exports: [PostService],
 })

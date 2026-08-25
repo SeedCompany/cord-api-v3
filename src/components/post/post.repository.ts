@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { inArray, node, type Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { type ID, ServerException, type UnsecuredDto } from '~/common';
+import { type ID, type UnsecuredDto } from '~/common';
 import { type DbTypeOf } from '~/core/database';
 import { type ChangesOf } from '~/core/database/changes';
 import { DtoRepository } from '~/core/neo4j';
@@ -49,39 +49,14 @@ export class PostRepository extends DtoRepository(Post) {
     existing: UnsecuredDto<Post>,
     changes: ChangesOf<Post, UpdatePost>,
   ) {
-    // `report` is Postgres-only. It is a link to a periodic report, not a
-    // property, so `updateProperties` cannot write it — and the features that
-    // set it (partner quarterly reporting) are not being built against Neo4j.
-    // Dropped here rather than throwing, so a mutation that only touches the
-    // body still works on a Neo4j-backed deployment.
+    // `report` is a link, not a property, so `updateProperties` cannot write
+    // it. Nothing sets it on this path — partner quarterly reporting is
+    // Postgres-only — so drop it rather than fail a body-only edit.
     const { report: _neo4jUnsupported, ...properties } =
       changes as typeof changes & {
         report?: unknown;
       };
     return await this.updateProperties(existing, properties);
-  }
-
-  /**
-   * Postgres-only. Moderation was introduced for partner-submitted prayer,
-   * which is not being built against Neo4j — but the injected repository is
-   * typed as this class, so the method has to exist here.
-   *
-   * Throws rather than no-ops: silently not recording a moderator's decision
-   * would leave a post looking reviewed when it never was, which is the one
-   * outcome this feature exists to prevent.
-   */
-  async moderate(
-    _ids: ReadonlyArray<ID<'Post'>>,
-    _shareability: PostShareability,
-  ): Promise<Array<UnsecuredDto<Post>>> {
-    throw new ServerException('Post moderation requires the Postgres backend');
-  }
-
-  /** Postgres-only; see {@link moderate}. */
-  async listAwaitingModeration(
-    _parentIds: readonly ID[],
-  ): Promise<Array<UnsecuredDto<Post>>> {
-    throw new ServerException('Post moderation requires the Postgres backend');
   }
 
   async readMany(ids: readonly ID[]) {
