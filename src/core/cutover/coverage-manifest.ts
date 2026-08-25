@@ -99,6 +99,18 @@ const excluded = (reason: string): Disposition => ({
   kind: 'excluded',
   reason,
 });
+/**
+ * Currently unused, and deliberately kept.
+ *
+ * As of 2026-08-25 every name the source enumerates has a decided disposition —
+ * ExternalDepartmentId was the last one under review, and it is now ported. So
+ * this helper has no call sites, which is the good state rather than dead code:
+ * `review` is one of the five dispositions, the checker still refuses to pass on
+ * it, and the next unclaimed name that turns up needs it to be here. Deleting it
+ * would quietly make "I don't know yet" harder to express than "excluded", which
+ * is exactly the pressure this file exists to resist.
+ */
+// eslint-disable-next-line @seedcompany/no-unused-vars
 const review = (question: string): Disposition => ({
   kind: 'review',
   question,
@@ -973,15 +985,33 @@ export const labels: Readonly<Record<string, Disposition>> = {
       'cutover; anyone mid-reset requests a new email. Decided: drop (Rob, 2026-08-24)',
   ),
 
-  // ── Still open — blocks the run until the team answers ─────────────────────
-  ExternalDepartmentId: review(
-    '565 fully DISCONNECTED nodes (zero edges in or out), each {name, departmentId} — an ' +
-      'org-name → 5-digit finance-department-code directory imported in a single moment ' +
-      '(2025-09-22T21:05:53Z; the names read as scrubbed fakes in this copy, real in prod; ' +
-      'codes like 00000/00010/00020). Nothing in src/ reads the label — likely the finance ' +
-      'system’s department list imported around the department-id-block work. Rob is asking ' +
-      'the team whether it is superseded (2026-08-24)',
-  ),
+  ExternalDepartmentId: {
+    kind: 'migrated',
+    extractor: 'external-department-id',
+    table: 'external_department_ids',
+    to:
+      'external_department_ids — the department IDs Intacct already holds, which must never ' +
+      'be assigned to a CORD project. 565 nodes, one bulk import (2025-09-22T21:05:53Z). ' +
+      'PORTED (Rob, 2026-08-25, after the team confirmed Intacct is still in use and the ' +
+      'reservations still stand). ' +
+      // The correction matters more than the disposition. This entry previously
+      // read "Nothing in src/ reads the label", and that was simply wrong: the
+      // department-ID allocator unions these into the unavailable set on every
+      // assignment and has since 2025-09. The nodes ARE fully disconnected, and
+      // that is what made them look retired — but a reservation list has
+      // nothing to connect to, so disconnected was the correct shape, not a
+      // symptom. The lesson for future entries: "no edges" and "no readers" are
+      // different claims, and only the second is evidence of being retired.
+      'CORRECTION to the earlier entry, which said nothing in src/ read this label: ' +
+      'set-department-id.handler.ts reads it on every department-ID assignment. The ' +
+      'exclusion was missing from the Postgres arm and is restored in migration 0040 — ' +
+      'measured before fixing, 389 of the 565 codes sit inside blocks projects are assigned ' +
+      'from, and 2 of 13 blocks would have handed out a different ID than Neo4j on their ' +
+      'next project. ' +
+      'Separately open, and NOT a cutover item: the list is a one-shot manual load with no ' +
+      'refresh path (its importer was never merged to develop), so it is stale against ' +
+      'Intacct. Owner of the Intacct side to decide re-export vs real integration.',
+  },
 
   // ── Decided ports (Rob, 2026-08-24) ─────────────────────────────────────────
   ProjectTypeFinancialApprover: {
@@ -1484,7 +1514,14 @@ export const propertyKeys: Readonly<Record<string, Disposition>> = {
   totalVerses: carried('products.unspecified_scripture_total_verses'),
   blocks: carried('department_id_blocks.range (JSON ranges → int4multirange)'),
   programs: carried('department_id_blocks.programs'),
-  departmentId: carried('projects.department_id (where stored directly)'),
+  // Two different nodes carry this key and both are migrated: the Property
+  // record behind a project's departmentId, and the ExternalDepartmentId
+  // reservation nodes. Named here because a single property-key entry cannot
+  // say "per label", and one destination would have hidden the other.
+  departmentId: carried(
+    'projects.department_id (where stored directly), and ' +
+      'external_department_ids.department_id for the ExternalDepartmentId nodes',
+  ),
   key: carried('tools.key (where stored directly)'),
   source: carried('pnp_extraction_result_problems.source'),
   context: carried(

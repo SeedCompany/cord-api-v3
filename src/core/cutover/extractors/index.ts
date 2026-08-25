@@ -4,6 +4,7 @@ import { commentExtractor } from './comment.extractor';
 import { departmentIdBlockExtractor } from './department-id-block.extractor';
 import { engagementExtractor } from './engagement.extractor';
 import { ethnologueExtractor } from './ethnologue.extractor';
+import { externalDepartmentIdExtractor } from './external-department-id.extractor';
 import { fieldRegionExtractor } from './field-region.extractor';
 import { fieldZoneExtractor } from './field-zone.extractor';
 import { fileExtractor } from './file.extractor';
@@ -61,6 +62,10 @@ export const extractors: readonly Extractor[] = [
   ethnologueExtractor,
   languageExtractor,
   departmentIdBlockExtractor,
+  // No dependencies in either direction — a flat reservation list. Placed next
+  // to the block extractor because they are read together by the allocator, not
+  // because either needs the other.
+  externalDepartmentIdExtractor,
   fieldZoneExtractor,
   fieldRegionExtractor,
   locationExtractor,
