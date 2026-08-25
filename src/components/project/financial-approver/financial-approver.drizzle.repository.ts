@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { many, type Many } from '@seedcompany/common';
-import { and, arrayOverlaps, eq, isNull } from 'drizzle-orm';
+import { and, arrayOverlaps, eq, isNull, sql } from 'drizzle-orm';
 import { type ID, type PublicOf, ServerException } from '~/common';
 import { DrizzleService } from '~/core/drizzle/drizzle.service';
 import { financialApprovers, users } from '~/core/drizzle/schema';
@@ -29,31 +29,53 @@ export class FinancialApproverDrizzleRepository implements PublicOf<FinancialApp
 
   async write(input: SetFinancialApprover) {
     if (input.projectTypes.length === 0) {
+      // Deliberately not conditioned on the user being live, unlike the write
+      // below. The Neo4j arm matches the live `User` label here too, so for a
+      // soft-deleted user it deletes nothing and the row survives — but that
+      // row is unreachable through read() on either engine, so matching Neo4j
+      // would mean deliberately keeping data nothing can see. Removing it is
+      // the better of two unobservable behaviours.
       await this.db.client
         .delete(financialApprovers)
         .where(eq(financialApprovers.userId, input.user));
       return null;
     }
 
-    // The FK alone cannot enforce this: a soft-deleted user's row never
-    // leaves, so the insert would succeed where the Neo4j arm's match on the
-    // live `User` label finds nothing and throws. Same check, same error.
-    const liveUser = await this.db.client
-      .select({ id: users.id })
-      .from(users)
-      .where(and(eq(users.id, input.user), isNull(users.deletedAt)));
-    if (!liveUser[0]) {
-      throw new ServerException('Failed to set financial approver.');
-    }
+    // Each value parameterized rather than inlined, and cast explicitly: the
+    // column is `project_type[]`, and a bare array parameter arrives untyped.
+    const typesLiteral = sql<
+      readonly [ProjectType, ...ProjectType[]]
+    >`array[${sql.join(
+      input.projectTypes.map((type) => sql`${type}`),
+      sql`, `,
+    )}]::"project_type"[]`;
 
-    await this.db.client
-      .insert(financialApprovers)
-      .values({ userId: input.user, projectTypes: input.projectTypes })
-      .onConflictDoUpdate({
-        target: financialApprovers.userId,
-        set: { projectTypes: input.projectTypes },
-      });
+    // ONE statement, deliberately. The foreign key cannot carry this: soft
+    // deletion never removes the user's row, so it is satisfied by a deleted
+    // user. Checking liveness in a separate SELECT first leaves a window — a
+    // user soft-deleted between the two statements gets an approver row
+    // written anyway — where the Neo4j arm, a single match-then-merge, has no
+    // such window. Selecting the row out of `users` closes it without needing
+    // a lock or a surrounding transaction: no live user, no row to insert,
+    // nothing written.
+    //
+    // Raw SQL rather than the query builder because drizzle's
+    // insert-from-select generics reject a projection that mixes a column with
+    // a SQL expression, which is exactly the shape wanted here.
+    await this.db.client.execute(sql`
+      insert into ${financialApprovers} ("user_id", "project_types")
+      select ${users.id}, ${typesLiteral}
+      from ${users}
+      where ${users.id} = ${input.user} and ${users.deletedAt} is null
+      on conflict ("user_id")
+        do update set "project_types" = excluded."project_types"
+    `);
 
+    // This now covers the not-live case as well as a failed write, which is
+    // why the liveness check above it is gone rather than merely moved:
+    // hydrated() inner-joins live users, so a user who was never live (nothing
+    // was written) and one deleted concurrently both land here, and raise the
+    // same error the Neo4j arm raises when its match finds nothing.
     const written = await this.hydrated().where(
       eq(financialApprovers.userId, input.user),
     );
