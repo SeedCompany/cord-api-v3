@@ -16,9 +16,15 @@ import {
   resolveResourceBaseNode,
   type SortMap,
 } from '~/core/drizzle';
-import { posts, projectMembers } from '~/core/drizzle/schema';
+import { engagements, posts, projectMembers } from '~/core/drizzle/schema';
 import { type BaseNode } from '~/core/neo4j/results';
-import { type CreatePost, Post, type UpdatePost } from './dto';
+import {
+  type CreatePost,
+  needsModeration,
+  Post,
+  type PostShareability,
+  type UpdatePost,
+} from './dto';
 import { type PostListInput } from './dto/list-posts.dto';
 
 @Injectable()
@@ -49,6 +55,11 @@ export class PostDrizzleRepository extends DrizzleDtoRepository<
       creator: { id: row.creatorId },
       type: row.type,
       shareability: row.shareability,
+      approvedShareability: row.approvedShareability ?? null,
+      approvedBy: row.approvedById ? { id: row.approvedById } : null,
+      approvedAt: row.approvedAt ? DateTime.fromJSDate(row.approvedAt) : null,
+      report: row.reportId ? { id: row.reportId } : null,
+      respondsTo: row.respondsToId ? { id: row.respondsToId } : null,
       body: row.body,
       modifiedAt: DateTime.fromJSDate(row.modifiedAt),
     };
@@ -61,6 +72,9 @@ export class PostDrizzleRepository extends DrizzleDtoRepository<
       throw new NotFoundException('Resource does not exist', 'parent');
     }
     const id = await generateId<ID<'Post'>>();
+    // Reach that never leaves Seed Company is cleared on the way in, so the
+    // moderation queue only ever holds decisions a human actually has to make.
+    const selfClearing = !needsModeration(input.shareability);
     await this.db.insert(posts).values({
       id,
       parentId: input.parent,
@@ -68,6 +82,10 @@ export class PostDrizzleRepository extends DrizzleDtoRepository<
       creatorId: this.identity.current.userId,
       type: input.type,
       shareability: input.shareability,
+      approvedShareability: selfClearing ? input.shareability : null,
+      approvedAt: selfClearing ? new Date() : null,
+      reportId: input.report ?? null,
+      respondsToId: input.respondsTo ?? null,
       body: input.body,
     });
     // Hydrated without the auth filter — mirrors the Neo4j create path, which
@@ -81,6 +99,11 @@ export class PostDrizzleRepository extends DrizzleDtoRepository<
     changes: ChangesOf<Post, UpdatePost>,
   ): Promise<UnsecuredDto<Post>> {
     const c = changes as Partial<typeof posts.$inferInsert>;
+    // Editing the requested reach upward invalidates any prior clearance —
+    // otherwise a post approved at Internal could be edited to External and
+    // keep the old approval, which is the one way this model could leak.
+    const reopensModeration =
+      c.shareability !== undefined && needsModeration(c.shareability);
     await this.updateColumns(existing.id, {
       type: c.type,
       shareability: c.shareability,
@@ -89,6 +112,14 @@ export class PostDrizzleRepository extends DrizzleDtoRepository<
       // it via its generic property write, so enumerating columns here without
       // it froze every post's modifiedAt at creation (audit LPOST-1).
       modifiedAt: changes.modifiedAt?.toJSDate(),
+      // `report` is explicitly nullable: passing null detaches from the report
+      // and leaves the post on its engagement. `undefined` means "don't touch".
+      ...('report' in changes
+        ? { reportId: (changes as { report?: ID | null }).report ?? null }
+        : {}),
+      ...(reopensModeration
+        ? { approvedShareability: null, approvedById: null, approvedAt: null }
+        : {}),
     });
     const [row] = await this.db
       .select()
@@ -150,6 +181,57 @@ export class PostDrizzleRepository extends DrizzleDtoRepository<
     };
   }
 
+  /**
+   * Record a moderator's clearance on one or more posts.
+   *
+   * Written in a single statement rather than per-post, because the queue's
+   * normal interaction is clearing a batch — looping would turn one round trip
+   * into dozens and make partial failure a real state.
+   */
+  async moderate(
+    ids: ReadonlyArray<ID<'Post'>>,
+    shareability: PostShareability,
+  ): Promise<Array<UnsecuredDto<Post>>> {
+    if (ids.length === 0) return [];
+    await this.db
+      .update(posts)
+      .set({
+        approvedShareability: shareability,
+        approvedById: this.identity.current.userId,
+        approvedAt: new Date(),
+      })
+      .where(inArray(posts.id, ids as Array<ID<'Post'>>));
+    for (const id of ids) {
+      this.liveQueryStore.invalidate([this.resource, id]);
+    }
+    return await this.readMany(ids);
+  }
+
+  /**
+   * Posts on the given parents that nobody has reviewed yet.
+   *
+   * Drives the moderation queue. Filters on the parent set rather than taking a
+   * reviewer id, because who may review is a policy question the service
+   * answers — the repository only needs to know which engagements to look at.
+   */
+  async listAwaitingModeration(
+    parentIds: readonly ID[],
+  ): Promise<Array<UnsecuredDto<Post>>> {
+    if (parentIds.length === 0) return [];
+    const rows = await this.db
+      .select()
+      .from(posts)
+      .where(
+        and(
+          inArray(posts.parentId, parentIds as ID[]),
+          sql`${posts.approvedShareability} is null`,
+          this.authFilter(),
+        ),
+      )
+      .orderBy(asc(posts.createdAt), asc(posts.id));
+    return rows.map((row) => this.toDto(row));
+  }
+
   async getBaseNode(id: ID): Promise<BaseNode | undefined> {
     return await resolveResourceBaseNode(this.db, id);
   }
@@ -165,22 +247,35 @@ export class PostDrizzleRepository extends DrizzleDtoRepository<
 
   /**
    * A post is visible when its shareability isn't Membership, or when the
-   * requester is an active member of the (Project) parent. Only Project
-   * parents have members, so Membership posts on Language/Partner are hidden —
-   * matching the Neo4j member-path filter. Gated on 'Membership' only; a
-   * (deprecated) 'ProjectTeam' value is treated as unrestricted, as in Neo4j.
+   * requester is an active member of the parent's project. Language and Partner
+   * parents have no project to resolve against, so Membership posts on those
+   * stay hidden — matching the Neo4j member-path filter. Gated on 'Membership'
+   * only; a (deprecated) 'ProjectTeam' value is treated as unrestricted, as in
+   * Neo4j.
+   *
+   * Engagement parents resolve one hop further, through `engagements.project_id`.
+   * Without that hop a Membership post on an engagement would compare an
+   * engagement id against `project_members.project_id`, never match, and become
+   * invisible to everyone — including the person who wrote it.
    */
   private authFilter(): SQL {
     const userId = this.identity.currentMaybe?.userId;
     if (!userId) {
       return sql`${posts.shareability} <> 'Membership'`;
     }
-    return sql`(${posts.shareability} <> 'Membership' or exists (
+    const activeMemberOf = (projectId: SQL) => sql`exists (
       select 1 from ${projectMembers}
-      where ${projectMembers.projectId} = ${posts.parentId}
+      where ${projectMembers.projectId} = ${projectId}
         and ${projectMembers.userId} = ${userId}
         and ${projectMembers.deletedAt} is null
         and ${projectMembers.inactiveAt} is null
-    ))`;
+    )`;
+    return sql`(${posts.shareability} <> 'Membership'
+      or ${activeMemberOf(sql`${posts.parentId}`)}
+      or ${activeMemberOf(sql`(
+        select ${engagements.projectId} from ${engagements}
+        where ${engagements.id} = ${posts.parentId}
+      )`)}
+    )`;
   }
 }

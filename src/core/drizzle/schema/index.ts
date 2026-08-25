@@ -3051,9 +3051,18 @@ export const postShareabilityEnum = pgEnum('post_shareability', [
 ]);
 
 /**
- * Posts attach to any Postable resource (Language/Partner/Project) via a
- * polymorphic FK-less parent_id + parent_type discriminator. Membership
- * shareability is enforced in the repo against project_members.
+ * Posts attach to any Postable resource (Language/Partner/Project/Engagement)
+ * via a polymorphic FK-less parent_id + parent_type discriminator. Membership
+ * shareability is enforced in the repo against project_members — for an
+ * Engagement parent, one hop through engagements.project_id.
+ *
+ * Three columns exist for partner-submitted prayer:
+ *  * `report_id` — set when the post is included in a quarterly report. The
+ *    parent stays the engagement either way, so a report being dropped and
+ *    re-synced can never take prayer with it.
+ *  * `responds_to_id` — an update to an earlier post ("answered prayer"), so a
+ *    request and its updates can be grouped rather than read as an undated pile.
+ *  * `approved_shareability` — moderated reach. See the column comment below.
  */
 export const posts = pgTable(
   'posts',
@@ -3066,9 +3075,36 @@ export const posts = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
     type: postTypeEnum('type').$type<PostType>().notNull(),
+    /** What reach was *requested*. Compare with `approvedShareability`. */
     shareability: postShareabilityEnum('shareability')
       .$type<PostShareability>()
       .notNull(),
+    /**
+     * What reach has been *cleared* by a moderator. Effective reach is
+     * `approvedShareability ?? min(shareability, Internal)` — so an
+     * unmoderated post is fully visible internally and only its external
+     * reach waits. Null means "not yet reviewed", which is distinct from
+     * a review that deliberately narrowed the reach to Internal.
+     */
+    approvedShareability: postShareabilityEnum(
+      'approved_shareability',
+    ).$type<PostShareability>(),
+    approvedById: text('approved_by_id')
+      .$type<ID<'User'>>()
+      .references(() => users.id, { onDelete: 'set null' }),
+    approvedAt: timestamp('approved_at', { withTimezone: true }),
+    /**
+     * The quarterly report this post was submitted with, if any. Nullable and
+     * deliberately `on delete set null`: losing the report must not lose the
+     * prayer.
+     */
+    reportId: text('report_id')
+      .$type<ID<'PeriodicReport'>>()
+      .references(() => periodicReports.id, { onDelete: 'set null' }),
+    /** An update to an earlier post — e.g. an answer to a prayer request. */
+    respondsToId: text('responds_to_id')
+      .$type<ID<'Post'>>()
+      .references((): AnyPgColumn => posts.id, { onDelete: 'set null' }),
     body: text('body').notNull(),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
@@ -3080,6 +3116,8 @@ export const posts = pgTable(
   (t) => [
     index('posts_parent_id_idx').on(t.parentId),
     index('posts_creator_id_idx').on(t.creatorId),
+    index('posts_report_id_idx').on(t.reportId),
+    index('posts_responds_to_id_idx').on(t.respondsToId),
   ],
 );
 

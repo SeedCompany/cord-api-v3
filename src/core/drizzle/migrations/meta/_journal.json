@@ -36,6 +36,13 @@
       "when": 1788210000000,
       "tag": "0004_gtl_report_media",
       "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1754006400000,
+      "tag": "0039_add_post_report_and_moderation",
+      "breakpoints": true
     }
   ]
 }

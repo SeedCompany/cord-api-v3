@@ -49,7 +49,16 @@ export class PostRepository extends DtoRepository(Post) {
     existing: UnsecuredDto<Post>,
     changes: ChangesOf<Post, UpdatePost>,
   ) {
-    return await this.updateProperties(existing, changes);
+    // `report` is Postgres-only. It is a link to a periodic report, not a
+    // property, so `updateProperties` cannot write it — and the features that
+    // set it (partner quarterly reporting) are not being built against Neo4j.
+    // Dropped here rather than throwing, so a mutation that only touches the
+    // body still works on a Neo4j-backed deployment.
+    const { report: _neo4jUnsupported, ...properties } =
+      changes as typeof changes & {
+        report?: unknown;
+      };
+    return await this.updateProperties(existing, properties);
   }
 
   async readMany(ids: readonly ID[]) {

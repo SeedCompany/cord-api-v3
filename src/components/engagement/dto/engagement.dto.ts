@@ -34,6 +34,7 @@ import { ChangesetAware } from '../../changeset/dto';
 import { Commentable } from '../../comments/dto';
 import { SecuredLanguageMilestone } from '../../language/dto';
 import { SecuredAIAssistedTranslation } from '../../language/dto/ai-assisted-translation.enum';
+import { Postable } from '../../post/dto';
 import { Product, SecuredMethodologies } from '../../product/dto';
 import {
   InternshipProject,
@@ -168,11 +169,20 @@ export { Engagement as IEngagement, type AnyEngagement as Engagement };
 
 @RegisterResource({ db: e.LanguageEngagement })
 @ObjectType({
-  implements: [Engagement],
+  // Postable so prayer requests can live on the engagement itself, not only
+  // inside a quarterly report — teams share and update them throughout the
+  // quarter, and a report is too short-lived a parent to hang them off (it can
+  // be dropped and re-synced). A post carries an optional `report` reference
+  // instead, set when it is included in that quarter's report.
+  //
+  // InternshipEngagement can adopt Postable the same way when GTL reporting
+  // needs it; nothing here is language-specific except where it's declared.
+  implements: [Engagement, Postable],
 })
 export class LanguageEngagement extends Engagement {
   static readonly Relations = (() => ({
     ...Engagement.Relations(),
+    ...Postable.Relations(),
     // why is this singular?
     product: [Product],
   })) satisfies ResourceRelationsShape;

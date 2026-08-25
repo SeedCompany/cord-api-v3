@@ -21,6 +21,17 @@ export abstract class UpdatePost {
   })
   @IsNotEmpty()
   readonly body: string;
+
+  @IdField({
+    nullable: true,
+    description: `
+      Attach to, or (with an explicit null) detach from, a quarterly report.
+
+      Detaching leaves the post on its engagement rather than deleting it — that
+      is the difference between "not in this report" and "gone".
+    `,
+  })
+  readonly report?: ID<'PeriodicReport'> | null;
 }
 
 @ObjectType()
