@@ -252,6 +252,19 @@ const projectIdRefForResource = (resource: EnhancedResource<any>): SQL => {
       return sql.raw(
         `(select "e"."project_id" from "engagements" "e" where "e"."id" = "ceremonies"."engagement_id")`,
       );
+    case 'GtlReportGoal':
+      // Two report links; the SETTING report is the owner. @see migration 0039
+      return sql.raw(
+        `(select "e"."project_id" from "engagements" "e"
+            join "periodic_reports" "pr" on "pr"."engagement_id" = "e"."id"
+           where "pr"."id" = "gtl_report_goals"."set_in_report_id")`,
+      );
+    case 'GtlReportPracticum':
+      return sql.raw(
+        `(select "e"."project_id" from "engagements" "e"
+            join "periodic_reports" "pr" on "pr"."engagement_id" = "e"."id"
+           where "pr"."id" = "gtl_report_practicums"."report_id")`,
+      );
     case 'ProgressReport':
     case 'GTLReport':
       // Both live on the shared periodic_reports table and are always

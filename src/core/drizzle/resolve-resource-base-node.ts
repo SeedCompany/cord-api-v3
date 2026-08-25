@@ -17,6 +17,8 @@ import {
   fieldZones,
   fileNodes,
   fundingAccounts,
+  gtlReportGoals,
+  gtlReportPracticums,
   languages,
   locations,
   notifications,
@@ -214,6 +216,8 @@ const RESOURCE_TABLES: readonly ResourceTable[] = [
     Narrative: 'NarrativeReport',
     GTL: 'GTLReport',
   }),
+  ofOneType(gtlReportGoals, 'GtlReportGoal'),
+  ofOneType(gtlReportPracticums, 'GtlReportPracticum'),
   ofSeveralTypes(products, {
     DirectScripture: 'DirectScriptureProduct',
     Derivative: 'DerivativeScriptureProduct',

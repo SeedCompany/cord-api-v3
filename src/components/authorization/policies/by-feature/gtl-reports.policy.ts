@@ -17,6 +17,10 @@ import { Policy, Role } from '../util';
     Role.FieldPartner,
     Role.Leadership,
   ],
-  (r) => [r.GTLReport.read],
+  (r) => [
+    r.GTLReport.read,
+    r.GtlReportGoal.read.create.edit.delete,
+    r.GtlReportPracticum.read.create.edit.delete,
+  ],
 )
 export class GtlReportsPolicy {}
