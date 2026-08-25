@@ -1,4 +1,4 @@
-import { asc, desc, sql, type SQL, type SQLWrapper } from 'drizzle-orm';
+import { asc, desc, SQL, sql, type SQLWrapper } from 'drizzle-orm';
 import { type AnyPgColumn } from 'drizzle-orm/pg-core';
 import { type Order } from '~/common';
 import {
@@ -20,7 +20,7 @@ import {
  * One sort entry: a single column, or a column list expressing tiebreakers
  * (e.g. `[lastName, firstName]`).
  */
-export type SortColumns = AnyPgColumn | readonly AnyPgColumn[];
+export type SortColumns = AnyPgColumn | SQL | ReadonlyArray<AnyPgColumn | SQL>;
 
 /**
  * Map of supported sort keys to columns, narrowed to the DTO's fields:
@@ -125,13 +125,18 @@ const NAME_COLUMNS: ReadonlySet<AnyPgColumn> = new Set<AnyPgColumn>([
  * name (partner, partnership, project) do exactly that, and would otherwise order
  * differently from every other list in the app.
  */
-export const displayOrder = (col: AnyPgColumn): SQLWrapper =>
-  NAME_COLUMNS.has(col) &&
-  COLLATABLE_COLUMN_TYPES.has(col.columnType) &&
-  !col.enumValues?.length &&
-  !col.primary
-    ? sql`${col} collate ${sql.identifier(DISPLAY_ORDER_COLLATION)}`
-    : col;
+export const displayOrder = (col: AnyPgColumn | SQL): SQLWrapper =>
+  // An expression rather than a column — a value computed in the query, such
+  // as a partner's sensitivity derived from its projects. There is no column
+  // to look up in NAME_COLUMNS and nothing to collate, so it orders as-is.
+  col instanceof SQL
+    ? col
+    : NAME_COLUMNS.has(col) &&
+        COLLATABLE_COLUMN_TYPES.has(col.columnType) &&
+        !col.enumValues?.length &&
+        !col.primary
+      ? sql`${col} collate ${sql.identifier(DISPLAY_ORDER_COLLATION)}`
+      : col;
 
 /**
  * Resolve a list-input's `sort` key to an ORDER BY clause. Unmatched keys

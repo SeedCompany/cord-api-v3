@@ -411,8 +411,15 @@ export const organizations = pgTable(
       .$type<readonly OrganizationReach[]>()
       .notNull()
       .default([]),
-    // migration-todo: keep current via hooks once Project/Partnership migrate;
-    // currently always 'High' since no project linkage exists in PG yet.
+    // NO LONGER READ. The organization's sensitivity is derived in the query
+    // from the projects reached through its partners — see
+    // `derived-sensitivity.ts`. This column stayed defaulted to 'High' with
+    // nothing keeping it current, which is why it stopped being the answer.
+    // It is left in place only because the cutover ETL still writes it and
+    // removing it would invalidate a certified load.
+    // migration-todo(cutover-cleanup): drop this column and stop the partner
+    // extractor writing it. Nothing reads it now, so it can go with the rest
+    // of the transition-only schema rather than needing its own migration.
     sensitivity: sensitivityEnum('sensitivity').notNull().default('High'),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
@@ -980,9 +987,9 @@ export const partners = pgTable(
     departmentIdBlockId: text('department_id_block_id')
       .$type<ID>()
       .references(() => departmentIdBlocks.id),
-    // migration-todo: derived from the project's sensitivity; keep current via
-    // hook once Project/Partnership migrate. Always 'High' until then — same as
-    // organizations.sensitivity.
+    // NO LONGER READ — same story as organizations.sensitivity above. Derived
+    // in the query from the partner's projects (`derived-sensitivity.ts`).
+    // migration-todo(cutover-cleanup): drop with the organization one.
     sensitivity: sensitivityEnum('sensitivity').notNull().default('High'),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()

@@ -6,6 +6,9 @@ import { graphql } from '~/graphql';
 import {
   createLocation,
   createOrganization,
+  createPartner,
+  createPartnership,
+  createProject,
   createSession,
   createTestApp,
   errors,
@@ -24,6 +27,48 @@ describe('Organization e2e', () => {
     await registerUser(app, {
       roles: [Role.Controller],
     });
+  });
+
+  // The organization's own version of the partner test in partner.e2e-spec.
+  // Worth having separately rather than trusting the partner one to cover it:
+  // an organization reaches projects one hop further out, through the partners
+  // that belong to it, so the two walk different paths and only share the
+  // shape of the answer.
+  it('derives sensitivity from its partners projects, and follows them', async () => {
+    const org = await runAsAdmin(app, () => createOrganization(app));
+
+    const readSensitivity = async () => {
+      const { organization } = await app.graphql.query(
+        graphql(`
+          query organization($id: ID!) {
+            organization(id: $id) {
+              sensitivity
+            }
+          }
+        `),
+        { id: org.id },
+      );
+      return organization.sensitivity;
+    };
+
+    // Nothing connected yet, so the most restrictive answer.
+    expect(await readSensitivity()).toBe('High');
+
+    // A partner belonging to this organization, on a Low project. Reading the
+    // stored column instead leaves this at High.
+    await runAsAdmin(app, async () => {
+      const partner = await createPartner(app, { organization: org.id });
+      const project = await createProject(app, {
+        type: 'Internship',
+        sensitivity: 'Low',
+      });
+      await createPartnership(app, {
+        project: project.id,
+        partner: partner.id,
+      });
+    });
+
+    expect(await readSensitivity()).toBe('Low');
   });
 
   it.skip('should have unique name', async () => {

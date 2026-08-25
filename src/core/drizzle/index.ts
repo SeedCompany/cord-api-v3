@@ -1,3 +1,4 @@
+export * from './derived-sensitivity';
 export * from './drizzle-transactional-mutations.interceptor';
 export * from './drizzle.module';
 export * from './drizzle.service';
