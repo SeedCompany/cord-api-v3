@@ -92,8 +92,8 @@ const catchDepartmentIdUnique = catchUniqueViolation(
 /**
  * Hydrated Project row: the projects table row + the current user's membership
  * (id, roles, inactive_at) if any. Pulled together in a single SELECT for
- * `readMany`. Cross-domain stubs (usesRev79, primaryPartnership,
- * rootDirectory) live in `toDto`.
+ * `readMany`. Cross-domain stubs (usesRev79, rootDirectory) live in `toDto`.
+ * `primaryPartnership` used to be one of them and is now batched like the rest.
  */
 type ProjectRow = typeof projects.$inferSelect & {
   engagementTotal?: number;
@@ -107,6 +107,8 @@ type ProjectRow = typeof projects.$inferSelect & {
   inheritedMarketingRegionId?: ID<'Location'> | null;
   /** Has a live ToolUsage for the Rev79 tool — batched in `readMany`. */
   usesRev79?: boolean;
+  /** The live primary partnership's id, if the project has one — batched in `readMany`. */
+  primaryPartnershipId?: ID<'Partnership'> | null;
   membership?: {
     id: ID<'ProjectMember'>;
     // `Role`, not `string` — the column is a role enum array, and the DTO's
@@ -329,6 +331,29 @@ export class ProjectDrizzleRepository extends DrizzleDtoRepository<
     const usesRev79ByProject = new Set(
       rev79Usages.map((r) => r.projectId as ID<'Project'>),
     );
+    // The project's primary partnership. Neo4j finds it by walking to each
+    // partnership and checking its `primary` property; here it is a column,
+    // and `partnerships_project_primary_active_unique` already guarantees at
+    // most one live primary row per project, so this cannot return two.
+    const primaryPartnerships = await this.db
+      .select({
+        projectId: partnerships.projectId,
+        id: partnerships.id,
+      })
+      .from(partnerships)
+      .where(
+        and(
+          inArray(
+            partnerships.projectId,
+            rows.map((r) => r.id),
+          ),
+          eq(partnerships.primary, true),
+          isNull(partnerships.deletedAt),
+        ),
+      );
+    const primaryPartnershipByProject = new Map(
+      primaryPartnerships.map((row) => [row.projectId, row.id]),
+    );
     return rows.map((row): UnsecuredDto<Project> => {
       const enriched: ProjectRow = {
         ...row,
@@ -340,6 +365,7 @@ export class ProjectDrizzleRepository extends DrizzleDtoRepository<
           ? (inheritedRegionByLocation.get(row.marketingLocationId) ?? null)
           : null,
         usesRev79: usesRev79ByProject.has(row.id),
+        primaryPartnershipId: primaryPartnershipByProject.get(row.id) ?? null,
       };
       return this.toDto(enriched);
     });
@@ -620,10 +646,7 @@ export class ProjectDrizzleRepository extends DrizzleDtoRepository<
       fieldRegion: linkOrNull(row.fieldRegionId),
       owningOrganization: linkOrNull(row.owningOrganizationId),
       rootDirectory: linkOrNull(row.rootDirectoryId),
-      // migration-todo: Partnership is on develop, but per-project
-      // primaryPartnership hydration is not yet wired (mono stubs it null too).
-      // Wire via a `partnerships` subquery (primary = true) as a follow-up.
-      primaryPartnership: null,
+      primaryPartnership: linkOrNull(row.primaryPartnershipId ?? null),
       engagementTotal: row.engagementTotal ?? 0,
       // Batched in readMany — whether the project has a live ToolUsage
       // against the Rev79 tool.

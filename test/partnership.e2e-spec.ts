@@ -34,6 +34,55 @@ describe('Partnership e2e', () => {
     project = await createProject(app);
   });
 
+  // A project's `primaryPartnership` is whichever of its partnerships is
+  // flagged primary. Postgres returned a hardcoded null here — the field had
+  // no coverage on either engine, and it was left out of the read comparison
+  // between the two databases, so nothing was in a position to notice.
+  //
+  // Note the first partnership on a project is made primary automatically
+  // whatever the input says (partnership.service.ts), so this walks the two
+  // states that actually exist: no partnerships at all, and a later one taking
+  // over as primary.
+  it('exposes the primary partnership on its project', async () => {
+    const own = await createProject(app);
+
+    const readPrimary = async () => {
+      const { project: read } = await app.graphql.query(
+        graphql(`
+          query project($id: ID!) {
+            project(id: $id) {
+              primaryPartnership {
+                canRead
+                value {
+                  id
+                }
+              }
+            }
+          }
+        `),
+        { id: own.id },
+      );
+      return read.primaryPartnership;
+    };
+
+    // No partnerships at all.
+    expect((await readPrimary()).value).toBeNull();
+
+    // The first one is primary whether or not it asked to be.
+    const first = await createPartnership(app, { project: own.id });
+    const afterFirst = await readPrimary();
+    expect(afterFirst.canRead).toBe(true);
+    expect(afterFirst.value?.id).toBe(first.id);
+
+    // A later one flagged primary takes over. This is the assertion that
+    // fails while the field is stubbed: the project answers null throughout.
+    const second = await createPartnership(app, {
+      project: own.id,
+      primary: true,
+    });
+    expect((await readPrimary()).value?.id).toBe(second.id);
+  });
+
   it('create & read partnership by id', async () => {
     const partnership = await createPartnership(app, { project: project.id });
 
