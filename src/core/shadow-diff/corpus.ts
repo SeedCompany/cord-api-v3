@@ -537,12 +537,11 @@ const partnersList = /* GraphQL */ `
 // called `engagementTotal`, which is an internal field with no GraphQL
 // counterpart; it is no longer stubbed at 0 either way.
 //
-// STILL EXCLUDED — `primaryPartnership`, and this one is a real gap rather
-// than a stale note: Postgres returns a hardcoded null
-// (project.drizzle.repository.ts) while Neo4j hydrates it AND supports
-// filtering on it. Partnership has migrated, so the blocker is gone and only
-// the wiring is missing. Selecting it here would just record a known
-// difference on every project; it needs the repository fixed first.
+// `primaryPartnership` IS now covered. It was the one exclusion here that was
+// a real gap rather than a stale note — Postgres returned a hardcoded null
+// while Neo4j hydrated it and could filter on it — and the repository is now
+// wired (branch `pg-project-primary-partnership`), so the field is selected
+// rather than skipped.
 // Still excluded: changeRequests — changesets are not carried forward.
 // rootDirectory value is id-only (File-domain boundary; column parity only).
 const projectById = /* GraphQL */ `
@@ -706,6 +705,13 @@ const projectById = /* GraphQL */ `
         items {
           id
           __typename
+        }
+      }
+      primaryPartnership {
+        canRead
+        canEdit
+        value {
+          id
         }
       }
     }
