@@ -91,8 +91,18 @@ export class GtlReportProseResolver {
   }
 
   @Mutation(() => PromptVariantResponse)
+  async changeGtlReportPraisePrompt(@Args('input') input: ChangePrompt) {
+    return await this.praiseService.changePrompt(input);
+  }
+
+  @Mutation(() => PromptVariantResponse)
   async createGtlReportPetition(@Args('input') input: ChoosePrompt) {
     return await this.petitionService.create(input);
+  }
+
+  @Mutation(() => PromptVariantResponse)
+  async changeGtlReportPetitionPrompt(@Args('input') input: ChangePrompt) {
+    return await this.petitionService.changePrompt(input);
   }
 
   @Mutation(() => PromptVariantResponse)
