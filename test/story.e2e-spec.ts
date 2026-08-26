@@ -10,6 +10,7 @@ import {
   createTestApp,
   fragments,
   registerUser,
+  runAsAdmin,
   type TestApp,
 } from './utility';
 
@@ -98,34 +99,40 @@ describe('Story e2e', () => {
 
   // DELETE STORY
   //
-  // Still skipped, but no longer without a reason — this was one of a batch
-  // switched off in 2020 ("tests were harmed. skipping them to get this in.
-  // will make an unskip ticket") and the ticket was never made.
+  // Off since 2020, in a batch switched off with "tests were harmed. skipping
+  // them to get this in. will make an unskip ticket" — and the ticket was never
+  // made. It failed as written because this suite signs in as a
+  // FieldOperationsDirector, whose grant is `r.Producible.edit.create`: read,
+  // edit and create, never delete. No role-specific policy grants delete on a
+  // producible.
   //
-  // It fails because NO ROLE CAN DELETE A PRODUCIBLE. Every grant in
-  // policies/by-role is `r.Producible.edit.create` — read, edit and create,
-  // never delete — while the line directly below it in the same file reads
-  // `r.Product.edit.create.delete`. So `deleteStory` (and `deleteFilm`, and
-  // `deleteEthnoArt`) exist in the API and are reachable by nobody.
+  // An Administrator can, though. `AdministratorPolicy` is
+  // `allowAll('read', 'edit', 'create', 'delete')`, which covers producibles
+  // along with everything else, so the mutation is reachable — just not by a
+  // project-level role. Hence the delete runs in an admin session here while
+  // the rest of the suite stays as it was.
   //
-  // Identical on Neo4j and Postgres, so this is not a migration question. It
-  // needs a product answer first: either producibles are deliberately
-  // undeletable because products reference them, in which case this test
-  // should assert the refusal and the mutations should probably go, or the
-  // missing `.delete` is an oversight in the policy. Not guessing here.
-  it.skip('delete story', async () => {
+  // Whether a project role SHOULD be able to delete one is a product question,
+  // not a migration question: it reads the same on Neo4j and Postgres, since
+  // the check is `privileges.verifyCan` in the service layer, above the point
+  // where the two databases diverge.
+  it('delete story', async () => {
     const st = await createStory(app);
-    const result = await app.graphql.mutate(
-      graphql(`
-        mutation deleteStory($id: ID!) {
-          deleteStory(id: $id) {
-            __typename
-          }
-        }
-      `),
-      {
-        id: st.id,
-      },
+    const result = await runAsAdmin(
+      app,
+      async () =>
+        await app.graphql.mutate(
+          graphql(`
+            mutation deleteStory($id: ID!) {
+              deleteStory(id: $id) {
+                __typename
+              }
+            }
+          `),
+          {
+            id: st.id,
+          },
+        ),
     );
     const actual = result.deleteStory;
     expect(actual).toBeTruthy();
