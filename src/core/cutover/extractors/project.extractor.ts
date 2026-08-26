@@ -149,6 +149,12 @@ export const projectExtractor: Extractor = {
         mouEnd: dateStr(p.mouEnd),
         initialMouEnd: dateStr(p.initialMouEnd),
         estimatedSubmission: dateStr(p.estimatedSubmission),
+        // Carried across verbatim, nulls included. Postgres used to derive
+        // this from the latest workflow event, but that trail only starts
+        // 2021-02-13 and 1,560 projects moved step before it existed — see
+        // migration 0041. All 4,305 stored values carry a time and zone, so
+        // `ts` cannot pick up the loader machine's timezone here.
+        stepChangedAt: ts(p.stepChangedAt),
         financialReportReceivedAt: ts(p.financialReportReceivedAt),
         financialReportPeriod,
         tags: [...orDefault(ctx, 'projects.tags', p.tags, [])],
@@ -324,11 +330,12 @@ export const projectExtractor: Extractor = {
       await bulkInsert(ctx, projectWorkflowEvents, eventRows),
     );
 
-    // ── Step + modifiedAt re-assert ────────────────────────────────────────
-    // Inserting the events fired the step-sync trigger, which sets BOTH
-    // `projects.step` AND `projects.modified_at` from the newest event
-    // (`sync_project_step_from_event`, 0010_add_projects.sql). Two distinct
-    // corrections are needed, and the second is easy to miss:
+    // ── Step + modifiedAt + stepChangedAt re-assert ────────────────────────
+    // Inserting the events fired the step-sync trigger, which sets
+    // `projects.step`, `projects.modified_at` AND `projects.step_changed_at`
+    // from the newest event (`sync_project_step_from_event`, 0010 as amended
+    // by 0041). Three distinct corrections are needed, and the last two are
+    // easy to miss:
     //
     //   step — where Neo4j's current step disagrees with its own event history
     //     (steps taken outside the workflow), Neo4j wins, it is the live value.
@@ -341,11 +348,26 @@ export const projectExtractor: Extractor = {
     //     Every project with at least one event is affected, so this is not an
     //     edge case. `updated_at` keeps the carried value either way, which is
     //     the cheapest way to spot the divergence if it ever regresses again.
+    //
+    //   step_changed_at — same shape as modified_at, and it matters MOST where
+    //     Neo4j holds nothing. 509 projects have an event trail but no stored
+    //     value, because their newest event is the February-2021 backfill that
+    //     created the trail — many carry no transition key at all, so nobody
+    //     moved them; the trail was simply written around them. Letting the
+    //     trigger stand there reports "step changed Feb 2021" for a project
+    //     completed in 2015, which is a migration artifact dressed as a
+    //     business date — the same mistake as the created_at fallback 0041
+    //     removes. Neo4j reports blank; blank is the honest answer, so a
+    //     carried NULL has to win over the trigger.
     if (!ctx.dryRun) {
       const wantById = new Map(
         rows.map((row) => [
           row.id,
-          { step: row.step, modifiedAt: row.modifiedAt },
+          {
+            step: row.step,
+            modifiedAt: row.modifiedAt,
+            stepChangedAt: row.stepChangedAt,
+          },
         ]),
       );
       const live = await ctx.db
@@ -353,27 +375,41 @@ export const projectExtractor: Extractor = {
           id: projects.id,
           step: projects.step,
           modifiedAt: projects.modifiedAt,
+          stepChangedAt: projects.stepChangedAt,
         })
         .from(projects)
         .where(inArray(projects.id, [...wantById.keys()]));
 
       let stepDrift = 0;
       let modifiedDrift = 0;
+      let stepChangedDrift = 0;
+      /** Two timestamps agree when both are absent or both name the instant. */
+      const sameMoment = (a: Date | null, b: Date | null) =>
+        a === null || b === null ? a === b : a.getTime() === b.getTime();
       const drifted = live.filter((row) => {
         const want = wantById.get(row.id);
         if (!want) return false;
         const stepOff = want.step !== row.step;
         const modifiedOff =
           want.modifiedAt.getTime() !== row.modifiedAt.getTime();
+        const stepChangedOff = !sameMoment(
+          want.stepChangedAt,
+          row.stepChangedAt,
+        );
         if (stepOff) stepDrift++;
         if (modifiedOff) modifiedDrift++;
-        return stepOff || modifiedOff;
+        if (stepChangedOff) stepChangedDrift++;
+        return stepOff || modifiedOff || stepChangedOff;
       });
       for (const row of drifted) {
         const want = wantById.get(row.id)!;
         await ctx.db
           .update(projects)
-          .set({ step: want.step, modifiedAt: want.modifiedAt })
+          .set({
+            step: want.step,
+            modifiedAt: want.modifiedAt,
+            stepChangedAt: want.stepChangedAt,
+          })
           .where(inArray(projects.id, [row.id]));
       }
       if (stepDrift) {
@@ -384,6 +420,12 @@ export const projectExtractor: Extractor = {
       if (modifiedDrift) {
         ctx.log(
           `    ⚠ restored modifiedAt on ${modifiedDrift} project(s) that the step-sync trigger had set to their last transition time`,
+        );
+      }
+      if (stepChangedDrift) {
+        ctx.log(
+          `    ⚠ restored stepChangedAt on ${stepChangedDrift} project(s) the step-sync trigger had overwritten — ` +
+            'includes the ones Neo4j leaves blank, which must stay blank',
         );
       }
     }

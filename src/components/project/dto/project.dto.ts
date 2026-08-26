@@ -21,7 +21,6 @@ import {
   type Secured,
   SecuredBoolean,
   SecuredDateNullable,
-  SecuredDateTime,
   SecuredDateTimeNullable,
   SecuredString,
   SecuredStringNullable,
@@ -164,9 +163,21 @@ class Project extends Interfaces {
   // this should match project mouEnd, until it becomes active, then this is final.
   readonly initialMouEnd: SecuredDateNullable;
 
+  /**
+   * When the project last moved to a new step — blank when it never has.
+   *
+   * Typed nullable as of 2026-08-26. It always could be null: `SecuredDateTime`
+   * already emits `value: DateTime` (nullable) in the schema, and Neo4j returns
+   * nothing here for the ~470 legacy projects created before the field was
+   * written at creation time. The TypeScript type simply claimed otherwise, and
+   * nothing caught it because the Neo4j repository builds this DTO untyped.
+   *
+   * The emitted GraphQL shape is unchanged — both wrappers expose the same
+   * nullable `value`; only the wrapper's name on this one field differs.
+   */
   @Field()
   @Calculated()
-  readonly stepChangedAt: SecuredDateTime;
+  readonly stepChangedAt: SecuredDateTimeNullable;
 
   @Field()
   readonly estimatedSubmission: SecuredDateNullable;

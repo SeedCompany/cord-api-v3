@@ -12,7 +12,6 @@ import {
   isNull,
   lt,
   lte,
-  max,
   notInArray,
   sql,
   type SQL,
@@ -50,7 +49,6 @@ import {
   partnerships,
   projectMembers,
   projects,
-  projectWorkflowEvents,
   tools,
   toolUsages,
 } from '~/core/drizzle/schema';
@@ -98,8 +96,6 @@ const catchDepartmentIdUnique = catchUniqueViolation(
 type ProjectRow = typeof projects.$inferSelect & {
   engagementTotal?: number;
   pinned?: boolean;
-  /** Latest workflow-event `at`, if any — batched in `readMany`. */
-  stepChangedAt?: Date | null;
   /**
    * The marketing location's default region — batched in `readMany`. Feeds
    * `marketingRegion`, which falls back to this when there's no override.
@@ -207,21 +203,11 @@ export class ProjectDrizzleRepository extends DrizzleDtoRepository<
     const membershipByProject = new Map(
       memberships.map((m) => [m.projectId, m]),
     );
-    // Latest workflow-event timestamp per project — `stepChangedAt` derives
-    // from it at read time (toDto falls back to createdAt, matching Gel's
-    // `latestWorkflowEvent.at ?? createdAt`). Served by the
-    // (project_id, at DESC) index; events are append-only (no soft delete).
-    const latestEvents = await this.db
-      .select({
-        projectId: projectWorkflowEvents.projectId,
-        at: max(projectWorkflowEvents.at),
-      })
-      .from(projectWorkflowEvents)
-      .where(inArray(projectWorkflowEvents.projectId, [...ids]))
-      .groupBy(projectWorkflowEvents.projectId);
-    const stepChangedByProject = new Map(
-      latestEvents.map((e) => [e.projectId, e.at]),
-    );
+    // `stepChangedAt` is a stored column (migration 0041), not a lookup of the
+    // latest workflow event. It used to be derived here; that agreed for
+    // anything transitioned after the event trail began in Feb 2021 and was
+    // wrong by up to four years for the 1,560 projects that moved before it
+    // existed. History that was never recorded cannot be derived.
     const engagementCounts = await this.db
       .select({
         projectId: engagements.projectId,
@@ -358,7 +344,6 @@ export class ProjectDrizzleRepository extends DrizzleDtoRepository<
       const enriched: ProjectRow = {
         ...row,
         membership: membershipByProject.get(row.id) ?? null,
-        stepChangedAt: stepChangedByProject.get(row.id) ?? null,
         engagementTotal: engagementTotalByProject.get(row.id) ?? 0,
         pinned: pinnedSet.has(row.id),
         inheritedMarketingRegionId: row.marketingLocationId
@@ -632,9 +617,14 @@ export class ProjectDrizzleRepository extends DrizzleDtoRepository<
       presetInventory: row.presetInventory,
       createdAt: DateTime.fromJSDate(row.createdAt),
       modifiedAt: DateTime.fromJSDate(row.modifiedAt),
-      // Derived from the latest workflow event (batched in readMany), falling
-      // back to createdAt — Gel parity: `latestWorkflowEvent.at ?? createdAt`.
-      stepChangedAt: DateTime.fromJSDate(row.stepChangedAt ?? row.createdAt),
+      // Stored, not derived (migration 0041). Null stays null rather than
+      // falling back to createdAt: Neo4j reports blank for the ~470 legacy
+      // projects that never moved off their first step, and a creation date
+      // presented as a step-change date is a confident wrong answer where
+      // blank is an honest one.
+      stepChangedAt: row.stepChangedAt
+        ? DateTime.fromJSDate(row.stepChangedAt)
+        : null,
       primaryLocation: linkOrNull(row.primaryLocationId),
       marketingLocation: linkOrNull(row.marketingLocationId),
       marketingRegionOverride: linkOrNull(row.marketingRegionOverrideId),
