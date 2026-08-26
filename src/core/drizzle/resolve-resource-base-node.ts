@@ -19,6 +19,7 @@ import {
   fundingAccounts,
   gtlGoalProgress,
   gtlGoals,
+  gtlReportMedia,
   gtlReportPracticums,
   languages,
   locations,
@@ -220,6 +221,7 @@ const RESOURCE_TABLES: readonly ResourceTable[] = [
   ofOneType(gtlGoals, 'GtlGoal'),
   ofOneType(gtlGoalProgress, 'GtlGoalProgress'),
   ofOneType(gtlReportPracticums, 'GtlReportPracticum'),
+  ofOneType(gtlReportMedia, 'GtlReportMedia'),
   ofSeveralTypes(products, {
     DirectScripture: 'DirectScriptureProduct',
     Derivative: 'DerivativeScriptureProduct',

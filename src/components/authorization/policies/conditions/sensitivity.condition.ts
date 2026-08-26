@@ -247,6 +247,13 @@ const sensitivityRefForResource = (
         join "periodic_reports" "pr" on "pr"."engagement_id" = "e"."id"
         where "pr"."id" = "gtl_report_practicums"."report_id"
       ) <= ${accessLiteral}`;
+    case 'GtlReportMedia':
+      return sql`(
+        select "p"."sensitivity" from "projects" "p"
+        join "engagements" "e" on "e"."project_id" = "p"."id"
+        join "periodic_reports" "pr" on "pr"."engagement_id" = "e"."id"
+        where "pr"."id" = "gtl_report_media"."report_id"
+      ) <= ${accessLiteral}`;
     case 'ProgressReport':
     case 'GTLReport':
       // Both live on the shared periodic_reports table and are always

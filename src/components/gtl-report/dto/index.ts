@@ -6,6 +6,7 @@ export * from './gtl-goal.dto';
 export * from './gtl-goal.enums';
 export * from './gtl-progress-explanation.dto';
 export * from './gtl-report-list.dto';
+export * from './gtl-report-media.dto';
 export * from './gtl-report-practicum.dto';
 export * from './gtl-report-prose.dto';
 export * from './gtl-report-status.enum';

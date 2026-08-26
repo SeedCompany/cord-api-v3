@@ -3643,6 +3643,49 @@ export const gtlReportPracticums = pgTable(
 );
 
 /**
+ * Media (photo, video, audio) attached to a GTL quarterly report.
+ *
+ * Deliberately not `progress_report_media`: that table is keyed by
+ * (variant_group, variant) because a Momentum highlight is one image re-cut for
+ * four audiences. GTL media is not re-cut — a leader uploads photos of a
+ * workshop and captions them — so a variant group here would always be a group
+ * of one. The category vocabulary is shared, because it is the same set of
+ * subjects and the investor portal reads both.
+ *
+ * `file_id` is a DefinedFile placeholder created after the row lands, hence
+ * FK-less, exactly as on `progress_report_media`.
+ */
+export const gtlReportMedia = pgTable(
+  'gtl_report_media',
+  {
+    id: text('id').$type<ID<'GtlReportMedia'>>().primaryKey(),
+    reportId: text('report_id')
+      .$type<ID<'GTLReport'>>()
+      .notNull()
+      .references(() => periodicReports.id),
+    category:
+      progressReportMediaCategoryEnum('category').$type<MediaCategory>(),
+    caption: text('caption'),
+    fileId: text('file_id').$type<ID<'File'>>(),
+    creatorId: text('creator_id')
+      .$type<ID<'User'>>()
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    modifiedAt: timestamp('modified_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (t) => [
+    index('gtl_report_media_report_id_idx').on(t.reportId),
+    index('gtl_report_media_creator_id_idx').on(t.creatorId),
+  ],
+);
+
+/**
  * At most ONE explanation of progress per GTL report — the PK on `report_id`
  * encodes that, so writes are a plain upsert. Exact mirror of
  * `progress_report_variance_explanations`, including having no soft delete:

@@ -1,6 +1,7 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { EngagementModule } from '../engagement/engagement.module';
+import { FileModule } from '../file/file.module';
 import { PeriodicReportModule } from '../periodic-report/periodic-report.module';
 import { PostModule } from '../post/post.module';
 import { GtlGoalDrizzleRepository } from './goals/gtl-goal.drizzle.repository';
@@ -15,6 +16,12 @@ import { GtlReportPrayerResolver } from './gtl-report-prayer.resolver';
 import { GtlReportProseResolver } from './gtl-report-prose.resolver';
 import { GtlReportSectionsResolver } from './gtl-report-sections.resolver';
 import { SyncGtlReportToEngagementDateRange } from './handlers/sync-gtl-report-to-engagement.handler';
+import { GtlReportMediaDrizzleRepository } from './media/gtl-report-media.drizzle.repository';
+import {
+  GtlReportMediaConnectionResolver,
+  GtlReportMediaResolver,
+} from './media/gtl-report-media.resolver';
+import { GtlReportMediaService } from './media/gtl-report-media.service';
 import { GtlReportPracticumDrizzleRepository } from './practicums/gtl-report-practicum.drizzle.repository';
 import { GtlReportPracticumResolver } from './practicums/gtl-report-practicum.resolver';
 import { GtlReportPracticumService } from './practicums/gtl-report-practicum.service';
@@ -40,6 +47,7 @@ import { GtlReportWorkflowService } from './workflow/gtl-report-workflow.service
     forwardRef(() => EngagementModule),
     forwardRef(() => AuthorizationModule),
     forwardRef(() => PostModule),
+    forwardRef(() => FileModule),
   ],
   providers: [
     GtlReportEngagementConnectionResolver,
@@ -57,6 +65,10 @@ import { GtlReportWorkflowService } from './workflow/gtl-report-workflow.service
     GtlReportCommunityImpactDrizzleRepository,
     GtlReportCommunityImpactService,
     GtlReportPrayerResolver,
+    GtlReportMediaDrizzleRepository,
+    GtlReportMediaService,
+    GtlReportMediaConnectionResolver,
+    GtlReportMediaResolver,
     GtlProgressExplanationResolver,
     GtlProgressExplanationRepository,
     GtlReportWorkflowResolver,

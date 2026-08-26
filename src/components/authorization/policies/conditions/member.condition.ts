@@ -269,6 +269,12 @@ const projectIdRefForResource = (resource: EnhancedResource<any>): SQL => {
             join "periodic_reports" "pr" on "pr"."engagement_id" = "e"."id"
            where "pr"."id" = "gtl_report_practicums"."report_id")`,
       );
+    case 'GtlReportMedia':
+      return sql.raw(
+        `(select "e"."project_id" from "engagements" "e"
+            join "periodic_reports" "pr" on "pr"."engagement_id" = "e"."id"
+           where "pr"."id" = "gtl_report_media"."report_id")`,
+      );
     case 'ProgressReport':
     case 'GTLReport':
       // Both live on the shared periodic_reports table and are always

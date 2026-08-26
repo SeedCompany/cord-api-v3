@@ -23,6 +23,7 @@ import { Policy, Role } from '../util';
     r.GtlGoal.read.create.edit.delete,
     r.GtlGoalProgress.read.create.edit.delete,
     r.GtlReportPracticum.read.create.edit.delete,
+    r.GtlReportMedia.read.create.edit.delete,
     // Without these the prose sections resolve `canRead: false` for every
     // non-root user and the UI renders nothing — root only saw them because
     // Administrator bypasses policies.
