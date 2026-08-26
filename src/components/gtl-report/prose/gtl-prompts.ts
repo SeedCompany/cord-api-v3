@@ -21,19 +21,3 @@ export const communityImpactPrompts = [
     shortLabel: 'Personal and community impact',
   }),
 ];
-
-export const praisePrompts = [
-  Prompt.create({
-    id: 'gtlPraise0001',
-    text: 'What are you thankful for from the past three months?',
-    shortLabel: 'Praises',
-  }),
-];
-
-export const petitionPrompts = [
-  Prompt.create({
-    id: 'gtlPetition001',
-    text: 'What needs do you have that we can join you in praying for?',
-    shortLabel: 'Petitions',
-  }),
-];

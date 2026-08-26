@@ -114,6 +114,9 @@ export class PostDrizzleRepository extends DrizzleDtoRepository<
     if (filter?.parentId) {
       conditions.push(eq(posts.parentId, filter.parentId));
     }
+    if (filter?.type) {
+      conditions.push(eq(posts.type, filter.type));
+    }
     const predicate = and(...conditions);
     const offset = (input.page - 1) * input.count;
     const [countRows, rows] = await Promise.all([

@@ -14,17 +14,19 @@ import { Commentable } from '../../comments/dto';
 import { InternshipEngagement } from '../../engagement/dto';
 import { type DefinedFile } from '../../file/dto';
 import { IPeriodicReport } from '../../periodic-report/dto/periodic-report.dto';
-import {
-  GtlReportCommunityImpact,
-  GtlReportPetition,
-  GtlReportPraise,
-} from './gtl-report-prose.dto';
+import { Postable } from '../../post/dto';
+import { GtlReportCommunityImpact } from './gtl-report-prose.dto';
 import {
   SecuredGtlReportStatus as SecuredStatus,
   GtlReportStatus as Status,
 } from './gtl-report-status.enum';
 
-const Interfaces = IntersectTypes(IPeriodicReport, Resource, Commentable);
+const Interfaces = IntersectTypes(
+  IPeriodicReport,
+  Resource,
+  Commentable,
+  Postable,
+);
 
 /**
  * The quarterly narrative report for a Global Translation Leader — Cord's
@@ -36,6 +38,11 @@ const Interfaces = IntersectTypes(IPeriodicReport, Resource, Commentable);
  * date range. What differs is entirely the content: a GTL report carries goals,
  * practicum involvement, prayer and community impact rather than translation
  * progress against a PnP.
+ *
+ * Postable because prayer belongs to the Post domain rather than to a prompt:
+ * a prayer request is written once, read by whoever the leader shares it with,
+ * and answered — it is not an audience-varied narrative the way community
+ * impact is. `prayerRequests` narrows the inherited `posts` list to that kind.
  *
  * The class name is load-bearing: `IPeriodicReport`'s `resolveType` is
  * `` `${obj.type}Report` ``, so the `GTL` report type resolves to exactly
@@ -60,8 +67,7 @@ export class GTLReport extends Interfaces {
   static readonly Relations = (() => ({
     ...Resource.Relations(),
     communityImpact: [GtlReportCommunityImpact],
-    praises: [GtlReportPraise],
-    petitions: [GtlReportPetition],
+    ...Postable.Relations(),
     ...Commentable.Relations(),
   })) satisfies ResourceRelationsShape;
 

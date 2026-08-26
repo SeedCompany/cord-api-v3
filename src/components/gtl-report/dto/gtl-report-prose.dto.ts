@@ -43,30 +43,10 @@ export class GtlReportCommunityImpact extends PromptVariantResponse<GtlProseVari
   static readonly ConfirmThisClassPassesSensitivityToPolicies = true;
 }
 
-/** "Praises — What are you thankful for?" */
-@RegisterResource()
-export class GtlReportPraise extends PromptVariantResponse<GtlProseVariant> {
-  static readonly Parent = () =>
-    import('./gtl-report.dto').then((m) => m.GTLReport);
-  static Variants = variants;
-  static readonly ConfirmThisClassPassesSensitivityToPolicies = true;
-}
-
-/** "Petitions — What needs do you have?" */
-@RegisterResource()
-export class GtlReportPetition extends PromptVariantResponse<GtlProseVariant> {
-  static readonly Parent = () =>
-    import('./gtl-report.dto').then((m) => m.GTLReport);
-  static Variants = variants;
-  static readonly ConfirmThisClassPassesSensitivityToPolicies = true;
-}
-
 export type GtlProseVariant = VariantOf<typeof GtlReportCommunityImpact>;
 
 declare module '~/core/resources/map' {
   interface ResourceMap {
     GtlReportCommunityImpact: typeof GtlReportCommunityImpact;
-    GtlReportPraise: typeof GtlReportPraise;
-    GtlReportPetition: typeof GtlReportPetition;
   }
 }

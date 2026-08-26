@@ -18,7 +18,8 @@ import { Policy, Role } from '../util';
     Role.Leadership,
   ],
   (r) => [
-    r.GTLReport.read,
+    // Prayer is Posts, and posts are granted through the parent's edge.
+    r.GTLReport.read.children((c) => c.posts.read.create),
     r.GtlGoal.read.create.edit.delete,
     r.GtlGoalProgress.read.create.edit.delete,
     r.GtlReportPracticum.read.create.edit.delete,
@@ -26,8 +27,6 @@ import { Policy, Role } from '../util';
     // non-root user and the UI renders nothing — root only saw them because
     // Administrator bypasses policies.
     r.GtlReportCommunityImpact.read.create.edit.delete,
-    r.GtlReportPraise.read.create.edit.delete,
-    r.GtlReportPetition.read.create.edit.delete,
   ],
 )
 export class GtlReportsPolicy {}

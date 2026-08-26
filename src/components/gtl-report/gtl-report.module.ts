@@ -2,6 +2,7 @@ import { forwardRef, Module } from '@nestjs/common';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { EngagementModule } from '../engagement/engagement.module';
 import { PeriodicReportModule } from '../periodic-report/periodic-report.module';
+import { PostModule } from '../post/post.module';
 import { GtlGoalDrizzleRepository } from './goals/gtl-goal.drizzle.repository';
 import { GtlGoalService } from './goals/gtl-goal.service';
 import {
@@ -10,6 +11,7 @@ import {
   GtlGoalResolver,
 } from './gtl-goal.resolver';
 import { GtlReportEngagementConnectionResolver } from './gtl-report-engagement-connection.resolver';
+import { GtlReportPrayerResolver } from './gtl-report-prayer.resolver';
 import { GtlReportProseResolver } from './gtl-report-prose.resolver';
 import { GtlReportSectionsResolver } from './gtl-report-sections.resolver';
 import { SyncGtlReportToEngagementDateRange } from './handlers/sync-gtl-report-to-engagement.handler';
@@ -20,10 +22,6 @@ import { GtlProgressExplanationRepository } from './progress-explanation/gtl-pro
 import { GtlProgressExplanationResolver } from './progress-explanation/gtl-progress-explanation.resolver';
 import { GtlReportCommunityImpactDrizzleRepository } from './prose/gtl-report-community-impact.drizzle.repository';
 import { GtlReportCommunityImpactService } from './prose/gtl-report-community-impact.service';
-import { GtlReportPetitionDrizzleRepository } from './prose/gtl-report-petition.drizzle.repository';
-import { GtlReportPetitionService } from './prose/gtl-report-petition.service';
-import { GtlReportPraiseDrizzleRepository } from './prose/gtl-report-praise.drizzle.repository';
-import { GtlReportPraiseService } from './prose/gtl-report-praise.service';
 import { GtlReportWorkflowRepository } from './workflow/gtl-report-workflow.repository';
 import { GtlReportWorkflowResolver } from './workflow/gtl-report-workflow.resolver';
 import { GtlReportWorkflowService } from './workflow/gtl-report-workflow.service';
@@ -41,6 +39,7 @@ import { GtlReportWorkflowService } from './workflow/gtl-report-workflow.service
     forwardRef(() => PeriodicReportModule),
     forwardRef(() => EngagementModule),
     forwardRef(() => AuthorizationModule),
+    forwardRef(() => PostModule),
   ],
   providers: [
     GtlReportEngagementConnectionResolver,
@@ -57,10 +56,7 @@ import { GtlReportWorkflowService } from './workflow/gtl-report-workflow.service
     GtlReportProseResolver,
     GtlReportCommunityImpactDrizzleRepository,
     GtlReportCommunityImpactService,
-    GtlReportPraiseDrizzleRepository,
-    GtlReportPraiseService,
-    GtlReportPetitionDrizzleRepository,
-    GtlReportPetitionService,
+    GtlReportPrayerResolver,
     GtlProgressExplanationResolver,
     GtlProgressExplanationRepository,
     GtlReportWorkflowResolver,

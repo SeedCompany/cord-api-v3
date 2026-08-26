@@ -153,7 +153,9 @@ export abstract class SecuredLanguageEngagementList extends SecuredList(
 ) {}
 
 @ObjectType({
-  description: SecuredList.descriptionFor('Global Translation Leader engagements'),
+  description: SecuredList.descriptionFor(
+    'Global Translation Leader engagements',
+  ),
 })
 export abstract class SecuredInternshipEngagementList extends SecuredList(
   InternshipEngagement,

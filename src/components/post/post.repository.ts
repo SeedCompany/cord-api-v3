@@ -63,6 +63,11 @@ export class PostRepository extends DtoRepository(Post) {
       .run();
   }
 
+  /**
+   * `filter.type` is deliberately unimplemented here: only GTL reports narrow
+   * posts by kind, and GTL exists on Postgres alone. If another caller ever
+   * sets it, this path has to grow a `node.type` predicate.
+   */
   async securedList({ filter, ...input }: PostListInput) {
     const result = await this.db
       .query()
