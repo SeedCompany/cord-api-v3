@@ -34,6 +34,8 @@
  *     yarn start --entryFile core/cutover.run -- --batch=100
  *
  * Flags: --dry-run | --only=a,b,c | --batch=N | --no-migrate | --strict
+ *        --allow-other-sessions (load even though somebody else is connected
+ *        to the target — they lose their session at the truncate)
  *
  * Exit codes: 0 clean, 1 a table MISMATCHed (a write did not land) or the run
  * threw, 2 under --strict when rows were lost but nothing broke.
@@ -67,6 +69,10 @@ const parseFlags = (argv: readonly string[]) => {
     dryRun: has('dry-run'),
     migrate: !has('no-migrate'),
     strict: has('strict'),
+    // Load even though somebody else is connected to the target. They lose
+    // their session at the truncate and their writes read afterwards as a
+    // reconciliation mismatch, so this is a deliberate choice, never a default.
+    allowOtherSessions: has('allow-other-sessions'),
     only: get('only')?.split(',').filter(Boolean),
     batchSize,
   };
@@ -147,6 +153,7 @@ async function bootstrap() {
           moduleRef,
           dryRun: flags.dryRun,
           batchSize: flags.batchSize,
+          allowOtherSessions: flags.allowOtherSessions,
           notHydrated: new Map(),
           log,
         },

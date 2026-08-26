@@ -5,6 +5,7 @@ import {
   type Extractor,
   type TableStat,
 } from './cutover.types';
+import { checkExclusiveTarget } from './target-access';
 
 /**
  * Topologically order extractors by their `dependsOn` (parents before
@@ -78,6 +79,16 @@ export const runCutover = async (
     throw new Error(`Cutover refused — ${gate.reason}`);
   }
   ctx.log(`Source: ${gate.reason}`);
+
+  // The target end of the same idea. Checked here for the same reason the scrub
+  // gate is: THIS is what truncates every table, and an entry-point check is
+  // bypassed by any other caller. pg-refresh also checks before its schema
+  // drop, which happens earlier still — both are wanted, neither is redundant.
+  const exclusive = await checkExclusiveTarget(ctx.db);
+  if (!exclusive.allowed && !ctx.allowOtherSessions) {
+    throw new Error(`Cutover refused — ${exclusive.reason}`);
+  }
+  ctx.log(`Target: ${exclusive.reason}`);
 
   const ordered = orderExtractors(extractors);
   // An unknown --only name is a typo, not a request for nothing. Silently

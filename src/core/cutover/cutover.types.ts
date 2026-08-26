@@ -39,6 +39,13 @@ export interface CutoverContext {
    * for ongoing QA refreshes, which should always run against scrubbed data.
    */
   readonly allowProductionSource?: boolean;
+  /**
+   * When true, load even though other sessions are connected to the target.
+   * They lose their session at the truncate below, and whatever they write
+   * during the load lands in a half-populated database and reads afterwards as
+   * a reconciliation mismatch. Leave it false unless you know who is attached.
+   */
+  readonly allowOtherSessions?: boolean;
   readonly log: (msg: string) => void;
 }
 

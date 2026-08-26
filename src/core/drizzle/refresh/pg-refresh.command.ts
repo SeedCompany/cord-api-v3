@@ -4,6 +4,7 @@ import { sql } from 'drizzle-orm';
 import { InjectableCommand } from '~/core/cli';
 import { ConfigService } from '~/core/config';
 import { DatabaseService } from '~/core/neo4j';
+import { checkExclusiveTarget } from '../../cutover/target-access';
 import { DrizzleService } from '../drizzle.service';
 import { DrizzleMigrator } from '../migrator';
 
@@ -51,6 +52,12 @@ export class PgRefreshCommand extends Command {
       'Allow loading from a production-scale Neo4j without a scrub marker. ' +
       'Required for the real cutover. Omit for QA refreshes (scrubbed data only).',
   });
+  allowOtherSessions = Option.Boolean('--allow-other-sessions', false, {
+    description:
+      'Proceed even though other sessions are connected to the target. ' +
+      'They will lose their session when the schema is dropped, and anything ' +
+      'they write during the load will read later as a mismatch.',
+  });
   only = Option.String('--only', {
     description:
       'Comma-separated extractor names to run, e.g. --only=tool,user',
@@ -83,6 +90,36 @@ export class PgRefreshCommand extends Command {
       );
       return 1;
     }
+
+    // Say where this is going before doing anything to it. Without this line a
+    // refresh that picked up the wrong POSTGRES_URL runs for an hour and looks
+    // completely normal — which is how the 2026-08-25 load ended up in the
+    // wrong database. An inline env var that expands to EMPTY is dropped and
+    // the .env file quietly fills the hole, so "I set it on the command line"
+    // is not evidence of anything. cutover.run.ts has always printed this; the
+    // path people actually use for a refresh did not.
+    //
+    // Host and database name only, never the whole URL — it carries the
+    // password. ConfigService has already stripped credentials off the Neo4j one.
+    const target = new URL(this.config.postgres.url);
+    const targetName = target.pathname.replace(/^\//, '');
+    write(
+      `\nPostgres target: ${targetName} on ${target.host}\n` +
+        `Neo4j source:    ${this.config.neo4j.url}\n\n`,
+    );
+
+    // Nobody else may be attached: the drop below and the ETL's truncate would
+    // take their session out from under them, and their writes would land in a
+    // half-loaded database. Checked here, at the entry point, because the drop
+    // is right below — and again inside the harness for callers that skip this
+    // command entirely.
+    const exclusive = await checkExclusiveTarget(this.drizzle.client);
+    if (!exclusive.allowed && !this.allowOtherSessions) {
+      write(`Refusing to run — ${exclusive.reason}\n`);
+      write('Pass --allow-other-sessions to proceed anyway.\n');
+      return 1;
+    }
+    write(`Target access: ${exclusive.reason}\n\n`);
 
     if (this.fresh) {
       write('Dropping schema (data + migration history)…\n');
@@ -127,6 +164,9 @@ export class PgRefreshCommand extends Command {
           dryRun: false,
           batchSize,
           allowProductionSource: this.productionSource,
+          // Already checked above, before the schema drop. Carried through so
+          // the harness does not refuse what this command deliberately allowed.
+          allowOtherSessions: this.allowOtherSessions,
           notHydrated: new Map(),
           log,
         },

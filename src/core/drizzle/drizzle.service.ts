@@ -45,7 +45,17 @@ export class DrizzleService implements OnModuleDestroy {
       }
       return;
     }
-    this.pool = new Pool({ connectionString: url });
+    this.pool = new Pool({
+      connectionString: url,
+      // Names every connection this process opens, so `pg_stat_activity` says
+      // who is attached instead of listing anonymous backends. The process id
+      // is part of it deliberately: the whole pool shares one name, which lets
+      // a caller subtract its OWN connections and still see a second API or a
+      // stray psql. checkExclusiveTarget in cutover/target-access.ts relies on
+      // exactly that, and degrades to a less precise check without it.
+      // eslint-disable-next-line @typescript-eslint/naming-convention -- pg's own option name
+      application_name: `cord-${config.isCli ? 'cli' : 'api'}[${process.pid}]`,
+    });
     this.baseDb = drizzle(this.pool, { schema });
   }
 
