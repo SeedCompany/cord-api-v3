@@ -150,9 +150,10 @@ async function bootstrap() {
   const { HttpAdapter } = await import('~/core/http');
   const { report, runProbes, sampleIds } =
     await import('./mutation-probe/probe');
-  const { probes, sampledTables } = await import('./mutation-probe/probes');
-  const { and, asc, eq, isNull } = await import('drizzle-orm');
-  const { userGlobalRoles, users } = await import('~/core/drizzle/schema');
+  const { cohorts, probes } = await import('./mutation-probe/probes');
+  const { and, asc, eq, isNull, sql } = await import('drizzle-orm');
+  const { projectMembers, userGlobalRoles, users } =
+    await import('~/core/drizzle/schema');
 
   // A full app, not an application context: the GraphQL module only builds the
   // schema when an HTTP adapter is present. Initialised, never listening.
@@ -165,11 +166,10 @@ async function bootstrap() {
     await app.get(SessionManager).lazySessionForRootUser();
 
     const db = app.get(DrizzleService).client;
-    // The live Administrator with the lowest id — deterministic, so two runs
-    // act as the same person. Resolved here rather than imported from the
-    // shadow-diff harness, which lives only on the ETL branch: this probe has
-    // to run on develop-based branches too, which is how it gets compared
-    // against a branch that fixes something.
+    // Resolved here rather than imported from the shadow-diff harness, which
+    // lives only on the ETL branch: this probe has to run on develop-based
+    // branches too, which is how it gets compared against a branch that fixes
+    // something.
     const admins = await db
       .select({ id: users.id })
       .from(users)
@@ -179,20 +179,67 @@ async function bootstrap() {
       )
       .orderBy(asc(users.id))
       .limit(1);
-    const actor = admins[0]?.id;
-    if (!actor) {
+    const admin = admins[0]?.id;
+
+    // A project manager who holds NO OTHER global role, and is on the most
+    // teams among those.
+    //
+    // The "no other role" part is load-bearing and was learned the hard way.
+    // Picking simply the most-connected project manager landed on somebody who
+    // was also a Field Operations Director and a Regional Director — and Field
+    // Operations Director carries `r.Project.edit` with no membership
+    // condition. Policies add together, so every "they should NOT be allowed
+    // to" check came back allowed, which looked exactly like a permission bug
+    // and was in fact correct behaviour for that person.
+    //
+    // Ordering by team count then id keeps it deterministic, and guarantees
+    // both projects they manage and projects they do not.
+    const pms = await db
+      .select({
+        id: users.id,
+        projects: sql<number>`count(distinct ${projectMembers.projectId})::int`,
+      })
+      .from(users)
+      .innerJoin(userGlobalRoles, eq(userGlobalRoles.userId, users.id))
+      .innerJoin(
+        projectMembers,
+        and(
+          eq(projectMembers.userId, users.id),
+          isNull(projectMembers.deletedAt),
+        ),
+      )
+      .where(
+        and(
+          eq(userGlobalRoles.role, 'ProjectManager'),
+          isNull(users.deletedAt),
+          sql`(select count(*) from ${userGlobalRoles} other
+               where other.user_id = ${users.id}) = 1`,
+        ),
+      )
+      .groupBy(users.id)
+      .orderBy(
+        sql`count(distinct ${projectMembers.projectId}) desc`,
+        asc(users.id),
+      )
+      .limit(1);
+    const projectManager = pms[0]?.id;
+
+    if (!admin || !projectManager) {
       throw new Error(
-        'No live Administrator in the loaded data — the probes need one to ' +
-          'act as. This is a finding about the load, not about the probe.',
+        `The loaded data has no live ${!admin ? 'Administrator' : 'ProjectManager with any team membership'}. ` +
+          'The probes need both to act as. This is a finding about the load, ' +
+          'not about the probe.',
       );
     }
 
-    const ids = await sampleIds(db, sampledTables, flags.rows);
     log(
       `\nMutation probe — working copy ${flags.into}\n` +
-        `acting as Administrator ${actor}\n` +
-        `${probes.length} probes over ${flags.rows} migrated row(s) each\n`,
+        `  administrator:   ${admin}\n` +
+        `  project manager: ${projectManager} (on ${pms[0]!.projects} teams)\n` +
+        `${probes.length} probes, up to ${flags.rows} migrated row(s) per type\n`,
     );
+    log('Sampling:');
+    const ids = await sampleIds(db, cohorts(projectManager), flags.rows, log);
 
     const outcomes = await runProbes(
       {
@@ -200,7 +247,7 @@ async function bootstrap() {
         identity: app.get(Identity),
         gqlContextAls: app.get(GqlContextHostImpl).als,
         db,
-        actor,
+        actors: { admin, projectManager },
         log,
       },
       probes,

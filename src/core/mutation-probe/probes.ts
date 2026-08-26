@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm';
 import { type ID } from '~/common';
 import {
   engagements,
@@ -6,47 +7,105 @@ import {
   partners,
   partnerships,
   periodicReports,
+  products,
+  projectMembers,
   projects,
   users,
 } from '~/core/drizzle/schema';
-import { type Probe, type SampledTable } from './probe';
+import { type Cohort, type Probe, type ProbeContext } from './probe';
 
 /**
- * The migrated rows each probe draws from. Live rows only, in id order, so a
- * failure can be quoted and reproduced.
+ * The migrated rows each probe draws from.
+ *
+ * Two things shape this list. Types are stratified, so every project type,
+ * engagement type and product type gets looked at rather than whichever
+ * happened to sort first — ids are random strings, so an unstratified sample of
+ * five would miss an Internship engagement about two times in five, and would
+ * never once see an Other product (69 rows out of 80,320).
+ *
+ * And projects are split by whether the acting project manager is on the team,
+ * because that is what their permission to edit turns on. Membership rows came
+ * across in the migration, so this asks a question about migrated DATA, not
+ * just about policy.
  */
-export const sampledTables: Readonly<Record<string, SampledTable>> = {
-  users: { table: users, id: users.id, deletedAt: users.deletedAt },
-  organizations: {
-    table: organizations,
-    id: organizations.id,
-    deletedAt: organizations.deletedAt,
-  },
-  partners: { table: partners, id: partners.id, deletedAt: partners.deletedAt },
-  languages: {
-    table: languages,
-    id: languages.id,
-    deletedAt: languages.deletedAt,
-  },
-  projects: { table: projects, id: projects.id, deletedAt: projects.deletedAt },
-  partnerships: {
-    table: partnerships,
-    id: partnerships.id,
-    deletedAt: partnerships.deletedAt,
-  },
-  engagements: {
-    table: engagements,
-    id: engagements.id,
-    deletedAt: engagements.deletedAt,
-  },
-  // No deleted_at by design — periodic_reports is real-delete.
-  periodicReports: { table: periodicReports, id: periodicReports.id },
+export const cohorts = (actor: ID): Readonly<Record<string, Cohort>> => {
+  const onTheTeam = sql`exists (
+    select 1 from ${projectMembers} pm
+    where pm.project_id = ${projects.id}
+      and pm.user_id = ${actor}
+      and pm.deleted_at is null
+  )`;
+  return {
+    users: { table: users, id: users.id, deletedAt: users.deletedAt },
+    organizations: {
+      table: organizations,
+      id: organizations.id,
+      deletedAt: organizations.deletedAt,
+    },
+    partners: {
+      table: partners,
+      id: partners.id,
+      deletedAt: partners.deletedAt,
+    },
+    languages: {
+      table: languages,
+      id: languages.id,
+      deletedAt: languages.deletedAt,
+    },
+    projectsMember: {
+      table: projects,
+      id: projects.id,
+      deletedAt: projects.deletedAt,
+      predicate: onTheTeam,
+      stratifyBy: projects.type,
+    },
+    projectsNotMember: {
+      table: projects,
+      id: projects.id,
+      deletedAt: projects.deletedAt,
+      predicate: sql`not ${onTheTeam}`,
+      stratifyBy: projects.type,
+    },
+    partnerships: {
+      table: partnerships,
+      id: partnerships.id,
+      deletedAt: partnerships.deletedAt,
+    },
+    engagements: {
+      table: engagements,
+      id: engagements.id,
+      deletedAt: engagements.deletedAt,
+      stratifyBy: engagements.type,
+    },
+    products: {
+      table: products,
+      id: products.id,
+      deletedAt: products.deletedAt,
+      stratifyBy: products.type,
+    },
+    // No deleted_at by design — periodic_reports is real-delete.
+    periodicReports: {
+      table: periodicReports,
+      id: periodicReports.id,
+      stratifyBy: periodicReports.type,
+    },
+    projectMembersOnMyProjects: {
+      table: projectMembers,
+      id: projectMembers.id,
+      deletedAt: projectMembers.deletedAt,
+      predicate: sql`exists (
+        select 1 from ${projectMembers} mine
+        where mine.project_id = ${projectMembers.projectId}
+          and mine.user_id = ${actor}
+          and mine.deleted_at is null
+      )`,
+    },
+  };
 };
 
 /** Distinct per run and per row, so a read-back cannot pass on a stale value. */
 const mark = (id: ID) => `probe ${id} ${process.pid}`;
 
-/** The shape every access-controlled scalar comes back in. */
 interface Secured<T> {
   readonly value: T | null;
 }
@@ -56,7 +115,6 @@ interface Reads {
   readonly partner: { readonly address: Secured<string> };
   readonly language: { readonly displayNamePronunciation: Secured<string> };
   readonly project: { readonly name: Secured<string> };
-  readonly partnership: { readonly mouStartOverride: Secured<string> };
 }
 type Read<K extends keyof Reads> = Pick<Reads, K>;
 
@@ -92,7 +150,7 @@ interface TeamRead {
  * defect this codebase has actually shipped.
  */
 const writeAndReadBack = async <T>(
-  ctx: Parameters<Probe['run']>[0],
+  ctx: ProbeContext,
   id: ID,
   opts: {
     readonly mutation: string;
@@ -112,10 +170,173 @@ const writeAndReadBack = async <T>(
   }
 };
 
+/**
+ * Insist the call is REFUSED on permissions.
+ *
+ * Succeeding is the failure here. So is failing for any other reason: an
+ * unexpected crash would otherwise read as "correctly denied" and hide a real
+ * defect behind a check that looks satisfied.
+ */
+const expectDenied = async (
+  ctx: ProbeContext,
+  what: string,
+  call: () => Promise<unknown>,
+): Promise<void> => {
+  try {
+    await call();
+  } catch (err: unknown) {
+    if (ctx.isDenied(err)) return;
+    throw new Error(
+      `expected a refusal for ${what} but it failed for another reason: ` +
+        (err instanceof Error ? err.message : String(err)),
+    );
+  }
+  throw new Error(`${what} was ALLOWED — expected the policy to refuse it`);
+};
+
+/** A live user who is not already on this project's team, if there is one. */
+const someoneNotOnTheTeam = async (
+  ctx: ProbeContext,
+  project: ID,
+): Promise<ID | undefined> => {
+  const rows = await ctx.db
+    .select({ id: users.id })
+    .from(users)
+    .where(
+      sql`${users.deletedAt} is null and not exists (
+        select 1 from ${projectMembers} pm
+        where pm.project_id = ${project}
+          and pm.user_id = ${users.id}
+          and pm.deleted_at is null
+      )`,
+    )
+    .orderBy(users.id)
+    .limit(1);
+  return rows[0]?.id as ID | undefined;
+};
+
+/** After a delete, reading it back must not return it. */
+const expectGone = async (
+  ctx: ProbeContext,
+  what: string,
+  id: ID,
+  query: string,
+): Promise<void> => {
+  try {
+    await ctx.gql(query, { id });
+  } catch {
+    return; // NotFound is the expected shape.
+  }
+  throw new Error(`deleted the ${what} but it is still readable`);
+};
+
+const UPDATE_PROJECT = `mutation ProbeUpdateProject($input: UpdateProject!) {
+  updateProject(input: $input) { project { id } }
+}`;
+const READ_PROJECT = `query ProbeReadProject($id: ID!) {
+  project(id: $id) { id name { value } }
+}`;
+const ADD_MEMBER = `mutation ProbeAddMember($input: CreateProjectMember!) {
+  createProjectMember(input: $input) { projectMember { id } }
+}`;
+
 export const probes: readonly Probe[] = [
+  // ---- As a project manager, split by whether they are on the team --------
+  {
+    /**
+     * The grant reads `r.Project.read.create.when(member).edit` — edit applies
+     * only to a project they are a member of. Those membership rows came across
+     * in the migration, so this is really asking whether migrated team data
+     * still grants what it should.
+     */
+    key: 'PM edits a project they manage',
+    domain: 'projectsMember',
+    run: async (ctx, id) =>
+      await writeAndReadBack<Read<'project'>>(ctx, id, {
+        mutation: UPDATE_PROJECT,
+        variables: (name) => ({ input: { id, name } }),
+        query: READ_PROJECT,
+        actual: (d) => d.project.name.value,
+      }),
+  },
+  {
+    key: 'PM cannot edit a project they do not manage',
+    domain: 'projectsNotMember',
+    run: async (ctx, id) =>
+      await expectDenied(
+        ctx,
+        'editing a non-member project',
+        async () =>
+          await ctx.gql(UPDATE_PROJECT, { input: { id, name: mark(id) } }),
+      ),
+  },
+  {
+    key: 'PM adds a member to a project they manage',
+    domain: 'projectsMember',
+    run: async (ctx, id) => {
+      // Somebody who is NOT already on this team. It cannot be the actor: this
+      // cohort is defined as projects they are a member of, so adding them
+      // fails with "already a member" every single time.
+      const newcomer = await someoneNotOnTheTeam(ctx, id);
+      if (!newcomer) {
+        return { notApplicable: 'every live user is already on this team' };
+      }
+      const team = `query ProbeTeam($id: ID!) {
+        project(id: $id) { team(input: { count: 1 }) { total } }
+      }`;
+      const before = await ctx.gql<TeamRead>(team, { id });
+      await ctx.gql(ADD_MEMBER, { input: { project: id, user: newcomer } });
+      const after = await ctx.gql<TeamRead>(team, { id });
+      const expected = before.project.team.total + 1;
+      if (after.project.team.total !== expected) {
+        throw new Error(
+          `team total went ${before.project.team.total} -> ` +
+            `${after.project.team.total}, expected ${expected}`,
+        );
+      }
+      return undefined;
+    },
+  },
+  {
+    /**
+     * ⚠ CURRENTLY FAILING, AND NOT YET EXPLAINED. Left red on purpose.
+     *
+     * The grant reads `r.ProjectMember.read.when(member).edit.create.delete`,
+     * so creating a member should need the requester to be on that project's
+     * team. Acting as a project manager who holds no other role, on projects
+     * they are not a member of, it is ALLOWED — nine times out of nine.
+     *
+     * What has been ruled out: the actor holding a second role that grants it
+     * (checked — this one holds only ProjectManager), and the scope lookup
+     * being wrong (`requesterScopeByProject` queries the requester's own
+     * memberships and looks right). What has NOT been established is whether
+     * the old database behaves the same way. That is the question that decides
+     * what this is: same on both means a long-standing gap and post-cutover by
+     * the priority rule; different means a migration regression and it matters
+     * now.
+     *
+     * Do not "fix" this by relaxing the expectation. The policy text is the
+     * expectation; if the answer turns out to be that creates are checked
+     * differently by design, change this comment and the assertion together.
+     */
+    key: 'PM cannot add a member to a project they do not manage',
+    domain: 'projectsNotMember',
+    run: async (ctx, id) =>
+      await expectDenied(
+        ctx,
+        'adding a member to a non-member project',
+        async () =>
+          await ctx.gql(ADD_MEMBER, {
+            input: { project: id, user: ctx.actor },
+          }),
+      ),
+  },
+
+  // ---- As an administrator, where no project-membership rule applies ------
   {
     key: 'updateUser',
     domain: 'users',
+    as: 'admin',
     run: async (ctx, id) =>
       await writeAndReadBack<Read<'user'>>(ctx, id, {
         mutation: `mutation ProbeUpdateUser($input: UpdateUser!) {
@@ -131,6 +352,7 @@ export const probes: readonly Probe[] = [
   {
     key: 'updateOrganization',
     domain: 'organizations',
+    as: 'admin',
     run: async (ctx, id) =>
       await writeAndReadBack<Read<'organization'>>(ctx, id, {
         mutation: `mutation ProbeUpdateOrg($input: UpdateOrganization!) {
@@ -146,6 +368,7 @@ export const probes: readonly Probe[] = [
   {
     key: 'updatePartner',
     domain: 'partners',
+    as: 'admin',
     run: async (ctx, id) =>
       await writeAndReadBack<Read<'partner'>>(ctx, id, {
         mutation: `mutation ProbeUpdatePartner($input: UpdatePartner!) {
@@ -159,87 +382,9 @@ export const probes: readonly Probe[] = [
       }),
   },
   {
-    /**
-     * The F2 shape, turned into a check that can actually see it.
-     *
-     * A partner's sensitivity is documented as "Based on the project's
-     * sensitivity" — the lowest among the projects it partners with. On
-     * Postgres it was a stored column that nothing maintained, and the reason
-     * that survived every check we had is worth restating: the ETL loaded
-     * correct values, so reading agreed perfectly, and the value only went
-     * wrong once something happened that should have moved it.
-     *
-     * So this probe MOVES it. Link the partner to a project whose sensitivity
-     * is lower than the partner's current one, and the partner must follow. A
-     * stored column will not, and a derived one will.
-     *
-     * Note what a weaker version of this misses: writing an unrelated field and
-     * checking sensitivity "did not change" passes on the broken implementation
-     * too, because on migrated data the loaded value is already right.
-     */
-    key: 'partner sensitivity follows a new project',
-    domain: 'partners',
-    run: async (ctx, id) => {
-      const rank: Record<string, number> = { Low: 1, Medium: 2, High: 3 };
-      const read = `query ProbePartnerSensitivity($id: ID!) {
-        partner(id: $id) {
-          id
-          sensitivity
-          projects(input: { count: 50 }) { items { id sensitivity } }
-        }
-      }`;
-      const before = await ctx.gql<PartnerSensitivityRead>(read, { id });
-      const current: string = before.partner.sensitivity;
-      if ((rank[current] ?? 9) <= rank.Low!) {
-        return {
-          notApplicable: `partner is already ${current}, nothing lower to move to`,
-        };
-      }
-
-      // A project this partner is NOT already linked to, with a lower
-      // sensitivity than the partner currently reports.
-      const linked = new Set<string>(
-        before.partner.projects.items.map((p: { id: string }) => p.id),
-      );
-      const { projects } = await ctx.gql<ProjectListRead>(
-        `query ProbeFindLowerProject {
-          projects(input: { count: 50, filter: { sensitivity: [Low] } }) {
-            items { id sensitivity }
-          }
-        }`,
-      );
-      const candidate = projects.items.find(
-        (p: { id: string; sensitivity: string }) =>
-          !linked.has(p.id) &&
-          (rank[p.sensitivity] ?? 9) < (rank[current] ?? 9),
-      );
-      if (!candidate) {
-        return {
-          notApplicable: `no unlinked project with sensitivity below ${current}`,
-        };
-      }
-
-      await ctx.gql(
-        `mutation ProbeLinkPartner($input: CreatePartnership!) {
-          createPartnership(input: $input) { partnership { id } }
-        }`,
-        { input: { partner: id, project: candidate.id } },
-      );
-
-      const after = await ctx.gql<PartnerSensitivityRead>(read, { id });
-      if (after.partner.sensitivity !== candidate.sensitivity) {
-        throw new Error(
-          `linked a ${candidate.sensitivity} project (${candidate.id}) but ` +
-            `sensitivity is still ${after.partner.sensitivity} ` +
-            `(was ${current}) — it is not derived from the projects`,
-        );
-      }
-      return undefined;
-    },
-  },
-  {
     key: 'updateLanguage',
     domain: 'languages',
+    as: 'admin',
     run: async (ctx, id) =>
       await writeAndReadBack<Read<'language'>>(ctx, id, {
         mutation: `mutation ProbeUpdateLanguage($input: UpdateLanguage!) {
@@ -255,82 +400,144 @@ export const probes: readonly Probe[] = [
       }),
   },
   {
-    key: 'updateProject',
-    domain: 'projects',
-    run: async (ctx, id) =>
-      await writeAndReadBack<Read<'project'>>(ctx, id, {
-        mutation: `mutation ProbeUpdateProject($input: UpdateProject!) {
-          updateProject(input: $input) { project { id } }
-        }`,
-        variables: (name) => ({ input: { id, name } }),
-        query: `query ProbeReadProject($id: ID!) {
-          project(id: $id) { id name { value } }
-        }`,
-        actual: (d) => d.project.name.value,
-      }),
-  },
-  {
-    // Creating a CHILD of a migrated parent, which is a different risk from
-    // editing the parent: the new row has to satisfy constraints and required
-    // links against a parent the application never wrote.
-    key: 'createProjectMember on a migrated project',
-    domain: 'projects',
+    /**
+     * The one that has caught a real bug.
+     *
+     * A partner's sensitivity is documented as "Based on the project's
+     * sensitivity" — the lowest among the projects it partners with. On
+     * Postgres it was a stored column that nothing maintained, and the reason
+     * that survived every check is worth restating: the loader wrote correct
+     * values, so reading agreed perfectly, and it only went wrong once
+     * something happened that should have MOVED it.
+     *
+     * So this moves it. A weaker version — write an unrelated field, confirm
+     * sensitivity did not change — passes on the broken implementation too,
+     * because on migrated data the stored value is already right.
+     */
+    key: 'partner sensitivity follows a new project',
+    domain: 'partners',
+    as: 'admin',
     run: async (ctx, id) => {
-      const { project } = await ctx.gql<TeamRead>(
-        `query ProbeTeam($id: ID!) {
-          project(id: $id) { id team(input: { count: 1 }) { total } }
+      const rank: Record<string, number> = { Low: 1, Medium: 2, High: 3 };
+      const read = `query ProbePartnerSensitivity($id: ID!) {
+        partner(id: $id) {
+          id
+          sensitivity
+          projects(input: { count: 50 }) { items { id sensitivity } }
+        }
+      }`;
+      const before = await ctx.gql<PartnerSensitivityRead>(read, { id });
+      const current = before.partner.sensitivity;
+      if ((rank[current] ?? 9) <= rank.Low!) {
+        return {
+          notApplicable: `partner is already ${current}, nothing lower to move to`,
+        };
+      }
+      const linked = new Set(before.partner.projects.items.map((p) => p.id));
+      const { projects: found } = await ctx.gql<ProjectListRead>(
+        `query ProbeFindLowerProject {
+          projects(input: { count: 50, filter: { sensitivity: [Low] } }) {
+            items { id sensitivity }
+          }
         }`,
-        { id },
       );
-      const before = project.team.total;
+      const candidate = found.items.find(
+        (p) =>
+          !linked.has(p.id) &&
+          (rank[p.sensitivity] ?? 9) < (rank[current] ?? 9),
+      );
+      if (!candidate) {
+        return {
+          notApplicable: `no unlinked project with sensitivity below ${current}`,
+        };
+      }
       await ctx.gql(
-        `mutation ProbeAddMember($input: CreateProjectMember!) {
-          createProjectMember(input: $input) { projectMember { id } }
+        `mutation ProbeLinkPartner($input: CreatePartnership!) {
+          createPartnership(input: $input) { partnership { id } }
         }`,
-        // No roles: a member may only be given roles the user already holds
-        // globally (project-member.service.ts:199), and this probe is asking
-        // whether a member can attach to a MIGRATED project at all, not what
-        // they may be called once attached.
-        { input: { project: id, user: ctx.actor } },
+        { input: { partner: id, project: candidate.id } },
       );
-      const { project: after } = await ctx.gql<TeamRead>(
-        `query ProbeTeamAfter($id: ID!) {
-          project(id: $id) { id team(input: { count: 1 }) { total } }
-        }`,
-        { id },
-      );
-      if (after.team.total !== before + 1) {
+      const after = await ctx.gql<PartnerSensitivityRead>(read, { id });
+      if (after.partner.sensitivity !== candidate.sensitivity) {
         throw new Error(
-          `team total went ${before} -> ${after.team.total}, expected ${
-            before + 1
-          }`,
+          `linked a ${candidate.sensitivity} project (${candidate.id}) but ` +
+            `sensitivity is still ${after.partner.sensitivity} ` +
+            `(was ${current}) — it is not derived from the projects`,
         );
       }
+      return undefined;
+    },
+  },
+
+  // ---- Deletion, last: it removes the rows the checks above read ---------
+  {
+    key: 'PM removes a member from a project they manage',
+    domain: 'projectMembersOnMyProjects',
+    run: async (ctx, id) => {
+      await ctx.gql(
+        `mutation ProbeDeleteMember($id: ID!) {
+          deleteProjectMember(id: $id) { __typename }
+        }`,
+        { id },
+      );
     },
   },
   {
-    key: 'updatePartnership',
+    key: 'delete a migrated partnership',
     domain: 'partnerships',
+    as: 'admin',
     run: async (ctx, id) => {
-      // A date rather than a string: partnerships carry no free-text field, and
-      // the override columns are the ones a user actually edits.
-      const value = '2024-03-04';
       await ctx.gql(
-        `mutation ProbeUpdatePartnership($input: UpdatePartnership!) {
-          updatePartnership(input: $input) { partnership { id } }
-        }`,
-        { input: { id, mouStartOverride: value } },
-      );
-      const after = await ctx.gql<Read<'partnership'>>(
-        `query ProbeReadPartnership($id: ID!) {
-          partnership(id: $id) { id mouStartOverride { value } }
+        `mutation ProbeDeletePartnership($id: ID!) {
+          deletePartnership(id: $id) { __typename }
         }`,
         { id },
       );
-      const actual = after.partnership.mouStartOverride.value;
-      if (actual !== value) {
-        throw new Error(`wrote ${value} but read back ${String(actual)}`);
-      }
+      await expectGone(
+        ctx,
+        'partnership',
+        id,
+        `query ProbeGonePartnership($id: ID!) { partnership(id: $id) { id } }`,
+      );
+    },
+  },
+  {
+    key: 'delete a migrated engagement',
+    domain: 'engagements',
+    as: 'admin',
+    run: async (ctx, id) => {
+      await ctx.gql(
+        `mutation ProbeDeleteEngagement($id: ID!) {
+          deleteEngagement(id: $id) { __typename }
+        }`,
+        { id },
+      );
+      await expectGone(
+        ctx,
+        'engagement',
+        id,
+        `query ProbeGoneEngagement($id: ID!) { engagement(id: $id) { id } }`,
+      );
+    },
+  },
+  {
+    /**
+     * The biggest cascade there is, and where the two databases genuinely
+     * differ: the old one cuts children loose rather than deleting them, which
+     * is why 1,082 files are sitting unreachable today. Postgres cascades
+     * instead. Worth watching on real trees.
+     */
+    key: 'delete a migrated project',
+    domain: 'projectsMember',
+    as: 'admin',
+    run: async (ctx, id) => {
+      await ctx.gql(
+        `mutation ProbeDeleteProject($id: ID!) {
+          deleteProject(id: $id) { __typename }
+        }`,
+        { id },
+      );
+      await expectGone(ctx, 'project', id, READ_PROJECT);
     },
   },
 ];

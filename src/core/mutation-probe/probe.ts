@@ -1,4 +1,4 @@
-import { and, asc, isNull, type SQL } from 'drizzle-orm';
+import { and, asc, eq, isNull, type SQL } from 'drizzle-orm';
 import { type AnyPgColumn, type PgTable } from 'drizzle-orm/pg-core';
 import { graphql, type GraphQLSchema, Kind, parse } from 'graphql';
 import { type AsyncLocalStorage } from 'node:async_hooks';
@@ -34,12 +34,26 @@ import { isGqlContext } from '~/core/graphql/gql-context.host';
  * check every time.
  */
 
+/**
+ * Who a probe acts as.
+ *
+ * `projectManager` is the default, and it is the point. An administrator holds
+ * a blanket grant over everything, so acting as one tests the write path while
+ * skipping every rule about who may write — and the one confirmed bug so far
+ * was in a value that DECIDES those rules. The project manager is the common
+ * non-administrator role, and its grant on a project reads
+ * `r.Project.read.create.when(member).edit`: read and create unconditionally,
+ * edit only for a project they are on the team of. Whether that team membership
+ * works is a question about MIGRATED rows, which is exactly what is untested.
+ */
+export type ActorRole = 'admin' | 'projectManager';
+
 export interface ProbeContext {
   readonly schema: GraphQLSchema;
   readonly identity: Identity;
   readonly gqlContextAls: AsyncLocalStorage<GqlContextType>;
   readonly db: DrizzleDb;
-  /** The migrated user the probes act as. */
+  /** The migrated user THIS probe acts as. */
   readonly actor: ID<'User'>;
   readonly log: (msg: string) => void;
   /** Run one GraphQL document as the actor; throws on any GraphQL error. */
@@ -47,6 +61,8 @@ export interface ProbeContext {
     document: string,
     variables?: Record<string, unknown>,
   ) => Promise<T>;
+  /** True when the call was refused on permissions rather than failing. */
+  readonly isDenied: (err: unknown) => boolean;
 }
 
 /**
@@ -67,17 +83,31 @@ const isNotApplicable = (v: unknown): v is NotApplicable =>
 export interface Probe {
   /** The mutation being exercised. Used as the report key. */
   readonly key: string;
-  /** Which table to draw real, already-migrated rows from. */
+  /** Which cohort of real, already-migrated rows to draw from. */
   readonly domain: string;
+  /** Defaults to `projectManager` — see {@link ActorRole}. */
+  readonly as?: ActorRole;
   /** Throw to fail. The message is what the report shows. */
   readonly run: (ctx: ProbeContext, id: ID) => Promise<void | NotApplicable>;
 }
 
-export interface SampledTable {
+export interface Cohort {
   readonly table: PgTable;
   readonly id: AnyPgColumn;
   readonly deletedAt?: AnyPgColumn;
   readonly predicate?: SQL;
+  /**
+   * Take the sample size from EACH distinct value of this column rather than
+   * from the table as a whole.
+   *
+   * Without it the rare shapes never get looked at. Ids here are random
+   * strings, so "first N by id" is effectively a random draw: at five rows an
+   * Internship engagement (16% of the table) is missed about 42% of the time,
+   * and an Other product — 69 rows out of 80,320 — would never once be
+   * sampled. Those are the shapes most likely to break, being the least
+   * exercised in normal use.
+   */
+  readonly stratifyBy?: AnyPgColumn;
 }
 
 export interface ProbeOutcome {
@@ -93,25 +123,54 @@ export interface ProbeOutcome {
  * Rows are taken in id order rather than at random, so a failure can be
  * reproduced and quoted. They are NOT filtered for tidiness: the awkward rows
  * are the entire point of this exercise.
+ *
+ * A cohort with `stratifyBy` gets `perDomain` rows from each distinct value of
+ * that column, so every project type, engagement type and product type is
+ * represented rather than left to the luck of the draw.
  */
 export const sampleIds = async (
   db: DrizzleDb,
-  tables: Readonly<Record<string, SampledTable>>,
+  cohorts: Readonly<Record<string, Cohort>>,
   perDomain: number,
+  log: (msg: string) => void,
 ): Promise<Record<string, readonly ID[]>> => {
   const out: Record<string, readonly ID[]> = {};
-  for (const [domain, spec] of Object.entries(tables)) {
-    const conditions = [
+  for (const [domain, spec] of Object.entries(cohorts)) {
+    const base = [
       ...(spec.deletedAt ? [isNull(spec.deletedAt)] : []),
       ...(spec.predicate ? [spec.predicate] : []),
     ];
-    const rows = await db
-      .select({ id: spec.id })
+    const take = async (extra?: SQL) => {
+      const conditions = [...base, ...(extra ? [extra] : [])];
+      const rows = await db
+        .select({ id: spec.id })
+        .from(spec.table)
+        .where(conditions.length === 0 ? undefined : and(...conditions))
+        .orderBy(asc(spec.id))
+        .limit(perDomain);
+      return rows.map((row) => String(row.id) as ID);
+    };
+
+    if (!spec.stratifyBy) {
+      out[domain] = await take();
+      continue;
+    }
+    const strata = await db
+      .selectDistinct({ v: spec.stratifyBy })
       .from(spec.table)
-      .where(conditions.length === 0 ? undefined : and(...conditions))
-      .orderBy(asc(spec.id))
-      .limit(perDomain);
-    out[domain] = rows.map((row) => String(row.id) as ID);
+      .where(base.length === 0 ? undefined : and(...base))
+      .orderBy(asc(spec.stratifyBy));
+    const collected: ID[] = [];
+    const covered: string[] = [];
+    for (const { v } of strata) {
+      const ids = await take(eq(spec.stratifyBy, v));
+      if (ids.length > 0) covered.push(`${String(v)}:${ids.length}`);
+      collected.push(...ids);
+    }
+    out[domain] = collected;
+    // Printed, not assumed. If a type is missing from this line it was never
+    // probed, and a total alone would not have said so.
+    log(`  ${domain}: ${collected.length} rows across ${covered.join(', ')}`);
   }
   return out;
 };
@@ -164,15 +223,37 @@ export const makeGql =
     return result.data as T;
   };
 
+/**
+ * A refusal on permissions, as opposed to something actually breaking. The two
+ * must never be confused: "the project manager was not allowed to do that" is
+ * often the CORRECT answer, and counting it as a failure would bury the real
+ * ones.
+ */
+const isDenied = (err: unknown): boolean => {
+  const message = err instanceof Error ? err.message : String(err);
+  // Both wordings occur, and the difference is one word. The field-level
+  // refusal in resource-privileges.ts says "You do not have permission to
+  // update X.name"; the resource-level one says "You do not have THE
+  // permission to delete this story". A pattern matching only the second
+  // reports a correct refusal as an unexplained failure — which it did.
+  return /do not have (the )?permission|Unauthorized|not authorized/i.test(
+    message,
+  );
+};
+
 export const runProbes = async (
-  ctx: Omit<ProbeContext, 'gql'>,
+  ctx: Omit<ProbeContext, 'gql' | 'actor' | 'isDenied'> & {
+    readonly actors: Readonly<Record<ActorRole, ID<'User'>>>;
+  },
   probes: readonly Probe[],
   ids: Record<string, readonly ID[]>,
 ): Promise<readonly ProbeOutcome[]> => {
-  const full: ProbeContext = { ...ctx, gql: makeGql(ctx) };
   const outcomes: ProbeOutcome[] = [];
 
   for (const probe of probes) {
+    const actor = ctx.actors[probe.as ?? 'projectManager'];
+    const base = { ...ctx, actor, isDenied };
+    const full: ProbeContext = { ...base, gql: makeGql(base) };
     const targets = ids[probe.domain] ?? [];
     if (targets.length === 0) {
       ctx.log(
