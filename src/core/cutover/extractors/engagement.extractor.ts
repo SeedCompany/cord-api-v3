@@ -21,6 +21,7 @@ import {
   cypher,
   dateStr,
   fetchIds,
+  keepBlank,
   keepLanded,
   linkId,
   liveTargetIds,
@@ -222,11 +223,12 @@ export const engagementExtractor: Extractor = {
           methodologies: methodologies.kept as any,
           countryOfOriginId,
           growthPlanId: liveFileRefOrNull(linkId(lang.growthPlan)),
-          marketable: orDefault(
+          // Nullable since migration 0042. This was the largest invented-value
+          // site in the load (6,866 of 8,224) and nobody had noticed it.
+          marketable: keepBlank(
             ctx,
             'engagements.marketable',
             lang.marketable as boolean,
-            false,
           ),
           webId: (lang.webId as string | null) ?? null,
 
@@ -464,7 +466,9 @@ export const engagementExtractor: Extractor = {
           id: cer.id,
           engagementId,
           type: cer.type,
-          planned: orDefault(ctx, 'ceremonies.planned', cer.planned, false),
+          // Nullable since migration 0042 — this is the one the warehouse
+          // comparison caught reading 'N' on Postgres and blank on Neo4j.
+          planned: keepBlank(ctx, 'ceremonies.planned', cer.planned),
           estimatedDate: dateStr(cer.estimatedDate),
           actualDate: dateStr(cer.actualDate),
           createdAt: tsReq(cer.createdAt),

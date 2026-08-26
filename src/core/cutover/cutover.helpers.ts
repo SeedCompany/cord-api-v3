@@ -512,15 +512,51 @@ export const orDefault = <T>(
   value: T | null | undefined,
   fallback: T,
 ): T => {
-  const tally = ctx.defaulted.get(column) ?? {
+  tally(ctx, column, value, renderFallback(fallback), 'invented');
+  return value ?? fallback;
+};
+
+/**
+ * Let a Neo4j blank stay blank, and count it exactly the way {@link orDefault}
+ * counts an invented value.
+ *
+ * Use this wherever the Postgres column has been made nullable specifically so
+ * that "nobody ever recorded this" survives the load. The tally still fires, so
+ * the run reports how many blanks it preserved — the same number `orDefault`
+ * used to report as invented, which is what makes the two runs comparable.
+ *
+ * **The `?? null` is doing real work.** Drizzle drops an `undefined` key from
+ * the INSERT entirely, which hands the column back to its DEFAULT — so a field
+ * that is merely *absent* in Neo4j would be re-filled by the very default we
+ * removed the NOT NULL for. Writing NULL explicitly is what makes the blank
+ * survive. Migration 0042 drops those defaults as a second guard, but this is
+ * the one that holds if a default is ever added back.
+ */
+export const keepBlank = <T>(
+  ctx: CutoverContext,
+  column: string,
+  value: T | null | undefined,
+): T | null => {
+  tally(ctx, column, value, 'null', 'blank');
+  return value ?? null;
+};
+
+const tally = (
+  ctx: CutoverContext,
+  column: string,
+  value: unknown,
+  fallback: string,
+  mode: 'invented' | 'blank',
+) => {
+  const entry = ctx.defaulted.get(column) ?? {
     filled: 0,
     seen: 0,
-    fallback: renderFallback(fallback),
+    fallback,
+    mode,
   };
-  tally.seen += 1;
-  if (value == null) tally.filled += 1;
-  ctx.defaulted.set(column, tally);
-  return value ?? fallback;
+  entry.seen += 1;
+  if (value == null) entry.filled += 1;
+  ctx.defaulted.set(column, entry);
 };
 
 /** A fallback as it should read in the summary: `false`, `'High'`, `[]`, `0`. */

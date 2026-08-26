@@ -6,7 +6,7 @@ import {
   Resource,
   type ResourceRelationsShape,
   type Secured,
-  SecuredBoolean,
+  SecuredBooleanNullable,
   SecuredDateNullable,
   SecuredProperty,
   SecuredStringNullable,
@@ -51,10 +51,10 @@ export class Partner extends Interfaces {
   readonly pmcEntityCode: SecuredStringNullable;
 
   @Field()
-  readonly globalInnovationsClient: SecuredBoolean;
+  readonly globalInnovationsClient: SecuredBooleanNullable;
 
   @Field()
-  readonly active: SecuredBoolean;
+  readonly active: SecuredBooleanNullable;
 
   @Field()
   readonly address: SecuredStringNullable;

@@ -20,6 +20,7 @@ import {
   type ResourceRelationsShape,
   type Secured,
   SecuredBoolean,
+  SecuredBooleanNullable,
   SecuredDateNullable,
   SecuredDateTimeNullable,
   SecuredString,
@@ -214,7 +215,7 @@ class Project extends Interfaces {
       It also means the project is committed to having quality, consistent reporting.
     `,
   })
-  readonly presetInventory: SecuredBoolean;
+  readonly presetInventory: SecuredBooleanNullable;
 
   /**
    * Optimization for {@link ProjectResolver.engagements}.

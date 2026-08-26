@@ -30,11 +30,31 @@ export const AsUpdateType = <
     {
       Links: links,
       fromInput: makeFromInput<Omit<T, OmitKeys>, Output>(links),
-      pickPrevious: (prev: Output, changes: Omit<T, OmitKeys>): Output =>
+      pickPrevious: (
+        prev: AsStored<Output>,
+        changes: Omit<T, OmitKeys>,
+      ): Output =>
         omit(pick(prev, Object.keys(changes)), 'modifiedAt') as Output,
     },
   );
 };
+
+/**
+ * What `pickPrevious` reads from: the record as it is actually stored, rather
+ * than the update input's shape.
+ *
+ * The two differ on nullability, and the difference is real. An input field is
+ * optional (`planned?: boolean`) because a client may leave it out; a stored
+ * field can be genuinely blank (`planned: boolean | null`) because nobody ever
+ * set it — which several columns became in migration 0042, so that a Neo4j
+ * blank survives the cutover instead of arriving as a definite `false`. Only
+ * inputs that let a client *clear* a value carry `| null` themselves, and
+ * widening those to match here would say clients can blank any of these.
+ *
+ * The return stays `Output`: the previous value goes onto a subscription
+ * payload whose fields are all nullable already.
+ */
+type AsStored<T> = { [K in keyof T]: T[K] | null };
 
 // eslint-disable-next-line @seedcompany/no-unused-vars
 type LinksAsIDs<T, Links extends LiteralUnion<keyof T & string, string>> = {

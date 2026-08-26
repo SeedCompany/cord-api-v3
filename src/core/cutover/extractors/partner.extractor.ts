@@ -19,6 +19,7 @@ import {
   bulkInsert,
   cypher,
   dateStr,
+  keepBlank,
   keepLanded,
   linkId,
   liveTargetIds,
@@ -142,14 +143,15 @@ export const partnerExtractor: Extractor = {
         types: types.kept,
         financialReportingTypes: frt.kept,
         pmcEntityCode: p.pmcEntityCode ?? null,
-        // NOT NULL (default false) — legacy rows may lack the Property.
-        globalInnovationsClient: orDefault(
+        // Legacy rows may lack the Property. Nullable since migration 0042, so
+        // an unmarked partner reads blank rather than a definite "no" — these
+        // are individually known to people, and 78 of 323 were unmarked.
+        globalInnovationsClient: keepBlank(
           ctx,
           'partners.global_innovations_client',
           p.globalInnovationsClient,
-          false,
         ),
-        active: orDefault(ctx, 'partners.active', p.active, false),
+        active: keepBlank(ctx, 'partners.active', p.active),
         address: p.address ?? null,
         // Plain text (deferred FK) — may reference not-yet-migrated languages.
         languageOfWiderCommunicationId: linkId(p.languageOfWiderCommunication),

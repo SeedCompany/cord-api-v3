@@ -66,10 +66,17 @@ export interface CutoverContext {
 export interface DefaultFill {
   /** Values the source did not have, so the loader supplied `fallback`. */
   filled: number;
-  /** Values offered to `orDefault` at this site, filled or not. */
+  /** Values offered to `orDefault`/`keepBlank` at this site, filled or not. */
   seen: number;
   /** The substituted value, rendered for the report. */
   fallback: string;
+  /**
+   * What the loader did with the blank. `invented` means it supplied a value
+   * the source never had; `blank` means the column now allows NULL and the
+   * blank survived. Both are counted, because both are worth seeing — but only
+   * the first is a decision anyone has to defend.
+   */
+  mode: 'invented' | 'blank';
 }
 
 export interface TableStat {

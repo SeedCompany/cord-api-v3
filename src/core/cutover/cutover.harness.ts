@@ -201,11 +201,20 @@ export const runCutover = async (
   // Values the source did not have. The mirror image of the block above: those
   // rows never arrived, these arrived carrying a value nobody wrote. Both are
   // invisible to per-table reconciliation, for opposite reasons.
-  const filledColumns = [...ctx.defaulted.entries()]
+  const blankColumns = [...ctx.defaulted.entries()]
     .filter(([, fill]) => fill.filled > 0)
     .sort((a, b) => b[1].filled - a[1].filled);
-  const totalFilled = filledColumns.reduce((sum, [, f]) => sum + f.filled, 0);
-  if (totalFilled > 0) {
+  const logColumns = (columns: typeof blankColumns) => {
+    for (const [column, fill] of columns) {
+      ctx.log(
+        `  ${column.padEnd(44)} ${String(fill.filled).padStart(7)} of ` +
+          `${String(fill.seen).padStart(7)} → ${fill.fallback}`,
+      );
+    }
+  };
+
+  const invented = blankColumns.filter(([, f]) => f.mode === 'invented');
+  if (invented.length > 0) {
     ctx.log(
       '\n─── Values the source did not have (filled with the column default) ───\n' +
         '  NOT a loss — every one of these rows loaded and reconciles ✓. The value\n' +
@@ -214,12 +223,21 @@ export const runCutover = async (
         '  though the row counts agree. Each line is a reporting decision, not a\n' +
         '  defect: is "never recorded" the same as this value?',
     );
-    for (const [column, fill] of filledColumns) {
-      ctx.log(
-        `  ${column.padEnd(44)} ${String(fill.filled).padStart(7)} of ` +
-          `${String(fill.seen).padStart(7)} → ${fill.fallback}`,
-      );
-    }
+    logColumns(invented);
+  }
+
+  // The same measurement, for the columns where the answer to that question
+  // turned out to be "no". These used to appear in the block above.
+  const kept = blankColumns.filter(([, f]) => f.mode === 'blank');
+  if (kept.length > 0) {
+    ctx.log(
+      '\n─── Values the source did not have (kept blank) ───\n' +
+        '  Nothing to decide here — migration 0042 made these columns nullable so\n' +
+        '  "nobody ever recorded this" reads the same on both engines. Counted\n' +
+        '  anyway: the numbers should match what the same run reported as invented\n' +
+        '  before the change, and a drop means the blank stopped surviving.',
+    );
+    logColumns(kept);
   }
 
   const totalLost = totalDropped + totalNotHydrated;

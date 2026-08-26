@@ -22,6 +22,7 @@ import {
   bulkInsert,
   cypher,
   dateStr,
+  keepBlank,
   keepLanded,
   linkId,
   liveTargetIds,
@@ -158,11 +159,14 @@ export const projectExtractor: Extractor = {
         financialReportReceivedAt: ts(p.financialReportReceivedAt),
         financialReportPeriod,
         tags: [...orDefault(ctx, 'projects.tags', p.tags, [])],
-        presetInventory: orDefault(
+        // Nullable since migration 0042 — a project nobody marked is blank,
+        // not a definite "no". Also keeps the `presetInventory: false` list
+        // filter from sweeping in every unmarked project, which is what
+        // Neo4j's `filter.propVal()` does today.
+        presetInventory: keepBlank(
           ctx,
           'projects.preset_inventory',
           p.presetInventory,
-          false,
         ),
         createdAt: tsReq(p.createdAt),
         modifiedAt: tsReq(p.modifiedAt),

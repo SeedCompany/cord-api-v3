@@ -257,7 +257,7 @@ export class InternshipEngagement extends Engagement {
   readonly methodologies: SecuredMethodologies;
 
   @Field()
-  readonly marketable: SecuredBoolean;
+  readonly marketable: SecuredBooleanNullable;
 
   @Field()
   readonly webId: SecuredStringNullable;

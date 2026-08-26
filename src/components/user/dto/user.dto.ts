@@ -10,7 +10,6 @@ import {
   type Secured,
   SecuredProperty,
   SecuredRoles,
-  SecuredString,
   SecuredStringNullable,
 } from '~/common';
 import { e } from '~/core/gel';
@@ -54,26 +53,29 @@ export class User extends Interfaces {
   @DbUnique('EmailAddress')
   email: SecuredStringNullable;
 
+  // Nullable (migration 0042): Neo4j stores a name Property only when one was
+  // written, and one migrated person has none. The GraphQL shape is unchanged —
+  // `SecuredString.value` and `SecuredStringNullable.value` are both `String`.
   @NameField()
   @DbLabel('UserName')
-  realFirstName: SecuredString;
+  realFirstName: SecuredStringNullable;
 
   @NameField()
   @DbLabel('UserName')
-  realLastName: SecuredString;
+  realLastName: SecuredStringNullable;
 
   @NameField()
   @DbLabel('UserName')
-  displayFirstName: SecuredString;
+  displayFirstName: SecuredStringNullable;
 
   @NameField()
   @DbLabel('UserName')
-  displayLastName: SecuredString;
+  displayLastName: SecuredStringNullable;
 
   @Field()
   phone: SecuredStringNullable;
 
-  timezone: SecuredString;
+  timezone: SecuredStringNullable;
 
   @Field()
   about: SecuredStringNullable;

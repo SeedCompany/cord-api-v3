@@ -17,9 +17,9 @@ import { UserRepository } from '../../../components/user/user.repository';
 import {
   bulkInsert,
   cypher,
+  keepBlank,
   linkId,
   liveTargetIds,
-  orDefault,
   readAllViaRepo,
   stat,
   tsReq,
@@ -70,31 +70,26 @@ export const userExtractor: Extractor = {
     const userRows = userDtos.map((u) => ({
       id: u.id,
       isRoot: isRootUser(u),
-      // NOT NULL columns whose Property node may be missing in Neo4j — coalesce
-      // to the schema default (real load surfaced null `status` on legacy rows).
-      status: orDefault(ctx, 'users.status', u.status, 'Active'),
+      // Columns whose Property node may be missing in Neo4j. Nullable since
+      // migration 0042, so the blank survives instead of becoming 'Active' /
+      // '' / 'America/Chicago'. `keepBlank` still counts, so the load reports
+      // how many it preserved.
+      status: keepBlank(ctx, 'users.status', u.status),
       email: u.email ?? null,
-      realFirstName: orDefault(
-        ctx,
-        'users.real_first_name',
-        u.realFirstName,
-        '',
-      ),
-      realLastName: orDefault(ctx, 'users.real_last_name', u.realLastName, ''),
-      displayFirstName: orDefault(
+      realFirstName: keepBlank(ctx, 'users.real_first_name', u.realFirstName),
+      realLastName: keepBlank(ctx, 'users.real_last_name', u.realLastName),
+      displayFirstName: keepBlank(
         ctx,
         'users.display_first_name',
         u.displayFirstName,
-        '',
       ),
-      displayLastName: orDefault(
+      displayLastName: keepBlank(
         ctx,
         'users.display_last_name',
         u.displayLastName,
-        '',
       ),
       phone: u.phone ?? null,
-      timezone: orDefault(ctx, 'users.timezone', u.timezone, 'America/Chicago'),
+      timezone: keepBlank(ctx, 'users.timezone', u.timezone),
       about: u.about ?? null,
       title: u.title ?? null,
       gender: u.gender ?? null,

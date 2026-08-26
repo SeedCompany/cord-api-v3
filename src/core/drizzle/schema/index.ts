@@ -74,14 +74,17 @@ export const degreeEnum = pgEnum('degree', [
 export const users = pgTable('users', {
   id: text('id').$type<ID<'User'>>().primaryKey(),
   isRoot: boolean('is_root').notNull().default(false),
-  status: userStatusEnum('status').notNull(),
+  // Nullable (migration 0042): Neo4j stores each of these only when somebody
+  // set it, so NOT NULL forced the loader to invent one. The create paths all
+  // write these columns explicitly, so nothing new arrives blank.
+  status: userStatusEnum('status'),
   email: text('email').unique(),
-  realFirstName: text('real_first_name').notNull().default(''),
-  realLastName: text('real_last_name').notNull().default(''),
-  displayFirstName: text('display_first_name').notNull().default(''),
-  displayLastName: text('display_last_name').notNull().default(''),
+  realFirstName: text('real_first_name'),
+  realLastName: text('real_last_name'),
+  displayFirstName: text('display_first_name'),
+  displayLastName: text('display_last_name'),
   phone: text('phone'),
-  timezone: text('timezone').notNull().default('America/Chicago'),
+  timezone: text('timezone'),
   about: text('about'),
   title: text('title'),
   gender: genderEnum('gender').$type<Gender>(),
@@ -966,10 +969,9 @@ export const partners = pgTable(
       .notNull()
       .default([]),
     pmcEntityCode: text('pmc_entity_code'),
-    globalInnovationsClient: boolean('global_innovations_client')
-      .notNull()
-      .default(false),
-    active: boolean('active').notNull().default(false),
+    // Nullable (migration 0042) — an unmarked partner is blank, not a "no".
+    globalInnovationsClient: boolean('global_innovations_client'),
+    active: boolean('active'),
     address: text('address'),
     // migration-todo: deferred FK → languages(id); add REFERENCES when Language
     // migrates. Plain text until then (same pattern as locations.funding_account_id).
@@ -1322,7 +1324,10 @@ export const projects = pgTable(
       'financial_report_period',
     ).$type<ReportPeriod>(),
     tags: text('tags').array().notNull().default([]),
-    presetInventory: boolean('preset_inventory').notNull().default(false),
+    // Nullable (migration 0042). Also fixes the list filter: `eq(..., false)`
+    // used to sweep in every unmarked project, where Neo4j's `filter.propVal()`
+    // matches neither true nor false when the property was never written.
+    presetInventory: boolean('preset_inventory'),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -2118,7 +2123,8 @@ export const engagements = pgTable(
       .references(() => locations.id),
     // migration-todo: deferred FK → files(id); Phase 7.
     growthPlanId: text('growth_plan_id').$type<ID<'File'>>(),
-    marketable: boolean('marketable').notNull().default(false),
+    // Nullable (migration 0042) — same filter reasoning as preset_inventory.
+    marketable: boolean('marketable'),
     webId: text('web_id'),
 
     createdAt: timestamp('created_at', { withTimezone: true })
@@ -2220,7 +2226,9 @@ export const ceremonies = pgTable(
       .notNull()
       .references(() => engagements.id, { onDelete: 'cascade' }),
     type: ceremonyTypeEnum('type').$type<CeremonyType>().notNull(),
-    planned: boolean('planned').notNull().default(false),
+    // Nullable (migration 0042) — the column a warehouse comparison caught
+    // reading 'N' on Postgres where Neo4j returned a blank.
+    planned: boolean('planned'),
     estimatedDate: date('estimated_date'),
     actualDate: date('actual_date'),
     createdAt: timestamp('created_at', { withTimezone: true })

@@ -2,7 +2,7 @@ import { Field, ObjectType } from '@nestjs/graphql';
 import {
   Calculated,
   Resource,
-  SecuredBoolean,
+  SecuredBooleanNullable,
   SecuredDateNullable,
   SecuredProperty,
   Sensitivity,
@@ -27,7 +27,7 @@ export class Ceremony extends Resource {
   readonly type: CeremonyType;
 
   @Field()
-  readonly planned: SecuredBoolean;
+  readonly planned: SecuredBooleanNullable;
 
   @Field()
   readonly estimatedDate: SecuredDateNullable;
