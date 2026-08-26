@@ -203,7 +203,11 @@ const someoneNotOnTheTeam = async (
     .select({ id: users.id })
     .from(users)
     .where(
-      sql`${users.deletedAt} is null and not exists (
+      // Never the actor. On the "projects they do NOT manage" cohort the actor
+      // is by definition not on the team, so without this they can come back as
+      // the newcomer — and adding yourself is a different question with a
+      // different answer (see the create-permission spec in test/).
+      sql`${users.deletedAt} is null and ${users.id} <> ${ctx.actor} and not exists (
         select 1 from ${projectMembers} pm
         where pm.project_id = ${project}
           and pm.user_id = ${users.id}
@@ -299,37 +303,38 @@ export const probes: readonly Probe[] = [
   },
   {
     /**
-     * ⚠ CURRENTLY FAILING, AND NOT YET EXPLAINED. Left red on purpose.
+     * Adding SOMEBODY ELSE, deliberately — not the actor.
      *
-     * The grant reads `r.ProjectMember.read.when(member).edit.create.delete`,
-     * so creating a member should need the requester to be on that project's
-     * team. Acting as a project manager who holds no other role, on projects
-     * they are not a member of, it is ALLOWED — nine times out of nine.
+     * An earlier version of this probe added the actor to themselves and came
+     * back allowed every time, which read like a permission bug. It is not a
+     * migration one. `ProjectMemberService.create` writes the membership row
+     * before it checks the permission, and checks the row it just wrote, so
+     * adding yourself satisfies the membership requirement in the act of being
+     * checked. Both databases do it — measured, four checks each, identical.
+     * See `test/project-member-create-permission.e2e-spec.ts`, which holds the
+     * evidence and the failing test that will announce the fix.
      *
-     * What has been ruled out: the actor holding a second role that grants it
-     * (checked — this one holds only ProjectManager), and the scope lookup
-     * being wrong (`requesterScopeByProject` queries the requester's own
-     * memberships and looks right). What has NOT been established is whether
-     * the old database behaves the same way. That is the question that decides
-     * what this is: same on both means a long-standing gap and post-cutover by
-     * the priority rule; different means a migration regression and it matters
-     * now.
-     *
-     * Do not "fix" this by relaxing the expectation. The policy text is the
-     * expectation; if the answer turns out to be that creates are checked
-     * differently by design, change this comment and the assertion together.
+     * With the actor's own id out of the way, this asks the question the probe
+     * is here to ask: do the MIGRATED membership rows still refuse someone who
+     * is not on the team?
      */
     key: 'PM cannot add a member to a project they do not manage',
     domain: 'projectsNotMember',
-    run: async (ctx, id) =>
+    run: async (ctx, id) => {
+      const newcomer = await someoneNotOnTheTeam(ctx, id);
+      if (!newcomer) {
+        return { notApplicable: 'every live user is already on this team' };
+      }
       await expectDenied(
         ctx,
         'adding a member to a non-member project',
         async () =>
           await ctx.gql(ADD_MEMBER, {
-            input: { project: id, user: ctx.actor },
+            input: { project: id, user: newcomer },
           }),
-      ),
+      );
+      return undefined;
+    },
   },
 
   // ---- As an administrator, where no project-membership rule applies ------
