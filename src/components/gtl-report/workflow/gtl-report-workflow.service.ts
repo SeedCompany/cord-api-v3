@@ -43,6 +43,7 @@ export class GtlReportWorkflowService {
       to: row.status,
       transition: row.transitionKey as ID | null,
       at: DateTime.fromJSDate(row.at),
+      notes: row.notes ?? null,
       who: row.who,
     }));
   }

@@ -3,12 +3,13 @@ import { RegisterResource } from '~/core/resources';
 import { PromptVariantResponse } from '../../prompts/dto';
 
 /**
- * The audience stages a GTL narrative passes through.
+ * The audience stages a GTL narrative passes through — the same four Momentum
+ * uses, in the same order.
  *
- * Shorter than Momentum's four: there is no separate translation stage owned by
- * a Translator role here — a GTL narrative arriving in a national language is
- * handled by the report's `PendingTranslation` workflow state rather than by a
- * distinct response variant.
+ * `translated` is not gated on the report's workflow status: a variant is
+ * visible to whoever holds its responsible role, in every status. The
+ * `PendingTranslation` state says a translation is *awaited*; this variant is
+ * where it lands.
  *
  * `published` MUST stay last. Downstream code treats the final variant as the
  * public one positionally (see `ProgressReportMedia.PublicVariants`), and
@@ -18,6 +19,10 @@ const variants = Variant.createList({
   draft: {
     label: `Global Leader`,
     responsibleRole: Role.FieldPartner,
+  },
+  translated: {
+    label: `Translation`,
+    responsibleRole: Role.Translator,
   },
   fpm: {
     label: `Field Operations`,

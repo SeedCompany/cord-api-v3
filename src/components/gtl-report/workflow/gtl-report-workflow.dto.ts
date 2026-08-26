@@ -6,6 +6,7 @@ import {
   IdField,
   type RichTextDocument,
   RichTextField,
+  RichTextScalar,
 } from '~/common';
 import { TransitionType } from '../../workflow/dto/workflow-transition.dto';
 import { GtlReportStatus } from '../dto/gtl-report-status.enum';
@@ -49,6 +50,13 @@ export abstract class GtlReportWorkflowEvent {
 
   @Field(() => IDType)
   readonly who: ID;
+
+  @Field(() => RichTextScalar, {
+    nullable: true,
+    description:
+      'Optional notes the actor left when moving the report to this state',
+  })
+  readonly notes: RichTextDocument | null;
 }
 
 @InputType()

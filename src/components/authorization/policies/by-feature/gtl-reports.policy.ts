@@ -21,6 +21,12 @@ import { Policy, Role } from '../util';
     r.GTLReport.read,
     r.GtlReportGoal.read.create.edit.delete,
     r.GtlReportPracticum.read.create.edit.delete,
+    // Without these the prose sections resolve `canRead: false` for every
+    // non-root user and the UI renders nothing — root only saw them because
+    // Administrator bypasses policies.
+    r.GtlReportCommunityImpact.read.create.edit.delete,
+    r.GtlReportPraise.read.create.edit.delete,
+    r.GtlReportPetition.read.create.edit.delete,
   ],
 )
 export class GtlReportsPolicy {}

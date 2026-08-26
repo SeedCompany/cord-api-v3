@@ -1,10 +1,10 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { type Engagement, InternshipEngagement } from '../engagement/dto';
-import { GtlGrowthPlan } from './dto';
+import { GtlGoalProgress } from './dto';
 import { GtlReportGoalService } from './goals/gtl-report-goal.service';
 
 /**
- * The growth plan at a glance, on the engagement itself.
+ * Progress toward this Global Translation Leader's goals, on the engagement.
  *
  * Goals live on reports — one quarter sets them, the next reviews them — so
  * seeing the plan as a whole means reading across every report. That rollup
@@ -15,8 +15,13 @@ import { GtlReportGoalService } from './goals/gtl-report-goal.service';
 export class GtlGrowthPlanResolver {
   constructor(private readonly goals: GtlReportGoalService) {}
 
-  @ResolveField(() => GtlGrowthPlan)
-  async growthPlan(@Parent() engagement: Engagement): Promise<GtlGrowthPlan> {
+  // NOT `growthPlan` — InternshipEngagement already has a field by that name,
+  // a SecuredFile for the Growth Plan document upload. Reusing it silently
+  // shadowed this resolver and made the field validate as a file.
+  @ResolveField(() => GtlGoalProgress)
+  async goalProgress(
+    @Parent() engagement: Engagement,
+  ): Promise<GtlGoalProgress> {
     const goals = await this.goals.listForEngagement(engagement.id);
     const reviewed = goals.filter((g) => g.met.value != null);
     return {
