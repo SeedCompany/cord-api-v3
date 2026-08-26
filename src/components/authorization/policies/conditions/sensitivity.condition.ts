@@ -227,12 +227,18 @@ const sensitivityRefForResource = (
         join "engagements" "e" on "e"."project_id" = "p"."id"
         where "e"."id" = "ceremonies"."engagement_id"
       ) <= ${accessLiteral}`;
-    case 'GtlReportGoal':
+    case 'GtlGoal':
       return sql`(
         select "p"."sensitivity" from "projects" "p"
         join "engagements" "e" on "e"."project_id" = "p"."id"
-        join "periodic_reports" "pr" on "pr"."engagement_id" = "e"."id"
-        where "pr"."id" = "gtl_report_goals"."set_in_report_id"
+        where "e"."id" = "gtl_goals"."engagement_id"
+      ) <= ${accessLiteral}`;
+    case 'GtlGoalProgress':
+      return sql`(
+        select "p"."sensitivity" from "projects" "p"
+        join "engagements" "e" on "e"."project_id" = "p"."id"
+        join "gtl_goals" "g" on "g"."engagement_id" = "e"."id"
+        where "g"."id" = "gtl_goal_progress"."goal_id"
       ) <= ${accessLiteral}`;
     case 'GtlReportPracticum':
       return sql`(

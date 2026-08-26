@@ -1,37 +1,49 @@
-import { Field, Int, ObjectType } from '@nestjs/graphql';
-import { GtlReportGoal } from './gtl-report-goal.dto';
+import { Field, ObjectType } from '@nestjs/graphql';
+import {
+  Resource,
+  SecuredDate,
+  SecuredIntNullable,
+  SecuredRichTextNullable,
+  type Sensitivity,
+} from '~/common';
+import { type LinkTo, RegisterResource } from '~/core/resources';
+import { SecuredGtlGoalStatus } from './gtl-goal.enums';
 
 /**
- * An engagement's goals across every quarter, plus how they are tracking.
+ * One quarter's report on one goal.
  *
- * Deliberately NOT called `growthPlan`: `InternshipEngagement` already has a
- * field by that name — a SecuredFile for the Growth Plan document — and the
- * two would collide.
- *
- * This is the growth plan as it has actually accumulated report by report,
- * rather than a plan authored up front — the Growth Plan document itself is a
- * later pass. `met` and `unmet` only count goals a following quarter has
- * actually reviewed; everything else is still open, which is why the three
- * counts do not have to sum to `total`.
+ * At most one live entry per (goal, report) — a report says one thing about a
+ * goal. Writing one updates the goal's own `status`/`progressValue` in the same
+ * transaction, but only if this is the most recent entry by `progressDate`, so
+ * backfilling an earlier quarter cannot regress the goal's current state.
  */
-@ObjectType({
-  description: "A Global Translation Leader's goals across every quarter",
-})
-export abstract class GtlGoalProgress {
-  @Field(() => [GtlReportGoal])
-  readonly goals: readonly GtlReportGoal[];
+@RegisterResource()
+@ObjectType({ implements: [Resource] })
+export class GtlGoalProgress extends Resource {
+  static readonly Parent = () =>
+    import('./gtl-goal.dto').then((m) => m.GtlGoal);
 
-  @Field(() => Int)
-  readonly total: number;
+  readonly goal: LinkTo<'GtlGoal'>;
 
-  @Field(() => Int, { description: 'Goals a later quarter reviewed as met' })
-  readonly met: number;
+  readonly report: LinkTo<'GTLReport'>;
 
-  @Field(() => Int, { description: 'Goals a later quarter reviewed as unmet' })
-  readonly unmet: number;
+  @Field()
+  readonly status: SecuredGtlGoalStatus;
 
-  @Field(() => Int, {
-    description: 'Goals set but not yet reviewed by a following quarter',
-  })
-  readonly awaitingReview: number;
+  @Field()
+  readonly progressValue: SecuredIntNullable;
+
+  @Field({ description: 'What happened with this goal during the quarter' })
+  readonly notes: SecuredRichTextNullable;
+
+  @Field()
+  readonly progressDate: SecuredDate;
+
+  readonly sensitivity: Sensitivity;
+}
+
+declare module '~/core/resources/map' {
+  interface ResourceMap {
+    GtlGoalProgress: typeof GtlGoalProgress;
+  }
 }

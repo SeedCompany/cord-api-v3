@@ -2,9 +2,12 @@ import { forwardRef, Module } from '@nestjs/common';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { EngagementModule } from '../engagement/engagement.module';
 import { PeriodicReportModule } from '../periodic-report/periodic-report.module';
-import { GtlReportGoalDrizzleRepository } from './goals/gtl-report-goal.drizzle.repository';
-import { GtlReportGoalService } from './goals/gtl-report-goal.service';
-import { GtlGrowthPlanResolver } from './gtl-growth-plan.resolver';
+import { GtlGoalDrizzleRepository } from './goals/gtl-goal.drizzle.repository';
+import { GtlGoalService } from './goals/gtl-goal.service';
+import {
+  GtlGoalEngagementResolver,
+  GtlGoalResolver,
+} from './gtl-goal.resolver';
 import { GtlReportEngagementConnectionResolver } from './gtl-report-engagement-connection.resolver';
 import { GtlReportProseResolver } from './gtl-report-prose.resolver';
 import { GtlReportSectionsResolver } from './gtl-report-sections.resolver';
@@ -42,9 +45,10 @@ import { GtlReportWorkflowService } from './workflow/gtl-report-workflow.service
     GtlReportEngagementConnectionResolver,
     GtlReportSectionsResolver,
     // Registered bare — Postgres-only, no splitDb. @see components/audit
-    GtlReportGoalDrizzleRepository,
-    GtlReportGoalService,
-    GtlGrowthPlanResolver,
+    GtlGoalDrizzleRepository,
+    GtlGoalService,
+    GtlGoalResolver,
+    GtlGoalEngagementResolver,
     GtlReportPracticumDrizzleRepository,
     GtlReportPracticumResolver,
     GtlReportPracticumService,
