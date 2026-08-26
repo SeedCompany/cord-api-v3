@@ -11,6 +11,7 @@ import {
   CreateGtlGoal,
   GtlGoal,
   GtlGoalCreated,
+  GtlGoalProgress,
   GtlGoalProgressReported,
   GtlGoalSummary,
   GtlGoalUpdated,
@@ -34,6 +35,18 @@ export class GtlGoalEngagementResolver {
   })
   async goalSummary(@Parent() engagement: Engagement): Promise<GtlGoalSummary> {
     return await this.goals.summaryForEngagement(engagement.id);
+  }
+}
+
+@Resolver(GtlGoalProgress)
+export class GtlGoalProgressResolver {
+  constructor(private readonly goals: GtlGoalService) {}
+
+  @ResolveField(() => GtlGoal, {
+    description: 'The goal this entry reports on',
+  })
+  async goal(@Parent() progress: GtlGoalProgress): Promise<GtlGoal> {
+    return await this.goals.readOne(progress.goal.id);
   }
 }
 

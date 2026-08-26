@@ -6,6 +6,7 @@ import { GtlGoalDrizzleRepository } from './goals/gtl-goal.drizzle.repository';
 import { GtlGoalService } from './goals/gtl-goal.service';
 import {
   GtlGoalEngagementResolver,
+  GtlGoalProgressResolver,
   GtlGoalResolver,
 } from './gtl-goal.resolver';
 import { GtlReportEngagementConnectionResolver } from './gtl-report-engagement-connection.resolver';
@@ -48,6 +49,7 @@ import { GtlReportWorkflowService } from './workflow/gtl-report-workflow.service
     GtlGoalDrizzleRepository,
     GtlGoalService,
     GtlGoalResolver,
+    GtlGoalProgressResolver,
     GtlGoalEngagementResolver,
     GtlReportPracticumDrizzleRepository,
     GtlReportPracticumResolver,

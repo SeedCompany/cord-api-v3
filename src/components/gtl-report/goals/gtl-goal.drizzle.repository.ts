@@ -159,12 +159,16 @@ export class GtlGoalDrizzleRepository extends DrizzleDtoRepository<
    * earlier quarter cannot regress the goal's current state.
    */
   async reportProgress(input: ReportGtlGoalProgress, progressDate: string) {
-    const id = await generateId<ID<'GtlGoalProgress'>>();
-    await this.db.transaction(async (tx) => {
-      await tx
+    const newId = await generateId<ID<'GtlGoalProgress'>>();
+    return await this.db.transaction(async (tx) => {
+      // A goal gets one entry per report, so re-saving the same quarter updates
+      // in place. `returning` is what makes that safe: on conflict the row that
+      // comes back is the existing one, keeping its own id — returning the id we
+      // just generated would name a row that was never inserted.
+      const [row] = await tx
         .insert(gtlGoalProgress)
         .values({
-          id,
+          id: newId,
           goalId: input.goal as ID<'GtlGoal'>,
           reportId: input.report as ID<'GTLReport'>,
           status: input.status,
@@ -185,7 +189,8 @@ export class GtlGoalDrizzleRepository extends DrizzleDtoRepository<
             modifiedAt: new Date(),
             updatedAt: new Date(),
           },
-        });
+        })
+        .returning({ id: gtlGoalProgress.id });
 
       const [latest] = await tx
         .select({
@@ -215,8 +220,9 @@ export class GtlGoalDrizzleRepository extends DrizzleDtoRepository<
           })
           .where(eq(gtlGoals.id, input.goal as ID<'GtlGoal'>));
       }
+
+      return row!.id;
     });
-    return id;
   }
 
   async listProgressForReport(reportId: ID) {
