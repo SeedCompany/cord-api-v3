@@ -94,8 +94,13 @@ export const progressSummaryExtractor: Extractor = {
           {
             reportId: row.reportId,
             period: period.kept[0],
-            planned: orDefault(row.planned, 0),
-            actual: orDefault(row.actual, 0),
+            planned: orDefault(
+              ctx,
+              'progress_summaries.planned',
+              row.planned,
+              0,
+            ),
+            actual: orDefault(ctx, 'progress_summaries.actual', row.actual, 0),
           },
         ];
       });

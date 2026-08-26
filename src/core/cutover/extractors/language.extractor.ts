@@ -80,22 +80,44 @@ export const languageExtractor: Extractor = {
       displayName: nameOf(lang.displayName, lang.name, lang.id),
       displayNamePronunciation: lang.displayNamePronunciation ?? null,
       // Stored value — see the docblock. NOT effectiveSensitivity.
-      sensitivity: orDefault(lang.sensitivity, 'High'),
-      isDialect: orDefault(lang.isDialect, false),
+      sensitivity: orDefault(
+        ctx,
+        'languages.sensitivity',
+        lang.sensitivity,
+        'High',
+      ),
+      isDialect: orDefault(ctx, 'languages.is_dialect', lang.isDialect, false),
       populationOverride: lang.populationOverride ?? null,
       registryOfLanguageVarietiesCode:
         lang.registryOfLanguageVarietiesCode ?? null,
-      leastOfThese: orDefault(lang.leastOfThese, false),
+      leastOfThese: orDefault(
+        ctx,
+        'languages.least_of_these',
+        lang.leastOfThese,
+        false,
+      ),
       leastOfTheseReason: lang.leastOfTheseReason ?? null,
-      isSignLanguage: orDefault(lang.isSignLanguage, false),
+      isSignLanguage: orDefault(
+        ctx,
+        'languages.is_sign_language',
+        lang.isSignLanguage,
+        false,
+      ),
       signLanguageCode: lang.signLanguageCode ?? null,
       sponsorEstimatedEndDate: dateStr(lang.sponsorEstimatedEndDate),
       hasExternalFirstScripture: orDefault(
+        ctx,
+        'languages.has_external_first_scripture',
         lang.hasExternalFirstScripture,
         false,
       ),
       tags: lang.tags ? [...lang.tags] : [],
-      isAvailableForReporting: orDefault(lang.isAvailableForReporting, false),
+      isAvailableForReporting: orDefault(
+        ctx,
+        'languages.is_available_for_reporting',
+        lang.isAvailableForReporting,
+        false,
+      ),
       createdAt: tsReq(lang.createdAt),
       // Language carries no modifiedAt (Resource gives only createdAt), so
       // updatedAt mirrors it — same as fieldZone/fieldRegion/location.

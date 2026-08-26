@@ -168,6 +168,7 @@ export class PgRefreshCommand extends Command {
           // the harness does not refuse what this command deliberately allowed.
           allowOtherSessions: this.allowOtherSessions,
           notHydrated: new Map(),
+          defaulted: new Map(),
           log,
         },
         extractors,

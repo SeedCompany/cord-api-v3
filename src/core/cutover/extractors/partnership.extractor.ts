@@ -76,7 +76,7 @@ export const partnershipExtractor: Extractor = {
       // Neo4j never wrote arrives undefined despite the DTO's array type, and
       // spreading it ends the whole run rather than dropping this row.
       const types = sanitizeEnum(
-        [...orDefault(p.types, [])],
+        [...orDefault(ctx, 'partnerships.types', p.types, [])],
         partnerTypeEnum.enumValues,
       );
       types.dropped.forEach((value) => dropped.add(value));
@@ -103,7 +103,7 @@ export const partnershipExtractor: Extractor = {
         mouEndOverride: dateStr(p.mouEndOverride),
         types: types.kept,
         financialReportingType: frt,
-        primary: orDefault(p.primary, false),
+        primary: orDefault(ctx, 'partnerships.primary', p.primary, false),
         createdAt: tsReq(p.createdAt),
         updatedAt: tsReq(p.createdAt),
         deletedAt: null,

@@ -107,15 +107,29 @@ export const partnerExtractor: Extractor = {
       // types these as arrays, but a field Neo4j never wrote arrives undefined
       // and spreading it throws, ending the whole run rather than this row.
       const types = sanitizeEnum(
-        [...orDefault(p.types, [])],
+        [...orDefault(ctx, 'partners.types', p.types, [])],
         partnerTypeEnum.enumValues,
       );
       const frt = sanitizeEnum(
-        [...orDefault(p.financialReportingTypes, [])],
+        [
+          ...orDefault(
+            ctx,
+            'partners.financial_reporting_types',
+            p.financialReportingTypes,
+            [],
+          ),
+        ],
         financialReportingTypeEnum.enumValues,
       );
       const programs = sanitizeEnum(
-        [...orDefault(p.approvedPrograms, [])],
+        [
+          ...orDefault(
+            ctx,
+            'partners.approved_programs',
+            p.approvedPrograms,
+            [],
+          ),
+        ],
         projectTypeEnum.enumValues,
       );
       [...types.dropped, ...frt.dropped, ...programs.dropped].forEach((d) =>
@@ -129,8 +143,13 @@ export const partnerExtractor: Extractor = {
         financialReportingTypes: frt.kept,
         pmcEntityCode: p.pmcEntityCode ?? null,
         // NOT NULL (default false) — legacy rows may lack the Property.
-        globalInnovationsClient: orDefault(p.globalInnovationsClient, false),
-        active: orDefault(p.active, false),
+        globalInnovationsClient: orDefault(
+          ctx,
+          'partners.global_innovations_client',
+          p.globalInnovationsClient,
+          false,
+        ),
+        active: orDefault(ctx, 'partners.active', p.active, false),
         address: p.address ?? null,
         // Plain text (deferred FK) — may reference not-yet-migrated languages.
         languageOfWiderCommunicationId: linkId(p.languageOfWiderCommunication),

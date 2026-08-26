@@ -239,7 +239,14 @@ export const productExtractor: Extractor = {
           )
         : { kept: [], dropped: [] as string[] };
       const measurement = sanitizeEnum(
-        [orDefault(dto.progressStepMeasurement as string, 'Percent')],
+        [
+          orDefault(
+            ctx,
+            'products.progress_step_measurement',
+            dto.progressStepMeasurement as string,
+            'Percent',
+          ),
+        ],
         progressMeasurementEnum.enumValues,
       );
       for (const [label, result] of [
@@ -281,13 +288,25 @@ export const productExtractor: Extractor = {
           placeholderDescription:
             (dto.placeholderDescription as string | null) ?? null,
           progressStepMeasurement: (measurement.kept[0] as any) ?? 'Percent',
-          progressTarget: orDefault(dto.progressTarget as number, 100),
+          progressTarget: orDefault(
+            ctx,
+            'products.progress_target',
+            dto.progressTarget as number,
+            100,
+          ),
           scriptureReferences: isDerivative ? [] : ownRanges,
           scriptureReferencesOverride: override,
           unspecifiedScriptureBook: unspecifiedBook,
           unspecifiedScriptureTotalVerses: unspecifiedVerses,
-          totalVerses: orDefault(dto.totalVerses as number, 0),
+          totalVerses: orDefault(
+            ctx,
+            'products.total_verses',
+            dto.totalVerses as number,
+            0,
+          ),
           totalVerseEquivalents: orDefault(
+            ctx,
+            'products.total_verse_equivalents',
             dto.totalVerseEquivalents as number,
             0,
           ),

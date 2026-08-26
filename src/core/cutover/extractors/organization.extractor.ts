@@ -58,11 +58,11 @@ export const organizationExtractor: Extractor = {
       // setupRootObjects creates (id hardcoded in config.service.ts) is written
       // with a `name` and nothing else, so it has neither of these.
       const types = sanitizeEnum(
-        [...orDefault(o.types, [])],
+        [...orDefault(ctx, 'organizations.types', o.types, [])],
         organizationTypeEnum.enumValues,
       );
       const reach = sanitizeEnum(
-        [...orDefault(o.reach, [])],
+        [...orDefault(ctx, 'organizations.reach', o.reach, [])],
         organizationReachEnum.enumValues,
       );
       [...types.dropped, ...reach.dropped].forEach((d) => droppedEnums.add(d));

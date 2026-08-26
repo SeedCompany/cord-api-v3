@@ -30,6 +30,19 @@ export interface CutoverContext {
    * have to be totalled separately.
    */
   readonly notHydrated: Map<string, number>;
+  /**
+   * Columns where the source had no value and the loader supplied one, keyed by
+   * `table.column`. Written by `orDefault`, reported by the harness.
+   *
+   * This is not a loss — the row lands and reconciles ✓. It is the opposite
+   * problem: a value that did not exist now does, and everything reading
+   * Postgres sees a real answer where the old system returned a blank. That is
+   * invisible to per-table counts, invisible to the read comparison unless it
+   * happens to ask for the field, and it changes what reports say. It was found
+   * from the outside, by a downstream warehouse diff, which is exactly the
+   * situation this block exists to prevent repeating.
+   */
+  readonly defaulted: Map<string, DefaultFill>;
   /** Read/insert chunk size. */
   readonly batchSize: number;
   /**
@@ -47,6 +60,16 @@ export interface CutoverContext {
    */
   readonly allowOtherSessions?: boolean;
   readonly log: (msg: string) => void;
+}
+
+/** One column's default-fill tally — see {@link CutoverContext.defaulted}. */
+export interface DefaultFill {
+  /** Values the source did not have, so the loader supplied `fallback`. */
+  filled: number;
+  /** Values offered to `orDefault` at this site, filled or not. */
+  seen: number;
+  /** The substituted value, rendered for the report. */
+  fallback: string;
 }
 
 export interface TableStat {

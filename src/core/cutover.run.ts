@@ -155,6 +155,7 @@ async function bootstrap() {
           batchSize: flags.batchSize,
           allowOtherSessions: flags.allowOtherSessions,
           notHydrated: new Map(),
+          defaulted: new Map(),
           log,
         },
         extractors,

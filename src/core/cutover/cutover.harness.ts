@@ -198,6 +198,30 @@ export const runCutover = async (
     }
   }
 
+  // Values the source did not have. The mirror image of the block above: those
+  // rows never arrived, these arrived carrying a value nobody wrote. Both are
+  // invisible to per-table reconciliation, for opposite reasons.
+  const filledColumns = [...ctx.defaulted.entries()]
+    .filter(([, fill]) => fill.filled > 0)
+    .sort((a, b) => b[1].filled - a[1].filled);
+  const totalFilled = filledColumns.reduce((sum, [, f]) => sum + f.filled, 0);
+  if (totalFilled > 0) {
+    ctx.log(
+      '\n─── Values the source did not have (filled with the column default) ───\n' +
+        '  NOT a loss — every one of these rows loaded and reconciles ✓. The value\n' +
+        '  is what was invented. Reading Postgres now returns a real answer where\n' +
+        '  Neo4j returned a blank, so anything downstream sees the change even\n' +
+        '  though the row counts agree. Each line is a reporting decision, not a\n' +
+        '  defect: is "never recorded" the same as this value?',
+    );
+    for (const [column, fill] of filledColumns) {
+      ctx.log(
+        `  ${column.padEnd(44)} ${String(fill.filled).padStart(7)} of ` +
+          `${String(fill.seen).padStart(7)} → ${fill.fallback}`,
+      );
+    }
+  }
+
   const totalLost = totalDropped + totalNotHydrated;
   ctx.log(
     `\nCutover ${ctx.dryRun ? 'dry-run' : 'load'} complete — ${

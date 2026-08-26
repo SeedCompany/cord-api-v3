@@ -116,7 +116,12 @@ export const projectExtractor: Extractor = {
         step: p.step,
         // Effective sensitivity from Neo4j is the real (engagement-derived)
         // value for translation projects — better than the schema default.
-        sensitivity: orDefault(p.sensitivity, 'High' as const),
+        sensitivity: orDefault(
+          ctx,
+          'projects.sensitivity',
+          p.sensitivity,
+          'High' as const,
+        ),
         // Writable only for Internship; translation rows derive theirs.
         ownSensitivity:
           p.type === 'Internship' ? (p.sensitivity ?? null) : null,
@@ -146,8 +151,13 @@ export const projectExtractor: Extractor = {
         estimatedSubmission: dateStr(p.estimatedSubmission),
         financialReportReceivedAt: ts(p.financialReportReceivedAt),
         financialReportPeriod,
-        tags: [...orDefault(p.tags, [])],
-        presetInventory: orDefault(p.presetInventory, false),
+        tags: [...orDefault(ctx, 'projects.tags', p.tags, [])],
+        presetInventory: orDefault(
+          ctx,
+          'projects.preset_inventory',
+          p.presetInventory,
+          false,
+        ),
         createdAt: tsReq(p.createdAt),
         modifiedAt: tsReq(p.modifiedAt),
         updatedAt: tsReq(p.modifiedAt),

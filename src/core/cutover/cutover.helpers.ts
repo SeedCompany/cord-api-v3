@@ -490,9 +490,45 @@ export const dateStr = (d: ISODateish): string | null => {
  * Coalesce a value that the DTO *types* as non-null but which real Neo4j data
  * can still hold null for (a Property node was never written). Mirrors the
  * column's schema default so the NOT NULL insert succeeds.
+ *
+ * **`column` is required, and the count is the point.** Filling a blank is not
+ * a lost row — the row lands, the table reconciles ✓, and nothing in the load
+ * output used to say it had happened. But the value is invented: everything
+ * reading Postgres now gets a real answer where the old system returned a
+ * blank, and a report that used to show an empty cell shows "no".
+ *
+ * We learned this the expensive way. A warehouse comparison against production
+ * flagged `ceremonies.planned` as 'N' on Postgres and blank on Neo4j, and it
+ * took a controlled experiment to establish which side was which — because the
+ * loader had recorded nothing. Naming the column here is what makes the next
+ * one arrive as a line in the load summary instead of a question from another
+ * team.
+ *
+ * @param column `table.column`, so the report reads like the schema.
  */
-export const orDefault = <T>(value: T | null | undefined, fallback: T): T =>
-  value ?? fallback;
+export const orDefault = <T>(
+  ctx: CutoverContext,
+  column: string,
+  value: T | null | undefined,
+  fallback: T,
+): T => {
+  const tally = ctx.defaulted.get(column) ?? {
+    filled: 0,
+    seen: 0,
+    fallback: renderFallback(fallback),
+  };
+  tally.seen += 1;
+  if (value == null) tally.filled += 1;
+  ctx.defaulted.set(column, tally);
+  return value ?? fallback;
+};
+
+/** A fallback as it should read in the summary: `false`, `'High'`, `[]`, `0`. */
+const renderFallback = (value: unknown): string => {
+  if (Array.isArray(value)) return '[]';
+  if (typeof value === 'string') return `'${value}'`;
+  return String(value);
+};
 
 /**
  * The stored rich-text value → the plain object a `jsonb` column takes.

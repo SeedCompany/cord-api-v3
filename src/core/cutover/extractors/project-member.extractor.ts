@@ -86,7 +86,7 @@ export const projectMemberExtractor: Extractor = {
       // whose roles were never written arrives undefined despite the DTO's array
       // type, and spreading it ends the whole run rather than dropping this row.
       const roles = sanitizeEnum(
-        [...orDefault(m.roles, [])],
+        [...orDefault(ctx, 'project_members.roles', m.roles, [])],
         roleEnum.enumValues,
       );
       roles.dropped.forEach((role) => droppedRoles.add(role));

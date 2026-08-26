@@ -147,7 +147,14 @@ export const engagementExtractor: Extractor = {
       }
 
       const status = sanitizeEnum(
-        [orDefault(eng.status as string, 'InDevelopment')],
+        [
+          orDefault(
+            ctx,
+            'engagements.status',
+            eng.status as string,
+            'InDevelopment',
+          ),
+        ],
         engagementStatusEnum.enumValues,
       );
       if (status.dropped.length > 0) {
@@ -195,11 +202,15 @@ export const engagementExtractor: Extractor = {
           sentPrintingDate: dateStr(lang.sentPrintingDate),
           historicGoal: (lang.historicGoal as string | null) ?? null,
           milestonePlanned: orDefault(
+            ctx,
+            'engagements.milestone_planned',
             lang.milestonePlanned,
             'Unknown' as const,
           ),
           milestoneReached: (lang.milestoneReached as boolean | null) ?? null,
           usingAIAssistedTranslation: orDefault(
+            ctx,
+            'engagements.using_ai_assisted_translation',
             lang.usingAIAssistedTranslation,
             'Unknown' as const,
           ),
@@ -211,7 +222,12 @@ export const engagementExtractor: Extractor = {
           methodologies: methodologies.kept as any,
           countryOfOriginId,
           growthPlanId: liveFileRefOrNull(linkId(lang.growthPlan)),
-          marketable: orDefault(lang.marketable as boolean, false),
+          marketable: orDefault(
+            ctx,
+            'engagements.marketable',
+            lang.marketable as boolean,
+            false,
+          ),
           webId: (lang.webId as string | null) ?? null,
 
           createdAt: tsReq(eng.createdAt),
@@ -448,7 +464,7 @@ export const engagementExtractor: Extractor = {
           id: cer.id,
           engagementId,
           type: cer.type,
-          planned: orDefault(cer.planned, false),
+          planned: orDefault(ctx, 'ceremonies.planned', cer.planned, false),
           estimatedDate: dateStr(cer.estimatedDate),
           actualDate: dateStr(cer.actualDate),
           createdAt: tsReq(cer.createdAt),
