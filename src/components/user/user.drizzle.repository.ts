@@ -303,6 +303,12 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
       displayLastName: [users.displayLastName, users.displayFirstName],
       realFirstName: [users.realFirstName, users.realLastName],
       displayFirstName: [users.displayFirstName, users.displayLastName],
+      // Was MISSING until 2026-08-27: resolveOrderBy silently substitutes the
+      // fallback (id) for any key not in this map, so `sort: createdAt` came
+      // back id-ordered — Neo4j sorts it for real, and the shadow-diff's
+      // users.list.sort-createdAt-asc class (300 entries) was exactly this,
+      // not timestamp ties.
+      createdAt: users.createdAt,
     } satisfies SortMap<keyof User | 'fullName'>;
 
     const { rows, total, hasMore } = await this.paginatedSelect({
