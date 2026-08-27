@@ -73,6 +73,24 @@ export interface OperationResult {
   readonly errors: readonly NormalizedError[];
 }
 
+/**
+ * One stratum's accounting. `population` is how many live rows the stratum
+ * matches in total, `drawn` how many the stratum query returned, and `added`
+ * how many were new after removing ids an earlier stratum already picked.
+ *
+ * The distinction matters for the loudness rule: `drawn = 0` while
+ * `population > 0` is a sampling bug and capture THROWS on it, whereas
+ * `added = 0` with `drawn > 0` just means the rows were already covered.
+ */
+export interface StratumTally {
+  readonly population: number;
+  readonly drawn: number;
+  readonly added: number;
+}
+
+/** Per-domain draw accounting, one entry per stratum that ran. */
+export type DomainStrata = Readonly<Record<string, StratumTally>>;
+
 export interface CaptureMeta {
   readonly engine: string;
   readonly capturedAt: string;
@@ -81,6 +99,12 @@ export interface CaptureMeta {
   readonly skippedPersonas: readonly PersonaRole[];
   /** domain → sampled ids — must match between the two captures. */
   readonly sampledIds: Readonly<Record<SampledDomain, readonly string[]>>;
+  /**
+   * How each domain's ids were drawn (per-stratum populations and counts).
+   * Written so a report reader can verify coverage without re-deriving it —
+   * "reads match" is only as strong as what was actually drawn.
+   */
+  readonly strata?: Readonly<Partial<Record<SampledDomain, DomainStrata>>>;
 }
 
 export interface CaptureFile {
