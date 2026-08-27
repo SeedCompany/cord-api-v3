@@ -2,6 +2,7 @@ import { Field, ObjectType } from '@nestjs/graphql';
 import {
   Calculated,
   Resource,
+  SecuredBoolean,
   SecuredBooleanNullable,
   SecuredDateNullable,
   SecuredProperty,
@@ -26,7 +27,11 @@ export class Ceremony extends Resource {
   @Field(() => CeremonyType)
   readonly type: CeremonyType;
 
-  @Field()
+  // Nullable in TS (migration 0042): 7,386 migrated ceremonies carry a kept
+  // blank. The WIRE type stays `SecuredBoolean` on purpose — the schema is an
+  // API-compatibility promise, and its `value` was always nullable
+  // (`Boolean`, not `Boolean!`), so the blank needs no schema change.
+  @Field(() => SecuredBoolean)
   readonly planned: SecuredBooleanNullable;
 
   @Field()

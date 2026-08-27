@@ -256,7 +256,10 @@ export class InternshipEngagement extends Engagement {
   @DbLabel('ProductMethodology')
   readonly methodologies: SecuredMethodologies;
 
-  @Field()
+  // Nullable in TS (migration 0042): 6,866 migrated rows carry a kept blank.
+  // The WIRE type stays `SecuredBoolean` — its `value` was always nullable,
+  // so the schema does not change (an API-compatibility promise).
+  @Field(() => SecuredBoolean)
   readonly marketable: SecuredBooleanNullable;
 
   @Field()

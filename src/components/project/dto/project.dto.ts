@@ -206,7 +206,10 @@ class Project extends Interfaces {
         Pick<UnsecuredDto<ProjectMember>, 'roles' | 'inactiveAt'>)
     | null;
 
-  @Field({
+  // Nullable in TS (migration 0042): 2,185 migrated rows carry a kept blank.
+  // The WIRE type stays `SecuredBoolean` — its `value` was always nullable,
+  // so the schema does not change (an API-compatibility promise).
+  @Field(() => SecuredBoolean, {
     description: stripIndent`
       Whether or not this project and its associated languages (via engagements)
       are a part of our "Preset Inventory".
