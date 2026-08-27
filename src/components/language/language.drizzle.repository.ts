@@ -5,6 +5,7 @@ import {
   ilike,
   inArray,
   isNull,
+  not,
   or,
   sql,
   type SQL,
@@ -452,9 +453,12 @@ interface EngagementDerived {
 }
 
 /**
- * Column-level WHERE clauses for `LanguageFilters`. presetInventory /
- * usesAIAssistance list filters remain unimplemented (rarely used;
- * migration-todo if a consumer surfaces).
+ * Column-level WHERE clauses for `LanguageFilters`.
+ *
+ * migration-todo: the usesAIAssistance list filter remains unimplemented —
+ * its Neo4j side carries the known 42N07 shadowing fault on filter+sort
+ * (won't fix, transition-only), so there is no working behavior to mirror;
+ * decide its Postgres semantics when a consumer surfaces.
  */
 export const languageFilterClauses = (
   db: DrizzleDb,
@@ -490,6 +494,27 @@ export const languageFilterClauses = (
   if (filter.isAvailableForReporting != null) {
     conditions.push(
       eq(languages.isAvailableForReporting, filter.isAvailableForReporting),
+    );
+  }
+  // Derived, mirroring the Neo4j filter and the engagementDerived hydration:
+  // a language is "preset inventory" when ANY project engaging it is flagged
+  // AND currently InDevelopment/Active. This was silently ignored until
+  // 2026-08-27 — the shadow-diff corpus caught the list answering unfiltered
+  // (3,624 rows against Neo4j's 18).
+  if (filter.presetInventory != null) {
+    const anyFlaggedEngagingProject = sql`exists (
+      select 1 from "engagements" "e"
+      join "projects" "p" on "p"."id" = "e"."project_id"
+      where "e"."language_id" = ${languages.id}
+        and "e"."deleted_at" is null
+        and "p"."deleted_at" is null
+        and "p"."preset_inventory" = true
+        and "p"."status" in ('InDevelopment', 'Active')
+    )`;
+    conditions.push(
+      filter.presetInventory
+        ? anyFlaggedEngagingProject
+        : not(anyFlaggedEngagingProject),
     );
   }
   const rolv =
