@@ -1,4 +1,5 @@
 import { eq, sql } from 'drizzle-orm';
+import { type PgTable } from 'drizzle-orm/pg-core';
 import { type ID } from '~/common';
 import {
   ceremonies,
@@ -6,6 +7,7 @@ import {
   fileNodes,
   languages,
   media,
+  notifications,
   organizations,
   partners,
   partnerships,
@@ -14,6 +16,7 @@ import {
   products,
   projectMembers,
   projects,
+  resourceMutations,
   userGlobalRoles,
   users,
 } from '~/core/drizzle/schema';
@@ -913,6 +916,113 @@ export const probes: readonly Probe[] = [
         }`,
         actual: (d) => d.user.about.value,
       }),
+  },
+
+  // ---- B4: side effects — the audit trail and the rollback invariant ------
+  {
+    /**
+     * Every user-driven mutation must leave a resource_mutations row, written
+     * by the audit handler INSIDE the same transaction. A silent audit gap is
+     * invisible to every read comparison, so it gets its own probe.
+     */
+    key: 'a write on a migrated row leaves an audit entry',
+    domain: 'languages',
+    as: 'admin',
+    run: async (ctx, id) => {
+      const auditCount = async () => {
+        const rows = await ctx.db
+          .select({ n: sql<number>`count(*)::int` })
+          .from(resourceMutations)
+          .where(eq(resourceMutations.resourceId, id));
+        return rows[0]?.n ?? 0;
+      };
+      const before = await auditCount();
+      // Suffixed so it differs from what the updateLanguage probe wrote to
+      // the same row earlier in the run: an identical value makes
+      // getActualChanges empty and the service returns before writing or
+      // firing the hook — which read as a missing audit row on the first run.
+      await ctx.gql(
+        `mutation ProbeAuditedUpdate($input: UpdateLanguage!) {
+          updateLanguage(input: $input) { language { id } }
+        }`,
+        { input: { id, displayNamePronunciation: `${mark(id)} audit` } },
+      );
+      const after = await auditCount();
+      if (after !== before + 1) {
+        throw new Error(
+          `audit rows for the language went ${before} -> ${after}, ` +
+            'expected exactly one more',
+        );
+      }
+    },
+  },
+  {
+    /**
+     * The rolled-back-transaction invariant — the 122-email incident shape.
+     *
+     * createProjectMember WRITES the membership row before the permission
+     * check that refuses it (the documented create-then-check ordering), so a
+     * refused add is a transaction that already contained a real write when
+     * it threw. Nothing may survive: not the membership row (counted across
+     * ALL rows, so a write-then-soft-delete cannot fake the rollback), not a
+     * notification, not an audit entry.
+     */
+    key: 'a refused create leaves nothing behind',
+    domain: 'projectsNotMember',
+    run: async (ctx, id) => {
+      const newcomer = await someoneNotOnTheTeam(ctx, id);
+      if (!newcomer) {
+        return { notApplicable: 'every live user is already on this team' };
+      }
+      const memberRows = async () => {
+        const rows = await ctx.db
+          .select({ n: sql<number>`count(*)::int` })
+          .from(projectMembers)
+          .where(eq(projectMembers.projectId, id));
+        return rows[0]?.n ?? 0;
+      };
+      const tableCount = async (table: PgTable) => {
+        // Annotated because a bare PgTable drops the dynamic select to `any`.
+        const rows: Array<{ n: number }> = await ctx.db
+          .select({ n: sql<number>`count(*)::int` })
+          .from(table);
+        return rows[0]?.n ?? 0;
+      };
+      const membersBefore = await memberRows();
+      const notificationsBefore = await tableCount(notifications);
+      const auditBefore = await tableCount(resourceMutations);
+      await expectDenied(
+        ctx,
+        'adding a member to a non-member project',
+        async () =>
+          await ctx.gql(ADD_MEMBER, {
+            input: { project: id, user: newcomer },
+          }),
+      );
+      const leftovers: string[] = [];
+      const membersAfter = await memberRows();
+      if (membersAfter !== membersBefore) {
+        leftovers.push(
+          `membership rows went ${membersBefore} -> ${membersAfter}`,
+        );
+      }
+      const notificationsAfter = await tableCount(notifications);
+      if (notificationsAfter !== notificationsBefore) {
+        leftovers.push(
+          `notifications went ${notificationsBefore} -> ${notificationsAfter}`,
+        );
+      }
+      const auditAfter = await tableCount(resourceMutations);
+      if (auditAfter !== auditBefore) {
+        leftovers.push(`audit rows went ${auditBefore} -> ${auditAfter}`);
+      }
+      if (leftovers.length > 0) {
+        throw new Error(
+          'the refused create left something behind: ' + leftovers.join('; '),
+        );
+      }
+      return undefined;
+    },
   },
 
   // ---- Deletion, last: it removes the rows the checks above read ---------
