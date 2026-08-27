@@ -283,6 +283,31 @@ run deliberately disables root-object sync and index creation so that stays true
 (booting the AppModule would otherwise write to the source graph in the
 background).
 
+## Certification sequence — `certify.sh`
+
+Steps 2–5 above, plus every parity and coverage checker built since, chained
+into one script: `src/core/cutover/certify.sh --target=<db>`. It runs the full
+load, compares the loss manifest against the committed baseline, runs the
+invariant and coverage checks, profiles every column on both engines, replays
+the shadow-diff corpus under both engines and diffs the captures, writes to
+migrated rows through the mutation probe (on a throwaway copy), runs the whole
+e2e suite against another throwaway copy, and finishes with the
+mutation-coverage and corpus-completeness checkers. One red phase = NOT
+CERTIFIED; a `--from`/`--only`/`--resume` run can only ever report a partial
+green, never the certification verdict.
+
+Every phase is judged by a banner or a machine-readable report, never by an
+exit code alone (yarn has been seen swallowing an OOM and exiting 0), and the
+full output of each phase is kept under `certify-output/<target>/`. The
+script's own assertion helpers were certified the same way as every other
+checker here — by planting defects (an unexpected probe failure, a failing
+test, a missing banner, a stale expected-red registration) and requiring each
+to turn the phase red.
+
+This sequence is the verification half of the cutover rehearsal runbook; the
+rehearsal itself adds the freeze, the people, the clock, and the rollback
+drill on top.
+
 ### Cheap probes worth running at immediate pre-flight
 
 All are O(1) or near it, and each answers "is there data here we do not migrate,
