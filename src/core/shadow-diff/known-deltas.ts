@@ -118,7 +118,12 @@ export const knownDeltas: readonly KnownDeltaRule[] = [
       'nodes — unavailability.repository.ts:84 has no user filter — so every ' +
       'profile shows the entire table (3 rows in prod), while Postgres ' +
       'correctly scopes the list to the user. Neo4j-only wrongness the port ' +
-      'fixed (A1 triage 2026-08-27); the Postgres answer is the right one.',
+      'fixed (A1 triage 2026-08-27); the Postgres answer is the right one. ' +
+      'Stakes verified 2026-08-27: cord-field never queries, displays, or ' +
+      'mutates unavailabilities (grepped — zero operations, zero rendering), ' +
+      'so the divergence has NO UI surface. That is a claim about cord-field ' +
+      'only, not about all readers — the BI pipeline reads through the same ' +
+      'GraphQL API and has not been checked.',
     op: /^user\.byId/,
     persona: /./,
     path: /(^|\.)unavailabilities(\.|$)/,
