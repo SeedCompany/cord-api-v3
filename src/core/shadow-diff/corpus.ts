@@ -544,6 +544,9 @@ const partnersList = /* GraphQL */ `
 // rather than skipped.
 // Still excluded: changeRequests — changesets are not carried forward.
 // rootDirectory value is id-only (File-domain boundary; column parity only).
+// `budget` here stays `{ id }` on purpose; full budget depth (records,
+// amounts, totals) lives on the ShadowProjectBudget document below, expanded
+// over projects that actually have budget records.
 const projectById = /* GraphQL */ `
   query ShadowProjectById($id: ID!) {
     project(id: $id) {
@@ -725,6 +728,81 @@ const projectsList = /* GraphQL */ `
       hasMore
       items {
         id
+      }
+    }
+  }
+`;
+
+// ─── budgets (via project — Budget has no top-level query) ───────────────────
+// Added 2026-08-27 (plan item A2). Until now Budget was one of the five types
+// this corpus reached ONLY as `{ id }`, which is how 18,648 money rows went
+// uncompared while the report read clean. Expanded over `budgetedProjects`
+// ids: projects that have a live budget with live records (see capture.ts).
+//
+// `records` is a plain array, NOT a paginated list, and the Postgres
+// repository reads it with no ORDER BY — record order is engine-dependent, so
+// this document depends on diff.ts aligning object arrays by id.
+// `total` and `summary` are resolver-computed from the records and double as
+// checksums over the amounts.
+// universalTemplateFile value is id-only (File-domain boundary; a DefinedFile
+// answers through the Neo4j file repository on both engines).
+const projectBudget = /* GraphQL */ `
+  query ShadowProjectBudget($id: ID!) {
+    project(id: $id) {
+      id
+      budget {
+        canRead
+        canEdit
+        value {
+          id
+          createdAt
+          status
+          sensitivity
+          total
+          summary {
+            hasPreApproved
+            preApprovedExceeded
+          }
+          universalTemplateFile {
+            canRead
+            canEdit
+            value {
+              id
+            }
+          }
+          records {
+            id
+            createdAt
+            sensitivity
+            fiscalYear {
+              value
+              canRead
+              canEdit
+            }
+            amount {
+              value
+              canRead
+              canEdit
+            }
+            preApprovedAmount {
+              value
+              canRead
+              canEdit
+            }
+            initialAmount {
+              value
+              canRead
+              canEdit
+            }
+            organization {
+              canRead
+              canEdit
+              value {
+                id
+              }
+            }
+          }
+        }
       }
     }
   }
@@ -1405,7 +1483,15 @@ const periodicReportById = /* GraphQL */ `
             id
           }
         }
+        # product { id } is the alignment identity: progress is one entry PER
+        # PRODUCT (a 49-product report has 49 entries all with variant
+        # "official"), so without it the entries are indistinguishable and the
+        # diff falls back to index-wise comparison — which is exactly how a
+        # reorder read as phantom missing steps in the A1 triage.
         progress {
+          product {
+            id
+          }
           variant {
             key
           }
@@ -1702,6 +1788,16 @@ export const corpus: readonly CorpusEntry[] = [
     variables: { input: { filter: { type: ['MomentumTranslation'] } } },
   },
   { key: 'project.byId', document: projectById, idsFrom: 'projects' },
+  // Budget depth (records, amounts, totals) — see the document's header.
+  // Keyed under `project.` deliberately: the S1 known-delta (inactive-
+  // membership visibility) governs project reachability for member personas,
+  // and budget reads inherit exactly that visibility. Data parity rides on
+  // the Administrator persona, which S1 never touches.
+  {
+    key: 'project.budget',
+    document: projectBudget,
+    idsFrom: 'budgetedProjects',
+  },
 
   // partnerships — default sort is `createdAt`; the filter arg is internal
   // (not exposed in the schema), so no filter variant

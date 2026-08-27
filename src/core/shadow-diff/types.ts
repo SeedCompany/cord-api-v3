@@ -42,7 +42,12 @@ export type SampledDomain =
   | 'periodicReports'
   | 'progressReports'
   | 'commentThreads'
-  | 'posts';
+  | 'posts'
+  // Added 2026-08-27 (plan item A2). Budget has NO top-level query — it is
+  // reachable only through `project.budget` — so the sample draws PROJECT ids
+  // narrowed to projects that actually have a live budget with live records,
+  // and the corpus reads the budget through the project document.
+  | 'budgetedProjects';
 
 /** One hand-enumerated corpus operation (see corpus.ts). */
 export interface CorpusEntry {

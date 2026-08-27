@@ -112,6 +112,76 @@ export const knownDeltas: readonly KnownDeltaRule[] = [
     path: /(^|\.)presetInventory(\.|$)/,
   },
   {
+    ref: 'U16',
+    reason:
+      'user.unavailabilities: the Neo4j repository lists ALL Unavailability ' +
+      'nodes — unavailability.repository.ts:84 has no user filter — so every ' +
+      'profile shows the entire table (3 rows in prod), while Postgres ' +
+      'correctly scopes the list to the user. Neo4j-only wrongness the port ' +
+      'fixed (A1 triage 2026-08-27); the Postgres answer is the right one.',
+    op: /^user\.byId/,
+    persona: /./,
+    path: /(^|\.)unavailabilities(\.|$)/,
+  },
+  {
+    ref: 'U17',
+    reason:
+      'The anonymous user (id `anonuserid`) is labelled AnonUser in Neo4j ' +
+      'and dropped from user lists there, while Postgres has no marker ' +
+      'column to read and lists it — totals run higher by exactly 1 and the ' +
+      'row appears only on the Postgres side. The fix (exclude ' +
+      'config.anonUser.id) is written on branch `pg-exclude-anon-user` ' +
+      'targeting develop and is NOT on this lineage yet; remove this rule ' +
+      'after the next catch-up merge and confirm the totals match on a ' +
+      'fresh capture. Scoped away from the filter-status op on purpose — ' +
+      'its totals stay red under the S6-cardinality decision below. ' +
+      '`«order»` is deliberately NOT suppressed: dropping an unshared id ' +
+      'cannot reorder the shared ones, so any order entry here is collation ' +
+      'signal, not this delta.',
+    op: /^users\.list\.(?:default|sort-)/,
+    persona: /./,
+    path: /\[id=anonuserid\]|(^|\.)(total|hasMore)$/,
+  },
+  {
+    ref: 'U18',
+    reason:
+      'project.primaryPartnership: the Postgres repository still hardcodes ' +
+      'the hydrated value to null (project.drizzle.repository.ts) while ' +
+      'Neo4j resolves the primary partnership, so Neo4j returns an id where ' +
+      'Postgres returns null. The fix is written on branch ' +
+      '`pg-project-primary-partnership` targeting develop (PR draft ' +
+      '`pr-primary-partnership.md`) and is NOT on this lineage yet; remove ' +
+      'this rule after the next catch-up merge and confirm on a fresh ' +
+      'capture that the values match.',
+    op: /^project\.byId/,
+    persona: /./,
+    path: /(^|\.)primaryPartnership(\.|$)/,
+  },
+  {
+    ref: 'S6-progressTarget',
+    reason:
+      'ETL fill accepted as new truth (Rob, 2026-08-26): products with no ' +
+      'progressTarget property in Neo4j (12,081 rows) load with a filled ' +
+      'value instead of null. Same coalescing class as the other S6 rules; ' +
+      'also registered in the column profiler ' +
+      '(column-profile.run.ts, products.progress_target).',
+    op: /^product\.byId/,
+    persona: /./,
+    path: /(^|\.)progressTarget(\.|$)/,
+  },
+  {
+    ref: 'B1-records-order',
+    reason:
+      'Budget.records is a plain array with no defined order on EITHER ' +
+      'engine — Neo4j returns Cypher collect() order and Postgres heap ' +
+      'order (readManyByBudget has no ORDER BY). Records are id-aligned and ' +
+      'every field compared, so only the `«order»` entry is suppressed. ' +
+      'Post-cutover nicety: give the Postgres read a deterministic ORDER BY.',
+    op: /^project\.budget/,
+    persona: /./,
+    path: /records\.«order»$/,
+  },
+  {
     ref: 'S8',
     reason:
       'Orphaned-partnership phantom counts (decided 2026-07-14, drop-and-log): ' +
@@ -140,7 +210,9 @@ export const knownDeltas: readonly KnownDeltaRule[] = [
       'nullable column. Enable only after that call.',
     op: /^users\.list\.filter-status/,
     persona: /./,
-    path: /(^|\.)(total|hasMore)$|items\[\d+\]/,
+    // `items\[[^\]]+\]` matches both index-wise ([3]) and id-aligned
+    // ([id=xyz]) item paths (diff.ts aligns keyable arrays by id).
+    path: /(^|\.)(total|hasMore)$|items\[[^\]]+\]|items\.«order»/,
     disabled: true,
   },
   {
@@ -148,10 +220,13 @@ export const knownDeltas: readonly KnownDeltaRule[] = [
     reason:
       'ORDER-only differences on name sorts can stem from Neo4j vs Postgres ' +
       '(ICU/libc) collation rather than data. Disabled by default: inspect ' +
-      'the ordering diffs first, then enable deliberately if confirmed.',
+      'the ordering diffs first, then enable deliberately if confirmed. ' +
+      'With id-aligned arrays (diff.ts, 2026-08-27) ordering drift surfaces ' +
+      'as a single `items.«order»` entry per list rather than per-item ' +
+      'shifts, so that is the path this rule would suppress.',
     op: /sort-(?:name|displayLastName)/,
     persona: /./,
-    path: /^data\.[A-Za-z]+\.items\[\d+\]/,
+    path: /^data\.[A-Za-z]+\.items\.«order»$/,
     disabled: true,
   },
   {
@@ -178,7 +253,9 @@ export const knownDeltas: readonly KnownDeltaRule[] = [
       'restore exactly the masking this note exists to prevent.',
     op: /^users\.list\.default$/,
     persona: /./,
-    path: /^data\.users\.items\[\d+\]/,
+    // The fold difference is order-only, so with id-aligned arrays it is one
+    // `items.«order»` entry; the anonuserid row itself is the U17 rule above.
+    path: /^data\.users\.items\.«order»$/,
     disabled: true,
   },
 ];

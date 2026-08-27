@@ -150,6 +150,28 @@ const sampledTables: Readonly<Record<SampledDomain, SampledTable>> = {
   },
   commentThreads: { table: commentThreads, id: commentThreads.id },
   posts: { table: posts, id: posts.id },
+  // Budget has no top-level query, so budget depth is read through
+  // `project(id).budget`. The draw is PROJECT ids, narrowed to projects whose
+  // current data actually exercises the selection: a live budget with at
+  // least one live record. Flagged = a record with a NULL amount — the blank
+  // the loader now preserves (17 of the 1,945 Neo4j blanks belonged to the 45
+  // dropped records; the rest must read back as blanks, not 0).
+  budgetedProjects: {
+    table: projects,
+    id: projects.id,
+    deletedAt: projects.deletedAt,
+    predicate: sql`EXISTS (
+      SELECT 1 FROM budgets b
+      JOIN budget_records br ON br.budget_id = b.id AND br.deleted_at IS NULL
+      WHERE b.project_id = ${projects.id} AND b.deleted_at IS NULL
+    )`,
+    flagged: sql`EXISTS (
+      SELECT 1 FROM budgets b
+      JOIN budget_records br ON br.budget_id = b.id AND br.deleted_at IS NULL
+      WHERE b.project_id = ${projects.id} AND b.deleted_at IS NULL
+        AND br.amount IS NULL
+    )`,
+  },
 };
 
 interface SampledIds {

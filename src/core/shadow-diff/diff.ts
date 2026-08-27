@@ -15,20 +15,29 @@ import {
 export const ABSENT = '«absent»';
 
 /**
- * Datetime canonicalization is limited to values that are BOTH valid ISO
- * instants AND represent the same moment — i.e. only string-form differences
- * (offset spelling, milliseconds) are treated as equal, and counted. Anything
- * else (different instants, date-only strings, null-vs-value) diffs as usual.
+ * Datetime canonicalization is limited to values that BOTH parse as ISO
+ * moments AND represent the same instant — i.e. only string-form differences
+ * (offset spelling, milliseconds) are treated as equal, and counted. A
+ * date-only string counts as midnight UTC: legacy rows stored dates in
+ * DateTime fields, and the engines serialize that back differently
+ * (`2013-09-30` vs `2013-09-29T20:00:00-04:00` — the same instant; A1 triage
+ * 2026-08-27). Anything else (different instants, null-vs-value) diffs as
+ * usual.
  */
 const ISO_INSTANT =
   /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
+const ISO_DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
 
-const equivalentInstants = (a: unknown, b: unknown): boolean =>
-  typeof a === 'string' &&
-  typeof b === 'string' &&
-  ISO_INSTANT.test(a) &&
-  ISO_INSTANT.test(b) &&
-  Date.parse(a) === Date.parse(b);
+const instantOf = (value: unknown): number | null =>
+  typeof value === 'string' &&
+  (ISO_INSTANT.test(value) || ISO_DATE_ONLY.test(value))
+    ? Date.parse(value)
+    : null;
+
+const equivalentInstants = (a: unknown, b: unknown): boolean => {
+  const parsedA = instantOf(a);
+  return parsedA !== null && parsedA === instantOf(b);
+};
 
 const isPlainObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -49,9 +58,64 @@ interface WalkState {
 }
 
 /**
+ * The key that identifies an array element for order-independent alignment,
+ * tried in this order:
+ * - `id` covers nearly every list in the corpus;
+ * - `product.id` (+ `variant.key`) covers ProgressReport.progress — one entry
+ *   PER PRODUCT, so `variant.key` alone duplicates ("official" × 49);
+ * - `variant.key` covers variant arrays without a product;
+ * - `step` covers the step arrays inside progress entries;
+ * - `partnership.id` + `medium` covers partnershipsProducingMediums.
+ * Items with none of these (or duplicate keys within one array) fall back to
+ * the index-wise walk.
+ */
+const alignmentKeyOf = (item: unknown): string | null => {
+  if (!isPlainObject(item)) return null;
+  if (typeof item.id === 'string') return `id=${item.id}`;
+  const variant = item.variant;
+  const variantKey =
+    isPlainObject(variant) && typeof variant.key === 'string'
+      ? variant.key
+      : null;
+  const product = item.product;
+  if (isPlainObject(product) && typeof product.id === 'string') {
+    return `product=${product.id}${variantKey ? `|variant=${variantKey}` : ''}`;
+  }
+  if (variantKey) return `variant=${variantKey}`;
+  if (typeof item.step === 'string') return `step=${item.step}`;
+  const partnership = item.partnership;
+  if (
+    isPlainObject(partnership) &&
+    typeof partnership.id === 'string' &&
+    typeof item.medium === 'string'
+  ) {
+    return `partnership=${partnership.id}|medium=${item.medium}`;
+  }
+  return null;
+};
+
+/** Per-item keys, or null unless EVERY item is keyable and keys are unique. */
+const alignmentKeys = (items: readonly unknown[]): string[] | null => {
+  const keys: string[] = [];
+  for (const item of items) {
+    const key = alignmentKeyOf(item);
+    if (key === null) return null;
+    keys.push(key);
+  }
+  return new Set(keys).size === keys.length ? keys : null;
+};
+
+/**
  * Structural walk of two JSON values, emitting leaf differences.
- * List item ORDER matters: arrays are compared index-wise as-is —
- * ordering drift IS signal (see the disabled collation known-delta).
+ *
+ * Arrays whose items all carry an alignment key are matched BY KEY, not by
+ * index: legacy bulk imports share createdAt timestamps, the engines break
+ * the ties differently, and an index-wise walk turns a reorder into phantom
+ * missing data (the progress[0]↔progress[7] mirror from the A1 triage —
+ * 3,461 entries whose dominant class was exactly this). Ordering is still
+ * signal, but it surfaces as ONE `«order»` entry comparing the shared-key
+ * sequences instead of thousands of misaligned leaf diffs. Unkeyable arrays
+ * keep the index-wise walk, where order differences diff leaf-by-leaf.
  */
 const walk = (a: unknown, b: unknown, path: string, state: WalkState): void => {
   if (Object.is(a, b)) return;
@@ -60,6 +124,33 @@ const walk = (a: unknown, b: unknown, path: string, state: WalkState): void => {
     return;
   }
   if (Array.isArray(a) && Array.isArray(b)) {
+    const keysA = alignmentKeys(a);
+    const keysB = keysA ? alignmentKeys(b) : null;
+    if (keysA && keysB) {
+      const byKeyB = new Map(keysB.map((key, i) => [key, b[i]]));
+      const setA = new Set(keysA);
+      const sharedA = keysA.filter((key) => byKeyB.has(key));
+      const sharedB = keysB.filter((key) => setA.has(key));
+      if (sharedA.join('\n') !== sharedB.join('\n')) {
+        state.diffs.push({
+          path: `${path}.«order»`,
+          neo4j: sharedA,
+          postgres: sharedB,
+        });
+      }
+      keysA.forEach((key, i) => {
+        walk(
+          a[i],
+          byKeyB.has(key) ? byKeyB.get(key) : ABSENT,
+          `${path}[${key}]`,
+          state,
+        );
+      });
+      keysB.forEach((key, i) => {
+        if (!setA.has(key)) walk(ABSENT, b[i], `${path}[${key}]`, state);
+      });
+      return;
+    }
     if (a.length !== b.length) {
       state.diffs.push({
         path: `${path}.length`,
