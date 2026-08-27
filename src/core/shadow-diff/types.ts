@@ -47,7 +47,11 @@ export type SampledDomain =
   // reachable only through `project.budget` — so the sample draws PROJECT ids
   // narrowed to projects that actually have a live budget with live records,
   // and the corpus reads the budget through the project document.
-  | 'budgetedProjects';
+  | 'budgetedProjects'
+  // Engagements whose ceremony carries a kept-blank `planned` (the class
+  // migration 0042 made representable) — Ceremony has no top-level query, so
+  // the blank round-trip is pinned through the engagement document.
+  | 'ceremonyBlankEngagements';
 
 /** One hand-enumerated corpus operation (see corpus.ts). */
 export interface CorpusEntry {

@@ -1089,11 +1089,33 @@ const engagementById = /* GraphQL */ `
         canRead
         canEdit
       }
+      # Full ceremony depth (was { id } — one of the five field-blind types).
+      # planned is the column 0042 made nullable: 7,386 ceremonies carry a
+      # kept-blank planned, and the engagement.ceremonyBlank corpus entry
+      # samples engagements specifically from that population so the blank's
+      # round-trip is pinned, not left to the draw.
       ceremony {
         canRead
         canEdit
         value {
           id
+          createdAt
+          type
+          planned {
+            value
+            canRead
+            canEdit
+          }
+          estimatedDate {
+            value
+            canRead
+            canEdit
+          }
+          actualDate {
+            value
+            canRead
+            canEdit
+          }
         }
       }
       ... on LanguageEngagement {
@@ -1336,12 +1358,53 @@ const productById = /* GraphQL */ `
             }
           }
         }
+        # Full producible depth (was id-only — one of the five field-blind
+        # types). The interface carries scriptureReferences; each concrete
+        # type (EthnoArt / Film / Story) adds a name.
         produces {
           canRead
           canEdit
           value {
             id
             __typename
+            createdAt
+            scriptureReferences {
+              canRead
+              canEdit
+              value {
+                start {
+                  book
+                  chapter
+                  verse
+                }
+                end {
+                  book
+                  chapter
+                  verse
+                }
+              }
+            }
+            ... on EthnoArt {
+              name {
+                value
+                canRead
+                canEdit
+              }
+            }
+            ... on Film {
+              name {
+                value
+                canRead
+                canEdit
+              }
+            }
+            ... on Story {
+              name {
+                value
+                canRead
+                canEdit
+              }
+            }
           }
         }
       }
@@ -1375,6 +1438,42 @@ const productById = /* GraphQL */ `
 // Still excluded: tools, history — `resource_mutations` exists as a table but
 // the ETL does not load it (verified against the 2026-08-25 load), so Postgres
 // would answer empty against a populated Neo4j.
+// Selection for the three prompt-response lists on a ProgressReport
+// (teamNews / highlights / communityStories) — the items share the
+// PromptVariantResponse shape even where the concrete GraphQL types differ.
+const promptResponseFields = /* GraphQL */ `
+  id
+  createdAt
+  prompt {
+    canRead
+    canEdit
+    value {
+      id
+      text {
+        value
+        canRead
+        canEdit
+      }
+      shortLabel {
+        value
+        canRead
+        canEdit
+      }
+    }
+  }
+  responses {
+    variant {
+      key
+    }
+    response {
+      value
+      canRead
+      canEdit
+    }
+    modifiedAt
+  }
+`;
+
 const periodicReportsList = /* GraphQL */ `
   query ShadowPeriodicReports($input: PeriodicReportListInput) {
     periodicReports(input: $input) {
@@ -1451,18 +1550,18 @@ const periodicReportById = /* GraphQL */ `
           variance
           scheduleStatus
         }
+        # Full prompt-response depth (Prompt was one of the five field-blind
+        # types; the responses are loaded data — prompt_variant_responses).
+        # Prompt VALUES are code-defined constants, so their parity is
+        # trivially expected — selected anyway so no migrated type is
+        # reachable only as { id }.
         teamNews {
           total
           hasMore
           canRead
           canCreate
           items {
-            id
-            prompt {
-              value {
-                id
-              }
-            }
+            ${promptResponseFields}
           }
         }
         highlights {
@@ -1471,7 +1570,7 @@ const periodicReportById = /* GraphQL */ `
           canRead
           canCreate
           items {
-            id
+            ${promptResponseFields}
           }
         }
         communityStories {
@@ -1480,7 +1579,7 @@ const periodicReportById = /* GraphQL */ `
           canRead
           canCreate
           items {
-            id
+            ${promptResponseFields}
           }
         }
         # product { id } is the alignment identity: progress is one entry PER
@@ -1862,6 +1961,14 @@ export const corpus: readonly CorpusEntry[] = [
     variables: { input: { filter: { type: 'language' } } },
   },
   { key: 'engagement.byId', document: engagementById, idsFrom: 'engagements' },
+  // Same document over engagements whose ceremony has a kept-blank `planned`
+  // (the 0042 class, 7,386 rows) — pins the blank's API round-trip on both
+  // engines instead of hoping the general draw hits one.
+  {
+    key: 'engagement.ceremonyBlank',
+    document: engagementById,
+    idsFrom: 'ceremonyBlankEngagements',
+  },
 
   // ─── products ─────────────────────────────────────────────────────────────
   { key: 'products.list.default', document: productsList },

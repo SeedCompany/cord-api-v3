@@ -172,6 +172,20 @@ const sampledTables: Readonly<Record<SampledDomain, SampledTable>> = {
         AND br.amount IS NULL
     )`,
   },
+  // Ceremony also has no top-level query — read through the engagement
+  // document. This domain IS the kept-blank population (7,386 ceremonies with
+  // NULL planned after migration 0042), so no separate flagged stratum: every
+  // stratum here already draws the odd rows.
+  ceremonyBlankEngagements: {
+    table: engagements,
+    id: engagements.id,
+    deletedAt: engagements.deletedAt,
+    predicate: sql`EXISTS (
+      SELECT 1 FROM ceremonies c
+      WHERE c.engagement_id = ${engagements.id}
+        AND c.deleted_at IS NULL AND c.planned IS NULL
+    )`,
+  },
 };
 
 interface SampledIds {
