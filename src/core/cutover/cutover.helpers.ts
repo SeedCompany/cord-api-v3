@@ -335,7 +335,29 @@ export const bulkInsert = async <T extends PgTable>(
     // `c.length` here reported attempted-not-written, so a unique-conflict drop
     // showed as `inserted 69` against `pgCount 50` and the "inserted" column was
     // simply false. Only the pgCount comparison caught it; now both agree.
-    const res = await ctx.db.insert(table).values(c).onConflictDoNothing();
+    let res;
+    try {
+      res = await ctx.db.insert(table).values(c).onConflictDoNothing();
+    } catch (err) {
+      // Drizzle wraps the Postgres error as `cause`, and both entry points
+      // (cutover.run, pg-refresh via clipanion) print only message + stack —
+      // a pg-test failure was pasted three times without ever showing WHICH
+      // constraint refused the row. Name it here, where every load funnels
+      // through: the cause's `detail` carries the exact key and table
+      // (e.g. `Key (report_file_id)=(xyz) is not present in table "file_nodes"`).
+      const cause =
+        err instanceof Error && err.cause instanceof Error
+          ? (err.cause as Error & { detail?: string; constraint?: string })
+          : undefined;
+      if (cause) {
+        ctx.log(
+          `    ✗ ${getTableName(table)}: insert refused — ${cause.message}` +
+            (cause.detail ? `\n      ${cause.detail}` : '') +
+            (cause.constraint ? `\n      constraint: ${cause.constraint}` : ''),
+        );
+      }
+      throw err;
+    }
     n += (res as { rowCount?: number | null }).rowCount ?? c.length;
   }
   const refused = rows.length - n;
