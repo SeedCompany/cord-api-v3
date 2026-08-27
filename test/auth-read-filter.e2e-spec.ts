@@ -41,6 +41,14 @@ import {
 // created under DATABASE=postgres until then.
 const isPostgres = process.env.DATABASE === 'postgres';
 
+// Newest-first, so a fixture created moments ago lands on page 1 even against
+// a LOADED database (5,337 projects push it off the default sort's first
+// page, which failed the POSITIVE controls — E2E_REUSE_DB run, 2026-08-21).
+// The negative assertions get stronger with this sort, not weaker: a row the
+// requester could see WOULD be on the newest-first page, so its absence
+// really means hidden.
+const page1Newest = { count: 100, sort: 'createdAt', order: 'DESC' } as const;
+
 describe('Read-filter hides restricted rows from a non-privileged requester', () => {
   let app: TestApp;
   let outsider: TestUser; // Intern, not a member of the fixture project
@@ -72,14 +80,12 @@ describe('Read-filter hides restricted rows from a non-privileged requester', ()
   it('hides a non-member project from the projects list', async () => {
     const admin = await runAsAdmin(
       app,
-      async () =>
-        await app.graphql.query(ProjectsDoc, { input: { count: 100 } }),
+      async () => await app.graphql.query(ProjectsDoc, { input: page1Newest }),
     );
     expect(admin.projects.items.map((p) => p.id)).toContain(projectId);
 
     const seen = await outsider.runAs(
-      async () =>
-        await app.graphql.query(ProjectsDoc, { input: { count: 100 } }),
+      async () => await app.graphql.query(ProjectsDoc, { input: page1Newest }),
     );
     expect(seen.projects.items.map((p) => p.id)).not.toContain(projectId);
   });
@@ -107,13 +113,13 @@ describe('Read-filter hides restricted rows from a non-privileged requester', ()
       const admin = await runAsAdmin(
         app,
         async () =>
-          await app.graphql.query(EngagementsDoc, { input: { count: 100 } }),
+          await app.graphql.query(EngagementsDoc, { input: page1Newest }),
       );
       expect(admin.engagements.items.map((e) => e.id)).toContain(engagementId);
 
       const seen = await outsider.runAs(
         async () =>
-          await app.graphql.query(EngagementsDoc, { input: { count: 100 } }),
+          await app.graphql.query(EngagementsDoc, { input: page1Newest }),
       );
       expect(seen.engagements.items.map((e) => e.id)).not.toContain(
         engagementId,
@@ -125,13 +131,13 @@ describe('Read-filter hides restricted rows from a non-privileged requester', ()
     const admin = await runAsAdmin(
       app,
       async () =>
-        await app.graphql.query(PartnershipsDoc, { input: { count: 100 } }),
+        await app.graphql.query(PartnershipsDoc, { input: page1Newest }),
     );
     expect(admin.partnerships.items.map((p) => p.id)).toContain(partnershipId);
 
     const seen = await outsider.runAs(
       async () =>
-        await app.graphql.query(PartnershipsDoc, { input: { count: 100 } }),
+        await app.graphql.query(PartnershipsDoc, { input: page1Newest }),
     );
     expect(seen.partnerships.items.map((p) => p.id)).not.toContain(
       partnershipId,
@@ -176,10 +182,10 @@ describe('Member/sensitivity condition arms via the partnership chain', () => {
   it('hides a partner and its organization from a non-member', async () => {
     const admin = await runAsAdmin(app, async () => ({
       partners: await app.graphql.query(PartnersDoc, {
-        input: { count: 100 },
+        input: page1Newest,
       }),
       orgs: await app.graphql.query(OrganizationsDoc, {
-        input: { count: 100 },
+        input: page1Newest,
       }),
     }));
     expect(admin.partners.partners.items.map((p) => p.id)).toContain(partnerId);
@@ -187,10 +193,10 @@ describe('Member/sensitivity condition arms via the partnership chain', () => {
 
     const seen = await fieldPartner.runAs(async () => ({
       partners: await app.graphql.query(PartnersDoc, {
-        input: { count: 100 },
+        input: page1Newest,
       }),
       orgs: await app.graphql.query(OrganizationsDoc, {
-        input: { count: 100 },
+        input: page1Newest,
       }),
     }));
     expect(seen.partners.partners.items.map((p) => p.id)).not.toContain(
@@ -205,10 +211,10 @@ describe('Member/sensitivity condition arms via the partnership chain', () => {
     // sensMediumOrLower role sees none — fail-closed interim.
     const seen = await fundraising.runAs(async () => ({
       partners: await app.graphql.query(PartnersDoc, {
-        input: { count: 100 },
+        input: page1Newest,
       }),
       orgs: await app.graphql.query(OrganizationsDoc, {
-        input: { count: 100 },
+        input: page1Newest,
       }),
     }));
     expect(seen.partners.partners.items.map((p) => p.id)).not.toContain(
@@ -219,7 +225,7 @@ describe('Member/sensitivity condition arms via the partnership chain', () => {
 
   it('a non-member sees only themselves in the users list', async () => {
     const seen = await intern.runAs(
-      async () => await app.graphql.query(UsersDoc, { input: { count: 100 } }),
+      async () => await app.graphql.query(UsersDoc, { input: page1Newest }),
     );
     const ids = seen.users.items.map((u) => u.id);
     expect(ids).toContain(intern.id);
@@ -257,10 +263,10 @@ describe('Member/sensitivity condition arms via the partnership chain', () => {
     // Member arm: the partnership chain now grants partner + org.
     const seen = await fieldPartner.runAs(async () => ({
       partners: await app.graphql.query(PartnersDoc, {
-        input: { count: 100 },
+        input: page1Newest,
       }),
       orgs: await app.graphql.query(OrganizationsDoc, {
-        input: { count: 100 },
+        input: page1Newest,
       }),
     }));
     expect(seen.partners.partners.items.map((p) => p.id)).toContain(partnerId);
@@ -268,7 +274,7 @@ describe('Member/sensitivity condition arms via the partnership chain', () => {
 
     // User arm: member of ANY project → other users become listable.
     const users = await intern.runAs(
-      async () => await app.graphql.query(UsersDoc, { input: { count: 100 } }),
+      async () => await app.graphql.query(UsersDoc, { input: page1Newest }),
     );
     expect(users.users.items.map((u) => u.id)).toContain(fieldPartner.id);
 

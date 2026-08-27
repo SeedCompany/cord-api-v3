@@ -21,31 +21,46 @@ export async function createLanguage(
   app: TestApp,
   input: Partial<InputOf<typeof CreateLanguageDoc>> = {},
 ) {
-  return await createLanguageMinimal(app, {
-    displayNamePronunciation: faker.lorem.word(),
-    isDialect: faker.datatype.boolean(),
-    // this represents the largest number that is less than the 32-bit max for GraphQL
-    populationOverride: faker.number.int({ max: 2147483647 }),
-    registryOfLanguageVarietiesCode: faker.number
-      .int({ min: 10000, max: 99999 })
-      .toString(),
-    leastOfThese: faker.datatype.boolean(),
-    leastOfTheseReason: faker.lorem.sentence(),
-    ethnologue: {
-      code: nextEthCode(),
-      provisionalCode: nextEthCode(),
-      name: faker.person.firstName(),
-      // this represents the largest number that is less than the 32-bit max for GraphQL
-      population: faker.number.int({ max: 2147483647 }),
-      ...input.ethnologue,
-    },
-    signLanguageCode:
-      faker.helpers.replaceSymbols('??').toUpperCase() +
-      faker.number.int({ min: 10, max: 99 }).toString(),
-    sponsorEstimatedEndDate: CalendarDate.fromISO('1991-01-01').toISO(),
-    tags: ['tag1', 'tag2'],
-    ...input,
-  });
+  // Against a LOADED database (E2E_REUSE_DB) the random draws can collide
+  // with real rows on unique columns — 3,624 loaded languages occupy real
+  // RoLV codes and real 3-letter ethnologue codes, so a draw has a few
+  // percent chance per call of hitting one. Retry with FRESH draws, and only
+  // on uniqueness failures: an explicit value passed by the caller keeps its
+  // collision loud, since `input` overrides every regenerated field.
+  let lastError: unknown;
+  for (const _attempt of Array.from({ length: 5 }).keys()) {
+    try {
+      return await createLanguageMinimal(app, {
+        displayNamePronunciation: faker.lorem.word(),
+        isDialect: faker.datatype.boolean(),
+        // this represents the largest number that is less than the 32-bit max for GraphQL
+        populationOverride: faker.number.int({ max: 2147483647 }),
+        registryOfLanguageVarietiesCode: faker.number
+          .int({ min: 10000, max: 99999 })
+          .toString(),
+        leastOfThese: faker.datatype.boolean(),
+        leastOfTheseReason: faker.lorem.sentence(),
+        ethnologue: {
+          code: nextEthCode(),
+          provisionalCode: nextEthCode(),
+          name: faker.person.firstName(),
+          // this represents the largest number that is less than the 32-bit max for GraphQL
+          population: faker.number.int({ max: 2147483647 }),
+          ...input.ethnologue,
+        },
+        signLanguageCode:
+          faker.helpers.replaceSymbols('??').toUpperCase() +
+          faker.number.int({ min: 10, max: 99 }).toString(),
+        sponsorEstimatedEndDate: CalendarDate.fromISO('1991-01-01').toISO(),
+        tags: ['tag1', 'tag2'],
+        ...input,
+      });
+    } catch (error) {
+      if (!String(error).includes('already exists')) throw error;
+      lastError = error;
+    }
+  }
+  throw lastError;
 }
 
 export async function createLanguageMinimal(

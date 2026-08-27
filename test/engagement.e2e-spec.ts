@@ -2,7 +2,7 @@ import { faker } from '@faker-js/faker';
 import { beforeAll, describe, expect, it } from '@jest/globals';
 import { some } from 'lodash';
 import { DateTime, Interval } from 'luxon';
-import { CalendarDate, generateId, type ID, Role } from '~/common';
+import { CalendarDate, generateId, type ID, Order, Role } from '~/common';
 import { graphql, type InputOf } from '~/graphql';
 import {
   EngagementStatus,
@@ -692,10 +692,13 @@ describe('Engagement e2e', () => {
       intern: intern.id,
       mentor: mentor.id,
     });
+    // Newest-first: the default sort is createdAt ASC, so against a LOADED
+    // database the first page is 2016-era rows and the two fixtures created
+    // above are thousands of rows away.
     const { engagements } = await app.graphql.query(
       graphql(`
         query {
-          engagements(input: { count: 7 }) {
+          engagements(input: { count: 7, sort: "createdAt", order: DESC }) {
             items {
               __typename
               id
@@ -761,8 +764,13 @@ describe('Engagement e2e', () => {
         }
       `),
       {
+        // Newest-first page 1 so the just-created fixture is present even
+        // against a LOADED database (the filter matches hundreds of rows).
         input: {
           filter: { project: { type: [ProjectType.Internship] } },
+          count: 100,
+          sort: 'createdAt',
+          order: Order.DESC,
         },
       },
     );

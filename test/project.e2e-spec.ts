@@ -384,10 +384,29 @@ describe('Project e2e', () => {
   it('toggles usesRev79 and filters by it and by tool', async () => {
     // usesRev79 delegates to a ToolUsage against whichever Tool carries the
     // Rev79 key, so a project can't turn it on until that Tool exists.
-    const rev79Tool = await runAsAdmin(
-      app,
-      async () => await createTool(app, { key: 'Rev79' }),
-    );
+    // A LOADED database already carries it (the key is unique), so reuse the
+    // existing tool instead of colliding with the unique index
+    // (E2E_REUSE_DB run, 2026-08-21).
+    const rev79Tool = await runAsAdmin(app, async () => {
+      const existing = await app.graphql.query(
+        graphql(`
+          query rev79ToolLookup {
+            tools(input: { count: 100 }) {
+              items {
+                id
+                key {
+                  value
+                }
+              }
+            }
+          }
+        `),
+      );
+      const found = existing.tools.items.find(
+        (tool) => tool.key?.value === 'Rev79',
+      );
+      return found ?? (await createTool(app, { key: 'Rev79' }));
+    });
     const project = await createProject(app, {
       type: ProjectType.MomentumTranslation,
       fieldRegion: fieldRegion.id,
@@ -425,10 +444,20 @@ describe('Project e2e', () => {
     );
     expect(enabled.updateProject.project.usesRev79.value).toBe(true);
 
+    // Newest-first page 1: LOADED data has real projects using the Rev79
+    // tool, so the default name-sorted first page does not contain the
+    // fixture created moments ago.
     const rev79Filtered = await app.graphql.query(
       graphql(`
         query projectsUsingRev79 {
-          projects(input: { filter: { usesRev79: true } }) {
+          projects(
+            input: {
+              filter: { usesRev79: true }
+              count: 100
+              sort: "createdAt"
+              order: DESC
+            }
+          ) {
             items {
               id
             }
@@ -441,7 +470,14 @@ describe('Project e2e', () => {
     const toolFiltered = await app.graphql.query(
       graphql(`
         query projectsByTool($id: ID!) {
-          projects(input: { filter: { tool: { id: $id } } }) {
+          projects(
+            input: {
+              filter: { tool: { id: $id } }
+              count: 100
+              sort: "createdAt"
+              order: DESC
+            }
+          ) {
             items {
               id
             }
@@ -530,6 +566,13 @@ describe('Project e2e', () => {
   // project` last, a text sort lost that collation. Check that before changing
   // these expectations.
   it('List of projects sorted by name to be alphabetical', async () => {
+    // A shared letters-only prefix keeps this working against a LOADED
+    // database: the name filter narrows the list to these seven fixtures
+    // (page 1 of 5,000+ projects contains none of them otherwise), and
+    // because every pairwise comparison shares the prefix, the ordering is
+    // still decided by the tails — the punctuation, spaces, case, and Ñ
+    // this test exists to prove.
+    const prefix = faker.string.alpha({ length: 8 });
     const unsorted = [
       'A ignore spaces',
       'ABC',
@@ -538,7 +581,7 @@ describe('Project e2e', () => {
       'another project 2',
       'zap zap',
       'never a project',
-    ];
+    ].map((name) => `${prefix} ${name}`);
     const sorted = [
       'ABC',
       '[a!-ignore-punctuation]', // ignores punctuation & case sensitivity
@@ -547,7 +590,7 @@ describe('Project e2e', () => {
       'never a project',
       'Ñot a project', // ignores special characters
       'zap zap',
-    ];
+    ].map((name) => `${prefix} ${name}`);
 
     await Promise.all(
       unsorted.map(async (name) => {
@@ -570,12 +613,14 @@ describe('Project e2e', () => {
     const ascProjects = await listProjects(app, {
       sort: 'name',
       order: Order.ASC,
+      filter: { name: prefix },
     });
     expect(filterNames(ascProjects)).toEqual(sorted);
 
     const descProjects = await listProjects(app, {
       sort: 'name',
       order: Order.DESC,
+      filter: { name: prefix },
     });
     expect(filterNames(descProjects)).toEqual(sorted.slice().reverse());
   });
@@ -635,12 +680,18 @@ describe('Project e2e', () => {
       fieldRegion: otherRegion.id,
     });
 
+    // Newest-first page 1: the 'am' pattern matches hundreds of LOADED
+    // projects (648 live ones on the r4 reference), so the default first
+    // page cannot be expected to hold the fixture.
     const projects = await listProjects(app, {
       filter: {
         fieldRegion: {
           name: 'am',
         },
       },
+      count: 100,
+      sort: 'createdAt',
+      order: Order.DESC,
     });
 
     expect(projects.items.map((project) => project.id)).toContain(
@@ -652,23 +703,27 @@ describe('Project e2e', () => {
   });
 
   it('List of projects sorted by Sensitivity', async () => {
+    // Shared name prefix + name filter scope this to its own five fixtures —
+    // against a LOADED database, page 1 of a whole-table sensitivity sort is
+    // all Low and contains none of them.
+    const prefix = faker.string.alpha({ length: 8 });
     //Create three intern projects of different sensitivities
     await createProject(app, {
-      name: 'High Sensitivity Proj ' + (await generateId()),
+      name: `${prefix} High Sensitivity Proj ` + (await generateId()),
       type: ProjectType.Internship,
       sensitivity: Sensitivity.High,
       fieldRegion: fieldRegion.id,
     });
 
     await createProject(app, {
-      name: 'Low Sensitivity Proj ' + (await generateId()),
+      name: `${prefix} Low Sensitivity Proj ` + (await generateId()),
       type: ProjectType.Internship,
       sensitivity: Sensitivity.Low,
       fieldRegion: fieldRegion.id,
     });
 
     await createProject(app, {
-      name: 'Med Sensitivity Proj ' + (await generateId()),
+      name: `${prefix} Med Sensitivity Proj ` + (await generateId()),
       type: ProjectType.Internship,
       sensitivity: Sensitivity.Medium,
       fieldRegion: fieldRegion.id,
@@ -676,10 +731,14 @@ describe('Project e2e', () => {
 
     // Create two translation projects, one without language engagements and
     // one with 1 med and 1 low sensitivity eng translation project without engagements
-    await createProject(app, { fieldRegion: fieldRegion.id });
+    await createProject(app, {
+      name: `${prefix} plain translation ` + (await generateId()),
+      fieldRegion: fieldRegion.id,
+    });
 
     //with engagements, low and med sensitivity, project should eval to med
     const translationProjectWithEngagements = await createProject(app, {
+      name: `${prefix} with engagements ` + (await generateId()),
       fieldRegion: fieldRegion.id,
     });
 
@@ -719,6 +778,7 @@ describe('Project e2e', () => {
           input: {
             sort: 'sensitivity',
             order,
+            filter: { name: prefix },
           },
         },
       );
@@ -1505,8 +1565,16 @@ describe('Project e2e', () => {
       endDateOverride,
     });
 
+    // Newest-first page 1: the filter matches thousands of LOADED projects,
+    // so the fixtures are not on the default name-sorted first page.
+    const newestFirst = {
+      count: 100,
+      sort: 'createdAt',
+      order: Order.DESC,
+    } as const;
     const multiple = await listProjects(app, {
       filter: { onlyMultipleEngagements: true },
+      ...newestFirst,
     });
     const multipleIds = multiple.items.map((p) => p.id);
     expect(multipleIds).toContain(twoEngagements.id);
@@ -1515,6 +1583,7 @@ describe('Project e2e', () => {
 
     const exactlyOne = await listProjects(app, {
       filter: { onlyMultipleEngagements: false },
+      ...newestFirst,
     });
     const exactlyOneIds = exactlyOne.items.map((p) => p.id);
     expect(exactlyOneIds).toContain(oneEngagement.id);

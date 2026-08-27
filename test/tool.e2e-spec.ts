@@ -64,7 +64,13 @@ describe('Tool e2e', () => {
   });
 
   it('should have unique key among active tools', async () => {
-    await createTool(app, { key: 'Rev79' });
+    // ToolKey is an enum with exactly ONE value (Rev79), so there is no
+    // fresh key to claim. On an empty database the first create takes it and
+    // the second collides; on a LOADED database the real Rev79 tool already
+    // exists and the first create is itself the collision. Either way the
+    // asserted create below proves the unique index — so the first one is
+    // allowed to fail.
+    await createTool(app, { key: 'Rev79' }).catch(() => undefined);
     await expect(createTool(app, { key: 'Rev79' })).rejects.toThrowGqlError(
       errors.duplicate({
         message: 'Key is already assigned to another tool.',
