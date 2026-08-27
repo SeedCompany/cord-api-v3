@@ -7,6 +7,7 @@ import { ethnologueExtractor } from './ethnologue.extractor';
 import { fieldRegionExtractor } from './field-region.extractor';
 import { fieldZoneExtractor } from './field-zone.extractor';
 import { fileExtractor } from './file.extractor';
+import { financialApproverExtractor } from './financial-approver.extractor';
 import { fundingAccountExtractor } from './funding-account.extractor';
 import { knownLanguageExtractor } from './known-language.extractor';
 import { languageExtractor } from './language.extractor';
@@ -69,6 +70,7 @@ export const extractors: readonly Extractor[] = [
   projectMemberExtractor,
   partnershipExtractor,
   engagementExtractor,
+  financialApproverExtractor,
   productExtractor,
   periodicReportExtractor,
   promptVariantResponseExtractor,
