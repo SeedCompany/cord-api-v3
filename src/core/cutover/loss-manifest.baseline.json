@@ -1,0 +1,136 @@
+{
+  "dropped": {
+    "file_nodes": 89,
+    "project_members": 8,
+    "engagements": 9,
+    "product_completion_descriptions": 65,
+    "prompt_variant_responses": 30,
+    "prompt_variant_response_entries": 63,
+    "product_progress": 283,
+    "step_progress": 82664,
+    "progress_summaries": 60,
+    "budget_records": 45,
+    "progress_report_media": 3,
+    "partnership_producing_mediums": 81,
+    "progress_report_variance_explanations": 4,
+    "progress_report_workflow_events": 47
+  },
+  "notHydrated": {
+    "ProjectMember": 129,
+    "Partnership": 25,
+    "Engagement": 2,
+    "Ceremony": 11,
+    "Product": 1878,
+    "PeriodicReport": 7011,
+    "ProgressReportTeamNews": 3,
+    "ProgressReportCommunityStory": 2,
+    "ProductProgress": 19535,
+    "ProgressSummary": 13,
+    "Budget": 46,
+    "Post": 2,
+    "ProgressReportWorkflowEvent": 12
+  },
+  "defaulted": {
+    "users.status": {
+      "filled": 92,
+      "seen": 2376,
+      "fallback": "null",
+      "mode": "blank"
+    },
+    "users.real_first_name": {
+      "filled": 1,
+      "seen": 2376,
+      "fallback": "null",
+      "mode": "blank"
+    },
+    "users.real_last_name": {
+      "filled": 1,
+      "seen": 2376,
+      "fallback": "null",
+      "mode": "blank"
+    },
+    "users.display_first_name": {
+      "filled": 1,
+      "seen": 2376,
+      "fallback": "null",
+      "mode": "blank"
+    },
+    "users.display_last_name": {
+      "filled": 1,
+      "seen": 2376,
+      "fallback": "null",
+      "mode": "blank"
+    },
+    "users.timezone": {
+      "filled": 2,
+      "seen": 2376,
+      "fallback": "null",
+      "mode": "blank"
+    },
+    "partners.global_innovations_client": {
+      "filled": 78,
+      "seen": 323,
+      "fallback": "null",
+      "mode": "blank"
+    },
+    "partners.active": {
+      "filled": 9,
+      "seen": 323,
+      "fallback": "null",
+      "mode": "blank"
+    },
+    "projects.preset_inventory": {
+      "filled": 2185,
+      "seen": 5284,
+      "fallback": "null",
+      "mode": "blank"
+    },
+    "engagements.milestone_planned": {
+      "filled": 1358,
+      "seen": 8224,
+      "fallback": "'Unknown'",
+      "mode": "invented"
+    },
+    "engagements.using_ai_assisted_translation": {
+      "filled": 1358,
+      "seen": 8224,
+      "fallback": "'Unknown'",
+      "mode": "invented"
+    },
+    "engagements.marketable": {
+      "filled": 6866,
+      "seen": 8224,
+      "fallback": "null",
+      "mode": "blank"
+    },
+    "ceremonies.planned": {
+      "filled": 7386,
+      "seen": 8223,
+      "fallback": "null",
+      "mode": "blank"
+    },
+    "products.progress_target": {
+      "filled": 11815,
+      "seen": 80320,
+      "fallback": "100",
+      "mode": "invented"
+    },
+    "products.total_verses": {
+      "filled": 69,
+      "seen": 80320,
+      "fallback": "0",
+      "mode": "invented"
+    },
+    "products.total_verse_equivalents": {
+      "filled": 69,
+      "seen": 80320,
+      "fallback": "0",
+      "mode": "invented"
+    }
+  },
+  "totals": {
+    "dropped": 83451,
+    "notHydrated": 28669,
+    "lost": 112120
+  }
+}
