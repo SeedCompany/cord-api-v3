@@ -61,6 +61,38 @@ export interface CutoverResult {
   totalDropped: number;
   totalNotHydrated: number;
   totalLost: number;
+  /** The same losses, machine-readable — see {@link LossManifest}. */
+  manifest: LossManifest;
+}
+
+/**
+ * Every row or value the load did not carry over verbatim, keyed finely
+ * enough to compare across loads. The plan's A4 premise: the loss profile of
+ * a healthy load is STABLE across source snapshots — a new key or a grown
+ * count is a regression to investigate, not noise. Written to
+ * `cutover-loss-manifest.json` by cutover.run and compared against a
+ * committed baseline by `compare-loss-manifest.ts`.
+ */
+export interface LossManifest {
+  /** table → rows read but not inserted (guard drops); only entries > 0. */
+  readonly dropped: Record<string, number>;
+  /** Neo4j label → rows lost before the mapper; only entries > 0. */
+  readonly notHydrated: Record<string, number>;
+  /** column → blank-fill tally (both invented and kept-blank modes). */
+  readonly defaulted: Record<
+    string,
+    {
+      readonly filled: number;
+      readonly seen: number;
+      readonly mode: string;
+      readonly fallback: string;
+    }
+  >;
+  readonly totals: {
+    readonly dropped: number;
+    readonly notHydrated: number;
+    readonly lost: number;
+  };
 }
 
 export const runCutover = async (
@@ -116,6 +148,12 @@ export const runCutover = async (
       totalDropped: 0,
       totalNotHydrated: 0,
       totalLost: 0,
+      manifest: {
+        dropped: {},
+        notHydrated: {},
+        defaulted: {},
+        totals: { dropped: 0, notHydrated: 0, lost: 0 },
+      },
     };
   }
 
@@ -153,6 +191,7 @@ export const runCutover = async (
   ctx.log('  table                              read  inserted   pgCount  ok');
   let allOk = true;
   let totalDropped = 0;
+  const droppedByTable: Record<string, number> = {};
   for (const e of selected) {
     for (const table of e.targetTables) {
       const s = results.get(e.name)?.[table] ?? { read: 0, inserted: 0 };
@@ -168,6 +207,7 @@ export const runCutover = async (
       const dropped = ctx.dryRun ? 0 : s.read - s.inserted;
       if (!countMatches) allOk = false;
       totalDropped += Math.max(0, dropped);
+      if (dropped > 0) droppedByTable[table] = dropped;
       const verdict = !countMatches
         ? '✗ MISMATCH'
         : dropped > 0
@@ -258,5 +298,26 @@ export const runCutover = async (
   // load that MISMATCHed used to end in exit 0 exactly like a clean one, which
   // makes the run unusable as an automated gate and puts the entire weight of
   // catching a broken load on someone reading scrollback.
-  return { allOk, totalDropped, totalNotHydrated, totalLost };
+  return {
+    allOk,
+    totalDropped,
+    totalNotHydrated,
+    totalLost,
+    manifest: {
+      dropped: droppedByTable,
+      notHydrated: Object.fromEntries(
+        [...ctx.notHydrated].filter(([, n]) => n > 0),
+      ),
+      defaulted: Object.fromEntries(
+        [...ctx.defaulted]
+          .filter(([, fill]) => fill.filled > 0)
+          .map(([column, fill]) => [column, { ...fill }]),
+      ),
+      totals: {
+        dropped: totalDropped,
+        notHydrated: totalNotHydrated,
+        lost: totalLost,
+      },
+    },
+  };
 };

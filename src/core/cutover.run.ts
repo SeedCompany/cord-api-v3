@@ -42,6 +42,7 @@
  */
 import { NestFactory } from '@nestjs/core';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
+import fs from 'node:fs';
 import path from 'node:path';
 import { exit } from 'node:process';
 import '../polyfills';
@@ -164,6 +165,23 @@ async function bootstrap() {
     });
   } finally {
     await app.close();
+  }
+
+  // The loss profile, machine-readable — the A4 premise is that a healthy
+  // load's losses are STABLE across source snapshots, so a fresh manifest is
+  // comparable against the committed baseline (new cause / growth = a
+  // regression to investigate). Dry runs skip it: their drop counts are
+  // structurally zero, so a dry-run manifest would only overwrite a real one
+  // with nothing.
+  if (result && !flags.dryRun) {
+    const manifestPath = path.join(process.cwd(), 'cutover-loss-manifest.json');
+    fs.writeFileSync(manifestPath, JSON.stringify(result.manifest, null, 2));
+    log(
+      `\nLoss manifest written to ${manifestPath}\n` +
+        'Compare against the baseline: node ' +
+        'src/core/cutover/compare-loss-manifest.ts <baseline.json> ' +
+        `${manifestPath}`,
+    );
   }
 
   // A MISMATCH means a write did not land — the load is broken, so say so in the
