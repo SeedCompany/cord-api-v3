@@ -155,26 +155,50 @@ export class PgRefreshCommand extends Command {
 
     const sessions = this.moduleRef.get(SessionManager, { strict: false });
     const rootSession = await sessions.lazySessionForRootUser();
-    await sessions.asUser(rootSession, async () => {
-      await runCutover(
-        {
-          neo4j: this.neo4j,
-          db: this.drizzle.client,
-          moduleRef: this.moduleRef,
-          dryRun: false,
-          batchSize,
-          allowProductionSource: this.productionSource,
-          // Already checked above, before the schema drop. Carried through so
-          // the harness does not refuse what this command deliberately allowed.
-          allowOtherSessions: this.allowOtherSessions,
-          notHydrated: new Map(),
-          defaulted: new Map(),
-          log,
-        },
-        extractors,
-        { only },
+    const result = await sessions.asUser(
+      rootSession,
+      async () =>
+        await runCutover(
+          {
+            neo4j: this.neo4j,
+            db: this.drizzle.client,
+            moduleRef: this.moduleRef,
+            dryRun: false,
+            batchSize,
+            allowProductionSource: this.productionSource,
+            // Already checked above, before the schema drop. Carried through so
+            // the harness does not refuse what this command deliberately allowed.
+            allowOtherSessions: this.allowOtherSessions,
+            notHydrated: new Map(),
+            defaulted: new Map(),
+            log,
+          },
+          extractors,
+          { only },
+        ),
+    );
+
+    // Same as cutover.run: the loss profile, machine-readable, so this load —
+    // the path people actually use for a refresh — is comparable against the
+    // committed baseline too. Without this, a full production-scale run
+    // produced every number on screen and nothing the A4 comparator could eat.
+    // Partial loads skip it: an --only run's manifest would report every
+    // unloaded domain as vanished and overwrite a real one.
+    if (result && !only?.length) {
+      const fs = await import('node:fs');
+      const path = await import('node:path');
+      const manifestPath = path.join(
+        process.cwd(),
+        'cutover-loss-manifest.json',
       );
-    });
+      fs.writeFileSync(manifestPath, JSON.stringify(result.manifest, null, 2));
+      write(
+        `\nLoss manifest written to ${manifestPath}\n` +
+          'Compare against the baseline: node ' +
+          'src/core/cutover/compare-loss-manifest.ts <baseline.json> ' +
+          `${manifestPath}\n`,
+      );
+    }
 
     write('Refresh complete.\n');
     return 0;
