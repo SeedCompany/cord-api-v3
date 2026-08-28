@@ -79,7 +79,7 @@ describe('Location e2e', () => {
   });
 
   // Delete Location
-  it.skip('delete location', async () => {
+  it('delete location', async () => {
     const st = await createLocation(app);
     const result = await app.graphql.mutate(
       graphql(`

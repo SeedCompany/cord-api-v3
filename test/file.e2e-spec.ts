@@ -403,19 +403,19 @@ describe('File e2e', () => {
     });
   });
 
-  it.skip('delete file', async () => {
+  it('delete file', async () => {
     const { id } = await uploadFile(app, root.id);
     await deleteNode(app, id);
     await expectNodeNotFound(app, id);
   });
 
-  it.skip('delete directory', async () => {
+  it('delete directory', async () => {
     const { id } = await createDirectory(app, root.id);
     await deleteNode(app, id);
     await expectNodeNotFound(app, id);
   });
 
-  it.skip('delete version', async () => {
+  it('delete version', async () => {
     const upload = await requestFileUpload(app);
     const file = await uploadFile(app, root.id, {}, upload);
     // Maybe get version from file.children when implemented

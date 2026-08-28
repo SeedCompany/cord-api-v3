@@ -10,6 +10,7 @@ import {
   createTestApp,
   fragments,
   registerUser,
+  runAsAdmin,
   type TestApp,
 } from './utility';
 
@@ -97,19 +98,28 @@ describe('Film e2e', () => {
   });
 
   // DELETE FILM
-  it.skip('delete film', async () => {
+  //
+  // Runs in an admin session for the same reason as `delete story`, which
+  // carries the full explanation: this suite signs in as a role whose grant on
+  // Producible stops at create, while an Administrator's blanket grant does
+  // include delete.
+  it('delete film', async () => {
     const fm = await createFilm(app);
-    const result = await app.graphql.mutate(
-      graphql(`
-        mutation deleteFilm($id: ID!) {
-          deleteFilm(id: $id) {
-            __typename
-          }
-        }
-      `),
-      {
-        id: fm.id,
-      },
+    const result = await runAsAdmin(
+      app,
+      async () =>
+        await app.graphql.mutate(
+          graphql(`
+            mutation deleteFilm($id: ID!) {
+              deleteFilm(id: $id) {
+                __typename
+              }
+            }
+          `),
+          {
+            id: fm.id,
+          },
+        ),
     );
     const actual = result.deleteFilm;
     expect(actual).toBeTruthy();
