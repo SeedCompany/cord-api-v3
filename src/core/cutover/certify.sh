@@ -187,7 +187,10 @@ phase_load() {
   db_exists "$TARGET" || "${PSQL[@]}" "create database \"$TARGET\"" >/dev/null
   LOAD_STARTED_AT=$(date +%s)
   local log="$OUT/load.log"
-  DATABASE=neo4j NEO4J_URL="$NEO4J_URL" NEO4J_PASSWORD="$NEO4J_PASSWORD" \
+  # TZ=UTC is the belt on top of the code fix in cutover.helpers toDate: a
+  # date-only source value must become midnight UTC no matter where this runs.
+  # Defect A came back the one time a load ran without it.
+  TZ=UTC DATABASE=neo4j NEO4J_URL="$NEO4J_URL" NEO4J_PASSWORD="$NEO4J_PASSWORD" \
     POSTGRES_URL="$PG/$TARGET" NODE_OPTIONS=--max-old-space-size=12288 \
     yarn start --entryFile core/cutover.run -- --batch=100 >"$log" 2>&1
   local code=$?

@@ -3,7 +3,7 @@ import { getTableName, sql } from 'drizzle-orm';
 import { type PgTable } from 'drizzle-orm/pg-core';
 import { DateTime } from 'luxon';
 import {
-  type CalendarDate,
+  CalendarDate,
   type ID,
   RichTextDocument,
   type UnsecuredDto,
@@ -457,13 +457,30 @@ const toDate = (value: Luxonish): Date | null => {
     // parser accepts. Roughly half of one edge-stored domain's timestamps carry
     // it and the rest do not, so the format parses fine right up until it does
     // not. Strip the suffix; the offset ahead of it already fixes the instant.
-    const parsed = DateTime.fromISO(value.replace(/\[[^\]]*\]$/, ''));
+    // `zone: 'utc'` anchors ZONE-LESS strings (a bare date, a naive datetime)
+    // at UTC; a string carrying its own offset keeps its instant regardless.
+    // Without it Luxon anchors them in the system zone — Defect A's mechanism.
+    const parsed = DateTime.fromISO(value.replace(/\[[^\]]*\]$/, ''), {
+      zone: 'utc',
+    });
     if (!parsed.isValid) {
       throw new Error(
         `Cannot read a timestamp from a string (${parsed.invalidReason ?? 'invalid'})`,
       );
     }
     return parsed.toJSDate();
+  }
+  // A Neo4j DATE hydrates as a CalendarDate whose Luxon instant is midnight in
+  // the SYSTEM zone (transformer.ts transformDate builds it with no zone) — so
+  // `.toJSDate()` below would bake the loader's timezone into the column. That
+  // is Defect A: r3 carried 2,065 engagement status timestamps at 04:00/05:00Z
+  // because the load ran on a laptop in Eastern time, and `TZ=UTC` on the
+  // command line was the only thing standing between r4 and the same bytes —
+  // the belt held exactly until a load forgot it (r5, and pg-test's 08-27
+  // refresh). A date has no time; materialize it at midnight UTC by
+  // construction so the zone the loader runs in can never matter again.
+  if (CalendarDate.isDate(value)) {
+    return new Date(Date.UTC(value.year, value.month - 1, value.day));
   }
   // A Luxon value can be INVALID (`isValid === false`) and still answer
   // `toJSDate()` — with a Date whose time is NaN. Postgres then fails at
