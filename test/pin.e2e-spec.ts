@@ -52,9 +52,21 @@ describe('Pin e2e', () => {
     const unpinnedPerson = await createPerson(app);
     await createPin(app, pinnedPerson.id, true);
 
+    // Newest first so the people created above land on page 1 even against a
+    // loaded production-scale database — with the default sort, 2,300+
+    // migrated users push a just-created person off the first page and the
+    // pinned:false assertion below fails on data volume, not behavior.
     const UsersByPinnedDoc = graphql(`
       query usersByPinned($pinned: Boolean!) {
-        users(input: { count: 25, page: 1, filter: { pinned: $pinned } }) {
+        users(
+          input: {
+            count: 25
+            page: 1
+            sort: "createdAt"
+            order: DESC
+            filter: { pinned: $pinned }
+          }
+        ) {
           items {
             id
             pinned
