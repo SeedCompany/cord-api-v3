@@ -7,6 +7,10 @@ import {
   type ResourceShape,
   Sensitivity,
 } from '~/common';
+import {
+  organizationDerivedSensitivity,
+  partnerDerivedSensitivity,
+} from '~/core/drizzle/derived-sensitivity';
 import { matchProjectSens, rankSens } from '~/core/neo4j/query';
 import {
   type AsDrizzleParams,
@@ -195,13 +199,21 @@ const sensitivityRefForResource = (
         where "b"."id" = "budget_records"."budget_id"
       ) <= ${accessLiteral}`;
     case 'Partner':
-      // Own denormalized column. Statically 'High' on create until Language
-      // migrates and wires the real derivation — fail-closed in the interim
-      // (sens-gated roles see nothing rather than everything).
-      return sql`"partners"."sensitivity" <= ${accessLiteral}`;
+      // Derived from the connected projects, like every other case here. This
+      // used to read the denormalized `partners.sensitivity` column, which was
+      // meant to be a temporary fail-closed default until the surrounding
+      // domains migrated. They did; the derivation was never wired; and the
+      // column has since been holding whatever the data migration loaded,
+      // with nothing keeping it current. A stale value here is not cosmetic —
+      // this clause decides who can see the record.
+      return sql`${partnerDerivedSensitivity(
+        sql`"partners"."id"`,
+      )} <= ${accessLiteral}`;
     case 'Organization':
-      // Same interim story as Partner.
-      return sql`"organizations"."sensitivity" <= ${accessLiteral}`;
+      // Same as Partner, one hop further out through its partners.
+      return sql`${organizationDerivedSensitivity(
+        sql`"organizations"."id"`,
+      )} <= ${accessLiteral}`;
     case 'Engagement':
     case 'LanguageEngagement':
     case 'InternshipEngagement':

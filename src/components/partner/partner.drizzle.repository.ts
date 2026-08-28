@@ -14,6 +14,7 @@ import {
   lt,
   lte,
   type SQL,
+  sql,
 } from 'drizzle-orm';
 import { DateTime } from 'luxon';
 import {
@@ -29,9 +30,11 @@ import { Identity } from '~/core/authentication';
 import {
   catchForeignKeyViolation,
   catchUniqueViolation,
+  derivedSensitivityByPartner,
   displayOrder,
   DrizzleDtoRepository,
   EMPTY_PAGE,
+  partnerDerivedSensitivity,
   resolveOrderBy,
   type SortMap,
   subFilter,
@@ -277,27 +280,37 @@ export class PartnerDrizzleRepository extends DrizzleDtoRepository<
         departmentIdBlock: true,
       },
     });
-    const [pinnedSet, scopeByPartner] = await Promise.all([
-      pinnedByRequester(
-        this.db,
-        this.identity.current.userId,
-        rows.map((r) => r.id),
-      ),
-      // Attaches `scope` so `member`-gated policies (e.g. FinancialAnalyst
-      // reading a High-sensitivity partner) can evaluate membership instead
-      // of throwing `MissingContextException` — see the Organization repo's
-      // sibling override for the full rationale.
-      requesterScopeByPartner(
-        this.db,
-        this.identity.current.userId,
-        rows.map((r) => r.id),
-      ),
-    ]);
+    const [pinnedSet, scopeByPartner, sensitivityByPartner] = await Promise.all(
+      [
+        pinnedByRequester(
+          this.db,
+          this.identity.current.userId,
+          rows.map((r) => r.id),
+        ),
+        // Attaches `scope` so `member`-gated policies (e.g. FinancialAnalyst
+        // reading a High-sensitivity partner) can evaluate membership instead
+        // of throwing `MissingContextException` — see the Organization repo's
+        // sibling override for the full rationale.
+        requesterScopeByPartner(
+          this.db,
+          this.identity.current.userId,
+          rows.map((r) => r.id),
+        ),
+        // Computed from the partner's projects rather than read off the row —
+        // the stored column is no longer the source of truth. See
+        // `derived-sensitivity.ts`.
+        derivedSensitivityByPartner(
+          this.db,
+          rows.map((r) => r.id),
+        ),
+      ],
+    );
     return rows.map((row) =>
       this.toDto({
         ...row,
         pinned: pinnedSet.has(row.id),
         scope: scopeByPartner.get(row.id) ?? [],
+        sensitivity: sensitivityByPartner.get(row.id) ?? 'High',
       }),
     );
   }
@@ -650,7 +663,9 @@ export const partnerSortColumns = {
   globalInnovationsClient: partners.globalInnovationsClient,
   modifiedAt: partners.updatedAt,
   pmcEntityCode: partners.pmcEntityCode,
-  sensitivity: partners.sensitivity,
+  // The derived value, not the stored column, so a list orders by the same
+  // sensitivity it displays and filters on.
+  sensitivity: partnerDerivedSensitivity(sql`${partners.id}`),
   startDate: partners.startDate,
 } satisfies SortMap<keyof Partner>;
 
