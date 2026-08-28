@@ -128,40 +128,11 @@ export const knownDeltas: readonly KnownDeltaRule[] = [
     persona: /./,
     path: /(^|\.)unavailabilities(\.|$)/,
   },
-  {
-    ref: 'U17',
-    reason:
-      'The anonymous user (id `anonuserid`) is labelled AnonUser in Neo4j ' +
-      'and dropped from user lists there, while Postgres has no marker ' +
-      'column to read and lists it — totals run higher by exactly 1 and the ' +
-      'row appears only on the Postgres side. The fix (exclude ' +
-      'config.anonUser.id) is written on branch `pg-exclude-anon-user` ' +
-      'targeting develop and is NOT on this lineage yet; remove this rule ' +
-      'after the next catch-up merge and confirm the totals match on a ' +
-      'fresh capture. Scoped away from the filter-status op on purpose — ' +
-      'its totals stay red under the S6-cardinality decision below. ' +
-      '`«order»` is deliberately NOT suppressed: dropping an unshared id ' +
-      'cannot reorder the shared ones, so any order entry here is collation ' +
-      'signal, not this delta.',
-    op: /^users\.list\.(?:default|sort-)/,
-    persona: /./,
-    path: /\[id=anonuserid\]|(^|\.)(total|hasMore)$/,
-  },
-  {
-    ref: 'U18',
-    reason:
-      'project.primaryPartnership: the Postgres repository still hardcodes ' +
-      'the hydrated value to null (project.drizzle.repository.ts) while ' +
-      'Neo4j resolves the primary partnership, so Neo4j returns an id where ' +
-      'Postgres returns null. The fix is written on branch ' +
-      '`pg-project-primary-partnership` targeting develop (PR draft ' +
-      '`pr-primary-partnership.md`) and is NOT on this lineage yet; remove ' +
-      'this rule after the next catch-up merge and confirm on a fresh ' +
-      'capture that the values match.',
-    op: /^project\.byId/,
-    persona: /./,
-    path: /(^|\.)primaryPartnership(\.|$)/,
-  },
+  // U17 (anonymous user listed on Postgres) and U18 (primaryPartnership
+  // hardcoded null) were removed 2026-08-28: their fixes merged to develop
+  // (#3865, #3868) and arrived here with the catch-up rebase. Their deltas
+  // must now show as MATCHES on the next capture — if either difference
+  // reappears, it should be loud, not suppressed.
   {
     ref: 'S6-progressTarget',
     reason:

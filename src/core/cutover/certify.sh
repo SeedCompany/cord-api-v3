@@ -58,14 +58,12 @@ REFERENCE_DBS=(cord_cutover_r4)
 BASELINE=src/core/cutover/loss-manifest.baseline.json
 FRESH_MANIFEST=cutover-loss-manifest.json
 
-# migration-todo: remove this registration (and require probe exit 0) when
-# pg-derive-partner-org-sensitivity merges — until then this one probe is red
-# by design, and any OTHER red is a finding. The check is two-directional,
-# like the coverage checker's exemptions: an expected red that does NOT fire
-# fails the phase too, so this registration cannot silently go stale.
-PROBE_EXPECTED_RED=(
-  'partner sensitivity follows a new project'
-)
+# Probe failures registered as expected, if any. The check is two-directional,
+# like the coverage checker's exemptions: an UNREGISTERED red fails the phase,
+# and a registered red that does NOT fire fails it too (stale registration).
+# Empty since 2026-08-28: the partner-sensitivity registration was removed when
+# pg-derive-partner-org-sensitivity merged (#3867) — the probe must be all green.
+PROBE_EXPECTED_RED=()
 
 PHASES=(load manifest verify coverage-etl shadow-copy profiles
         capture-neo4j capture-postgres diff probe e2e mutation-coverage corpus)
@@ -143,13 +141,16 @@ check_probe_reds() { # <log>
   for key in "${found[@]:-}"; do
     [[ -n "$key" ]] || continue
     local expected=1
-    for reg in "${PROBE_EXPECTED_RED[@]}"; do [[ "$key" == "$reg" ]] && expected=0; done
+    for reg in "${PROBE_EXPECTED_RED[@]:-}"; do
+      [[ -n "$reg" && "$key" == "$reg" ]] && expected=0
+    done
     if [[ $expected == 1 ]]; then
       echo "  ✗ UNEXPECTED probe failure: $key"
       ok=1
     fi
   done
-  for reg in "${PROBE_EXPECTED_RED[@]}"; do
+  for reg in "${PROBE_EXPECTED_RED[@]:-}"; do
+    [[ -n "$reg" ]] || continue
     local fired=1
     for key in "${found[@]:-}"; do [[ "$key" == "$reg" ]] && fired=0; done
     if [[ $fired == 1 ]]; then
