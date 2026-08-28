@@ -22,6 +22,7 @@ import {
   SecuredBoolean,
   SecuredBooleanNullable,
   SecuredDateNullable,
+  SecuredDateTime,
   SecuredDateTimeNullable,
   SecuredString,
   SecuredStringNullable,
@@ -173,10 +174,12 @@ class Project extends Interfaces {
    * written at creation time. The TypeScript type simply claimed otherwise, and
    * nothing caught it because the Neo4j repository builds this DTO untyped.
    *
-   * The emitted GraphQL shape is unchanged — both wrappers expose the same
-   * nullable `value`; only the wrapper's name on this one field differs.
+   * The WIRE type stays `SecuredDateTime` on purpose — the schema is an
+   * API-compatibility promise, and its `value` was always nullable
+   * (`DateTime`, not `DateTime!`), so the blank needs no schema change at
+   * all. `@Field` pins the emitted name; the TS type tells the truth.
    */
-  @Field()
+  @Field(() => SecuredDateTime)
   @Calculated()
   readonly stepChangedAt: SecuredDateTimeNullable;
 
