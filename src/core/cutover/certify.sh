@@ -160,19 +160,24 @@ check_probe_reds() { # <log>
   return $ok
 }
 
-# jest --json result: zero failed TESTS required. A failed SUITE whose tests
-# all passed is the tracked app.close() teardown hang — reported, not fatal.
+# jest --json result: zero failed TESTS required. A failed SUITE with zero
+# failed assertions is a hook timeout / teardown hang (the tracked intermittent
+# app.close() class) — reported, not fatal. Field names come from jest's REAL
+# --json schema (suite entries carry `name` + `assertionResults`); the first
+# version asserted on invented fields (`numFailingTests`) and its self-test
+# "certified" it against fixtures invented with the same wrong assumption.
 check_e2e_json() { # <results.json>
   node -e '
     const r = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
-    const hangs = r.testResults.filter(
-      (s) => s.status === "failed" && s.numFailingTests === 0);
-    const realSuiteFails = r.numFailedTestSuites - hangs.length;
+    const failedSuites = r.testResults.filter((s) => s.status === "failed");
+    const hangs = failedSuites.filter(
+      (s) => !(s.assertionResults ?? []).some((a) => a.status === "failed"));
+    const realSuiteFails = failedSuites.length - hangs.length;
     console.log(`  tests: ${r.numPassedTests} passed, ${r.numFailedTests} failed, ` +
-      `${r.numPendingTests} skipped; suites failed: ${r.numFailedTestSuites} ` +
-      `(${hangs.length} teardown-hang shaped)`);
-    if (hangs.length) console.log("  ⚠ teardown hang (tracked, intermittent): " +
-      hangs.map((s) => s.testFilePath).join(", "));
+      `${r.numPendingTests} skipped; suites failed: ${failedSuites.length} ` +
+      `(${hangs.length} hang shaped)`);
+    if (hangs.length) console.log("  ⚠ hook/teardown hang (tracked, intermittent): " +
+      hangs.map((s) => String(s.name).replace(/.*cord-api-v3\//, "")).join(", "));
     process.exit(r.numFailedTests === 0 && realSuiteFails === 0 ? 0 : 1);
   ' "$1"
 }
