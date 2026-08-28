@@ -89,9 +89,11 @@ export function ProgressReportStatusChanged({
             ) : null}
             <>
               for {languageName} in <a href={projectUrl}>{projectName}</a> on{' '}
+              {/* A recipient with no recorded timezone falls back to the
+                  component's own default, same as one who never set it. */}
               <FormattedDateTime
                 value={workflowEvent.at}
-                timezone={recipient.timezone.value}
+                timezone={recipient.timezone.value ?? undefined}
               />
             </>
           </Mjml.Text>

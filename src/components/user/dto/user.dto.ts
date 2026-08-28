@@ -54,26 +54,32 @@ export class User extends Interfaces {
   @DbUnique('EmailAddress')
   email: SecuredStringNullable;
 
-  @NameField()
+  // Nullable in TS (migration 0042): Neo4j stores a name Property only when
+  // one was written, and one migrated person has none. The WIRE type stays
+  // `SecuredString` on purpose — the schema is an API-compatibility promise,
+  // and its `value` was always nullable (`String`, not `String!`), so the
+  // blank needs no schema change at all. `type:` pins the emitted name;
+  // the TS type tells the truth.
+  @NameField({ type: () => SecuredString })
   @DbLabel('UserName')
-  realFirstName: SecuredString;
+  realFirstName: SecuredStringNullable;
 
-  @NameField()
+  @NameField({ type: () => SecuredString })
   @DbLabel('UserName')
-  realLastName: SecuredString;
+  realLastName: SecuredStringNullable;
 
-  @NameField()
+  @NameField({ type: () => SecuredString })
   @DbLabel('UserName')
-  displayFirstName: SecuredString;
+  displayFirstName: SecuredStringNullable;
 
-  @NameField()
+  @NameField({ type: () => SecuredString })
   @DbLabel('UserName')
-  displayLastName: SecuredString;
+  displayLastName: SecuredStringNullable;
 
   @Field()
   phone: SecuredStringNullable;
 
-  timezone: SecuredString;
+  timezone: SecuredStringNullable;
 
   @Field()
   about: SecuredStringNullable;

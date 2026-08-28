@@ -17,11 +17,19 @@ type NameFieldParams = FieldOptions & {
    * If true, values can be omitted/undefined but not null.
    */
   optional?: true;
+  /**
+   * Explicit GraphQL type, overriding inference from the TS property type.
+   * For when the declared TS type and the emitted wire type deliberately
+   * differ — e.g. a property typed `SecuredStringNullable` (migrated rows can
+   * be blank) that keeps emitting the `SecuredString` wire type, whose
+   * `value` was always nullable, so the schema does not change.
+   */
+  type?: ReturnTypeFunc;
 };
 
-export const NameField = (options: NameFieldParams = {}) =>
+export const NameField = ({ type, ...options }: NameFieldParams = {}) =>
   applyDecorators(
-    InferredTypeOrStringField({
+    InferredTypeOrStringField(type, {
       ...options,
       nullable: options.optional ?? options.nullable,
     }),
@@ -50,7 +58,10 @@ export const NameField = (options: NameFieldParams = {}) =>
  * Useful for when the type is `string | null`.
  */
 const InferredTypeOrStringField =
-  (options: FieldOptions): PropertyDecorator | MethodDecorator =>
+  (
+    explicitType: ReturnTypeFunc | undefined,
+    options: FieldOptions,
+  ): PropertyDecorator | MethodDecorator =>
   (prototype, property, descriptorRaw) => {
     const propertyKey = property as string;
     const applyMetadataFn = () => {
@@ -70,7 +81,7 @@ const InferredTypeOrStringField =
         });
       let resolved;
       try {
-        resolved = resolveType();
+        resolved = resolveType(explicitType);
       } catch {
         resolved = resolveType(() => String);
       }

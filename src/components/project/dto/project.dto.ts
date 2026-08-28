@@ -20,6 +20,7 @@ import {
   type ResourceRelationsShape,
   type Secured,
   SecuredBoolean,
+  SecuredBooleanNullable,
   SecuredDateNullable,
   SecuredDateTime,
   SecuredDateTimeNullable,
@@ -164,9 +165,23 @@ class Project extends Interfaces {
   // this should match project mouEnd, until it becomes active, then this is final.
   readonly initialMouEnd: SecuredDateNullable;
 
-  @Field()
+  /**
+   * When the project last moved to a new step — blank when it never has.
+   *
+   * Typed nullable as of 2026-08-26. It always could be null: `SecuredDateTime`
+   * already emits `value: DateTime` (nullable) in the schema, and Neo4j returns
+   * nothing here for the ~470 legacy projects created before the field was
+   * written at creation time. The TypeScript type simply claimed otherwise, and
+   * nothing caught it because the Neo4j repository builds this DTO untyped.
+   *
+   * The WIRE type stays `SecuredDateTime` on purpose — the schema is an
+   * API-compatibility promise, and its `value` was always nullable
+   * (`DateTime`, not `DateTime!`), so the blank needs no schema change at
+   * all. `@Field` pins the emitted name; the TS type tells the truth.
+   */
+  @Field(() => SecuredDateTime)
   @Calculated()
-  readonly stepChangedAt: SecuredDateTime;
+  readonly stepChangedAt: SecuredDateTimeNullable;
 
   @Field()
   readonly estimatedSubmission: SecuredDateNullable;
@@ -194,7 +209,10 @@ class Project extends Interfaces {
         Pick<UnsecuredDto<ProjectMember>, 'roles' | 'inactiveAt'>)
     | null;
 
-  @Field({
+  // Nullable in TS (migration 0042): 2,185 migrated rows carry a kept blank.
+  // The WIRE type stays `SecuredBoolean` — its `value` was always nullable,
+  // so the schema does not change (an API-compatibility promise).
+  @Field(() => SecuredBoolean, {
     description: stripIndent`
       Whether or not this project and its associated languages (via engagements)
       are a part of our "Preset Inventory".
@@ -203,7 +221,7 @@ class Project extends Interfaces {
       It also means the project is committed to having quality, consistent reporting.
     `,
   })
-  readonly presetInventory: SecuredBoolean;
+  readonly presetInventory: SecuredBooleanNullable;
 
   /**
    * Optimization for {@link ProjectResolver.engagements}.
