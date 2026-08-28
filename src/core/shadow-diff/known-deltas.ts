@@ -220,48 +220,100 @@ export const knownDeltas: readonly KnownDeltaRule[] = [
     path: /(^|\.)(total|hasMore)$|items\[[^\]]+\]|items\.«order»/,
     disabled: true,
   },
+  // ---------------------------------------------------------------------
+  // CR1-* — the four classes from the FIRST FULL CERTIFICATION RUN
+  // (2026-08-28, cord_cutover_r5; ledger section of the same date).
+  // Approved as a set by Rob 2026-08-28. Every count below was measured on
+  // BOTH the r4-day2 and r5-certify captures with IDENTICAL per-op numbers —
+  // two independent loads and two independent capture rounds — so each class
+  // is deterministic engine behavior, not run-to-run churn.
+  // ---------------------------------------------------------------------
   {
-    ref: 'collation — enable only after inspecting',
+    ref: 'CR1-order',
     reason:
-      'ORDER-only differences on name sorts can stem from Neo4j vs Postgres ' +
-      '(ICU/libc) collation rather than data. Disabled by default: inspect ' +
-      'the ordering diffs first, then enable deliberately if confirmed. ' +
-      'With id-aligned arrays (diff.ts, 2026-08-27) ordering drift surfaces ' +
-      'as a single `items.«order»` entry per list rather than per-item ' +
-      'shifts, so that is the path this rule would suppress.',
-    op: /sort-(?:name|displayLastName)/,
+      'Array ordering under tied sort keys, suppressed globally (Rob, ' +
+      '2026-08-28). Arrays are id-aligned (diff.ts 2026-08-27): every element ' +
+      'is matched by identity and every field compared, so the single ' +
+      '`«order»` entry per array records only the permutation of SHARED ids. ' +
+      'Neither engine defines that permutation — legacy rows carry identical ' +
+      'migration-era timestamps, and ties fall through to Neo4j internal ' +
+      'order vs Postgres heap/collation order. Measured: 182 entries across ' +
+      '15 list surfaces, per-op counts identical across two independent ' +
+      'loads+captures. Value and membership differences are NOT covered — a ' +
+      'reordering caused by a dropped sort key also displaces page ' +
+      'membership, which stays loud on any op outside the CR1-membership ' +
+      'scope. Subsumes the retired disabled candidates for name-sort ' +
+      'collation and users.list fullName folding (see git history); the ' +
+      'anonymous-user count signal those notes protected lives in totals ' +
+      'and membership, which this rule does not touch.',
+    op: /./,
     persona: /./,
-    path: /^data\.[A-Za-z]+\.items\.«order»$/,
-    disabled: true,
+    path: /\.«order»$/,
   },
   {
-    ref: 'U-fullName-fold',
+    ref: 'CR1-totals',
     reason:
-      'user list fullName ordering: both engines now compare the SAME string ' +
-      '(first and last concatenated — the two-column form was fixed 2026-08-19), ' +
-      'but they fold it differently and that part is deliberate. `fullName` is a ' +
-      'resolver field, not a @NameField, so DbSort finds no transformer and Neo4j ' +
-      'orders it by raw code points — capitals before lower case, accented ' +
-      'initials after `z`. Postgres keeps the display_order collation instead ' +
-      '(Rob, 2026-08-19) so the list reads the way people expect and agrees with ' +
-      'every other name sort in the app. Exact parity would mean `collate "C"`. ' +
-      '⚠ STILL DISABLED, and not because the delta is unconfirmed: the same ' +
-      'path also carries the anonymous-user difference (Postgres returns 2376 ' +
-      'users to Neo4j`s 2375 — `anonuserid` is labelled AnonUser and Neo4j drops ' +
-      'it, Postgres lists it). Enabling this now would hide that. ' +
-      'UPDATE 2026-08-25: the user-list fix is written and lands on develop via ' +
-      'branch `pg-exclude-anon-user` (the list now excludes config.anonUser.id, ' +
-      'since there is no AnonUser marker column to read — see the manifest ' +
-      'entry). It is NOT on this lineage yet; it arrives with the next catch-up ' +
-      'merge. Enable this rule then, and confirm on a fresh capture that the ' +
-      'users list totals match before trusting it — enabling it early would ' +
-      'restore exactly the masking this note exists to prevent.',
-    op: /^users\.list\.default$/,
+      'List totals lower on Postgres by exactly the documented ETL drops ' +
+      '(Rob, 2026-08-28). products.list: 82,198 → 80,320 (Δ1,878 == ' +
+      'loss-manifest notHydrated.Product), Δ173 under the methodology ' +
+      'filter; periodicReports.list: 218,228 → 211,217 (Δ7,011 == ' +
+      'notHydrated.PeriodicReport), Δ6,721 for the Progress-type subset. ' +
+      'The guard against these deltas silently growing is NOT this registry: ' +
+      'compare-loss-manifest.ts fails the certify run on any drop growth ' +
+      'against the committed baseline (loss-manifest.baseline.json), so a ' +
+      'new or bigger drop goes red in the manifest phase before it could ' +
+      'hide here. Scoped to exactly the measured ops; a total delta on any ' +
+      'other op stays red.',
+    op: /^(?:products\.list\.(?:default|filter-methodology|sort-createdAt-desc)|periodicReports\.list\.(?:default|filter-type-progress|sort-end-desc))$/,
     persona: /./,
-    // The fold difference is order-only, so with id-aligned arrays it is one
-    // `items.«order»` entry; the anonuserid row itself is the U17 rule above.
-    path: /^data\.users\.items\.«order»$/,
-    disabled: true,
+    path: /(^|\.)total$/,
+  },
+  {
+    ref: 'CR1-membership',
+    reason:
+      'Page-membership churn at the page-1-of-25 boundary under tied sort ' +
+      'keys (Rob, 2026-08-28): whole rows present in the first page on one ' +
+      'engine and «absent» on the other because ties are broken differently, ' +
+      'while the underlying sets match (totals on these ops either agree or ' +
+      'are the CR1-totals dropped-row deltas). Measured: 844 entries, per-op ' +
+      'counts IDENTICAL across two independent loads+captures. Scoped to ' +
+      'exactly the measured ops ON PURPOSE — membership churn on any op not ' +
+      'listed here stays red, because this signal is how the dropped-sort-key ' +
+      'bug on users/unavailability/education was caught (53488a43f). Only ' +
+      'whole-item entries at `items[id=…]` are covered; a FIELD difference ' +
+      'inside a matched item has a deeper path and stays red.',
+    op: /^(?:engagements\.list\.(?:default|filter-type-language)|products\.list\.(?:default|filter-methodology)|organizations\.list\.sort-createdAt-asc|languages\.list\.sort-createdAt-asc|periodicReports\.list\.(?:default|filter-type-progress|sort-end-desc)|progressReports\.list\.(?:default|filter-status-notStarted)|users\.list\.(?:default|sort-displayLastName-desc))$/,
+    persona: /./,
+    path: /\.items\[id=[^\]]+\]$/,
+  },
+  {
+    ref: 'CR1-membership',
+    reason:
+      'Same page-membership class as the list rule above, on the NESTED ' +
+      'products page inside a single engagement document: these four legacy ' +
+      'engagements carry more than one page of products, so the first-page ' +
+      'read in the corpus hits the same tied-key boundary. Ids are pinned to ' +
+      'the measured draws (the corpus/sampling draw is deterministic — ' +
+      'identical across r4-day2 and r5-certify); a different engagement ' +
+      'showing churn stays red.',
+    op: /^engagement\.(?:byId|ceremonyBlank):(?:5c4279179503d5cd78e84b70|5c4279179503d5cd78e84b73|5c4279179503d5cd78e84c84|5c4279179503d5cd78e852a5)$/,
+    persona: /./,
+    path: /^data\.engagement\.products\.items\[id=[^\]]+\]$/,
+  },
+  {
+    ref: 'CR1-partners-gic',
+    reason:
+      'partners.list.filter-globalInnovationsClient under the Marketing ' +
+      'persona: Neo4j throws a masked "Failed" error (root cause on the ' +
+      'Neo4j side unexplained — possibly the known Neo4j partner-list query ' +
+      'blowup) while Postgres answers correctly with the 8 matching ' +
+      'partners. Neo4j-only wrongness the port does not share; the class ' +
+      'disappears at cutover when Neo4j is retired. Scoped to exactly this ' +
+      'op + persona (3 entries: the null data document and the error pair); ' +
+      'any other persona or filter failing stays red.',
+    op: /^partners\.list\.filter-globalInnovationsClient$/,
+    persona: /^Marketing$/,
+    path: /^data$|^errors(?:\.length|\[\d+\])$/,
   },
 ];
 
