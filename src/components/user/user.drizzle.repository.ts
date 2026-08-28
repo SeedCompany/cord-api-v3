@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { and, eq, ilike, inArray, isNull, or, type SQL } from 'drizzle-orm';
+import { and, eq, ilike, inArray, isNull, ne, or, type SQL } from 'drizzle-orm';
 import { groupBy } from 'lodash';
 import { DateTime } from 'luxon';
 import {
@@ -11,6 +11,7 @@ import {
   type UnsecuredDto,
 } from '~/common';
 import { Identity } from '~/core/authentication';
+import { ConfigService } from '~/core/config';
 import {
   catchUniqueViolation,
   DrizzleDtoRepository,
@@ -64,6 +65,7 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
     private readonly executor: PolicyExecutor,
     private readonly files: FileService,
     private readonly identity: Identity,
+    private readonly config: ConfigService,
   ) {
     super(db, users, User);
   }
@@ -236,7 +238,21 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
   async list(
     input: UserListInput,
   ): Promise<PaginatedListType<UnsecuredDto<User>>> {
-    const conditions: SQL[] = [isNull(users.deletedAt)];
+    const conditions: SQL[] = [
+      isNull(users.deletedAt),
+      // The anonymous user is a system record, not a person, and has no place
+      // in a list of people. Neo4j leaves it out; without this the People page
+      // gains a nameless extra row at cutover (Postgres 2,376 vs Neo4j 2,375,
+      // measured by shadow-diff against the production copy).
+      //
+      // Excluded by its configured id rather than a column, because there is no
+      // marker to read: Neo4j distinguishes it with an `AnonUser` label, and
+      // unlike the root user — carried as `users.is_root` — that label has no
+      // counterpart here. `config.anonUser.id` is the same fixed constant the
+      // admin bootstrap uses to create the row, so it is the definition of
+      // which user this is, on both engines.
+      ne(users.id, this.config.anonUser.id),
+    ];
     if (!this.executor.applyReadFilter(this.resource, conditions)) {
       return EMPTY_PAGE;
     }
