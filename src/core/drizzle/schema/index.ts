@@ -1208,9 +1208,9 @@ export const roleEnum = pgEnum('role', [
  * discriminator; `own_sensitivity` is meaningful only for Internship (Translation
  * rows ignore it and read the denormalized `sensitivity` column).
  *
- * `sensitivity` is denormalized: kept current via a hook that recomputes from
- * Engagement/Language. The hook is stubbed (`migration-todo:`) until Language
- * migrates — Translation projects read 'High' in DATABASE=postgres until then.
+ * `sensitivity` is denormalized: kept current by `recomputeProjectSensitivity`
+ * (project.drizzle.repository.ts), called from the language and engagement
+ * repositories wherever a linked language's sensitivity can change.
  *
  * `status` is `GENERATED ALWAYS AS (CASE step ... END) STORED` in the raw SQL
  * migration; mirrors Gel's `Project::statusFromStep(.step)`. Drizzle marks it
