@@ -54,6 +54,39 @@ const EXEMPT: ReadonlyMap<string, string> = new Map([
     'Needs a real PnP spreadsheet fixture and none exists anywhere in ' +
       'test/ — genuinely blocked until one is committed.',
   ],
+  // The four highlight mutations are unreachable through the API BY DESIGN:
+  // creating a highlight means choosing a prompt, and PR #2910 deliberately
+  // emptied the highlight prompt list (its community-story and team-news
+  // siblings kept theirs), so there is nothing to choose and the other three
+  // mutations have no subject. The decision lives in the service, above the
+  // database boundary, so it cannot differ by engine. mutation-smoke.e2e-spec
+  // PINS the state ("highlights offer no prompts, so their mutations are
+  // unreachable") — if a prompt ever comes back, that test fails, the
+  // mutations become testable, and these exemptions go stale and fail here.
+  [
+    'createProgressReportHighlight',
+    'Unreachable by design — highlight prompts were removed in PR #2910, so ' +
+      'there is no prompt to create against; state pinned by ' +
+      'mutation-smoke.e2e-spec.ts.',
+  ],
+  [
+    'changeProgressReportHighlightPrompt',
+    'Unreachable by design — no highlight can exist to change (see ' +
+      'createProgressReportHighlight); state pinned by ' +
+      'mutation-smoke.e2e-spec.ts.',
+  ],
+  [
+    'updateProgressReportHighlightResponse',
+    'Unreachable by design — no highlight can exist to respond to (see ' +
+      'createProgressReportHighlight); state pinned by ' +
+      'mutation-smoke.e2e-spec.ts.',
+  ],
+  [
+    'deleteProgressReportHighlight',
+    'Unreachable by design — no highlight can exist to delete (see ' +
+      'createProgressReportHighlight); state pinned by ' +
+      'mutation-smoke.e2e-spec.ts.',
+  ],
 ]);
 
 // ─── schema side ─────────────────────────────────────────────────────────────

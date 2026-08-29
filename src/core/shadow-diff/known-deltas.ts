@@ -272,6 +272,28 @@ export const knownDeltas: readonly KnownDeltaRule[] = [
     path: /^data\.engagement\.products\.items\[id=[^\]]+\]$/,
   },
   {
+    ref: 'CR2-anon-createdAt-sort',
+    reason:
+      'Neo4j counts the anonymous user in the people list ONLY under the ' +
+      'createdAt sort (2,376 vs 2,375 everywhere else, measured 2026-08-29 ' +
+      'on the same capture): name-property sorts JOIN a property the anon ' +
+      'node does not have and silently drop the row from result AND count ' +
+      '(the propSorter row-dropping class — same mechanism as the partners ' +
+      'sensitivity-sort empty page), while createdAt lives on the node ' +
+      'itself, so the row survives. So Neo4j never had an anon-exclusion ' +
+      'rule at all — its apparent exclusion was an accident of sort ' +
+      'plumbing, incoherent across sort keys. Postgres (#3865) excludes the ' +
+      'row deterministically under every sort, which is the intended product ' +
+      'behavior ("a system record, not a person"). Neo4j-side wrongness that ' +
+      'resolves at cutover; scoped to exactly the measured op and path. ' +
+      'NOTE the node itself was boot-created in the prodcopy 2026-08-27 by ' +
+      'mergeAnonUser (app startup writes to whatever Neo4j it points at), ' +
+      'which is why this surfaced only after the U17 rule was retired.',
+    op: /^users\.list\.sort-createdAt-asc$/,
+    persona: /./,
+    path: /^data\.users\.total$/,
+  },
+  {
     ref: 'CR1-partners-gic',
     reason:
       'partners.list.filter-globalInnovationsClient under the Marketing ' +
