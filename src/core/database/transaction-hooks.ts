@@ -19,6 +19,25 @@ export class TransactionHooks {
     return this.managerFor('afterCommit');
   }
 
+  /**
+   * Run `fn` after the current mutation's transaction commits, or immediately
+   * when not inside one.
+   *
+   * Inside a GraphQL mutation the work is queued to {@link afterCommit}, which
+   * the TransactionalMutationsInterceptor drains on commit and CLEARS on
+   * rollback — so a rolled-back attempt cannot leak its side effects, and a
+   * retried attempt cannot re-run them. Outside a mutation nothing drains that
+   * queue, so the work runs right away instead of never.
+   */
+  async afterCommitOrNow(fn: Callback) {
+    const op = this.contextHost.contextMaybe?.operation;
+    if (op && op.operation === 'mutation') {
+      this.afterCommit.add(fn);
+      return;
+    }
+    await fn();
+  }
+
   private managerFor(event: string) {
     const contextId = this.contextHost.context;
     return cached(
