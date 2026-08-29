@@ -1,5 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { inArray, node, type Query, relation } from 'cypher-query-builder';
+import {
+  inArray,
+  isNull,
+  node,
+  type Query,
+  relation,
+} from 'cypher-query-builder';
 import { type SetRequired } from 'type-fest';
 import {
   type ID,
@@ -16,7 +22,6 @@ import {
   createRelationships,
   currentUser,
   merge,
-  path,
   sorting,
 } from '~/core/neo4j/query';
 import { ProgressReport, type ProgressReportStatus as Status } from '../dto';
@@ -144,13 +149,15 @@ export class ProgressReportWorkflowRepository extends DtoRepository(
         relation('out', '', 'user', ACTIVE),
         node('user', 'User'),
       ])
-      .where(
-        path([
-          node('member'),
-          relation('out', '', 'inactiveAt', ACTIVE),
-          node('', 'Property', { value: null }),
-        ]),
-      )
+      .match([
+        node('member'),
+        relation('out', '', 'inactiveAt', ACTIVE),
+        node('inactiveAt', 'Property'),
+      ])
+      // A map pattern `{ value: null }` never matches in Cypher — null only
+      // compares with IS NULL, so the property node has to be matched into a
+      // variable and filtered here.
+      .where({ inactiveAt: { value: isNull() } })
       .match([
         node('user'),
         relation('out', '', 'email', ACTIVE),
