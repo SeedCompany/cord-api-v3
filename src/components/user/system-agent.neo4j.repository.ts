@@ -20,10 +20,10 @@ export class SystemAgentNeo4jRepository extends SystemAgentRepository {
         variables: {
           'agent.id': 'apoc.create.uuid()',
         },
-        values: {
-          'agent.roles': roles ?? [],
-        },
       })
+      // On match too — the Drizzle arm updates roles on conflict, and a roles
+      // change in a getter must land the same way on both engines.
+      .setValues({ 'agent.roles': roles ?? [] })
       .return<{ agent: SystemAgent }>(
         merge('agent', { __typename: '"SystemAgent"' }).as('agent'),
       )

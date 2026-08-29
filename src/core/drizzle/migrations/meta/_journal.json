@@ -288,6 +288,13 @@
       "when": 1754092800000,
       "tag": "0040_add_external_department_ids",
       "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1787950800000,
+      "tag": "0043_progress_report_workflow_event_actor",
+      "breakpoints": true
     }
   ]
 }

@@ -191,13 +191,10 @@ export class ProjectWorkflowDrizzleRepository {
   }
 
   /**
-   * Which actor column this event belongs in.
-   *
-   * `identity.current.userId` holds a SystemAgent's id whenever the session
-   * resolved to an agent rather than a person: an anonymous session (the Anonymous
-   * agent) or Ghost impersonation. Both set `systemAgentName` in
-   * `SessionManager.resumeSession`, which is what makes the discriminator below
-   * work, and the audit writer discriminates on the same field.
+   * Which actor column this event belongs in. `Session.actor` owns the
+   * user-vs-agent discrimination — including the migration-todo documenting the
+   * two session shapes that defeat it (whose failure is the `users` FK, never
+   * the actor-shape CHECK) — this only maps that to this table's columns.
    *
    * Do NOT read a population claim from this method. The agent-actored events
    * already in the data did not arrive through here — they came from the
@@ -208,43 +205,15 @@ export class ProjectWorkflowDrizzleRepository {
    *
    * Exactly one column is returned non-null, satisfying
    * `project_workflow_events_actor_shape_chk` (migration 0031).
-   *
-   * migration-todo: TWO session shapes slip past the discriminator, and in both the
-   * failure is the foreign key to `users` — never the actor-shape CHECK, so that
-   * constraint is not what protects this.
-   *
-   * 1. REACHABLE TODAY, over a request header. `resumeSession` resolves the Ghost
-   *    agent only when the impersonatee id is the literal `'ghost'`; any other id
-   *    passes straight through, and `systemAgentName` is set from `ghost?.name`.
-   *    So a requester who sends a SystemAgent's REAL id as the impersonatee gets a
-   *    session whose `userId` is that agent while `systemAgentName` stays
-   *    undefined. The branch below reads it as a person, writes the agent id into
-   *    `who`, fails the FK, and rolls the whole transition back. Nothing validates
-   *    that the impersonatee is a live user. The underlying gap is pre-existing,
-   *    engine-independent, and mirrored in the audit writer, so it is not this
-   *    migration's to fix — but it is not hypothetical either.
-   * 2. Unreachable today. `SessionManager.asRole` builds a session with the literal
-   *    placeholder `userId: 'anonymous'`, `anonymous: false`, and no
-   *    `systemAgentName`. Both call sites are read-only permission serializers
-   *    (`policy-dumper.ts`, `permission.serializer.ts`), and `executeTransition`
-   *    does no identity switching around `recordEvent`. The fix belongs in
-   *    `asRole`.
-   *
-   * A safer shape for this method would be to treat an id that is not a live user
-   * as an agent, or to fail with a domain error naming the session shape, rather
-   * than handing an unresolvable id to the FK. Note this copy also omits the audit
-   * writer's `session.anonymous ||` half — equivalent today, and it would catch
-   * neither shape above (shape 2 sets `anonymous: false`; shape 1 has a real
-   * logged-in requester).
    */
   private resolveActor(): {
     who: ID<'User'> | null;
     whoSystemAgentId: ID<'SystemAgent'> | null;
   } {
-    const session = this.identity.current;
-    return session.systemAgentName
-      ? { who: null, whoSystemAgentId: session.userId as ID<'SystemAgent'> }
-      : { who: session.userId as ID<'User'>, whoSystemAgentId: null };
+    const actor = this.identity.current.actor;
+    return actor.type === 'agent'
+      ? { who: null, whoSystemAgentId: actor.id }
+      : { who: actor.id, whoSystemAgentId: null };
   }
 
   /**

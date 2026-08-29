@@ -117,17 +117,24 @@ export class ProgressReportWorkflowDrizzleRepository {
     }
     // Select the event's own columns so the row stays flat and `toDto` takes it
     // unchanged; a bare `.select()` over joins nests each table under its name.
-    return this.db
-      .select(getTableColumns(workflowEvents))
-      .from(workflowEvents)
-      .innerJoin(
-        periodicReports,
-        eq(periodicReports.id, workflowEvents.reportId),
-      )
-      .innerJoin(engagements, eq(engagements.id, periodicReports.engagementId))
-      .innerJoin(projects, eq(projects.id, engagements.projectId))
-      .innerJoin(users, eq(users.id, workflowEvents.who))
-      .where(and(...conditions));
+    return (
+      this.db
+        .select(getTableColumns(workflowEvents))
+        .from(workflowEvents)
+        .innerJoin(
+          periodicReports,
+          eq(periodicReports.id, workflowEvents.reportId),
+        )
+        .innerJoin(
+          engagements,
+          eq(engagements.id, periodicReports.engagementId),
+        )
+        .innerJoin(projects, eq(projects.id, engagements.projectId))
+        // LEFT, not INNER: agent-actored events (e.g. Rev79 auto-advance) have
+        // no `who` user row, and must still be readable.
+        .leftJoin(users, eq(users.id, workflowEvents.who))
+        .where(and(...conditions))
+    );
   }
 
   async readMany(
@@ -161,13 +168,13 @@ export class ProgressReportWorkflowDrizzleRepository {
     UnsecuredDto<WorkflowEvent>
   > {
     const id = await generateId<ID<'ProgressReportWorkflowEvent'>>();
-    const who = this.identity.current.userId;
+    const actor = this.resolveActor();
     const at = new Date();
 
     const row = {
       id,
       reportId: report as ID<'ProgressReport'>,
-      who,
+      ...actor,
       status: props.status,
       transitionKey: props.transition ?? null,
       notes: props.notes ?? null,
@@ -175,6 +182,23 @@ export class ProgressReportWorkflowDrizzleRepository {
     };
     await this.db.insert(workflowEvents).values(row);
     return this.toDto(row);
+  }
+
+  /**
+   * Which actor column this event belongs in. `Session.actor` owns the
+   * user-vs-agent discrimination (and documents the session shapes that defeat
+   * it); this only maps that to this table's columns. Exactly one column is
+   * non-null, satisfying `progress_report_workflow_events_actor_shape_chk`
+   * (migration 0043).
+   */
+  private resolveActor(): {
+    who: ID<'User'> | null;
+    whoSystemAgentId: ID<'SystemAgent'> | null;
+  } {
+    const actor = this.identity.current.actor;
+    return actor.type === 'agent'
+      ? { who: null, whoSystemAgentId: actor.id }
+      : { who: actor.id, whoSystemAgentId: null };
   }
 
   async currentStatus(reportId: ID): Promise<Status> {
@@ -308,7 +332,9 @@ export class ProgressReportWorkflowDrizzleRepository {
       __typename: 'ProgressReportWorkflowEvent',
       createdAt: DateTime.fromJSDate(row.at),
       at: DateTime.fromJSDate(row.at),
-      who: { id: row.who },
+      // ActorLoader hydrates users and system agents alike, so downstream only
+      // needs the one id — whichever column holds it.
+      who: { id: (row.who ?? row.whoSystemAgentId)! },
       // The transition *key*; the service resolves it to a WorkflowTransition
       // object. Null means the workflow was bypassed.
       transition: row.transitionKey ?? null,

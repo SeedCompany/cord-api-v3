@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import {
   inArray,
   isNull,
@@ -15,12 +15,12 @@ import {
   ServerException,
   type UnsecuredDto,
 } from '~/common';
+import { Identity } from '~/core/authentication';
 import { DtoRepository } from '~/core/neo4j';
 import {
   ACTIVE,
   createNode,
   createRelationships,
-  currentUser,
   merge,
   sorting,
 } from '~/core/neo4j/query';
@@ -32,6 +32,8 @@ import { ProgressReportWorkflowEvent as WorkflowEvent } from './dto/workflow-eve
 export class ProgressReportWorkflowRepository extends DtoRepository(
   WorkflowEvent,
 ) {
+  @Inject() private readonly identity: Identity;
+
   async readMany(ids: readonly ID[]) {
     return await this.db
       .query()
@@ -75,7 +77,9 @@ export class ProgressReportWorkflowRepository extends DtoRepository(
         .match([
           node('node'),
           relation('out', undefined, 'who'),
-          node('who', 'User'),
+          // Actor, not User — automated transitions are attributed to a
+          // SystemAgent (e.g. Rev79), same as project workflow events.
+          node('who', 'Actor'),
         ])
         .return<{ dto: UnsecuredDto<WorkflowEvent> }>(
           merge('node', {
@@ -99,7 +103,9 @@ export class ProgressReportWorkflowRepository extends DtoRepository(
       .apply(
         createRelationships(WorkflowEvent, {
           in: { workflowEvent: ['ProgressReport', report] },
-          out: { who: currentUser },
+          // By Actor rather than `currentUser` (a User-labeled match) so a
+          // session running as a SystemAgent can be the recorded actor.
+          out: { who: ['Actor', this.identity.current.userId] },
         }),
       )
       .apply(this.hydrate())

@@ -3187,10 +3187,15 @@ export const progressReportWorkflowEvents = pgTable(
       .$type<ID<'ProgressReport'>>()
       .notNull()
       .references(() => periodicReports.id, { onDelete: 'cascade' }),
+    // Exactly one of `who` / `who_system_agent_id` is set — the actor is a
+    // User or a SystemAgent (e.g. Rev79 auto-advance). Same shape as
+    // `project_workflow_events`; reasoning in migration 0031's header.
     who: text('who')
       .$type<ID<'User'>>()
-      .notNull()
       .references(() => users.id),
+    whoSystemAgentId: text('who_system_agent_id')
+      .$type<ID<'SystemAgent'>>()
+      .references(() => systemAgents.id),
     status: progressReportStatusEnum('status')
       .$type<ProgressReportStatus>()
       .notNull(),
@@ -3205,6 +3210,13 @@ export const progressReportWorkflowEvents = pgTable(
       t.at,
     ),
     index('progress_report_workflow_events_who_idx').on(t.who),
+    index('progress_report_workflow_events_who_system_agent_id_idx').on(
+      t.whoSystemAgentId,
+    ),
+    check(
+      'progress_report_workflow_events_actor_shape_chk',
+      sql`num_nonnulls(${t.who}, ${t.whoSystemAgentId}) = 1`,
+    ),
   ],
 );
 

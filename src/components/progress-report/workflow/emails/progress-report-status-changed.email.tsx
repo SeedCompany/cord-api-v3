@@ -16,7 +16,8 @@ import { ProgressReportStatus } from '../../dto';
 import { type ProgressReportWorkflowEvent } from '../dto/workflow-event.dto';
 
 export interface ProgressReportStatusChangedProps {
-  changedBy: UserRefProps;
+  /** Absent when the actor cannot be shown. */
+  changedBy?: UserRefProps;
   recipient: Pick<
     User,
     'email' | 'displayFirstName' | 'displayLastName' | 'timezone'
@@ -75,8 +76,16 @@ export function ProgressReportStatusChanged({
       <Mjml.Section>
         <Mjml.Column>
           <Mjml.Text paddingBottom={16}>
-            <UserRef {...changedBy} /> has changed{' '}
-            <a href={reportUrl}>{reportLabel}</a>{' '}
+            {changedBy ? (
+              <>
+                <UserRef {...changedBy} /> has changed{' '}
+                <a href={reportUrl}>{reportLabel}</a>{' '}
+              </>
+            ) : (
+              <>
+                <a href={reportUrl}>{reportLabel}</a> changed{' '}
+              </>
+            )}
             {newStatus ? (
               <>
                 {oldStatus ? (
