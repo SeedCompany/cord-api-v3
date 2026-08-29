@@ -145,7 +145,13 @@ export class ProgressReportWorkflowNotificationHandler {
       const project = await this.projectService.readOne(projectId);
       const language = await this.languageService.readOne(languageId);
       const report = await this.reportService.readOne(reportId);
-      const changedBy = await this.userService.readOne(unsecuredEvent.who.id);
+      // The actor may be a User or a SystemAgent; an agent or unloadable actor
+      // degrades to the actor-less sentence in the template.
+      const changedByActor = (
+        await this.userService.readManyActors([unsecuredEvent.who.id])
+      )[0];
+      const changedBy =
+        changedByActor?.__typename === 'User' ? changedByActor : undefined;
       const workflowEvent = this.workflowService.secure(unsecuredEvent);
 
       return {
