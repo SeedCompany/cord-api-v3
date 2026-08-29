@@ -50,6 +50,7 @@ export class ProgressReportWorkflowNotificationHandler {
     previousStatus,
     next,
     workflowEvent,
+    automatedReason,
   }: WorkflowUpdatedHook) {
     const { enabled } = this.configService.progressReportStatusChange;
     if (!enabled) {
@@ -77,10 +78,11 @@ export class ProgressReportWorkflowNotificationHandler {
               workflowEvent,
               projectId,
               languageId,
+              automatedReason,
             );
           } catch (exception) {
             // Hooks run inside the transaction — losing one recipient's email
-            // must not roll back the status change.
+            // must not roll back the status change (or the whole ingest).
             this.logger.error('Failed to prepare status change notification', {
               recipient: email,
               reportId,
@@ -135,6 +137,7 @@ export class ProgressReportWorkflowNotificationHandler {
     unsecuredEvent: UnsecuredDto<ProgressReportWorkflowEvent>,
     projectId: ID,
     languageId: ID,
+    automatedReason?: string,
   ): Promise<EmailReportStatusNotification> {
     const recipientId = receiver.userId ?? this.configService.rootUser.id;
     return await this.identity.asUser(recipientId, async () => {
@@ -145,11 +148,12 @@ export class ProgressReportWorkflowNotificationHandler {
       const project = await this.projectService.readOne(projectId);
       const language = await this.languageService.readOne(languageId);
       const report = await this.reportService.readOne(reportId);
-      // The actor may be a User or a SystemAgent; an agent or unloadable actor
-      // degrades to the actor-less sentence in the template.
-      const changedByActor = (
-        await this.userService.readManyActors([unsecuredEvent.who.id])
-      )[0];
+      // The template only names the actor for human changes — automated ones
+      // carry the reason sentence instead — so skip the read entirely there.
+      // An agent or unloadable actor degrades to the actor-less sentence.
+      const changedByActor = automatedReason
+        ? undefined
+        : (await this.userService.readManyActors([unsecuredEvent.who.id]))[0];
       const changedBy =
         changedByActor?.__typename === 'User' ? changedByActor : undefined;
       const workflowEvent = this.workflowService.secure(unsecuredEvent);
@@ -163,6 +167,7 @@ export class ProgressReportWorkflowNotificationHandler {
         newStatusVal: report.status?.value,
         previousStatusVal: report.status?.value ? previousStatus : undefined,
         workflowEvent: workflowEvent,
+        automatedReason,
       };
     });
   }
