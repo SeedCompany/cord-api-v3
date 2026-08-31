@@ -33,6 +33,10 @@ jobs:
 
       - name: Gel Setup
         uses: ./.github/actions/gel-setup
+        with:
+          # Only the generated TS client is needed to type-check & lint —
+          # proven by generating the schema against an unreachable DSN.
+          server: 'false'
 
       - name: Check for no duplicate dependencies
         run: yarn dedupe --check

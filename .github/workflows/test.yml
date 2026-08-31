@@ -29,6 +29,10 @@ jobs:
 
       - name: Gel Setup
         uses: ./.github/actions/gel-setup
+        with:
+          # Unit tests never open a Gel connection (this job has no Neo4j
+          # service either); only the generated TS client is needed.
+          server: 'false'
 
       - name: Generate GQL Schema
         run: yarn start -- --gen-schema && yarn gql-tada generate output

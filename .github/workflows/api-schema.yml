@@ -34,6 +34,10 @@ jobs:
 
       - name: Gel Setup
         uses: ./.github/actions/gel-setup
+        with:
+          # Schema generation never opens a Gel connection; the generated
+          # TS client (cached) is all it needs.
+          server: 'false'
 
       - name: Generate GraphQL Schema
         run: yarn start -- --gen-schema

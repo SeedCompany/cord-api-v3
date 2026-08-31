@@ -1,22 +1,28 @@
 name: Setup Gel
 description: 'Setup Gel server, migrate schema, generate TS files'
+inputs:
+  server:
+    description: >
+      Whether this job needs a live Gel instance. Jobs that only compile,
+      lint, or run unit tests need just the generated TS client, which the
+      cache below serves without Gel installed at all — declare 'false' so
+      an outage of Gel's package CDN (packages.geldata.com) cannot fail
+      them. Jobs that boot ephemeral Gel databases keep the default.
+    required: false
+    default: 'true'
 runs:
   using: composite
   steps:
-    - name: Install Gel CLI
-      uses: geldata/setup-gel@v1
-      with:
-        server-version: none
-
-    - name: Initialize Gel Project
-      shell: bash
-      run: gel project init --no-migrations --non-interactive
-
     # The migrated (empty) database and the generated TS client are pure
     # functions of dbschema/ + the generator deps, but rebuilding them takes
     # ~15-20 min per job. Cache a dump of the migrated DB + the generated
     # files; on a hit, `gel restore` (seconds) replaces `gel migrate` and the
     # restored files skip `yarn gel:gen` entirely.
+    #
+    # Restored FIRST, before anything downloads from Gel's CDN: on a hit, a
+    # files-only job (server: 'false') is complete right here, so a CDN
+    # outage only blocks jobs that truly need Gel — or a genuinely cold
+    # cache, where building the files needs the real toolchain.
     - name: Restore migrated-DB dump & generated client
       id: gel-cache
       uses: actions/cache@v4
@@ -27,6 +33,47 @@ runs:
           src/core/gel/schema.ts
           src/**/*.edgeql.ts
         key: gel-setup-${{ runner.os }}-${{ hashFiles('dbschema/**', 'gel.toml', 'yarn.lock') }}
+
+    # Everything below installs or starts Gel. It is skipped entirely when
+    # the generated files were restored and the job declared server: 'false'.
+
+    # The CLI + portable server binaries, cached so a CDN outage can't block
+    # jobs once any prior run has warmed them. Keyed on gel.toml because it
+    # pins the exact server version; bump that pin (or the key) to pick up a
+    # newer CLI, since a cache key is immutable once saved.
+    - name: Restore Gel CLI & server binaries
+      id: gel-binaries
+      if: inputs.server == 'true' || steps.gel-cache.outputs.cache-hit != 'true'
+      uses: actions/cache@v4
+      with:
+        path: |
+          ${{ runner.tool_cache }}/gel-cli
+          ~/.local/share/gel/portable
+        key: gel-binaries-${{ runner.os }}-${{ hashFiles('gel.toml') }}
+
+    # setup-gel installs via @actions/tool-cache into
+    # $RUNNER_TOOL_CACHE/gel-cli/<version>/<arch> and puts that dir on PATH;
+    # restoring the cache restores the files but not the PATH entry.
+    - name: Add cached Gel CLI to PATH
+      if: steps.gel-binaries.outputs.cache-hit == 'true'
+      shell: bash
+      run: ls -d "$RUNNER_TOOL_CACHE"/gel-cli/*/* >> "$GITHUB_PATH"
+
+    # Even with warm binaries, setup-gel would still resolve "stable" against
+    # the package index (a CDN call) — so on a binaries hit it is skipped
+    # outright rather than re-run.
+    - name: Install Gel CLI
+      if: |
+        (inputs.server == 'true' || steps.gel-cache.outputs.cache-hit != 'true')
+          && steps.gel-binaries.outputs.cache-hit != 'true'
+      uses: geldata/setup-gel@v1
+      with:
+        server-version: none
+
+    - name: Initialize Gel Project
+      if: inputs.server == 'true' || steps.gel-cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: gel project init --no-migrations --non-interactive
 
     - name: Migrate Gel Schema
       if: steps.gel-cache.outputs.cache-hit != 'true'
@@ -46,6 +93,6 @@ runs:
         gel dump .gel-cache/main.dump
 
     - name: Restore migrated DB from cache
-      if: steps.gel-cache.outputs.cache-hit == 'true'
+      if: inputs.server == 'true' && steps.gel-cache.outputs.cache-hit == 'true'
       shell: bash
       run: gel restore .gel-cache/main.dump
