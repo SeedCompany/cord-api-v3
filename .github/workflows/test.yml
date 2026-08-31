@@ -139,6 +139,13 @@ jobs:
 
       - name: Gel Setup
         uses: ./.github/actions/gel-setup
+        with:
+          # Only the gel matrix entry runs tests against Gel; on neo4j and
+          # postgres, ephemeralGel() is a no-op (test/setup/gel-setup.ts) and
+          # nothing connects — proven by full suites passing on both engines
+          # with GEL_DSN pointed at an unreachable port. The generated TS
+          # client (cached) is all those entries need.
+          server: ${{ matrix.database == 'gel' }}
 
       - name: Generate GQL Schema
         run: yarn start -- --gen-schema && yarn gql-tada generate output
