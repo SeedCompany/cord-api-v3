@@ -16,7 +16,11 @@ import { ProgressReportStatus } from '../../dto';
 import { type ProgressReportWorkflowEvent } from '../dto/workflow-event.dto';
 
 export interface ProgressReportStatusChangedProps {
-  changedBy: UserRefProps;
+  /**
+   * Absent for automated changes (the automation sentence carries the
+   * attribution) and when the actor cannot be shown.
+   */
+  changedBy?: UserRefProps;
   recipient: Pick<
     User,
     'email' | 'displayFirstName' | 'displayLastName' | 'timezone'
@@ -27,6 +31,12 @@ export interface ProgressReportStatusChangedProps {
   newStatusVal?: ProgressReportStatus;
   previousStatusVal?: ProgressReportStatus;
   workflowEvent: ProgressReportWorkflowEvent;
+  /**
+   * When an automated process (not a person) executed the transition,
+   * a human-readable phrase for why, e.g.
+   * "report data was received from Rev79".
+   */
+  automatedReason?: string;
 }
 
 export function ProgressReportStatusChanged({
@@ -38,6 +48,7 @@ export function ProgressReportStatusChanged({
   newStatusVal,
   previousStatusVal,
   workflowEvent,
+  automatedReason,
 }: ProgressReportStatusChangedProps) {
   const projectUrl = useFrontendUrl(`/projects/${project.id}`);
   const projectName = project.name.value || '';
@@ -75,8 +86,19 @@ export function ProgressReportStatusChanged({
       <Mjml.Section>
         <Mjml.Column>
           <Mjml.Text paddingBottom={16}>
-            <UserRef {...changedBy} /> has changed{' '}
-            <a href={reportUrl}>{reportLabel}</a>{' '}
+            {automatedReason || !changedBy ? (
+              // No actor lead for automated changes — the sentence below
+              // carries the attribution, and "Rev79 has changed ... because
+              // data was received from Rev79" read as a confusing double.
+              <>
+                <a href={reportUrl}>{reportLabel}</a> changed{' '}
+              </>
+            ) : (
+              <>
+                <UserRef {...changedBy} /> has changed{' '}
+                <a href={reportUrl}>{reportLabel}</a>{' '}
+              </>
+            )}
             {newStatus ? (
               <>
                 {oldStatus ? (
@@ -95,6 +117,11 @@ export function ProgressReportStatusChanged({
               />
             </>
           </Mjml.Text>
+          {automatedReason ? (
+            <Mjml.Text paddingBottom={16}>
+              This change was made automatically because {automatedReason}.
+            </Mjml.Text>
+          ) : null}
           <Mjml.Button href={reportUrl} paddingTop={16}>
             View {reportLabel}
           </Mjml.Button>

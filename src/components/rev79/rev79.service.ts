@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { File } from '@whatwg-node/fetch';
 import { type ID, NotFoundException } from '~/common';
 import { fullFiscalQuarter } from '~/common/temporal/fiscal-year';
+import { Hooks } from '~/core/hooks';
 import { ILogger, Logger } from '~/core/logger';
 import { PeriodicReportService } from '../periodic-report/periodic-report.service';
 import { ProgressReportVariantProgress } from '../product-progress/dto';
@@ -10,6 +11,7 @@ import { ProgressReportCommunityStoryService } from '../progress-report/communit
 import { ProgressReportMedia } from '../progress-report/media/dto';
 import { ProgressReportMediaService } from '../progress-report/media/progress-report-media.service';
 import { ProgressReportTeamNewsService } from '../progress-report/team-news/progress-report-team-news.service';
+import { ProgressReportIngestTriggerHook } from '../progress-report/workflow/hooks/ingest-trigger.hook';
 import { ProjectService } from '../project/project.service';
 import type {
   Rev79BulkUploadProgressReportsInput,
@@ -45,6 +47,7 @@ export class Rev79Service {
     private readonly communityStoryService: ProgressReportCommunityStoryService,
     private readonly productProgressService: ProductProgressService,
     private readonly mediaService: ProgressReportMediaService,
+    private readonly hooks: Hooks,
     @Logger('rev79') private readonly logger: ILogger,
   ) {}
 
@@ -200,14 +203,18 @@ export class Rev79Service {
     }
     const reportId = report.id as ID<'ProgressReport'>;
 
+    let receivedData = false;
+
     if (item.teamNews) {
       await this.applyTeamNews(report, reportId, item.teamNews);
+      receivedData = true;
     }
 
     if (item.communityStories?.length) {
       for (const story of item.communityStories) {
         await this.applyCommunityStory(report, reportId, story);
       }
+      receivedData = true;
     }
 
     if (item.productProgress?.length) {
@@ -218,12 +225,22 @@ export class Rev79Service {
           variant: ProgressReportVariantProgress.Variants.byKey('partner'),
         });
       }
+      receivedData = true;
     }
 
     if (item.media?.length) {
       for (const m of item.media) {
         await this.applyMedia(reportId, m);
       }
+      receivedData = true;
+    }
+
+    if (receivedData) {
+      // Let the workflow react to the delivery, e.g. auto-advance the report
+      // from NotStarted to InProgress (#3767).
+      await this.hooks.run(
+        new ProgressReportIngestTriggerHook(reportId, 'DataReceived', 'Rev79'),
+      );
     }
 
     return { rev79CommunityId, progressReport: reportId };

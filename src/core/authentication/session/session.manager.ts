@@ -11,6 +11,7 @@ import {
 } from '~/common';
 import { Hooks } from '~/core/hooks';
 import { ILogger, Logger } from '~/core/logger';
+import { type SystemAgent } from '../../../components/user/dto';
 import { SystemAgentRepository } from '../../../components/user/system-agent.repository';
 import { AuthenticationRepository } from '../authentication.repository';
 import { CanImpersonateHook } from '../hooks/can-impersonate.hook';
@@ -184,6 +185,21 @@ export class SessionManager {
     const session =
       typeof user === 'string' ? await this.sessionForUser(user) : user;
     return await this.sessionHost.withSession(session, () => fn(session));
+  }
+
+  /**
+   * Run this function as the given system agent, with the agent's roles.
+   */
+  async asSystemAgent<R>(agent: SystemAgent, fn: () => Promise<R>): Promise<R> {
+    const session = Session.from({
+      token: 'system',
+      issuedAt: DateTime.now(),
+      userId: agent.id,
+      anonymous: false,
+      roles: agent.roles,
+      systemAgentName: agent.name,
+    });
+    return await this.asUser(session, fn);
   }
 
   asRole<R>(role: Role, fn: () => R): R {
