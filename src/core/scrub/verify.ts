@@ -1,5 +1,6 @@
 import { type DatabaseService } from '~/core/neo4j';
 import { isFieldRecord, links, properties } from './classification';
+import { GIVEN_NAMES, SURNAMES } from './theme';
 
 /**
  * The independent check that the scrub worked.
@@ -55,12 +56,50 @@ const PROBES = {
     where: `NOT p.value STARTS WITH '\\u0000RichText\\u0000'`,
     describes: 'rich-text field holding a bare string, not a document',
   },
+  /**
+   * A name field holding anything that is not in the reviewed pool.
+   *
+   * The strongest probe here, because names are the one category whose correct
+   * output is a CLOSED SET — every scrubbed given name is one of the 480
+   * entries in `theme.ts`, so a real name cannot help but fall outside it. The
+   * pattern probes above can only describe what real data tends to look like;
+   * this one knows exactly what fake data looks like and counts everything else.
+   *
+   * It still fires on the bad state and passes on the good one, which is the
+   * property the inverted rich-text probe lacked: a real name is not in the
+   * pool, an unscrubbed field is not in the pool, and a full name written into
+   * a surname field is not in the pool either — that last being the defect
+   * these two strategies were split to fix.
+   *
+   * ⚠ It also fires on a copy scrubbed under an OLDER pool, and that is
+   * deliberate. Pool edits do not change `classificationHash`, so the marker
+   * cannot tell you a name was vetoed after the fact; this probe can. A
+   * violation here after a pool edit means the copy still shows names that are
+   * no longer approved, and the answer is to re-scrub.
+   */
+  // Both exclude the empty string, and that is not a loophole. `fakeValue`
+  // returns a blank unchanged, deliberately: several of these columns were made
+  // nullable specifically so a Neo4j blank survives the load, and the count of
+  // blanks is itself one of the migration's open findings. Inventing a name
+  // where production stores nothing would destroy that evidence — so a blank is
+  // correct output here, not an unscrubbed value.
+  unpooledGivenName: {
+    where: `p.value <> '' AND NOT p.value IN $givenNames`,
+    params: { givenNames: [...GIVEN_NAMES] },
+    describes: 'given-name field holding a name outside the reviewed pool',
+  },
+  unpooledSurname: {
+    where: `p.value <> '' AND NOT p.value IN $surnames`,
+    params: { surnames: [...SURNAMES] },
+    describes: 'surname field holding a name outside the reviewed pool',
+  },
 } as const;
 
 const countFieldMatches = async (
   neo4j: DatabaseService,
   link: string,
   where: string,
+  params: object = {},
 ): Promise<number> => {
   const rows = await neo4j
     .query<{ total: number }>(
@@ -68,6 +107,7 @@ const countFieldMatches = async (
        WHERE ${isFieldRecord('p')}
          AND p.value IS NOT NULL AND ${where}
        RETURN count(p) AS total`,
+      params,
     )
     .run();
   return Number(rows[0]?.total ?? 0);
@@ -122,9 +162,17 @@ export const runVerify = async (
     if (action.as === 'email') applicable.push('realEmail');
     if (action.as === 'phone') applicable.push('realPhone');
     if (action.as === 'richText') applicable.push('nonDocumentRichText');
+    if (action.as === 'givenName') applicable.push('unpooledGivenName');
+    if (action.as === 'surname') applicable.push('unpooledSurname');
 
     for (const probe of applicable) {
-      const count = await countFieldMatches(neo4j, link, PROBES[probe].where);
+      const definition = PROBES[probe];
+      const count = await countFieldMatches(
+        neo4j,
+        link,
+        definition.where,
+        'params' in definition ? definition.params : {},
+      );
       if (count > 0) {
         violations.push({
           field: `${link} (link)`,

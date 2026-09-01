@@ -1,6 +1,7 @@
 import { describe, expect, it } from '@jest/globals';
 import { RichTextDocument } from '~/common';
 import { fakeValue } from './fake';
+import { GIVEN_NAMES, SURNAMES } from './theme';
 
 /**
  * The properties the scrub depends on, tested rather than assumed.
@@ -14,15 +15,16 @@ import { fakeValue } from './fake';
 describe('scrub fake values', () => {
   describe('determinism', () => {
     it('gives the same replacement for the same input, every time', () => {
-      const once = fakeValue('personName', 'Some Person');
-      const twice = fakeValue('personName', 'Some Person');
+      const once = fakeValue('givenName', 'Robert');
+      const twice = fakeValue('givenName', 'Robert');
       expect(once).toBe(twice);
-      expect(once).not.toBe('Some Person');
+      expect(once).not.toBe('Robert');
     });
 
     it('is stable across every strategy', () => {
       const strategies = [
-        'personName',
+        'givenName',
+        'surname',
         'entityName',
         'languageName',
         'email',
@@ -40,10 +42,223 @@ describe('scrub fake values', () => {
     it('does not let one call bleed into the next', () => {
       // faker is seeded globally, so an interleaved call could shift the sequence
       // and make results depend on call ORDER rather than input.
-      const isolated = fakeValue('personName', 'A');
-      fakeValue('entityName', 'unrelated');
+      const isolated = fakeValue('entityName', 'A');
+      fakeValue('givenName', 'unrelated');
       fakeValue('prose', 'unrelated and longer text here');
-      expect(fakeValue('personName', 'A')).toBe(isolated);
+      expect(fakeValue('entityName', 'A')).toBe(isolated);
+    });
+  });
+
+  describe('person names', () => {
+    // These four fields are the reason the theme work started. One strategy used
+    // to serve all of them and it generated a FULL name every time, so
+    // `realLastName` held "Orlando Considine Jr." and the initials derived from
+    // these fields were wrong.
+    const inputs = Array.from({ length: 500 }, (_, i) => `person ${i}`);
+
+    it('puts exactly one name in a single-name field', () => {
+      for (const input of inputs) {
+        expect(fakeValue('givenName', input)).not.toMatch(/\s/);
+        expect(fakeValue('surname', input)).not.toMatch(/\s/);
+      }
+    });
+
+    it('draws only from the reviewed pools', () => {
+      // The pools are the review artifact, so nothing may reach the database
+      // that a reviewer has not seen. This is also what the verify pass's
+      // closed-set probe depends on being true.
+      for (const input of inputs) {
+        expect(GIVEN_NAMES).toContain(fakeValue('givenName', input));
+        expect(SURNAMES).toContain(fakeValue('surname', input));
+      }
+    });
+
+    it('keeps given names and surnames in separate pools', () => {
+      // A surname field must not receive a given name. The two pools are
+      // disjoint, so a value alone says which field it belongs to — which is
+      // what makes the verify probes able to tell them apart.
+      const overlap = GIVEN_NAMES.filter((name) => SURNAMES.includes(name));
+      expect(overlap).toEqual([]);
+    });
+
+    it('spreads across the pool instead of favoring a few names', () => {
+      // A modulo over a weak digest could bunch up, which would quietly shrink
+      // the pool to a handful of names and undo the coverage below. Covering an
+      // 863-name pool needs ~5,800 uniform draws (n·ln n), so 6,000 sat right on
+      // the edge — 15,000 keeps this a fixed outcome rather than a threshold
+      // that trips the next time the pool grows.
+      const used = new Set(
+        Array.from({ length: 15000 }, (_, i) =>
+          fakeValue('givenName', `person number ${i}`),
+        ),
+      );
+      expect(used.size).toBe(GIVEN_NAMES.length);
+    });
+
+    it('leaves a blank name blank instead of inventing one', () => {
+      // Blanks in these four fields are why the columns were made nullable, and
+      // how many there are is an open question in the migration. Filling one in
+      // would erase that evidence — so a blank is correct output, and the verify
+      // pass's closed-set probe has to allow it for the same reason.
+      expect(fakeValue('givenName', '')).toBe('');
+      expect(fakeValue('surname', '')).toBe('');
+    });
+
+    it('gives the same fake to a real and display name that match', () => {
+      // Real first name and display first name are separate records holding the
+      // same string for most people. Keeping them equal after the scrub is what
+      // makes the copy behave like the original, where a differing display name
+      // is the exception rather than the rule. Still true with per-record
+      // keying, because both fields hang off the SAME user.
+      expect(fakeValue('givenName', 'Robert', 'user-1')).toBe(
+        fakeValue('givenName', 'Robert', 'user-1'),
+      );
+    });
+
+    describe('unique per person', () => {
+      // DECIDED (Rob, 2026-09-01): a person's full name should be unique across
+      // the dataset. Pool size alone cannot deliver that — keyed on the value,
+      // everyone sharing a real first name necessarily gets the same fake one.
+      it('gives two people with the SAME real name different fakes', () => {
+        expect(fakeValue('givenName', 'John', 'user-1')).not.toBe(
+          fakeValue('givenName', 'John', 'user-2'),
+        );
+        expect(fakeValue('surname', 'Smith', 'user-1')).not.toBe(
+          fakeValue('surname', 'Smith', 'user-2'),
+        );
+      });
+
+      it('keeps one person stable across refreshes', () => {
+        // The id is the salt, and an id is more stable than a name — so a person
+        // keeps their fake even if their real name changes spelling.
+        expect(fakeValue('surname', 'Smith', 'user-1')).toBe(
+          fakeValue('surname', 'Smith', 'user-1'),
+        );
+      });
+
+      it('still gives one person different fakes for different historical values', () => {
+        // A name field keeps every previous version. Those must not collapse
+        // onto one fake, or the copy loses the fact that the name changed.
+        expect(fakeValue('surname', 'Smith', 'user-1')).not.toBe(
+          fakeValue('surname', 'Jones', 'user-1'),
+        );
+      });
+
+      it('makes full names essentially unique across a realistic population', () => {
+        // 2,375 people who all share one real name — the worst case for the old
+        // value-only keying, which would map every one of them onto a single
+        // full name.
+        const fullNames = new Set(
+          Array.from({ length: 2375 }, (_, i) => {
+            const owner = `user-${i}`;
+            const given = fakeValue('givenName', 'John', owner)!;
+            const surname = fakeValue('surname', 'Smith', owner)!;
+            return `${given} ${surname}`;
+          }),
+        );
+        // Not exactly 2,375: hashing into 863 x 2,664 combinations still
+        // collides a couple of times by chance, and only a registry that checks
+        // and walks forward would make it exact. Asserting the property that
+        // matters — essentially unique — rather than a number that would make
+        // this test brittle against any pool edit.
+        expect(fullNames.size).toBeGreaterThan(2375 * 0.997);
+      });
+
+      it('does NOT key entity names per record, so production collisions survive', () => {
+        // The counterpart, and the reason this is a per-strategy decision:
+        // project names carry a UNIQUE constraint and production really does
+        // have duplicates. Those must keep colliding in the copy.
+        expect(fakeValue('entityName', 'Shared Project', 'owner-1')).toBe(
+          fakeValue('entityName', 'Shared Project', 'owner-2'),
+        );
+      });
+    });
+  });
+
+  describe('the pools are test coverage, not decoration', () => {
+    // Better fake data is the whole point of the theme: 0 of 2,376 users moved
+    // under the `fullName` concatenation fix on the old scrubbed data, because
+    // no faker first name is ever a prefix of another. Real names do this
+    // constantly (Ann/Anna, Jon/Jonathan), and so must these.
+    it('contains given names that are prefixes of other given names', () => {
+      // 20 at the time of writing. Asserting a floor rather than the exact
+      // number so adding cast members is not a test edit — but a floor well
+      // above the eight deliberate pairs, because a pool edit that collapses
+      // the emergent ones is worth hearing about.
+      const families = GIVEN_NAMES.filter((name) =>
+        GIVEN_NAMES.some((other) => other !== name && other.startsWith(name)),
+      );
+      expect(families.length).toBeGreaterThanOrEqual(15);
+    });
+
+    it('contains surnames that are prefixes of other surnames', () => {
+      const families = SURNAMES.filter((name) =>
+        SURNAMES.some((other) => other !== name && other.startsWith(name)),
+      );
+      expect(families.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('carries diacritics, so collation has something to sort', () => {
+      // Sort order and `pg_trgm` search parity between Neo4j and Postgres are
+      // measured on this data. All-ASCII fakes cannot exercise either.
+      const accented = [...GIVEN_NAMES, ...SURNAMES].filter((name) =>
+        [...name].some((char) => char.codePointAt(0)! > 127),
+      );
+      expect(accented.length).toBeGreaterThanOrEqual(5);
+    });
+
+    it('spans a wide range of lengths, because length drives column sizing', () => {
+      const lengths = [...GIVEN_NAMES, ...SURNAMES].map((name) => name.length);
+      expect(Math.min(...lengths)).toBeLessThanOrEqual(3);
+      expect(Math.max(...lengths)).toBeGreaterThanOrEqual(9);
+    });
+
+    it('holds no entry that would break a single-name field', () => {
+      // Whitespace is the old defect. Quotes would break the Cypher list the
+      // verify probe builds from these pools.
+      for (const name of [...GIVEN_NAMES, ...SURNAMES]) {
+        expect(name).not.toMatch(/\s/);
+        expect(name).not.toMatch(/["'\\]/);
+        expect(name.length).toBeGreaterThan(0);
+      }
+    });
+
+    it('loses distinctness when fed its own output, so a re-scrub cannot realize a pool change', () => {
+      // The property that makes a re-scrub the WRONG way to apply a pool edit,
+      // and it cost a wasted run to learn: every generator is a pure function of
+      // the value it replaces, so a second pass reads the first pass's output.
+      // Its input is then only as varied as that output was, and hashing into a
+      // pool can only shrink from there.
+      //
+      // Measured on the production copy: growing surnames 150 -> 242 and
+      // re-scrubbing took surnames in use from 149 DOWN to 101, and duplicate
+      // full names from 140 UP to 240.
+      // Scaled to the pool rather than a fixed 1,800 — that number was smaller
+      // than the pool once the composed surnames landed, so the first assertion
+      // was really measuring "fewer inputs than slots" and failed for a reason
+      // that had nothing to do with the property under test.
+      const realNames = Array.from(
+        { length: SURNAMES.length * 4 },
+        (_, i) => `real ${i}`,
+      );
+
+      const fromRealData = new Set(
+        realNames.map((name) => fakeValue('surname', name)),
+      );
+      const fromScrubbedData = new Set(
+        [...fromRealData].map((fake) => fakeValue('surname', fake!)),
+      );
+
+      // Real data fills nearly the whole pool; its own output cannot.
+      expect(fromRealData.size).toBeGreaterThan(SURNAMES.length * 0.95);
+      expect(fromScrubbedData.size).toBeLessThan(fromRealData.size * 0.75);
+    });
+
+    it('has no duplicate entries within a pool', () => {
+      // A duplicate silently weights one name twice and misleads a reviewer
+      // counting what the copy can show.
+      expect(new Set(GIVEN_NAMES).size).toBe(GIVEN_NAMES.length);
+      expect(new Set(SURNAMES).size).toBe(SURNAMES.length);
     });
   });
 

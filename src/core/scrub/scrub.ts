@@ -2,13 +2,27 @@ import { chunk } from 'lodash';
 import { type DatabaseService } from '~/core/neo4j';
 import {
   type Action,
+  baseLabel,
   findUnclassified,
   isFieldRecord,
   links,
+  nameStrategyByLabel,
   properties,
 } from './classification';
 import { fakeValue, sortValueFor } from './fake';
-import { MARKER_PROPERTY_KEYS, stampProvenance } from './provenance';
+import {
+  buildProjectRegistry,
+  composeProjectName,
+  emptyCensus,
+  type ShapeCensus,
+  splitOrdinal,
+} from './project-name';
+import {
+  MARKER_PROPERTY_KEYS,
+  readProvenance,
+  stampProvenance,
+} from './provenance';
+import { PROJECT_TITLES } from './theme';
 
 /**
  * The scrub itself.
@@ -47,6 +61,22 @@ export interface ScrubContext {
 interface ValueRow {
   readonly nodeId: number;
   readonly value: unknown;
+  /**
+   * Id of the record the field hangs off — the User behind a `realFirstName`,
+   * say. Read so the per-record strategies can key on it; see
+   * `PER_RECORD_STRATEGIES` in `fake.ts` for why person names need it.
+   *
+   * `coalesce(n.id, n.deleted_id)` because a soft-deleted record carries its id
+   * under the prefixed name, and its field versions still have to be scrubbed.
+   * Null for the node-property pass, where the value already lives ON the record
+   * and no per-record strategy applies to it.
+   */
+  readonly ownerId: string | null;
+  /**
+   * Labels of that record, so a polymorphic link can be themed per record type.
+   * See `nameStrategyByLabel` — `name` alone is shared by ten kinds of record.
+   */
+  readonly labels: readonly string[];
 }
 
 /**
@@ -110,10 +140,11 @@ const eachFieldValuePage = async (
   await forEachPage(
     ctx,
     (after, pageSize) => [
-      `MATCH ()-[:\`${link}\`]->(p)
+      `MATCH (n)-[:\`${link}\`]->(p)
        WHERE ${isFieldRecord('p')} AND p.value IS NOT NULL
          AND id(p) > $after
-       RETURN id(p) AS nodeId, p.value AS value
+       RETURN id(p) AS nodeId, p.value AS value,
+              coalesce(n.id, n.deleted_id) AS ownerId, labels(n) AS labels
        ORDER BY id(p) LIMIT ${pageSize}`,
       { after },
     ],
@@ -146,7 +177,8 @@ const eachNodePropertyPage = async (
     ctx,
     (after, pageSize) => [
       `MATCH (n) WHERE n.\`${key}\` IS NOT NULL AND id(n) > $after
-       RETURN id(n) AS nodeId, n.\`${key}\` AS value
+       RETURN id(n) AS nodeId, n.\`${key}\` AS value, null AS ownerId,
+              labels(n) AS labels
        ORDER BY id(n) LIMIT ${pageSize}`,
       { after },
     ],
@@ -195,6 +227,18 @@ const deleteKeyEverywhere = async (
 const isScrub = (
   action: Action,
 ): action is Extract<Action, { kind: 'scrub' }> => action.kind === 'scrub';
+
+/**
+ * Does this row's record get the project-name treatment?
+ *
+ * ⚠ Compares STRIPPED labels. A soft-deleted project is `:Deleted_Project` and
+ * a twice-deleted one `:Deleted_Deleted_Project`, so a `=== 'Project'` test
+ * would skip exactly the historical rows the scrub exists to cover.
+ */
+const isProjectRow = (row: ValueRow) =>
+  row.labels.some(
+    (label) => nameStrategyByLabel[baseLabel(label)] === 'projectName',
+  );
 
 export interface ScrubReport {
   readonly scrubbedValues: number;
@@ -247,6 +291,38 @@ export const runScrub = async (ctx: ScrubContext): Promise<ScrubReport> => {
     `Classification covers all ${liveLinks.length} links and ${liveKeys.length} fields.\n`,
   );
 
+  // ── A re-scrub DEGRADES the copy, so say so before doing one ──────────────
+  //
+  // Every generator is a pure function of the value it replaces, so a second
+  // pass reads the FIRST pass's output. Its input domain is therefore whatever
+  // the last run produced, and distinctness can only shrink from there —
+  // hashing N distinct values into a pool of P slots leaves about
+  // P(1 - e^(-N/P)) of them in use, never more than N.
+  //
+  // Measured on the production copy 2026-09-01, and the reason this warning
+  // exists: growing the surname pool 150 -> 242 and re-scrubbing took surnames
+  // IN USE from 149 down to 101, and duplicate full names from 140 up to 240.
+  // The same pool scrubbing real names fills 241 of 242 slots. So a pool or
+  // strategy change CANNOT be evaluated or realized on an already-scrubbed
+  // graph — it needs a fresh restore. The warning is here in the harness rather
+  // than in the entry script for the same reason `checkScrubGate` is: an
+  // entry-point check is bypassed by every other caller.
+  //
+  // Credentials and dead keys are unaffected — emptying and removing are
+  // idempotent. It is only the generated VALUES that decay.
+  const existing = await readProvenance(ctx.neo4j);
+  if (existing) {
+    ctx.log(
+      `⚠ ALREADY SCRUBBED ${existing.scrubbedAt} (classification ` +
+        `${existing.classificationHash}, ${existing.scrubbedValues} values).\n` +
+        `  Re-scrubbing replaces fakes with fakes OF fakes, and distinctness\n` +
+        `  only shrinks: names collapse onto fewer pool entries every pass, so\n` +
+        `  duplicate people and duplicate project names INCREASE.\n` +
+        `  If you changed a pool or a strategy, restore a fresh copy and scrub\n` +
+        `  that instead — this run cannot show you what the change really does.\n`,
+    );
+  }
+
   const perField: Array<{ field: string; replaced: number }> = [];
   let scrubbedValues = 0;
   let credentialsCleared = 0;
@@ -296,6 +372,43 @@ export const runScrub = async (ctx: ScrubContext): Promise<ScrubReport> => {
     ctx.log(`  ${key} (field): ${affected}`);
   }
 
+  // ── Pass 2b: the project-title registry ──────────────────────────────────
+  //
+  // A read-only pass over the `name` link, collecting the distinct BASES of
+  // project names so each can be assigned a distinct title. It has to happen up
+  // front and see everything: `projects.name` is UNIQUE, so the assignment
+  // cannot be made one page at a time without risking two bases landing on one
+  // title and aborting the load.
+  //
+  // Cheap despite reading the biggest field, because only Project rows are kept
+  // — 5,284 of 1,670,911 values — and only their bases, deduplicated.
+  ctx.log('\nPass 2b — project title registry');
+  const projectBases = new Set<string>();
+  const census: ShapeCensus = emptyCensus();
+  await eachFieldValuePage(ctx, 'name', async (rows) => {
+    for (const row of rows) {
+      if (!isProjectRow(row)) continue;
+      if (typeof row.value !== 'string') continue;
+      const { base, shape } = splitOrdinal(row.value);
+      projectBases.add(base);
+      census[shape] += 1;
+    }
+  });
+  const projectTitles = buildProjectRegistry(projectBases, PROJECT_TITLES);
+  ctx.log(
+    `  ${projectBases.size} distinct name bases → ${projectTitles.size} titles ` +
+      `assigned from a pool of ${PROJECT_TITLES.length}`,
+  );
+  // The census the parser reports rather than us assuming: which separator real
+  // project names actually use. Written down because the previous copy was
+  // already scrubbed when the question was first asked, so it was unanswerable.
+  ctx.log(
+    '  ordinal shapes: ' +
+      Object.entries(census)
+        .map(([shape, n]) => `${shape}=${n}`)
+        .join(' · '),
+  );
+
   // ── Pass 3: everything else ──────────────────────────────────────────────
   ctx.log('\nPass 3 — values replaced');
   for (const [link, action] of Object.entries(links)) {
@@ -303,7 +416,17 @@ export const runScrub = async (ctx: ScrubContext): Promise<ScrubReport> => {
     const count = await eachFieldValuePage(ctx, link, async (rows) => {
       const updates = rows.map((row) => ({
         nodeId: row.nodeId,
-        value: fakeValue(action.as, row.value),
+        // Three different keying rules meet here, so the row decides:
+        //  - a Project's `name` goes through the registry, to keep its family
+        //    and its uniqueness (see project-name.ts);
+        //  - person names key on ownerId, so two people who share a real name
+        //    get different fakes;
+        //  - everything else keys on the value alone, preserving the collisions
+        //    production has.
+        value:
+          isProjectRow(row) && typeof row.value === 'string'
+            ? composeProjectName(projectTitles, row.value)
+            : fakeValue(action.as, row.value, row.ownerId),
       }));
       if (!ctx.dryRun) await writeFieldValues(ctx, updates);
     });

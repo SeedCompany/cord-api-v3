@@ -58,10 +58,51 @@
 export const isFieldRecord = (variable: string) =>
   `any(lbl IN labels(${variable}) WHERE lbl = 'Property' OR lbl ENDS WITH '_Property')`;
 
+/**
+ * Node labels whose `name` gets a themed strategy of its own, instead of the
+ * generic {@link Strategy} `entityName`.
+ *
+ * **This exists because `name` is one link shared by ten kinds of record** —
+ * project, organization, partner, location, tool, field zone, field region,
+ * funding account, producible, file — carrying 1,670,911 values between them.
+ * Neo4j hangs them all off `-[:name]->`, so the classification's link-name key
+ * cannot tell them apart and one strategy had to serve all of them. Reading
+ * `labels(n)` alongside the value is what makes per-type theming possible.
+ *
+ * ⚠ **Labels must be matched with the `Deleted_` prefixes STRIPPED.** Neo4j's
+ * soft delete prefixes labels rather than setting a flag, so a deleted project
+ * is `:Deleted_Project` and would silently miss a `= 'Project'` test. That exact
+ * mistake cost 94% of the engagement status history once, and 16 unscrubbed
+ * production values another time. See {@link isFieldRecord} for the same trap on
+ * the field records themselves.
+ *
+ * Anything not listed falls through to `entityName`, so adding a label here is
+ * opt-in and the allowlist guarantee is untouched — an unclassified record type
+ * keeps the conservative behavior rather than losing its scrub.
+ *
+ * ⚠ NOT part of {@link classificationHash}, on the same reasoning as the pools:
+ * this changes how a scrubbed value LOOKS, not whether a field is scrubbed. A
+ * copy made before and after this change is indistinguishable by its marker.
+ */
+export const nameStrategyByLabel: Readonly<Record<string, 'projectName'>> = {
+  Project: 'projectName',
+};
+
+/** Strip every soft-delete prefix, so `Deleted_Deleted_Project` reads Project. */
+export const baseLabel = (label: string) => label.replace(/^(?:Deleted_)+/, '');
+
 /** How a replacement value is generated. All are deterministic in the input. */
 export type Strategy =
-  /** Person names — first/last/display, and the derived initials. */
-  | 'personName'
+  /**
+   * A person's given name — ONE name, from the reviewed pool in `theme.ts`.
+   *
+   * Split from a single `personName` strategy that generated a FULL name for
+   * every one of the four name links, so a surname field held "Orlando
+   * Considine Jr." and initials derived from it were wrong.
+   */
+  | 'givenName'
+  /** A person's family name — one name, from the reviewed pool. */
+  | 'surname'
   /** Names of organizations, projects, places, tools, funding accounts. */
   | 'entityName'
   /**
@@ -122,10 +163,10 @@ const scrub = (as: Strategy, note?: string): Action => ({
  */
 export const links: Readonly<Record<string, Action>> = {
   // ── People ────────────────────────────────────────────────────────────────
-  realFirstName: scrub('personName'),
-  realLastName: scrub('personName'),
-  displayFirstName: scrub('personName'),
-  displayLastName: scrub('personName'),
+  realFirstName: scrub('givenName'),
+  realLastName: scrub('surname'),
+  displayFirstName: scrub('givenName'),
+  displayLastName: scrub('surname'),
   email: scrub('email'),
   phone: scrub('phone'),
   about: scrub('prose', 'User bio, free text'),
