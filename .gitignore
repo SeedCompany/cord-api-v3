@@ -59,3 +59,6 @@ lerna-debug.log*
 # default local files dir
 .files
 .cache
+
+# per-run cutover ETL output (see src/core/cutover.run.ts / pg-refresh.command.ts)
+/cutover-loss-manifests

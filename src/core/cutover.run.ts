@@ -174,13 +174,30 @@ async function bootstrap() {
   // structurally zero, so a dry-run manifest would only overwrite a real one
   // with nothing.
   if (result && !flags.dryRun) {
-    const manifestPath = path.join(process.cwd(), 'cutover-loss-manifest.json');
-    fs.writeFileSync(manifestPath, JSON.stringify(result.manifest, null, 2));
+    // One file per run, not one overwritten each time — repeated rehearsal
+    // runs (QA) need their own history to compare against each other, not
+    // just against the baseline.
+    const manifestDir = path.join(process.cwd(), 'cutover-loss-manifests');
+    fs.mkdirSync(manifestDir, { recursive: true });
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const manifestPath = path.join(
+      manifestDir,
+      `${timestamp}-cutover-loss-manifest.json`,
+    );
+    const manifestJson = JSON.stringify(result.manifest, null, 2);
+    fs.writeFileSync(manifestPath, manifestJson);
+    // Printed in full, not just the path: the file above only survives when
+    // this runs somewhere with a persistent filesystem. Run as a one-off ECS
+    // task instead, and the container (and that file) is gone the moment the
+    // task stops — this log line is what actually survives, since it rides
+    // along on whatever's already capturing stdout (CloudWatch for ECS).
     log(
-      `\nLoss manifest written to ${manifestPath}\n` +
-        'Compare against the baseline: node ' +
-        'src/core/cutover/compare-loss-manifest.ts <baseline.json> ' +
-        `${manifestPath}`,
+      `\n--- cutover-loss-manifest (${timestamp}) ---\n` +
+        `${manifestJson}\n` +
+        `--- end cutover-loss-manifest ---\n\n` +
+        `Also written to ${manifestPath}, if this filesystem is persistent.\n` +
+        'Compare two manifests against each other: node ' +
+        'src/core/cutover/compare-loss-manifest.ts <baseline.json> <fresh.json>',
     );
   }
 
