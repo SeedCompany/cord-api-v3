@@ -56,9 +56,14 @@ export class DrizzleService implements OnModuleDestroy {
       }
       return;
     }
-    const noVerify = new URL(url).searchParams.get('sslmode') === 'no-verify';
+    // pg re-parses `connectionString` itself, and if it finds `sslmode` in the
+    // query string, the `ssl` it derives from that (not this one) wins — silently
+    // dropping our CA. Strip it so our own `ssl` below is what's actually used.
+    const parsedUrl = new URL(url);
+    const noVerify = parsedUrl.searchParams.get('sslmode') === 'no-verify';
+    parsedUrl.searchParams.delete('sslmode');
     this.pool = new Pool({
-      connectionString: url,
+      connectionString: parsedUrl.toString(),
       ssl: noVerify ? { rejectUnauthorized: false } : { ca: rdsCaBundle },
     });
     this.baseDb = drizzle(this.pool, { schema });
