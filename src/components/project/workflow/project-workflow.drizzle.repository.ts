@@ -37,8 +37,12 @@ import {
  * `status` is a `GENERATED ALWAYS AS (CASE step ... END) STORED` column, so it
  * follows step automatically — no extra write needed.
  *
- * `stepChangedAt` derives from the event's `at` timestamp at read time on the
- * Project resolver; nothing is stored on `projects` for it.
+ * `projects.step_changed_at` is set by that same trigger, from the event's
+ * `at`. It used to be derived at read time from the latest event; migration
+ * 0041 stores it instead, because the event trail only begins 2021-02-13 and
+ * 1,560 projects moved step before it existed. Nothing to do here either way —
+ * insert the event and the trigger handles step, modified_at and
+ * step_changed_at together, so they cannot drift apart.
  */
 // migration-todo: `PublicOf<ProjectWorkflowRepository>` widens to every
 // public/protected member of the Gel base (privileges, getActualChanges,

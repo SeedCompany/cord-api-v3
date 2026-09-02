@@ -7,6 +7,7 @@ import {
   type ResourceRelationsShape,
   type Secured,
   SecuredBoolean,
+  SecuredBooleanNullable,
   SecuredDateNullable,
   SecuredProperty,
   SecuredStringNullable,
@@ -50,11 +51,14 @@ export class Partner extends Interfaces {
   @Field()
   readonly pmcEntityCode: SecuredStringNullable;
 
-  @Field()
-  readonly globalInnovationsClient: SecuredBoolean;
+  // Nullable in TS (migration 0042): 78 + 9 migrated rows carry kept blanks.
+  // The WIRE type stays `SecuredBoolean` — its `value` was always nullable,
+  // so the schema does not change (an API-compatibility promise).
+  @Field(() => SecuredBoolean)
+  readonly globalInnovationsClient: SecuredBooleanNullable;
 
-  @Field()
-  readonly active: SecuredBoolean;
+  @Field(() => SecuredBoolean)
+  readonly active: SecuredBooleanNullable;
 
   @Field()
   readonly address: SecuredStringNullable;
