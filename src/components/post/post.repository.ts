@@ -50,12 +50,17 @@ export class PostRepository extends DtoRepository(Post) {
     changes: ChangesOf<Post, UpdatePost>,
   ) {
     // `report` is a link, not a property, so `updateProperties` cannot write
-    // it. Nothing sets it on this path — partner quarterly reporting is
-    // Postgres-only — so drop it rather than fail a body-only edit.
-    const { report: _neo4jUnsupported, ...properties } =
-      changes as typeof changes & {
-        report?: unknown;
-      };
+    // it, and `finalBody` is a Postgres-only column with no Neo4j property to
+    // match. Nothing sets either on this path — partner quarterly reporting is
+    // Postgres-only — so drop both rather than fail an otherwise-plain edit.
+    const {
+      report: _neo4jUnsupported,
+      finalBody: _alsoUnsupported,
+      ...properties
+    } = changes as typeof changes & {
+      report?: unknown;
+      finalBody?: unknown;
+    };
     return await this.updateProperties(existing, properties);
   }
 

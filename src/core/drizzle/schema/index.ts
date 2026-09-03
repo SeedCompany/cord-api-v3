@@ -3106,6 +3106,14 @@ export const posts = pgTable(
       .$type<ID<'Post'>>()
       .references((): AnyPgColumn => posts.id, { onDelete: 'set null' }),
     body: text('body').notNull(),
+    /**
+     * The wording actually shown once it leaves the author's hands — a
+     * translation, a moderator's touch-up, or both in sequence. Null means
+     * `body` is still the whole story. Kept separate from `body` rather than
+     * overwriting it so the author's own words are never lost to someone
+     * else's edit; see `effectiveBodyOf` for which one to read.
+     */
+    finalBody: text('final_body'),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
       .defaultNow(),

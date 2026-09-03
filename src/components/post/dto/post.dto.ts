@@ -1,6 +1,12 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
-import { DateTimeField, Resource, type Secured, SecuredString } from '~/common';
+import {
+  DateTimeField,
+  Resource,
+  type Secured,
+  SecuredString,
+  SecuredStringNullable,
+} from '~/common';
 import { e } from '~/core/gel';
 import { type BaseNode } from '~/core/neo4j/results';
 import { type LinkTo, RegisterResource } from '~/core/resources';
@@ -72,12 +78,42 @@ export class Post extends Resource {
    */
   readonly respondsTo: Secured<LinkTo<'Post'> | null>;
 
-  @Field()
+  @Field({
+    description: `
+      What the author actually wrote. Never overwritten by a translation or a
+      moderator's edit — see \`finalBody\` and \`effectiveBody\` for those.
+    `,
+  })
   readonly body: SecuredString;
+
+  @Field({
+    description: `
+      The wording actually shown once this leaves the author's hands — a
+      translation, a moderator's touch-up, or both. Null means \`body\` is
+      still the whole story.
+
+      Secured rather than plain, for the same reason as \`approvedShareability\`:
+      \`canEdit\` here is the question "may I translate or finalize the wording
+      of this post?" — see FinalizePostWordingPolicy.
+    `,
+  })
+  readonly finalBody: SecuredStringNullable;
 
   @DateTimeField()
   readonly modifiedAt: DateTime;
 }
+
+/**
+ * The wording to actually show anywhere this post's content matters beyond
+ * the author's own view — `finalBody` if anyone has produced one, otherwise
+ * `body` unchanged. Mirrors `effectiveShareabilityOf`: two columns so the
+ * author's original is never lost to someone else's edit, one computed field
+ * so most callers never have to think about which one to read.
+ */
+export const effectiveBodyOf = (post: {
+  body: string;
+  finalBody: string | null;
+}): string => post.finalBody ?? post.body;
 
 /**
  * How widely this post may actually be shared right now.

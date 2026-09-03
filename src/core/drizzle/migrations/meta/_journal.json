@@ -38,10 +38,17 @@
       "breakpoints": true
     },
     {
-      "idx": 39,
+      "idx": 5,
       "version": "7",
-      "when": 1754006400000,
-      "tag": "0039_add_post_report_and_moderation",
+      "when": 1788296400000,
+      "tag": "0005_add_post_report_and_moderation",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1788382800000,
+      "tag": "0006_add_post_final_body",
       "breakpoints": true
     }
   ]

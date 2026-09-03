@@ -32,6 +32,16 @@ export abstract class UpdatePost {
     `,
   })
   readonly report?: ID<'PeriodicReport'> | null;
+
+  @Field(() => String, {
+    nullable: true,
+    description: `
+      Set (or with an explicit null, clear) the finalized wording — a
+      translation, a moderator's touch-up, or both. Leave unset to change
+      other fields without touching this one; see \`Post.finalBody\`.
+    `,
+  })
+  readonly finalBody?: string | null;
 }
 
 @ObjectType()

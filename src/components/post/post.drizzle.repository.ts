@@ -55,6 +55,7 @@ export class PostDrizzleRepository extends DrizzleDtoRepository<
       report: row.reportId ? { id: row.reportId } : null,
       respondsTo: row.respondsToId ? { id: row.respondsToId } : null,
       body: row.body,
+      finalBody: row.finalBody ?? null,
       modifiedAt: DateTime.fromJSDate(row.modifiedAt),
     };
     return dto as UnsecuredDto<Post>;
@@ -102,10 +103,17 @@ export class PostDrizzleRepository extends DrizzleDtoRepository<
       type: c.type,
       shareability: c.shareability,
       body: c.body,
-      // `report` is explicitly nullable: passing null detaches from the report
-      // and leaves the post on its engagement. `undefined` means "don't touch".
+      // `report` and `finalBody` are both explicitly nullable — passing null
+      // detaches the report, or clears a finalized wording back to `body`.
+      // `undefined` (the key absent from `changes`) means "don't touch".
       ...('report' in changes
         ? { reportId: (changes as { report?: ID | null }).report ?? null }
+        : {}),
+      ...('finalBody' in changes
+        ? {
+            finalBody:
+              (changes as { finalBody?: string | null }).finalBody ?? null,
+          }
         : {}),
       ...(reopensModeration
         ? { approvedShareability: null, approvedById: null, approvedAt: null }

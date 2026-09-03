@@ -15,6 +15,7 @@ import { UserLoader } from '../user';
 import { SecuredUser } from '../user/dto';
 import {
   CreatePost,
+  effectiveBodyOf,
   effectiveShareabilityOf,
   ModeratePost,
   ModeratePosts,
@@ -110,6 +111,20 @@ export class PostResolver {
     return effectiveShareabilityOf({
       shareability: post.shareability,
       approvedShareability: post.approvedShareability.value ?? null,
+    });
+  }
+
+  @ResolveField(() => String, {
+    description: `
+      The wording to show anywhere this post's content matters beyond the
+      author's own view. \`finalBody\` if anyone has produced one (a
+      translation, a moderator's touch-up), otherwise \`body\` unchanged.
+    `,
+  })
+  effectiveBody(@Parent() post: Post): string {
+    return effectiveBodyOf({
+      body: post.body.value ?? '',
+      finalBody: post.finalBody.value ?? null,
     });
   }
 

@@ -61,8 +61,18 @@ export class PostService {
       const postable = perms.context as ConcretePostable;
       this.liveQueryStore.invalidate([postable.__typename, postable.id]);
 
+      // Unlike Update, a Create audit row doesn't get its field values from a
+      // diff — there's nothing to diff against — so it's the only place the
+      // as-submitted wording, type, and requested reach ever get captured.
+      // Every future edit (a moderator's cleanup, a translator's pass) is
+      // still just an Update row recording what it changed *to*, so this
+      // snapshot is what makes the original recoverable from history later.
       await this.hooks.run(
-        new ResourceMutatedHook('Post', result.dto.id, 'Create'),
+        new ResourceMutatedHook('Post', result.dto.id, 'Create', {
+          type: result.dto.type,
+          shareability: result.dto.shareability,
+          body: result.dto.body,
+        }),
       );
 
       return this.secure(result.dto);

@@ -14,6 +14,7 @@ import { PeriodicReportLoader } from '../../../periodic-report';
 import { ProgressReport } from '../../dto';
 import {
   ProgressReportMedia as ReportMedia,
+  ReuseProgressReportMedia as ReuseMedia,
   UpdateProgressReportMedia as UpdateMedia,
   UploadProgressReportMedia as UploadMedia,
 } from '../dto';
@@ -60,6 +61,18 @@ export class ProgressReportMediaResolver {
     @Args('input') input: UpdateMedia,
   ): Promise<ReportMedia> {
     return await this.service.update(input);
+  }
+
+  @Mutation(() => ProgressReport, {
+    description:
+      'Duplicate an already-uploaded media item into another variant, without re-uploading the file.',
+  })
+  async reuseProgressReportMedia(
+    @Args('input') input: ReuseMedia,
+    @Loader(() => PeriodicReportLoader) reports: LoaderOf<PeriodicReportLoader>,
+  ) {
+    const reportId = await this.service.reuse(input);
+    return await reports.load(reportId);
   }
 
   @Mutation(() => ProgressReport)

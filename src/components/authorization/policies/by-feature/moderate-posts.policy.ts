@@ -6,7 +6,9 @@ import { Policy, Role } from '../util';
  * Moderation is modelled as edit access to a single property —
  * `approvedShareability` — rather than a bespoke action. A moderator is doing
  * exactly one thing: setting how far a post may actually reach. Everything else
- * about the post stays under its author's control.
+ * about the post's content stays under its author's control (or, for the
+ * wording actually shown externally, under FinalizePostWordingPolicy — a
+ * separate decision from reach, which is why it's a separate policy).
  *
  * The set of roles is deliberately a list rather than a single hardcoded role.
  * Who should own this is genuinely unsettled: the Field Project Manager is
