@@ -25,6 +25,9 @@ export class AdminDrizzleService implements OnApplicationBootstrap {
   }
 
   async onApplicationBootstrap(): Promise<void> {
+    // Same switch the Neo4j AdminService honors — also how read-only
+    // maintenance mode keeps boot from writing.
+    if (!this.config.dbRootObjectsSync) return;
     const finishing = this.repo.finishing(async () => {
       await this.setupRootUser();
       await this.setupDefaultOrg();

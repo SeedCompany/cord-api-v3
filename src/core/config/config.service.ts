@@ -1,5 +1,5 @@
 import { type Provider } from '@nestjs/common';
-import { csv } from '@seedcompany/common';
+import { csv, simpleSwitch } from '@seedcompany/common';
 import type { EmailModuleOptions as EmailOptions } from '@seedcompany/nestjs-email';
 import type { Server as HttpServer } from 'http';
 import { type LRUCache } from 'lru-cache';
@@ -202,22 +202,73 @@ export const makeConfig = (env: EnvironmentService) =>
       };
     })();
 
-    postgres = {
-      url: env.string('POSTGRES_URL').optional(),
-    };
+    postgres = (() => {
+      const url = env.string('POSTGRES_URL').optional();
+      let hostname;
+      try {
+        hostname = url ? new URL(url).hostname : undefined;
+      } catch {
+        hostname = undefined;
+      }
+      return {
+        url,
+        // Mirrors neo4j.isLocal. An absent or unparseable URL counts as
+        // local, preserving always-run behavior for setups without one.
+        isLocal: !hostname || hostname === 'localhost',
+      };
+    })();
 
     // Control which database is prioritized, while we migrate.
     databaseEngine = env.string('DATABASE').optional('neo4j').toLowerCase();
 
-    dbIndexesCreate = env
-      .boolean('DB_CREATE_INDEXES')
-      .optional(isDev ? this.neo4j.isLocal : true);
-    dbAutoMigrate = env
-      .boolean('DB_AUTO_MIGRATE')
-      .optional(isDev && this.neo4j.isLocal && !this.jest);
-    dbRootObjectsSync = env
-      .boolean('DB_ROOT_OBJECTS_SYNC')
-      .optional(isDev ? this.neo4j.isLocal : true);
+    /**
+     * Puts the API in read-only maintenance mode.
+     * Every mutation is refused, except signing in & out — sessions are not
+     * part of the frozen data. Boot-time writes (index creation, migrations,
+     * root object sync) are also skipped, regardless of their own flags.
+     * Queued background jobs (BullMQ) are NOT covered — anything already in
+     * the queue when the freeze starts can still run and write; let the
+     * queue drain before counting on the freeze.
+     * This keeps the app up for reading while the data underneath must not
+     * change — i.e. while the cutover ETL copies the database.
+     */
+    maintenance = {
+      readOnly: env.boolean('READ_ONLY').optional(false),
+    };
+
+    dbIndexesCreate =
+      !this.maintenance.readOnly &&
+      env
+        .boolean('DB_CREATE_INDEXES')
+        .optional(isDev ? this.neo4j.isLocal : true);
+    dbAutoMigrate =
+      !this.maintenance.readOnly &&
+      env
+        .boolean('DB_AUTO_MIGRATE')
+        .optional(isDev && this.neo4j.isLocal && !this.jest);
+    dbRootObjectsSync =
+      !this.maintenance.readOnly &&
+      env.boolean('DB_ROOT_OBJECTS_SYNC').optional(
+        isDev
+          ? // In dev, don't write root objects into a shared/remote database —
+            // judged by the ACTIVE engine's own URL, not always Neo4j's.
+            (simpleSwitch(this.databaseEngine, {
+              postgres: this.postgres.isLocal,
+              neo4j: this.neo4j.isLocal,
+              // Gel instances here are CLI-managed local ones.
+              gel: true,
+            }) ?? this.neo4j.isLocal)
+          : true,
+      );
+    /**
+     * Whether the Drizzle boot migrator applies pending migrations.
+     * Off during read-only maintenance — a schema change is still a write.
+     * Derived from the environment here, like the flags above, rather than
+     * read off `maintenance` at runtime: a test overriding
+     * `maintenance.readOnly` freezes the GraphQL layer without leaving its
+     * ephemeral database schemaless.
+     */
+    pgAutoMigrate = !this.maintenance.readOnly;
 
     files = (() => {
       const sources = env
