@@ -9,6 +9,7 @@ import {
   type RichTextDocument,
   RichTextField,
   type Secured,
+  SecuredBoolean,
   SecuredRichText,
   SecuredRichTextNullable,
   type SetUnsecuredType,
@@ -67,6 +68,21 @@ export class PromptVariantResponse<
   @Field(() => [VariantResponse])
   readonly responses: ReadonlyArray<VariantResponse<Key>> &
     SetUnsecuredType<ReadonlyArray<UnsecuredDto<VariantResponse<Key>>>>;
+
+  /**
+   * The one item, among however many its parent holds, to surface for an
+   * audience that wants exactly one — e.g. the community story chosen for the
+   * investor/published report. Always false for subtypes that only ever hold
+   * one item per parent (team news, and today's other activities/next
+   * quarter): nothing there needs a selection, so nothing sets it.
+   *
+   * Secured, not a plain boolean: `canEdit` on this field answers "may I make
+   * this the featured one?" directly, which the UI reads to decide whether to
+   * offer the control and the service reads instead of a separate permission
+   * check.
+   */
+  @Field()
+  readonly featured: SecuredBoolean;
 
   @Field()
   readonly modifiedAt: DateTime;

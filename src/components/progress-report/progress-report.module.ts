@@ -2,6 +2,7 @@ import { forwardRef, Module } from '@nestjs/common';
 import { splitDb } from '~/core/database';
 import { FileModule } from '../file/file.module';
 import { PeriodicReportModule } from '../periodic-report/periodic-report.module';
+import { PromptVariantResponseFeaturedDrizzleRepository } from '../prompts/prompt-variant-response-featured.drizzle.repository';
 import { ProgressReportCommunityStoryDrizzleRepository } from './community-stories/progress-report-community-story.drizzle.repository';
 import { ProgressReportCommunityStoryRepository } from './community-stories/progress-report-community-story.repository';
 import { ProgressReportCommunityStoryResolver } from './community-stories/progress-report-community-story.resolver';
@@ -71,6 +72,8 @@ import { ProgressReportWorkflowModule } from './workflow/progress-report-workflo
     }),
     ProgressReportCommunityStoryResolver,
     ProgressReportCommunityStoryService,
+    // Postgres-only; see the repository's own doc comment for why.
+    PromptVariantResponseFeaturedDrizzleRepository,
     splitDb(ProgressReportCommunityStoryRepository, {
       // migration-todo: `as any` removed at Phase 7 cutover.
       postgres: ProgressReportCommunityStoryDrizzleRepository as any,

@@ -1,0 +1,23 @@
+-- Migration: let a PromptVariantResponse be marked as the one to surface for
+-- an audience that wants a single item, when a parent can hold several.
+--
+-- Immediate use: a progress report can now hold several community stories
+-- (one per prompt), but only one should flow into the investor/published
+-- report -- a partner or field-ops selection, not "whichever has the most
+-- recently written published-variant text" (nothing today prevents two
+-- stories from both having that).
+--
+-- Added on the shared prompt_variant_responses table rather than a
+-- CommunityStory-specific one, because every PromptVariantResponse subtype
+-- (team news, community story, other activities, next quarter plans) already
+-- shares this table, scoped by resource_type. Team news and the others simply
+-- never set this to true.
+--
+-- No partial unique index enforcing "at most one true per (parent_id,
+-- resource_type)": the write path (a feature() call, mirroring how
+-- post moderation was built) already clears the previous holder and sets the
+-- new one inside one transaction, so an index would only catch a bug in that
+-- path, not a real concurrent race (a report has one editor at a time in
+-- practice). Can be added later if that assumption stops holding.
+ALTER TABLE "prompt_variant_responses"
+  ADD COLUMN "featured" boolean NOT NULL DEFAULT false;

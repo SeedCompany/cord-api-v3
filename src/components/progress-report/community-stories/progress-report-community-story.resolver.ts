@@ -53,6 +53,20 @@ export class ProgressReportCommunityStoryResolver {
     return await this.service.submitResponse(input);
   }
 
+  @Mutation(() => PromptVariantResponse, {
+    description: `
+      Mark this story as the one for the investor/published report.
+
+      Clears whichever story previously held it on this same report — at most
+      one story is ever featured per report.
+    `,
+  })
+  async featureProgressReportCommunityStory(
+    @IdArg() id: ID<PromptVariantResponse>,
+  ): Promise<PromptVariantResponse> {
+    return await this.service.feature(id);
+  }
+
   @Mutation(() => ProgressReport)
   async deleteProgressReportCommunityStory(
     @IdArg() id: ID<PromptVariantResponse>,
