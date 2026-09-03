@@ -1,4 +1,4 @@
-import { Field, InputType, ObjectType } from '@nestjs/graphql';
+import { Field, InputType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import {
@@ -14,7 +14,6 @@ import {
 import { CreateDefinedFileVersion } from '../../../components/file/dto';
 import { Gender } from './gender.enum';
 import { UserStatus } from './user-status.enum';
-import { User } from './user.dto';
 
 @InputType()
 export abstract class UpdateUser {
@@ -62,10 +61,4 @@ export abstract class UpdateUser {
   @Type(() => CreateDefinedFileVersion)
   @ValidateNested()
   readonly photo?: CreateDefinedFileVersion;
-}
-
-@ObjectType()
-export abstract class UserUpdated {
-  @Field()
-  readonly user: User;
 }

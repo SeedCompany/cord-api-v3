@@ -14,15 +14,15 @@
 --
 -- ⚠ The DEFAULT goes with the NOT NULL, deliberately. Drizzle omits an
 -- `undefined` key from an INSERT, which hands the column back to its default —
--- so a field merely *absent* in Neo4j would be silently re-filled by the very
--- default this migration exists to remove. Every create path writes these
+-- so a field merely *absent* in the source would be silently re-filled by the
+-- very default this migration exists to remove. Every create path writes these
 -- columns explicitly (`input.marketable ?? false`), so nothing new arrives
 -- blank and no application insert depends on the default.
 --
 -- ⚠ This migration does NOT convert existing `false`/'Active'/'' rows to NULL,
 -- and cannot: once the value has been written there is no way to tell an
--- invented one from a real one. Databases already loaded (`cord_cutover_r3`)
--- must be RELOADED to pick up the preserved blanks.
+-- invented one from a real one. Any database already populated by the cutover
+-- ETL must be RELOADED to pick up the preserved blanks.
 
 ALTER TABLE "ceremonies" ALTER COLUMN "planned" DROP DEFAULT;
 --> statement-breakpoint

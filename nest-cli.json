@@ -9,6 +9,11 @@
         "include": "core/database/drizzle/migrations/**/*.sql",
         "outDir": "./dist/src",
         "watchAssets": true
+      },
+      {
+        "include": "core/drizzle/rds-ca-bundle.pem",
+        "outDir": "./dist/src",
+        "watchAssets": true
       }
     ]
   }

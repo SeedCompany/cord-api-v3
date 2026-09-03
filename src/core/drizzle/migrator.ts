@@ -16,6 +16,12 @@ export class DrizzleMigrator implements OnModuleInit {
 
   async onModuleInit() {
     if (this.config.databaseEngine !== 'postgres') return;
+    if (!this.config.pgAutoMigrate) {
+      this.logger.info(
+        'Skipping migrations — the API is in read-only maintenance mode',
+      );
+      return;
+    }
     await this.run();
   }
 

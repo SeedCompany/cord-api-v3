@@ -14,6 +14,7 @@ import { GraphqlErrorFormatter } from './graphql-error-formatter';
 import { GraphqlLoggingPlugin } from './graphql-logging.plugin';
 import { GraphqlTracingPlugin } from './graphql-tracing.plugin';
 import { GraphqlOptions } from './graphql.options';
+import { ReadOnlyModePlugin } from './read-only-mode.plugin';
 import { Yoga } from './yoga.facade';
 
 import './normalize-subscription-output';
@@ -38,6 +39,7 @@ class SharedPluginsModule {}
     GraphqlLoggingPlugin,
     GraphqlTracingPlugin,
     DataLoadersInSubscriptionPlugin,
+    ReadOnlyModePlugin,
   ],
   exports: [GraphqlOptions],
 })

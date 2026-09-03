@@ -1,9 +1,20 @@
 import { Injectable, type OnModuleDestroy } from '@nestjs/common';
 import { AsyncLocalStorage } from 'async_hooks';
 import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { Pool } from 'pg';
 import { ConfigService } from '~/core/config';
 import * as schema from './schema/index';
+
+// Amazon's RDS certs are issued by AWS's own CA, which isn't in Node's default
+// trust store. `sslmode=require` in POSTGRES_URL only gets pg to attempt full
+// verification — it still needs this bundle to actually pass. `no-verify`
+// (local/PG-test, connecting through an SSM tunnel) skips this entirely.
+const rdsCaBundle = readFileSync(
+  join(import.meta.dirname, 'rds-ca-bundle.pem'),
+  'utf8',
+);
 
 export type DrizzleDb = NodePgDatabase<typeof schema>;
 
@@ -45,8 +56,15 @@ export class DrizzleService implements OnModuleDestroy {
       }
       return;
     }
+    // pg re-parses `connectionString` itself, and if it finds `sslmode` in the
+    // query string, the `ssl` it derives from that (not this one) wins — silently
+    // dropping our CA. Strip it so our own `ssl` below is what's actually used.
+    const parsedUrl = new URL(url);
+    const noVerify = parsedUrl.searchParams.get('sslmode') === 'no-verify';
+    parsedUrl.searchParams.delete('sslmode');
     this.pool = new Pool({
-      connectionString: url,
+      connectionString: parsedUrl.toString(),
+      ssl: noVerify ? { rejectUnauthorized: false } : { ca: rdsCaBundle },
       // Names every connection this process opens, so `pg_stat_activity` says
       // who is attached instead of listing anonymous backends. The process id
       // is part of it deliberately: the whole pool shares one name, which lets

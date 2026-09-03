@@ -33,6 +33,10 @@ export class AdminDrizzleService implements OnApplicationBootstrap {
     // the reload, stopping it partway with the old data already gone.
     if (isPgRefreshInvocation()) return;
 
+    // Same switch the Neo4j AdminService honors — also how read-only
+    // maintenance mode keeps boot from writing.
+    if (!this.config.dbRootObjectsSync) return;
+
     const finishing = this.repo.finishing(async () => {
       await this.setupRootUser();
       await this.setupDefaultOrg();

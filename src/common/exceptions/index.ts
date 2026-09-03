@@ -8,6 +8,7 @@ export * from './not-implemented.exception';
 export * from './unauthenticated.exception';
 export * from './unauthorized.exception';
 export * from './service-unavailable.exception';
+export * from './read-only-mode.exception';
 export * from './invalid-id-for-type.exception';
 export * from './creation-failed.exception';
 export * from './date-override-conflict.exception';
