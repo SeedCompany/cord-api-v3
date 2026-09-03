@@ -149,6 +149,9 @@ export const fieldRegionFilterClauses = (
 ): SQL[] => {
   const conditions: SQL[] = [];
   if (!filter) return conditions;
+  if (filter.id) {
+    conditions.push(eq(fieldRegions.id, filter.id));
+  }
   if (filter.name) {
     conditions.push(
       ilike(fieldRegions.name, `%${escapeLikePattern(filter.name)}%`),

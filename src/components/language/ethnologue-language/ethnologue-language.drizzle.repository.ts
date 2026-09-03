@@ -1,11 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ilike, type SQL } from 'drizzle-orm';
 import { generateId, type ID, type UnsecuredDto } from '~/common';
-import {
-  catchUniqueViolation,
-  DrizzleDtoRepository,
-  escapeLikePattern,
-} from '~/core/drizzle';
+import { DrizzleDtoRepository, escapeLikePattern } from '~/core/drizzle';
 import { type DrizzleDb, DrizzleService } from '~/core/drizzle/drizzle.service';
 import { ethnologueLanguages } from '~/core/drizzle/schema';
 import {
@@ -15,16 +11,9 @@ import {
   type UpdateEthnologueLanguage,
 } from '../dto';
 
-const catchCodeUnique = catchUniqueViolation(
-  'ethnologue_languages_code_unique',
-  'code',
-  'EthnologueLanguage with this code already exists.',
-);
-const catchProvisionalCodeUnique = catchUniqueViolation(
-  'ethnologue_languages_provisional_code_unique',
-  'provisionalCode',
-  'EthnologueLanguage with this provisional code already exists.',
-);
+// No unique-violation mapping: neither `code` nor `provisional_code` is unique
+// (migration 0030 — languages share ethnologue codes routinely), so there is no
+// violation to map. The unique key is the ROLV code on `languages`.
 
 @Injectable()
 export class EthnologueLanguageDrizzleRepository extends DrizzleDtoRepository<
@@ -38,40 +27,46 @@ export class EthnologueLanguageDrizzleRepository extends DrizzleDtoRepository<
   async create(
     input: CreateEthnologueLanguage & { languageId: ID },
   ): Promise<UnsecuredDto<EthnologueLanguage>> {
-    // migration-todo: `EthnologueLanguageService.create()` currently passes
-    // `'temp' as ID` for `languageId` because the Language row is created
-    // *after* the EthnologueLanguage in `LanguageRepository.create()` — the
-    // relationship is wired up by the caller via the returned ethnologue
-    // id, so Neo4j never reads `input.languageId`. The Gel repo's `create()`
-    // throws ("Database creates EthnologueLanguages directly. Don't call
-    // this") because Gel creates the row as a side-effect of Language insert.
+    // The insert-Language-first ordering this used to wait for HAS LANDED on the
+    // Drizzle path, so nothing here receives a placeholder id: `splitDb` routes
+    // the ethnologue and Language repositories together, meaning whenever this
+    // repo is live the Drizzle Language repo is its only caller and it passes the
+    // real `languageId`.
     //
-    // Drizzle is the only impl that writes `input.languageId` to a real
-    // column. With `language_id` now nullable (see schema comment), the
-    // 'temp' string still slips through as a non-null bogus id today — the
-    // schema doesn't reject it, but it's still wrong data.
+    // migration-todo: the surviving half is a Neo4j-only fallback.
+    // `EthnologueLanguageService.create()` still passes `'temp' as ID` for the
+    // Neo4j caller, because there the Language row is created *after* the
+    // EthnologueLanguage and the relationship is wired up by the caller via the
+    // returned ethnologue id — so Neo4j never reads `input.languageId`. (The Gel
+    // repo's `create()` throws outright, since Gel creates the row as a
+    // side-effect of the Language insert.) Retire the fallback with the Neo4j
+    // repositories at Phase 7 cutover.
     //
-    // Resolution lands with the Language migration (Phase 3&4) by flipping
-    // the create flow: insert Language first, then EthnologueLanguage with
-    // the real `languageId`. Or, if the global-pool model is in place by
-    // then, the service `create()` becomes "attach existing pool entry by
-    // code if one matches, else insert a new pool entry" — at which point
-    // `languageId` here is the attaching Language and the call to this
-    // repo's `create()` only fires for genuinely new pool entries.
+    // For the record, since an earlier version of this comment said otherwise:
+    // `language_id` carries a real, fully enforced FK to `languages(id)` from
+    // migration 0016 — not `NOT VALID`, not deferrable, never dropped. A literal
+    // `'temp'` would be REJECTED by that FK, not stored as bogus data.
+    //
+    // If the global-pool model arrives instead, the service `create()` becomes
+    // "attach an existing pool entry by code, else insert a new one" — at which
+    // point `languageId` here is the attaching Language and this repo's `create()`
+    // only fires for genuinely new pool entries.
+    //
+    // If that is the path taken: codes are NOT unique (migration 0030 — sharing
+    // is routine, not rare), so "the pool entry matching this code" is
+    // frequently several rows. That step needs an explicit disambiguation rule
+    // decided in application code; it cannot be a single-row lookup, and the
+    // database will not narrow it for you.
     // Dormant until PG mode activates.
     const id = await generateId();
-    await this.db
-      .insert(ethnologueLanguages)
-      .values({
-        id,
-        languageId: input.languageId,
-        code: input.code,
-        provisionalCode: input.provisionalCode,
-        name: input.name,
-        population: input.population,
-      })
-      .catch(catchCodeUnique)
-      .catch(catchProvisionalCodeUnique);
+    await this.db.insert(ethnologueLanguages).values({
+      id,
+      languageId: input.languageId,
+      code: input.code,
+      provisionalCode: input.provisionalCode,
+      name: input.name,
+      population: input.population,
+    });
     return await this.readOne(id);
   }
 
@@ -84,9 +79,7 @@ export class EthnologueLanguageDrizzleRepository extends DrizzleDtoRepository<
       provisionalCode: fields.provisionalCode,
       name: fields.name,
       population: fields.population,
-    })
-      .catch(catchCodeUnique)
-      .catch(catchProvisionalCodeUnique);
+    });
     return await this.readOne(id);
   }
 

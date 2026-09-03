@@ -234,6 +234,8 @@ const projectIdRefForResource = (resource: EnhancedResource<any>): SQL => {
       return sql.raw(`"projects"."id"`);
     case 'ProjectMember':
       return sql.raw(`"project_members"."project_id"`);
+    case 'ProjectWorkflowEvent':
+      return sql.raw(`"project_workflow_events"."project_id"`);
     case 'Partnership':
       return sql.raw(`"partnerships"."project_id"`);
     case 'Budget':
@@ -241,6 +243,29 @@ const projectIdRefForResource = (resource: EnhancedResource<any>): SQL => {
     case 'BudgetRecord':
       return sql.raw(
         `(select "b"."project_id" from "budgets" "b" where "b"."id" = "budget_records"."budget_id")`,
+      );
+    case 'Engagement':
+    case 'LanguageEngagement':
+    case 'InternshipEngagement':
+      return sql.raw(`"engagements"."project_id"`);
+    case 'Ceremony':
+      return sql.raw(
+        `(select "e"."project_id" from "engagements" "e" where "e"."id" = "ceremonies"."engagement_id")`,
+      );
+    case 'ProgressReport':
+      // Progress rows on the shared periodic_reports table are always
+      // engagement-parented (never project-parented directly) — see
+      // PeriodicReportDrizzleRepository.parentCondition.
+      return sql.raw(
+        `(select "e"."project_id" from "engagements" "e" where "e"."id" = "periodic_reports"."engagement_id")`,
+      );
+    case 'Language':
+      // A language is "member-visible" through ANY project engaging it.
+      // `pm.project_id = any(array(...))` keeps the shared `= ${ref}` template
+      // working with a multi-row subquery.
+      return sql.raw(
+        `any(array(select "e"."project_id" from "engagements" "e"
+          where "e"."language_id" = "languages"."id" and "e"."deleted_at" is null))`,
       );
     // migration-todo: re-add a case per domain as it ports to Postgres
     // (Engagement/Ceremony/Language each dereference to

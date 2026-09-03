@@ -10,6 +10,7 @@ import { TimeZoneModule } from '../timezone';
 import { ActorLoader } from './actor.loader';
 import { AssignableRolesResolver } from './assignable-roles.resolver';
 import { EducationModule } from './education/education.module';
+import { KnownLanguageDrizzleRepository } from './known-language.drizzle.repository';
 import { KnownLanguageRepository } from './known-language.repository';
 import { KnownLanguageResolver } from './known-language.resolver';
 import { AddActorLabelMigration } from './migrations/add-actor-label.migration';
@@ -21,6 +22,11 @@ import { SystemAgentGelRepository } from './system-agent.gel.repository';
 import { SystemAgentNeo4jRepository } from './system-agent.neo4j.repository';
 import { SystemAgentRepository } from './system-agent.repository';
 import { UnavailabilityModule } from './unavailability/unavailability.module';
+import { UserMutationActorResolver } from './user-mutation-actor.resolver';
+import { UserMutationSubscriptionsResolver } from './user-mutation-subscriptions.resolver';
+import { UserUpdateLinksResolver } from './user-update-links.resolver';
+import { UserUpdatedResolver } from './user-updated.resolver';
+import { UserChannels } from './user.channels';
 import { UserDrizzleRepository } from './user.drizzle.repository';
 import { UserGelRepository } from './user.gel.repository';
 import { UserLoader } from './user.loader';
@@ -43,16 +49,24 @@ import { UserService } from './user.service';
   providers: [
     KnownLanguageResolver,
     UserResolver,
+    UserMutationSubscriptionsResolver,
+    UserMutationActorResolver,
+    UserUpdatedResolver,
+    UserUpdateLinksResolver,
     AssignableRolesResolver,
     UserLoader,
     ActorLoader,
     UserService,
+    UserChannels,
     splitDb(UserRepository, {
       gel: UserGelRepository,
       // migration-todo: remove `as any` once splitDb types accept drizzle repos directly
       postgres: UserDrizzleRepository as any,
     }),
-    KnownLanguageRepository,
+    splitDb(KnownLanguageRepository, {
+      // migration-todo: `as any` + the Neo4j path removed at Phase 7 cutover.
+      postgres: KnownLanguageDrizzleRepository as any,
+    }),
     {
       ...splitDb(SystemAgentNeo4jRepository, {
         neo4j: SystemAgentNeo4jRepository,

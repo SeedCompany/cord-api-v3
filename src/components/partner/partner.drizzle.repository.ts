@@ -14,6 +14,7 @@ import {
   lt,
   lte,
   type SQL,
+  sql,
 } from 'drizzle-orm';
 import { DateTime } from 'luxon';
 import {
@@ -25,11 +26,15 @@ import {
   type PaginatedListType,
   type UnsecuredDto,
 } from '~/common';
+import { Identity } from '~/core/authentication';
 import {
   catchForeignKeyViolation,
   catchUniqueViolation,
+  derivedSensitivityByPartner,
+  displayOrder,
   DrizzleDtoRepository,
   EMPTY_PAGE,
+  partnerDerivedSensitivity,
   resolveOrderBy,
   type SortMap,
   subFilter,
@@ -44,6 +49,7 @@ import {
   partners,
   userOrganizations,
 } from '~/core/drizzle/schema';
+import { type ScopedRole } from '../authorization/dto/role.dto';
 import { PolicyExecutor } from '../authorization/policy/executor/policy-executor';
 import { type FinanceDepartmentIdBlock } from '../finance/department/dto/id-blocks.dto';
 import { type FinanceDepartmentIdBlockInput } from '../finance/department/dto/id-blocks.input';
@@ -51,6 +57,8 @@ import {
   organizationFilterClauses,
   organizationSortColumns,
 } from '../organization/organization.drizzle.repository';
+import { pinnedByRequester, pinnedFilter } from '../pin/pinned-by-requester';
+import { requesterScopeByPartner } from '../project/project-member/membership-scope';
 import {
   type CreatePartner,
   Partner,
@@ -65,6 +73,8 @@ type PartnerRow = typeof partners.$inferSelect & {
   countries: Array<{ locationId: ID<'Location'> }>;
   languagesOfConsulting: Array<{ languageId: ID<'Language'> }>;
   departmentIdBlock: typeof departmentIdBlocks.$inferSelect | null;
+  pinned?: boolean;
+  scope?: ScopedRole[];
 };
 
 @Injectable()
@@ -75,6 +85,7 @@ export class PartnerDrizzleRepository extends DrizzleDtoRepository<
   constructor(
     db: DrizzleService,
     private readonly executor: PolicyExecutor,
+    private readonly identity: Identity,
   ) {
     super(db, partners, Partner);
   }
@@ -269,7 +280,39 @@ export class PartnerDrizzleRepository extends DrizzleDtoRepository<
         departmentIdBlock: true,
       },
     });
-    return rows.map((row) => this.toDto(row));
+    const [pinnedSet, scopeByPartner, sensitivityByPartner] = await Promise.all(
+      [
+        pinnedByRequester(
+          this.db,
+          this.identity.current.userId,
+          rows.map((r) => r.id),
+        ),
+        // Attaches `scope` so `member`-gated policies (e.g. FinancialAnalyst
+        // reading a High-sensitivity partner) can evaluate membership instead
+        // of throwing `MissingContextException` — see the Organization repo's
+        // sibling override for the full rationale.
+        requesterScopeByPartner(
+          this.db,
+          this.identity.current.userId,
+          rows.map((r) => r.id),
+        ),
+        // Computed from the partner's projects rather than read off the row —
+        // the stored column is no longer the source of truth. See
+        // `derived-sensitivity.ts`.
+        derivedSensitivityByPartner(
+          this.db,
+          rows.map((r) => r.id),
+        ),
+      ],
+    );
+    return rows.map((row) =>
+      this.toDto({
+        ...row,
+        pinned: pinnedSet.has(row.id),
+        scope: scopeByPartner.get(row.id) ?? [],
+        sensitivity: sensitivityByPartner.get(row.id) ?? 'High',
+      }),
+    );
   }
 
   async list(
@@ -280,7 +323,13 @@ export class PartnerDrizzleRepository extends DrizzleDtoRepository<
       return EMPTY_PAGE;
     }
 
-    conditions.push(...partnerFilterClauses(this.db, input.filter));
+    conditions.push(
+      ...partnerFilterClauses(
+        this.db,
+        input.filter,
+        this.identity.current.userId,
+      ),
+    );
     const predicate = and(...conditions);
 
     // Cast to string because `name` / `organization.*` aren't in `keyof
@@ -333,7 +382,7 @@ export class PartnerDrizzleRepository extends DrizzleDtoRepository<
             eq(partners.organizationId, organizations.id),
           )
           .where(predicate)
-          .orderBy(direction(orgSortColumn), asc(partners.id))
+          .orderBy(direction(displayOrder(orgSortColumn)), asc(partners.id))
           .limit(input.count)
           .offset(offset),
       ]);
@@ -546,7 +595,7 @@ export class PartnerDrizzleRepository extends DrizzleDtoRepository<
    * relational shape. `readMany` always passes the enriched row.
    */
   protected toDto(row: PartnerRow): UnsecuredDto<Partner> {
-    return {
+    const dto: unknown = {
       id: row.id,
       __typename: 'Partner',
       createdAt: DateTime.fromJSDate(row.createdAt),
@@ -591,11 +640,14 @@ export class PartnerDrizzleRepository extends DrizzleDtoRepository<
           : null,
       // migration-todo: derived from project sensitivity; 'High' until Project migrates.
       sensitivity: row.sensitivity,
-      // migration-todo: pinned is per-requesting-user state, not stored on the
-      // partner row. Re-add the requesterId param + pinnedByRequester batch
-      // when the Pin domain migrates to Postgres.
-      pinned: false,
+      // Per-requester pin state — populated by readMany/list via
+      // pinnedByRequester; other internal paths leave it false.
+      pinned: row.pinned ?? false,
+      // Populated by readMany via requesterScopeByPartner; other internal
+      // paths (none currently bypass readMany) would leave it empty.
+      scope: row.scope ?? [],
     };
+    return dto as UnsecuredDto<Partner>;
   }
 }
 
@@ -611,7 +663,9 @@ export const partnerSortColumns = {
   globalInnovationsClient: partners.globalInnovationsClient,
   modifiedAt: partners.updatedAt,
   pmcEntityCode: partners.pmcEntityCode,
-  sensitivity: partners.sensitivity,
+  // The derived value, not the stored column, so a list orders by the same
+  // sensitivity it displays and filters on.
+  sensitivity: partnerDerivedSensitivity(sql`${partners.id}`),
   startDate: partners.startDate,
 } satisfies SortMap<keyof Partner>;
 
@@ -623,6 +677,7 @@ export const partnerSortColumns = {
 export const partnerFilterClauses = (
   db: DrizzleDb,
   filter: PartnerFilters | undefined,
+  requesterId?: ID<'User'>,
 ): SQL[] => {
   const conditions: SQL[] = [];
   if (!filter) return conditions;
@@ -694,8 +749,8 @@ export const partnerFilterClauses = (
       );
     }
   }
-  // migration-todo: `filter.pinned` is unsupported until the Pin domain
-  // migrates to Postgres (it needs the per-requester `pinnedFilter` helper).
-  // Re-add the `requesterId` param + the `pinnedFilter` branch then.
+  if (filter.pinned != null) {
+    conditions.push(pinnedFilter(requesterId, partners.id, filter.pinned));
+  }
   return conditions;
 };

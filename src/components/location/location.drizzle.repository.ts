@@ -4,7 +4,7 @@ import { DateTime } from 'luxon';
 import {
   generateId,
   type ID,
-  NotImplementedException,
+  NotFoundException,
   type PaginatedListType,
   ServerException,
   type UnsecuredDto,
@@ -18,7 +18,17 @@ import {
   type SortMap,
 } from '~/core/drizzle';
 import { DrizzleService } from '~/core/drizzle/drizzle.service';
-import { locations } from '~/core/drizzle/schema';
+import {
+  languageLocations,
+  languages,
+  locations,
+  organizationLocations,
+  organizations,
+  projectOtherLocations,
+  projects,
+  userLocations,
+  users,
+} from '~/core/drizzle/schema';
 import { type ResourceNameLike } from '~/core/resources';
 import { PolicyExecutor } from '../authorization/policy/executor/policy-executor';
 import { FileService } from '../file';
@@ -28,7 +38,6 @@ import {
   Location,
   type LocationFilters,
   type LocationListInput,
-  type LocationListOutput,
   type UpdateLocation,
 } from './dto';
 
@@ -145,37 +154,232 @@ export class LocationDrizzleRepository extends DrizzleDtoRepository<
     };
   }
 
-  // migration-todo: implement when location-node relationships are migrated to PG
-  addLocationToNode(
-    _label: ResourceNameLike,
-    _id: ID,
-    _rel: string,
-    _locationId: ID<'Location'>,
+  async addLocationToNode(
+    label: ResourceNameLike,
+    id: ID,
+    rel: string,
+    locationId: ID<'Location'>,
   ): Promise<DateTime | null> {
-    throw new NotImplementedException();
+    await this.assertLiveLocation(locationId);
+    await this.assertLiveResource(label, id);
+
+    if (label === 'Organization' && rel === 'locations') {
+      const inserted = await this.db
+        .insert(organizationLocations)
+        .values({ organizationId: id as ID<'Organization'>, locationId })
+        .onConflictDoNothing()
+        .returning();
+      return inserted.length > 0 ? DateTime.now() : null;
+    }
+    if (label === 'User' && rel === 'locations') {
+      const inserted = await this.db
+        .insert(userLocations)
+        .values({ userId: id as ID<'User'>, locationId })
+        .onConflictDoNothing()
+        .returning();
+      return inserted.length > 0 ? DateTime.now() : null;
+    }
+    if (label === 'Language' && rel === 'locations') {
+      const inserted = await this.db
+        .insert(languageLocations)
+        .values({ languageId: id as ID<'Language'>, locationId })
+        .onConflictDoNothing()
+        .returning();
+      return inserted.length > 0 ? DateTime.now() : null;
+    }
+    if (label === 'Project' && rel === 'otherLocations') {
+      const inserted = await this.db
+        .insert(projectOtherLocations)
+        .values({ projectId: id as ID<'Project'>, locationId })
+        .onConflictDoNothing()
+        .returning();
+      return inserted.length > 0 ? DateTime.now() : null;
+    }
+    throw new ServerException(`Unsupported location edge: ${label}.${rel}`);
   }
 
-  // migration-todo: implement when location-node relationships are migrated to PG
-  removeLocationFromNode(
-    _label: ResourceNameLike,
-    _id: ID,
-    _rel: string,
-    _locationId: ID<'Location'>,
+  async removeLocationFromNode(
+    label: ResourceNameLike,
+    id: ID,
+    rel: string,
+    locationId: ID<'Location'>,
   ): Promise<DateTime | null> {
-    throw new NotImplementedException();
+    await this.assertLiveLocation(locationId);
+    await this.assertLiveResource(label, id);
+
+    if (label === 'Organization' && rel === 'locations') {
+      const deleted = await this.db
+        .delete(organizationLocations)
+        .where(
+          and(
+            eq(organizationLocations.organizationId, id as ID<'Organization'>),
+            eq(organizationLocations.locationId, locationId),
+          ),
+        )
+        .returning();
+      return deleted.length > 0 ? DateTime.now() : null;
+    }
+    if (label === 'User' && rel === 'locations') {
+      const deleted = await this.db
+        .delete(userLocations)
+        .where(
+          and(
+            eq(userLocations.userId, id as ID<'User'>),
+            eq(userLocations.locationId, locationId),
+          ),
+        )
+        .returning();
+      return deleted.length > 0 ? DateTime.now() : null;
+    }
+    if (label === 'Language' && rel === 'locations') {
+      const deleted = await this.db
+        .delete(languageLocations)
+        .where(
+          and(
+            eq(languageLocations.languageId, id as ID<'Language'>),
+            eq(languageLocations.locationId, locationId),
+          ),
+        )
+        .returning();
+      return deleted.length > 0 ? DateTime.now() : null;
+    }
+    if (label === 'Project' && rel === 'otherLocations') {
+      const deleted = await this.db
+        .delete(projectOtherLocations)
+        .where(
+          and(
+            eq(projectOtherLocations.projectId, id as ID<'Project'>),
+            eq(projectOtherLocations.locationId, locationId),
+          ),
+        )
+        .returning();
+      return deleted.length > 0 ? DateTime.now() : null;
+    }
+    throw new ServerException(`Unsupported location edge: ${label}.${rel}`);
   }
 
-  // migration-todo: implement when location-node relationships are migrated
-  // to PG. Edges can't be written yet (addLocationToNode above throws), so an
-  // empty page is accurate for PG-resident resources — and it keeps reads
-  // (e.g. user.locations in e2e fragments) from hard-failing.
   async listLocationsFromNodeNoSecGroups(
-    _label: string,
-    _rel: string,
-    _id: ID,
-    _input: LocationListInput,
-  ): Promise<LocationListOutput> {
-    return EMPTY_PAGE;
+    label: string,
+    rel: string,
+    id: ID,
+    input: LocationListInput,
+  ): Promise<PaginatedListType<UnsecuredDto<Location>>> {
+    const linkedLocationIds =
+      label === 'Organization' && rel === 'locations'
+        ? this.db
+            .select({ id: organizationLocations.locationId })
+            .from(organizationLocations)
+            .where(
+              eq(
+                organizationLocations.organizationId,
+                id as ID<'Organization'>,
+              ),
+            )
+        : label === 'User' && rel === 'locations'
+          ? this.db
+              .select({ id: userLocations.locationId })
+              .from(userLocations)
+              .where(eq(userLocations.userId, id as ID<'User'>))
+          : label === 'Language' && rel === 'locations'
+            ? this.db
+                .select({ id: languageLocations.locationId })
+                .from(languageLocations)
+                .where(eq(languageLocations.languageId, id as ID<'Language'>))
+            : label === 'Project' && rel === 'otherLocations'
+              ? this.db
+                  .select({ id: projectOtherLocations.locationId })
+                  .from(projectOtherLocations)
+                  .where(
+                    eq(projectOtherLocations.projectId, id as ID<'Project'>),
+                  )
+              : null;
+    if (!linkedLocationIds) {
+      throw new ServerException(`Unsupported location edge: ${label}.${rel}`);
+    }
+
+    const conditions: SQL[] = [
+      isNull(locations.deletedAt),
+      inArray(locations.id, linkedLocationIds),
+    ];
+    if (!this.executor.applyReadFilter(this.resource, conditions)) {
+      return EMPTY_PAGE;
+    }
+    conditions.push(...locationFilterClauses(input.filter));
+
+    const { rows, total, hasMore } = await this.paginatedSelect({
+      predicate: and(...conditions),
+      orderBy: resolveOrderBy(input, locationSortColumns, locations.name),
+      page: input.page,
+      count: input.count,
+    });
+    return {
+      total,
+      items: rows.map((row) => this.toDto(row)),
+      hasMore,
+    };
+  }
+
+  /** Confirms `locationId` refers to a live Location, or throws. */
+  private async assertLiveLocation(locationId: ID<'Location'>): Promise<void> {
+    const [row] = await this.db
+      .select({ id: locations.id })
+      .from(locations)
+      .where(and(eq(locations.id, locationId), isNull(locations.deletedAt)));
+    if (!row) {
+      throw new NotFoundException('Location not found', 'location');
+    }
+  }
+
+  /** Confirms `id` refers to a live row of the resource named by `label`, or throws. */
+  private async assertLiveResource(
+    label: ResourceNameLike,
+    id: ID,
+  ): Promise<void> {
+    const rows =
+      label === 'Organization'
+        ? await this.db
+            .select({ id: organizations.id })
+            .from(organizations)
+            .where(
+              and(
+                eq(organizations.id, id as ID<'Organization'>),
+                isNull(organizations.deletedAt),
+              ),
+            )
+        : label === 'User'
+          ? await this.db
+              .select({ id: users.id })
+              .from(users)
+              .where(
+                and(eq(users.id, id as ID<'User'>), isNull(users.deletedAt)),
+              )
+          : label === 'Language'
+            ? await this.db
+                .select({ id: languages.id })
+                .from(languages)
+                .where(
+                  and(
+                    eq(languages.id, id as ID<'Language'>),
+                    isNull(languages.deletedAt),
+                  ),
+                )
+            : label === 'Project'
+              ? await this.db
+                  .select({ id: projects.id })
+                  .from(projects)
+                  .where(
+                    and(
+                      eq(projects.id, id as ID<'Project'>),
+                      isNull(projects.deletedAt),
+                    ),
+                  )
+              : null;
+    if (!rows) {
+      throw new ServerException(`Unsupported location edge resource: ${label}`);
+    }
+    if (rows.length === 0) {
+      throw new NotFoundException('Resource not found');
+    }
   }
 
   protected toDto(row: typeof locations.$inferSelect): UnsecuredDto<Location> {

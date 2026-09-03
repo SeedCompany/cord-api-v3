@@ -256,6 +256,10 @@ export class LanguageRepository extends DtoRepository<
         );
   }
 
+  async delete(id: ID): Promise<void> {
+    await this.deleteNode(id);
+  }
+
   async list(input: LanguageListInput) {
     const result = await this.db
       .query()

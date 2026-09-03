@@ -5,7 +5,9 @@ import {
   ServerException,
   type UnsecuredDto,
 } from '~/common';
+import { Hooks } from '~/core/hooks';
 import { HandleIdLookup } from '~/core/resources';
+import { ResourceMutatedHook } from '../audit/resource-mutated.hook';
 import { Privileges } from '../authorization';
 import { LocationService } from '../location';
 import {
@@ -27,12 +29,17 @@ export class OrganizationService {
     private readonly privileges: Privileges,
     private readonly locationService: LocationService,
     private readonly repo: OrganizationRepository,
+    private readonly hooks: Hooks,
   ) {}
 
   async create(input: CreateOrganization): Promise<Organization> {
     const created = await this.repo.create(input);
 
     this.privileges.for(Organization, created).verifyCan('create');
+
+    await this.hooks.run(
+      new ResourceMutatedHook('Organization', created.id, 'Create'),
+    );
 
     return this.secure(created);
   }
@@ -61,6 +68,10 @@ export class OrganizationService {
 
     const updated = await this.repo.update({ id: input.id, ...changes });
 
+    await this.hooks.run(
+      new ResourceMutatedHook('Organization', input.id, 'Update', changes),
+    );
+
     return this.secure(updated);
   }
 
@@ -74,6 +85,8 @@ export class OrganizationService {
     } catch (exception) {
       throw new ServerException('Failed to delete', exception);
     }
+
+    await this.hooks.run(new ResourceMutatedHook('Organization', id, 'Delete'));
   }
 
   async list(input: OrganizationListInput): Promise<OrganizationListOutput> {

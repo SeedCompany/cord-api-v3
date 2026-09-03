@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { type ID, type ObjectView, type UnsecuredDto } from '~/common';
 import { Identity } from '~/core/authentication';
+import { Hooks } from '~/core/hooks';
 import { HandleIdLookup } from '~/core/resources';
+import { ResourceMutatedHook } from '../../audit/resource-mutated.hook';
 import { Privileges } from '../../authorization';
 import {
   type CreateEducation,
@@ -18,12 +20,16 @@ export class EducationService {
     private readonly privileges: Privileges,
     private readonly identity: Identity,
     private readonly repo: EducationRepository,
+    private readonly hooks: Hooks,
   ) {}
 
   async create(input: CreateEducation): Promise<Education> {
     this.privileges.for(Education).verifyCan('create');
     // create education
     const result = await this.repo.create(input);
+    await this.hooks.run(
+      new ResourceMutatedHook('Education', result.id, 'Create'),
+    );
     return this.secure(result);
   }
 
@@ -52,11 +58,14 @@ export class EducationService {
     }
 
     const updated = await this.repo.update({ id: input.id, ...changes });
+    await this.hooks.run(
+      new ResourceMutatedHook('Education', input.id, 'Update', changes),
+    );
     return this.secure(updated);
   }
 
   async delete(_id: ID): Promise<void> {
-    // Not Implemented
+    // Not Implemented — no audit event until a real delete exists.
   }
 
   async list(input: EducationListInput): Promise<EducationListOutput> {

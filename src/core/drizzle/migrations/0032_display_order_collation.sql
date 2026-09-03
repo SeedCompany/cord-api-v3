@@ -1,0 +1,58 @@
+-- A collation for ordering text the way people read it, which does not change
+-- with the host operating system.
+--
+-- It ignores three things when comparing:
+--   * case          -> `apple` and `Apple` sort together
+--   * accents       -> `Ñot` sorts as `Not`, between `never` and `zap`
+--   * punctuation
+--      and spaces   -> `[a!-b]` sorts as `ab`, and `A ignore` as `Aignore`
+--
+-- That is exactly how Neo4j orders NAMES today, so name lists do not silently
+-- reorder when a domain moves to Postgres.
+--
+-- Note where Neo4j's folding comes from, because it is easy to assume it is the
+-- database: it is not. Neo4j's own string ordering is raw code points. The
+-- folding comes from `@NameField`, which attaches a sort transformer running
+-- `apoc.text.clean`, and Neo4j's `sorting()` applies that only to fields
+-- carrying it. So this collation belongs on name columns and NOT on plain text
+-- like an address or a description, which Neo4j orders by code point. The list of
+-- columns that get it lives in `NAME_COLUMNS` in src/core/drizzle/order-by.ts —
+-- inferring it from the column's type instead silently folds nine columns Neo4j
+-- leaves alone.
+--
+-- Because of that scope, the non-name text sorts DO still depend on the database's
+-- default collation, and so on the image's C library. That is intentional and
+-- settled: we run a musl image (alpine), whose byte comparison IS code-point
+-- order, which is exactly how Neo4j orders those columns. A glibc image would
+-- case-fold them and ignore leading spaces — nicer to read, but a divergence from
+-- Neo4j, and parity is the rule here. See the note in docker-compose.yml and
+-- .github/workflows/test.yml. The paragraph below is about the name columns this
+-- collation is for, not about every text sort in the app.
+--
+-- Why not just use the database's default collation: the default depends on
+-- which C library the Postgres image was built against, and the two disagree.
+-- The alpine image links musl, which does not implement locale-aware
+-- collation at all, so `en_US.utf8` there quietly degrades to raw byte order —
+-- every capital ahead of every lowercase letter, and accented characters after
+-- `z`. A Debian/glibc image with the SAME collation name is locale-aware and
+-- matches Neo4j. So relying on the default means ordering differs between CI
+-- and production depending on their images, with nothing reporting it. It can
+-- also shift under a glibc upgrade, which invalidates text indexes. Naming an
+-- ICU collation explicitly gives identical ordering on every platform and
+-- across OS upgrades.
+--
+-- ⚠️ USE THIS IN `ORDER BY` ONLY — NEVER AS A COLUMN'S COLLATION.
+-- It is non-deterministic (required, so that strings differing only by case or
+-- accent can compare equal for ordering). Postgres refuses `LIKE`/`ILIKE` on a
+-- non-deterministic collation: "nondeterministic collations are not supported
+-- for ILIKE". Global search runs ILIKE against these same name columns, so
+-- attaching this to a column would break search. Applying it per-ORDER BY is
+-- allowed and is what `displayOrder()` in src/core/drizzle/order-by.ts does.
+--
+-- `ka-shifted` is what makes punctuation and spaces ignorable; `ks-level1` is
+-- what makes case and accents ignorable.
+CREATE COLLATION display_order (
+  provider = icu,
+  locale = 'und-u-ka-shifted-ks-level1',
+  deterministic = false
+);

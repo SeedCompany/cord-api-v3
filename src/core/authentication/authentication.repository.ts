@@ -124,7 +124,13 @@ export class AuthenticationRepository {
           node('status', 'Property'),
         ],
       ])
-      .return<{ passwordHash: string; status: UserStatus }>([
+      // `status` is nullable in Postgres (migration 0042) — 92 migrated people
+      // have none recorded. The only consumer asks `status === 'Disabled'`,
+      // which is already correct for a blank. Neo4j cannot actually produce one
+      // here: the match above REQUIRES the status Property, so a person without
+      // it matches nothing and is refused a login outright. That engine
+      // difference pre-dates this change and is not resolved by it.
+      .return<{ passwordHash: string; status: UserStatus | null }>([
         'password.value as passwordHash',
         'status.value as status',
       ])

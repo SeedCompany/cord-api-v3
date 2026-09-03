@@ -7,7 +7,9 @@ import { FinancialReportingType } from '../src/components/partnership/dto';
 import {
   createOrganization,
   createPartner,
+  createPartnership,
   createPerson,
+  createProject,
   createSession,
   createTestApp,
   errors,
@@ -24,6 +26,52 @@ describe('Partner e2e', () => {
     app = await createTestApp();
     await createSession(app);
     await registerUser(app, { roles: [Role.LeadFinancialAnalyst] });
+  });
+
+  // Sensitivity is derived from the projects a partner is connected to — the
+  // lowest of them, or High when there are none. Neo4j works this out on every
+  // read. Postgres kept a stored column that nothing updated, so a partner's
+  // sensitivity was frozen at whatever it was created or migrated with.
+  //
+  // The second half is what makes this test worth having. Reading a partner
+  // that already had the right value proves nothing, because the stored column
+  // was right at rest — it only went wrong once the connected projects changed,
+  // and no read-only comparison between the two databases could see that.
+  it('derives sensitivity from its projects, and follows them when they change', async () => {
+    const partner = await runAsAdmin(app, () => createPartner(app));
+
+    const readSensitivity = async () => {
+      const { partner: read } = await app.graphql.query(
+        graphql(`
+          query partner($id: ID!) {
+            partner(id: $id) {
+              sensitivity
+            }
+          }
+        `),
+        { id: partner.id },
+      );
+      return read.sensitivity;
+    };
+
+    // No projects yet, so the most restrictive answer.
+    expect(await readSensitivity()).toBe('High');
+
+    // Connecting a Low project has to lower it. This is the assertion that
+    // fails when sensitivity is read from the stored column: the partnership
+    // is created, nothing recomputes, and the partner stays High.
+    await runAsAdmin(app, async () => {
+      const project = await createProject(app, {
+        type: 'Internship',
+        sensitivity: 'Low',
+      });
+      await createPartnership(app, {
+        project: project.id,
+        partner: partner.id,
+      });
+    });
+
+    expect(await readSensitivity()).toBe('Low');
   });
 
   it('create & read partner by id', async () => {
@@ -190,6 +238,7 @@ describe('Partner e2e', () => {
     });
 
     const otherUser = await createPerson(app);
+    const unrelatedUser = await createPerson(app);
     await runAsAdmin(app, async () => {
       await app.graphql.mutate(AssignOrgToUserDoc, {
         org: org.id,
@@ -227,9 +276,9 @@ describe('Partner e2e', () => {
 
     const list = result.partner.people;
     expect(list.canRead).toBe(true);
-    expect(list.total).toBeGreaterThanOrEqual(2);
     const userIds = list.items.map((u) => u.id);
     expect(userIds).toEqual(expect.arrayContaining([poc.id, otherUser.id]));
+    expect(userIds).not.toContain(unrelatedUser.id);
     expect(result.partner.pointOfContact.value?.id).toBe(poc.id);
   });
 });

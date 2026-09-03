@@ -17,7 +17,7 @@ import {
   type SortMap,
 } from '~/core/drizzle';
 import { DrizzleService } from '~/core/drizzle/drizzle.service';
-import { budgets } from '~/core/drizzle/schema';
+import { budgets, type projects } from '~/core/drizzle/schema';
 import { type ScopedRole } from '../authorization/dto/role.dto';
 import { PolicyExecutor } from '../authorization/policy/executor/policy-executor';
 import { type FileId } from '../file/dto';
@@ -32,7 +32,10 @@ import {
 } from './dto';
 
 type BudgetRow = typeof budgets.$inferSelect & {
-  project?: { id: ID<'Project'>; sensitivity: string } | null;
+  project?: Pick<
+    typeof projects.$inferSelect,
+    'id' | 'sensitivity' | 'type'
+  > | null;
 };
 
 @Injectable()
@@ -91,7 +94,8 @@ export class BudgetDrizzleRepository extends DrizzleDtoRepository<
     const rows = await this.db.query.budgets.findMany({
       where: (b) => and(inArray(b.id, [...ids]), isNull(b.deletedAt)),
       with: {
-        project: { columns: { id: true, sensitivity: true } },
+        // `type` feeds the parent ref's __typename (`${type}Project`).
+        project: { columns: { id: true, sensitivity: true, type: true } },
       },
     });
     const scopeByProject = await requesterScopeByProject(
@@ -180,18 +184,26 @@ export class BudgetDrizzleRepository extends DrizzleDtoRepository<
         `Budget ${row.id} has no parent project row — FK invariant violated`,
       );
     }
-    const dto: unknown = {
+    // Not laundered through `unknown` before the cast below: that stops
+    // TypeScript comparing this object to the DTO at all, which is how a field
+    // can go missing or take the wrong shape unnoticed. The direct cast still
+    // allows the service-layer overlays (canDelete, scope) and the fields the
+    // service fills in later.
+    const dto = {
       id: row.id,
       __typename: 'Budget',
       createdAt: DateTime.fromJSDate(row.createdAt),
       status: row.status,
       sensitivity: row.project.sensitivity,
-      universalTemplateFile: row.universalTemplateFileId
-        ? { id: row.universalTemplateFileId }
-        : null,
+      // The bare id, matching both the Neo4j repo and the declared DefinedFile
+      // type. The resolver accepts a null here and yields no file.
+      universalTemplateFile: row.universalTemplateFileId,
       // Assembled by the service via listRecords.
       records: [],
-      parent: { id: row.project.id },
+      parent: {
+        id: row.project.id,
+        __typename: `${row.project.type}Project`,
+      },
       // PCR is excluded; resolver navigation marker stays undefined.
       changeset: undefined,
       canDelete: true,

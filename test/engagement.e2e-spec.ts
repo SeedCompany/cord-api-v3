@@ -2,8 +2,8 @@ import { faker } from '@faker-js/faker';
 import { beforeAll, describe, expect, it } from '@jest/globals';
 import { some } from 'lodash';
 import { DateTime, Interval } from 'luxon';
-import { generateId, type ID, Role } from '~/common';
-import { graphql } from '~/graphql';
+import { CalendarDate, generateId, type ID, Role } from '~/common';
+import { graphql, type InputOf } from '~/graphql';
 import {
   EngagementStatus,
   InternshipPosition,
@@ -43,6 +43,26 @@ import {
   stepsFromEarlyConversationToBeforeActive,
   transitionProject,
 } from './utility/transition-project';
+
+const EngagementListDoc = graphql(`
+  query EngagementList($input: EngagementListInput) {
+    engagements(input: $input) {
+      items {
+        id
+      }
+      total
+    }
+  }
+`);
+const listEngagements = async (
+  app: TestApp,
+  input?: InputOf<typeof EngagementListDoc>,
+) => {
+  const { engagements } = await app.graphql.query(EngagementListDoc, {
+    input,
+  });
+  return engagements;
+};
 
 describe('Engagement e2e', () => {
   let app: TestApp;
@@ -416,7 +436,7 @@ describe('Engagement e2e', () => {
     expect(parseInt(difference)).toBeGreaterThan(0);
   });
 
-  it.skip('deletes engagement', async () => {
+  it('deletes engagement', async () => {
     project = await createProject(app);
     const languageEngagement = await createLanguageEngagement(app, {
       project: project.id,
@@ -703,6 +723,53 @@ describe('Engagement e2e', () => {
         __typename: 'LanguageEngagement',
       }),
     ).toBeTruthy();
+  });
+
+  it('filters engagements by a project sub-filter field beyond id', async () => {
+    const translationProject = await createProject(app);
+    const internProject = await createProject(app, {
+      type: ProjectType.Internship,
+    });
+
+    // Match createProject()'s default MOU window (1991–1992) instead of
+    // letting these fall back to today's date, which sits outside it.
+    const startDateOverride = CalendarDate.fromISO('1991-01-01').toISO();
+    const endDateOverride = CalendarDate.fromISO('1992-01-01').toISO();
+    const languageEngagement = await createLanguageEngagement(app, {
+      language: language.id,
+      project: translationProject.id,
+      startDateOverride,
+      endDateOverride,
+    });
+    const internshipEngagement = await createInternshipEngagement(app, {
+      project: internProject.id,
+      countryOfOrigin: location.id,
+      intern: intern.id,
+      mentor: mentor.id,
+      startDateOverride,
+      endDateOverride,
+    });
+
+    const { engagements } = await app.graphql.query(
+      graphql(`
+        query ($input: EngagementListInput) {
+          engagements(input: $input) {
+            items {
+              id
+            }
+          }
+        }
+      `),
+      {
+        input: {
+          filter: { project: { type: [ProjectType.Internship] } },
+        },
+      },
+    );
+
+    const ids = engagements.items.map((e) => e.id);
+    expect(ids).toContain(internshipEngagement.id);
+    expect(ids).not.toContain(languageEngagement.id);
   });
 
   it('internship engagement creation fails and lets you know why if your ids are bad', async () => {
@@ -1243,6 +1310,95 @@ describe('Engagement e2e', () => {
         message:
           'You do not have the permission to delete this language engagement',
       }),
+    );
+  });
+
+  it('filters engagements by name matching the project name', async () => {
+    const term = 'Zolt' + (await generateId());
+    const namedProject = await createProject(app, { name: `${term} project` });
+    const engagement = await createLanguageEngagement(app, {
+      project: namedProject.id,
+      language: language.id,
+    });
+    const unrelatedEngagement = await createLanguageEngagement(app);
+
+    const result = await listEngagements(app, { filter: { name: term } });
+
+    const ids = result.items.map((item) => item.id);
+    expect(ids).toContain(engagement.id);
+    expect(ids).not.toContain(unrelatedEngagement.id);
+  });
+
+  it('filters engagements by name matching the engaged language name', async () => {
+    const term = 'Yenn' + (await generateId());
+    const namedLanguage = await runAsAdmin(
+      app,
+      async () => await createLanguage(app, { name: `${term} language` }),
+    );
+    const engagement = await createLanguageEngagement(app, {
+      project: project.id,
+      language: namedLanguage.id,
+    });
+    const unrelatedEngagement = await createLanguageEngagement(app);
+
+    const result = await listEngagements(app, { filter: { name: term } });
+
+    const ids = result.items.map((item) => item.id);
+    expect(ids).toContain(engagement.id);
+    expect(ids).not.toContain(unrelatedEngagement.id);
+  });
+
+  it('filters engagements by engagedName, excluding project-name-only matches', async () => {
+    const term = 'Xylo' + (await generateId());
+    const namedProject = await createProject(app, { name: `${term} project` });
+    const nonMatchingEngagement = await createLanguageEngagement(app, {
+      project: namedProject.id,
+      language: language.id,
+    });
+
+    const namedLanguage = await runAsAdmin(
+      app,
+      async () => await createLanguage(app, { name: `${term} language` }),
+    );
+    const matchingEngagement = await createLanguageEngagement(app, {
+      project: project.id,
+      language: namedLanguage.id,
+    });
+
+    const result = await listEngagements(app, {
+      filter: { engagedName: term },
+    });
+
+    const ids = result.items.map((item) => item.id);
+    expect(ids).toContain(matchingEngagement.id);
+    expect(ids).not.toContain(nonMatchingEngagement.id);
+  });
+
+  it('filters engagements by startDate/endDate, falling back to the project mou window', async () => {
+    const farFutureProject = await createProject(app, {
+      mouStart: CalendarDate.fromISO('2075-01-01').toISO(),
+      mouEnd: CalendarDate.fromISO('2076-01-01').toISO(),
+    });
+    const engagement = await createLanguageEngagement(app, {
+      project: farFutureProject.id,
+      language: language.id,
+      startDateOverride: undefined,
+      endDateOverride: undefined,
+    });
+
+    const inRange = await listEngagements(app, {
+      filter: {
+        startDate: { afterInclusive: '2075-01-01' },
+        endDate: { beforeInclusive: '2076-01-01' },
+      },
+    });
+    expect(inRange.items.map((item) => item.id)).toContain(engagement.id);
+
+    const outOfRange = await listEngagements(app, {
+      filter: { startDate: { after: '2076-01-01' } },
+    });
+    expect(outOfRange.items.map((item) => item.id)).not.toContain(
+      engagement.id,
     );
   });
 });

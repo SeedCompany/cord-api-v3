@@ -23,6 +23,14 @@ export class IndexerModule implements OnModuleInit {
   ) {}
 
   async onModuleInit() {
+    // migration-todo: drop this guard at cutover, along with this whole module.
+    // Index sync retries the connection forever, so without the guard it churns
+    // against an absent Neo4j — and logs driver errors — whenever another engine
+    // is active.
+    if (this.config.databaseEngine !== 'neo4j') {
+      return;
+    }
+
     if (!this.config.dbIndexesCreate) {
       return;
     }

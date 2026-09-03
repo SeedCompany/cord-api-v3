@@ -78,9 +78,11 @@ export function ProjectStepChanged({
               </>
             ) : null}
             at{' '}
+            {/* A recipient with no recorded timezone falls back to the
+                component's own default, same as one who never set it. */}
             <FormattedDateTime
               value={project.modifiedAt}
-              timezone={recipient.timezone.value}
+              timezone={recipient.timezone.value ?? undefined}
             />
           </Mjml.Text>
           <InHtml>

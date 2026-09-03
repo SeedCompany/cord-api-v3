@@ -20,7 +20,7 @@ import {
 
 @Injectable()
 export class CeremonyRepository extends DtoRepository(Ceremony) {
-  async create(input: CreateCeremony) {
+  async create(input: CreateCeremony, _engagementId?: ID<'Engagement'>) {
     const initialProps = {
       type: input.type,
       planned: input.planned,
@@ -44,6 +44,10 @@ export class CeremonyRepository extends DtoRepository(Ceremony) {
     const { id, ...simpleChanges } = changes;
     await this.updateProperties({ id }, simpleChanges);
     return await this.readOne(id);
+  }
+
+  async delete(id: ID): Promise<void> {
+    await this.deleteNode(id);
   }
 
   protected hydrate() {

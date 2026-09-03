@@ -12,9 +12,11 @@ import {
   type UnsecuredDto,
 } from '~/common';
 import { compareNullable, ifDiff, isSame } from '~/core/database/changes';
+import { Hooks } from '~/core/hooks';
 import { LiveQueryStore } from '~/core/live-query';
 import { ILogger, Logger } from '~/core/logger';
 import { HandleIdLookup, ResourceResolver } from '~/core/resources';
+import { ResourceMutatedHook } from '../audit/resource-mutated.hook';
 import { Privileges } from '../authorization';
 import {
   getTotalVerseEquivalents,
@@ -66,6 +68,7 @@ export class ProductService {
     private readonly resources: ResourceResolver,
     private readonly liveQueryStore: LiveQueryStore,
     private readonly channels: ProductChannels,
+    private readonly hooks: Hooks,
     @Logger('product:service') private readonly logger: ILogger,
   ) {}
 
@@ -183,6 +186,14 @@ export class ProductService {
       product: created.id,
       at: created.createdAt,
     });
+
+    await this.hooks.run(
+      new ResourceMutatedHook(
+        resolveProductType(created).name,
+        created.id,
+        'Create',
+      ),
+    );
 
     return created;
   }
@@ -338,6 +349,15 @@ export class ProductService {
       ),
     });
 
+    await this.hooks.run(
+      new ResourceMutatedHook(
+        'DirectScriptureProduct',
+        updated.id,
+        'Update',
+        changes,
+      ),
+    );
+
     return { product: updated, payload: updatedPayload };
   }
 
@@ -449,6 +469,15 @@ export class ProductService {
       ),
     });
 
+    await this.hooks.run(
+      new ResourceMutatedHook(
+        'DerivativeScriptureProduct',
+        updated.id,
+        'Update',
+        changes,
+      ),
+    );
+
     return { product: updated, payload: updatedPayload };
   }
 
@@ -539,6 +568,10 @@ export class ProductService {
       previous: OtherProductUpdate.pickPrevious(currentProduct, changes),
     });
 
+    await this.hooks.run(
+      new ResourceMutatedHook('OtherProduct', updated.id, 'Update', changes),
+    );
+
     return { product: updated, payload: updatedPayload };
   }
 
@@ -627,10 +660,9 @@ export class ProductService {
 
     this.privileges.for(Product, object).verifyCan('delete');
 
-    const { at } = await this.repo
-      .deleteNode(object, {
-        resource: resolveProductType(object),
-      })
+    const at = DateTime.now();
+    await this.repo
+      .delete(object.id, resolveProductType(object))
       .catch((exception) => {
         throw new ServerException('Failed to delete', exception);
       });
@@ -642,6 +674,14 @@ export class ProductService {
       product: object.id,
       at,
     });
+
+    await this.hooks.run(
+      new ResourceMutatedHook(
+        resolveProductType(object).name,
+        object.id,
+        'Delete',
+      ),
+    );
 
     return { product: object, payload };
   }

@@ -26,6 +26,7 @@ import { type AnyChangesOf } from '~/core/database/changes';
 import { Hooks } from '~/core/hooks';
 import { Transactional } from '~/core/neo4j';
 import { HandleIdLookup } from '~/core/resources';
+import { ResourceMutatedHook } from '../audit/resource-mutated.hook';
 import { Privileges } from '../authorization';
 import { BudgetService } from '../budget';
 import { BudgetStatus, type SecuredBudget } from '../budget/dto';
@@ -186,6 +187,13 @@ export class ProjectService {
 
       const event = new ProjectCreatedHook(project);
       await this.hooks.run(event);
+      await this.hooks.run(
+        new ResourceMutatedHook(
+          resolveProjectType(event.project).name,
+          event.project.id,
+          'Create',
+        ),
+      );
 
       this.channels.publishToAll('created', {
         program: project.type,
@@ -383,6 +391,14 @@ export class ProjectService {
         ...changes,
       });
       await this.hooks.run(event);
+      await this.hooks.run(
+        new ResourceMutatedHook(
+          resolveProjectType(event.updated).name,
+          event.updated.id,
+          'Update',
+          changes,
+        ),
+      );
 
       payload = this.channels.publishToAll('updated', {
         program: event.updated.type,
@@ -408,6 +424,9 @@ export class ProjectService {
     const at = DateTime.now();
 
     await this.hooks.run(new ProjectDeletedHook(object));
+    await this.hooks.run(
+      new ResourceMutatedHook(resolveProjectType(object).name, id, 'Delete'),
+    );
 
     return this.channels.publishToAll('deleted', {
       program: object.type,

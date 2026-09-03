@@ -65,7 +65,7 @@ describe('ProjectMember e2e', () => {
     );
   });
 
-  it.skip('delete projectMember', async () => {
+  it('delete projectMember', async () => {
     const member = await createPerson(app);
     const projectMember = await createProjectMember(app, {
       user: member.id,
@@ -88,28 +88,33 @@ describe('ProjectMember e2e', () => {
     const actual = result.deleteProjectMember;
     expect(actual).toBeTruthy();
 
-    await expect(
-      app.graphql.query(
-        graphql(
-          `
-            query projectMember($id: ID!) {
-              projectMember(id: $id) {
-                ...projectMember
+    // Read the team back rather than the member directly. This test used to
+    // query a root `projectMember(id:)` field and expect a NotFound; that field
+    // no longer exists, so the assertion had stopped describing the schema and
+    // failed on validation instead of on the behaviour it was checking. The
+    // team list is how a member is reachable now, and "gone" is better stated
+    // as absence from it than as an error from a lookup by id.
+    const after = await app.graphql.query(
+      graphql(
+        `
+          query project($id: ID!) {
+            project(id: $id) {
+              team {
+                items {
+                  ...projectMember
+                }
+                total
               }
             }
-          `,
-          [fragments.projectMember],
-        ),
-        {
-          id: projectMember.id,
-        },
+          }
+        `,
+        [fragments.projectMember],
       ),
-    ).rejects.toThrowGqlError(
-      errors.notFound({
-        message: 'Could not find project member',
-        field: 'id',
-      }),
+      { id: project.id },
     );
+
+    const ids = after.project.team.items.map((item) => item.id);
+    expect(ids).not.toContain(projectMember.id);
   });
 
   it('Can create the same projectMember after deletion', async () => {

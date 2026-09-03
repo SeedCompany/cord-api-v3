@@ -1,29 +1,48 @@
 import { Injectable } from '@nestjs/common';
-import { and, desc, eq, inArray } from 'drizzle-orm';
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  getTableColumns,
+  inArray,
+  isNull,
+  type SQL,
+} from 'drizzle-orm';
 import { DateTime } from 'luxon';
-import { generateId, type ID, type UnsecuredDto } from '~/common';
+import {
+  EnhancedResource,
+  generateId,
+  type ID,
+  type UnsecuredDto,
+} from '~/common';
 import { Identity } from '~/core/authentication';
 import { DrizzleService } from '~/core/drizzle/drizzle.service';
 import { projects, projectWorkflowEvents } from '~/core/drizzle/schema';
+import { PolicyExecutor } from '../../authorization/policy/executor/policy-executor';
 import { type ProjectStep } from '../dto';
 import {
   type ExecuteProjectTransition,
-  type ProjectWorkflowEvent as WorkflowEvent,
+  ProjectWorkflowEvent as WorkflowEvent,
 } from './dto';
 
 /**
  * PostgreSQL implementation of the canonical `ProjectWorkflowRepository`.
  *
  * `projects.step` is kept in sync by an `AFTER INSERT` trigger on
- * `project_workflow_events` (see migration 0009 — `sync_project_step_from_event`).
+ * `project_workflow_events` (see migration 0010 — `sync_project_step_from_event`).
  * App code never writes to `projects.step` directly; insert an event and the
  * trigger does the rest. `modified_at` is bumped in the same trigger.
  *
  * `status` is a `GENERATED ALWAYS AS (CASE step ... END) STORED` column, so it
  * follows step automatically — no extra write needed.
  *
- * `stepChangedAt` derives from the event's `at` timestamp at read time on the
- * Project resolver; nothing is stored on `projects` for it.
+ * `projects.step_changed_at` is set by that same trigger, from the event's
+ * `at`. It used to be derived at read time from the latest event; migration
+ * 0041 stores it instead, because the event trail only begins 2021-02-13 and
+ * 1,560 projects moved step before it existed. Nothing to do here either way —
+ * insert the event and the trigger handles step, modified_at and
+ * step_changed_at together, so they cannot drift apart.
  */
 // migration-todo: `PublicOf<ProjectWorkflowRepository>` widens to every
 // public/protected member of the Gel base (privileges, getActualChanges,
@@ -32,32 +51,97 @@ import {
 // time and lose compile-time enforcement here. Collapses at Phase 7 cutover.
 @Injectable()
 export class ProjectWorkflowDrizzleRepository {
+  private readonly resource = EnhancedResource.of(WorkflowEvent);
+
   constructor(
     private readonly drizzle: DrizzleService,
     private readonly identity: Identity,
+    private readonly executor: PolicyExecutor,
   ) {}
 
   protected get db() {
     return this.drizzle.client;
   }
 
+  /**
+   * What the reader is allowed to see, plus the ancestry Neo4j requires.
+   *
+   * Permission: `filterToReadable()` there, `applyReadFilter` here. Read on a
+   * project workflow event is granted outright to some roles and not at all to
+   * others — Marketing, Fundraising and StaffMember can read a project but hold
+   * no grant on its events, so Neo4j resolves their permission to false and
+   * returns nothing. Securing the DTO is not a substitute: only `who` and `notes`
+   * are secured, so `id`, `at`, `to` and `transition` would pass through
+   * untouched and hand over the project's whole approval-and-rejection history,
+   * timestamps included. Returns null when the reader has no grant, and the
+   * callers answer with an empty list rather than asking the database.
+   *
+   * Ancestry: `matchEvent()` there requires `node('project', 'Project')`, and
+   * soft delete relabels to `Deleted_Project`, so an event under a removed
+   * project matches nothing. Migration 0010's `ON DELETE CASCADE` is no
+   * substitute, because the project row never leaves.
+   *
+   * A plain join, not the relational `with:` plus an EXISTS. The first version of
+   * this used a correlated EXISTS inside `db.query.…findMany`, and it returned
+   * nothing at all: the relational builder aliases the table it is querying, so
+   * the subquery's reference to the outer column did not bind to it. That is a
+   * silent wrong answer rather than an error — the workflow-event list simply came
+   * back empty — so the join is both correct and the shape whose behaviour is
+   * obvious from reading it.
+   */
+  private readableEventsUnderLiveProject(...narrowing: SQL[]) {
+    const conditions: SQL[] = [isNull(projects.deletedAt), ...narrowing];
+    // The caller's own conditions go in this ONE array with everything else.
+    // Chaining a second `.where()` onto the built query would REPLACE this
+    // clause, not add to it — silently dropping the read filter.
+    if (!this.executor.applyReadFilter(this.resource, conditions)) {
+      return null;
+    }
+    return this.db
+      .select({
+        ...getTableColumns(projectWorkflowEvents),
+        // Exactly the three columns the DTO reads off the parent.
+        project: {
+          id: projects.id,
+          type: projects.type,
+          step: projects.step,
+        },
+      })
+      .from(projectWorkflowEvents)
+      .innerJoin(projects, eq(projects.id, projectWorkflowEvents.projectId))
+      .where(and(...conditions));
+  }
+
+  // migration-todo: the actor's liveness is still missing, the same gap the
+  // sibling ProgressReport repo closed. Neo4j's `hydrate()` requires
+  // `node('who', 'Actor')`, and soft delete prefixes every label including
+  // `Actor`, so an event whose actor was deleted does not come back there. Here
+  // the row survives and the actor cannot be loaded, which nulls the event and
+  // then the whole list. NOT the identical one-liner the sibling used: `who` is
+  // nullable on this table because an event can be attributed to a system agent
+  // instead (`who_system_agent_id`, migration 0031), so it has to allow a live
+  // user OR an agent rather than inner-joining users. Left open deliberately —
+  // it needs a Neo4j-side fact checked first (whether a SystemAgent node carries
+  // the `Actor` label, which decides whether Neo4j keeps agent-actored events at
+  // all), and that question is independent of the read filter above.
   async readMany(
     ids: readonly ID[],
   ): Promise<Array<UnsecuredDto<WorkflowEvent>>> {
     if (ids.length === 0) return [];
-    const rows = await this.db.query.projectWorkflowEvents.findMany({
-      where: (e) => inArray(e.id, [...ids]),
-      with: { project: { columns: { id: true, type: true, step: true } } },
-    });
+    const query = this.readableEventsUnderLiveProject(
+      inArray(projectWorkflowEvents.id, [...ids]),
+    );
+    if (!query) return [];
+    const rows = await query;
     return rows.map((row) => this.toDto(row));
   }
 
   async list(projectId: ID): Promise<Array<UnsecuredDto<WorkflowEvent>>> {
-    const rows = await this.db.query.projectWorkflowEvents.findMany({
-      where: (e) => eq(e.projectId, projectId),
-      with: { project: { columns: { id: true, type: true, step: true } } },
-      orderBy: (e, { asc }) => [asc(e.at)],
-    });
+    const query = this.readableEventsUnderLiveProject(
+      eq(projectWorkflowEvents.projectId, projectId),
+    );
+    if (!query) return [];
+    const rows = await query.orderBy(asc(projectWorkflowEvents.at));
     return rows.map((row) => this.toDto(row));
   }
 
@@ -79,13 +163,13 @@ export class ProjectWorkflowDrizzleRepository {
     const fromStep: ProjectStep | null = projectRow?.step ?? null;
 
     const id = await generateId<ID<'ProjectWorkflowEvent'>>();
-    const who = this.identity.current.userId;
+    const actor = this.resolveActor();
     const at = new Date();
 
     await this.db.insert(projectWorkflowEvents).values({
       id,
       projectId: input.project,
-      who,
+      ...actor,
       fromStep,
       toStep: input.to,
       transitionKey: input.transition ?? null,
@@ -96,7 +180,7 @@ export class ProjectWorkflowDrizzleRepository {
     return this.toDto({
       id,
       projectId: input.project,
-      who,
+      ...actor,
       fromStep,
       toStep: input.to,
       transitionKey: input.transition ?? null,
@@ -108,6 +192,63 @@ export class ProjectWorkflowDrizzleRepository {
         step: fromStep ?? input.to,
       },
     });
+  }
+
+  /**
+   * Which actor column this event belongs in.
+   *
+   * `identity.current.userId` holds a SystemAgent's id whenever the session
+   * resolved to an agent rather than a person: an anonymous session (the Anonymous
+   * agent) or Ghost impersonation. Both set `systemAgentName` in
+   * `SessionManager.resumeSession`, which is what makes the discriminator below
+   * work, and the audit writer discriminates on the same field.
+   *
+   * Do NOT read a population claim from this method. The agent-actored events
+   * already in the data did not arrive through here — they came from the
+   * step-history backfill, which writes directly and never calls `recordEvent`.
+   * Migration 0031's header is the single source for that. (The Neo4j writer
+   * cannot produce one at all: it builds the `who` relationship against the `User`
+   * label, which system agents never carry.)
+   *
+   * Exactly one column is returned non-null, satisfying
+   * `project_workflow_events_actor_shape_chk` (migration 0031).
+   *
+   * migration-todo: TWO session shapes slip past the discriminator, and in both the
+   * failure is the foreign key to `users` — never the actor-shape CHECK, so that
+   * constraint is not what protects this.
+   *
+   * 1. REACHABLE TODAY, over a request header. `resumeSession` resolves the Ghost
+   *    agent only when the impersonatee id is the literal `'ghost'`; any other id
+   *    passes straight through, and `systemAgentName` is set from `ghost?.name`.
+   *    So a requester who sends a SystemAgent's REAL id as the impersonatee gets a
+   *    session whose `userId` is that agent while `systemAgentName` stays
+   *    undefined. The branch below reads it as a person, writes the agent id into
+   *    `who`, fails the FK, and rolls the whole transition back. Nothing validates
+   *    that the impersonatee is a live user. The underlying gap is pre-existing,
+   *    engine-independent, and mirrored in the audit writer, so it is not this
+   *    migration's to fix — but it is not hypothetical either.
+   * 2. Unreachable today. `SessionManager.asRole` builds a session with the literal
+   *    placeholder `userId: 'anonymous'`, `anonymous: false`, and no
+   *    `systemAgentName`. Both call sites are read-only permission serializers
+   *    (`policy-dumper.ts`, `permission.serializer.ts`), and `executeTransition`
+   *    does no identity switching around `recordEvent`. The fix belongs in
+   *    `asRole`.
+   *
+   * A safer shape for this method would be to treat an id that is not a live user
+   * as an agent, or to fail with a domain error naming the session shape, rather
+   * than handing an unresolvable id to the FK. Note this copy also omits the audit
+   * writer's `session.anonymous ||` half — equivalent today, and it would catch
+   * neither shape above (shape 2 sets `anonymous: false`; shape 1 has a real
+   * logged-in requester).
+   */
+  private resolveActor(): {
+    who: ID<'User'> | null;
+    whoSystemAgentId: ID<'SystemAgent'> | null;
+  } {
+    const session = this.identity.current;
+    return session.systemAgentName
+      ? { who: null, whoSystemAgentId: session.userId as ID<'SystemAgent'> }
+      : { who: session.userId as ID<'User'>, whoSystemAgentId: null };
   }
 
   /**
@@ -154,7 +295,11 @@ export class ProjectWorkflowDrizzleRepository {
       __typename: 'ProjectWorkflowEvent',
       createdAt: DateTime.fromJSDate(row.at),
       at: DateTime.fromJSDate(row.at),
-      who: { id: row.who },
+      // Exactly one actor column is set (CHECK, migration 0031). The resolver
+      // hydrates whichever id through `ActorLoader`, which resolves users and
+      // system agents alike and returns `SecuredActor` — so nothing downstream
+      // needs to know which of the two it got.
+      who: { id: (row.who ?? row.whoSystemAgentId)! },
       // `transition` is the transition key (a string id resolved to a
       // WorkflowTransition object at the resolver layer). null when the
       // transition was bypassed or dynamic.

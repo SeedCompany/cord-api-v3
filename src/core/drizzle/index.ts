@@ -1,3 +1,4 @@
+export * from './derived-sensitivity';
 export * from './drizzle-transactional-mutations.interceptor';
 export * from './drizzle.module';
 export * from './drizzle.service';
@@ -7,5 +8,6 @@ export * from './int4-multirange';
 export * from './like';
 export * from './order-by';
 export * from './pg-error-codes';
+export * from './resolve-resource-base-node';
 export * from './schema/index';
 export * from './sub-filter';

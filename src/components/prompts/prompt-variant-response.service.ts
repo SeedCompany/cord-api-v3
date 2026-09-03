@@ -268,7 +268,7 @@ export const PromptVariantResponseListService = <
       const privileges = this.resourcePrivileges.forContext(context);
       privileges.verifyCan('delete');
 
-      await this.repo.deleteNode(id);
+      await this.repo.delete(id);
 
       return response;
     }

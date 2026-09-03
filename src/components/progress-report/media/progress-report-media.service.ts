@@ -6,7 +6,9 @@ import {
   type UnsecuredDto,
 } from '~/common';
 import { type DbTypeOf } from '~/core/database';
+import { Hooks } from '~/core/hooks';
 import { ResourceLoader } from '~/core/resources';
+import { ResourceMutatedHook } from '../../audit/resource-mutated.hook';
 import { Privileges, withVariant } from '../../authorization';
 import { FileService } from '../../file';
 import { MediaService } from '../../file/media/media.service';
@@ -29,6 +31,7 @@ export class ProgressReportMediaService {
     private readonly mediaService: MediaService,
     private readonly resources: ResourceLoader,
     private readonly repo: ProgressReportMediaRepository,
+    private readonly hooks: Hooks,
   ) {}
 
   async listForReport(
@@ -71,9 +74,11 @@ export class ProgressReportMediaService {
       .for(ReportMedia, withVariant(context, input.variant))
       .verifyCan('create');
 
-    const initialDto = await this.repo.create(input);
+    // Generate the file id up front so the repo can store the FK (Postgres);
+    // the Neo4j repo ignores it and links via the createDefinedFile edge.
+    const fileId = await generateId<ID<'File'>>();
+    const initialDto = await this.repo.create(input, fileId);
 
-    const fileId = await generateId();
     await this.files.createDefinedFile(
       fileId,
       input.file.name,
@@ -81,6 +86,10 @@ export class ProgressReportMediaService {
       'file',
       input.file,
       ReportMedia.PublicVariants.has(input.variant.key),
+    );
+
+    await this.hooks.run(
+      new ResourceMutatedHook('ProgressReportMedia', initialDto.id, 'Create'),
     );
   }
 
@@ -106,6 +115,15 @@ export class ProgressReportMediaService {
     };
     loader.prime(id, updated);
 
+    await this.hooks.run(
+      new ResourceMutatedHook(
+        'ProgressReportMedia',
+        input.id,
+        'Update',
+        category !== undefined ? { category } : undefined,
+      ),
+    );
+
     return updated;
   }
 
@@ -117,6 +135,10 @@ export class ProgressReportMediaService {
 
     await this.repo.deleteNode(id);
     await this.repo.deleteVariantGroupIfEmpty(media.variantGroup);
+
+    await this.hooks.run(
+      new ResourceMutatedHook('ProgressReportMedia', id, 'Delete'),
+    );
 
     return media.report;
   }

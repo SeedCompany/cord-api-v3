@@ -81,6 +81,10 @@ export class StoryRepository extends DtoRepository(Story) {
     return await this.readOne(input.id);
   }
 
+  async delete(id: ID) {
+    await this.deleteNode(id);
+  }
+
   async readOne(id: ID) {
     return (await super.readOne(id)) as UnsecuredDto<Story>;
   }

@@ -1,17 +1,21 @@
 import { Injectable } from '@nestjs/common';
-import { and, eq, ilike, inArray, isNull, type SQL } from 'drizzle-orm';
+import { and, eq, ilike, inArray, isNull, type SQL, sql } from 'drizzle-orm';
 import { DateTime } from 'luxon';
 import {
   generateId,
   type ID,
   type PaginatedListType,
+  type Sensitivity,
   type UnsecuredDto,
 } from '~/common';
+import { Identity } from '~/core/authentication';
 import {
   catchUniqueViolation,
+  derivedSensitivityByOrganization,
   DrizzleDtoRepository,
   EMPTY_PAGE,
   escapeLikePattern,
+  organizationDerivedSensitivity,
   resolveOrderBy,
   type SortMap,
 } from '~/core/drizzle';
@@ -21,7 +25,9 @@ import {
   organizations,
   userOrganizations,
 } from '~/core/drizzle/schema';
+import { type ScopedRole } from '../authorization/dto/role.dto';
 import { PolicyExecutor } from '../authorization/policy/executor/policy-executor';
+import { requesterScopeByOrganization } from '../project/project-member/membership-scope';
 import {
   type CreateOrganization,
   Organization,
@@ -44,8 +50,54 @@ export class OrganizationDrizzleRepository extends DrizzleDtoRepository<
   constructor(
     db: DrizzleService,
     private readonly executor: PolicyExecutor,
+    private readonly identity: Identity,
   ) {
     super(db, organizations, Organization);
+  }
+
+  /**
+   * Attaches each org's `scope` — the requesting user's project-membership
+   * roles unioned across every project reachable via a live Partnership. The
+   * base class's `readMany` doesn't know about this, so it's overridden here
+   * (mirroring Ceremony/ProjectMember's overrides for their own extra joins).
+   * Without it, `member`-gated policies (e.g. FinancialAnalyst reading a
+   * High-sensitivity org) throw `MissingContextException` instead of
+   * evaluating membership, because `getScope()` finds no `scope` on the DTO.
+   */
+  override async readMany(
+    ids: readonly ID[],
+  ): Promise<Array<UnsecuredDto<Organization>>> {
+    if (ids.length === 0) return [];
+    const rows = await this.db
+      .select()
+      .from(organizations)
+      .where(
+        and(
+          inArray(organizations.id, [...ids]),
+          isNull(organizations.deletedAt),
+        ),
+      );
+    const [scopeByOrg, sensitivityByOrg] = await Promise.all([
+      requesterScopeByOrganization(
+        this.db,
+        this.identity.current.userId,
+        rows.map((row) => row.id),
+      ),
+      // Computed from the projects reached through this organization's
+      // partners, rather than read off the row — the stored column is no
+      // longer the source of truth. See `derived-sensitivity.ts`.
+      derivedSensitivityByOrganization(
+        this.db,
+        rows.map((row) => row.id),
+      ),
+    ]);
+    return rows.map((row) =>
+      this.toDto(
+        row,
+        scopeByOrg.get(row.id) ?? [],
+        sensitivityByOrg.get(row.id) ?? 'High',
+      ),
+    );
   }
 
   async create(input: CreateOrganization): Promise<UnsecuredDto<Organization>> {
@@ -105,7 +157,9 @@ export class OrganizationDrizzleRepository extends DrizzleDtoRepository<
       name: organizations.name,
       acronym: organizations.acronym,
       address: organizations.address,
-      sensitivity: organizations.sensitivity,
+      // Derived, not the stored column — a list must order by the same
+      // sensitivity it displays and filters on.
+      sensitivity: organizationDerivedSensitivity(sql`${organizations.id}`),
       createdAt: organizations.createdAt,
     } satisfies SortMap<keyof Organization>;
 
@@ -115,17 +169,26 @@ export class OrganizationDrizzleRepository extends DrizzleDtoRepository<
       page: input.page,
       count: input.count,
     });
+    if (rows.length === 0) return { total, items: [], hasMore };
+    const items = await this.readMany(rows.map((row) => row.id));
+    const byId = new Map(items.map((item) => [item.id, item]));
     return {
       total,
-      items: rows.map((row) => this.toDto(row)),
+      items: rows.map((row) => byId.get(row.id)!).filter(Boolean),
       hasMore,
     };
   }
 
   protected toDto(
     row: typeof organizations.$inferSelect,
+    scope: ScopedRole[] = [],
+    // Passed in rather than taken from `row`: it is derived from the connected
+    // projects, so the row's own column is not the answer. Defaults to the
+    // most restrictive value, which is what an organization with no projects
+    // reads on either engine.
+    sensitivity: Sensitivity = 'High',
   ): UnsecuredDto<Organization> {
-    return {
+    const dto: unknown = {
       id: row.id,
       __typename: 'Organization',
       createdAt: DateTime.fromJSDate(row.createdAt),
@@ -134,8 +197,10 @@ export class OrganizationDrizzleRepository extends DrizzleDtoRepository<
       address: row.address ?? null,
       types: row.types,
       reach: row.reach,
-      sensitivity: row.sensitivity,
+      sensitivity,
+      scope,
     };
+    return dto as UnsecuredDto<Organization>;
   }
 }
 
@@ -179,6 +244,7 @@ export const organizationSortColumns = {
   name: organizations.name,
   acronym: organizations.acronym,
   address: organizations.address,
-  sensitivity: organizations.sensitivity,
+  // Derived, not the stored column — see the sibling map in `list`.
+  sensitivity: organizationDerivedSensitivity(sql`${organizations.id}`),
   createdAt: organizations.createdAt,
 } as const;

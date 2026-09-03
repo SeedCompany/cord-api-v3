@@ -34,6 +34,55 @@ describe('Partnership e2e', () => {
     project = await createProject(app);
   });
 
+  // A project's `primaryPartnership` is whichever of its partnerships is
+  // flagged primary. Postgres returned a hardcoded null here — the field had
+  // no coverage on either engine, and it was left out of the read comparison
+  // between the two databases, so nothing was in a position to notice.
+  //
+  // Note the first partnership on a project is made primary automatically
+  // whatever the input says (partnership.service.ts), so this walks the two
+  // states that actually exist: no partnerships at all, and a later one taking
+  // over as primary.
+  it('exposes the primary partnership on its project', async () => {
+    const own = await createProject(app);
+
+    const readPrimary = async () => {
+      const { project: read } = await app.graphql.query(
+        graphql(`
+          query project($id: ID!) {
+            project(id: $id) {
+              primaryPartnership {
+                canRead
+                value {
+                  id
+                }
+              }
+            }
+          }
+        `),
+        { id: own.id },
+      );
+      return read.primaryPartnership;
+    };
+
+    // No partnerships at all.
+    expect((await readPrimary()).value).toBeNull();
+
+    // The first one is primary whether or not it asked to be.
+    const first = await createPartnership(app, { project: own.id });
+    const afterFirst = await readPrimary();
+    expect(afterFirst.canRead).toBe(true);
+    expect(afterFirst.value?.id).toBe(first.id);
+
+    // A later one flagged primary takes over. This is the assertion that
+    // fails while the field is stubbed: the project answers null throughout.
+    const second = await createPartnership(app, {
+      project: own.id,
+      primary: true,
+    });
+    expect((await readPrimary()).value?.id).toBe(second.id);
+  });
+
   it('create & read partnership by id', async () => {
     const partnership = await createPartnership(app, { project: project.id });
 
@@ -68,6 +117,79 @@ describe('Partnership e2e', () => {
     expect(actual.partner).toBeTruthy();
     expect(actual.partner).toEqual(partnership.partner);
     expect(actual.agreementStatus.canEdit).toBe(true);
+  });
+
+  /**
+   * `parent` on a ChangesetAware resource is resolved from a Neo4j-shaped
+   * BaseNode (`{ identity, labels, properties }`). A flat `{ id }` is a
+   * TypeError, because both branches of ChangesetAwareResolver.parent read
+   * `.labels` and `.properties.id`. Four Drizzle repos shipped the flat shape;
+   * no spec on any migrated entity queried this field, which is how it survived
+   * three PRs.
+   *
+   * Negative case verified 2026-08-03: with the shape fix reverted this test
+   * fails with `TypeError: Cannot read properties of undefined (reading 'id')`.
+   *
+   * SKIPPED — narrow pre-existing bug, unrelated to the BaseNode shape.
+   * `Partnership.parent` is typed as the `Project` INTERFACE, which carries a
+   * custom `resolveType` (`resolveProjectType`, project.dto.ts:82) that reads
+   * `val.type`. graphql-js always calls a custom resolveType and ignores
+   * `__typename`. The `IsOnlyId` shortcut (changeset-aware.resolver.ts:36-42)
+   * returns `{ __typename, id, changeset }` — no `type` — so selecting ONLY
+   * `id`/`changeset` under `parent` throws:
+   *
+   *   ServerException: Could not resolve project type: 'undefined'
+   *
+   * Identical under DATABASE=neo4j and DATABASE=postgres, so it is pre-existing
+   * and not a migration regression. Selecting any additional field takes the
+   * `loadByBaseNode` path, which returns the real DTO (with `type`) and works —
+   * which is why normal client queries never hit this.
+   */
+  // Named so the reason shows up in the test output, not just in the note above.
+  it.skip('resolves parent (id-only branch) — skipped: pre-existing on every engine, Project.resolveType reads `type` and ignores `__typename`', async () => {
+    const partnership = await createPartnership(app, { project: project.id });
+
+    const onlyId = await app.graphql.query(
+      graphql(`
+        query partnershipParentOnlyId($id: ID!) {
+          partnership(id: $id) {
+            parent {
+              id
+            }
+          }
+        }
+      `),
+      { id: partnership.id },
+    );
+    expect(onlyId.partnership.parent?.id).toBe(project.id);
+  });
+
+  /**
+   * The working path, and the regression test for the BaseNode shape fix.
+   *
+   * Selecting any field beyond `id`/`changeset` takes
+   * `ResourceLoader.loadByBaseNode`, which reads `.labels` and
+   * `.properties.id` off the parent BaseNode. Verified on both engines.
+   */
+  it('resolves parent as a hydrated Project', async () => {
+    const partnership = await createPartnership(app, { project: project.id });
+
+    const hydrated = await app.graphql.query(
+      graphql(`
+        query partnershipParentHydrated($id: ID!) {
+          partnership(id: $id) {
+            parent {
+              id
+              __typename
+              createdAt
+            }
+          }
+        }
+      `),
+      { id: partnership.id },
+    );
+    expect(hydrated.partnership.parent?.id).toBe(project.id);
+    expect(hydrated.partnership.parent?.__typename).toMatch(/Project$/);
   });
 
   it('update partnership', async () => {
@@ -119,7 +241,7 @@ describe('Partnership e2e', () => {
       );
   });
 
-  it.skip('delete partnership', async () => {
+  it('delete partnership', async () => {
     const partnership = await createPartnership(app, { project: project.id });
     expect(partnership.id).toBeTruthy();
     const result = await app.graphql.mutate(

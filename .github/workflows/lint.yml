@@ -16,6 +16,15 @@ concurrency:
 jobs:
   lint:
     runs-on: ubuntu-latest
+    env:
+      # Type-aware rules and `tsc` itself both build a full TypeScript program
+      # in memory, and that's grown enough (dozens of new domains from the
+      # Postgres migration) to hit Node's default ~4GB heap ceiling on
+      # ubuntu-latest runners — an OOM crash mid-step, not a real problem with
+      # the code. Runners have far more RAM than that default; just raise the
+      # ceiling for every step in this job, not only whichever one crashed
+      # most recently.
+      NODE_OPTIONS: '--max-old-space-size=8192'
 
     steps:
       - uses: actions/checkout@v4

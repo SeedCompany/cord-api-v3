@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { and, eq, ilike, inArray, isNull, or, type SQL } from 'drizzle-orm';
+import { and, eq, ilike, inArray, isNull, ne, or, type SQL } from 'drizzle-orm';
 import { groupBy } from 'lodash';
 import { DateTime } from 'luxon';
 import {
@@ -11,6 +11,7 @@ import {
   type UnsecuredDto,
 } from '~/common';
 import { Identity } from '~/core/authentication';
+import { ConfigService } from '~/core/config';
 import {
   catchUniqueViolation,
   DrizzleDtoRepository,
@@ -21,6 +22,8 @@ import {
 } from '~/core/drizzle';
 import { type DrizzleDb, DrizzleService } from '~/core/drizzle/drizzle.service';
 import {
+  engagements,
+  partners,
   userGlobalRoles,
   userOrganizations,
   users,
@@ -28,6 +31,7 @@ import {
 import { PolicyExecutor } from '../authorization/policy/executor/policy-executor';
 import { FileService } from '../file';
 import { type FileId } from '../file/dto';
+import { pinnedByRequester, pinnedFilter } from '../pin/pinned-by-requester';
 import {
   type AssignOrganizationToUser,
   type CreatePerson,
@@ -41,6 +45,8 @@ import {
 
 type UserRow = typeof users.$inferSelect & {
   globalRoles?: Array<typeof userGlobalRoles.$inferSelect>;
+  isIntern?: boolean;
+  pinned?: boolean;
 };
 
 const catchEmailUnique = catchUniqueViolation(
@@ -59,25 +65,60 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
     private readonly executor: PolicyExecutor,
     private readonly files: FileService,
     private readonly identity: Identity,
+    private readonly config: ConfigService,
   ) {
     super(db, users, User);
   }
 
-  // migration-todo: populate `isIntern` on toDto() (subquery against the
-  // internship_engagements table where intern_id = users.id), and add an
-  // `asDrizzleCondition` to IsInternCondition for the DB-level filter.
   override async readMany(
     ids: readonly ID[],
   ): Promise<Array<UnsecuredDto<User>>> {
-    const rows = await this.db.query.users.findMany({
-      where: (user) => and(inArray(user.id, [...ids]), isNull(user.deletedAt)),
-      with: { globalRoles: true },
-    });
-    return rows.map((row) => this.toDto(row));
+    const [rows, interns] = await Promise.all([
+      this.db.query.users.findMany({
+        where: (user) =>
+          and(inArray(user.id, [...ids]), isNull(user.deletedAt)),
+        with: { globalRoles: true },
+      }),
+      this.internUserIds(ids),
+    ]);
+    const pinnedSet = await pinnedByRequester(
+      this.db,
+      this.identity.currentMaybe?.userId,
+      rows.map((r) => r.id),
+    );
+    return rows.map((row) =>
+      this.toDto({
+        ...row,
+        isIntern: interns.has(row.id),
+        pinned: pinnedSet.has(row.id),
+      }),
+    );
+  }
+
+  /**
+   * The subset of `ids` who are the intern on ≥1 live InternshipEngagement —
+   * feeds the `isIntern` flag the IsIntern policy condition reads. Must stay
+   * in lockstep with IsInternCondition.asDrizzleCondition (same predicate).
+   */
+  private async internUserIds(
+    ids: readonly ID[],
+  ): Promise<ReadonlySet<string>> {
+    if (ids.length === 0) return new Set();
+    const rows = await this.db
+      .selectDistinct({ id: engagements.internId })
+      .from(engagements)
+      .where(
+        and(
+          inArray(engagements.internId, [...ids]),
+          eq(engagements.type, 'Internship'),
+          isNull(engagements.deletedAt),
+        ),
+      );
+    return new Set(rows.flatMap((row) => (row.id ? [row.id] : [])));
   }
 
   async readManyActors(ids: readonly ID[]) {
-    const [userRows, agentRows] = await Promise.all([
+    const [userRows, agentRows, interns] = await Promise.all([
       this.db.query.users.findMany({
         where: (user) =>
           and(inArray(user.id, [...ids]), isNull(user.deletedAt)),
@@ -86,11 +127,12 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
       this.db.query.systemAgents.findMany({
         where: (agent) => inArray(agent.id, [...ids]),
       }),
+      this.internUserIds(ids),
     ]);
     return [
-      ...(userRows.map((row) => this.toDto(row)) as Array<
-        UnsecuredDto<User | SystemAgent>
-      >),
+      ...(userRows.map((row) =>
+        this.toDto({ ...row, isIntern: interns.has(row.id) }),
+      ) as Array<UnsecuredDto<User | SystemAgent>>),
       ...agentRows.map(
         (row) =>
           // migration-todo: SystemAgent is abstract; cast bridges plain row → class shape
@@ -189,25 +231,46 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
     return await this.readOne(id);
   }
 
-  async delete(id: ID, _object: User): Promise<void> {
+  async delete(id: ID): Promise<void> {
     await this.softDelete(id);
   }
 
   async list(
     input: UserListInput,
   ): Promise<PaginatedListType<UnsecuredDto<User>>> {
-    const conditions: SQL[] = [isNull(users.deletedAt)];
+    const conditions: SQL[] = [
+      isNull(users.deletedAt),
+      // The anonymous user is a system record, not a person, and has no place
+      // in a list of people. Neo4j leaves it out; without this the People page
+      // gains a nameless extra row at cutover (Postgres 2,376 vs Neo4j 2,375,
+      // measured by shadow-diff against the production copy).
+      //
+      // Excluded by its configured id rather than a column, because there is no
+      // marker to read: Neo4j distinguishes it with an `AnonUser` label, and
+      // unlike the root user — carried as `users.is_root` — that label has no
+      // counterpart here. `config.anonUser.id` is the same fixed constant the
+      // admin bootstrap uses to create the row, so it is the definition of
+      // which user this is, on both engines.
+      ne(users.id, this.config.anonUser.id),
+    ];
     if (!this.executor.applyReadFilter(this.resource, conditions)) {
       return EMPTY_PAGE;
     }
-    conditions.push(...userFilterClauses(this.db, input.filter));
+    conditions.push(
+      ...userFilterClauses(
+        this.db,
+        input.filter,
+        this.identity.currentMaybe?.userId,
+      ),
+    );
 
     const sortColumns = {
+      fullName: [users.realFirstName, users.realLastName],
       realLastName: [users.realLastName, users.realFirstName],
       displayLastName: [users.displayLastName, users.displayFirstName],
       realFirstName: [users.realFirstName, users.realLastName],
       displayFirstName: [users.displayFirstName, users.displayLastName],
-    } satisfies SortMap<keyof User>;
+    } satisfies SortMap<keyof User | 'fullName'>;
 
     const { rows, total, hasMore } = await this.paginatedSelect({
       predicate: and(...conditions),
@@ -217,19 +280,31 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
     });
 
     const ids = rows.map((row) => row.id);
-    const allRoles =
+    const [allRoles, interns] = await Promise.all([
       ids.length > 0
-        ? await this.db
+        ? this.db
             .select()
             .from(userGlobalRoles)
             .where(inArray(userGlobalRoles.userId, ids))
-        : [];
+        : [],
+      this.internUserIds(ids),
+    ]);
     const rolesByUser = groupBy(allRoles, (row) => row.userId);
+    const pinnedSet = await pinnedByRequester(
+      this.db,
+      this.identity.currentMaybe?.userId,
+      ids,
+    );
 
     return {
       total,
       items: rows.map((row) =>
-        this.toDto({ ...row, globalRoles: rolesByUser[row.id] ?? [] }),
+        this.toDto({
+          ...row,
+          globalRoles: rolesByUser[row.id] ?? [],
+          isIntern: interns.has(row.id),
+          pinned: pinnedSet.has(row.id),
+        }),
       ),
       hasMore,
     };
@@ -253,7 +328,9 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
       where: and(...conditions),
       with: { globalRoles: true },
     });
-    return row ? this.toDto(row) : null;
+    if (!row) return null;
+    const interns = await this.internUserIds([row.id]);
+    return this.toDto({ ...row, isIntern: interns.has(row.id) });
   }
 
   async assignOrganizationToUser({
@@ -316,7 +393,8 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
   /**
    * Public wrapper around `toDto` so other domains' repos (e.g. ProjectMember)
    * can hydrate a User from a raw row without duplicating logic. The row should
-   * be loaded with `globalRoles`.
+   * be loaded with `globalRoles`. `isIntern` stays unset here — embedded users
+   * aren't edit targets, so the IsIntern policy condition never reads them.
    */
   mapRowToDto(row: UserRow): UnsecuredDto<User> {
     return this.toDto(row);
@@ -340,8 +418,10 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
       title: row.title ?? null,
       gender: row.gender ?? null,
       photo: row.photoId ? { id: row.photoId } : null,
-      // migration-todo: pinned is per-requesting-user state, not stored on the user row
-      pinned: false,
+      // Per-requester pin state — populated by readMany/list via
+      // pinnedByRequester; other internal paths (actors, byEmail) leave it false.
+      pinned: row.pinned ?? false,
+      isIntern: row.isIntern,
     };
   }
 }
@@ -351,15 +431,21 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
  * `users` table. Reusable from sub-filters in other domains (e.g. FieldZone's
  * `director` filter) — the caller composes these with their own join/lookup.
  *
- * Note: `pinned` is not stored on the user row (per-requester state), so it is
- * intentionally not handled here — same migration-todo as the user list itself.
+ * `pinned` is per-requester state, so it needs `requesterId` — the user list
+ * passes it; sub-filter callers currently don't, and for them a `pinned`
+ * filter matches nothing (same as an anonymous requester — the semantics
+ * `pinnedFilter` already defines).
  */
 export const userFilterClauses = (
   db: DrizzleDb,
   filter: UserFilters | undefined,
+  requesterId?: ID<'User'>,
 ): SQL[] => {
   const conditions: SQL[] = [];
   if (!filter) return conditions;
+  if (filter.pinned != null) {
+    conditions.push(pinnedFilter(requesterId, users.id, filter.pinned));
+  }
   if (filter.id) conditions.push(eq(users.id, filter.id));
   if (filter.status) conditions.push(eq(users.status, filter.status));
   if (filter.name) {
@@ -382,6 +468,19 @@ export const userFilterClauses = (
       .from(userGlobalRoles)
       .where(inArray(userGlobalRoles.role, filter.roles));
     conditions.push(inArray(users.id, roleSubq));
+  }
+  if (filter.partnerId) {
+    const partnerUserIdsSubq = db
+      .selectDistinct({ userId: userOrganizations.userId })
+      .from(userOrganizations)
+      .innerJoin(
+        partners,
+        eq(partners.organizationId, userOrganizations.organizationId),
+      )
+      .where(
+        and(eq(partners.id, filter.partnerId), isNull(partners.deletedAt)),
+      );
+    conditions.push(inArray(users.id, partnerUserIdsSubq));
   }
   return conditions;
 };

@@ -2,6 +2,7 @@ import { relations, sql } from 'drizzle-orm';
 import {
   type AnyPgColumn,
   bigint,
+  bigserial,
   boolean,
   check,
   date,
@@ -16,9 +17,19 @@ import {
   timestamp,
   uniqueIndex,
 } from 'drizzle-orm/pg-core';
-import { type ID, type Role } from '~/common';
+import {
+  type ID,
+  type Range,
+  type RichTextDocument,
+  type Role,
+} from '~/common';
 import { type BudgetStatus } from '../../../components/budget/dto/budget-status.enum';
+import { type CeremonyType } from '../../../components/ceremony/dto/ceremony-type.enum';
+import { type InternshipPosition } from '../../../components/engagement/dto/intern-position.enum';
+import { type EngagementStatus } from '../../../components/engagement/dto/status.enum';
 import { type FileNodeType } from '../../../components/file/dto/file-node-type.enum';
+import { type AIAssistedTranslation } from '../../../components/language/dto/ai-assisted-translation.enum';
+import { type LanguageMilestone } from '../../../components/language/dto/language-milestone.enum';
 import { type LocationType } from '../../../components/location/dto/location-type.enum';
 import { type OrganizationReach } from '../../../components/organization/dto/organization-reach.dto';
 import { type OrganizationType } from '../../../components/organization/dto/organization-type.dto';
@@ -26,11 +37,23 @@ import { type PartnerType } from '../../../components/partner/dto/partner-type.e
 import { type FinancialReportingType } from '../../../components/partnership/dto/financial-reporting-type.enum';
 import { type PartnershipAgreementStatus } from '../../../components/partnership/dto/partnership-agreement-status.enum';
 import { type ReportPeriod } from '../../../components/periodic-report/dto/report-period.enum';
+import { type ReportType } from '../../../components/periodic-report/dto/report-type.enum';
+import { type PostType } from '../../../components/post/dto/post-type.enum';
+import { type PostShareability } from '../../../components/post/dto/shareability.dto';
+import { type ProductMedium } from '../../../components/product/dto/product-medium.enum';
+import { type ProductMethodology } from '../../../components/product/dto/product-methodology.enum';
+import { type ProductPurpose } from '../../../components/product/dto/product-purpose.enum';
+import { type ProductStep } from '../../../components/product/dto/product-step.enum';
+import { type ProgressMeasurement } from '../../../components/product/dto/progress-measurement.enum';
+import { type ProgressReportStatus } from '../../../components/progress-report/dto/progress-report-status.enum';
+import { type MediaCategory } from '../../../components/progress-report/media/media-category.enum';
 import { type ProjectStatus } from '../../../components/project/dto/project-status.enum';
 import { type ProjectStep } from '../../../components/project/dto/project-step.enum';
 import { type ProjectType } from '../../../components/project/dto/project-type.enum';
+import { type Prompt } from '../../../components/prompts/dto/prompt.dto';
 import { type ToolKey } from '../../../components/tools/tool/dto/tool-key.enum';
 import { type Gender } from '../../../components/user/dto/gender.enum';
+import { type LanguageProficiency } from '../../../components/user/dto/language-proficiency.enum';
 import { int4multirange } from '../int4-multirange';
 
 export const userStatusEnum = pgEnum('user_status', ['Active', 'Disabled']);
@@ -51,14 +74,17 @@ export const degreeEnum = pgEnum('degree', [
 export const users = pgTable('users', {
   id: text('id').$type<ID<'User'>>().primaryKey(),
   isRoot: boolean('is_root').notNull().default(false),
-  status: userStatusEnum('status').notNull(),
+  // Nullable (migration 0042): Neo4j stores each of these only when somebody
+  // set it, so NOT NULL forced the loader to invent one. The create paths all
+  // write these columns explicitly, so nothing new arrives blank.
+  status: userStatusEnum('status'),
   email: text('email').unique(),
-  realFirstName: text('real_first_name').notNull().default(''),
-  realLastName: text('real_last_name').notNull().default(''),
-  displayFirstName: text('display_first_name').notNull().default(''),
-  displayLastName: text('display_last_name').notNull().default(''),
+  realFirstName: text('real_first_name'),
+  realLastName: text('real_last_name'),
+  displayFirstName: text('display_first_name'),
+  displayLastName: text('display_last_name'),
   phone: text('phone'),
-  timezone: text('timezone').notNull().default('America/Chicago'),
+  timezone: text('timezone'),
   about: text('about'),
   title: text('title'),
   gender: genderEnum('gender').$type<Gender>(),
@@ -82,6 +108,7 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   }),
   educations: many(educations),
   unavailabilities: many(unavailabilities),
+  locations: many(userLocations),
 }));
 
 export const userGlobalRoles = pgTable(
@@ -299,13 +326,14 @@ export const locations = pgTable(
     deletedAt: timestamp('deleted_at', { withTimezone: true }),
   },
   (t) => [
-    // Partial unique indexes scoped to live rows so soft-deleted records
-    // don't block reuse of their name / iso_alpha3.
+    // Partial unique index scoped to live rows so soft-deleted records don't
+    // block reuse of their name. `iso_alpha3` is deliberately NOT unique —
+    // Neo4j never constrained it, and nothing *filters* on it (the resolver reads
+    // the value and resolves the ISO country in app code). It IS a selectable
+    // sort key though, so it is not unread; there is simply no index behind that
+    // sort, which this table's size makes fine. See migration 0030.
     uniqueIndex('locations_name_active_unique')
       .on(t.name)
-      .where(sql`${t.deletedAt} IS NULL`),
-    uniqueIndex('locations_iso_alpha3_active_unique')
-      .on(t.isoAlpha3)
       .where(sql`${t.deletedAt} IS NULL`),
     index('locations_default_marketing_region_id_idx').on(
       t.defaultMarketingRegionId,
@@ -317,7 +345,38 @@ export const locations = pgTable(
   ],
 );
 
-export const locationsRelations = relations(locations, () => ({}));
+export const locationsRelations = relations(locations, ({ many }) => ({
+  users: many(userLocations),
+}));
+
+export const userLocations = pgTable(
+  'user_locations',
+  {
+    userId: text('user_id')
+      .$type<ID<'User'>>()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    locationId: text('location_id')
+      .$type<ID<'Location'>>()
+      .notNull()
+      .references(() => locations.id, { onDelete: 'cascade' }),
+  },
+  (t) => [
+    primaryKey({ columns: [t.userId, t.locationId] }),
+    index('user_locations_location_id_idx').on(t.locationId),
+  ],
+);
+
+export const userLocationsRelations = relations(userLocations, ({ one }) => ({
+  user: one(users, {
+    fields: [userLocations.userId],
+    references: [users.id],
+  }),
+  location: one(locations, {
+    fields: [userLocations.locationId],
+    references: [locations.id],
+  }),
+}));
 
 // ─── Organizations ─────────────────────────────────────────────────────────
 
@@ -355,8 +414,15 @@ export const organizations = pgTable(
       .$type<readonly OrganizationReach[]>()
       .notNull()
       .default([]),
-    // migration-todo: keep current via hooks once Project/Partnership migrate;
-    // currently always 'High' since no project linkage exists in PG yet.
+    // NO LONGER READ. The organization's sensitivity is derived in the query
+    // from the projects reached through its partners — see
+    // `derived-sensitivity.ts`. This column stayed defaulted to 'High' with
+    // nothing keeping it current, which is why it stopped being the answer.
+    // It is left in place only because the cutover ETL still writes it and
+    // removing it would invalidate a certified load.
+    // migration-todo(cutover-cleanup): drop this column and stop the partner
+    // extractor writing it. Nothing reads it now, so it can go with the rest
+    // of the transition-only schema rather than needing its own migration.
     sensitivity: sensitivityEnum('sensitivity').notNull().default('High'),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
@@ -577,24 +643,33 @@ export const ethnologueLanguages = pgTable(
   'ethnologue_languages',
   {
     id: text('id').$type<ID<'EthnologueLanguage'>>().primaryKey(),
-    // migration-todo: add REFERENCES languages(id) ON DELETE SET NULL when
-    // Language migrates in Phase 3&4. Deliberately NOT `ON DELETE CASCADE`
-    // and `language_id` is nullable — preserves the path to the planned
-    // future model where EthnologueLanguage is a global pool of canonical
-    // language records and `language_id` is a *soft attachment* (a new
-    // Language hooks into an existing pool entry by code, rather than
-    // creating its own Ethnologue). Deleting a Language should release the
-    // attachment, not destroy the pool entry. The Apollo client already
-    // treats EthnologueLanguage as a value object (`typePolicies.base.ts:43`
-    // — `keyFields: false`), and no codepath calls a delete on it.
+    // The reference to `languages(id)` ALREADY EXISTS — added by migration 0016
+    // and fully enforced. (An earlier version of this comment still asked for it
+    // to be added "when Language migrates"; Language migrated, and the FK came
+    // with it.)
     //
-    // The `code` / `provisional_code` partial uniques stay GLOBAL (not
-    // scoped to attached rows) because the future global-pool model
-    // requires codes to be unique across the entire pool — orphaned and
-    // attached alike. Today that means deleting a Language and then
-    // creating a new one with the same code throws on the unique index;
-    // that error path is the seed of the future "attach existing pool
-    // entry by code" logic.
+    // migration-todo: only the `ON DELETE SET NULL` half is outstanding.
+    // Deliberately NOT `ON DELETE CASCADE`, and `language_id` stays nullable —
+    // that preserves the path to the planned future model where
+    // EthnologueLanguage is a global pool of canonical language records and
+    // `language_id` is a *soft attachment* (a new Language hooks into an existing
+    // pool entry by code rather than creating its own Ethnologue). Deleting a
+    // Language should release the attachment, not destroy the pool entry. The
+    // Apollo client already treats EthnologueLanguage as a value object
+    // (`typePolicies.base.ts:43` — `keyFields: false`), and no codepath calls a
+    // delete on it.
+    //
+    // Codes are NOT unique — see migration 0030 and the note further down this
+    // table. An earlier version of this comment said the `code` /
+    // `provisional_code` uniques stayed GLOBAL to support that pool model, and
+    // that recreating a Language with an existing code would throw on the unique
+    // index. Neither is true any more: ethnologue codes are shared across a large
+    // share of languages, so a pool keyed uniquely by code cannot exist, and 0030
+    // drops both indexes along with the handlers that translated their
+    // violations. So when the pool model is built, "attach to the existing entry
+    // by code" has to disambiguate MULTIPLE candidates per code in application
+    // code — a single-row lookup by code is not something the database can
+    // guarantee.
     //
     // Separate-ticket cleanup (out of scope here): `EthnologueLanguage.canDelete`
     // (on the DTO) and the `r.EthnologueLanguage.create.read.edit.delete`
@@ -602,7 +677,9 @@ export const ethnologueLanguages = pgTable(
     // surfaces only because `secure()` injects it as standard Resource
     // boilerplate, and the `.delete` policy bit is never exercised. Prune
     // both in a follow-up PR.
-    languageId: text('language_id').$type<ID<'Language'>>(),
+    languageId: text('language_id')
+      .$type<ID<'Language'>>()
+      .references((): AnyPgColumn => languages.id),
     code: text('code'),
     provisionalCode: text('provisional_code'),
     name: text('name'),
@@ -631,18 +708,14 @@ export const ethnologueLanguages = pgTable(
     uniqueIndex('ethnologue_languages_language_id_unique')
       .on(t.languageId)
       .where(sql`${t.deletedAt} IS NULL`),
-    uniqueIndex('ethnologue_languages_code_unique')
-      .on(t.code)
-      .where(sql`${t.code} IS NOT NULL AND ${t.deletedAt} IS NULL`),
-    uniqueIndex('ethnologue_languages_provisional_code_unique')
-      .on(t.provisionalCode)
-      .where(sql`${t.provisionalCode} IS NOT NULL AND ${t.deletedAt} IS NULL`),
+    // Full FK index — the partial unique above can't serve FK-maintenance
+    // scans. Added in 0016 alongside the REFERENCES attach.
+    index('ethnologue_languages_language_id_idx').on(t.languageId),
+    // `code` and `provisional_code` are deliberately NOT unique. Languages share
+    // ethnologue codes routinely, and Neo4j never constrained either column. The
+    // unique key for a language is its ROLV code, over on `languages`. See
+    // migration 0030.
   ],
-);
-
-export const ethnologueLanguagesRelations = relations(
-  ethnologueLanguages,
-  () => ({}),
 );
 
 // ─── Tools ─────────────────────────────────────────────────────────────────
@@ -805,6 +878,71 @@ export const departmentIdBlocks = pgTable('department_id_blocks', {
     .default([]),
 });
 
+/**
+ * Department IDs that already exist in Intacct, the accounting system, and so
+ * must never be assigned to a CORD project.
+ *
+ * A reservation list rather than an entity: nothing references these rows and
+ * they reference nothing. Their whole purpose is to be subtracted from the pool
+ * of available IDs when set-department-id.handler.ts picks the next one. The
+ * department ID is the primary key because the reservation is the identity —
+ * the source nodes carry an apoc-generated uuid that names nothing.
+ *
+ * See migration 0040 for why there is no CHECK on the code's shape and no
+ * deleted_at.
+ */
+export const externalDepartmentIds = pgTable('external_department_ids', {
+  departmentId: text('department_id').primaryKey(),
+  name: text('name').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+/**
+ * Finance-approver config: "user X approves finances for project type Y" —
+ * read by the project workflow to notify approvers on financial-plan
+ * transitions. Ported (not retired) per Rob 2026-08-24: without it those
+ * notifications silently stop at cutover.
+ *
+ * One row per user: Neo4j merges one ProjectTypeFinancialApprover node per
+ * [:financialApprover] user and Gel makes the link exclusive. The source node
+ * holds ONLY the projectTypes array — no id, no timestamps — so the user IS
+ * the row identity.
+ */
+export const financialApprovers = pgTable(
+  'financial_approvers',
+  {
+    userId: text('user_id')
+      .$type<ID<'User'>>()
+      .primaryKey()
+      .references(() => users.id),
+    projectTypes: projectTypeEnum('project_types')
+      .array()
+      .$type<readonly [ProjectType, ...ProjectType[]]>()
+      .notNull(),
+  },
+  (t) => [
+    // An approver with no project types is a delete, not a row — the write
+    // path removes the row when the list empties (matching Neo4j's
+    // detachDelete), and the DB refuses the meaningless state outright.
+    check(
+      'financial_approvers_types_not_empty',
+      sql`cardinality(${t.projectTypes}) > 0`,
+    ),
+  ],
+);
+
+export const financialApproversRelations = relations(
+  financialApprovers,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [financialApprovers.userId],
+      references: [users.id],
+    }),
+  }),
+);
+
 export const partners = pgTable(
   'partners',
   {
@@ -829,10 +967,9 @@ export const partners = pgTable(
       .notNull()
       .default([]),
     pmcEntityCode: text('pmc_entity_code'),
-    globalInnovationsClient: boolean('global_innovations_client')
-      .notNull()
-      .default(false),
-    active: boolean('active').notNull().default(false),
+    // Nullable (migration 0042) — an unmarked partner is blank, not a "no".
+    globalInnovationsClient: boolean('global_innovations_client'),
+    active: boolean('active'),
     address: text('address'),
     // migration-todo: deferred FK → languages(id); add REFERENCES when Language
     // migrates. Plain text until then (same pattern as locations.funding_account_id).
@@ -852,9 +989,9 @@ export const partners = pgTable(
     departmentIdBlockId: text('department_id_block_id')
       .$type<ID>()
       .references(() => departmentIdBlocks.id),
-    // migration-todo: derived from the project's sensitivity; keep current via
-    // hook once Project/Partnership migrate. Always 'High' until then — same as
-    // organizations.sensitivity.
+    // NO LONGER READ — same story as organizations.sensitivity above. Derived
+    // in the query from the partner's projects (`derived-sensitivity.ts`).
+    // migration-todo(cutover-cleanup): drop with the organization one.
     sensitivity: sensitivityEnum('sensitivity').notNull().default('High'),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
@@ -1087,6 +1224,24 @@ export const projects = pgTable(
       .$type<ProjectStep>()
       .notNull()
       .default('EarlyConversations'),
+    /**
+     * When the project last moved to a new step.
+     *
+     * Stored rather than derived from `project_workflow_events`, because the
+     * event trail only begins 2021-02-13 and 1,560 production projects
+     * transitioned before it existed — see migration 0041. Nullable on
+     * purpose: Neo4j reports blank for the ~470 legacy projects that never
+     * moved, and matching that beats inventing a date.
+     *
+     * Written by the `sync_project_step_from_event` trigger, never by app
+     * code — same rule as `step` itself.
+     *
+     * migration-todo(post-cutover): revisit stored vs derived once the
+     * pre-2021 rows are the only ones needing it (Rob's call 2026-08-26).
+     */
+    stepChangedAt: timestamp('step_changed_at', {
+      withTimezone: true,
+    }).default(sql`now()`),
     status: projectStatusEnum('status')
       .$type<ProjectStatus>()
       .generatedAlwaysAs(
@@ -1167,7 +1322,10 @@ export const projects = pgTable(
       'financial_report_period',
     ).$type<ReportPeriod>(),
     tags: text('tags').array().notNull().default([]),
-    presetInventory: boolean('preset_inventory').notNull().default(false),
+    // Nullable (migration 0042). Also fixes the list filter: `eq(..., false)`
+    // used to sweep in every unmarked project, where Neo4j's `filter.propVal()`
+    // matches neither true nor false when the property was never written.
+    presetInventory: boolean('preset_inventory'),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -1263,10 +1421,18 @@ export const projectWorkflowEvents = pgTable(
       .$type<ID<'Project'>>()
       .notNull()
       .references(() => projects.id, { onDelete: 'cascade' }),
+    // Exactly one of `who` / `who_system_agent_id` is set — a transition always
+    // has an actor, but it is a User or a SystemAgent. Most events are
+    // agent-driven, and Neo4j has always matched `node('who','Actor')`.
+    // See migration 0031, and `resource_mutations` for the same arc on the audit
+    // log (which stores the agent's name, not an FK — the reasoning for the
+    // difference is in 0031's header).
     who: text('who')
       .$type<ID<'User'>>()
-      .notNull()
       .references(() => users.id),
+    whoSystemAgentId: text('who_system_agent_id')
+      .$type<ID<'SystemAgent'>>()
+      .references(() => systemAgents.id),
     // Nullable for synthetic/initial events; populated for normal transitions.
     fromStep: projectStepEnum('from_step').$type<ProjectStep>(),
     toStep: projectStepEnum('to_step').$type<ProjectStep>().notNull(),
@@ -1283,6 +1449,13 @@ export const projectWorkflowEvents = pgTable(
       t.at.desc(),
     ),
     index('project_workflow_events_who_idx').on(t.who),
+    index('project_workflow_events_who_system_agent_id_idx').on(
+      t.whoSystemAgentId,
+    ),
+    check(
+      'project_workflow_events_actor_shape_chk',
+      sql`num_nonnulls(${t.who}, ${t.whoSystemAgentId}) = 1`,
+    ),
   ],
 );
 
@@ -1320,7 +1493,40 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
   }),
   members: many(projectMembers),
   workflowEvents: many(projectWorkflowEvents),
+  otherLocations: many(projectOtherLocations),
 }));
+
+export const projectOtherLocations = pgTable(
+  'project_other_locations',
+  {
+    projectId: text('project_id')
+      .$type<ID<'Project'>>()
+      .notNull()
+      .references(() => projects.id, { onDelete: 'cascade' }),
+    locationId: text('location_id')
+      .$type<ID<'Location'>>()
+      .notNull()
+      .references(() => locations.id, { onDelete: 'cascade' }),
+  },
+  (t) => [
+    primaryKey({ columns: [t.projectId, t.locationId] }),
+    index('project_other_locations_location_id_idx').on(t.locationId),
+  ],
+);
+
+export const projectOtherLocationsRelations = relations(
+  projectOtherLocations,
+  ({ one }) => ({
+    project: one(projects, {
+      fields: [projectOtherLocations.projectId],
+      references: [projects.id],
+    }),
+    location: one(locations, {
+      fields: [projectOtherLocations.locationId],
+      references: [locations.id],
+    }),
+  }),
+);
 
 export const projectMembersRelations = relations(projectMembers, ({ one }) => ({
   project: one(projects, {
@@ -1475,10 +1681,12 @@ export const notifications = pgTable(
     // System
     message: text('message'),
     // CommentViaMention. FK-less for now — the comments table lands in a later
-    // Phase 6 migration.
-    // migration-todo: add `.references(() => comments.id, { onDelete: 'cascade' })`
-    // once the comments table exists (Comments domain port).
-    commentId: text('comment_id').$type<ID<'Comment'>>(),
+    // Phase 6 migration. FK to comments added with the Comments migration
+    // (0024) — a deferred (thunked) reference since `comments` is declared
+    // later in this file.
+    commentId: text('comment_id')
+      .$type<ID<'Comment'>>()
+      .references(() => comments.id, { onDelete: 'cascade' }),
   },
   (t) => [
     index('notifications_created_at_idx').on(t.createdAt),
@@ -1614,3 +1822,1577 @@ export const budgetRecordsRelations = relations(budgetRecords, ({ one }) => ({
     references: [organizations.id],
   }),
 }));
+
+// ─── Languages ─────────────────────────────────────────────────────────────
+
+export const languages = pgTable(
+  'languages',
+  {
+    id: text('id').$type<ID<'Language'>>().primaryKey(),
+    name: text('name').notNull(),
+    displayName: text('display_name').notNull(),
+    displayNamePronunciation: text('display_name_pronunciation'),
+    // User-settable. `effectiveSensitivity` is computed at read time as the
+    // lowest sensitivity across projects engaging this language (mirror of
+    // the Neo4j hydrate); falls back to this column when unengaged.
+    sensitivity: sensitivityEnum('sensitivity').notNull().default('High'),
+    isDialect: boolean('is_dialect').notNull().default(false),
+    populationOverride: integer('population_override'),
+    registryOfLanguageVarietiesCode: text(
+      'registry_of_language_varieties_code',
+    ),
+    leastOfThese: boolean('least_of_these').notNull().default(false),
+    leastOfTheseReason: text('least_of_these_reason'),
+    isSignLanguage: boolean('is_sign_language').notNull().default(false),
+    signLanguageCode: text('sign_language_code'),
+    sponsorEstimatedEndDate: date('sponsor_estimated_end_date'),
+    hasExternalFirstScripture: boolean('has_external_first_scripture')
+      .notNull()
+      .default(false),
+    tags: text('tags').array().$type<readonly string[]>().notNull().default([]),
+    isAvailableForReporting: boolean('is_available_for_reporting')
+      .notNull()
+      .default(false),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (t) => [
+    // The ROLV code is the unique natural key for a language; the names
+    // deliberately are NOT. Distinct languages legitimately share a name — real
+    // data contains such groups, each separable by ROLV — and Neo4j never
+    // constrained them. The comment that used to sit here claimed these mirrored
+    // Neo4j `LanguageName` / `LanguageDisplayName` constraints; those constraints
+    // do not exist, and the claim misled two separate pieces of work. Partial,
+    // scoped to live rows. See migration 0030.
+    uniqueIndex('languages_rolv_code_active_unique')
+      .on(t.registryOfLanguageVarietiesCode)
+      .where(
+        sql`${t.registryOfLanguageVarietiesCode} IS NOT NULL AND ${t.deletedAt} IS NULL`,
+      ),
+  ],
+);
+
+export const languagesRelations = relations(languages, ({ one, many }) => ({
+  // 1:1 — the FK lives on ethnologue_languages.language_id (soft attachment;
+  // see that table's comment for the future global-pool model).
+  ethnologue: one(ethnologueLanguages, {
+    fields: [languages.id],
+    references: [ethnologueLanguages.languageId],
+  }),
+  locations: many(languageLocations),
+}));
+
+export const languageLocations = pgTable(
+  'language_locations',
+  {
+    languageId: text('language_id')
+      .$type<ID<'Language'>>()
+      .notNull()
+      .references(() => languages.id, { onDelete: 'cascade' }),
+    locationId: text('location_id')
+      .$type<ID<'Location'>>()
+      .notNull()
+      .references(() => locations.id, { onDelete: 'cascade' }),
+  },
+  (t) => [
+    primaryKey({ columns: [t.languageId, t.locationId] }),
+    index('language_locations_location_id_idx').on(t.locationId),
+  ],
+);
+
+export const languageLocationsRelations = relations(
+  languageLocations,
+  ({ one }) => ({
+    language: one(languages, {
+      fields: [languageLocations.languageId],
+      references: [languages.id],
+    }),
+    location: one(locations, {
+      fields: [languageLocations.locationId],
+      references: [locations.id],
+    }),
+  }),
+);
+
+export const ethnologueLanguagesRelations = relations(
+  ethnologueLanguages,
+  ({ one }) => ({
+    language: one(languages, {
+      fields: [ethnologueLanguages.languageId],
+      references: [languages.id],
+    }),
+  }),
+);
+
+// ─── Product vocabulary enums ──────────────────────────────────────────────
+// Declared ahead of the Engagements section because engagements.methodologies
+// shares product_methodology. Value sets mirror the app enums in
+// src/components/product/dto (postgres-schema.e2e enforces parity) and Gel's
+// Product::Medium/Purpose/Step/Methodology scalars.
+
+export const productMediumEnum = pgEnum('product_medium', [
+  'Print',
+  'Web',
+  'EBook',
+  'App',
+  'TrainedStoryTellers',
+  'Audio',
+  'Video',
+  'Other',
+]);
+
+export const productPurposeEnum = pgEnum('product_purpose', [
+  'EvangelismChurchPlanting',
+  'ChurchLife',
+  'ChurchMaturity',
+  'SocialIssues',
+  'Discipleship',
+]);
+
+export const productStepEnum = pgEnum('product_step', [
+  'ExegesisAndFirstDraft',
+  'TeamCheck',
+  'CommunityTesting',
+  'BackTranslation',
+  'ConsultantCheck',
+  'InternalizationAndDrafting',
+  'PeerRevision',
+  'ConsistencyCheckAndFinalEdits',
+  'Craft',
+  'Test',
+  'Check',
+  'Record',
+  'Develop',
+  'Translate',
+  'Completed',
+]);
+
+export const productMethodologyEnum = pgEnum('product_methodology', [
+  'Paratext',
+  'OtherWritten',
+  'Render',
+  'Audacity',
+  'AdobeAudition',
+  'OtherOralTranslation',
+  'StoryTogether',
+  'SeedCompanyMethod',
+  'OneStory',
+  'Craft2Tell',
+  'OtherOralStories',
+  'Film',
+  'SignLanguage',
+  'OtherVisual',
+]);
+
+// ─── Engagements ───────────────────────────────────────────────────────────
+
+export const engagementTypeEnum = pgEnum('engagement_type', [
+  'Language',
+  'Internship',
+]);
+
+export const engagementStatusEnum = pgEnum('engagement_status', [
+  'InDevelopment',
+  'DidNotDevelop',
+  'Rejected',
+  'Active',
+  'ActiveChangedPlan',
+  'DiscussingTermination',
+  'DiscussingReactivation',
+  'DiscussingChangeToPlan',
+  'DiscussingSuspension',
+  'Suspended',
+  'FinalizingCompletion',
+  'Terminated',
+  'Completed',
+  // Legacy — only used in historic data.
+  'Converted',
+  'Unapproved',
+  'Transferred',
+  'NotRenewed',
+]);
+
+export const languageMilestoneEnum = pgEnum('language_milestone', [
+  'Unknown',
+  'None',
+  'OldTestament',
+  'NewTestament',
+  'FullBible',
+]);
+
+export const aiAssistedTranslationEnum = pgEnum('ai_assisted_translation', [
+  'Unknown',
+  'None',
+  'Draft',
+  'Check',
+  'DraftAndCheck',
+  'Other',
+]);
+
+/**
+ * Single-table inheritance over LanguageEngagement / InternshipEngagement —
+ * same approach as projects. The `type` discriminator matches the parent
+ * project's type (Language ⟷ Translation projects, Internship ⟷ Internship
+ * projects); the CHECK below keeps the per-type columns coherent.
+ * `position` is text-typed (InternshipPosition lives in the app; convert with
+ * the internship vocab if ever needed). `methodologies` uses the
+ * product_methodology enum declared above with the product vocabulary.
+ */
+export const engagements = pgTable(
+  'engagements',
+  {
+    id: text('id').$type<ID<'Engagement'>>().primaryKey(),
+    projectId: text('project_id')
+      .$type<ID<'Project'>>()
+      .notNull()
+      .references(() => projects.id, { onDelete: 'cascade' }),
+    type: engagementTypeEnum('type').notNull(),
+    status: engagementStatusEnum('status')
+      .$type<EngagementStatus>()
+      .notNull()
+      .default('InDevelopment'),
+    statusModifiedAt: timestamp('status_modified_at', { withTimezone: true }),
+    lastSuspendedAt: timestamp('last_suspended_at', { withTimezone: true }),
+    lastReactivatedAt: timestamp('last_reactivated_at', { withTimezone: true }),
+    completeDate: date('complete_date'),
+    disbursementCompleteDate: date('disbursement_complete_date'),
+    startDateOverride: date('start_date_override'),
+    endDateOverride: date('end_date_override'),
+    initialEndDate: date('initial_end_date'),
+    description: jsonb('description'),
+
+    // ── LanguageEngagement only ──
+    languageId: text('language_id')
+      .$type<ID<'Language'>>()
+      .references(() => languages.id),
+    // Nullable to mirror Neo4j semantics — unset is distinct from false and
+    // surfaces as null in the API.
+    firstScripture: boolean('first_scripture'),
+    lukePartnership: boolean('luke_partnership'),
+    openToInvestorVisit: boolean('open_to_investor_visit'),
+    paratextRegistryId: text('paratext_registry_id'),
+    rev79CommunityId: text('rev79_community_id'),
+    // migration-todo: deferred FK → files(id); populate when File migrates
+    // (Phase 7). Null until then.
+    pnpId: text('pnp_id').$type<ID<'File'>>(),
+    sentPrintingDate: date('sent_printing_date'),
+    historicGoal: text('historic_goal'),
+    milestonePlanned: languageMilestoneEnum('milestone_planned')
+      .$type<LanguageMilestone>()
+      .notNull()
+      .default('Unknown'),
+    milestoneReached: boolean('milestone_reached'),
+    usingAIAssistedTranslation: aiAssistedTranslationEnum(
+      'using_ai_assisted_translation',
+    )
+      .$type<AIAssistedTranslation>()
+      .notNull()
+      .default('Unknown'),
+
+    // ── InternshipEngagement only ──
+    internId: text('intern_id')
+      .$type<ID<'User'>>()
+      .references(() => users.id),
+    mentorId: text('mentor_id')
+      .$type<ID<'User'>>()
+      .references(() => users.id),
+    position: text('position').$type<InternshipPosition>(),
+    methodologies: productMethodologyEnum('methodologies')
+      .array()
+      .$type<readonly ProductMethodology[]>()
+      .notNull()
+      .default([]),
+    countryOfOriginId: text('country_of_origin_id')
+      .$type<ID<'Location'>>()
+      .references(() => locations.id),
+    // migration-todo: deferred FK → files(id); Phase 7.
+    growthPlanId: text('growth_plan_id').$type<ID<'File'>>(),
+    // Nullable (migration 0042) — same filter reasoning as preset_inventory.
+    marketable: boolean('marketable'),
+    webId: text('web_id'),
+
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    modifiedAt: timestamp('modified_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (t) => [
+    check(
+      'engagements_type_shape_chk',
+      sql`(${t.type} = 'Language' AND ${t.languageId} IS NOT NULL AND ${t.internId} IS NULL)
+        OR (${t.type} = 'Internship' AND ${t.internId} IS NOT NULL AND ${t.languageId} IS NULL)`,
+    ),
+    uniqueIndex('engagements_project_language_active_unique')
+      .on(t.projectId, t.languageId)
+      .where(sql`${t.languageId} IS NOT NULL AND ${t.deletedAt} IS NULL`),
+    uniqueIndex('engagements_project_intern_active_unique')
+      .on(t.projectId, t.internId)
+      .where(sql`${t.internId} IS NOT NULL AND ${t.deletedAt} IS NULL`),
+    index('engagements_project_id_idx').on(t.projectId),
+    index('engagements_language_id_idx').on(t.languageId),
+    index('engagements_intern_id_idx').on(t.internId),
+    index('engagements_mentor_id_idx').on(t.mentorId),
+    index('engagements_country_of_origin_id_idx').on(t.countryOfOriginId),
+  ],
+);
+
+export const engagementsRelations = relations(engagements, ({ one, many }) => ({
+  products: many(products),
+  project: one(projects, {
+    fields: [engagements.projectId],
+    references: [projects.id],
+  }),
+  language: one(languages, {
+    fields: [engagements.languageId],
+    references: [languages.id],
+  }),
+  intern: one(users, {
+    fields: [engagements.internId],
+    references: [users.id],
+  }),
+  mentor: one(users, {
+    fields: [engagements.mentorId],
+    references: [users.id],
+  }),
+  countryOfOrigin: one(locations, {
+    fields: [engagements.countryOfOriginId],
+    references: [locations.id],
+  }),
+  ceremony: one(ceremonies, {
+    fields: [engagements.id],
+    references: [ceremonies.engagementId],
+  }),
+}));
+
+/**
+ * Previous statuses, newest first — drives the rules engine's "BackTo"
+ * dynamic transitions (mirror of Neo4j's inactive status Property history).
+ * The repo appends the OLD status whenever status changes.
+ */
+export const engagementStatusHistory = pgTable(
+  'engagement_status_history',
+  {
+    id: bigserial('id', { mode: 'number' }).primaryKey(),
+    engagementId: text('engagement_id')
+      .$type<ID<'Engagement'>>()
+      .notNull()
+      .references(() => engagements.id, { onDelete: 'cascade' }),
+    status: engagementStatusEnum('status').$type<EngagementStatus>().notNull(),
+    at: timestamp('at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index('engagement_status_history_engagement_id_at_idx').on(
+      t.engagementId,
+      t.at,
+    ),
+  ],
+);
+
+// ─── Ceremonies ────────────────────────────────────────────────────────────
+
+export const ceremonyTypeEnum = pgEnum('ceremony_type', [
+  'Dedication',
+  'Certification',
+]);
+
+export const ceremonies = pgTable(
+  'ceremonies',
+  {
+    id: text('id').$type<ID<'Ceremony'>>().primaryKey(),
+    engagementId: text('engagement_id')
+      .$type<ID<'Engagement'>>()
+      .notNull()
+      .references(() => engagements.id, { onDelete: 'cascade' }),
+    type: ceremonyTypeEnum('type').$type<CeremonyType>().notNull(),
+    // Nullable (migration 0042) — the column a warehouse comparison caught
+    // reading 'N' on Postgres where Neo4j returned a blank.
+    planned: boolean('planned'),
+    estimatedDate: date('estimated_date'),
+    actualDate: date('actual_date'),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (t) => [
+    // 1:1 with engagement among live rows (Gel: exclusive on .engagement).
+    uniqueIndex('ceremonies_engagement_active_unique')
+      .on(t.engagementId)
+      .where(sql`${t.deletedAt} IS NULL`),
+    // Full FK index — the partial unique above can't serve FK-maintenance scans.
+    index('ceremonies_engagement_id_idx').on(t.engagementId),
+  ],
+);
+
+export const ceremoniesRelations = relations(ceremonies, ({ one }) => ({
+  engagement: one(engagements, {
+    fields: [ceremonies.engagementId],
+    references: [engagements.id],
+  }),
+}));
+
+// ─── Producibles ───────────────────────────────────────────────────────────
+
+export const producibleTypeEnum = pgEnum('producible_type', [
+  'Film',
+  'Story',
+  'EthnoArt',
+]);
+
+/**
+ * Film / Story / EthnoArt share one table — they are shape-identical
+ * (name + scripture references); the discriminator stands in for the Neo4j
+ * label. Scripture references are stored as the same `{start, end}` verse-id
+ * pairs Neo4j stores on ScriptureRange nodes; they are only ever read/written
+ * as a whole list, so jsonb over a child table.
+ */
+export const producibles = pgTable(
+  'producibles',
+  {
+    id: text('id').$type<ID>().primaryKey(),
+    type: producibleTypeEnum('type').notNull(),
+    name: text('name').notNull(),
+    scriptureReferences: jsonb('scripture_references')
+      .$type<ReadonlyArray<Range<number>>>()
+      .notNull()
+      .default([]),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (t) => [
+    // Name is unique per type among live rows (matches Neo4j per-label check).
+    uniqueIndex('producibles_type_name_active_unique')
+      .on(t.type, t.name)
+      .where(sql`${t.deletedAt} IS NULL`),
+  ],
+);
+
+// ─── Products ──────────────────────────────────────────────────────────────
+
+export const productTypeEnum = pgEnum('product_type', [
+  'DirectScripture',
+  'Derivative',
+  'Other',
+]);
+
+export const progressMeasurementEnum = pgEnum('progress_measurement', [
+  'Number',
+  'Percent',
+  'Boolean',
+]);
+
+/**
+ * Single-table inheritance over DirectScriptureProduct /
+ * DerivativeScriptureProduct / OtherProduct (same approach as projects and
+ * engagements). mediums/purposes/steps/methodology use the product vocabulary
+ * pgEnums (declared above the Engagements section), mirroring Gel's scalars.
+ *
+ * Scripture columns mirror how the DTOs distinguish the subtypes:
+ * - Direct: `scriptureReferences` (or the unspecified-portion pair for legacy
+ *   data where only a verse total is known).
+ * - Derivative: `scriptureReferencesOverride`; null means "not overriding"
+ *   (use the producible's list) — this replaces Neo4j's `isOverriding` flag.
+ */
+export const products = pgTable(
+  'products',
+  {
+    id: text('id').$type<ID<'Product'>>().primaryKey(),
+    engagementId: text('engagement_id')
+      .$type<ID<'Engagement'>>()
+      .notNull()
+      .references(() => engagements.id, { onDelete: 'cascade' }),
+    type: productTypeEnum('type').notNull(),
+    mediums: productMediumEnum('mediums')
+      .array()
+      .$type<readonly ProductMedium[]>()
+      .notNull()
+      .default([]),
+    purposes: productPurposeEnum('purposes')
+      .array()
+      .$type<readonly ProductPurpose[]>()
+      .notNull()
+      .default([]),
+    methodology:
+      productMethodologyEnum('methodology').$type<ProductMethodology>(),
+    steps: productStepEnum('steps')
+      .array()
+      .$type<readonly ProductStep[]>()
+      .notNull()
+      .default([]),
+    describeCompletion: text('describe_completion'),
+    placeholderDescription: text('placeholder_description'),
+    progressStepMeasurement: progressMeasurementEnum(
+      'progress_step_measurement',
+    )
+      .$type<ProgressMeasurement>()
+      .notNull()
+      .default('Percent'),
+    progressTarget: doublePrecision('progress_target').notNull().default(100),
+
+    scriptureReferences: jsonb('scripture_references')
+      .$type<ReadonlyArray<Range<number>>>()
+      .notNull()
+      .default([]),
+    scriptureReferencesOverride: jsonb('scripture_references_override').$type<
+      ReadonlyArray<Range<number>>
+    >(),
+    unspecifiedScriptureBook: text('unspecified_scripture_book'),
+    unspecifiedScriptureTotalVerses: integer(
+      'unspecified_scripture_total_verses',
+    ),
+    totalVerses: integer('total_verses').notNull().default(0),
+    totalVerseEquivalents: doublePrecision('total_verse_equivalents')
+      .notNull()
+      .default(0),
+
+    // ── DerivativeScriptureProduct only ──
+    producesId: text('produces_id')
+      .$type<ID>()
+      .references(() => producibles.id),
+    composite: boolean('composite'),
+
+    // ── OtherProduct only ──
+    title: text('title'),
+    description: text('description'),
+
+    pnpIndex: integer('pnp_index'),
+
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (t) => [
+    check(
+      'products_type_shape_chk',
+      sql`(${t.type} = 'DirectScripture' AND ${t.producesId} IS NULL AND ${t.title} IS NULL)
+        OR (${t.type} = 'Derivative' AND ${t.producesId} IS NOT NULL AND ${t.title} IS NULL)
+        OR (${t.type} = 'Other' AND ${t.title} IS NOT NULL AND ${t.producesId} IS NULL)`,
+    ),
+    check(
+      'products_unspecified_scripture_chk',
+      sql`(${t.unspecifiedScriptureBook} IS NULL) = (${t.unspecifiedScriptureTotalVerses} IS NULL)`,
+    ),
+    index('products_engagement_id_idx').on(t.engagementId),
+    index('products_produces_id_idx').on(t.producesId),
+  ],
+);
+
+export const productsRelations = relations(products, ({ one }) => ({
+  engagement: one(engagements, {
+    fields: [products.engagementId],
+    references: [engagements.id],
+  }),
+  produces: one(producibles, {
+    fields: [products.producesId],
+    references: [producibles.id],
+  }),
+}));
+
+/**
+ * Suggestion store for `describeCompletion` — merged on every product
+ * create/update that sets one (mirror of the Neo4j full-text-indexed
+ * ProductCompletionDescription nodes; suggestions use ILIKE here).
+ */
+export const productCompletionDescriptions = pgTable(
+  'product_completion_descriptions',
+  {
+    id: bigserial('id', { mode: 'number' }).primaryKey(),
+    value: text('value').notNull(),
+    methodology: productMethodologyEnum('methodology')
+      .$type<ProductMethodology>()
+      .notNull(),
+    lastUsedAt: timestamp('last_used_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex('product_completion_descriptions_value_methodology_unique').on(
+      t.value,
+      t.methodology,
+    ),
+  ],
+);
+
+// ─── Periodic Reports ──────────────────────────────────────────────────────
+
+export const reportTypeEnum = pgEnum('report_type', [
+  'Financial',
+  'Narrative',
+  'Progress',
+]);
+
+export const progressReportStatusEnum = pgEnum('progress_report_status', [
+  'NotStarted',
+  'InProgress',
+  'PendingTranslation',
+  'InReview',
+  'Approved',
+  'Published',
+]);
+
+/**
+ * Single table over FinancialReport / NarrativeReport / ProgressReport.
+ * Financial+Narrative hang off projects; Progress hangs off (language)
+ * engagements — the CHECK keeps the parent FK coherent with the type.
+ *
+ * The id is deterministic — sha256(parent:type:start:end), same derivation as
+ * Neo4j — but it is a FIRST CHOICE, not a guarantee. Deletion is a soft delete
+ * as of migration 0035, matching Neo4j (whose own delete relabels rather than
+ * removing), so a dead row can still be holding the deterministic id. When it
+ * is, the repository takes a fresh id for the new live row rather than reviving
+ * the dead one — again what Neo4j does.
+ *
+ * Because of that, dedup between concurrent syncs comes from the partial unique
+ * index over LIVE rows, not from the primary key, and the insert's
+ * `onConflictDoNothing()` is deliberately untargeted: a loser can conflict on
+ * either the id or that index.
+ *
+ * Read paths must therefore filter `deleted_at`, including where this table is
+ * the joined side rather than the driving one.
+ *
+ * `status` is ProgressReport-only (workflow-driven; plain column like
+ * engagement.status).
+ */
+export const periodicReports = pgTable(
+  'periodic_reports',
+  {
+    id: text('id').$type<ID>().primaryKey(),
+    type: reportTypeEnum('type').$type<ReportType>().notNull(),
+    projectId: text('project_id')
+      .$type<ID<'Project'>>()
+      .references(() => projects.id, { onDelete: 'cascade' }),
+    engagementId: text('engagement_id')
+      .$type<ID<'Engagement'>>()
+      .references(() => engagements.id, { onDelete: 'cascade' }),
+    start: date('start').notNull(),
+    end: date('end').notNull(),
+    receivedDate: date('received_date'),
+    skippedReason: text('skipped_reason'),
+    // migration-todo(cutover-cleanup): plain text, no FK — S4 class. The
+    // file_nodes table exists (0008), but the createDefinedFile fan-out
+    // inserts this row before its file rows; real FKs land with the S4
+    // option-2 reorder at cutover cleanup.
+    reportFileId: text('report_file_id').$type<ID<'File'>>(),
+    // Columns-mono-style per Rob 2026-07-16 (periodic_report_files join-table
+    // redesign = post-cutover ticket). Same S4 deferred-FK class as above.
+    narrativeFileId: text('narrative_file_id').$type<ID<'File'>>(),
+    narrativeReceivedDate: date('narrative_received_date'),
+    status: progressReportStatusEnum('status').$type<ProgressReportStatus>(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    // Soft delete, matching Neo4j's `deleteBaseNode` relabel (migration 0035).
+    // Removing a report from a shrunken date window must not destroy its media,
+    // variance explanation or workflow events.
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (t) => [
+    check(
+      'periodic_reports_parent_shape_chk',
+      sql`(${t.type} IN ('Financial', 'Narrative') AND ${t.projectId} IS NOT NULL AND ${t.engagementId} IS NULL)
+        OR (${t.type} = 'Progress' AND ${t.engagementId} IS NOT NULL AND ${t.projectId} IS NULL)`,
+    ),
+    check(
+      'periodic_reports_status_shape_chk',
+      sql`(${t.type} = 'Progress') = (${t.status} IS NOT NULL)`,
+    ),
+    index('periodic_reports_project_id_idx').on(t.projectId),
+    index('periodic_reports_engagement_id_idx').on(t.engagementId),
+    // No bare index on deleted_at — every read narrows by parent id first, and
+    // the two above lead that. @see migration 0035
+    // At most one LIVE report per (parent, type, interval). This — not the
+    // deterministic id — is the dedup guarantee under soft delete, since a dead
+    // row can hold the deterministic id and force a fresh one.
+    // Keyed on the coalesced parent: indexing both parent columns would leave a
+    // NULL in every row, and NULLs compare DISTINCT in a unique index, so it
+    // would silently enforce nothing. @see migration 0035
+    uniqueIndex('periodic_reports_live_interval_unique')
+      .on(
+        sql`(coalesce(${t.projectId}, ${t.engagementId}))`,
+        t.type,
+        t.start,
+        t.end,
+      )
+      .where(sql`${t.deletedAt} is null`),
+  ],
+);
+
+export const periodicReportsRelations = relations(
+  periodicReports,
+  ({ one }) => ({
+    project: one(projects, {
+      fields: [periodicReports.projectId],
+      references: [projects.id],
+    }),
+    engagement: one(engagements, {
+      fields: [periodicReports.engagementId],
+      references: [engagements.id],
+    }),
+  }),
+);
+
+// ─── Prompt Variant Responses ──────────────────────────────────────────────
+
+/**
+ * Generic prompt-response container shared by every PromptVariantResponse
+ * subtype (ProgressReport team news / highlights / community stories; more
+ * later). `resource_type` is the concrete DTO name (stands in for the Neo4j
+ * label); `parent_id` is intentionally FK-less — parents span tables
+ * (periodic_reports today, others as domains migrate). Prompts are
+ * code-defined; only the chosen prompt id is stored.
+ */
+export const promptVariantResponses = pgTable(
+  'prompt_variant_responses',
+  {
+    id: text('id').$type<ID>().primaryKey(),
+    resourceType: text('resource_type').notNull(),
+    parentId: text('parent_id').$type<ID>().notNull(),
+    // Holds a Prompt's id, not its text — prompts are defined in app code
+    // rather than a table, which is why there's no FK to point at.
+    prompt: text('prompt').$type<ID<Prompt>>().notNull(),
+    creatorId: text('creator_id')
+      .$type<ID<'User'>>()
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    modifiedAt: timestamp('modified_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (t) => [
+    index('prompt_variant_responses_parent_id_idx').on(t.parentId),
+    index('prompt_variant_responses_creator_id_idx').on(t.creatorId),
+  ],
+);
+
+/**
+ * One row per (response, variant) — the actual rich-text answers. Edits
+ * within the permanent-after window update in place; later edits soft-delete
+ * the old row and insert a new one (mirror of Neo4j's deactivate+create
+ * history chain).
+ */
+export const promptVariantResponseEntries = pgTable(
+  'prompt_variant_response_entries',
+  {
+    id: bigserial('id', { mode: 'number' }).primaryKey(),
+    responseId: text('response_id')
+      .$type<ID>()
+      .notNull()
+      .references(() => promptVariantResponses.id, { onDelete: 'cascade' }),
+    variant: text('variant').notNull(),
+    // Always a rich-text document, so say so — untyped jsonb reads back as
+    // `unknown`, which then needs a cast at every use.
+    response: jsonb('response').$type<RichTextDocument | null>(),
+    creatorId: text('creator_id')
+      .$type<ID<'User'>>()
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    modifiedAt: timestamp('modified_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (t) => [
+    uniqueIndex(
+      'prompt_variant_response_entries_response_variant_active_unique',
+    )
+      .on(t.responseId, t.variant)
+      .where(sql`${t.deletedAt} IS NULL`),
+    // Full FK index — the partial unique can't serve FK-maintenance scans.
+    index('prompt_variant_response_entries_response_id_idx').on(t.responseId),
+    index('prompt_variant_response_entries_creator_id_idx').on(t.creatorId),
+  ],
+);
+
+export const promptVariantResponsesRelations = relations(
+  promptVariantResponses,
+  ({ many }) => ({
+    entries: many(promptVariantResponseEntries),
+  }),
+);
+
+export const promptVariantResponseEntriesRelations = relations(
+  promptVariantResponseEntries,
+  ({ one }) => ({
+    parent: one(promptVariantResponses, {
+      fields: [promptVariantResponseEntries.responseId],
+      references: [promptVariantResponses.id],
+    }),
+  }),
+);
+
+// ─── Product Progress + Progress Summaries ─────────────────────────────────
+
+/**
+ * Progress container per (product, report, variant) — exists once any step
+ * progress is reported. Step rows hang off it; unreported steps surface as
+ * placeholders at read time, ordered by the product's declared steps.
+ */
+export const productProgress = pgTable(
+  'product_progress',
+  {
+    id: text('id').$type<ID>().primaryKey(),
+    productId: text('product_id')
+      .$type<ID<'Product'>>()
+      .notNull()
+      .references(() => products.id, { onDelete: 'cascade' }),
+    reportId: text('report_id')
+      .$type<ID>()
+      .notNull()
+      .references(() => periodicReports.id, { onDelete: 'cascade' }),
+    variant: text('variant').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex('product_progress_product_report_variant_unique').on(
+      t.productId,
+      t.reportId,
+      t.variant,
+    ),
+    index('product_progress_report_id_idx').on(t.reportId),
+  ],
+);
+
+export const stepProgress = pgTable(
+  'step_progress',
+  {
+    id: text('id').$type<ID>().primaryKey(),
+    progressId: text('progress_id')
+      .$type<ID>()
+      .notNull()
+      .references(() => productProgress.id, { onDelete: 'cascade' }),
+    // product_step enum — matches products.steps (mono had no enum type).
+    step: productStepEnum('step').$type<ProductStep>().notNull(),
+    completed: doublePrecision('completed'),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex('step_progress_progress_step_unique').on(t.progressId, t.step),
+  ],
+);
+
+export const productProgressRelations = relations(
+  productProgress,
+  ({ many }) => ({
+    steps: many(stepProgress),
+  }),
+);
+
+export const stepProgressRelations = relations(stepProgress, ({ one }) => ({
+  progress: one(productProgress, {
+    fields: [stepProgress.progressId],
+    references: [productProgress.id],
+  }),
+}));
+
+export const summaryPeriodEnum = pgEnum('summary_period', [
+  'ReportPeriod',
+  'FiscalYearSoFar',
+  'Cumulative',
+]);
+
+/**
+ * Extracted planned/actual figures per (progress report, period) — written
+ * by the PnP extractor on report file upload (File domain, Phase 7); the
+ * read path serves the ProgressReport summary fields.
+ */
+export const progressSummaries = pgTable(
+  'progress_summaries',
+  {
+    id: bigserial('id', { mode: 'number' }).primaryKey(),
+    reportId: text('report_id')
+      .$type<ID>()
+      .notNull()
+      .references(() => periodicReports.id, { onDelete: 'cascade' }),
+    period: summaryPeriodEnum('period').notNull(),
+    planned: doublePrecision('planned').notNull(),
+    actual: doublePrecision('actual').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex('progress_summaries_report_period_unique').on(
+      t.reportId,
+      t.period,
+    ),
+  ],
+);
+
+// ─── Pins ──────────────────────────────────────────────────────────────────
+
+/**
+ * Per-user pins over any resource. `resource_id` is FK-less because a user can
+ * pin any Pinnable (Project, Language, Partner, User, …) which span tables —
+ * same rationale as prompt_variant_responses.parent_id. The composite PK makes
+ * pin/unpin idempotent and the per-requester `pinned` field lookup a PK hit.
+ */
+export const pins = pgTable(
+  'pins',
+  {
+    userId: text('user_id')
+      .$type<ID<'User'>>()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    resourceId: text('resource_id').$type<ID>().notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.resourceId] })],
+);
+
+// ─── Known Languages ─────────────────────────────────────────────────────────
+
+export const languageProficiencyEnum = pgEnum('language_proficiency', [
+  'Beginner',
+  'Conversational',
+  'Skilled',
+  'Fluent',
+]);
+
+/**
+ * A user's known languages, at a proficiency level. A user may know a
+ * language at more than one proficiency (the Neo4j create only replaces the
+ * exact (user, language, proficiency) edge), so the PK spans all three and
+ * create is an idempotent ON CONFLICT DO NOTHING.
+ */
+export const knownLanguages = pgTable(
+  'known_languages',
+  {
+    userId: text('user_id')
+      .$type<ID<'User'>>()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    languageId: text('language_id')
+      .$type<ID<'Language'>>()
+      .notNull()
+      .references(() => languages.id, { onDelete: 'cascade' }),
+    proficiency: languageProficiencyEnum('proficiency')
+      .$type<LanguageProficiency>()
+      .notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.userId, t.languageId, t.proficiency] }),
+    index('known_languages_user_id_idx').on(t.userId),
+    index('known_languages_language_id_idx').on(t.languageId),
+  ],
+);
+
+// ─── Tool Usages ─────────────────────────────────────────────────────────────
+
+/**
+ * A container (Project or Engagement) using a Tool. The Neo4j ToolUsage node
+ * plus its `uses`/`tool`/`creator` relationships collapse to this row.
+ *
+ * `containerId` is polymorphic and FK-less (spans projects + engagements, same
+ * rationale as commentThreads.parentId); `containerType` holds the CONCRETE
+ * __typename (e.g. 'LanguageEngagement') so reads emit a typed resource ref
+ * without probing candidate tables. The GraphQL `ToolContainerType` enum is the
+ * normalized bucket ('Engagement' | 'Project') and is derived from this, not
+ * stored.
+ */
+export const toolUsages = pgTable(
+  'tool_usages',
+  {
+    id: text('id').$type<ID<'ToolUsage'>>().primaryKey(),
+    containerId: text('container_id').$type<ID>().notNull(),
+    containerType: text('container_type').notNull(),
+    toolId: text('tool_id')
+      .$type<ID<'Tool'>>()
+      .notNull()
+      .references(() => tools.id),
+    creatorId: text('creator_id')
+      .$type<ID<'User'>>()
+      .notNull()
+      .references(() => users.id),
+    startDate: date('start_date'),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (t) => [
+    uniqueIndex('tool_usages_container_tool_unique')
+      .on(t.containerId, t.toolId)
+      .where(sql`${t.deletedAt} is null`),
+    index('tool_usages_container_id_idx').on(t.containerId),
+    index('tool_usages_tool_id_idx').on(t.toolId),
+    index('tool_usages_creator_id_idx').on(t.creatorId),
+  ],
+);
+
+export const toolUsagesRelations = relations(toolUsages, ({ one }) => ({
+  tool: one(tools, {
+    fields: [toolUsages.toolId],
+    references: [tools.id],
+  }),
+  creator: one(users, {
+    fields: [toolUsages.creatorId],
+    references: [users.id],
+  }),
+}));
+
+// ─── Partnership Producing Mediums ───────────────────────────────────────────
+
+/**
+ * Which Partnership is responsible for producing each ProductMedium on a
+ * LanguageEngagement. In Neo4j this is a `PartnershipProducingMedium`
+ * relationship carrying `medium` as a relationship property; here it is a plain
+ * association row.
+ *
+ * Hard-deleted on reassignment (no `deleted_at`) — it's a pure assignment and
+ * the Neo4j deactivation was relationship-property history, not retention.
+ * The composite PK enforces one partnership per (engagement, medium).
+ *
+ * The set of *available* mediums is not stored: it's derived at read time from
+ * the engagement's products' `mediums` arrays.
+ */
+export const partnershipProducingMediums = pgTable(
+  'partnership_producing_mediums',
+  {
+    engagementId: text('engagement_id')
+      .$type<ID<'Engagement'>>()
+      .notNull()
+      .references(() => engagements.id, { onDelete: 'cascade' }),
+    medium: productMediumEnum('medium').$type<ProductMedium>().notNull(),
+    partnershipId: text('partnership_id')
+      .$type<ID<'Partnership'>>()
+      .notNull()
+      .references(() => partnerships.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.engagementId, t.medium] }),
+    index('partnership_producing_mediums_partnership_id_idx').on(
+      t.partnershipId,
+    ),
+  ],
+);
+
+// ─── Comments ────────────────────────────────────────────────────────────────
+
+/**
+ * A comment thread attached to any Commentable resource. `parent_id` is
+ * FK-less and polymorphic (User/Language/Partner/Project/Engagement/
+ * ProgressReport span tables, same rationale as
+ * prompt_variant_responses.parent_id); `parent_type` is the discriminator used
+ * to rebuild the parent's fake BaseNode at read time.
+ */
+export const commentThreads = pgTable(
+  'comment_threads',
+  {
+    id: text('id').$type<ID<'CommentThread'>>().primaryKey(),
+    parentId: text('parent_id').$type<ID>().notNull(),
+    parentType: text('parent_type').notNull(),
+    creatorId: text('creator_id')
+      .$type<ID<'User'>>()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index('comment_threads_parent_id_idx').on(t.parentId),
+    index('comment_threads_creator_id_idx').on(t.creatorId),
+  ],
+);
+
+/**
+ * Comments hang off a thread. Hard DELETE (no soft-delete): deleting the
+ * thread's first comment deletes the thread row, and the cascade removes the
+ * rest — matching CommentService.delete.
+ */
+export const comments = pgTable(
+  'comments',
+  {
+    id: text('id').$type<ID<'Comment'>>().primaryKey(),
+    threadId: text('thread_id')
+      .$type<ID<'CommentThread'>>()
+      .notNull()
+      .references(() => commentThreads.id, { onDelete: 'cascade' }),
+    creatorId: text('creator_id')
+      .$type<ID<'User'>>()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    body: jsonb('body').$type<RichTextDocument>().notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    modifiedAt: timestamp('modified_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index('comments_thread_id_idx').on(t.threadId),
+    index('comments_creator_id_idx').on(t.creatorId),
+  ],
+);
+
+// ─── Posts ───────────────────────────────────────────────────────────────────
+
+export const postTypeEnum = pgEnum('post_type', ['Note', 'Story', 'Prayer']);
+
+// 5-value to match Neo4j exactly: 'ProjectTeam' is a deprecated alias for
+// 'Membership' and is stored verbatim.
+// migration-todo: post-cutover, consider collapsing 'ProjectTeam' -> 'Membership'.
+export const postShareabilityEnum = pgEnum('post_shareability', [
+  'Membership',
+  'ProjectTeam',
+  'Internal',
+  'AskToShareExternally',
+  'External',
+]);
+
+/**
+ * Posts attach to any Postable resource (Language/Partner/Project) via a
+ * polymorphic FK-less parent_id + parent_type discriminator. Membership
+ * shareability is enforced in the repo against project_members.
+ */
+export const posts = pgTable(
+  'posts',
+  {
+    id: text('id').$type<ID<'Post'>>().primaryKey(),
+    parentId: text('parent_id').$type<ID>().notNull(),
+    parentType: text('parent_type').notNull(),
+    creatorId: text('creator_id')
+      .$type<ID<'User'>>()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    type: postTypeEnum('type').$type<PostType>().notNull(),
+    shareability: postShareabilityEnum('shareability')
+      .$type<PostShareability>()
+      .notNull(),
+    body: text('body').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    modifiedAt: timestamp('modified_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index('posts_parent_id_idx').on(t.parentId),
+    index('posts_creator_id_idx').on(t.creatorId),
+  ],
+);
+
+// ─── Audit log ───────────────────────────────────────────────────────────
+
+export const mutationActionEnum = pgEnum('mutation_action', [
+  'Create',
+  'Update',
+  'Delete',
+]);
+
+/**
+ * Append-only log of resource mutations (the general audit log). One row per
+ * create/update/delete, written by an in-transaction hook so it's atomic with
+ * the mutation. `resource_id` is FK-less/polymorphic (spans every resource
+ * table); `actor_id` set-null on user delete so history outlives the actor.
+ * `role_at_time` snapshots the actor's roles at write time (plain text, not the
+ * live role enum). `changes` holds the diffed field set (jsonb).
+ *
+ * The actor is EITHER a user or a system agent, never both — see migration 0027
+ * for why the agent side stores a name snapshot instead of an FK, and why
+ * `impersonator_id` needs no such treatment.
+ */
+export const resourceMutations = pgTable(
+  'resource_mutations',
+  {
+    id: bigserial('id', { mode: 'number' }).primaryKey(),
+    resourceType: text('resource_type').notNull(),
+    resourceId: text('resource_id').$type<ID>().notNull(),
+    action: mutationActionEnum('action').notNull(),
+    actorId: text('actor_id')
+      .$type<ID<'User'>>()
+      .references(() => users.id, { onDelete: 'set null' }),
+    /**
+     * The SystemAgent that acted, by NAME ('Ghost' | 'Anonymous' | ...), when
+     * the actor was not a user. A snapshot, not a reference — same reasoning as
+     * `role_at_time`.
+     */
+    actorSystemAgent: text('actor_system_agent'),
+    /**
+     * The real, requesting user when `actor_id` is being impersonated. Always a
+     * user (an impersonator can't be a system agent), so a plain FK suffices.
+     */
+    impersonatorId: text('impersonator_id')
+      .$type<ID<'User'>>()
+      .references(() => users.id, { onDelete: 'set null' }),
+    roleAtTime: text('role_at_time').array().notNull().default([]),
+    changes: jsonb('changes'),
+    at: timestamp('at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    // `<= 1`, not `= 1`: a write with no session in context has no actor at all.
+    check(
+      'resource_mutations_actor_shape_chk',
+      sql`num_nonnulls(${t.actorId}, ${t.actorSystemAgent}) <= 1`,
+    ),
+    index('resource_mutations_resource_idx').on(
+      t.resourceType,
+      t.resourceId,
+      t.at,
+    ),
+    index('resource_mutations_actor_id_idx').on(t.actorId),
+    index('resource_mutations_impersonator_id_idx').on(t.impersonatorId),
+  ],
+);
+
+// ─── Progress Report Media ───────────────────────────────────────────────────
+
+export const progressReportMediaCategoryEnum = pgEnum(
+  'progress_report_media_category',
+  [
+    'Team',
+    'WorkInProgress',
+    'CommunityEngagement',
+    'LifeInCommunity',
+    'Events',
+    'SceneryLandscape',
+    'Other',
+  ],
+);
+
+/**
+ * Media (image/video/audio) attached to a ProgressReport. Each row carries one
+ * `variant` (draft/translated/fpm/published); rows sharing a `variant_group_id`
+ * are the "same image" across variants (≤1 row per (group, variant)). The
+ * `file_id` is a DefinedFile placeholder created by FileService.createDefinedFile
+ * after the row lands (so it's FK-less here, like other defined-file columns);
+ * the media sidecar is reached via that file's latest FileVersion.
+ *
+ * The Neo4j VariantGroup node collapses to a plain `variant_group_id` here — a
+ * group "exists" exactly as long as some media references it (matching the
+ * Neo4j deleteVariantGroupIfEmpty cleanup).
+ */
+export const progressReportMedia = pgTable(
+  'progress_report_media',
+  {
+    id: text('id').$type<ID>().primaryKey(),
+    reportId: text('report_id')
+      .$type<ID<'ProgressReport'>>()
+      .notNull()
+      .references(() => periodicReports.id),
+    variant: text('variant').notNull(),
+    category:
+      progressReportMediaCategoryEnum('category').$type<MediaCategory>(),
+    variantGroupId: text('variant_group_id')
+      .$type<ID<'ProgressReportMediaVariantGroup'>>()
+      .notNull(),
+    // DefinedFile placeholder; created by createDefinedFile after this row.
+    fileId: text('file_id').$type<ID<'File'>>(),
+    creatorId: text('creator_id')
+      .$type<ID<'User'>>()
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (t) => [
+    index('progress_report_media_report_id_idx').on(t.reportId),
+    index('progress_report_media_variant_group_id_idx').on(t.variantGroupId),
+    index('progress_report_media_creator_id_idx').on(t.creatorId),
+    // One live row per (variant_group, variant) — the DB fail-safe behind the
+    // repository's SELECT-then-INSERT check, which is a TOCTOU race on its own.
+    // Goes beyond Neo4j, which has no equivalent constraint; safe to adopt
+    // because prod carries 8076 media rows with zero duplicate pairs.
+    uniqueIndex('progress_report_media_group_variant_active_unique')
+      .on(t.variantGroupId, t.variant)
+      .where(sql`${t.deletedAt} IS NULL`),
+  ],
+);
+
+// ─── Progress Report Workflow ────────────────────────────────────────────────
+
+/**
+ * At most ONE variance explanation per report — the PK on `report_id` encodes
+ * Neo4j's MERGE-on-relationship semantics, so writes are a plain upsert.
+ *
+ * `reasons` is text[] rather than an enum on purpose: the option set lives in
+ * `ProgressReportVarianceExplanationReasonOptions`, which carries an explicit
+ * `deprecated` list so old values stay *readable* while being blocked for new
+ * writes. An enum couldn't express that, and would need a migration per wording
+ * change. App-level `@IsIn` remains the gate. See migration 0036.
+ */
+export const progressReportVarianceExplanations = pgTable(
+  'progress_report_variance_explanations',
+  {
+    reportId: text('report_id')
+      .$type<ID<'ProgressReport'>>()
+      .primaryKey()
+      .references(() => periodicReports.id, { onDelete: 'cascade' }),
+    reasons: text('reasons').array().notNull().default([]),
+    comments: jsonb('comments'), // RichText
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+);
+
+/**
+ * Append-only status-transition history for a progress report. Immutable
+ * facts — no soft delete, no `updated_at`.
+ *
+ * `transition_key` is null when the workflow was bypassed (status set directly).
+ * Unlike `project_workflow_events`, no trigger syncs the parent's status;
+ * `periodic_reports.status` is written app-side by `changeStatus` to stay
+ * faithful to Neo4j (see migration 0036 for the promotion candidate).
+ */
+export const progressReportWorkflowEvents = pgTable(
+  'progress_report_workflow_events',
+  {
+    id: text('id').$type<ID<'ProgressReportWorkflowEvent'>>().primaryKey(),
+    reportId: text('report_id')
+      .$type<ID<'ProgressReport'>>()
+      .notNull()
+      .references(() => periodicReports.id, { onDelete: 'cascade' }),
+    who: text('who')
+      .$type<ID<'User'>>()
+      .notNull()
+      .references(() => users.id),
+    status: progressReportStatusEnum('status')
+      .$type<ProgressReportStatus>()
+      .notNull(),
+    transitionKey: text('transition_key'),
+    notes: jsonb('notes'), // RichText
+    at: timestamp('at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    // Lists read oldest-first, matching the Neo4j repo's createdAt ASC sort.
+    index('progress_report_workflow_events_report_id_at_idx').on(
+      t.reportId,
+      t.at,
+    ),
+    index('progress_report_workflow_events_who_idx').on(t.who),
+  ],
+);
+
+export const progressReportWorkflowEventsRelations = relations(
+  progressReportWorkflowEvents,
+  ({ one }) => ({
+    report: one(periodicReports, {
+      fields: [progressReportWorkflowEvents.reportId],
+      references: [periodicReports.id],
+    }),
+  }),
+);
+
+// ─── PnP Extraction Results ──────────────────────────────────────────────────
+
+/**
+ * Result of parsing a PnP spreadsheet, keyed by the File it was extracted from
+ * (one result per File — a LanguageEngagement.pnp or ProgressReport.reportFile).
+ * The concrete Planning/Progress flavor isn't stored — it's implied by which
+ * resource's file this is, resolved by the consuming field's type.
+ */
+export const pnpExtractionResults = pgTable('pnp_extraction_results', {
+  // An extraction result has no life of its own without its File, so the
+  // lifetime follows it. Note what CASCADE does and does not buy: file_nodes is
+  // SOFT-deleted, so ordinary deletion sets deleted_at and this never fires —
+  // the result simply becomes unreachable, since every read arrives via the
+  // file. The cascade earns its keep on a real DELETE (a hard purge, or a
+  // rollback), and the FK itself is what stops a result pointing at no file.
+  // The problems table already cascades from here, so the chain completes.
+  fileId: text('file_id')
+    .$type<ID<'File'>>()
+    .primaryKey()
+    .references(() => fileNodes.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+/**
+ * Problems found during extraction. `type` is a PnpProblemType uuid (its
+ * severity + render live in code, not the DB); `source` is "Sheet!A1"; context
+ * is the type-specific render input.
+ */
+export const pnpExtractionResultProblems = pgTable(
+  'pnp_extraction_result_problems',
+  {
+    id: text('id').$type<ID>().primaryKey(),
+    fileId: text('file_id')
+      .$type<ID<'File'>>()
+      .notNull()
+      .references(() => pnpExtractionResults.fileId, { onDelete: 'cascade' }),
+    type: text('type').notNull(),
+    source: text('source').notNull(),
+    context: jsonb('context').$type<Record<string, unknown>>().notNull(),
+  },
+  (t) => [index('pnp_extraction_result_problems_file_id_idx').on(t.fileId)],
+);
+
+// ─── Webhooks ─────────────────────────────────────────────────────────────────
+
+/**
+ * Holds the signing `secret` for all of a user's webhooks. One row per user,
+ * created lazily the first time they save a webhook. The secret lives here
+ * rather than on `webhooks` because Neo4j models it the same way: rotating
+ * rotates for every webhook the user owns, not one at a time.
+ */
+export const webhookExecutors = pgTable('webhook_executors', {
+  userId: text('user_id')
+    .$type<ID<'User'>>()
+    .primaryKey()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  secret: text('secret').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+/**
+ * A user's subscription to a GraphQL operation, POSTed to a url on matching
+ * events. `key` is user-provided (defaults to the operation name) and is only
+ * unique per-owner — the Neo4j graph achieves this implicitly by always
+ * traversing from the current user; here it's an explicit composite unique
+ * index. No soft delete: the Neo4j `deleteBy` hard-deletes (`detachDelete`),
+ * so this matches.
+ */
+export const webhooks = pgTable(
+  'webhooks',
+  {
+    id: text('id').$type<ID<'Webhook'>>().primaryKey(),
+    ownerId: text('owner_id')
+      .$type<ID<'User'>>()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    // Branded as an ID like the rest of the codebase types it (see
+    // Webhook.key's own comment), even though it's plain user-provided text,
+    // not one of our generated IDs.
+    key: text('key').$type<ID<'Webhook'>>().notNull(),
+    name: text('name').notNull(),
+    subscription: text('subscription').notNull(),
+    variables: jsonb('variables').$type<Record<string, unknown>>(),
+    url: text('url').notNull(),
+    metadata: jsonb('metadata').$type<Record<string, unknown>>(),
+    valid: boolean('valid').notNull().default(true),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    modifiedAt: timestamp('modified_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    // Leading column also covers owner_id for FK-maintenance scans, so no
+    // separate index on owner_id is needed.
+    uniqueIndex('webhooks_owner_key_unique').on(t.ownerId, t.key),
+  ],
+);
+
+/**
+ * A named event bucket a webhook can observe (e.g. `project:created`).
+ * Global/shared across all users — same channel name, one row — matching the
+ * Neo4j `BroadcastChannel` unique-constrained-by-name node. No properties
+ * besides the name itself, so the name is the primary key.
+ */
+export const broadcastChannels = pgTable('broadcast_channels', {
+  name: text('name').primaryKey(),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+/**
+ * Which channels a webhook currently observes, and when that was last
+ * (re)evaluated. Recomputed wholesale on every save (webhook config changes
+ * can change which channels apply) and on a `SubscriptionChannelVersion` bump
+ * (app schema changes can too) — `evaluated_at` is what lets the migration
+ * find webhooks that need re-evaluating after such a bump.
+ *
+ * `channel_name` has no `onDelete` cascade: a `broadcast_channels` row is only
+ * ever removed once nothing observes it (checked explicitly by the
+ * application), so the FK is a correctness backstop, not a path expected to
+ * fire.
+ */
+export const webhookChannelObservations = pgTable(
+  'webhook_channel_observations',
+  {
+    webhookId: text('webhook_id')
+      .$type<ID<'Webhook'>>()
+      .notNull()
+      .references(() => webhooks.id, { onDelete: 'cascade' }),
+    channelName: text('channel_name')
+      .notNull()
+      .references(() => broadcastChannels.name),
+    evaluatedAt: timestamp('evaluated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    // Leading column also covers webhook_id for FK-maintenance scans.
+    primaryKey({ columns: [t.webhookId, t.channelName] }),
+    index('webhook_channel_observations_channel_name_idx').on(t.channelName),
+  ],
+);

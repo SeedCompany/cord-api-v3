@@ -74,8 +74,12 @@ export class Media extends MediaUserMetadata {
 
   readonly file: ID<FileVersion>;
 
-  /** The resource that holds the root file node that this media is attached to */
-  readonly attachedTo: [resource: BaseNode, relation: string];
+  /**
+   * The resource that holds the root file node that this media is attached to.
+   * Absent when the root can't be resolved to a live resource (e.g. the owner
+   * was soft-deleted, or a free-floating tree) — consumers must guard for it.
+   */
+  readonly attachedTo?: [resource: BaseNode, relation: string];
 
   @Field(() => String)
   readonly mimeType: string;

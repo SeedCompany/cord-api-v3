@@ -25,6 +25,9 @@ export class AdminGelService implements OnApplicationBootstrap {
   }
 
   async onApplicationBootstrap(): Promise<void> {
+    // Same switch its Neo4j/Drizzle siblings honor — also how read-only
+    // maintenance mode keeps boot from writing.
+    if (!this.config.dbRootObjectsSync) return;
     const finishing = this.repo.finishing(() => this.setupRootUser());
     // Wait for root object setup when running tests, else just let it run in
     // the background and allow webserver to start.

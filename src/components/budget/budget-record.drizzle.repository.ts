@@ -195,7 +195,7 @@ export class BudgetRecordDrizzleRepository extends DrizzleDtoRepository<
       preApprovedAmount: row.preApprovedAmount,
       status: row.budget.status,
       sensitivity: row.budget.project.sensitivity,
-      parent: { id: row.budget.id },
+      parent: { id: row.budget.id, __typename: 'Budget' },
       // PCR is excluded; resolver navigation marker stays undefined.
       changeset: undefined,
       canDelete: true,

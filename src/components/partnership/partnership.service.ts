@@ -18,6 +18,7 @@ import { Hooks } from '~/core/hooks';
 import { LiveQueryStore } from '~/core/live-query';
 import { ILogger, Logger } from '~/core/logger';
 import { HandleIdLookup, ResourceLoader } from '~/core/resources';
+import { ResourceMutatedHook } from '../audit/resource-mutated.hook';
 import { Privileges } from '../authorization';
 import { FileService } from '../file';
 import { PartnerService } from '../partner';
@@ -93,12 +94,28 @@ export class PartnershipService {
         changeset,
       );
 
-      if (primary) {
+      // Use the repo's reported outcome, not the request: a concurrent
+      // create on the same project can win the primary race between our
+      // `isFirstPartnership` check and the insert, so `result.primary` can
+      // be false even when the local `primary` above is true. Stripping
+      // every other partnership's primary flag off the strength of the
+      // request alone would wipe the actual winner's flag too, leaving the
+      // project with zero primaries.
+      if (result.primary) {
+        // Postgres already displaced the old primary atomically inside
+        // create() (see its docs for why); this call is a no-op there since
+        // there's nothing left to clear. Neo4j/Gel have no such backstop and
+        // still rely on this call to actually do the clearing. Union both so
+        // every displaced partnership gets its live queries invalidated
+        // regardless of which engine handled it.
         const other = await this.repo.removePrimaryFromOtherPartnerships(
           result.id,
         );
+        const displaced = new Map(
+          [...result.displaced, ...other].map((r) => [r.id, r]),
+        );
         this.liveQueryStore.invalidateAll(
-          other.map((r) => ['Partnership', r.id]),
+          [...displaced.values()].map((r) => ['Partnership', r.id]),
         );
       }
 
@@ -114,6 +131,9 @@ export class PartnershipService {
       this.privileges.for(Partnership, partnership).verifyCan('create');
 
       await this.hooks.run(new PartnershipCreatedHook(partnership));
+      await this.hooks.run(
+        new ResourceMutatedHook('Partnership', partnership.id, 'Create'),
+      );
 
       this.liveQueryStore.invalidate([resolveProjectType(project), project.id]);
 
@@ -217,6 +237,9 @@ export class PartnershipService {
     const partnership = await this.readOne(input.id, view);
     const event = new PartnershipUpdatedHook(partnership, object, input);
     await this.hooks.run(event);
+    await this.hooks.run(
+      new ResourceMutatedHook('Partnership', input.id, 'Update', changes),
+    );
     return event.updated;
   }
 
@@ -236,6 +259,7 @@ export class PartnershipService {
     }
 
     await this.hooks.run(new PartnershipWillDeleteHook(object));
+    await this.hooks.run(new ResourceMutatedHook('Partnership', id, 'Delete'));
 
     try {
       await this.repo.deleteNode(object, { changeset });

@@ -6,6 +6,7 @@ import { CeremonyMutationActorResolver } from './ceremony-mutation-actor.resolve
 import { CeremonyMutationSubscriptionsResolver } from './ceremony-mutation-subscriptions.resolver';
 import { CeremonyUpdatedResolver } from './ceremony-updated.resolver';
 import { CeremonyChannels } from './ceremony.channels';
+import { CeremonyDrizzleRepository } from './ceremony.drizzle.repository';
 import { CeremonyGelRepository } from './ceremony.gel.repository';
 import { CeremonyLoader } from './ceremony.loader';
 import { CeremonyRepository } from './ceremony.repository';
@@ -25,6 +26,9 @@ import * as handlers from './handlers';
     CeremonyChannels,
     splitDb(CeremonyRepository, {
       gel: CeremonyGelRepository,
+      // migration-todo: `as any` removed at Phase 7 cutover when splitDb
+      // disappears with the Neo4j path.
+      postgres: CeremonyDrizzleRepository as any,
     }),
     CeremonyLoader,
     ...Object.values(handlers),

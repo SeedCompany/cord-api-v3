@@ -12,6 +12,7 @@ import {
 } from '~/common';
 import { e } from '~/core/gel';
 import { type BaseNode } from '~/core/neo4j/results';
+import { type LinkToUnknown } from '~/core/resources';
 import { RegisterResource } from '~/core/resources';
 import { ChangesetAware } from '../../changeset/dto';
 import { type DefinedFile } from '../../file/dto';
@@ -54,7 +55,7 @@ export class Budget extends Interfaces {
     import('../../project/dto').then((m) => m.IProject);
 
   @Field(() => IProject)
-  declare readonly parent: BaseNode;
+  declare readonly parent: LinkToUnknown | BaseNode;
 
   @Field()
   @DbLabel('BudgetStatus')

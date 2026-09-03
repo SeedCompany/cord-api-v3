@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { splitDb } from '~/core/database';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { PeriodicReportModule } from '../periodic-report/periodic-report.module';
 import { ProductModule } from '../product/product.module';
@@ -7,6 +8,7 @@ import * as handlers from './handlers';
 import { ProductConnectionResolver } from './product-connection.resolver';
 import { ProductProgressByProductLoader } from './product-progress-by-product.loader';
 import { ProductProgressByReportLoader } from './product-progress-by-report.loader';
+import { ProductProgressDrizzleRepository } from './product-progress.drizzle.repository';
 import { ProductProgressRepository } from './product-progress.repository';
 import { ProductProgressResolver } from './product-progress.resolver';
 import { ProductProgressService } from './product-progress.service';
@@ -25,7 +27,11 @@ import { StepProgressResolver } from './step-progress.resolver';
     ProductProgressByProductLoader,
     ProductProgressByReportLoader,
     ProductProgressService,
-    ProductProgressRepository,
+    splitDb(ProductProgressRepository, {
+      // migration-todo: `as any` removed at Phase 7 cutover when splitDb
+      // disappears with the Neo4j path.
+      postgres: ProductProgressDrizzleRepository as any,
+    }),
     StepProgressExtractor,
     ...Object.values(handlers),
   ],

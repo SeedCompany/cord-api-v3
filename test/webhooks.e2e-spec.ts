@@ -37,6 +37,7 @@ import { Identity } from '~/core/authentication';
 import { Broadcaster } from '~/core/broadcast';
 import { ConfigService } from '~/core/config';
 import { DatabaseMigrationCommand } from '~/core/neo4j/migration/migration.command';
+import { WebhookChannelSyncMigration } from '~/core/webhooks/channels/channel-sync.migration';
 import { WebhookChannelRepository } from '~/core/webhooks/channels/webhook-channel.repository';
 import { WebhooksRepository } from '~/core/webhooks/management/webhooks.repository';
 import { WebhookListener } from '~/core/webhooks/processor/webhook.listener';
@@ -60,6 +61,27 @@ import {
 import { GqlError } from './setup/gql-client/gql-result';
 
 const SHORT = +Duration.from('30s');
+
+const isPostgres = process.env.DATABASE === 'postgres';
+
+/**
+ * `DatabaseMigrationCommand` runs every registered migration through
+ * `MigrationRunner`, which tracks the schema version as a `:SchemaVersion`
+ * node in Neo4j — raw Cypher, no engine split. That's fine at real app
+ * bootstrap, which guards it to Neo4j only (`migration.module.ts`) precisely
+ * because it has no Postgres counterpart and never will (it's gone at
+ * cutover along with the rest of that module).
+ *
+ * These two tests call the command directly to simulate "a deploy just
+ * happened," bypassing that guard. Under Postgres there's nothing for it to
+ * track, so go straight to the one migration these tests actually care
+ * about — which is already properly split — instead of the Neo4j-only
+ * version bookkeeping around it.
+ */
+const runDeployMigrations = async (app: TestApp) =>
+  isPostgres
+    ? await app.get(WebhookChannelSyncMigration).up()
+    : await app.get(DatabaseMigrationCommand).execute();
 
 describe('Move to Generic Subscriptions Tests', () => {
   it.todo(
@@ -1735,7 +1757,7 @@ describe('Webhooks', () => {
       // established in the ephemeral tests db.
       // It would probably be better to move this to db setup as it would
       // mirror prod more closely.
-      await isolatedApp.get(DatabaseMigrationCommand).execute();
+      await runDeployMigrations(isolatedApp);
 
       // Create a webhook with a valid subscription
       const webhook = await isolatedTester.apply(
@@ -1758,8 +1780,11 @@ describe('Webhooks', () => {
       const newVersion = DateTime.now();
       const newApp = await createApp({
         config: {
-          // Share db with the suite app
+          // Share db with the suite app. Both are passed regardless of which
+          // engine is active — the one that matters takes effect, and the
+          // other is an inert unused field on the given engine.
           neo4j: isolatedApp.get(ConfigService).neo4j,
+          postgres: isolatedApp.get(ConfigService).postgres,
         },
         overrides: (builder) =>
           builder
@@ -1781,7 +1806,7 @@ describe('Webhooks', () => {
 
       // region Act
       // Call db migrate, as would happen on deployment, which should trigger webhook migration
-      await newApp.get(DatabaseMigrationCommand).execute();
+      await runDeployMigrations(newApp);
       // endregion
 
       // region Assert
@@ -1814,7 +1839,7 @@ describe('Webhooks', () => {
       // established in the ephemeral tests db.
       // It would probably be better to move this to db setup as it would
       // mirror prod more closely.
-      await isolatedApp.get(DatabaseMigrationCommand).execute();
+      await runDeployMigrations(isolatedApp);
 
       // Create a webhook with a valid subscription
       const webhook = await isolatedTester.apply(
@@ -1837,8 +1862,11 @@ describe('Webhooks', () => {
       const newVersion = DateTime.now();
       const newApp = await createApp({
         config: {
-          // Share db with the suite app
+          // Share db with the suite app. Both are passed regardless of which
+          // engine is active — the one that matters takes effect, and the
+          // other is an inert unused field on the given engine.
           neo4j: isolatedApp.get(ConfigService).neo4j,
+          postgres: isolatedApp.get(ConfigService).postgres,
         },
         overrides: (builder) =>
           builder
@@ -1861,7 +1889,7 @@ describe('Webhooks', () => {
       const waitingForWebhook = firstValueFrom(events.pipe(timeout(SHORT)));
 
       // Call db migrate, as would happen on deployment, which should trigger webhook migration
-      await newApp.get(DatabaseMigrationCommand).execute();
+      await runDeployMigrations(newApp);
       // endregion
 
       // region Assert

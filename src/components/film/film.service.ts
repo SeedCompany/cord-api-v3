@@ -67,7 +67,7 @@ export class FilmService {
     this.privileges.for(Film, film).verifyCan('delete');
 
     try {
-      await this.repo.deleteNode(film);
+      await this.repo.delete(film.id);
     } catch (exception) {
       throw new ServerException('Failed to delete', exception);
     }

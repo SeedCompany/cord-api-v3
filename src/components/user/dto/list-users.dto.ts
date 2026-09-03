@@ -45,7 +45,7 @@ export abstract class UserFilters {
 export class UserListInput extends SortablePaginationInput<
   keyof User | 'fullName'
 >({
-  defaultSort: 'id',
+  defaultSort: 'fullName',
 }) {
   @FilterField(() => UserFilters)
   readonly filter?: UserFilters;

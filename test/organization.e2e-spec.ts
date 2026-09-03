@@ -1,16 +1,20 @@
 import { faker } from '@faker-js/faker';
 import { beforeAll, describe, expect, it } from '@jest/globals';
-import { sortBy } from '@seedcompany/common';
 import { times } from 'lodash';
 import { generateId, type ID, isValidId, Role } from '~/common';
 import { graphql } from '~/graphql';
 import {
+  createLocation,
   createOrganization,
+  createPartner,
+  createPartnership,
+  createProject,
   createSession,
   createTestApp,
   errors,
   fragments,
   registerUser,
+  runAsAdmin,
   type TestApp,
 } from './utility';
 
@@ -23,6 +27,48 @@ describe('Organization e2e', () => {
     await registerUser(app, {
       roles: [Role.Controller],
     });
+  });
+
+  // The organization's own version of the partner test in partner.e2e-spec.
+  // Worth having separately rather than trusting the partner one to cover it:
+  // an organization reaches projects one hop further out, through the partners
+  // that belong to it, so the two walk different paths and only share the
+  // shape of the answer.
+  it('derives sensitivity from its partners projects, and follows them', async () => {
+    const org = await runAsAdmin(app, () => createOrganization(app));
+
+    const readSensitivity = async () => {
+      const { organization } = await app.graphql.query(
+        graphql(`
+          query organization($id: ID!) {
+            organization(id: $id) {
+              sensitivity
+            }
+          }
+        `),
+        { id: org.id },
+      );
+      return organization.sensitivity;
+    };
+
+    // Nothing connected yet, so the most restrictive answer.
+    expect(await readSensitivity()).toBe('High');
+
+    // A partner belonging to this organization, on a Low project. Reading the
+    // stored column instead leaves this at High.
+    await runAsAdmin(app, async () => {
+      const partner = await createPartner(app, { organization: org.id });
+      const project = await createProject(app, {
+        type: 'Internship',
+        sensitivity: 'Low',
+      });
+      await createPartnership(app, {
+        project: project.id,
+        partner: partner.id,
+      });
+    });
+
+    expect(await readSensitivity()).toBe('Low');
   });
 
   it.skip('should have unique name', async () => {
@@ -295,6 +341,62 @@ describe('Organization e2e', () => {
     expect(actual.name.canEdit).toBe(true);
   });
 
+  it('adds and removes a location from an organization', async () => {
+    const org = await createOrganization(app);
+    const location = await runAsAdmin(app, () => createLocation(app));
+
+    const OrgLocations = graphql(`
+      query org($id: ID!) {
+        organization(id: $id) {
+          locations {
+            items {
+              id
+            }
+          }
+        }
+      }
+    `);
+
+    await app.graphql.mutate(
+      graphql(`
+        mutation addLocationToOrganization($organization: ID!, $location: ID!) {
+          addLocationToOrganization(
+            organization: $organization
+            location: $location
+          ) {
+            id
+          }
+        }
+      `),
+      { organization: org.id, location: location.id },
+    );
+
+    const afterAdd = await app.graphql.query(OrgLocations, { id: org.id });
+    expect(afterAdd.organization.locations.items.map((l) => l.id)).toEqual([
+      location.id,
+    ]);
+
+    await app.graphql.mutate(
+      graphql(`
+        mutation removeLocationFromOrganization(
+          $organization: ID!
+          $location: ID!
+        ) {
+          removeLocationFromOrganization(
+            organization: $organization
+            location: $location
+          ) {
+            id
+          }
+        }
+      `),
+      { organization: org.id, location: location.id },
+    );
+
+    const afterRemove = await app.graphql.query(OrgLocations, { id: org.id });
+    expect(afterRemove.organization.locations.items).toHaveLength(0);
+  });
+
   const Organizations = graphql(`
     query organizations($input: OrganizationListInput) {
       organizations(input: $input) {
@@ -309,65 +411,95 @@ describe('Organization e2e', () => {
       }
     }
   `);
-  it.skip('List of organizations sorted by name to be alphabetical, ignoring case sensitivity. Order: ASCENDING', async () => {
-    await registerUser(app, {
-      roles: [Role.FieldOperationsDirector],
-      displayFirstName: 'Tammy',
-    });
-    //Create three projects, each beginning with lower or upper-cases
-    await createOrganization(app, {
-      name: 'an Organization ' + faker.string.uuid(),
-    });
-    await createOrganization(app, {
-      name: 'Another Organization' + faker.string.uuid(),
-    });
-    await createOrganization(app, {
-      name: 'Big Organization' + faker.string.uuid(),
-    });
-    await createOrganization(app, {
-      name: 'big Organization also' + faker.string.uuid(),
-    });
-    const { organizations } = await app.graphql.query(Organizations, {
-      input: {
-        sort: 'name',
-        order: 'ASC',
-      },
-    });
-    const items = organizations.items;
-    const sorted = sortBy(items, (org: any) => org.name.value.toLowerCase());
-    expect(sorted).toEqual(items);
+  /**
+   * Seeds four organizations whose names differ ONLY in the case of the first
+   * letter after a shared random prefix — no spaces, digits or punctuation. That
+   * keeps the assertion about case folding and nothing else: every collation
+   * that folds case agrees on `alpha, Bravo, charlie, Delta`, while a
+   * case-sensitive byte sort gives a visibly different `Bravo, Delta, alpha,
+   * charlie`. Names containing spaces would instead be testing how the collation
+   * weights punctuation, which is a separate question with a different answer
+   * per collation.
+   *
+   * Inserted in an order matching neither the expected ascending nor descending
+   * result, so a repository that drops `sort` on the floor cannot pass by luck.
+   */
+  const seedCaseVariants = async () => {
+    const prefix = faker.string.alpha({ length: 10, casing: 'lower' });
+    const ascendingSuffixes = ['alpha', 'Bravo', 'charlie', 'Delta'];
+    for (const suffix of ['charlie', 'Delta', 'alpha', 'Bravo']) {
+      await createOrganization(app, { name: prefix + suffix });
+    }
+    return {
+      prefix,
+      expectedAsc: ascendingSuffixes.map((suffix) => prefix + suffix),
+    };
+  };
+
+  /**
+   * Collects every visible organization name in the order the API returns them.
+   *
+   * Two reasons this pages instead of asking for one big page or using the
+   * `name` filter:
+   *   - `count` is capped at 100, and the shared Neo4j test database accumulates
+   *     organizations across spec files, so one page is not guaranteed to hold
+   *     the seeded four.
+   *   - the `name` filter is NOT equivalent across engines — Neo4j reaches a
+   *     Lucene full-text index (a synthetic prefix glued to a word is one token,
+   *     which an unanchored term query will not match) while Postgres runs a
+   *     substring ILIKE. Filtering server-side would have the two engines
+   *     comparing different result sets, which is the opposite of what a parity
+   *     test should do.
+   *
+   * Bounded, and throws rather than silently returning a partial list.
+   */
+  const allOrgNamesInOrder = async (order: 'ASC' | 'DESC') => {
+    const maxPages = 25;
+    const names: string[] = [];
+    let page = 1;
+    let hasMore = true;
+    while (hasMore) {
+      if (page > maxPages) {
+        throw new Error(
+          `organization list did not terminate within ${maxPages} pages — raise the bound or narrow the query`,
+        );
+      }
+      const { organizations } = await app.graphql.query(Organizations, {
+        input: { sort: 'name', order, count: 100, page },
+      });
+      names.push(
+        ...organizations.items
+          .map((org) => org.name.value)
+          .filter((name): name is string => !!name),
+      );
+      hasMore = organizations.hasMore;
+      page++;
+    }
+    return names;
+  };
+
+  it('sorts organizations by name ignoring case, ascending', async () => {
+    const { prefix, expectedAsc } = await seedCaseVariants();
+
+    const seeded = (await allOrgNamesInOrder('ASC')).filter((name) =>
+      name.startsWith(prefix),
+    );
+
+    // Check the set before the order: if the seeds went missing, this fails
+    // loudly instead of the order assertion quietly passing on a subset.
+    expect(seeded).toHaveLength(expectedAsc.length);
+    expect(seeded).toEqual(expectedAsc);
   });
 
-  it.skip('List of organizations sorted by name to be alphabetical, ignoring case sensitivity. Order: DESCENDING', async () => {
-    await registerUser(app, {
-      roles: [Role.FieldOperationsDirector],
-      displayFirstName: 'Tammy',
-    });
-    //Create three projects, each beginning with lower or upper-cases
-    await createOrganization(app, {
-      name: 'an Organization ' + faker.string.uuid(),
-    });
-    await createOrganization(app, {
-      name: 'Another Organization' + faker.string.uuid(),
-    });
-    await createOrganization(app, {
-      name: 'Big Organization' + faker.string.uuid(),
-    });
-    await createOrganization(app, {
-      name: 'big Organization also' + faker.string.uuid(),
-    });
-    const { organizations } = await app.graphql.query(Organizations, {
-      input: {
-        sort: 'name',
-        order: 'DESC',
-      },
-    });
-    const items = organizations.items;
-    const sorted = sortBy(items, [
-      (org: any) => org.name.value.toLowerCase(),
-      'desc',
-    ]);
-    expect(sorted).toEqual(items);
+  it('sorts organizations by name ignoring case, descending', async () => {
+    const { prefix, expectedAsc } = await seedCaseVariants();
+
+    const seeded = (await allOrgNamesInOrder('DESC')).filter((name) =>
+      name.startsWith(prefix),
+    );
+
+    expect(seeded).toHaveLength(expectedAsc.length);
+    expect(seeded).toEqual([...expectedAsc].reverse());
   });
 
   it('list view of organizations with mismatch parameters', async () => {

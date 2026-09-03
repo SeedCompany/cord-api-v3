@@ -113,6 +113,195 @@
       "when": 1751501200000,
       "tag": "0015_add_budgets",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1752019200000,
+      "tag": "0016_add_languages",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1752105600000,
+      "tag": "0017_add_engagements",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1752192000000,
+      "tag": "0018_add_products",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1752278400000,
+      "tag": "0019_add_periodic_reports",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1752364800000,
+      "tag": "0020_add_prompt_variant_responses",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1752451200000,
+      "tag": "0021_add_product_progress",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1752537600000,
+      "tag": "0022_add_pins",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1752624000000,
+      "tag": "0023_add_known_languages",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1752710400000,
+      "tag": "0024_add_comments",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1752796800000,
+      "tag": "0025_add_posts",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1752883200000,
+      "tag": "0026_add_resource_mutations",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1752969600000,
+      "tag": "0027_audit_actor_attribution",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1753056000000,
+      "tag": "0028_add_progress_report_media",
+      "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1753142400000,
+      "tag": "0029_add_pnp_extraction_results",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1753228800000,
+      "tag": "0030_relax_name_and_code_uniqueness",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1753315200000,
+      "tag": "0031_workflow_event_system_agent_actor",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1753401600000,
+      "tag": "0032_display_order_collation",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1753488000000,
+      "tag": "0033_add_partnership_producing_mediums",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1753574400000,
+      "tag": "0034_add_tool_usages",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1753660800000,
+      "tag": "0035_periodic_reports_soft_delete",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1753747200000,
+      "tag": "0036_add_progress_report_workflow",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1753833600000,
+      "tag": "0037_add_webhooks",
+      "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1753920000000,
+      "tag": "0038_add_location_edges",
+      "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1754006400000,
+      "tag": "0039_add_financial_approvers",
+      "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1754092800000,
+      "tag": "0040_add_external_department_ids",
+      "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1754179200000,
+      "tag": "0041_store_project_step_changed_at",
+      "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1754265600000,
+      "tag": "0042_allow_blanks_on_migrated_flags",
+      "breakpoints": true
     }
   ]
 }

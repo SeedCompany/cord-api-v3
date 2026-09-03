@@ -15,8 +15,15 @@ export async function mapSecuredValue<T extends Secured<any>, S>(
   if (!rest.canRead || value == null) {
     return rest;
   }
-  const mapped = await mapper(value);
-  return { ...rest, value: mapped };
+  try {
+    const mapped = await mapper(value);
+    return { ...rest, value: mapped };
+  } catch (e) {
+    if (e instanceof NotFoundException) {
+      return rest;
+    }
+    throw e;
+  }
 }
 
 /**

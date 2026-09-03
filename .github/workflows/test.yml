@@ -60,6 +60,28 @@ jobs:
           --health-start-period 30s
       # Needed for the postgres matrix entries; idle for the neo4j ones.
       postgres:
+        # Alpine, deliberately, because it is what matches Neo4j.
+        #
+        # Name columns do not care which image this is — they name the
+        # `display_order` collation explicitly (migration 0032), so they order
+        # identically anywhere. Every OTHER text sort falls back to the collation
+        # the database was created with, and ephemeral test databases are created
+        # with no LOCALE clause, so they inherit initdb's choice — which behaves
+        # differently per C library. musl has no locale-aware comparison and so
+        # compares raw bytes; glibc case-folds and ignores a leading space.
+        #
+        # Neo4j orders those columns by raw code points, and UTF-8 byte order IS
+        # code-point order, so musl reproduces Neo4j and glibc would diverge from
+        # it. Parity is the rule for this migration, so CI runs the family that
+        # has it. The columns concerned are two address fields, a post body, two
+        # product descriptions, an ISO code, a PMC entity code, a department id
+        # and an unavailability description (see NAME_COLUMNS in
+        # src/core/drizzle/order-by.ts for the collated set).
+        #
+        # migration-todo: emitting `collate "C"` for non-name text sorts would
+        # remove the dependence on the image entirely and match Neo4j anywhere,
+        # including on a glibc production server. Not done — it changes ordering
+        # on glibc, so it is a deliberate call, not a cleanup.
         image: postgres:16-alpine
         ports:
           - 5432:5432
@@ -80,23 +102,31 @@ jobs:
           - neo4j
 #          - gel
         include:
-          # Postgres runs only the suites for domains that have a Drizzle repo
-          # on this branch — unmigrated domains fall back to Neo4j via splitDb
-          # and hit cross-engine boundaries. Each entry below MUST have a
-          # matching *.drizzle.repository.ts; add a domain here only in the same
-          # PR that lands its repo. Widen as each phase lands. migration-todo:
-          # drop the filter entirely at Phase 7 cutover so postgres runs the
-          # full suite (and re-shard it to match neo4j).
+          # Postgres runs the WHOLE suite. It used to run an opt-in allowlist of
+          # migrated domains, which is removed deliberately: an allowlist
+          # silently excludes anything nobody remembered to name, and it failed
+          # that way three separate times — a domain whose own migration PR
+          # never added it, a name that didn't match because entries are
+          # anchored to a following `.` (so `periodic-report` never covered
+          # `periodic-report-narrative-file`), and every spec under `test/`
+          # subdirectories, which the pattern's shape could never match at all.
+          # The last of those hid the fact that webhooks was never ported.
           #
-          # Single shard on purpose: the migrated-domain subset is only a few
-          # minutes of tests — six jobs paying the full setup cost for ~1.5 min
-          # of tests each was pure runner waste. Bump `total` (and add shard
-          # entries) as the subset grows.
+          # Suites that genuinely cannot pass under Postgres now switch
+          # themselves off inside the test file (`describe.skip` on a DATABASE
+          # check), so they are reported as skipped, appear in the run output,
+          # and state their reason — instead of being invisible. Currently: the
+          # three *-changeset-aware specs (changesets are not being carried
+          # forward). Add that condition to the test file — never a filter
+          # here. (Webhooks used to be listed here too — ported 2026-08-05,
+          # its spec now runs unconditionally on both engines.)
+          #
+          # Single shard on purpose: the full suite is ~10 min serial, and six
+          # jobs each paying the full setup cost was pure runner waste. Bump
+          # `total` (and add shard entries) if that grows uncomfortable.
           - database: postgres
             shard: 1
             total: 1
-            test-args: >-
-              --testPathPatterns "test/(authentication|user|education|unavailability|file|location|organization|region|zone|funding-account|partner|partnership|project-member|tool|notification|postgres-schema|auth-read-filter|budget)\."
       fail-fast: false
     steps:
       - uses: actions/checkout@v4
@@ -120,7 +150,7 @@ jobs:
         # V8's default 4GB heap cap late in the shard (all-shards OOM,
         # 2026-07-14). Recycling the worker between files when it bloats keeps
         # serial semantics with bounded memory.
-        run: yarn test:e2e --maxWorkers=1 --workerIdleMemoryLimit=1500MB --shard=${{ matrix.shard }}/${{ matrix.total || 6 }} --reporters=github-actions ${{ matrix.test-args }}
+        run: yarn test:e2e --maxWorkers=1 --workerIdleMemoryLimit=1500MB --shard=${{ matrix.shard }}/${{ matrix.total || 6 }} --reporters=github-actions
         env:
           NEO4J_VERSION: ${{ matrix.neo4j-version }}
           DATABASE: ${{ matrix.database }}

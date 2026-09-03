@@ -14,6 +14,18 @@ class RawSession extends DataObject {
   readonly anonymous: boolean;
 
   /**
+   * The name of the SystemAgent {@link userId} refers to, when it refers to one
+   * rather than to a User — anonymous sessions ('Anonymous') and ghost
+   * impersonation ('Ghost').
+   *
+   * `userId` is typed plain `ID`, not `ID<'User'>`, exactly because of this
+   * ambiguity. Resolving it needs the agent in hand, which only session
+   * creation has, so the answer is recorded here instead of left for each
+   * consumer to reconstruct by comparing ids.
+   */
+  readonly systemAgentName?: string;
+
+  /**
    * The "real", requesting user's session, when they are impersonating.
    */
   readonly impersonator?: Session;

@@ -1,6 +1,5 @@
 import type { MergeExclusive, RequireAtLeastOne } from 'type-fest';
 import { type ID, type UnsecuredDto } from '~/common';
-import { ConfigService } from '~/core/config';
 import { OnHook } from '~/core/hooks';
 import {
   type Project,
@@ -104,7 +103,6 @@ export class UpdateEngagementStatusHandler {
   constructor(
     private readonly repo: EngagementRepository,
     private readonly engagementService: EngagementService,
-    private readonly config: ConfigService,
   ) {}
 
   async handle({
@@ -112,10 +110,6 @@ export class UpdateEngagementStatusHandler {
     previousStep,
     workflowEvent,
   }: ProjectTransitionedHook) {
-    // migration-todo: Engagement isn't migrated to Postgres yet; skip this
-    // Neo4j-only engagement-status sync under DATABASE=postgres. Drop this
-    // guard when engagement-pg lands.
-    if (this.config.databaseEngine === 'postgres') return;
     const engagementStatus = changes.find(
       changeMatcher(previousStep, workflowEvent.to),
     )?.newStatus;

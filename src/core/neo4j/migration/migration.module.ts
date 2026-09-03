@@ -17,6 +17,14 @@ export class MigrationModule implements OnApplicationBootstrap {
   ) {}
 
   async onApplicationBootstrap() {
+    // migration-todo: drop this guard at cutover, along with this whole module.
+    // syncUp retries the connection forever, so without the guard it churns
+    // against an absent Neo4j — and logs driver errors — whenever another engine
+    // is active.
+    if (this.config.databaseEngine !== 'neo4j') {
+      return;
+    }
+
     const entryCmd = process.argv.join('');
     if (
       !this.config.dbAutoMigrate ||

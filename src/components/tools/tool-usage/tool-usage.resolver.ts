@@ -38,6 +38,19 @@ export class ToolUsageResolver {
     return (await this.resources.loadByBaseNode(container)) as Resource;
   }
 
+  /**
+   * Who recorded this usage.
+   *
+   * Kept non-null on purpose (2026-08-07 reversal of the 2026-07-30 nullable
+   * attempt): flipping this to nullable is a real breaking schema change for
+   * every GraphQL consumer, and that's a conversation to have on its own
+   * timeline, not something to fold into the migration cutover. Parity with
+   * Neo4j is what the cutover needs, and Neo4j's query requires the creator to
+   * match, so a soft-deleted creator makes the whole usage disappear over
+   * there rather than surfacing with a blank field. The repository now does
+   * the same — it drops any usage whose creator has been removed before this
+   * resolver ever runs — so the actor here is guaranteed to still exist.
+   */
   @ResolveField(() => Actor)
   async creator(
     @Parent() toolUsage: ToolUsage,
