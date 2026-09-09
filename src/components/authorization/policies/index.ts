@@ -21,6 +21,7 @@ export * from './by-role/staff-member.policy';
 export * from './by-role/translator.policy';
 
 export * from './by-feature/engagements-create-delete.policy';
+export * from './by-feature/feature-post-for-investor-report.policy';
 export * from './by-feature/finalize-post-wording.policy';
 export * from './by-feature/moderate-posts.policy';
 export * from './by-feature/progress-report-media-owner.policy';

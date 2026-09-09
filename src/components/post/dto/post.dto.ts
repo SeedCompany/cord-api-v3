@@ -4,6 +4,7 @@ import {
   DateTimeField,
   Resource,
   type Secured,
+  SecuredBoolean,
   SecuredString,
   SecuredStringNullable,
 } from '~/common';
@@ -98,6 +99,22 @@ export class Post extends Resource {
     `,
   })
   readonly finalBody: SecuredStringNullable;
+
+  @Field({
+    description: `
+      Curated into this quarter's Investor Report — a distinct question from
+      \`shareability\`/\`approvedShareability\` (may this leave Seed Company at
+      all). Only meaningful once \`report\` is set: a request not submitted with
+      any report isn't part of a specific investor-facing document to feature
+      it in. Not exclusive — a report can feature several requests, unlike
+      ProgressReportCommunityStory's single \`featured\` story.
+
+      Secured for the same reason as \`approvedShareability\`: \`canEdit\` is the
+      question "may I curate this into the investor report?" — see
+      FeaturePostForInvestorReportPolicy.
+    `,
+  })
+  readonly featured: SecuredBoolean;
 
   @DateTimeField()
   readonly modifiedAt: DateTime;

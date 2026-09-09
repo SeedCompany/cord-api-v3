@@ -3114,6 +3114,13 @@ export const posts = pgTable(
      * else's edit; see `effectiveBodyOf` for which one to read.
      */
     finalBody: text('final_body'),
+    /**
+     * Curated into this quarter's Investor Report — a distinct question from
+     * `shareability`/`approvedShareability` (may this leave Seed Company at
+     * all). Only meaningful once `reportId` is set; not exclusive, unlike
+     * `promptVariantResponses.featured` — a report can feature several.
+     */
+    featured: boolean('featured').notNull().default(false),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
       .defaultNow(),

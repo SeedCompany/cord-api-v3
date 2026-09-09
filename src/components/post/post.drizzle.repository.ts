@@ -56,6 +56,7 @@ export class PostDrizzleRepository extends DrizzleDtoRepository<
       respondsTo: row.respondsToId ? { id: row.respondsToId } : null,
       body: row.body,
       finalBody: row.finalBody ?? null,
+      featured: row.featured,
       modifiedAt: DateTime.fromJSDate(row.modifiedAt),
     };
     return dto as UnsecuredDto<Post>;
@@ -103,6 +104,7 @@ export class PostDrizzleRepository extends DrizzleDtoRepository<
       type: c.type,
       shareability: c.shareability,
       body: c.body,
+      featured: c.featured,
       // `report` and `finalBody` are both explicitly nullable — passing null
       // detaches the report, or clears a finalized wording back to `body`.
       // `undefined` (the key absent from `changes`) means "don't touch".

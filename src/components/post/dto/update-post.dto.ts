@@ -42,6 +42,17 @@ export abstract class UpdatePost {
     `,
   })
   readonly finalBody?: string | null;
+
+  @Field(() => Boolean, {
+    nullable: true,
+    description: `
+      Set whether this is curated into the report's Investor Report. Leave
+      unset to change other fields without touching this one. Requires the
+      post to be attached to a report and cleared to at least
+      \`AskToShareExternally\`; see \`Post.featured\`.
+    `,
+  })
+  readonly featured?: boolean;
 }
 
 @ObjectType()

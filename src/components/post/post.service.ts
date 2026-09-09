@@ -21,6 +21,7 @@ import { ResourceMutatedHook } from '../audit/resource-mutated.hook';
 import { Privileges } from '../authorization';
 import {
   type CreatePost,
+  effectiveShareabilityOf,
   Post,
   Postable,
   type PostShareability,
@@ -93,6 +94,11 @@ export class PostService {
     const object = await this.repo.readOne(input.id);
 
     const changes = this.repo.getActualChanges(object, input);
+
+    if ((changes as { featured?: boolean }).featured === true) {
+      this.verifyCanFeature(object, changes);
+    }
+
     this.privileges.for(Post, object).verifyChanges(changes);
     const updated = await this.repo.update(object, changes);
 
@@ -101,6 +107,43 @@ export class PostService {
     );
 
     return this.secure(updated);
+  }
+
+  /**
+   * `featured` (curated into this quarter's Investor Report) only makes sense
+   * once a post is actually part of a specific report, and only once it's
+   * been cleared to leave Seed Company — otherwise this would be publishing
+   * something nobody has approved for external reach. Checked against the
+   * post's state *after* this same update's other changes apply, so a caller
+   * can attach a report and feature it in one call.
+   */
+  private verifyCanFeature(
+    object: UnsecuredDto<Post>,
+    changes: Record<string, unknown>,
+  ) {
+    const reportId =
+      'report' in changes ? (changes.report as ID | null) : object.report?.id;
+    if (!reportId) {
+      throw new InputException(
+        'Only posts submitted with a report can be featured for the Investor Report',
+        'featured',
+      );
+    }
+
+    const shareability =
+      'shareability' in changes
+        ? (changes.shareability as PostShareability)
+        : object.shareability;
+    const effective = effectiveShareabilityOf({
+      shareability,
+      approvedShareability: object.approvedShareability,
+    });
+    if (!reachesAtLeast(effective, 'AskToShareExternally')) {
+      throw new InputException(
+        'This post has not been cleared to leave Seed Company yet',
+        'featured',
+      );
+    }
   }
 
   /**
