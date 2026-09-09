@@ -30,10 +30,16 @@ import {
 } from './dto';
 import { type PostListInput, type SecuredPostList } from './dto/list-posts.dto';
 import { PostModerationDrizzleRepository } from './post-moderation.drizzle.repository';
+import { PostDrizzleRepository } from './post.drizzle.repository';
 import { PostRepository } from './post.repository';
 
 type ConcretePostable = Postable & { __typename: string };
 type PostableRef = ID | BaseNode | ConcretePostable;
+
+// A product decision, not a data invariant — see PostDrizzleRepository's
+// countFeatured doc comment. Change this to change the cap; nothing else
+// models it.
+const MAX_FEATURED_POSTS_PER_REPORT = 3;
 
 @Injectable()
 export class PostService {
@@ -42,6 +48,7 @@ export class PostService {
     private readonly privileges: Privileges,
     private readonly repo: PostRepository,
     private readonly moderationRepo: PostModerationDrizzleRepository,
+    private readonly drizzleRepo: PostDrizzleRepository,
     private readonly resources: ResourceLoader,
     private readonly resourcesHost: ResourcesHost,
     private readonly liveQueryStore: LiveQueryStore,
@@ -96,7 +103,7 @@ export class PostService {
     const changes = this.repo.getActualChanges(object, input);
 
     if ((changes as { featured?: boolean }).featured === true) {
-      this.verifyCanFeature(object, changes);
+      await this.verifyCanFeature(object, changes);
     }
 
     this.privileges.for(Post, object).verifyChanges(changes);
@@ -117,7 +124,7 @@ export class PostService {
    * post's state *after* this same update's other changes apply, so a caller
    * can attach a report and feature it in one call.
    */
-  private verifyCanFeature(
+  private async verifyCanFeature(
     object: UnsecuredDto<Post>,
     changes: Record<string, unknown>,
   ) {
@@ -141,6 +148,19 @@ export class PostService {
     if (!reachesAtLeast(effective, 'AskToShareExternally')) {
       throw new InputException(
         'This post has not been cleared to leave Seed Company yet',
+        'featured',
+      );
+    }
+
+    // `changes.featured === true` at the call site means this post wasn't
+    // already featured, so it's never among the rows this counts — no need
+    // to exclude its own id.
+    const alreadyFeatured = await this.drizzleRepo.countFeatured(
+      reportId as ID<'PeriodicReport'>,
+    );
+    if (alreadyFeatured >= MAX_FEATURED_POSTS_PER_REPORT) {
+      throw new InputException(
+        `Up to ${MAX_FEATURED_POSTS_PER_REPORT} posts can be featured for the Investor Report`,
         'featured',
       );
     }

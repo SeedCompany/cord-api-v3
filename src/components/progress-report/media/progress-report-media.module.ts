@@ -26,6 +26,10 @@ import { ProgressReportMediaProgressReportConnectionResolver } from './resolvers
     splitDb(ProgressReportMediaRepository, {
       postgres: ProgressReportMediaDrizzleRepository as any,
     }),
+    // Also registered directly (not just via splitDb above) so the service
+    // can inject it for the Investor Report cap count — Postgres-only, same
+    // shape as PostModerationDrizzleRepository.
+    ProgressReportMediaDrizzleRepository,
     ProgressReportUpdateMediaMetadataCheckHandler,
     ProgressReportMediaFileIsMediaCheckHandler,
   ],

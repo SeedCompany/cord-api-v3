@@ -22,6 +22,9 @@ import { PostableResolver } from './postable.resolver';
     splitDb(PostRepository, {
       postgres: PostDrizzleRepository as any,
     }),
+    // Also registered directly (not just via splitDb above) so the service
+    // can inject it for the Investor Report featured-count cap — Postgres-only.
+    PostDrizzleRepository,
     PostableResolver,
     PostLoader,
     // Not split by backend: moderation is Postgres-only by design.

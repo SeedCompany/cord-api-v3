@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import {
   generateId,
   type ID,
+  InputException,
   NotImplementedException,
   type UnsecuredDto,
 } from '~/common';
@@ -21,8 +22,16 @@ import {
   type UpdateProgressReportMedia as UpdateMedia,
   type UploadProgressReportMedia as UploadMedia,
 } from './dto';
+import { ProgressReportMediaDrizzleRepository } from './progress-report-media.drizzle.repository';
 import { ProgressReportMediaLoader } from './progress-report-media.loader';
 import { ProgressReportMediaRepository } from './progress-report-media.repository';
+
+// The last variant is Investor Communications — see highlights.dto.ts.
+const PUBLISHED_VARIANT_KEY = ReportMedia.Variants.at(-1)!.key;
+
+// A product decision, not a data invariant — see countByVariant's doc comment
+// on the repository. Change this to change the cap; nothing else models it.
+const MAX_FEATURED_MEDIA_PER_REPORT = 4;
 
 @Injectable()
 export class ProgressReportMediaService {
@@ -32,8 +41,34 @@ export class ProgressReportMediaService {
     private readonly mediaService: MediaService,
     private readonly resources: ResourceLoader,
     private readonly repo: ProgressReportMediaRepository,
+    private readonly drizzleRepo: ProgressReportMediaDrizzleRepository,
     private readonly hooks: Hooks,
   ) {}
+
+  /**
+   * `upload()` and `reuse()` both call this before creating a row in the
+   * published variant — the only variant that reaches investors (see
+   * `readFeaturedOfReport`) — so the cap applies the same way regardless of
+   * how the item got there.
+   */
+  private async verifyInvestorReportCap(
+    reportId: ID<Report>,
+    variantKey: string,
+  ) {
+    if (variantKey !== PUBLISHED_VARIANT_KEY) {
+      return;
+    }
+    const existing = await this.drizzleRepo.countByVariant(
+      reportId,
+      PUBLISHED_VARIANT_KEY,
+    );
+    if (existing >= MAX_FEATURED_MEDIA_PER_REPORT) {
+      throw new InputException(
+        `Up to ${MAX_FEATURED_MEDIA_PER_REPORT} media items can be included in the Investor Report`,
+        'variant',
+      );
+    }
+  }
 
   async listForReport(
     report: Report,
@@ -74,6 +109,7 @@ export class ProgressReportMediaService {
     this.privileges
       .for(ReportMedia, withVariant(context, input.variant))
       .verifyCan('create');
+    await this.verifyInvestorReportCap(input.report, input.variant.key);
 
     // Generate the file id up front so the repo can store the FK (Postgres);
     // the Neo4j repo ignores it and links via the createDefinedFile edge.
@@ -117,6 +153,7 @@ export class ProgressReportMediaService {
     this.privileges
       .for(ReportMedia, withVariant(context, input.variant))
       .verifyCan('create');
+    await this.verifyInvestorReportCap(source.report, input.variant.key);
 
     const sourceFile = await this.files.getFile(source.file);
     const sourceVersion = await this.files.getFileVersion(
