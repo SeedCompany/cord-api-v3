@@ -53,17 +53,19 @@ export class ProgressReportCommunityStoryResolver {
     return await this.service.submitResponse(input);
   }
 
-  @Mutation(() => PromptVariantResponse, {
+  @Mutation(() => [PromptVariantResponse], {
     description: `
       Mark this story as the one for the investor/published report.
 
       Clears whichever story previously held it on this same report — at most
-      one story is ever featured per report.
+      one story is ever featured per report. Returns every story whose
+      \`featured\` value changed (this one, and whichever it demoted), so a
+      client refreshing only the mutation response still sees both updates.
     `,
   })
   async featureProgressReportCommunityStory(
     @IdArg() id: ID<PromptVariantResponse>,
-  ): Promise<PromptVariantResponse> {
+  ): Promise<readonly PromptVariantResponse[]> {
     return await this.service.feature(id);
   }
 

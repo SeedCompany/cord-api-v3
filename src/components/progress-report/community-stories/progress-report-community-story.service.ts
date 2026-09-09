@@ -39,8 +39,13 @@ export class ProgressReportCommunityStoryService extends PromptVariantResponseLi
    *
    * Authorization is a single field-level check — edit access to `featured` —
    * because that is the entire decision. Nothing else about the story changes.
+   *
+   * Returns every story whose `featured` value changed — this one and
+   * whichever it demoted — not just this one. The demoted story's `featured`
+   * did change server-side; a response that omits it would leave the client
+   * showing two stories featured until the next full refetch.
    */
-  async feature(id: ID): Promise<CommunityStory> {
+  async feature(id: ID): Promise<readonly CommunityStory[]> {
     const existing = await this.repo.readOne(id);
     const secured = await this.secure(existing);
     if (!secured.featured.canEdit) {
@@ -49,12 +54,17 @@ export class ProgressReportCommunityStoryService extends PromptVariantResponseLi
       );
     }
 
-    await this.featuredRepo.feature(
+    const changedIds = await this.featuredRepo.feature(
       id,
       existing.parent.properties.id,
       this.repo.resource.name,
     );
 
-    return await this.secure(await this.repo.readOne(id));
+    return await Promise.all(
+      changedIds.map(
+        async (changedId) =>
+          await this.secure(await this.repo.readOne(changedId)),
+      ),
+    );
   }
 }
