@@ -356,7 +356,10 @@ describe('User e2e', () => {
 
     expect(
       users.items.map(
-        (user) => `${user.realFirstName.value!} ${user.realLastName.value!}`,
+        (user) =>
+          `${String(user.realFirstName.value!)} ${String(
+            user.realLastName.value!,
+          )}`,
       ),
     ).toEqual([
       `${prefix}_Alice Smith`,

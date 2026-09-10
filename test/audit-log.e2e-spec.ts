@@ -112,7 +112,7 @@ describe('Audit log (resource_mutations) e2e', () => {
   // per-domain resolver) and populated by a back-instrumented domain service.
   it('exposes history on any resource via the Resource interface', async () => {
     const org = await createOrganization(app);
-    const newName = `${org.name.value ?? 'Org'} (renamed)`;
+    const newName = `${String(org.name.value ?? 'Org')} (renamed)`;
 
     await app.graphql.mutate(UpdateOrganizationDoc, {
       input: { id: org.id, name: newName },
@@ -142,7 +142,7 @@ describe('Audit log (resource_mutations) e2e', () => {
   // `info.parentType.name` — they must agree for history to resolve.
   it('records history for a polymorphic resource (Project)', async () => {
     const proj = await createProject(app);
-    const newName = 'Renamed ' + proj.id;
+    const newName = 'Renamed ' + String(proj.id);
 
     await app.graphql.mutate(UpdateProjectDoc, {
       input: { id: proj.id, name: newName },

@@ -303,7 +303,7 @@ describe('ProgressReport Media e2e', () => {
             }:${identifier[1]}`,
       ),
     );
-    expect(keys).toContain(`ProgressReportMedia:${mediaId}`);
+    expect(keys).toContain(`ProgressReportMedia:${String(mediaId)}`);
   });
 
   it('Progress report file is anonymous for multiplication projects', async () => {
