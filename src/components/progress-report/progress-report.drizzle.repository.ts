@@ -18,8 +18,8 @@ import {
 import { Identity } from '~/core/authentication';
 import {
   EMPTY_PAGE,
-  resolveOrderBy,
-  type SortMap,
+  orderEntries,
+  type SortColumns,
   subFilter,
 } from '~/core/drizzle';
 import { DrizzleService } from '~/core/drizzle/drizzle.service';
@@ -31,12 +31,16 @@ import {
   projects,
 } from '~/core/drizzle/schema';
 import { PolicyExecutor } from '../authorization/policy/executor/policy-executor';
-import { engagementFilterClauses } from '../engagement/engagement.drizzle.repository';
+import {
+  engagementFilterClauses,
+  engagementSortEntry,
+} from '../engagement/engagement.drizzle.repository';
 import {
   dateFilterConditions,
   type PeriodicReportDrizzleRepository,
 } from '../periodic-report/periodic-report.drizzle.repository';
 import { PeriodicReportRepository } from '../periodic-report/periodic-report.repository';
+import { periodicReportSortColumns } from '../periodic-report/periodic-report.sorts';
 import { PnpProblemType } from '../pnp/extraction-result/extraction-result.dto';
 import { ScheduleStatus, SummaryPeriod } from '../progress-summary/dto';
 import { ProgressReport, type ProgressReportListInput } from './dto';
@@ -140,19 +144,6 @@ export class ProgressReportDrizzleRepository {
       );
     }
 
-    const sortColumns = {
-      start: periodicReports.start,
-      end: periodicReports.end,
-      status: periodicReports.status,
-      receivedDate: periodicReports.receivedDate,
-      narrativeReceivedDate: periodicReports.narrativeReceivedDate,
-      createdAt: periodicReports.createdAt,
-      // migration-todo: engagement.*, pnpExtractionResult.*, cumulativeSummary,
-      // fiscalYearSummary, periodSummary delegated/cross-domain sorts — same
-      // shape as the Engagement repo's own deferred sort keys (see its
-      // migration-todo comment). Unknown keys fall back to `start`.
-    } satisfies SortMap<string>;
-
     const predicate = and(...conditions);
     const [countResult, rows] = await Promise.all([
       this.db.select({ total: count() }).from(periodicReports).where(predicate),
@@ -161,7 +152,11 @@ export class ProgressReportDrizzleRepository {
         .from(periodicReports)
         .where(predicate)
         .orderBy(
-          ...resolveOrderBy(input, sortColumns, periodicReports.start),
+          ...orderEntries(
+            progressReportSortEntry(input.sort as string) ??
+              periodicReports.start,
+            input.order,
+          ),
           asc(periodicReports.id),
         )
         .limit(input.count)
@@ -182,6 +177,101 @@ export class ProgressReportDrizzleRepository {
     };
   }
 }
+
+/**
+ * A summary period's variance for the report in scope. Neo4j sorts BOTH
+ * `variance` and `scheduleStatus` by this same number — `progressSummarySorters`
+ * returns `actual - planned` for either key — so the buckets never enter the
+ * ordering, and a report with no summary for the period sorts blank.
+ */
+const summaryVariance = (period: SummaryPeriod): SQL => sql`(
+  select ${progressSummaries.actual} - ${progressSummaries.planned}
+  from ${progressSummaries}
+  where ${progressSummaries.reportId} = ${periodicReports.id}
+    and ${progressSummaries.period} = ${period}
+)`;
+
+/** One summary period's sortable values, for a `<period>Summary.*` sort key. */
+const summarySortEntry = (
+  period: SummaryPeriod,
+  key: string,
+): SortColumns | undefined => {
+  if (key === 'variance' || key === 'scheduleStatus') {
+    return summaryVariance(period);
+  }
+  const column = {
+    planned: progressSummaries.planned,
+    actual: progressSummaries.actual,
+  }[key];
+  if (!column) return undefined;
+  return sql`(
+    select ${column} from ${progressSummaries}
+    where ${progressSummaries.reportId} = ${periodicReports.id}
+      and ${progressSummaries.period} = ${period}
+  )`;
+};
+
+/**
+ * Resolve a progress-report sort key, including the prefixes Neo4j answers by
+ * delegating: `engagement.*` (which reaches on through to `project.*` and
+ * `language.*`) and the three summary periods.
+ *
+ * The dashboard widgets sort by `engagement.project.name`,
+ * `engagement.language.displayName` and `cumulativeSummary.scheduleStatus`,
+ * none of which resolved before — they fell through to the `start` fallback.
+ *
+ * `pnpExtractionResult.totalErrors` is answered too, though nothing sends it
+ * yet: the PnP widget's Errors column sends the DOTLESS `pnpExtractionResult`,
+ * which matches neither this nor Neo4j's `pnpExtractionResult.*` prefix, so
+ * that column sorts on neither engine today. The UI handoff covers changing it.
+ */
+const progressReportSortEntry = (sort: string): SortColumns | undefined => {
+  if (sort.startsWith('engagement.')) {
+    return engagementSortEntry(
+      sort.slice('engagement.'.length),
+      sql`${periodicReports.engagementId}`,
+    );
+  }
+  for (const [prefix, period] of [
+    ['cumulativeSummary.', SummaryPeriod.Cumulative],
+    ['fiscalYearSummary.', SummaryPeriod.FiscalYearSoFar],
+    ['periodSummary.', SummaryPeriod.ReportPeriod],
+  ] as const) {
+    if (sort.startsWith(prefix)) {
+      return summarySortEntry(period, sort.slice(prefix.length));
+    }
+  }
+  if (sort === 'pnpExtractionResult.totalErrors') {
+    return totalPnpErrors();
+  }
+  return periodicReportSortColumns[
+    sort as keyof typeof periodicReportSortColumns
+  ];
+};
+
+/**
+ * How many Error-severity problems the report's PnP file recorded — the one key
+ * Neo4j's `pnpExtractionResultSorters` defines. Severity is a code-side
+ * registry rather than a stored column, so the matching type ids are resolved
+ * per call and inlined, exactly as `pnpHasErrorCondition` does for the filter.
+ *
+ * ⚠ A report whose file has no extraction result counts 0 here and stays in the
+ * list. Neo4j DROPS it instead: `progressReportExtrasSorters`'
+ * `pnpExtractionResult.*` matcher reaches the result through a required MATCH
+ * with no aggregation at that level, so a report without one produces no row.
+ * Counting zero is the sane reading and the one that survives cutover, but it
+ * is a deliberate difference — which is why the PnP widget's Errors column
+ * should stay unsortable until Neo4j is gone. See the UI handoff.
+ */
+const totalPnpErrors = (): SQL => {
+  const errorTypeIds = ERROR_PROBLEM_TYPE_IDS();
+  if (errorTypeIds.length === 0) return sql`0`;
+  return sql`(
+    select count(*) from ${pnpExtractionResultProblems}
+    where ${pnpExtractionResultProblems.fileId} = ${periodicReports.reportFileId}
+      and ${inArray(pnpExtractionResultProblems.type, errorTypeIds)}
+  )`;
+};
 
 /**
  * Mirrors the Neo4j `progressSummaryFilters`'s `scheduleStatus` matcher: a

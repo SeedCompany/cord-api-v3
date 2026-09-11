@@ -1,17 +1,28 @@
 import { faker } from '@faker-js/faker';
 import { beforeAll, describe, expect, it } from '@jest/globals';
 import { times } from 'lodash';
-import { isValidId, Role } from '~/common';
+import { isValidId, Order, Role } from '~/common';
 import { graphql } from '~/graphql';
 import {
+  createLanguage,
+  createLanguageEngagement,
+  createOrganization,
+  createProject,
   createSession,
   createTestApp,
   createTool,
   errors,
   fragments,
   registerUser,
+  runAsAdmin,
   type TestApp,
 } from './utility';
+
+/**
+ * `usageCount` is a Postgres-only sort (see its test). Skipped rather than
+ * silently passing on Neo4j, so the run reports that it did not execute.
+ */
+const itPostgresOnly = process.env.DATABASE === 'postgres' ? it : it.skip;
 
 describe('Tool e2e', () => {
   let app: TestApp;
@@ -202,4 +213,104 @@ describe('Tool e2e', () => {
     expect(ids).toContain(aiTool.id);
     expect(ids).not.toContain(nonAiTool.id);
   });
+
+  /**
+   * Postgres only, and deliberately: Neo4j's tool list applies the default
+   * sorters, and a key with no stored property becomes a required match that
+   * eliminates every row — so this sort returns an EMPTY list over there rather
+   * than an error. The Tools grid keeps its Usages column unsortable until
+   * cutover for that reason (see the UI handoff), so there is no Neo4j behavior
+   * to assert.
+   */
+  itPostgresOnly(
+    'sorts by usageCount, counting what the Usages column displays',
+    async () => {
+      const prefix = faker.string.alpha({ length: 8 });
+      const [twoUsages, noneCounted, oneUsage] = await Promise.all([
+        createTool(app, { name: `${prefix} Alpha` }),
+        createTool(app, { name: `${prefix} Bravo` }),
+        createTool(app, { name: `${prefix} Charlie` }),
+      ]);
+
+      const project = await createProject(app);
+      const language = await runAsAdmin(
+        app,
+        async () => await createLanguage(app),
+      );
+      const engagement = await createLanguageEngagement(app, {
+        project: project.id,
+        language: language.id,
+      });
+      // Alpha gets one of each counted container type; Charlie one project.
+      // Bravo's only usage is on an ORGANIZATION, which the Usages column does
+      // not count — any resource can hold a usage, but the summary buckets only
+      // projects and engagements — so Bravo has to sort as zero.
+      const organization = await runAsAdmin(
+        app,
+        async () => await createOrganization(app),
+      );
+      for (const [tool, container] of [
+        [twoUsages, project.id],
+        [twoUsages, engagement.id],
+        [oneUsage, project.id],
+        [noneCounted, organization.id],
+      ] as const) {
+        await app.graphql.mutate(
+          graphql(`
+            mutation createUsageForSort($container: ID!, $tool: ID!) {
+              createToolUsage(input: { container: $container, tool: $tool }) {
+                toolUsage {
+                  id
+                }
+              }
+            }
+          `),
+          { container, tool: tool.id },
+        );
+      }
+
+      const sorted = async (order: Order) => {
+        const { tools } = await app.graphql.query(
+          graphql(`
+            query toolsByUsageCount($input: ToolListInput) {
+              tools(input: $input) {
+                items {
+                  id
+                  name {
+                    value
+                  }
+                  containerSummary {
+                    total
+                  }
+                }
+              }
+            }
+          `),
+          { input: { sort: 'usageCount', order, filter: { name: prefix } } },
+        );
+        return tools.items.map((tool) => ({
+          label: tool.name.value?.replace(prefix + ' ', ''),
+          shown: tool.containerSummary.reduce((sum, c) => sum + c.total, 0),
+        }));
+      };
+
+      // Name order is Alpha, Bravo, Charlie — the reverse of the count order —
+      // so this cannot pass on the `name` fallback.
+      const ascending = await sorted(Order.ASC);
+      expect(ascending.map((tool) => tool.label)).toEqual([
+        'Bravo',
+        'Charlie',
+        'Alpha',
+      ]);
+      // The sort counted the same population the column displays.
+      expect(ascending.map((tool) => tool.shown)).toEqual([0, 1, 2]);
+
+      const descending = await sorted(Order.DESC);
+      expect(descending.map((tool) => tool.label)).toEqual([
+        'Alpha',
+        'Charlie',
+        'Bravo',
+      ]);
+    },
+  );
 });

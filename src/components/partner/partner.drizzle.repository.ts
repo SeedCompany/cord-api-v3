@@ -4,7 +4,6 @@ import {
   arrayOverlaps,
   asc,
   count,
-  desc,
   eq,
   gt,
   gte,
@@ -31,9 +30,9 @@ import {
   catchForeignKeyViolation,
   catchUniqueViolation,
   derivedSensitivityByPartner,
-  displayOrder,
   DrizzleDtoRepository,
   EMPTY_PAGE,
+  orderEntry,
   partnerDerivedSensitivity,
   resolveOrderBy,
   type SortMap,
@@ -367,7 +366,6 @@ export class PartnerDrizzleRepository extends DrizzleDtoRepository<
       );
     }
 
-    const direction = input.order === 'ASC' ? asc : desc;
     let pageIds: ReadonlyArray<{ id: ID<'Partner'> }>;
     let total: number;
     if (orgSortColumn) {
@@ -382,7 +380,7 @@ export class PartnerDrizzleRepository extends DrizzleDtoRepository<
             eq(partners.organizationId, organizations.id),
           )
           .where(predicate)
-          .orderBy(direction(displayOrder(orgSortColumn)), asc(partners.id))
+          .orderBy(orderEntry(orgSortColumn, input.order), asc(partners.id))
           .limit(input.count)
           .offset(offset),
       ]);

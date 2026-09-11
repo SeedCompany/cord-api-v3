@@ -3,7 +3,6 @@ import {
   and,
   asc,
   count,
-  desc,
   eq,
   inArray,
   isNull,
@@ -26,10 +25,10 @@ import {
 } from '~/common';
 import { Identity } from '~/core/authentication';
 import {
-  displayOrder,
   DrizzleDtoRepository,
   EMPTY_PAGE,
   isUniqueViolation,
+  orderEntry,
   resolveOrderBy,
   type SortMap,
   subFilter,
@@ -408,7 +407,6 @@ export class PartnershipDrizzleRepository extends DrizzleDtoRepository<
 
     // Cast to string — `partner.*` keys aren't in `keyof Partnership`.
     const sort = input.sort as string;
-    const direction = input.order === 'ASC' ? asc : desc;
 
     // migration-todo: third consumer of the cross-domain JOIN-sort pattern
     // (Partner → organization.*, Project → primaryLocation.*/fieldRegion.*,
@@ -441,7 +439,7 @@ export class PartnershipDrizzleRepository extends DrizzleDtoRepository<
           .innerJoin(partners, eq(partnerships.partnerId, partners.id))
           .where(predicate)
           .orderBy(
-            direction(displayOrder(partnerSortColumn)),
+            orderEntry(partnerSortColumn, input.order),
             asc(partnerships.id),
           )
           .limit(input.count)
