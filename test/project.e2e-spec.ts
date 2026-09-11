@@ -795,17 +795,27 @@ describe('Project e2e', () => {
         await createLanguage(app),
       ],
     );
+    // Inside the MOU window `createProject` gives every fixture (1991→1992).
+    // The engagement helper otherwise defaults both dates to today, which puts
+    // the engagement outside its own project's window.
+    const withinMou = {
+      startDateOverride: CalendarDate.fromISO('1991-01-01').toISO(),
+      endDateOverride: CalendarDate.fromISO('1992-01-01').toISO(),
+    };
     await createLanguageEngagement(app, {
       project: oneEngagement.id,
       language: firstLanguage.id,
+      ...withinMou,
     });
     await createLanguageEngagement(app, {
       project: twoEngagements.id,
       language: secondLanguage.id,
+      ...withinMou,
     });
     await createLanguageEngagement(app, {
       project: twoEngagements.id,
       language: thirdLanguage.id,
+      ...withinMou,
     });
     await createInternshipEngagement(app, {
       project: internshipProject.id,

@@ -38,6 +38,7 @@ import {
   EMPTY_PAGE,
   escapeLikePattern,
   orderEntries,
+  sortColumnFor,
   type SortColumns,
   type SortEntry,
   subFilter,
@@ -1035,8 +1036,7 @@ const currentProgressReportDue = (
   key: string,
   source: EngagementSortSource,
 ): SortColumns | undefined => {
-  const column =
-    periodicReportSortColumns[key as keyof typeof periodicReportSortColumns];
+  const column = sortColumnFor(periodicReportSortColumns, key);
   if (!column) return undefined;
   return sql`(
     select ${column} from ${periodicReports}
@@ -1100,7 +1100,7 @@ export const engagementSortEntry = (
       sql`${source.column(engagements.projectId)}`,
     );
   }
-  return engagementSortColumns(source)[sort];
+  return sortColumnFor(engagementSortColumns(source), sort);
 };
 
 const engagementDateFilterConditions = (

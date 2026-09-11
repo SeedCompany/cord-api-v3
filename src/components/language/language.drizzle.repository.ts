@@ -29,7 +29,9 @@ import {
   escapeLikePattern,
   foldsAsName,
   resolveOrderBy,
+  sortColumnFor,
   type SortColumns,
+  type SortEntry,
   type SortMap,
 } from '~/core/drizzle';
 import { type DrizzleDb, DrizzleService } from '~/core/drizzle/drizzle.service';
@@ -486,15 +488,49 @@ const ethnologueValue = (column: AnyPgColumn, languageId: SQL): SQL => sql`(
 )`;
 
 /**
+ * How to read one column off the language a sort is about.
+ *
+ * Two shapes, the same split the engagement repository makes: the language's
+ * own list has the row in scope and reads the column directly, while a domain
+ * sorting THROUGH a language (Engagement's `language.*`) has no `languages` row
+ * in its FROM and must read every value back through the foreign key.
+ */
+type LanguageColumnReader = (column: AnyPgColumn) => SortEntry;
+
+/** The language row the query itself is over. */
+const ownLanguage: LanguageColumnReader = (column) => column;
+
+/**
+ * The language a related row points at.
+ *
+ * ⚠ Only for a FOREIGN id. Passing `languages.id` here would put `languages` in
+ * the subquery's own FROM, where it shadows the outer one — `where languages.id
+ * = languages.id` then matches every row rather than correlating, and Postgres
+ * fails the query with "more than one row returned by a subquery". That is what
+ * {@link ownLanguage} is for.
+ */
+const languageVia =
+  (languageId: SQL) =>
+  (column: AnyPgColumn): SQL => sql`(
+    select ${column} from ${languages}
+    where ${languages.id} = ${languageId} and ${languages.deletedAt} is null
+  )`;
+
+/**
  * Language sort keys that are computed rather than stored, correlated to
  * whichever language id is passed in — the language's own list passes its own
  * column; Engagement passes `engagements.language_id`.
  *
  * `ethnologue.*` mirrors Neo4j delegating the prefix to the EthnologueLanguage
  * default property sorters, so every stored ethnologue field is sortable.
+ *
+ * ⚠ Anything reaching a `languages` column here must go through `readColumn`,
+ * NOT reference the column directly: these expressions are reused verbatim by
+ * the delegated path, where there is no `languages` row to read.
  */
 const languageComputedSorts = (
   languageId: SQL,
+  readColumn: LanguageColumnReader,
 ): Record<string, SortColumns> => ({
   'ethnologue.code': ethnologueValue(ethnologueLanguages.code, languageId),
   'ethnologue.provisionalCode': ethnologueValue(
@@ -516,10 +552,9 @@ const languageComputedSorts = (
   // value (see `toDto`), and Neo4j's sorter coalesces the same pair — so the
   // list orders by the number it displays. Measured on Neo4j: a language with
   // neither value sorts as blank rather than dropping out of the list.
-  population: sql`coalesce(${languages.populationOverride}, ${ethnologueValue(
-    ethnologueLanguages.population,
-    languageId,
-  )})`,
+  population: sql`coalesce(${readColumn(
+    languages.populationOverride,
+  )}, ${ethnologueValue(ethnologueLanguages.population, languageId)})`,
   // Any live engagement whose AI-assisted-translation value is a real answer —
   // the same rule `engagementDerived` applies when it computes the field.
   // Neo4j has a sorter for this but raises 42N07 when a request filters AND
@@ -539,7 +574,7 @@ const languageComputedSorts = (
 /** Every language sort key, for the language list's own use. */
 const languageListSortColumns: Record<string, SortColumns> = {
   ...languageSortColumns,
-  ...languageComputedSorts(sql`${languages.id}`),
+  ...languageComputedSorts(sql`${languages.id}`, ownLanguage),
 };
 
 /**
@@ -556,14 +591,15 @@ export const languageSortEntry = (
   key: string,
   languageId: SQL,
 ): SortColumns | undefined => {
-  const computed = languageComputedSorts(languageId)[key];
+  const readColumn = languageVia(languageId);
+  const computed = sortColumnFor(
+    languageComputedSorts(languageId, readColumn),
+    key,
+  );
   if (computed) return computed;
-  const column = languageSortColumns[key as keyof typeof languageSortColumns];
+  const column = sortColumnFor(languageSortColumns, key);
   if (!column) return undefined;
-  const value = sql`(
-    select ${column} from ${languages}
-    where ${languages.id} = ${languageId} and ${languages.deletedAt} is null
-  )`;
+  const value = readColumn(column);
   return foldsAsName(column) ? collateDisplayOrder(value) : value;
 };
 

@@ -36,6 +36,12 @@ import {
 /** Same engine gate the audit-log spec uses — `DATABASE`, not `DATABASE_ENGINE`. */
 const isPostgres = process.env.DATABASE === 'postgres';
 
+/**
+ * Reported as SKIPPED on Neo4j rather than passing silently — `it.skip`, not an
+ * early `return`, which jest counts as a pass.
+ */
+const itPostgresOnly = isPostgres ? it : it.skip;
+
 describe('cross-domain list sorts', () => {
   let app: TestApp;
 
@@ -62,6 +68,10 @@ describe('cross-domain list sorts', () => {
     await createLanguageEngagement(app, {
       project: project.id,
       language: created.id,
+      // `createProject`'s MOU window is 1991→1992, and the engagement helper
+      // defaults both dates to today, which lands outside it.
+      startDateOverride: CalendarDate.fromISO('1991-01-01').toISO(),
+      endDateOverride: CalendarDate.fromISO('1992-01-01').toISO(),
     });
   };
 
@@ -147,6 +157,32 @@ describe('cross-domain list sorts', () => {
     expect(
       await engagementsSortedBy('language.ethnologue.code', Order.ASC, prefix),
     ).toEqual(['Charlie', 'Bravo', 'Alpha']);
+  });
+
+  it('engagements by language.population — a delegated coalesce', async () => {
+    const prefix = faker.string.alpha({ length: 8 });
+    // Population order is a third permutation of the labels, and each
+    // language's override disagrees with its ethnologue number, so the sort
+    // has to coalesce the pair rather than read either one alone. Bravo has no
+    // override at all, which is the case that has to fall through.
+    for (const [label, population, populationOverride] of [
+      ['Alpha', 900, 200],
+      ['Bravo', 100, null],
+      ['Charlie', 50, 300],
+    ] as const) {
+      await createEngagementFixture(`${prefix} ${label}`, {
+        populationOverride,
+        ethnologue: { population },
+      });
+    }
+
+    // Reaching a language column from a query over `engagements` means reading
+    // it back through the foreign key. The override used to be referenced as a
+    // bare `languages` column here, which Postgres rejects outright when no
+    // `languages` row is in scope — so this key errored rather than sorting.
+    expect(
+      await engagementsSortedBy('language.population', Order.ASC, prefix),
+    ).toEqual(['Bravo', 'Alpha', 'Charlie']);
   });
 
   it('engagements by project.name, which IS case-folded', async () => {
@@ -485,4 +521,24 @@ describe('cross-domain list sorts', () => {
       `${prefix} Zulu`,
     ]);
   });
+
+  itPostgresOnly(
+    'treats an inherited property name as an unknown sort key',
+    async () => {
+      const prefix = faker.string.alpha({ length: 8 });
+      await runAsAdmin(app, async () => {
+        await createLanguageMinimal(app, { name: `${prefix} Alpha` });
+      });
+
+      // `sort` is a plain String validated only against `/^[A-Za-z0-9_.]+$/`
+      // (`SortablePaginationInput`), so `constructor` is a request anyone can
+      // send. Looked up in a plain object it answers with Object's own
+      // constructor — truthy, and indistinguishable from a real entry — which
+      // Drizzle then binds as a query parameter. The list has to fall back
+      // instead, the way any other unknown key does.
+      expect(await languagesSortedBy('constructor', Order.ASC, prefix)).toEqual(
+        ['Alpha'],
+      );
+    },
+  );
 });

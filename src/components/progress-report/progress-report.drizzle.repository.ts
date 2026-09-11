@@ -19,6 +19,7 @@ import { Identity } from '~/core/authentication';
 import {
   EMPTY_PAGE,
   orderEntries,
+  sortColumnFor,
   type SortColumns,
   subFilter,
 } from '~/core/drizzle';
@@ -199,10 +200,10 @@ const summarySortEntry = (
   if (key === 'variance' || key === 'scheduleStatus') {
     return summaryVariance(period);
   }
-  const column = {
-    planned: progressSummaries.planned,
-    actual: progressSummaries.actual,
-  }[key];
+  const column = sortColumnFor(
+    { planned: progressSummaries.planned, actual: progressSummaries.actual },
+    key,
+  );
   if (!column) return undefined;
   return sql`(
     select ${column} from ${progressSummaries}
@@ -244,9 +245,7 @@ const progressReportSortEntry = (sort: string): SortColumns | undefined => {
   if (sort === 'pnpExtractionResult.totalErrors') {
     return totalPnpErrors();
   }
-  return periodicReportSortColumns[
-    sort as keyof typeof periodicReportSortColumns
-  ];
+  return sortColumnFor(periodicReportSortColumns, sort);
 };
 
 /**

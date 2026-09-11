@@ -35,6 +35,7 @@ import {
   orderEntry,
   partnerDerivedSensitivity,
   resolveOrderBy,
+  sortColumnFor,
   type SortMap,
   subFilter,
 } from '~/core/drizzle';
@@ -353,12 +354,9 @@ export class PartnerDrizzleRepository extends DrizzleDtoRepository<
         : sort.startsWith('organization.')
           ? sort.slice('organization.'.length)
           : null;
-    const orgSortColumn =
-      orgSortKey && orgSortKey in organizationSortColumns
-        ? organizationSortColumns[
-            orgSortKey as keyof typeof organizationSortColumns
-          ]
-        : null;
+    const orgSortColumn = orgSortKey
+      ? sortColumnFor(organizationSortColumns, orgSortKey)
+      : null;
     if (orgSortKey && !orgSortColumn) {
       throw new NotImplementedException(
         `Sorting partners by '${sort}' is not supported — ` +
@@ -391,7 +389,7 @@ export class PartnerDrizzleRepository extends DrizzleDtoRepository<
       // sorting by `createdAt` (resolveOrderBy's `?? fallback`), mirroring the
       // `organization.*` NotImplementedException branch above — a bad sort key
       // should be discoverable, not quietly ignored.
-      if (!(sort in partnerSortColumns)) {
+      if (!Object.hasOwn(partnerSortColumns, sort)) {
         throw new NotImplementedException(
           `Sorting partners by '${sort}' is not supported.`,
         );

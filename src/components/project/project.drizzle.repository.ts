@@ -39,6 +39,7 @@ import {
   foldsAsName,
   orderEntry,
   resolveOrderBy,
+  sortColumnFor,
   type SortColumns,
   type SortMap,
   subFilter,
@@ -534,8 +535,10 @@ export class ProjectDrizzleRepository extends DrizzleDtoRepository<
       const sortColumns = projectListSortColumns;
       // Reject unknown/unmapped own-table sort keys instead of silently
       // falling back to createdAt (resolveOrderBy's `map[sort] ?? fallback`).
-      // Mirrors the Partner repo guard.
-      if (!(sort in sortColumns)) {
+      // Mirrors the Partner repo guard. `Object.hasOwn` rather than `in`, which
+      // walks the prototype chain and so answers true for `constructor` — a
+      // sort key the input validator accepts.
+      if (!Object.hasOwn(sortColumns, sort)) {
         throw new NotImplementedException(
           `Sorting projects by '${sort}' is not supported.`,
         );
@@ -833,24 +836,24 @@ export const projectSortEntry = (
     return foldsAsName(column) ? collateDisplayOrder(value) : value;
   };
   if (key.startsWith('primaryLocation.')) {
-    const column =
-      locationSortColumns[
-        key.slice('primaryLocation.'.length) as keyof typeof locationSortColumns
-      ];
+    const column = sortColumnFor(
+      locationSortColumns,
+      key.slice('primaryLocation.'.length),
+    );
     return column
       ? nested(locations, projects.primaryLocationId, column)
       : undefined;
   }
   if (key.startsWith('fieldRegion.')) {
-    const column =
-      fieldRegionSortColumns[
-        key.slice('fieldRegion.'.length) as keyof typeof fieldRegionSortColumns
-      ];
+    const column = sortColumnFor(
+      fieldRegionSortColumns,
+      key.slice('fieldRegion.'.length),
+    );
     return column
       ? nested(fieldRegions, projects.fieldRegionId, column)
       : undefined;
   }
-  const derived = projectDerivedSortColumns[key];
+  const derived = sortColumnFor(projectDerivedSortColumns, key);
   if (derived) {
     // The engagement counts correlate to `projects.id` directly, so they only
     // work from a query that has a `projects` row in scope. Reached through a
@@ -861,7 +864,7 @@ export const projectSortEntry = (
       where ${projects.id} = ${projectId} and ${projects.deletedAt} is null
     )`;
   }
-  const column = projectSortColumns[key as keyof typeof projectSortColumns];
+  const column = sortColumnFor(projectSortColumns, key);
   return column ? projectValue(column, projectId) : undefined;
 };
 

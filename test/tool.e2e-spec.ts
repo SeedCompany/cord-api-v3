@@ -1,7 +1,7 @@
 import { faker } from '@faker-js/faker';
 import { beforeAll, describe, expect, it } from '@jest/globals';
 import { times } from 'lodash';
-import { isValidId, Order, Role } from '~/common';
+import { CalendarDate, isValidId, Order, Role } from '~/common';
 import { graphql } from '~/graphql';
 import {
   createLanguage,
@@ -240,6 +240,10 @@ describe('Tool e2e', () => {
       const engagement = await createLanguageEngagement(app, {
         project: project.id,
         language: language.id,
+        // `createProject`'s MOU window is 1991→1992, and the engagement helper
+        // defaults both dates to today, which lands outside it.
+        startDateOverride: CalendarDate.fromISO('1991-01-01').toISO(),
+        endDateOverride: CalendarDate.fromISO('1992-01-01').toISO(),
       });
       // Alpha gets one of each counted container type; Charlie one project.
       // Bravo's only usage is on an ORGANIZATION, which the Usages column does

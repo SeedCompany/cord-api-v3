@@ -225,6 +225,24 @@ export const foldsAsName = (col: SortEntry): boolean =>
   !col.primary;
 
 /**
+ * Look a sort key up in a map of them, ignoring anything inherited.
+ *
+ * ⚠ Use this for EVERY lookup keyed by the client's `sort` string. That string
+ * is a plain GraphQL `String` validated only against `/^[A-Za-z0-9_.]+$/`
+ * (`SortablePaginationInput`), so `constructor`, `toString` and `valueOf` all
+ * arrive as ordinary requests — and a plain-object lookup answers them with an
+ * inherited function rather than undefined. That function then reads as a
+ * supported key: it survives a truthiness guard and a `key in map` test alike,
+ * and Drizzle binds it as a query PARAMETER, so the list comes back unsorted or
+ * the query errors outright. `Object.hasOwn` is what makes an unknown key
+ * unknown.
+ */
+export const sortColumnFor = <T>(
+  map: Record<string, T>,
+  key: string,
+): T | undefined => (Object.hasOwn(map, key) ? map[key] : undefined);
+
+/**
  * Resolve a list-input's `sort` key to an ORDER BY clause. Unmatched keys
  * fall back to `fallback`.
  *
@@ -240,5 +258,5 @@ export function resolveOrderBy(
   map: Record<string, SortColumns>,
   fallback: SortColumns,
 ): SQL[] {
-  return orderEntries(map[input.sort] ?? fallback, input.order);
+  return orderEntries(sortColumnFor(map, input.sort) ?? fallback, input.order);
 }

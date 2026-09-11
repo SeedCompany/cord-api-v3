@@ -30,6 +30,7 @@ import {
   isUniqueViolation,
   orderEntry,
   resolveOrderBy,
+  sortColumnFor,
   type SortMap,
   subFilter,
 } from '~/core/drizzle';
@@ -416,10 +417,9 @@ export class PartnershipDrizzleRepository extends DrizzleDtoRepository<
     const partnerSortKey = sort.startsWith('partner.')
       ? sort.slice('partner.'.length)
       : null;
-    const partnerSortColumn =
-      partnerSortKey && partnerSortKey in partnerSortColumns
-        ? partnerSortColumns[partnerSortKey as keyof typeof partnerSortColumns]
-        : null;
+    const partnerSortColumn = partnerSortKey
+      ? sortColumnFor(partnerSortColumns, partnerSortKey)
+      : null;
     if (partnerSortKey && !partnerSortColumn) {
       throw new NotImplementedException(
         `Sorting partnerships by '${sort}' is not supported — ` +
