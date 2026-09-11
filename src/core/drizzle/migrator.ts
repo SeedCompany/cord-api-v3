@@ -64,8 +64,15 @@ export class DrizzleMigrator implements OnModuleInit {
    * Both boundaries are deliberately exclusive: a database that finished the
    * old sequence records exactly `RETIRED_SEQUENCE_END`, and one built from
    * genesis records exactly `GENESIS_WHEN`. Only the strict interior is
-   * stranded. (A database that ran only the old 0000 is indistinguishable from
-   * a genesis one by timestamp; that population is empty in practice.)
+   * stranded by timestamp alone.
+   *
+   * `GENESIS_WHEN` is the one ambiguous value: the retired `0000` carried the
+   * same `when`, so a database that applied it and then failed on `0001` is
+   * indistinguishable from a genesis-built one by timestamp. That is not an
+   * exotic state — drizzle records each migration as it succeeds, so any run
+   * that died on the second file lands there. Timestamps cannot separate them,
+   * so we ask the schema instead: `public.projects` exists in genesis and not in
+   * the retired `0000`, whose five tables were all auth.
    *
    * migration-todo: delete this guard once no environment can predate the
    * squash — it protects only against databases built before 2026-09-08.
@@ -97,6 +104,24 @@ export class DrizzleMigrator implements OnModuleInit {
           `0000_genesis.sql and no longer exist, so this database cannot be brought up to date — ` +
           `it must be rebuilt from scratch.`,
       );
+    }
+
+    // The ambiguous case: `GENESIS_WHEN` means either "built from genesis" or
+    // "ran the retired 0000 and stopped". Only the schema can tell them apart,
+    // and drizzle would skip genesis for both.
+    if (highWaterMark === GENESIS_WHEN) {
+      const baseline = await db.execute<{ complete: boolean }>(
+        sql`select to_regclass('public.projects') is not null as complete`,
+      );
+      if (!baseline.rows[0]?.complete) {
+        throw new Error(
+          `This database recorded the retired 0000 migration (${GENESIS_WHEN}) but never got ` +
+            `past it — it holds the old auth tables and nothing else. That timestamp is also ` +
+            `what 0000_genesis.sql records, so drizzle will skip genesis and leave the schema ` +
+            `half-built. The retired migration files no longer exist, so this database cannot ` +
+            `be brought up to date — it must be rebuilt from scratch.`,
+        );
+      }
     }
   }
 }

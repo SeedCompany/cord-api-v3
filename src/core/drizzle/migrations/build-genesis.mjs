@@ -15,8 +15,13 @@
 //      (`--> statement-breakpoint` is a valid SQL comment, so psql applies the
 //      files directly, and `--single-transaction` mirrors how drizzle applies them):
 //        docker exec -i $PG psql -U postgres -c 'create database genesis_ref'
-//        cat $(ls src/core/drizzle/migrations/*.sql | sort) \
+//        cat 0000_genesis.sql 0001_....sql 0002_....sql \   # NAME THEM, in journal order
 //          | docker exec -i $PG psql -U postgres -d genesis_ref -v ON_ERROR_STOP=1 --single-transaction -q
+//      List the files explicitly rather than globbing `*.sql`. A glob also sweeps
+//      up anything you did NOT intend to collapse — a migration parked on another
+//      branch, or one added after you started — and whatever lands in the
+//      reference database becomes part of the new baseline, which step 5 then
+//      tells you to delete.
 //   2. dump its schema:
 //        docker exec $PG pg_dump -U postgres -d genesis_ref --schema-only \
 //          --no-owner --no-acl --no-comments --exclude-schema=drizzle > dump.sql
@@ -26,6 +31,13 @@
 //      way, and diff the two dumps -- they must be byte-identical. Plant a
 //      defect (delete one CREATE INDEX) and confirm the diff catches it, so you
 //      know the comparison has teeth rather than comparing two empty things.
+//   5. RETIRE what you collapsed: delete every .sql file that went into the
+//      reference database except the new 0000_genesis.sql, and delete its entry
+//      from meta/_journal.json, so `entries` holds genesis alone. Leaving a
+//      collapsed migration behind is not a no-op — a fresh database applies its
+//      changes twice, once from genesis and once from the file, and dies on the
+//      first duplicate object. Existing databases skip both by timestamp, so the
+//      breakage appears only in new environments, which is where nobody looks.
 //
 // Two classes of line must go, and both matter:
 //   1. psql meta-commands (`\restrict`) — not SQL; drizzle sends the file
@@ -50,6 +62,15 @@ import { readFileSync, writeFileSync } from 'node:fs';
 const MARKER = '-->' + ' statement-breakpoint';
 
 const [, , inPath, outPath] = process.argv;
+// Not just a friendlier error than the one node would throw: `tsconfig.json`
+// type-checks this file, and without narrowing these off `string | undefined`
+// the failed `readFileSync` overload makes `raw` `any`, which silently spreads
+// implicit-any through every callback below.
+if (!inPath || !outPath) {
+  throw new Error(
+    'usage: node src/core/drizzle/migrations/build-genesis.mjs <dump.sql> <out.sql>',
+  );
+}
 const raw = readFileSync(inPath, 'utf8');
 
 const DROP_LINE = [
@@ -83,6 +104,7 @@ for (const body of kept.match(/\$\$[\s\S]*?\$\$/g) ?? []) {
 // Split so each header stays attached to the statement it describes. Chunks
 // carrying only comments/blanks (the husk left where a banner was stripped) are
 // dropped — a breakpoint around no SQL is just noise.
+/** @param {string} part */
 const hasSql = (part) =>
   part
     .split('\n')
@@ -97,6 +119,7 @@ const statements = kept
 // SQL only — comment lines are excluded on both sides, since dropping the
 // comment-only husks above is an intended difference. Comment lines inside the
 // dollar-quoted body would be excluded too, but it has none (asserted above).
+/** @param {string} text */
 const sqlOnly = (text) =>
   text
     .split('\n')
