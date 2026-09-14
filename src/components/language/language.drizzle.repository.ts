@@ -5,6 +5,7 @@ import {
   ilike,
   inArray,
   isNull,
+  not,
   or,
   sql,
   type SQL,
@@ -604,9 +605,12 @@ export const languageSortEntry = (
 };
 
 /**
- * Column-level WHERE clauses for `LanguageFilters`. presetInventory /
- * usesAIAssistance list filters remain unimplemented (rarely used;
- * migration-todo if a consumer surfaces).
+ * Column-level WHERE clauses for `LanguageFilters`.
+ *
+ * migration-todo: the usesAIAssistance list filter remains unimplemented —
+ * its Neo4j side carries the known 42N07 shadowing fault on filter+sort
+ * (won't fix, transition-only), so there is no working behavior to mirror;
+ * decide its Postgres semantics when a consumer surfaces.
  */
 export const languageFilterClauses = (
   db: DrizzleDb,
@@ -642,6 +646,31 @@ export const languageFilterClauses = (
   if (filter.isAvailableForReporting != null) {
     conditions.push(
       eq(languages.isAvailableForReporting, filter.isAvailableForReporting),
+    );
+  }
+  // Derived, mirroring the Neo4j filter and the engagementDerived hydration:
+  // a language is "preset inventory" when ANY project engaging it is flagged
+  // AND currently InDevelopment/Active. This was silently ignored until
+  // 2026-08-27 — the shadow-diff corpus caught the list answering unfiltered
+  // (3,624 rows against Neo4j's 18).
+  //
+  // Neo4j matches `LanguageEngagement` by label; matching on `language_id`
+  // is the same set, because the type-shape CHECK on the shared engagements
+  // table only lets a Language row carry one.
+  if (filter.presetInventory != null) {
+    const anyFlaggedEngagingProject = sql`exists (
+      select 1 from ${engagements}
+      inner join ${projects} on ${projects.id} = ${engagements.projectId}
+      where ${engagements.languageId} = ${languages.id}
+        and ${engagements.deletedAt} is null
+        and ${projects.deletedAt} is null
+        and ${projects.presetInventory} = true
+        and ${projects.status} in ('InDevelopment', 'Active')
+    )`;
+    conditions.push(
+      filter.presetInventory
+        ? anyFlaggedEngagingProject
+        : not(anyFlaggedEngagingProject),
     );
   }
   const rolv =

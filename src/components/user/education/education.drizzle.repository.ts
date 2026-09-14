@@ -71,6 +71,9 @@ export class EducationDrizzleRepository extends DrizzleDtoRepository<
       degree: educations.degree,
       major: educations.major,
       institution: educations.institution,
+      // resolveOrderBy silently falls back for missing keys — same gap as the
+      // users map (2026-08-27); Neo4j sorts any property.
+      createdAt: educations.createdAt,
     } satisfies SortMap<keyof Education>;
 
     const { rows, total, hasMore } = await this.paginatedSelect({
