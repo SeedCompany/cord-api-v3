@@ -270,6 +270,11 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
       displayLastName: [users.displayLastName, users.displayFirstName],
       realFirstName: [users.realFirstName, users.realLastName],
       displayFirstName: [users.displayFirstName, users.displayLastName],
+      // Both are sortable columns on the users grid and plain properties
+      // Neo4j's default sorter answers. Missing from this map, they hit
+      // `resolveOrderBy`'s fallback and the list came back id-ordered.
+      title: users.title,
+      status: users.status,
     } satisfies SortMap<keyof User | 'fullName'>;
 
     const { rows, total, hasMore } = await this.paginatedSelect({

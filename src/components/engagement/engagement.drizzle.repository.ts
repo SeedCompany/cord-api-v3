@@ -13,6 +13,7 @@ import {
   sql,
   type SQL,
 } from 'drizzle-orm';
+import { type AnyPgColumn, type PgTable } from 'drizzle-orm/pg-core';
 import { difference } from 'lodash';
 import { DateTime } from 'luxon';
 import {
@@ -36,8 +37,10 @@ import {
   DrizzleDtoRepository,
   EMPTY_PAGE,
   escapeLikePattern,
-  resolveOrderBy,
-  type SortMap,
+  orderEntries,
+  sortColumnFor,
+  type SortColumns,
+  type SortEntry,
   subFilter,
 } from '~/core/drizzle';
 import { type DrizzleDb, DrizzleService } from '~/core/drizzle/drizzle.service';
@@ -45,6 +48,7 @@ import {
   engagements,
   engagementStatusHistory,
   languages,
+  periodicReports,
   projects,
   tools,
   toolUsages,
@@ -53,11 +57,16 @@ import {
 import { type ScopedRole } from '../authorization/dto/role.dto';
 import { PolicyExecutor } from '../authorization/policy/executor/policy-executor';
 import { FileService } from '../file';
-import { languageFilterClauses } from '../language/language.drizzle.repository';
+import {
+  languageFilterClauses,
+  languageSortEntry,
+} from '../language/language.drizzle.repository';
+import { periodicReportSortColumns } from '../periodic-report/periodic-report.sorts';
 import { IProject } from '../project/dto';
 import { requesterScopeByProject } from '../project/project-member/membership-scope';
 import {
   projectFilterClauses,
+  projectSortEntry,
   recomputeProjectSensitivity,
 } from '../project/project.drizzle.repository';
 import { toolFilterClauses } from '../tools/tool/tool.drizzle.repository';
@@ -504,31 +513,12 @@ export class EngagementDrizzleRepository extends DrizzleDtoRepository<
       ),
     );
 
-    const sortColumns = {
-      status: engagements.status,
-      createdAt: engagements.createdAt,
-      modifiedAt: engagements.modifiedAt,
-      type: engagements.type,
-      // startDate/endDate coalesce with the project's mou window.
-      startDate: effectiveStartDate,
-      endDate: effectiveEndDate,
-      // migration-todo: nameProjectFirst/nameProjectLast, sensitivity,
-      // language.* / project.* delegated sorts, currentProgressReportDue.*.
-      // Unknown keys fall back to createdAt.
-      //
-      // ⚠️ Whoever adds nameProjectFirst/nameProjectLast: they sort by TEXT and
-      // they have to be `sql` expressions (Neo4j builds them by concatenating a
-      // project's name with its language names, so there is no single column to
-      // point at). `displayOrder()` cannot see inside an expression — it
-      // collates COLUMNS — so an expression comes back uncollated with no error
-      // and nothing failing, and would order differently from every other list
-      // in the app. Write `collate "display_order"` inline in the expression.
-      // The two entries above are exempt only because they sort dates.
-    } as unknown as SortMap<keyof Engagement>;
-
     const { rows, total, hasMore } = await this.paginatedSelect({
       predicate: and(...conditions),
-      orderBy: resolveOrderBy(input, sortColumns, engagements.createdAt),
+      orderBy: orderEntries(
+        engagementSortEntry(input.sort as string) ?? engagements.createdAt,
+        input.order,
+      ),
       page: input.page,
       count: input.count,
     });
@@ -881,6 +871,237 @@ const effectiveEndDate = sql`coalesce(${engagements.endDateOverride}, (
   select "p"."mou_end" from "projects" "p"
   where "p"."id" = ${engagements.projectId}
 ))`;
+
+/**
+ * How a sort expression reaches the engagement it is ordering by.
+ *
+ * A list of engagements sorts by its own row's columns directly. A list of
+ * something that POINTS AT an engagement (progress reports) has no engagement
+ * row in scope, so every value has to be read back through the foreign key.
+ * One resolver serves both by asking its source for each column.
+ */
+interface EngagementSortSource {
+  /** The engagement's id, for reaching further (its project, its language). */
+  readonly id: SQL;
+  /** Read one column off the engagement row. */
+  readonly column: (column: AnyPgColumn) => SortEntry;
+}
+
+/** The engagement row the query itself is over. */
+const ownEngagement: EngagementSortSource = {
+  id: sql`${engagements.id}`,
+  column: (column) => column,
+};
+
+/** The engagement a related row points at. */
+const engagementVia = (engagementId: SQL): EngagementSortSource => ({
+  id: engagementId,
+  column: (column) => sql`(
+    select ${column} from ${engagements}
+    where ${engagements.id} = ${engagementId}
+      and ${engagements.deletedAt} is null
+  )`,
+});
+
+/** A related row's single text value, blank rather than null. */
+const relatedText = (
+  table: PgTable,
+  column: AnyPgColumn,
+  idColumn: AnyPgColumn,
+  fk: SortEntry,
+  deletedAt: AnyPgColumn,
+): SQL => sql`coalesce((
+  select ${column} from ${table}
+  where ${idColumn} = ${fk} and ${deletedAt} is null
+), '')`;
+
+/**
+ * The engagement's own sortable values, resolved against `source`.
+ *
+ * ⚠ `nameProjectFirst` / `nameProjectLast` are deliberately NOT collated,
+ * which reverses what the comment that used to live here instructed. Neo4j
+ * folds a name only where `DbSort` finds a transformer, and it looks that up as
+ * (IEngagement, 'nameProjectLast') — a sort-only key with no DTO field behind
+ * it, so there is no transformer and Neo4j orders these by raw code points.
+ * Measured 2026-09-10 on two engagements whose languages are named `Zebra` and
+ * `apple`: Neo4j returns `Zebra | apple` for both name keys (capitals first,
+ * unfolded) while `project.name` returns `apple | Zebra` (folded, because THAT
+ * key resolves to Project's `@NameField` name). Collating here would order the
+ * grid's "Language / Intern" column differently from Neo4j.
+ *
+ * The concatenation itself mirrors `multiPropsAsSortString`: the parts are
+ * glued with no separator and each missing one coalesces to an empty string,
+ * so a language engagement sorts by its language name and an internship
+ * engagement by its intern's display name.
+ */
+const engagementSortColumns = (
+  source: EngagementSortSource,
+): Record<string, SortColumns> => {
+  // ⚠ DISPLAY name, where Neo4j reads the language's `name`. A DELIBERATE
+  // divergence, decided 2026-09-10: the grid's "Language / Intern" column shows
+  // `language.displayName`, so sorting by `name` puts rows in positions the
+  // visible text cannot explain. On the scrubbed copy the two names differ for
+  // all 3,624 languages, which makes the column look unsorted; on real data it
+  // is the subset whose names diverge, which is what surfaced it.
+  //
+  // Same defect as the users list sorting by real name while showing the
+  // display name — that one is still outstanding. This is the only sort in the
+  // app that intentionally disagrees with Neo4j, so the engagement name test
+  // asserts a different order per engine rather than one shared answer.
+  const languageName = relatedText(
+    languages,
+    languages.displayName,
+    languages.id,
+    source.column(engagements.languageId),
+    languages.deletedAt,
+  );
+  const projectName = relatedText(
+    projects,
+    projects.name,
+    projects.id,
+    source.column(engagements.projectId),
+    projects.deletedAt,
+  );
+  const internFirst = relatedText(
+    users,
+    users.displayFirstName,
+    users.id,
+    source.column(engagements.internId),
+    users.deletedAt,
+  );
+  const internLast = relatedText(
+    users,
+    users.displayLastName,
+    users.id,
+    source.column(engagements.internId),
+    users.deletedAt,
+  );
+  const projectDate = (column: AnyPgColumn): SQL => sql`(
+    select ${column} from ${projects}
+    where ${projects.id} = ${source.column(engagements.projectId)}
+      and ${projects.deletedAt} is null
+  )`;
+  return {
+    id: source.column(engagements.id),
+    status: source.column(engagements.status),
+    createdAt: source.column(engagements.createdAt),
+    modifiedAt: source.column(engagements.modifiedAt),
+    type: source.column(engagements.type),
+    // Neo4j falls back from an override to the project's MOU date.
+    startDate: sql`coalesce(${source.column(
+      engagements.startDateOverride,
+    )}, ${projectDate(projects.mouStart)})`,
+    endDate: sql`coalesce(${source.column(
+      engagements.endDateOverride,
+    )}, ${projectDate(projects.mouEnd)})`,
+    statusModifiedAt: source.column(engagements.statusModifiedAt),
+    lastSuspendedAt: source.column(engagements.lastSuspendedAt),
+    lastReactivatedAt: source.column(engagements.lastReactivatedAt),
+    completeDate: source.column(engagements.completeDate),
+    disbursementCompleteDate: source.column(
+      engagements.disbursementCompleteDate,
+    ),
+    initialEndDate: source.column(engagements.initialEndDate),
+    // LanguageEngagement columns. Blank on an internship engagement, which
+    // sorts it to the end — where Neo4j's unset property also puts it.
+    firstScripture: source.column(engagements.firstScripture),
+    lukePartnership: source.column(engagements.lukePartnership),
+    openToInvestorVisit: source.column(engagements.openToInvestorVisit),
+    paratextRegistryId: source.column(engagements.paratextRegistryId),
+    historicGoal: source.column(engagements.historicGoal),
+    milestonePlanned: source.column(engagements.milestonePlanned),
+    milestoneReached: source.column(engagements.milestoneReached),
+    usingAIAssistedTranslation: source.column(
+      engagements.usingAIAssistedTranslation,
+    ),
+    sentPrintingDate: source.column(engagements.sentPrintingDate),
+    // InternshipEngagement columns.
+    position: source.column(engagements.position),
+    nameProjectFirst: sql`${projectName} || ${languageName} || ${internFirst} || ${internLast}`,
+    nameProjectLast: sql`${languageName} || ${internFirst} || ${internLast} || ${projectName}`,
+  };
+};
+
+/** `'Progress'` as the `report_type` enum rather than an untyped string. */
+const progressReportTypeLiteral = sql.raw(`'Progress'::"report_type"`);
+
+/**
+ * The current progress report due for the engagement in scope: the latest one
+ * whose period has already ended. Mirror of Neo4j's `matchCurrentDue` — same
+ * `end < today` predicate and same `end desc, start asc` tiebreak — returning
+ * null where the engagement has no such report, which is what that matcher's
+ * zero-reports arm returns.
+ */
+const currentProgressReportDue = (
+  key: string,
+  source: EngagementSortSource,
+): SortColumns | undefined => {
+  const column = sortColumnFor(periodicReportSortColumns, key);
+  if (!column) return undefined;
+  return sql`(
+    select ${column} from ${periodicReports}
+    where ${periodicReports.engagementId} = ${source.id}
+      and ${periodicReports.type} = ${progressReportTypeLiteral}
+      and ${periodicReports.deletedAt} is null
+      and ${periodicReports.end} < current_date
+    order by ${periodicReports.end} desc, ${periodicReports.start} asc
+    limit 1
+  )`;
+};
+
+/**
+ * Resolve an engagement sort key, including the prefixes Neo4j answers by
+ * delegating to another domain's sorters: `project.*` (which itself reaches
+ * `primaryLocation.*` and `fieldRegion.*`), `language.*`, and
+ * `currentProgressReportDue.*`.
+ *
+ * ⚠ `project.name` is the DEFAULT sort of every engagement grid in cord-field
+ * (`EngagementColumns[0].field`), sent on mount before anything is cached — so
+ * until this resolved, every engagement list came back in creation order on
+ * Postgres while Neo4j ordered it by project name.
+ *
+ * `engagementId` is for callers sorting THROUGH an engagement (progress
+ * reports); omit it when the query is over `engagements` itself.
+ *
+ * Returns undefined for an unsupported key, leaving the caller's fallback in
+ * place. `project.isMember` / `project.pinned` land there on purpose: no
+ * repository defines a Neo4j sorter for either, so Neo4j answers them with an
+ * EMPTY list (its required property match eliminates every row) and there is
+ * no working behavior to mirror.
+ */
+export const engagementSortEntry = (
+  sort: string,
+  engagementId?: SQL,
+): SortColumns | undefined => {
+  const source = engagementId ? engagementVia(engagementId) : ownEngagement;
+  if (sort.startsWith('project.')) {
+    return projectSortEntry(
+      sort.slice('project.'.length),
+      sql`${source.column(engagements.projectId)}`,
+    );
+  }
+  if (sort.startsWith('language.')) {
+    return languageSortEntry(
+      sort.slice('language.'.length),
+      sql`${source.column(engagements.languageId)}`,
+    );
+  }
+  if (sort.startsWith('currentProgressReportDue.')) {
+    return currentProgressReportDue(
+      sort.slice('currentProgressReportDue.'.length),
+      source,
+    );
+  }
+  // The engagement's `sensitivity` IS the project's — Neo4j's matcher reads it
+  // through the project too, so this is the project sort under another name.
+  if (sort === 'sensitivity') {
+    return projectSortEntry(
+      'sensitivity',
+      sql`${source.column(engagements.projectId)}`,
+    );
+  }
+  return sortColumnFor(engagementSortColumns(source), sort);
+};
 
 const engagementDateFilterConditions = (
   effectiveDate: SQL,

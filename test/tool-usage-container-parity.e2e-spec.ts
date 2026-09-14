@@ -1,3 +1,4 @@
+import { faker } from '@faker-js/faker';
 import { beforeAll, describe, expect, it } from '@jest/globals';
 import { type ID, Role } from '~/common';
 import { graphql } from '~/graphql';
@@ -34,6 +35,9 @@ import {
  * Runs on BOTH engines on purpose. These are parity tests, and they are only
  * meaningful if the Neo4j arm is asserted too.
  */
+/** Same engine gate the audit-log spec uses — `DATABASE`, not `DATABASE_ENGINE`. */
+const isPostgres = process.env.DATABASE === 'postgres';
+
 describe('Resource.tools answers for containers of any type', () => {
   let app: TestApp;
 
@@ -342,5 +346,64 @@ describe('Resource.tools answers for containers of any type', () => {
     expect(result.organization.id).toBe(org.id);
     expect(result.organization.tools.total).toBe(0);
     expect(result.organization.tools.items).toHaveLength(0);
+  });
+  /**
+   * Neither engine gave this list an order: both read paths collect rows
+   * without one, so Postgres returned them in heap order — a chip could change
+   * position after an unrelated update, with nothing to explain it. Postgres
+   * now orders by tool name; Neo4j deliberately keeps no order (the grid is not
+   * in production, so there is no existing order to preserve, and that
+   * repository goes away at cutover). Hence the asymmetric assertion.
+   */
+  it("orders a container's tools by name on Postgres", async () => {
+    const prefix = faker.string.alpha({ length: 8 });
+    const org = await createOrganization(app);
+    // Added out of name order, and the names mix cases, so the expected order
+    // is neither the creation order nor raw byte order (which puts every
+    // capital ahead of every lowercase letter).
+    for (const label of ['Zebra', 'apple', 'Mango']) {
+      const tool = await createTool(app, { name: `${prefix} ${label}` });
+      await app.graphql.mutate(
+        graphql(`
+          mutation createOrderedUsage($container: ID!, $tool: ID!) {
+            createToolUsage(input: { container: $container, tool: $tool }) {
+              toolUsage {
+                id
+              }
+            }
+          }
+        `),
+        { container: org.id, tool: tool.id },
+      );
+    }
+
+    const result = await app.graphql.query(
+      graphql(`
+        query orgToolNames($id: ID!) {
+          organization(id: $id) {
+            tools {
+              items {
+                tool {
+                  name {
+                    value
+                  }
+                }
+              }
+            }
+          }
+        }
+      `),
+      { id: org.id },
+    );
+    const names = result.organization.tools.items.map((usage) =>
+      usage.tool.name.value?.replace(prefix + ' ', ''),
+    );
+
+    if (isPostgres) {
+      expect(names).toEqual(['apple', 'Mango', 'Zebra']);
+    } else {
+      // No defined order over there, so only membership is assertable.
+      expect(new Set(names)).toEqual(new Set(['apple', 'Mango', 'Zebra']));
+    }
   });
 });

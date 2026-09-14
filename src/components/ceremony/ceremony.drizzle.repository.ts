@@ -178,7 +178,27 @@ export class CeremonyDrizzleRepository extends DrizzleDtoRepository<
       estimatedDate: ceremonies.estimatedDate,
       actualDate: ceremonies.actualDate,
       createdAt: ceremonies.createdAt,
-    } satisfies SortMap<keyof Ceremony>;
+      /**
+       * `CeremonyListInput`'s OWN default sort, so every unsorted ceremony
+       * list was landing on the `createdAt` fallback here while Neo4j ordered
+       * by the project's name (its `sorting()` call declares a `projectName`
+       * matcher).
+       *
+       * ⚠ NOT collated, and that is the parity choice rather than an
+       * oversight: Neo4j folds a name only where `DbSort` finds a transformer
+       * for the sorted resource's field, and it looks that up as
+       * (Ceremony, 'projectName') — which has none. So Neo4j orders this one
+       * by raw code points, unlike the project list's own `name` sort.
+       */
+      projectName: sql`(
+        select ${projects.name} from ${projects}
+        inner join ${engagements}
+          on ${engagements.projectId} = ${projects.id}
+        where ${engagements.id} = ${ceremonies.engagementId}
+          and ${engagements.deletedAt} is null
+          and ${projects.deletedAt} is null
+      )`,
+    } satisfies SortMap<keyof Ceremony | 'projectName'>;
     const { rows, total, hasMore } = await this.paginatedSelect({
       predicate: and(...conditions),
       orderBy: resolveOrderBy(input, sortColumns, ceremonies.createdAt),
