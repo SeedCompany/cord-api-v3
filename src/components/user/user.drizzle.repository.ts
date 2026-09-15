@@ -1,5 +1,15 @@
 import { Injectable } from '@nestjs/common';
-import { and, eq, ilike, inArray, isNull, ne, or, type SQL } from 'drizzle-orm';
+import {
+  and,
+  eq,
+  ilike,
+  inArray,
+  isNull,
+  ne,
+  or,
+  type SQL,
+  sql,
+} from 'drizzle-orm';
 import { groupBy } from 'lodash';
 import { DateTime } from 'luxon';
 import {
@@ -14,6 +24,7 @@ import { Identity } from '~/core/authentication';
 import { ConfigService } from '~/core/config';
 import {
   catchUniqueViolation,
+  collateDisplayOrder,
   DrizzleDtoRepository,
   EMPTY_PAGE,
   escapeLikePattern,
@@ -265,16 +276,49 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
     );
 
     const sortColumns = {
-      fullName: [users.realFirstName, users.realLastName],
+      // ONE concatenated string, not two columns with a tiebreaker. Neo4j's
+      // matching sorter is `coalesce(realFirstName,"") + coalesce(realLastName,"")`
+      // (multiPropsAsSortString in user.repository.ts), and ordering by that is
+      // not the same as ordering by first name then last name — they disagree
+      // whenever one first name is a prefix of another, which real names do
+      // constantly:
+      //   concatenated  -> "annabrown" < "annsmith"  => Anna Brown, Ann Smith
+      //   two columns   -> "Ann"       < "Anna"      => Ann Smith, Anna Brown
+      // Same for Jon/Jonathan, Dan/Daniel, Sam/Samuel. No separator between the
+      // two, and coalesce to '' rather than leaving NULL, both to match Neo4j.
+      //
+      // ⚠️ Deliberately still COLLATED, which Neo4j is NOT for this key: `fullName`
+      // is a resolver field, not a `@NameField` DTO field, so `DbSort.get` finds no
+      // transformer and Neo4j orders it by raw code points — capitals before lower
+      // case, accented initials after `z`. Matching that exactly would mean
+      // `collate "C"`; keeping display_order was chosen instead (2026-08-19) so the
+      // list reads the way people expect and agrees with every other name sort in
+      // this app. The residual ordering difference against Neo4j is known and
+      // accepted, and registered in the read-comparison suppressions.
+      //
+      // ⚠️ Do NOT "fix" it by deleting this wrapper. An uncollated expression
+      // does not mean code points — it means the SERVER's default collation,
+      // which is byte order on the Alpine image CI and local development use,
+      // and is not on the glibc one production runs (RDS). That would trade one
+      // known, registered difference for a default sort that disagrees with
+      // itself between environments. Matching Neo4j everywhere would take an
+      // explicit `collate "C"`, which is its own decision and not this one.
+      fullName: collateDisplayOrder(
+        sql`coalesce(${users.realFirstName}, '') || coalesce(${users.realLastName}, '')`,
+      ),
       realLastName: [users.realLastName, users.realFirstName],
       displayLastName: [users.displayLastName, users.displayFirstName],
       realFirstName: [users.realFirstName, users.realLastName],
       displayFirstName: [users.displayFirstName, users.displayLastName],
-      // Both are sortable columns on the users grid and plain properties
-      // Neo4j's default sorter answers. Missing from this map, they hit
-      // `resolveOrderBy`'s fallback and the list came back id-ordered.
+      // All three are plain properties Neo4j's default sorter answers. Missing
+      // from this map, a key hits `resolveOrderBy`'s fallback and the list
+      // comes back id-ordered instead. `title` and `status` are sortable
+      // columns on the users grid; `createdAt` is what the shadow-diff's
+      // users.list.sort-createdAt-asc class (300 entries) actually was — not
+      // timestamp ties, as it first appeared.
       title: users.title,
       status: users.status,
+      createdAt: users.createdAt,
     } satisfies SortMap<keyof User | 'fullName'>;
 
     const { rows, total, hasMore } = await this.paginatedSelect({

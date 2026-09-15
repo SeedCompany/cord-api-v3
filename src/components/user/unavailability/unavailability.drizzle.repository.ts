@@ -83,6 +83,9 @@ export class UnavailabilityDrizzleRepository extends DrizzleDtoRepository<
       description: unavailabilities.description,
       start: unavailabilities.start,
       end: unavailabilities.end,
+      // resolveOrderBy silently falls back for missing keys — same gap as the
+      // users map (2026-08-27); Neo4j sorts any property.
+      createdAt: unavailabilities.createdAt,
     } satisfies SortMap<keyof Unavailability>;
 
     const { rows, total, hasMore } = await this.paginatedSelect({

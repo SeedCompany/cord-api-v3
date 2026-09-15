@@ -11,6 +11,7 @@ import {
   createSession,
   createTestApp,
   createTool,
+  createUnavailability,
   registerUser,
   runAsAdmin,
   type TestApp,
@@ -520,6 +521,201 @@ describe('cross-domain list sorts', () => {
       `${prefix} Mike`,
       `${prefix} Zulu`,
     ]);
+  });
+
+  it('users by fullName — ONE concatenated string, not first-then-last', async () => {
+    // Neo4j's matching sorter concatenates first and last name and orders that
+    // one string (`multiPropsAsSortString`). Ordering by first name and then by
+    // last name is NOT the same thing: the two disagree whenever one first name
+    // is a prefix of another, which real names do constantly.
+    //
+    // These two fixtures are chosen so the answers differ AND both engines can
+    // assert the same one. The names diverge at the character after `Ann`:
+    //   concatenated -> "annvan dyke" vs "annabrown" => Anna Brown first
+    //   two columns  -> "Ann"         vs "Anna"      => Ann van Dyke first
+    // A lower-case surname initial is what makes it engine-neutral — this key
+    // is collated on Postgres and raw code points on Neo4j (a registered known
+    // delta), and those two agree only while the deciding characters share a
+    // case.
+    const prefix = faker.string.alpha({ length: 8 });
+    await runAsAdmin(app, async () => {
+      await createPerson(app, {
+        realFirstName: `${prefix}Ann`,
+        realLastName: 'van Dyke',
+        displayFirstName: `${prefix}Ann`,
+        displayLastName: 'van Dyke',
+      });
+      await createPerson(app, {
+        realFirstName: `${prefix}Anna`,
+        realLastName: 'Brown',
+        displayFirstName: `${prefix}Anna`,
+        displayLastName: 'Brown',
+      });
+    });
+
+    const { users } = await app.graphql.query(
+      graphql(`
+        query SortedUsersByFullName($input: UserListInput) {
+          users(input: $input) {
+            items {
+              fullName
+            }
+          }
+        }
+      `),
+      {
+        input: { sort: 'fullName', order: Order.ASC, filter: { name: prefix } },
+      },
+    );
+    expect(users.items.map((user) => user.fullName)).toEqual([
+      `${prefix}Anna Brown`,
+      `${prefix}Ann van Dyke`,
+    ]);
+  });
+
+  /**
+   * FOUR fixtures, not two. An unsupported sort key does not error — the list
+   * falls back to its id column, and ids are random, so a two-row set would
+   * come back in creation order half the time whether the key works or not.
+   */
+  const createdAtFixtureCount = 4;
+
+  /**
+   * Assert a list came back oldest-first and holds exactly the rows created.
+   *
+   * Checks the ORDER of `createdAt` rather than an exact sequence of ids,
+   * because two rows can in principle share a timestamp. The fixtures are
+   * separate awaited mutations so in practice they never do, but nothing adds
+   * a tie-breaker — `resolveOrderBy` returns only the resolved entry — so on a
+   * tie the order is undefined and an exact sequence would flake.
+   *
+   * It gives up no falsifying power. With the key missing the list orders by
+   * its random id fallback, and an arbitrary order of four rows is sorted by
+   * creation time about once in twenty-four.
+   */
+  const expectOldestFirst = (
+    rows: ReadonlyArray<{ id: string; createdAt: string }>,
+    createdIds: readonly string[],
+  ) => {
+    expect(new Set(rows.map((row) => row.id))).toEqual(new Set(createdIds));
+    const times = rows.map((row) => new Date(row.createdAt).getTime());
+    expect(times).toEqual([...times].sort((a, b) => a - b));
+  };
+
+  it('users by createdAt', async () => {
+    const prefix = faker.string.alpha({ length: 8 });
+    // Named in REVERSE creation order, so neither the id fallback nor a name
+    // sort can produce the expected answer by accident.
+    const labels = ['Delta', 'Charlie', 'Bravo', 'Alpha'];
+    const created: string[] = [];
+    await runAsAdmin(app, async () => {
+      for (const label of labels) {
+        const person = await createPerson(app, {
+          realFirstName: `${prefix}${label}`,
+        });
+        created.push(person.id);
+      }
+    });
+
+    const { users } = await app.graphql.query(
+      graphql(`
+        query SortedUsersByCreatedAt($input: UserListInput) {
+          users(input: $input) {
+            items {
+              id
+              createdAt
+            }
+          }
+        }
+      `),
+      {
+        input: {
+          sort: 'createdAt',
+          order: Order.ASC,
+          filter: { name: prefix },
+        },
+      },
+    );
+    expectOldestFirst(users.items, created);
+  });
+
+  it('educations and unavailabilities by createdAt', async () => {
+    const person = await runAsAdmin(
+      app,
+      async () => await createPerson(app, {}),
+    );
+
+    const educations: string[] = [];
+    const unavailabilities: string[] = [];
+    await runAsAdmin(app, async () => {
+      for (const index of Array.from({
+        length: createdAtFixtureCount,
+      }).keys()) {
+        const { createEducation } = await app.graphql.mutate(
+          graphql(`
+            mutation CreateEducationForSort($input: CreateEducation!) {
+              createEducation(input: $input) {
+                education {
+                  id
+                }
+              }
+            }
+          `),
+          {
+            input: {
+              user: person.id,
+              degree: 'Associates',
+              major: `Major ${createdAtFixtureCount - index}`,
+              // Institution is this list's DEFAULT sort, so labelling these in
+              // reverse keeps the default from answering the question for us.
+              institution: `Institution ${createdAtFixtureCount - index}`,
+            },
+          },
+        );
+        educations.push(createEducation.education.id);
+
+        const unavailability = await createUnavailability(app, {
+          user: person.id,
+        });
+        unavailabilities.push(unavailability.id);
+      }
+    });
+
+    const { user } = await runAsAdmin(
+      app,
+      async () =>
+        await app.graphql.query(
+          graphql(`
+            query SortedSubListsByCreatedAt(
+              $id: ID!
+              $education: EducationListInput
+              $unavailability: UnavailabilityListInput
+            ) {
+              user(id: $id) {
+                education(input: $education) {
+                  items {
+                    id
+                    createdAt
+                  }
+                }
+                unavailabilities(input: $unavailability) {
+                  items {
+                    id
+                    createdAt
+                  }
+                }
+              }
+            }
+          `),
+          {
+            id: person.id,
+            education: { sort: 'createdAt', order: Order.ASC },
+            unavailability: { sort: 'createdAt', order: Order.ASC },
+          },
+        ),
+    );
+    expectOldestFirst(user.education.items, educations);
+    expectOldestFirst(user.unavailabilities.items, unavailabilities);
   });
 
   itPostgresOnly(
