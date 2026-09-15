@@ -85,6 +85,10 @@ export class PostDrizzleRepository extends DrizzleDtoRepository<
       type: c.type,
       shareability: c.shareability,
       body: c.body,
+      // Injected by getActualChanges upstream of both engines; Neo4j persists
+      // it via its generic property write, so enumerating columns here without
+      // it froze every post's modifiedAt at creation (audit LPOST-1).
+      modifiedAt: changes.modifiedAt?.toJSDate(),
     });
     const [row] = await this.db
       .select()
