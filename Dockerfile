@@ -15,8 +15,18 @@ RUN apt-get update \
     && apt-get clean -q -y \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Gel CLI for running migrations during deployment
-RUN curl --proto '=https' --tlsv1.2 -sSf https://www.geldata.com/sh | sh -s -- -y --no-modify-path \
+# Install Gel CLI for running migrations during deployment.
+# The installer script's built-in package root is still packages.edgedb.com,
+# the pre-rename domain — it's been retired and now fails its TLS handshake.
+# Point it at the current one explicitly (both names set: the script accepts
+# either, and which one it reads depends on its version). The env vars have
+# to sit on the `sh` side of the pipe, not `curl` — `curl` only fetches the
+# script text; `sh` is the process that actually reads the variable while
+# running it. Mirrors the same fix in .github/actions/gel-setup/action.yml;
+# drop both once the installer defaults to the new root upstream.
+RUN curl --proto '=https' --tlsv1.2 -sSf https://www.geldata.com/sh \
+      | GEL_PKG_ROOT=https://packages.geldata.com EDGEDB_PKG_ROOT=https://packages.geldata.com \
+        sh -s -- -y --no-modify-path \
     && mv /root/.local/bin/gel /usr/local/bin/gel
 
 
