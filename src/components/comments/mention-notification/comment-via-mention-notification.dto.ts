@@ -19,3 +19,9 @@ declare module '~/core/resources/map' {
     CommentMentionedNotification: typeof e.Notification.CommentViaMention;
   }
 }
+
+declare module '../../notifications' {
+  interface NotificationMap {
+    CommentViaMention: typeof CommentViaMentionNotification;
+  }
+}
