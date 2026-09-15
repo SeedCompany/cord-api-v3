@@ -9,5 +9,11 @@ export class WorkflowUpdatedHook {
     readonly previousStatus: Status,
     readonly next: InternalTransition | Status,
     readonly workflowEvent: UnsecuredDto<WorkflowEvent>,
+    /**
+     * When an automated process (not a person) executed the transition,
+     * a human-readable phrase for why, e.g.
+     * "report data was received from Rev79".
+     */
+    readonly automatedReason?: string,
   ) {}
 }

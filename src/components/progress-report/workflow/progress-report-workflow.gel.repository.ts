@@ -26,6 +26,10 @@ export class ProgressReportWorkflowGelRepository
     return await this.db.run(query);
   }
 
+  // migration-todo: the Gel schema types `who` as `default::User` (defaulted
+  // from `global currentUser`), so an agent-actored event (Rev79 auto-advance)
+  // is unsupported here — same lag as the project workflow's Gel arm. Moot at
+  // Phase 7 cutover.
   async recordEvent({
     report,
     ...props

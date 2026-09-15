@@ -3,6 +3,7 @@ import { type RequireExactlyOne } from 'type-fest';
 import { type ID, Role, type UnsecuredDto } from '~/common';
 import { Identity } from '~/core/authentication';
 import { ConfigService } from '~/core/config';
+import { TransactionHooks } from '~/core/database';
 import { MailerService } from '~/core/email';
 import { OnHook } from '~/core/hooks';
 import { ILogger, Logger } from '~/core/logger';
@@ -39,6 +40,7 @@ export class ProgressReportWorkflowNotificationHandler {
     private readonly reportService: PeriodicReportService,
     private readonly mailer: MailerService,
     private readonly workflowService: ProgressReportWorkflowService,
+    private readonly txHooks: TransactionHooks,
     @Logger('progress-report:status-change-notifier')
     private readonly logger: ILogger,
   ) {}
@@ -48,6 +50,7 @@ export class ProgressReportWorkflowNotificationHandler {
     previousStatus,
     next,
     workflowEvent,
+    automatedReason,
   }: WorkflowUpdatedHook) {
     const { enabled } = this.configService.progressReportStatusChange;
     if (!enabled) {
@@ -64,18 +67,32 @@ export class ProgressReportWorkflowNotificationHandler {
       ({ id, email }) => [email, id],
     ).asMap;
 
-    const notifications = await Promise.all(
-      entries(userIdByEmail).map(([email, userId]) =>
-        this.prepareNotificationObject(
-          reportId,
-          previousStatus,
-          userId ? { userId } : { email },
-          workflowEvent,
-          projectId,
-          languageId,
-        ),
-      ),
-    );
+    const notifications = (
+      await Promise.all(
+        entries(userIdByEmail).map(async ([email, userId]) => {
+          try {
+            return await this.prepareNotificationObject(
+              reportId,
+              previousStatus,
+              userId ? { userId } : { email },
+              workflowEvent,
+              projectId,
+              languageId,
+              automatedReason,
+            );
+          } catch (exception) {
+            // Hooks run inside the transaction — losing one recipient's email
+            // must not roll back the status change (or the whole ingest).
+            this.logger.error('Failed to prepare status change notification', {
+              recipient: email,
+              reportId,
+              exception,
+            });
+            return null;
+          }
+        }),
+      )
+    ).flatMap((notification) => (notification ? [notification] : []));
 
     this.logger.info('Notifying', {
       emails: notifications.map((r) => r.recipient.email.value),
@@ -86,16 +103,31 @@ export class ProgressReportWorkflowNotificationHandler {
       previousStatusVal: notifications[0]?.previousStatusVal ?? undefined,
     });
 
-    for (const notification of notifications) {
-      if (notification.recipient.email.value) {
-        await this.mailer
-          .compose(
-            notification.recipient.email.value,
-            <ProgressReportStatusChanged {...notification} />,
-          )
-          .send();
+    const send = async () => {
+      for (const notification of notifications) {
+        const email = notification.recipient.email.value;
+        if (!email) {
+          continue;
+        }
+        try {
+          await this.mailer
+            .compose(email, <ProgressReportStatusChanged {...notification} />)
+            .send();
+        } catch (exception) {
+          // A failed send must not fail (or roll back) the status change.
+          this.logger.error('Failed to send status change notification', {
+            recipient: email,
+            reportId,
+            exception,
+          });
+        }
       }
-    }
+    };
+
+    // Emails are outbound side effects — hold them until the mutation's
+    // transaction commits, so a rolled-back attempt cannot send and a retry
+    // cannot re-send emails for writes that never persisted.
+    await this.txHooks.afterCommitOrNow(send);
   }
 
   private async prepareNotificationObject(
@@ -105,6 +137,7 @@ export class ProgressReportWorkflowNotificationHandler {
     unsecuredEvent: UnsecuredDto<ProgressReportWorkflowEvent>,
     projectId: ID,
     languageId: ID,
+    automatedReason?: string,
   ): Promise<EmailReportStatusNotification> {
     const recipientId = receiver.userId ?? this.configService.rootUser.id;
     return await this.identity.asUser(recipientId, async () => {
@@ -115,7 +148,14 @@ export class ProgressReportWorkflowNotificationHandler {
       const project = await this.projectService.readOne(projectId);
       const language = await this.languageService.readOne(languageId);
       const report = await this.reportService.readOne(reportId);
-      const changedBy = await this.userService.readOne(unsecuredEvent.who.id);
+      // The template only names the actor for human changes — automated ones
+      // carry the reason sentence instead — so skip the read entirely there.
+      // An agent or unloadable actor degrades to the actor-less sentence.
+      const changedByActor = automatedReason
+        ? undefined
+        : (await this.userService.readManyActors([unsecuredEvent.who.id]))[0];
+      const changedBy =
+        changedByActor?.__typename === 'User' ? changedByActor : undefined;
       const workflowEvent = this.workflowService.secure(unsecuredEvent);
 
       return {
@@ -127,6 +167,7 @@ export class ProgressReportWorkflowNotificationHandler {
         newStatusVal: report.status?.value,
         previousStatusVal: report.status?.value ? previousStatus : undefined,
         workflowEvent: workflowEvent,
+        automatedReason,
       };
     });
   }

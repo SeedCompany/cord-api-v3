@@ -215,6 +215,125 @@ describe('Rev79 e2e', () => {
       ).rejects.toThrowGqlError(errors.notFound());
     });
   });
+
+  describe('auto-advance on data received (#3767)', () => {
+    // Each test uses its own quarter within the MOU window so it observes a
+    // fresh report at NotStarted, unaffected by the upload tests above (Q2).
+    const reportIdFor = async (period: { year: number; quarter: number }) => {
+      const result = await app.graphql.query(Rev79QuarterlyReportContextDoc, {
+        input: {
+          rev79ProjectId: REV79_PROJECT_ID,
+          rev79CommunityId: REV79_COMMUNITY_ID,
+          period,
+        },
+      });
+      return result.rev79QuarterlyReportContext.progressReport;
+    };
+
+    const readReport = async (id: ID) =>
+      await runAsAdmin(app, async () => {
+        const result = await app.graphql.query(ProgressReportStatusDoc, {
+          id,
+        });
+        const report = result.periodicReport;
+        if (!('status' in report)) {
+          throw new Error('Expected a progress report');
+        }
+        return report;
+      });
+
+    const uploadTeamNews = async (period: { year: number; quarter: number }) =>
+      await app.graphql.mutate(UploadRev79ProgressReportsDoc, {
+        input: {
+          rev79ProjectId: REV79_PROJECT_ID,
+          reports: [
+            {
+              rev79CommunityId: REV79_COMMUNITY_ID,
+              period,
+              teamNews: {
+                response: {
+                  type: 'doc',
+                  content: [
+                    {
+                      type: 'paragraph',
+                      content: [{ type: 'text', text: 'Data arrived!' }],
+                    },
+                  ],
+                },
+              },
+            },
+          ],
+        },
+      });
+
+    it('advances NotStarted -> InProgress when data arrives, exactly once', async () => {
+      const period = { year: 2024, quarter: 1 };
+      const reportId = await reportIdFor(period);
+
+      let report = await readReport(reportId);
+      expect(report.status.value).toBe('NotStarted');
+      expect(report.workflowEvents).toHaveLength(0);
+
+      await uploadTeamNews(period);
+
+      report = await readReport(reportId);
+      expect(report.status.value).toBe('InProgress');
+      expect(report.workflowEvents).toHaveLength(1);
+      expect(report.workflowEvents[0]!.transition?.label).toBe('Start');
+      // The event records why it happened, and the email says the same.
+      expect(JSON.stringify(report.workflowEvents[0]!.notes.value)).toContain(
+        'report data was received from Rev79',
+      );
+      // Attributed to the Rev79 system agent, not the calling account.
+      expect(report.workflowEvents[0]!.who.value).toMatchObject({
+        __typename: 'SystemAgent',
+        name: 'Rev79',
+      });
+
+      // A repeated delivery changes nothing.
+      await uploadTeamNews(period);
+
+      report = await readReport(reportId);
+      expect(report.status.value).toBe('InProgress');
+      expect(report.workflowEvents).toHaveLength(1);
+    });
+
+    it('never regresses a report that is already further along', async () => {
+      const period = { year: 2024, quarter: 4 };
+      const reportId = await reportIdFor(period);
+
+      await runAsAdmin(app, () =>
+        app.graphql.mutate(TransitionProgressReportDoc, {
+          input: { report: reportId, status: 'InReview' },
+        }),
+      );
+
+      await uploadTeamNews(period);
+
+      const report = await readReport(reportId);
+      expect(report.status.value).toBe('InReview');
+      // Only the admin bypass event; the delivery added none.
+      expect(report.workflowEvents).toHaveLength(1);
+      // A human transition still records the person, not an agent.
+      expect(report.workflowEvents[0]!.who.value?.__typename).toBe('User');
+    });
+
+    it('does not advance when the upload carries no report data', async () => {
+      const period = { year: 2024, quarter: 3 };
+      const reportId = await reportIdFor(period);
+
+      await app.graphql.mutate(UploadRev79ProgressReportsDoc, {
+        input: {
+          rev79ProjectId: REV79_PROJECT_ID,
+          reports: [{ rev79CommunityId: REV79_COMMUNITY_ID, period }],
+        },
+      });
+
+      const report = await readReport(reportId);
+      expect(report.status.value).toBe('NotStarted');
+      expect(report.workflowEvents).toHaveLength(0);
+    });
+  });
 });
 
 const Rev79QuarterlyReportContextDoc = graphql(`
@@ -237,6 +356,47 @@ const UploadRev79ProgressReportsDoc = graphql(`
       results {
         rev79CommunityId
         progressReport
+      }
+    }
+  }
+`);
+
+const ProgressReportStatusDoc = graphql(`
+  query ProgressReportStatus($id: ID!) {
+    periodicReport(id: $id) {
+      ... on ProgressReport {
+        id
+        status {
+          value
+        }
+        workflowEvents {
+          id
+          transition {
+            label
+          }
+          notes {
+            value
+          }
+          who {
+            value {
+              __typename
+              ... on SystemAgent {
+                name
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+`);
+
+const TransitionProgressReportDoc = graphql(`
+  mutation TransitionProgressReport($input: ExecuteProgressReportTransition!) {
+    transitionProgressReport(input: $input) {
+      id
+      status {
+        value
       }
     }
   }
