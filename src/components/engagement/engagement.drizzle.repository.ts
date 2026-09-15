@@ -34,6 +34,7 @@ import { Identity } from '~/core/authentication';
 import { getChanges } from '~/core/database/changes';
 import {
   catchUniqueViolation,
+  collateDisplayOrder,
   DrizzleDtoRepository,
   EMPTY_PAGE,
   escapeLikePattern,
@@ -918,16 +919,11 @@ const relatedText = (
 /**
  * The engagement's own sortable values, resolved against `source`.
  *
- * ⚠ `nameProjectFirst` / `nameProjectLast` are deliberately NOT collated,
- * which reverses what the comment that used to live here instructed. Neo4j
- * folds a name only where `DbSort` finds a transformer, and it looks that up as
- * (IEngagement, 'nameProjectLast') — a sort-only key with no DTO field behind
- * it, so there is no transformer and Neo4j orders these by raw code points.
- * Measured 2026-09-10 on two engagements whose languages are named `Zebra` and
- * `apple`: Neo4j returns `Zebra | apple` for both name keys (capitals first,
- * unfolded) while `project.name` returns `apple | Zebra` (folded, because THAT
- * key resolves to Project's `@NameField` name). Collating here would order the
- * grid's "Language / Intern" column differently from Neo4j.
+ * `nameProjectFirst` / `nameProjectLast` are collated like every other text
+ * sort (decided 2026-09-15: sorting is case-insensitive as a product rule).
+ * Neo4j orders these two keys by raw code points — they are sort-only keys
+ * with no DTO field to carry a `DbSort` transformer — so this is a deliberate
+ * divergence from it, like every non-name text sort in the app.
  *
  * The concatenation itself mirrors `multiPropsAsSortString`: the parts are
  * glued with no separator and each missing one coalesces to an empty string,
@@ -1017,8 +1013,12 @@ const engagementSortColumns = (
     sentPrintingDate: source.column(engagements.sentPrintingDate),
     // InternshipEngagement columns.
     position: source.column(engagements.position),
-    nameProjectFirst: sql`${projectName} || ${languageName} || ${internFirst} || ${internLast}`,
-    nameProjectLast: sql`${languageName} || ${internFirst} || ${internLast} || ${projectName}`,
+    nameProjectFirst: collateDisplayOrder(
+      sql`${projectName} || ${languageName} || ${internFirst} || ${internLast}`,
+    ),
+    nameProjectLast: collateDisplayOrder(
+      sql`${languageName} || ${internFirst} || ${internLast} || ${projectName}`,
+    ),
   };
 };
 

@@ -36,7 +36,7 @@ import {
   DrizzleDtoRepository,
   EMPTY_PAGE,
   escapeLikePattern,
-  foldsAsName,
+  foldsWhenSorted,
   orderEntry,
   resolveOrderBy,
   sortColumnFor,
@@ -802,7 +802,7 @@ const projectValue = (column: AnyPgColumn, projectId: SQL): SortColumns => {
     select ${column} from ${projects}
     where ${projects.id} = ${projectId} and ${projects.deletedAt} is null
   )`;
-  return foldsAsName(column) ? collateDisplayOrder(value) : value;
+  return foldsWhenSorted(column) ? collateDisplayOrder(value) : value;
 };
 
 /**
@@ -833,7 +833,7 @@ export const projectSortEntry = (
         and ${projects.deletedAt} is null
         and ${table.deletedAt} is null
     )`;
-    return foldsAsName(column) ? collateDisplayOrder(value) : value;
+    return foldsWhenSorted(column) ? collateDisplayOrder(value) : value;
   };
   if (key.startsWith('primaryLocation.')) {
     const column = sortColumnFor(

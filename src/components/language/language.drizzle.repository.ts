@@ -28,7 +28,7 @@ import {
   DrizzleDtoRepository,
   EMPTY_PAGE,
   escapeLikePattern,
-  foldsAsName,
+  foldsWhenSorted,
   resolveOrderBy,
   sortColumnFor,
   type SortColumns,
@@ -481,12 +481,17 @@ export const languageSortColumns = {
  * this yields one value per language — null where the row is missing, which is
  * also what Neo4j produces for a language whose ethnologue property is unset.
  */
-const ethnologueValue = (column: AnyPgColumn, languageId: SQL): SQL => sql`(
-  select ${column} from ${ethnologueLanguages}
-  where ${ethnologueLanguages.languageId} = ${languageId}
-    and ${ethnologueLanguages.deletedAt} is null
-  limit 1
-)`;
+const ethnologueValue = (column: AnyPgColumn, languageId: SQL): SQL => {
+  const value = sql`(
+    select ${column} from ${ethnologueLanguages}
+    where ${ethnologueLanguages.languageId} = ${languageId}
+      and ${ethnologueLanguages.deletedAt} is null
+    limit 1
+  )`;
+  // A subquery hides its column from `displayOrder`, so the fold has to be
+  // decided here, from the column being read.
+  return foldsWhenSorted(column) ? collateDisplayOrder(value) : value;
+};
 
 /**
  * How to read one column off the language a sort is about.
@@ -538,13 +543,7 @@ const languageComputedSorts = (
     ethnologueLanguages.provisionalCode,
     languageId,
   ),
-  // `EthnologueLanguage.name` is a `@NameField`, so Neo4j folds case and
-  // punctuation for it. This is an expression, which `displayOrder` cannot
-  // look up, so the collation has to be written here or the two engines order
-  // ethnologue names differently.
-  'ethnologue.name': collateDisplayOrder(
-    ethnologueValue(ethnologueLanguages.name, languageId),
-  ),
+  'ethnologue.name': ethnologueValue(ethnologueLanguages.name, languageId),
   'ethnologue.population': ethnologueValue(
     ethnologueLanguages.population,
     languageId,
@@ -601,7 +600,7 @@ export const languageSortEntry = (
   const column = sortColumnFor(languageSortColumns, key);
   if (!column) return undefined;
   const value = readColumn(column);
-  return foldsAsName(column) ? collateDisplayOrder(value) : value;
+  return foldsWhenSorted(column) ? collateDisplayOrder(value) : value;
 };
 
 /**
