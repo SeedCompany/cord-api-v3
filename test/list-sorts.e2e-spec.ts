@@ -25,8 +25,10 @@ import {
  * engagement repository, the project repository's sort map, and the shared
  * order-by helper together, and the same is true of every case below. The file
  * runs against both engines, and every case asserts an order they have to agree
- * on — except `nameProjectLast`, which disagrees on purpose and asserts a
- * different answer per engine.
+ * on — except `nameProjectLast` and users-by-`title`, which disagree on purpose
+ * and assert a different answer per engine: every text sort folds case on
+ * Postgres (decided 2026-09-15), while Neo4j folds only names and orders plain
+ * text by raw code points.
  *
  * Every fixture set is scoped by a random name prefix and given labels whose
  * alphabetical order DISAGREES with the order under test. That is deliberate:
@@ -202,26 +204,27 @@ describe('cross-domain list sorts', () => {
 
   it('engagements by nameProjectLast — display name on Postgres, name on Neo4j', async () => {
     const prefix = faker.string.alpha({ length: 8 });
-    // Each language's name and display name point at OPPOSITE answers, and
-    // neither answer is what case-folding would give, so this one fixture set
-    // separates all three possibilities.
+    // Arranged so the Postgres expectation is unique to "sorted by DISPLAY
+    // name, case-folded": raw code points on the display name give the
+    // opposite order (`Bravo` leads `apple`), and the `name` column gives the
+    // opposite order whether folded or not.
     await createEngagementFixture(`${prefix} First`, {
-      name: `${prefix} Zulu`,
+      name: `${prefix} zulu`,
       displayName: `${prefix} apple`,
     });
     await createEngagementFixture(`${prefix} Second`, {
-      name: `${prefix} alpha`,
+      name: `${prefix} Alpha`,
       displayName: `${prefix} Bravo`,
     });
 
     // The grid's "Language / Intern" column SHOWS the language's display name,
-    // so Postgres sorts by that (decided 2026-09-10) while Neo4j still sorts by
-    // the language's `name` — the one sort in the app that intentionally
-    // disagrees between the engines. Neither is case-folded: `Zulu` before
-    // `alpha`, `Bravo` before `apple`, capitals first.
+    // so Postgres sorts by that (decided 2026-09-10) and folds it like every
+    // text sort (decided 2026-09-15): `apple` before `Bravo`. Neo4j still
+    // sorts by the language's `name`, unfolded — a sort-only key carries no
+    // fold transformer — so capitals lead: `Alpha` before `zulu`.
     expect(
       await engagementsSortedBy('nameProjectLast', Order.ASC, prefix),
-    ).toEqual(isPostgres ? ['Second', 'First'] : ['First', 'Second']);
+    ).toEqual(isPostgres ? ['First', 'Second'] : ['Second', 'First']);
   });
 
   const languagesSortedBy = async (
@@ -488,8 +491,10 @@ describe('cross-domain list sorts', () => {
     expect(await sorted(Order.DESC)).toEqual([true, false]);
   });
 
-  it('users by title', async () => {
+  it('users by title — plain text folds on Postgres, code points on Neo4j', async () => {
     const prefix = faker.string.alpha({ length: 8 });
+    // A case-crossing pair: raw code points put every capital ahead of every
+    // lowercase letter, so `Zulu` leads `apple` unfolded and trails it folded.
     await runAsAdmin(app, async () => {
       await createPerson(app, {
         realFirstName: `${prefix}Alpha`,
@@ -497,7 +502,7 @@ describe('cross-domain list sorts', () => {
       });
       await createPerson(app, {
         realFirstName: `${prefix}Bravo`,
-        title: `${prefix} Mike`,
+        title: `${prefix} apple`,
       });
     });
 
@@ -517,10 +522,15 @@ describe('cross-domain list sorts', () => {
         input: { sort: 'title', order: Order.ASC, filter: { name: prefix } },
       },
     );
-    expect(users.items.map((user) => user.title.value)).toEqual([
-      `${prefix} Mike`,
-      `${prefix} Zulu`,
-    ]);
+    // `title` is a plain `@Field()`, not a name — the class of sort where the
+    // engines deliberately disagree: every text sort folds case on Postgres
+    // (decided 2026-09-15), while Neo4j folds only `@NameField`s and orders
+    // the rest by raw code points.
+    expect(users.items.map((user) => user.title.value)).toEqual(
+      isPostgres
+        ? [`${prefix} apple`, `${prefix} Zulu`]
+        : [`${prefix} Zulu`, `${prefix} apple`],
+    );
   });
 
   it('users by fullName — ONE concatenated string, not first-then-last', async () => {
