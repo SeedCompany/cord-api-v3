@@ -16,7 +16,17 @@ export type TestApp = Pick<NestHttpApplication, 'get'>;
 
 const appsToClose = new Set<NestHttpApplication>();
 afterAll(async () => {
-  for (const app of appsToClose) {
+  // Reverse insertion order. An app created later may SHARE an earlier app's
+  // ephemeral database (pass `config.postgres.url` to opt into that, as
+  // webhooks does), in which case only the OWNER carries the cleanup that
+  // drops it -- with `force`, so it terminates whatever is still connected.
+  // Unwinding in creation order therefore drops the database out from under
+  // the sharer's still-open pool, and the resulting `FATAL 57P01 terminating
+  // connection due to administrator command` arrives as an unhandled error
+  // that fails the whole file AFTER every test in it has already passed.
+  // Sharers can only ever be created after the owner they borrow from, so
+  // closing newest-first always unwinds in a safe order.
+  for (const app of [...appsToClose].reverse()) {
     await app.close();
   }
   // Gel/PG are ephemeral per-file DBs (cleaned per app above); Neo4j is one
