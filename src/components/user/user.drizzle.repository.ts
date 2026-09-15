@@ -293,9 +293,16 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
       // case, accented initials after `z`. Matching that exactly would mean
       // `collate "C"`; keeping display_order was chosen instead (2026-08-19) so the
       // list reads the way people expect and agrees with every other name sort in
-      // this app. The residual ordering difference is a registered known delta in
-      // the shadow-diff suppression registry — do not "fix" it by dropping the
-      // collation without moving that entry too.
+      // this app. The residual ordering difference against Neo4j is known and
+      // accepted, and registered in the read-comparison suppressions.
+      //
+      // ⚠️ Do NOT "fix" it by deleting this wrapper. An uncollated expression
+      // does not mean code points — it means the SERVER's default collation,
+      // which is byte order on the Alpine image CI and local development use,
+      // and is not on the glibc one production runs (RDS). That would trade one
+      // known, registered difference for a default sort that disagrees with
+      // itself between environments. Matching Neo4j everywhere would take an
+      // explicit `collate "C"`, which is its own decision and not this one.
       fullName: collateDisplayOrder(
         sql`coalesce(${users.realFirstName}, '') || coalesce(${users.realLastName}, '')`,
       ),
