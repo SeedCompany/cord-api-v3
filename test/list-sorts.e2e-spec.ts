@@ -580,6 +580,28 @@ describe('cross-domain list sorts', () => {
    */
   const createdAtFixtureCount = 4;
 
+  /**
+   * Assert a list came back oldest-first and holds exactly the rows created.
+   *
+   * Checks the ORDER of `createdAt` rather than an exact sequence of ids,
+   * because two rows can in principle share a timestamp. The fixtures are
+   * separate awaited mutations so in practice they never do, but nothing adds
+   * a tie-breaker — `resolveOrderBy` returns only the resolved entry — so on a
+   * tie the order is undefined and an exact sequence would flake.
+   *
+   * It gives up no falsifying power. With the key missing the list orders by
+   * its random id fallback, and an arbitrary order of four rows is sorted by
+   * creation time about once in twenty-four.
+   */
+  const expectOldestFirst = (
+    rows: ReadonlyArray<{ id: string; createdAt: string }>,
+    createdIds: readonly string[],
+  ) => {
+    expect(new Set(rows.map((row) => row.id))).toEqual(new Set(createdIds));
+    const times = rows.map((row) => new Date(row.createdAt).getTime());
+    expect(times).toEqual([...times].sort((a, b) => a - b));
+  };
+
   it('users by createdAt', async () => {
     const prefix = faker.string.alpha({ length: 8 });
     // Named in REVERSE creation order, so neither the id fallback nor a name
@@ -601,6 +623,7 @@ describe('cross-domain list sorts', () => {
           users(input: $input) {
             items {
               id
+              createdAt
             }
           }
         }
@@ -613,7 +636,7 @@ describe('cross-domain list sorts', () => {
         },
       },
     );
-    expect(users.items.map((user) => user.id)).toEqual(created);
+    expectOldestFirst(users.items, created);
   });
 
   it('educations and unavailabilities by createdAt', async () => {
@@ -672,11 +695,13 @@ describe('cross-domain list sorts', () => {
                 education(input: $education) {
                   items {
                     id
+                    createdAt
                   }
                 }
                 unavailabilities(input: $unavailability) {
                   items {
                     id
+                    createdAt
                   }
                 }
               }
@@ -689,10 +714,8 @@ describe('cross-domain list sorts', () => {
           },
         ),
     );
-    expect(user.education.items.map((row) => row.id)).toEqual(educations);
-    expect(user.unavailabilities.items.map((row) => row.id)).toEqual(
-      unavailabilities,
-    );
+    expectOldestFirst(user.education.items, educations);
+    expectOldestFirst(user.unavailabilities.items, unavailabilities);
   });
 
   itPostgresOnly(
