@@ -10,6 +10,7 @@ import {
   sql,
   type SQL,
 } from 'drizzle-orm';
+import { type AnyPgColumn } from 'drizzle-orm/pg-core';
 import { DateTime } from 'luxon';
 import {
   CalendarDate,
@@ -23,10 +24,15 @@ import {
 import { Identity } from '~/core/authentication';
 import {
   catchUniqueViolation,
+  collateDisplayOrder,
   DrizzleDtoRepository,
   EMPTY_PAGE,
   escapeLikePattern,
+  foldsWhenSorted,
   resolveOrderBy,
+  sortColumnFor,
+  type SortColumns,
+  type SortEntry,
   type SortMap,
 } from '~/core/drizzle';
 import { type DrizzleDb, DrizzleService } from '~/core/drizzle/drizzle.service';
@@ -301,25 +307,9 @@ export class LanguageDrizzleRepository extends DrizzleDtoRepository<
       ),
     );
 
-    const sortColumns = {
-      name: languages.name,
-      displayName: languages.displayName,
-      sensitivity: languages.sensitivity,
-      isDialect: languages.isDialect,
-      leastOfThese: languages.leastOfThese,
-      isSignLanguage: languages.isSignLanguage,
-      isAvailableForReporting: languages.isAvailableForReporting,
-      registryOfLanguageVarietiesCode:
-        languages.registryOfLanguageVarietiesCode,
-      createdAt: languages.createdAt,
-      // migration-todo (Engagement step): population (override ?? ethnologue),
-      // ethnologue.* delegation, and usesAIAssistance sorts. Unknown sort keys
-      // fall back to name via resolveOrderBy.
-    } satisfies SortMap<keyof Language>;
-
     const { rows, total, hasMore } = await this.paginatedSelect({
       predicate: and(...conditions),
-      orderBy: resolveOrderBy(input, sortColumns, languages.name),
+      orderBy: resolveOrderBy(input, languageListSortColumns, languages.name),
       page: input.page,
       count: input.count,
     });
@@ -453,6 +443,167 @@ interface EngagementDerived {
 }
 
 /**
+ * Sortable columns on `languages` itself. Exported for cross-domain sort
+ * delegation — Engagement's `language.*` keys resolve through
+ * {@link languageSortEntry}, which reads this map.
+ *
+ * `name` and `displayName` are left as COLUMNS rather than expressions on
+ * purpose: `displayOrder` folds case and punctuation only for columns it can
+ * look up in its name list, and an expression silently skips that.
+ */
+export const languageSortColumns = {
+  id: languages.id,
+  name: languages.name,
+  displayName: languages.displayName,
+  displayNamePronunciation: languages.displayNamePronunciation,
+  sensitivity: languages.sensitivity,
+  isDialect: languages.isDialect,
+  populationOverride: languages.populationOverride,
+  registryOfLanguageVarietiesCode: languages.registryOfLanguageVarietiesCode,
+  // Neo4j answers this legacy spelling too — `languageSorters` maps
+  // `registryOfDialectsCode` onto the same property.
+  registryOfDialectsCode: languages.registryOfLanguageVarietiesCode,
+  leastOfThese: languages.leastOfThese,
+  leastOfTheseReason: languages.leastOfTheseReason,
+  isSignLanguage: languages.isSignLanguage,
+  signLanguageCode: languages.signLanguageCode,
+  sponsorEstimatedEndDate: languages.sponsorEstimatedEndDate,
+  hasExternalFirstScripture: languages.hasExternalFirstScripture,
+  isAvailableForReporting: languages.isAvailableForReporting,
+  createdAt: languages.createdAt,
+} satisfies SortMap<keyof Language | 'registryOfDialectsCode'>;
+
+/**
+ * A column from the EthnologueLanguage attached to the language identified by
+ * `languageId`, as a correlated subquery so it drops straight into ORDER BY.
+ *
+ * The relation is 1:1 (the FK lives on `ethnologue_languages.language_id`), so
+ * this yields one value per language — null where the row is missing, which is
+ * also what Neo4j produces for a language whose ethnologue property is unset.
+ */
+const ethnologueValue = (column: AnyPgColumn, languageId: SQL): SQL => {
+  const value = sql`(
+    select ${column} from ${ethnologueLanguages}
+    where ${ethnologueLanguages.languageId} = ${languageId}
+      and ${ethnologueLanguages.deletedAt} is null
+    limit 1
+  )`;
+  // A subquery hides its column from `displayOrder`, so the fold has to be
+  // decided here, from the column being read.
+  return foldsWhenSorted(column) ? collateDisplayOrder(value) : value;
+};
+
+/**
+ * How to read one column off the language a sort is about.
+ *
+ * Two shapes, the same split the engagement repository makes: the language's
+ * own list has the row in scope and reads the column directly, while a domain
+ * sorting THROUGH a language (Engagement's `language.*`) has no `languages` row
+ * in its FROM and must read every value back through the foreign key.
+ */
+type LanguageColumnReader = (column: AnyPgColumn) => SortEntry;
+
+/** The language row the query itself is over. */
+const ownLanguage: LanguageColumnReader = (column) => column;
+
+/**
+ * The language a related row points at.
+ *
+ * ⚠ Only for a FOREIGN id. Passing `languages.id` here would put `languages` in
+ * the subquery's own FROM, where it shadows the outer one — `where languages.id
+ * = languages.id` then matches every row rather than correlating, and Postgres
+ * fails the query with "more than one row returned by a subquery". That is what
+ * {@link ownLanguage} is for.
+ */
+const languageVia =
+  (languageId: SQL) =>
+  (column: AnyPgColumn): SQL => sql`(
+    select ${column} from ${languages}
+    where ${languages.id} = ${languageId} and ${languages.deletedAt} is null
+  )`;
+
+/**
+ * Language sort keys that are computed rather than stored, correlated to
+ * whichever language id is passed in — the language's own list passes its own
+ * column; Engagement passes `engagements.language_id`.
+ *
+ * `ethnologue.*` mirrors Neo4j delegating the prefix to the EthnologueLanguage
+ * default property sorters, so every stored ethnologue field is sortable.
+ *
+ * ⚠ Anything reaching a `languages` column here must go through `readColumn`,
+ * NOT reference the column directly: these expressions are reused verbatim by
+ * the delegated path, where there is no `languages` row to read.
+ */
+const languageComputedSorts = (
+  languageId: SQL,
+  readColumn: LanguageColumnReader,
+): Record<string, SortColumns> => ({
+  'ethnologue.code': ethnologueValue(ethnologueLanguages.code, languageId),
+  'ethnologue.provisionalCode': ethnologueValue(
+    ethnologueLanguages.provisionalCode,
+    languageId,
+  ),
+  'ethnologue.name': ethnologueValue(ethnologueLanguages.name, languageId),
+  'ethnologue.population': ethnologueValue(
+    ethnologueLanguages.population,
+    languageId,
+  ),
+  // The DTO's `population` is the override falling back to the ethnologue
+  // value (see `toDto`), and Neo4j's sorter coalesces the same pair — so the
+  // list orders by the number it displays. Measured on Neo4j: a language with
+  // neither value sorts as blank rather than dropping out of the list.
+  population: sql`coalesce(${readColumn(
+    languages.populationOverride,
+  )}, ${ethnologueValue(ethnologueLanguages.population, languageId)})`,
+  // Any live engagement whose AI-assisted-translation value is a real answer —
+  // the same rule `engagementDerived` applies when it computes the field.
+  // Neo4j has a sorter for this but raises 42N07 when a request filters AND
+  // sorts on it (known, won't-fix, transition-only); the note said the fault
+  // vanishes on Postgres because the sort becomes a plain ORDER BY expression,
+  // which is what this is.
+  usesAIAssistance: sql`exists (
+    select 1 from ${engagements}
+    inner join ${projects} on ${projects.id} = ${engagements.projectId}
+    where ${engagements.languageId} = ${languageId}
+      and ${engagements.deletedAt} is null
+      and ${projects.deletedAt} is null
+      and ${engagements.usingAIAssistedTranslation} not in ('None', 'Unknown')
+  )`,
+});
+
+/** Every language sort key, for the language list's own use. */
+const languageListSortColumns: Record<string, SortColumns> = {
+  ...languageSortColumns,
+  ...languageComputedSorts(sql`${languages.id}`, ownLanguage),
+};
+
+/**
+ * Resolve one language sort key — stored or computed — against a language id
+ * expression, for a domain that sorts THROUGH a language (Engagement's
+ * `language.*`). Returns undefined for a key languages do not sort by.
+ *
+ * Stored columns come back wrapped as a subquery over that id rather than as a
+ * bare column, because the caller's query has no `languages` row in scope.
+ * Name columns are collated explicitly for the same reason
+ * {@link languageComputedSorts} collates the ethnologue name.
+ */
+export const languageSortEntry = (
+  key: string,
+  languageId: SQL,
+): SortColumns | undefined => {
+  const readColumn = languageVia(languageId);
+  const computed = sortColumnFor(
+    languageComputedSorts(languageId, readColumn),
+    key,
+  );
+  if (computed) return computed;
+  const column = sortColumnFor(languageSortColumns, key);
+  if (!column) return undefined;
+  const value = readColumn(column);
+  return foldsWhenSorted(column) ? collateDisplayOrder(value) : value;
+};
+
+/**
  * Column-level WHERE clauses for `LanguageFilters`.
  *
  * migration-todo: the usesAIAssistance list filter remains unimplemented —
@@ -501,15 +652,19 @@ export const languageFilterClauses = (
   // AND currently InDevelopment/Active. This was silently ignored until
   // 2026-08-27 — the shadow-diff corpus caught the list answering unfiltered
   // (3,624 rows against Neo4j's 18).
+  //
+  // Neo4j matches `LanguageEngagement` by label; matching on `language_id`
+  // is the same set, because the type-shape CHECK on the shared engagements
+  // table only lets a Language row carry one.
   if (filter.presetInventory != null) {
     const anyFlaggedEngagingProject = sql`exists (
-      select 1 from "engagements" "e"
-      join "projects" "p" on "p"."id" = "e"."project_id"
-      where "e"."language_id" = ${languages.id}
-        and "e"."deleted_at" is null
-        and "p"."deleted_at" is null
-        and "p"."preset_inventory" = true
-        and "p"."status" in ('InDevelopment', 'Active')
+      select 1 from ${engagements}
+      inner join ${projects} on ${projects.id} = ${engagements.projectId}
+      where ${engagements.languageId} = ${languages.id}
+        and ${engagements.deletedAt} is null
+        and ${projects.deletedAt} is null
+        and ${projects.presetInventory} = true
+        and ${projects.status} in ('InDevelopment', 'Active')
     )`;
     conditions.push(
       filter.presetInventory

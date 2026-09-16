@@ -293,9 +293,16 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
       // case, accented initials after `z`. Matching that exactly would mean
       // `collate "C"`; keeping display_order was chosen instead (2026-08-19) so the
       // list reads the way people expect and agrees with every other name sort in
-      // this app. The residual ordering difference is a registered known delta in
-      // the shadow-diff suppression registry — do not "fix" it by dropping the
-      // collation without moving that entry too.
+      // this app. The residual ordering difference against Neo4j is known and
+      // accepted, and registered in the read-comparison suppressions.
+      //
+      // ⚠️ Do NOT "fix" it by deleting this wrapper. An uncollated expression
+      // does not mean code points — it means the SERVER's default collation,
+      // which is byte order on the Alpine image CI and local development use,
+      // and is not on the glibc one production runs (RDS). That would trade one
+      // known, registered difference for a default sort that disagrees with
+      // itself between environments. Matching Neo4j everywhere would take an
+      // explicit `collate "C"`, which is its own decision and not this one.
       fullName: collateDisplayOrder(
         sql`coalesce(${users.realFirstName}, '') || coalesce(${users.realLastName}, '')`,
       ),
@@ -303,11 +310,14 @@ export class UserDrizzleRepository extends DrizzleDtoRepository<
       displayLastName: [users.displayLastName, users.displayFirstName],
       realFirstName: [users.realFirstName, users.realLastName],
       displayFirstName: [users.displayFirstName, users.displayLastName],
-      // Was MISSING until 2026-08-27: resolveOrderBy silently substitutes the
-      // fallback (id) for any key not in this map, so `sort: createdAt` came
-      // back id-ordered — Neo4j sorts it for real, and the shadow-diff's
-      // users.list.sort-createdAt-asc class (300 entries) was exactly this,
-      // not timestamp ties.
+      // All three are plain properties Neo4j's default sorter answers. Missing
+      // from this map, a key hits `resolveOrderBy`'s fallback and the list
+      // comes back id-ordered instead. `title` and `status` are sortable
+      // columns on the users grid; `createdAt` is what the shadow-diff's
+      // users.list.sort-createdAt-asc class (300 entries) actually was — not
+      // timestamp ties, as it first appeared.
+      title: users.title,
+      status: users.status,
       createdAt: users.createdAt,
     } satisfies SortMap<keyof User | 'fullName'>;
 

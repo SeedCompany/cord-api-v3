@@ -67,6 +67,44 @@ type ToolUsageRow = typeof toolUsages.$inferSelect & {
   tool?: typeof tools.$inferSelect | null;
 };
 
+/**
+ * Ignores case, accents and punctuation, the way the `display_order` collation
+ * does for name columns sorted in SQL. Both are ICU (the collation declares
+ * `provider = icu`, and Node's `Intl` is ICU-backed), so the tool names in this
+ * list read in the same order as a name column ordered by the database.
+ */
+const byName = new Intl.Collator('en', {
+  sensitivity: 'base',
+  ignorePunctuation: true,
+});
+
+/**
+ * Give a usage list a defined order: tool name, then oldest first, then id.
+ *
+ * These lists had NO order at all — both read paths collect rows without an
+ * ORDER BY, so Postgres returned them in heap order, which can reshuffle after
+ * an unrelated update to any row. The "tools used" list on a project or
+ * engagement page is the visible consequence: a chip could change position for
+ * no reason a user could see.
+ *
+ * Sorted here rather than in SQL because Drizzle's relational query cannot
+ * ORDER BY a joined table's column, and the tool rows are already in hand —
+ * restructuring both queries into explicit joins would be a much larger change
+ * for the same result on lists this small.
+ *
+ * ⚠ Postgres only, deliberately. The Neo4j path has no defined order either and
+ * is not getting one: this grid is not in production yet, so there is no
+ * existing order for a reader to notice changing, and that repository is
+ * deleted at cutover (Rob 2026-09-11).
+ */
+const orderUsageRows = <T extends ToolUsageRow>(rows: T[]): T[] =>
+  rows.sort(
+    (a, b) =>
+      byName.compare(a.tool?.name ?? '', b.tool?.name ?? '') ||
+      a.createdAt.valueOf() - b.createdAt.valueOf() ||
+      a.id.localeCompare(b.id),
+  );
+
 @Injectable()
 export class ToolUsageDrizzleRepository extends DrizzleDtoRepository<
   typeof toolUsages,
@@ -191,7 +229,7 @@ export class ToolUsageDrizzleRepository extends DrizzleDtoRepository<
         ),
       with: { tool: true, creator: { columns: { deletedAt: true } } },
     });
-    const live = rows.filter(hasLiveCreator);
+    const live = orderUsageRows(rows.filter(hasLiveCreator));
     // Only ids are given here, with no discriminator to key off — the caller
     // asks about containers that may hold no usages at all. So probe by id
     // instead: one query per registry table, flat as the page grows.
@@ -236,7 +274,10 @@ export class ToolUsageDrizzleRepository extends DrizzleDtoRepository<
       where: () => and(...conditions),
       with: { tool: true, creator: { columns: { deletedAt: true } } },
     });
-    const live = rows.filter(hasLiveCreator);
+    // Every row here shares one tool, so the name key is constant and this
+    // effectively orders by oldest-first — still a defined order rather than
+    // whichever rows Postgres happened to hand back.
+    const live = orderUsageRows(rows.filter(hasLiveCreator));
     const nodes = await this.containerBaseNodesFor(live);
     const byTool = new Map<ID, Array<UnsecuredDto<ToolUsage>>>();
     for (const row of live) {

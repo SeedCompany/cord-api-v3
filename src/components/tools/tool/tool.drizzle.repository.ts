@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { and, eq, ilike, isNull, type SQL } from 'drizzle-orm';
+import { and, eq, ilike, inArray, isNull, sql, type SQL } from 'drizzle-orm';
 import { DateTime } from 'luxon';
 import {
   generateId,
@@ -17,7 +17,11 @@ import {
   type SortMap,
 } from '~/core/drizzle';
 import { type DrizzleDb, DrizzleService } from '~/core/drizzle/drizzle.service';
-import { tools, toolUsages } from '~/core/drizzle/schema';
+import {
+  ENGAGEMENT_TYPENAMES,
+  PROJECT_TYPENAMES,
+} from '~/core/drizzle/resolve-resource-base-node';
+import { tools, toolUsages, users } from '~/core/drizzle/schema';
 import { PolicyExecutor } from '../../authorization/policy/executor/policy-executor';
 import {
   type CreateTool,
@@ -27,6 +31,41 @@ import {
   type UpdateTool,
 } from './dto';
 import { type ToolKey } from './dto/tool-key.enum';
+
+/**
+ * The number the Tools grid's "Usages" column shows, as a correlated subquery so
+ * the list can be ordered by it.
+ *
+ * Counted exactly the way `containerSummaryForTools` counts — because that is
+ * what the column displays, and a sort that counts a different population would
+ * order the grid by a number nobody can see:
+ *
+ * - **Project and engagement containers only.** Any resource may hold a tool
+ *   usage, and the summary drops every other container type rather than
+ *   bucketing it, so a usage on (say) an organization is invisible in that
+ *   column and must not count here either.
+ * - **A dead creator drops the usage**, same as the summary's inner join.
+ * - Container liveness is NOT checked, also matching the summary. The list read
+ *   paths do drop container-less usages, so a usage whose container is gone can
+ *   still be counted here — a pre-existing quirk of the summary, reproduced
+ *   rather than fixed, so the sort agrees with the displayed number.
+ *
+ * ⚠ POSTGRES ONLY. Neo4j's tool list applies the default sorters, which for a
+ * key with no stored property is a required match that eliminates every row — so
+ * this sort returns an EMPTY list over there. The Tools grid must keep its
+ * Usages column unsortable until cutover; see the UI handoff.
+ */
+const usageCount = sql<number>`(
+  select count(*) from ${toolUsages}
+  inner join ${users}
+    on ${users.id} = ${toolUsages.creatorId} and ${users.deletedAt} is null
+  where ${toolUsages.toolId} = ${tools.id}
+    and ${toolUsages.deletedAt} is null
+    and ${inArray(toolUsages.containerType, [
+      ...PROJECT_TYPENAMES,
+      ...ENGAGEMENT_TYPENAMES,
+    ])}
+)`;
 
 const catchNameUnique = catchUniqueViolation(
   'tools_name_active_unique',
@@ -129,8 +168,13 @@ export class ToolDrizzleRepository extends DrizzleDtoRepository<
 
     const sortColumns = {
       name: tools.name,
+      // Both are plain columns Neo4j's default property sorter already
+      // answers; `aiBased` is a sortable column on the tools grid.
+      description: tools.description,
+      aiBased: tools.aiBased,
       createdAt: tools.createdAt,
-    } satisfies SortMap<keyof Tool>;
+      usageCount,
+    } satisfies SortMap<keyof Tool | 'usageCount'>;
 
     const { rows, total, hasMore } = await this.paginatedSelect({
       predicate: and(...conditions),

@@ -81,6 +81,12 @@ describe('Comment e2e', () => {
         input: { id: second.id, body: doc('Edited second') },
       });
       expect(textOf(updateComment.comment.body.value)).toBe('Edited second');
+      // The edit advances "last modified". The bump is injected upstream of
+      // both engines (getActualChanges), so both must show it — Postgres used
+      // to drop it in the repository and freeze the field at creation.
+      expect(
+        new Date(updateComment.comment.modifiedAt).getTime(),
+      ).toBeGreaterThan(new Date(second.modifiedAt).getTime());
 
       // Deleting a non-first comment leaves the thread intact.
       await a.graphql.mutate(DeleteCommentDoc, { id: second.id });
@@ -157,6 +163,7 @@ const CreateCommentDoc = graphql(`
     createComment(input: $input) {
       comment {
         id
+        modifiedAt
         body {
           value
         }
@@ -204,6 +211,7 @@ const UpdateCommentDoc = graphql(`
     updateComment(input: $input) {
       comment {
         id
+        modifiedAt
         body {
           value
         }

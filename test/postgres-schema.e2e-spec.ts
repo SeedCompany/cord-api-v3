@@ -96,13 +96,53 @@ describePg('Postgres schema invariants', () => {
 
     const journal = JSON.parse(
       readFileSync(resolve(migrationsDir, 'meta', '_journal.json'), 'utf8'),
-    ) as { entries: Array<{ idx: number; tag: string }> };
+    ) as { entries: Array<{ idx: number; tag: string; when: number }> };
 
     expect(journal.entries).toHaveLength(sqlFiles.length);
     journal.entries.forEach((entry, i) => {
       expect(entry.idx).toBe(i);
       expect(sqlFiles).toContain(`${entry.tag}.sql`);
     });
+  });
+
+  // Drizzle picks what to apply by comparing `when` against the single highest
+  // `created_at` already in the database — never by file hash. So a migration
+  // whose `when` sits at or below the high-water mark of an existing database
+  // applies on a fresh one and is SILENTLY skipped on every deployed one, with
+  // no error either way: green here, missing column in production.
+  //
+  // Since 0000_genesis.sql collapsed 0000-0042 it deliberately carries the old
+  // 0000 timestamp, so a fresh database's mark is LOW while every deployed
+  // database's mark is the retired 0042's. That gap is the dead window this
+  // asserts nothing falls into. It matters because the recut procedure copies
+  // migrations out of the pg-e2e-harness branch, where nearly every entry's
+  // `when` lands inside it.
+  it('gives every migration after genesis a `when` past the retired sequence', () => {
+    const journal = JSON.parse(
+      readFileSync(resolve(migrationsDir, 'meta', '_journal.json'), 'utf8'),
+    ) as { entries: Array<{ idx: number; tag: string; when: number }> };
+
+    // `when` of the retired 0042 — the high-water mark of any database that ran
+    // the pre-squash sequence, and therefore the floor for anything new.
+    const retiredSequenceEnd = 1754265600000;
+    const genesisWhen = 1745625600000;
+
+    const [genesis, ...rest] = journal.entries;
+    // genesis must keep the original 0000 timestamp, or already-migrated
+    // databases would try to re-run it over their existing schema
+    expect(genesis?.tag).toBe('0000_genesis');
+    expect(genesis?.when).toBe(genesisWhen);
+
+    for (const entry of rest) {
+      // a `when` at or below the retired sequence's end is invisible to every
+      // deployed database — copy from mono, then reset it to Date.now()
+      expect(entry.when).toBeGreaterThan(retiredSequenceEnd);
+    }
+
+    // strictly increasing, no duplicates
+    const whens = journal.entries.map((entry) => entry.when);
+    expect(whens).toEqual([...new Set(whens)]);
+    expect(whens).toEqual([...whens].sort((a, b) => a - b));
   });
 
   // `projects.status` is a STORED generated column whose CASE expression must

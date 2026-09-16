@@ -199,7 +199,7 @@ export class ProjectMemberDrizzleRepository extends DrizzleDtoRepository<
     // Reject unknown/unmapped sort keys instead of silently falling back to
     // createdAt (resolveOrderBy's `map[sort] ?? fallback`). Partner-parity.
     const sort = input.sort as string;
-    if (!(sort in sortColumns)) {
+    if (!Object.hasOwn(sortColumns, sort)) {
       throw new NotImplementedException(
         `Sorting project members by '${sort}' is not supported.`,
       );
