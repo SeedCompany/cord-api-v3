@@ -62,6 +62,12 @@ describe('Post e2e', () => {
         },
       });
       expect(updatePost.post.body.value).toBe('Edited note');
+      // The edit advances "last modified". The bump is injected upstream of
+      // both engines (getActualChanges), so both must show it — Postgres used
+      // to drop it in the repository and freeze the field at creation.
+      expect(new Date(updatePost.post.modifiedAt).getTime()).toBeGreaterThan(
+        new Date(internal.post.modifiedAt).getTime(),
+      );
 
       // Delete it — it drops out of the list.
       await a.graphql.mutate(DeletePostDoc, { id: internal.post.id });
@@ -80,6 +86,7 @@ const CreatePostDoc = graphql(`
         id
         type
         shareability
+        modifiedAt
         body {
           value
         }
@@ -110,6 +117,7 @@ const UpdatePostDoc = graphql(`
     updatePost(input: $input) {
       post {
         id
+        modifiedAt
         body {
           value
         }

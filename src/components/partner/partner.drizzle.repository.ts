@@ -4,7 +4,6 @@ import {
   arrayOverlaps,
   asc,
   count,
-  desc,
   eq,
   gt,
   gte,
@@ -31,11 +30,12 @@ import {
   catchForeignKeyViolation,
   catchUniqueViolation,
   derivedSensitivityByPartner,
-  displayOrder,
   DrizzleDtoRepository,
   EMPTY_PAGE,
+  orderEntry,
   partnerDerivedSensitivity,
   resolveOrderBy,
+  sortColumnFor,
   type SortMap,
   subFilter,
 } from '~/core/drizzle';
@@ -354,12 +354,9 @@ export class PartnerDrizzleRepository extends DrizzleDtoRepository<
         : sort.startsWith('organization.')
           ? sort.slice('organization.'.length)
           : null;
-    const orgSortColumn =
-      orgSortKey && orgSortKey in organizationSortColumns
-        ? organizationSortColumns[
-            orgSortKey as keyof typeof organizationSortColumns
-          ]
-        : null;
+    const orgSortColumn = orgSortKey
+      ? sortColumnFor(organizationSortColumns, orgSortKey)
+      : null;
     if (orgSortKey && !orgSortColumn) {
       throw new NotImplementedException(
         `Sorting partners by '${sort}' is not supported — ` +
@@ -367,7 +364,6 @@ export class PartnerDrizzleRepository extends DrizzleDtoRepository<
       );
     }
 
-    const direction = input.order === 'ASC' ? asc : desc;
     let pageIds: ReadonlyArray<{ id: ID<'Partner'> }>;
     let total: number;
     if (orgSortColumn) {
@@ -382,7 +378,7 @@ export class PartnerDrizzleRepository extends DrizzleDtoRepository<
             eq(partners.organizationId, organizations.id),
           )
           .where(predicate)
-          .orderBy(direction(displayOrder(orgSortColumn)), asc(partners.id))
+          .orderBy(orderEntry(orgSortColumn, input.order), asc(partners.id))
           .limit(input.count)
           .offset(offset),
       ]);
@@ -393,7 +389,7 @@ export class PartnerDrizzleRepository extends DrizzleDtoRepository<
       // sorting by `createdAt` (resolveOrderBy's `?? fallback`), mirroring the
       // `organization.*` NotImplementedException branch above — a bad sort key
       // should be discoverable, not quietly ignored.
-      if (!(sort in partnerSortColumns)) {
+      if (!Object.hasOwn(partnerSortColumns, sort)) {
         throw new NotImplementedException(
           `Sorting partners by '${sort}' is not supported.`,
         );

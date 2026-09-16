@@ -462,9 +462,15 @@ describe('Language e2e', () => {
   });
 
   it('List view of languages by presetInventory flag', async () => {
+    // Languages with no preset-inventory project, kept so the filter has
+    // something to EXCLUDE. Counting results, or asserting only that the
+    // flagged language comes back, passes just as well when the filter is
+    // ignored and the whole table is returned — which is what Postgres did
+    // until 2026-08-27.
     const numLanguages = 2;
-
-    await Promise.all(times(numLanguages).map(() => createLanguage(app)));
+    const unflagged = await Promise.all(
+      times(numLanguages).map(() => createLanguage(app)),
+    );
     // create presetInventory language
     const project = await createProject(app, { presetInventory: true });
     const language = await createLanguage(app);
@@ -490,7 +496,11 @@ describe('Language e2e', () => {
       ),
     );
 
-    expect(languages.items.length).toBeGreaterThan(1);
+    const ids = languages.items.map((item) => item.id);
+    expect(ids).toContain(language.id);
+    for (const other of unflagged) {
+      expect(ids).not.toContain(other.id);
+    }
   });
 });
 
