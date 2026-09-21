@@ -754,6 +754,101 @@ describe('Project e2e', () => {
     );
   });
 
+  it('List of projects sorted by engagement count', async () => {
+    // Scoped by a shared name prefix for the same reason as the sensitivity
+    // sort above: over a loaded database, page one of an engagement-count sort
+    // holds the projects with the MOST engagements, and none of these
+    // fixtures would be on it.
+    const prefix = faker.string.alpha({ length: 8 });
+    const named = async (label: string) =>
+      `${prefix} ${label} ` + (await generateId());
+
+    const noEngagements = await createProject(app, {
+      name: await named('no engagements'),
+      fieldRegion: fieldRegion.id,
+    });
+    const oneEngagement = await createProject(app, {
+      name: await named('one engagement'),
+      fieldRegion: fieldRegion.id,
+    });
+    const twoEngagements = await createProject(app, {
+      name: await named('two engagements'),
+      fieldRegion: fieldRegion.id,
+    });
+    // An internship engagement does NOT count: both engines sort by the
+    // number of LANGUAGE engagements only, so this project ties with the
+    // translation project that has none, even though it has one of its own.
+    // Asserted because it is a quirk worth noticing if it ever changes — see
+    // `projectDerivedSortColumns` in the Drizzle repository.
+    const internshipProject = await createProject(app, {
+      name: await named('internship'),
+      type: ProjectType.Internship,
+      fieldRegion: fieldRegion.id,
+    });
+
+    // Distinct languages — a project cannot hold two engagements for one.
+    const [firstLanguage, secondLanguage, thirdLanguage] = await runAsAdmin(
+      app,
+      async () => [
+        await createLanguage(app),
+        await createLanguage(app),
+        await createLanguage(app),
+      ],
+    );
+    // Inside the MOU window `createProject` gives every fixture (1991→1992).
+    // The engagement helper otherwise defaults both dates to today, which puts
+    // the engagement outside its own project's window.
+    const withinMou = {
+      startDateOverride: CalendarDate.fromISO('1991-01-01').toISO(),
+      endDateOverride: CalendarDate.fromISO('1992-01-01').toISO(),
+    };
+    await createLanguageEngagement(app, {
+      project: oneEngagement.id,
+      language: firstLanguage.id,
+      ...withinMou,
+    });
+    await createLanguageEngagement(app, {
+      project: twoEngagements.id,
+      language: secondLanguage.id,
+      ...withinMou,
+    });
+    await createLanguageEngagement(app, {
+      project: twoEngagements.id,
+      language: thirdLanguage.id,
+      ...withinMou,
+    });
+    await createInternshipEngagement(app, {
+      project: internshipProject.id,
+      intern: intern.id,
+      mentor: mentor.id,
+      countryOfOrigin: location.id,
+    });
+
+    const idsInOrder = async (order: Order) => {
+      const projects = await listProjects(app, {
+        sort: 'engagements.total',
+        order,
+        filter: { name: prefix },
+      });
+      return projects.items.map((project) => project.id);
+    };
+
+    const ascending = await idsInOrder(Order.ASC);
+    expect(ascending).toHaveLength(4);
+    expect(ascending.slice(2)).toEqual([oneEngagement.id, twoEngagements.id]);
+    // The two projects counting zero tie, and neither engine defines an order
+    // within a tie, so assert which pair leads rather than a fixed sequence.
+    expect(ascending.slice(0, 2)).toEqual(
+      expect.arrayContaining([noEngagements.id, internshipProject.id]),
+    );
+
+    const descending = await idsInOrder(Order.DESC);
+    expect(descending.slice(0, 2)).toEqual([
+      twoEngagements.id,
+      oneEngagement.id,
+    ]);
+  });
+
   it('List view of my projects', async () => {
     const numProjects = 2;
     const type = ProjectType.MomentumTranslation;

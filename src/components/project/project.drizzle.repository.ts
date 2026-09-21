@@ -3,7 +3,6 @@ import {
   and,
   asc,
   count,
-  desc,
   eq,
   gt,
   gte,
@@ -33,11 +32,15 @@ import { Identity } from '~/core/authentication';
 import { ConfigService } from '~/core/config';
 import {
   catchUniqueViolation,
-  displayOrder,
+  collateDisplayOrder,
   DrizzleDtoRepository,
   EMPTY_PAGE,
   escapeLikePattern,
+  foldsWhenSorted,
+  orderEntry,
   resolveOrderBy,
+  sortColumnFor,
+  type SortColumns,
   type SortMap,
   subFilter,
 } from '~/core/drizzle';
@@ -502,7 +505,6 @@ export class ProjectDrizzleRepository extends DrizzleDtoRepository<
 
     const allConditions = and(...conditions);
     const sort = input.sort as string;
-    const direction = input.order === 'ASC' ? asc : desc;
 
     // Cross-domain JOIN-sort — mirror of the partner repo's pattern. When a
     // second consumer needs the same prefix-strip + sortColumn-resolve dance,
@@ -520,18 +522,23 @@ export class ProjectDrizzleRepository extends DrizzleDtoRepository<
           .from(projects)
           .leftJoin(joinSort.table, eq(joinSort.fkColumn, joinSort.table.id))
           .where(allConditions)
-          .orderBy(direction(displayOrder(joinSort.column)), asc(projects.id))
+          .orderBy(orderEntry(joinSort.column, input.order), asc(projects.id))
           .limit(input.count)
           .offset(offset),
       ]);
       total = countResult[0]?.total ?? 0;
       pageIds = joined;
     } else {
-      const sortColumns = projectSortColumns;
+      // Columns on `projects` itself, plus the sorts counted out of another
+      // table (the engagement counts). Both end up as one ORDER BY entry, so
+      // they resolve through the same map rather than needing a third branch.
+      const sortColumns = projectListSortColumns;
       // Reject unknown/unmapped own-table sort keys instead of silently
       // falling back to createdAt (resolveOrderBy's `map[sort] ?? fallback`).
-      // Mirrors the Partner repo guard.
-      if (!(sort in sortColumns)) {
+      // Mirrors the Partner repo guard. `Object.hasOwn` rather than `in`, which
+      // walks the prototype chain and so answers true for `constructor` — a
+      // sort key the input validator accepts.
+      if (!Object.hasOwn(sortColumns, sort)) {
         throw new NotImplementedException(
           `Sorting projects by '${sort}' is not supported.`,
         );
@@ -712,6 +719,7 @@ export const recomputeProjectSensitivity = async (
  * Sortable columns on `projects` itself. Cross-domain sorts (primaryLocation.*,
  * fieldRegion.*) are resolved in `resolveCrossDomainSort` and routed through a
  * hand-rolled INNER JOIN — same pattern as Partner's organization sort.
+ * Sorts counted out of another table live in {@link projectDerivedSortColumns}.
  */
 export const projectSortColumns = {
   id: projects.id,
@@ -727,6 +735,138 @@ export const projectSortColumns = {
   estimatedSubmission: projects.estimatedSubmission,
   departmentId: projects.departmentId,
 } satisfies SortMap<keyof Project>;
+
+/**
+ * `'Language'` as the `engagement_type` enum rather than an untyped string —
+ * same reason the partnership repo casts its `partner_type` literals.
+ */
+const languageEngagementTypeLiteral = sql.raw(`'Language'::"engagement_type"`);
+
+/**
+ * How many live LANGUAGE engagements the `projects` row in scope has, as a
+ * correlated subquery so it drops straight into ORDER BY — no join, no GROUP
+ * BY, and exactly one value per project (zero where there are none, never
+ * null), which is what Neo4j's aggregating sorter also produces.
+ *
+ * Deleted engagements drop out here the same way they do in Neo4j: there,
+ * `deleteBaseNode` prefixes the node's labels, so a deleted engagement stops
+ * matching `:LanguageEngagement`.
+ */
+const liveLanguageEngagementCount = sql<number>`(
+  select count(*) from ${engagements}
+  where ${engagements.projectId} = ${projects.id}
+    and ${engagements.type} = ${languageEngagementTypeLiteral}
+    and ${engagements.deletedAt} is null
+)`;
+
+/**
+ * Sort keys that are not a column on `projects` but a value counted out of
+ * another table. `engagements.total` is what the cord-field Projects table
+ * sorts its engagement-count column by; `engagements` is the older spelling of
+ * the same sort, answered here because `projectSorters` still answers it too.
+ *
+ * ⚠ Both count LANGUAGE engagements only, which is deliberate parity with
+ * `projectSorters` in project.repository.ts — it matches
+ * `node('engagement', 'LanguageEngagement')`. That is NOT the population
+ * behind the `engagementTotal` FIELD, which counts every engagement type on
+ * both engines, so an internship project sorts as 0 here while reporting a
+ * non-zero total of its own engagements. Reproduced rather than corrected: a
+ * reader at the flip should see the list they see today.
+ *
+ * migration-todo: at cutover, decide whether this sort should count every
+ * engagement type the way the field does. It is a pre-existing quirk of the
+ * Neo4j sorter, not something the port introduced, so it belongs in the
+ * post-cutover backlog rather than in this repository's parity scope.
+ */
+const projectDerivedSortColumns: Record<string, SortColumns> = {
+  engagements: liveLanguageEngagementCount,
+  'engagements.total': liveLanguageEngagementCount,
+};
+
+/**
+ * Every sort key `list()` answers without a join. Separate from
+ * {@link projectSortColumns} because that map is typed against `keyof Project`
+ * and `engagements.total` is a sort key with no field of that name behind it.
+ */
+const projectListSortColumns: Record<string, SortColumns> = {
+  ...projectSortColumns,
+  ...projectDerivedSortColumns,
+};
+
+/**
+ * Read one column of the project identified by `projectId` as a correlated
+ * subquery, folding names the way a direct column sort would.
+ */
+const projectValue = (column: AnyPgColumn, projectId: SQL): SortColumns => {
+  const value = sql`(
+    select ${column} from ${projects}
+    where ${projects.id} = ${projectId} and ${projects.deletedAt} is null
+  )`;
+  return foldsWhenSorted(column) ? collateDisplayOrder(value) : value;
+};
+
+/**
+ * Resolve one project sort key against a project id expression, for a domain
+ * that sorts THROUGH a project — Engagement's `project.*` keys, which Neo4j
+ * answers by delegating the prefix to `projectSorters`.
+ *
+ * Covers the project's own columns and its two nested paths
+ * (`primaryLocation.*`, `fieldRegion.*`), which need a second hop: the value
+ * lives on a row the project points at, so the subquery reads through the FK
+ * rather than joining. Returns undefined for a key projects do not sort by —
+ * `primaryPartnership.*` included, which is unimplemented here too (see
+ * {@link resolveCrossDomainSort}).
+ */
+export const projectSortEntry = (
+  key: string,
+  projectId: SQL,
+): SortColumns | undefined => {
+  const nested = (
+    table: typeof locations | typeof fieldRegions,
+    fkColumn: AnyPgColumn,
+    column: AnyPgColumn,
+  ): SortColumns => {
+    const value = sql`(
+      select ${column} from ${table}
+      inner join ${projects} on ${fkColumn} = ${table.id}
+      where ${projects.id} = ${projectId}
+        and ${projects.deletedAt} is null
+        and ${table.deletedAt} is null
+    )`;
+    return foldsWhenSorted(column) ? collateDisplayOrder(value) : value;
+  };
+  if (key.startsWith('primaryLocation.')) {
+    const column = sortColumnFor(
+      locationSortColumns,
+      key.slice('primaryLocation.'.length),
+    );
+    return column
+      ? nested(locations, projects.primaryLocationId, column)
+      : undefined;
+  }
+  if (key.startsWith('fieldRegion.')) {
+    const column = sortColumnFor(
+      fieldRegionSortColumns,
+      key.slice('fieldRegion.'.length),
+    );
+    return column
+      ? nested(fieldRegions, projects.fieldRegionId, column)
+      : undefined;
+  }
+  const derived = sortColumnFor(projectDerivedSortColumns, key);
+  if (derived) {
+    // The engagement counts correlate to `projects.id` directly, so they only
+    // work from a query that has a `projects` row in scope. Reached through a
+    // FK there is none, so re-correlate by nesting the whole expression under
+    // the project this id names.
+    return sql`(
+      select ${derived} from ${projects}
+      where ${projects.id} = ${projectId} and ${projects.deletedAt} is null
+    )`;
+  }
+  const column = sortColumnFor(projectSortColumns, key);
+  return column ? projectValue(column, projectId) : undefined;
+};
 
 /**
  * Resolve a `prefix.field`-style sort key to its (sub-table, FK, sub-column).

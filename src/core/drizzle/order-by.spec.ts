@@ -20,15 +20,19 @@ import { displayOrder } from './order-by';
 
 /**
  * `displayOrder()` decides, from a column alone, whether to attach the
- * case/accent-insensitive `display_order` collation. Both ways of getting that
- * decision wrong are silent:
+ * case/accent-insensitive `display_order` collation: every collatable text
+ * column folds, except a primary key. Both ways of getting that decision wrong
+ * are silent:
  *
  * - Collating something it should not means a list quietly reorders. That is how
  *   the user list's default sort — its `id`, an opaque generated identifier —
  *   ended up case-folded, ordering differently from Neo4j and losing the primary
  *   key index for every page.
- * - Skipping something it should collate means one list orders differently from
- *   every other list in the app.
+ * - Skipping something it should collate means that list sorts by the DATABASE
+ *   DEFAULT collation, which depends on the image's C library: capitals-first
+ *   byte order on musl (CI, local compose), locale-aware on glibc (production
+ *   RDS) — one list ordering differently per environment, with nothing
+ *   reporting it.
  *
  * Neither shows up as a failure anywhere else: no list spec asserts the default
  * user ordering, and a wrong decision still produces valid SQL and a full page of
@@ -54,16 +58,14 @@ describe('displayOrder', () => {
   });
 
   /**
-   * The nine that used to be collated because they are text, and are not.
-   *
-   * Neo4j's own string ordering is raw code points; the folding comes from
-   * `@NameField`, and every field below is a plain `@Field()`. Collating them
-   * ordered these lists differently from Neo4j — visibly so for the two address
-   * fields, the descriptions and the post body, where values differ in case and
-   * punctuation. `sort` is a free string on the list inputs, so a client can ask
-   * for any of them on either engine.
+   * The nine that spent the migration deliberately unfolded, for parity: Neo4j
+   * orders plain `@Field()` text by raw code points, folding only `@NameField`s.
+   * Decided 2026-09-15 that case-insensitive sorting is a product rule and
+   * outranks parity here — Neo4j's capitals-first order on these keys is a
+   * registered divergence until cutover. Folding them also unhooks their order
+   * from the image's C library, which the database default collation depends on.
    */
-  it('does NOT collate plain text that Neo4j leaves alone', () => {
+  it('collates plain text too — sorting is case-insensitive everywhere', () => {
     for (const col of [
       organizations.address,
       partners.address,
@@ -75,7 +77,7 @@ describe('displayOrder', () => {
       projects.departmentId,
       unavailabilities.description,
     ]) {
-      expect(isCollated(col)).toBe(false);
+      expect(isCollated(col)).toBe(true);
     }
   });
 

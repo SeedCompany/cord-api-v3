@@ -3,6 +3,27 @@ description: 'Setup Gel server, migrate schema, generate TS files'
 runs:
   using: composite
   steps:
+    # The CLI's built-in package root is still `packages.edgedb.com`, the
+    # pre-rename domain. It has been retired and now fails its TLS handshake, so
+    # every `gel` command that resolves a version dies there — including
+    # `project init` below, which looks up the server pinned in gel.toml. That
+    # kills Gel Setup, and because it runs before everything else, it takes
+    # lint, type-check, unit and e2e down with it in every workflow.
+    #
+    # `setup-gel` already downloads from packages.geldata.com, but it runs the
+    # CLI with a hardcoded environment and never passes that on, so the CLI
+    # falls back to its own default. Exporting it here reaches every later step
+    # in the job. Both names are set because the CLI accepts either and which
+    # one it reads depends on its version.
+    #
+    # Upstream added a `package-root` input on 2026-09-13 that exports these
+    # itself; drop this step once the action ships a release carrying it.
+    - name: Point the Gel CLI at the current package root
+      shell: bash
+      run: |
+        echo "GEL_PKG_ROOT=https://packages.geldata.com" >> "$GITHUB_ENV"
+        echo "EDGEDB_PKG_ROOT=https://packages.geldata.com" >> "$GITHUB_ENV"
+
     - name: Install Gel CLI
       uses: geldata/setup-gel@v1
       with:

@@ -10,6 +10,7 @@ import {
 } from '~/common';
 import { Identity } from '~/core/authentication';
 import {
+  collateDisplayOrder,
   DrizzleDtoRepository,
   EMPTY_PAGE,
   resolveOrderBy,
@@ -178,7 +179,26 @@ export class CeremonyDrizzleRepository extends DrizzleDtoRepository<
       estimatedDate: ceremonies.estimatedDate,
       actualDate: ceremonies.actualDate,
       createdAt: ceremonies.createdAt,
-    } satisfies SortMap<keyof Ceremony>;
+      /**
+       * `CeremonyListInput`'s OWN default sort, so every unsorted ceremony
+       * list was landing on the `createdAt` fallback here while Neo4j ordered
+       * by the project's name (its `sorting()` call declares a `projectName`
+       * matcher).
+       *
+       * Collated like every other text sort (decided 2026-09-15). Neo4j orders
+       * this key by raw code points — its `DbSort` lookup is
+       * (Ceremony, 'projectName'), a field Ceremony does not have, so no fold
+       * transformer applies — making this a deliberate divergence from it.
+       */
+      projectName: collateDisplayOrder(sql`(
+        select ${projects.name} from ${projects}
+        inner join ${engagements}
+          on ${engagements.projectId} = ${projects.id}
+        where ${engagements.id} = ${ceremonies.engagementId}
+          and ${engagements.deletedAt} is null
+          and ${projects.deletedAt} is null
+      )`),
+    } satisfies SortMap<keyof Ceremony | 'projectName'>;
     const { rows, total, hasMore } = await this.paginatedSelect({
       predicate: and(...conditions),
       orderBy: resolveOrderBy(input, sortColumns, ceremonies.createdAt),

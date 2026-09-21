@@ -64,10 +64,17 @@ export class CommentDrizzleRepository extends DrizzleDtoRepository<
     existing: UnsecuredDto<Comment>,
     changes: ChangesOf<Comment, UpdateComment>,
   ): Promise<void> {
-    // Mirrors the Neo4j repo: only writes changed scalar props. modifiedAt is
-    // not part of UpdateComment, so (as in Neo4j) it isn't bumped on edit.
+    // Only writes changed scalar props, like the Neo4j repo. The change set
+    // holds one thing UpdateComment doesn't: `getActualChanges` injects
+    // `modifiedAt: now` into every non-empty change set UPSTREAM of both
+    // engines, and Neo4j's generic updateProperties persists whatever arrives
+    // — so the bump never appears in either repo's code. A previous comment
+    // here concluded from that absence that Neo4j doesn't bump it and dropped
+    // the field on purpose, freezing every comment's modifiedAt at creation
+    // under Postgres (audit LCMT-8).
     await this.updateColumns(existing.id, {
       body: (changes as { body?: RichTextDocument }).body,
+      modifiedAt: changes.modifiedAt?.toJSDate(),
     });
   }
 

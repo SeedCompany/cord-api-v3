@@ -42,8 +42,14 @@ conditions · tests · CI pattern.
 - Extract mono's schema block verbatim; add type + `pg-core` imports; **REUSE**
   existing enums (don't redeclare `sensitivity`, `project_type`, etc.).
 - Copy mono's migration SQL; renumber to develop's next free `NNNN`.
-- Append `_journal.json` (idx, tag); **sequence your entry LAST on conflict** —
-  it's the one recurring per-PR merge conflict.
+- Append `_journal.json` (idx, tag, **and a fresh `when`**); **sequence your
+  entry LAST on conflict** — it's the one recurring per-PR merge conflict.
+  ⚠ **Reset `when` to `Date.now()`; never keep mono's copied value.** 28 of
+  mono's 30 entries carry mid-2025 timestamps that are at or below the retired
+  0042's `1754265600000`, and drizzle applies by timestamp, not file hash — so
+  a copied `when` applies on a fresh database and is **silently skipped on
+  every deployed one**. Green in CI, missing column in prod. The journal test
+  in `test/postgres-schema.e2e-spec.ts` now fails on this.
 - **Index every FK column** with a full b-tree index. A partial-unique leading
   column does NOT count — it excludes soft-deleted rows, so PG can't use it for
   FK maintenance / `ON DELETE CASCADE`. (Drift class: `who_idx`,
