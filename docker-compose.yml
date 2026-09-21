@@ -1,38 +1,21 @@
 services:
-  db:
-    image: neo4j:2025.04-enterprise
-    ports:
-      - 7474:7474
-      - 7687:7687
-    networks:
-      - cord
-    environment:
-      NEO4J_ACCEPT_LICENSE_AGREEMENT: 'yes'
-      NEO4J_AUTH: neo4j/admin
-      NEO4J_PLUGINS: '["apoc"]'
-      NEO4J_server_metrics_enabled: 'false'
-      NEO4J_dbms_security_auth__enabled: 'false'
-      NEO4J_dbms_security_auth__minimum__password__length: 1
-
   postgres:
-    # Alpine. The image's C library no longer affects any list ordering: every
-    # text sort names the ICU `display_order` collation explicitly (migration
-    # 0032, applied by displayOrder() in src/core/drizzle/order-by.ts — decided
-    # 2026-09-15, sorting is case-insensitive everywhere), and ICU orders
-    # identically on musl (here, and CI) and glibc (production RDS). Residual
-    # libc dependence is limited to non-sort text behavior on non-ASCII input,
-    # e.g. how ILIKE case-folds `Ñ`.
-    image: postgres:16-alpine
+    # Major version 16 = production RDS (16.15, us-east-2), checked 2026-09-21.
+    # Debian-based image, not alpine: it matches production RDS's glibc and
+    # ships the openssl CLI that the first-boot SSL script needs. Text ordering
+    # doesn't depend on this choice — every text sort names the ICU
+    # `display_order` collation explicitly (displayOrder() in
+    # src/core/drizzle/order-by.ts).
+    image: postgres:16
     ports:
       - 5432:5432
-    networks:
-      - cord
     environment:
       POSTGRES_DB: cord
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     volumes:
       - ./.pg.local:/var/lib/postgresql/data
-
-networks:
-  cord:
+      # Generates a self-signed cert on first boot. The API's PG client always
+      # performs an SSL handshake (sslmode=no-verify only skips verification),
+      # so even this local server has to present a certificate.
+      - ./docker/postgres-ssl-init.sh:/docker-entrypoint-initdb.d/postgres-ssl-init.sh:ro

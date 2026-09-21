@@ -1,13 +1,10 @@
-# Copy this file to docker-compose.override.yml to use
+# Copy this file to docker-compose.override.yml to customize the local setup.
 services:
+  postgres:
+    # Move the host port if 5432 is taken.
+    # Keep POSTGRES_URL in .env.local in sync.
+    #ports:
+    #  - 5433:5432
 
-  db:
-    # Mount and persist database data
-    #volumes:
-    # - ./data:/var/lib/neo4j/data
-
-    # Change the database connection user/password
-    # Be sure it matches the credentials given to API config
-    #environment:
-    #  NEO4J_AUTH: neo4j/admin
-
+    # More shared memory for large restores / heavy local querying.
+    #shm_size: 1g

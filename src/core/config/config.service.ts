@@ -218,8 +218,11 @@ export const makeConfig = (env: EnvironmentService) =>
       };
     })();
 
-    // Control which database is prioritized, while we migrate.
-    databaseEngine = env.string('DATABASE').optional('neo4j').toLowerCase();
+    // Which database engine is active. Postgres has been the production
+    // engine since the 2026-09 cutover; the other values exist only while the
+    // legacy engine code awaits removal.
+    // migration-todo: drop this switch (and the env var) with the Neo4j/Gel arms.
+    databaseEngine = env.string('DATABASE').optional('postgres').toLowerCase();
 
     /**
      * Puts the API in read-only maintenance mode.
