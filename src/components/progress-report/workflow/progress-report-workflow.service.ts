@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { type SetRequired } from 'type-fest';
 import {
   type ID,
   many,
@@ -63,11 +64,51 @@ export class ProgressReportWorkflowService {
     return this.privileges.for(WorkflowEvent).can('create');
   }
 
-  async executeTransition(input: ExecuteProgressReportTransition) {
-    const { report: reportId, notes } = input;
-
-    const currentStatus = await this.repo.currentStatus(reportId);
+  async executeTransition(
+    input: ExecuteProgressReportTransition,
+    automatedReason?: string,
+  ) {
+    const currentStatus = await this.repo.currentStatus(input.report);
     const next = this.validateExecutionInput(input, currentStatus);
+    await this.commitTransition(input, currentStatus, next, automatedReason);
+  }
+
+  /**
+   * Execute the transition when it is available from the report's current
+   * status to the current session; otherwise do nothing and return false.
+   *
+   * The no-throw variant automation wants: where {@link executeTransition}
+   * treats an unavailable transition as an error, a repeated ingest trigger is
+   * simply a no-op. One status read serves both the availability check and the
+   * commit.
+   */
+  async executeTransitionIfAvailable(
+    input: SetRequired<ExecuteProgressReportTransition, 'transition'>,
+    automatedReason?: string,
+  ): Promise<boolean> {
+    const currentStatus = await this.repo.currentStatus(input.report);
+    const transition = this.getAvailableTransitions(currentStatus).find(
+      (t) => t.id === input.transition,
+    );
+    if (!transition) {
+      return false;
+    }
+    await this.commitTransition(
+      input,
+      currentStatus,
+      transition,
+      automatedReason,
+    );
+    return true;
+  }
+
+  private async commitTransition(
+    input: ExecuteProgressReportTransition,
+    currentStatus: Status,
+    next: InternalTransition | Status,
+    automatedReason?: string,
+  ) {
+    const { report: reportId, notes } = input;
     const isTransition = typeof next !== 'string';
 
     const [unsecuredEvent] = await Promise.all([
@@ -82,6 +123,7 @@ export class ProgressReportWorkflowService {
       currentStatus,
       next,
       unsecuredEvent,
+      automatedReason,
     );
     await this.hooks.run(event);
 

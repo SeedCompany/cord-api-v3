@@ -1,5 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { type ID, type Role } from '~/common';
+import { type SystemAgent } from '../../components/user/dto';
 import { type IRequest } from '../http/types';
 import { SessionHost } from './session/session.host';
 import type { SessionInitiator } from './session/session.initiator';
@@ -81,6 +82,13 @@ export class Identity {
 
   async asUser<R>(user: ID<'User'>, fn: () => Promise<R>): Promise<R> {
     return await this.sessionManager.asUser(user, fn);
+  }
+
+  /**
+   * Run this function as the given system agent, with the agent's roles.
+   */
+  async asSystemAgent<R>(agent: SystemAgent, fn: () => Promise<R>): Promise<R> {
+    return await this.sessionManager.asSystemAgent(agent, fn);
   }
 
   /**

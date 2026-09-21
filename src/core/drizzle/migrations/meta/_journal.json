@@ -8,6 +8,13 @@
       "when": 1745625600000,
       "tag": "0000_genesis",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1787950800000,
+      "tag": "0001_progress_report_workflow_event_actor",
+      "breakpoints": true
     }
   ]
 }
