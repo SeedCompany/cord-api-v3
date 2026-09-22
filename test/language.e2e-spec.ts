@@ -504,7 +504,8 @@ describe('Language e2e', () => {
   });
 
   it('List view of languages by usesAIAssistance flag', async () => {
-    const [withAI, withoutAI, noEngagement] = await Promise.all([
+    const [withAI, noneAI, unknownAI, noEngagement] = await Promise.all([
+      createLanguage(app),
       createLanguage(app),
       createLanguage(app),
       createLanguage(app),
@@ -516,10 +517,14 @@ describe('Language e2e', () => {
       usingAIAssistedTranslation: 'Draft',
     });
 
-    // `None` or a language with no engagements is `false`.
     await createLanguageEngagement(app, {
-      language: withoutAI.id,
+      language: noneAI.id,
       usingAIAssistedTranslation: 'None',
+    });
+
+    await createLanguageEngagement(app, {
+      language: unknownAI.id,
+      usingAIAssistedTranslation: 'Unknown',
     });
 
     const list = async (usesAIAssistance: boolean | null) => {
@@ -532,7 +537,12 @@ describe('Language e2e', () => {
     // List all languages regardless of their AI assistance status.
     const all = await list(null);
     expect(all.map((item) => item.id)).toEqual(
-      expect.arrayContaining([withAI.id, withoutAI.id, noEngagement.id]),
+      expect.arrayContaining([
+        withAI.id,
+        noneAI.id,
+        unknownAI.id,
+        noEngagement.id,
+      ]),
     );
 
     // Check languages that are using AI assistance.
@@ -544,7 +554,8 @@ describe('Language e2e', () => {
     // Check languages that are not using AI assistance.
     const notUsingAI = await list(false);
     const notUsingAIIds = notUsingAI.map((item) => item.id);
-    expect(notUsingAIIds).toContain(withoutAI.id);
+    expect(notUsingAIIds).toContain(noneAI.id);
+    expect(notUsingAIIds).toContain(unknownAI.id);
     expect(notUsingAIIds).toContain(noEngagement.id);
     expect(notUsingAIIds).not.toContain(withAI.id);
 
