@@ -238,9 +238,18 @@ export class LanguageEngagement extends Engagement {
 
 @RegisterResource({ db: e.InternshipEngagement })
 @ObjectType({
-  implements: [Engagement],
+  // Postable on the same terms as LanguageEngagement above: a Global
+  // Translation Leader's prayer requests accumulate through the quarter and
+  // must outlive any one report, which the sync handler creates and drops as
+  // the engagement's date window moves. The report is an attribution carried on
+  // the post, not the post's parent.
+  implements: [Engagement, Postable],
 })
 export class InternshipEngagement extends Engagement {
+  static readonly Relations = (() => ({
+    ...Engagement.Relations(),
+    ...Postable.Relations(),
+  })) satisfies ResourceRelationsShape;
   static readonly Parent = () =>
     import('../../project/dto').then((m) => m.InternshipProject);
 

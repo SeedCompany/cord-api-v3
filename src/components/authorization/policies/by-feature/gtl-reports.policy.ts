@@ -1,4 +1,4 @@
-import { Policy, Role } from '../util';
+import { member, Policy, Role } from '../util';
 
 /**
  * Read access to GTL quarterly reports for the roles that already read the
@@ -18,8 +18,11 @@ import { Policy, Role } from '../util';
     Role.Leadership,
   ],
   (r) => [
-    // Prayer is Posts, and posts are granted through the parent's edge.
-    r.GTLReport.read.children((c) => c.posts.read.create),
+    r.GTLReport.read,
+    // Prayer is Posts on the ENGAGEMENT, not the report — the report is an
+    // attribution carried on the post. Granted through the parent's edge, the
+    // same shape field-partner.policy.ts uses for LanguageEngagement.
+    r.InternshipEngagement.children((c) => c.posts.when(member).create.read),
     r.GtlGoal.read.create.edit.delete,
     r.GtlGoalProgress.read.create.edit.delete,
     r.GtlReportPracticum.read.create.edit.delete,

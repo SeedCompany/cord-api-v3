@@ -12,7 +12,6 @@ import {
   GtlGoalResolver,
 } from './gtl-goal.resolver';
 import { GtlReportEngagementConnectionResolver } from './gtl-report-engagement-connection.resolver';
-import { GtlReportPrayerResolver } from './gtl-report-prayer.resolver';
 import { GtlReportProseResolver } from './gtl-report-prose.resolver';
 import { GtlReportSectionsResolver } from './gtl-report-sections.resolver';
 import { SyncGtlReportToEngagementDateRange } from './handlers/sync-gtl-report-to-engagement.handler';
@@ -64,7 +63,6 @@ import { GtlReportWorkflowService } from './workflow/gtl-report-workflow.service
     GtlReportProseResolver,
     GtlReportCommunityImpactDrizzleRepository,
     GtlReportCommunityImpactService,
-    GtlReportPrayerResolver,
     GtlReportMediaDrizzleRepository,
     GtlReportMediaService,
     GtlReportMediaConnectionResolver,
