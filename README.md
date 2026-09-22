@@ -25,18 +25,16 @@ Bible translation project management API.
    against a local server — which is also why `POSTGRES_URL` ends in
    `?sslmode=no-verify`.
 1. Load data (recommended): ask a teammate for the current scrubbed production
-   dump and restore it into the still-empty database, before the app's first
-   boot:
+   dump and restore it:
     ```bash
-    docker compose exec -T postgres pg_restore -U postgres -d cord \
-      --no-owner --no-privileges < cord-scrubbed-<date>.dump
+    yarn pg:restore ~/cord-dev-seed/cord-scrubbed-<date>.dump
     ```
-   Sign in as `devops@tsco.org` / `admin` — the default root account, which the
-   app re-syncs on every boot. Skipping this step is fine too — the app boots
-   against the empty database and applies migrations itself. To load a
-   dump later, stop the app and drop/recreate the `cord` database first
-   (`dropdb` / `createdb` inside the container); `pg_restore` will not
-   overwrite tables the app has already created.
+   The script drops and recreates the `cord` database before restoring, so it
+   also works for reloading a newer dump later — just stop the API first (it
+   refuses to run while anything is connected). Sign in as `devops@tsco.org` /
+   `admin` — the default root account, which the app re-syncs on every boot.
+   Skipping this step is fine too — the app boots against the empty database
+   and applies migrations itself.
 1. Set up a Gel instance. Gel is **not used at runtime** — it is a leftover
    migration target whose code is still in the tree — but its generated client
    is not committed, so the project will not compile without this step:
