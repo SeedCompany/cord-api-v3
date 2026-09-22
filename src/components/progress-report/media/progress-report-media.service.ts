@@ -17,6 +17,7 @@ import {
   type ProgressReportMediaListInput as ListArgs,
   ProgressReportMedia as ReportMedia,
   type ProgressReportMediaList as ReportMediaList,
+  type ReuseProgressReportMedia as ReuseMedia,
   type UpdateProgressReportMedia as UpdateMedia,
   type UploadProgressReportMedia as UploadMedia,
 } from './dto';
@@ -91,6 +92,63 @@ export class ProgressReportMediaService {
     await this.hooks.run(
       new ResourceMutatedHook('ProgressReportMedia', initialDto.id, 'Create'),
     );
+  }
+
+  /**
+   * Duplicate an already-uploaded item into another variant, rather than
+   * requiring a fresh upload of the same photo. The copy gets its own
+   * File/FileVersion/Media chain (see `FileService.copyFileVersion`), so its
+   * caption & category start blank and are editable independently of the
+   * source from then on via the normal `update` mutation.
+   *
+   * Returns the report id, matching `upload()`'s shape: the resolver reloads
+   * the report so the client can refresh the whole media list in one round
+   * trip, the same way it already does after a fresh upload — this is a new
+   * row, not an edit to one already in the list, so the client has nothing
+   * to merge it into otherwise.
+   */
+  async reuse(input: ReuseMedia): Promise<ID<Report>> {
+    const loader = await this.resources.getLoader(ProgressReportMediaLoader);
+    const source = await loader.load(input.id);
+    this.privileges.for(ReportMedia, source).verifyCan('read');
+
+    const report = await this.resources.load(Report, source.report);
+    const context = report as any; // the report is fine for condition context
+    this.privileges
+      .for(ReportMedia, withVariant(context, input.variant))
+      .verifyCan('create');
+
+    const sourceFile = await this.files.getFile(source.file);
+    const sourceVersion = await this.files.getFileVersion(
+      sourceFile.latestVersionId,
+    );
+
+    const fileId = await generateId<ID<'File'>>();
+    const initialDto = await this.repo.create(
+      {
+        report: source.report,
+        variant: input.variant,
+        category: source.category,
+        variantGroup: source.variantGroup,
+      },
+      fileId,
+    );
+
+    const newVersionId = await this.files.copyFileVersion(sourceVersion.id);
+    await this.files.createDefinedFile(
+      fileId,
+      sourceVersion.name,
+      initialDto.id,
+      'file',
+      { upload: newVersionId, mimeType: sourceVersion.mimeType },
+      ReportMedia.PublicVariants.has(input.variant.key),
+    );
+
+    await this.hooks.run(
+      new ResourceMutatedHook('ProgressReportMedia', initialDto.id, 'Create'),
+    );
+
+    return source.report;
   }
 
   async update(input: UpdateMedia): Promise<ReportMedia> {

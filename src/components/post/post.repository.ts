@@ -49,7 +49,22 @@ export class PostRepository extends DtoRepository(Post) {
     existing: UnsecuredDto<Post>,
     changes: ChangesOf<Post, UpdatePost>,
   ) {
-    return await this.updateProperties(existing, changes);
+    // `report` is a link, not a property, so `updateProperties` cannot write
+    // it, and `finalBody`/`featured` are Postgres-only columns with no Neo4j
+    // property to match. Nothing sets any of these on this path — partner
+    // quarterly reporting is Postgres-only — so drop them rather than fail an
+    // otherwise-plain edit.
+    const {
+      report: _neo4jUnsupported,
+      finalBody: _alsoUnsupported,
+      featured: _alsoUnsupported2,
+      ...properties
+    } = changes as typeof changes & {
+      report?: unknown;
+      finalBody?: unknown;
+      featured?: unknown;
+    };
+    return await this.updateProperties(existing, properties);
   }
 
   async readMany(ids: readonly ID[]) {
@@ -63,6 +78,11 @@ export class PostRepository extends DtoRepository(Post) {
       .run();
   }
 
+  /**
+   * `filter.type` is deliberately unimplemented here: only GTL reports narrow
+   * posts by kind, and GTL exists on Postgres alone. If another caller ever
+   * sets it, this path has to grow a `node.type` predicate.
+   */
   async securedList({ filter, ...input }: PostListInput) {
     const result = await this.db
       .query()

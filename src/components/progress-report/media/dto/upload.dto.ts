@@ -51,3 +51,20 @@ export class UpdateProgressReportMedia extends Merge(
   @IdField()
   readonly id: ID<ProgressReportMedia>;
 }
+
+@InputType()
+export class ReuseProgressReportMedia {
+  @IdField({
+    description: stripIndent`
+      An existing media item — from any variant — to duplicate the uploaded
+      file from. The copy becomes its own file, so its caption/category can
+      be edited independently of the source afterwards.
+    `,
+  })
+  readonly id: ID<ProgressReportMedia>;
+
+  @VariantInputField(ProgressReportMedia, {
+    description: 'Which variant the duplicated file is uploaded into.',
+  })
+  readonly variant: Variant<MediaVariant>;
+}

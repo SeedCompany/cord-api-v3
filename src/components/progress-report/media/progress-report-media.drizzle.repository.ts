@@ -29,6 +29,12 @@ import {
   type UploadProgressReportMedia as UploadMedia,
 } from './dto';
 
+// `file` is attached separately, via `FileService.createDefinedFile`'s FK/edge
+// — neither storage engine reads it off this input, so row-creation callers
+// (a fresh upload, or duplicating an existing file into another variant)
+// don't need one on hand.
+type CreateMediaRow = Omit<UploadMedia, 'file'>;
+
 type Row = DbTypeOf<ReportMedia>;
 
 const variantOrder = new Map(
@@ -124,7 +130,7 @@ export class ProgressReportMediaDrizzleRepository {
   }
 
   async create(
-    input: UploadMedia,
+    input: CreateMediaRow,
     fileId: ID<'File'>,
   ): Promise<Omit<Row, 'media' | 'file'>> {
     let variantGroupId = input.variantGroup;

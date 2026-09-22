@@ -34,6 +34,8 @@ import {
   type UploadProgressReportMedia as UploadMedia,
 } from './dto';
 
+type CreateMediaRow = Omit<UploadMedia, 'file'>;
+
 @Injectable()
 export class ProgressReportMediaRepository extends DtoRepository(ReportMedia) {
   async listForReport(report: Report, args: ListArgs) {
@@ -113,7 +115,7 @@ export class ProgressReportMediaRepository extends DtoRepository(ReportMedia) {
       .run();
   }
 
-  async create(input: UploadMedia, _fileId?: ID<'File'>) {
+  async create(input: CreateMediaRow, _fileId?: ID<'File'>) {
     // _fileId is stored as a FK by the Postgres repo; Neo4j links the file via
     // the createDefinedFile `fileNode` edge instead, so it's ignored here.
     const newVariantGroupId = await generateId();

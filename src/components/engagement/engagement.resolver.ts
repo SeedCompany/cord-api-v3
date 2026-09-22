@@ -74,7 +74,7 @@ export class EngagementResolver {
   }
 
   @Query(() => InternshipEngagement, {
-    description: 'Lookup an InternshipEngagement by ID',
+    description: 'Lookup a Global Translation Leader engagement by ID',
   })
   async internshipEngagement(
     @IdsAndViewArg() key: IdsAndView,
@@ -116,7 +116,7 @@ export class EngagementResolver {
   }
 
   @Query(() => InternshipEngagementListOutput, {
-    description: 'Look up internship engagements',
+    description: 'Look up Global Translation Leader engagements',
   })
   async internshipEngagements(
     @ListArg(EngagementListInput) input: EngagementListInput,
@@ -179,7 +179,7 @@ export class EngagementResolver {
   }
 
   @Mutation(() => InternshipEngagementCreated, {
-    description: 'Create an internship engagement',
+    description: 'Create a Global Translation Leader engagement',
   })
   async createInternshipEngagement(
     @Args('input') { changeset, ...input }: CreateInternshipEngagement,
@@ -231,7 +231,7 @@ export class EngagementResolver {
   }
 
   @Mutation(() => InternshipEngagementUpdated, {
-    description: 'Update an internship engagement',
+    description: 'Update a Global Translation Leader engagement',
   })
   async updateInternshipEngagement(
     @Args('input') { changeset, ...input }: UpdateInternshipEngagement,

@@ -15,6 +15,48 @@
       "when": 1787950800000,
       "tag": "0001_progress_report_workflow_event_actor",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1788037200000,
+      "tag": "0002_add_gtl_reports",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1788123600000,
+      "tag": "0003_gtl_goals_tracking",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1788210000000,
+      "tag": "0004_gtl_report_media",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1788296400000,
+      "tag": "0005_add_post_report_and_moderation",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1788382800000,
+      "tag": "0006_add_post_final_body",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1788469200000,
+      "tag": "0007_add_post_featured",
+      "breakpoints": true
     }
   ]
 }

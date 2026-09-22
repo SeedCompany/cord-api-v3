@@ -43,10 +43,12 @@ import {
 import { type BaseNode } from '~/core/neo4j/results';
 import { type ScopedRole } from '../authorization/dto/role.dto';
 import { FileService } from '../file';
+import { GtlReportStatus } from '../gtl-report/dto/gtl-report-status.enum';
 import { ProgressReportStatus } from '../progress-report/dto';
 import { requesterScopeByProject } from '../project/project-member/membership-scope';
 import {
   IPeriodicReport,
+  isEngagementParented,
   type MergePeriodicReports,
   type PeriodicReport,
   type PeriodicReportListInput,
@@ -59,6 +61,7 @@ type ReportRow = typeof periodicReports.$inferSelect & {
   project?: ParentProject | null;
   engagement?: {
     id: ID<'Engagement'>;
+    type: string;
     createdAt: Date;
     project?: ParentProject | null;
   } | null;
@@ -78,7 +81,8 @@ const PROJECT_COLUMNS = {
 const RELATIONS = {
   project: PROJECT_COLUMNS,
   engagement: {
-    columns: { id: true, createdAt: true },
+    // `type` feeds the parent BaseNode's label in `toDto` — see there.
+    columns: { id: true, type: true, createdAt: true },
     with: { project: PROJECT_COLUMNS },
   },
 } as const;
@@ -114,9 +118,9 @@ export class PeriodicReportDrizzleRepository extends DrizzleDtoRepository<
    * A report's own `deleted_at` says nothing about its parents: soft-deleting a
    * project or an engagement leaves every report under it untouched. Neo4j's
    * hydrate requires a live `:Project`, so there it returns nothing — this is the
-   * equivalent. Financial and Narrative reports hang off a project directly;
-   * Progress reports reach one through their engagement, so both routes are
-   * checked and a report needs exactly one of them.
+   * equivalent. Project-parented reports hang off a project directly;
+   * engagement-parented ones reach a project through their engagement, so both
+   * routes are checked and a report needs exactly one of them.
    */
   private async liveReportIds(ids: readonly ID[]): Promise<ID[]> {
     if (ids.length === 0) return [];
@@ -150,6 +154,15 @@ export class PeriodicReportDrizzleRepository extends DrizzleDtoRepository<
       return [];
     }
     const isProgress = input.type === 'Progress';
+    const engagementParented = isEngagementParented(input.type);
+    // Which status column a new report initialises, if any. The two workflows
+    // run on different enums in different columns, and `periodic_reports`
+    // enforces one biconditional per column — leaving the wrong one null is a
+    // CHECK violation, not a silent no-op. @see migration 0002
+    const initialStatus = {
+      status: isProgress ? ProgressReportStatus.NotStarted : null,
+      gtlStatus: input.type === 'GTL' ? GtlReportStatus.NotStarted : null,
+    };
     // Each report owns a `reportFile` DefinedFile placeholder. The FK is stored
     // here; the (version-less) file node is created by createDefinedFile after
     // the rows land, only for those actually inserted.
@@ -194,11 +207,15 @@ export class PeriodicReportDrizzleRepository extends DrizzleDtoRepository<
         return {
           id,
           type: input.type,
-          projectId: isProgress ? null : (input.parent as ID<'Project'>),
-          engagementId: isProgress ? (input.parent as ID<'Engagement'>) : null,
+          projectId: engagementParented
+            ? null
+            : (input.parent as ID<'Project'>),
+          engagementId: engagementParented
+            ? (input.parent as ID<'Engagement'>)
+            : null,
           start: interval.start.toISODate(),
           end: interval.end.toISODate(),
-          status: isProgress ? ProgressReportStatus.NotStarted : null,
+          ...initialStatus,
           reportFileId,
           narrativeFileId,
         };
@@ -474,6 +491,8 @@ export class PeriodicReportDrizzleRepository extends DrizzleDtoRepository<
         and(
           this.parentCondition(baseNodeId, type),
           or(...intervalConditions),
+          // Status axis, not the parent axis: only report types that carry a
+          // workflow status gate removal on it. @see periodic_reports_status_shape_chk
           ...(type === 'Progress'
             ? [eq(periodicReports.status, ProgressReportStatus.NotStarted)]
             : // Non-progress reports are removable only while no file has been
@@ -495,7 +514,7 @@ export class PeriodicReportDrizzleRepository extends DrizzleDtoRepository<
     return and(
       isNull(periodicReports.deletedAt),
       eq(periodicReports.type, type),
-      type === 'Progress'
+      isEngagementParented(type)
         ? eq(periodicReports.engagementId, parentId as ID<'Engagement'>)
         : eq(periodicReports.projectId, parentId as ID<'Project'>),
     )!;
@@ -547,10 +566,18 @@ export class PeriodicReportDrizzleRepository extends DrizzleDtoRepository<
     const isProgress = row.type === 'Progress';
     // Neo4j-shaped BaseNode so ResourceLoader.loadByBaseNode() on the parent
     // field keeps working — only labels + properties.{id,createdAt} are read.
-    const parent: BaseNode = isProgress
+    // The engagement's own discriminator names it, mirroring the project branch
+    // below. Hardcoding `LanguageEngagement` here was only ever correct because
+    // Progress is currently the sole engagement-parented type, and it would have
+    // silently mis-resolved the parent the moment that stopped being true.
+    const parent: BaseNode = isEngagementParented(row.type)
       ? {
           identity: row.engagement!.id,
-          labels: ['LanguageEngagement', 'Engagement', 'BaseNode'],
+          labels: [
+            `${row.engagement!.type}Engagement`,
+            'Engagement',
+            'BaseNode',
+          ],
           properties: {
             id: row.engagement!.id,
             createdAt: DateTime.fromJSDate(row.engagement!.createdAt),
@@ -568,6 +595,10 @@ export class PeriodicReportDrizzleRepository extends DrizzleDtoRepository<
       id: row.id,
       type: row.type,
       ...(isProgress && { __typename: 'ProgressReport', status: row.status }),
+      ...(row.type === 'GTL' && {
+        __typename: 'GTLReport',
+        status: row.gtlStatus,
+      }),
       parent,
       start: CalendarDate.fromISO(row.start),
       end: CalendarDate.fromISO(row.end),

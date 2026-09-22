@@ -28,6 +28,11 @@ import { type CeremonyType } from '../../../components/ceremony/dto/ceremony-typ
 import { type InternshipPosition } from '../../../components/engagement/dto/intern-position.enum';
 import { type EngagementStatus } from '../../../components/engagement/dto/status.enum';
 import { type FileNodeType } from '../../../components/file/dto/file-node-type.enum';
+import {
+  type GtlGoalMeasurement,
+  type GtlGoalStatus,
+} from '../../../components/gtl-report/dto/gtl-goal.enums';
+import { type GtlReportStatus } from '../../../components/gtl-report/dto/gtl-report-status.enum';
 import { type AIAssistedTranslation } from '../../../components/language/dto/ai-assisted-translation.enum';
 import { type LanguageMilestone } from '../../../components/language/dto/language-milestone.enum';
 import { type LocationType } from '../../../components/location/dto/location-type.enum';
@@ -2101,6 +2106,14 @@ export const engagements = pgTable(
     mentorId: text('mentor_id')
       .$type<ID<'User'>>()
       .references(() => users.id),
+    // The person overseeing the Global Translation Leader on the ground —
+    // distinct from the mentor (who develops them) and the FPM (Seed Company's
+    // manager for the project). Deliberately absent from
+    // `engagements_type_shape_chk`, like `mentor_id`: that CHECK constrains only
+    // the columns that identify a subtype.
+    supervisorId: text('supervisor_id')
+      .$type<ID<'User'>>()
+      .references(() => users.id),
     position: text('position').$type<InternshipPosition>(),
     methodologies: productMethodologyEnum('methodologies')
       .array()
@@ -2143,6 +2156,7 @@ export const engagements = pgTable(
     index('engagements_language_id_idx').on(t.languageId),
     index('engagements_intern_id_idx').on(t.internId),
     index('engagements_mentor_id_idx').on(t.mentorId),
+    index('engagements_supervisor_id_idx').on(t.supervisorId),
     index('engagements_country_of_origin_id_idx').on(t.countryOfOriginId),
   ],
 );
@@ -2439,6 +2453,27 @@ export const productCompletionDescriptions = pgTable(
   ],
 );
 
+/**
+ * GTL's workflow status — its own enum, not Momentum's.
+ *
+ * The two flows agree on five states but diverge on `PendingSupervisorSignOff`:
+ * the GTL narrative ends by going to the leader's on-the-ground supervisor for
+ * assessment, and that sign-off gates review. Adding that value to
+ * `progress_report_status` would surface it in Momentum's GraphQL enum, status
+ * dropdowns and stepper for a state Momentum can never reach.
+ *
+ * Declared in workflow order — `sortingForEnumIndex` sorts by ordinal.
+ */
+export const gtlReportStatusEnum = pgEnum('gtl_report_status', [
+  'NotStarted',
+  'InProgress',
+  'PendingSupervisorSignOff',
+  'PendingTranslation',
+  'InReview',
+  'Approved',
+  'Published',
+]);
+
 // ─── Periodic Reports ──────────────────────────────────────────────────────
 
 export const reportTypeEnum = pgEnum('report_type', [
@@ -2504,6 +2539,10 @@ export const periodicReports = pgTable(
     narrativeFileId: text('narrative_file_id').$type<ID<'File'>>(),
     narrativeReceivedDate: date('narrative_received_date'),
     status: progressReportStatusEnum('status').$type<ProgressReportStatus>(),
+    // GTL runs its own workflow on its own enum — see `gtlReportStatusEnum`.
+    // Kept as a separate column rather than widening `progress_report_status`,
+    // which would surface GTL-only states on Momentum's reports.
+    gtlStatus: gtlReportStatusEnum('gtl_status').$type<GtlReportStatus>(),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -2524,6 +2563,13 @@ export const periodicReports = pgTable(
     check(
       'periodic_reports_status_shape_chk',
       sql`(${t.type} = 'Progress') = (${t.status} IS NOT NULL)`,
+    ),
+    // The same biconditional, one report type over. Momentum's constraint above
+    // is deliberately untouched: a GTL row leaves `status` null and satisfies it
+    // unchanged.
+    check(
+      'periodic_reports_gtl_status_shape_chk',
+      sql`(${t.type}::text = 'GTL') = (${t.gtlStatus} IS NOT NULL)`,
     ),
     index('periodic_reports_project_id_idx').on(t.projectId),
     index('periodic_reports_engagement_id_idx').on(t.engagementId),
@@ -3005,9 +3051,18 @@ export const postShareabilityEnum = pgEnum('post_shareability', [
 ]);
 
 /**
- * Posts attach to any Postable resource (Language/Partner/Project) via a
- * polymorphic FK-less parent_id + parent_type discriminator. Membership
- * shareability is enforced in the repo against project_members.
+ * Posts attach to any Postable resource (Language/Partner/Project/Engagement)
+ * via a polymorphic FK-less parent_id + parent_type discriminator. Membership
+ * shareability is enforced in the repo against project_members — for an
+ * Engagement parent, one hop through engagements.project_id.
+ *
+ * Three columns exist for partner-submitted prayer:
+ *  * `report_id` — set when the post is included in a quarterly report. The
+ *    parent stays the engagement either way, so a report being dropped and
+ *    re-synced can never take prayer with it.
+ *  * `responds_to_id` — an update to an earlier post ("answered prayer"), so a
+ *    request and its updates can be grouped rather than read as an undated pile.
+ *  * `approved_shareability` — moderated reach. See the column comment below.
  */
 export const posts = pgTable(
   'posts',
@@ -3020,10 +3075,52 @@ export const posts = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
     type: postTypeEnum('type').$type<PostType>().notNull(),
+    /** What reach was *requested*. Compare with `approvedShareability`. */
     shareability: postShareabilityEnum('shareability')
       .$type<PostShareability>()
       .notNull(),
+    /**
+     * What reach has been *cleared* by a moderator. Effective reach is
+     * `approvedShareability ?? min(shareability, Internal)` — so an
+     * unmoderated post is fully visible internally and only its external
+     * reach waits. Null means "not yet reviewed", which is distinct from
+     * a review that deliberately narrowed the reach to Internal.
+     */
+    approvedShareability: postShareabilityEnum(
+      'approved_shareability',
+    ).$type<PostShareability>(),
+    approvedById: text('approved_by_id')
+      .$type<ID<'User'>>()
+      .references(() => users.id, { onDelete: 'set null' }),
+    approvedAt: timestamp('approved_at', { withTimezone: true }),
+    /**
+     * The quarterly report this post was submitted with, if any. Nullable and
+     * deliberately `on delete set null`: losing the report must not lose the
+     * prayer.
+     */
+    reportId: text('report_id')
+      .$type<ID<'PeriodicReport'>>()
+      .references(() => periodicReports.id, { onDelete: 'set null' }),
+    /** An update to an earlier post — e.g. an answer to a prayer request. */
+    respondsToId: text('responds_to_id')
+      .$type<ID<'Post'>>()
+      .references((): AnyPgColumn => posts.id, { onDelete: 'set null' }),
     body: text('body').notNull(),
+    /**
+     * The wording actually shown once it leaves the author's hands — a
+     * translation, a moderator's touch-up, or both in sequence. Null means
+     * `body` is still the whole story. Kept separate from `body` rather than
+     * overwriting it so the author's own words are never lost to someone
+     * else's edit; see `effectiveBodyOf` for which one to read.
+     */
+    finalBody: text('final_body'),
+    /**
+     * Curated into this quarter's Investor Report — a distinct question from
+     * `shareability`/`approvedShareability` (may this leave Seed Company at
+     * all). Only meaningful once `reportId` is set; not exclusive, unlike
+     * `promptVariantResponses.featured` — a report can feature several.
+     */
+    featured: boolean('featured').notNull().default(false),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -3034,6 +3131,8 @@ export const posts = pgTable(
   (t) => [
     index('posts_parent_id_idx').on(t.parentId),
     index('posts_creator_id_idx').on(t.creatorId),
+    index('posts_report_id_idx').on(t.reportId),
+    index('posts_responds_to_id_idx').on(t.respondsToId),
   ],
 );
 
@@ -3407,4 +3506,444 @@ export const webhookChannelObservations = pgTable(
     primaryKey({ columns: [t.webhookId, t.channelName] }),
     index('webhook_channel_observations_channel_name_idx').on(t.channelName),
   ],
+);
+
+// ─── GTL Reports ───────────────────────────────────────────────────────────
+
+/**
+ * The FPM's Explanation of Progress on a GTL report.
+ *
+ * Four values, taken verbatim from the Stage III narrative template — "behind"
+ * splits into a recoverable case and one that triggers the Change to Plan
+ * process, and that split is the point of the field. A pgEnum rather than the
+ * `text[]` that `progress_report_variance_explanations.reasons` uses: this is a
+ * single closed choice that gates behaviour, with no deprecation story to tell.
+ */
+export const gtlProgressStatusEnum = pgEnum('gtl_progress_status', [
+  'AheadOfSchedule',
+  'OnTrack',
+  'DelayedYetExpectedToCompleteOnTime',
+  'NeedsAChangeToPlan',
+]);
+
+/**
+ * How a GTL goal's completion is measured.
+ *
+ * Same three axes as the Growth Partners Activity on the other branch —
+ * keeping the two features' vocabulary identical matters more than inventing a
+ * better one here. Boolean carries its result in `status` alone.
+ */
+export const gtlGoalMeasurementEnum = pgEnum('gtl_goal_measurement', [
+  'Number',
+  'Percent',
+  'Boolean',
+]);
+
+export const gtlGoalStatusEnum = pgEnum('gtl_goal_status', [
+  'Planned',
+  'InProgress',
+  'AtRisk',
+  'OnHold',
+  'Done',
+  'Cancelled',
+]);
+
+/**
+ * A goal on a Global Translation Leader's growth plan.
+ *
+ * Owned by the ENGAGEMENT, not by one quarter's report: a goal with a target
+ * date two or three quarters out is reported against every quarter along the
+ * way. `set_in_report_id` survives as nullable provenance — the report it was
+ * first proposed in — so the timeline the reports give is not lost.
+ *
+ * `status` and `progress_value` are a cache of the most recent
+ * `gtl_goal_progress` entry, written app-side in the same transaction. The
+ * entries are the record; these two columns exist so listing goals doesn't
+ * require a lateral join per row.
+ */
+export const gtlGoals = pgTable(
+  'gtl_goals',
+  {
+    id: text('id').$type<ID<'GtlGoal'>>().primaryKey(),
+    engagementId: text('engagement_id')
+      .$type<ID<'Engagement'>>()
+      .notNull()
+      .references(() => engagements.id, { onDelete: 'cascade' }),
+    // Provenance, not ownership.
+    setInReportId: text('set_in_report_id')
+      .$type<ID<'GTLReport'>>()
+      .references(() => periodicReports.id, { onDelete: 'set null' }),
+    goal: text('goal').notNull(),
+    details: jsonb('details').$type<RichTextDocument | null>(),
+    order: integer('order').notNull().default(0),
+    targetDate: date('target_date'),
+    measurement: gtlGoalMeasurementEnum('measurement')
+      .$type<GtlGoalMeasurement>()
+      .notNull()
+      .default('Boolean'),
+    targetNumber: integer('target_number'),
+    // What is being counted, e.g. "workshops facilitated".
+    targetDescription: text('target_description'),
+    progressValue: integer('progress_value'),
+    status: gtlGoalStatusEnum('status')
+      .$type<GtlGoalStatus>()
+      .notNull()
+      .default('Planned'),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    modifiedAt: timestamp('modified_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (t) => [
+    check(
+      'gtl_goals_measurement_shape_chk',
+      sql`(${t.measurement} = 'Number' AND ${t.targetNumber} IS NOT NULL AND ${t.targetNumber} > 0)
+        OR (${t.measurement} <> 'Number' AND ${t.targetNumber} IS NULL)`,
+    ),
+    index('gtl_goals_engagement_id_idx').on(t.engagementId),
+    index('gtl_report_goals_set_in_report_id_idx').on(t.setInReportId),
+  ],
+);
+
+/**
+ * One quarter's report on one goal — what moved, and what was written about it.
+ *
+ * At most one live entry per (goal, report): a report says one thing about a
+ * goal. Replaces the original single `met` boolean, which allowed a goal to be
+ * reviewed exactly once no matter how long it ran.
+ */
+export const gtlGoalProgress = pgTable(
+  'gtl_goal_progress',
+  {
+    id: text('id').$type<ID<'GtlGoalProgress'>>().primaryKey(),
+    goalId: text('goal_id')
+      .$type<ID<'GtlGoal'>>()
+      .notNull()
+      .references(() => gtlGoals.id, { onDelete: 'cascade' }),
+    reportId: text('report_id')
+      .$type<ID<'GTLReport'>>()
+      .notNull()
+      .references(() => periodicReports.id, { onDelete: 'cascade' }),
+    status: gtlGoalStatusEnum('status').$type<GtlGoalStatus>().notNull(),
+    // Count for Number, 0-100 for Percent, unused for Boolean.
+    progressValue: integer('progress_value'),
+    notes: jsonb('notes').$type<RichTextDocument | null>(),
+    progressDate: date('progress_date').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    modifiedAt: timestamp('modified_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (t) => [
+    uniqueIndex('gtl_goal_progress_goal_report_active_unique')
+      .on(t.goalId, t.reportId)
+      .where(sql`${t.deletedAt} IS NULL`),
+    index('gtl_goal_progress_goal_id_idx').on(t.goalId),
+    index('gtl_goal_progress_report_id_idx').on(t.reportId),
+  ],
+);
+
+/**
+ * Practicum and workshop involvement on a GTL report.
+ *
+ * A dedicated table rather than a PromptVariantResponse subtype because a row is
+ * three independent fields, one of which is a person — PVR carries exactly one
+ * rich-text answer per audience variant and has nowhere to put a mentor.
+ */
+export const gtlReportPracticums = pgTable(
+  'gtl_report_practicums',
+  {
+    id: text('id').$type<ID<'GtlReportPracticum'>>().primaryKey(),
+    reportId: text('report_id')
+      .$type<ID<'GTLReport'>>()
+      .notNull()
+      .references(() => periodicReports.id, { onDelete: 'cascade' }),
+    involvement: text('involvement').notNull(),
+    // No onDelete clause — same precedent as every other optional user
+    // reference here: content shouldn't vanish with a user record.
+    mentorId: text('mentor_id')
+      .$type<ID<'User'>>()
+      .references(() => users.id),
+    outcomes: jsonb('outcomes').$type<RichTextDocument | null>(),
+    order: integer('order').notNull().default(0),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    modifiedAt: timestamp('modified_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (t) => [
+    index('gtl_report_practicums_report_id_idx').on(t.reportId),
+    index('gtl_report_practicums_mentor_id_idx').on(t.mentorId),
+  ],
+);
+
+/**
+ * Media (photo, video, audio) attached to a GTL quarterly report.
+ *
+ * Deliberately not `progress_report_media`: that table is keyed by
+ * (variant_group, variant) because a Momentum highlight is one image re-cut for
+ * four audiences. GTL media is not re-cut — a leader uploads photos of a
+ * workshop and captions them — so a variant group here would always be a group
+ * of one. The category vocabulary is shared, because it is the same set of
+ * subjects and the investor portal reads both.
+ *
+ * `file_id` is a DefinedFile placeholder created after the row lands, hence
+ * FK-less, exactly as on `progress_report_media`.
+ */
+export const gtlReportMedia = pgTable(
+  'gtl_report_media',
+  {
+    id: text('id').$type<ID<'GtlReportMedia'>>().primaryKey(),
+    reportId: text('report_id')
+      .$type<ID<'GTLReport'>>()
+      .notNull()
+      .references(() => periodicReports.id),
+    category:
+      progressReportMediaCategoryEnum('category').$type<MediaCategory>(),
+    caption: text('caption'),
+    fileId: text('file_id').$type<ID<'File'>>(),
+    creatorId: text('creator_id')
+      .$type<ID<'User'>>()
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    modifiedAt: timestamp('modified_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (t) => [
+    index('gtl_report_media_report_id_idx').on(t.reportId),
+    index('gtl_report_media_creator_id_idx').on(t.creatorId),
+  ],
+);
+
+/**
+ * At most ONE explanation of progress per GTL report — the PK on `report_id`
+ * encodes that, so writes are a plain upsert. Exact mirror of
+ * `progress_report_variance_explanations`, including having no soft delete:
+ * clearing an explanation means removing the row, and it dies with its report.
+ */
+export const gtlReportProgressExplanations = pgTable(
+  'gtl_report_progress_explanations',
+  {
+    reportId: text('report_id')
+      .$type<ID<'GTLReport'>>()
+      .primaryKey()
+      .references(() => periodicReports.id, { onDelete: 'cascade' }),
+    status: gtlProgressStatusEnum('status').notNull(),
+    // Required by the app for anything other than OnTrack; nullable here.
+    context: jsonb('context').$type<RichTextDocument | null>(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+);
+
+/**
+ * An optional transcript file plus its explanatory note. Confidential.
+ *
+ * `file_id` is a DefinedFile placeholder with no FK — the row lands before
+ * `FileService.createDefinedFile` fans out the file nodes, the same deferred-FK
+ * class as `periodic_reports.report_file_id`.
+ * migration-todo(cutover-cleanup): real FK to `file_nodes` with the S4 reorder.
+ */
+export const gtlReportTranscripts = pgTable('gtl_report_transcripts', {
+  reportId: text('report_id')
+    .$type<ID<'GTLReport'>>()
+    .primaryKey()
+    .references(() => periodicReports.id, { onDelete: 'cascade' }),
+  fileId: text('file_id').$type<ID<'File'>>(),
+  explanation: jsonb('explanation').$type<RichTextDocument | null>(),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+/**
+ * The supervisor's assessment of the leader's progress. One per report.
+ *
+ * `supervisor_id` is who the assessment is ATTRIBUTED to, not necessarily who
+ * executed the sign-off transition — the FPM may enter it on the supervisor's
+ * behalf, and the actor is recorded on the workflow event instead. Defaulted
+ * from `engagements.supervisor_id` but snapshotted here, since the engagement's
+ * supervisor can change between quarters and a filed assessment should keep
+ * saying who wrote it.
+ *
+ * Confidentiality (Field Ops + the assigned supervisor) is a policy concern; no
+ * column encodes it.
+ */
+export const gtlReportSupervisorAssessments = pgTable(
+  'gtl_report_supervisor_assessments',
+  {
+    reportId: text('report_id')
+      .$type<ID<'GTLReport'>>()
+      .primaryKey()
+      .references(() => periodicReports.id, { onDelete: 'cascade' }),
+    supervisorId: text('supervisor_id')
+      .$type<ID<'User'>>()
+      .references(() => users.id),
+    assessment: jsonb('assessment').$type<RichTextDocument | null>(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index('gtl_report_supervisor_assessments_supervisor_id_idx').on(
+      t.supervisorId,
+    ),
+  ],
+);
+
+/**
+ * Append-only status-transition history for a GTL report — the mirror of
+ * `progress_report_workflow_events`, kept separate because its `status` is the
+ * GTL enum. Sharing the Momentum table would mean sharing the enum, which is
+ * precisely what `gtlReportStatusEnum` exists to avoid.
+ *
+ * Immutable facts: no soft delete, no `updated_at`. `transition_key` is null
+ * when the workflow was bypassed and the status set directly. No trigger syncs
+ * the parent's `gtl_status`; it is written app-side in the same transaction.
+ */
+export const gtlReportWorkflowEvents = pgTable(
+  'gtl_report_workflow_events',
+  {
+    id: text('id').$type<ID<'GtlReportWorkflowEvent'>>().primaryKey(),
+    reportId: text('report_id')
+      .$type<ID<'GTLReport'>>()
+      .notNull()
+      .references(() => periodicReports.id, { onDelete: 'cascade' }),
+    who: text('who')
+      .$type<ID<'User'>>()
+      .notNull()
+      .references(() => users.id),
+    status: gtlReportStatusEnum('status').$type<GtlReportStatus>().notNull(),
+    transitionKey: text('transition_key'),
+    notes: jsonb('notes').$type<RichTextDocument | null>(),
+    at: timestamp('at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    // Lists read oldest-first; the leading column also serves FK-maintenance.
+    index('gtl_report_workflow_events_report_id_at_idx').on(t.reportId, t.at),
+    index('gtl_report_workflow_events_who_idx').on(t.who),
+  ],
+);
+
+// `relations()` is required even when empty, or `db.query.<table>.findMany()`
+// returns undefined.
+export const gtlGoalsRelations = relations(gtlGoals, ({ one, many }) => ({
+  engagement: one(engagements, {
+    fields: [gtlGoals.engagementId],
+    references: [engagements.id],
+  }),
+  setInReport: one(periodicReports, {
+    fields: [gtlGoals.setInReportId],
+    references: [periodicReports.id],
+  }),
+  progress: many(gtlGoalProgress),
+}));
+
+export const gtlGoalProgressRelations = relations(
+  gtlGoalProgress,
+  ({ one }) => ({
+    goal: one(gtlGoals, {
+      fields: [gtlGoalProgress.goalId],
+      references: [gtlGoals.id],
+    }),
+    report: one(periodicReports, {
+      fields: [gtlGoalProgress.reportId],
+      references: [periodicReports.id],
+    }),
+  }),
+);
+
+export const gtlReportPracticumsRelations = relations(
+  gtlReportPracticums,
+  ({ one }) => ({
+    report: one(periodicReports, {
+      fields: [gtlReportPracticums.reportId],
+      references: [periodicReports.id],
+    }),
+    mentor: one(users, {
+      fields: [gtlReportPracticums.mentorId],
+      references: [users.id],
+    }),
+  }),
+);
+
+export const gtlReportProgressExplanationsRelations = relations(
+  gtlReportProgressExplanations,
+  ({ one }) => ({
+    report: one(periodicReports, {
+      fields: [gtlReportProgressExplanations.reportId],
+      references: [periodicReports.id],
+    }),
+  }),
+);
+
+export const gtlReportTranscriptsRelations = relations(
+  gtlReportTranscripts,
+  ({ one }) => ({
+    report: one(periodicReports, {
+      fields: [gtlReportTranscripts.reportId],
+      references: [periodicReports.id],
+    }),
+  }),
+);
+
+export const gtlReportSupervisorAssessmentsRelations = relations(
+  gtlReportSupervisorAssessments,
+  ({ one }) => ({
+    report: one(periodicReports, {
+      fields: [gtlReportSupervisorAssessments.reportId],
+      references: [periodicReports.id],
+    }),
+    supervisor: one(users, {
+      fields: [gtlReportSupervisorAssessments.supervisorId],
+      references: [users.id],
+    }),
+  }),
+);
+
+export const gtlReportWorkflowEventsRelations = relations(
+  gtlReportWorkflowEvents,
+  ({ one }) => ({
+    report: one(periodicReports, {
+      fields: [gtlReportWorkflowEvents.reportId],
+      references: [periodicReports.id],
+    }),
+    who: one(users, {
+      fields: [gtlReportWorkflowEvents.who],
+      references: [users.id],
+    }),
+  }),
 );

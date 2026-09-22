@@ -20,6 +20,8 @@ package-lock.json
 # local configuration
 .env.local
 .pg.local/
+# Per-worktree Postgres volumes (each worktree runs its own isolated instance)
+.pg.*/
 .env.*.local
 logging.yml
 docker-compose.override.yml

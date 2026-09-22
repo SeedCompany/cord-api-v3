@@ -1,5 +1,6 @@
 import { type ID } from '~/common';
 import { type DataLoaderStrategy, LoaderFactory } from '~/core/data-loader';
+import { GTLReport } from '../gtl-report/dto';
 import { ProgressReport } from '../progress-report/dto';
 import {
   FinancialReport,
@@ -14,6 +15,7 @@ import { PeriodicReportService } from './periodic-report.service';
   FinancialReport,
   NarrativeReport,
   ProgressReport,
+  GTLReport,
 ])
 export class PeriodicReportLoader implements DataLoaderStrategy<
   PeriodicReport,

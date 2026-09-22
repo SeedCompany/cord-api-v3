@@ -21,6 +21,9 @@ export * from './by-role/staff-member.policy';
 export * from './by-role/translator.policy';
 
 export * from './by-feature/engagements-create-delete.policy';
+export * from './by-feature/feature-post-for-investor-report.policy';
+export * from './by-feature/finalize-post-wording.policy';
+export * from './by-feature/moderate-posts.policy';
 export * from './by-feature/progress-report-media-owner.policy';
 export * from './by-feature/project-change-requests-beta.policy';
 export * from './by-feature/read-util-objects.policy';
@@ -29,3 +32,4 @@ export * from './by-feature/everyone-can-comment.policy';
 export * from './by-feature/user-can-manage-own-comments.policy';
 export * from './by-feature/new-progress-reports-beta.policy';
 export * from './by-feature/project-managers-can-retract-own-change-to-plan-approval';
+export * from './by-feature/gtl-reports.policy';

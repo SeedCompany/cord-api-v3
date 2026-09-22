@@ -511,6 +511,19 @@ export class FileService {
     return fileId;
   }
 
+  /**
+   * Duplicate a file version's bytes server-side, under a fresh id, without
+   * the client re-uploading. Pair with `createDefinedFile`'s `upload` field
+   * to attach the copy to its own new File/FileVersion/Media chain — that
+   * independence (not just avoiding the re-upload) is the point: it lets the
+   * copy's caption/category diverge from the source's from then on.
+   */
+  async copyFileVersion(sourceVersionId: ID): Promise<ID> {
+    const newVersionId = await generateId();
+    await this.bucket.copyObject(sourceVersionId, newVersionId);
+    return newVersionId;
+  }
+
   async createDefinedFile(
     fileId: ID,
     initialFileName: string | undefined,

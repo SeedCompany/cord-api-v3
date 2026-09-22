@@ -7,6 +7,14 @@ import { member, Policy, Role, variant } from '../util';
   r.FieldRegion.read,
   r.FieldZone.read,
   r.Language.when(member).read,
+  // Prayer requests and updates on their own engagement, throughout the
+  // quarter rather than only at report time. Editing and deleting their own is
+  // already granted globally by UserCanManageOwnCommentsPolicy; this adds the
+  // create and the read of the shared feed.
+  //
+  // Note there is no grant on `approvedShareability` — a partner asks for a
+  // reach, a moderator clears it. See ModeratePostsPolicy.
+  r.LanguageEngagement.children((c) => c.posts.when(member).create.read),
   r.Organization.when(member).read.specifically((p) => p.address.none),
   r.Partner.when(member).read.specifically((p) => p.pointOfContact.none),
   r.Partnership.when(member).read,

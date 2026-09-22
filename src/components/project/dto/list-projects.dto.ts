@@ -198,7 +198,9 @@ export class TranslationProjectListOutput extends PaginatedList(
 export class InternshipProjectListOutput extends PaginatedList(
   InternshipProject,
   {
-    itemsDescription: PaginatedList.itemDescriptionFor('internship projects'),
+    itemsDescription: PaginatedList.itemDescriptionFor(
+      'Global Translation Leader projects',
+    ),
   },
 ) {}
 
@@ -223,11 +225,13 @@ export abstract class SecuredTranslationProjectList extends SecuredList(
 ) {}
 
 @ObjectType({
-  description: SecuredList.descriptionFor('internship projects'),
+  description: SecuredList.descriptionFor('Global Translation Leader projects'),
 })
 export abstract class SecuredInternshipProjectList extends SecuredList(
   InternshipProject,
   {
-    itemsDescription: PaginatedList.itemDescriptionFor('internship projects'),
+    itemsDescription: PaginatedList.itemDescriptionFor(
+      'Global Translation Leader projects',
+    ),
   },
 ) {}

@@ -1,18 +1,23 @@
 import { simpleSwitch } from '@seedcompany/common';
 import { type MergeExclusive } from 'type-fest';
 import { ServerException } from '~/common';
+import { GTLReport } from '../../gtl-report/dto';
 import { ProgressReport } from '../../progress-report/dto';
 import { FinancialReport, NarrativeReport } from './periodic-report.dto';
 
 export type PeriodicReport = MergeExclusive<
-  MergeExclusive<FinancialReport, NarrativeReport>,
-  ProgressReport
+  MergeExclusive<
+    MergeExclusive<FinancialReport, NarrativeReport>,
+    ProgressReport
+  >,
+  GTLReport
 >;
 
 const getPeriodicReportTypeMap = () => ({
   Financial: FinancialReport,
   Narrative: NarrativeReport,
   Progress: ProgressReport,
+  GTL: GTLReport,
 });
 type PeriodicReportTypeMapStatic = ReturnType<typeof getPeriodicReportTypeMap>;
 export type PeriodicReportTypeMap = {

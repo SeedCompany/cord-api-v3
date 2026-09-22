@@ -252,9 +252,34 @@ const projectIdRefForResource = (resource: EnhancedResource<any>): SQL => {
       return sql.raw(
         `(select "e"."project_id" from "engagements" "e" where "e"."id" = "ceremonies"."engagement_id")`,
       );
+    case 'GtlGoal':
+      // Engagement-owned as of migration 0003.
+      return sql.raw(
+        `(select "e"."project_id" from "engagements" "e" where "e"."id" = "gtl_goals"."engagement_id")`,
+      );
+    case 'GtlGoalProgress':
+      return sql.raw(
+        `(select "e"."project_id" from "engagements" "e"
+            join "gtl_goals" "g" on "g"."engagement_id" = "e"."id"
+           where "g"."id" = "gtl_goal_progress"."goal_id")`,
+      );
+    case 'GtlReportPracticum':
+      return sql.raw(
+        `(select "e"."project_id" from "engagements" "e"
+            join "periodic_reports" "pr" on "pr"."engagement_id" = "e"."id"
+           where "pr"."id" = "gtl_report_practicums"."report_id")`,
+      );
+    case 'GtlReportMedia':
+      return sql.raw(
+        `(select "e"."project_id" from "engagements" "e"
+            join "periodic_reports" "pr" on "pr"."engagement_id" = "e"."id"
+           where "pr"."id" = "gtl_report_media"."report_id")`,
+      );
     case 'ProgressReport':
-      // Progress rows on the shared periodic_reports table are always
+    case 'GTLReport':
+      // Both live on the shared periodic_reports table and are always
       // engagement-parented (never project-parented directly) — see
+      // `engagementParentedReportTypes` and
       // PeriodicReportDrizzleRepository.parentCondition.
       return sql.raw(
         `(select "e"."project_id" from "engagements" "e" where "e"."id" = "periodic_reports"."engagement_id")`,
