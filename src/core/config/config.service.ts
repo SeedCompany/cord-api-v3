@@ -100,6 +100,14 @@ export const makeConfig = (env: EnvironmentService) =>
     isConsole = process.argv.join(' ').includes('console');
     /** Is this a REPL / console command process? */
     isCli = this.isRepl || this.isConsole;
+    /**
+     * Is this a schema-generation-only boot (`yarn start -- --gen-schema`)?
+     * It initializes the app to emit the GraphQL schema and exits without ever
+     * querying, so it must not need a database — CI generates the schema in
+     * jobs that have no database service at all. Boot-time writes (index
+     * creation, migrations, root object sync) are skipped, as in read-only mode.
+     */
+    isGenSchema = process.argv.includes('--gen-schema');
 
     /** Is this a jest process? */
     jest = Boolean(env.string('JEST_WORKER_ID').optional());
@@ -241,16 +249,19 @@ export const makeConfig = (env: EnvironmentService) =>
 
     dbIndexesCreate =
       !this.maintenance.readOnly &&
+      !this.isGenSchema &&
       env
         .boolean('DB_CREATE_INDEXES')
         .optional(isDev ? this.neo4j.isLocal : true);
     dbAutoMigrate =
       !this.maintenance.readOnly &&
+      !this.isGenSchema &&
       env
         .boolean('DB_AUTO_MIGRATE')
         .optional(isDev && this.neo4j.isLocal && !this.jest);
     dbRootObjectsSync =
       !this.maintenance.readOnly &&
+      !this.isGenSchema &&
       env.boolean('DB_ROOT_OBJECTS_SYNC').optional(
         isDev
           ? // In dev, don't write root objects into a shared/remote database —
@@ -271,7 +282,7 @@ export const makeConfig = (env: EnvironmentService) =>
      * `maintenance.readOnly` freezes the GraphQL layer without leaving its
      * ephemeral database schemaless.
      */
-    pgAutoMigrate = !this.maintenance.readOnly;
+    pgAutoMigrate = !this.maintenance.readOnly && !this.isGenSchema;
 
     files = (() => {
       const sources = env

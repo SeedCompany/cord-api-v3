@@ -1,9 +1,10 @@
 # Copy this file to docker-compose.override.yml to customize the local setup.
 services:
   postgres:
-    # Move the host port if 5432 is taken.
+    # Move the host port if 5432 is taken. `!override` replaces the base
+    # file's mapping instead of adding a second one (Compose >= 2.24.4).
     # Keep POSTGRES_URL in .env.local in sync.
-    #ports:
+    #ports: !override
     #  - 5433:5432
 
     # More shared memory for large restores / heavy local querying.
