@@ -28,6 +28,9 @@ export class GtlProgressExplanationResolver {
     @Parent() report: GTLReport,
   ): Promise<GtlProgressExplanation> {
     const row = await this.repo.readOne(report.id);
+    // `report as any`: the secured DTO is fine as privilege context, and this
+    // is the same shape Momentum's own confidential section uses — see
+    // VarianceExplanationService.privilegesFor.
     const canRead = this.privileges.for(GTLReport, report as any).can('edit');
     const explanation: GtlProgressExplanation = {
       status: { value: row?.status, canRead, canEdit: canRead },

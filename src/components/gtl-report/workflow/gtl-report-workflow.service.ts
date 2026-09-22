@@ -1,6 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { DateTime } from 'luxon';
-import { type ID, InputException, UnauthorizedException } from '~/common';
+import {
+  type ID,
+  InputException,
+  type RichTextDocument,
+  UnauthorizedException,
+} from '~/common';
 import { Identity } from '~/core/authentication';
 import { GtlReportWorkflowRepository } from './gtl-report-workflow.repository';
 import { GtlTransitions, transitionsFrom } from './transitions';
@@ -48,7 +53,11 @@ export class GtlReportWorkflowService {
     }));
   }
 
-  async execute(input: { report: ID; transition: ID; notes?: unknown }) {
+  async execute(input: {
+    report: ID;
+    transition: ID;
+    notes?: RichTextDocument | null;
+  }) {
     const transition = Object.values(GtlTransitions).find(
       (t) => t.id === input.transition,
     );

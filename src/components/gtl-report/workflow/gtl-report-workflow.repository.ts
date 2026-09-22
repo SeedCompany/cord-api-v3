@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { asc, eq } from 'drizzle-orm';
-import { generateId, type ID } from '~/common';
+import { generateId, type ID, type RichTextDocument } from '~/common';
 import { DrizzleService } from '~/core/drizzle';
 import {
   gtlReportWorkflowEvents,
@@ -36,7 +36,7 @@ export class GtlReportWorkflowRepository {
     to: GtlReportStatus;
     transitionKey: ID | null;
     who: ID;
-    notes?: unknown;
+    notes?: RichTextDocument | null;
   }) {
     const id = await generateId<ID<'GtlReportWorkflowEvent'>>();
     await this.db.transaction(async (tx) => {
@@ -46,7 +46,7 @@ export class GtlReportWorkflowRepository {
         who: input.who as ID<'User'>,
         status: input.to,
         transitionKey: input.transitionKey,
-        notes: (input.notes ?? null) as never,
+        notes: input.notes ?? null,
       });
       await tx
         .update(periodicReports)

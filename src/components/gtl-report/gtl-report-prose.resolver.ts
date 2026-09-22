@@ -35,7 +35,7 @@ export class GtlReportProseResolver {
   async communityImpact(
     @Parent() report: GTLReport,
   ): Promise<PromptVariantResponseList<GtlProseVariant>> {
-    return await this.communityImpactService.list(report as any);
+    return await this.communityImpactService.list(report);
   }
 
   @Mutation(() => PromptVariantResponse)
@@ -47,7 +47,7 @@ export class GtlReportProseResolver {
   async updateGtlReportCommunityImpactResponse(
     @Args('input') input: UpdatePromptVariantResponse<GtlProseVariant>,
   ) {
-    return await this.communityImpactService.submitResponse(input as never);
+    return await this.communityImpactService.submitResponse(input);
   }
 
   @Mutation(() => PromptVariantResponse)
