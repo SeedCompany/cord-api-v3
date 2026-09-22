@@ -1239,7 +1239,10 @@ describe('Webhooks', () => {
 
       // Trigger an update on the project
       await tester.run(UpdateProject, {
-        input: { id: project.id, name: `${project.name.value!} Updated` },
+        input: {
+          id: project.id,
+          name: `${String(project.name.value!)} Updated`,
+        },
       });
 
       // Wait for both webhooks to be sent
@@ -1325,7 +1328,7 @@ describe('Webhooks', () => {
         tester.apply(
           webhooks.save({
             url: receiver.url,
-            key: `ProjectUpdated:${project1.id}` as ID,
+            key: `ProjectUpdated:${String(project1.id)}` as ID,
             subscription: SpecificProjectUpdated,
             variables: { project: project1.id },
           }),
@@ -1333,7 +1336,7 @@ describe('Webhooks', () => {
         tester.apply(
           webhooks.save({
             url: receiver.url,
-            key: `ProjectUpdated:${project2.id}` as ID,
+            key: `ProjectUpdated:${String(project2.id)}` as ID,
             subscription: SpecificProjectUpdated,
             variables: { project: project2.id },
           }),
@@ -1355,7 +1358,10 @@ describe('Webhooks', () => {
         events.pipe(bufferTime(SHORT)),
       );
       await tester.run(UpdateProject, {
-        input: { id: project1.id, name: `${project1.name.value!} Updated` },
+        input: {
+          id: project1.id,
+          name: `${String(project1.name.value!)} Updated`,
+        },
       });
       const requests1 = await waitingForProjectUpdates1;
 
@@ -1369,7 +1375,10 @@ describe('Webhooks', () => {
         events.pipe(bufferTime(SHORT)),
       );
       await tester.run(UpdateProject, {
-        input: { id: project2.id, name: `${project2.name.value!} Updated` },
+        input: {
+          id: project2.id,
+          name: `${String(project2.name.value!)} Updated`,
+        },
       });
       const requests2 = await waitingForProjectUpdates2;
 

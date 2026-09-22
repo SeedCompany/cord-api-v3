@@ -2639,6 +2639,22 @@ export const promptVariantResponses = pgTable(
       .notNull()
       .defaultNow(),
     deletedAt: timestamp('deleted_at', { withTimezone: true }),
+    /**
+     * Marks this item as the one to surface for an audience that only wants a
+     * single item, when a parent can hold several — e.g. one investor-featured
+     * story out of several a report may have. Meaningless (always false) for
+     * subtypes that only ever hold one item per parent, such as team news;
+     * added here rather than on a subtype table because every
+     * PromptVariantResponse subtype shares this one, scoped by resourceType.
+     *
+     * Exclusivity (at most one true per parent+resourceType) is an application
+     * invariant enforced by whoever sets it to true, not a DB constraint —
+     * a partial unique index here would need a WHERE featured on
+     * (parent_id, resource_type), which Postgres supports, but the write path
+     * already does the clear-then-set in one transaction, so the index would
+     * only guard against a bug rather than a real concurrent race.
+     */
+    featured: boolean('featured').notNull().default(false),
   },
   (t) => [
     index('prompt_variant_responses_parent_id_idx').on(t.parentId),

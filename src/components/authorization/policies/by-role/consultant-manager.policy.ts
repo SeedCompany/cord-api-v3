@@ -51,6 +51,8 @@ import * as Consultant from './consultant.policy';
     r.ProgressReportCommunityStory,
     r.ProgressReportHighlight,
     r.ProgressReportTeamNews,
+    r.ProgressReportOtherActivities,
+    r.ProgressReportNextQuarterPlans,
     r.ProgressReportMedia,
     r.ProgressReportVarianceExplanation,
     r.StepProgress,

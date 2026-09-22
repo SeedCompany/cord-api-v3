@@ -140,6 +140,21 @@ export class PostDrizzleRepository extends DrizzleDtoRepository<
     return rows.map((row) => this.toDto(row));
   }
 
+  /**
+   * How many live posts on this report already have `featured` set. Backs
+   * the "up to N in the Investor Report" cap in PostService — checked before
+   * setting `featured: true`, not enforced by a DB constraint, since the
+   * limit is a product decision that could change rather than an invariant
+   * of the data shape.
+   */
+  async countFeatured(reportId: ID<'PeriodicReport'>): Promise<number> {
+    const [row] = await this.db
+      .select({ count: count() })
+      .from(posts)
+      .where(and(eq(posts.reportId, reportId), eq(posts.featured, true)));
+    return row?.count ?? 0;
+  }
+
   async securedList({ filter, ...input }: PostListInput) {
     const conditions = [this.authFilter()];
     if (filter?.parentId) {

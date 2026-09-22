@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { and, desc, eq, inArray, isNull, type SQL } from 'drizzle-orm';
+import { and, count, desc, eq, inArray, isNull, type SQL } from 'drizzle-orm';
 import { DateTime } from 'luxon';
 import {
   generateId,
@@ -127,6 +127,27 @@ export class ProgressReportMediaDrizzleRepository {
         desc(progressReportMedia.createdAt),
       );
     return await this.readMany(featured.map((r) => r.id));
+  }
+
+  /**
+   * How many live items in this report already hold `variant`. Backs the
+   * "up to N in the Investor Report" cap in ProgressReportMediaService —
+   * checked before creating a row in that variant, not enforced by a DB
+   * constraint, since the limit is a product decision that could change
+   * rather than an invariant of the data shape.
+   */
+  async countByVariant(reportId: ID<Report>, variant: string): Promise<number> {
+    const [row] = await this.db
+      .select({ count: count() })
+      .from(progressReportMedia)
+      .where(
+        and(
+          eq(progressReportMedia.reportId, reportId),
+          eq(progressReportMedia.variant, variant),
+          isNull(progressReportMedia.deletedAt),
+        ),
+      );
+    return row?.count ?? 0;
   }
 
   async create(

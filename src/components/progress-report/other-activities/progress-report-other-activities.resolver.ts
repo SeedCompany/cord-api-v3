@@ -17,60 +17,43 @@ import {
   UpdatePromptVariantResponse,
 } from '../../prompts/dto';
 import { ProgressReport } from '../dto';
-import { type CommunityStoryVariant } from '../dto/community-stories.dto';
-import { ProgressReportCommunityStoryService } from './progress-report-community-story.service';
+import { type OtherActivitiesVariant } from '../dto/other-activities.dto';
+import { ProgressReportOtherActivitiesService } from './progress-report-other-activities.service';
 
 @Resolver(ProgressReport)
-export class ProgressReportCommunityStoryResolver {
-  constructor(private readonly service: ProgressReportCommunityStoryService) {}
+export class ProgressReportOtherActivitiesResolver {
+  constructor(private readonly service: ProgressReportOtherActivitiesService) {}
 
   @ResolveField(() => PromptVariantResponseList)
-  async communityStories(
+  async otherActivities(
     @Parent() report: ProgressReport,
-  ): Promise<PromptVariantResponseList<CommunityStoryVariant>> {
+  ): Promise<PromptVariantResponseList<OtherActivitiesVariant>> {
     return await this.service.list(report);
   }
 
   @Mutation(() => PromptVariantResponse)
-  async createProgressReportCommunityStory(
+  async createProgressReportOtherActivities(
     @Args('input') input: ChoosePrompt,
   ): Promise<PromptVariantResponse> {
     return await this.service.create(input);
   }
 
   @Mutation(() => PromptVariantResponse)
-  async changeProgressReportCommunityStoryPrompt(
+  async changeProgressReportOtherActivitiesPrompt(
     @Args('input') input: ChangePrompt,
   ): Promise<PromptVariantResponse> {
     return await this.service.changePrompt(input);
   }
 
   @Mutation(() => PromptVariantResponse)
-  async updateProgressReportCommunityStoryResponse(
-    @Args('input')
-    input: UpdatePromptVariantResponse<CommunityStoryVariant>,
+  async updateProgressReportOtherActivitiesResponse(
+    @Args('input') input: UpdatePromptVariantResponse<OtherActivitiesVariant>,
   ): Promise<PromptVariantResponse> {
     return await this.service.submitResponse(input);
   }
 
-  @Mutation(() => [PromptVariantResponse], {
-    description: `
-      Mark this story as the one for the investor/published report.
-
-      Clears whichever story previously held it on this same report — at most
-      one story is ever featured per report. Returns every story whose
-      \`featured\` value changed (this one, and whichever it demoted), so a
-      client refreshing only the mutation response still sees both updates.
-    `,
-  })
-  async featureProgressReportCommunityStory(
-    @IdArg() id: ID<PromptVariantResponse>,
-  ): Promise<readonly PromptVariantResponse[]> {
-    return await this.service.feature(id);
-  }
-
   @Mutation(() => ProgressReport)
-  async deleteProgressReportCommunityStory(
+  async deleteProgressReportOtherActivities(
     @IdArg() id: ID<PromptVariantResponse>,
     @Loader(PeriodicReportLoader) reports: LoaderOf<PeriodicReportLoader>,
   ): Promise<PeriodicReport> {

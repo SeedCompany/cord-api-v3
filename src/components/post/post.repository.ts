@@ -79,9 +79,10 @@ export class PostRepository extends DtoRepository(Post) {
   }
 
   /**
-   * `filter.type` is deliberately unimplemented here: only GTL reports narrow
-   * posts by kind, and GTL exists on Postgres alone. If another caller ever
-   * sets it, this path has to grow a `node.type` predicate.
+   * `filter.types` is deliberately unimplemented here: the surfaces that narrow
+   * posts by kind — an engagement's prayer feed, a report's prayer section —
+   * exist on Postgres alone. If a Neo4j caller ever sets it, this path has to
+   * grow a `node.type` predicate.
    */
   async securedList({ filter, ...input }: PostListInput) {
     const result = await this.db

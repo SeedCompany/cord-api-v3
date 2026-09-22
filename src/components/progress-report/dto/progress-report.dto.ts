@@ -17,6 +17,8 @@ import { type DefinedFile } from '../../file/dto';
 import { IPeriodicReport } from '../../periodic-report/dto/periodic-report.dto';
 import { ProgressReportCommunityStory } from './community-stories.dto';
 import { ProgressReportHighlight } from './highlights.dto';
+import { ProgressReportNextQuarterPlans } from './next-quarter-plans.dto';
+import { ProgressReportOtherActivities } from './other-activities.dto';
 import {
   SecuredProgressReportStatus as SecuredStatus,
   ProgressReportStatus as Status,
@@ -37,6 +39,8 @@ export class ProgressReport extends Interfaces {
     highlights: [ProgressReportHighlight],
     teamNews: [ProgressReportTeamNews],
     communityStories: [ProgressReportCommunityStory],
+    otherActivities: [ProgressReportOtherActivities],
+    nextQuarterPlans: [ProgressReportNextQuarterPlans],
     ...Commentable.Relations(),
   })) satisfies ResourceRelationsShape;
 

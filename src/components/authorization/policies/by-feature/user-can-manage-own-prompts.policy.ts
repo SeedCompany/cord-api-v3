@@ -5,6 +5,8 @@ import { creator, Policy } from '../util';
     r.ProgressReportCommunityStory,
     r.ProgressReportHighlight,
     r.ProgressReportTeamNews,
+    r.ProgressReportOtherActivities,
+    r.ProgressReportNextQuarterPlans,
   ].map((it) => it.specifically((p) => p.prompt.when(creator).edit)),
 ])
 export class UserCanManageOwnPromptsPolicy {}

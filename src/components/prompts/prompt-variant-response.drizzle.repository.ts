@@ -234,6 +234,7 @@ export const PromptVariantResponseDrizzleRepository = <
         creator: { id: row.creatorId },
         parent,
         prompt: row.prompt,
+        featured: row.featured,
         responses: row.entries
           .filter((entry) => !entry.deletedAt)
           .map((entry) => ({

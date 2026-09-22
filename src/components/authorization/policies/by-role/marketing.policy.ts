@@ -23,6 +23,8 @@ import {
     r.ProgressReportCommunityStory,
     r.ProgressReportHighlight,
     r.ProgressReportTeamNews,
+    r.ProgressReportOtherActivities,
+    r.ProgressReportNextQuarterPlans,
   ].flatMap((it) => [
     it.create,
     it.read.specifically((p) => [

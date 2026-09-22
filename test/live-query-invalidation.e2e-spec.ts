@@ -87,7 +87,7 @@ describe('Live-query invalidation (Drizzle base) e2e', () => {
     const org = await createOrganization(app);
     const spy = watchInvalidations();
 
-    const newName = `${org.name.value ?? 'Org'} (renamed)`;
+    const newName = `${String(org.name.value ?? 'Org')} (renamed)`;
     const updated = await app.graphql.mutate(UpdateOrgDoc, {
       input: { id: org.id, name: newName },
     });
@@ -97,7 +97,7 @@ describe('Live-query invalidation (Drizzle base) e2e', () => {
     expect(updated.updateOrganization.organization.name.value).toBe(newName);
 
     expect(spy.mock.calls.map(([arg]) => keyOf(arg))).toContain(
-      `Organization:${org.id}`,
+      `Organization:${String(org.id)}`,
     );
   });
 
@@ -110,7 +110,7 @@ describe('Live-query invalidation (Drizzle base) e2e', () => {
       await app.graphql.mutate(DeleteOrgDoc, { id: org.id });
 
       expect(spy.mock.calls.map(([arg]) => keyOf(arg))).toContain(
-        `Organization:${org.id}`,
+        `Organization:${String(org.id)}`,
       );
     },
   );
@@ -130,7 +130,7 @@ describe('Live-query invalidation (Drizzle base) e2e', () => {
       });
 
       expect(spy.mock.calls.map(([arg]) => keyOf(arg))).not.toContain(
-        `Organization:${org.id}`,
+        `Organization:${String(org.id)}`,
       );
     },
   );
@@ -152,8 +152,8 @@ describe('Live-query invalidation (Drizzle base) e2e', () => {
       await app.graphql.mutate(UpdateDirectProductDoc, { id: product.id });
 
       const keys = spy.mock.calls.map(([arg]) => keyOf(arg));
-      expect(keys).toContain(`DirectScriptureProduct:${product.id}`);
-      expect(keys).not.toContain(`Product:${product.id}`);
+      expect(keys).toContain(`DirectScriptureProduct:${String(product.id)}`);
+      expect(keys).not.toContain(`Product:${String(product.id)}`);
     },
   );
 });

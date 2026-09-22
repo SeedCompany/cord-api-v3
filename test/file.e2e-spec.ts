@@ -366,8 +366,8 @@ describe('File e2e', () => {
       // the concrete type. `FileNode:` — the interface — would announce
       // something nothing listens for: worse than silence, because it reads as
       // correct in review.
-      expect(keys).toContain(`Directory:${dir.id}`);
-      expect(keys).not.toContain(`FileNode:${dir.id}`);
+      expect(keys).toContain(`Directory:${String(dir.id)}`);
+      expect(keys).not.toContain(`FileNode:${String(dir.id)}`);
     });
 
     it('announces the whole subtree when a directory is deleted', async () => {
@@ -378,11 +378,11 @@ describe('File e2e', () => {
       await deleteNode(app, dir.id);
 
       const keys = keysFrom(spy);
-      expect(keys).toContain(`Directory:${dir.id}`);
+      expect(keys).toContain(`Directory:${String(dir.id)}`);
       // The descendants were soft-deleted by the same statement, so RETURNING
       // hands them over for free. Neo4j announces only the top node; this is a
       // deliberate improvement, not a divergence to revert.
-      expect(keys).toContain(`File:${file.id}`);
+      expect(keys).toContain(`File:${String(file.id)}`);
     });
 
     it('announces the parent File when its latest version is deleted', async () => {
@@ -395,11 +395,11 @@ describe('File e2e', () => {
       await deleteNode(app, secondUpload.id);
 
       const keys = keysFrom(spy);
-      expect(keys).toContain(`FileVersion:${secondUpload.id}`);
+      expect(keys).toContain(`FileVersion:${String(secondUpload.id)}`);
       // The File survives but its surfaced mimeType/size/modifiedAt just moved
       // back to the earlier version, and it is not in the deleted subtree — so
       // it needs its own announcement.
-      expect(keys).toContain(`File:${file.id}`);
+      expect(keys).toContain(`File:${String(file.id)}`);
     });
   });
 
