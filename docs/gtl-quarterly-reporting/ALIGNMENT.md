@@ -3,6 +3,34 @@
 Ten concrete places where GTL's local work disagrees with, duplicates, or is already superseded by
 the other two efforts touching the same domain. Ordered roughly by how much code moves.
 
+## Status — 2026-09-22
+
+Five of the ten are now closed on the ground. `gtl-reports` absorbed the Quarterly Report Intake
+Post model (prayer moved off `GTLReport` onto the engagement, the duplicated `PostFilters` field
+collapsed to the shared plural one, the report-scoped prayer resolver deleted), PR #3882's genesis
+squash landed and every branch here renumbered against it, and `partner-quarterly-reporting` has
+been rebased onto `gtl-reports` — the two no longer disagree about the shared tables.
+
+| # | Finding | Status |
+| - | --- | --- |
+| 1 | Prayer's `Postable` parent | **Closed** — `GTLReport` is no longer `Postable`; `InternshipEngagement` is, with `report` as attribution |
+| 2 | How `Postable` is declared | **Open** — still `implements: [Engagement, Postable]` on both engagement subtypes, not `IntersectTypes` |
+| 3 | `PostFilters` filter shape | **Closed** — only the shared, public, plural `types` remains |
+| 4 | `GtlReportPrayerResolver` | **Closed** — file and its module registration deleted; the UI props it existed for were kept |
+| 5 | Moderation | **Partly closed** — GTL adopted the shared model rather than building a third; the Prayer-Requests `moderation_state` rework is still ahead |
+| 6 | Report attribution keying | **Open** — `posts.report_id` is still a literal row FK, not period-keyed |
+| 7 | Media table fork | **Closed as to numbering** (see 9); the fork itself stands, as intended |
+| 8 | DOMO sync reach | **Open** — unchanged; still needs the generic "any Postable engagement" fix |
+| 9 | Migration numbering | **Closed** — genesis squash landed; the combined set is now `0000`–`0008`, contiguous, and applies cleanly to an empty database |
+| 10 | Third model on `language-domain-poc` | **Open** — not this branch's to fix |
+
+Finding 2 is the one worth acting on next: it is a silent-failure trap rather than a visible bug.
+`EnhancedResource.interfaces` is derived from `getParentTypes`, which walks the *prototype chain*,
+and `implements: [...]` is GraphQL-schema metadata that never touches it — so
+`getImplementations(Postable)` returns neither engagement type. Nothing grants on `Postable` today
+(grants are declared per concrete type), so nothing is broken yet; the first interface-level grant
+written against it will simply not apply, with no error.
+
 ## 1. Prayer's parent is on the wrong resource
 
 GTL made `GTLReport` implement `Postable` (`gtl-report.dto.ts`), with a `prayerRequests` field that
@@ -168,12 +196,18 @@ extending `progress_report_media`, on the reasoning that GTL media is never re-c
 variant the way a Momentum highlight is — there is no "Investor Communications" pass on a GTL
 photo. That reasoning holds; this is not a design conflict to resolve.
 
-It is, however, a **migration-numbering** conflict: `partner-quarterly-reporting` independently
-claims migration slots `0039`–`0042` for its own, unrelated changes (post moderation,
-`prompt_variant_responses.featured`, `posts.final_body`, `posts.featured`), and GTL's `0041_gtl_report_media.sql`
-was written against a different, older base — both branches currently think they own "0041". This
-has nothing to do with media specifically; it's the same problem as Finding 9, and is called out
-here only because media is where GTL's own new migration collides most directly.
+It was, however, a **migration-numbering** conflict: `partner-quarterly-reporting` independently
+claimed migration slots `0039`–`0042` for its own, unrelated changes (post moderation,
+`prompt_variant_responses.featured`, `posts.final_body`, `posts.featured`), and GTL's
+`0041_gtl_report_media.sql` was written against a different, older base — both branches thought
+they owned "0041". This had nothing to do with media specifically; it was the same problem as
+Finding 9, called out here only because media is where GTL's own new migration collided most
+directly.
+
+**Resolved (2026-09-22).** After the genesis squash, the combined set is contiguous and
+unambiguous: `0002_add_gtl_reports`, `0003_gtl_goals_tracking`, `0004_gtl_report_media`,
+`0005_add_post_report_and_moderation`, `0006_add_post_final_body`, `0007_add_post_featured`,
+`0008_add_prompt_variant_response_featured`.
 
 **Forward-looking note, not required now:** if GTL ever needs investor-facing curation of its
 media (out of scope for the current POC per the original kickoff decisions), reuse the
@@ -206,10 +240,13 @@ to branch on the `Postable` interface / `parent_type` generically rather than na
 
 ## 9. Migration-number collision spans at least four branches, GTL included
 
-Both API worktrees currently number new migrations starting at `0039` against a `develop` baseline
-that has since moved. As of this review:
+**Resolved (2026-09-22)** — retained because the sequencing rule it establishes still governs the
+branches below that have not yet rebased.
 
-| Branch | Claims migration(s) |
+Both API worktrees numbered new migrations starting at `0039` against a `develop` baseline that had
+since moved. As of the original review:
+
+| Branch | Claimed migration(s) |
 | --- | --- |
 | `partner-quarterly-reporting` | `0039_add_post_report_and_moderation`, `0040_add_prompt_variant_response_featured`, `0041_add_post_final_body`, `0042_add_post_featured` |
 | `gtl-reports` | `0039_add_gtl_reports`, `0040_gtl_goals_tracking`, `0041_gtl_report_media` |
@@ -245,15 +282,17 @@ separately. See Epic 4.
 
 ## Summary table
 
-| # | Finding | GTL today | Target | Epic |
-| - | --- | --- | --- | --- |
-| 1 | Prayer's `Postable` parent | `GTLReport` | `InternshipEngagement`, `report` as attribution | 1 |
-| 2 | How `Postable` is declared | `implements: [...]` on the report class | One line on `Engagement`'s `IntersectTypes` | 1 |
-| 3 | `PostFilters` filter shape | Internal, singular `type` | Shared, public, plural `types` | 1 |
-| 4 | `GtlReportPrayerResolver` | Exists, report-scoped | Deleted; UI props (`fixedType`/`listField`/`readOnly`) kept, re-pointed | 1 |
-| 5 | Moderation | None | Wait for shared `moderation_state`/`final_body`; grant roles only | 2 |
-| 6 | Report attribution keying | Row id (via direct parenting) | Report period, re-resolved | 1, 4 |
-| 7 | Media table | New `gtl_report_media` (legitimate fork) | Unchanged; adopt shared `featured` pattern later, not now | 5 (deferred) |
-| 8 | DOMO sync reach | Never reaches DOMO | Same F1 fix as Momentum, written generically | 3 |
-| 9 | Migration numbering | Claims `0039`–`0041`, collides with 3+ branches | Coordinated renumber after genesis squash | 4 |
-| 10 | Third competing model (`language-domain-poc`) | N/A — not GTL's branch | Dropped in the same coordinated pass | 4 |
+Status as of 2026-09-22; "GTL then" is the state at the original review.
+
+| # | Finding | GTL then | Target | Epic | Status |
+| - | --- | --- | --- | --- | --- |
+| 1 | Prayer's `Postable` parent | `GTLReport` | `InternshipEngagement`, `report` as attribution | 1 | Closed |
+| 2 | How `Postable` is declared | `implements: [...]` on the report class | One line on `Engagement`'s `IntersectTypes` | 1 | **Open** |
+| 3 | `PostFilters` filter shape | Internal, singular `type` | Shared, public, plural `types` | 1 | Closed |
+| 4 | `GtlReportPrayerResolver` | Exists, report-scoped | Deleted; UI props (`fixedType`/`listField`/`readOnly`) kept, re-pointed | 1 | Closed |
+| 5 | Moderation | None | Wait for shared `moderation_state`/`final_body`; grant roles only | 2 | Partly closed |
+| 6 | Report attribution keying | Row id (via direct parenting) | Report period, re-resolved | 1, 4 | **Open** |
+| 7 | Media table | New `gtl_report_media` (legitimate fork) | Unchanged; adopt shared `featured` pattern later, not now | 5 (deferred) | Fork stands |
+| 8 | DOMO sync reach | Never reaches DOMO | Same F1 fix as Momentum, written generically | 3 | **Open** |
+| 9 | Migration numbering | Claimed `0039`–`0041`, collided with 3+ branches | Coordinated renumber after genesis squash | 4 | Closed |
+| 10 | Third competing model (`language-domain-poc`) | N/A — not GTL's branch | Dropped in the same coordinated pass | 4 | **Open** |
