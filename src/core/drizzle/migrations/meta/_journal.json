@@ -15,6 +15,13 @@
       "when": 1787950800000,
       "tag": "0001_progress_report_workflow_event_actor",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790035200000,
+      "tag": "0002_unaccent_extension",
+      "breakpoints": true
     }
   ]
 }
