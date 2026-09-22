@@ -39,7 +39,11 @@ export class DatabaseModule implements OnApplicationShutdown {
   ) {}
 
   async onApplicationShutdown() {
-    if (this.config.neo4j.ephemeral) {
+    // migration-todo: drop this cleanup along with the Neo4j engine code.
+    // The ephemeral test database only exists when the suite actually ran
+    // against Neo4j; under another engine this dials a server that local
+    // setups no longer run.
+    if (this.config.databaseEngine === 'neo4j' && this.config.neo4j.ephemeral) {
       if (this.config.jest) {
         await this.dbService.dropStaleTestDbs();
       }

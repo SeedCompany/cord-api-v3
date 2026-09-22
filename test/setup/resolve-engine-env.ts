@@ -29,8 +29,8 @@ import { resolve } from 'node:path';
  * wins, so CI (which sets `DATABASE` from the job matrix) is unaffected.
  */
 
-// Matches ConfigService's default: env.string('DATABASE').optional('neo4j')
-const APP_DEFAULT_ENGINE = 'neo4j';
+// Matches ConfigService's default: env.string('DATABASE').optional('postgres')
+const APP_DEFAULT_ENGINE = 'postgres';
 
 /**
  * The same files EnvironmentService reads, in the same order — including the
