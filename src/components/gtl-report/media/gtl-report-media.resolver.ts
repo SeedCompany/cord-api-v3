@@ -7,8 +7,8 @@ import {
 } from '@nestjs/graphql';
 import { type ID, IdArg } from '~/common';
 import { Loader, type LoaderOf } from '~/core/data-loader';
+import { FileNodeLoader, resolveDefinedFile } from '../../file';
 import { SecuredFile } from '../../file/dto';
-import { FileNodeLoader } from '../../file/file-node.loader';
 import { Media } from '../../file/media/media.dto';
 import { MediaLoader } from '../../file/media/media.loader';
 import { PeriodicReportLoader } from '../../periodic-report';
@@ -79,8 +79,13 @@ export class GtlReportMediaResolver {
     @Parent() media: GtlReportMedia,
     @Loader(FileNodeLoader) files: LoaderOf<FileNodeLoader>,
   ): Promise<SecuredFile> {
-    return media.file
-      ? { canRead: true, canEdit: true, value: await files.load(media.file) }
-      : { canRead: true, canEdit: true, value: undefined };
+    // The shared helper, rather than a direct load: it narrows the FileNode
+    // union to a File, and returns undefined for a DefinedFile that has no
+    // version yet — which a direct load throws on.
+    return await resolveDefinedFile(files, {
+      canRead: true,
+      canEdit: true,
+      value: media.file,
+    });
   }
 }

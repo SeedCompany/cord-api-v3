@@ -253,7 +253,7 @@ const projectIdRefForResource = (resource: EnhancedResource<any>): SQL => {
         `(select "e"."project_id" from "engagements" "e" where "e"."id" = "ceremonies"."engagement_id")`,
       );
     case 'GtlGoal':
-      // Engagement-owned as of migration 0040.
+      // Engagement-owned as of migration 0003.
       return sql.raw(
         `(select "e"."project_id" from "engagements" "e" where "e"."id" = "gtl_goals"."engagement_id")`,
       );

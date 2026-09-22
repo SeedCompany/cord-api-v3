@@ -54,7 +54,7 @@ const Interfaces = IntersectTypes(
  *
  * The workflow has its own status enum: GTL adds `PendingSupervisorSignOff`,
  * a state Momentum can never reach, and putting it on the shared enum would
- * surface it across Momentum's UI. @see `GtlReportStatus`, migration 0039
+ * surface it across Momentum's UI. @see `GtlReportStatus`, migration 0002
  */
 @RegisterResource()
 @ObjectType({

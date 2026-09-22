@@ -158,7 +158,7 @@ export class PeriodicReportDrizzleRepository extends DrizzleDtoRepository<
     // Which status column a new report initialises, if any. The two workflows
     // run on different enums in different columns, and `periodic_reports`
     // enforces one biconditional per column — leaving the wrong one null is a
-    // CHECK violation, not a silent no-op. @see migration 0039
+    // CHECK violation, not a silent no-op. @see migration 0002
     const initialStatus = {
       status: isProgress ? ProgressReportStatus.NotStarted : null,
       gtlStatus: input.type === 'GTL' ? GtlReportStatus.NotStarted : null,

@@ -46,7 +46,9 @@ export class GtlReportMediaDrizzleRepository {
 
   async readMany(ids: ReadonlyArray<ID<'GtlReportMedia'>>) {
     if (ids.length === 0) return [];
-    return await this.hydrate([inArray(gtlReportMedia.id, ids as string[])]);
+    return await this.hydrate([
+      inArray(gtlReportMedia.id, ids as Array<ID<'GtlReportMedia'>>),
+    ]);
   }
 
   async readOne(id: ID<'GtlReportMedia'>) {
