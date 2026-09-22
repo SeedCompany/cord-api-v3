@@ -1,0 +1,26 @@
+-- Enable `unaccent` so global search can fold accents.
+--
+-- Neo4j's full-text index used the `standard-folding` analyzer, which stripped
+-- diacritics from both the stored value and the query. `ilike` does not, so
+-- after the cutover an unaccented query stopped finding an accented name and
+-- vice versa — a real regression for language names, which carry diacritics.
+-- `search.drizzle.repository.ts` now wraps both sides of every comparison in
+-- `unaccent()`, and that function does not exist until this runs.
+--
+-- Adds no table, column, index or constraint: `CREATE EXTENSION` takes no lock
+-- on any existing relation and rewrites no rows, so it is safe against live
+-- production data regardless of table size.
+--
+-- The extension is on the RDS allowlist and installs into `public`, which is
+-- already on the app's `search_path` (every query in this codebase names its
+-- tables unqualified). It needs `rds_superuser` on RDS, which the app's
+-- migration role holds; locally the `postgres` superuser covers it.
+--
+-- Note for anyone tempted to index over this later: `unaccent()` is STABLE,
+-- not IMMUTABLE, so it cannot appear in an index expression without an
+-- IMMUTABLE wrapper. Writing that wrapper asserts the dictionary will never
+-- change, and the index silently returns wrong answers if it ever does. A
+-- sequential scan is correct at the current data size; see the "Why no index"
+-- section of the repository's doc comment.
+
+CREATE EXTENSION IF NOT EXISTS "unaccent";

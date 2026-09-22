@@ -121,6 +121,7 @@ describe('Rev79Service — applyMedia', () => {
       {} as any, // communityStoryService
       productProgressService,
       mediaService,
+      { run: jest.fn() } as any, // hooks
       { debug: jest.fn() } as any,
     );
 

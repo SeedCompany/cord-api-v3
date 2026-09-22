@@ -1,5 +1,11 @@
-import { Injectable } from '@nestjs/common';
-import { inArray, node, type Query, relation } from 'cypher-query-builder';
+import { Inject, Injectable } from '@nestjs/common';
+import {
+  inArray,
+  isNull,
+  node,
+  type Query,
+  relation,
+} from 'cypher-query-builder';
 import { type SetRequired } from 'type-fest';
 import {
   type ID,
@@ -9,14 +15,13 @@ import {
   ServerException,
   type UnsecuredDto,
 } from '~/common';
+import { Identity } from '~/core/authentication';
 import { DtoRepository } from '~/core/neo4j';
 import {
   ACTIVE,
   createNode,
   createRelationships,
-  currentUser,
   merge,
-  path,
   sorting,
 } from '~/core/neo4j/query';
 import { ProgressReport, type ProgressReportStatus as Status } from '../dto';
@@ -27,6 +32,8 @@ import { ProgressReportWorkflowEvent as WorkflowEvent } from './dto/workflow-eve
 export class ProgressReportWorkflowRepository extends DtoRepository(
   WorkflowEvent,
 ) {
+  @Inject() private readonly identity: Identity;
+
   async readMany(ids: readonly ID[]) {
     return await this.db
       .query()
@@ -70,7 +77,9 @@ export class ProgressReportWorkflowRepository extends DtoRepository(
         .match([
           node('node'),
           relation('out', undefined, 'who'),
-          node('who', 'User'),
+          // Actor, not User — automated transitions are attributed to a
+          // SystemAgent (e.g. Rev79), same as project workflow events.
+          node('who', 'Actor'),
         ])
         .return<{ dto: UnsecuredDto<WorkflowEvent> }>(
           merge('node', {
@@ -94,7 +103,9 @@ export class ProgressReportWorkflowRepository extends DtoRepository(
       .apply(
         createRelationships(WorkflowEvent, {
           in: { workflowEvent: ['ProgressReport', report] },
-          out: { who: currentUser },
+          // By Actor rather than `currentUser` (a User-labeled match) so a
+          // session running as a SystemAgent can be the recorded actor.
+          out: { who: ['Actor', this.identity.current.userId] },
         }),
       )
       .apply(this.hydrate())
@@ -144,13 +155,15 @@ export class ProgressReportWorkflowRepository extends DtoRepository(
         relation('out', '', 'user', ACTIVE),
         node('user', 'User'),
       ])
-      .where(
-        path([
-          node('member'),
-          relation('out', '', 'inactiveAt', ACTIVE),
-          node('', 'Property', { value: null }),
-        ]),
-      )
+      .match([
+        node('member'),
+        relation('out', '', 'inactiveAt', ACTIVE),
+        node('inactiveAt', 'Property'),
+      ])
+      // A map pattern `{ value: null }` never matches in Cypher — null only
+      // compares with IS NULL, so the property node has to be matched into a
+      // variable and filtered here.
+      .where({ inactiveAt: { value: isNull() } })
       .match([
         node('user'),
         relation('out', '', 'email', ACTIVE),
