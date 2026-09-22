@@ -502,7 +502,77 @@ describe('Language e2e', () => {
       expect(ids).not.toContain(other.id);
     }
   });
+
+  it('List view of languages by usesAIAssistance flag', async () => {
+    const [withAI, withoutAI, noEngagement] = await Promise.all([
+      createLanguage(app),
+      createLanguage(app),
+      createLanguage(app),
+    ]);
+
+    // Only a real answer makes a language `true`.
+    await createLanguageEngagement(app, {
+      language: withAI.id,
+      usingAIAssistedTranslation: 'Draft',
+    });
+
+    // `None` or a language with no engagements is `false`.
+    await createLanguageEngagement(app, {
+      language: withoutAI.id,
+      usingAIAssistedTranslation: 'None',
+    });
+
+    const list = async (usesAIAssistance: boolean | null) => {
+      const { languages } = await app.graphql.query(ListByAIAssistanceDoc, {
+        filter: usesAIAssistance != null ? { usesAIAssistance } : {},
+      });
+      return languages.items;
+    };
+
+    // List all languages regardless of their AI assistance status.
+    const all = await list(null);
+    expect(all.map((item) => item.id)).toEqual(
+      expect.arrayContaining([withAI.id, withoutAI.id, noEngagement.id]),
+    );
+
+    // Check languages that are using AI assistance.
+    // Cannot simply check that `withAI` is included;
+    // we must also verify that no other languages are incorrectly marked as using AI.
+    const usingAI = await list(true);
+    expect(usingAI.map((item) => item.id)).toEqual([withAI.id]);
+
+    // Check languages that are not using AI assistance.
+    const notUsingAI = await list(false);
+    const notUsingAIIds = notUsingAI.map((item) => item.id);
+    expect(notUsingAIIds).toContain(withoutAI.id);
+    expect(notUsingAIIds).toContain(noEngagement.id);
+    expect(notUsingAIIds).not.toContain(withAI.id);
+
+    // Because the `false` contains every other language this spec file has created, testing by `id` is fragile.
+    // Instead, assert that each item in the `notUsingAI` list has `usesAIAssistance.value` set to `false`.
+    for (const item of notUsingAI) {
+      expect(item.usesAIAssistance.value).toBe(false);
+    }
+  });
 });
+
+// `count` is raised to the 100 max so neither assertion depends on the default
+// page size — this spec file creates well under that many languages. Scoping by
+// a shared name prefix instead would not carry across backends: Neo4j's `name`
+// filter is a full-text index search rather than a substring match.
+const ListByAIAssistanceDoc = graphql(`
+  query languagesByAIAssistance($filter: LanguageFilters) {
+    languages(input: { count: 100, filter: $filter }) {
+      items {
+        id
+        usesAIAssistance {
+          value
+        }
+      }
+      total
+    }
+  }
+`);
 
 async function updateLanguage(
   app: TestApp,
