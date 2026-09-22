@@ -23,7 +23,8 @@ import { GtlReportCommunityImpactService } from './prose/gtl-report-community-im
  * The narrative sections of a GTL report.
  *
  * Community impact is the only prompt-driven section. Prayer used to be two
- * more of these; it is now Posts — @see GtlReportPrayerResolver.
+ * more of these; it is now Posts on the engagement, with the report carried
+ * as an attribution — @see InternshipEngagement's Postable declaration.
  */
 @Resolver(GTLReport)
 export class GtlReportProseResolver {
