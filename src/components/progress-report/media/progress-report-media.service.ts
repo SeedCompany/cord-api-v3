@@ -16,6 +16,7 @@ import { MediaService } from '../../file/media/media.service';
 import { ProgressReport as Report } from '../dto';
 import {
   type ProgressReportMediaListInput as ListArgs,
+  type MediaVariant,
   ProgressReportMedia as ReportMedia,
   type ProgressReportMediaList as ReportMediaList,
   type ReuseProgressReportMedia as ReuseMedia,
@@ -25,9 +26,6 @@ import {
 import { ProgressReportMediaDrizzleRepository } from './progress-report-media.drizzle.repository';
 import { ProgressReportMediaLoader } from './progress-report-media.loader';
 import { ProgressReportMediaRepository } from './progress-report-media.repository';
-
-// The last variant is Investor Communications — see highlights.dto.ts.
-const PUBLISHED_VARIANT_KEY = ReportMedia.Variants.at(-1)!.key;
 
 // A product decision, not a data invariant — see countByVariant's doc comment
 // on the repository. Change this to change the cap; nothing else models it.
@@ -53,14 +51,17 @@ export class ProgressReportMediaService {
    */
   private async verifyInvestorReportCap(
     reportId: ID<Report>,
-    variantKey: string,
+    variantKey: MediaVariant,
   ) {
-    if (variantKey !== PUBLISHED_VARIANT_KEY) {
+    // `PublicVariants` is the same "only the last variant reaches an outside
+    // audience" fact this file already tests with on upload/reuse — reuse it
+    // rather than re-deriving `Variants.at(-1)` a second time here.
+    if (!ReportMedia.PublicVariants.has(variantKey)) {
       return;
     }
     const existing = await this.drizzleRepo.countByVariant(
       reportId,
-      PUBLISHED_VARIANT_KEY,
+      variantKey,
     );
     if (existing >= MAX_FEATURED_MEDIA_PER_REPORT) {
       throw new InputException(

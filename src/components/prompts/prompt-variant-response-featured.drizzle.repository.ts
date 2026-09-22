@@ -82,8 +82,16 @@ export class PromptVariantResponseFeaturedDrizzleRepository {
       // base repository — this has to invalidate itself. Every changed row,
       // not just `id`: a live report page watching the demoted story needs
       // to hear about that too, not only the one that gained `featured`.
+      //
+      // Keyed on `PromptVariantResponse`, NOT `resourceType`. The subtypes
+      // (community story, team news, …) are `@RegisterResource` only — the
+      // GraphQL type every one of them resolves as is `PromptVariantResponse`,
+      // so that is the name live queries are indexed under. Invalidating
+      // `ProgressReportCommunityStory:<id>` fires but matches nothing, which
+      // looks identical to working in a log. Same string the rest of this
+      // domain uses — see PromptVariantResponseListService.submitResponse.
       this.liveQueryStore.invalidateAll(
-        changedIds.map((changedId) => [resourceType, changedId] as const),
+        changedIds.map((changedId) => `PromptVariantResponse:${changedId}`),
       );
 
       return changedIds;
