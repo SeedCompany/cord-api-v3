@@ -83,29 +83,26 @@ jobs:
 
     strategy:
       matrix:
-        shard: [1, 2, 3, 4, 5, 6]
-        database:
-          - neo4j
-#          - gel
         include:
-          # Postgres runs the WHOLE suite. It used to run an opt-in allowlist of
-          # migrated domains, which is removed deliberately: an allowlist
-          # silently excludes anything nobody remembered to name, and it failed
-          # that way three separate times — a domain whose own migration PR
-          # never added it, a name that didn't match because entries are
-          # anchored to a following `.` (so `periodic-report` never covered
-          # `periodic-report-narrative-file`), and every spec under `test/`
-          # subdirectories, which the pattern's shape could never match at all.
-          # The last of those hid the fact that webhooks was never ported.
+          # ─── Postgres: the engine production runs. Whole suite, one shard. ──
+          # It used to run an opt-in allowlist of migrated domains, which is
+          # removed deliberately: an allowlist silently excludes anything nobody
+          # remembered to name, and it failed that way three separate times — a
+          # domain whose own migration PR never added it, a name that didn't
+          # match because entries are anchored to a following `.` (so
+          # `periodic-report` never covered `periodic-report-narrative-file`),
+          # and every spec under `test/` subdirectories, which the pattern's
+          # shape could never match at all. The last of those hid the fact that
+          # webhooks was never ported.
           #
-          # Suites that genuinely cannot pass under Postgres now switch
-          # themselves off inside the test file (`describe.skip` on a DATABASE
-          # check), so they are reported as skipped, appear in the run output,
-          # and state their reason — instead of being invisible. Currently: the
-          # three *-changeset-aware specs (changesets are not being carried
-          # forward). Add that condition to the test file — never a filter
-          # here. (Webhooks used to be listed here too — ported 2026-08-05,
-          # its spec now runs unconditionally on both engines.)
+          # Suites that genuinely cannot pass under Postgres switch themselves
+          # off inside the test file (`describe.skip` on a DATABASE check), so
+          # they are reported as skipped, appear in the run output, and state
+          # their reason — instead of being invisible. Currently: the three
+          # *-changeset-aware specs (changesets are not being carried forward).
+          # Add that condition to the test file — never a filter here.
+          # (Webhooks used to be listed here too — ported 2026-08-05, its spec
+          # now runs unconditionally on both engines.)
           #
           # Single shard on purpose: the full suite is ~10 min serial, and six
           # jobs each paying the full setup cost was pure runner waste. Bump
@@ -113,6 +110,26 @@ jobs:
           - database: postgres
             shard: 1
             total: 1
+
+          # ─── Neo4j: dead code, kept as a ONE-shard canary until Phase 7. ────
+          # Production moved to Postgres ~2026-09-18, so these repositories are
+          # awaiting deletion (#3890) and nothing here guards a live code path.
+          # It earns one shard because the Neo4j path is still the only way to
+          # answer "did this work before the cutover?" — write the failing case
+          # as an e2e spec and run it on both engines. `yarn type-check` already
+          # catches compile-level rot in that path; this catches the runtime
+          # kind, which nothing else would.
+          #
+          # Cut from six shards to one on 2026-09-23: the six cost ~133 of the
+          # run's ~167 runner-minutes to exercise code we are deleting. Shard
+          # 1/6 is a fixed sixth of the suite (Jest splits deterministically by
+          # file path), so this is a smoke check, NOT coverage — do not read a
+          # green canary as "Neo4j still passes". Delete this entry along with
+          # the repositories in #3890, and drop the `neo4j` service above with
+          # it. (`gel` was commented out of this matrix long before the cutover.)
+          - database: neo4j
+            shard: 1
+            total: 6
       fail-fast: false
     steps:
       - uses: actions/checkout@v4
@@ -145,11 +162,21 @@ jobs:
           # The wipe additionally refuses any non-loopback NEO4J_URL. Only set
           # this where Neo4j is an ephemeral per-job service container.
           NEO4J_TEST_WIPE: true
-        # neo4j is the production engine → blocking (required to merge).
-        # postgres is dev-only until the cutover, so keep it running for
-        # migration signal but DON'T gate merges on it — a PG failure on a
-        # migrated domain shouldn't block an unrelated PR. (gel is likewise
-        # advisory.) migration-todo: flip postgres back to a required gate
-        # (narrow this to `== 'gel'`) once the migration is further along /
-        # approaching cutover.
-        continue-on-error: ${{ matrix.database != 'neo4j' }}
+        # There is deliberately NO `continue-on-error` here: every job reports
+        # its real result, and BRANCH PROTECTION alone decides which results
+        # block a merge (Settings → Branches → develop → required status
+        # checks). Keeping both mechanisms in play is what made the old
+        # behavior so hard to see.
+        #
+        # What used to be here: `continue-on-error: ${{ matrix.database !=
+        # 'neo4j' }}`. Because it sat at STEP level, a Postgres failure was
+        # swallowed and the job still reported green — so Postgres could not go
+        # red even in principle, and the required checks were the six Neo4j
+        # shards. Correct before the cutover; backwards after it, and that is
+        # how a class of global-search regressions reached users unnoticed.
+        #
+        # ⚠ Required contexts must now list `E2E Tests (postgres 1/1)` and must
+        # NOT list any neo4j shard: a required context whose job no longer
+        # exists leaves every PR waiting forever on a status that will never be
+        # reported. The neo4j canary above is intentionally NOT required — it
+        # reports red honestly when it breaks, and blocks nothing.
