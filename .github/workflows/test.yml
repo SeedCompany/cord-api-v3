@@ -58,54 +58,32 @@ jobs:
           --health-retries 20
           --health-interval 10s
           --health-start-period 30s
-      # Needed for the postgres matrix entries; idle for the neo4j ones.
-      postgres:
-        # Alpine. The image's C library no longer affects any list ordering:
-        # every text sort names the ICU `display_order` collation explicitly
-        # (migration 0032, applied by displayOrder() in
-        # src/core/drizzle/order-by.ts — decided 2026-09-15, sorting is
-        # case-insensitive everywhere), and ICU orders identically on musl
-        # (here) and glibc (production RDS). So what these jobs assert about
-        # ordering is what production does, even though ephemeral test
-        # databases inherit initdb's default collation.
-        image: postgres:16-alpine
-        ports:
-          - 5432:5432
-        env:
-          POSTGRES_DB: cord
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-        options: >-
-          --health-cmd "pg_isready -U postgres"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 20
+      # Postgres is NOT a service container — see the "Start Postgres" step
+      # below. It needs a certificate, and a certificate needs a file from the
+      # repository, which does not exist yet when services start.
 
     strategy:
       matrix:
-        shard: [1, 2, 3, 4, 5, 6]
-        database:
-          - neo4j
-#          - gel
         include:
-          # Postgres runs the WHOLE suite. It used to run an opt-in allowlist of
-          # migrated domains, which is removed deliberately: an allowlist
-          # silently excludes anything nobody remembered to name, and it failed
-          # that way three separate times — a domain whose own migration PR
-          # never added it, a name that didn't match because entries are
-          # anchored to a following `.` (so `periodic-report` never covered
-          # `periodic-report-narrative-file`), and every spec under `test/`
-          # subdirectories, which the pattern's shape could never match at all.
-          # The last of those hid the fact that webhooks was never ported.
+          # ─── Postgres: the engine production runs. Whole suite, one shard. ──
+          # It used to run an opt-in allowlist of migrated domains, which is
+          # removed deliberately: an allowlist silently excludes anything nobody
+          # remembered to name, and it failed that way three separate times — a
+          # domain whose own migration PR never added it, a name that didn't
+          # match because entries are anchored to a following `.` (so
+          # `periodic-report` never covered `periodic-report-narrative-file`),
+          # and every spec under `test/` subdirectories, which the pattern's
+          # shape could never match at all. The last of those hid the fact that
+          # webhooks was never ported.
           #
-          # Suites that genuinely cannot pass under Postgres now switch
-          # themselves off inside the test file (`describe.skip` on a DATABASE
-          # check), so they are reported as skipped, appear in the run output,
-          # and state their reason — instead of being invisible. Currently: the
-          # three *-changeset-aware specs (changesets are not being carried
-          # forward). Add that condition to the test file — never a filter
-          # here. (Webhooks used to be listed here too — ported 2026-08-05,
-          # its spec now runs unconditionally on both engines.)
+          # Suites that genuinely cannot pass under Postgres switch themselves
+          # off inside the test file (`describe.skip` on a DATABASE check), so
+          # they are reported as skipped, appear in the run output, and state
+          # their reason — instead of being invisible. Currently: the three
+          # *-changeset-aware specs (changesets are not being carried forward).
+          # Add that condition to the test file — never a filter here.
+          # (Webhooks used to be listed here too — ported 2026-08-05, its spec
+          # now runs unconditionally on both engines.)
           #
           # Single shard on purpose: the full suite is ~10 min serial, and six
           # jobs each paying the full setup cost was pure runner waste. Bump
@@ -113,9 +91,83 @@ jobs:
           - database: postgres
             shard: 1
             total: 1
+
+          # ─── Neo4j: dead code, kept as a ONE-shard canary until Phase 7. ────
+          # Production moved to Postgres ~2026-09-18, so these repositories are
+          # awaiting deletion (#3890) and nothing here guards a live code path.
+          # It earns one shard because the Neo4j path is still the only way to
+          # answer "did this work before the cutover?" — write the failing case
+          # as an e2e spec and run it on both engines. `yarn type-check` already
+          # catches compile-level rot in that path; this catches the runtime
+          # kind, which nothing else would.
+          #
+          # Cut from six shards to one on 2026-09-23: the six cost ~133 of the
+          # run's ~167 runner-minutes to exercise code we are deleting. Shard
+          # 1/6 is a fixed sixth of the suite (Jest splits deterministically by
+          # file path), so this is a smoke check, NOT coverage — do not read a
+          # green canary as "Neo4j still passes". Delete this entry along with
+          # the repositories in #3890, and drop the `neo4j` service above with
+          # it. (`gel` was commented out of this matrix long before the cutover.)
+          - database: neo4j
+            shard: 1
+            total: 6
       fail-fast: false
     steps:
       - uses: actions/checkout@v4
+
+      # The app's Postgres client ALWAYS performs an SSL handshake — see
+      # src/core/drizzle/drizzle.service.ts, where `sslmode=no-verify` only
+      # skips certificate verification and there is no way to turn SSL off. So
+      # the server has to present a certificate, exactly as the local compose
+      # setup does. Without one EVERY spec dies on the migrator's first query
+      # with `The server does not support SSL connections` — which is what had
+      # been happening here unnoticed, because this step was advisory and the
+      # reporter printed no test output to contradict it.
+      #
+      # This cannot be a service container: the certificate is generated by
+      # `docker/postgres-ssl-init.sh` from this repository, and services start
+      # before the checkout that would provide it.
+      #
+      # `postgres:16` (Debian), not alpine: it matches production RDS 16.15 and
+      # ships the openssl CLI the init script needs. Ordering does not depend on
+      # the choice — every text sort names the ICU `display_order` collation
+      # explicitly (displayOrder() in src/core/drizzle/order-by.ts).
+      - name: Start Postgres with SSL
+        if: matrix.database == 'postgres'
+        run: |
+          set -euo pipefail
+          docker run -d --name postgres \
+            -e POSTGRES_DB=cord \
+            -e POSTGRES_USER=postgres \
+            -e POSTGRES_PASSWORD=postgres \
+            -p 5432:5432 \
+            -v "$PWD/docker/postgres-ssl-init.sh:/docker-entrypoint-initdb.d/postgres-ssl-init.sh:ro" \
+            postgres:16
+          # Wait for `ssl = on` over TCP, not for readiness over the socket.
+          # The entrypoint runs init scripts against a TEMPORARY socket-only
+          # server and only then restarts the real one, so a socket probe can
+          # answer while the certificate does not exist yet — measured: ready
+          # at 1.0s with `show ssl` still `off`. Waiting on the condition the
+          # tests actually depend on cannot race, because the temporary server
+          # reports `off` and only the final one reports `on`. TCP for the same
+          # reason, and it is the path the tests use; PGPASSWORD because host
+          # connections authenticate where socket connections do not.
+          for _ in $(seq 1 60); do
+            if [ "$(docker exec -e PGPASSWORD=postgres postgres \
+                     psql -h 127.0.0.1 -U postgres -tAc 'show ssl' 2>/dev/null \
+                   | tr -d '[:space:]')" = on ]; then
+              ready=1
+              break
+            fi
+            sleep 2
+          done
+          if [ "${ready:-}" != 1 ]; then
+            echo "::error::Postgres never came up with ssl=on; every spec would fail with 'The server does not support SSL connections'" >&2
+            docker logs postgres >&2 || true
+            exit 1
+          fi
+          docker exec postgres pg_isready -h 127.0.0.1 -U postgres
+
       - name: Node Setup & Yarn Install
         uses: ./.github/actions/setup
 
@@ -136,20 +188,41 @@ jobs:
         # V8's default 4GB heap cap late in the shard (all-shards OOM,
         # 2026-07-14). Recycling the worker between files when it bloats keeps
         # serial semantics with bounded memory.
-        run: yarn test:e2e --maxWorkers=1 --workerIdleMemoryLimit=1500MB --shard=${{ matrix.shard }}/${{ matrix.total || 6 }} --reporters=github-actions
+        # `default` alongside `github-actions`: the github-actions reporter emits
+        # ONLY inline annotations, so the log carries no run summary and no
+        # error `cause`. A failure on 2026-09-23 reported ten annotations all
+        # reading `Failed query: select to_regclass(...)` with the underlying
+        # driver error nowhere in the log or the API — leaving a red required
+        # check that could not be diagnosed from its own artifacts. A required
+        # check has to explain itself when it fails.
+        run: yarn test:e2e --maxWorkers=1 --workerIdleMemoryLimit=1500MB --shard=${{ matrix.shard }}/${{ matrix.total || 6 }} --reporters=default --reporters=github-actions
         env:
           NEO4J_VERSION: ${{ matrix.neo4j-version }}
           DATABASE: ${{ matrix.database }}
-          POSTGRES_URL: postgresql://postgres:postgres@localhost:5432/cord
+          # `sslmode=no-verify` is required, not incidental: the certificate
+          # generated above is self-signed, and without this the client
+          # verifies it against the bundled Amazon RDS roots and rejects it.
+          # It does NOT disable SSL — the handshake still happens.
+          POSTGRES_URL: postgresql://postgres:postgres@localhost:5432/cord?sslmode=no-verify
           # Opt-in for the between-spec-file Neo4j wipe (test/setup/neo4j-wipe.ts).
           # The wipe additionally refuses any non-loopback NEO4J_URL. Only set
           # this where Neo4j is an ephemeral per-job service container.
           NEO4J_TEST_WIPE: true
-        # neo4j is the production engine → blocking (required to merge).
-        # postgres is dev-only until the cutover, so keep it running for
-        # migration signal but DON'T gate merges on it — a PG failure on a
-        # migrated domain shouldn't block an unrelated PR. (gel is likewise
-        # advisory.) migration-todo: flip postgres back to a required gate
-        # (narrow this to `== 'gel'`) once the migration is further along /
-        # approaching cutover.
-        continue-on-error: ${{ matrix.database != 'neo4j' }}
+        # There is deliberately NO `continue-on-error` here: every job reports
+        # its real result, and BRANCH PROTECTION alone decides which results
+        # block a merge (Settings → Branches → develop → required status
+        # checks). Keeping both mechanisms in play is what made the old
+        # behavior so hard to see.
+        #
+        # What used to be here: `continue-on-error: ${{ matrix.database !=
+        # 'neo4j' }}`. Because it sat at STEP level, a Postgres failure was
+        # swallowed and the job still reported green — so Postgres could not go
+        # red even in principle, and the required checks were the six Neo4j
+        # shards. Correct before the cutover; backwards after it, and that is
+        # how a class of global-search regressions reached users unnoticed.
+        #
+        # ⚠ Required contexts must now list `E2E Tests (postgres 1/1)` and must
+        # NOT list any neo4j shard: a required context whose job no longer
+        # exists leaves every PR waiting forever on a status that will never be
+        # reported. The neo4j canary above is intentionally NOT required — it
+        # reports red honestly when it breaks, and blocks nothing.
