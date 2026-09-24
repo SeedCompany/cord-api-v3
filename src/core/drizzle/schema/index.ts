@@ -2309,6 +2309,7 @@ export const progressMeasurementEnum = pgEnum('progress_measurement', [
  * Scripture columns mirror how the DTOs distinguish the subtypes:
  * - Direct: `scriptureReferences` (or the unspecified-portion pair for legacy
  *   data where only a verse total is known).
+ * - Other: `scriptureReferences` too, but it never feeds the verse totals.
  * - Derivative: `scriptureReferencesOverride`; null means "not overriding"
  *   (use the producible's list) — this replaces Neo4j's `isOverriding` flag.
  */
