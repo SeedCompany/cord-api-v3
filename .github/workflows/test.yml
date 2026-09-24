@@ -153,7 +153,14 @@ jobs:
         # V8's default 4GB heap cap late in the shard (all-shards OOM,
         # 2026-07-14). Recycling the worker between files when it bloats keeps
         # serial semantics with bounded memory.
-        run: yarn test:e2e --maxWorkers=1 --workerIdleMemoryLimit=1500MB --shard=${{ matrix.shard }}/${{ matrix.total || 6 }} --reporters=github-actions
+        # `default` alongside `github-actions`: the github-actions reporter emits
+        # ONLY inline annotations, so the log carries no run summary and no
+        # error `cause`. A failure on 2026-09-23 reported ten annotations all
+        # reading `Failed query: select to_regclass(...)` with the underlying
+        # driver error nowhere in the log or the API — leaving a red required
+        # check that could not be diagnosed from its own artifacts. A required
+        # check has to explain itself when it fails.
+        run: yarn test:e2e --maxWorkers=1 --workerIdleMemoryLimit=1500MB --shard=${{ matrix.shard }}/${{ matrix.total || 6 }} --reporters=default --reporters=github-actions
         env:
           NEO4J_VERSION: ${{ matrix.neo4j-version }}
           DATABASE: ${{ matrix.database }}
