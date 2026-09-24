@@ -556,13 +556,20 @@ describe('Mutation smoke coverage e2e', () => {
             title: 'Smoke Other Product renamed',
             scriptureReferences: [
               { start: { book: 'Mark' }, end: { book: 'Mark' } },
-              { start: { book: 'Luke' }, end: { book: 'Luke' } },
+              { start: { book: 'John' }, end: { book: 'John' } },
             ],
           },
         },
       );
       expect(result.product.title.value).toBe('Smoke Other Product renamed');
-      expect(result.product.scriptureReferences.value).toHaveLength(2);
+      const updatedRefs = result.product.scriptureReferences.value;
+      expect(updatedRefs).toHaveLength(2);
+      expect(updatedRefs).toEqual(
+        expect.arrayContaining([
+          { start: { book: 'Mark' }, end: { book: 'Mark' } },
+          { start: { book: 'John' }, end: { book: 'John' } },
+        ]),
+      );
     });
   });
 
