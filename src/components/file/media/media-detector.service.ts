@@ -1,7 +1,7 @@
 import npmFfprobe from '@ffprobe-installer/ffprobe';
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { CachedByArg as Once } from '@seedcompany/common';
-import { $, execa } from 'execa';
+import { $, execa, type ExecaError } from 'execa';
 import { type FFProbeResult } from 'ffprobe';
 import { imageSize } from 'image-size';
 import type { ISize as ImageSize } from 'image-size/types/interface';
@@ -11,6 +11,17 @@ import { ILogger, Logger } from '~/core/logger';
 import { type FileVersion } from '../dto';
 import { FileService } from '../file.service';
 import { type AnyMedia, type Media } from './media.dto';
+
+/**
+ * ffprobe fetched the bytes and they are not decodable media — as opposed to a
+ * transport failure (404, connection refused, timeout), which a second attempt
+ * could resolve. This one returns the same answer every time.
+ *
+ * Matched narrowly on purpose: anything unrecognized still retries, so a
+ * message we have not seen degrades to the old behavior rather than turning a
+ * transient failure into a permanent one.
+ */
+const UNDECODABLE = /Invalid data found when processing input/i;
 
 @Injectable()
 export class MediaDetector {
@@ -53,7 +64,7 @@ export class MediaDetector {
 
     const url = await this.files.getDownloadUrl(file);
 
-    const result = await this.ffprobe(url);
+    const result = await this.ffprobe(url, file);
     const { width, height, duration: rawDuration } = result.streams?.[0] ?? {};
 
     const duration = rawDuration ? parseFloat(rawDuration) : 0;
@@ -71,8 +82,28 @@ export class MediaDetector {
     };
   }
 
-  private async ffprobe(url: string): Promise<Partial<FFProbeResult>> {
+  private async ffprobe(
+    url: string,
+    file: FileVersion,
+  ): Promise<Partial<FFProbeResult>> {
     const binaryPath = await this.getFfprobeBinaryPath();
+
+    // `url` is a pre-signed S3 link — working access to a private object until
+    // it expires. ffprobe echoes it back in its own stderr, and execa repeats
+    // the whole command line in `message`, `shortMessage`, `command` and
+    // `escapedCommand`, so no part of the error can be logged as it arrives.
+    // Report the file instead, which is what you would want to look up anyway.
+    const describe = (exception: Error) => {
+      const { stderr, shortMessage } = exception as ExecaError;
+      const text =
+        (typeof stderr === 'string' && stderr) ||
+        shortMessage ||
+        exception.message;
+      return text.split(url).join('<signed url>').trim();
+    };
+    const isUndecodable = (exception: Error) =>
+      UNDECODABLE.test(describe(exception));
+
     try {
       return await retry(
         async () => {
@@ -98,9 +129,23 @@ export class MediaDetector {
         },
         {
           retries: 2,
+          // Decodability does not change between attempts, and every attempt
+          // re-downloads the whole object from S3 to reach the same verdict.
+          shouldRetry: (exception) => !isUndecodable(exception),
           onFailedAttempt: (exception) => {
+            const context = { file: file.id, mimeType: file.mimeType };
+            if (isUndecodable(exception)) {
+              // Ordinary user content: someone uploaded a corrupt or mislabeled
+              // file. The caller falls back to zeroed dimensions and duration,
+              // and the upload still succeeds, so this is not a fault.
+              this.logger.info('File is not decodable media', context);
+              return;
+            }
             const level = exception.retriesLeft > 0 ? 'warning' : 'error';
-            this.logger[level]('ffprobe failed', { exception });
+            this.logger[level]('ffprobe failed', {
+              ...context,
+              reason: describe(exception),
+            });
           },
         },
       );
