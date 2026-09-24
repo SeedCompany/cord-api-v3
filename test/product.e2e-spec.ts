@@ -14,6 +14,7 @@ import {
   createDirectProduct,
   createFilm,
   createLanguageEngagement,
+  createOtherProduct,
   createSession,
   createStory,
   createTestApp,
@@ -795,6 +796,94 @@ describe('Product e2e', () => {
     expect(products.items.length).toBeGreaterThanOrEqual(numProducts);
   });
 
+  it('create OtherProduct without scriptureReferences', async () => {
+    const product = await createOtherProduct(app, {
+      engagement: engagement.id,
+    });
+
+    expect(product.scriptureReferences.value).toEqual([]);
+  });
+
+  it('create OtherProduct with scriptureReferences', async () => {
+    const createdRefs = ScriptureRange.randomList();
+    const product = await createOtherProduct(app, {
+      engagement: engagement.id,
+      scriptureReferences: createdRefs,
+    });
+
+    expect(product.scriptureReferences.value).toEqual(
+      expect.arrayContaining(createdRefs),
+    );
+    expect(product.scriptureReferences.value).toHaveLength(createdRefs.length);
+  });
+
+  it('update OtherProduct scriptureReferences', async () => {
+    const product = await createOtherProduct(app, {
+      engagement: engagement.id,
+      scriptureReferences: ScriptureRange.randomList(),
+    });
+    const updatedRefs = ScriptureRange.randomList();
+
+    const result = await app.graphql.mutate(UpdateOtherProductDoc, {
+      input: { id: product.id, scriptureReferences: updatedRefs },
+    });
+
+    const actual = result.updateOtherProduct.product;
+    expect(actual.scriptureReferences.value).toEqual(
+      expect.arrayContaining(updatedRefs),
+    );
+    expect(actual.scriptureReferences.value).toHaveLength(updatedRefs.length);
+  });
+
+  it('update OtherProduct title keeps scriptureReferences', async () => {
+    const createdRefs = ScriptureRange.randomList();
+    const product = await createOtherProduct(app, {
+      engagement: engagement.id,
+      scriptureReferences: createdRefs,
+    });
+
+    const result = await app.graphql.mutate(UpdateOtherProductDoc, {
+      input: { id: product.id, title: 'Renamed Other Goal' },
+    });
+
+    const actual = result.updateOtherProduct.product;
+    expect(actual.title.value).toBe('Renamed Other Goal');
+    expect(actual.scriptureReferences.value).toEqual(
+      expect.arrayContaining(createdRefs),
+    );
+    expect(actual.scriptureReferences.value).toHaveLength(createdRefs.length);
+  });
+
+  it('clear OtherProduct scriptureReferences with an empty list', async () => {
+    const product = await createOtherProduct(app, {
+      engagement: engagement.id,
+      scriptureReferences: ScriptureRange.randomList(),
+    });
+
+    const result = await app.graphql.mutate(UpdateOtherProductDoc, {
+      input: { id: product.id, scriptureReferences: [] },
+    });
+
+    expect(result.updateOtherProduct.product.scriptureReferences.value).toEqual(
+      [],
+    );
+  });
+
+  it('clear OtherProduct scriptureReferences with null', async () => {
+    const product = await createOtherProduct(app, {
+      engagement: engagement.id,
+      scriptureReferences: ScriptureRange.randomList(),
+    });
+
+    const result = await app.graphql.mutate(UpdateOtherProductDoc, {
+      input: { id: product.id, scriptureReferences: null },
+    });
+
+    expect(result.updateOtherProduct.product.scriptureReferences.value).toEqual(
+      [],
+    );
+  });
+
   it('should return list of products filtered by engagementId', async () => {
     // create 2 products
     const numProducts = 2;
@@ -829,3 +918,19 @@ describe('Product e2e', () => {
     expect(actual.products.items.length).toBeGreaterThanOrEqual(numProducts);
   });
 });
+
+const UpdateOtherProductDoc = graphql(
+  `
+    mutation updateOtherProduct($input: UpdateOtherProduct!) {
+      updateOtherProduct(input: $input) {
+        product {
+          ...product
+          title {
+            value
+          }
+        }
+      }
+    }
+  `,
+  [fragments.product],
+);

@@ -127,4 +127,9 @@ export abstract class CreateOtherProduct extends CreateBaseProduct {
 
   @Field(() => String, { nullable: true })
   readonly description?: string | null;
+
+  @ScriptureField({
+    nullable: true,
+  })
+  readonly scriptureReferences?: readonly ScriptureRangeInput[] | null;
 }
