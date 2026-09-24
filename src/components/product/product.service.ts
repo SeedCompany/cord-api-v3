@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { asNonEmptyArray, mapEntries, simpleSwitch } from '@seedcompany/common';
-import { intersection, sumBy, uniq } from 'lodash';
+import { intersection, pickBy, sumBy, uniq } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   type ID,
@@ -539,11 +539,11 @@ export class ProductService {
       // `getActualOtherChanges` compares items in an array by object identity,
       // but scripture ranges are new objects each request.
       // An array of the same scripture references would still count as an edit — failing permission checks and writing a false auditentry.
-      // `changes.scriptureReferences` below compares the actual scripture references instead.
+      // `possibleChanges.scriptureReferences` below compares the actual scripture references instead.
       scriptureReferences: undefined,
     });
 
-    const changes = {
+    const possibleChanges = {
       ...partialChanges,
       progressTarget: this.restrictProgressTargetChange(
         currentProduct,
@@ -556,6 +556,14 @@ export class ProductService {
       ),
     };
 
+    // Drop keys with value of `undefined`, signaling "no change".
+    // Otherwise an unchanged submission would still count as an edit.
+    const changes = pickBy(
+      possibleChanges,
+      (value) => value !== undefined,
+    ) as Partial<typeof possibleChanges>;
+
+    // If no changes, return the current product without performing an update.
     if (Object.keys(changes).length === 0) {
       return { product: this.secure(currentProduct) as OtherProduct };
     }
