@@ -496,6 +496,16 @@ describe('Mutation smoke coverage e2e', () => {
                 title {
                   value
                 }
+                scriptureReferences {
+                  value {
+                    start {
+                      book
+                    }
+                    end {
+                      book
+                    }
+                  }
+                }
               }
             }
           }
@@ -505,10 +515,14 @@ describe('Mutation smoke coverage e2e', () => {
             engagement: engagementId,
             title: 'Smoke Other Product',
             description: 'created by the mutation smoke pass',
+            scriptureReferences: [
+              { start: { book: 'Matthew' }, end: { book: 'Matthew' } },
+            ],
           },
         },
       );
       expect(result.product.id).toBeTruthy();
+      expect(result.product.scriptureReferences.value).toHaveLength(1);
       productId = result.product.id;
     });
 
@@ -522,13 +536,40 @@ describe('Mutation smoke coverage e2e', () => {
                 title {
                   value
                 }
+                scriptureReferences {
+                  value {
+                    start {
+                      book
+                    }
+                    end {
+                      book
+                    }
+                  }
+                }
               }
             }
           }
         `),
-        { input: { id: productId, title: 'Smoke Other Product renamed' } },
+        {
+          input: {
+            id: productId,
+            title: 'Smoke Other Product renamed',
+            scriptureReferences: [
+              { start: { book: 'Mark' }, end: { book: 'Mark' } },
+              { start: { book: 'John' }, end: { book: 'John' } },
+            ],
+          },
+        },
       );
       expect(result.product.title.value).toBe('Smoke Other Product renamed');
+      const updatedRefs = result.product.scriptureReferences.value;
+      expect(updatedRefs).toHaveLength(2);
+      expect(updatedRefs).toEqual(
+        expect.arrayContaining([
+          { start: { book: 'Mark' }, end: { book: 'Mark' } },
+          { start: { book: 'John' }, end: { book: 'John' } },
+        ]),
+      );
     });
   });
 

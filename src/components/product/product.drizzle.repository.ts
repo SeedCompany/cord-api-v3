@@ -334,6 +334,9 @@ export class ProductDrizzleRepository {
       placeholderDescription: input.placeholderDescription,
       progressTarget: input.progressTarget,
       progressStepMeasurement: input.progressStepMeasurement ?? 'Percent',
+      scriptureReferences: (input.scriptureReferences ?? []).map(
+        ScriptureRange.fromReferences,
+      ),
     });
     return id;
   }

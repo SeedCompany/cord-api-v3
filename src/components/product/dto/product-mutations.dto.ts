@@ -144,9 +144,12 @@ export class DerivativeScriptureProductUpdate extends AsUpdateType(
 
 @ObjectType({ implements: [ProductUpdate] })
 export class OtherProductUpdate extends AsUpdateType(UpdateOtherProduct, {
-  omit: ['id'],
+  omit: ['id', 'scriptureReferences'],
   links: [],
-}) {}
+}) {
+  @Field({ nullable: true })
+  readonly scriptureReferences?: SecuredScriptureRanges;
+}
 
 @InterfaceType({ implements: [ProductMutation] })
 export class ProductUpdated extends ProductMutation {

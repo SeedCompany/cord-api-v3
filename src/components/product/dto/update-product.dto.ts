@@ -12,6 +12,7 @@ import {
   CreateBaseProduct,
   CreateDerivativeScriptureProduct,
   CreateDirectScriptureProduct,
+  CreateOtherProduct,
 } from './create-product.dto';
 
 @InputType()
@@ -57,7 +58,10 @@ export abstract class UpdateDerivativeScriptureProduct extends IntersectTypes(
 }
 
 @InputType()
-export abstract class UpdateOtherProduct extends UpdateBaseProduct {
+export abstract class UpdateOtherProduct extends IntersectTypes(
+  UpdateBaseProduct,
+  PickType(CreateOtherProduct, ['scriptureReferences']),
+) {
   @NameField({ optional: true })
   readonly title?: string;
 
