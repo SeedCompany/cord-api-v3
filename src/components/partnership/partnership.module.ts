@@ -8,7 +8,6 @@ import { ProjectModule } from '../project/project.module';
 import * as handlers from './handlers';
 import { PartnershipByProjectAndPartnerLoader } from './partnership-by-project-and-partner.loader';
 import { PartnershipDrizzleRepository } from './partnership.drizzle.repository';
-import { PartnershipGelRepository } from './partnership.gel.repository';
 import { PartnershipLoader } from './partnership.loader';
 import { PartnershipRepository } from './partnership.repository';
 import { PartnershipResolver } from './partnership.resolver';
@@ -26,7 +25,6 @@ import { PartnershipService } from './partnership.service';
     PartnershipResolver,
     PartnershipService,
     splitDb(PartnershipRepository, {
-      gel: PartnershipGelRepository,
       // migration-todo: `as any` removed at Phase 7 cutover when splitDb
       // disappears with the Neo4j path.
       postgres: PartnershipDrizzleRepository as any,

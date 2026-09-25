@@ -4,8 +4,6 @@ import { AuthorizationModule } from '../authorization/authorization.module';
 import { UserModule } from '../user/user.module';
 import { AdminDrizzleRepository } from './admin.drizzle.repository';
 import { AdminDrizzleService } from './admin.drizzle.service';
-import { AdminGelRepository } from './admin.gel.repository';
-import { AdminGelService } from './admin.gel.service';
 import { AdminRepository } from './admin.repository';
 import { AdminService } from './admin.service';
 import { NormalizeCreatorBaseNodeMigration } from './migrations/normalize-creator-base-node.migration';
@@ -15,14 +13,11 @@ import { NormalizeCreatorMigration } from './migrations/normalize-creator.migrat
   imports: [AuthorizationModule, UserModule],
   providers: [
     splitDb(AdminService, {
-      gel: AdminGelService,
       postgres: AdminDrizzleService,
     }),
     splitDb(AdminRepository, {
       // @ts-expect-error types don't have to match since the service is split
       // and each will only use their own.
-      gel: AdminGelRepository,
-      // @ts-expect-error types don't have to match here either; see above.
       postgres: AdminDrizzleRepository,
     }),
     NormalizeCreatorMigration,

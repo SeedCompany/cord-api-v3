@@ -6,7 +6,6 @@ import { LocationModule } from '../location/location.module';
 import { ProjectModule } from '../project/project.module';
 import { EthnologueLanguageService } from './ethnologue-language';
 import { EthnologueLanguageDrizzleRepository } from './ethnologue-language/ethnologue-language.drizzle.repository';
-import { EthnologueLanguageGelRepository } from './ethnologue-language/ethnologue-language.gel.repository';
 import { EthnologueLanguageRepository } from './ethnologue-language/ethnologue-language.repository';
 import { InternalFirstScriptureResolver } from './internal-first-scripture.resolver';
 import { LanguageMutationActorResolver } from './language-mutation-actor.resolver';
@@ -15,7 +14,6 @@ import { LanguageUpdateLinksResolver } from './language-update-links.resolver';
 import { LanguageUpdatedResolver } from './language-updated.resolver';
 import { LanguageChannels } from './language.channels';
 import { LanguageDrizzleRepository } from './language.drizzle.repository';
-import { LanguageGelRepository } from './language.gel.repository';
 import { LanguageLoader } from './language.loader';
 import { LanguageRepository } from './language.repository';
 import { LanguageResolver } from './language.resolver';
@@ -40,13 +38,11 @@ import { RegistryOfDialectToRegistryOfLanguageVarietiesMigration } from './migra
     LanguageChannels,
     EthnologueLanguageService,
     splitDb(EthnologueLanguageRepository, {
-      gel: EthnologueLanguageGelRepository,
       // migration-todo: `as any` removed at Phase 7 cutover when splitDb
       // disappears with the Neo4j path.
       postgres: EthnologueLanguageDrizzleRepository as any,
     }),
     splitDb(LanguageRepository, {
-      gel: LanguageGelRepository,
       // migration-todo: same as above.
       postgres: LanguageDrizzleRepository as any,
     }),

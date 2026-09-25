@@ -1,5 +1,4 @@
 import { ServerException } from '~/common';
-import { ConfigService } from '~/core/config';
 import { OnHook } from '~/core/hooks';
 import { EngagementStatus, LanguageEngagement } from '../dto';
 import { EngagementRepository } from '../engagement.repository';
@@ -10,16 +9,9 @@ type SubscribedEvent = EngagementCreatedHook | EngagementUpdatedHook;
 @OnHook(EngagementCreatedHook)
 @OnHook(EngagementUpdatedHook)
 export class SetInitialEndDate {
-  constructor(
-    private readonly engagementRepo: EngagementRepository,
-    private readonly config: ConfigService,
-  ) {}
+  constructor(private readonly engagementRepo: EngagementRepository) {}
 
   async handle(event: SubscribedEvent) {
-    if (this.config.databaseEngine === 'gel') {
-      return;
-    }
-
     const engagement = 'engagement' in event ? event.engagement : event.updated;
 
     if (

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { type ID } from '~/common';
 import { type PnpExtractionResult } from './extraction-result.dto';
-import { PnpExtractionResultRepository } from './pnp-extraction-result.gel.repository';
+import { PnpExtractionResultRepository } from './pnp-extraction-result.repository';
 
 @Injectable()
 export class PlanningExtractionResultSaver {

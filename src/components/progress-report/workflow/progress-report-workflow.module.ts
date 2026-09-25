@@ -8,7 +8,6 @@ import * as handlers from './handlers';
 import { ProgressReportWorkflowEventLoader } from './progress-report-workflow-event.loader';
 import { ProgressReportWorkflowDrizzleRepository } from './progress-report-workflow.drizzle.repository';
 import { ProgressReportWorkflowFlowchart } from './progress-report-workflow.flowchart';
-import { ProgressReportWorkflowGelRepository } from './progress-report-workflow.gel.repository';
 import { ProgressReportWorkflowEventGranter } from './progress-report-workflow.granter';
 import { ProgressReportWorkflowRepository } from './progress-report-workflow.repository';
 import { ProgressReportWorkflowService } from './progress-report-workflow.service';
@@ -33,7 +32,6 @@ import { ProgressReportWorkflowEventsResolver } from './resolvers/progress-repor
     ProgressReportWorkflowService,
     ProgressReportWorkflowEventGranter,
     splitDb(ProgressReportWorkflowRepository, {
-      gel: ProgressReportWorkflowGelRepository,
       // migration-todo: drop the Neo4j path (and this splitDb) at Phase 7 cutover.
       // migration-todo: remove `as any` once splitDb types accept drizzle repos.
       postgres: ProgressReportWorkflowDrizzleRepository as any,

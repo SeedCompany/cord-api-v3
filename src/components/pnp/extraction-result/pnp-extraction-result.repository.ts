@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CachedByArg, mapKeys } from '@seedcompany/common';
 import { inArray, node, relation } from 'cypher-query-builder';
 import type { SetNonNullable } from 'type-fest';
-import { type ID, type PublicOf } from '~/common';
+import { type ID } from '~/common';
 import { CommonRepository } from '~/core/neo4j';
 import {
   apoc,
@@ -22,14 +22,10 @@ import {
   PnpProblemSeverity as Severity,
   type StoredProblem,
 } from './extraction-result.dto';
-import { type PnpExtractionResultRepository } from './pnp-extraction-result.gel.repository';
 import { type PnpExtractionResultLoadResult } from './pnp-extraction-result.loader';
 
 @Injectable()
-export class PnpExtractionResultNeo4jRepository
-  extends CommonRepository
-  implements PublicOf<PnpExtractionResultRepository>
-{
+export class PnpExtractionResultRepository extends CommonRepository {
   async read(files: ReadonlyArray<ID<'File'>>) {
     await this.syncTypesOnce();
 

@@ -1,6 +1,5 @@
 import { RichTextDocument, ServerException } from '~/common';
 import { Identity } from '~/core/authentication';
-import { ConfigService } from '~/core/config';
 import { OnHook } from '~/core/hooks';
 import { ILogger, Logger } from '~/core/logger';
 import { SystemAgentRepository } from '../../../user/system-agent.repository';
@@ -31,22 +30,10 @@ export class ProgressReportIngestAutoAdvanceHandler {
     private readonly workflow: ProgressReportWorkflowService,
     private readonly agents: SystemAgentRepository,
     private readonly identity: Identity,
-    private readonly config: ConfigService,
     @Logger('progress-report:auto-advance') private readonly logger: ILogger,
   ) {}
 
   async handle({ reportId, trigger, source }: ProgressReportIngestTriggerHook) {
-    if (this.config.databaseEngine === 'gel') {
-      // migration-todo: the Gel schema types workflow-event `who` as a User,
-      // so an agent-actored event cannot be recorded there — skip rather than
-      // fail the whole ingest. Drop with the Gel arm at Phase 7 cutover.
-      this.logger.info(
-        'Skipping auto-advance; Gel cannot record agent actors',
-        { report: reportId, trigger },
-      );
-      return;
-    }
-
     const { transition: transitionName, description } = IngestTriggers[trigger];
     const transition = Transitions[transitionName];
     if (!transition.from) {
