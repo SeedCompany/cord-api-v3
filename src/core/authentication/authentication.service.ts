@@ -9,7 +9,6 @@ import {
 } from '~/common';
 import { MailerService } from '~/core/email';
 import { ILogger, Logger } from '~/core/logger';
-import { disableAccessPolicies, Gel } from '../gel';
 import { AuthenticationRepository } from './authentication.repository';
 import { CryptoService } from './crypto.service';
 import {
@@ -34,7 +33,6 @@ export class AuthenticationService {
     private readonly mailer: MailerService,
     @Logger('authentication:service') private readonly logger: ILogger,
     private readonly repo: AuthenticationRepository,
-    private readonly gel: Gel,
     private readonly jwt: JwtService,
     private readonly sessionManager: SessionManager,
     private readonly sessionHost: SessionHost,
@@ -51,10 +49,7 @@ export class AuthenticationService {
 
     const userMod = await import('../../components/user');
     const users = this.moduleRef.get(userMod.UserService, { strict: false });
-    const { id: userId } = await this.gel.usingOptions(
-      disableAccessPolicies,
-      async () => await users.create(input),
-    );
+    const { id: userId } = await users.create(input);
 
     const passwordHash = await this.crypto.hash(password);
     await this.repo.savePasswordHashOnUser(userId, passwordHash);

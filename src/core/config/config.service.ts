@@ -269,8 +269,6 @@ export const makeConfig = (env: EnvironmentService) =>
             (simpleSwitch(this.databaseEngine, {
               postgres: this.postgres.isLocal,
               neo4j: this.neo4j.isLocal,
-              // Gel instances here are CLI-managed local ones.
-              gel: true,
             }) ?? this.neo4j.isLocal)
           : true,
       );
