@@ -31,4 +31,15 @@ module Notification {
   }
   type CommentViaMention extending Comment;
   type CommentViaMembership extending Comment;
+
+  type Preference {
+    required user: default::User {
+      on target delete delete source;
+    };
+    required notificationType: str;
+    required channel: str;
+    constraint exclusive on ((.user, .notificationType, .channel));
+
+    required enabled: bool;
+  }
 }
