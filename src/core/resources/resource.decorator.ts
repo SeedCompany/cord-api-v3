@@ -9,18 +9,13 @@ import { __privateDontUseThis } from './resource-map-holder';
  */
 export const RegisterResource = ({
   db,
-  skipAccessPolicies,
 }: {
   db?: $.$expr_PathNode;
-  skipAccessPolicies?: boolean;
 } = {}) => {
   return <T extends ResourceShape<any>>(target: T) => {
     __privateDontUseThis[target.name] = target;
     if (db) {
       EnhancedResource.dbTypes.set(target, db);
-      if (skipAccessPolicies) {
-        EnhancedResource.dbSkipAccessPolicies.add(db.__element__.__name__);
-      }
     }
     return target;
   };

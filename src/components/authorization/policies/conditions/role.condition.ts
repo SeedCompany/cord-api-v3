@@ -2,13 +2,7 @@ import { type NonEmptyArray } from '@seedcompany/common';
 import { sql } from 'drizzle-orm';
 import { inspect } from 'util';
 import { type Role } from '~/common';
-import {
-  type AsEdgeQLParams,
-  type Condition,
-  eqlDoesIntersect,
-  fqnRelativeTo,
-  type IsAllowedParams,
-} from '../../policy/conditions';
+import { type Condition, type IsAllowedParams } from '../../policy/conditions';
 
 export class RoleCondition implements Condition {
   constructor(readonly allowed: ReadonlySet<Role>) {}
@@ -24,13 +18,6 @@ export class RoleCondition implements Condition {
 
   asDrizzleCondition() {
     return sql`false`;
-  }
-
-  asEdgeQLCondition({ namespace }: AsEdgeQLParams<any>) {
-    const currentRoles =
-      'global ' + fqnRelativeTo('default::currentRoles', namespace);
-    const roleType = fqnRelativeTo('default::Role', namespace);
-    return eqlDoesIntersect(currentRoles, this.allowed, roleType);
   }
 
   union(this: void, conditions: NonEmptyArray<this>) {

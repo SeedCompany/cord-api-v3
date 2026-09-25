@@ -11,13 +11,11 @@ import { GelTransactionalMutationsInterceptor } from './gel-transactional-mutati
 import { Gel } from './gel.service';
 import { OptionsContext } from './options.context';
 import { Client } from './reexports';
-import { GelSchemaAstModule } from './schema-ast/schema-ast.module';
 import { TransactionContext } from './transaction.context';
 
 import './errors';
 
 @Module({
-  imports: [GelSchemaAstModule],
   providers: [
     {
       provide: Options,

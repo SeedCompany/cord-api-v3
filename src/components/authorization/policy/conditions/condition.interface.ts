@@ -32,11 +32,6 @@ export type AsDrizzleParams<TResourceStatic extends ResourceShape<any>> = Omit<
   'object'
 >;
 
-export type AsEdgeQLParams<TResourceStatic extends ResourceShape<any>> = Pick<
-  IsAllowedParams<TResourceStatic>,
-  'resource'
-> & { namespace: string };
-
 export abstract class Condition<
   TResourceStatic extends ResourceShape<any> = ResourceShape<any>,
 > {
@@ -78,15 +73,6 @@ export abstract class Condition<
     query: Query,
     other: AsCypherParams<TResourceStatic>,
   ): string;
-
-  /**
-   * Add with statement aliases.
-   */
-  setupEdgeQLContext?(
-    params: AsEdgeQLParams<TResourceStatic>,
-  ): Record<string, string>;
-
-  abstract asEdgeQLCondition(params: AsEdgeQLParams<TResourceStatic>): string;
 
   /**
    * Drizzle SQL WHERE clause fragment that represents the condition.
