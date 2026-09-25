@@ -4,7 +4,6 @@ import { AuthorizationModule } from '../authorization/authorization.module';
 import { ProjectModule } from '../project/project.module';
 import { UserModule } from '../user/user.module';
 import { FieldZoneDrizzleRepository } from './field-zone.drizzle.repository';
-import { FieldZoneGelRepository } from './field-zone.gel.repository';
 import { FieldZoneLoader } from './field-zone.loader';
 import { FieldZoneRepository } from './field-zone.repository';
 import { FieldZoneResolver } from './field-zone.resolver';
@@ -21,7 +20,6 @@ import { RestrictZoneDirectorRemovalHandler } from './handlers/restrict-zone-dir
     FieldZoneResolver,
     FieldZoneService,
     splitDb(FieldZoneRepository, {
-      gel: FieldZoneGelRepository,
       // migration-todo: remove `as any` once splitDb types accept drizzle repos directly
       postgres: FieldZoneDrizzleRepository as any,
     }),

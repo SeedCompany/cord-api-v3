@@ -15,7 +15,6 @@ import { ProjectMemberMutationSubscriptionsResolver } from './project-member-mut
 import { ProjectMemberUpdatedResolver } from './project-member-updated.resolver';
 import { ProjectMemberChannels } from './project-member.channels';
 import { ProjectMemberDrizzleRepository } from './project-member.drizzle.repository';
-import { ProjectMemberGelRepository } from './project-member.gel.repository';
 import { ProjectMemberLoader } from './project-member.loader';
 import { ProjectMemberRepository } from './project-member.repository';
 import { ProjectMemberResolver } from './project-member.resolver';
@@ -36,8 +35,7 @@ import { ProjectMemberService } from './project-member.service';
     ProjectMemberService,
     ProjectMemberChannels,
     splitDb(ProjectMemberRepository, {
-      gel: ProjectMemberGelRepository,
-      // migration-todo: drop the `as any` + the Neo4j/Gel paths at Phase 7 cutover.
+      // migration-todo: drop the `as any` with the Neo4j path.
       postgres: ProjectMemberDrizzleRepository as any,
     }),
     ProjectMemberLoader,
