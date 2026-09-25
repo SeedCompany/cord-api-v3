@@ -31,9 +31,6 @@ jobs:
       - name: Node Setup & Yarn Install
         uses: ./.github/actions/setup
 
-      - name: Gel Setup
-        uses: ./.github/actions/gel-setup
-
       - name: Check for no duplicate dependencies
         run: yarn dedupe --check
 

@@ -2143,20 +2143,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@gel/generate@npm:^0.7.0-canary.20250422T080308":
-  version: 0.7.0-canary.20250429T162205
-  resolution: "@gel/generate@npm:0.7.0-canary.20250429T162205"
-  dependencies:
-    "@iarna/toml": "npm:^2.2.5"
-    debug: "npm:^4.3.4"
-  peerDependencies:
-    gel: ^2.0.1
-  bin:
-    generate: dist/cli.js
-  checksum: 10c0/67ea57c9511754608d6562c8bff13fb7ab7db6d4860925a150a718798155f64358685b4d6462526f38a7073495c80c58a8fb3d92dc0a8e41400400ac1da07500
-  languageName: node
-  linkType: hard
-
 "@golevelup/nestjs-discovery@npm:^5.0.0":
   version: 5.0.0
   resolution: "@golevelup/nestjs-discovery@npm:5.0.0"
@@ -2703,13 +2689,6 @@ __metadata:
   version: 2.0.3
   resolution: "@humanwhocodes/object-schema@npm:2.0.3"
   checksum: 10c0/80520eabbfc2d32fe195a93557cef50dfe8c8905de447f022675aaf66abc33ae54098f5ea78548d925aa671cd4ab7c7daa5ad704fe42358c9b5e7db60f80696c
-  languageName: node
-  linkType: hard
-
-"@iarna/toml@npm:^2.2.5":
-  version: 2.2.5
-  resolution: "@iarna/toml@npm:2.2.5"
-  checksum: 10c0/d095381ad4554aca233b7cf5a91f243ef619e5e15efd3157bc640feac320545450d14b394aebbf6f02a2047437ced778ae598d5879a995441ab7b6c0b2c2f201
   languageName: node
   linkType: hard
 
@@ -3891,13 +3870,6 @@ __metadata:
   bin:
     pp: lib/cli.js
   checksum: 10c0/c130cf5f478b37a5439daae69dd149ca5f20f931f81f6462fb842a92143b82850c625624f07e1ba9a39951bb58ba3cb3e008e84fdbde5ff6f7b74fc0de374c4c
-  languageName: node
-  linkType: hard
-
-"@petamoriken/float16@npm:^3.8.7":
-  version: 3.9.2
-  resolution: "@petamoriken/float16@npm:3.9.2"
-  checksum: 10c0/af229a0fc429083e76c459cc3bf7e682f578518c34c21e2d1c1b1c2744e69a5208b94245c41757f500ef722dd79fb6c55e8858d29d7fb57d4fe2b3e5734f1149
   languageName: node
   linkType: hard
 
@@ -6906,7 +6878,6 @@ __metadata:
     "@fastify/cors": "npm:^11.0.1"
     "@fastify/websocket": "npm:^11.0.2"
     "@ffprobe-installer/ffprobe": "npm:^2.1.2"
-    "@gel/generate": "npm:^0.7.0-canary.20250422T080308"
     "@golevelup/nestjs-discovery": "npm:^5.0.0"
     "@graphql-hive/cli": "npm:>=0.51"
     "@graphql-hive/yoga": "npm:>=0.42.2"
@@ -6979,7 +6950,6 @@ __metadata:
     fengari: "npm:^0.1.5"
     fengari-interop: "npm:^0.1.4"
     file-type: "npm:^20.5.0"
-    gel: "npm:^2.1.0-canary.20250319T143140"
     glob: "npm:^11.0.2"
     got: "npm:^14.6.6"
     gql.tada: "npm:^1.8.10"
@@ -7861,13 +7831,6 @@ __metadata:
   version: 2.2.1
   resolution: "env-paths@npm:2.2.1"
   checksum: 10c0/285325677bf00e30845e330eec32894f5105529db97496ee3f598478e50f008c5352a41a30e5e72ec9de8a542b5a570b85699cd63bd2bc646dbcb9f311d83bc4
-  languageName: node
-  linkType: hard
-
-"env-paths@npm:^3.0.0":
-  version: 3.0.0
-  resolution: "env-paths@npm:3.0.0"
-  checksum: 10c0/76dec878cee47f841103bacd7fae03283af16f0702dad65102ef0a556f310b98a377885e0f32943831eb08b5ab37842a323d02529f3dfd5d0a40ca71b01b435f
   languageName: node
   linkType: hard
 
@@ -9223,22 +9186,6 @@ __metadata:
   version: 1.2.3
   resolution: "functions-have-names@npm:1.2.3"
   checksum: 10c0/33e77fd29bddc2d9bb78ab3eb854c165909201f88c75faa8272e35899e2d35a8a642a15e7420ef945e1f64a9670d6aa3ec744106b2aa42be68ca5114025954ca
-  languageName: node
-  linkType: hard
-
-"gel@npm:^2.1.0-canary.20250319T143140":
-  version: 2.1.0
-  resolution: "gel@npm:2.1.0"
-  dependencies:
-    "@petamoriken/float16": "npm:^3.8.7"
-    debug: "npm:^4.3.4"
-    env-paths: "npm:^3.0.0"
-    semver: "npm:^7.6.2"
-    shell-quote: "npm:^1.8.1"
-    which: "npm:^4.0.0"
-  bin:
-    gel: dist/cli.mjs
-  checksum: 10c0/f6d3ab5b0ab25ca96a78dca711fc7021553ea3dc7aba4729351e89356d30fca313db4e9b3554415a0c737db953d93d8b6b228bc758c06c3ef3738d4e11709130
   languageName: node
   linkType: hard
 
@@ -14179,7 +14126,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"semver@npm:7.7.4, semver@npm:^7.3.5, semver@npm:^7.3.7, semver@npm:^7.5.3, semver@npm:^7.5.4, semver@npm:^7.6.0, semver@npm:^7.6.2, semver@npm:^7.6.3, semver@npm:^7.7.2, semver@npm:^7.7.3":
+"semver@npm:7.7.4, semver@npm:^7.3.5, semver@npm:^7.3.7, semver@npm:^7.5.3, semver@npm:^7.5.4, semver@npm:^7.6.0, semver@npm:^7.6.3, semver@npm:^7.7.2, semver@npm:^7.7.3":
   version: 7.7.4
   resolution: "semver@npm:7.7.4"
   bin:
@@ -14270,13 +14217,6 @@ __metadata:
   version: 3.0.0
   resolution: "shebang-regex@npm:3.0.0"
   checksum: 10c0/1dbed0726dd0e1152a92696c76c7f06084eb32a90f0528d11acd764043aacf76994b2fb30aa1291a21bd019d6699164d048286309a278855ee7bec06cf6fb690
-  languageName: node
-  linkType: hard
-
-"shell-quote@npm:^1.8.1":
-  version: 1.8.2
-  resolution: "shell-quote@npm:1.8.2"
-  checksum: 10c0/85fdd44f2ad76e723d34eb72c753f04d847ab64e9f1f10677e3f518d0e5b0752a176fd805297b30bb8c3a1556ebe6e77d2288dbd7b7b0110c7e941e9e9c20ce1
   languageName: node
   linkType: hard
 
