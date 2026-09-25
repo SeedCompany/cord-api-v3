@@ -150,10 +150,34 @@ export class SearchService {
             }
 
             const resource = this.resources.getByName(hydrated.__typename);
-            const perms = this.privileges.for(resource, hydrated).all;
+            const privileges = this.privileges.for(resource, hydrated);
+
+            // Drop the hit unless the requester can read at least one of the
+            // fields that matched their query.
+            //
+            // `matchedProps` holds DTO field names — the Postgres repo maps
+            // every searched column to one, and the Neo4j repo reports the
+            // matched Property's key. Only the securable ones have a read
+            // permission to consult: an exact-id hit reports `id`, and an
+            // EthnologueLanguage hit is rewritten to `ethnologue` further up.
+            // Those stay visible, which is what this check always intended.
+            //
+            // It used to ask `key in perms` against `.all`, which builds a
+            // lazily calculated view over an EMPTY object — so `in` was always
+            // false, every key fell through to the `: true` branch, and every
+            // match was returned to every requester regardless of read access.
+            // `can()` resolves the policy for real.
+            //
+            // `as never`: the resource is resolved at runtime, so its prop
+            // union — and therefore `can`'s parameter — collapses to `never`
+            // for the compiler. The `securable.has(key)` test immediately
+            // before IS the check the types cannot express, so the cast is
+            // guarded by it rather than papering over an unknown, which is
+            // what the blanket `@ts-expect-error` here used to do.
+            const securable: ReadonlySet<string> =
+              resource.securedPropsPlusExtra;
             return matchedProps.some((key) =>
-              // @ts-expect-error strict typing is hard for this dynamic use case.
-              key in perms ? perms[key].read : true,
+              securable.has(key) ? privileges.can('read', key as never) : true,
             )
               ? hydrated
               : null;
