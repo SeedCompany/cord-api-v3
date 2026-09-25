@@ -11,7 +11,6 @@ import {
 } from '~/common';
 import {
   type Condition,
-  eqlInLiteralSet,
   type IsAllowedParams,
   MissingContextException,
 } from '../../policy/conditions';
@@ -79,10 +78,6 @@ export class EnumFieldCondition<
     // and is decided in memory by `isAllowed`, where the condition reads
     // `project.type` off the object and works.
     return sql`false`;
-  }
-
-  asEdgeQLCondition() {
-    return '<str>' + eqlInLiteralSet(`.${this.path}`, this.allowed);
   }
 
   union(this: void, conditions: NonEmptyArray<this>) {

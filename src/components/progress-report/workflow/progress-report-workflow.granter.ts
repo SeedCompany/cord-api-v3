@@ -9,7 +9,6 @@ import { action } from '../../authorization/policy/builder/perm-granter';
 import { type PropsGranterFn } from '../../authorization/policy/builder/resource-granter';
 import {
   type Condition,
-  eqlInLiteralSet,
   type IsAllowedParams,
 } from '../../authorization/policy/conditions';
 import { type ProgressReportStatus } from '../dto';
@@ -129,16 +128,6 @@ class TransitionCondition implements Condition<typeof Event> {
       'allowedTransitions',
     );
     return `node.transition IN ${String(required)}`;
-  }
-
-  asEdgeQLCondition() {
-    // TODO bypasses to statuses won't work with this. How should these be filtered?
-    const transitionAllowed = eqlInLiteralSet(
-      '.transitionId',
-      this.allowedTransitionIds,
-    );
-    // If no transition then false
-    return `((${transitionAllowed}) ?? false)`;
   }
 
   asDrizzleCondition() {

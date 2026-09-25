@@ -10,10 +10,7 @@ import {
 import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
 
-@RegisterResource({
-  db: e.Actor,
-  skipAccessPolicies: true,
-})
+@RegisterResource({ db: e.Actor })
 @InterfaceType()
 export class Actor extends DataObject {
   declare readonly __typename: 'User' | 'SystemAgent';
@@ -22,10 +19,7 @@ export class Actor extends DataObject {
   readonly id: ID;
 }
 
-@RegisterResource({
-  db: e.SystemAgent,
-  skipAccessPolicies: true,
-})
+@RegisterResource({ db: e.SystemAgent })
 @ObjectType({
   implements: [Actor],
 })

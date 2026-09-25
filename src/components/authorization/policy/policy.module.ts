@@ -7,7 +7,6 @@ import { ConditionOptimizer } from './executor/condition-optimizer';
 import { PolicyDumpCommand, PolicyDumper } from './executor/policy-dumper';
 import { PolicyExecutor } from './executor/policy-executor';
 import { Privileges } from './executor/privileges';
-import { GelAccessPolicyGenerator } from './gel-access-policy.generator';
 import { GrantersFactory } from './granters.factory';
 import { PolicyFactory } from './policy.factory';
 
@@ -21,11 +20,10 @@ import { PolicyFactory } from './policy.factory';
     PolicyDumper,
     PolicyDumpCommand,
     ConditionOptimizer,
-    GelAccessPolicyGenerator,
     RoleAndExpUnionOptimizer,
     VariantAndExpUnionOptimizer,
     FlattenAggregateOptimizer,
   ],
-  exports: [Privileges, GelAccessPolicyGenerator, PolicyExecutor],
+  exports: [Privileges, PolicyExecutor],
 })
 export class PolicyModule {}

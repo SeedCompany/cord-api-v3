@@ -55,10 +55,6 @@ class CreatorCondition<
     ].join(' OR ');
   }
 
-  asEdgeQLCondition() {
-    return '.isCreator';
-  }
-
   union(this: void, conditions: NonEmptyArray<this>) {
     return conditions[0];
   }

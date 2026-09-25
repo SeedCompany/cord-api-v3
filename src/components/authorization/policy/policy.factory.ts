@@ -1,5 +1,5 @@
 import { Injectable, type OnModuleInit } from '@nestjs/common';
-import { entries, mapEntries, mapValues, setOf } from '@seedcompany/common';
+import { mapEntries, mapValues, setOf } from '@seedcompany/common';
 import { pick, startCase } from 'lodash';
 import { type DeepWritable, type Writable } from 'ts-essentials';
 import { type EnhancedResource, many, type Role } from '~/common';
@@ -13,7 +13,7 @@ import {
   type Permissions,
 } from './builder/perm-granter';
 import { Policy as PolicyMetadata } from './builder/policy.decorator';
-import { all, any, Condition } from './conditions';
+import { all, any, type Condition } from './conditions';
 import { type ResourcesGranter } from './granters';
 import { GrantersFactory } from './granters.factory';
 
@@ -43,7 +43,6 @@ interface PlainPolicy extends Pick<Policy, 'name' | 'roles'> {
 @Injectable()
 export class PolicyFactory implements OnModuleInit {
   private policies?: Policy[];
-  private dbPolicies?: Policy[];
 
   constructor(
     private readonly grantersFactory: GrantersFactory,
@@ -56,13 +55,6 @@ export class PolicyFactory implements OnModuleInit {
       throw new Error('Policies are not available yet.');
     }
     return this.policies;
-  }
-
-  getDBPolicies() {
-    if (!this.dbPolicies) {
-      throw new Error('Policies are not available yet.');
-    }
-    return this.dbPolicies;
   }
 
   async onModuleInit() {
@@ -79,12 +71,6 @@ export class PolicyFactory implements OnModuleInit {
       const grants = cloneGrants(plain.grants);
       this.defaultInterfacesFromAllImplementationsIntersection(grants);
       this.defaultImplementationsFromInterfaces(grants);
-
-      return this.enhancePolicy({ ...plain, grants });
-    });
-    this.dbPolicies = plainPolicies.map((plain) => {
-      const grants = cloneGrants(plain.grants);
-      this.stripImplementationsMatchingInterfaces(grants);
 
       return this.enhancePolicy({ ...plain, grants });
     });
@@ -204,48 +190,6 @@ export class PolicyFactory implements OnModuleInit {
       };
 
       grantMap.set(interfaceRes, interfaceGrants);
-    }
-  }
-
-  private stripImplementationsMatchingInterfaces(grantMap: WritableGrants) {
-    const interfaceCandidates = new Set(
-      [...grantMap.keys()]
-        .map((res) => this.resourcesHost.getInterfaces(res))
-        .flat(),
-    );
-
-    for (const interfaceRes of interfaceCandidates) {
-      const interfaceGrants = grantMap.get(interfaceRes);
-      // Skip if policy hasn't declared
-      if (!interfaceCandidates) {
-        continue;
-      }
-
-      const impls = this.resourcesHost.getImplementations(interfaceRes);
-
-      for (const impl of impls) {
-        const implGrants = grantMap.get(impl);
-        if (!implGrants) {
-          continue;
-        }
-        // Only bother checking object level read/create/delete as that is all our DB AP's use
-        const isSame = entries(implGrants.objectLevel).every(
-          ([action, perm]) => {
-            if (action === 'edit') {
-              return true;
-            }
-            const ifacePerm = interfaceGrants?.objectLevel[action];
-            return (
-              ifacePerm &&
-              perm &&
-              Condition.id(ifacePerm) === Condition.id(perm)
-            );
-          },
-        );
-        if (isSame) {
-          grantMap.delete(impl);
-        }
-      }
     }
   }
 

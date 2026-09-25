@@ -10,7 +10,6 @@ import {
 import {
   type AsCypherParams,
   type Condition,
-  eqlInLiteralSet,
   type IsAllowedParams,
   MissingContextException,
 } from '../../policy/conditions';
@@ -42,10 +41,6 @@ export class VariantCondition<
   asCypherCondition(query: Query, _other: AsCypherParams<TResourceStatic>) {
     const variants = query.params.addParam([...this.variants], 'variants');
     return `node.variant = ${String(variants)}`;
-  }
-
-  asEdgeQLCondition() {
-    return '<str>' + eqlInLiteralSet('.variant', this.variants);
   }
 
   union(this: void, conditions: NonEmptyArray<this>) {
