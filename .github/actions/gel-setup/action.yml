@@ -1,5 +1,17 @@
 name: Setup Gel
 description: 'Setup Gel server, migrate schema, generate TS files'
+inputs:
+  restore-database:
+    description: >-
+      Load the cached dump into the Gel instance, so the instance actually holds
+      the migrated schema. Only a job that RUNS something against Gel needs it
+      (`gel migration status`, `yarn gel:seed`, an e2e shard with
+      DATABASE=gel). Jobs that merely compile or boot the app do not: the
+      generated TypeScript client comes from the cache restore below, not from
+      the database. Off by default because the restore is the most expensive
+      thing in the job — see the comment on that step.
+    required: false
+    default: 'false'
 runs:
   using: composite
   steps:
@@ -36,8 +48,13 @@ runs:
     # The migrated (empty) database and the generated TS client are pure
     # functions of dbschema/ + the generator deps, but rebuilding them takes
     # ~15-20 min per job. Cache a dump of the migrated DB + the generated
-    # files; on a hit, `gel restore` (seconds) replaces `gel migrate` and the
-    # restored files skip `yarn gel:gen` entirely.
+    # files; on a hit, the restored files skip `gel migrate` and `yarn gel:gen`
+    # entirely.
+    #
+    # ⚠ The generated client lands here, from THIS cache — `src/core/gel/
+    # generated-client` is gitignored and imported by ~10 source files, so
+    # without it nothing in the repo compiles. That is why this action cannot
+    # simply be dropped while any Gel code remains.
     - name: Restore migrated-DB dump & generated client
       id: gel-cache
       uses: actions/cache@v4
@@ -66,7 +83,24 @@ runs:
         mkdir -p .gel-cache
         gel dump .gel-cache/main.dump
 
+    # ⚠ MEASURED 2026-09-23: this takes **10.1 minutes**, for a dump the CLI
+    # itself reports as 0.68 MB — it is by far the most expensive step in any
+    # job that runs it, more than the test suite. It is not data volume and it
+    # is not a cache miss (the cache hit; migrate and gel:gen were skipped).
+    #
+    # Unlike the cache above, this cannot be reused between jobs: it loads a
+    # dump into a live server, and every job gets a fresh runner. So it is paid
+    # per job, every run.
+    #
+    # It populates the DATABASE, which only a job that queries Gel needs. Every
+    # job in test.yml runs DATABASE=postgres or neo4j (the `gel` matrix entry is
+    # commented out), and lint/api-schema only boot the app for `--gen-schema`.
+    # Verified locally with the Gel instance stopped: e2e, type-check, eslint
+    # and `yarn start -- --gen-schema` all succeed. So it is skipped unless a
+    # caller asks for it, which today is `gel.yml` alone.
     - name: Restore migrated DB from cache
-      if: steps.gel-cache.outputs.cache-hit == 'true'
+      if: >-
+        steps.gel-cache.outputs.cache-hit == 'true' &&
+        inputs.restore-database == 'true'
       shell: bash
       run: gel restore .gel-cache/main.dump
