@@ -3,7 +3,6 @@ import { Connection } from 'cypher-query-builder';
 import { ServerException } from '~/common';
 import { ConfigService } from '~/core/config';
 import { DrizzleService } from '~/core/drizzle/drizzle.service';
-import { TransactionContext } from '~/core/gel/transaction.context';
 import { type TransactionOptions } from '~/core/neo4j/transaction';
 import { TransactionRetryInformer } from './transaction-retry.informer';
 
@@ -18,8 +17,8 @@ import { TransactionRetryInformer } from './transaction-retry.informer';
  * The engine services are injected `@Optional()` because only the active
  * engine's is guaranteed to be resolvable.
  *
- * migration-todo: at Phase 7 cutover, drop the `neo4j` and `gel` arms (and
- * their injections) leaving only the Drizzle path.
+ * migration-todo: drop the `neo4j` arm and its injection, leaving only the
+ * Drizzle path.
  */
 @Injectable()
 export class TransactionRunner {
@@ -28,7 +27,6 @@ export class TransactionRunner {
     private readonly retryInformer: TransactionRetryInformer,
     @Optional() private readonly neo4j?: Connection,
     @Optional() private readonly drizzle?: DrizzleService,
-    @Optional() private readonly gel?: TransactionContext,
   ) {}
 
   /**
@@ -53,8 +51,6 @@ export class TransactionRunner {
         }
         return await this.inDrizzleTx(drizzle, fn);
       }
-      case 'gel':
-        return await this.required(this.gel, 'gel').inTx(fn);
       case 'neo4j':
         return await this.required(this.neo4j, 'neo4j').runInTransaction(
           fn,
