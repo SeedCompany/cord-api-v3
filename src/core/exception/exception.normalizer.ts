@@ -3,20 +3,11 @@ import { type ArgumentsHost, Inject, Injectable } from '@nestjs/common';
 import * as Nest from '@nestjs/common';
 import { GqlExecutionContext } from '@nestjs/graphql';
 import { isNotFalsy, simpleSwitch } from '@seedcompany/common';
-import * as Gel from 'gel';
-import * as GelTags from 'gel/dist/errors/tags.js';
 import { GraphQLError } from 'graphql';
 import { lowerCase, uniq } from 'lodash';
 import type { AbstractClass } from 'type-fest';
-import {
-  DuplicateException,
-  Exception,
-  getCauseList,
-  getParentTypes,
-  JsonSet,
-} from '~/common';
+import { Exception, getCauseList, getParentTypes, JsonSet } from '~/common';
 import type { ConfigService } from '~/core/config';
-import { ExclusivityViolationError } from '~/core/gel/errors';
 import * as Neo from '~/core/neo4j/errors';
 import { prettyStack } from './pretty-stack';
 
@@ -74,7 +65,7 @@ export class ExceptionNormalizer {
   }
 
   private gatherExtraInfo(params: NormalizeParams): Record<string, any> {
-    let { ex } = params;
+    const { ex } = params;
     const { context } = params;
 
     if (ex instanceof Nest.HttpException) {
@@ -111,22 +102,6 @@ export class ExceptionNormalizer {
       };
     }
 
-    // Again, dig deep here to find connection errors.
-    // These would be the root problem that we'd want to expose.
-    const gelError = exs.find(
-      (e): e is Gel.GelError => e instanceof Gel.GelError,
-    );
-    if (
-      gelError &&
-      (gelError instanceof Gel.AvailabilityError ||
-        gelError instanceof Gel.ClientConnectionError)
-    ) {
-      return {
-        codes: this.errorToCodes(ex),
-        message: 'Failed to connect to CORD database',
-      };
-    }
-
     if (
       ex instanceof AggregateError &&
       // not subclassed
@@ -152,10 +127,7 @@ export class ExceptionNormalizer {
         ? GqlExecutionContext.create(context as any)
         : undefined;
 
-    if (ex instanceof ExclusivityViolationError) {
-      ex = DuplicateException.fromDB(ex, gqlContext);
-      // TODO Neo4j UniquenessError could be moved here too - currently manually in service files
-    } else if (ex instanceof Gel.GelError || Neo.isNeo4jError(ex)) {
+    if (Neo.isNeo4jError(ex)) {
       // Mask actual DB error with a nicer user error message.
       let message = 'Failed';
       if (gqlContext) {
@@ -291,13 +263,6 @@ export class ExceptionNormalizer {
     }
     if (type === Nest.IntrinsicException) {
       return [];
-    }
-    if (type === Gel.GelError) {
-      const transient =
-        ex instanceof Gel.GelError &&
-        (ex.hasTag(GelTags.SHOULD_RECONNECT) ||
-          ex.hasTag(GelTags.SHOULD_RETRY));
-      return [...(transient ? ['Transient'] : []), 'Database', 'Server'];
     }
     if (Neo.isNeo4jError(ex)) {
       return [

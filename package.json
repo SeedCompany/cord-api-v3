@@ -11,7 +11,7 @@
     "prebuild": "rimraf dist",
     "postinstall": "ts-patch install || true; husky || true",
     "build": "nest build",
-    "clean": "rimraf -g dist schema.graphql 'src/core/gel/{generated-client,schema.ts}' 'src/**/*.edgeql.ts'",
+    "clean": "rimraf -g dist schema.graphql",
     "console": "yarn start --entryFile console --",
     "console:prod": "node --import=extensionless/register dist/src/console",
     "start": "NODE_OPTIONS=\"${NODE_OPTIONS:-} --import=extensionless/register\" nest start",
@@ -19,8 +19,6 @@
     "start:debug": "yarn start --debug --watch",
     "start:prod": "node --import=extensionless/register --enable-source-maps dist/src/main",
     "repl": "yarn start --entryFile repl",
-    "gel:gen": "yarn start --entryFile core/gel/generator/run",
-    "gel:seed": "yarn start --entryFile core/gel/seeds.run",
     "migrate:generate": "drizzle-kit generate",
     "migrate:apply": "drizzle-kit migrate",
     "lint": "eslint --ext .ts,.tsx --fix --max-warnings 0 .",
@@ -86,7 +84,6 @@
     "fengari": "^0.1.5",
     "fengari-interop": "^0.1.4",
     "file-type": "^20.5.0",
-    "gel": "^2.1.0-canary.20250319T143140",
     "glob": "^11.0.2",
     "got": "^14.6.6",
     "gql.tada": "^1.8.10",
@@ -134,7 +131,6 @@
     "yaml": "^2.3.3"
   },
   "devDependencies": {
-    "@gel/generate": "^0.7.0-canary.20250422T080308",
     "@graphql-hive/cli": ">=0.51",
     "@nestjs/cli": "^11.0.7",
     "@nestjs/schematics": "^11.0.5",

@@ -229,7 +229,7 @@ export const makeConfig = (env: EnvironmentService) =>
     // Which database engine is active. Postgres has been the production
     // engine since the 2026-09 cutover; the other values exist only while the
     // legacy engine code awaits removal.
-    // migration-todo: drop this switch (and the env var) with the Neo4j/Gel arms.
+    // migration-todo: drop this switch (and the env var) with the Neo4j arm.
     databaseEngine = env.string('DATABASE').optional('postgres').toLowerCase();
 
     /**
@@ -269,8 +269,6 @@ export const makeConfig = (env: EnvironmentService) =>
             (simpleSwitch(this.databaseEngine, {
               postgres: this.postgres.isLocal,
               neo4j: this.neo4j.isLocal,
-              // Gel instances here are CLI-managed local ones.
-              gel: true,
             }) ?? this.neo4j.isLocal)
           : true,
       );

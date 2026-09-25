@@ -5,7 +5,6 @@ import {
   type OnModuleInit,
 } from '@nestjs/common';
 import { mapEntries, type Nil } from '@seedcompany/common';
-import Event from 'gel/dist/primitives/event.js';
 import { from, mergeMap } from 'rxjs';
 import {
   type ID,
@@ -63,7 +62,7 @@ export class NotificationServiceImpl
     ResourceShape<Notification>,
     INotificationStrategy<Notification>
   >;
-  readonly ready = new ((Event as any).default as typeof Event)();
+  readonly ready = new Latch();
 
   constructor(
     private readonly discovery: MetadataDiscovery,
@@ -141,5 +140,29 @@ export class NotificationServiceImpl
       return [meta, instance];
     }).asMap;
     this.ready.set();
+  }
+}
+
+/**
+ * A one-shot latch: `wait()` resolves once `set()` has been called, and stays
+ * resolved for callers that arrive afterwards.
+ *
+ * This was previously the Gel driver's internal `Event` primitive, borrowed for
+ * its shape rather than for anything to do with that database. Reimplemented
+ * here so the notification service does not depend on a database client for a
+ * promise.
+ */
+class Latch {
+  private release!: () => void;
+  private readonly released = new Promise<void>((resolve) => {
+    this.release = resolve;
+  });
+
+  set() {
+    this.release();
+  }
+
+  async wait() {
+    await this.released;
   }
 }

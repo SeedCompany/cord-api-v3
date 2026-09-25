@@ -32,9 +32,6 @@ jobs:
       - name: Node Setup & Yarn Install
         uses: ./.github/actions/setup
 
-      - name: Gel Setup
-        uses: ./.github/actions/gel-setup
-
       - name: Generate GraphQL Schema
         run: yarn start -- --gen-schema
 

@@ -21,7 +21,6 @@ runRepl({
   import: { import: (name) => import(name) },
   extraContext: async (app) => {
     const { ResourcesHost } = await import('~/core/resources');
-    const { e } = await import('~/core/gel');
     const { SessionManager } =
       await import('~/core/authentication/session/session.manager');
     const { Pnp } = await import('./components/pnp');
@@ -30,7 +29,6 @@ runRepl({
     const Resources = app.get(ResourcesHost).getEnhancedMap();
 
     return {
-      e,
       DateTime,
       Duration,
       Interval,

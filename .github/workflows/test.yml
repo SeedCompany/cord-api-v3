@@ -27,9 +27,6 @@ jobs:
       - name: Node Setup & Yarn Install
         uses: ./.github/actions/setup
 
-      - name: Gel Setup
-        uses: ./.github/actions/gel-setup
-
       - name: Generate GQL Schema
         run: yarn start -- --gen-schema && yarn gql-tada generate output
 
@@ -136,15 +133,6 @@ jobs:
 
       - name: Node Setup & Yarn Install
         uses: ./.github/actions/setup
-
-      - name: Gel Setup
-        uses: ./.github/actions/gel-setup
-        with:
-          # Future-proofing: no matrix entry runs DATABASE=gel, so this is
-          # 'false' for every job here. If a Gel entry is ever added back, that
-          # shard needs the cached dump loaded or it queries an empty instance
-          # — a confusing failure rather than a clear one.
-          restore-database: ${{ matrix.database == 'gel' }}
 
       - name: Generate GQL Schema
         run: yarn start -- --gen-schema && yarn gql-tada generate output

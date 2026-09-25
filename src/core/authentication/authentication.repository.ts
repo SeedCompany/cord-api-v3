@@ -17,7 +17,7 @@ import { type Session } from './session/session.dto';
 interface PasswordResetToken {
   email: string;
   token: string;
-  // migration-todo: make userId non-optional after Gel and Neo4j are removed
+  // migration-todo: make userId non-optional after Neo4j is removed
   // (Drizzle always provides it; Gel/Neo4j will be updated or removed)
   userId?: ID;
   createdOn: DateTime;
@@ -342,7 +342,7 @@ export class AuthenticationRepository {
   }
 
   async removeAllPasswordResetTokensByEmail(email: string) {
-    // migration-todo: switch to userId after Neo4j/Gel are removed
+    // migration-todo: switch to userId after Neo4j is removed
     await this.db
       .query()
       .match([node('emailToken', 'EmailToken', { value: email })])

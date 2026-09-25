@@ -231,7 +231,7 @@ export class AuthenticationDrizzleRepository implements PublicOf<AuthenticationR
   }
 
   async removeAllPasswordResetTokensByEmail(email: string) {
-    // migration-todo: switch to userId after Gel and Neo4j are removed
+    // migration-todo: switch to userId after Neo4j is removed
     await this.drizzle.client
       .delete(authPasswordResetTokens)
       .where(eq(authPasswordResetTokens.email, email));
