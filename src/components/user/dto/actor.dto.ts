@@ -7,13 +7,9 @@ import {
   type Role,
   SecuredProperty,
 } from '~/common';
-import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
 
-@RegisterResource({
-  db: e.Actor,
-  skipAccessPolicies: true,
-})
+@RegisterResource()
 @InterfaceType()
 export class Actor extends DataObject {
   declare readonly __typename: 'User' | 'SystemAgent';
@@ -22,10 +18,7 @@ export class Actor extends DataObject {
   readonly id: ID;
 }
 
-@RegisterResource({
-  db: e.SystemAgent,
-  skipAccessPolicies: true,
-})
+@RegisterResource()
 @ObjectType({
   implements: [Actor],
 })
@@ -47,9 +40,5 @@ declare module '~/core/resources/map' {
   interface ResourceMap {
     Actor: typeof Actor;
     SystemAgent: typeof SystemAgent;
-  }
-  interface ResourceDBMap {
-    Actor: typeof e.Actor;
-    SystemAgent: typeof e.SystemAgent;
   }
 }

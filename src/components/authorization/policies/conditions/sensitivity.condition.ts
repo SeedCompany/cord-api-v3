@@ -14,9 +14,7 @@ import {
 import { matchProjectSens, rankSens } from '~/core/neo4j/query';
 import {
   type AsDrizzleParams,
-  type AsEdgeQLParams,
   type Condition,
-  fqnRelativeTo,
   type IsAllowedParams,
   MissingContextException,
 } from '../../policy/conditions';
@@ -84,25 +82,6 @@ export class SensitivityCondition<
     // Project-scoped children the column is on the parent project; use a
     // correlated subquery.
     return sensitivityRefForResource(resource, this.access);
-  }
-
-  setupEdgeQLContext({
-    resource,
-    namespace,
-  }: AsEdgeQLParams<TResourceStatic>): Record<string, string> {
-    const Sensitivity = fqnRelativeTo('default::Sensitivity', namespace);
-    if (resource.isEmbedded) {
-      const eql = `(.container[is Project::ContextAware].sensitivity ?? ${Sensitivity}.High)`;
-      return { sensitivity: eql };
-    }
-    return {};
-  }
-
-  asEdgeQLCondition({ resource, namespace }: AsEdgeQLParams<TResourceStatic>) {
-    const Sensitivity = fqnRelativeTo('default::Sensitivity', namespace);
-    const lhs = resource.isEmbedded ? 'sensitivity' : '.sensitivity';
-    const rhs = `${Sensitivity}.${this.access}`;
-    return `${lhs} <= ${rhs}`;
   }
 
   union(conditions: NonEmptyArray<this>) {

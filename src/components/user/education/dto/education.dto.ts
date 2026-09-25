@@ -8,7 +8,6 @@ import {
   SecuredProperty,
   SecuredString,
 } from '~/common';
-import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
 
 export type Degree = EnumType<typeof Degree>;
@@ -29,7 +28,7 @@ export const Degree = makeEnum({
 })
 export abstract class SecuredDegree extends SecuredEnum(Degree) {}
 
-@RegisterResource({ db: e.User.Education })
+@RegisterResource()
 @ObjectType({
   implements: [Resource],
 })
@@ -49,8 +48,5 @@ export class Education extends Resource {
 declare module '~/core/resources/map' {
   interface ResourceMap {
     Education: typeof Education;
-  }
-  interface ResourceDBMap {
-    Education: typeof e.User.Education;
   }
 }

@@ -8,10 +8,9 @@ import {
   SecuredPropertyList,
   SecuredString,
 } from '~/common';
-import { e } from '~/core/gel';
 import { type LinkTo, RegisterResource } from '~/core/resources';
 
-@RegisterResource({ db: e.FieldRegion })
+@RegisterResource()
 @ObjectType({
   implements: [Resource],
 })
@@ -38,8 +37,5 @@ export class SecuredFieldRegions extends SecuredPropertyList(FieldRegion) {}
 declare module '~/core/resources/map' {
   interface ResourceMap {
     FieldRegion: typeof FieldRegion;
-  }
-  interface ResourceDBMap {
-    FieldRegion: typeof e.default.FieldRegion;
   }
 }

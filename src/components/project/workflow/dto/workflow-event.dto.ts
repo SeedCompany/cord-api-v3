@@ -1,11 +1,10 @@
 import { ObjectType } from '@nestjs/graphql';
-import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
 import { WorkflowEvent } from '../../../workflow/dto';
 import { type IProject, ProjectStep } from '../../dto';
 import { ProjectWorkflowTransition } from './workflow-transition.dto';
 
-@RegisterResource({ db: e.Project.WorkflowEvent })
+@RegisterResource()
 @ObjectType()
 export abstract class ProjectWorkflowEvent extends WorkflowEvent(
   ProjectStep,
@@ -20,8 +19,5 @@ export abstract class ProjectWorkflowEvent extends WorkflowEvent(
 declare module '~/core/resources/map' {
   interface ResourceMap {
     ProjectWorkflowEvent: typeof ProjectWorkflowEvent;
-  }
-  interface ResourceDBMap {
-    ProjectWorkflowEvent: typeof e.Project.WorkflowEvent;
   }
 }

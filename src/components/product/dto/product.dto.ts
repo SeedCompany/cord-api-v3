@@ -17,7 +17,6 @@ import {
 } from '~/common';
 import { type SetDbType } from '~/core/database';
 import { type SetChangeType } from '~/core/database/changes';
-import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
 import { type DbScriptureReferences } from '../../scripture';
 import {
@@ -46,7 +45,7 @@ export const resolveProductType = (
       ? OtherProduct
       : DirectScriptureProduct;
 
-@RegisterResource({ db: e.Product })
+@RegisterResource()
 @InterfaceType({
   resolveType: resolveProductType,
   implements: [Producible],
@@ -116,7 +115,7 @@ export class Product extends Producible {
   readonly placeholderDescription: SecuredStringNullable;
 }
 
-@RegisterResource({ db: e.DirectScriptureProduct })
+@RegisterResource()
 @ObjectType({
   implements: [Product],
   description: stripIndent`
@@ -154,7 +153,7 @@ export class DirectScriptureProduct extends Product {
   readonly pnpIndex?: number;
 }
 
-@RegisterResource({ db: e.DerivativeScriptureProduct })
+@RegisterResource()
 @ObjectType({
   implements: [Product],
   description: stripIndent`
@@ -210,7 +209,7 @@ export class DerivativeScriptureProduct extends Product {
   totalVerseEquivalents: number;
 }
 
-@RegisterResource({ db: e.Product })
+@RegisterResource()
 @ObjectType({
   implements: [Product],
   description:
@@ -272,11 +271,5 @@ declare module '~/core/resources/map' {
     DirectScriptureProduct: typeof DirectScriptureProduct;
     DerivativeScriptureProduct: typeof DerivativeScriptureProduct;
     OtherProduct: typeof OtherProduct;
-  }
-  interface ResourceDBMap {
-    Product: typeof e.default.Product;
-    DirectScriptureProduct: typeof e.default.DirectScriptureProduct;
-    DerivativeScriptureProduct: typeof e.default.DerivativeScriptureProduct;
-    OtherProduct: typeof e.default.OtherProduct;
   }
 }

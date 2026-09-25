@@ -1,10 +1,9 @@
-import type { ConditionalKeys, IsAny, LiteralUnion, ValueOf } from 'type-fest';
-import type { DBName, ResourceShape } from '~/common';
-import type { ResourceDBMap, ResourceMap } from './map';
+import type { IsAny, LiteralUnion, ValueOf } from 'type-fest';
+import type { ResourceShape } from '~/common';
+import type { ResourceMap } from './map';
 
 export type AllResourceAppNames = keyof ResourceMap;
-export type AllResourceDBNames = DBName<ValueOf<ResourceDBMap>>;
-export type AllResourceNames = AllResourceAppNames | AllResourceDBNames;
+export type AllResourceNames = AllResourceAppNames;
 export type ResourceNameLike = LiteralUnion<AllResourceNames, string>;
 
 //region ResourceName
@@ -14,7 +13,6 @@ export type ResourceNameLike = LiteralUnion<AllResourceNames, string>;
  *
  * @example User
  * "User"           -> "User"
- * "default::User"  -> "User"
  * typeof User      -> "User"
  * User             -> "User"
  *
@@ -32,18 +30,13 @@ export type ResourceNameLike = LiteralUnion<AllResourceNames, string>;
 export type ResourceName<T, IncludeSubclasses extends boolean = false> =
   IsAny<T> extends true
     ? AllResourceAppNames // short-circuit and prevent many seemly random circular definitions
-    : T extends AllResourceDBNames
-      ? ResourceNameFromStatic<
-          ResourceMap[ResourceNameFromDBName<T>],
-          IncludeSubclasses
-        >
-      : T extends AllResourceAppNames
-        ? ResourceNameFromStatic<ResourceMap[T], IncludeSubclasses>
-        : T extends ResourceShape<any>
-          ? ResourceNameFromStatic<T, IncludeSubclasses>
-          : ResourceNameFromInstance<T> extends string
-            ? ResourceNameFromInstance<T, IncludeSubclasses> & string
-            : never;
+    : T extends AllResourceAppNames
+      ? ResourceNameFromStatic<ResourceMap[T], IncludeSubclasses>
+      : T extends ResourceShape<any>
+        ? ResourceNameFromStatic<T, IncludeSubclasses>
+        : ResourceNameFromInstance<T> extends string
+          ? ResourceNameFromInstance<T, IncludeSubclasses> & string
+          : never;
 
 type ResourceNameFromInstance<
   TResource,
@@ -80,14 +73,6 @@ type ResourceNameFromStatic<
         }[keyof ResourceMap]
       : never;
 
-type ResourceNameFromDBName<Name extends AllResourceDBNames> =
-  ConditionalKeys<
-    ResourceDBMap,
-    // eslint-disable-next-line @typescript-eslint/naming-convention
-    { __element__: { __name__: Name } }
-  > extends infer AppName extends AllResourceAppNames
-    ? AppName
-    : never;
 //endregion
 
 export type ResourceStaticFromName<Name> = string extends Name

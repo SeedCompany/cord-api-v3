@@ -6,7 +6,6 @@ import {
   DateInterval,
   DateTimeField,
   DbLabel,
-  type DBNames,
   Grandparent,
   IntersectTypes,
   RequiredWhen,
@@ -23,7 +22,6 @@ import {
   SensitivityField,
   type UnsecuredDto,
 } from '~/common';
-import { e } from '~/core/gel';
 import { type BaseNode } from '~/core/neo4j/results';
 import {
   type LinkTo,
@@ -67,7 +65,7 @@ const RequiredWhenNotInDev = RequiredWhen(() => Engagement)({
     status !== 'InDevelopment' && status !== 'DidNotDevelop',
 });
 
-@RegisterResource({ db: e.Engagement })
+@RegisterResource()
 @InterfaceType({
   resolveType: resolveEngagementType,
   implements: Interfaces.members,
@@ -84,7 +82,9 @@ class Engagement extends Interfaces {
     import('../../project/dto').then((m) => m.IProject);
   static readonly resolve = resolveEngagementType;
 
-  declare readonly __typename: DBNames<typeof e.Engagement>;
+  declare readonly __typename:
+    | 'default::LanguageEngagement'
+    | 'default::InternshipEngagement';
 
   readonly project: LinkTo<'Project'> &
     Pick<UnsecuredDto<IProject>, 'status' | 'step' | 'type'>;
@@ -166,7 +166,7 @@ class Engagement extends Interfaces {
 // export as different names to maintain compatibility with our codebase.
 export { Engagement as IEngagement, type AnyEngagement as Engagement };
 
-@RegisterResource({ db: e.LanguageEngagement })
+@RegisterResource()
 @ObjectType({
   implements: [Engagement],
 })
@@ -179,7 +179,7 @@ export class LanguageEngagement extends Engagement {
   static readonly Parent = () =>
     import('../../project/dto').then((m) => m.TranslationProject);
 
-  declare readonly __typename: DBNames<typeof e.LanguageEngagement>;
+  declare readonly __typename: 'default::LanguageEngagement';
 
   @Field(() => TranslationProject)
   declare readonly parent: LinkToUnknown | BaseNode;
@@ -226,7 +226,7 @@ export class LanguageEngagement extends Engagement {
   readonly usingAIAssistedTranslation: SecuredAIAssistedTranslation;
 }
 
-@RegisterResource({ db: e.InternshipEngagement })
+@RegisterResource()
 @ObjectType({
   implements: [Engagement],
 })
@@ -234,7 +234,7 @@ export class InternshipEngagement extends Engagement {
   static readonly Parent = () =>
     import('../../project/dto').then((m) => m.InternshipProject);
 
-  declare readonly __typename: DBNames<typeof e.InternshipEngagement>;
+  declare readonly __typename: 'default::InternshipEngagement';
 
   @Field(() => InternshipProject)
   declare readonly parent: LinkToUnknown | BaseNode;
@@ -281,10 +281,5 @@ declare module '~/core/resources/map' {
     Engagement: typeof Engagement;
     InternshipEngagement: typeof InternshipEngagement;
     LanguageEngagement: typeof LanguageEngagement;
-  }
-  interface ResourceDBMap {
-    Engagement: typeof e.default.Engagement;
-    InternshipEngagement: typeof e.default.InternshipEngagement;
-    LanguageEngagement: typeof e.default.LanguageEngagement;
   }
 }

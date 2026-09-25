@@ -10,12 +10,11 @@ import {
   type SetUnsecuredType,
   type UnsecuredDto,
 } from '~/common';
-import { e } from '~/core/gel';
 import { type LinkTo, RegisterResource } from '~/core/resources';
 import { SecuredUser, type User } from '../../../user/dto';
 import { type IProject } from '../../dto';
 
-@RegisterResource({ db: e.Project.Member })
+@RegisterResource()
 @ObjectType({
   implements: [Resource],
 })
@@ -45,8 +44,5 @@ export class ProjectMember extends Resource {
 declare module '~/core/resources/map' {
   interface ResourceMap {
     ProjectMember: typeof ProjectMember;
-  }
-  interface ResourceDBMap {
-    ProjectMember: typeof e.Project.Member;
   }
 }

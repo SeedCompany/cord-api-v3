@@ -26,17 +26,10 @@ jobs:
       - name: Gel Setup
         uses: ./.github/actions/gel-setup
         with:
-          # The only workflow that runs anything against Gel itself — the steps
-          # below check migration status and run the seed — so this is the one
-          # caller that needs the cached dump loaded into the instance.
+          # The only workflow that runs anything against Gel itself — the
+          # seed below — so this is the one caller that needs the cached dump
+          # loaded into the instance.
           restore-database: 'true'
-
-      - name: Inject Access Policies
-        run: yarn console gel ap inject
-
-      - name: Schema Migrations In Sync
-        run: gel migration status
-        if: github.event.pull_request.draft == false
 
       - name: Validate seed scripts are error free
         run: yarn gel:seed

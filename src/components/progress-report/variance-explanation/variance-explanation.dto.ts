@@ -10,12 +10,11 @@ import {
   SecuredStringList,
   type SetUnsecuredType,
 } from '~/common';
-import { e } from '~/core/gel';
 import { type LinkTo, RegisterResource } from '~/core/resources';
 import { type ProgressReport } from '../dto';
 import { ProgressReportVarianceExplanationReasonOptions as ReasonOptions } from './reason-options';
 
-@RegisterResource({ db: e.ProgressReport.VarianceExplanation })
+@RegisterResource()
 @ObjectType()
 export abstract class ProgressReportVarianceExplanation {
   static readonly Parent = () => import('../dto').then((m) => m.ProgressReport);
@@ -55,8 +54,5 @@ export abstract class ExplainProgressVariance {
 declare module '~/core/resources/map' {
   interface ResourceMap {
     ProgressReportVarianceExplanation: typeof ProgressReportVarianceExplanation;
-  }
-  interface ResourceDBMap {
-    ProgressReportVarianceExplanation: typeof e.ProgressReport.VarianceExplanation;
   }
 }

@@ -7,12 +7,11 @@ import {
   type SetUnsecuredType,
   type UnsecuredDto,
 } from '~/common';
-import { e } from '~/core/gel';
 import { type BaseNode } from '~/core/neo4j/results';
 import { type LinkTo, RegisterResource } from '~/core/resources';
 import { Tool } from '../../tool/dto';
 
-@RegisterResource({ db: e.Tool.Usage })
+@RegisterResource()
 @ObjectType({
   implements: [Resource],
 })
@@ -33,9 +32,6 @@ export class ToolUsage extends Resource {
 declare module '~/core/resources/map' {
   interface ResourceMap {
     ToolUsage: typeof ToolUsage;
-  }
-  interface ResourceDBMap {
-    ToolUsage: typeof e.Tool.Usage;
   }
 }
 

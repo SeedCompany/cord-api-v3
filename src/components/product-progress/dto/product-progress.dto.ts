@@ -9,7 +9,6 @@ import {
   type UnsecuredDto,
   Variant,
 } from '~/common';
-import { e } from '~/core/gel';
 import { LiveQueryConfig } from '~/core/live-query';
 import { RegisterResource } from '~/core/resources';
 import { type Product, ProductStep } from '../../product/dto';
@@ -99,7 +98,7 @@ export type UnsecuredProductProgress = Merge<
   }
 >;
 
-@RegisterResource({ db: e.ProgressReport.ProductProgress.Step })
+@RegisterResource()
 @ObjectType({
   description: `The progress of a product's step for a given report`,
 })
@@ -133,8 +132,5 @@ export class StepProgress {
 declare module '~/core/resources/map' {
   interface ResourceMap {
     StepProgress: typeof StepProgress;
-  }
-  interface ResourceDBMap {
-    StepProgress: typeof e.ProgressReport.ProductProgress.Step;
   }
 }

@@ -10,13 +10,12 @@ import {
   Sensitivity,
   SensitivityField,
 } from '~/common';
-import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
 import { Location } from '../../location/dto';
 import { SecuredOrganizationReach } from './organization-reach.dto';
 import { SecuredOrganizationTypes } from './organization-type.dto';
 
-@RegisterResource({ db: e.Organization })
+@RegisterResource()
 @ObjectType({
   implements: Resource,
 })
@@ -57,8 +56,5 @@ export class SecuredOrganization extends SecuredProperty(Organization) {}
 declare module '~/core/resources/map' {
   interface ResourceMap {
     Organization: typeof Organization;
-  }
-  interface ResourceDBMap {
-    Organization: typeof e.default.Organization;
   }
 }

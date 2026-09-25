@@ -7,11 +7,10 @@ import {
   SecuredString,
   SecuredStringNullable,
 } from '~/common';
-import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
 import { SecuredToolKey } from './tool-key.enum';
 
-@RegisterResource({ db: e.Tool })
+@RegisterResource()
 @ObjectType({
   implements: [Resource],
 })
@@ -36,8 +35,5 @@ export class Tool extends Resource {
 declare module '~/core/resources/map' {
   interface ResourceMap {
     Tool: typeof Tool;
-  }
-  interface ResourceDBMap {
-    Tool: typeof e.default.Tool;
   }
 }

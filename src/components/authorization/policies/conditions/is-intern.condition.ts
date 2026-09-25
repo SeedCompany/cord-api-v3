@@ -3,9 +3,7 @@ import { sql } from 'drizzle-orm';
 import { inspect, type InspectOptionsStylized } from 'util';
 import { type User } from '../../../user/dto';
 import {
-  type AsEdgeQLParams,
   type Condition,
-  fqnRelativeTo,
   type IsAllowedParams,
   MissingContextException,
 } from '../../policy/conditions';
@@ -22,14 +20,6 @@ class IsInternCondition<
 
   asCypherCondition() {
     return 'exists((node)<-[:intern { active: true }]-(:InternshipEngagement))';
-  }
-
-  asEdgeQLCondition({ namespace }: AsEdgeQLParams<TResourceStatic>) {
-    const InternshipEngagement = fqnRelativeTo(
-      'default::InternshipEngagement',
-      namespace,
-    );
-    return `exists .<intern[is ${InternshipEngagement}]`;
   }
 
   asDrizzleCondition() {
