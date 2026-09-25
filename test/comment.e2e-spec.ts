@@ -139,6 +139,44 @@ describe('Comment e2e', () => {
       expect(listed.commentThreads.total).toBe(1);
     });
   });
+
+  // Engagement is the one commentable whose `__typename` is module-qualified
+  // (`default::LanguageEngagement`) — the hydrate stamps that prefix on and
+  // `resolveEngagementType` matches on it. The comment service looks a parent
+  // up by `__typename`, so a lookup that cannot handle the prefix throws
+  // `Unable to determine resource from ResourceMap`. The cases above use a
+  // Language and a ProgressReport, whose names are bare, so neither covers it.
+  it('creates a comment on a LanguageEngagement parent', async () => {
+    await runAsAdmin(app, async (a) => {
+      const mouStart = CalendarDate.local(2023, 1, 1);
+      const mouEnd = mouStart.plus({ years: 1 });
+      const project = await createProject(a, {
+        mouStart: mouStart.toISO(),
+        mouEnd: mouEnd.toISO(),
+      });
+      const language = await createLanguage(a);
+      const { createEng } = await a.graphql.mutate(CreateLangEngForCommentDoc, {
+        input: {
+          project: project.id,
+          language: language.id,
+          startDateOverride: mouStart.toISO(),
+          endDateOverride: mouEnd.toISO(),
+        },
+      });
+      const engagementId = createEng.engagement.id;
+      expect(engagementId).toBeTruthy();
+
+      const { createComment } = await a.graphql.mutate(CreateCommentDoc, {
+        input: { resource: engagementId, body: doc('Engagement comment') },
+      });
+      expect(createComment.comment.id).toBeTruthy();
+
+      const listed = await a.graphql.query(CommentThreadsDoc, {
+        resource: engagementId,
+      });
+      expect(listed.commentThreads.total).toBe(1);
+    });
+  });
 });
 
 const CreateLangEngForCommentDoc = graphql(`
