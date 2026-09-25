@@ -1,7 +1,7 @@
 import { type ID } from '~/common';
 import { type DataLoaderStrategy, LoaderFactory } from '~/core/data-loader';
 import { type PnpExtractionResult } from './extraction-result.dto';
-import { PnpExtractionResultRepository } from './pnp-extraction-result.gel.repository';
+import { PnpExtractionResultRepository } from './pnp-extraction-result.repository';
 
 export interface PnpExtractionResultLoadResult {
   id: ID<'File'>;
