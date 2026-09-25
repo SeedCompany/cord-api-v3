@@ -10,7 +10,6 @@ import {
   Sensitivity,
   SensitivityField,
 } from '~/common';
-import { e } from '~/core/gel';
 import { type BaseNode } from '~/core/neo4j/results';
 import { type LinkToUnknown } from '~/core/resources';
 import { RegisterResource } from '~/core/resources';
@@ -42,7 +41,7 @@ export class BudgetSummary {
 }
 
 @Calculated()
-@RegisterResource({ db: e.Budget })
+@RegisterResource()
 @ObjectType({
   implements: Interfaces.members,
 })
@@ -80,8 +79,5 @@ export class SecuredBudget extends SecuredProperty(Budget) {}
 declare module '~/core/resources/map' {
   interface ResourceMap {
     Budget: typeof Budget;
-  }
-  interface ResourceDBMap {
-    Budget: typeof e.default.Budget;
   }
 }

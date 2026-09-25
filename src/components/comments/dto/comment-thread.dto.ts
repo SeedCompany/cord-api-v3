@@ -6,12 +6,11 @@ import {
   type SetUnsecuredType,
   type UnsecuredDto,
 } from '~/common';
-import { e } from '~/core/gel';
 import { type BaseNode } from '~/core/neo4j/results';
 import { RegisterResource } from '~/core/resources';
 import { Comment } from './comment.dto';
 
-@RegisterResource({ db: e.Comments.Thread })
+@RegisterResource()
 @ObjectType({
   implements: [Resource],
 })
@@ -34,8 +33,5 @@ export class CommentThread extends Resource {
 declare module '~/core/resources/map' {
   interface ResourceMap {
     CommentThread: typeof CommentThread;
-  }
-  interface ResourceDBMap {
-    CommentThread: typeof e.Comments.Thread;
   }
 }

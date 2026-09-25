@@ -14,6 +14,3 @@
 export interface ResourceMap {
   // Use interface merging to add to this interface in the owning module.
 }
-
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-export interface ResourceDBMap {}

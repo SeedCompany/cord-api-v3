@@ -1,6 +1,5 @@
 import { ObjectType } from '@nestjs/graphql';
 import { DbUnique, NameField, Resource, SecuredString } from '~/common';
-import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
 import {
   Producible,
@@ -14,7 +13,7 @@ declare module '../../product/dto/producible.dto' {
   }
 }
 
-@RegisterResource({ db: e.Film })
+@RegisterResource()
 @ObjectType({
   implements: [Producible, Resource],
 })
@@ -27,8 +26,5 @@ export class Film extends Producible {
 declare module '~/core/resources/map' {
   interface ResourceMap {
     Film: typeof Film;
-  }
-  interface ResourceDBMap {
-    Film: typeof e.default.Film;
   }
 }

@@ -17,7 +17,6 @@ import {
   NameField,
   ServerException,
 } from '~/common';
-import { e } from '~/core/gel';
 import { type BaseNode } from '~/core/neo4j/results';
 import { RegisterResource } from '~/core/resources';
 import { type FileVersion } from '../dto';
@@ -65,7 +64,7 @@ export class MediaUserMetadata extends DataObject {
 @InterfaceType({
   resolveType: resolveMedia,
 })
-@RegisterResource({ db: e.Media })
+@RegisterResource()
 export class Media extends MediaUserMetadata {
   declare __typename: unknown;
 
@@ -134,8 +133,5 @@ export class Audio extends TemporalMedia {
 declare module '~/core/resources/map' {
   interface ResourceMap {
     Media: typeof Media;
-  }
-  interface ResourceDBMap {
-    Media: typeof e.default.Media;
   }
 }

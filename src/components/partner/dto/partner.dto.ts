@@ -14,7 +14,6 @@ import {
   Sensitivity,
   SensitivityField,
 } from '~/common';
-import { e } from '~/core/gel';
 import { type LinkTo, RegisterResource } from '~/core/resources';
 import { Commentable } from '../../comments/dto';
 import { SecuredFinanceDepartmentIdBlockNullable } from '../../finance/department/dto/id-blocks.dto';
@@ -26,7 +25,7 @@ import { SecuredPartnerTypes } from './partner-type.enum';
 
 const Interfaces = IntersectTypes(Resource, Pinnable, Postable, Commentable);
 
-@RegisterResource({ db: e.Partner })
+@RegisterResource()
 @ObjectType({
   implements: Interfaces.members,
 })
@@ -103,8 +102,5 @@ export class SecuredPartner extends SecuredProperty(Partner) {}
 declare module '~/core/resources/map' {
   interface ResourceMap {
     Partner: typeof Partner;
-  }
-  interface ResourceDBMap {
-    Partner: typeof e.default.Partner;
   }
 }

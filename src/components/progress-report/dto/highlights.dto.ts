@@ -1,5 +1,4 @@
 import { Role, Variant, type VariantOf } from '~/common';
-import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
 import { PromptVariantResponse } from '../../prompts/dto';
 
@@ -22,7 +21,7 @@ const variants = Variant.createList({
   },
 });
 
-@RegisterResource({ db: e.ProgressReport.Highlight })
+@RegisterResource()
 export class ProgressReportHighlight extends PromptVariantResponse<HighlightVariant> {
   static readonly Parent = () =>
     import('./progress-report.dto').then((m) => m.ProgressReport);
@@ -35,8 +34,5 @@ export type HighlightVariant = VariantOf<typeof ProgressReportHighlight>;
 declare module '~/core/resources/map' {
   interface ResourceMap {
     ProgressReportHighlight: typeof ProgressReportHighlight;
-  }
-  interface ResourceDBMap {
-    ProgressReportHighlight: typeof e.ProgressReport.Highlight;
   }
 }

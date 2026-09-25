@@ -10,14 +10,13 @@ import {
   Sensitivity,
   SensitivityField,
 } from '~/common';
-import { e } from '~/core/gel';
 import { type BaseNode as DbBaseNode } from '~/core/neo4j/results';
 import { RegisterResource } from '~/core/resources';
 import { type ScopedRole } from '../../authorization/dto';
 import { type DefinedFile } from '../../file/dto';
 import { ReportType } from './report-type.enum';
 
-@RegisterResource({ db: e.PeriodicReport })
+@RegisterResource()
 @Calculated()
 @InterfaceType({
   resolveType: (obj: PeriodicReport) => `${obj.type}Report`,
@@ -63,7 +62,7 @@ class PeriodicReport extends Resource {
 
 export { PeriodicReport as IPeriodicReport };
 
-@RegisterResource({ db: e.FinancialReport })
+@RegisterResource()
 @ObjectType({
   implements: [PeriodicReport],
 })
@@ -73,7 +72,7 @@ export class FinancialReport extends PeriodicReport {
   declare readonly type: 'Financial';
 }
 
-@RegisterResource({ db: e.NarrativeReport })
+@RegisterResource()
 @ObjectType({
   implements: [PeriodicReport],
 })
@@ -93,10 +92,5 @@ declare module '~/core/resources/map' {
     PeriodicReport: typeof PeriodicReport;
     FinancialReport: typeof FinancialReport;
     NarrativeReport: typeof NarrativeReport;
-  }
-  interface ResourceDBMap {
-    PeriodicReport: typeof e.default.PeriodicReport;
-    FinancialReport: typeof e.default.FinancialReport;
-    NarrativeReport: typeof e.default.NarrativeReport;
   }
 }
