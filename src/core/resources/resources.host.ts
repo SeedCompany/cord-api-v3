@@ -66,7 +66,12 @@ export class ResourcesHost {
     name: Name,
   ): EnhancedResource<ResourceStaticFromName<ResourceName<Name>>> {
     const map = this.getEnhancedMap();
-    const resource = map[name];
+    // Engagement `__typename`s carry a `default::` module prefix. That is a Gel
+    // convention, but it is not dead: the Postgres hydrate writes it and
+    // `resolveEngagementType` matches on it, so it reaches here from the
+    // comment and post services, which look a parent up by its `__typename`.
+    // Resolve a qualified name the same as a bare one.
+    const resource = map[stripModulePrefix(name)];
     // double-check at runtime
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (!resource) {
@@ -137,3 +142,15 @@ export class ResourcesHost {
     return impls;
   }
 }
+
+/**
+ * `default::LanguageEngagement` -> `LanguageEngagement`.
+ *
+ * Resource names reaching the lookups above can be module-qualified, because
+ * the engagement hydrate stamps a `default::` prefix onto `__typename` on
+ * every engine and `resolveEngagementType` keys off that exact form.
+ */
+const stripModulePrefix = <Name extends string>(name: Name) =>
+  (name.includes('::')
+    ? name.slice(name.lastIndexOf('::') + 2)
+    : name) as keyof ResourceMap;
