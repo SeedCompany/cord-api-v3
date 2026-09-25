@@ -15,7 +15,6 @@ import {
   SecuredProperty,
   ServerException,
 } from '~/common';
-import { e } from '~/core/gel';
 import { type BaseNode } from '~/core/neo4j/results';
 import { RegisterResource } from '~/core/resources';
 import { FileNodeType } from './file-node-type.enum';
@@ -41,7 +40,7 @@ export const resolveFileNode = (val: AnyFileNode) => {
   return type;
 };
 
-@RegisterResource({ db: e.File.Node })
+@RegisterResource()
 @InterfaceType({
   resolveType: resolveFileNode,
 })
@@ -95,7 +94,7 @@ abstract class BaseFile extends FileNode {
   readonly size: number;
 }
 
-@RegisterResource({ db: e.File.Version })
+@RegisterResource()
 @ObjectType({
   implements: [FileNode, Resource],
 })
@@ -103,7 +102,7 @@ export class FileVersion extends BaseFile {
   declare readonly type: 'FileVersion';
 }
 
-@RegisterResource({ db: e.File })
+@RegisterResource()
 @ObjectType({
   implements: [FileNode, Resource],
 })
@@ -118,7 +117,7 @@ export class File extends BaseFile {
   readonly modifiedAt: DateTime;
 }
 
-@RegisterResource({ db: e.Directory })
+@RegisterResource()
 @ObjectType({
   implements: [FileNode, Resource],
 })
@@ -211,11 +210,5 @@ declare module '~/core/resources/map' {
     File: typeof File;
     FileNode: typeof FileNode;
     FileVersion: typeof FileVersion;
-  }
-  interface ResourceDBMap {
-    Directory: typeof e.Directory;
-    File: typeof e.default.File;
-    FileNode: typeof e.File.Node;
-    FileVersion: typeof e.File.Version;
   }
 }

@@ -8,10 +8,9 @@ import {
   SecuredProperty,
   SecuredString,
 } from '~/common';
-import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
 
-@RegisterResource({ db: e.FundingAccount })
+@RegisterResource()
 @ObjectType({
   implements: [Resource],
 })
@@ -33,8 +32,5 @@ export class SecuredFundingAccount extends SecuredProperty(FundingAccount) {}
 declare module '~/core/resources/map' {
   interface ResourceMap {
     FundingAccount: typeof FundingAccount;
-  }
-  interface ResourceDBMap {
-    FundingAccount: typeof e.default.FundingAccount;
   }
 }

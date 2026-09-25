@@ -9,11 +9,10 @@ import {
   Sensitivity,
   SensitivityField,
 } from '~/common';
-import { e } from '~/core/gel';
 import { type LinkTo, RegisterResource } from '~/core/resources';
 import { CeremonyType } from './ceremony-type.enum';
 
-@RegisterResource({ db: e.Engagement.Ceremony })
+@RegisterResource()
 @Calculated()
 @ObjectType({
   implements: [Resource],
@@ -54,8 +53,5 @@ export class SecuredCeremony extends SecuredProperty(Ceremony) {}
 declare module '~/core/resources/map' {
   interface ResourceMap {
     Ceremony: typeof Ceremony;
-  }
-  interface ResourceDBMap {
-    Ceremony: typeof e.Engagement.Ceremony;
   }
 }

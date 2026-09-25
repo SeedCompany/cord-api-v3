@@ -23,7 +23,6 @@ import {
   type UnsecuredDto,
 } from '~/common';
 import { type SetChangeType } from '~/core/database/changes';
-import { e } from '~/core/gel';
 import { type LinkTo, RegisterResource } from '~/core/resources';
 import { Commentable } from '../../comments/dto';
 import { Location } from '../../location/dto';
@@ -31,7 +30,7 @@ import { Pinnable } from '../../pin/dto';
 import { Postable } from '../../post/dto';
 import { type UpdateEthnologueLanguage } from './update-language.dto';
 
-@RegisterResource({ db: e.Ethnologue.Language })
+@RegisterResource()
 @ObjectType()
 export class EthnologueLanguage {
   static readonly Parent = async () => Language;
@@ -70,7 +69,7 @@ export class EthnologueLanguage {
 
 const Interfaces = IntersectTypes(Resource, Pinnable, Postable, Commentable);
 
-@RegisterResource({ db: e.Language })
+@RegisterResource()
 @ObjectType({
   implements: Interfaces.members,
 })
@@ -216,9 +215,5 @@ declare module '~/core/resources/map' {
   interface ResourceMap {
     EthnologueLanguage: typeof EthnologueLanguage;
     Language: typeof Language;
-  }
-  interface ResourceDBMap {
-    EthnologueLanguage: typeof e.Ethnologue.Language;
-    Language: typeof e.default.Language;
   }
 }

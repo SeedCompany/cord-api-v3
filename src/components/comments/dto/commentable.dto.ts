@@ -1,10 +1,9 @@
 import { InterfaceType } from '@nestjs/graphql';
 import { Resource, type ResourceRelationsShape } from '~/common';
-import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
 import { CommentThread } from './comment-thread.dto';
 
-@RegisterResource({ db: e.Comments.Aware })
+@RegisterResource()
 @InterfaceType({
   description: 'A resource that can be commented on',
   implements: [Resource],
@@ -21,8 +20,5 @@ export abstract class Commentable extends Resource {
 declare module '~/core/resources/map' {
   interface ResourceMap {
     Commentable: typeof Commentable;
-  }
-  interface ResourceDBMap {
-    Commentable: typeof e.Comments.Aware;
   }
 }

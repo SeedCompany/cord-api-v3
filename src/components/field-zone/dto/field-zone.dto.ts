@@ -7,10 +7,9 @@ import {
   SecuredProperty,
   SecuredString,
 } from '~/common';
-import { e } from '~/core/gel';
 import { type LinkTo, RegisterResource } from '~/core/resources';
 
-@RegisterResource({ db: e.FieldZone })
+@RegisterResource()
 @ObjectType({
   implements: [Resource],
 })
@@ -30,8 +29,5 @@ export class SecuredFieldZone extends SecuredProperty(FieldZone) {}
 declare module '~/core/resources/map' {
   interface ResourceMap {
     FieldZone: typeof FieldZone;
-  }
-  interface ResourceDBMap {
-    FieldZone: typeof e.default.FieldZone;
   }
 }

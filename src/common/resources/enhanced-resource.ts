@@ -12,7 +12,6 @@ import { CalculatedSymbol } from '~/common/decorators';
 import { ServerException } from '~/common/exceptions';
 import { getParentTypes } from '~/common/functions';
 import { GqlMetadata } from '~/common/graphql';
-import type { $ } from '~/core/gel/reexports';
 import type {
   ResourceLike,
   ResourceName,
@@ -22,8 +21,6 @@ import type { ResourceShape } from './resource-shape';
 import type {
   ChildListsKey,
   ChildSinglesKey,
-  DBName,
-  DBType,
   EnhancedRelation,
   ExtraPropsFromRelationsKey,
   SecuredResourceKey,
@@ -33,9 +30,6 @@ import type {
  * A helper class to query the static info of a resource in a typed way.
  */
 export class EnhancedResource<T extends ResourceShape<any>> {
-  /** @internal */
-  static readonly dbTypes = new WeakMap<ResourceShape<any>, $.$expr_PathNode>();
-  /** @internal */
   /** @internal */
   static resourcesHost?: ResourcesHost;
 
@@ -222,21 +216,6 @@ export class EnhancedResource<T extends ResourceShape<any>> {
       return !!Reflect.getMetadata(CalculatedSymbol, this.type.prototype, prop);
     });
     return new Set(props);
-  }
-
-  get hasDB() {
-    return !!EnhancedResource.dbTypes.get(this.type);
-  }
-  get db(): DBType<T> {
-    const type = EnhancedResource.dbTypes.get(this.type);
-    if (!type) {
-      throw new ServerException(`No DB type defined for ${this.name}`);
-    }
-    return type as any;
-  }
-
-  get dbFQN(): ResourceShape<any> extends T ? string : DBName<DBType<T>> {
-    return this.db.__element__.__name__ as any;
   }
 
   @Once()

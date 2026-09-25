@@ -9,7 +9,6 @@ import {
   type VariantOf,
 } from '~/common';
 import { type SetDbType } from '~/core/database';
-import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
 import { type LinkTo } from '~/core/resources';
 import { type FileId } from '../../../file/dto';
@@ -20,7 +19,7 @@ import { MediaCategory } from '../media-category.enum';
 
 export type VariantGroup = ID<'ProgressReportMediaVariantGroup'>;
 
-@RegisterResource({ db: e.ProgressReport.Media })
+@RegisterResource()
 @InputType({ isAbstract: true })
 @ObjectType()
 export class ProgressReportMedia extends Resource {
@@ -63,8 +62,5 @@ export type MediaVariant = VariantOf<typeof ProgressReportMedia>;
 declare module '~/core/resources/map' {
   interface ResourceMap {
     ProgressReportMedia: typeof ProgressReportMedia;
-  }
-  interface ResourceDBMap {
-    ProgressReportMedia: typeof e.ProgressReport.Media;
   }
 }

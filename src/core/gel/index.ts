@@ -3,8 +3,6 @@ export { edgeql, type EdgeQLArgsOf, type EdgeQLReturnOf } from './edgeql';
 export type { OptionsFn } from './options.context';
 export * from './gel.service';
 export { ExclusivityViolationError } from './errors/constraint-violation.error';
-export * from './common.repository';
-export * from './dto.repository';
 export type { OrderByExpression } from './generated-client/select';
 export * from './query-util/disable-access-policies.option';
 export * from './query-util/cast-to-enum';

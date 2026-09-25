@@ -11,7 +11,6 @@ import {
   SecuredString,
   SecuredStringNullable,
 } from '~/common';
-import { e } from '~/core/gel';
 import { type LinkTo, RegisterResource } from '~/core/resources';
 import { LocationType } from './location-type.enum';
 
@@ -20,7 +19,7 @@ import { LocationType } from './location-type.enum';
 })
 export abstract class SecuredLocationType extends SecuredEnum(LocationType) {}
 
-@RegisterResource({ db: e.Location })
+@RegisterResource()
 @ObjectType({
   implements: [Resource],
 })
@@ -59,8 +58,5 @@ export class SecuredLocations extends SecuredPropertyList(Location) {}
 declare module '~/core/resources/map' {
   interface ResourceMap {
     Location: typeof Location;
-  }
-  interface ResourceDBMap {
-    Location: typeof e.default.Location;
   }
 }

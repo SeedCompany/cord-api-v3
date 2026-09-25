@@ -1,10 +1,9 @@
 import { type VariantOf } from '~/common';
-import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
 import { PromptVariantResponse } from '../../prompts/dto';
 import { ProgressReportHighlight } from './highlights.dto';
 
-@RegisterResource({ db: e.ProgressReport.CommunityStory })
+@RegisterResource()
 export class ProgressReportCommunityStory extends PromptVariantResponse<CommunityStoryVariant> {
   static readonly Parent = () =>
     import('./progress-report.dto').then((m) => m.ProgressReport);
@@ -19,8 +18,5 @@ export type CommunityStoryVariant = VariantOf<
 declare module '~/core/resources/map' {
   interface ResourceMap {
     ProgressReportCommunityStory: typeof ProgressReportCommunityStory;
-  }
-  interface ResourceDBMap {
-    ProgressReportCommunityStory: typeof e.ProgressReport.CommunityStory;
   }
 }

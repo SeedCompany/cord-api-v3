@@ -1,9 +1,8 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { Resource, SecuredDateTime, SecuredString } from '~/common';
-import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
 
-@RegisterResource({ db: e.User.Unavailability })
+@RegisterResource()
 @ObjectType({
   implements: [Resource],
 })
@@ -23,8 +22,5 @@ export class Unavailability extends Resource {
 declare module '~/core/resources/map' {
   interface ResourceMap {
     Unavailability: typeof Unavailability;
-  }
-  interface ResourceDBMap {
-    Unavailability: typeof e.User.Unavailability;
   }
 }
