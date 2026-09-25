@@ -5,9 +5,8 @@ import { PlanningExtractionResultSaver } from './planning-extraction-result-save
 import { PnpExtractionResultLanguageEngagementConnectionResolver } from './pnp-extraction-result-language-engagement-connection.resolver';
 import { PnpExtractionResultProgressReportConnectionResolver } from './pnp-extraction-result-progress-report-connection.resolver';
 import { PnpExtractionResultDrizzleRepository } from './pnp-extraction-result.drizzle.repository';
-import { PnpExtractionResultRepository } from './pnp-extraction-result.gel.repository';
 import { PnpExtractionResultLoader } from './pnp-extraction-result.loader';
-import { PnpExtractionResultNeo4jRepository } from './pnp-extraction-result.neo4j.repository';
+import { PnpExtractionResultRepository } from './pnp-extraction-result.repository';
 import { PnpProblemResolver } from './pnp-problem.resolver';
 import { SaveProgressExtractionResultHandler } from './save-progress-extraction-result.handler';
 
@@ -20,9 +19,8 @@ import { SaveProgressExtractionResultHandler } from './save-progress-extraction-
     PnpExtractionResultLoader,
     PlanningExtractionResultSaver,
     SaveProgressExtractionResultHandler,
-    // migration-todo: drop the `as any` + the gel/Neo4j paths at cutover.
+    // migration-todo: drop the `as any` with the Neo4j path.
     splitDb(PnpExtractionResultRepository, {
-      neo4j: PnpExtractionResultNeo4jRepository,
       postgres: PnpExtractionResultDrizzleRepository as any,
     }),
   ],

@@ -14,7 +14,7 @@ import {
 } from '~/core/neo4j/query';
 import { engagementFilters } from '../engagement/engagement.repository';
 import { progressReportSorters } from '../periodic-report/periodic-report.repository';
-import { pnpExtractionResultFilters } from '../pnp/extraction-result/pnp-extraction-result.neo4j.repository';
+import { pnpExtractionResultFilters } from '../pnp/extraction-result/pnp-extraction-result.repository';
 import { SummaryPeriod } from '../progress-summary/dto';
 import { progressSummaryFilters } from '../progress-summary/progress-summary.repository';
 import {

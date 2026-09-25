@@ -1,57 +1,83 @@
 import { Injectable } from '@nestjs/common';
 import { many, type Many } from '@seedcompany/common';
-import { e, Gel } from '~/core/gel';
-import { type ProjectType } from '../dto';
-import { type SetFinancialApprover } from './dto';
+import { node, type Query, relation } from 'cypher-query-builder';
+import { ServerException } from '~/common';
+import { CommonRepository } from '~/core/neo4j';
+import { ACTIVE, merge } from '~/core/neo4j/query';
+import { type ProjectType } from '../dto/project-type.enum';
+import { type FinancialApprover, type SetFinancialApprover } from './dto';
 
 @Injectable()
-export class FinancialApproverRepository {
-  constructor(private readonly db: Gel) {}
-
+export class FinancialApproverRepository extends CommonRepository {
   async read(types?: Many<ProjectType>) {
-    const query = e.select(e.Project.FinancialApprover, (approver) => ({
-      projectTypes: true,
-      user: () => ({ id: true, email: true }),
-      ...(types
-        ? {
-            filter: e.op(
-              'exists',
-              e.op(
-                approver.projectTypes,
-                'intersect',
-                e.cast(e.Project.Type, e.set(...many(types))),
-              ),
-            ),
-          }
-        : {}),
-    }));
-    return await this.db.run(query);
+    const query = this.db
+      .query()
+      .match([
+        node('node', 'ProjectTypeFinancialApprover'),
+        relation('out', '', 'financialApprover', ACTIVE),
+        node('user', 'User'),
+      ])
+      .apply((q) =>
+        types
+          ? q.raw(
+              `WHERE size(apoc.coll.intersection(node.projectTypes, $types)) > 0`,
+              { types: many(types) },
+            )
+          : q,
+      )
+      .apply(this.hydrate());
+    return await query.run();
   }
 
-  async write({ user: userId, projectTypes }: SetFinancialApprover) {
-    const user = e.cast(e.User, e.cast(e.uuid, userId));
-
-    if (projectTypes.length === 0) {
-      const query = e.delete(e.Project.FinancialApprover, (fa) => ({
-        filter: e.op(fa.user, '=', user),
-      }));
-      await this.db.run(query);
+  async write(input: SetFinancialApprover) {
+    if (input.projectTypes.length === 0) {
+      const query = this.db
+        .query()
+        .match([
+          node('node', 'ProjectTypeFinancialApprover'),
+          relation('out', '', 'financialApprover', ACTIVE),
+          node('user', 'User', { id: input.user }),
+        ])
+        .detachDelete('node');
+      await query.run();
       return null;
     }
 
-    const written = e
-      .insert(e.Project.FinancialApprover, { user, projectTypes })
-      .unlessConflict(({ user }) => ({
-        on: user,
-        else: e.update(e.Project.FinancialApprover, (approver) => ({
-          filter_single: e.op(approver.user, '=', user),
-          set: { projectTypes },
-        })),
-      }));
-    const query = e.select(written, () => ({
-      projectTypes: true,
-      user: () => ({ id: true, email: true }),
-    }));
-    return await this.db.run(query);
+    const query = this.db
+      .query()
+      .match(node('user', 'User', { id: input.user }))
+      .merge([
+        node('node', 'ProjectTypeFinancialApprover'),
+        relation('out', '', 'financialApprover', { active: true }),
+        node('user'),
+      ])
+      .setValues({
+        'node.projectTypes': input.projectTypes,
+      })
+      .apply(this.hydrate());
+
+    const result = await query.first();
+    if (!result) {
+      throw new ServerException('Failed to set financial approver.');
+    }
+
+    return result;
+  }
+
+  private hydrate() {
+    return (query: Query) =>
+      query
+        .with('node, user')
+        .optionalMatch([
+          node('user'),
+          relation('out', '', 'email', ACTIVE),
+          node('email'),
+        ])
+        .return<{ dto: FinancialApprover }>(
+          merge('node', {
+            user: merge('user { .id }', { email: 'email.value' }),
+          }).as('dto'),
+        )
+        .map('dto');
   }
 }
