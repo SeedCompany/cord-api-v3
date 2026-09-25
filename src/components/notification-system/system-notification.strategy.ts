@@ -2,7 +2,6 @@ import { node, type Query } from 'cypher-query-builder';
 import { isNull } from 'drizzle-orm';
 import { type ID } from '~/common';
 import { type DrizzleDb, users } from '~/core/drizzle';
-import { e } from '~/core/gel';
 import {
   INotificationStrategy,
   type NotificationRow,
@@ -15,10 +14,6 @@ export class SystemNotificationStrategy extends INotificationStrategy<SystemNoti
   recipientsForNeo4j() {
     return (query: Query) =>
       query.match(node('recipient', 'User')).return('recipient');
-  }
-
-  recipientsForGel() {
-    return e.User; // all users
   }
 
   override async recipientsForDrizzle(
