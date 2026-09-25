@@ -18,7 +18,6 @@ import { AddGenderAndPhotoMigration } from './migrations/add-photo-and-gender.mi
 import { AddUserNameLabelMigration } from './migrations/add-user-name-label.migration';
 import { DefaultUserStatusMigration } from './migrations/default-user-status.migration';
 import { SystemAgentDrizzleRepository } from './system-agent.drizzle.repository';
-import { SystemAgentGelRepository } from './system-agent.gel.repository';
 import { SystemAgentNeo4jRepository } from './system-agent.neo4j.repository';
 import { SystemAgentRepository } from './system-agent.repository';
 import { UnavailabilityModule } from './unavailability/unavailability.module';
@@ -28,7 +27,6 @@ import { UserUpdateLinksResolver } from './user-update-links.resolver';
 import { UserUpdatedResolver } from './user-updated.resolver';
 import { UserChannels } from './user.channels';
 import { UserDrizzleRepository } from './user.drizzle.repository';
-import { UserGelRepository } from './user.gel.repository';
 import { UserLoader } from './user.loader';
 import { UserRepository } from './user.repository';
 import { UserResolver } from './user.resolver';
@@ -59,7 +57,6 @@ import { UserService } from './user.service';
     UserService,
     UserChannels,
     splitDb(UserRepository, {
-      gel: UserGelRepository,
       // migration-todo: remove `as any` once splitDb types accept drizzle repos directly
       postgres: UserDrizzleRepository as any,
     }),
@@ -70,7 +67,6 @@ import { UserService } from './user.service';
     {
       ...splitDb(SystemAgentNeo4jRepository, {
         neo4j: SystemAgentNeo4jRepository,
-        gel: SystemAgentGelRepository,
         // migration-todo: remove `as any` once splitDb types accept drizzle repos directly
         postgres: SystemAgentDrizzleRepository as any,
       }),
