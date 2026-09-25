@@ -2082,17 +2082,24 @@ export const engagements = pgTable(
     pnpId: text('pnp_id').$type<ID<'File'>>(),
     sentPrintingDate: date('sent_printing_date'),
     historicGoal: text('historic_goal'),
-    milestonePlanned: languageMilestoneEnum('milestone_planned')
-      .$type<LanguageMilestone>()
-      .notNull()
-      .default('Unknown'),
+    // Nullable with no default, matching every other language-only column on
+    // this table. These two used to be NOT NULL DEFAULT 'Unknown', which
+    // stamped a language-translation answer onto all 1,370 internship rows —
+    // engagements where the concepts do not apply and the API never exposes
+    // the fields. `milestoneReached` just below is the control: same table,
+    // same concept, nullable, and correctly blank on every internship.
+    //
+    // Keep them nullable. A NOT NULL DEFAULT here re-creates the problem
+    // silently, because Drizzle omits `undefined` and the column fills itself.
+    // `engagements_language_fields_shape_chk` now refuses a value on an
+    // internship and refuses a blank on a language engagement, so the shape
+    // is enforced rather than assumed.
+    milestonePlanned:
+      languageMilestoneEnum('milestone_planned').$type<LanguageMilestone>(),
     milestoneReached: boolean('milestone_reached'),
     usingAIAssistedTranslation: aiAssistedTranslationEnum(
       'using_ai_assisted_translation',
-    )
-      .$type<AIAssistedTranslation>()
-      .notNull()
-      .default('Unknown'),
+    ).$type<AIAssistedTranslation>(),
 
     // ── InternshipEngagement only ──
     internId: text('intern_id')
@@ -2132,6 +2139,16 @@ export const engagements = pgTable(
       'engagements_type_shape_chk',
       sql`(${t.type} = 'Language' AND ${t.languageId} IS NOT NULL AND ${t.internId} IS NULL)
         OR (${t.type} = 'Internship' AND ${t.internId} IS NOT NULL AND ${t.languageId} IS NULL)`,
+    ),
+    // These two belong to language engagements and to nothing else. Stating
+    // that here does the job the old NOT NULL was doing for language rows,
+    // and adds the half it was missing: an internship cannot carry a value.
+    // Written as an equivalence, the same shape as
+    // `periodic_reports_status_shape_chk`, so neither direction can drift.
+    check(
+      'engagements_language_fields_shape_chk',
+      sql`(${t.type} = 'Language') = (${t.milestonePlanned} IS NOT NULL)
+        AND (${t.type} = 'Language') = (${t.usingAIAssistedTranslation} IS NOT NULL)`,
     ),
     uniqueIndex('engagements_project_language_active_unique')
       .on(t.projectId, t.languageId)
