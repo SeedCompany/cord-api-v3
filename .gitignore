@@ -3,9 +3,6 @@
 *.gql
 *.graphql
 
-# gel generated
-src/core/gel/generated-client
-src/core/gel/schema.ts
 src/**/*.edgeql.ts
 *.generated.*
 
