@@ -70,6 +70,13 @@ export class DrizzleService implements OnModuleDestroy {
     this.pool = new Pool({
       connectionString: parsedUrl.toString(),
       ssl: noVerify ? { rejectUnauthorized: false } : { ca: rdsCaBundle },
+      // Both were previously left to the driver. `max` defaulted to 10, which
+      // is fine but was nobody's decision; `connectionTimeoutMillis` defaulted
+      // to 0, which means a caller that cannot get a connection waits forever.
+      // See config.postgres.pool for what each bound is and how to size it.
+      max: config.postgres.pool.max,
+      connectionTimeoutMillis:
+        config.postgres.pool.acquireTimeout.as('milliseconds'),
     });
     this.baseDb = drizzle(this.pool, { schema });
   }

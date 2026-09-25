@@ -223,6 +223,39 @@ export const makeConfig = (env: EnvironmentService) =>
         // Mirrors neo4j.isLocal. An absent or unparseable URL counts as
         // local, preserving always-run behavior for setups without one.
         isLocal: !hostname || hostname === 'localhost',
+        pool: {
+          /**
+           * Connections this process will open, at most.
+           *
+           * Stated rather than inherited: `pg` defaults to 10, which is a real
+           * capacity decision that nothing here was making on purpose. The
+           * ceiling that matters is the server's `max_connections` divided by
+           * the number of processes pointing at it — every API instance and
+           * every background worker holds its own pool of this size, so raising
+           * it multiplies across the fleet.
+           *
+           * @default 10 — what the driver already used, so this is a knob, not
+           * a capacity change.
+           */
+          max: env.number('POSTGRES_POOL_MAX').optional(10),
+          /**
+           * How long a caller waits for a connection before giving up.
+           *
+           * `pg` defaults to 0, meaning wait forever: once every connection is
+           * checked out, requests queue with no timer and no bound on the
+           * queue. That turns a busy database into hung requests rather than
+           * failed ones — worse, because a hung request holds its HTTP worker
+           * and reports nothing. A finite wait fails with `timeout exceeded
+           * when trying to connect`, which surfaces and sheds load.
+           *
+           * The same value also bounds opening a NEW connection (pg-pool uses
+           * it for both), so it must stay comfortably above a TLS handshake to
+           * RDS while still being decisive under saturation.
+           */
+          acquireTimeout: env
+            .duration('POSTGRES_POOL_ACQUIRE_TIMEOUT')
+            .optional('10s'),
+        },
       };
     })();
 
