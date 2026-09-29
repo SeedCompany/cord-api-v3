@@ -1,6 +1,3 @@
 # Represent TS generated files as generated
 *.generated.tsx linguist-generated
 *.generated.ts linguist-generated
-dbschema/migrations/*.edgeql linguist-generated
-
-*.gel linguist-language=EdgeQL

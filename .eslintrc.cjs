@@ -255,20 +255,6 @@ const config = {
         '@typescript-eslint/method-signature-style': 'off',
       },
     },
-    {
-      files: './src/core/gel/generator/*.ts',
-      rules: {
-        // Scripts can use the console for logging
-        'no-console': 'off',
-      },
-    },
-    {
-      files: './dbschema/seeds/*.ts',
-      rules: {
-        'import/no-default-export': 'off',
-        // 'import/no-named-export': 'error',
-      },
-    },
   ],
 };
 

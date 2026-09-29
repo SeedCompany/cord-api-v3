@@ -8,7 +8,6 @@ Bible translation project management API.
 
 1. Docker from their website (complications with homebrew)
 1. NodeJS (`brew install node corepack && corepack enable`)
-1. Gel (`brew install geldata/tap/gel-cli`) — build-time only, see [Setup](#setup)
 
 ## Setup
 
@@ -37,20 +36,11 @@ Bible translation project management API.
    dump later, stop the app and drop/recreate the `cord` database first
    (`dropdb` / `createdb` inside the container); `pg_restore` will not
    overwrite tables the app has already created.
-1. Set up a Gel instance. Gel is **not used at runtime** — it is a leftover
-   migration target whose code is still in the tree — but its generated client
-   is not committed, so the project will not compile without this step:
-    ```bash
-    gel project init
-    yarn gel:gen
-    ```
-   Re-run `yarn gel:gen` after any change to `dbschema/`. The Gel instance only
-   needs to be running for that command, not for the app.
 
 ## Database
 
 PostgreSQL is the database — production cut over from Neo4j in September 2026.
-The legacy Neo4j and Gel code paths are still in the tree pending removal.
+The legacy Neo4j code paths are still in the tree pending removal.
 `DATABASE` picks the engine and defaults to `postgres`; there is no longer a
 reason to set it to anything else.
 

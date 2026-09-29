@@ -15,8 +15,3 @@ trim_trailing_whitespace = false
 # with the textmate bundle hack.
 [*.gel]
 trim_trailing_whitespace = false
-
-# These are auto created and contain a hash of the content.
-# Removing whitespace counts as a hash change so avoid.
-[dbschema/migrations/*.edgeql]
-trim_trailing_whitespace = false
