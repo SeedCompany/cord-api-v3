@@ -24,9 +24,6 @@ export class CreateEngagementDefaultCeremonyHandler {
           ? CeremonyType.Dedication
           : CeremonyType.Certification,
     };
-    if (this.config.databaseEngine === 'gel') {
-      return;
-    }
 
     // Under postgres the FK on ceremonies.engagement_id carries the
     // relationship — no separate connect step. migration-todo: at Phase 7

@@ -42,12 +42,6 @@ export class SetDepartmentId {
   @OnHook(ProjectTransitionedHook)
   @OnHook(ProjectUpdatedHook)
   async handle(event: ProjectTransitionedHook | ProjectUpdatedHook) {
-    // migration-todo: collapse the gel-early-return at Phase 7 cutover when
-    // the Gel path is removed.
-    if (this.config.databaseEngine === 'gel') {
-      return;
-    }
-
     const project =
       event instanceof ProjectTransitionedHook ? event.project : event.updated;
 

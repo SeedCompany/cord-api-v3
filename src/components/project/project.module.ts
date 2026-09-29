@@ -25,7 +25,6 @@ import { ProjectUpdateLinksResolver } from './project-update-links.resolver';
 import { ProjectUpdatedResolver } from './project-updated.resolver';
 import { ProjectChannels } from './project.channels';
 import { ProjectDrizzleRepository } from './project.drizzle.repository';
-import { ConcreteRepos, ProjectGelRepository } from './project.gel.repository';
 import { ProjectLoader } from './project.loader';
 import { ProjectRepository } from './project.repository';
 import { ProjectResolver } from './project.resolver';
@@ -65,11 +64,9 @@ import { ProjectWorkflowModule } from './workflow/project-workflow.module';
     ProjectChannels,
     ProjectService,
     splitDb(ProjectRepository, {
-      gel: ProjectGelRepository,
-      // migration-todo: drop the `as any` + the Neo4j/Gel paths at Phase 7 cutover.
+      // migration-todo: drop the `as any` with the Neo4j path.
       postgres: ProjectDrizzleRepository as any,
     }),
-    ...Object.values(ConcreteRepos),
     ProjectLoader,
     ...Object.values(handlers),
     RenameTranslationToMomentumMigration,

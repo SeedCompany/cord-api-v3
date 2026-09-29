@@ -1,66 +1,142 @@
 import { Injectable } from '@nestjs/common';
-import { type ID } from '~/common';
-import { e, edgeql, RepoFor } from '~/core/gel';
-import { type ProjectStep } from '../dto';
-import { projectRefShape } from '../project.gel.repository';
-import { type ExecuteProjectTransition, ProjectWorkflowEvent } from './dto';
+import { inArray, node, type Query, relation } from 'cypher-query-builder';
+import { type ID, Order, type UnsecuredDto } from '~/common';
+import { DtoRepository } from '~/core/neo4j';
+import {
+  ACTIVE,
+  createNode,
+  createRelationships,
+  currentUser,
+  INACTIVE,
+  merge,
+  sorting,
+} from '~/core/neo4j/query';
+import { IProject, type ProjectStep, stepToStatus } from '../dto';
+import {
+  type ExecuteProjectTransition,
+  ProjectWorkflowEvent as WorkflowEvent,
+} from './dto';
 
 @Injectable()
-export class ProjectWorkflowRepository extends RepoFor(ProjectWorkflowEvent, {
-  hydrate: (event) => ({
-    id: true,
-    who: true,
-    at: true,
-    transition: event.transitionKey,
-    to: true,
-    notes: true,
-    project: projectRefShape,
-  }),
-  omit: ['list', 'create', 'update', 'delete', 'readMany'],
-}) {
+export class ProjectWorkflowRepository extends DtoRepository(WorkflowEvent) {
   async readMany(ids: readonly ID[]) {
-    return await this.defaults.readMany(ids);
+    return await this.db
+      .query()
+      .apply(this.matchEvent())
+      .where({ 'node.id': inArray(ids) })
+      .apply(this.privileges.filterToReadable())
+      .apply(this.hydrate())
+      .map('dto')
+      .run();
   }
 
   async list(projectId: ID) {
-    const project = e.cast(e.Project, e.uuid(projectId));
-    const query = e.select(project.workflowEvents, this.hydrate);
-    return await this.db.run(query);
+    return await this.db
+      .query()
+      .apply(this.matchEvent())
+      .where({ 'project.id': projectId })
+      .with('*') // needed between where & where
+      .apply(this.privileges.filterToReadable())
+      .apply(sorting(WorkflowEvent, { sort: 'createdAt', order: Order.ASC }))
+      .apply(this.hydrate())
+      .map('dto')
+      .run();
   }
 
-  async recordEvent(
-    input: Omit<ExecuteProjectTransition, 'bypassTo'> & {
-      to: ProjectStep;
-    },
-  ) {
-    const project = e.cast(e.Project, e.uuid(input.project));
-    const created = e.insert(e.Project.WorkflowEvent, {
-      project,
-      projectContext: project.projectContext,
-      transitionKey: input.transition,
-      to: input.to,
-      notes: input.notes,
+  protected matchEvent() {
+    return (query: Query) =>
+      query.match([
+        node('node', this.resource.dbLabel),
+        relation('in', '', ACTIVE),
+        node('project', 'Project'),
+      ]);
+  }
+
+  protected hydrate() {
+    return (query: Query) =>
+      query
+        .match([
+          node('project', 'Project'),
+          relation('out', '', 'workflowEvent', ACTIVE),
+          node('node'),
+          relation('out', undefined, 'who'),
+          node('who', 'Actor'),
+        ])
+        .match([
+          node('project'),
+          relation('out', '', 'step', ACTIVE),
+          node('step', 'Property'),
+        ])
+        .return<{
+          dto: UnsecuredDto<WorkflowEvent> & {
+            project: { previousStep: ProjectStep };
+          };
+        }>(
+          merge('node', {
+            at: 'node.createdAt',
+            who: 'who { .id }',
+            project: merge('project { .id, .type }', {
+              previousStep: 'step.value',
+            }),
+          }).as('dto'),
+        );
+  }
+
+  async recordEvent({
+    project,
+    ...props
+  }: Omit<ExecuteProjectTransition, 'bypassTo'> & { to: ProjectStep }) {
+    const result = await this.db
+      .query()
+      .apply(
+        await createNode(WorkflowEvent, {
+          baseNodeProps: props,
+        }),
+      )
+      .apply(
+        createRelationships(WorkflowEvent, {
+          in: { workflowEvent: ['Project', project] },
+          out: { who: currentUser },
+        }),
+      )
+      .apply(this.hydrate())
+      .first();
+    const event = result!.dto;
+
+    const prevStatus = stepToStatus(event.project.previousStep);
+    const nextStatus = stepToStatus(event.to);
+
+    await this.db.updateProperties({
+      type: IProject,
+      object: { id: project },
+      changes: {
+        step: event.to,
+        status: prevStatus === nextStatus ? undefined : nextStatus,
+        stepChangedAt: event.at,
+        modifiedAt: event.at,
+      },
+      permanentAfter: 0,
     });
-    const query = e.select(created, this.hydrate);
-    return await this.db.run(query);
+
+    return event;
   }
 
   async mostRecentStep(
     projectId: ID<'Project'>,
     steps: readonly ProjectStep[],
   ) {
-    const query = edgeql(`
-      with
-       project := <Project><uuid>$projectId,
-       steps := array_unpack(<array<Project::Step>>$steps),
-       mostRecentEvent := (
-        select project.workflowEvents
-        filter .to in steps if exists steps else true
-        order by .at desc
-        limit 1
-      )
-      select mostRecentEvent.to
-    `);
-    return await this.db.run(query, { projectId, steps });
+    const result = await this.db
+      .query()
+      .match([
+        node('node', 'Project', { id: projectId }),
+        relation('out', '', 'step', INACTIVE),
+        node('prop'),
+      ])
+      .where({ 'prop.value': inArray(steps) })
+      .with('prop')
+      .orderBy('prop.createdAt', 'DESC')
+      .return<{ step: ProjectStep }>(`prop.value as step`)
+      .first();
+    return result?.step ?? null;
   }
 }

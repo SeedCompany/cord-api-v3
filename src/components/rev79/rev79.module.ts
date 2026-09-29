@@ -6,7 +6,6 @@ import { ProgressReportModule } from '../progress-report/progress-report.module'
 import { ProjectModule } from '../project/project.module';
 import { FixRev79ActiveFlagMigration } from './migrations/fix-rev79-active-flag.migration';
 import { Rev79DrizzleRepository } from './rev79.drizzle.repository';
-import { Rev79GelRepository } from './rev79.gel.repository';
 import { Rev79Repository } from './rev79.repository';
 import { Rev79Resolver } from './rev79.resolver';
 import { Rev79Service } from './rev79.service';
@@ -22,7 +21,6 @@ import { Rev79Service } from './rev79.service';
     Rev79Resolver,
     Rev79Service,
     splitDb(Rev79Repository, {
-      gel: Rev79GelRepository,
       // migration-todo: `as any` removed at Phase 7 cutover when splitDb
       // disappears with the Neo4j path.
       postgres: Rev79DrizzleRepository as any,
