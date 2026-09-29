@@ -8,7 +8,6 @@ import { HttpAdapter, type NestHttpApplication } from '~/core/http';
 import { LogLevel } from '~/core/logger';
 import { LevelMatcher } from '~/core/logger/level-matcher';
 import { AppModule } from '../../src/app.module';
-import { ephemeralGel } from './gel-setup';
 import { wipeNeo4jAfterFile } from './neo4j-wipe';
 import { ephemeralPg } from './pg-setup';
 
@@ -29,7 +28,7 @@ afterAll(async () => {
   for (const app of [...appsToClose].reverse()) {
     await app.close();
   }
-  // Gel/PG are ephemeral per-file DBs (cleaned per app above); Neo4j was one
+  // PG gets an ephemeral per-file DB (cleaned per app above); Neo4j was one
   // shared instance per CI job, so it got wiped here instead. Inert since
   // #3890 — nothing sets NEO4J_TEST_WIPE now that CI does not run the suite
   // against Neo4j. Removed with the rest of the Neo4j test infrastructure.
@@ -46,13 +45,11 @@ export const createApp = async ({
   providers?: Provider[];
   overrides?: (builder: TestingModuleBuilder) => TestingModuleBuilder;
 } & Pick<ModuleMetadata, 'imports' | 'providers'> = {}): Promise<TestApp> => {
-  const gel = await ephemeralGel();
   // A caller sharing another app's db (config.postgres.url already set, e.g.
   // to run a second app instance against the same ephemeral database) means:
   // reuse it, don't spin up — and later drop — a second one out from under it.
   const pg = config?.postgres?.url ? undefined : await ephemeralPg();
   const cleanupDb = async () => {
-    await gel?.cleanup();
     await pg?.cleanup();
   };
 
@@ -77,9 +74,7 @@ export const createApp = async ({
       ],
     })
       .overrideProvider(LevelMatcher)
-      .useValue(new LevelMatcher([], LogLevel.ERROR))
-      .overrideProvider('GEL_CONNECT')
-      .useValue(gel?.options);
+      .useValue(new LevelMatcher([], LogLevel.ERROR));
     if (overrides) {
       builder = overrides?.(builder);
     }
