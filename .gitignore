@@ -3,7 +3,6 @@
 *.gql
 *.graphql
 
-src/**/*.edgeql.ts
 *.generated.*
 
 # Yarn / NPM

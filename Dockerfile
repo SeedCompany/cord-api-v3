@@ -1,6 +1,5 @@
 ARG NODE_VERSION=24.14.1
 ARG NODE_IMAGE=public.ecr.aws/docker/library/node:${NODE_VERSION}-slim
-ARG GEL_IMAGE=ghcr.io/geldata/gel:6.9
 
 FROM ${NODE_IMAGE} AS base-runtime
 
@@ -15,21 +14,6 @@ RUN apt-get update \
     && apt-get clean -q -y \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Gel CLI for running migrations during deployment.
-# The installer script's built-in package root is still packages.edgedb.com,
-# the pre-rename domain — it's been retired and now fails its TLS handshake.
-# Point it at the current one explicitly (both names set: the script accepts
-# either, and which one it reads depends on its version). The env vars have
-# to sit on the `sh` side of the pipe, not `curl` — `curl` only fetches the
-# script text; `sh` is the process that actually reads the variable while
-# running it. Mirrors the same fix in .github/actions/gel-setup/action.yml;
-# drop both once the installer defaults to the new root upstream.
-RUN curl --proto '=https' --tlsv1.2 -sSf https://www.geldata.com/sh \
-      | GEL_PKG_ROOT=https://packages.geldata.com EDGEDB_PKG_ROOT=https://packages.geldata.com \
-        sh -s -- -y --no-modify-path \
-    && mv /root/.local/bin/gel /usr/local/bin/gel
-
-
 # Apollo Rover CLI
 RUN curl -sSL https://rover.apollo.dev/nix/latest | sh
 
@@ -39,72 +23,24 @@ RUN curl -sSL https://graphql-hive.com/install.sh | sh
 # Enable yarn via corepack
 RUN corepack enable
 
-FROM ${GEL_IMAGE} AS builder
-
-# region Install NodeJS
-ARG NODE_VERSION
-
-RUN <<EOF
-set -e
-
-apt-get update
-
-# Install necessary packages for downloading and verifying node repository info
-apt-get install -y --no-install-recommends ca-certificates curl gnupg
-
-# Download the node repository's GPG key and save it in the keyring directory
-mkdir -p /etc/apt/keyrings
-curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
-# Add the node repository's source list with its GPG key for package verification
-echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_${NODE_VERSION%%.*}.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list
-
-# Update again to recognize the new repository
-apt-get update
-
-apt-get install -y nodejs
+FROM ${NODE_IMAGE} AS builder
 
 # Enable yarn via corepack
-corepack enable
-
-EOF
-# endregion
+RUN corepack enable
 
 ENV NODE_ENV=development \
-    # Ignore creds during this build process
-    GEL_SERVER_SECURITY=insecure_dev_mode \
-    # Don't start/host the db server, just bootstrap & quit.
-    GEL_SERVER_BOOTSTRAP_ONLY=1 \
-    # No need to print temporary generated cert, just clutters log
-    GEL_DOCKER_SHOW_GENERATED_CERT=never \
     # Don't flood log with cache debug messages
     VERBOSE_YARN_LOG=discard
 
-# Run the migrations in a single transaction, so we don't hit a CLI timeout
-RUN sed -i 's|schema-dir=/dbschema|schema-dir=/dbschema --single-transaction|' /usr/local/bin/docker-entrypoint-funcs.sh
-
-# Hook `yarn gel:gen` into gel bootstrap.
-# This allows it to be ran in parallel to the db server running without a daemon
-RUN <<EOF
-set -e
-mkdir -p /gel-bootstrap-late.d
-printf "#!/usr/bin/env bash\ncd /source \nyarn gel:gen\n" > /gel-bootstrap-late.d/01-generate-js.sh
-chmod +x /gel-bootstrap-late.d/01-generate-js.sh
-EOF
-
-USER gel
 WORKDIR /source
 
 # Install dependencies (in separate docker layer from app code)
-COPY --chown=gel:gel .yarn .yarn
-COPY --chown=gel:gel package.json yarn.lock .yarnrc.yml ./
+COPY .yarn .yarn
+COPY package.json yarn.lock .yarnrc.yml ./
 RUN yarn install --immutable
 
 # Copy in application code
-COPY --chown=gel:gel ./dbschema /dbschema
-COPY --chown=gel:gel . .
-
-# Bootstrap the db to apply migrations and then generate the TS/JS from that.
-RUN /usr/local/bin/docker-entrypoint.sh server
+COPY . .
 
 # Build server
 RUN yarn build

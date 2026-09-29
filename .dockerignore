@@ -16,11 +16,6 @@ README*
 !.yarn/plugins
 node_modules
 
-# gel generated
-src/core/gel/generated-client
-src/core/gel/schema.ts
-src/**/*.edgeql.ts
-
 # Local
 dist
 coverage
