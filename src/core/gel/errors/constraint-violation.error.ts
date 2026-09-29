@@ -1,7 +1,6 @@
 import { ConstraintViolationError } from 'gel';
 import type { LiteralUnion } from 'type-fest';
 import { type ID } from '~/common';
-import type { AllResourceDBNames } from '~/core/resources';
 import { attributesOf } from './attributes';
 
 export class MyConstraintViolationError extends ConstraintViolationError {
@@ -64,7 +63,7 @@ export class MyConstraintViolationError extends ConstraintViolationError {
 }
 
 export class PointerConstraintViolationError extends MyConstraintViolationError {
-  readonly objectFQN: AllResourceDBNames;
+  readonly objectFQN: string;
   readonly property: string;
   readonly constraint: LiteralUnion<'std::exclusive' | 'std::regexp', string>;
 }
@@ -72,12 +71,12 @@ export class ExclusivityViolationError extends PointerConstraintViolationError {
 
 export class DeletionPolicyViolationError extends MyConstraintViolationError {
   readonly source: Readonly<{
-    type: AllResourceDBNames;
+    type: string;
     link: string;
     id: ID;
   }>;
   readonly target: Readonly<{
-    type: AllResourceDBNames;
+    type: string;
     id: ID;
   }>;
 

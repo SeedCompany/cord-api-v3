@@ -6,7 +6,6 @@ import {
 } from '@seedcompany/common';
 import { type Query } from 'cypher-query-builder';
 import { and, or, type SQL } from 'drizzle-orm';
-import addIndent from 'indent-string';
 import { type Class, type Constructor } from 'type-fest';
 import { inspect, type InspectOptionsStylized } from 'util';
 import { type ResourceShape } from '~/common';
@@ -14,7 +13,6 @@ import { type Policy } from '../policy.factory';
 import type {
   AsCypherParams,
   AsDrizzleParams,
-  AsEdgeQLParams,
   Condition,
   IsAllowedParams,
 } from './condition.interface';
@@ -83,25 +81,6 @@ export abstract class AggregateConditions<
       this instanceof AndConditions ? and(...inner) : or(...inner);
     // and()/or() only return undefined for zero inputs; from() guarantees 1+.
     return combined!;
-  }
-
-  setupEdgeQLContext(params: AsEdgeQLParams<TResourceStatic>) {
-    const contexts = this.conditions.map(
-      (condition) => condition.setupEdgeQLContext?.(params) ?? {},
-    );
-    const merged = Object.assign({}, ...contexts);
-    return merged;
-  }
-
-  asEdgeQLCondition(params: AsEdgeQLParams<TResourceStatic>): string {
-    if (this.conditions.length === 0) {
-      return 'true';
-    }
-    const separator = this instanceof AndConditions ? '\nand ' : '\nor ';
-    const inner = this.conditions
-      .map((condition) => condition.asEdgeQLCondition(params))
-      .join(separator);
-    return `(${addIndent('\n' + inner, 2)}\n)`;
   }
 
   [inspect.custom](_depth: number, _options: InspectOptionsStylized) {

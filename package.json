@@ -21,7 +21,6 @@
     "repl": "yarn start --entryFile repl",
     "gel:gen": "yarn start --entryFile core/gel/generator/run",
     "gel:seed": "yarn start --entryFile core/gel/seeds.run",
-    "gel:migration": "yarn console gel migration",
     "migrate:generate": "drizzle-kit generate",
     "migrate:apply": "drizzle-kit migrate",
     "lint": "eslint --ext .ts,.tsx --fix --max-warnings 0 .",

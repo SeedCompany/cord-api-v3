@@ -16,7 +16,6 @@ import {
 } from '~/common';
 import { type SetDbType } from '~/core/database';
 import { type SetChangeType } from '~/core/database/changes';
-import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
 import { type DbScriptureReferences } from '../../scripture';
 import {
@@ -24,7 +23,7 @@ import {
   SecuredScriptureRanges,
 } from '../../scripture/dto';
 
-@RegisterResource({ db: e.Producible })
+@RegisterResource()
 @InterfaceType({
   description: 'Something that is _producible_ via a Product',
   resolveType: (p: ProducibleRef) => p.__typename,
@@ -74,8 +73,5 @@ export class SecuredProducible extends SecuredProperty(Producible, {
 declare module '~/core/resources/map' {
   interface ResourceMap {
     Producible: typeof Producible;
-  }
-  interface ResourceDBMap {
-    Producible: typeof e.default.Producible;
   }
 }

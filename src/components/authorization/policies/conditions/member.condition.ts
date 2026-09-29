@@ -9,10 +9,7 @@ import { rolesForScope, type ScopedRole, splitScope } from '../../dto/role.dto';
 import {
   type AsCypherParams,
   type AsDrizzleParams,
-  type AsEdgeQLParams,
   type Condition,
-  eqlDoesIntersect,
-  fqnRelativeTo,
   type IsAllowedParams,
   MissingContextException,
 } from '../../policy/conditions';
@@ -121,21 +118,6 @@ class MemberCondition<
     )`;
   }
 
-  setupEdgeQLContext({
-    resource,
-  }: AsEdgeQLParams<TResourceStatic>): Record<string, string> {
-    return resource.isEmbedded
-      ? { isMember: '(.container[is Project::ContextAware].isMember ?? false)' }
-      : {};
-  }
-
-  asEdgeQLCondition({ resource }: AsEdgeQLParams<TResourceStatic>) {
-    if (resource.name === 'User' || resource.name === 'Unavailability') {
-      return 'exists { "Stubbed .isMember for User/Unavailability" }'; // TODO
-    }
-    return resource.isEmbedded ? 'isMember' : '.isMember';
-  }
-
   union(this: void, conditions: NonEmptyArray<this>) {
     return conditions[0];
   }
@@ -199,11 +181,6 @@ class MemberWithRolesCondition<
         and "pm"."deleted_at" is null
         and "pm"."roles" && ${requiredRoles}
     )`;
-  }
-
-  asEdgeQLCondition({ namespace }: AsEdgeQLParams<TResourceStatic>) {
-    const Role = fqnRelativeTo('default::Role', namespace);
-    return eqlDoesIntersect('.membership.roles', this.roles, Role);
   }
 
   [inspect.custom](_depth: number, _options: InspectOptionsStylized) {

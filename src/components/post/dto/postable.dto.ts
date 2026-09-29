@@ -6,11 +6,10 @@ import {
   Resource,
   type ResourceRelationsShape,
 } from '~/common';
-import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
 import { Post } from './post.dto';
 
-@RegisterResource({ db: e.Mixin.Postable })
+@RegisterResource()
 @InterfaceType({
   description: stripIndent`
     An object that can be used to enable Post discussions on a Node.
@@ -32,8 +31,5 @@ export abstract class Postable {
 declare module '~/core/resources/map' {
   interface ResourceMap {
     Postable: typeof Postable;
-  }
-  interface ResourceDBMap {
-    Postable: typeof e.Mixin.Postable;
   }
 }

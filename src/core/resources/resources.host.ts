@@ -1,8 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { GraphQLSchemaHost } from '@nestjs/graphql';
-import { CachedByArg, mapKeys } from '@seedcompany/common';
+import { CachedByArg } from '@seedcompany/common';
 import { isObjectType } from 'graphql';
-import { LazyGetter as Once } from 'lazy-get-decorator';
 import { mapValues } from 'lodash';
 import {
   EnhancedResource,
@@ -11,7 +10,6 @@ import {
   type ResourceShape,
   ServerException,
 } from '~/common';
-import { e } from '../gel/reexports';
 import type { ResourceMap } from './map';
 import { __privateDontUseThis } from './resource-map-holder';
 import type {
@@ -31,13 +29,10 @@ export type ResourceLike =
   | EnhancedResource<any>
   | ResourceNameLike;
 
-RegisterResource({ db: e.Resource })(Resource);
+RegisterResource()(Resource);
 declare module '~/core/resources/map' {
   interface ResourceMap {
     Resource: typeof Resource;
-  }
-  interface ResourceDBMap {
-    Resource: typeof e.Resource;
   }
 }
 
@@ -70,11 +65,13 @@ export class ResourcesHost {
   getByName<Name extends AllResourceNames>(
     name: Name,
   ): EnhancedResource<ResourceStaticFromName<ResourceName<Name>>> {
-    if (name.includes('::')) {
-      return this.getByGel(name) as any;
-    }
     const map = this.getEnhancedMap();
-    const resource = map[name as keyof ResourceMap];
+    // Engagement `__typename`s carry a `default::` module prefix. That is a Gel
+    // convention, but it is not dead: the Postgres hydrate writes it and
+    // `resolveEngagementType` matches on it, so it reaches here from the
+    // comment and post services, which look a parent up by its `__typename`.
+    // Resolve a qualified name the same as a bare one.
+    const resource = map[stripModulePrefix(name)];
     // double-check at runtime
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (!resource) {
@@ -87,40 +84,6 @@ export class ResourcesHost {
 
   getByDynamicName(name: ResourceNameLike): EnhancedResource<any> {
     return this.getByName(name as any);
-  }
-
-  getByGel<Name extends ResourceNameLike>(
-    name: Name,
-  ): EnhancedResource<
-    string extends Name
-      ? ResourceShape<any>
-      : ResourceStaticFromName<ResourceName<Name>>
-  > {
-    const resByFQN = this.byEdgeFQN.get(
-      name.includes('::') ? name : `default::${name}`,
-    );
-    if (resByFQN) {
-      return resByFQN;
-    }
-    const nameMap = this.getEnhancedMap();
-    const resByName = nameMap[name as keyof ResourceMap];
-    // double-check at runtime
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    if (!resByName) {
-      throw new ServerException(
-        `Unable to determine resource from ResourceMap for Gel FQN: ${name}`,
-      );
-    }
-    return resByName as any;
-  }
-
-  @Once() get byEdgeFQN() {
-    const map = this.getEnhancedMap();
-    const fqnMap = mapKeys(
-      map as Record<string, EnhancedResource<any>>,
-      (_, r, { SKIP }) => (r.hasDB ? r.dbFQN : SKIP),
-    ).asMap;
-    return fqnMap;
   }
 
   verifyImplements(resource: ResourceLike, theInterface: ResourceLike) {
@@ -179,3 +142,15 @@ export class ResourcesHost {
     return impls;
   }
 }
+
+/**
+ * `default::LanguageEngagement` -> `LanguageEngagement`.
+ *
+ * Resource names reaching the lookups above can be module-qualified, because
+ * the engagement hydrate stamps a `default::` prefix onto `__typename` on
+ * every engine and `resolveEngagementType` keys off that exact form.
+ */
+const stripModulePrefix = <Name extends string>(name: Name) =>
+  (name.includes('::')
+    ? name.slice(name.lastIndexOf('::') + 2)
+    : name) as keyof ResourceMap;

@@ -7,7 +7,6 @@ import {
   type ResourceRelationsShape,
   SecuredProperty,
 } from '~/common';
-import { e } from '~/core/gel';
 import { sortingForEnumIndex } from '~/core/neo4j/query';
 import { type BaseNode } from '~/core/neo4j/results';
 import { RegisterResource } from '~/core/resources';
@@ -25,7 +24,7 @@ import { ProgressReportTeamNews } from './team-news.dto';
 
 const Interfaces = IntersectTypes(IPeriodicReport, Resource, Commentable);
 
-@RegisterResource({ db: e.ProgressReport })
+@RegisterResource()
 @ObjectType({
   implements: Interfaces.members,
 })
@@ -63,8 +62,5 @@ export class SecuredProgressReport extends SecuredProperty(ProgressReport) {}
 declare module '~/core/resources/map' {
   interface ResourceMap {
     ProgressReport: typeof ProgressReport;
-  }
-  interface ResourceDBMap {
-    ProgressReport: typeof e.default.ProgressReport;
   }
 }

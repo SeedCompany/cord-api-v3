@@ -1,13 +1,12 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import { DateTimeField, Resource, type Secured, SecuredString } from '~/common';
-import { e } from '~/core/gel';
 import { type BaseNode } from '~/core/neo4j/results';
 import { type LinkTo, RegisterResource } from '~/core/resources';
 import { PostType } from './post-type.enum';
 import { PostShareability } from './shareability.dto';
 
-@RegisterResource({ db: e.Post })
+@RegisterResource()
 @ObjectType({
   implements: [Resource],
 })
@@ -34,8 +33,5 @@ export class Post extends Resource {
 declare module '~/core/resources/map' {
   interface ResourceMap {
     Post: typeof Post;
-  }
-  interface ResourceDBMap {
-    Post: typeof e.default.Post;
   }
 }

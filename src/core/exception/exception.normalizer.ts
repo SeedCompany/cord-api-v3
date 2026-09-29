@@ -2,7 +2,7 @@ import { type ArgumentsHost, Inject, Injectable } from '@nestjs/common';
 // eslint-disable-next-line no-restricted-imports,@seedcompany/no-restricted-imports
 import * as Nest from '@nestjs/common';
 import { GqlExecutionContext } from '@nestjs/graphql';
-import { entries, isNotFalsy, simpleSwitch } from '@seedcompany/common';
+import { isNotFalsy, simpleSwitch } from '@seedcompany/common';
 import * as Gel from 'gel';
 import * as GelTags from 'gel/dist/errors/tags.js';
 import { GraphQLError } from 'graphql';
@@ -13,15 +13,11 @@ import {
   Exception,
   getCauseList,
   getParentTypes,
-  InputException,
   JsonSet,
-  NotFoundException,
-  ServerException,
 } from '~/common';
 import type { ConfigService } from '~/core/config';
 import { ExclusivityViolationError } from '~/core/gel/errors';
 import * as Neo from '~/core/neo4j/errors';
-import { ResourcesHost } from '~/core/resources/resources.host';
 import { prettyStack } from './pretty-stack';
 
 interface NormalizeParams {
@@ -57,10 +53,7 @@ export class NormalizedException extends Error {
 
 @Injectable()
 export class ExceptionNormalizer {
-  constructor(
-    @Inject('CONFIG') private readonly config?: ConfigService & {},
-    private readonly resources?: ResourcesHost,
-  ) {}
+  constructor(@Inject('CONFIG') private readonly config?: ConfigService & {}) {}
 
   normalize(params: NormalizeParams): ExceptionJson {
     const {
@@ -159,8 +152,6 @@ export class ExceptionNormalizer {
         ? GqlExecutionContext.create(context as any)
         : undefined;
 
-    ex = this.wrapIDNotFoundError(params, gqlContext);
-
     if (ex instanceof ExclusivityViolationError) {
       ex = DuplicateException.fromDB(ex, gqlContext);
       // TODO Neo4j UniquenessError could be moved here too - currently manually in service files
@@ -241,57 +232,6 @@ export class ExceptionNormalizer {
 
     // Fallback to generic Error
     return { codes: ['Server'] };
-  }
-
-  /**
-   * Convert ID not found database errors from user input
-   * to user input NotFound error with that input path.
-   */
-  private wrapIDNotFoundError(
-    { ex, gql }: NormalizeParams,
-    gqlContext: GqlExecutionContext | undefined,
-  ) {
-    if (!(ex instanceof Gel.CardinalityViolationError)) {
-      return ex;
-    }
-
-    const matched = ex.message.match(/'(.+)' with id '(.+)' does not exist/);
-    if (!matched) {
-      return ex;
-    }
-    const type = matched[1]!;
-    const id = matched[2]!;
-    const typeName = this.resources ? this.resources.getByGel(type).name : type;
-
-    if (gql?.path && gql.path.length > 1) {
-      // This error was thrown from a field resolver.
-      // Because this is not directly from user input, it is a server error.
-      // Still make the error nicer.
-      const wrapped = new ServerException(
-        `Field \`${gql.path.join('.')}\` failed to use valid ${typeName} id`,
-        ex,
-      );
-      return Object.assign(wrapped, { idNotFound: id });
-    }
-
-    const inputPath = entries(InputException.getFlattenInput(gqlContext)).find(
-      ([_, value]) => value === id,
-    )?.[0];
-    if (!inputPath) {
-      /*
-       TODO Just because we can't identify the input path we don't make the ex nicer?
-         NotFound requires a field, which is why we do this.
-         But is there a case where we have NotFound without a field?
-      */
-      return ex;
-    }
-
-    const wrapped = new NotFoundException(
-      `${typeName} could not be found`,
-      inputPath,
-      ex,
-    );
-    return Object.assign(wrapped, { idNotFound: id });
   }
 
   private httpException(ex: Nest.HttpException) {

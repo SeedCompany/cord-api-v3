@@ -10,7 +10,6 @@ import {
   Sensitivity,
   SensitivityField,
 } from '~/common';
-import { e } from '~/core/gel';
 import { type BaseNode } from '~/core/neo4j/results';
 import { type LinkToUnknown } from '~/core/resources';
 import { RegisterResource } from '~/core/resources';
@@ -21,7 +20,7 @@ import { Budget } from './budget.dto';
 const Interfaces = IntersectTypes(Resource, ChangesetAware);
 
 @Calculated()
-@RegisterResource({ db: e.Budget.Record })
+@RegisterResource()
 @ObjectType({
   implements: Interfaces.members,
 })
@@ -65,8 +64,5 @@ export class BudgetRecord extends Interfaces {
 declare module '~/core/resources/map' {
   interface ResourceMap {
     BudgetRecord: typeof BudgetRecord;
-  }
-  interface ResourceDBMap {
-    BudgetRecord: typeof e.Budget.Record;
   }
 }

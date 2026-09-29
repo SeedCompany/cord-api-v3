@@ -8,13 +8,12 @@ import {
   SecuredRichTextNullable,
   type SetUnsecuredType,
 } from '~/common';
-import { e } from '~/core/gel';
 import { type LinkTo, RegisterResource } from '~/core/resources';
 import { ProgressReportStatus } from '../../dto';
 import { type InternalTransition } from '../transitions';
 import { ProgressReportWorkflowTransition as PublicTransition } from './workflow-transition.dto';
 
-@RegisterResource({ db: e.ProgressReport.WorkflowEvent })
+@RegisterResource()
 @ObjectType()
 export abstract class ProgressReportWorkflowEvent {
   static readonly BaseNodeProps = ['id', 'createdAt', 'status', 'transition'];
@@ -43,8 +42,5 @@ export abstract class ProgressReportWorkflowEvent {
 declare module '~/core/resources/map' {
   interface ResourceMap {
     ProgressReportWorkflowEvent: typeof ProgressReportWorkflowEvent;
-  }
-  interface ResourceDBMap {
-    ProgressReportWorkflowEvent: typeof e.ProgressReport.WorkflowEvent;
   }
 }
