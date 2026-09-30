@@ -1,13 +1,10 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { type ID, IdField, type UnsecuredDto } from '~/common';
-import { e } from '~/core/gel';
 import { type LinkTo, RegisterResource } from '~/core/resources';
 import { type User } from '../../../user/dto';
 import { ProjectType } from '../../dto';
 
-@RegisterResource({
-  db: e.Project.FinancialApprover,
-})
+@RegisterResource()
 @ObjectType('ProjectTypeFinancialApprover')
 export class FinancialApprover {
   readonly user: LinkTo<'User'> & Pick<UnsecuredDto<User>, 'email'>;
@@ -28,8 +25,5 @@ export abstract class SetFinancialApprover {
 declare module '~/core/resources/map' {
   interface ResourceMap {
     FinancialApprover: typeof FinancialApprover;
-  }
-  interface ResourceDBMap {
-    FinancialApprover: typeof e.Project.FinancialApprover;
   }
 }

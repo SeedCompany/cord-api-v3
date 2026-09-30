@@ -5,7 +5,6 @@ import { FieldRegionModule } from '../field-region/field-region.module';
 import { FileModule } from '../file/file.module';
 import { FundingAccountModule } from '../funding-account/funding-account.module';
 import { LocationDrizzleRepository } from './location.drizzle.repository';
-import { LocationGelRepository } from './location.gel.repository';
 import { LocationLoader } from './location.loader';
 import { LocationRepository } from './location.repository';
 import { LocationResolver } from './location.resolver';
@@ -23,7 +22,6 @@ import { DefaultMarketingRegionMigration } from './migrations/default-marketing-
     LocationResolver,
     LocationService,
     splitDb(LocationRepository, {
-      gel: LocationGelRepository,
       // migration-todo: remove `as any` once splitDb types accept drizzle repos directly
       postgres: LocationDrizzleRepository as any,
     }),

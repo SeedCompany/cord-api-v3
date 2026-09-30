@@ -3,7 +3,6 @@ import { splitDb } from '~/core/database';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { ScriptureModule } from '../scripture';
 import { StoryDrizzleRepository } from './story.drizzle.repository';
-import { StoryGelRepository } from './story.gel.repository';
 import { StoryLoader } from './story.loader';
 import { StoryRepository } from './story.repository';
 import { StoryResolver } from './story.resolver';
@@ -15,7 +14,6 @@ import { StoryService } from './story.service';
     StoryResolver,
     StoryService,
     splitDb(StoryRepository, {
-      gel: StoryGelRepository,
       // migration-todo: `as any` removed at Phase 7 cutover when splitDb
       // disappears with the Neo4j path.
       postgres: StoryDrizzleRepository as any,

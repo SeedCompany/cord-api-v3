@@ -32,7 +32,6 @@ import {
   ServerException,
   type UnsecuredDto,
 } from '~/common';
-import { e } from '~/core/gel';
 import { sortingForEnumIndex } from '~/core/neo4j/query';
 import { type LinkTo, RegisterResource } from '~/core/resources';
 import { Budget } from '../../budget/dto';
@@ -78,7 +77,7 @@ const RequiredWhenNotInDev = RequiredWhen(() => Project)({
     status !== 'InDevelopment' && status !== 'DidNotDevelop',
 });
 
-@RegisterResource({ db: e.Project })
+@RegisterResource()
 @InterfaceType({
   resolveType: resolveProjectType,
   implements: Interfaces.members,
@@ -245,7 +244,7 @@ class Project extends Interfaces {
 // export as different names to maintain compatibility with our codebase.
 export { Project as IProject, type AnyProject as Project };
 
-@RegisterResource({ db: e.TranslationProject })
+@RegisterResource()
 @InterfaceType({
   resolveType: resolveProjectType,
   implements: [Project],
@@ -254,7 +253,7 @@ export class TranslationProject extends Project {
   declare readonly type: 'MultiplicationTranslation' | 'MomentumTranslation';
 }
 
-@RegisterResource({ db: e.MomentumTranslationProject })
+@RegisterResource()
 @ObjectType({
   implements: [TranslationProject],
   description: 'Formerly known as our TranslationProjects',
@@ -263,7 +262,7 @@ export class MomentumTranslationProject extends TranslationProject {
   declare readonly type: 'MomentumTranslation';
 }
 
-@RegisterResource({ db: e.MultiplicationTranslationProject })
+@RegisterResource()
 @ObjectType({
   implements: [TranslationProject],
 })
@@ -271,7 +270,7 @@ export class MultiplicationTranslationProject extends TranslationProject {
   declare readonly type: 'MultiplicationTranslation';
 }
 
-@RegisterResource({ db: e.InternshipProject })
+@RegisterResource()
 @ObjectType({
   implements: [Project],
 })
@@ -295,12 +294,5 @@ declare module '~/core/resources/map' {
     TranslationProject: typeof TranslationProject;
     MomentumTranslationProject: typeof MomentumTranslationProject;
     MultiplicationTranslationProject: typeof MultiplicationTranslationProject;
-  }
-  interface ResourceDBMap {
-    Project: typeof e.default.Project;
-    InternshipProject: typeof e.default.InternshipProject;
-    TranslationProject: typeof e.default.TranslationProject;
-    MomentumTranslationProject: typeof e.default.MomentumTranslationProject;
-    MultiplicationTranslationProject: typeof e.default.MultiplicationTranslationProject;
   }
 }

@@ -11,7 +11,6 @@ import {
   Sensitivity,
   SensitivityField,
 } from '~/common';
-import { e } from '~/core/gel';
 import { type BaseNode } from '~/core/neo4j/results';
 import {
   type LinkTo,
@@ -27,7 +26,7 @@ import { SecuredPartnershipAgreementStatus } from './partnership-agreement-statu
 
 const Interfaces = IntersectTypes(Resource, ChangesetAware);
 
-@RegisterResource({ db: e.Partnership })
+@RegisterResource()
 @ObjectType({
   implements: Interfaces.members,
 })
@@ -90,9 +89,6 @@ export class Partnership extends Interfaces {
 declare module '~/core/resources/map' {
   interface ResourceMap {
     Partnership: typeof Partnership;
-  }
-  interface ResourceDBMap {
-    Partnership: typeof e.default.Partnership;
   }
 }
 

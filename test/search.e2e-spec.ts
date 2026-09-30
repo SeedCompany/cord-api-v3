@@ -14,6 +14,7 @@ import {
   createSession,
   createTestApp,
   registerUser,
+  runAsAdmin,
   type TestApp,
   updateProject,
 } from './utility';
@@ -463,6 +464,60 @@ describe('Search e2e', () => {
         input: { query: '   ', count: 25 },
       });
       expect(search.items).toHaveLength(0);
+    });
+  });
+
+  describe('read permission on the matched field', () => {
+    // Every other case in this file runs as Administrator, who can read
+    // everything — so none of them can tell a working permission check from one
+    // that returns every hit to everyone. That is how the check stayed dead:
+    // it asked `key in perms` against an always-empty lazy view, so it always
+    // answered "no permission recorded, show it anyway".
+    //
+    // `pmcEntityCode` is the field to test with: a Staff Member can read a
+    // Partner but that one prop is explicitly denied to them
+    // (staff-member.policy.ts), so a hit that matched ONLY on it must not come
+    // back. The code is 3 uppercase letters by validation, so it is chosen to
+    // avoid appearing anywhere in the organization's name — an organization hit
+    // surfaces its partner, which would find the partner through a field the
+    // Staff Member IS allowed to read and make the test lie.
+    it('hides a hit whose only matched field the requester cannot read', async () => {
+      const orgName = `Permission Check ${tok()} Inc`;
+      let code: string;
+      do {
+        code = faker.string.alpha({ length: 3, casing: 'upper' });
+      } while (orgName.toLowerCase().includes(code.toLowerCase()));
+
+      // A Staff Member can read a Language's display name unconditionally, so
+      // it is the positive control's target. The organization is no use for
+      // that: a new one has no projects, so its sensitivity is High and a
+      // Staff Member cannot read its name either.
+      const readableName = `Readable${tok()}`;
+
+      const { partner, language } = await runAsAdmin(app, async () => {
+        const org = await createOrganization(app, { name: orgName });
+        const partner = await createPartner(app, {
+          organization: org.id,
+          pmcEntityCode: code,
+        });
+        const language = await createLanguage(app, {
+          displayName: readableName,
+        });
+        return { partner, language };
+      });
+
+      // The fixture works and the field is searchable: the admin finds it.
+      expect(await found(code, partner.id)).toBe(true);
+
+      const staff = await registerUser(app, { roles: [Role.StaffMember] });
+      await staff.runAs(async () => {
+        // Positive control — search itself works for this persona, so a `false`
+        // below means the permission check fired, not that the user sees
+        // nothing at all.
+        expect(await found(readableName, language.id)).toBe(true);
+
+        expect(await found(code, partner.id)).toBe(false);
+      });
     });
   });
 });

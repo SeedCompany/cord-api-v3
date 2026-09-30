@@ -12,11 +12,6 @@ export class CalculatedCondition implements Condition {
       'Action is calculated, it should not be going to Cypher',
     );
   }
-  asEdgeQLCondition(): never {
-    throw new ServerException(
-      'Action is calculated, it should not be going to EdgeQL',
-    );
-  }
   [inspect.custom]() {
     return 'Calculated';
   }

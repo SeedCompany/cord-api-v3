@@ -1,5 +1,4 @@
-import { EnhancedResource, type ResourceShape } from '~/common';
-import type { $ } from '../gel';
+import { type ResourceShape } from '~/common';
 import { __privateDontUseThis } from './resource-map-holder';
 
 /**
@@ -7,21 +6,9 @@ import { __privateDontUseThis } from './resource-map-holder';
  * Be sure to add the type to the type map as well.
  * See {@link import('./map').ResourceMap} for details on that.
  */
-export const RegisterResource = ({
-  db,
-  skipAccessPolicies,
-}: {
-  db?: $.$expr_PathNode;
-  skipAccessPolicies?: boolean;
-} = {}) => {
+export const RegisterResource = () => {
   return <T extends ResourceShape<any>>(target: T) => {
     __privateDontUseThis[target.name] = target;
-    if (db) {
-      EnhancedResource.dbTypes.set(target, db);
-      if (skipAccessPolicies) {
-        EnhancedResource.dbSkipAccessPolicies.add(db.__element__.__name__);
-      }
-    }
     return target;
   };
 };

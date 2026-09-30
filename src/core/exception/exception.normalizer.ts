@@ -2,26 +2,13 @@ import { type ArgumentsHost, Inject, Injectable } from '@nestjs/common';
 // eslint-disable-next-line no-restricted-imports,@seedcompany/no-restricted-imports
 import * as Nest from '@nestjs/common';
 import { GqlExecutionContext } from '@nestjs/graphql';
-import { entries, isNotFalsy, simpleSwitch } from '@seedcompany/common';
-import * as Gel from 'gel';
-import * as GelTags from 'gel/dist/errors/tags.js';
+import { isNotFalsy, simpleSwitch } from '@seedcompany/common';
 import { GraphQLError } from 'graphql';
 import { lowerCase, uniq } from 'lodash';
 import type { AbstractClass } from 'type-fest';
-import {
-  DuplicateException,
-  Exception,
-  getCauseList,
-  getParentTypes,
-  InputException,
-  JsonSet,
-  NotFoundException,
-  ServerException,
-} from '~/common';
+import { Exception, getCauseList, getParentTypes, JsonSet } from '~/common';
 import type { ConfigService } from '~/core/config';
-import { ExclusivityViolationError } from '~/core/gel/errors';
 import * as Neo from '~/core/neo4j/errors';
-import { ResourcesHost } from '~/core/resources/resources.host';
 import { prettyStack } from './pretty-stack';
 
 interface NormalizeParams {
@@ -57,10 +44,7 @@ export class NormalizedException extends Error {
 
 @Injectable()
 export class ExceptionNormalizer {
-  constructor(
-    @Inject('CONFIG') private readonly config?: ConfigService & {},
-    private readonly resources?: ResourcesHost,
-  ) {}
+  constructor(@Inject('CONFIG') private readonly config?: ConfigService & {}) {}
 
   normalize(params: NormalizeParams): ExceptionJson {
     const {
@@ -81,7 +65,7 @@ export class ExceptionNormalizer {
   }
 
   private gatherExtraInfo(params: NormalizeParams): Record<string, any> {
-    let { ex } = params;
+    const { ex } = params;
     const { context } = params;
 
     if (ex instanceof Nest.HttpException) {
@@ -118,22 +102,6 @@ export class ExceptionNormalizer {
       };
     }
 
-    // Again, dig deep here to find connection errors.
-    // These would be the root problem that we'd want to expose.
-    const gelError = exs.find(
-      (e): e is Gel.GelError => e instanceof Gel.GelError,
-    );
-    if (
-      gelError &&
-      (gelError instanceof Gel.AvailabilityError ||
-        gelError instanceof Gel.ClientConnectionError)
-    ) {
-      return {
-        codes: this.errorToCodes(ex),
-        message: 'Failed to connect to CORD database',
-      };
-    }
-
     if (
       ex instanceof AggregateError &&
       // not subclassed
@@ -159,12 +127,7 @@ export class ExceptionNormalizer {
         ? GqlExecutionContext.create(context as any)
         : undefined;
 
-    ex = this.wrapIDNotFoundError(params, gqlContext);
-
-    if (ex instanceof ExclusivityViolationError) {
-      ex = DuplicateException.fromDB(ex, gqlContext);
-      // TODO Neo4j UniquenessError could be moved here too - currently manually in service files
-    } else if (ex instanceof Gel.GelError || Neo.isNeo4jError(ex)) {
+    if (Neo.isNeo4jError(ex)) {
       // Mask actual DB error with a nicer user error message.
       let message = 'Failed';
       if (gqlContext) {
@@ -243,57 +206,6 @@ export class ExceptionNormalizer {
     return { codes: ['Server'] };
   }
 
-  /**
-   * Convert ID not found database errors from user input
-   * to user input NotFound error with that input path.
-   */
-  private wrapIDNotFoundError(
-    { ex, gql }: NormalizeParams,
-    gqlContext: GqlExecutionContext | undefined,
-  ) {
-    if (!(ex instanceof Gel.CardinalityViolationError)) {
-      return ex;
-    }
-
-    const matched = ex.message.match(/'(.+)' with id '(.+)' does not exist/);
-    if (!matched) {
-      return ex;
-    }
-    const type = matched[1]!;
-    const id = matched[2]!;
-    const typeName = this.resources ? this.resources.getByGel(type).name : type;
-
-    if (gql?.path && gql.path.length > 1) {
-      // This error was thrown from a field resolver.
-      // Because this is not directly from user input, it is a server error.
-      // Still make the error nicer.
-      const wrapped = new ServerException(
-        `Field \`${gql.path.join('.')}\` failed to use valid ${typeName} id`,
-        ex,
-      );
-      return Object.assign(wrapped, { idNotFound: id });
-    }
-
-    const inputPath = entries(InputException.getFlattenInput(gqlContext)).find(
-      ([_, value]) => value === id,
-    )?.[0];
-    if (!inputPath) {
-      /*
-       TODO Just because we can't identify the input path we don't make the ex nicer?
-         NotFound requires a field, which is why we do this.
-         But is there a case where we have NotFound without a field?
-      */
-      return ex;
-    }
-
-    const wrapped = new NotFoundException(
-      `${typeName} could not be found`,
-      inputPath,
-      ex,
-    );
-    return Object.assign(wrapped, { idNotFound: id });
-  }
-
   private httpException(ex: Nest.HttpException) {
     const res = ex.getResponse();
     const {
@@ -351,13 +263,6 @@ export class ExceptionNormalizer {
     }
     if (type === Nest.IntrinsicException) {
       return [];
-    }
-    if (type === Gel.GelError) {
-      const transient =
-        ex instanceof Gel.GelError &&
-        (ex.hasTag(GelTags.SHOULD_RECONNECT) ||
-          ex.hasTag(GelTags.SHOULD_RETRY));
-      return [...(transient ? ['Transient'] : []), 'Database', 'Server'];
     }
     if (Neo.isNeo4jError(ex)) {
       return [

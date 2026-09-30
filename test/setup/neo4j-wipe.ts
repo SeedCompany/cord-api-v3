@@ -14,9 +14,11 @@ import * as Neo from 'neo4j-driver';
  * Safety — this deletes EVERY node in the target database, so two independent
  * gates keep it away from real data (the local compose `db` is a long-lived
  * dev database and the cutover-ETL source; prod runs Neo4j until the PG flip):
- * 1. `NEO4J_TEST_WIPE` must be explicitly set to `true` — only the CI
- *    workflow sets it. Nothing keys off ambient env like `CI`, so self-hosted
- *    runners or local shells can't trip it by accident.
+ * 1. `NEO4J_TEST_WIPE` must be explicitly set to `true`. Nothing keys off
+ *    ambient env like `CI`, so self-hosted runners or local shells can't trip
+ *    it by accident. As of #3890 NOTHING sets it — CI no longer runs the suite
+ *    against Neo4j — so this whole helper is inert and goes away with the
+ *    Neo4j test infrastructure.
  * 2. The target host must be loopback. A wipe opt-in pointed at a remote host
  *    is always a misconfiguration — we throw loudly instead of silently
  *    skipping, so the flake this exists to fix can't quietly return.

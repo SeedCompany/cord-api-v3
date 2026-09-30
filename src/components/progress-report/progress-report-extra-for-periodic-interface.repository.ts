@@ -16,7 +16,7 @@ import {
 } from '~/core/neo4j/query';
 import { engagementSorters } from '../engagement/engagement.repository';
 import { type MergePeriodicReports } from '../periodic-report/dto';
-import { pnpExtractionResultSorters } from '../pnp/extraction-result/pnp-extraction-result.neo4j.repository';
+import { pnpExtractionResultSorters } from '../pnp/extraction-result/pnp-extraction-result.repository';
 import { SummaryPeriod } from '../progress-summary/dto';
 import { progressSummarySorters } from '../progress-summary/progress-summary.repository';
 import { ProgressReport, ProgressReportStatus as Status } from './dto';

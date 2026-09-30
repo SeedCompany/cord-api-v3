@@ -5,9 +5,7 @@ import { users } from '~/core/drizzle/schema';
 import { type User } from '../../../user/dto';
 import {
   type AsDrizzleParams,
-  type AsEdgeQLParams,
   type Condition,
-  fqnRelativeTo,
   type IsAllowedParams,
   MissingContextException,
 } from '../../policy/conditions';
@@ -28,11 +26,6 @@ class SelfCondition<
 
   asDrizzleCondition({ session }: AsDrizzleParams<TResourceStatic>) {
     return eq(users.id, session.userId);
-  }
-
-  asEdgeQLCondition({ namespace }: AsEdgeQLParams<any>) {
-    const currentId = fqnRelativeTo('default::currentActorId', namespace);
-    return `.id ?= global ${currentId}`;
   }
 
   union(this: void, conditions: NonEmptyArray<this>) {

@@ -523,6 +523,25 @@ const languageVia =
   )`;
 
 /**
+ * Whether a language uses AI-assisted translation.
+ *
+ * True when the language has at least one live engagement, on a live project,
+ * whose AI-assisted-translation answer is something other than `None` or
+ * `Unknown`. The same rule is applied in
+ * {@link LanguageDrizzleRepository.engagementDerived}.
+ */
+const anyAIAssistedEngagement = (
+  languageId: SQL | AnyPgColumn<{ data: ID<'Language'> }>,
+) => sql<boolean>`exists (
+  select 1 from ${engagements}
+  inner join ${projects} on ${projects.id} = ${engagements.projectId}
+  where ${engagements.languageId} = ${languageId}
+    and ${engagements.deletedAt} is null
+    and ${projects.deletedAt} is null
+    and ${engagements.usingAIAssistedTranslation} not in ('None', 'Unknown')
+)`;
+
+/**
  * Language sort keys that are computed rather than stored, correlated to
  * whichever language id is passed in — the language's own list passes its own
  * column; Engagement passes `engagements.language_id`.
@@ -555,20 +574,11 @@ const languageComputedSorts = (
   population: sql`coalesce(${readColumn(
     languages.populationOverride,
   )}, ${ethnologueValue(ethnologueLanguages.population, languageId)})`,
-  // Any live engagement whose AI-assisted-translation value is a real answer —
-  // the same rule `engagementDerived` applies when it computes the field.
   // Neo4j has a sorter for this but raises 42N07 when a request filters AND
   // sorts on it (known, won't-fix, transition-only); the note said the fault
   // vanishes on Postgres because the sort becomes a plain ORDER BY expression,
   // which is what this is.
-  usesAIAssistance: sql`exists (
-    select 1 from ${engagements}
-    inner join ${projects} on ${projects.id} = ${engagements.projectId}
-    where ${engagements.languageId} = ${languageId}
-      and ${engagements.deletedAt} is null
-      and ${projects.deletedAt} is null
-      and ${engagements.usingAIAssistedTranslation} not in ('None', 'Unknown')
-  )`,
+  usesAIAssistance: anyAIAssistedEngagement(languageId),
 });
 
 /** Every language sort key, for the language list's own use. */
@@ -605,11 +615,6 @@ export const languageSortEntry = (
 
 /**
  * Column-level WHERE clauses for `LanguageFilters`.
- *
- * migration-todo: the usesAIAssistance list filter remains unimplemented —
- * its Neo4j side carries the known 42N07 shadowing fault on filter+sort
- * (won't fix, transition-only), so there is no working behavior to mirror;
- * decide its Postgres semantics when a consumer surfaces.
  */
 export const languageFilterClauses = (
   db: DrizzleDb,
@@ -671,6 +676,10 @@ export const languageFilterClauses = (
         ? anyFlaggedEngagingProject
         : not(anyFlaggedEngagingProject),
     );
+  }
+  if (filter.usesAIAssistance != null) {
+    const anyAI = anyAIAssistedEngagement(languages.id);
+    conditions.push(filter.usesAIAssistance ? anyAI : not(anyAI));
   }
   const rolv =
     filter.registryOfLanguageVarietiesCode ?? filter.registryOfDialectsCode;

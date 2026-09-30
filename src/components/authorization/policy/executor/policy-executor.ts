@@ -5,7 +5,6 @@ import { identity } from 'lodash';
 import { type EnhancedResource } from '~/common';
 import { Identity, type Session } from '~/core/authentication';
 import { type QueryFragment } from '~/core/neo4j/query';
-import { RoleCondition } from '../../policies/conditions/role.condition';
 import { type Permission } from '../builder/perm-granter';
 import {
   AggregateConditions,
@@ -111,60 +110,6 @@ export class PolicyExecutor {
       condition = this.conditionOptimizer.optimize(condition);
     }
     return condition;
-  }
-
-  forGel({
-    action,
-    resource,
-  }: Pick<ResolveParams, 'action' | 'resource'>): Permission {
-    const isDerivedInDB = [...resource.interfaces].some((e) => e.hasDB);
-
-    if (action !== 'read' && resource.isCalculated) {
-      // users don't initiate calculated actions, so don't block with access policies
-      // But don't duplicate AP if an interface has already declared
-      return !isDerivedInDB;
-    }
-
-    // let app handle edit permissions
-    if (action === 'edit') {
-      return !isDerivedInDB;
-    }
-
-    const policies = this.policyFactory.getDBPolicies();
-
-    const conditions = [];
-    for (const policy of policies) {
-      const grants = policy.grants.get(resource);
-      if (!grants) {
-        continue;
-      }
-
-      const condition = grants.objectLevel[action];
-      if (condition == null) {
-        continue;
-      }
-      if (condition === false) {
-        // Deny actions should not cross into other policies, continue executing.
-        continue;
-      }
-
-      const roleCondition =
-        policy.roles && policy.roles.size > 0
-          ? new RoleCondition(policy.roles)
-          : undefined;
-
-      if (!roleCondition && condition === true) {
-        // globally allowed
-        return true;
-      }
-      conditions.push(
-        all(roleCondition, condition !== true ? condition : null),
-      );
-    }
-    if (conditions.length === 0) {
-      return false;
-    }
-    return this.conditionOptimizer.optimize(any(...conditions));
   }
 
   drizzleFilter(params: ResolveParams): SQL | boolean {

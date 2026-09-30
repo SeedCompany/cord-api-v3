@@ -9,7 +9,14 @@ import { type FinancialApprover, type SetFinancialApprover } from './dto';
 import { type FinancialApproverRepository } from './financial-approver.repository';
 
 @Injectable()
-export class FinancialApproverDrizzleRepository implements PublicOf<FinancialApproverRepository> {
+// Only `read`/`write` are the contract here. The canonical extends
+// CommonRepository, so its public surface also carries Neo4j plumbing
+// (getBaseNode, getBaseNodes, deleteNode) that no consumer of this repository
+// calls and that has no Postgres counterpart.
+export class FinancialApproverDrizzleRepository implements Pick<
+  PublicOf<FinancialApproverRepository>,
+  'read' | 'write'
+> {
   constructor(private readonly db: DrizzleService) {}
 
   async read(types?: Many<ProjectType>) {

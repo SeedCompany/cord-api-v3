@@ -13,7 +13,6 @@ import {
   SecuredString,
   SecuredStringNullable,
 } from '~/common';
-import { e } from '~/core/gel';
 import { type LinkTo, RegisterResource } from '~/core/resources';
 import { Commentable } from '../../comments/dto';
 import { Location } from '../../location/dto';
@@ -30,7 +29,7 @@ import { SecuredUserStatus } from './user-status.enum';
 
 const Interfaces = IntersectTypes(Resource, Actor, Pinnable, Commentable);
 
-@RegisterResource({ db: e.User })
+@RegisterResource()
 @ObjectType({
   implements: Interfaces.members,
 })
@@ -113,8 +112,5 @@ export class SecuredUser extends SecuredProperty(User) {}
 declare module '~/core/resources/map' {
   interface ResourceMap {
     User: typeof User;
-  }
-  interface ResourceDBMap {
-    User: typeof e.default.User;
   }
 }
