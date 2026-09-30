@@ -8,6 +8,7 @@ import { graphql } from '~/graphql';
 import { AuditService } from '../src/components/audit/audit.service';
 import { ResourceMutatedHook } from '../src/components/audit/resource-mutated.hook';
 import { ResourceMutationRepository } from '../src/components/audit/resource-mutation.repository';
+import { ScriptureRange } from '../src/components/scripture/dto';
 import { SessionHost } from '../src/core/authentication/session/session.host';
 import { SessionManager } from '../src/core/authentication/session/session.manager';
 import {
@@ -15,6 +16,7 @@ import {
   createLanguage,
   createLanguageEngagement,
   createOrganization,
+  createOtherProduct,
   createPartnership,
   createProject,
   createSession,
@@ -214,6 +216,44 @@ describe('Audit log (resource_mutations) e2e', () => {
     expect(read.history.total).toBeGreaterThanOrEqual(1);
     expect(read.history.items.map((i) => i.action)).toContain('Create');
   });
+
+  itPostgresOnly(
+    'does not record an OtherProduct update that repeats its scriptureReferences',
+    async () => {
+      const language = await runAsAdmin(app, createLanguage);
+      const engagement = await createLanguageEngagement(app, {
+        project: project.id,
+        language: language.id,
+        startDateOverride: engStart.toISO(),
+        endDateOverride: engEnd.toISO(),
+      });
+      const scriptureReferences = ScriptureRange.randomList();
+      const product = await createOtherProduct(app, {
+        engagement: engagement.id,
+        scriptureReferences,
+      });
+      const updateActions = async () => {
+        const { product: read } = await runAsAdmin(app, () =>
+          app.graphql.query(ProductHistoryDoc, { id: product.id }),
+        );
+        return read.history.items.filter((i) => i.action === 'Update');
+      };
+
+      // Scripture ranges arrive as new objects, so an identity comparison
+      // would see this as a change.
+      await app.graphql.mutate(UpdateOtherProductDoc, {
+        input: { id: product.id, scriptureReferences },
+      });
+      expect(await updateActions()).toHaveLength(0);
+
+      // Control: a real change is recorded, so the empty result above is
+      // not an absence of OtherProduct auditing.
+      await app.graphql.mutate(UpdateOtherProductDoc, {
+        input: { id: product.id, title: 'Renamed Other Goal' },
+      });
+      expect(await updateActions()).toHaveLength(1);
+    },
+  );
 
   // Registration runs under an anonymous session: there is no logged-in user,
   // and the anonymous SystemAgent id lives in `system_agents`, NOT `users`. The
@@ -516,6 +556,16 @@ const EngagementHistoryDoc = graphql(`
         items {
           action
         }
+      }
+    }
+  }
+`);
+
+const UpdateOtherProductDoc = graphql(`
+  mutation UpdateOtherProductForAudit($input: UpdateOtherProduct!) {
+    updateOtherProduct(input: $input) {
+      product {
+        id
       }
     }
   }
