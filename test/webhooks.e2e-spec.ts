@@ -23,11 +23,13 @@ import { createHmac } from 'node:crypto';
 import { createServer } from 'node:http';
 import { promisify } from 'node:util';
 import {
-  bufferTime,
   defer,
   firstValueFrom,
   merge,
+  of,
+  skip,
   Subject,
+  take,
   timeout,
 } from 'rxjs';
 import type { SetNonNullable, SetRequired } from 'type-fest';
@@ -61,6 +63,43 @@ import {
 import { GqlError } from './setup/gql-client/gql-result';
 
 const SHORT = +Duration.from('30s');
+
+/**
+ * How long to keep listening after the expected requests arrive, to catch an
+ * unexpected extra one. Deliveries land ~1–2s after the trigger, so this is a
+ * margin over that, not a guarantee against a much slower stray.
+ */
+const QUIET = '3s';
+
+/**
+ * Collects webhook requests until `count` have arrived (or SHORT passes), then
+ * for QUIET more, so a test can assert an exact count — including that some
+ * webhook did NOT fire — without sitting through a fixed SHORT window every
+ * time. Call it BEFORE triggering the event: `events` is hot, and listening
+ * starts on the call.
+ */
+async function collectRequests(
+  events: Subject<WebhookRequest>,
+  count: number,
+): Promise<WebhookRequest[]> {
+  const received: WebhookRequest[] = [];
+  const listening = events.subscribe((request) => received.push(request));
+  try {
+    // Too few by the deadline: return what arrived, so the caller's length
+    // assertion reports the real count rather than a bare TimeoutError.
+    await firstValueFrom(
+      events.pipe(
+        skip(count - 1),
+        take(1),
+        timeout({ first: SHORT, with: () => of(undefined) }),
+      ),
+    );
+    await delay(QUIET);
+    return received;
+  } finally {
+    listening.unsubscribe();
+  }
+}
 
 const isPostgres = process.env.DATABASE === 'postgres';
 
@@ -1162,7 +1201,7 @@ describe('Webhooks', () => {
       );
 
       // Listen for both webhook events
-      const waitingForWebhooks = firstValueFrom(events.pipe(bufferTime(SHORT)));
+      const waitingForWebhooks = collectRequests(events, 2);
 
       // Trigger the event
       const project = await tester.apply(createProject());
@@ -1235,7 +1274,7 @@ describe('Webhooks', () => {
       `);
 
       // Listen for both webhook events
-      const waitingForWebhooks = firstValueFrom(events.pipe(bufferTime(SHORT)));
+      const waitingForWebhooks = collectRequests(events, 2);
 
       // Trigger an update on the project
       await tester.run(UpdateProject, {
@@ -1282,7 +1321,7 @@ describe('Webhooks', () => {
       );
 
       // Listen for both webhook events
-      const waitingForWebhooks = firstValueFrom(events.pipe(bufferTime(SHORT)));
+      const waitingForWebhooks = collectRequests(events, 2);
 
       // Trigger the event (as first user)
       await tester.apply(createProject());
@@ -1351,9 +1390,7 @@ describe('Webhooks', () => {
       `);
 
       // Emit & collect events for update for project 1
-      const waitingForProjectUpdates1 = firstValueFrom(
-        events.pipe(bufferTime(SHORT)),
-      );
+      const waitingForProjectUpdates1 = collectRequests(events, 1);
       await tester.run(UpdateProject, {
         input: { id: project1.id, name: `${project1.name.value!} Updated` },
       });
@@ -1365,9 +1402,7 @@ describe('Webhooks', () => {
       expect(payload1.data.projectUpdated.project.id).toBe(project1.id);
 
       // Trigger update for project 2
-      const waitingForProjectUpdates2 = firstValueFrom(
-        events.pipe(bufferTime(SHORT)),
-      );
+      const waitingForProjectUpdates2 = collectRequests(events, 1);
       await tester.run(UpdateProject, {
         input: { id: project2.id, name: `${project2.name.value!} Updated` },
       });
@@ -1618,8 +1653,13 @@ describe('Webhooks', () => {
         const updated = await tester.apply(webhooks.get(webhook.key));
         expect(updated.valid).toBe(false);
 
+        // Nothing should arrive. Deliveries land ~1–2s after the trigger, and
+        // this window starts before it, so 5s leaves margin without paying
+        // the full SHORT every run.
         const waitingForWebhook2 = firstValueFrom(
-          events.pipe(timeout({ each: SHORT, with: () => [undefined] })),
+          events.pipe(
+            timeout({ each: +Duration.from('5s'), with: () => [undefined] }),
+          ),
         );
         // Trigger event by creating a project
         await tester.apply(createProject());

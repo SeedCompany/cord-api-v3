@@ -34,7 +34,7 @@ jobs:
         run: yarn test --reporters=github-actions
 
   E2E:
-    name: E2E Tests (${{ matrix.database }} ${{ matrix.shard }}/${{ matrix.total || 6 }})
+    name: E2E Tests (shard ${{ matrix.shard }}/${{ matrix.total }})
     runs-on: ubuntu-latest
 
     # No service containers. Postgres is started by the step below, because it
@@ -42,39 +42,37 @@ jobs:
     # start before the checkout that would provide it. Neo4j is gone: nothing
     # here runs against it any more (#3890).
 
+    # The whole suite, split across shards. It used to run an opt-in allowlist
+    # of migrated domains, which is removed deliberately: an allowlist silently
+    # excludes anything nobody remembered to name, and it failed that way three
+    # separate times — a domain whose own migration PR never added it, a name
+    # that didn't match because entries are anchored to a following `.` (so
+    # `periodic-report` never covered `periodic-report-narrative-file`), and
+    # every spec under `test/` subdirectories, which the pattern's shape could
+    # never match at all. The last of those hid the fact that webhooks was never
+    # ported. The `E2E Tests` job below now proves nothing is left out.
+    #
+    # Suites that genuinely cannot pass under Postgres switch themselves off
+    # inside the test file (`describe.skip` on a DATABASE check), so they are
+    # reported as skipped, appear in the run output, and state their reason —
+    # instead of being invisible. Currently: the *-changeset-aware specs
+    # (changesets are not being carried forward). Add that condition to the
+    # test file — never a filter here.
+    #
+    # Shards are split by recorded duration, not by Jest's path hash
+    # (test/setup/shard-sequencer.ts, timings in test/e2e-timings.json). Serial
+    # the suite was ~24 min and the only thing on the critical path (#3949).
+    # Six shards: ~3.6 min of test time each. More shards trade runner-minutes
+    # for wall clock — each one pays ~1.5 min of setup plus a cold compile. No
+    # single file sets a floor (webhooks was one until its fixed 30s waits were
+    # removed), so the split stays even.
+    #
+    # These job names are NOT required checks and can change freely — change
+    # `total` and the `shard` list together. Only `E2E Tests` is required.
     strategy:
       matrix:
-        include:
-          # ─── Postgres: the engine production runs. Whole suite, one shard. ──
-          # It used to run an opt-in allowlist of migrated domains, which is
-          # removed deliberately: an allowlist silently excludes anything nobody
-          # remembered to name, and it failed that way three separate times — a
-          # domain whose own migration PR never added it, a name that didn't
-          # match because entries are anchored to a following `.` (so
-          # `periodic-report` never covered `periodic-report-narrative-file`),
-          # and every spec under `test/` subdirectories, which the pattern's
-          # shape could never match at all. The last of those hid the fact that
-          # webhooks was never ported.
-          #
-          # Suites that genuinely cannot pass under Postgres switch themselves
-          # off inside the test file (`describe.skip` on a DATABASE check), so
-          # they are reported as skipped, appear in the run output, and state
-          # their reason — instead of being invisible. Currently: the three
-          # *-changeset-aware specs (changesets are not being carried forward).
-          # Add that condition to the test file — never a filter here.
-          #
-          # Single shard on purpose: the full suite is ~10 min serial, and six
-          # jobs each paying the full setup cost was pure runner waste. Bump
-          # `total` (and add shard entries) if that grows uncomfortable.
-          #
-          # ⚠ This is a one-entry matrix on purpose. The job's NAME is a
-          # required status check, so it must keep reading exactly
-          # `E2E Tests (postgres 1/1)`. Renaming it — including by dropping the
-          # matrix and hardcoding a different string — leaves every open PR
-          # waiting forever on a context that will never be reported.
-          - database: postgres
-            shard: 1
-            total: 1
+        shard: [1, 2, 3, 4, 5, 6]
+        total: [6]
       fail-fast: false
     steps:
       - uses: actions/checkout@v4
@@ -156,9 +154,11 @@ jobs:
         # driver error nowhere in the log or the API — leaving a red required
         # check that could not be diagnosed from its own artifacts. A required
         # check has to explain itself when it fails.
-        run: yarn test:e2e --maxWorkers=1 --workerIdleMemoryLimit=1500MB --shard=${{ matrix.shard }}/${{ matrix.total || 6 }} --reporters=default --reporters=github-actions
+        # --json --outputFile: the per-file results the `E2E Tests` job checks
+        # for coverage and turns into refreshed timings. Reporters still print.
+        run: yarn test:e2e --maxWorkers=1 --workerIdleMemoryLimit=1500MB --shard=${{ matrix.shard }}/${{ matrix.total }} --reporters=default --reporters=github-actions --json --outputFile=e2e-results-${{ matrix.shard }}-of-${{ matrix.total }}.json
         env:
-          DATABASE: ${{ matrix.database }}
+          DATABASE: postgres
           # `sslmode=no-verify` is required, not incidental: the certificate
           # generated above is self-signed, and without this the client
           # verifies it against the bundled Amazon RDS roots and rejects it.
@@ -176,9 +176,72 @@ jobs:
         # red even in principle, and the required checks were the six Neo4j
         # shards. Correct before the cutover; backwards after it, and that is
         # how a class of global-search regressions reached users unnoticed.
-        #
-        # ⚠ Required contexts must list `E2E Tests (postgres 1/1)` and must NOT
-        # list any neo4j shard: a required context whose job no longer exists
-        # leaves every PR waiting forever on a status that will never be
-        # reported. That is why `E2E Tests (neo4j 1/6)` has to come OUT of the
-        # required list before this change lands, not after.
+
+      # `always()`: a shard that fails still has results worth checking, and
+      # a missing file is how the coverage check spots a shard that crashed.
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-results-${{ matrix.shard }}-of-${{ matrix.total }}
+          path: e2e-results-${{ matrix.shard }}-of-${{ matrix.total }}.json
+          if-no-files-found: ignore
+          retention-days: 7
+
+  # ─── The ONE required e2e check. ─────────────────────────────────────────
+  # Branch protection requires `E2E Tests` — this job — and none of the shard
+  # jobs above. Their names include the shard count, so requiring them would
+  # mean editing branch protection every time the count changes, and a
+  # required context whose job no longer exists leaves every PR waiting
+  # forever on a status nothing will report.
+  #
+  # ⚠ `if: always()` is what makes this safe to require. GitHub counts a
+  # SKIPPED required job as passing, and a job skips by default when anything
+  # it `needs` fails — so without it, a failing shard would make this check
+  # go green.
+  E2E-Summary:
+    name: E2E Tests
+    needs: E2E
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.14.1
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: e2e-results-*
+          merge-multiple: true
+          path: e2e-results
+
+      # Every tracked spec file ran in exactly one shard, and every shard
+      # reported. Each shard only knows its own files, so a split that drops
+      # one would otherwise leave every job green.
+      - name: Check coverage
+        if: always()
+        # mkdir: if no shard uploaded anything, report that, not a stack trace.
+        run: |
+          mkdir -p e2e-results
+          node test/setup/check-e2e-shards.ts e2e-results e2e-timings.json
+
+      # To rebalance the shards, download this artifact from a recent green
+      # develop run and commit it over test/e2e-timings.json. Stale timings
+      # only make the split less even; they never drop a file.
+      - name: Upload refreshed timings
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-timings
+          path: e2e-timings.json
+          if-no-files-found: ignore
+
+      - name: All shards passed
+        if: always()
+        run: |
+          if [ "${{ needs.E2E.result }}" != success ]; then
+            echo "::error::E2E shards finished with '${{ needs.E2E.result }}' — see the failing E2E Tests (shard N/M) job"
+            exit 1
+          fi

@@ -65,6 +65,9 @@ export default async (): Promise<Config> => {
       },
       e2e,
     ],
+    // Only changes how `--shard` splits files (by recorded duration); ordering
+    // within a run is Jest's default. Global option, so it can't sit on `e2e`.
+    testSequencer: './test/setup/shard-sequencer.ts',
     testTimeout: Duration.fromObject({ minutes: 1 }).toMillis(),
     // WebStorm doesn't need this as it adds the cli flag automatically.
     // I'm guessing VSCode needs it.
