@@ -78,9 +78,18 @@ const seenIn = new Map<string, number[]>();
 const timings: Record<string, number> = {};
 const loads: string[] = [];
 for (const { file, shard } of shardFiles.sort((a, b) => a.shard - b.shard)) {
-  const json = JSON.parse(
-    readFileSync(join(resultsDir, file), 'utf8'),
-  ) as JestJson;
+  // A shard killed mid-write leaves a truncated or empty file. Report it and
+  // keep going, so the summary still names every other problem.
+  let json: JestJson;
+  try {
+    json = JSON.parse(readFileSync(join(resultsDir, file), 'utf8'));
+    if (!Array.isArray(json.testResults)) throw new Error('no testResults');
+  } catch (error) {
+    errors.push(
+      `Shard ${shard} results are unreadable (${file}: ${String(error)}); its files count as not run.`,
+    );
+    continue;
+  }
   let load = 0;
   for (const result of json.testResults) {
     const spec = relative(root, result.name).split('\\').join('/');
@@ -109,7 +118,11 @@ for (const spec of seenIn.keys()) {
 const sorted = Object.fromEntries(
   Object.entries(timings).sort(([a], [b]) => (a < b ? -1 : 1)),
 );
-writeFileSync(timingsOut, JSON.stringify(sorted, null, 2) + '\n');
+// Only from a complete run: timings missing files would make those files
+// weigh the median next time, and the upload step skips a missing file.
+if (errors.length === 0) {
+  writeFileSync(timingsOut, JSON.stringify(sorted, null, 2) + '\n');
+}
 
 const report = [
   `### E2E shard coverage`,

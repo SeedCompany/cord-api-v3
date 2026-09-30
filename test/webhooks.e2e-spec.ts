@@ -41,7 +41,9 @@ import { ConfigService } from '~/core/config';
 import { DatabaseMigrationCommand } from '~/core/neo4j/migration/migration.command';
 import { WebhookChannelSyncMigration } from '~/core/webhooks/channels/channel-sync.migration';
 import { WebhookChannelRepository } from '~/core/webhooks/channels/webhook-channel.repository';
+import { WebhookDeliveryQueue } from '~/core/webhooks/delivery/webhook-delivery.queue';
 import { WebhooksRepository } from '~/core/webhooks/management/webhooks.repository';
+import { WebhookProcessorQueue } from '~/core/webhooks/processor/webhook-processor.queue';
 import { WebhookListener } from '~/core/webhooks/processor/webhook.listener';
 import {
   type FragmentOf,
@@ -65,20 +67,14 @@ import { GqlError } from './setup/gql-client/gql-result';
 const SHORT = +Duration.from('30s');
 
 /**
- * How long to keep listening after the expected requests arrive, to catch an
- * unexpected extra one. Deliveries land ~1–2s after the trigger, so this is a
- * margin over that, not a guarantee against a much slower stray.
- */
-const QUIET = '3s';
-
-/**
  * Collects webhook requests until `count` have arrived (or SHORT passes), then
- * for QUIET more, so a test can assert an exact count — including that some
- * webhook did NOT fire — without sitting through a fixed SHORT window every
- * time. Call it BEFORE triggering the event: `events` is hot, and listening
- * starts on the call.
+ * until the webhook pipeline has nothing left in flight — so a test can assert
+ * an exact count, including that some webhook did NOT fire, without sitting
+ * through a fixed SHORT window. Call it BEFORE triggering the event: `events`
+ * is hot, and listening starts on the call.
  */
 async function collectRequests(
+  app: TestApp,
   events: Subject<WebhookRequest>,
   count: number,
 ): Promise<WebhookRequest[]> {
@@ -94,11 +90,47 @@ async function collectRequests(
         timeout({ first: SHORT, with: () => of(undefined) }),
       ),
     );
-    await delay(QUIET);
+    await pipelineIdle(app);
     return received;
   } finally {
     listening.unsubscribe();
   }
+}
+
+/**
+ * Waits until no webhook work is queued or running: the listener has handed
+ * off its batches, and neither the processor queue (event → payloads) nor the
+ * delivery queue (payload → HTTP request) has a job waiting or active. A
+ * delivery job stays active until its request is answered, so once this
+ * resolves every delivery already queued has reached the receiver.
+ *
+ * Only meaningful once the trigger's first requests have ARRIVED: that proves
+ * the listener's short batching timer has fired, so an empty queue means done
+ * rather than not-yet-started. `delayed` is deliberately not counted — those
+ * are retries of failed deliveries, minutes out, not extra deliveries.
+ */
+async function pipelineIdle(app: TestApp) {
+  await app.get(WebhookListener).draining;
+  // Checked in pipeline order, one after the other — never in parallel. A
+  // processor job queues its deliveries before it stops being active, so an
+  // empty processor queue followed by an empty delivery queue can't miss a
+  // delivery queued in between. Read concurrently, it could.
+  const processor = app.get(WebhookProcessorQueue);
+  const delivery = app.get(WebhookDeliveryQueue);
+  const isEmpty = async (
+    queue: WebhookProcessorQueue | WebhookDeliveryQueue,
+  ) => {
+    const counts = await queue.getJobCounts('waiting', 'active', 'prioritized');
+    return Object.values(counts).every((jobs) => jobs === 0);
+  };
+  const deadline = Date.now() + SHORT;
+  while (Date.now() < deadline) {
+    if ((await isEmpty(processor)) && (await isEmpty(delivery))) {
+      return;
+    }
+    await delay(50);
+  }
+  throw new Error('Webhook queues did not go idle within SHORT');
 }
 
 const isPostgres = process.env.DATABASE === 'postgres';
@@ -1201,7 +1233,7 @@ describe('Webhooks', () => {
       );
 
       // Listen for both webhook events
-      const waitingForWebhooks = collectRequests(events, 2);
+      const waitingForWebhooks = collectRequests(app, events, 2);
 
       // Trigger the event
       const project = await tester.apply(createProject());
@@ -1274,7 +1306,7 @@ describe('Webhooks', () => {
       `);
 
       // Listen for both webhook events
-      const waitingForWebhooks = collectRequests(events, 2);
+      const waitingForWebhooks = collectRequests(app, events, 2);
 
       // Trigger an update on the project
       await tester.run(UpdateProject, {
@@ -1321,7 +1353,7 @@ describe('Webhooks', () => {
       );
 
       // Listen for both webhook events
-      const waitingForWebhooks = collectRequests(events, 2);
+      const waitingForWebhooks = collectRequests(app, events, 2);
 
       // Trigger the event (as first user)
       await tester.apply(createProject());
@@ -1390,7 +1422,7 @@ describe('Webhooks', () => {
       `);
 
       // Emit & collect events for update for project 1
-      const waitingForProjectUpdates1 = collectRequests(events, 1);
+      const waitingForProjectUpdates1 = collectRequests(app, events, 1);
       await tester.run(UpdateProject, {
         input: { id: project1.id, name: `${project1.name.value!} Updated` },
       });
@@ -1402,7 +1434,7 @@ describe('Webhooks', () => {
       expect(payload1.data.projectUpdated.project.id).toBe(project1.id);
 
       // Trigger update for project 2
-      const waitingForProjectUpdates2 = collectRequests(events, 1);
+      const waitingForProjectUpdates2 = collectRequests(app, events, 1);
       await tester.run(UpdateProject, {
         input: { id: project2.id, name: `${project2.name.value!} Updated` },
       });
