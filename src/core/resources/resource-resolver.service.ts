@@ -13,7 +13,7 @@ import {
 } from '~/common';
 import { MetadataDiscovery } from '~/core/discovery';
 import { ILogger, Logger } from '../logger';
-import { type BaseNode } from '../neo4j/results';
+import { type BaseNode } from './base-node';
 import { type ResourceMap } from './map';
 import { ResourcesHost } from './resources.host';
 

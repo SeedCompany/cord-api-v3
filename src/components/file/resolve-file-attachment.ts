@@ -2,7 +2,7 @@ import { sql } from 'drizzle-orm';
 import { DateTime } from 'luxon';
 import { type ID } from '~/common';
 import { type DrizzleDb } from '~/core/drizzle';
-import { type BaseNode } from '~/core/neo4j/results';
+import { type BaseNode } from '~/core/resources';
 
 export type Attachment = [resource: BaseNode, relation: string];
 
@@ -16,7 +16,8 @@ export type Attachment = [resource: BaseNode, relation: string];
  * Batched (one UNION query for all roots) because FileNode.rootAttachedTo is
  * computed for every hydrated node.
  *
- * migration-todo: delete at Phase 7 cutover with the Neo4j/BaseNode shims.
+ * This is the Postgres implementation, not a shim; it stays for as long as the
+ * file DTOs carry a {@link BaseNode}. Retiring that shape is a separate refactor.
  */
 export async function reverseAttachmentByRootIds(
   db: DrizzleDb,

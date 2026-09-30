@@ -13,7 +13,7 @@ import {
 } from '~/common';
 import { Identity } from '~/core/authentication';
 import { Hooks } from '~/core/hooks';
-import { type BaseNode, isBaseNode } from '~/core/neo4j/results';
+import { type BaseNode, isBaseNode } from '~/core/resources';
 import { ResourceLoader, ResourcesHost } from '~/core/resources';
 import { ResourceMutatedHook } from '../audit/resource-mutated.hook';
 import { Privileges } from '../authorization';

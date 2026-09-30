@@ -5,7 +5,7 @@ import { ConfigService } from '~/core/config';
 import { DataLoaderContext, type DataLoaderStrategy } from '~/core/data-loader';
 import { Identity } from '../authentication';
 import { GqlContextHost } from '../graphql';
-import { type BaseNode } from '../neo4j/results';
+import { type BaseNode } from './base-node';
 import { ResourceLoaderRegistry } from './loader.registry';
 import { type ResourceMap } from './map';
 import { ResourceResolver } from './resource-resolver.service';

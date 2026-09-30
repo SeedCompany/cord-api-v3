@@ -2,7 +2,7 @@ import { and, inArray, isNull, sql, type SQL } from 'drizzle-orm';
 import { type PgColumn, type PgTable, unionAll } from 'drizzle-orm/pg-core';
 import { DateTime } from 'luxon';
 import { type ID } from '~/common';
-import { type BaseNode } from '~/core/neo4j/results';
+import { type BaseNode } from '~/core/resources';
 import { type DrizzleDb } from './drizzle.service';
 import {
   budgetRecords,
@@ -304,8 +304,9 @@ const runBranches = async (
  * `*_type` column is available, prefer {@link resolveResourceBaseNodesByType} — it
  * reads fewer tables and can distinguish "deleted" from "unsupported type".
  *
- * migration-todo: delete at Phase 7 cutover with the rest of the Neo4j/BaseNode
- * compatibility shims.
+ * This is the Postgres implementation, not a shim: it stays for as long as the
+ * loader takes a {@link BaseNode}. Retiring that shape in favor of
+ * `{ id, __typename }` references is a separate refactor.
  */
 export const resolveResourceBaseNode = async (
   db: DrizzleDb,

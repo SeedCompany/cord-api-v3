@@ -10,8 +10,7 @@ import {
   Sensitivity,
   SensitivityField,
 } from '~/common';
-import { type BaseNode } from '~/core/neo4j/results';
-import { type LinkToUnknown } from '~/core/resources';
+import { type BaseNode, type LinkToUnknown } from '~/core/resources';
 import { RegisterResource } from '~/core/resources';
 import { ChangesetAware } from '../../changeset/dto';
 import { type BudgetStatus } from './budget-status.enum';

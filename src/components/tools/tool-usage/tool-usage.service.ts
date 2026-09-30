@@ -12,7 +12,7 @@ import {
   type UnsecuredDto,
 } from '~/common';
 import { LiveQueryStore } from '~/core/live-query';
-import { type BaseNode, isBaseNode } from '~/core/neo4j/results';
+import { type BaseNode, isBaseNode } from '~/core/resources';
 import {
   HandleIdLookup,
   ResourceLoader,

@@ -3,7 +3,6 @@ import { Connection } from 'cypher-query-builder';
 import { ServerException } from '~/common';
 import { ConfigService } from '~/core/config';
 import { DrizzleService } from '~/core/drizzle/drizzle.service';
-import { type TransactionOptions } from '~/core/neo4j/transaction';
 import { TransactionRetryInformer } from './transaction-retry.informer';
 
 /**
@@ -29,14 +28,7 @@ export class TransactionRunner {
     @Optional() private readonly drizzle?: DrizzleService,
   ) {}
 
-  /**
-   * @param options Neo4j-only transaction options (metadata, retry config).
-   *   Ignored by the other engines, which take no equivalent.
-   */
-  async inTx<R>(
-    fn: () => Promise<R>,
-    options?: TransactionOptions,
-  ): Promise<R> {
+  async inTx<R>(fn: () => Promise<R>): Promise<R> {
     switch (this.config.databaseEngine) {
       case 'postgres': {
         const drizzle = this.required(this.drizzle, 'postgres');
@@ -52,10 +44,7 @@ export class TransactionRunner {
         return await this.inDrizzleTx(drizzle, fn);
       }
       case 'neo4j':
-        return await this.required(this.neo4j, 'neo4j').runInTransaction(
-          fn,
-          options,
-        );
+        return await this.required(this.neo4j, 'neo4j').runInTransaction(fn);
       default:
         throw new ServerException(
           `Cannot start a transaction for unknown database engine '${this.config.databaseEngine}'`,

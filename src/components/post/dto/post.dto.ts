@@ -1,8 +1,7 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import { DateTimeField, Resource, type Secured, SecuredString } from '~/common';
-import { type BaseNode } from '~/core/neo4j/results';
-import { type LinkTo, RegisterResource } from '~/core/resources';
+import { type BaseNode, type LinkTo, RegisterResource } from '~/core/resources';
 import { PostType } from './post-type.enum';
 import { PostShareability } from './shareability.dto';
 

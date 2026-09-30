@@ -7,8 +7,7 @@ import {
   type SetUnsecuredType,
   type UnsecuredDto,
 } from '~/common';
-import { type BaseNode } from '~/core/neo4j/results';
-import { type LinkTo, RegisterResource } from '~/core/resources';
+import { type BaseNode, type LinkTo, RegisterResource } from '~/core/resources';
 import { Tool } from '../../tool/dto';
 
 @RegisterResource()

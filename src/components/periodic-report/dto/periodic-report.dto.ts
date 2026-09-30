@@ -10,7 +10,7 @@ import {
   Sensitivity,
   SensitivityField,
 } from '~/common';
-import { type BaseNode as DbBaseNode } from '~/core/neo4j/results';
+import { type BaseNode as DbBaseNode } from '~/core/resources';
 import { RegisterResource } from '~/core/resources';
 import { type ScopedRole } from '../../authorization/dto';
 import { type DefinedFile } from '../../file/dto';

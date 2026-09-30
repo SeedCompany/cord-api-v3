@@ -4,3 +4,4 @@ export * from './resources.host';
 export * from './resource-name.types';
 export * from './resource.decorator';
 export * from './map';
+export * from './base-node';

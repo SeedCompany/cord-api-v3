@@ -6,7 +6,7 @@ import {
   type SetUnsecuredType,
   type UnsecuredDto,
 } from '~/common';
-import { type BaseNode } from '~/core/neo4j/results';
+import { type BaseNode } from '~/core/resources';
 import { RegisterResource } from '~/core/resources';
 import { Comment } from './comment.dto';
 

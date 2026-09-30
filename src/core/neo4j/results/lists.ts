@@ -1,9 +1,2 @@
-import { type PaginatedListType } from '~/common';
-
-export const mapListResults = async <T, R>(
-  results: PaginatedListType<T>,
-  mapper: (item: T) => Promise<R>,
-) => ({
-  ...results,
-  items: await Promise.all(results.items.map(mapper)),
-});
+// Moved to `~/common`; re-exported here until the Neo4j repositories go.
+export { mapListResults } from '~/common';

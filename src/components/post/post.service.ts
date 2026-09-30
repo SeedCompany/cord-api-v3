@@ -15,7 +15,7 @@ import { Identity } from '~/core/authentication';
 import { Hooks } from '~/core/hooks';
 import { LiveQueryStore } from '~/core/live-query';
 import { ILogger, Logger } from '~/core/logger';
-import { type BaseNode, isBaseNode } from '~/core/neo4j/results';
+import { type BaseNode, isBaseNode } from '~/core/resources';
 import { ResourceLoader, ResourcesHost } from '~/core/resources';
 import { ResourceMutatedHook } from '../audit/resource-mutated.hook';
 import { Privileges } from '../authorization';

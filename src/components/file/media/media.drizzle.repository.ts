@@ -10,7 +10,7 @@ import {
 } from '~/common';
 import { DrizzleService } from '~/core/drizzle';
 import { fileNodes, media } from '~/core/drizzle/schema';
-import { type BaseNode } from '~/core/neo4j/results';
+import { type BaseNode } from '~/core/resources';
 import {
   type Attachment,
   resolveFileRootAttachments,

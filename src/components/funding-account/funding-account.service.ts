@@ -10,8 +10,8 @@ import {
   ServerException,
   type UnsecuredDto,
 } from '~/common';
+import { mapListResults } from '~/common';
 import { Hooks } from '~/core/hooks';
-import { mapListResults } from '~/core/neo4j/results';
 import { HandleIdLookup } from '~/core/resources';
 import { ResourceMutatedHook } from '../audit/resource-mutated.hook';
 import { Privileges } from '../authorization';

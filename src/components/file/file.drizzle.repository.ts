@@ -16,7 +16,7 @@ import {
 } from '~/core/drizzle';
 import { fileNodes } from '~/core/drizzle/schema';
 import { LiveQueryStore } from '~/core/live-query';
-import { type BaseNode } from '~/core/neo4j/results';
+import { type BaseNode } from '~/core/resources';
 import {
   FileListInput,
   type FileListOutput,

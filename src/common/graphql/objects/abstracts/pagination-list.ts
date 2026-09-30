@@ -51,3 +51,12 @@ PaginatedList.itemDescriptionFor = (name: string) => stripIndent`
   Note that this could include items that where also in sibling pages;
   you should de-duplicate these based on ID.
 `;
+
+/** Map each item of a paginated list, keeping the page metadata. */
+export const mapListResults = async <T, R>(
+  results: PaginatedListType<T>,
+  mapper: (item: T) => Promise<R>,
+) => ({
+  ...results,
+  items: await Promise.all(results.items.map(mapper)),
+});

@@ -5,8 +5,7 @@ import { type Merge } from 'type-fest';
 import { type ID } from '~/common';
 import { DrizzleService } from '~/core/drizzle';
 import { escapeLikePattern } from '~/core/drizzle/like';
-import { type BaseNode } from '~/core/neo4j/results';
-import type { ResourceMap } from '~/core/resources';
+import { type BaseNode, type ResourceMap } from '~/core/resources';
 import { type SearchInput } from './dto';
 
 interface SearchRow {
@@ -49,7 +48,8 @@ type SearchCol = readonly [expr: string, prop: string];
  * so the DB-agnostic {@link import('./search.service').SearchService} needs no
  * changes.
  *
- * migration-todo: drop at Phase 7 cutover with the rest of the BaseNode shims.
+ * This stays for as long as the search service takes a {@link BaseNode};
+ * retiring that shape is a separate refactor.
  *
  * ## Matching
  *

@@ -21,7 +21,7 @@ import {
 } from '~/core/drizzle/resolve-resource-base-node';
 import { tools, toolUsages, users } from '~/core/drizzle/schema';
 import { ILogger, Logger } from '~/core/logger';
-import { type BaseNode } from '~/core/neo4j/results';
+import { type BaseNode } from '~/core/resources';
 import {
   type CreateToolUsage,
   type ToolContainerType,
