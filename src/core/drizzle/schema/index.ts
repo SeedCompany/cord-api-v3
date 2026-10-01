@@ -971,12 +971,12 @@ export const partners = pgTable(
     globalInnovationsClient: boolean('global_innovations_client'),
     active: boolean('active'),
     address: text('address'),
-    // migration-todo: deferred FK → languages(id); add REFERENCES when Language
-    // migrates. Plain text until then (same pattern as locations.funding_account_id).
+    // migration-todo: deferred FK → languages(id). No longer blocked (Language
+    // is on Postgres); adding it is a schema change on live rows.
     languageOfWiderCommunicationId: text(
       'language_of_wider_communication_id',
     ).$type<ID<'Language'>>(),
-    // migration-todo: deferred FK → languages(id); add when Language migrates.
+    // migration-todo: deferred FK → languages(id); same as the column above.
     languageOfReportingId: text('language_of_reporting_id').$type<
       ID<'Language'>
     >(),
@@ -1065,8 +1065,8 @@ export const partnerLanguagesOfConsulting = pgTable(
       .$type<ID<'Partner'>>()
       .notNull()
       .references(() => partners.id, { onDelete: 'cascade' }),
-    // migration-todo: deferred FK → languages(id); add REFERENCES when
-    // Language migrates.
+    // migration-todo: deferred FK → languages(id). No longer blocked (Language
+    // is on Postgres); adding it is a schema change on live rows.
     languageId: text('language_id').$type<ID<'Language'>>().notNull(),
   },
   (t) => [
@@ -1206,9 +1206,8 @@ export const roleEnum = pgEnum('role', [
  * discriminator; `own_sensitivity` is meaningful only for Internship (Translation
  * rows ignore it and read the denormalized `sensitivity` column).
  *
- * `sensitivity` is denormalized: kept current via a hook that recomputes from
- * Engagement/Language. The hook is stubbed (`migration-todo:`) until Language
- * migrates — Translation projects read 'High' in DATABASE=postgres until then.
+ * `sensitivity` is denormalized: kept current by `recomputeProjectSensitivity`,
+ * which the engagement and language repositories call when either changes.
  *
  * `status` is `GENERATED ALWAYS AS (CASE step ... END) STORED` in the raw SQL
  * migration; mirrors Gel's `Project::statusFromStep(.step)`. Drizzle marks it
@@ -1278,9 +1277,9 @@ export const projects = pgTable(
         END`,
       )
       .notNull(),
-    // migration-todo: denormalized — recompute hook fires when Engagement/Language
-    // sensitivity changes (Tier 2 Language migration wires the hook). Translation
-    // rows read 'High' until then; Internship reads own_sensitivity.
+    // Denormalized — `recomputeProjectSensitivity` keeps Translation rows
+    // current from their engagements' languages; Internship rows mirror
+    // own_sensitivity.
     sensitivity: sensitivityEnum('sensitivity').notNull().default('High'),
     // Writable only for Internship projects; Translation rows ignore it.
     ownSensitivity: sensitivityEnum('own_sensitivity'),
@@ -2077,8 +2076,8 @@ export const engagements = pgTable(
     openToInvestorVisit: boolean('open_to_investor_visit'),
     paratextRegistryId: text('paratext_registry_id'),
     rev79CommunityId: text('rev79_community_id'),
-    // migration-todo: deferred FK → files(id); populate when File migrates
-    // (Phase 7). Null until then.
+    // migration-todo: plain text (not FK) for the same reason as `mou_id`:
+    // create() inserts this row before files.createDefinedFile() makes the file.
     pnpId: text('pnp_id').$type<ID<'File'>>(),
     sentPrintingDate: date('sent_printing_date'),
     historicGoal: text('historic_goal'),
@@ -2110,7 +2109,7 @@ export const engagements = pgTable(
     countryOfOriginId: text('country_of_origin_id')
       .$type<ID<'Location'>>()
       .references(() => locations.id),
-    // migration-todo: deferred FK → files(id); Phase 7.
+    // migration-todo: plain text (not FK); same insert-order reason as pnp_id.
     growthPlanId: text('growth_plan_id').$type<ID<'File'>>(),
     // Nullable (migration 0042) — same filter reasoning as preset_inventory.
     marketable: boolean('marketable'),

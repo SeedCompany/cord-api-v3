@@ -54,7 +54,7 @@ const Interfaces = IntersectTypes(Resource, ChangesetAware, Commentable);
 export const resolveEngagementType = (
   val: Pick<AnyEngagement, '__typename'>,
 ) =>
-  val.__typename === 'default::LanguageEngagement'
+  val.__typename === 'LanguageEngagement'
     ? LanguageEngagement
     : InternshipEngagement;
 
@@ -81,9 +81,7 @@ class Engagement extends Interfaces {
     import('../../project/dto').then((m) => m.IProject);
   static readonly resolve = resolveEngagementType;
 
-  declare readonly __typename:
-    | 'default::LanguageEngagement'
-    | 'default::InternshipEngagement';
+  declare readonly __typename: 'LanguageEngagement' | 'InternshipEngagement';
 
   readonly project: LinkTo<'Project'> &
     Pick<UnsecuredDto<IProject>, 'status' | 'step' | 'type'>;
@@ -177,7 +175,7 @@ export class LanguageEngagement extends Engagement {
   static readonly Parent = () =>
     import('../../project/dto').then((m) => m.TranslationProject);
 
-  declare readonly __typename: 'default::LanguageEngagement';
+  declare readonly __typename: 'LanguageEngagement';
 
   @Field(() => TranslationProject)
   declare readonly parent: LinkToUnknown | BaseNode;
@@ -232,7 +230,7 @@ export class InternshipEngagement extends Engagement {
   static readonly Parent = () =>
     import('../../project/dto').then((m) => m.InternshipProject);
 
-  declare readonly __typename: 'default::InternshipEngagement';
+  declare readonly __typename: 'InternshipEngagement';
 
   @Field(() => InternshipProject)
   declare readonly parent: LinkToUnknown | BaseNode;

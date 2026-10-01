@@ -33,9 +33,9 @@ export class ChangesetAwareResolver {
     if (!object.parent) {
       return null;
     }
-    // migration-todo: drop this normalization at Phase 7 cutover — it exists
-    // only because the Neo4j/Gel repos hand over a raw graph node. Postgres
-    // repos already emit the typed ref, so under PG this is a no-op.
+    // migration-todo: drop this normalization with the BaseNode retirement —
+    // it handles a raw graph node, which only the deleted Neo4j/Gel repos
+    // handed over.
     const ref = isBaseNode(object.parent)
       ? {
           __typename: this.resourceResolver.resolveTypeByBaseNode(

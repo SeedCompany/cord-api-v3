@@ -140,12 +140,11 @@ describe('Comment e2e', () => {
     });
   });
 
-  // Engagement is the one commentable whose `__typename` is module-qualified
-  // (`default::LanguageEngagement`) — the hydrate stamps that prefix on and
-  // `resolveEngagementType` matches on it. The comment service looks a parent
-  // up by `__typename`, so a lookup that cannot handle the prefix throws
-  // `Unable to determine resource from ResourceMap`. The cases above use a
-  // Language and a ProgressReport, whose names are bare, so neither covers it.
+  // Engagement is the one commentable reached through a polymorphic interface
+  // (`resolveEngagementType`). The comment service looks a parent up by its
+  // `__typename`, so a mismatch there throws `Unable to determine resource
+  // from ResourceMap`. The cases above use a Language and a ProgressReport,
+  // so neither covers it.
   it('creates a comment on a LanguageEngagement parent', async () => {
     await runAsAdmin(app, async (a) => {
       const mouStart = CalendarDate.local(2023, 1, 1);

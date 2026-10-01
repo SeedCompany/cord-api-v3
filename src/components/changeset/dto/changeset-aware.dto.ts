@@ -29,12 +29,11 @@ export abstract class ChangesetAware {
    * A reference to the resource that owns this one — used for navigation
    * (breadcrumbs, `project: parent { … }`), not only for changesets.
    *
-   * Postgres repos emit the typed {@link LinkToUnknown} form. The
-   * {@link BaseNode} arm is only for the Neo4j/Gel repos, which hand over a raw
-   * graph node; `ChangesetAwareResolver.parent` normalizes it.
+   * Repositories emit the typed {@link LinkToUnknown} form. The {@link BaseNode}
+   * arm was for the deleted Neo4j/Gel repos, which handed over a raw graph node.
    *
-   * migration-todo: drop the `| BaseNode` arm at Phase 7 cutover (and the
-   * normalizing branch in ChangesetAwareResolver.parent with it).
+   * migration-todo: drop the `| BaseNode` arm with the BaseNode retirement (and
+   * the normalizing branch in ChangesetAwareResolver.parent with it).
    */
   readonly parent?: LinkToUnknown | BaseNode;
 }

@@ -634,7 +634,8 @@ export class PartnerRepository extends DrizzleDtoRepository<
               programs: row.departmentIdBlock.programs,
             }
           : null,
-      // migration-todo: derived from project sensitivity; 'High' until Project migrates.
+      // Callers pass the value derived from the partner's projects; the stored
+      // column is no longer read (see `derived-sensitivity.ts`).
       sensitivity: row.sensitivity,
       // Per-requester pin state — populated by readMany/list via
       // pinnedByRequester; other internal paths leave it false.

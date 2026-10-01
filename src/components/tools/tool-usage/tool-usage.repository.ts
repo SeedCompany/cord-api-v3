@@ -135,7 +135,7 @@ export class ToolUsageRepository extends DrizzleDtoRepository<
    * does not cover instead of dropping them: an uncovered type is a registry
    * gap, and must not be indistinguishable from a deleted container.
    *
-   * migration-todo: at cutover, `ToolUsage.container` should become a
+   * migration-todo: `ToolUsage.container` should become a
    * `PolymorphicLinkTo` and this whole lookup disappears — `container_type`
    * already stores the concrete __typename, so no query would be needed.
    */

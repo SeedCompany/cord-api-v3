@@ -12,6 +12,7 @@ import {
   lt,
   lte,
   notInArray,
+  or,
   sql,
   type SQL,
 } from 'drizzle-orm';
@@ -135,8 +136,8 @@ export class ProjectRepository extends DrizzleDtoRepository<
   // migration-todo: Neo4j-shaped existence check kept for the service layer's
   // validateOtherResourceId. Only the labels project create/update actually
   // validates are mapped; extend if a new label appears. Replace with a
-  // shared exists() helper at Phase 7 cutover when getBaseNode leaves the
-  // service layer.
+  // shared exists() helper when getBaseNode leaves the service layer (the
+  // BaseNode retirement).
   async getBaseNode(id: ID, label?: string) {
     if (label === 'FieldRegion') {
       return await this.db.query.fieldRegions.findFirst({
@@ -375,8 +376,8 @@ export class ProjectRepository extends DrizzleDtoRepository<
         ownSensitivity:
           input.type === 'Internship' ? (input.sensitivity ?? 'High') : null,
         // For Internship: keep `sensitivity` in lockstep with own_sensitivity
-        // on create. For Translation: 'High' default (migration-todo: hook
-        // recomputes when Engagement/Language migrates).
+        // on create. For Translation: 'High' until the first engagement's
+        // language recomputes it (recomputeProjectSensitivity).
         sensitivity:
           input.type === 'Internship' ? (input.sensitivity ?? 'High') : 'High',
         primaryLocationId: input.primaryLocation ?? null,
@@ -399,9 +400,6 @@ export class ProjectRepository extends DrizzleDtoRepository<
       })
       .catch(catchDepartmentIdUnique)
       .catch(catchNameUnique);
-    // migration-todo (PR 2 follow-up): `otherLocations` are still managed by
-    // LocationService against Neo4j. Once the location service ports, wire a
-    // `project_other_locations` junction or move the loop here.
     return { id };
   }
 
@@ -693,10 +691,6 @@ export const recomputeProjectSensitivity = async (
   projectIds: ReadonlyArray<ID<'Project'>>,
 ) => {
   if (projectIds.length === 0) return;
-  // migration-todo: INERT on develop — references `engagements`/`languages`
-  // (not migrated), and nothing calls this until the Engagement/Language repos
-  // do. Kept exported so those repos wire it without a new export. The raw SQL
-  // compiles (string table names); it would only fail if invoked pre-migration.
   await db.execute(sql`
     update "projects" set "sensitivity" = coalesce((
       select max("l"."sensitivity") from "engagements" "e"
@@ -771,7 +765,7 @@ const liveLanguageEngagementCount = sql<number>`(
  * non-zero total of its own engagements. Reproduced rather than corrected: a
  * reader at the flip should see the list they see today.
  *
- * migration-todo: at cutover, decide whether this sort should count every
+ * migration-todo: decide whether this sort should count every
  * engagement type the way the field does. It is a pre-existing quirk of the
  * Neo4j sorter, not something the port introduced, so it belongs in the
  * post-cutover backlog rather than in this repository's parity scope.
@@ -1127,8 +1121,7 @@ export const projectFilterClauses = (
       );
     }
   }
-  // `userId`: project where user is a member OR engagement intern. Intern path
-  // is gated on Engagement migration — partial support: member only.
+  // `userId`: project where user is a member OR an engagement's intern.
   if (filter.userId) {
     const memberSub = db
       .selectDistinct({ id: projectMembers.projectId })
@@ -1139,9 +1132,18 @@ export const projectFilterClauses = (
           isNull(projectMembers.deletedAt),
         ),
       );
-    // migration-todo: when Engagement migrates, OR-in the intern path:
-    //   ... OR projects.id IN (SELECT project_id FROM engagements WHERE intern_id = $userId)
-    conditions.push(inArray(projects.id, memberSub));
+    const internSub = db
+      .selectDistinct({ id: engagements.projectId })
+      .from(engagements)
+      .where(
+        and(
+          eq(engagements.internId, filter.userId as ID<'User'>),
+          isNull(engagements.deletedAt),
+        ),
+      );
+    conditions.push(
+      or(inArray(projects.id, memberSub), inArray(projects.id, internSub))!,
+    );
   }
   if (filter.languageId) {
     conditions.push(
