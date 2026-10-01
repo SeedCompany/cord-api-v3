@@ -107,7 +107,7 @@ export class BudgetService {
 
   @HandleIdLookup(Budget)
   async readOne(id: ID, view?: ObjectView): Promise<Budget> {
-    const result = await this.budgetRepo.readOne(id, view);
+    const result = await this.budgetRepo.readOne(id);
 
     const privs = this.privileges.for(Budget, result);
 

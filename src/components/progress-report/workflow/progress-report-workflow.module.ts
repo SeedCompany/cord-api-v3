@@ -1,12 +1,10 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { splitDb } from '~/core/database';
 import { LanguageModule } from '../../language/language.module';
 import { PeriodicReportModule } from '../../periodic-report/periodic-report.module';
 import { ProjectModule } from '../../project/project.module';
 import { UserModule } from '../../user/user.module';
 import * as handlers from './handlers';
 import { ProgressReportWorkflowEventLoader } from './progress-report-workflow-event.loader';
-import { ProgressReportWorkflowDrizzleRepository } from './progress-report-workflow.drizzle.repository';
 import { ProgressReportWorkflowFlowchart } from './progress-report-workflow.flowchart';
 import { ProgressReportWorkflowEventGranter } from './progress-report-workflow.granter';
 import { ProgressReportWorkflowRepository } from './progress-report-workflow.repository';
@@ -31,11 +29,7 @@ import { ProgressReportWorkflowEventsResolver } from './resolvers/progress-repor
     ProgressReportWorkflowEventLoader,
     ProgressReportWorkflowService,
     ProgressReportWorkflowEventGranter,
-    splitDb(ProgressReportWorkflowRepository, {
-      // migration-todo: drop the Neo4j path (and this splitDb) at Phase 7 cutover.
-      // migration-todo: remove `as any` once splitDb types accept drizzle repos.
-      postgres: ProgressReportWorkflowDrizzleRepository as any,
-    }),
+    ProgressReportWorkflowRepository,
     ProgressReportWorkflowFlowchart,
     ...Object.values(handlers),
   ],

@@ -1,167 +1,159 @@
 import { Injectable } from '@nestjs/common';
-import {
-  inArray,
-  lessEqualTo,
-  node,
-  not,
-  relation,
-} from 'cypher-query-builder';
-import { DateTime } from 'luxon';
+import { and, eq, inArray, lte } from 'drizzle-orm';
+import { type DateTime } from 'luxon';
 import { type ID, NotFoundException } from '~/common';
-import { ILogger, Logger } from '~/core/logger';
+import { DrizzleService } from '~/core/drizzle';
 import {
-  CommonRepository,
-  createUniqueConstraint,
-  OnIndex,
-} from '~/core/neo4j';
-import { collect, path, variable } from '~/core/neo4j/query';
+  broadcastChannels,
+  webhookChannelObservations,
+  webhooks,
+} from '~/core/drizzle/schema';
 import { type Webhook } from '../dto';
 import { WebhooksRepository } from '../management/webhooks.repository';
+import { cleanupOrphanedChannels } from './cleanup-orphaned-channels';
 
 @Injectable()
-export class WebhookChannelRepository extends CommonRepository {
+export class WebhookChannelRepository {
   constructor(
+    private readonly drizzle: DrizzleService,
+    // Injected concretely (not via the WebhookChannelRepository token): only
+    // this repo needs the Postgres-specific hydration below, and there's no
+    // cycle back the other way (WebhooksRepository doesn't depend on
+    // this one) — same shape as CommentThreadRepository being injected
+    // concretely into CommentRepository.
     private readonly webhooks: WebhooksRepository,
-    @Logger('webhooks') private readonly logger: ILogger,
-  ) {
-    super();
+  ) {}
+
+  protected get db() {
+    return this.drizzle.client;
   }
 
-  @OnIndex()
-  private createConstraints() {
-    return [createUniqueConstraint('BroadcastChannel', 'name')];
-  }
-
-  async save(webhook: ID<'Webhook'>, channels: readonly string[]) {
-    const query = this.db
-      .query()
-      .match(node('webhook', 'Webhook', { id: webhook }))
-
-      .comment('Remove relationships not in the new list')
-      .subQuery('webhook', (sub) =>
-        sub
-          .match([
-            node('webhook'),
-            relation('out', 'rel', 'observes'),
-            node('channel', 'BroadcastChannel'),
-          ])
-          .where({ 'channel.name': not(inArray(channels)) })
-          .delete('rel')
-          .return([
-            'collect(channel) as unobserved',
-            'collect(channel.name) as unobservedNames',
-          ]),
-      )
-
-      .comment(
-        'Cleanup channels that no longer have any webhooks observing them',
-      )
-      .subQuery('unobserved', (sub) =>
-        sub
-          .raw('UNWIND unobserved AS channel')
-          .with(['channel', 'channel.name as name'])
-          .where(
-            not(
-              path([
-                node('channel'),
-                relation('in', '', 'observes'),
-                node('', 'Webhook'),
-              ]),
-            ),
-          )
-          .delete('channel')
-          .return('collect(name) as orphaned'),
-      )
-
-      .comment('Upsert new channels & observations for the webhook')
-      .subQuery('webhook', (sub) =>
-        sub
-          .unwind([...channels], 'channelName')
-          .merge(
-            node('channel', 'BroadcastChannel', {
-              name: variable('channelName'),
-            }),
-          )
-          .merge([
-            node('webhook'),
-            relation('out', 'observes', 'observes'),
-            node('channel'),
-          ])
-          .setValues({
-            'observes.evaluatedAt': DateTime.now(),
-          })
-          .return('collect(channel.name) as observed'),
-      )
-      .return<{
-        observed: readonly string[];
-        unobserved: readonly string[];
-        orphaned: readonly string[];
-      }>(['unobservedNames as unobserved', 'observed', 'orphaned']);
-    const result = await query.first();
-    if (!result) {
+  /** Recomputes the full set of channels a webhook observes. */
+  async save(
+    webhook: ID<'Webhook'>,
+    channels: readonly string[],
+  ): Promise<void> {
+    const [exists] = await this.db
+      .select({ id: webhooks.id })
+      .from(webhooks)
+      .where(eq(webhooks.id, webhook));
+    if (!exists) {
       throw new NotFoundException('Webhook not found');
     }
-    this.logger.debug(`Saved webhook channels`, { webhook, ...result });
+
+    const current = await this.db
+      .select({ name: webhookChannelObservations.channelName })
+      .from(webhookChannelObservations)
+      .where(eq(webhookChannelObservations.webhookId, webhook));
+    const currentNames = current.map((row) => row.name);
+    const nextNames = [...new Set(channels)];
+
+    const toRemove = currentNames.filter((name) => !nextNames.includes(name));
+    if (toRemove.length > 0) {
+      await this.db
+        .delete(webhookChannelObservations)
+        .where(
+          and(
+            eq(webhookChannelObservations.webhookId, webhook),
+            inArray(webhookChannelObservations.channelName, toRemove),
+          ),
+        );
+      await cleanupOrphanedChannels(this.db, toRemove);
+    }
+
+    if (nextNames.length > 0) {
+      await this.db
+        .insert(broadcastChannels)
+        .values(nextNames.map((name) => ({ name })))
+        .onConflictDoNothing();
+
+      const evaluatedAt = new Date();
+      await this.db
+        .insert(webhookChannelObservations)
+        .values(
+          nextNames.map((name) => ({
+            webhookId: webhook,
+            channelName: name,
+            evaluatedAt,
+          })),
+        )
+        .onConflictDoUpdate({
+          target: [
+            webhookChannelObservations.webhookId,
+            webhookChannelObservations.channelName,
+          ],
+          set: { evaluatedAt },
+        });
+    }
   }
 
-  async markInvalid(webhook: ID<'Webhook'>) {
+  async markInvalid(webhook: ID<'Webhook'>): Promise<void> {
     await this.db
-      .query()
-      .match(node('webhook', 'Webhook', { id: webhook }))
-      .setValues({ 'webhook.valid': false })
-      .executeAndLogStats();
+      .update(webhooks)
+      .set({ valid: false })
+      .where(eq(webhooks.id, webhook));
   }
 
-  async listForChannels(channels: Iterable<string>) {
-    return await this.db
-      .query()
-      .unwind([...channels], 'channelName')
-      .match([
-        node('node', 'Webhook', { valid: true }),
-        relation('out', '', 'observes'),
-        node('channel', 'BroadcastChannel', {
-          name: variable('channelName'),
-        }),
-      ])
-      .with(['distinct node', collect('channel.name').as('channels')])
-      .subQuery('node', this.webhooks.hydrate())
-      .return<{ webhook: Webhook; channels: readonly string[] }>([
-        'dto as webhook',
-        'channels',
-      ])
-      .run();
+  async listForChannels(
+    channels: Iterable<string>,
+  ): Promise<ReadonlyArray<{ webhook: Webhook; channels: readonly string[] }>> {
+    const names = [...channels];
+    if (names.length === 0) return [];
+    const rows = await this.db
+      .select({
+        webhookId: webhookChannelObservations.webhookId,
+        channelName: webhookChannelObservations.channelName,
+      })
+      .from(webhookChannelObservations)
+      .innerJoin(
+        webhooks,
+        eq(webhooks.id, webhookChannelObservations.webhookId),
+      )
+      .where(
+        and(
+          eq(webhooks.valid, true),
+          inArray(webhookChannelObservations.channelName, names),
+        ),
+      );
+
+    const channelsByWebhook = new Map<ID<'Webhook'>, string[]>();
+    for (const row of rows) {
+      const list = channelsByWebhook.get(row.webhookId) ?? [];
+      list.push(row.channelName);
+      channelsByWebhook.set(row.webhookId, list);
+    }
+
+    const hydrated = await this.webhooks.readManyByIds([
+      ...channelsByWebhook.keys(),
+    ]);
+    return hydrated.map((webhook) => ({
+      webhook,
+      channels: channelsByWebhook.get(webhook.id)!,
+    }));
   }
 
-  async listForWebhook(webhook: ID<'Webhook'>) {
-    return await this.db
-      .query()
-      .match([
-        node('node', 'Webhook', { id: webhook }),
-        relation('out', '', 'observes'),
-        node('channel', 'BroadcastChannel'),
-      ])
-      .return<{ channel: string }>('channel.name as channel')
-      .map((row) => row.channel)
-      .run();
+  async listForWebhook(webhook: ID<'Webhook'>): Promise<readonly string[]> {
+    const rows = await this.db
+      .select({ name: webhookChannelObservations.channelName })
+      .from(webhookChannelObservations)
+      .where(eq(webhookChannelObservations.webhookId, webhook));
+    return rows.map((row) => row.name);
   }
 
-  async getStale(evaluatedAt: DateTime) {
-    return await this.db
-      .query()
-      .match([
-        node('node', 'Webhook', {
-          // If we've already confirmed the webhook is invalid, we don't need
-          // to reevaluate channels.
-          // That will happen again when the consumer upserts with an updated operation.
-          valid: true,
-        }),
-        relation('out', 'observes', 'observes'),
-        node('', 'BroadcastChannel'),
-      ])
-      .where({ 'observes.evaluatedAt': lessEqualTo(evaluatedAt) })
-      .with('distinct node')
-      .apply(this.webhooks.hydrate())
-      .map((row) => row.dto)
-      .run();
+  async getStale(evaluatedAt: DateTime): Promise<Webhook[]> {
+    const rows = await this.db
+      .selectDistinct({ webhookId: webhookChannelObservations.webhookId })
+      .from(webhookChannelObservations)
+      .innerJoin(
+        webhooks,
+        eq(webhooks.id, webhookChannelObservations.webhookId),
+      )
+      .where(
+        and(
+          eq(webhooks.valid, true),
+          lte(webhookChannelObservations.evaluatedAt, evaluatedAt.toJSDate()),
+        ),
+      );
+    return await this.webhooks.readManyByIds(rows.map((row) => row.webhookId));
   }
 }

@@ -1,5 +1,4 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { splitDb } from '~/core/database';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { BudgetModule } from '../budget/budget.module';
 import { FileModule } from '../file/file.module';
@@ -7,7 +6,6 @@ import { PartnerModule } from '../partner/partner.module';
 import { ProjectModule } from '../project/project.module';
 import * as handlers from './handlers';
 import { PartnershipByProjectAndPartnerLoader } from './partnership-by-project-and-partner.loader';
-import { PartnershipDrizzleRepository } from './partnership.drizzle.repository';
 import { PartnershipLoader } from './partnership.loader';
 import { PartnershipRepository } from './partnership.repository';
 import { PartnershipResolver } from './partnership.resolver';
@@ -24,11 +22,7 @@ import { PartnershipService } from './partnership.service';
   providers: [
     PartnershipResolver,
     PartnershipService,
-    splitDb(PartnershipRepository, {
-      // migration-todo: `as any` removed at Phase 7 cutover when splitDb
-      // disappears with the Neo4j path.
-      postgres: PartnershipDrizzleRepository as any,
-    }),
+    PartnershipRepository,
     PartnershipLoader,
     PartnershipByProjectAndPartnerLoader,
     ...Object.values(handlers),

@@ -11,7 +11,6 @@ import {
 import { mapListResults } from '~/common';
 import { Hooks } from '~/core/hooks';
 import { ILogger, Logger } from '~/core/logger';
-import { DatabaseService } from '~/core/neo4j';
 import { HandleIdLookup } from '~/core/resources';
 import { Privileges } from '../authorization';
 import { ChangesetFinalizingHook } from '../changeset';
@@ -31,7 +30,6 @@ import { ProjectChangeRequestRepository } from './project-change-request.reposit
 @Injectable()
 export class ProjectChangeRequestService {
   constructor(
-    private readonly db: DatabaseService,
     @Logger('project:change-request:service') private readonly logger: ILogger,
     private readonly privileges: Privileges,
     private readonly hooks: Hooks,
@@ -97,15 +95,11 @@ export class ProjectChangeRequestService {
       (changes.status === Status.Approved ||
         changes.status === Status.Rejected);
 
-    await this.db.updateProperties({
-      type: ProjectChangeRequest,
-      object,
-      changes: {
-        ...changes,
-        ...(isStatusChanged
-          ? { applied: changes.status === Status.Approved, editable: false }
-          : {}),
-      },
+    await this.repo.update({
+      ...changes,
+      ...(isStatusChanged
+        ? { applied: changes.status === Status.Approved, editable: false }
+        : {}),
     });
     const updated = await this.readOneUnsecured(input.id);
 

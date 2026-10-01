@@ -1,76 +1,63 @@
 import { Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
-import { DateTime } from 'luxon';
+import { and, asc, eq } from 'drizzle-orm';
 import { type ID } from '~/common';
-import { DtoRepository } from '~/core/neo4j';
-import { ACTIVE } from '~/core/neo4j/query';
-import { KnownLanguage, type ModifyKnownLanguageArgs } from './dto';
+import { DrizzleService } from '~/core/drizzle/drizzle.service';
+import { knownLanguages } from '~/core/drizzle/schema';
+import { type KnownLanguage, type ModifyKnownLanguageArgs } from './dto';
 
 @Injectable()
-export class KnownLanguageRepository extends DtoRepository(KnownLanguage) {
+export class KnownLanguageRepository {
+  constructor(private readonly drizzle: DrizzleService) {}
+
+  protected get db() {
+    return this.drizzle.client;
+  }
+
   async create({
     user,
     language,
     languageProficiency,
-  }: ModifyKnownLanguageArgs) {
-    await this.delete({ user, language, languageProficiency });
-
+  }: ModifyKnownLanguageArgs): Promise<void> {
+    // Idempotent: the Neo4j flow replaces the exact (user, language,
+    // proficiency) edge, so a re-create is a no-op.
     await this.db
-      .query()
-      .matchNode('user', 'User', { id: user })
-      .matchNode('language', 'Language', { id: language })
-      .create([
-        node('user'),
-        relation('out', '', 'knownLanguage', {
-          active: true,
-          createdAt: DateTime.local(),
-          value: languageProficiency,
-        }),
-        node('language'),
-      ])
-      .run();
+      .insert(knownLanguages)
+      .values({
+        userId: user,
+        languageId: language,
+        proficiency: languageProficiency,
+      })
+      .onConflictDoNothing();
   }
 
   async delete({
     user,
     language,
     languageProficiency,
-  }: ModifyKnownLanguageArgs) {
+  }: ModifyKnownLanguageArgs): Promise<void> {
     await this.db
-      .query()
-      .matchNode('user', 'User', { id: user })
-      .matchNode('language', 'Language', { id: language })
-      .match([
-        [
-          node('user'),
-          relation('out', 'rel', 'knownLanguage', {
-            active: true,
-            value: languageProficiency,
-          }),
-          node('language'),
-        ],
-      ])
-      .setValues({
-        'rel.active': false,
-      })
-      .run();
+      .delete(knownLanguages)
+      .where(
+        and(
+          eq(knownLanguages.userId, user),
+          eq(knownLanguages.languageId, language),
+          eq(knownLanguages.proficiency, languageProficiency),
+        ),
+      );
   }
 
-  async list(userId: ID) {
-    const results = await this.db
-      .query()
-      .match([
-        node('node', 'Language'),
-        relation('in', 'knownLanguageRel', 'knownLanguage', ACTIVE),
-        node('user', 'User', { id: userId }),
-      ])
-      .with('collect(distinct user) as users, node, knownLanguageRel')
-      .raw(`unwind users as user`)
-      .return<KnownLanguage>([
-        'knownLanguageRel.value as proficiency',
-        'node.id as language',
-      ])
-      .run();
-    return results;
+  async list(userId: ID): Promise<KnownLanguage[]> {
+    const rows = await this.db
+      .select({
+        language: knownLanguages.languageId,
+        proficiency: knownLanguages.proficiency,
+      })
+      .from(knownLanguages)
+      .where(eq(knownLanguages.userId, userId as ID<'User'>))
+      .orderBy(asc(knownLanguages.createdAt));
+    return rows.map((row) => ({
+      language: row.language,
+      proficiency: row.proficiency,
+    }));
   }
 }

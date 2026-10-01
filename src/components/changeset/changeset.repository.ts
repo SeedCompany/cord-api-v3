@@ -1,92 +1,19 @@
 import { Injectable } from '@nestjs/common';
-import {
-  equals,
-  hasLabel,
-  isNull,
-  node,
-  not,
-  or,
-  relation,
-} from 'cypher-query-builder';
-import { type ID, NotFoundException } from '~/common';
-import { DtoRepository } from '~/core/neo4j';
-import { ACTIVE, path, variable } from '~/core/neo4j/query';
-import { type BaseNode } from '~/core/neo4j/results';
-import { Changeset, type ChangesetDiff } from './dto';
+import { type ID } from '~/common';
+import { type BaseNode } from '~/core/resources';
 
+/**
+ * Changesets were not carried forward to Postgres: no changeset can exist, so
+ * there is never a difference to report. The GraphQL surface stays because
+ * clients still select it; `Query.changeset` already answers "not found"
+ * through the change-request repository.
+ */
 @Injectable()
-export class ChangesetRepository extends DtoRepository(Changeset) {
-  async difference(id: ID, parent?: ID) {
-    const importVars = ['changeset', ...(parent ? ['parent'] : [])];
-    const limitToParentSubTree = parent
-      ? {
-          node: or([
-            equals('parent', true),
-            path([
-              node('parent'),
-              relation('out', undefined, undefined, undefined, '*'),
-              node('node'),
-            ]),
-          ]),
-        }
-      : {};
-
-    const result = await this.db
-      .query()
-      .match([
-        [node('changeset', 'Changeset', { id })],
-        ...(parent ? [[node('parent', 'BaseNode', { id: parent })]] : []),
-      ])
-      .subQuery(importVars, (sub) =>
-        sub
-          .match([
-            node('changeset'),
-            relation('out', '', [], ACTIVE),
-            node('', 'Property'),
-            relation('in', 'prop'),
-            node('node', 'BaseNode'),
-          ])
-          .where({
-            // Ignore modifiedAt properties when determining if a node has changed.
-            // These are not directly modified by user, and could be left over
-            // if a user made a change and then reverted it.
-            prop: not(hasLabel('modifiedAt')),
-            ...limitToParentSubTree,
-          })
-          .return('collect(distinct node) as changed'),
-      )
-      .subQuery(importVars, (sub) =>
-        sub
-          .match([
-            node('changeset'),
-            relation('out', '', [], { deleting: variable('true') }),
-            node('node'),
-          ])
-          .apply((q) => (parent ? q.where(limitToParentSubTree) : q))
-          .return('collect(distinct node) as removed'),
-      )
-      .subQuery(importVars, (sub) =>
-        sub
-          .match([
-            node('changeset'),
-            relation('out', 'changeType', 'changeset', ACTIVE),
-            node('node', 'BaseNode'),
-          ])
-          .where({
-            changeType: { deleting: isNull() },
-            ...limitToParentSubTree,
-          })
-          .return('collect(distinct node) as added'),
-      )
-      .return<Record<keyof ChangesetDiff, readonly BaseNode[]>>([
-        'changed',
-        'removed',
-        'added',
-      ])
-      .first();
-    if (!result) {
-      throw new NotFoundException('Could not find changeset');
-    }
-    return result;
+export class ChangesetRepository {
+  async difference(
+    _id: ID,
+    _parent?: ID,
+  ): Promise<Record<'added' | 'removed' | 'changed', readonly BaseNode[]>> {
+    return { added: [], removed: [], changed: [] };
   }
 }

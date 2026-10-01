@@ -6,7 +6,7 @@ import {
   InvalidIdForTypeException,
   isIdLike,
   NotFoundException,
-  Resource,
+  type Resource,
   SecuredList,
   ServerException,
   type UnsecuredDto,
@@ -62,7 +62,7 @@ export class PostService {
         exception,
       });
 
-      if (!(await this.repo.getBaseNode(input.parent, 'BaseNode'))) {
+      if (!(await this.repo.getBaseNode(input.parent))) {
         throw new InputException('Parent is invalid', 'parent');
       }
 
@@ -141,7 +141,7 @@ export class PostService {
 
   private async loadPostable(resource: PostableRef): Promise<ConcretePostable> {
     const parentNode = isIdLike(resource)
-      ? await this.repo.getBaseNode(resource, Resource)
+      ? await this.repo.getBaseNode(resource)
       : resource;
     if (!parentNode) {
       throw new NotFoundException('Resource does not exist', 'resource');

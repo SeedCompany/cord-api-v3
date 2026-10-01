@@ -1,139 +1,90 @@
 import { Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
-import { type DateTime } from 'luxon';
-import { type ID, Resource } from '~/common';
-import { CommonRepository, OnIndex } from '~/core/neo4j';
-import { ACTIVE } from '~/core/neo4j/query';
+import { ModuleRef } from '@nestjs/core';
+import { and, eq, isNull } from 'drizzle-orm';
+import { LazyGetter as Once } from 'lazy-get-decorator';
+import { type ID, Role } from '~/common';
+import { AuthenticationRepository } from '~/core/authentication/authentication.repository';
+import { DrizzleService } from '~/core/drizzle/drizzle.service';
+import {
+  authIdentities,
+  organizations,
+  userGlobalRoles,
+  users,
+} from '~/core/drizzle/schema';
 
 @Injectable()
-export class AdminRepository extends CommonRepository {
-  finishing(callback: () => Promise<void>) {
-    return this.db.runOnceUntilCompleteAfterConnecting(callback);
+export class AdminRepository {
+  constructor(
+    private readonly drizzle: DrizzleService,
+    private readonly moduleRef: ModuleRef,
+  ) {}
+
+  @Once() get auth() {
+    return this.moduleRef.get(AuthenticationRepository, { strict: false });
   }
 
-  @OnIndex()
-  private applyIndexes() {
-    return this.getConstraintsFor(Resource);
+  async finishing(callback: () => Promise<void>) {
+    await callback();
   }
 
-  async mergeAnonUser(createdAt: DateTime, anonUserId: string) {
-    await this.db
-      .query()
-      .merge([
-        node('anon', 'AnonUser', {
-          id: anonUserId,
-        }),
-      ])
-      .onCreate.setLabels({ anon: ['AnonUser', 'User', 'BaseNode'] })
-      .setValues({
-        'anon.createdAt': createdAt,
-        'anon.id': anonUserId,
+  async findRootUser() {
+    const [row] = await this.drizzle.client
+      .select({
+        id: users.id,
+        email: users.email,
+        hash: authIdentities.passwordHash,
       })
-      .run();
+      .from(users)
+      .leftJoin(authIdentities, eq(authIdentities.userId, users.id))
+      .where(and(eq(users.isRoot, true), isNull(users.deletedAt)))
+      .limit(1);
+    return row;
   }
 
-  async checkExistingRoot() {
-    return await this.db
-      .query()
-      .match([
-        node('email', 'EmailAddress'),
-        relation('in', '', 'email', ACTIVE),
-        node('root', ['RootUser']),
-        relation('out', '', 'password', ACTIVE),
-        node('pw', 'Property'),
-      ])
-      .return(['root.id as id', 'email.value as email', 'pw.value as hash'])
-      .asResult<{ id: ID; email: string; hash: string }>()
-      .first();
+  /**
+   * Atomic: a partial failure would leave a row with isRoot=true but no admin
+   * role/password, and findRootUser would then skip re-creation forever.
+   * Bootstrap isn't a GraphQL mutation, so the transactional-mutations
+   * interceptor doesn't cover it — wrap explicitly. (client is ALS-bound, so
+   * the auth write below joins the same tx.)
+   */
+  async createRootUser(id: ID, email: string, passwordHash: string) {
+    const userId = id as ID<'User'>;
+    await this.drizzle.inTx(async () => {
+      await this.drizzle.client.insert(users).values({
+        id: userId,
+        isRoot: true,
+        status: 'Active',
+        email,
+        realFirstName: 'Root',
+        realLastName: 'Admin',
+        displayFirstName: 'Root',
+        displayLastName: 'Admin',
+      });
+      await this.drizzle.client
+        .insert(userGlobalRoles)
+        .values({ userId, role: Role.Administrator });
+      await this.auth.savePasswordHashOnUser(userId, passwordHash);
+    });
   }
 
-  async updateRootUser(id: ID, email: string, hashedPassword?: string) {
-    await this.db
-      .query()
-      .match([
-        node('email', 'EmailAddress'),
-        relation('in', '', 'email', ACTIVE),
-        node('root', ['RootUser']),
-        relation('out', '', 'password', ACTIVE),
-        node('pw', 'Property'),
-      ])
-      .setValues(
-        {
-          root: { id },
-          email: { value: email },
-          ...(hashedPassword ? { pw: { value: hashedPassword } } : {}),
-        },
-        true,
-      )
-      .run();
+  /**
+   * Idempotent on re-boot when the row already exists (id conflict → no-op).
+   * Scope the conflict to the id only: if a *different* org already holds
+   * this name, let the name unique-index violation surface rather than
+   * silently no-op and leave config.defaultOrg.id pointing at no row.
+   */
+  async mergeDefaultOrg(id: ID, name: string) {
+    await this.drizzle.client
+      .insert(organizations)
+      .values({ id: id as ID<'Organization'>, name })
+      .onConflictDoNothing({ target: organizations.id });
   }
 
-  async setRootUserLabel(tempId: ID, id: ID) {
-    await this.db
-      .query()
-      .matchNode('user', 'User', { id: tempId })
-      .setLabels({ user: 'RootUser' })
-      .setValues({ user: { id } }, true)
-      .run();
-  }
-
-  async checkDefaultOrg() {
-    return await this.db
-      .query()
-      .match([node('org', 'DefaultOrganization')])
-      .return('org.id as id')
-      .first();
-  }
-
-  async doesOrgExist(defaultOrgName: string) {
-    return await this.db
-      .query()
-      .match([
-        node('org', 'Organization'),
-        relation('out', '', 'name'),
-        node('name', 'Property', {
-          value: defaultOrgName,
-        }),
-      ])
-      .return('org')
-      .first();
-  }
-
-  async giveOrgDefaultLabel(defaultOrgName: string) {
-    return await this.db
-      .query()
-      .match([
-        node('org', 'Organization'),
-        relation('out', '', 'name'),
-        node('name', 'Property', {
-          value: defaultOrgName,
-        }),
-      ])
-      .setLabels({ org: 'DefaultOrganization' })
-      .return('org.id as id')
-      .first();
-  }
-
-  async createOrgResult(
-    createdAt: DateTime,
-    defaultOrgId: string,
-    defaultOrgName: string,
-  ) {
-    return await this.db
-      .query()
-      .match(node('rootuser', 'RootUser'))
-      .create([
-        node('org', ['DefaultOrganization', 'Organization'], {
-          id: defaultOrgId,
-          createdAt,
-        }),
-        relation('out', '', 'name', { active: true, createdAt }),
-        node('name', 'Property', {
-          createdAt,
-          value: defaultOrgName,
-        }),
-      ])
-      .return('org.id as id')
-      .first();
+  async updateEmail(id: ID, email: string) {
+    await this.drizzle.client
+      .update(users)
+      .set({ email })
+      .where(eq(users.id, id as ID<'User'>));
   }
 }

@@ -79,10 +79,7 @@ const catchKeyUnique = catchUniqueViolation(
 );
 
 @Injectable()
-export class ToolDrizzleRepository extends DrizzleDtoRepository<
-  typeof tools,
-  Tool
-> {
+export class ToolRepository extends DrizzleDtoRepository<typeof tools, Tool> {
   constructor(
     db: DrizzleService,
     private readonly executor: PolicyExecutor,
@@ -131,7 +128,7 @@ export class ToolDrizzleRepository extends DrizzleDtoRepository<
    * queries.
    *
    * The same statement reports what it changed, so announcing the usages to live
-   * queries costs no extra round trip — the shape `FileDrizzleRepository.delete`
+   * queries costs no extra round trip — the shape `FileRepository.delete`
    * already uses for a deleted directory's subtree. A database trigger was the
    * other option and is the wrong one here specifically because it is invisible
    * to the application: nothing would tell the live-query store, so a page

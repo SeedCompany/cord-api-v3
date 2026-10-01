@@ -21,8 +21,8 @@ import {
  * Found by comparing the 137 fields on `type Mutation` in schema.graphql
  * against every mutation referenced in `test/` (directly as a GraphQL document
  * or through a `test/utility/` helper). 107 were already exercised; these were
- * not. Every one of them lives in a domain that already has a
- * `*.drizzle.repository.ts`, so they are ported code with nothing looking at
+ * not. Every one of them lives in a domain that already has a Postgres
+ * repository, so they are ported code with nothing looking at
  * them — which is exactly where the last two defects were found: a stored
  * column Postgres never maintained, and a resolver returning a hardcoded null.
  *

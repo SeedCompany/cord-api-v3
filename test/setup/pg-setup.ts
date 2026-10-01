@@ -8,7 +8,7 @@ const TEST_DB_PREFIX = 'cord_e2e_';
 /**
  * Creates an empty, uniquely named database for the current spec file.
  * The app applies migrations (DrizzleMigrator) and root objects
- * (AdminDrizzleService) itself on boot, so no template/seeding is needed here.
+ * (AdminService) itself on boot, so no template/seeding is needed here.
  */
 export const ephemeralPg = async () => {
   if (process.env.DATABASE !== 'postgres') {

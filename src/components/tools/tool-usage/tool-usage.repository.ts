@@ -106,7 +106,7 @@ const orderUsageRows = <T extends ToolUsageRow>(rows: T[]): T[] =>
   );
 
 @Injectable()
-export class ToolUsageDrizzleRepository extends DrizzleDtoRepository<
+export class ToolUsageRepository extends DrizzleDtoRepository<
   typeof toolUsages,
   ToolUsage
 > {

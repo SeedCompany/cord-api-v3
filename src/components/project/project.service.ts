@@ -240,9 +240,9 @@ export class ProjectService {
 
   async readOneUnsecured(
     id: ID,
-    changeset?: ID,
+    _changeset?: ID,
   ): Promise<UnsecuredDto<Project>> {
-    return await this.repo.readOne(id, changeset);
+    return await this.repo.readOne(id);
   }
 
   async readMany(

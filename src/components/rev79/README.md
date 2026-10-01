@@ -106,7 +106,7 @@ rev79/
   rev79.service.spec.ts   # Unit tests
 ```
 
-The repository is split between Neo4j (`Rev79Repository`) and EdgeDB (`Rev79GelRepository`) via `splitDb`, matching the dual-database pattern used elsewhere in Cord.
+`Rev79Repository` stores Rev79 data in Postgres.
 
 ### Key dependencies
 

@@ -147,8 +147,8 @@ export class PartnershipService {
   }
 
   @HandleIdLookup(Partnership)
-  async readOne(id: ID, view?: ObjectView): Promise<Partnership> {
-    const dto = await this.repo.readOne(id, view);
+  async readOne(id: ID, _view?: ObjectView): Promise<Partnership> {
+    const dto = await this.repo.readOne(id);
     return this.secure(dto);
   }
 
@@ -176,7 +176,7 @@ export class PartnershipService {
   }
 
   async update(input: UpdatePartnership, view?: ObjectView) {
-    const existing = await this.repo.readOne(input.id, view);
+    const existing = await this.repo.readOne(input.id);
     const partner = await this.partnerService.readOne(existing.partner.id);
     const object = this.secure(existing);
 

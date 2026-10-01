@@ -1,12 +1,12 @@
-import { Injectable, type OnApplicationBootstrap } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  type OnApplicationBootstrap,
+} from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { LazyGetter as Once } from 'lazy-get-decorator';
-import { DateTime } from 'luxon';
-import { Role, ServerException } from '~/common';
-import { AuthenticationService } from '~/core/authentication/authentication.service';
 import { CryptoService } from '~/core/authentication/crypto.service';
 import { ConfigService } from '~/core/config';
-import { Transactional } from '~/core/database';
 import { ILogger, Logger } from '~/core/logger';
 import { AdminRepository } from './admin.repository';
 
@@ -14,26 +14,23 @@ import { AdminRepository } from './admin.repository';
 export class AdminService implements OnApplicationBootstrap {
   constructor(
     private readonly config: ConfigService,
-    private readonly repo: AdminRepository,
+    @Inject(AdminRepository) private readonly repo: AdminRepository,
     private readonly moduleRef: ModuleRef,
     @Logger('admin:service') private readonly logger: ILogger,
-    @Logger('admin:database') private readonly dbLogger: ILogger,
   ) {}
-
-  @Once() private get authentication() {
-    return this.moduleRef.get(AuthenticationService, { strict: false });
-  }
 
   @Once() private get crypto() {
     return this.moduleRef.get(CryptoService, { strict: false });
   }
 
   async onApplicationBootstrap(): Promise<void> {
-    if (!this.config.dbRootObjectsSync) {
-      return;
-    }
-
-    const finishing = this.repo.finishing(() => this.setupRootObjects());
+    // Same switch the Neo4j AdminService honors — also how read-only
+    // maintenance mode keeps boot from writing.
+    if (!this.config.dbRootObjectsSync) return;
+    const finishing = this.repo.finishing(async () => {
+      await this.setupRootUser();
+      await this.setupDefaultOrg();
+    });
     // Wait for root object setup when running tests, else just let it run in
     // the background and allow webserver to start.
     if (this.config.jest) {
@@ -47,89 +44,42 @@ export class AdminService implements OnApplicationBootstrap {
     }
   }
 
-  @Transactional()
-  private async setupRootObjects(): Promise<void> {
-    // @ts-expect-error ahh I'm just being lazy.
-    this.repo.db.conn.currentTransaction!.queryLogger = this.dbLogger;
-
-    this.logger.debug('Setting up root objects');
-
-    await this.mergeAnonUser();
-
-    await this.mergeRootUser();
-
-    await this.mergeDefaultOrg();
+  // Projects FK their owning organization to this row (config.defaultOrg),
+  // so it has to exist before the first project insert — same job as the
+  // Neo4j AdminService's mergeDefaultOrg.
+  private async setupDefaultOrg(): Promise<void> {
+    const { id, name } = this.config.defaultOrg;
+    await this.repo.mergeDefaultOrg(id, name);
   }
 
-  private async mergeAnonUser() {
-    const createdAt = DateTime.local();
-    const anonUserId = this.config.anonUser.id;
-    await this.repo.mergeAnonUser(createdAt, anonUserId);
-  }
+  private async setupRootUser(): Promise<void> {
+    const root = this.config.rootUser;
 
-  private async mergeRootUser(): Promise<void> {
-    const { id, email, password } = this.config.rootUser;
-
-    const existing = await this.repo.checkExistingRoot();
+    const existing = await this.repo.findRootUser();
     if (!existing) {
-      const tempId = await this.authentication.register({
-        email,
-        password,
-        displayFirstName: 'Root',
-        displayLastName: 'Admin',
-        realFirstName: 'Root',
-        realLastName: 'Admin',
-        roles: [Role.Administrator],
-      });
-      await this.repo.setRootUserLabel(tempId, id);
-    } else {
-      const passwordSame = await this.crypto
-        .verify(existing.hash, password)
-        .catch(() => false);
-      // Neo4j can handle ID changes, because it anchors off the RootUser label.
-      if (existing.id !== id || existing.email !== email || !passwordSame) {
-        this.logger.notice('Updating root user to match app configuration');
-        const hashedPassword = passwordSame
-          ? undefined
-          : await this.crypto.hash(password);
-        await this.repo.updateRootUser(id, email, hashedPassword);
-      }
+      this.logger.notice('Setting up root user');
+      const hashed = await this.crypto.hash(root.password);
+      await this.repo.createRootUser(root.id, root.email, hashed);
+      return;
     }
-  }
 
-  private async mergeDefaultOrg(): Promise<void> {
-    // is there a default org
-    const isDefaultOrgResult = await this.repo.checkDefaultOrg();
+    if (root.id !== existing.id) {
+      this.logger.notice(
+        'Stored root user ID differs from config, using stored value',
+      );
+      // TODO hack. Change notification handlers to pull from DB, instead of config
+      Object.assign(this.config.rootUser, { id: existing.id });
+    }
 
-    if (!isDefaultOrgResult) {
-      // is there an org with the soon-to-be-created defaultOrg's name
-      const defaultOrgName = this.config.defaultOrg.name;
-      const doesOrgExist = await this.repo.doesOrgExist(defaultOrgName);
-
-      if (doesOrgExist) {
-        // add label to org
-
-        const giveOrgDefaultLabel =
-          await this.repo.giveOrgDefaultLabel(defaultOrgName);
-
-        if (!giveOrgDefaultLabel) {
-          throw new ServerException('could not create default org');
-        }
-      } else {
-        // create org
-        const createdAt = DateTime.local();
-        const defaultOrgId = this.config.defaultOrg.id;
-        const defaultOrgName = this.config.defaultOrg.name;
-
-        const createOrgResult = await this.repo.createOrgResult(
-          createdAt,
-          defaultOrgId,
-          defaultOrgName,
-        );
-
-        if (!createOrgResult) {
-          throw new ServerException('failed to create default org');
-        }
+    const passwordSame = await this.crypto
+      .verify(existing.hash, root.password)
+      .catch(() => false);
+    if (existing.email !== root.email || !passwordSame) {
+      this.logger.notice('Updating root user to match app configuration');
+      await this.repo.updateEmail(root.id, root.email);
+      if (!passwordSame) {
+        const hashed = await this.crypto.hash(root.password);
+        await this.repo.auth.savePasswordHashOnUser(root.id, hashed);
       }
     }
   }

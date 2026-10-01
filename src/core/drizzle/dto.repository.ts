@@ -74,9 +74,8 @@ export abstract class DrizzleDtoRepository<
 
   /**
    * Diff an existing DTO against an `Update*` input and return only fields
-   * whose values actually changed. Mirrors the helper on the Neo4j and Gel
-   * bases — services call `repo.getActualChanges(existing, input)` regardless
-   * of which engine `splitDb` resolves to.
+   * whose values actually changed. Services call
+   * `repo.getActualChanges(existing, input)` before writing.
    */
   readonly getActualChanges!: ReturnType<
     typeof getChanges<ResourceShape<TDto>>

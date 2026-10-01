@@ -1,94 +1,89 @@
 import { Injectable } from '@nestjs/common';
-import { isNull, node, not, type Query, relation } from 'cypher-query-builder';
+import { and, eq, ilike, inArray, isNull, type SQL } from 'drizzle-orm';
 import { DateTime } from 'luxon';
 import {
-  CreationFailed,
-  DuplicateException,
   generateId,
   type ID,
   NotFoundException,
-  ReadAfterCreationFailed,
+  type PaginatedListType,
   ServerException,
   type UnsecuredDto,
 } from '~/common';
-import { DtoRepository, OnIndex } from '~/core/neo4j';
 import {
-  ACTIVE,
-  collect,
-  createNode,
-  createRelationships,
-  defineSorters,
-  filter,
-  FullTextIndex,
-  matchProps,
-  merge,
-  paginate,
-  path,
-  sortWith,
-} from '~/core/neo4j/query';
-import { type BaseNode } from '~/core/neo4j/results';
+  catchUniqueViolation,
+  DrizzleDtoRepository,
+  EMPTY_PAGE,
+  escapeLikePattern,
+  resolveOrderBy,
+  type SortMap,
+} from '~/core/drizzle';
+import { DrizzleService } from '~/core/drizzle/drizzle.service';
+import {
+  languageLocations,
+  languages,
+  locations,
+  organizationLocations,
+  organizations,
+  projectOtherLocations,
+  projects,
+  userLocations,
+  users,
+} from '~/core/drizzle/schema';
 import { type ResourceNameLike } from '~/core/resources';
+import { PolicyExecutor } from '../authorization/policy/executor/policy-executor';
 import { FileService } from '../file';
 import { type FileId } from '../file/dto';
 import {
   type CreateLocation,
   Location,
-  LocationFilters,
+  type LocationFilters,
   type LocationListInput,
   type UpdateLocation,
 } from './dto';
 
-@Injectable()
-export class LocationRepository extends DtoRepository(Location) {
-  constructor(private readonly files: FileService) {
-    super();
-  }
-  async create(input: CreateLocation) {
-    const checkName = await this.doesNameExist(input.name);
-    if (checkName) {
-      throw new DuplicateException(
-        'name',
-        'Location with this name already exists.',
-      );
-    }
+const catchNameUnique = catchUniqueViolation(
+  'name',
+  'name',
+  'Location with this name already exists.',
+);
 
+@Injectable()
+export class LocationRepository extends DrizzleDtoRepository<
+  typeof locations,
+  Location
+> {
+  constructor(
+    db: DrizzleService,
+    private readonly files: FileService,
+    private readonly executor: PolicyExecutor,
+  ) {
+    super(db, locations, Location);
+  }
+
+  async create(input: CreateLocation): Promise<UnsecuredDto<Location>> {
+    const id = await generateId();
     const mapImageId = await generateId<FileId>();
 
-    const initialProps = {
-      name: input.name,
-      isoAlpha3: input.isoAlpha3,
-      type: input.type,
-      mapImage: mapImageId,
-      canDelete: true,
-    };
+    await this.db
+      .insert(locations)
+      .values({
+        id,
+        name: input.name,
+        type: input.type,
+        isoAlpha3: input.isoAlpha3 ?? null,
+        fundingAccountId: input.fundingAccount ?? null,
+        defaultFieldRegionId: input.defaultFieldRegion ?? null,
+        defaultMarketingRegionId: input.defaultMarketingRegion ?? null,
+        mapImageId,
+      })
+      .catch(catchNameUnique);
 
-    const query = this.db
-      .query()
-      .apply(await createNode(Location, { initialProps }))
-      .apply(
-        createRelationships(Location, 'out', {
-          fundingAccount: ['FundingAccount', input.fundingAccount],
-          defaultFieldRegion: ['FieldRegion', input.defaultFieldRegion],
-          defaultMarketingRegion: ['Location', input.defaultMarketingRegion],
-        }),
-      )
-      .return<{ id: ID }>('node.id as id');
-
-    const result = await query.first();
-    if (!result) {
-      throw new CreationFailed(Location);
-    }
-
-    const dto = await this.readOne(result.id).catch((e) => {
-      throw e instanceof NotFoundException
-        ? new ReadAfterCreationFailed(Location)
-        : e;
-    });
+    const dto = await this.readOne(id);
 
     await this.files.createDefinedFile(
       mapImageId,
       input.name,
-      dto.id,
+      id,
       'mapImage',
       input.mapImage,
       true,
@@ -97,105 +92,66 @@ export class LocationRepository extends DtoRepository(Location) {
     return dto;
   }
 
-  async update(changes: UpdateLocation) {
-    const {
-      id,
-      fundingAccount,
-      defaultFieldRegion,
-      defaultMarketingRegion,
-      mapImage,
-      ...simpleChanges
-    } = changes;
+  async update(changes: UpdateLocation): Promise<UnsecuredDto<Location>> {
+    const { id, mapImage, ...fields } = changes;
 
-    await this.updateProperties({ id }, simpleChanges);
-
-    if (fundingAccount !== undefined) {
-      await this.updateRelation(
-        'fundingAccount',
-        'FundingAccount',
-        id,
-        fundingAccount,
-      );
-    }
+    await this.updateColumns(id, {
+      name: fields.name,
+      type: fields.type,
+      isoAlpha3: fields.isoAlpha3,
+      fundingAccountId: fields.fundingAccount,
+      defaultFieldRegionId: fields.defaultFieldRegion,
+      defaultMarketingRegionId: fields.defaultMarketingRegion,
+    }).catch(catchNameUnique);
 
     if (mapImage !== undefined) {
       const location = await this.readOne(id);
-
       if (!location.mapImage) {
         throw new ServerException(
           'Expected map image file to be updated with the location',
         );
       }
-
       await this.files.createFileVersion({
         ...mapImage,
         parent: location.mapImage.id,
       });
     }
 
-    if (defaultFieldRegion !== undefined) {
-      await this.updateRelation(
-        'defaultFieldRegion',
-        'FieldRegion',
-        id,
-        defaultFieldRegion,
-      );
-    }
-
-    if (defaultMarketingRegion !== undefined) {
-      await this.updateRelation(
-        'defaultMarketingRegion',
-        'Location',
-        id,
-        defaultMarketingRegion,
-      );
-    }
-
     return await this.readOne(id);
   }
 
-  protected hydrate() {
-    return (query: Query) =>
-      query
-        .apply(matchProps())
-        .optionalMatch([
-          node('node'),
-          relation('out', '', 'fundingAccount', ACTIVE),
-          node('fundingAccount', 'FundingAccount'),
-        ])
-        .optionalMatch([
-          node('node'),
-          relation('out', '', 'defaultFieldRegion', ACTIVE),
-          node('defaultFieldRegion', 'FieldRegion'),
-        ])
-        .optionalMatch([
-          node('node'),
-          relation('out', '', 'defaultMarketingRegion', ACTIVE),
-          node('defaultMarketingRegion', 'Location'),
-        ])
-        .return<{ dto: UnsecuredDto<Location> }>(
-          merge('props', {
-            mapImage: { id: 'props.mapImage' },
-            fundingAccount: 'fundingAccount {.id}',
-            defaultFieldRegion: 'defaultFieldRegion {.id}',
-            defaultMarketingRegion: 'defaultMarketingRegion {.id}',
-          }).as('dto'),
-        );
-  }
-
-  async list(input: LocationListInput) {
-    const result = await this.db
-      .query()
-      .matchNode('node', 'Location')
-      .apply(locationFilters(input.filter))
-      .apply(sortWith(locationSorters, input))
-      .apply(paginate(input, this.hydrate()))
-      .first();
-    return result!; // result from paginate() will always have 1 row.
-  }
-
   async delete(id: ID): Promise<void> {
-    await this.deleteNode(id);
+    await this.softDelete(id);
+  }
+
+  async list(
+    input: LocationListInput,
+  ): Promise<PaginatedListType<UnsecuredDto<Location>>> {
+    const conditions: SQL[] = [isNull(locations.deletedAt)];
+    if (!this.executor.applyReadFilter(this.resource, conditions)) {
+      return EMPTY_PAGE;
+    }
+
+    conditions.push(...locationFilterClauses(input.filter));
+
+    const sortColumns = {
+      name: locations.name,
+      type: locations.type,
+      isoAlpha3: locations.isoAlpha3,
+      createdAt: locations.createdAt,
+    } satisfies SortMap<keyof Location>;
+
+    const { rows, total, hasMore } = await this.paginatedSelect({
+      predicate: and(...conditions),
+      orderBy: resolveOrderBy(input, sortColumns, locations.name),
+      page: input.page,
+      count: input.count,
+    });
+    return {
+      total,
+      items: rows.map((row) => this.toDto(row)),
+      hasMore,
+    };
   }
 
   async addLocationToNode(
@@ -203,49 +159,43 @@ export class LocationRepository extends DtoRepository(Location) {
     id: ID,
     rel: string,
     locationId: ID<'Location'>,
-  ) {
-    const query = this.db
-      .query()
-      .optionalMatch(node('node', label, { id }))
-      .optionalMatch(node('location', 'Location', { id: locationId }))
-      .subQuery(['node', 'location'], (sub) =>
-        sub
-          .with(['node', 'location'])
-          .where({
-            node: not(isNull()),
-            location: not(isNull()),
-            '': not(
-              path([
-                node('node'),
-                relation('out', '', rel, ACTIVE),
-                node('location'),
-              ]),
-            ),
-          })
-          .create([
-            node('node'),
-            relation('out', 'rel', rel, {
-              ...ACTIVE,
-              createdAt: DateTime.now(),
-            }),
-            node('location'),
-          ])
-          .with(collect('rel.createdAt').as('createdAt'))
-          .return('createdAt[0] as createdAt'),
-      )
-      .return<{ node?: BaseNode; location?: BaseNode; createdAt?: DateTime }>([
-        'node',
-        'location',
-        'createdAt',
-      ]);
-    const res = await query.first();
-    if (!res?.location) {
-      throw new NotFoundException('Location not found', 'location');
+  ): Promise<DateTime | null> {
+    await this.assertLiveLocation(locationId);
+    await this.assertLiveResource(label, id);
+
+    if (label === 'Organization' && rel === 'locations') {
+      const inserted = await this.db
+        .insert(organizationLocations)
+        .values({ organizationId: id as ID<'Organization'>, locationId })
+        .onConflictDoNothing()
+        .returning();
+      return inserted.length > 0 ? DateTime.now() : null;
     }
-    if (!res.node) {
-      throw new NotFoundException('Resource not found');
+    if (label === 'User' && rel === 'locations') {
+      const inserted = await this.db
+        .insert(userLocations)
+        .values({ userId: id as ID<'User'>, locationId })
+        .onConflictDoNothing()
+        .returning();
+      return inserted.length > 0 ? DateTime.now() : null;
     }
-    return res.createdAt ?? null;
+    if (label === 'Language' && rel === 'locations') {
+      const inserted = await this.db
+        .insert(languageLocations)
+        .values({ languageId: id as ID<'Language'>, locationId })
+        .onConflictDoNothing()
+        .returning();
+      return inserted.length > 0 ? DateTime.now() : null;
+    }
+    if (label === 'Project' && rel === 'otherLocations') {
+      const inserted = await this.db
+        .insert(projectOtherLocations)
+        .values({ projectId: id as ID<'Project'>, locationId })
+        .onConflictDoNothing()
+        .returning();
+      return inserted.length > 0 ? DateTime.now() : null;
+    }
+    throw new ServerException(`Unsupported location edge: ${label}.${rel}`);
   }
 
   async removeLocationFromNode(
@@ -253,43 +203,59 @@ export class LocationRepository extends DtoRepository(Location) {
     id: ID,
     rel: string,
     locationId: ID<'Location'>,
-  ) {
-    const query = this.db
-      .query()
-      .optionalMatch(node('node', label, { id }))
-      .optionalMatch(node('location', 'Location', { id: locationId }))
-      .subQuery(['node', 'location'], (sub) =>
-        sub
-          .with(['node', 'location'])
-          .where({
-            node: not(isNull()),
-            location: not(isNull()),
-          })
-          .match([
-            node('node'),
-            relation('out', 'rel', rel, ACTIVE),
-            node('location'),
-          ])
-          .set({
-            variables: { 'rel.active': 'false' },
-            values: { 'rel.deletedAt': DateTime.now() },
-          })
-          .with(collect('rel.deletedAt').as('deletedAt'))
-          .return('deletedAt[0] as deletedAt'),
-      )
-      .return<{ node?: BaseNode; location?: BaseNode; deletedAt?: DateTime }>([
-        'node',
-        'location',
-        'deletedAt',
-      ]);
-    const res = await query.first();
-    if (!res?.location) {
-      throw new NotFoundException('Location not found', 'location');
+  ): Promise<DateTime | null> {
+    await this.assertLiveLocation(locationId);
+    await this.assertLiveResource(label, id);
+
+    if (label === 'Organization' && rel === 'locations') {
+      const deleted = await this.db
+        .delete(organizationLocations)
+        .where(
+          and(
+            eq(organizationLocations.organizationId, id as ID<'Organization'>),
+            eq(organizationLocations.locationId, locationId),
+          ),
+        )
+        .returning();
+      return deleted.length > 0 ? DateTime.now() : null;
     }
-    if (!res.node) {
-      throw new NotFoundException('Resource not found');
+    if (label === 'User' && rel === 'locations') {
+      const deleted = await this.db
+        .delete(userLocations)
+        .where(
+          and(
+            eq(userLocations.userId, id as ID<'User'>),
+            eq(userLocations.locationId, locationId),
+          ),
+        )
+        .returning();
+      return deleted.length > 0 ? DateTime.now() : null;
     }
-    return res.deletedAt ?? null;
+    if (label === 'Language' && rel === 'locations') {
+      const deleted = await this.db
+        .delete(languageLocations)
+        .where(
+          and(
+            eq(languageLocations.languageId, id as ID<'Language'>),
+            eq(languageLocations.locationId, locationId),
+          ),
+        )
+        .returning();
+      return deleted.length > 0 ? DateTime.now() : null;
+    }
+    if (label === 'Project' && rel === 'otherLocations') {
+      const deleted = await this.db
+        .delete(projectOtherLocations)
+        .where(
+          and(
+            eq(projectOtherLocations.projectId, id as ID<'Project'>),
+            eq(projectOtherLocations.locationId, locationId),
+          ),
+        )
+        .returning();
+      return deleted.length > 0 ? DateTime.now() : null;
+    }
+    throw new ServerException(`Unsupported location edge: ${label}.${rel}`);
   }
 
   async listLocationsFromNodeNoSecGroups(
@@ -297,58 +263,178 @@ export class LocationRepository extends DtoRepository(Location) {
     rel: string,
     id: ID,
     input: LocationListInput,
-  ) {
-    const result = await this.db
-      .query()
-      .match([
-        node('node', 'Location'),
-        relation('in', '', rel, ACTIVE),
-        node(`${label.toLowerCase()}`, label, { id }),
-      ])
-      .apply(sortWith(locationSorters, input))
-      .apply(paginate(input, this.hydrate()))
-      .first();
-    return result!; // result from paginate() will always have 1 row.
+  ): Promise<PaginatedListType<UnsecuredDto<Location>>> {
+    const linkedLocationIds =
+      label === 'Organization' && rel === 'locations'
+        ? this.db
+            .select({ id: organizationLocations.locationId })
+            .from(organizationLocations)
+            .where(
+              eq(
+                organizationLocations.organizationId,
+                id as ID<'Organization'>,
+              ),
+            )
+        : label === 'User' && rel === 'locations'
+          ? this.db
+              .select({ id: userLocations.locationId })
+              .from(userLocations)
+              .where(eq(userLocations.userId, id as ID<'User'>))
+          : label === 'Language' && rel === 'locations'
+            ? this.db
+                .select({ id: languageLocations.locationId })
+                .from(languageLocations)
+                .where(eq(languageLocations.languageId, id as ID<'Language'>))
+            : label === 'Project' && rel === 'otherLocations'
+              ? this.db
+                  .select({ id: projectOtherLocations.locationId })
+                  .from(projectOtherLocations)
+                  .where(
+                    eq(projectOtherLocations.projectId, id as ID<'Project'>),
+                  )
+              : null;
+    if (!linkedLocationIds) {
+      throw new ServerException(`Unsupported location edge: ${label}.${rel}`);
+    }
+
+    const conditions: SQL[] = [
+      isNull(locations.deletedAt),
+      inArray(locations.id, linkedLocationIds),
+    ];
+    if (!this.executor.applyReadFilter(this.resource, conditions)) {
+      return EMPTY_PAGE;
+    }
+    conditions.push(...locationFilterClauses(input.filter));
+
+    const { rows, total, hasMore } = await this.paginatedSelect({
+      predicate: and(...conditions),
+      orderBy: resolveOrderBy(input, locationSortColumns, locations.name),
+      page: input.page,
+      count: input.count,
+    });
+    return {
+      total,
+      items: rows.map((row) => this.toDto(row)),
+      hasMore,
+    };
   }
 
-  private async doesNameExist(name: string) {
-    const result = await this.db
-      .query()
-      .match([node('name', 'LocationName', { value: name })])
-      .return('name')
-      .first();
-    return !!result;
+  /** Confirms `locationId` refers to a live Location, or throws. */
+  private async assertLiveLocation(locationId: ID<'Location'>): Promise<void> {
+    const [row] = await this.db
+      .select({ id: locations.id })
+      .from(locations)
+      .where(and(eq(locations.id, locationId), isNull(locations.deletedAt)));
+    if (!row) {
+      throw new NotFoundException('Location not found', 'location');
+    }
   }
 
-  @OnIndex('schema')
-  private async createSchemaIndexes() {
-    await this.db.query().apply(NameIndex.create()).run();
+  /** Confirms `id` refers to a live row of the resource named by `label`, or throws. */
+  private async assertLiveResource(
+    label: ResourceNameLike,
+    id: ID,
+  ): Promise<void> {
+    const rows =
+      label === 'Organization'
+        ? await this.db
+            .select({ id: organizations.id })
+            .from(organizations)
+            .where(
+              and(
+                eq(organizations.id, id as ID<'Organization'>),
+                isNull(organizations.deletedAt),
+              ),
+            )
+        : label === 'User'
+          ? await this.db
+              .select({ id: users.id })
+              .from(users)
+              .where(
+                and(eq(users.id, id as ID<'User'>), isNull(users.deletedAt)),
+              )
+          : label === 'Language'
+            ? await this.db
+                .select({ id: languages.id })
+                .from(languages)
+                .where(
+                  and(
+                    eq(languages.id, id as ID<'Language'>),
+                    isNull(languages.deletedAt),
+                  ),
+                )
+            : label === 'Project'
+              ? await this.db
+                  .select({ id: projects.id })
+                  .from(projects)
+                  .where(
+                    and(
+                      eq(projects.id, id as ID<'Project'>),
+                      isNull(projects.deletedAt),
+                    ),
+                  )
+              : null;
+    if (!rows) {
+      throw new ServerException(`Unsupported location edge resource: ${label}`);
+    }
+    if (rows.length === 0) {
+      throw new NotFoundException('Resource not found');
+    }
+  }
+
+  protected toDto(row: typeof locations.$inferSelect): UnsecuredDto<Location> {
+    return {
+      id: row.id,
+      __typename: 'Location',
+      createdAt: DateTime.fromJSDate(row.createdAt),
+      name: row.name,
+      type: row.type,
+      isoAlpha3: row.isoAlpha3 ?? null,
+      fundingAccount: row.fundingAccountId
+        ? { id: row.fundingAccountId }
+        : null,
+      defaultFieldRegion: row.defaultFieldRegionId
+        ? { id: row.defaultFieldRegionId }
+        : null,
+      defaultMarketingRegion: row.defaultMarketingRegionId
+        ? { id: row.defaultMarketingRegionId }
+        : null,
+      mapImage: row.mapImageId ? { id: row.mapImageId } : null,
+    };
   }
 }
 
-export const locationSorters = defineSorters(Location, {});
+/**
+ * Sortable columns on `locations`. Exported for cross-domain sort
+ * (Project sorts by `primaryLocation.*`), parallel to `*FilterClauses`.
+ */
+export const locationSortColumns = {
+  name: locations.name,
+  type: locations.type,
+  isoAlpha3: locations.isoAlpha3,
+  createdAt: locations.createdAt,
+} satisfies SortMap<keyof Location>;
 
-export const locationFilters = filter.define(() => LocationFilters, {
-  fundingAccountId: filter.pathExists((id) => [
-    node('node'),
-    relation('out', '', 'fundingAccount', ACTIVE),
-    node('', 'FundingAccount', { id }),
-  ]),
-  type: filter.stringListProp(),
-  name: filter.fullText({
-    index: () => NameIndex,
-    matchToNode: (q) =>
-      q.match([
-        node('node', 'Location'),
-        relation('out', '', undefined, ACTIVE),
-        node('match'),
-      ]),
-  }),
-});
-
-const NameIndex = FullTextIndex({
-  indexName: 'LocationName',
-  labels: 'LocationName',
-  properties: 'value',
-  analyzer: 'standard-folding',
-});
+/**
+ * Build the column-level WHERE clauses for a `LocationFilters` input against
+ * the `locations` table. Reusable from sub-filters in other domains
+ * (e.g. Project's `location` filter).
+ */
+export const locationFilterClauses = (
+  filter: LocationFilters | undefined,
+): SQL[] => {
+  const conditions: SQL[] = [];
+  if (!filter) return conditions;
+  if (filter.name) {
+    conditions.push(
+      ilike(locations.name, `%${escapeLikePattern(filter.name)}%`),
+    );
+  }
+  if (filter.type?.length) {
+    conditions.push(inArray(locations.type, [...filter.type]));
+  }
+  if (filter.fundingAccountId) {
+    conditions.push(eq(locations.fundingAccountId, filter.fundingAccountId));
+  }
+  return conditions;
+};

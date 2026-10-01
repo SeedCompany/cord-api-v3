@@ -1,132 +1,180 @@
 import { Injectable } from '@nestjs/common';
-import { inArray, node, type Query, relation } from 'cypher-query-builder';
+import { and, asc, count, eq, inArray, type SQL, sql } from 'drizzle-orm';
 import { DateTime } from 'luxon';
-import { type ID, type UnsecuredDto } from '~/common';
-import { type DbTypeOf } from '~/core/database';
-import { type ChangesOf } from '~/core/database/changes';
-import { DtoRepository } from '~/core/neo4j';
 import {
-  ACTIVE,
-  createNode,
-  createRelationships,
-  currentUser,
-  matchProps,
-  merge,
-  paginate,
-  sorting,
-} from '~/core/neo4j/query';
+  generateId,
+  type ID,
+  NotFoundException,
+  type UnsecuredDto,
+} from '~/common';
+import { Identity } from '~/core/authentication';
+import { type ChangesOf } from '~/core/database/changes';
+import {
+  DrizzleDtoRepository,
+  DrizzleService,
+  resolveOrderBy,
+  resolveResourceBaseNode,
+  type SortMap,
+} from '~/core/drizzle';
+import { posts, projectMembers } from '~/core/drizzle/schema';
+import { type BaseNode } from '~/core/resources';
 import { type CreatePost, Post, type UpdatePost } from './dto';
 import { type PostListInput } from './dto/list-posts.dto';
-import { PostShareability } from './dto/shareability.dto';
 
 @Injectable()
-export class PostRepository extends DtoRepository(Post) {
-  async create(input: CreatePost) {
-    const initialProps = {
+export class PostRepository extends DrizzleDtoRepository<typeof posts, Post> {
+  constructor(
+    drizzle: DrizzleService,
+    private readonly identity: Identity,
+  ) {
+    super(drizzle, posts, Post);
+  }
+
+  protected toDto(row: typeof posts.$inferSelect): UnsecuredDto<Post> {
+    const dto: unknown = {
+      id: row.id,
+      createdAt: DateTime.fromJSDate(row.createdAt),
+      // Fake BaseNode so ResourceLoader.loadByBaseNode resolves the parent.
+      parent: {
+        identity: row.parentId,
+        labels: [row.parentType, 'BaseNode'],
+        properties: {
+          id: row.parentId,
+          createdAt: DateTime.fromJSDate(row.createdAt),
+        },
+      },
+      creator: { id: row.creatorId },
+      type: row.type,
+      shareability: row.shareability,
+      body: row.body,
+      modifiedAt: DateTime.fromJSDate(row.modifiedAt),
+    };
+    return dto as UnsecuredDto<Post>;
+  }
+
+  async create(input: CreatePost): Promise<{ dto: UnsecuredDto<Post> }> {
+    const parentNode = await resolveResourceBaseNode(this.db, input.parent);
+    if (!parentNode) {
+      throw new NotFoundException('Resource does not exist', 'parent');
+    }
+    const id = await generateId<ID<'Post'>>();
+    await this.db.insert(posts).values({
+      id,
+      parentId: input.parent,
+      parentType: parentNode.labels[0]!,
+      creatorId: this.identity.current.userId,
       type: input.type,
       shareability: input.shareability,
       body: input.body,
-      modifiedAt: DateTime.local(),
-    };
-    return await this.db
-      .query()
-      .apply(await createNode(Post, { initialProps }))
-      .apply(
-        createRelationships(Post, {
-          in: {
-            post: ['BaseNode', input.parent],
-          },
-          out: {
-            creator: currentUser,
-          },
-        }),
-      )
-      .apply(this.hydrate())
-      .first();
+    });
+    // Hydrated without the auth filter — mirrors the Neo4j create path, which
+    // returns the post directly to its creator.
+    const [row] = await this.db.select().from(posts).where(eq(posts.id, id));
+    return { dto: this.toDto(row!) };
   }
 
   async update(
     existing: UnsecuredDto<Post>,
     changes: ChangesOf<Post, UpdatePost>,
-  ) {
-    return await this.updateProperties(existing, changes);
+  ): Promise<UnsecuredDto<Post>> {
+    const c = changes as Partial<typeof posts.$inferInsert>;
+    await this.updateColumns(existing.id, {
+      type: c.type,
+      shareability: c.shareability,
+      body: c.body,
+      // Injected by getActualChanges upstream of both engines; Neo4j persists
+      // it via its generic property write, so enumerating columns here without
+      // it froze every post's modifiedAt at creation (audit LPOST-1).
+      modifiedAt: changes.modifiedAt?.toJSDate(),
+    });
+    const [row] = await this.db
+      .select()
+      .from(posts)
+      .where(eq(posts.id, existing.id));
+    if (!row) throw new NotFoundException();
+    return this.toDto(row);
   }
 
-  async readMany(ids: readonly ID[]) {
-    return await this.db
-      .query()
-      .matchNode('node', 'Post')
-      .where({ 'node.id': inArray(ids) })
-      .apply(this.filterAuthorized())
-      .apply(this.hydrate())
-      .map('dto')
-      .run();
+  async readMany(ids: readonly ID[]): Promise<Array<UnsecuredDto<Post>>> {
+    if (ids.length === 0) return [];
+    const rows = await this.db
+      .select()
+      .from(posts)
+      .where(
+        and(inArray(posts.id, ids as Array<ID<'Post'>>), this.authFilter()),
+      );
+    return rows.map((row) => this.toDto(row));
   }
 
   async securedList({ filter, ...input }: PostListInput) {
-    const result = await this.db
-      .query()
-      .match([
-        node('node', 'Post'),
-        ...(filter?.parentId
-          ? [
-              relation('in', '', 'post', ACTIVE),
-              node('', 'BaseNode', {
-                id: filter.parentId,
-              }),
-            ]
-          : []),
-      ])
-      .apply(this.filterAuthorized())
-      .apply(sorting(Post, input))
-      .apply(paginate(input, this.hydrate()))
-      .first();
-    return result!;
+    const conditions = [this.authFilter()];
+    if (filter?.parentId) {
+      conditions.push(eq(posts.parentId, filter.parentId));
+    }
+    const predicate = and(...conditions);
+    const offset = (input.page - 1) * input.count;
+    const [countRows, rows] = await Promise.all([
+      this.db.select({ total: count() }).from(posts).where(predicate),
+      this.db
+        .select()
+        .from(posts)
+        .where(predicate)
+        .orderBy(
+          ...resolveOrderBy(
+            input,
+            {
+              createdAt: posts.createdAt,
+              modifiedAt: posts.modifiedAt,
+              type: posts.type,
+              shareability: posts.shareability,
+              body: posts.body,
+            } satisfies SortMap<keyof Post>,
+            posts.createdAt,
+          ),
+          asc(posts.id),
+        )
+        .limit(input.count)
+        .offset(offset),
+    ]);
+    const total = countRows[0]?.total ?? 0;
+    return {
+      items: rows.map((row) => this.toDto(row)),
+      total,
+      hasMore: offset + rows.length < total,
+    };
   }
 
-  protected filterAuthorized() {
-    return (query: Query) =>
-      query
-        .with('node')
-        .match([
-          node('node'),
-          relation('out', '', 'shareability', ACTIVE),
-          node('shareability', 'Property'),
-        ])
-        // Only match posts whose shareability is ProjectTeam
-        // if the current user is a member of the parent object
-        .raw(
-          `
-            WHERE (
-              NOT shareability.value = '${PostShareability.Membership}'
-            ) OR (
-              shareability.value = '${PostShareability.Membership}'
-              AND
-              (node)<-[:post]-(:BaseNode)-[:member]-(:BaseNode)-[:user]->(:User { id: $currentUser })
-            )
-          `,
-        );
+  async getBaseNode(id: ID): Promise<BaseNode | undefined> {
+    return await resolveResourceBaseNode(this.db, id);
   }
 
-  protected hydrate() {
-    return (query: Query) =>
-      query
-        .match([
-          node('node'),
-          relation('in', '', 'post', ACTIVE),
-          node('parent', 'BaseNode'),
-        ])
-        .match([
-          node('node'),
-          relation('out', '', 'creator', ACTIVE),
-          node('creator', 'User'),
-        ])
-        .apply(matchProps())
-        .return<{ dto: DbTypeOf<Post> }>(
-          merge('props', {
-            parent: 'parent',
-            creator: 'creator { .id }',
-          }).as('dto'),
-        );
+  async deleteNode(objectOrId: { id: ID } | ID): Promise<void> {
+    const id = typeof objectOrId === 'string' ? objectOrId : objectOrId.id;
+    await this.db.delete(posts).where(eq(posts.id, id as ID<'Post'>));
+    // Hand-rolled delete (a hard delete, not the base's softDelete()), so it
+    // has to invalidate itself — see the base class's doc comment on why
+    // updateColumns()/softDelete() can't cover this for us.
+    this.liveQueryStore.invalidate([this.resource, id]);
+  }
+
+  /**
+   * A post is visible when its shareability isn't Membership, or when the
+   * requester is an active member of the (Project) parent. Only Project
+   * parents have members, so Membership posts on Language/Partner are hidden —
+   * matching the Neo4j member-path filter. Gated on 'Membership' only; a
+   * (deprecated) 'ProjectTeam' value is treated as unrestricted, as in Neo4j.
+   */
+  private authFilter(): SQL {
+    const userId = this.identity.currentMaybe?.userId;
+    if (!userId) {
+      return sql`${posts.shareability} <> 'Membership'`;
+    }
+    return sql`(${posts.shareability} <> 'Membership' or exists (
+      select 1 from ${projectMembers}
+      where ${projectMembers.projectId} = ${posts.parentId}
+        and ${projectMembers.userId} = ${userId}
+        and ${projectMembers.deletedAt} is null
+        and ${projectMembers.inactiveAt} is null
+    ))`;
   }
 }

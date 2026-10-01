@@ -1,401 +1,285 @@
 import { Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
+import { and, eq, isNull, ne } from 'drizzle-orm';
 import { DateTime } from 'luxon';
-import { type ID, type Role, ServerException } from '~/common';
-import { DatabaseService, DbTraceLayer, OnIndex } from '~/core/neo4j';
+import { type ID, ServerException } from '~/common';
 import {
-  ACTIVE,
-  currentUser,
-  matchUserGloballyScopedRoles,
-  variable,
-} from '~/core/neo4j/query';
-import { type LinkTo } from '~/core/resources';
-import { type UserStatus } from '../../components/user/dto';
+  authIdentities,
+  authPasswordResetTokens,
+  authSessions,
+  DrizzleService,
+  userGlobalRoles,
+  users,
+} from '~/core/drizzle';
 import { type LoginInput } from './dto';
 import { type Session } from './session/session.dto';
-
-interface PasswordResetToken {
-  email: string;
-  token: string;
-  // migration-todo: make userId non-optional after Neo4j is removed
-  // (Drizzle always provides it; Gel/Neo4j will be updated or removed)
-  userId?: ID;
-  createdOn: DateTime;
-}
+import { SessionHost } from './session/session.host';
 
 @Injectable()
-@DbTraceLayer.applyToClass()
 export class AuthenticationRepository {
-  constructor(private readonly db: DatabaseService) {}
-
-  async waitForRootUserId() {
-    let rootId: ID | undefined;
-    await this.db.waitForConnection(
-      {
-        forever: true,
-        maxTimeout: { seconds: 10 },
-        unref: true,
-      },
-      async () => {
-        // Ensure the root user exists, if not keep waiting
-        rootId = await this.getRootUserId();
-      },
-    );
-    return rootId!;
-  }
-
-  async getRootUserId() {
-    const node = await this.db
-      .query()
-      .matchNode('node', 'RootUser')
-      .return<{ id: ID }>('node.id as id')
-      .first();
-    if (!node) {
-      throw new ServerException('Could not find root user');
-    }
-    return node.id;
-  }
+  constructor(
+    private readonly drizzle: DrizzleService,
+    private readonly session: SessionHost,
+  ) {}
 
   async saveSessionToken(token: string) {
-    const result = await this.db
-      .query()
-      .raw(
-        `
-    CREATE
-      (token:Token {
-        active: true,
-        createdAt: datetime(),
-        value: $token
-      })
-    RETURN
-      token.value as token
-    `,
-        {
-          token,
-        },
-      )
-      .first();
-    if (!result) {
-      throw new ServerException('Failed to save session token');
-    }
-  }
-
-  async savePasswordHashOnUser(userId: ID, passwordHash: string) {
-    await this.db
-      .query()
-      .match([
-        node('user', 'User', {
-          id: userId,
-        }),
-      ])
-      .raw('', { passwordHash })
-      .create([
-        node('user'),
-        relation('out', '', 'password', {
-          active: true,
-          createdAt: DateTime.local(),
-        }),
-        node('password', 'Property', {
-          value: variable('$passwordHash'),
-        }),
-      ])
-      .run();
-  }
-
-  async getInfoForLogin(input: LoginInput) {
-    const result = await this.db
-      .query()
-      .match([
-        [
-          node('email', 'EmailAddress', {
-            value: input.email,
-          }),
-          relation('in', '', 'email', ACTIVE),
-          node('user', 'User'),
-        ],
-        [
-          node('user'),
-          relation('out', '', 'password', ACTIVE),
-          node('password', 'Property'),
-        ],
-        [
-          node('user'),
-          relation('out', '', 'status', ACTIVE),
-          node('status', 'Property'),
-        ],
-      ])
-      // `status` is nullable in Postgres (migration 0042) — 92 migrated people
-      // have none recorded. The only consumer asks `status === 'Disabled'`,
-      // which is already correct for a blank. Neo4j cannot actually produce one
-      // here: the match above REQUIRES the status Property, so a person without
-      // it matches nothing and is refused a login outright. That engine
-      // difference pre-dates this change and is not resolved by it.
-      .return<{ passwordHash: string; status: UserStatus | null }>([
-        'password.value as passwordHash',
-        'status.value as status',
-      ])
-      .first();
-    return result ?? null;
-  }
-
-  async connectSessionToUser(input: LoginInput, session: Session) {
-    const result = await this.db
-      .query()
-      .raw(
-        `
-        MATCH
-          (token:Token {
-            active: true,
-            value: $token
-          }),
-          (:EmailAddress {value: $email})
-          <-[:email {active: true}]-
-          (user:User)
-        OPTIONAL MATCH
-          (token)-[r]-()
-        DELETE r
-        CREATE
-          (user)-[:token {active: true, createdAt: datetime()}]->(token)
-        RETURN
-          user.id as id
-      `,
-        {
-          token: session.token,
-          email: input.email,
-        },
-      )
-      .asResult<{ id: ID }>()
-      .first();
-    return result?.id;
-  }
-
-  async disconnectUserFromSession(token: string): Promise<void> {
-    await this.db
-      .query()
-      .raw(
-        `
-      MATCH
-        (token:Token {value: $token})-[r]-()
-      DELETE
-        r
-      RETURN
-        token.value as token
-      `,
-        {
-          token,
-        },
-      )
-      .run();
+    await this.drizzle.client.insert(authSessions).values({ token });
   }
 
   async resumeSession(token: string, impersonatee?: ID) {
-    const result = await this.db
-      .query()
-      .raw('MATCH (token:Token { active: true, value: $token })', { token })
-      .optionalMatch([
-        node('token'),
-        relation('in', '', 'token', ACTIVE),
-        node('user', 'User'),
-      ])
-      .apply(matchUserGloballyScopedRoles('user', 'roles'))
-      .apply(
-        impersonatee
-          ? (q) =>
-              q.subQuery((sub) =>
-                sub
-                  .optionalMatch(
-                    node('impersonatee', 'User', { id: impersonatee }),
-                  )
-                  .apply(
-                    matchUserGloballyScopedRoles(
-                      'impersonatee',
-                      'impersonateeRoles',
-                    ),
-                  )
-                  .return('impersonateeRoles'),
-              )
-          : null,
-      )
-      .return<{
-        userId: ID | null;
-        roles: readonly Role[];
-        impersonateeRoles?: readonly Role[] | null;
-      }>([
-        'user.id as userId',
-        'roles',
-        impersonatee ? 'impersonateeRoles' : '',
-      ])
-      .first();
+    const row = await this.drizzle.client.query.authSessions.findFirst({
+      where: (session) =>
+        and(eq(session.token, token), eq(session.active, true)),
+      with: { user: { with: { globalRoles: true } } },
+    });
+    if (!row) return null;
 
-    return result ?? null;
+    // User-liveness: Neo4j enforces this structurally (deleting a user
+    // relabels the node, so the session→user match fails and the session
+    // degrades to anonymous). Mirror that: a soft-deleted user's session
+    // resolves as anonymous instead of retaining its identity. The
+    // delete→revoke-sessions hook deactivates these outright; this guards
+    // any session the hook missed (e.g. created before the hook shipped).
+    const user = row.user && !row.user.deletedAt ? row.user : null;
+    const roles = (user?.globalRoles ?? []).map(
+      (globalRole) => globalRole.role,
+    );
+    const userId = user ? row.userId : null;
+
+    if (!impersonatee) {
+      return { userId, roles };
+    }
+
+    const impersonateeRoles = await this.rolesForUser(impersonatee);
+    return { userId, roles, impersonateeRoles };
   }
 
-  async rolesForUser(user: ID) {
-    const result = await this.db
-      .query()
-      .matchNode('user', 'User', { id: user })
-      .apply(matchUserGloballyScopedRoles('user', 'roles'))
-      .return('roles')
-      .first();
-    return result?.roles ?? [];
+  async disconnectUserFromSession(token: string) {
+    // Logout makes the session anonymous again; the token stays alive.
+    await this.drizzle.client
+      .update(authSessions)
+      .set({ userId: null, loggedInAt: null })
+      .where(eq(authSessions.token, token));
+  }
+
+  async connectSessionToUser(input: LoginInput, session: Session) {
+    const user = await this.drizzle.client.query.users.findFirst({
+      where: (user) => and(eq(user.email, input.email), isNull(user.deletedAt)),
+    });
+    if (!user) return undefined;
+
+    const result = await this.drizzle.client
+      .update(authSessions)
+      .set({ userId: user.id, loggedInAt: new Date() })
+      .where(
+        and(
+          eq(authSessions.token, session.token),
+          eq(authSessions.active, true),
+        ),
+      )
+      .returning();
+
+    return result.length > 0 ? user.id : undefined;
+  }
+
+  async deactivateAllOtherSessions(session: Session) {
+    if (session.anonymous) return;
+    await this.drizzle.client
+      .update(authSessions)
+      .set({ active: false })
+      .where(
+        and(
+          eq(authSessions.userId, session.userId),
+          ne(authSessions.token, session.token),
+          eq(authSessions.active, true),
+        ),
+      );
+  }
+
+  async deactivateAllOtherSessionsByEmail(email: string, session: Session) {
+    const user = await this.drizzle.client.query.users.findFirst({
+      where: (user) => eq(user.email, email),
+    });
+    if (!user) return;
+
+    await this.drizzle.client
+      .update(authSessions)
+      .set({ active: false })
+      .where(
+        and(
+          eq(authSessions.userId, user.id),
+          ne(authSessions.token, session.token),
+          eq(authSessions.active, true),
+        ),
+      );
+  }
+
+  async deactivateAllSessions(user: ID<'User'>) {
+    await this.drizzle.client
+      .update(authSessions)
+      .set({ active: false })
+      .where(eq(authSessions.userId, user));
+  }
+
+  async savePasswordHashOnUser(userId: ID, passwordHash: string) {
+    await this.drizzle.client
+      .insert(authIdentities)
+      .values({ userId, passwordHash })
+      .onConflictDoUpdate({
+        target: authIdentities.userId,
+        set: { passwordHash, updatedAt: new Date() },
+      });
   }
 
   async getCurrentPasswordHash() {
-    const result = await this.db
-      .query()
-      .match([
-        currentUser,
-        relation('out', '', 'password', ACTIVE),
-        node('password', 'Property'),
-      ])
-      .return('password.value as passwordHash')
-      .asResult<{ passwordHash: string }>()
-      .first();
-    return result?.passwordHash ?? null;
+    const { userId } = this.session.current;
+    const row = await this.drizzle.client.query.authIdentities.findFirst({
+      where: (identity) => eq(identity.userId, userId),
+    });
+    return row?.passwordHash ?? null;
   }
 
-  async updatePassword(newPasswordHash: string): Promise<void> {
-    await this.db
-      .query()
-      .match([
-        currentUser,
-        relation('out', '', 'password', ACTIVE),
-        node('password', 'Property'),
-      ])
-      .setValues({
-        'password.value': newPasswordHash,
+  async updatePassword(newPasswordHash: string) {
+    const { userId } = this.session.current;
+    await this.drizzle.client
+      .update(authIdentities)
+      .set({ passwordHash: newPasswordHash, updatedAt: new Date() })
+      .where(eq(authIdentities.userId, userId));
+  }
+
+  async getInfoForLogin({ email }: LoginInput) {
+    const rows = await this.drizzle.client
+      .select({
+        passwordHash: authIdentities.passwordHash,
+        status: users.status,
       })
-      .return('password.value as passwordHash')
-      .first();
+      .from(users)
+      .innerJoin(authIdentities, eq(authIdentities.userId, users.id))
+      .where(and(eq(users.email, email), isNull(users.deletedAt)))
+      .limit(1);
+
+    return rows[0]
+      ? {
+          passwordHash: rows[0].passwordHash,
+          status: rows[0].status,
+        }
+      : null;
   }
 
   async doesEmailAddressExist(email: string) {
-    const result = await this.db
-      .query()
-      .match([node('email', 'EmailAddress', { value: email })])
-      .return('email')
-      .first();
-    return !!result;
+    // Liveness matters here: Neo4j relabels the EmailAddress property node to
+    // Deleted_EmailAddress on user delete, so its existence check is false for
+    // deleted users and forgotPassword silently skips them — same void
+    // response either way, no deletion oracle. savePasswordResetToken below
+    // stays liveness-blind because this gate makes it unreachable for
+    // deleted emails.
+    const row = await this.drizzle.client.query.users.findFirst({
+      where: (user) => and(eq(user.email, email), isNull(user.deletedAt)),
+    });
+    return !!row;
   }
 
-  async savePasswordResetToken(email: string, token: string): Promise<void> {
-    await this.db
-      .query()
-      .raw(
-        `
-      CREATE(et:EmailToken{value:$value, token: $token, createdOn:datetime()})
-      RETURN et as emailToken
-      `,
-        {
-          value: email,
-          token,
-        },
-      )
-      .run();
+  async savePasswordResetToken(email: string, token: string) {
+    const user = await this.drizzle.client.query.users.findFirst({
+      where: (user) => eq(user.email, email),
+    });
+    if (!user) {
+      throw new ServerException('Could not find user by email');
+    }
+    await this.drizzle.client
+      .insert(authPasswordResetTokens)
+      .values({ email, token, userId: user.id });
   }
 
   async findPasswordResetToken(token: string) {
-    const result = await this.db
-      .query()
-      .raw('MATCH (emailToken:EmailToken { token: $token })', { token })
-      .return([
-        'emailToken.value as email',
-        'emailToken.token as token',
-        'emailToken.createdOn as createdOn',
-      ])
-      .asResult<PasswordResetToken>()
-      .first();
-    return result ?? null;
+    const row =
+      await this.drizzle.client.query.authPasswordResetTokens.findFirst({
+        where: (resetToken) => eq(resetToken.token, token),
+        with: { user: { columns: { id: true, deletedAt: true } } },
+      });
+    // A token whose user has since been soft-deleted is dead — completing
+    // the reset would overwrite the deleted account's identity hash
+    // (account takeover on any future restore). Same invalid-token path as
+    // an unknown token. (savePasswordResetToken stays liveness-blind on
+    // purpose: forgotPassword must not error differently for deleted
+    // emails, and the token can never be consumed.)
+    if (!row?.user || row.user.deletedAt) return null;
+    return {
+      email: row.email,
+      token: row.token,
+      userId: row.userId,
+      createdOn: DateTime.fromJSDate(row.createdOn),
+    };
   }
 
   async updatePasswordViaEmailToken(
-    { email }: PasswordResetToken,
-    pash: string,
+    { email }: { email: string },
+    passwordHash: string,
   ) {
-    const query = this.db
-      .query()
-      .raw(
-        `
-        MATCH (:EmailAddress {value: $email})<-[:email {active: true}]-(user:User)
-        OPTIONAL MATCH (user)-[oldPasswordRel:password]->(oldPassword)
-        SET oldPasswordRel.active = false
-        WITH user
-        LIMIT 1
-        CREATE (user)-[:password {active: true, createdAt: $createdAt }]->(password:Property { value: $password })
-        RETURN user { .id }
-      `,
-        {
-          email,
-          password: pash,
-          createdAt: DateTime.local(),
-        },
-      )
-      .asResult<{ user: LinkTo<'User'> }>();
-    const res = await query.first();
-    if (!res) {
+    // Liveness backstop for findPasswordResetToken's check above.
+    const user = await this.drizzle.client.query.users.findFirst({
+      where: (user) => and(eq(user.email, email), isNull(user.deletedAt)),
+    });
+    if (!user) {
       throw new ServerException(
         'Failed to reset password',
         new ServerException('Could not find user by email'),
       );
     }
-    return res;
+    await this.savePasswordHashOnUser(user.id, passwordHash);
+    return { user: { id: user.id } };
   }
 
   async removeAllPasswordResetTokensByEmail(email: string) {
     // migration-todo: switch to userId after Neo4j is removed
-    await this.db
-      .query()
-      .match([node('emailToken', 'EmailToken', { value: email })])
-      .delete('emailToken')
-      .run();
+    await this.drizzle.client
+      .delete(authPasswordResetTokens)
+      .where(eq(authPasswordResetTokens.email, email));
   }
 
-  async deactivateAllOtherSessions(session: Session) {
-    await this.db
-      .query()
-      .match([
-        currentUser,
-        relation('out', 'oldRel', 'token', ACTIVE),
-        node('token', 'Token'),
-      ])
-      .raw('WHERE NOT token.value = $token', { token: session.token })
-      .setValues({ 'oldRel.active': false })
-      .run();
+  async rolesForUser(user: ID) {
+    // Liveness join — Neo4j starts from a `:User` match, so a deleted user
+    // yields [] there; mirror that so stale roles can't feed sessionForUser
+    // / impersonation merges.
+    const rows = await this.drizzle.client
+      .select({ role: userGlobalRoles.role })
+      .from(userGlobalRoles)
+      .innerJoin(
+        users,
+        and(eq(users.id, userGlobalRoles.userId), isNull(users.deletedAt)),
+      )
+      .where(eq(userGlobalRoles.userId, user));
+    return rows.map((row) => row.role);
   }
 
-  async deactivateAllOtherSessionsByEmail(email: string, session: Session) {
-    await this.db
-      .query()
-      .match([
-        node('emailAddress', 'EmailAddress', { value: email }),
-        relation('in', '', 'email', ACTIVE),
-        node('user', 'User'),
-        relation('out', 'oldRel', 'token', ACTIVE),
-        node('token', 'Token'),
-      ])
-      .raw('WHERE NOT token.value = $token', { token: session.token })
-      .setValues({ 'oldRel.active': false })
-      .run();
+  async getRootUserId() {
+    const row = await this.drizzle.client.query.users.findFirst({
+      where: (user) => eq(user.isRoot, true),
+    });
+    if (!row) throw new ServerException('Could not find root user');
+    return row.id;
   }
 
-  async deactivateAllSessions(user: ID<'User'>) {
-    await this.db
-      .query()
-      .match([
-        node('user', 'User', { id: user }),
-        relation('out', 'oldRel', 'token', ACTIVE),
-        node('token', 'Token'),
-      ])
-      .setValues({ 'oldRel.active': false })
-      .run();
-  }
-
-  @OnIndex()
-  private createIndexes() {
-    return [
-      `CREATE INDEX AuthToken_value IF NOT EXISTS FOR (n:Token) ON (n.value)`,
-      `CREATE INDEX AuthEmailToken_token IF NOT EXISTS FOR (n:EmailToken) ON (n.token)`,
-      `CREATE INDEX AuthEmailToken_email IF NOT EXISTS FOR (n:EmailToken) ON (n.value)`,
-    ];
+  async waitForRootUserId(): Promise<ID> {
+    const find = () =>
+      this.drizzle.client.query.users.findFirst({
+        where: (user) => eq(user.isRoot, true),
+      });
+    let row;
+    try {
+      row = await find();
+    } catch {
+      // Database not ready yet, will retry below
+    }
+    while (!row) {
+      await new Promise<void>((resolve) => {
+        setTimeout(resolve, 1000).unref();
+      });
+      try {
+        row = await find();
+      } catch {
+        // Continue retrying on error
+      }
+    }
+    return row.id;
   }
 }

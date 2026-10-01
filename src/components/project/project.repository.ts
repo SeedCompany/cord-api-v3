@@ -1,507 +1,1298 @@
 import { Injectable } from '@nestjs/common';
-import { mapValues } from '@seedcompany/common';
-import { inArray, node, not, type Query, relation } from 'cypher-query-builder';
+import {
+  and,
+  asc,
+  count,
+  eq,
+  gt,
+  gte,
+  ilike,
+  inArray,
+  isNull,
+  lt,
+  lte,
+  notInArray,
+  sql,
+  type SQL,
+} from 'drizzle-orm';
+import { type AnyPgColumn, unionAll } from 'drizzle-orm/pg-core';
 import { DateTime } from 'luxon';
 import {
-  CreationFailed,
+  CalendarDate,
   DuplicateException,
+  generateId,
   type ID,
   NotFoundException,
-  Sensitivity,
+  NotImplementedException,
+  type PaginatedListType,
+  type Role,
   type UnsecuredDto,
 } from '~/common';
+import { Identity } from '~/core/authentication';
 import { ConfigService } from '~/core/config';
-import { type ChangesOf, getChanges } from '~/core/database/changes';
-import { CommonRepository, OnIndex, UniquenessError } from '~/core/neo4j';
 import {
-  ACTIVE,
-  coalesce,
-  collect,
-  createNode,
-  createRelationships,
-  currentUser,
-  defineSorters,
-  FullTextIndex,
-  matchChangesetAndChangedProps,
-  matchProjectSens,
-  matchProps,
-  matchPropsAndProjectSensAndScopedRoles,
-  merge,
-  paginate,
-  path,
-  pinned,
-  type SortCol,
-  sortWith,
-  variable,
-} from '~/core/neo4j/query';
-import { Privileges } from '../authorization';
-import { fieldRegionSorters } from '../field-region/field-region.repository';
-import { locationSorters } from '../location/location.repository';
-import { partnershipSorters } from '../partnership/partnership.repository';
+  catchUniqueViolation,
+  collateDisplayOrder,
+  DrizzleDtoRepository,
+  EMPTY_PAGE,
+  escapeLikePattern,
+  foldsWhenSorted,
+  orderEntry,
+  resolveOrderBy,
+  sortColumnFor,
+  type SortColumns,
+  type SortMap,
+  subFilter,
+} from '~/core/drizzle';
+import { type DrizzleDb, DrizzleService } from '~/core/drizzle/drizzle.service';
+import {
+  engagements,
+  fieldRegions,
+  locations,
+  partnerships,
+  projectMembers,
+  projects,
+  tools,
+  toolUsages,
+} from '~/core/drizzle/schema';
+import { rolesForScope } from '../authorization/dto/role.dto';
+import { PolicyExecutor } from '../authorization/policy/executor/policy-executor';
+import {
+  fieldRegionFilterClauses,
+  fieldRegionSortColumns,
+} from '../field-region/field-region.repository';
+import {
+  locationFilterClauses,
+  locationSortColumns,
+} from '../location/location.repository';
+import { partnershipFilterClauses } from '../partnership/partnership.repository';
+import { pinnedByRequester, pinnedFilter } from '../pin/pinned-by-requester';
 import { ToolKey } from '../tools/tool/dto/tool-key.enum';
+import { toolFilterClauses } from '../tools/tool/tool.repository';
 import {
   type CreateProject,
   IProject,
   type Project,
+  type ProjectFilters,
   type ProjectListInput,
-  ProjectStep,
-  resolveProjectType,
-  stepToStatus,
   type UpdateProject,
 } from './dto';
-import { projectFilters } from './project-filters.query';
+import { projectMemberFilterClauses } from './project-member/project-member.repository';
+
+const catchNameUnique = catchUniqueViolation(
+  'projects_name_active_unique',
+  'name',
+  'Project with this name already exists',
+);
+const catchDepartmentIdUnique = catchUniqueViolation(
+  'projects_department_id_active_unique',
+  'departmentId',
+  'Another Project with this Department ID already exists.',
+);
+
+/**
+ * Hydrated Project row: the projects table row + the current user's membership
+ * (id, roles, inactive_at) if any. Pulled together in a single SELECT for
+ * `readMany`. Cross-domain stubs (usesRev79, rootDirectory) live in `toDto`.
+ * `primaryPartnership` used to be one of them and is now batched like the rest.
+ */
+type ProjectRow = typeof projects.$inferSelect & {
+  engagementTotal?: number;
+  pinned?: boolean;
+  /**
+   * The marketing location's default region — batched in `readMany`. Feeds
+   * `marketingRegion`, which falls back to this when there's no override.
+   */
+  inheritedMarketingRegionId?: ID<'Location'> | null;
+  /** Has a live ToolUsage for the Rev79 tool — batched in `readMany`. */
+  usesRev79?: boolean;
+  /** The live primary partnership's id, if the project has one — batched in `readMany`. */
+  primaryPartnershipId?: ID<'Partnership'> | null;
+  membership?: {
+    id: ID<'ProjectMember'>;
+    // `Role`, not `string` — the column is a role enum array, and the DTO's
+    // `membership.roles` is typed from it. Declaring this loosely meant the DTO
+    // needed a cast to get the type back, which is what hid the mismatch.
+    roles: readonly Role[];
+    inactiveAt: Date | null;
+  } | null;
+};
 
 @Injectable()
-export class ProjectRepository extends CommonRepository {
+export class ProjectRepository extends DrizzleDtoRepository<
+  typeof projects,
+  Project
+> {
   constructor(
+    db: DrizzleService,
+    private readonly executor: PolicyExecutor,
+    private readonly identity: Identity,
     private readonly config: ConfigService,
-    private readonly privileges: Privileges,
   ) {
-    super();
+    super(db, projects, IProject);
   }
 
-  async readOne(id: ID, changeset?: ID) {
-    const [dto] = await this.readMany([id], changeset);
-    if (!dto) {
-      throw new NotFoundException('Could not find project');
+  // migration-todo: Neo4j-shaped existence check kept for the service layer's
+  // validateOtherResourceId. Only the labels project create/update actually
+  // validates are mapped; extend if a new label appears. Replace with a
+  // shared exists() helper at Phase 7 cutover when getBaseNode leaves the
+  // service layer.
+  async getBaseNode(id: ID, label?: string) {
+    if (label === 'FieldRegion') {
+      return await this.db.query.fieldRegions.findFirst({
+        where: (fr) =>
+          and(eq(fr.id, id as ID<'FieldRegion'>), isNull(fr.deletedAt)),
+        columns: { id: true },
+      });
     }
-    return dto;
+    if (label === 'Location') {
+      return await this.db.query.locations.findFirst({
+        where: (l) => and(eq(l.id, id as ID<'Location'>), isNull(l.deletedAt)),
+        columns: { id: true },
+      });
+    }
+    throw new NotImplementedException(
+      `getBaseNode existence check for label "${String(label)}" under postgres`,
+    );
   }
 
-  async readMany(ids: readonly ID[], changeset?: ID) {
-    return await this.db
-      .query()
-      .matchNode('node', 'Project')
-      .where({ 'node.id': inArray(ids) })
-      .apply(
-        this.privileges.for(IProject).filterToReadable({
-          wrapContext: (conditions) => (q) =>
-            q.with('node, node as project').apply(conditions),
-        }),
+  override async readMany(
+    ids: readonly ID[],
+    _changeset?: ID,
+  ): Promise<Array<UnsecuredDto<Project>>> {
+    // Changesets were not carried forward, so a changeset view collapses to
+    // the canonical row — the arg is ignored.
+    if (ids.length === 0) return [];
+    const userId = this.identity.current.userId;
+    // Mirror the Neo4j readMany's `filterToReadable`: without this, member-
+    // gated roles could resolve non-member projects by id. The policy's
+    // condition SQL references literal table names, so it runs over a plain
+    // id-select rather than inside the relational query; survivors hydrate
+    // through the normal path.
+    const readConditions: SQL[] = [
+      inArray(projects.id, [...ids]),
+      isNull(projects.deletedAt),
+    ];
+    if (!this.executor.applyReadFilter(this.resource, readConditions)) {
+      return [];
+    }
+    const readable = await this.db
+      .select({ id: projects.id })
+      .from(projects)
+      .where(and(...readConditions));
+    if (readable.length === 0) return [];
+    const readableIds = readable.map((row) => row.id);
+    const rows = await this.db.query.projects.findMany({
+      where: (p) => inArray(p.id, readableIds),
+    });
+    if (rows.length === 0) return [];
+
+    // Pull the requesting user's memberships in one query, then attach.
+    const memberships = await this.db
+      .select({
+        id: projectMembers.id,
+        projectId: projectMembers.projectId,
+        roles: projectMembers.roles,
+        inactiveAt: projectMembers.inactiveAt,
+      })
+      .from(projectMembers)
+      .where(
+        and(
+          eq(projectMembers.userId, userId),
+          isNull(projectMembers.deletedAt),
+        ),
+      );
+    const membershipByProject = new Map(
+      memberships.map((m) => [m.projectId, m]),
+    );
+    // `stepChangedAt` is a stored column (migration 0041), not a lookup of the
+    // latest workflow event. It used to be derived here; that agreed for
+    // anything transitioned after the event trail began in Feb 2021 and was
+    // wrong by up to four years for the 1,560 projects that moved before it
+    // existed. History that was never recorded cannot be derived.
+    const engagementCounts = await this.db
+      .select({
+        projectId: engagements.projectId,
+        total: count(engagements.id),
+      })
+      .from(engagements)
+      .where(
+        and(
+          inArray(
+            engagements.projectId,
+            rows.map((r) => r.id),
+          ),
+          isNull(engagements.deletedAt),
+        ),
       )
-      .apply(this.hydrate(changeset))
-      .map('dto')
-      .run();
-  }
-
-  private hydrate(changeset?: ID) {
-    return (query: Query) =>
-      query
-        .with(['node', 'node as project'])
-        .apply(matchPropsAndProjectSensAndScopedRoles())
-        .apply(matchChangesetAndChangedProps(changeset))
-        // optional because not defined until right after creation
-        .optionalMatch([
-          node('node'),
-          relation('out', '', 'rootDirectory', ACTIVE),
-          node('rootDirectory', 'Directory'),
-        ])
-        .subQuery('node', (sub) =>
-          sub
-            .match([
-              node('node'),
-              relation('out', '', 'member', ACTIVE),
-              node('membership'),
-              relation('out', '', 'user'),
-              currentUser,
-            ])
-            .apply(matchProps({ nodeName: 'membership', outputVar: 'dto' }))
-            .with(collect('dto').as('dtos'))
-            .return('dtos[0] as membership'),
-        )
-        .optionalMatch([
-          node('node'),
-          relation('out', '', 'partnership', ACTIVE),
-          node('primaryPartnership', 'Partnership'),
-          relation('out', '', 'primary', ACTIVE),
-          node('', 'Property', { value: variable('true') }),
-        ])
-        .optionalMatch([
-          node('node'),
-          relation('out', '', 'primaryLocation', ACTIVE),
-          node('primaryLocation', 'Location'),
-        ])
-        .optionalMatch([
-          node('node'),
-          relation('out', '', 'marketingLocation', ACTIVE),
-          node('marketingLocation', 'Location'),
-        ])
-        .optionalMatch([
-          node('node'),
-          relation('out', '', 'fieldRegion', ACTIVE),
-          node('fieldRegion', 'FieldRegion'),
-        ])
-        .optionalMatch([
-          node('node'),
-          relation('out', '', 'owningOrganization', ACTIVE),
-          node('organization', 'Organization'),
-        ])
-        .optionalMatch([
-          node('node'),
-          relation('out', '', 'marketingRegionOverride', ACTIVE),
-          node('marketingRegionOverride', 'Location'),
-        ])
-        .optionalMatch([
-          node('marketingLocation'),
-          relation('out', '', 'defaultMarketingRegion', ACTIVE),
-          node('inheritedMarketingRegion', 'Location'),
-        ])
-        .subQuery('node', (sub) =>
-          sub
-            .match([
-              node('node'),
-              relation('out', '', 'engagement', ACTIVE),
-              node('engagement', 'Engagement'),
-            ])
-            .return('count(engagement) as engagementTotal'),
-        )
-        .subQuery('node', (sub) =>
-          sub
-            .optionalMatch([
-              node('node'),
-              relation('out', '', 'uses', ACTIVE),
-              node('', 'ToolUsage'),
-              relation('out', '', 'tool', ACTIVE),
-              node('tool', 'Tool'),
-              relation('out', '', 'key'),
-              node('', 'Property', { value: ToolKey.Rev79 }),
-            ])
-            .return('count(tool) > 0 as usesRev79'),
-        )
-        .return<{ dto: UnsecuredDto<Project> }>(
-          merge('props', 'changedProps', {
-            type: 'node.type',
-            pinned,
-            membership: 'membership',
-            rootDirectory: 'rootDirectory { .id }',
-            primaryPartnership: 'primaryPartnership { .id }',
-            primaryLocation: 'primaryLocation { .id }',
-            marketingLocation: 'marketingLocation { .id }',
-            fieldRegion: 'fieldRegion { .id }',
-            owningOrganization: 'organization { .id }',
-            engagementTotal: 'engagementTotal',
-            usesRev79: 'usesRev79',
-            changeset: 'changeset.id',
-            marketingRegionOverride: 'marketingRegionOverride { .id }',
-            marketingRegion: coalesce(
-              'marketingRegionOverride { .id }',
-              'inheritedMarketingRegion { .id }',
+      .groupBy(engagements.projectId);
+    const engagementTotalByProject = new Map(
+      engagementCounts.map((c) => [c.projectId, c.total]),
+    );
+    // A project with no marketing region override inherits the one its
+    // marketing location points at — the same fallback the Neo4j repo does with
+    // `coalesce`. Soft-deleted locations contribute nothing, matching Neo4j,
+    // where a deleted location's link is no longer active.
+    const marketingLocationIds = [
+      ...new Set(
+        rows
+          .map((row) => row.marketingLocationId)
+          .filter((id): id is ID<'Location'> => id !== null),
+      ),
+    ];
+    const marketingLocations = marketingLocationIds.length
+      ? await this.db
+          .select({
+            id: locations.id,
+            defaultMarketingRegionId: locations.defaultMarketingRegionId,
+          })
+          .from(locations)
+          .where(
+            and(
+              inArray(locations.id, marketingLocationIds),
+              isNull(locations.deletedAt),
             ),
-          }).as('dto'),
-        );
+          )
+      : [];
+    const inheritedRegionByLocation = new Map(
+      marketingLocations.map((loc) => [loc.id, loc.defaultMarketingRegionId]),
+    );
+    const pinnedSet = await pinnedByRequester(
+      this.db,
+      userId,
+      rows.map((r) => r.id),
+    );
+    // Rev79 usage — one row per project with a live ToolUsage against the
+    // Rev79 tool, either attached directly to the project or to one of its
+    // (Language) engagements — `containerId` is polymorphic, so a usage
+    // scoped to an engagement never equals a project id directly and needs
+    // the join through `engagements` to resolve back to its project.
+    const rev79Usages = await unionAll(
+      this.db
+        .select({ projectId: toolUsages.containerId })
+        .from(toolUsages)
+        .innerJoin(
+          tools,
+          and(
+            eq(tools.id, toolUsages.toolId),
+            eq(tools.key, ToolKey.Rev79),
+            isNull(tools.deletedAt),
+          ),
+        )
+        .where(
+          and(
+            inArray(
+              toolUsages.containerId,
+              rows.map((r) => r.id),
+            ),
+            isNull(toolUsages.deletedAt),
+          ),
+        ),
+      this.db
+        .select({ projectId: engagements.projectId })
+        .from(toolUsages)
+        .innerJoin(
+          tools,
+          and(
+            eq(tools.id, toolUsages.toolId),
+            eq(tools.key, ToolKey.Rev79),
+            isNull(tools.deletedAt),
+          ),
+        )
+        .innerJoin(
+          engagements,
+          and(
+            eq(engagements.id, toolUsages.containerId),
+            isNull(engagements.deletedAt),
+          ),
+        )
+        .where(
+          and(
+            inArray(
+              engagements.projectId,
+              rows.map((r) => r.id),
+            ),
+            isNull(toolUsages.deletedAt),
+          ),
+        ),
+    );
+    const usesRev79ByProject = new Set(
+      rev79Usages.map((r) => r.projectId as ID<'Project'>),
+    );
+    // The project's primary partnership. Neo4j finds it by walking to each
+    // partnership and checking its `primary` property; here it is a column,
+    // and `partnerships_project_primary_active_unique` already guarantees at
+    // most one live primary row per project, so this cannot return two.
+    const primaryPartnerships = await this.db
+      .select({
+        projectId: partnerships.projectId,
+        id: partnerships.id,
+      })
+      .from(partnerships)
+      .where(
+        and(
+          inArray(
+            partnerships.projectId,
+            rows.map((r) => r.id),
+          ),
+          eq(partnerships.primary, true),
+          isNull(partnerships.deletedAt),
+        ),
+      );
+    const primaryPartnershipByProject = new Map(
+      primaryPartnerships.map((row) => [row.projectId, row.id]),
+    );
+    return rows.map((row): UnsecuredDto<Project> => {
+      const enriched: ProjectRow = {
+        ...row,
+        membership: membershipByProject.get(row.id) ?? null,
+        engagementTotal: engagementTotalByProject.get(row.id) ?? 0,
+        pinned: pinnedSet.has(row.id),
+        inheritedMarketingRegionId: row.marketingLocationId
+          ? (inheritedRegionByLocation.get(row.marketingLocationId) ?? null)
+          : null,
+        usesRev79: usesRev79ByProject.has(row.id),
+        primaryPartnershipId: primaryPartnershipByProject.get(row.id) ?? null,
+      };
+      return this.toDto(enriched);
+    });
   }
 
-  getActualChanges(
-    currentProject: UnsecuredDto<Project>,
-    input: UpdateProject,
-  ) {
-    return getChanges(IProject)(currentProject, input);
-  }
-
-  async create(input: CreateProject) {
-    const step = ProjectStep.EarlyConversations;
-    const now = DateTime.local();
-    const {
-      primaryLocation,
-      fieldRegion,
-      marketingLocation,
-      marketingRegionOverride,
-      otherLocations,
-      type,
-      ...initialProps
-    } = {
-      ...input,
-      sensitivity: input.sensitivity ?? Sensitivity.High,
-      mouStart: input.mouStart,
-      mouEnd: input.mouEnd,
-      initialMouEnd: undefined,
-      stepChangedAt: now,
-      estimatedSubmission: input.estimatedSubmission,
-      tags: input.tags,
-      financialReportReceivedAt: input.financialReportReceivedAt,
-      financialReportPeriod: input.financialReportPeriod,
-      step,
-      status: stepToStatus(step),
-      modifiedAt: now,
-      canDelete: true,
-    };
-
-    const Project = resolveProjectType({ type });
-    const query = this.db
-      .query()
-      .apply(
-        await createNode(Project, {
-          initialProps,
-          baseNodeProps: { type },
-        }),
-      )
-      .apply(
-        createRelationships(IProject, 'out', {
-          fieldRegion: ['FieldRegion', fieldRegion],
-          primaryLocation: ['Location', primaryLocation],
-          otherLocations: ['Location', otherLocations],
-          marketingLocation: ['Location', marketingLocation],
-          marketingRegionOverride: ['Location', marketingRegionOverride],
-          owningOrganization: ['Organization', this.config.defaultOrg.id],
-        }),
-      )
-      .return<{ id: ID }>('node.id as id');
-    let result;
-    try {
-      result = await query.first();
-    } catch (e) {
-      if (e instanceof UniquenessError && e.label === 'ProjectName') {
-        throw Object.assign(
-          new DuplicateException(
-            'name',
-            'Project with this name already exists',
-          ),
-          { value: e.value },
-        );
-      }
-      if (e instanceof UniquenessError && e.label === 'DepartmentId') {
-        throw Object.assign(
-          new DuplicateException(
-            'departmentId',
-            'Another Project with this Department ID already exists',
-          ),
-          { value: e.value },
-        );
-      }
-    }
-    if (!result) {
-      throw new CreationFailed(Project);
-    }
-    return result;
+  async create(input: CreateProject): Promise<{ id: ID<'Project'> }> {
+    const id = await generateId<ID<'Project'>>();
+    // migration-note: `step` defaults to EarlyConversations via the schema
+    // column default. SetInitialMouEnd (Created hook) and SetDepartmentId
+    // (Transitioned hook) get their PG paths in the workflow PR
+    // (`project-workflow-pg`); no inline wiring needed here.
+    await this.db
+      .insert(projects)
+      .values({
+        id,
+        type: input.type,
+        name: input.name,
+        // Internship-only writable; Translation rows leave it null and read
+        // the denormalized `sensitivity` column.
+        ownSensitivity:
+          input.type === 'Internship' ? (input.sensitivity ?? 'High') : null,
+        // For Internship: keep `sensitivity` in lockstep with own_sensitivity
+        // on create. For Translation: 'High' default (migration-todo: hook
+        // recomputes when Engagement/Language migrates).
+        sensitivity:
+          input.type === 'Internship' ? (input.sensitivity ?? 'High') : 'High',
+        primaryLocationId: input.primaryLocation ?? null,
+        marketingLocationId: input.marketingLocation ?? null,
+        marketingRegionOverrideId: input.marketingRegionOverride ?? null,
+        fieldRegionId: input.fieldRegion ?? null,
+        owningOrganizationId: this.config.defaultOrg.id as ID<'Organization'>,
+        mouStart: input.mouStart ? input.mouStart.toSQLDate() : null,
+        mouEnd: input.mouEnd ? input.mouEnd.toSQLDate() : null,
+        estimatedSubmission: input.estimatedSubmission
+          ? input.estimatedSubmission.toSQLDate()
+          : null,
+        tags: input.tags ? [...input.tags] : [],
+        financialReportReceivedAt:
+          input.financialReportReceivedAt?.toJSDate() ?? null,
+        financialReportPeriod: input.financialReportPeriod ?? null,
+        presetInventory: input.presetInventory ?? false,
+        departmentId: input.departmentId ?? null,
+        rev79ProjectId: input.rev79ProjectId ?? null,
+      })
+      .catch(catchDepartmentIdUnique)
+      .catch(catchNameUnique);
+    // migration-todo (PR 2 follow-up): `otherLocations` are still managed by
+    // LocationService against Neo4j. Once the location service ports, wire a
+    // `project_other_locations` junction or move the loop here.
+    return { id };
   }
 
   async update(
     existing: UnsecuredDto<Project>,
-    changes: ChangesOf<Project, UpdateProject>,
-    changeset?: ID,
-  ) {
+    changes: Partial<UpdateProject>,
+    _changeset?: ID,
+  ): Promise<UnsecuredDto<Project>> {
+    // Changesets were not carried forward, so there is no staging table: a
+    // changeset argument still writes through to the row. No changeset can
+    // exist to pass here.
     const {
+      id: _id,
+      changeset: _cs,
       primaryLocation,
       marketingLocation,
       marketingRegionOverride,
       fieldRegion,
+      mouStart,
+      mouEnd,
+      initialMouEnd,
+      estimatedSubmission,
+      financialReportReceivedAt,
+      sensitivity,
+      tags,
+      usesRev79: _usesRev79,
       ...simpleChanges
     } = changes;
 
-    const type = resolveProjectType({ type: existing.type });
-
-    let result;
-    try {
-      result = await this.db.updateProperties({
-        type,
-        object: existing,
-        changes: simpleChanges,
-        changeset,
-      });
-    } catch (e) {
-      if (e instanceof UniquenessError && e.label === 'DepartmentId') {
-        throw Object.assign(
-          new DuplicateException(
-            'departmentId',
-            'Another Project with this Department ID already exists',
-          ),
-          { value: e.value },
-        );
-      }
-      throw e;
-    }
-
-    if (primaryLocation !== undefined) {
-      await this.updateRelation(
-        'primaryLocation',
-        'Location',
-        existing.id,
-        primaryLocation,
-        type,
-      );
-      result = {
-        ...result,
-        primaryLocation: primaryLocation ? { id: primaryLocation } : null,
-      };
-    }
-
-    if (fieldRegion !== undefined) {
-      await this.updateRelation(
-        'fieldRegion',
-        'FieldRegion',
-        existing.id,
-        fieldRegion,
-        type,
-      );
-      result = {
-        ...result,
-        fieldRegion: fieldRegion ? { id: fieldRegion } : null,
-      };
-    }
-
-    if (marketingLocation !== undefined) {
-      await this.updateRelation(
-        'marketingLocation',
-        'Location',
-        existing.id,
-        marketingLocation,
-        type,
-      );
-      result = {
-        ...result,
-        marketingLocation: marketingLocation ? { id: marketingLocation } : null,
-      };
-    }
-
-    if (marketingRegionOverride !== undefined) {
-      await this.updateRelation(
-        'marketingRegionOverride',
-        'Location',
-        existing.id,
-        marketingRegionOverride,
-        type,
-      );
-      result = {
-        ...result,
-        marketingRegionOverride: marketingRegionOverride
-          ? { id: marketingRegionOverride }
+    await this.updateColumns(existing.id, {
+      ...simpleChanges,
+      ...(primaryLocation !== undefined && {
+        primaryLocationId: primaryLocation,
+      }),
+      ...(marketingLocation !== undefined && {
+        marketingLocationId: marketingLocation,
+      }),
+      ...(marketingRegionOverride !== undefined && {
+        marketingRegionOverrideId: marketingRegionOverride,
+      }),
+      ...(fieldRegion !== undefined && { fieldRegionId: fieldRegion }),
+      ...(mouStart !== undefined && {
+        mouStart: mouStart ? mouStart.toSQLDate() : null,
+      }),
+      ...(mouEnd !== undefined && {
+        mouEnd: mouEnd ? mouEnd.toSQLDate() : null,
+      }),
+      ...(initialMouEnd !== undefined && {
+        initialMouEnd: initialMouEnd ? initialMouEnd.toSQLDate() : null,
+      }),
+      ...(estimatedSubmission !== undefined && {
+        estimatedSubmission: estimatedSubmission
+          ? estimatedSubmission.toSQLDate()
           : null,
-      };
-    }
+      }),
+      ...(financialReportReceivedAt !== undefined && {
+        financialReportReceivedAt:
+          financialReportReceivedAt?.toJSDate() ?? null,
+      }),
+      ...(tags !== undefined && { tags: [...tags] }),
+      // Internship: writable. Translation: ignored (denormalized from
+      // engagements; recompute hook lands when Language migrates).
+      ...(sensitivity !== undefined &&
+        existing.type === 'Internship' && {
+          ownSensitivity: sensitivity,
+          sensitivity,
+        }),
+      modifiedAt: new Date(),
+    }).catch(catchDepartmentIdUnique);
 
-    return result;
+    // usesRev79 is deliberately dropped here, not written: project.service.ts's
+    // update() handles the toggle itself, via `this.toolUsage.setUsageByKey`
+    // (create/remove the Rev79 ToolUsage row), then re-reads this repo to pick
+    // up the recomputed value. Nothing repo-side to do.
+
+    // The service runs RequiredWhen.calc against this return value, so it
+    // must be the full updated DTO — not a stub.
+    return await this.readOne(existing.id);
   }
 
   async delete(id: ID): Promise<void> {
-    await this.deleteNode(id, { resource: IProject });
+    await this.softDelete(id);
   }
 
-  async list(input: ProjectListInput) {
-    const result = await this.db
-      .query()
-      .matchNode('node', 'Project')
-      .with('distinct(node) as node, node as project')
-      .apply(projectFilters(input.filter))
-      .apply(this.privileges.for(IProject).filterToReadable())
-      .apply(sortWith(projectSorters, input))
-      .apply(paginate(input, this.hydrate()))
-      .first();
-    return result!; // result from paginate() will always have 1 row.
+  async list(
+    input: ProjectListInput,
+  ): Promise<PaginatedListType<UnsecuredDto<Project>>> {
+    const conditions: SQL[] = [isNull(projects.deletedAt)];
+    if (!this.executor.applyReadFilter(this.resource, conditions)) {
+      return EMPTY_PAGE;
+    }
+    conditions.push(
+      ...projectFilterClauses(
+        this.db,
+        input.filter,
+        this.identity.current.userId,
+      ),
+    );
+
+    const allConditions = and(...conditions);
+    const sort = input.sort as string;
+
+    // Cross-domain JOIN-sort — mirror of the partner repo's pattern. When a
+    // second consumer needs the same prefix-strip + sortColumn-resolve dance,
+    // extract `resolveCrossDomainSort` (per partner's migration-todo).
+    const joinSort = resolveCrossDomainSort(sort);
+
+    let pageIds: ReadonlyArray<{ id: ID<'Project'> }>;
+    let total: number;
+    if (joinSort) {
+      const offset = (input.page - 1) * input.count;
+      const [countResult, joined] = await Promise.all([
+        this.db.select({ total: count() }).from(projects).where(allConditions),
+        this.db
+          .select({ id: projects.id })
+          .from(projects)
+          .leftJoin(joinSort.table, eq(joinSort.fkColumn, joinSort.table.id))
+          .where(allConditions)
+          .orderBy(orderEntry(joinSort.column, input.order), asc(projects.id))
+          .limit(input.count)
+          .offset(offset),
+      ]);
+      total = countResult[0]?.total ?? 0;
+      pageIds = joined;
+    } else {
+      // Columns on `projects` itself, plus the sorts counted out of another
+      // table (the engagement counts). Both end up as one ORDER BY entry, so
+      // they resolve through the same map rather than needing a third branch.
+      const sortColumns = projectListSortColumns;
+      // Reject unknown/unmapped own-table sort keys instead of silently
+      // falling back to createdAt (resolveOrderBy's `map[sort] ?? fallback`).
+      // Mirrors the Partner repo guard. `Object.hasOwn` rather than `in`, which
+      // walks the prototype chain and so answers true for `constructor` — a
+      // sort key the input validator accepts.
+      if (!Object.hasOwn(sortColumns, sort)) {
+        throw new NotImplementedException(
+          `Sorting projects by '${sort}' is not supported.`,
+        );
+      }
+      const page = await this.paginatedSelect({
+        predicate: allConditions,
+        orderBy: resolveOrderBy(input, sortColumns, projects.createdAt),
+        page: input.page,
+        count: input.count,
+      });
+      pageIds = page.rows.map((r) => ({ id: r.id }));
+      total = page.total;
+    }
+
+    const offset = (input.page - 1) * input.count;
+    const hasMore = offset + pageIds.length < total;
+    if (pageIds.length === 0) return { total, items: [], hasMore };
+
+    const dtos = await this.readMany(pageIds.map((r) => r.id));
+    const byId = new Map(dtos.map((d) => [d.id, d]));
+    return {
+      total,
+      items: pageIds.flatMap((r) => byId.get(r.id) ?? []),
+      hasMore,
+    };
   }
 
-  async getPrimaryOrganizationName(id: ID) {
-    const name = await this.db
-      .query()
-      .match([
-        node('project', 'Project', { id }),
-        relation('out', '', 'partnership', ACTIVE),
-        node('partnership', 'Partnership'),
-        relation('out', '', 'primary', ACTIVE),
-        node('primary', 'Property', { value: true }),
-      ])
-      .with('partnership')
-      .match([
-        node('partnership'),
-        relation('out', '', 'partner', ACTIVE),
-        node('', 'Partner'),
-        relation('out', '', 'organization', ACTIVE),
-        node('org', 'Organization'),
-        relation('out', '', 'name', ACTIVE),
-        node('name', 'Property'),
-      ])
-      .return<{ name: string }>('name.value as name')
-      .map('name')
-      .first();
-    return name ?? null;
+  /**
+   * Resolve the primary partnership's owning organization name. Used by the
+   * Rev79 integration. Traverses partnerships → partners → organizations.
+   */
+  async getPrimaryOrganizationName(id: ID): Promise<string | null> {
+    const rows = await this.db.execute<{ name: string }>(sql`
+      select "o"."name" from "partnerships" "ps"
+      join "partners" "pt" on "pt"."id" = "ps"."partner_id"
+      join "organizations" "o" on "o"."id" = "pt"."organization_id"
+      where "ps"."project_id" = ${id}
+        and "ps"."primary" = true
+        and "ps"."deleted_at" is null
+      limit 1
+    `);
+    return rows.rows[0]?.name ?? null;
   }
 
-  @OnIndex()
-  private createIndexes() {
-    return this.getConstraintsFor(IProject);
-  }
-  @OnIndex('schema')
-  private async createSchemaIndexes() {
-    await this.db.query().apply(ProjectNameIndex.create()).run();
+  protected toDto(row: ProjectRow): UnsecuredDto<Project> {
+    const linkOrNull = <T extends string>(id: ID<T> | null | undefined) =>
+      id ? { id } : null;
+    // Typed here rather than asserted on the way out. An earlier version built
+    // this as `unknown` and asserted it, which stops TypeScript comparing the
+    // object to the DTO at all — that is how `marketingRegion` went missing
+    // unnoticed. Declaring the type checks every field where it is written, so a
+    // missing or wrong-shaped one is reported by name. `canDelete` is
+    // intersected in because `UnsecuredDto` drops it on purpose: the policy layer
+    // in the service decides it, but every repository still sets it.
+    const dto: UnsecuredDto<Project> & { canDelete: boolean } = {
+      id: row.id,
+      __typename:
+        row.type === 'Internship'
+          ? 'InternshipProject'
+          : row.type === 'MomentumTranslation'
+            ? 'MomentumTranslationProject'
+            : 'MultiplicationTranslationProject',
+      type: row.type,
+      name: row.name,
+      step: row.step,
+      status: row.status,
+      sensitivity: row.sensitivity,
+      rev79ProjectId: row.rev79ProjectId ?? null,
+      departmentId: row.departmentId ?? null,
+      mouStart: row.mouStart ? CalendarDate.fromISO(row.mouStart) : null,
+      mouEnd: row.mouEnd ? CalendarDate.fromISO(row.mouEnd) : null,
+      initialMouEnd: row.initialMouEnd
+        ? CalendarDate.fromISO(row.initialMouEnd)
+        : null,
+      estimatedSubmission: row.estimatedSubmission
+        ? CalendarDate.fromISO(row.estimatedSubmission)
+        : null,
+      financialReportReceivedAt: row.financialReportReceivedAt
+        ? DateTime.fromJSDate(row.financialReportReceivedAt)
+        : null,
+      financialReportPeriod: row.financialReportPeriod ?? null,
+      tags: row.tags,
+      presetInventory: row.presetInventory,
+      createdAt: DateTime.fromJSDate(row.createdAt),
+      modifiedAt: DateTime.fromJSDate(row.modifiedAt),
+      // Stored, not derived (migration 0041). Null stays null rather than
+      // falling back to createdAt: Neo4j reports blank for the ~470 legacy
+      // projects that never moved off their first step, and a creation date
+      // presented as a step-change date is a confident wrong answer where
+      // blank is an honest one.
+      stepChangedAt: row.stepChangedAt
+        ? DateTime.fromJSDate(row.stepChangedAt)
+        : null,
+      primaryLocation: linkOrNull(row.primaryLocationId),
+      marketingLocation: linkOrNull(row.marketingLocationId),
+      marketingRegionOverride: linkOrNull(row.marketingRegionOverrideId),
+      // Effective region: the override if set, else the marketing location's
+      // default (batched in readMany). Matches the Neo4j repo's coalesce.
+      marketingRegion: linkOrNull(
+        row.marketingRegionOverrideId ?? row.inheritedMarketingRegionId,
+      ),
+      fieldRegion: linkOrNull(row.fieldRegionId),
+      owningOrganization: linkOrNull(row.owningOrganizationId),
+      rootDirectory: linkOrNull(row.rootDirectoryId),
+      primaryPartnership: linkOrNull(row.primaryPartnershipId ?? null),
+      engagementTotal: row.engagementTotal ?? 0,
+      // Batched in readMany — whether the project has a live ToolUsage
+      // against the Rev79 tool.
+      usesRev79: row.usesRev79 ?? false,
+      membership: row.membership
+        ? {
+            id: row.membership.id,
+            roles: [...row.membership.roles],
+            inactiveAt: row.membership.inactiveAt
+              ? DateTime.fromJSDate(row.membership.inactiveAt)
+              : null,
+          }
+        : null,
+      // `changeset` is a resolver navigation marker — populated from request
+      // context, not stored on the row. PCR is excluded from the migration,
+      // so it stays undefined here.
+      changeset: undefined,
+      // Per-requester pin state — populated by readMany via pinnedByRequester;
+      // other internal paths leave it false.
+      pinned: row.pinned ?? false,
+      // canDelete is populated by the policy layer in the service.
+      canDelete: true,
+      // Scoped roles from the requesting user's active membership — the
+      // `member` policy conditions read `object.scope` directly. Mirror of
+      // Neo4j's matchProjectScopedRoles: the 'member:true' marker plus the
+      // membership roles project-scoped.
+      scope:
+        row.membership && !row.membership.inactiveAt
+          ? [
+              'member:true' as const,
+              ...row.membership.roles.map(rolesForScope('project')),
+            ]
+          : [],
+    };
+    return dto;
   }
 }
 
-export const ProjectNameIndex = FullTextIndex({
-  indexName: 'ProjectName',
-  labels: 'ProjectName',
-  properties: 'value',
-  analyzer: 'standard-folding',
-});
+/**
+ * Recompute the denormalized `projects.sensitivity` for translation projects
+ * from their engaged languages — max(language sensitivity) ?? High. Mirror of
+ * Gel's recalculateProjectSens triggers; called from the engagement/language
+ * drizzle repos whenever the inputs change (create/delete engagement,
+ * language sensitivity update). Internship projects are untouched — they
+ * read own_sensitivity.
+ */
+export const recomputeProjectSensitivity = async (
+  db: DrizzleDb,
+  projectIds: ReadonlyArray<ID<'Project'>>,
+) => {
+  if (projectIds.length === 0) return;
+  // migration-todo: INERT on develop — references `engagements`/`languages`
+  // (not migrated), and nothing calls this until the Engagement/Language repos
+  // do. Kept exported so those repos wire it without a new export. The raw SQL
+  // compiles (string table names); it would only fail if invoked pre-migration.
+  await db.execute(sql`
+    update "projects" set "sensitivity" = coalesce((
+      select max("l"."sensitivity") from "engagements" "e"
+      join "languages" "l" on "l"."id" = "e"."language_id"
+      where "e"."project_id" = "projects"."id"
+        and "e"."deleted_at" is null
+        and "l"."deleted_at" is null
+    ), 'High')
+    where "id" in (${sql.join(
+      projectIds.map((id) => sql`${id}`),
+      sql`, `,
+    )})
+      and "type" <> 'Internship'
+  `);
+};
 
-export const projectSorters = defineSorters(IProject, {
-  sensitivity: (query) =>
-    query
-      .apply(matchProjectSens('node', 'sortValue'))
-      .return<SortCol>('sortValue'),
-  ...mapValues.fromList(
-    [
-      'engagements', // probably "deprecated"
-      'engagements.total',
-    ],
-    () => (query: Query) =>
-      query
-        .match([
-          node('node'),
-          relation('out', '', 'engagement'),
-          node('engagement', 'LanguageEngagement'),
-        ])
-        .return<SortCol>('count(engagement) as sortValue'),
-  ).asRecord,
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  'primaryLocation.*': (query, input) => {
-    const getPath = (anon = false) => [
-      node('project'),
-      relation('out', '', 'primaryLocation', ACTIVE),
-      node(anon ? '' : 'node'),
-    ];
-    return query
-      .with('node as project')
-      .match(getPath())
-      .apply(sortWith(locationSorters, input))
-      .union()
-      .with('node')
-      .with('node as project')
-      .where(not(path(getPath(true))))
-      .return<SortCol>('null as sortValue');
-  },
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  'primaryPartnership.*': (query, input) => {
-    const getPath = (anon = false) => [
-      node('project'),
-      relation('out', '', 'partnership', ACTIVE),
-      node(anon ? '' : 'node', 'Partnership'),
-      relation('out', '', 'primary', ACTIVE),
-      node('', 'Property', { value: variable('true') }),
-    ];
-    return query
-      .with('node as project')
-      .match(getPath())
-      .apply(sortWith(partnershipSorters, input))
-      .union()
-      .with('node')
-      .with('node as project')
-      .where(not(path(getPath(true))))
-      .return<SortCol>('null as sortValue');
-  },
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  'fieldRegion.*': (query, input) => {
-    const getPath = (anon = false) => [
-      node('project'),
-      relation('out', '', 'fieldRegion', ACTIVE),
-      node(anon ? '' : 'node', 'FieldRegion'),
-    ];
-    return query
-      .with('node as project')
-      .match(getPath())
-      .apply(sortWith(fieldRegionSorters, input))
-      .union()
-      .with('node')
-      .with('node as project')
-      .where(not(path(getPath(true))))
-      .return<SortCol>('null as sortValue');
-  },
-});
+/**
+ * Sortable columns on `projects` itself. Cross-domain sorts (primaryLocation.*,
+ * fieldRegion.*) are resolved in `resolveCrossDomainSort` and routed through a
+ * hand-rolled INNER JOIN — same pattern as Partner's organization sort.
+ * Sorts counted out of another table live in {@link projectDerivedSortColumns}.
+ */
+export const projectSortColumns = {
+  id: projects.id,
+  name: projects.name,
+  createdAt: projects.createdAt,
+  modifiedAt: projects.modifiedAt,
+  step: projects.step,
+  status: projects.status,
+  type: projects.type,
+  sensitivity: projects.sensitivity,
+  mouStart: projects.mouStart,
+  mouEnd: projects.mouEnd,
+  estimatedSubmission: projects.estimatedSubmission,
+  departmentId: projects.departmentId,
+} satisfies SortMap<keyof Project>;
+
+/**
+ * `'Language'` as the `engagement_type` enum rather than an untyped string —
+ * same reason the partnership repo casts its `partner_type` literals.
+ */
+const languageEngagementTypeLiteral = sql.raw(`'Language'::"engagement_type"`);
+
+/**
+ * How many live LANGUAGE engagements the `projects` row in scope has, as a
+ * correlated subquery so it drops straight into ORDER BY — no join, no GROUP
+ * BY, and exactly one value per project (zero where there are none, never
+ * null), which is what Neo4j's aggregating sorter also produces.
+ *
+ * Deleted engagements drop out here the same way they do in Neo4j: there,
+ * `deleteBaseNode` prefixes the node's labels, so a deleted engagement stops
+ * matching `:LanguageEngagement`.
+ */
+const liveLanguageEngagementCount = sql<number>`(
+  select count(*) from ${engagements}
+  where ${engagements.projectId} = ${projects.id}
+    and ${engagements.type} = ${languageEngagementTypeLiteral}
+    and ${engagements.deletedAt} is null
+)`;
+
+/**
+ * Sort keys that are not a column on `projects` but a value counted out of
+ * another table. `engagements.total` is what the cord-field Projects table
+ * sorts its engagement-count column by; `engagements` is the older spelling of
+ * the same sort, answered here because `projectSorters` still answers it too.
+ *
+ * ⚠ Both count LANGUAGE engagements only, which is deliberate parity with
+ * `projectSorters` in project.repository.ts — it matches
+ * `node('engagement', 'LanguageEngagement')`. That is NOT the population
+ * behind the `engagementTotal` FIELD, which counts every engagement type on
+ * both engines, so an internship project sorts as 0 here while reporting a
+ * non-zero total of its own engagements. Reproduced rather than corrected: a
+ * reader at the flip should see the list they see today.
+ *
+ * migration-todo: at cutover, decide whether this sort should count every
+ * engagement type the way the field does. It is a pre-existing quirk of the
+ * Neo4j sorter, not something the port introduced, so it belongs in the
+ * post-cutover backlog rather than in this repository's parity scope.
+ */
+const projectDerivedSortColumns: Record<string, SortColumns> = {
+  engagements: liveLanguageEngagementCount,
+  'engagements.total': liveLanguageEngagementCount,
+};
+
+/**
+ * Every sort key `list()` answers without a join. Separate from
+ * {@link projectSortColumns} because that map is typed against `keyof Project`
+ * and `engagements.total` is a sort key with no field of that name behind it.
+ */
+const projectListSortColumns: Record<string, SortColumns> = {
+  ...projectSortColumns,
+  ...projectDerivedSortColumns,
+};
+
+/**
+ * Read one column of the project identified by `projectId` as a correlated
+ * subquery, folding names the way a direct column sort would.
+ */
+const projectValue = (column: AnyPgColumn, projectId: SQL): SortColumns => {
+  const value = sql`(
+    select ${column} from ${projects}
+    where ${projects.id} = ${projectId} and ${projects.deletedAt} is null
+  )`;
+  return foldsWhenSorted(column) ? collateDisplayOrder(value) : value;
+};
+
+/**
+ * Resolve one project sort key against a project id expression, for a domain
+ * that sorts THROUGH a project — Engagement's `project.*` keys, which Neo4j
+ * answers by delegating the prefix to `projectSorters`.
+ *
+ * Covers the project's own columns and its two nested paths
+ * (`primaryLocation.*`, `fieldRegion.*`), which need a second hop: the value
+ * lives on a row the project points at, so the subquery reads through the FK
+ * rather than joining. Returns undefined for a key projects do not sort by —
+ * `primaryPartnership.*` included, which is unimplemented here too (see
+ * {@link resolveCrossDomainSort}).
+ */
+export const projectSortEntry = (
+  key: string,
+  projectId: SQL,
+): SortColumns | undefined => {
+  const nested = (
+    table: typeof locations | typeof fieldRegions,
+    fkColumn: AnyPgColumn,
+    column: AnyPgColumn,
+  ): SortColumns => {
+    const value = sql`(
+      select ${column} from ${table}
+      inner join ${projects} on ${fkColumn} = ${table.id}
+      where ${projects.id} = ${projectId}
+        and ${projects.deletedAt} is null
+        and ${table.deletedAt} is null
+    )`;
+    return foldsWhenSorted(column) ? collateDisplayOrder(value) : value;
+  };
+  if (key.startsWith('primaryLocation.')) {
+    const column = sortColumnFor(
+      locationSortColumns,
+      key.slice('primaryLocation.'.length),
+    );
+    return column
+      ? nested(locations, projects.primaryLocationId, column)
+      : undefined;
+  }
+  if (key.startsWith('fieldRegion.')) {
+    const column = sortColumnFor(
+      fieldRegionSortColumns,
+      key.slice('fieldRegion.'.length),
+    );
+    return column
+      ? nested(fieldRegions, projects.fieldRegionId, column)
+      : undefined;
+  }
+  const derived = sortColumnFor(projectDerivedSortColumns, key);
+  if (derived) {
+    // The engagement counts correlate to `projects.id` directly, so they only
+    // work from a query that has a `projects` row in scope. Reached through a
+    // FK there is none, so re-correlate by nesting the whole expression under
+    // the project this id names.
+    return sql`(
+      select ${derived} from ${projects}
+      where ${projects.id} = ${projectId} and ${projects.deletedAt} is null
+    )`;
+  }
+  const column = sortColumnFor(projectSortColumns, key);
+  return column ? projectValue(column, projectId) : undefined;
+};
+
+/**
+ * Resolve a `prefix.field`-style sort key to its (sub-table, FK, sub-column).
+ * Returns `null` when the sort is column-local (handled by paginatedSelect).
+ *
+ * migration-todo: when a second consumer needs this same prefix-strip dance
+ * (Partnership → `partner.*`, Engagement → `project.*`), extract a shared
+ * `resolveCrossDomainSort(sort, prefix, sortColumns)` helper alongside
+ * `paginatedSelectWithJoin` (mirror of `*FilterClauses` emergence).
+ *
+ * migration-todo: `primaryPartnership.*` sort is not implemented. Unlike the
+ * partnerId/partnerships/primaryPartnership FILTERS (wired below now that
+ * Partnership has landed), this doesn't fit the `{table, fkColumn, column}` +
+ * `leftJoin(table, eq(table.id, fkColumn))` shape this helper's caller uses —
+ * partnerships.project_id points AT projects, so the join runs the other way
+ * (`eq(partnerships.projectId, projects.id)`), which would mean widening this
+ * helper's return shape for one caller. No confirmed cord-field usage of this
+ * specific sort key either (unlike the filters, which are). Deferred rather
+ * than forced into a shape that doesn't fit — throw `NotImplementedException`
+ * so callers discover the gap.
+ */
+const resolveCrossDomainSort = (
+  sort: string,
+): {
+  table: typeof locations | typeof fieldRegions;
+  fkColumn: AnyPgColumn;
+  column: AnyPgColumn;
+} | null => {
+  if (sort.startsWith('primaryLocation.')) {
+    const key = sort.slice('primaryLocation.'.length);
+    const column = locationSortColumns[key as keyof typeof locationSortColumns];
+    if (!column) {
+      throw new NotImplementedException(
+        `Sorting projects by '${sort}' is not supported — '${key}' is not a known sortable column on locations.`,
+      );
+    }
+    return { table: locations, fkColumn: projects.primaryLocationId, column };
+  }
+  if (sort.startsWith('fieldRegion.')) {
+    const key = sort.slice('fieldRegion.'.length);
+    const column =
+      fieldRegionSortColumns[key as keyof typeof fieldRegionSortColumns];
+    if (!column) {
+      throw new NotImplementedException(
+        `Sorting projects by '${sort}' is not supported — '${key}' is not a known sortable column on field_regions.`,
+      );
+    }
+    return { table: fieldRegions, fkColumn: projects.fieldRegionId, column };
+  }
+  if (sort.startsWith('primaryPartnership.')) {
+    // Partnership HAS landed (its filters are wired below) — this message
+    // used to blame that, which is now misleading. The real blockers are
+    // the ones in this function's docblock: the FK points the other way
+    // (partnerships.project_id, not a column on projects), so it doesn't fit
+    // this helper's {table, fkColumn, column} shape, and there's still no
+    // confirmed cord-field usage of this specific sort key.
+    throw new NotImplementedException(
+      `Sorting projects by '${sort}' is not supported — the partner FK points ` +
+        "the other way, so it needs its own join shape rather than this helper's.",
+    );
+  }
+  return null;
+};
+
+/**
+ * Build the column-level WHERE clauses for a `ProjectFilters` input against
+ * `projects`. Exported for sub-delegation from other domains (Engagement and
+ * Partnership both filter-sub-delegate into projectFilterClauses).
+ *
+ * partnerId/partnerships/primaryPartnership/onlyMultipleEngagements are wired
+ * below now that Partnership and Engagement have landed. `tool` and
+ * `usesRev79` are wired too now that ToolUsage has landed (migration 0034) —
+ * both go through `tool_usages`, matched by `containerId` since a Project's
+ * usages carry no separate `containerType` predicate (ids are globally
+ * unique, same assumption `tool-usage.repository.ts` already makes).
+ */
+export const projectFilterClauses = (
+  db: DrizzleDb,
+  filter: ProjectFilters | undefined,
+  requesterId?: ID<'User'>,
+): SQL[] => {
+  const conditions: SQL[] = [];
+  if (!filter) return conditions;
+
+  if (filter.id) conditions.push(eq(projects.id, filter.id));
+  if (filter.type?.length) {
+    conditions.push(inArray(projects.type, filter.type));
+  }
+  if (filter.status?.length) {
+    conditions.push(inArray(projects.status, filter.status));
+  }
+  if (filter.step?.length) {
+    conditions.push(inArray(projects.step, filter.step));
+  }
+  if (filter.sensitivity?.length) {
+    conditions.push(inArray(projects.sensitivity, [...filter.sensitivity]));
+  }
+  if (filter.presetInventory !== undefined) {
+    conditions.push(eq(projects.presetInventory, filter.presetInventory));
+  }
+  if (filter.name) {
+    conditions.push(
+      ilike(projects.name, `%${escapeLikePattern(filter.name)}%`),
+    );
+  }
+  if (filter.createdAt) {
+    if (filter.createdAt.after) {
+      conditions.push(
+        gt(projects.createdAt, filter.createdAt.after.toJSDate()),
+      );
+    }
+    if (filter.createdAt.afterInclusive) {
+      conditions.push(
+        gte(projects.createdAt, filter.createdAt.afterInclusive.toJSDate()),
+      );
+    }
+    if (filter.createdAt.before) {
+      conditions.push(
+        lt(projects.createdAt, filter.createdAt.before.toJSDate()),
+      );
+    }
+    if (filter.createdAt.beforeInclusive) {
+      conditions.push(
+        lte(projects.createdAt, filter.createdAt.beforeInclusive.toJSDate()),
+      );
+    }
+  }
+  if (filter.modifiedAt) {
+    if (filter.modifiedAt.after) {
+      conditions.push(
+        gt(projects.modifiedAt, filter.modifiedAt.after.toJSDate()),
+      );
+    }
+    if (filter.modifiedAt.afterInclusive) {
+      conditions.push(
+        gte(projects.modifiedAt, filter.modifiedAt.afterInclusive.toJSDate()),
+      );
+    }
+    if (filter.modifiedAt.before) {
+      conditions.push(
+        lt(projects.modifiedAt, filter.modifiedAt.before.toJSDate()),
+      );
+    }
+    if (filter.modifiedAt.beforeInclusive) {
+      conditions.push(
+        lte(projects.modifiedAt, filter.modifiedAt.beforeInclusive.toJSDate()),
+      );
+    }
+  }
+  if (filter.mouStart) {
+    if (filter.mouStart.after) {
+      conditions.push(
+        gt(projects.mouStart, filter.mouStart.after.toSQLDate()!),
+      );
+    }
+    if (filter.mouStart.afterInclusive) {
+      conditions.push(
+        gte(projects.mouStart, filter.mouStart.afterInclusive.toSQLDate()!),
+      );
+    }
+    if (filter.mouStart.before) {
+      conditions.push(
+        lt(projects.mouStart, filter.mouStart.before.toSQLDate()!),
+      );
+    }
+    if (filter.mouStart.beforeInclusive) {
+      conditions.push(
+        lte(projects.mouStart, filter.mouStart.beforeInclusive.toSQLDate()!),
+      );
+    }
+  }
+  if (filter.mouEnd) {
+    if (filter.mouEnd.after) {
+      conditions.push(gt(projects.mouEnd, filter.mouEnd.after.toSQLDate()!));
+    }
+    if (filter.mouEnd.afterInclusive) {
+      conditions.push(
+        gte(projects.mouEnd, filter.mouEnd.afterInclusive.toSQLDate()!),
+      );
+    }
+    if (filter.mouEnd.before) {
+      conditions.push(lt(projects.mouEnd, filter.mouEnd.before.toSQLDate()!));
+    }
+    if (filter.mouEnd.beforeInclusive) {
+      conditions.push(
+        lte(projects.mouEnd, filter.mouEnd.beforeInclusive.toSQLDate()!),
+      );
+    }
+  }
+  if (filter.primaryLocation) {
+    conditions.push(
+      subFilter(
+        db,
+        projects.primaryLocationId,
+        locations,
+        locationFilterClauses(filter.primaryLocation),
+      ),
+    );
+  }
+  if (filter.fieldRegion) {
+    conditions.push(
+      subFilter(
+        db,
+        projects.fieldRegionId,
+        fieldRegions,
+        fieldRegionFilterClauses(db, filter.fieldRegion),
+      ),
+    );
+  }
+  // `members` and `membership` filters — links project → project_members via
+  // a project-side `IN (SELECT project_id FROM project_members WHERE ...)`.
+  // The members filter doesn't constrain user; membership scopes to the
+  // current requester. Both lean on projectMemberFilterClauses.
+  if (filter.members) {
+    const sub = db
+      .selectDistinct({ id: projectMembers.projectId })
+      .from(projectMembers)
+      .where(
+        and(
+          isNull(projectMembers.deletedAt),
+          ...projectMemberFilterClauses(db, filter.members, requesterId),
+        ),
+      );
+    conditions.push(inArray(projects.id, sub));
+  }
+  if (filter.membership) {
+    // BUG FIX (found live 2026-08-07, impersonating Financial Analyst: 5240
+    // projects locally vs 116 in prod for the same `mine` filter). The old
+    // comment here was wrong — no transform injects the current user. On
+    // Neo4j, `membership`'s match HARDCODES `currentUser` directly into the
+    // path (project-filters.query.ts) — it always means "the REQUESTER's own
+    // membership", unlike `members` above (any user's). Without that
+    // constraint, `membership.active = true` (what `mine`/`isMember` set)
+    // matched any project with ANY active member at all — for a role whose
+    // Project.read is unconditional (Financial Analyst's policy has no
+    // `.when(member)` on the base read grant), that's nearly every project.
+    // Fail closed rather than open when there's no requester to scope to —
+    // same convention as `pinnedFilter`.
+    if (!requesterId) {
+      conditions.push(sql`false`);
+    } else {
+      conditions.push(
+        inArray(
+          projects.id,
+          db
+            .selectDistinct({ id: projectMembers.projectId })
+            .from(projectMembers)
+            .where(
+              and(
+                isNull(projectMembers.deletedAt),
+                eq(projectMembers.userId, requesterId),
+                ...projectMemberFilterClauses(
+                  db,
+                  filter.membership,
+                  requesterId,
+                ),
+              ),
+            ),
+        ),
+      );
+    }
+  }
+  // `userId`: project where user is a member OR engagement intern. Intern path
+  // is gated on Engagement migration — partial support: member only.
+  if (filter.userId) {
+    const memberSub = db
+      .selectDistinct({ id: projectMembers.projectId })
+      .from(projectMembers)
+      .where(
+        and(
+          eq(projectMembers.userId, filter.userId),
+          isNull(projectMembers.deletedAt),
+        ),
+      );
+    // migration-todo: when Engagement migrates, OR-in the intern path:
+    //   ... OR projects.id IN (SELECT project_id FROM engagements WHERE intern_id = $userId)
+    conditions.push(inArray(projects.id, memberSub));
+  }
+  if (filter.languageId) {
+    conditions.push(
+      sql`exists (
+        select 1 from "engagements" "e"
+        where "e"."project_id" = ${projects.id}
+          and "e"."language_id" = ${filter.languageId}
+          and "e"."deleted_at" is null
+      )`,
+    );
+  }
+  // Reverse relationship — partnerships.project_id points AT projects, so
+  // this is the same `IN (SELECT parent_fk FROM child WHERE ...)` shape as
+  // members/membership above, not `subFilter` (which assumes the FK lives on
+  // the outer table, pointing forward at the sub-table's own id).
+  if (filter.partnerId) {
+    conditions.push(
+      inArray(
+        projects.id,
+        db
+          .selectDistinct({ id: partnerships.projectId })
+          .from(partnerships)
+          .where(
+            and(
+              isNull(partnerships.deletedAt),
+              eq(partnerships.partnerId, filter.partnerId),
+            ),
+          ),
+      ),
+    );
+  }
+  if (filter.partnerships) {
+    conditions.push(
+      inArray(
+        projects.id,
+        db
+          .selectDistinct({ id: partnerships.projectId })
+          .from(partnerships)
+          .where(
+            and(
+              isNull(partnerships.deletedAt),
+              ...partnershipFilterClauses(db, filter.partnerships),
+            ),
+          ),
+      ),
+    );
+  }
+  if (filter.primaryPartnership) {
+    conditions.push(
+      inArray(
+        projects.id,
+        db
+          .selectDistinct({ id: partnerships.projectId })
+          .from(partnerships)
+          .where(
+            and(
+              isNull(partnerships.deletedAt),
+              eq(partnerships.primary, true),
+              ...partnershipFilterClauses(db, filter.primaryPartnership),
+            ),
+          ),
+      ),
+    );
+  }
+  if (filter.tool) {
+    conditions.push(
+      inArray(
+        projects.id,
+        db
+          .selectDistinct({ id: toolUsages.containerId })
+          .from(toolUsages)
+          .innerJoin(
+            tools,
+            and(eq(tools.id, toolUsages.toolId), isNull(tools.deletedAt)),
+          )
+          .where(
+            and(
+              isNull(toolUsages.deletedAt),
+              ...toolFilterClauses(db, filter.tool),
+            ),
+          ),
+      ),
+    );
+  }
+  if (filter.onlyMultipleEngagements != null) {
+    // Mirrors project-filters.query.ts's Cypher exactly: a REQUIRED match
+    // through the engagement edge means a project with zero engagements
+    // never enters the aggregation, so it matches neither true nor false —
+    // `false` means "exactly one", not "zero or one". GROUP BY reproduces
+    // that same required-match behavior (a project with no live engagements
+    // never produces a row to filter on).
+    conditions.push(
+      inArray(
+        projects.id,
+        db
+          .select({ id: engagements.projectId })
+          .from(engagements)
+          .where(isNull(engagements.deletedAt))
+          .groupBy(engagements.projectId)
+          .having(
+            filter.onlyMultipleEngagements
+              ? sql`count(*) > 1`
+              : sql`count(*) = 1`,
+          ),
+      ),
+    );
+  }
+  if (filter.usesRev79 != null) {
+    // Same containerId-is-polymorphic problem as readMany's rev79Usages
+    // above: a usage scoped to an engagement never equals a project id
+    // directly, so it needs the join through `engagements` to resolve back
+    // to its project. Union rather than one subquery so both project-direct
+    // and engagement-scoped usages count.
+    const rev79ToolJoin = and(
+      eq(tools.id, toolUsages.toolId),
+      eq(tools.key, ToolKey.Rev79),
+      isNull(tools.deletedAt),
+    );
+    const usesRev79Sub = unionAll(
+      db
+        .selectDistinct({ id: toolUsages.containerId })
+        .from(toolUsages)
+        .innerJoin(tools, rev79ToolJoin)
+        .where(isNull(toolUsages.deletedAt)),
+      db
+        .selectDistinct({ id: engagements.projectId })
+        .from(toolUsages)
+        .innerJoin(tools, rev79ToolJoin)
+        .innerJoin(
+          engagements,
+          and(
+            eq(engagements.id, toolUsages.containerId),
+            isNull(engagements.deletedAt),
+          ),
+        )
+        .where(isNull(toolUsages.deletedAt)),
+    );
+    conditions.push(
+      filter.usesRev79
+        ? inArray(projects.id, usesRev79Sub)
+        : notInArray(projects.id, usesRev79Sub),
+    );
+  }
+  if (filter.pinned != null) {
+    conditions.push(pinnedFilter(requesterId, projects.id, filter.pinned));
+  }
+  return conditions;
+};
+
+// Re-export to satisfy the unused-import linter — `DuplicateException` is part
+// of the catch-helper public surface elsewhere; here it's reached only via the
+// catch chains above.
+void DuplicateException;
+void NotFoundException;

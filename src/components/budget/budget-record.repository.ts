@@ -1,27 +1,24 @@
 import { Injectable } from '@nestjs/common';
-import { node, type Query, relation } from 'cypher-query-builder';
-import { pickBy } from 'lodash';
+import { and, eq, inArray, isNull, type SQL } from 'drizzle-orm';
+import { DateTime } from 'luxon';
 import {
-  CreationFailed,
+  generateId,
   type ID,
-  labelForView,
   NotFoundException,
   type ObjectView,
   type UnsecuredDto,
 } from '~/common';
+import { Identity } from '~/core/authentication';
 import { type ChangesOf } from '~/core/database/changes';
-import { DtoRepository } from '~/core/neo4j';
 import {
-  ACTIVE,
-  createNode,
-  createRelationships,
-  INACTIVE,
-  matchChangesetAndChangedProps,
-  matchPropsAndProjectSensAndScopedRoles,
-  merge,
-  paginate,
-  sorting,
-} from '~/core/neo4j/query';
+  DrizzleDtoRepository,
+  resolveOrderBy,
+  type SortMap,
+} from '~/core/drizzle';
+import { DrizzleService } from '~/core/drizzle/drizzle.service';
+import { budgetRecords } from '~/core/drizzle/schema';
+import { type ScopedRole } from '../authorization/dto/role.dto';
+import { requesterScopeByProject } from '../project/project-member/membership-scope';
 import {
   type Budget,
   BudgetRecord,
@@ -30,194 +27,180 @@ import {
   type UpdateBudgetRecord,
 } from './dto';
 
-interface BudgetRecordHydrateArgs {
-  recordVar?: string;
-  projectVar?: string;
-  outputVar?: string;
-  view?: ObjectView;
-}
+type BudgetRecordRow = typeof budgetRecords.$inferSelect & {
+  budget?: {
+    id: ID<'Budget'>;
+    status: string;
+    project?: { id: ID<'Project'>; sensitivity: string } | null;
+  } | null;
+};
 
 @Injectable()
-export class BudgetRecordRepository extends DtoRepository<
-  typeof BudgetRecord,
-  [BudgetRecordHydrateArgs]
->(BudgetRecord) {
-  async create(input: CreateBudgetRecord, changeset?: ID) {
-    const result = await this.db
-      .query()
-      .apply(
-        await createNode(BudgetRecord, {
-          initialProps: {
-            fiscalYear: input.fiscalYear,
-            amount: null,
-            initialAmount: null,
-            preApprovedAmount: null,
-          },
-        }),
-      )
-      .apply(
-        createRelationships(BudgetRecord, {
-          in: {
-            record: ['Budget', input.budget],
-            changeset: ['Changeset', changeset],
-          },
-          out: {
-            organization: ['Organization', input.organization],
-          },
-        }),
-      )
-      .return<{ id: ID }>('node.id as id')
-      .first();
-    if (!result) {
-      throw new CreationFailed(BudgetRecord);
-    }
-    return result.id;
+export class BudgetRecordRepository extends DrizzleDtoRepository<
+  typeof budgetRecords,
+  BudgetRecord
+> {
+  constructor(
+    db: DrizzleService,
+    private readonly identity: Identity,
+  ) {
+    super(db, budgetRecords, BudgetRecord);
+  }
+
+  async create(input: CreateBudgetRecord, _changeset?: ID): Promise<ID> {
+    // Changesets were not carried forward; the argument is ignored.
+    const id = await generateId<ID<'BudgetRecord'>>();
+    await this.db.insert(budgetRecords).values({
+      id,
+      budgetId: input.budget,
+      organizationId: input.organization,
+      fiscalYear: input.fiscalYear,
+      amount: null,
+      initialAmount: null,
+      preApprovedAmount: null,
+    });
+    return id;
   }
 
   async update(
     existing: UnsecuredDto<BudgetRecord>,
     changes: ChangesOf<Budget, UpdateBudgetRecord>,
-    changeset?: ID,
+    _changeset?: ID,
   ) {
-    return await this.updateProperties(existing, changes, changeset);
+    await this.updateColumns(existing.id, {
+      amount: changes.amount,
+      initialAmount: changes.initialAmount,
+      preApprovedAmount: changes.preApprovedAmount,
+    });
+    return { ...existing, ...changes };
   }
 
-  async doesRecordExist(input: CreateBudgetRecord) {
-    const result = await this.db
-      .query()
-      .match([
-        node('budget', 'Budget', { id: input.budget }),
-        relation('out', '', 'record', ACTIVE),
-        node('br', 'BudgetRecord'),
-        relation('out', '', 'organization', ACTIVE),
-        node('', 'Organization', { id: input.organization }),
-      ])
-      .match([
-        node('br'),
-        relation('out', '', 'fiscalYear', ACTIVE),
-        node('', 'Property', { value: input.fiscalYear }),
-      ])
-      .return('br')
-      .first();
-    return !!result;
+  async doesRecordExist(input: CreateBudgetRecord): Promise<boolean> {
+    const [row] = await this.db
+      .select({ id: budgetRecords.id })
+      .from(budgetRecords)
+      .where(
+        and(
+          eq(budgetRecords.budgetId, input.budget),
+          eq(budgetRecords.organizationId, input.organization),
+          eq(budgetRecords.fiscalYear, input.fiscalYear),
+          isNull(budgetRecords.deletedAt),
+        ),
+      )
+      .limit(1);
+    return !!row;
   }
 
-  async readOne(id: ID, opts: BudgetRecordHydrateArgs) {
-    const query = this.db
-      .query()
-      .match([
-        node('project', 'Project'),
-        // omitting active checks on these two relations which could be either depending on changeset
-        relation('out', '', 'budget'),
-        // read deleted record in active or deleted budget
-        node('', labelForView('Budget', opts.view)),
-        relation('out', '', 'record'),
-        node('node', labelForView('BudgetRecord', opts.view), { id }),
-      ])
-      .apply(this.hydrate(opts))
-      .return<{ dto: UnsecuredDto<BudgetRecord> }>('dto');
-    const result = await query.first();
-    if (!result) {
+  override async readOne(
+    id: ID,
+    _opts?: { view?: ObjectView },
+  ): Promise<UnsecuredDto<BudgetRecord>> {
+    const [dto] = await this.readMany([id]);
+    if (!dto) {
       throw new NotFoundException('Could not find BudgetRecord', 'budget');
     }
-
-    return result.dto;
+    return dto;
   }
 
-  async delete(id: ID, changeset?: ID): Promise<void> {
-    await this.deleteNode(id, { changeset });
+  override async readMany(
+    ids: readonly ID[],
+  ): Promise<Array<UnsecuredDto<BudgetRecord>>> {
+    if (ids.length === 0) return [];
+    const rows = await this.db.query.budgetRecords.findMany({
+      where: (br) => and(inArray(br.id, [...ids]), isNull(br.deletedAt)),
+      with: {
+        budget: {
+          columns: { id: true, status: true },
+          with: { project: { columns: { id: true, sensitivity: true } } },
+        },
+      },
+    });
+    return await this.mapRows(rows as BudgetRecordRow[]);
   }
 
-  async list(input: BudgetRecordListInput, view?: ObjectView) {
-    const { budgetId } = input.filter ?? {};
-    const result = await this.db
-      .query()
-      .matchNode(
-        'budget',
-        labelForView('Budget', view),
-        pickBy({ id: budgetId }),
-      )
-      .apply(this.recordsOfBudget({ view }))
-      .apply(sorting(BudgetRecord, input))
-      .apply(paginate(input))
-      .first();
-    return result!; // result from paginate() will always have 1 row.
+  /** All live records of a budget — drives the budget-record sync handler. */
+  async readManyByBudget(
+    budgetId: ID<'Budget'>,
+  ): Promise<Array<UnsecuredDto<BudgetRecord>>> {
+    const rows = await this.db.query.budgetRecords.findMany({
+      where: (br) => and(eq(br.budgetId, budgetId), isNull(br.deletedAt)),
+      with: {
+        budget: {
+          columns: { id: true, status: true },
+          with: { project: { columns: { id: true, sensitivity: true } } },
+        },
+      },
+    });
+    return await this.mapRows(rows as BudgetRecordRow[]);
   }
 
-  hydrate({
-    recordVar = 'node',
-    projectVar = 'project',
-    outputVar = 'dto',
-    view,
-  }: BudgetRecordHydrateArgs) {
-    return (query: Query) =>
-      query.subQuery((sub) =>
-        sub
-          .with([recordVar, projectVar]) // import
-          // rename to constant, only apply if making a change otherwise cypher breaks
-          .apply((q) =>
-            recordVar !== 'node' || projectVar !== 'project'
-              ? q.with({ [recordVar]: 'node', [projectVar]: 'project' })
-              : q,
-          )
-          .match([
-            node('node'),
-            relation('in', '', 'record'),
-            node('budget', labelForView('Budget', view)),
-            relation('out', '', 'status', ACTIVE),
-            node('status'),
-          ])
-          .match([
-            node('node'),
-            relation('out', '', 'organization', ACTIVE),
-            node('organization', 'Organization'),
-          ])
-          .apply(matchChangesetAndChangedProps(view?.changeset))
-          .apply(matchPropsAndProjectSensAndScopedRoles({ view }))
-          .return<{ dto: UnsecuredDto<BudgetRecord> }>(
-            merge('props', 'changedProps', {
-              parent: 'budget',
-              organization: 'organization.id',
-              changeset: 'changeset.id',
-              status: 'status.value',
-            }).as(outputVar),
-          ),
+  async list(input: BudgetRecordListInput, _view?: ObjectView) {
+    const conditions: SQL[] = [isNull(budgetRecords.deletedAt)];
+    if (input.filter?.budgetId) {
+      conditions.push(eq(budgetRecords.budgetId, input.filter.budgetId));
+    }
+    const sortColumns = {
+      fiscalYear: budgetRecords.fiscalYear,
+      amount: budgetRecords.amount,
+      createdAt: budgetRecords.createdAt,
+    } satisfies SortMap<keyof BudgetRecord>;
+    const { rows, total, hasMore } = await this.paginatedSelect({
+      predicate: and(...conditions),
+      orderBy: resolveOrderBy(input, sortColumns, budgetRecords.fiscalYear),
+      page: input.page,
+      count: input.count,
+    });
+    // Bare IDs — the service hydrates each via readOneRecord (mirror of the
+    // Neo4j paginate()-without-hydrate flow).
+    return { items: rows.map((r) => r.id), total, hasMore };
+  }
+
+  async delete(id: ID, _changeset?: ID): Promise<void> {
+    await this.softDelete(id);
+  }
+
+  private async mapRows(rows: BudgetRecordRow[]) {
+    const scopeByProject = await requesterScopeByProject(
+      this.db,
+      this.identity.current.userId,
+      rows.flatMap((r) => r.budget?.project?.id ?? []),
+    );
+    return rows.map((row) =>
+      this.toDto(
+        row,
+        row.budget?.project
+          ? (scopeByProject.get(row.budget.project.id) ?? [])
+          : [],
+      ),
+    );
+  }
+
+  protected toDto(
+    row: BudgetRecordRow,
+    scope: ScopedRole[] = [],
+  ): UnsecuredDto<BudgetRecord> {
+    if (!row.budget?.project) {
+      throw new Error(
+        `BudgetRecord ${row.id} has no parent budget/project row — FK invariant violated`,
       );
-  }
-
-  recordsOfBudget({
-    budgetVar = 'budget',
-    view,
-    outputVar = 'node',
-  }: {
-    budgetVar?: string;
-    view?: ObjectView;
-    outputVar?: string;
-  }) {
-    return (query: Query) =>
-      query.subQuery((sub) =>
-        sub
-          .with(budgetVar)
-          .match([
-            node(budgetVar),
-            relation('out', '', 'record', ACTIVE),
-            node('node', labelForView('BudgetRecord', view)),
-          ])
-          .return({ node: outputVar })
-          .apply((q) =>
-            view?.changeset
-              ? q
-                  .union()
-                  .match([
-                    node(budgetVar),
-                    relation('out', '', 'record', INACTIVE),
-                    node('node', 'BudgetRecord'),
-                    relation('in', '', 'changeset', ACTIVE),
-                    node('changeset', 'Changeset', { id: view.changeset }),
-                  ])
-                  .return({ node: outputVar })
-              : q,
-          ),
-      );
+    }
+    const dto: unknown = {
+      id: row.id,
+      __typename: 'BudgetRecord',
+      createdAt: DateTime.fromJSDate(row.createdAt),
+      organization: row.organizationId,
+      fiscalYear: row.fiscalYear,
+      amount: row.amount,
+      initialAmount: row.initialAmount,
+      preApprovedAmount: row.preApprovedAmount,
+      status: row.budget.status,
+      sensitivity: row.budget.project.sensitivity,
+      parent: { id: row.budget.id, __typename: 'Budget' },
+      // PCR is excluded; resolver navigation marker stays undefined.
+      changeset: undefined,
+      canDelete: true,
+      scope,
+    };
+    return dto as UnsecuredDto<BudgetRecord>;
   }
 }

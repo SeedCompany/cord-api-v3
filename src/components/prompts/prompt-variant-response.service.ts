@@ -256,7 +256,7 @@ export const PromptVariantResponseListService = <
                 modifiedAt: DateTime.now(),
               } satisfies UnsecuredDto<VariantResponse>)
             : {}),
-        })),
+        })) as UnsecuredDto<PromptVariantResponse<TVariant>>['responses'],
       };
       return await this.secure(updated);
     }
