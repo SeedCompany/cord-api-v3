@@ -1,6 +1,5 @@
 import { ObjectType } from '@nestjs/graphql';
 import {
-  DbUnique,
   NameField,
   Resource,
   type Secured,
@@ -16,7 +15,6 @@ import { type LinkTo, RegisterResource } from '~/core/resources';
 })
 export class FieldRegion extends Resource {
   @NameField()
-  @DbUnique()
   readonly name: SecuredString;
 
   readonly fieldZone: Secured<LinkTo<'FieldZone'>>;

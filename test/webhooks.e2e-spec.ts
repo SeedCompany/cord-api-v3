@@ -38,8 +38,7 @@ import { type ID } from '~/common';
 import { Identity } from '~/core/authentication';
 import { Broadcaster } from '~/core/broadcast';
 import { ConfigService } from '~/core/config';
-import { DatabaseMigrationCommand } from '~/core/neo4j/migration/migration.command';
-import { WebhookChannelSyncMigration } from '~/core/webhooks/channels/channel-sync.migration';
+import { WebhookChannelSync } from '~/core/webhooks/channels/webhook-channel-sync.service';
 import { WebhookChannelRepository } from '~/core/webhooks/channels/webhook-channel.repository';
 import { WebhookDeliveryQueue } from '~/core/webhooks/delivery/webhook-delivery.queue';
 import { WebhooksRepository } from '~/core/webhooks/management/webhooks.repository';
@@ -133,26 +132,19 @@ async function pipelineIdle(app: TestApp) {
   throw new Error('Webhook queues did not go idle within SHORT');
 }
 
-const isPostgres = process.env.DATABASE === 'postgres';
-
 /**
- * `DatabaseMigrationCommand` runs every registered migration through
- * `MigrationRunner`, which tracks the schema version as a `:SchemaVersion`
- * node in Neo4j — raw Cypher, no engine split. That's fine at real app
- * bootstrap, which guards it to Neo4j only (`migration.module.ts`) precisely
- * because it has no Postgres counterpart and never will (it's gone at
- * cutover along with the rest of that module).
- *
- * These two tests call the command directly to simulate "a deploy just
- * happened," bypassing that guard. Under Postgres there's nothing for it to
- * track, so go straight to the one migration these tests actually care
- * about — which is already properly split — instead of the Neo4j-only
- * version bookkeeping around it.
+ * The channel sync runs at boot. These tests patch a subscription resolver
+ * AFTER boot to simulate a deploy that changes channels, so the second app
+ * boots with the boot-time run turned off and the test calls `sync()` itself.
  */
-const runDeployMigrations = async (app: TestApp) =>
-  isPostgres
-    ? await app.get(WebhookChannelSyncMigration).up()
-    : await app.get(DatabaseMigrationCommand).execute();
+class ManualWebhookChannelSync extends WebhookChannelSync {
+  override async onApplicationBootstrap() {
+    // Run explicitly by the test instead.
+  }
+}
+
+const runDeploySync = async (app: TestApp) =>
+  await app.get(WebhookChannelSync).sync();
 
 describe('Move to Generic Subscriptions Tests', () => {
   it.todo(
@@ -1823,14 +1815,6 @@ describe('Webhooks', () => {
         isolatedApp,
         'RegionalDirector',
       );
-      // Call db migrate, as would have happened on a previous deployment.
-      // For these tests it sets the db version to the current app version
-      // without applying any changes, since there is no version previously
-      // established in the ephemeral tests db.
-      // It would probably be better to move this to db setup as it would
-      // mirror prod more closely.
-      await runDeployMigrations(isolatedApp);
-
       // Create a webhook with a valid subscription
       const webhook = await isolatedTester.apply(
         webhooks.save({
@@ -1861,7 +1845,9 @@ describe('Webhooks', () => {
         overrides: (builder) =>
           builder
             .overrideProvider(SubscriptionChannelVersion.TOKEN)
-            .useValue(newVersion),
+            .useValue(newVersion)
+            .overrideProvider(WebhookChannelSync)
+            .useClass(ManualWebhookChannelSync),
       });
 
       // Patch projectCreated subscription resolver to observe another channel
@@ -1877,8 +1863,8 @@ describe('Webhooks', () => {
       // endregion
 
       // region Act
-      // Call db migrate, as would happen on deployment, which should trigger webhook migration
-      await runDeployMigrations(newApp);
+      // Run the sync, as would happen at boot after a deploy
+      await runDeploySync(newApp);
       // endregion
 
       // region Assert
@@ -1905,14 +1891,6 @@ describe('Webhooks', () => {
         isolatedApp,
         'RegionalDirector',
       );
-      // Call db migrate, as would have happened on a previous deployment.
-      // For these tests it sets the db version to the current app version
-      // without applying any changes, since there is no version previously
-      // established in the ephemeral tests db.
-      // It would probably be better to move this to db setup as it would
-      // mirror prod more closely.
-      await runDeployMigrations(isolatedApp);
-
       // Create a webhook with a valid subscription
       const webhook = await isolatedTester.apply(
         webhooks.save({
@@ -1943,7 +1921,9 @@ describe('Webhooks', () => {
         overrides: (builder) =>
           builder
             .overrideProvider(SubscriptionChannelVersion.TOKEN)
-            .useValue(newVersion),
+            .useValue(newVersion)
+            .overrideProvider(WebhookChannelSync)
+            .useClass(ManualWebhookChannelSync),
       });
 
       // Patch projectCreated subscription resolver to be invalid
@@ -1960,8 +1940,8 @@ describe('Webhooks', () => {
       // region Act
       const waitingForWebhook = firstValueFrom(events.pipe(timeout(SHORT)));
 
-      // Call db migrate, as would happen on deployment, which should trigger webhook migration
-      await runDeployMigrations(newApp);
+      // Run the sync, as would happen at boot after a deploy
+      await runDeploySync(newApp);
       // endregion
 
       // region Assert

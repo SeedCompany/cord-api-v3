@@ -180,10 +180,8 @@ export class EngagementRepository extends DrizzleDtoRepository<
   ): Promise<Array<UnsecuredDto<Engagement>>> {
     // Changesets were not carried forward; the view is ignored.
     if (ids.length === 0) return [];
-    // Mirror the Neo4j readMany, which gates by-id reads on the PARENT
-    // PROJECT's readability (privileges.for(IProject).filterToReadable) —
-    // while list() gates by IEngagement, matching the same asymmetry in the
-    // Neo4j repo. The Project condition SQL references the literal
+    // By-id reads are gated on the PARENT PROJECT's readability, while
+    // list() gates by IEngagement — an asymmetry kept from the Neo4j repo. The Project condition SQL references the literal
     // "projects" table, so it runs inside an EXISTS over the unaliased
     // table correlated on project_id; survivors hydrate normally.
     const projectConditions: SQL[] = [isNull(projects.deletedAt)];
@@ -480,8 +478,7 @@ export class EngagementRepository extends DrizzleDtoRepository<
     if (!prev || prev === next) return;
 
     // Stamp with the update's modifiedAt when available so
-    // statusModifiedAt === modifiedAt (mirror of the Neo4j SetLastStatusDate
-    // handler, which copied updated.modifiedAt).
+    // statusModifiedAt === modifiedAt.
     const now = at ?? new Date();
     await this.db
       .update(engagements)
@@ -490,7 +487,7 @@ export class EngagementRepository extends DrizzleDtoRepository<
         statusModifiedAt: now,
         ...(next === 'Suspended' && { lastSuspendedAt: now }),
         // Only a true reactivation (Suspended → Active) — Suspended →
-        // Terminated etc. must NOT stamp it (mirrors SetLastStatusDate).
+        // Terminated etc. must NOT stamp it.
         ...(prev === 'Suspended' &&
           next === 'Active' && { lastReactivatedAt: now }),
       })
@@ -921,9 +918,8 @@ const relatedText = (
  *
  * `nameProjectFirst` / `nameProjectLast` are collated like every other text
  * sort (decided 2026-09-15: sorting is case-insensitive as a product rule).
- * Neo4j orders these two keys by raw code points — they are sort-only keys
- * with no DTO field to carry a `DbSort` transformer — so this is a deliberate
- * divergence from it, like every non-name text sort in the app.
+ * Neo4j ordered these two sort-only keys by raw code points, so this is a
+ * deliberate divergence from it, like every non-name text sort in the app.
  *
  * The concatenation itself mirrors `multiPropsAsSortString`: the parts are
  * glued with no separator and each missing one coalesces to an empty string,
@@ -1027,10 +1023,8 @@ const progressReportTypeLiteral = sql.raw(`'Progress'::"report_type"`);
 
 /**
  * The current progress report due for the engagement in scope: the latest one
- * whose period has already ended. Mirror of Neo4j's `matchCurrentDue` — same
- * `end < today` predicate and same `end desc, start asc` tiebreak — returning
- * null where the engagement has no such report, which is what that matcher's
- * zero-reports arm returns.
+ * whose period has already ended (`end < today`, tiebreak `end desc, start
+ * asc`), or null where the engagement has no such report.
  */
 const currentProgressReportDue = (
   key: string,

@@ -11,7 +11,6 @@ import {
 import { Identity } from '~/core/authentication';
 import { Hooks } from '~/core/hooks';
 import { ILogger, Logger } from '~/core/logger';
-import { type Variable } from '~/core/neo4j/query';
 import { HandleIdLookup } from '~/core/resources';
 import { ResourceMutatedHook } from '../audit/resource-mutated.hook';
 import { Privileges } from '../authorization';
@@ -161,10 +160,6 @@ export class PeriodicReportService {
     return report
       ? (this.secure(report) as PeriodicReportTypeMap[Type])
       : undefined;
-  }
-
-  matchCurrentDue(parentId: ID | Variable, reportType: ReportType) {
-    return this.repo.matchCurrentDue(parentId, reportType);
   }
 
   async getNextReportDue<Type extends keyof PeriodicReportTypeMap>(

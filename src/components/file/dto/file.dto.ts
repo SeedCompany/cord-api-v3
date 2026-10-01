@@ -6,7 +6,6 @@ import { type Readable } from 'stream';
 import { type MergeExclusive } from 'type-fest';
 import {
   DateTimeField,
-  DbLabel,
   type ID,
   InputException,
   NameField,
@@ -80,7 +79,6 @@ export { FileNode as IFileNode, type AnyFileNode as FileNode };
 @ObjectType({
   isAbstract: true,
 })
-@DbLabel(null)
 /**
  * Both file and file version have these properties
  */

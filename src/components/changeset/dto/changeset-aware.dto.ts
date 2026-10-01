@@ -1,6 +1,6 @@
 import { Field, InterfaceType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { DbLabel, type ID, IdField } from '~/common';
+import { type ID, IdField } from '~/common';
 import { type BaseNode, type LinkToUnknown } from '~/core/resources';
 import { Changeset } from './changeset.dto';
 
@@ -13,7 +13,6 @@ import { Changeset } from './changeset.dto';
 })
 // Maintaining previous functionality.
 // This could be removed (and data migrated) to query it.
-@DbLabel(null)
 export abstract class ChangesetAware {
   @IdField({
     description: "The object's ID",

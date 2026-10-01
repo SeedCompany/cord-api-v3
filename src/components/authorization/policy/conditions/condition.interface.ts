@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/method-signature-style */
 import { type Many, type NonEmptyArray } from '@seedcompany/common';
-import { type Query } from 'cypher-query-builder';
 import { type SQL } from 'drizzle-orm';
 import { inspect, type InspectOptionsStylized } from 'util';
 import { type EnhancedResource, type ResourceShape } from '~/common';
@@ -20,12 +19,6 @@ export interface IsAllowedParams<TResourceStatic extends ResourceShape<any>> {
 
   session: Session;
 }
-
-// migration-todo: remove with Neo4j; Drizzle uses AsDrizzleParams instead.
-export type AsCypherParams<TResourceStatic extends ResourceShape<any>> = Omit<
-  IsAllowedParams<TResourceStatic>,
-  'object'
->;
 
 export type AsDrizzleParams<TResourceStatic extends ResourceShape<any>> = Omit<
   IsAllowedParams<TResourceStatic>,
@@ -55,28 +48,8 @@ export abstract class Condition<
   attachPolicy?(policy: Policy): Condition<TResourceStatic>;
 
   /**
-   * Add to the DB query what this condition needs into context.
-   *
-   * Use `prevApplied` to dedupe logic, like when this type of condition
-   * is used multiple times with a query.
-   */
-  setupCypherContext?(
-    query: Query,
-    prevApplied: Set<any>,
-    other: AsCypherParams<TResourceStatic>,
-  ): Query;
-
-  /**
-   * DB query where clause fragment that represents the condition.
-   */
-  abstract asCypherCondition(
-    query: Query,
-    other: AsCypherParams<TResourceStatic>,
-  ): string;
-
-  /**
-   * Drizzle SQL WHERE clause fragment that represents the condition.
-   * Optional — implement when porting a domain to PostgreSQL.
+   * SQL WHERE clause fragment that represents the condition. Optional, but a
+   * read filter that reaches a condition without one throws.
    */
   asDrizzleCondition?(other: AsDrizzleParams<TResourceStatic>): SQL;
 

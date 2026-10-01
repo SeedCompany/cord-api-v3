@@ -31,15 +31,6 @@ export class EthnologueLanguageRepository extends DrizzleDtoRepository<
     // placeholder id: the Language repository is this repo's only caller and
     // it passes the real `languageId`.
     //
-    // migration-todo: the surviving half is a Neo4j-only fallback.
-    // `EthnologueLanguageService.create()` still passes `'temp' as ID` for the
-    // Neo4j caller, because there the Language row is created *after* the
-    // EthnologueLanguage and the relationship is wired up by the caller via the
-    // returned ethnologue id — so Neo4j never reads `input.languageId`. (The Gel
-    // repo's `create()` throws outright, since Gel creates the row as a
-    // side-effect of the Language insert.) Retire the fallback with the Neo4j
-    // repositories at Phase 7 cutover.
-    //
     // For the record, since an earlier version of this comment said otherwise:
     // `language_id` carries a real, fully enforced FK to `languages(id)` from
     // migration 0016 — not `NOT VALID`, not deferrable, never dropped. A literal
@@ -55,7 +46,6 @@ export class EthnologueLanguageRepository extends DrizzleDtoRepository<
     // frequently several rows. That step needs an explicit disambiguation rule
     // decided in application code; it cannot be a single-row lookup, and the
     // database will not narrow it for you.
-    // Dormant until PG mode activates.
     const id = await generateId();
     await this.db.insert(ethnologueLanguages).values({
       id,

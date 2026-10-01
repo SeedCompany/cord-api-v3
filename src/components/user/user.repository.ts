@@ -15,7 +15,6 @@ import { DateTime } from 'luxon';
 import {
   generateId,
   type ID,
-  NotImplementedException,
   type PaginatedListType,
   ServerException,
   type UnsecuredDto,
@@ -284,10 +283,9 @@ export class UserRepository extends DrizzleDtoRepository<typeof users, User> {
       // Same for Jon/Jonathan, Dan/Daniel, Sam/Samuel. No separator between the
       // two, and coalesce to '' rather than leaving NULL, both to match Neo4j.
       //
-      // ⚠️ Deliberately still COLLATED, which Neo4j is NOT for this key: `fullName`
-      // is a resolver field, not a `@NameField` DTO field, so `DbSort.get` finds no
-      // transformer and Neo4j orders it by raw code points — capitals before lower
-      // case, accented initials after `z`. Matching that exactly would mean
+      // ⚠️ Deliberately still COLLATED, which Neo4j was NOT for this key: it
+      // ordered `fullName` by raw code points — capitals before lower case,
+      // accented initials after `z`. Matching that exactly would mean
       // `collate "C"`; keeping display_order was chosen instead (2026-08-19) so the
       // list reads the way people expect and agrees with every other name sort in
       // this app. The residual ordering difference against Neo4j is known and
@@ -429,11 +427,6 @@ export class UserRepository extends DrizzleDtoRepository<typeof users, User> {
           eq(userOrganizations.organizationId, org),
         ),
       );
-  }
-
-  // migration-todo: remove when the Neo4j UserRepository is retired
-  hydrateAsNeo4j(): never {
-    throw new NotImplementedException();
   }
 
   /**

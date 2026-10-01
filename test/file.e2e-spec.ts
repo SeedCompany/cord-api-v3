@@ -1,6 +1,5 @@
 import { faker } from '@faker-js/faker';
 import {
-  afterAll,
   afterEach,
   beforeAll,
   beforeEach,
@@ -19,7 +18,6 @@ import {
 } from 'luxon';
 import { type ID, Role } from '~/common';
 import { LiveQueryStore } from '~/core/live-query';
-import { DatabaseService } from '~/core/neo4j';
 import { graphql } from '~/graphql';
 import { FileBucket, type LocalBucket } from '../src/components/file/bucket';
 import {
@@ -543,62 +541,6 @@ describe('File e2e', () => {
     let file: fragments.file;
     const expectedVersionIds: ID[] = [];
     let expectedTotalVersions: number;
-
-    afterAll(async () => {
-      // Neo4j-only: revert deactivated name/mimeType props so the Neo4j
-      // consistency check at teardown passes. Postgres has no such check and no
-      // DatabaseService query surface for these raw cypher statements.
-      if (process.env.DATABASE === 'postgres') {
-        return;
-      }
-      // revert the changes so consistency check will be passed for remaining file nodes.
-      await app
-        .get(DatabaseService)
-        .query()
-        .raw(
-          `
-          MATCH
-            (file: File {active: true}),
-            (file)-[rel:name {active: false}]->(nm: Property {active: true})
-          SET rel.active = true
-          RETURN
-            file, rel
-          `,
-        )
-        .run();
-
-      await app
-        .get(DatabaseService)
-        .query()
-        .raw(
-          `
-          MATCH
-            (dir: Directory {active: true}),
-            (dir)-[rel:name {active: false}]->(nm: Property {active: true})
-          SET rel.active = true
-          RETURN
-          dir, rel
-          `,
-        )
-        .run();
-
-      await app
-        .get(DatabaseService)
-        .query()
-        .raw(
-          `
-        MATCH
-          (file: FileNode {active: true}),
-          (file)<-[:parent {active: true}]-(fv: FileVersion {active: true}),
-          (fv)-[:mimeType {active: true}]->(mt: Property {active: false})
-        SET
-          mt.active = true
-        RETURN
-          fv, mt
-        `,
-        )
-        .run();
-    });
 
     beforeEach(async () => {
       const uploadRequest = await requestFileUpload(app);

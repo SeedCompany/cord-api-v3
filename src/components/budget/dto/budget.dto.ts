@@ -2,7 +2,6 @@ import { Field, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import {
   Calculated,
-  DbLabel,
   IntersectTypes,
   Resource,
   type ResourceRelationsShape,
@@ -56,7 +55,6 @@ export class Budget extends Interfaces {
   declare readonly parent: LinkToUnknown | BaseNode;
 
   @Field()
-  @DbLabel('BudgetStatus')
   readonly status: BudgetStatus;
 
   @Field(() => [BudgetRecord])

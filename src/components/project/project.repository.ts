@@ -164,8 +164,8 @@ export class ProjectRepository extends DrizzleDtoRepository<
     // the canonical row — the arg is ignored.
     if (ids.length === 0) return [];
     const userId = this.identity.current.userId;
-    // Mirror the Neo4j readMany's `filterToReadable`: without this, member-
-    // gated roles could resolve non-member projects by id. The policy's
+    // Without the read filter, member-gated roles could resolve non-member
+    // projects by id. The policy's
     // condition SQL references literal table names, so it runs over a plain
     // id-select rather than inside the relational query; survivors hydrate
     // through the normal path.

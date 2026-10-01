@@ -392,15 +392,6 @@ export class PeriodicReportRepository extends DrizzleDtoRepository<
     };
   }
 
-  matchCurrentDue(_parentId: unknown, _reportType: ReportType): never {
-    // Only consumed by the Neo4j product-progress repo as a cypher fragment.
-    // migration-todo: remove when ProductProgress ports — its drizzle repo
-    // queries current-due reports directly in SQL.
-    throw new ServerException(
-      'matchCurrentDue is a cypher fragment; use getCurrentDue under postgres',
-    );
-  }
-
   async getByDate(parentId: ID, date: CalendarDate, reportType: ReportType) {
     const day = date.toISODate();
     return await this.first(

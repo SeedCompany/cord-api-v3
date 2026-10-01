@@ -1,20 +1,15 @@
 import { type NonEmptyArray } from '@seedcompany/common';
-import { type Query } from 'cypher-query-builder';
 import { type SQL, sql } from 'drizzle-orm';
 import { intersection } from 'lodash';
 import { inspect, type InspectOptionsStylized } from 'util';
 import { type EnhancedResource, type ResourceShape, type Role } from '~/common';
-import { matchProjectScopedRoles } from '~/core/neo4j/query';
 import { rolesForScope, type ScopedRole, splitScope } from '../../dto/role.dto';
 import {
-  type AsCypherParams,
   type AsDrizzleParams,
   type Condition,
   type IsAllowedParams,
   MissingContextException,
 } from '../../policy/conditions';
-
-const CQL_VAR = 'membershipRoles';
 
 const ScopedRoles = Symbol('ScopedRoles');
 
@@ -32,35 +27,19 @@ class MemberCondition<
     return getScope(object).includes('member:true');
   }
 
-  asCypherCondition(
-    _query: Query,
-    { resource }: AsCypherParams<TResourceStatic>,
-  ) {
-    // The User/Unavailability list queries bind no `project` variable, and
-    // Neo4j 5 rejects pattern expressions that introduce one (42N29). An
-    // anonymous start node keeps the "member of ANY project" semantics
-    // (matching the Drizzle arm's User/Unavailability branch) without
-    // introducing a variable.
-    if (resource.name === 'User' || resource.name === 'Unavailability') {
-      return 'exists(()-[:member { active: true }]->(:ProjectMember)-[:user]->(:User { id: $currentUser }))';
-    }
-    return 'exists((project)-[:member { active: true }]->(:ProjectMember)-[:user]->(:User { id: $currentUser }))';
-  }
-
   asDrizzleCondition({ resource, session }: AsDrizzleParams<TResourceStatic>) {
-    // Resources that aren't project-scoped rows need bespoke membership SQL —
-    // each mirrors its Neo4j list query's `wrapContext` pattern (see the
-    // corresponding *.repository.ts) instead of a `project_id` column ref.
+    // Resources that aren't project-scoped rows need bespoke membership SQL
+    // instead of a `project_id` column ref.
     //
-    // Deliberate tightening vs the cypher, all arms: `pm.inactive_at is null`
+    // Deliberate tightening vs the old Neo4j filter, all arms: `pm.inactive_at is null`
     // excludes replaced/inactive memberships that Neo4j's
     // `[:member { active: true }]` still honors (the rel stays active; only
     // inactiveAt is set). Matches membership-scope semantics. Recorded in the
     // pre-cutover audit ledger — do not loosen to match Neo4j.
     switch (resource.name) {
       case 'Partner':
-        // partner.repository.ts list(): member of any project connected via a
-        // partnership. Deliberate tightenings vs the cypher: soft-deleted
+        // Member of any project connected via a partnership. Deliberate
+        // tightenings vs the old Neo4j filter: soft-deleted
         // partnerships and soft-deleted projects don't grant membership here
         // (Neo4j severs deleted projects via label rewrites; PG must correlate
         // liveness explicitly).
@@ -76,8 +55,7 @@ class MemberCondition<
             and "pm"."deleted_at" is null
         )`;
       case 'Organization':
-        // organization.repository.ts list(): the partner chain extended one
-        // hop (project → partnership → partner → organization).
+        // The partner chain extended one hop (project → partnership → partner → organization).
         return sql`exists (
           select 1 from "partners" "p"
           join "partnerships" "ps" on "ps"."partner_id" = "p"."id"
@@ -93,12 +71,9 @@ class MemberCondition<
         )`;
       case 'User':
       case 'Unavailability':
-        // Neo4j's user list binds no `project` variable, so the cypher is
-        // existentially unbound = "requester is an active member of ANY
-        // project" — a requester property, uncorrelated with the target row.
-        // This arm intentionally matches Neo4j. The EdgeQL stub for User is an
-        // always-true TODO (`exists { "…" }` over a literal set) — a known
-        // Gel-vs-PG divergence for the shadow-diff audit, not parity.
+        // "Requester is an active member of ANY project" — a requester
+        // property, uncorrelated with the target row. Intentionally matches
+        // what the Neo4j user list did.
         return sql`exists (
           select 1 from "project_members" "pm"
           where "pm"."user_id" = ${session.userId}
@@ -144,32 +119,10 @@ class MemberWithRolesCondition<
     return intersection(this.roles, actual).length > 0;
   }
 
-  setupCypherContext(query: Query, prevApplied: Set<any>) {
-    if (prevApplied.has('membership-roles')) {
-      return query;
-    }
-    prevApplied.add('membership-roles');
-
-    return query.apply(
-      matchProjectScopedRoles({
-        outputVar: CQL_VAR,
-      }),
-    );
-  }
-
-  asCypherCondition(query: Query) {
-    const required = query.params.addParam(
-      this.roles.map(rolesForScope('project')),
-      'requiredMemberRoles',
-    );
-    return `size(apoc.coll.intersection(${CQL_VAR}, ${String(required)})) > 0`;
-  }
-
   asDrizzleCondition({ resource, session }: AsDrizzleParams<TResourceStatic>) {
     const projectIdRef = projectIdRefForResource(resource);
     // ARRAY[...]::role[] intersection — true when membership shares at least
-    // one role with the required set. Mirrors `apoc.coll.intersection` >0 in
-    // Cypher and `intersect` in EdgeQL.
+    // one role with the required set.
     const requiredRoles = sql.raw(
       `array[${this.roles.map((r) => `'${r}'`).join(', ')}]::"role"[]`,
     );

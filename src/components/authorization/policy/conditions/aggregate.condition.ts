@@ -4,14 +4,12 @@ import {
   isNotNil,
   type Nil,
 } from '@seedcompany/common';
-import { type Query } from 'cypher-query-builder';
 import { and, or, type SQL } from 'drizzle-orm';
 import { type Class, type Constructor } from 'type-fest';
 import { inspect, type InspectOptionsStylized } from 'util';
 import { type ResourceShape } from '~/common';
 import { type Policy } from '../policy.factory';
 import type {
-  AsCypherParams,
   AsDrizzleParams,
   Condition,
   IsAllowedParams,
@@ -36,32 +34,6 @@ export abstract class AggregateConditions<
   isAllowed(params: IsAllowedParams<TResourceStatic>) {
     const aggFn = this instanceof AndConditions ? 'every' : 'some';
     return this.conditions[aggFn]((condition) => condition.isAllowed(params));
-  }
-
-  setupCypherContext(
-    query: Query,
-    prevApplied: Set<any>,
-    other: AsCypherParams<TResourceStatic>,
-  ) {
-    for (const condition of this.conditions) {
-      query =
-        condition.setupCypherContext?.(query, prevApplied, other) ?? query;
-    }
-    return query;
-  }
-
-  asCypherCondition(
-    query: Query,
-    other: AsCypherParams<TResourceStatic>,
-  ): string {
-    if (this.conditions.length === 0) {
-      return 'true';
-    }
-    const separator = this instanceof AndConditions ? ' AND ' : ' OR ';
-    const inner = this.conditions
-      .map((condition) => condition.asCypherCondition(query, other))
-      .join(separator);
-    return `(${inner})`;
   }
 
   asDrizzleCondition(params: AsDrizzleParams<TResourceStatic>): SQL {

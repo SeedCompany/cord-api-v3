@@ -1,13 +1,10 @@
 import { setInspectOnClass, setToStringTag } from '@seedcompany/common';
 import { markSkipClassTransformation } from '@seedcompany/nest';
 import { DateTime, Settings } from 'luxon';
-import * as Neo from 'neo4j-driver';
 
 /* eslint-disable @typescript-eslint/method-signature-style */
 declare module 'luxon' {
   interface DateTime {
-    toNeo4JDate(this: DateTime): Neo.Date<number>;
-    toNeo4JDateTime(this: DateTime): Neo.DateTime<number>;
     toPostgres(this: DateTime): string;
 
     // Compatibility with Gel's LocalDate which is a subset of Temporal.PlainDate
@@ -34,26 +31,6 @@ setToStringTag(DateTime, 'DateTime');
 markSkipClassTransformation(DateTime);
 
 Object.defineProperties(DateTime.prototype, {
-  toNeo4JDate: {
-    value: function toNeo4JDate(this: DateTime) {
-      return new Neo.types.Date(this.year, this.month, this.day);
-    },
-  },
-  toNeo4JDateTime: {
-    value: function toNeo4JDateTime(this: DateTime) {
-      return new Neo.types.DateTime(
-        this.year,
-        this.month,
-        this.day,
-        this.hour,
-        this.minute,
-        this.second,
-        this.millisecond * 1e6,
-        this.offset * 60,
-        undefined, // Neo4j doesn't recommend timezone names as they're ambiguous
-      );
-    },
-  },
   toPostgres: {
     value: function toPostgres(this: DateTime) {
       return this.toSQL();

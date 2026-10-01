@@ -1,7 +1,5 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import {
-  DbLabel,
-  DbUnique,
   Grandparent,
   IntersectTypes,
   NameField,
@@ -33,7 +31,6 @@ const Interfaces = IntersectTypes(Resource, Actor, Pinnable, Commentable);
 @ObjectType({
   implements: Interfaces.members,
 })
-@DbLabel('User', 'Actor')
 export class User extends Interfaces {
   static readonly Relations = (() => ({
     ...Resource.Relations(),
@@ -50,7 +47,6 @@ export class User extends Interfaces {
   declare readonly __typename: 'User';
 
   @Field()
-  @DbUnique('EmailAddress')
   email: SecuredStringNullable;
 
   // Nullable in TS (migration 0042): Neo4j stores a name Property only when
@@ -60,19 +56,15 @@ export class User extends Interfaces {
   // blank needs no schema change at all. `type:` pins the emitted name;
   // the TS type tells the truth.
   @NameField({ type: () => SecuredString })
-  @DbLabel('UserName')
   realFirstName: SecuredStringNullable;
 
   @NameField({ type: () => SecuredString })
-  @DbLabel('UserName')
   realLastName: SecuredStringNullable;
 
   @NameField({ type: () => SecuredString })
-  @DbLabel('UserName')
   displayFirstName: SecuredStringNullable;
 
   @NameField({ type: () => SecuredString })
-  @DbLabel('UserName')
   displayLastName: SecuredStringNullable;
 
   @Field()

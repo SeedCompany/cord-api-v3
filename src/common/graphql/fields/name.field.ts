@@ -5,7 +5,6 @@ import { LazyMetadataStorage } from '@nestjs/graphql/dist/schema-builder/storage
 import { reflectTypeFromMetadata } from '@nestjs/graphql/dist/utils/reflection.utilts.js';
 import { Transform } from 'class-transformer';
 import { MinLength } from 'class-validator';
-import { DbSort } from '~/common/db';
 
 type NameFieldParams = FieldOptions & {
   /**
@@ -48,7 +47,6 @@ export const NameField = ({ type, ...options }: NameFieldParams = {}) =>
       // Null & empty string treated as MinLength validation error
       return value?.trim() ?? '';
     }),
-    DbSort((value) => `apoc.text.clean(${value})`),
     // Using this instead of @IsNotEmpty, as this allows nulls.
     MinLength(1, { message: 'Cannot be empty' }),
   );

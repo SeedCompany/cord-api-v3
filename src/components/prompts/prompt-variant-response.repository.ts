@@ -80,12 +80,11 @@ export const PromptVariantResponseRepository = <
       ) as EdgePrivileges<Parent, any, ChildListAction>;
     }
 
-    // migration-todo: the Neo4j hydrate applies filterToReadable() row-level;
-    // this port (and readOne below) deliberately relies on the service's
-    // parent-edge `edge.can('read')` gate instead — equivalent today because
-    // PVR read grants are resource-level, not per-row. If a per-row condition
-    // (e.g. creator-based) is ever added, port an EXISTS predicate mirroring
-    // oncePerProjectFromProgressReportChild here.
+    // migration-todo: no row-level read filter here (or in readOne below);
+    // this relies on the service's parent-edge `edge.can('read')` gate instead
+    // — sufficient today because PVR read grants are resource-level, not
+    // per-row. If a per-row condition (e.g. creator-based) is ever added, add
+    // an EXISTS predicate on the parent's project here.
     async list(
       parentId: ID,
     ): Promise<

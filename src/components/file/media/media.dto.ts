@@ -10,7 +10,6 @@ import { simpleSwitch } from '@seedcompany/common';
 import { stripIndent } from 'common-tags';
 import {
   DataObject,
-  DbLabel,
   type ID,
   IdField,
   IntersectTypes,
@@ -34,7 +33,6 @@ export const resolveMedia = (val: Pick<AnyMedia, '__typename'>) => {
 @InputType()
 @InterfaceType({ isAbstract: true })
 @ObjectType({ isAbstract: true })
-@DbLabel(null)
 export class MediaUserMetadata extends DataObject {
   @NameField({
     description: stripIndent`

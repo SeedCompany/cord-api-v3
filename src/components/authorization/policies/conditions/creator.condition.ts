@@ -46,15 +46,6 @@ class CreatorCondition<
     return creator === session.userId;
   }
 
-  asCypherCondition() {
-    const requester = '$currentUser';
-    return [
-      `node.creator = ${requester}`,
-      `exists((node)-[:creator { active: true }]->(:Property { value: ${requester} }))`,
-      `exists((node)-[:creator { active: true }]->(:User { id: ${requester} }))`,
-    ].join(' OR ');
-  }
-
   union(this: void, conditions: NonEmptyArray<this>) {
     return conditions[0];
   }

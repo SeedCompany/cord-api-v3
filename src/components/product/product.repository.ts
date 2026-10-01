@@ -374,8 +374,7 @@ export class ProductRepository {
     }
   }
 
-  // Each of these invalidates with its CONCRETE subtype, matching what the Neo4j
-  // arm passes to `db.updateProperties({ type })` — the store keys on
+  // Each of these invalidates with its CONCRETE subtype — the store keys on
   // `${resource.name}:${id}`, so invalidating a generic `Product` here would
   // emit a key nothing subscribes to and read as a silent no-op.
   async updateProperties(
@@ -401,8 +400,8 @@ export class ProductRepository {
 
   /**
    * Write the simple-column subset of `changes`, then return `object` with
-   * the changes merged in (secured-aware), matching the Neo4j
-   * `db.updateProperties()` contract the service relies on.
+   * the changes merged in (secured-aware) — the contract the service relies
+   * on.
    */
   private async applyChanges<T extends { id: ID }>(
     object: T,

@@ -5,9 +5,6 @@ type Thunk<T> = T | (() => T);
 export type ResourceShape<T> = AbstractClass<T> & {
   Props?: string[];
   SecuredProps?: string[];
-  // An optional list of props that exist on the BaseNode in the DB.
-  // Default should probably be considered the props on Resource class.
-  BaseNodeProps?: string[];
   Relations?: Thunk<
     Record<
       string,

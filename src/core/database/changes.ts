@@ -5,17 +5,17 @@ import type { ConditionalKeys, IsAny } from 'type-fest';
 import {
   EnhancedResource,
   type ID,
+  type Many,
   type MaybeSecured,
   type MaybeUnsecuredInstance,
   Resource,
   type ResourceShape,
+  type RichTextDocument,
   unwrapSecured,
   type UnwrapSecured,
 } from '~/common';
 import { type LinkTo } from '~/core/resources';
 import { type CreateDefinedFileVersion } from '../../components/file/dto';
-import { type Variable } from '../neo4j/query';
-import { type NativeDbValue } from '../neo4j/results';
 
 /**
  * Specify this on a property to override the key & value type for ChangesOf on
@@ -84,6 +84,11 @@ type IsFileField<Val> =
           : false
       : false;
 
+/** A value a column can hold directly. */
+type ScalarDbValue = Many<
+  boolean | string | number | DateTime | RichTextDocument | null
+>;
+
 /**
  * Only props of T that can be written directly to DB
  */
@@ -92,9 +97,9 @@ export type DbChanges<T> = DbAllowableChanges<T> &
 
 type DbAllowableChanges<T> = {
   [K in Exclude<
-    ConditionalKeys<Required<T>, MaybeSecured<NativeDbValue | LinkTo<any>>>,
+    ConditionalKeys<Required<T>, MaybeSecured<ScalarDbValue | LinkTo<any>>>,
     keyof Resource
-  >]?: UnwrapSecured<T[K]> | Variable;
+  >]?: UnwrapSecured<T[K]>;
 };
 
 type AndModifiedAt<T> = T extends { modifiedAt: DateTime }

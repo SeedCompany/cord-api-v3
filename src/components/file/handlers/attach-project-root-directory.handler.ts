@@ -1,5 +1,4 @@
 import { eq } from 'drizzle-orm';
-import { ConfigService } from '~/core/config';
 import { DrizzleService } from '~/core/drizzle';
 import { projects } from '~/core/drizzle/schema';
 import { OnHook } from '~/core/hooks';
@@ -10,7 +9,6 @@ import { FileService } from '../file.service';
 export class AttachProjectRootDirectoryHandler {
   constructor(
     private readonly files: FileService,
-    private readonly config: ConfigService,
     private readonly drizzle: DrizzleService,
   ) {}
 
@@ -38,15 +36,11 @@ export class AttachProjectRootDirectoryHandler {
       await this.files.createDirectory(rootDirId, folder);
     }
 
-    // Neo4j persists this as the project's `rootDirectory` relationship (made by
-    // createRootDirectory). Postgres has no back-edge — set the FK column on the
+    // createRootDirectory makes no back-edge, so set the FK column on the
     // project row directly. Runs in the create transaction (tx-aware client).
-    // migration-todo: drop this engine check at Phase 7 cutover (always PG).
-    if (this.config.databaseEngine === 'postgres') {
-      await this.drizzle.client
-        .update(projects)
-        .set({ rootDirectoryId: rootDirId })
-        .where(eq(projects.id, project.id));
-    }
+    await this.drizzle.client
+      .update(projects)
+      .set({ rootDirectoryId: rootDirId })
+      .where(eq(projects.id, project.id));
   }
 }

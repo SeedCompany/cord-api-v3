@@ -1,7 +1,6 @@
 import { Field, InterfaceType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import type { OmitIndexSignature } from 'type-fest';
-import { DbLabel } from '~/common/db';
 import { IdField } from '~/common/graphql/fields/id.field';
 import { DateTimeField } from '~/common/graphql/fields/temporal.field';
 import { DataObject } from '~/common/graphql/objects/abstracts/data-object';
@@ -15,7 +14,6 @@ import type { ScopedRole } from '../../components/authorization/dto';
 export interface DeclareResourceRelations {}
 
 @InterfaceType()
-@DbLabel('BaseNode')
 export abstract class Resource extends DataObject {
   // eslint-disable-next-line @typescript-eslint/naming-convention
   static readonly Relations =

@@ -1,5 +1,4 @@
 import { type NonEmptyArray } from '@seedcompany/common';
-import { type Query } from 'cypher-query-builder';
 import { inArray } from 'drizzle-orm';
 import { type AnyPgColumn } from 'drizzle-orm/pg-core';
 import { inspect, type InspectOptionsStylized } from 'util';
@@ -144,15 +143,6 @@ export class TransitionCondition<W extends Workflow> implements Condition<
       return false;
     }
     return this.allowedTransitionKeys.has(transitionKey);
-  }
-
-  asCypherCondition(query: Query) {
-    // TODO bypasses to statuses won't work with this. How should these be filtered?
-    const required = query.params.addParam(
-      this.allowedTransitionKeys,
-      'allowedTransitions',
-    );
-    return `node.transition IN ${String(required)}`;
   }
 
   asDrizzleCondition() {

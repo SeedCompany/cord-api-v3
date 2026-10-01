@@ -3,7 +3,6 @@ import { stripIndent } from 'common-tags';
 import { startCase } from 'lodash';
 import { type MergeExclusive } from 'type-fest';
 import {
-  DbLabel,
   type ID,
   type Secured,
   SecuredBoolean,
@@ -58,15 +57,12 @@ export class Product extends Producible {
   readonly project: ID;
 
   @Field()
-  @DbLabel('ProductMedium')
   readonly mediums: SecuredProductMediums;
 
   @Field()
-  @DbLabel('ProductPurpose')
   readonly purposes: SecuredProductPurposes;
 
   @Field()
-  @DbLabel('ProductMethodology')
   readonly methodology: SecuredMethodology;
 
   @SensitivityField({
@@ -133,7 +129,6 @@ export class DirectScriptureProduct extends Product {
       This is needed for legacy data where we only know the total verse count.
     `,
   })
-  @DbLabel('UnspecifiedScripturePortion')
   unspecifiedScripture: SecuredUnspecifiedScripturePortion;
 
   @Field(() => Int, {

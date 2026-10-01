@@ -1,5 +1,4 @@
 import { entries, type NonEmptyArray } from '@seedcompany/common';
-import { type Query } from 'cypher-query-builder';
 import { inArray } from 'drizzle-orm';
 import { inspect, type InspectOptionsStylized } from 'util';
 import { type ID, isIdLike, type Many } from '~/common';
@@ -119,15 +118,6 @@ class TransitionCondition implements Condition<typeof Event> {
     return this.allowedTransitionIds.has(
       isIdLike(transitionId) ? transitionId : transitionId.id,
     );
-  }
-
-  asCypherCondition(query: Query) {
-    // TODO bypasses to statuses won't work with this. How should these be filtered?
-    const required = query.params.addParam(
-      this.allowedTransitionIds,
-      'allowedTransitions',
-    );
-    return `node.transition IN ${String(required)}`;
   }
 
   asDrizzleCondition() {

@@ -1,5 +1,4 @@
 import { type NonEmptyArray } from '@seedcompany/common';
-import { type Query } from 'cypher-query-builder';
 import { type SQL, sql } from 'drizzle-orm';
 import { inspect, type InspectOptionsStylized } from 'util';
 import {
@@ -11,7 +10,6 @@ import {
   organizationDerivedSensitivity,
   partnerDerivedSensitivity,
 } from '~/core/drizzle/derived-sensitivity';
-import { matchProjectSens, rankSens } from '~/core/neo4j/query';
 import {
   type AsDrizzleParams,
   type Condition,
@@ -20,7 +18,6 @@ import {
 } from '../../policy/conditions';
 
 const sensitivityRank = { High: 3, Medium: 2, Low: 1 };
-const CQL_VAR = 'sens';
 
 const EffectiveSensitivity = Symbol('EffectiveSensitivity');
 
@@ -54,25 +51,6 @@ export class SensitivityCondition<
     }
 
     return sensitivityRank[actual] <= sensitivityRank[this.access];
-  }
-
-  setupCypherContext(query: Query, prevApplied: Set<any>) {
-    if (prevApplied.has('sensitivity')) {
-      return query;
-    }
-    prevApplied.add('sensitivity');
-
-    return query.subQuery('project', (sub) =>
-      sub
-        .apply(matchProjectSens())
-        .return(`${rankSens('sensitivity')} as ${CQL_VAR}`),
-    );
-  }
-
-  asCypherCondition(query: Query) {
-    const ranked = sensitivityRank[this.access];
-    const param = query.params.addParam(ranked, 'requiredSens');
-    return `${CQL_VAR} <= ${String(param)}`;
   }
 
   asDrizzleCondition({ resource }: AsDrizzleParams<TResourceStatic>) {

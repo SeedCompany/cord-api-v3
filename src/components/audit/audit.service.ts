@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { type ID } from '~/common';
 import { Identity, type Session } from '~/core/authentication';
-import { ConfigService } from '~/core/config';
 import {
   type ResourceMutationList,
   type ResourceMutationListInput,
@@ -9,24 +8,14 @@ import {
 import { type ResourceMutatedHook } from './resource-mutated.hook';
 import { ResourceMutationRepository } from './resource-mutation.repository';
 
-const EMPTY: ResourceMutationList = { items: [], total: 0, hasMore: false };
-
 @Injectable()
 export class AuditService {
   constructor(
     private readonly repo: ResourceMutationRepository,
     private readonly identity: Identity,
-    private readonly config: ConfigService,
   ) {}
 
   async record(hook: ResourceMutatedHook): Promise<void> {
-    // The audit log lives in postgres; under neo4j the drizzle client has no
-    // pool, so this is a no-op (no rows captured during the transition).
-    // migration-todo(cutover-cleanup): drop this guard at Phase 7 cutover
-    // (always postgres) — audit is postgres-only by design.
-    if (this.config.databaseEngine !== 'postgres') {
-      return;
-    }
     // A no-op update (nothing actually changed) isn't worth an audit row.
     // Centralized here so every firing service is covered without each having
     // to guard its own empty-changes case. Creates/deletes always record —
@@ -72,11 +61,6 @@ export class AuditService {
     resourceId: ID,
     input: ResourceMutationListInput,
   ): Promise<ResourceMutationList> {
-    // migration-todo(cutover-cleanup): drop this guard at Phase 7 cutover
-    // (always postgres).
-    if (this.config.databaseEngine !== 'postgres') {
-      return EMPTY;
-    }
     return await this.repo.listByResource(resourceType, resourceId, input);
   }
 }
