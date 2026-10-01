@@ -59,13 +59,13 @@ export class ProjectWorkflowRepository {
   }
 
   /**
-   * What the reader is allowed to see, plus the ancestry Neo4j requires.
+   * What the reader is allowed to see, plus the ancestry it requires.
    *
-   * Permission: `filterToReadable()` there, `applyReadFilter` here. Read on a
+   * Permission: `applyReadFilter`. Read on a
    * project workflow event is granted outright to some roles and not at all to
    * others — Marketing, Fundraising and StaffMember can read a project but hold
-   * no grant on its events, so Neo4j resolves their permission to false and
-   * returns nothing. Securing the DTO is not a substitute: only `who` and `notes`
+   * no grant on its events, so their permission resolves to false and nothing
+   * is returned. Securing the DTO is not a substitute: only `who` and `notes`
    * are secured, so `id`, `at`, `to` and `transition` would pass through
    * untouched and hand over the project's whole approval-and-rejection history,
    * timestamps included. Returns null when the reader has no grant, and the

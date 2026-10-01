@@ -30,11 +30,8 @@ export class CeremonyService {
 
   async create(
     input: CreateCeremony,
-    engagementId?: ID<'Engagement'>,
+    engagementId: ID<'Engagement'>,
   ): Promise<ID> {
-    // engagementId is only meaningful under postgres (NOT NULL FK); the
-    // Neo4j repo ignores it and the caller wires the relationship after.
-    // migration-todo: make it required at Phase 7 cutover.
     const { id } = await this.repo.create(input, engagementId);
     await this.hooks.run(new ResourceMutatedHook('Ceremony', id, 'Create'));
 

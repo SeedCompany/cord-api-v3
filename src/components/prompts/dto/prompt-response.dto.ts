@@ -1,7 +1,6 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import {
-  DbLabel,
   type ID,
   IdField,
   Resource,
@@ -34,7 +33,6 @@ export class PromptResponse extends Resource {
 }
 
 @ObjectType()
-@DbLabel(VariantResponse.name, 'Property')
 export abstract class VariantResponse<Key extends string = string> {
   @Field(() => Variant)
   readonly variant: Variant<Key> & SetUnsecuredType<Key>;

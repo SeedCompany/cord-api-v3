@@ -14,7 +14,11 @@ import { CliModule } from './cli/cli.module';
 import { ConfigModule } from './config/config.module';
 import { CoreController } from './core.controller';
 import { DataLoaderConfig } from './data-loader/data-loader.config';
-import { TransactionRunner } from './database';
+import {
+  TransactionHooks,
+  TransactionRetryInformer,
+  TransactionRunner,
+} from './database';
 import { DrizzleModule } from './drizzle/drizzle.module';
 import { EmailConfig } from './email/email.config';
 import { ExceptionFilter } from './exception/exception.filter';
@@ -23,7 +27,6 @@ import { GraphqlModule } from './graphql';
 import { HttpModule } from './http';
 import { LiveQueryModule } from './live-query/live-query.module';
 import { LockerModule } from './locker/locker.module';
-import { DatabaseModule } from './neo4j/database.module';
 import { QueueModule } from './queue/queue.module';
 import { ResourceModule } from './resources/resource.module';
 import { ScalarProviders } from './scalars.resolver';
@@ -43,7 +46,6 @@ import { WebhooksModule } from './webhooks/webhooks.module';
     CacheModule,
     BroadcasterModule,
     CliModule,
-    DatabaseModule,
     DrizzleModule,
     DataLoaderModule.registerAsync({ useClass: DataLoaderConfig }),
     EmailModule.registerAsync({ useClass: EmailConfig }),
@@ -62,6 +64,8 @@ import { WebhooksModule } from './webhooks/webhooks.module';
   ],
   providers: [
     AwsS3Factory,
+    TransactionHooks,
+    TransactionRetryInformer,
     TransactionRunner,
     ExceptionNormalizer,
     ExceptionFilter,
@@ -75,13 +79,14 @@ import { WebhooksModule } from './webhooks/webhooks.module';
   exports: [
     HttpModule,
     AwsS3Factory,
+    TransactionHooks,
+    TransactionRetryInformer,
     TransactionRunner,
     ConfigModule,
     CacheModule,
     BroadcasterModule,
     GraphqlModule,
     LiveQueryModule,
-    DatabaseModule,
     DrizzleModule,
     DataLoaderModule,
     DiscoveryModule,

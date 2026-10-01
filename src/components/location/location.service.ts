@@ -119,7 +119,7 @@ export class LocationService {
     input: LocationListInput,
   ): Promise<SecuredLocationList> {
     const results = await this.repo.listLocationsFromNodeNoSecGroups(
-      edge.resource.dbLabel,
+      edge.resource.name,
       edge.key,
       dto.id,
       input,

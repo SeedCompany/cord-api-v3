@@ -1,5 +1,4 @@
 import { type NonEmptyArray } from '@seedcompany/common';
-import { type Query } from 'cypher-query-builder';
 import { inspect, type InspectOptionsStylized } from 'util';
 import {
   type Many,
@@ -8,7 +7,6 @@ import {
   type VariantOf,
 } from '~/common';
 import {
-  type AsCypherParams,
   type Condition,
   type IsAllowedParams,
   MissingContextException,
@@ -36,11 +34,6 @@ export class VariantCondition<
     ) as VariantOf<TResourceStatic>;
 
     return this.variants.has(current);
-  }
-
-  asCypherCondition(query: Query, _other: AsCypherParams<TResourceStatic>) {
-    const variants = query.params.addParam([...this.variants], 'variants');
-    return `node.variant = ${String(variants)}`;
   }
 
   union(this: void, conditions: NonEmptyArray<this>) {

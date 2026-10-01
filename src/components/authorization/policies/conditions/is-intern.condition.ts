@@ -18,17 +18,11 @@ class IsInternCondition<
     return Boolean(Reflect.get(object, 'isIntern'));
   }
 
-  asCypherCondition() {
-    return 'exists((node)<-[:intern { active: true }]-(:InternshipEngagement))';
-  }
-
   asDrizzleCondition() {
-    // Mirrors the cypher: the user row is the intern on ≥1 InternshipEngagement.
-    // Engagement liveness (`deleted_at`) replaces Neo4j's Deleted_ label
-    // rewrite. No project-liveness join on purpose — Neo4j doesn't sever an
-    // engagement's `intern` edge when its project is deleted, and the hydrate
-    // side (user.repository.ts `internUserIds`) must stay in lockstep
-    // with this predicate.
+    // The user row is the intern on ≥1 live InternshipEngagement. No
+    // project-liveness join on purpose — deleting a project does not sever an
+    // engagement's intern, and the hydrate side (user.repository.ts
+    // `internUserIds`) must stay in lockstep with this predicate.
     return sql`exists (
       select 1 from "engagements" "e"
       where "e"."intern_id" = "users"."id"

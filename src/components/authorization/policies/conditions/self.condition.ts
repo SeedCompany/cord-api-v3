@@ -20,10 +20,6 @@ class SelfCondition<
     return object.id === session.userId;
   }
 
-  asCypherCondition() {
-    return 'node:User AND node.id = $currentUser';
-  }
-
   asDrizzleCondition({ session }: AsDrizzleParams<TResourceStatic>) {
     return eq(users.id, session.userId);
   }

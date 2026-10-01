@@ -19,9 +19,8 @@ import {
 
 // Read-permission leak guard. A requester with no access to a resource must not
 // be able to enumerate its existence through a list endpoint. This is enforced
-// in the repository layer (privileges.filterToReadable / applyReadFilter), so it
-// must hold under BOTH engines — a missing filter on the postgres repo would
-// silently leak rows that the neo4j repo hid.
+// in the repository layer (applyReadFilter); a missing filter on a repository
+// silently leaks rows.
 //
 // Each test pairs a NEGATIVE assertion (the restricted requester can't see the
 // row) with a POSITIVE control (an admin can), so a vacuous empty list can't

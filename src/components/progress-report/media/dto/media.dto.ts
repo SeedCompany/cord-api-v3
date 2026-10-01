@@ -1,13 +1,6 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { setOf } from '@seedcompany/common';
-import {
-  EnhancedResource,
-  type ID,
-  IdField,
-  Resource,
-  Variant,
-  type VariantOf,
-} from '~/common';
+import { type ID, IdField, Resource, Variant, type VariantOf } from '~/common';
 import { type SetDbType } from '~/core/database';
 import { RegisterResource } from '~/core/resources';
 import { type LinkTo } from '~/core/resources';
@@ -23,12 +16,6 @@ export type VariantGroup = ID<'ProgressReportMediaVariantGroup'>;
 @InputType({ isAbstract: true })
 @ObjectType()
 export class ProgressReportMedia extends Resource {
-  static BaseNodeProps = [
-    ...EnhancedResource.of(Resource).props,
-    'category',
-    'creator',
-    'variant',
-  ];
   static readonly Parent = () =>
     import('../../dto/progress-report.dto').then((m) => m.ProgressReport);
   static readonly ConfirmThisClassPassesSensitivityToPolicies = true;

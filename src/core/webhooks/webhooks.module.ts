@@ -1,9 +1,7 @@
-import { Inject, Module } from '@nestjs/common';
-import { DateTime } from 'luxon';
+import { Module } from '@nestjs/common';
 import { SubscriptionChannelVersion } from '../../subscription-channel-version';
 import { GraphqlModule } from '../graphql';
-import { MigrationRegistry } from '../neo4j/migration/migration.registry';
-import { WebhookChannelSyncMigration } from './channels/channel-sync.migration';
+import { WebhookChannelSync } from './channels/webhook-channel-sync.service';
 import { WebhookChannelRepository } from './channels/webhook-channel.repository';
 import { WebhookChannelService } from './channels/webhook-channel.service';
 import { WebhookDeliveryQueue } from './delivery/webhook-delivery.queue';
@@ -38,19 +36,11 @@ import { WebhookValidator } from './webhook.validator';
     WebhookSender,
     WebhooksRepository,
     WebhookChannelRepository,
-    WebhookChannelSyncMigration,
+    WebhookChannelSync,
     {
       provide: SubscriptionChannelVersion.TOKEN,
       useValue: SubscriptionChannelVersion,
     },
   ],
 })
-export class WebhooksModule {
-  constructor(
-    registry: MigrationRegistry,
-    migration: WebhookChannelSyncMigration,
-    @Inject(SubscriptionChannelVersion.TOKEN) version: DateTime,
-  ) {
-    registry.register(migration, version);
-  }
-}
+export class WebhooksModule {}

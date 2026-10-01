@@ -9,8 +9,6 @@ import { type LinkTo } from '~/core/resources';
   `,
 })
 export abstract class ProgressSummary {
-  static readonly BaseNodeProps = ['planned', 'actual'];
-
   @Field(() => Float)
   planned: number;
 

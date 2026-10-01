@@ -7,11 +7,7 @@ import {
   Calculated,
   DateInterval,
   DateTimeField,
-  DbLabel,
-  DbSort,
-  DbUnique,
   Disabled,
-  EnhancedResource,
   Grandparent,
   IntersectTypes,
   NameField,
@@ -32,7 +28,6 @@ import {
   ServerException,
   type UnsecuredDto,
 } from '~/common';
-import { sortingForEnumIndex } from '~/core/neo4j/query';
 import { type LinkTo, RegisterResource } from '~/core/resources';
 import { Budget } from '../../budget/dto';
 import { ChangesetAware } from '../../changeset/dto';
@@ -47,7 +42,7 @@ import { Postable } from '../../post/dto';
 import { ProjectChangeRequest } from '../../project-change-request/dto';
 import { ProjectMember } from '../project-member/dto';
 import { ProjectStatus } from './project-status.enum';
-import { ProjectStep, SecuredProjectStep } from './project-step.enum';
+import { SecuredProjectStep } from './project-step.enum';
 import { ProjectType } from './project-type.enum';
 
 type AnyProject = MergeExclusive<
@@ -83,10 +78,6 @@ const RequiredWhenNotInDev = RequiredWhen(() => Project)({
   implements: Interfaces.members,
 })
 class Project extends Interfaces {
-  static readonly BaseNodeProps = [
-    ...EnhancedResource.of(Resource).props,
-    'type',
-  ];
   static readonly Relations = (() => ({
     ...Resource.Relations(),
     rootDirectory: Directory,
@@ -109,7 +100,6 @@ class Project extends Interfaces {
   readonly sensitivity: Sensitivity;
 
   @NameField()
-  @DbUnique()
   readonly name: SecuredString;
 
   @Field()
@@ -118,20 +108,15 @@ class Project extends Interfaces {
   @Field({
     description: "The ID for Finance's departments",
   })
-  @DbUnique('DepartmentId')
   readonly departmentId: SecuredStringNullable;
 
   @Field({
     middleware: [Grandparent.store],
   })
-  @DbLabel('ProjectStep')
-  @DbSort(sortingForEnumIndex(ProjectStep))
   @Calculated()
   readonly step: SecuredProjectStep;
 
   @Field(() => ProjectStatus)
-  @DbLabel('ProjectStatus')
-  @DbSort(sortingForEnumIndex(ProjectStatus))
   @Calculated()
   readonly status: ProjectStatus;
 

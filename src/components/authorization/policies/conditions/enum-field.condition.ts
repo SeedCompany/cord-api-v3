@@ -1,5 +1,4 @@
 import { groupBy, type NonEmptyArray } from '@seedcompany/common';
-import { type Query } from 'cypher-query-builder';
 import { sql } from 'drizzle-orm';
 import { get, startCase } from 'lodash';
 import type { Get, Paths } from 'type-fest';
@@ -46,28 +45,18 @@ export class EnumFieldCondition<
     return this.allowed.has(actual);
   }
 
-  asCypherCondition(_query: Query) {
-    return `false`; // TODO
-  }
-
   asDrizzleCondition() {
-    // Deliberately the same answer the Cypher arm above gives, and for the same
-    // unfinished reason: this condition reads a path like `project.type`, and
-    // turning that into SQL means knowing which table holds the row and how to
-    // reach its project — neither of which this class is told. See the
+    // Deliberately unfinished: this condition reads a path like `project.type`,
+    // and turning that into SQL means knowing which table holds the row and how
+    // to reach its project — neither of which this class is told. See the
     // post-cutover item on giving that lookup one home.
-    //
-    // `false` is the honest port, not a shortcut. Filtering rows in the database
-    // is what this method is for, and matching Neo4j exactly is the rule for the
-    // migration, so this must keep answering what the Cypher arm answers.
     //
     // Nothing reaches it today, which is why returning false costs nothing:
     // `drizzleFilter` has exactly one caller, `applyReadFilter`, and that always
     // asks for the `read` action — while every `field(...)` call site under
     // policies/by-role and policies/by-feature governs edit, create, delete or
-    // execute instead. The arm exists so Postgres answers what Cypher answers the
-    // day someone writes a policy condition-first. Do NOT "fix" it by writing a
-    // filter this migration is supposed to leave unchanged.
+    // execute instead. Implement the real filter the day someone writes a read
+    // policy condition-first.
     //
     // ⚠️ It does NOT mean the grants naming this condition are dead. A condition
     // governs the actions written AFTER it — `perm-granter.ts` stores

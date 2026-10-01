@@ -212,11 +212,7 @@ export class EngagementService {
       return { engagement: object };
     }
     if (changes.status) {
-      await this.engagementRules.verifyStatusChange(
-        input.id,
-        changes.status,
-        changeset,
-      );
+      await this.engagementRules.verifyStatusChange(input.id, changes.status);
     }
     this.privileges.for(LanguageEngagement, object).verifyChanges(changes);
     EngagementDateRangeException.throwIfInvalid(previous, changes);
@@ -310,11 +306,7 @@ export class EngagementService {
       return { engagement: object };
     }
     if (changes.status) {
-      await this.engagementRules.verifyStatusChange(
-        input.id,
-        changes.status,
-        changeset,
-      );
+      await this.engagementRules.verifyStatusChange(input.id, changes.status);
     }
     this.privileges
       .for(InternshipEngagement, object)

@@ -116,8 +116,6 @@ const EXEMPT: Record<string, string> = {
 };
 
 const SCAN_ROOTS = ['src/components', 'src/core'];
-// migration-todo: drop this exclusion when `src/core/neo4j` is deleted.
-const EXCLUDE = 'src/core/neo4j/';
 
 const walk = (dir: string): string[] =>
   readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -172,8 +170,7 @@ describe('LQ-1 structural guard: repositories invalidate live queries', () => {
       // POSIX-normalized so the pinned keys above are stable across platforms.
       key: relative('.', path).split(sep).join(posix.sep),
       code: toCode(readFileSync(path, 'utf8')),
-    }))
-    .filter(({ key }) => !key.startsWith(EXCLUDE));
+    }));
 
   const writers = repos.filter(({ code }) => writes(code));
   const offenders = writers

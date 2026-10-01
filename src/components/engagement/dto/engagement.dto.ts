@@ -5,7 +5,6 @@ import {
   Calculated,
   DateInterval,
   DateTimeField,
-  DbLabel,
   Grandparent,
   IntersectTypes,
   RequiredWhen,
@@ -101,7 +100,6 @@ class Engagement extends Interfaces {
   @Field(() => SecuredEngagementStatus, {
     middleware: [Grandparent.store],
   })
-  @DbLabel('EngagementStatus')
   readonly status: SecuredEngagementStatus;
 
   readonly ceremony: Secured<LinkTo<'Ceremony'>>;
@@ -248,12 +246,10 @@ export class InternshipEngagement extends Engagement {
   readonly mentor: Secured<LinkTo<'User'> | null>;
 
   @Field()
-  @DbLabel('InternPosition')
   @RequiredWhenNotInDev()
   readonly position: SecuredInternPosition;
 
   @Field()
-  @DbLabel('ProductMethodology')
   readonly methodologies: SecuredMethodologies;
 
   // Nullable in TS (migration 0042): 6,866 migrated rows carry a kept blank.

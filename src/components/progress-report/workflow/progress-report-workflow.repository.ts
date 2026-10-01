@@ -63,19 +63,19 @@ export class ProgressReportWorkflowRepository {
   }
 
   /**
-   * What the reader is allowed to see, plus the ancestry Neo4j requires.
+   * What the reader is allowed to see, plus the ancestry it requires.
    *
-   * Two separate rules, both of which the Neo4j repo gets and this one used to
+   * Two separate rules, both of which the Neo4j repo had and this one used to
    * skip.
    *
-   * Permission: `filterToReadable()` there, `applyReadFilter` here. Read
+   * Permission: `applyReadFilter`. Read
    * resolves to a plain boolean, not to the per-transition condition: an action
    * getter captures whatever condition is staged *at that moment*
    * (`perm-granter.ts` `[action]`, `stagedCondition ?? true`), and every policy
    * writes `.read` before staging, so the condition it stages governs the
    * following `execute` instead. Read is therefore granted outright to a handful
    * of roles and absent for Field Partner and Translator, who get execute only —
-   * Neo4j resolves their read to false and returns nothing. Securing the DTO does
+   * their read resolves to false and returns nothing. Securing the DTO does
    * not stand in for this: only `who` and `notes` are secured, so
    * `id`, `at`, `status` and `transition` would pass through untouched and hand a
    * report's whole internal review-and-reject history to anyone who can read the

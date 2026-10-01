@@ -1,13 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { and, eq, inArray, isNull, sql, type SQL } from 'drizzle-orm';
 import { DateTime } from 'luxon';
-import {
-  CalendarDate,
-  generateId,
-  type ID,
-  ServerException,
-  type UnsecuredDto,
-} from '~/common';
+import { CalendarDate, generateId, type ID, type UnsecuredDto } from '~/common';
 import { Identity } from '~/core/authentication';
 import {
   collateDisplayOrder,
@@ -49,15 +43,8 @@ export class CeremonyRepository extends DrizzleDtoRepository<
 
   async create(
     input: CreateCeremony,
-    engagementId?: ID<'Engagement'>,
+    engagementId: ID<'Engagement'>,
   ): Promise<{ id: ID }> {
-    if (!engagementId) {
-      // The Neo4j flow creates the node then connects it from the caller;
-      // under postgres the FK is NOT NULL so the caller must pass it.
-      throw new ServerException(
-        'Ceremony creation under postgres requires the engagement id',
-      );
-    }
     const id = await generateId<ID<'Ceremony'>>();
     await this.db.insert(ceremonies).values({
       id,
@@ -163,10 +150,9 @@ export class CeremonyRepository extends DrizzleDtoRepository<
           and ${projects.deletedAt} is null
       )`,
     ];
-    // Mirror the Neo4j list()'s `filterToReadable` — without it, member/
-    // sensitivity-gated roles could list ceremonies of unreadable projects.
-    // (readMany stays unfiltered: the Neo4j readMany uses the base's opt-in
-    // no-op filterManyToReadable, so unfiltered there is parity.)
+    // Without the read filter, member/sensitivity-gated roles could list
+    // ceremonies of unreadable projects. (readMany stays unfiltered, as it
+    // always has.)
     if (!this.executor.applyReadFilter(this.resource, conditions)) {
       return EMPTY_PAGE;
     }
@@ -185,10 +171,9 @@ export class CeremonyRepository extends DrizzleDtoRepository<
        * by the project's name (its `sorting()` call declares a `projectName`
        * matcher).
        *
-       * Collated like every other text sort (decided 2026-09-15). Neo4j orders
-       * this key by raw code points — its `DbSort` lookup is
-       * (Ceremony, 'projectName'), a field Ceremony does not have, so no fold
-       * transformer applies — making this a deliberate divergence from it.
+       * Collated like every other text sort (decided 2026-09-15). Neo4j ordered
+       * this key by raw code points, so this is a deliberate divergence from
+       * it.
        */
       projectName: collateDisplayOrder(sql`(
         select ${projects.name} from ${projects}

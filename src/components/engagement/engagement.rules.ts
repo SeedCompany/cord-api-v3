@@ -1,7 +1,6 @@
 /* eslint-disable no-case-declarations */
 import { Injectable } from '@nestjs/common';
 import { type NonEmptyArray, setOf } from '@seedcompany/common';
-import { node, relation } from 'cypher-query-builder';
 import { desc, eq } from 'drizzle-orm';
 import { first, intersection } from 'lodash';
 import {
@@ -11,7 +10,6 @@ import {
   UnauthorizedException,
 } from '~/common';
 import { Identity } from '~/core/authentication';
-import { ConfigService } from '~/core/config';
 import { DrizzleService } from '~/core/drizzle/drizzle.service';
 import {
   engagements,
@@ -19,8 +17,6 @@ import {
   projects,
 } from '~/core/drizzle/schema';
 import { ILogger, Logger } from '~/core/logger';
-import { DatabaseService } from '~/core/neo4j';
-import { ACTIVE, INACTIVE } from '~/core/neo4j/query';
 import { ProjectStep } from '../project/dto';
 import {
   EngagementStatus,
@@ -42,9 +38,7 @@ const rolesThatCanBypassWorkflow = setOf<Role>([Role.Administrator]);
 @Injectable()
 export class EngagementRules {
   constructor(
-    private readonly db: DatabaseService,
     private readonly drizzle: DrizzleService,
-    private readonly config: ConfigService,
     private readonly identity: Identity,
     // eslint-disable-next-line @seedcompany/no-unused-vars
     @Logger('engagement:rules') private readonly logger: ILogger,
@@ -324,14 +318,13 @@ export class EngagementRules {
 
   async getAvailableTransitions(
     engagementId: ID,
-    changeset?: ID,
   ): Promise<EngagementStatusTransition[]> {
     const session = this.identity.current;
     if (session.anonymous) {
       return [];
     }
 
-    const currentStatus = await this.getCurrentStatus(engagementId, changeset);
+    const currentStatus = await this.getCurrentStatus(engagementId);
     // get roles that can approve the current status
     const { approvers, transitions } = await this.getStatusRule(
       currentStatus,
@@ -352,10 +345,7 @@ export class EngagementRules {
       return transitions;
     }
 
-    const currentStep = await this.getCurrentProjectStep(
-      engagementId,
-      changeset,
-    );
+    const currentStep = await this.getCurrentProjectStep(engagementId);
     const availableTransitionsAccordingToProject = transitions.filter(
       (transition) =>
         !transition.projectStepRequirements?.length ||
@@ -369,19 +359,12 @@ export class EngagementRules {
     return roles.intersection(rolesThatCanBypassWorkflow).size > 0;
   }
 
-  async verifyStatusChange(
-    engagementId: ID,
-    nextStatus: EngagementStatus,
-    changeset?: ID,
-  ) {
+  async verifyStatusChange(engagementId: ID, nextStatus: EngagementStatus) {
     if (this.canBypassWorkflow()) {
       return;
     }
 
-    const transitions = await this.getAvailableTransitions(
-      engagementId,
-      changeset,
-    );
+    const transitions = await this.getAvailableTransitions(engagementId);
 
     const validNextStatus = transitions.some(
       (transition) => transition.to === nextStatus,
@@ -396,131 +379,29 @@ export class EngagementRules {
     }
   }
 
-  private async getCurrentStatus(id: ID, changeset?: ID) {
-    // migration-todo: collapse this engine-check at Phase 7 cutover — keep
-    // only the postgres branch. The postgres branch intentionally ignores
-    // `changeset`: PCR/Changeset is excluded from the migration, so no
-    // changeset can exist under postgres and the committed row is always
-    // the right answer. Revisit if changesets are ever ported to PG.
-    if (this.config.databaseEngine === 'postgres') {
-      const [row] = await this.drizzle.client
-        .select({ status: engagements.status })
-        .from(engagements)
-        .where(eq(engagements.id, id as ID<'Engagement'>));
-      if (!row) {
-        throw new ServerException('current status not found');
-      }
-      return row.status;
-    }
-
-    let currentStatus;
-
-    if (changeset) {
-      const result = await this.db
-        .query()
-        .match([
-          node('engagement', 'Engagement', { id }),
-          relation('out', '', 'status', INACTIVE),
-          node('status', 'Property'),
-          relation('in', '', 'changeset', ACTIVE),
-          node('', 'Changeset', { id: changeset }),
-        ])
-        .raw('return status.value as status')
-        .asResult<{ status: EngagementStatus }>()
-        .first();
-      currentStatus = result?.status;
-    }
-    if (!currentStatus) {
-      const result = await this.db
-        .query()
-        .match([
-          node('engagement', 'Engagement', { id }),
-          relation('out', '', 'status', ACTIVE),
-          node('status', 'Property'),
-        ])
-        .raw('return status.value as status')
-        .asResult<{ status: EngagementStatus }>()
-        .first();
-      currentStatus = result?.status;
-    }
-
-    if (!currentStatus) {
+  private async getCurrentStatus(id: ID) {
+    const [row] = await this.drizzle.client
+      .select({ status: engagements.status })
+      .from(engagements)
+      .where(eq(engagements.id, id as ID<'Engagement'>));
+    if (!row) {
       throw new ServerException('current status not found');
     }
-
-    return currentStatus;
+    return row.status;
   }
 
-  private async getCurrentProjectStep(engagementId: ID, changeset?: ID) {
-    // migration-todo: collapse this engine-check at Phase 7 cutover. Like
-    // getCurrentStatus, the postgres branch ignores `changeset` — none can
-    // exist under postgres (PCR excluded from the migration).
-    if (this.config.databaseEngine === 'postgres') {
-      const [row] = await this.drizzle.client
-        .select({ step: projects.step })
-        .from(projects)
-        .innerJoin(engagements, eq(engagements.projectId, projects.id))
-        .where(eq(engagements.id, engagementId as ID<'Engagement'>));
-      if (!row) {
-        throw new ServerException(`Could not find project's step`);
-      }
-      return row.step;
-    }
-
-    const result = await this.db
-      .query()
-      .match([
-        node('engagement', 'Engagement', { id: engagementId }),
-        relation('in', '', 'engagement'), // Removed active true due to changeset aware
-        node('project', 'Project'),
-      ])
-      .raw('return project.id as projectId')
-      .asResult<{ projectId: ID }>()
-      .first();
-
-    if (!result?.projectId) {
-      throw new ServerException(`Could not find project`);
-    }
-    const projectId = result.projectId;
-
-    let currentStep;
-    if (changeset) {
-      const result = await this.db
-        .query()
-        .match([
-          node('project', 'Project', { id: projectId }),
-          relation('out', '', 'step', INACTIVE),
-          node('step', 'Property'),
-          relation('in', '', 'changeset', ACTIVE),
-          node('', 'Changeset', { id: changeset }),
-        ])
-        .raw('return step.value as step')
-        .asResult<{ step: ProjectStep }>()
-        .first();
-      currentStep = result?.step;
-    }
-    if (!currentStep) {
-      const result = await this.db
-        .query()
-        .match([
-          node('project', 'Project', { id: projectId }),
-          relation('out', '', 'step', ACTIVE),
-          node('step', 'Property'),
-        ])
-        .raw('return step.value as step')
-        .asResult<{ step: ProjectStep }>()
-        .first();
-      currentStep = result?.step;
-    }
-
-    if (!currentStep) {
+  private async getCurrentProjectStep(engagementId: ID) {
+    const [row] = await this.drizzle.client
+      .select({ step: projects.step })
+      .from(projects)
+      .innerJoin(engagements, eq(engagements.projectId, projects.id))
+      .where(eq(engagements.id, engagementId as ID<'Engagement'>));
+    if (!row) {
       throw new ServerException(`Could not find project's step`);
     }
-
-    return currentStep;
+    return row.step;
   }
 
-  /** Of the given status which one was the most recent previous status */
   private async getMostRecentPreviousStatus(
     id: ID,
     statuses: NonEmptyArray<EngagementStatus>,
@@ -531,36 +412,13 @@ export class EngagementRules {
 
   /** A list of the engagement's previous status ordered most recent to furthest in the past */
   private async getPreviousStatus(id: ID) {
-    // migration-todo: collapse this engine-check at Phase 7 cutover.
-    if (this.config.databaseEngine === 'postgres') {
-      const rows = await this.drizzle.client
-        .select({ status: engagementStatusHistory.status })
-        .from(engagementStatusHistory)
-        .where(eq(engagementStatusHistory.engagementId, id as ID<'Engagement'>))
-        .orderBy(desc(engagementStatusHistory.at));
-      return rows.map(
-        (r) => r.status,
-      ) as unknown as NonEmptyArray<EngagementStatus>;
-    }
-
-    const result = await this.db
-      .query()
-      .match([
-        node('node', 'Engagement', { id }),
-        relation('out', '', 'status', INACTIVE),
-        node('prop'),
-      ])
-      .with('prop')
-      .orderBy('prop.createdAt', 'DESC')
-      .return<{ status: NonEmptyArray<EngagementStatus> }>(
-        'collect(prop.value) as status',
-      )
-      .first();
-    if (!result) {
-      throw new ServerException(
-        "Failed to determine engagement's previous status",
-      );
-    }
-    return result.status;
+    const rows = await this.drizzle.client
+      .select({ status: engagementStatusHistory.status })
+      .from(engagementStatusHistory)
+      .where(eq(engagementStatusHistory.engagementId, id as ID<'Engagement'>))
+      .orderBy(desc(engagementStatusHistory.at));
+    return rows.map(
+      (row) => row.status,
+    ) as unknown as NonEmptyArray<EngagementStatus>;
   }
 }

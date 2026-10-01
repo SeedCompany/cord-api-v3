@@ -8,7 +8,6 @@ export {
 } from '@seedcompany/common';
 export { makeEnum, type MadeEnum, type EnumType } from '@seedcompany/nest';
 
-export * from './db';
 export * from './decorators';
 export * from './enums';
 export * from './exceptions';

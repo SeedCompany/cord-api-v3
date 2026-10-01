@@ -114,9 +114,8 @@ export class LanguageRepository extends DrizzleDtoRepository<
       })
       .catch(catchRolvUnique);
 
-    // Mirror of Gel's connectEthnologue trigger: the Language row exists
-    // first, then the EthnologueLanguage attaches to it (resolves the
-    // 'temp' languageId hack documented in the ethnologue drizzle repo).
+    // The Language row exists first, then the EthnologueLanguage attaches
+    // to it by its real FK.
     await this.ethnologueLanguageService.create(input.ethnologue ?? {}, id);
 
     return await this.readOne(id);

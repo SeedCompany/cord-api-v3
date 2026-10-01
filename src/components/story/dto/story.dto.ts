@@ -1,5 +1,5 @@
 import { ObjectType } from '@nestjs/graphql';
-import { DbUnique, NameField, Resource, SecuredString } from '~/common';
+import { NameField, Resource, SecuredString } from '~/common';
 import { RegisterResource } from '~/core/resources';
 import { Producible, ProducibleTypeEntries } from '../../product/dto';
 
@@ -16,7 +16,6 @@ declare module '../../product/dto/producible.dto' {
 })
 export class Story extends Producible {
   @NameField()
-  @DbUnique()
   readonly name: SecuredString;
 }
 

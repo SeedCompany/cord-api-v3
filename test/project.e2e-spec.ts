@@ -13,7 +13,6 @@ import {
 } from '~/common';
 import { DrizzleService } from '~/core/drizzle';
 import { externalDepartmentIds } from '~/core/drizzle/schema';
-import { DatabaseService } from '~/core/neo4j';
 import { graphql, type InputOf } from '~/graphql';
 import { BudgetStatus } from '../src/components/budget/dto';
 import { PartnerType } from '../src/components/partner/dto';
@@ -1721,15 +1720,12 @@ describe('Project e2e', () => {
   });
 
   it('skips a department id that Intacct already holds', async () => {
-    // Deliberately NOT gated to one engine. The bug this guards against is the
-    // two engines disagreeing: Neo4j has unioned the externally reserved ids
-    // into the unavailable set since 2025-09, and the Postgres path shipped
-    // without that arm. A Postgres-only test would pass on either behaviour of
-    // the Neo4j path and so could not have caught the divergence.
+    // Externally reserved ids must be in the unavailable set; the Postgres
+    // path once shipped without that arm.
     //
     // The reservation is seeded directly because there is no API for it — it is
     // a flat list loaded from an Intacct export, with no resolver, service or
-    // DTO on either engine.
+    // DTO.
     const reserved = '500200';
     await runAsAdmin(app, async () => {
       const partner = await createPartner(app, {
@@ -1738,29 +1734,11 @@ describe('Project e2e', () => {
         departmentIdBlock: { blocks: '500200-500209' },
       });
 
-      if (process.env.DATABASE === 'postgres') {
-        await app
-          .get(DrizzleService)
-          .client.insert(externalDepartmentIds)
-          .values({ departmentId: reserved, name: 'Reserved in Intacct' })
-          .onConflictDoNothing();
-      } else {
-        await app
-          .get(DatabaseService)
-          .query()
-          .raw(
-            `CREATE (:ExternalDepartmentId {
-               id: $id, departmentId: $departmentId,
-               name: $name, createdAt: datetime()
-             })`,
-            {
-              id: await generateId(),
-              departmentId: reserved,
-              name: 'Reserved in Intacct',
-            },
-          )
-          .run();
-      }
+      await app
+        .get(DrizzleService)
+        .client.insert(externalDepartmentIds)
+        .values({ departmentId: reserved, name: 'Reserved in Intacct' })
+        .onConflictDoNothing();
 
       const project = await createProject(app, {
         type: ProjectType.MultiplicationTranslation,
