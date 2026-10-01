@@ -1,20 +1,21 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { node, type Query, relation } from 'cypher-query-builder';
-import { DateTime } from 'luxon';
-import { type ID, type UnsecuredDto } from '~/common';
-import { type ChangesOf } from '~/core/database/changes';
-import { DtoRepository } from '~/core/neo4j';
+import { Injectable } from '@nestjs/common';
+import { asc, count, eq } from 'drizzle-orm';
 import {
-  ACTIVE,
-  createNode,
-  createRelationships,
-  currentUser,
-  matchProps,
-  merge,
-  paginate,
-  sorting,
-  variable,
-} from '~/core/neo4j/query';
+  generateId,
+  type ID,
+  type RichTextDocument,
+  type UnsecuredDto,
+} from '~/common';
+import { Identity } from '~/core/authentication';
+import { type ChangesOf } from '~/core/database/changes';
+import {
+  DrizzleDtoRepository,
+  DrizzleService,
+  resolveOrderBy,
+  resolveResourceBaseNode,
+} from '~/core/drizzle';
+import { comments } from '~/core/drizzle/schema';
+import { type BaseNode } from '~/core/resources';
 import { CommentThreadRepository } from './comment-thread.repository';
 import {
   Comment,
@@ -22,84 +23,101 @@ import {
   type CreateComment,
   type UpdateComment,
 } from './dto';
+import { mapCommentRow } from './map-comment-row';
 
 @Injectable()
-export class CommentRepository extends DtoRepository(Comment) {
+export class CommentRepository extends DrizzleDtoRepository<
+  typeof comments,
+  Comment
+> {
   constructor(
-    @Inject(forwardRef(() => CommentThreadRepository))
-    readonly threads: CommentThreadRepository & {},
+    drizzle: DrizzleService,
+    // The thread repo has no back-reference to comments, so no forwardRef is
+    // needed. `service.repo.threads.*` resolves to this.
+    readonly threads: CommentThreadRepository,
+    private readonly identity: Identity,
   ) {
-    super();
+    super(drizzle, comments, Comment);
   }
 
-  async create(input: CreateComment) {
-    const initialProps = {
+  protected toDto(row: typeof comments.$inferSelect): UnsecuredDto<Comment> {
+    return mapCommentRow(row);
+  }
+
+  async create(input: CreateComment): Promise<{ id: ID; threadId: ID }> {
+    const threadId =
+      input.thread ?? (await this.threads.create(input.resource));
+    const id = await generateId<ID<'Comment'>>();
+    await this.db.insert(comments).values({
+      id,
+      threadId: threadId,
+      creatorId: this.identity.current.userId,
       body: input.body,
-      modifiedAt: DateTime.local(),
-    };
-    return await this.db
-      .query()
-      .subQuery(
-        input.thread
-          ? (q) =>
-              q
-                .matchNode('thread', 'CommentThread', { id: input.thread })
-                .return('thread')
-          : await this.threads.create(input.resource),
-      )
-      .apply(await createNode(Comment, { initialProps }))
-      .apply(
-        createRelationships(Comment, {
-          in: { comment: variable('thread') },
-          out: { creator: currentUser },
-        }),
-      )
-      .return<{ id: ID; threadId: ID }>([
-        'node.id as id',
-        'thread.id as threadId',
-      ])
-      .first();
+    });
+    return { id, threadId };
   }
 
   async update(
     existing: UnsecuredDto<Comment>,
     changes: ChangesOf<Comment, UpdateComment>,
-  ) {
-    await this.updateProperties(existing, changes);
+  ): Promise<void> {
+    // Only writes changed scalar props, like the Neo4j repo. The change set
+    // holds one thing UpdateComment doesn't: `getActualChanges` injects
+    // `modifiedAt: now` into every non-empty change set UPSTREAM of both
+    // engines, and Neo4j's generic updateProperties persists whatever arrives
+    // — so the bump never appears in either repo's code. A previous comment
+    // here concluded from that absence that Neo4j doesn't bump it and dropped
+    // the field on purpose, freezing every comment's modifiedAt at creation
+    // under Postgres (audit LCMT-8).
+    await this.updateColumns(existing.id, {
+      body: (changes as { body?: RichTextDocument }).body,
+      modifiedAt: changes.modifiedAt?.toJSDate(),
+    });
   }
 
-  override hydrate() {
-    return (query: Query) =>
-      query
-        .apply(matchProps())
-        .match([
-          node('node'),
-          relation('in', '', 'comment', ACTIVE),
-          node('thread', 'CommentThread'),
-        ])
-        .match([
-          node('node'),
-          relation('out', '', 'creator'),
-          node('creator', 'User'),
-        ])
-        .return<{ dto: UnsecuredDto<Comment> }>(
-          merge('props', { thread: 'thread.id', creator: 'creator.id' }).as(
-            'dto',
-          ),
-        );
+  /**
+   * Resolve the commentable PARENT id to a BaseNode (loadCommentable calls
+   * this with a parent resource id, not a comment id). Probes the migrated
+   * commentable tables.
+   */
+  async getBaseNode(id: ID): Promise<BaseNode | undefined> {
+    return await resolveResourceBaseNode(this.db, id);
+  }
+
+  async deleteNode(objectOrId: { id: ID } | ID): Promise<void> {
+    const id = typeof objectOrId === 'string' ? objectOrId : objectOrId.id;
+    await this.db.delete(comments).where(eq(comments.id, id as ID<'Comment'>));
+    // Hand-rolled delete (a hard delete, not the base's softDelete()), so it
+    // has to invalidate itself — see the base class's doc comment on why
+    // updateColumns()/softDelete() can't cover this for us.
+    this.liveQueryStore.invalidate([this.resource, id]);
   }
 
   async list(threadId: ID, input: CommentListInput) {
-    const result = await this.db
-      .query()
-      .match([
-        node('thread', 'CommentThread', { id: threadId }),
-        relation('out', '', 'comment', ACTIVE),
-        node('node', 'Comment'),
-      ])
-      .apply(sorting(Comment, input))
-      .apply(paginate(input, this.hydrate()))
-      .first();
-    return result!; // result from paginate() will always have 1 row.
+    const predicate = eq(comments.threadId, threadId as ID<'CommentThread'>);
+    const offset = (input.page - 1) * input.count;
+    const [countRows, rows] = await Promise.all([
+      this.db.select({ total: count() }).from(comments).where(predicate),
+      this.db
+        .select()
+        .from(comments)
+        .where(predicate)
+        .orderBy(
+          ...resolveOrderBy(
+            input,
+            { createdAt: comments.createdAt },
+            comments.createdAt,
+          ),
+          asc(comments.id),
+        )
+        .limit(input.count)
+        .offset(offset),
+    ]);
+    const total = countRows[0]?.total ?? 0;
+    return {
+      items: rows.map((r) => this.toDto(r)),
+      total,
+      hasMore: offset + rows.length < total,
+    };
   }
 }

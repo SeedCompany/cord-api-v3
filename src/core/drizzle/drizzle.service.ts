@@ -119,7 +119,7 @@ export class DrizzleService implements OnModuleDestroy {
    *
    * **If you actually want an inner failure to stay isolated**, do not reach for
    * a second `inTx` — call `.transaction()` on the current client, which Drizzle
-   * emits as a savepoint on the same connection. `PartnershipDrizzleRepository`
+   * emits as a savepoint on the same connection. `PartnershipRepository`
    * does exactly that so losing a uniqueness race cannot poison the surrounding
    * mutation. Continuation here and savepoints there are the two halves of the
    * same design: joined by default, isolated only where asked for.

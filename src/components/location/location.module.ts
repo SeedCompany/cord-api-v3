@@ -1,15 +1,12 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { splitDb } from '~/core/database';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { FieldRegionModule } from '../field-region/field-region.module';
 import { FileModule } from '../file/file.module';
 import { FundingAccountModule } from '../funding-account/funding-account.module';
-import { LocationDrizzleRepository } from './location.drizzle.repository';
 import { LocationLoader } from './location.loader';
 import { LocationRepository } from './location.repository';
 import { LocationResolver } from './location.resolver';
 import { LocationService } from './location.service';
-import { DefaultMarketingRegionMigration } from './migrations/default-marketing-region.migration';
 
 @Module({
   imports: [
@@ -21,12 +18,8 @@ import { DefaultMarketingRegionMigration } from './migrations/default-marketing-
   providers: [
     LocationResolver,
     LocationService,
-    splitDb(LocationRepository, {
-      // migration-todo: remove `as any` once splitDb types accept drizzle repos directly
-      postgres: LocationDrizzleRepository as any,
-    }),
+    LocationRepository,
     LocationLoader,
-    DefaultMarketingRegionMigration,
   ],
   exports: [LocationService],
 })

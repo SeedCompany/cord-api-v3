@@ -11,7 +11,7 @@ import {
   type ToolListOutput,
   type UpdateTool,
 } from './dto';
-import { ToolRepository } from './tool.neo4j.repository';
+import { ToolRepository } from './tool.repository';
 
 @Injectable()
 export class ToolService {

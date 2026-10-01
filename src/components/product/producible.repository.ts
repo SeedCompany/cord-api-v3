@@ -35,7 +35,7 @@ const parseRefs = (refs: ReadonlyArray<Range<number>>) =>
  * one table, the `type` column standing in for the Neo4j label. Each concrete
  * repo pins its discriminator and inherits everything.
  */
-export abstract class ProducibleDrizzleRepository<
+export abstract class ProducibleRepository<
   TDto extends ProducibleDto,
 > extends DrizzleDtoRepository<typeof producibles, TDto> {
   protected constructor(

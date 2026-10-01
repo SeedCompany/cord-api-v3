@@ -1,151 +1,132 @@
 import { Injectable } from '@nestjs/common';
-import { CachedByArg, mapKeys } from '@seedcompany/common';
-import { inArray, node, relation } from 'cypher-query-builder';
-import type { SetNonNullable } from 'type-fest';
+import { and, eq, inArray, isNull } from 'drizzle-orm';
 import { type ID } from '~/common';
-import { CommonRepository } from '~/core/neo4j';
+import { DrizzleService } from '~/core/drizzle/drizzle.service';
 import {
-  apoc,
-  collect,
-  count,
-  defineSorters,
-  filter,
-  merge,
-  type SortCol,
-  sortingForEnumIndex,
-  variable,
-} from '~/core/neo4j/query';
+  fileNodes,
+  pnpExtractionResultProblems,
+  pnpExtractionResults,
+} from '~/core/drizzle/schema';
 import {
-  PnpExtractionResult,
-  PnpExtractionResultFilters,
+  type PnpExtractionResult,
+  PnpProblemSeverity,
   PnpProblemType,
-  PnpProblemSeverity as Severity,
   type StoredProblem,
 } from './extraction-result.dto';
 import { type PnpExtractionResultLoadResult } from './pnp-extraction-result.loader';
 
+const severityOrder = [...PnpProblemSeverity.values];
+const severityIndex = (typeId: string): number => {
+  const severity = PnpProblemType.types.get(typeId as never)?.severity;
+  return severity ? severityOrder.indexOf(severity) : 99;
+};
+
+/**
+ * PnP extraction result storage.
+ * Results are keyed by File (the FileVersion's parent); problems live in a child
+ * table. Severity + rendering come from PnpProblemType in code, so no types
+ * table.
+ *
+ * migration-todo: the LanguageEngagement-list pnp filters/sorters (hasError /
+ * totalErrors) aren't ported — add when a postgres engagement-list-by-pnp-error
+ * path needs them.
+ */
 @Injectable()
-export class PnpExtractionResultRepository extends CommonRepository {
-  async read(files: ReadonlyArray<ID<'File'>>) {
-    await this.syncTypesOnce();
+export class PnpExtractionResultRepository {
+  constructor(private readonly drizzle: DrizzleService) {}
 
-    const found = await this.db
-      .query()
-      .match([
-        node('file', 'File'),
-        relation('out', '', 'pnpExtractionResult'),
-        node('result', 'PnpExtractionResult'),
-      ])
-      .where({ 'file.id': inArray(files) })
-      .subQuery('result', (sub) =>
-        sub
-          .match([
-            node('result'),
-            relation('out', 'problemRel', 'problem'),
-            node('type'),
-          ])
-          .with(
-            merge('problemRel', {
-              type: 'type.id',
-              context: apoc.convert.fromJsonMap('problemRel.context'),
-            }).as('problem'),
-          )
-          .orderBy(String(sortingForEnumIndex(Severity)('problem.severity')))
-          .return<{ problems: StoredProblem }>(
-            collect('problem').as('problems'),
+  protected get db() {
+    return this.drizzle.client;
+  }
+
+  async read(
+    files: ReadonlyArray<ID<'File'>>,
+  ): Promise<readonly PnpExtractionResultLoadResult[]> {
+    if (files.length === 0) return [];
+    const ids = files as Array<ID<'File'>>;
+    const [results, problems] = await Promise.all([
+      this.db
+        .select({ fileId: pnpExtractionResults.fileId })
+        .from(pnpExtractionResults)
+        // The file has to still be live — a soft-deleted File's row survives
+        // (the cascade never fires, since the delete is soft), and without
+        // this join a removed report's PnP result would keep resolving where
+        // Neo4j's parent-required match returns nothing.
+        .innerJoin(
+          fileNodes,
+          and(
+            eq(fileNodes.id, pnpExtractionResults.fileId),
+            isNull(fileNodes.deletedAt),
           ),
-      )
-      .return<SetNonNullable<PnpExtractionResultLoadResult>>([
-        'file.id as id',
-        merge('result', {
-          problems: 'problems',
-        }).as('result'),
-      ])
-      .run();
-    const map = mapKeys.fromList(found, (r) => r.id).asMap;
-    return files.map((id) => ({
-      id,
-      result: map.get(id)?.result ?? null,
-    }));
+        )
+        .where(inArray(pnpExtractionResults.fileId, ids)),
+      this.db
+        .select()
+        .from(pnpExtractionResultProblems)
+        .where(inArray(pnpExtractionResultProblems.fileId, ids)),
+    ]);
+    const haveResult = new Set(results.map((r) => r.fileId));
+    const byFile = new Map<ID<'File'>, StoredProblem[]>();
+    for (const p of problems) {
+      const list = byFile.get(p.fileId) ?? [];
+      list.push({
+        id: p.id as StoredProblem['id'],
+        type: p.type as StoredProblem['type'],
+        source: p.source,
+        context: p.context,
+      });
+      byFile.set(p.fileId, list);
+    }
+    return files.map((id) => {
+      if (!haveResult.has(id)) {
+        return { id, result: null };
+      }
+      const sorted = (byFile.get(id) ?? []).sort(
+        (a, b) => severityIndex(a.type) - severityIndex(b.type),
+      );
+      // The resolver only reads `.problems` (via .values()), and the concrete
+      // Planning/Progress type comes from the consuming field — so a plain
+      // object carrying the problems is sufficient.
+      const result = { problems: sorted } as unknown as PnpExtractionResult;
+      return { id, result };
+    });
   }
 
-  async save(file: ID<'FileVersion'>, result: PnpExtractionResult) {
-    await this.syncTypesOnce();
-
-    const problems = [...result.problems.values()];
-
+  // No live-query invalidation, deliberately: the Neo4j `save` is raw Cypher
+  // that reaches none of CommonRepository's announcing helpers, so it is silent
+  // too — matching it keeps this a pre-existing gap on every engine rather than
+  // a cutover regression. In practice this runs during upload, right before the
+  // file repo announces the new version anyway.
+  async save(
+    file: ID<'FileVersion'>,
+    result: PnpExtractionResult,
+  ): Promise<void> {
+    const [version] = await this.db
+      .select({ fileId: fileNodes.parentId })
+      .from(fileNodes)
+      .where(eq(fileNodes.id, file))
+      .limit(1);
+    const fileId = version?.fileId as ID<'File'> | undefined;
+    if (!fileId) {
+      return;
+    }
     await this.db
-      .query()
-      .match([
-        node('file', 'File'),
-        relation('in', 'parent'),
-        node('', 'FileVersion', { id: file }),
-      ])
-      .merge([
-        node('file'),
-        relation('out', '', 'pnpExtractionResult'),
-        node('result', 'PnpExtractionResult'),
-      ])
-      .setVariables({ result: '{}' }) // clear old schema - denormalized props.
-      .with('result')
-      .subQuery('result', (sub) =>
-        sub
-          .match([
-            node('result'),
-            relation('out', 'problem', 'problem'),
-            node(),
-          ])
-          .delete('problem')
-          .return('count(problem) as count'),
-      )
-      .unwind(problems, 'problem')
-      .match(node('type', 'PnpProblemType', { id: variable('problem.type') }))
-      .create([
-        node('result'),
-        relation('out', '', 'problem', {
-          id: variable('problem.id'),
-          source: variable('problem.source'),
-          context: variable(apoc.convert.toJson('problem.context')),
-        }),
-        node('type'),
-      ])
-      .executeAndLogStats();
-  }
-
-  @CachedByArg()
-  private async syncTypesOnce() {
-    const types = [...PnpProblemType.types.values()].map((type) => ({
-      id: type.id,
-      name: type.name,
-      severity: type.severity,
+      .insert(pnpExtractionResults)
+      .values({ fileId })
+      .onConflictDoNothing();
+    // Replace the problem set wholesale (mirrors the Neo4j delete-then-create).
+    await this.db
+      .delete(pnpExtractionResultProblems)
+      .where(eq(pnpExtractionResultProblems.fileId, fileId));
+    const rows = [...result.problems.values()].map((p) => ({
+      id: p.id,
+      fileId,
+      type: p.type,
+      source: p.source,
+      context: p.context,
     }));
-    await this.db
-      .query()
-      .unwind(types, 'type')
-      .merge([node('node', 'PnpProblemType', { id: variable('type.id') })])
-      .setVariables({ node: 'type' }, true)
-      .run();
+    if (rows.length > 0) {
+      await this.db.insert(pnpExtractionResultProblems).values(rows);
+    }
   }
 }
-
-export const pnpExtractionResultFilters = filter.define(
-  () => PnpExtractionResultFilters,
-  {
-    hasError: filter.pathExists([
-      node('node'),
-      relation('out', '', 'problem'),
-      node('', { severity: Severity.Error }),
-    ]),
-  },
-);
-
-export const pnpExtractionResultSorters = defineSorters(PnpExtractionResult, {
-  totalErrors: (query) =>
-    query
-      .match([
-        node('node'),
-        relation('out', 'problem', 'problem'),
-        node('type', { severity: Severity.Error }),
-      ])
-      .return<SortCol>(count('problem').as('sortValue')),
-});

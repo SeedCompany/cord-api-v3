@@ -1,7 +1,5 @@
 import { Module } from '@nestjs/common';
-import { splitDb } from '~/core/database';
-import { NotificationDrizzleRepository } from './notification.drizzle.repository';
-import { NotificationRepository as Neo4jRepository } from './notification.repository';
+import { NotificationRepository } from './notification.repository';
 import { NotificationResolver } from './notification.resolver';
 import {
   NotificationService,
@@ -13,11 +11,7 @@ import {
     NotificationResolver,
     { provide: NotificationService, useExisting: NotificationServiceImpl },
     NotificationServiceImpl,
-    splitDb(Neo4jRepository, {
-      // migration-todo: remove `as any` once splitDb types accept drizzle repos
-      // directly; drops with the Neo4j path at Phase 7 cutover.
-      postgres: NotificationDrizzleRepository as any,
-    }),
+    NotificationRepository,
   ],
   exports: [NotificationService],
 })

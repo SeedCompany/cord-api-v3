@@ -1,11 +1,9 @@
 import { Inject, Module } from '@nestjs/common';
 import { DateTime } from 'luxon';
 import { SubscriptionChannelVersion } from '../../subscription-channel-version';
-import { splitDb } from '../database';
 import { GraphqlModule } from '../graphql';
 import { MigrationRegistry } from '../neo4j/migration/migration.registry';
 import { WebhookChannelSyncMigration } from './channels/channel-sync.migration';
-import { WebhookChannelDrizzleRepository } from './channels/webhook-channel.drizzle.repository';
 import { WebhookChannelRepository } from './channels/webhook-channel.repository';
 import { WebhookChannelService } from './channels/webhook-channel.service';
 import { WebhookDeliveryQueue } from './delivery/webhook-delivery.queue';
@@ -15,7 +13,6 @@ import { GraphqlDocumentScalar } from './dto/graphql-document.scalar';
 import { WebhookExecutor } from './executor/webhook.executor';
 import { WebhookManagementResolver } from './management/webhook-management.resolver';
 import { WebhookManagementService } from './management/webhook-management.service';
-import { WebhooksDrizzleRepository } from './management/webhooks.drizzle.repository';
 import { WebhooksRepository } from './management/webhooks.repository';
 import { WebhookProcessorQueue } from './processor/webhook-processor.queue';
 import { WebhookProcessorWorker } from './processor/webhook-processor.worker';
@@ -39,17 +36,8 @@ import { WebhookValidator } from './webhook.validator';
     WebhookProcessorWorker,
     WebhookDeliveryWorker,
     WebhookSender,
-    // Also registered bare (not just via splitDb below): the Postgres channel
-    // repo injects it concretely for hydration, since there's no Gel/Neo4j
-    // counterpart relationship to preserve there.
-    // migration-todo: `as any` + the Neo4j path removed at Phase 7 cutover.
-    WebhooksDrizzleRepository,
-    splitDb(WebhooksRepository, {
-      postgres: WebhooksDrizzleRepository as any,
-    }),
-    splitDb(WebhookChannelRepository, {
-      postgres: WebhookChannelDrizzleRepository as any,
-    }),
+    WebhooksRepository,
+    WebhookChannelRepository,
     WebhookChannelSyncMigration,
     {
       provide: SubscriptionChannelVersion.TOKEN,

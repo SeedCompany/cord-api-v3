@@ -1,54 +1,46 @@
 import { Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
-import { DateTime } from 'luxon';
+import { and, eq } from 'drizzle-orm';
 import { type ID } from '~/common';
-import { DatabaseService, DbTraceLayer } from '~/core/neo4j';
-import { currentUser } from '~/core/neo4j/query';
+import { Identity } from '~/core/authentication';
+import { DrizzleService } from '~/core/drizzle/drizzle.service';
+import { pins } from '~/core/drizzle/schema';
 
 @Injectable()
-@DbTraceLayer.applyToClass()
 export class PinRepository {
-  constructor(private readonly db: DatabaseService) {}
+  constructor(
+    private readonly drizzle: DrizzleService,
+    private readonly identity: Identity,
+  ) {}
+
+  protected get db() {
+    return this.drizzle.client;
+  }
 
   async isPinned(id: ID): Promise<boolean> {
-    const result = await this.db
-      .query()
-      .match([
-        currentUser,
-        relation('out', '', 'pinned'),
-        node('node', 'BaseNode', { id }),
-      ])
-      .return('node')
-      .first();
-    return !!result;
+    const userId = this.identity.current.userId;
+    const [row] = await this.db
+      .select({ resourceId: pins.resourceId })
+      .from(pins)
+      .where(and(eq(pins.userId, userId), eq(pins.resourceId, id)))
+      .limit(1);
+    return !!row;
   }
 
   async add(id: ID): Promise<void> {
-    const createdAt = DateTime.local();
     await this.db
-      .query()
-      .match(node('node', 'BaseNode', { id }))
-      .match(currentUser.as('currentUser'))
-      .merge([
-        node('currentUser'),
-        relation('out', 'rel', 'pinned'),
-        node('node'),
-      ])
-      .onCreate.setValues({
-        'rel.createdAt': createdAt,
-      })
-      .run();
+      .insert(pins)
+      .values({ userId: this.identity.current.userId, resourceId: id })
+      .onConflictDoNothing();
   }
 
   async remove(id: ID): Promise<void> {
     await this.db
-      .query()
-      .match([
-        currentUser,
-        relation('out', 'rel', 'pinned'),
-        node('node', 'BaseNode', { id }),
-      ])
-      .delete('rel')
-      .run();
+      .delete(pins)
+      .where(
+        and(
+          eq(pins.userId, this.identity.current.userId),
+          eq(pins.resourceId, id),
+        ),
+      );
   }
 }

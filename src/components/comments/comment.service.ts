@@ -6,7 +6,6 @@ import {
   InvalidIdForTypeException,
   isIdLike,
   NotFoundException,
-  Resource,
   SecuredList,
   ServerException,
   type UnsecuredDto,
@@ -93,7 +92,7 @@ export class CommentService {
 
   async loadCommentable(resource: CommentableRef): Promise<Commentable> {
     const parentNode = isIdLike(resource)
-      ? await this.repo.getBaseNode(resource, Resource)
+      ? await this.repo.getBaseNode(resource)
       : resource;
     if (!parentNode) {
       throw new NotFoundException('Resource does not exist', 'resource');

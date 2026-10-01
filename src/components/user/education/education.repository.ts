@@ -1,19 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
+import { and, eq, isNull } from 'drizzle-orm';
+import { DateTime } from 'luxon';
 import {
-  CreationFailed,
+  generateId,
   type ID,
   NotFoundException,
-  ReadAfterCreationFailed,
+  type UnsecuredDto,
 } from '~/common';
-import { DtoRepository } from '~/core/neo4j';
-import {
-  ACTIVE,
-  createNode,
-  createRelationships,
-  paginate,
-  sorting,
-} from '~/core/neo4j/query';
+import { resolveOrderBy, type SortMap } from '~/core/drizzle';
+import { DrizzleService } from '~/core/drizzle/drizzle.service';
+import { DrizzleDtoRepository } from '~/core/drizzle/dto.repository';
+import { educations } from '~/core/drizzle/schema';
 import {
   type CreateEducation,
   Education,
@@ -22,78 +19,82 @@ import {
 } from './dto';
 
 @Injectable()
-export class EducationRepository extends DtoRepository(Education) {
-  async create(input: CreateEducation) {
-    const initialProps = {
-      degree: input.degree,
-      institution: input.institution,
-      major: input.major,
-    };
-
-    const query = this.db
-      .query()
-      .apply(await createNode(Education, { initialProps }))
-      .apply(
-        createRelationships(Education, 'in', {
-          education: ['User', input.user],
-        }),
-      )
-      .return<{ id: ID }>('node.id as id');
-
-    const result = await query.first();
-    if (!result) {
-      throw new CreationFailed(Education);
-    }
-    return await this.readOne(result.id).catch((e) => {
-      throw e instanceof NotFoundException
-        ? new ReadAfterCreationFailed(Education)
-        : e;
-    });
+export class EducationRepository extends DrizzleDtoRepository<
+  typeof educations,
+  Education
+> {
+  constructor(db: DrizzleService) {
+    super(db, educations, Education);
   }
 
-  async getUserByEducationId(id: ID) {
-    const result = await this.db
-      .query()
-      .match([
-        node('user', 'User'),
-        relation('out', '', 'education', ACTIVE),
-        node('education', 'Education', { id }),
-      ])
-      .return<{ id: ID<'User'> }>('user.id as id')
-      .first();
+  async create(input: CreateEducation): Promise<UnsecuredDto<Education>> {
+    const id = await generateId();
+    await this.db.insert(educations).values({
+      id,
+      userId: input.user,
+      degree: input.degree,
+      major: input.major,
+      institution: input.institution,
+    });
+    return await this.readOne(id);
+  }
 
-    if (!result) {
+  async update(changes: UpdateEducation): Promise<UnsecuredDto<Education>> {
+    const { id, ...fields } = changes;
+    await this.updateColumns(id, fields);
+    return await this.readOne(id);
+  }
+
+  async getUserByEducationId(id: ID): Promise<{ id: ID<'User'> }> {
+    const row = await this.db.query.educations.findFirst({
+      where: (education) => eq(education.id, id),
+      columns: { userId: true },
+    });
+    if (!row) {
       throw new NotFoundException(
         'Could not find user associated with education',
       );
     }
-    return result;
+    return { id: row.userId };
   }
 
-  async update(changes: UpdateEducation) {
-    const { id, ...simpleChanges } = changes;
-    await this.updateProperties({ id }, simpleChanges);
-    return await this.readOne(id);
+  async list(input: EducationListInput): Promise<{
+    items: Array<UnsecuredDto<Education>>;
+    total: number;
+    hasMore: boolean;
+  }> {
+    const conditions = [isNull(educations.deletedAt)];
+    if (input.filter?.userId)
+      conditions.push(eq(educations.userId, input.filter.userId));
+
+    const sortColumns = {
+      degree: educations.degree,
+      major: educations.major,
+      institution: educations.institution,
+      // resolveOrderBy silently falls back for missing keys — same gap as the
+      // users map (2026-08-27); Neo4j sorts any property.
+      createdAt: educations.createdAt,
+    } satisfies SortMap<keyof Education>;
+
+    const { rows, total, hasMore } = await this.paginatedSelect({
+      predicate: and(...conditions),
+      orderBy: resolveOrderBy(input, sortColumns, educations.institution),
+      page: input.page,
+      count: input.count,
+    });
+    return { items: rows.map((row) => this.toDto(row)), total, hasMore };
   }
 
-  async list({ filter, ...input }: EducationListInput) {
-    const result = await this.db
-      .query()
-      .matchNode('node', 'Education')
-      .match([
-        ...(filter?.userId
-          ? [
-              node('node'),
-              relation('in', '', 'education', ACTIVE),
-              node('user', 'User', {
-                id: filter.userId,
-              }),
-            ]
-          : []),
-      ])
-      .apply(sorting(Education, input))
-      .apply(paginate(input, this.hydrate()))
-      .first();
-    return result!; // result from paginate() will always have 1 row.
+  protected toDto(
+    row: typeof educations.$inferSelect,
+  ): UnsecuredDto<Education> {
+    return {
+      id: row.id,
+      __typename: 'Education',
+      createdAt: DateTime.fromJSDate(row.createdAt),
+      degree: row.degree,
+      major: row.major,
+      institution: row.institution,
+    };
   }
 }

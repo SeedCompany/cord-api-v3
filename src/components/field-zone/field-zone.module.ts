@@ -1,9 +1,7 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { splitDb } from '~/core/database';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { ProjectModule } from '../project/project.module';
 import { UserModule } from '../user/user.module';
-import { FieldZoneDrizzleRepository } from './field-zone.drizzle.repository';
 import { FieldZoneLoader } from './field-zone.loader';
 import { FieldZoneRepository } from './field-zone.repository';
 import { FieldZoneResolver } from './field-zone.resolver';
@@ -19,10 +17,7 @@ import { RestrictZoneDirectorRemovalHandler } from './handlers/restrict-zone-dir
   providers: [
     FieldZoneResolver,
     FieldZoneService,
-    splitDb(FieldZoneRepository, {
-      // migration-todo: remove `as any` once splitDb types accept drizzle repos directly
-      postgres: FieldZoneDrizzleRepository as any,
-    }),
+    FieldZoneRepository,
     FieldZoneLoader,
     RestrictZoneDirectorRemovalHandler,
   ],

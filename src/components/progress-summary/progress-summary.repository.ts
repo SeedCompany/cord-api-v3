@@ -1,80 +1,90 @@
 import { Injectable } from '@nestjs/common';
-import { cleanJoin, isNotFalsy, mapValues, setOf } from '@seedcompany/common';
-import { inArray, node, type Query, relation } from 'cypher-query-builder';
+import { and, inArray, isNull, sql } from 'drizzle-orm';
 import { type ID } from '~/common';
-import { CommonRepository } from '~/core/neo4j';
+import { DrizzleService } from '~/core/drizzle/drizzle.service';
 import {
-  ACTIVE,
-  defineSorters,
-  filter,
-  listConcat,
-  merge,
-  type SortCol,
-} from '~/core/neo4j/query';
-import { WhereExp } from '~/core/neo4j/query/where-and-list';
+  periodicReports,
+  products,
+  progressSummaries,
+} from '~/core/drizzle/schema';
 import { type ProgressReport } from '../progress-report/dto';
 import {
   type FetchedSummaries,
-  ProgressSummary,
-  ProgressSummaryFilters,
-  type SummaryPeriod,
+  type ProgressSummary,
+  SummaryPeriod,
 } from './dto';
 
 @Injectable()
-export class ProgressSummaryRepository extends CommonRepository {
-  async readMany(reportIds: readonly ID[]) {
-    const query = this.db
-      .query()
-      .matchNode('report', 'ProgressReport')
-      .where({ 'report.id': inArray(reportIds) })
-      .subQuery('report', (sub) =>
-        sub
-          .match([
-            [
-              node('report'),
-              relation('in', '', 'report', ACTIVE),
-              node('eng', 'Engagement'),
-              relation('out', '', 'product', ACTIVE),
-              node('product', 'Product'),
-            ],
-            [
-              node('product'),
-              relation('out', '', 'totalVerses', ACTIVE),
-              node('tv', 'Property'),
-            ],
-            [
-              node('product'),
-              relation('out', '', 'totalVerseEquivalents', ACTIVE),
-              node('tve', 'Property'),
-            ],
-          ])
-          .return([
-            'sum(tv.value) as totalVerses',
-            'sum(tve.value) as totalVerseEquivalents',
-          ]),
-      )
-      .optionalMatch([
-        node('report'),
-        relation('out', '', 'summary', ACTIVE),
-        node('ps', 'ProgressSummary'),
-      ])
-      .with([
-        'report',
-        'totalVerses',
-        'totalVerseEquivalents',
-        'collect(apoc.map.fromValues([ps.period, apoc.convert.toMap(ps)])) as collected',
-      ])
-      .return<{ dto: FetchedSummaries }>(
-        merge(
-          listConcat('collected', {
-            report: 'report { .id }',
-            totalVerses: 'totalVerses',
-            totalVerseEquivalents: 'totalVerseEquivalents',
-          }),
-        ).as('dto'),
-      )
-      .map('dto');
-    return await query.run();
+export class ProgressSummaryRepository {
+  constructor(private readonly drizzle: DrizzleService) {}
+
+  protected get db() {
+    return this.drizzle.client;
+  }
+
+  async readMany(reportIds: readonly ID[]): Promise<FetchedSummaries[]> {
+    if (reportIds.length === 0) return [];
+    const reports = await this.db
+      .select({
+        id: periodicReports.id,
+        engagementId: periodicReports.engagementId,
+      })
+      .from(periodicReports)
+      .where(
+        and(
+          inArray(periodicReports.id, [...reportIds]),
+          isNull(periodicReports.deletedAt),
+        ),
+      );
+    const engagementIds = [
+      ...new Set(reports.flatMap((r) => r.engagementId ?? [])),
+    ];
+    const totals =
+      engagementIds.length > 0
+        ? await this.db
+            .select({
+              engagementId: products.engagementId,
+              totalVerses: sql<number>`sum(${products.totalVerses})::float`,
+              totalVerseEquivalents: sql<number>`sum(${products.totalVerseEquivalents})::float`,
+            })
+            .from(products)
+            .where(
+              and(
+                inArray(products.engagementId, engagementIds),
+                isNull(products.deletedAt),
+              ),
+            )
+            .groupBy(products.engagementId)
+        : [];
+    const totalsByEngagement = new Map(totals.map((t) => [t.engagementId, t]));
+    const summaries = await this.db
+      .select()
+      .from(progressSummaries)
+      .where(inArray(progressSummaries.reportId, [...reportIds]));
+    const byReport = new Map<ID, Map<string, ProgressSummary>>();
+    for (const row of summaries) {
+      const map = byReport.get(row.reportId) ?? new Map();
+      map.set(row.period, { planned: row.planned, actual: row.actual });
+      byReport.set(row.reportId, map);
+    }
+    return reports.map((report) => {
+      const t = report.engagementId
+        ? totalsByEngagement.get(report.engagementId)
+        : undefined;
+      const periods = byReport.get(report.id);
+      const dto: unknown = {
+        report: { __typename: 'ProgressReport', id: report.id },
+        totalVerses: t?.totalVerses ?? 0,
+        totalVerseEquivalents: t?.totalVerseEquivalents ?? 0,
+        [SummaryPeriod.ReportPeriod]:
+          periods?.get(SummaryPeriod.ReportPeriod) ?? null,
+        [SummaryPeriod.FiscalYearSoFar]:
+          periods?.get(SummaryPeriod.FiscalYearSoFar) ?? null,
+        [SummaryPeriod.Cumulative]:
+          periods?.get(SummaryPeriod.Cumulative) ?? null,
+      };
+      return dto as FetchedSummaries;
+    });
   }
 
   async save(
@@ -83,48 +93,20 @@ export class ProgressSummaryRepository extends CommonRepository {
     data: ProgressSummary,
   ) {
     await this.db
-      .query()
-      .matchNode('pr', 'ProgressReport', { id: report.id })
-      .merge([
-        node('pr'),
-        relation('out', '', 'summary', ACTIVE),
-        node('summary', 'ProgressSummary', { period }),
-      ])
-      .setValues({ summary: { ...data, period } })
-      .run();
+      .insert(progressSummaries)
+      .values({
+        reportId: report.id,
+        period,
+        planned: data.planned,
+        actual: data.actual,
+      })
+      .onConflictDoUpdate({
+        target: [progressSummaries.reportId, progressSummaries.period],
+        set: {
+          planned: data.planned,
+          actual: data.actual,
+          updatedAt: new Date(),
+        },
+      });
   }
 }
-
-export const progressSummarySorters = defineSorters(ProgressSummary, {
-  ...mapValues.fromList(
-    ['variance', 'scheduleStatus'],
-    () => (query: Query) =>
-      query.return<SortCol>('(node.actual - node.planned) as sortValue'),
-  ).asRecord,
-});
-
-export const progressSummaryFilters = filter.define(
-  () => ProgressSummaryFilters,
-  {
-    scheduleStatus: ({ value, query }) => {
-      const status = setOf(value);
-      if (status.size === 1 && status.has(null)) {
-        return query.where(new WhereExp('node IS NULL'));
-      }
-
-      const conditions = cleanJoin(' OR ', [
-        status.has(null) && `node IS NULL`,
-        status.has('Ahead') && `node.actual - node.planned > 0.3`,
-        status.has('Behind') && `node.actual - node.planned < -0.1`,
-        status.has('OnTime') &&
-          `node.actual - node.planned <= 0.3 and node.actual - node.planned >= -0.1`,
-      ]);
-      const required = status.has(null) ? undefined : `node IS NOT NULL`;
-      const str = [required, conditions]
-        .filter(isNotFalsy)
-        .map((s) => `(${s})`)
-        .join(' AND ');
-      return str ? query.where(new WhereExp(str)) : query;
-    },
-  },
-);

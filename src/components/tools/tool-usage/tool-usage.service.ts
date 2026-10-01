@@ -22,7 +22,7 @@ import {
 import { Privileges } from '../../authorization';
 import { Tool } from '../tool/dto';
 import { type ToolKey } from '../tool/dto/tool-key.enum';
-import { ToolRepository } from '../tool/tool.neo4j.repository';
+import { ToolRepository } from '../tool/tool.repository';
 import {
   type CreateToolUsage,
   type SecuredToolUsageList,
@@ -34,7 +34,7 @@ import {
 } from './dto';
 import { type UsagesByContainer } from './tool-usage-by-container.loader';
 import { type UsagesByTool } from './tool-usage-by-tool.loader';
-import { ToolUsageRepository } from './tool-usage.neo4j.repository';
+import { ToolUsageRepository } from './tool-usage.repository';
 
 type TypedResource = Resource & { __typename: string };
 type ResourceRef = TypedResource | ID<Resource> | BaseNode;

@@ -232,7 +232,7 @@ const projectIdRefForResource = (resource: EnhancedResource<any>): SQL => {
     case 'ProgressReport':
       // Progress rows on the shared periodic_reports table are always
       // engagement-parented (never project-parented directly) — see
-      // PeriodicReportDrizzleRepository.parentCondition.
+      // PeriodicReportRepository.parentCondition.
       return sql.raw(
         `(select "e"."project_id" from "engagements" "e" where "e"."id" = "periodic_reports"."engagement_id")`,
       );

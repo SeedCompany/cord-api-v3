@@ -1,182 +1,147 @@
 import { Injectable } from '@nestjs/common';
-import { node, type Query, relation } from 'cypher-query-builder';
+import { and, eq, isNull, type SQL } from 'drizzle-orm';
 import { DateTime } from 'luxon';
 import {
-  CreationFailed,
-  DuplicateException,
+  generateId,
   type ID,
-  NotFoundException,
-  ReadAfterCreationFailed,
-  SecuredList,
+  type PaginatedListType,
   type UnsecuredDto,
 } from '~/common';
-import { DtoRepository } from '~/core/neo4j';
 import {
-  ACTIVE,
-  createNode,
-  createRelationships,
-  defineSorters,
-  filter,
-  matchProps,
-  merge,
-  paginate,
-  sortWith,
-} from '~/core/neo4j/query';
-import { userFilters, userSorters } from '../user/user.repository';
+  catchUniqueViolation,
+  DrizzleDtoRepository,
+  EMPTY_PAGE,
+  resolveOrderBy,
+  type SortMap,
+  subFilter,
+} from '~/core/drizzle';
+import { type DrizzleDb, DrizzleService } from '~/core/drizzle/drizzle.service';
+import { fieldZones, users } from '~/core/drizzle/schema';
+import { PolicyExecutor } from '../authorization/policy/executor/policy-executor';
+import { userFilterClauses } from '../user/user.repository';
 import {
   type CreateFieldZone,
   FieldZone,
-  FieldZoneFilters,
+  type FieldZoneFilters,
   type FieldZoneListInput,
   type UpdateFieldZone,
 } from './dto';
 
+const catchNameUnique = catchUniqueViolation(
+  'name',
+  'name',
+  'FieldZone with this name already exists.',
+);
+
 @Injectable()
-export class FieldZoneRepository extends DtoRepository(FieldZone) {
-  async create(input: CreateFieldZone) {
-    if (!(await this.isUnique(input.name))) {
-      throw new DuplicateException(
-        'name',
-        'FieldZone with this name already exists.',
-      );
-    }
-
-    const initialProps = {
-      name: input.name,
-      canDelete: true,
-    };
-
-    // create field zone
-    const query = this.db
-      .query()
-      .apply(await createNode(FieldZone, { initialProps }))
-      .apply(
-        createRelationships(FieldZone, 'out', {
-          director: ['User', input.director],
-        }),
-      )
-      .return<{ id: ID }>('node.id as id');
-
-    const result = await query.first();
-    if (!result) {
-      throw new CreationFailed(FieldZone);
-    }
-
-    return await this.readOne(result.id).catch((e) => {
-      throw e instanceof NotFoundException
-        ? new ReadAfterCreationFailed(FieldZone)
-        : e;
-    });
+export class FieldZoneRepository extends DrizzleDtoRepository<
+  typeof fieldZones,
+  FieldZone
+> {
+  constructor(
+    db: DrizzleService,
+    private readonly executor: PolicyExecutor,
+  ) {
+    super(db, fieldZones, FieldZone);
   }
 
-  protected hydrate() {
-    return (query: Query) =>
-      query
-        .apply(matchProps())
-        .optionalMatch([
-          node('node'),
-          relation('out', '', 'director', ACTIVE),
-          node('director', 'User'),
-        ])
-        .return<{ dto: UnsecuredDto<FieldZone> }>(
-          merge('props', {
-            director: 'director { .id }',
-          }).as('dto'),
-        );
-  }
-
-  async update(input: UpdateFieldZone) {
-    const { id, director, ...simpleChanges } = input;
-
-    if (director) {
-      await this.updateDirector(director, id);
-    }
-
-    await this.updateProperties({ id }, simpleChanges);
-
+  async create(input: CreateFieldZone): Promise<UnsecuredDto<FieldZone>> {
+    const id = await generateId();
+    await this.db
+      .insert(fieldZones)
+      .values({
+        id,
+        name: input.name,
+        directorId: input.director,
+      })
+      .catch(catchNameUnique);
     return await this.readOne(id);
   }
 
-  private async updateDirector(directorId: ID, id: ID) {
-    const createdAt = DateTime.local();
-    const query = this.db
-      .query()
-      .match(node('fieldZone', 'FieldZone', { id }))
-      .with('fieldZone')
-      .limit(1)
-      .match([node('director', 'User', { id: directorId })])
-      .optionalMatch([
-        node('fieldZone'),
-        relation('out', 'oldRel', 'director', ACTIVE),
-        node(''),
-      ])
-      .setValues({ 'oldRel.active': false })
-      .with('fieldZone, director')
-      .limit(1)
-      .create([
-        node('fieldZone'),
-        relation('out', '', 'director', {
-          active: true,
-          createdAt,
-        }),
-        node('director'),
-      ]);
-
-    await query.run();
+  async update(changes: UpdateFieldZone): Promise<UnsecuredDto<FieldZone>> {
+    const { id, director, ...fields } = changes;
+    await this.updateColumns(id, {
+      name: fields.name,
+      directorId: director,
+    }).catch(catchNameUnique);
+    return await this.readOne(id);
   }
 
   async delete(id: ID): Promise<void> {
-    await this.deleteNode(id);
+    await this.softDelete(id);
   }
 
-  async list(input: FieldZoneListInput) {
-    if (!this.privileges.can('read')) {
-      return SecuredList.Redacted;
+  async list(
+    input: FieldZoneListInput,
+  ): Promise<PaginatedListType<UnsecuredDto<FieldZone>>> {
+    const conditions: SQL[] = [isNull(fieldZones.deletedAt)];
+    if (!this.executor.applyReadFilter(this.resource, conditions)) {
+      return EMPTY_PAGE;
     }
-    const result = await this.db
-      .query()
-      .match(node('node', 'FieldZone'))
-      .apply(fieldZoneFilters(input.filter))
-      .apply(sortWith(fieldZoneSorters, input))
-      .apply(paginate(input, this.hydrate()))
-      .first();
-    return result!; // result from paginate() will always have 1 row.
+    conditions.push(...fieldZoneFilterClauses(this.db, input.filter));
+
+    const sortColumns = {
+      name: fieldZones.name,
+      createdAt: fieldZones.createdAt,
+    } satisfies SortMap<keyof FieldZone>;
+
+    const { rows, total, hasMore } = await this.paginatedSelect({
+      predicate: and(...conditions),
+      orderBy: resolveOrderBy(input, sortColumns, fieldZones.name),
+      page: input.page,
+      count: input.count,
+    });
+    return {
+      total,
+      items: rows.map((row) => this.toDto(row)),
+      hasMore,
+    };
   }
 
-  async readAllByDirector(id: ID<'User'>) {
-    return await this.db
-      .query()
-      .match([
-        node('node', 'FieldZone'),
-        relation('out', '', 'director', ACTIVE),
-        node('', 'User', { id }),
-      ])
-      .apply(this.hydrate())
-      .map('dto')
-      .run();
+  async readAllByDirector(
+    id: ID<'User'>,
+  ): Promise<ReadonlyArray<UnsecuredDto<FieldZone>>> {
+    const rows = await this.db
+      .select()
+      .from(fieldZones)
+      .where(and(eq(fieldZones.directorId, id), isNull(fieldZones.deletedAt)));
+    return rows.map((row) => this.toDto(row));
+  }
+
+  protected toDto(
+    row: typeof fieldZones.$inferSelect,
+  ): UnsecuredDto<FieldZone> {
+    return {
+      id: row.id,
+      __typename: 'FieldZone',
+      createdAt: DateTime.fromJSDate(row.createdAt),
+      name: row.name,
+      director: { id: row.directorId },
+    };
   }
 }
 
-export const fieldZoneFilters = filter.define(() => FieldZoneFilters, {
-  id: filter.baseNodeProp(),
-  director: filter.sub(() => userFilters)((sub) =>
-    sub.match([
-      node('outer'),
-      relation('out', '', 'director', ACTIVE),
-      node('node', 'User'),
-    ]),
-  ),
-});
-
-export const fieldZoneSorters = defineSorters(FieldZone, {
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  'director.*': (query, input) =>
-    query
-      .with('node as zone')
-      .match([
-        node('zone'),
-        relation('out', '', 'director', ACTIVE),
-        node('node', 'User'),
-      ])
-      .apply(sortWith(userSorters, input)),
-});
+/**
+ * Build the column-level WHERE clauses for a `FieldZoneFilters` input against
+ * the `field_zones` table. Reusable from sub-filters in other domains
+ * (e.g. FieldRegion's `fieldZone` filter).
+ */
+export const fieldZoneFilterClauses = (
+  db: DrizzleDb,
+  filter: FieldZoneFilters | undefined,
+): SQL[] => {
+  const conditions: SQL[] = [];
+  if (!filter) return conditions;
+  if (filter.id) conditions.push(eq(fieldZones.id, filter.id));
+  if (filter.director) {
+    conditions.push(
+      subFilter(
+        db,
+        fieldZones.directorId,
+        users,
+        userFilterClauses(db, filter.director),
+      ),
+    );
+  }
+  return conditions;
+};

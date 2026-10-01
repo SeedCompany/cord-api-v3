@@ -79,9 +79,9 @@ export class LanguageService {
   async readOne(
     langId: ID,
 
-    view?: ObjectView,
+    _view?: ObjectView,
   ): Promise<Language> {
-    const dto = await this.repo.readOne(langId, view);
+    const dto = await this.repo.readOne(langId);
     return this.secure(dto);
   }
 
@@ -118,7 +118,7 @@ export class LanguageService {
       ...props
     } = input;
 
-    const language = await this.repo.readOne(input.id, view);
+    const language = await this.repo.readOne(input.id);
     const changes = this.repo.getActualChanges(language, {
       ...props,
       registryOfLanguageVarietiesCode:

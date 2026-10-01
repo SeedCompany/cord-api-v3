@@ -1,291 +1,298 @@
 import { Injectable } from '@nestjs/common';
-import { inArray, node, not, type Query, relation } from 'cypher-query-builder';
+import { and, desc, eq, inArray, isNull, type SQL } from 'drizzle-orm';
+import { DateTime } from 'luxon';
 import {
-  CreationFailed,
   generateId,
   type ID,
   InputException,
   NotFoundException,
 } from '~/common';
+import { Identity } from '~/core/authentication';
 import { type DbTypeOf } from '~/core/database';
-import { DtoRepository } from '~/core/neo4j';
+import { DrizzleService } from '~/core/drizzle/drizzle.service';
+import { catchUniqueViolation } from '~/core/drizzle/errors';
 import {
-  ACTIVE,
-  createNode,
-  createRelationships,
-  currentUser,
-  deleteBaseNode,
-  filter,
-  matchProjectScopedRoles,
-  matchProjectSens,
-  merge,
-  oncePerProject,
-  paginate,
-  path,
-  sorting,
-  variable,
-} from '~/core/neo4j/query';
+  engagements,
+  fileNodes,
+  media,
+  periodicReports,
+  progressReportMedia,
+  projects,
+} from '~/core/drizzle/schema';
+import { LiveQueryStore } from '~/core/live-query';
+import { requesterScopeByProject } from '../../project/project-member/membership-scope';
 import { type ProgressReport as Report } from '../dto';
-import { projectFromProgressReportChild } from '../once-per-project-from-progress-report-child.db-query';
 import {
-  ProgressReportMediaListInput as ListArgs,
+  type ProgressReportMediaListInput as ListArgs,
   ProgressReportMedia as ReportMedia,
   type UpdateProgressReportMedia as UpdateMedia,
   type UploadProgressReportMedia as UploadMedia,
 } from './dto';
 
+type Row = DbTypeOf<ReportMedia>;
+
+const variantOrder = new Map(
+  ReportMedia.Variants.map((v, i) => [v.key, i] as const),
+);
+
+/**
+ * ProgressReportMedia storage. One row per
+ * (variantGroup, variant); `file_id` is a DefinedFile placeholder; the media
+ * sidecar is reached via that file's latest FileVersion. Project sensitivity +
+ * the requester's project-scoped roles (for `secure()`) come from the
+ * report → engagement → project chain.
+ *
+ * migration-todo: no row-level read filter — `secure()` handles field access and
+ *   the only caller paths run as project members; add an applyReadFilter when a
+ *   restricted-role e2e demands it.
+ */
 @Injectable()
-export class ProgressReportMediaRepository extends DtoRepository(ReportMedia) {
+export class ProgressReportMediaRepository {
+  constructor(
+    private readonly drizzle: DrizzleService,
+    private readonly identity: Identity,
+    private readonly liveQueryStore: LiveQueryStore,
+  ) {}
+
+  protected get db() {
+    return this.drizzle.client;
+  }
+
   async listForReport(report: Report, args: ListArgs) {
-    const query = this.db
-      .query()
-      .match([
-        node('report', 'ProgressReport', { id: report.id }),
-        relation('out', '', 'child', ACTIVE),
-        node('node', this.resource.dbLabel),
-      ])
-      .apply(progressReportMediaFilters({ variants: args.variants }))
-      .apply(projectFromProgressReportChild)
-      .apply(
-        this.privileges.filterToReadable({
-          wrapContext: oncePerProject,
-        }),
-      )
-      .apply(
-        sorting(ReportMedia, args, {
-          variant: (q) => {
-            const vo = q.params.addParam(
-              ReportMedia.Variants.map((v) => v.key),
-              'variantsOrder',
-            );
-            return q.return<{ sortValue: number }>(
-              `apoc.coll.indexOf(${String(vo)}, node.variant) as sortValue`,
-            );
-          },
-        }),
-      )
-      .apply(paginate(args, this.hydrate()));
-    return (await query.first())!;
+    const variantKeys = args.variants?.map((v) => v.key);
+    const all = await this.hydrate([
+      eq(progressReportMedia.reportId, report.id),
+      ...(variantKeys?.length
+        ? [inArray(progressReportMedia.variant, variantKeys)]
+        : []),
+    ]);
+    // Small per-report sets — sort + paginate in memory.
+    const sorted = [...all].sort((a, b) => {
+      if (args.sort === 'variant') {
+        const cmp =
+          (variantOrder.get(a.variant) ?? 0) -
+          (variantOrder.get(b.variant) ?? 0);
+        return args.order === 'DESC' ? -cmp : cmp;
+      }
+      const cmp = a.createdAt.toMillis() - b.createdAt.toMillis();
+      return args.order === 'DESC' ? -cmp : cmp;
+    });
+    const offset = (args.page - 1) * args.count;
+    const items = sorted.slice(offset, offset + args.count);
+    return {
+      items,
+      total: sorted.length,
+      hasMore: offset + items.length < sorted.length,
+    };
   }
 
   async readMany(ids: readonly ID[]) {
-    return await this.db
-      .query()
-      .matchNode('node', this.resource.dbLabel)
-      .where({ 'node.id': inArray(ids) })
-      .apply(projectFromProgressReportChild)
-      .apply(
-        this.privileges.filterToReadable({
-          wrapContext: oncePerProject,
-        }),
-      )
-      .apply(this.hydrate())
-      .map('dto')
-      .run();
+    if (ids.length === 0) return [];
+    return await this.hydrate([inArray(progressReportMedia.id, ids as ID[])]);
+  }
+
+  async readOne(id: ID): Promise<Row> {
+    const [row] = await this.readMany([id]);
+    if (!row) {
+      throw new NotFoundException('Could not find ProgressReportMedia');
+    }
+    return row;
   }
 
   async readFeaturedOfReport(ids: ReadonlyArray<ID<Report>>) {
-    return await this.db
-      .query()
-      .matchNode('report', 'ProgressReport')
-      .where({ 'report.id': inArray(ids) })
-      .subQuery('report', (sub) =>
-        sub
-          .match([
-            node('report'),
-            relation('out', '', 'child', ACTIVE),
-            node('node', this.resource.dbLabel, {
-              variant: ReportMedia.Variants.at(-1)!.key,
-            }),
-          ])
-          .return('node')
-          .orderBy('node.createdAt', 'DESC')
-          .raw('LIMIT 1'),
+    if (ids.length === 0) return [];
+    const publishedVariant = ReportMedia.Variants.at(-1)!.key;
+    // Latest published-variant media per report.
+    const featured = await this.db
+      .selectDistinctOn([progressReportMedia.reportId], {
+        id: progressReportMedia.id,
+      })
+      .from(progressReportMedia)
+      .where(
+        and(
+          inArray(progressReportMedia.reportId, ids as Array<ID<Report>>),
+          eq(progressReportMedia.variant, publishedVariant),
+          isNull(progressReportMedia.deletedAt),
+        ),
       )
-      .apply(projectFromProgressReportChild)
-      .apply(
-        this.privileges.filterToReadable({
-          wrapContext: oncePerProject,
-        }),
-      )
-      .apply(this.hydrate())
-      .map('dto')
-      .run();
+      .orderBy(
+        progressReportMedia.reportId,
+        desc(progressReportMedia.createdAt),
+      );
+    return await this.readMany(featured.map((r) => r.id));
   }
 
-  async create(input: UploadMedia, _fileId?: ID<'File'>) {
-    // _fileId is stored as a FK by the Postgres repo; Neo4j links the file via
-    // the createDefinedFile `fileNode` edge instead, so it's ignored here.
-    const newVariantGroupId = await generateId();
-    const query = this.db
-      .query()
-      .matchNode('report', 'ProgressReport', { id: input.report })
-      .apply((q) => {
-        // Create a new variant group if one isn't provided
-        if (!input.variantGroup) {
-          return q
-            .createNode('variantGroup', 'VariantGroup', {
-              id: newVariantGroupId,
-            })
-            .with('report, variantGroup');
-        }
-        return (
-          q
-            // Look up existing VariantGroup
-            .matchNode('variantGroup', 'VariantGroup', {
-              id: input.variantGroup,
-            })
-            // Block media creation if the variant group already has this variant
-            .where(
-              not(
-                path([
-                  node('variantGroup'),
-                  relation('out', '', 'child', ACTIVE),
-                  node({ variant: input.variant.key }),
-                ]),
-              ),
-            )
+  async create(
+    input: UploadMedia,
+    fileId: ID<'File'>,
+  ): Promise<Omit<Row, 'media' | 'file'>> {
+    let variantGroupId = input.variantGroup;
+    if (variantGroupId) {
+      const existing = await this.db
+        .select({ variant: progressReportMedia.variant })
+        .from(progressReportMedia)
+        .where(
+          and(
+            eq(progressReportMedia.variantGroupId, variantGroupId),
+            isNull(progressReportMedia.deletedAt),
+          ),
         );
-      })
-      .apply(
-        await createNode(this.resource, {
-          baseNodeProps: {
-            variant: input.variant.key,
-            category: input.category,
-          },
-        }),
-      )
-      .apply(
-        createRelationships(this.resource, 'out', {
-          creator: currentUser,
-        }),
-      )
-      .apply(
-        createRelationships(this.resource, 'in', {
-          child: variable('variantGroup'),
-        }),
-      )
-      .apply(
-        createRelationships(this.resource, 'in', {
-          child: variable('report'),
-        }),
-      )
-      .return<{ dto: Omit<DbTypeOf<ReportMedia>, 'media' | 'file'> }>(
-        merge('node', {
-          report: 'report.id',
-          creator: 'creator { .id }',
-        }).as('dto'),
-      );
-    const results = await query.first();
-    if (results) {
-      return results.dto;
-    }
-    if (input.variantGroup) {
-      const vg = await this.getBaseNode(input.variantGroup, 'VariantGroup');
-      if (!vg) {
+      if (existing.length === 0) {
         throw new NotFoundException(
           'Variant group does not exist',
           'variantGroup',
         );
       }
-    }
-
-    const variantAlreadyExists = await this.db
-      .query()
-      .match([
-        node('vg', 'VariantGroup'),
-        relation('out', '', 'child', ACTIVE),
-        node({ variant: input.variant.key }),
-      ])
-      .return('vg')
-      .first();
-    if (variantAlreadyExists) {
-      throw new InputException(
-        'Variant group already has this variant',
-        'variant',
-      );
-    }
-
-    throw new CreationFailed(ReportMedia);
-  }
-
-  async update({ id, category }: UpdateMedia) {
-    await this.db
-      .query()
-      .matchNode('node', this.resource.dbLabel, { id })
-      .setValues({ node: { category } }, true)
-      .run();
-  }
-
-  async deleteVariantGroupIfEmpty(id: string) {
-    await this.db
-      .query()
-      .match(node('variantGroup', 'VariantGroup', { id }))
-      .raw('where not exists((variantGroup)-[:child { active: true }]->())')
-      .apply(deleteBaseNode('variantGroup'))
-      .return('*')
-      .executeAndLogStats();
-  }
-
-  protected hydrate() {
-    return (query: Query) =>
-      query
-        .apply(projectFromProgressReportChild)
-        .apply(matchProjectSens())
-        .apply(matchProjectScopedRoles({ outputVar: 'scope' }))
-        .match([
-          [
-            node('node'),
-            relation('in', '', 'child', ACTIVE),
-            node('report', 'ProgressReport'),
-          ],
-          [
-            node('node'),
-            relation('in', '', 'child', ACTIVE),
-            node('variantGroup', 'VariantGroup'),
-          ],
-          [
-            node('node'),
-            relation('out', '', 'fileNode', ACTIVE),
-            node('file', 'File'),
-          ],
-          [
-            node('node'),
-            relation('out', '', 'creator', ACTIVE),
-            node('creator', 'User'),
-          ],
-        ])
-        .subQuery('file', (sub) =>
-          sub
-            .match([
-              node('file', 'FileNode'),
-              relation('in', '', 'parent', ACTIVE),
-              node('version', 'FileVersion'),
-              relation('out', '', 'media'),
-              node('media', 'Media'),
-            ])
-            .return('media')
-            .orderBy('version.createdAt', 'DESC')
-            .raw('LIMIT 1'),
-        )
-        .return<{ dto: DbTypeOf<ReportMedia> }>(
-          merge('node', {
-            report: 'report.id',
-            variantGroup: 'variantGroup.id',
-            file: 'file.id',
-            media: 'media.id',
-            creator: 'creator { .id }',
-            sensitivity: 'sensitivity',
-            scope: 'scope',
-          }).as('dto'),
+      if (existing.some((r) => r.variant === input.variant.key)) {
+        throw new InputException(
+          'Variant group already has this variant',
+          'variant',
         );
+      }
+    } else {
+      variantGroupId =
+        await generateId<ID<'ProgressReportMediaVariantGroup'>>();
+    }
+
+    const id = await generateId<ID<'ProgressReportMedia'>>();
+    const creatorId = this.identity.current.userId;
+    await this.db
+      .insert(progressReportMedia)
+      .values({
+        id,
+        reportId: input.report,
+        variant: input.variant.key,
+        category: input.category ?? null,
+        variantGroupId,
+        fileId,
+        creatorId,
+      })
+      // The `existing.some(...)` check above is a SELECT before this INSERT, so
+      // two concurrent uploads to the same group+variant can both pass it. The
+      // partial unique index is the fail-safe; map its violation to the SAME
+      // error the check raises (DuplicateException extends InputException with
+      // the same `field`), so a race is indistinguishable from the common case
+      // rather than surfacing as a 500.
+      .catch(
+        catchUniqueViolation(
+          'progress_report_media_group_variant_active_unique',
+          'variant',
+          'Variant group already has this variant',
+        ),
+      );
+    return {
+      id,
+      createdAt: DateTime.now(),
+      report: input.report,
+      variant: input.variant.key,
+      category: input.category ?? null,
+      variantGroup: variantGroupId,
+      creator: { id: creatorId },
+      canDelete: true,
+    } as unknown as Omit<Row, 'media' | 'file'>;
+  }
+
+  // No live-query invalidation here, deliberately: the Neo4j `update` is a raw
+  // `setValues()` rather than `db.updateProperties`, so it does not announce
+  // either. Matching it keeps this a pre-existing product gap on every engine
+  // instead of a cutover regression.
+  async update({ id, category }: UpdateMedia) {
+    if (category === undefined) return;
+    await this.db
+      .update(progressReportMedia)
+      .set({ category })
+      .where(eq(progressReportMedia.id, id));
+  }
+
+  async deleteNode(objectOrId: { id: ID } | ID) {
+    const id = typeof objectOrId === 'string' ? objectOrId : objectOrId.id;
+    // Unlike `update` above, the Neo4j arm DOES announce here: it inherits
+    // DtoRepository.deleteNode, which defaults `resource` to `this.resource` and
+    // invalidates before deleting. This override bypasses that base entirely, so
+    // it has to do it itself.
+    this.liveQueryStore.invalidate([ReportMedia, id]);
+    await this.db
+      .update(progressReportMedia)
+      .set({ deletedAt: new Date() })
+      .where(eq(progressReportMedia.id, id));
+  }
+
+  // The VariantGroup is just a shared id under PG — it "exists" only while some
+  // media references it, so emptiness cleanup is implicit. Kept for parity.
+  async deleteVariantGroupIfEmpty(_id: string) {
+    // no-op
+  }
+
+  private async hydrate(conditions: SQL[]): Promise<Row[]> {
+    const rows = await this.db
+      .select({
+        id: progressReportMedia.id,
+        createdAt: progressReportMedia.createdAt,
+        reportId: progressReportMedia.reportId,
+        variant: progressReportMedia.variant,
+        category: progressReportMedia.category,
+        variantGroupId: progressReportMedia.variantGroupId,
+        fileId: progressReportMedia.fileId,
+        creatorId: progressReportMedia.creatorId,
+        projectId: projects.id,
+        sensitivity: projects.sensitivity,
+        mediaId: media.id,
+      })
+      .from(progressReportMedia)
+      .innerJoin(
+        periodicReports,
+        eq(periodicReports.id, progressReportMedia.reportId),
+      )
+      .innerJoin(engagements, eq(engagements.id, periodicReports.engagementId))
+      .innerJoin(projects, eq(projects.id, engagements.projectId))
+      .leftJoin(fileNodes, eq(fileNodes.id, progressReportMedia.fileId))
+      .leftJoin(media, eq(media.fileVersionId, fileNodes.latestVersionId))
+      .where(
+        and(
+          ...conditions,
+          isNull(progressReportMedia.deletedAt),
+          // The report itself has to still be live. Before migration 0035 this
+          // state could not arise — the foreign key has no ON DELETE action, so
+          // it blocked the removal outright. Now the report soft-deletes and the
+          // row stays, so media under a removed report kept resolving here.
+          // Neo4j hides them: every one of its reads goes through
+          // `projectFromProgressReportChild`, which requires the
+          // `:ProgressReport` label, and soft delete relabels it.
+          isNull(periodicReports.deletedAt),
+          // …and its engagement and project, which is the rest of what the
+          // Cypher requires. `projectFromProgressReportChild` is a required
+          // match naming all three labels — :Project -> :Engagement ->
+          // :ProgressReport -> node — and neither engine cascades a soft delete
+          // to descendants, so deleting a PROJECT leaves a live engagement,
+          // report and media underneath it. Neo4j then returns no media; without
+          // these two, Postgres returns them.
+          isNull(engagements.deletedAt),
+          isNull(projects.deletedAt),
+        ),
+      );
+
+    const scopeByProject = await requesterScopeByProject(
+      this.db,
+      this.identity.current.userId,
+      rows.map((r) => r.projectId),
+    );
+
+    return rows.map((row) => {
+      const dto: unknown = {
+        id: row.id,
+        createdAt: DateTime.fromJSDate(row.createdAt),
+        report: row.reportId,
+        variant: row.variant,
+        category: row.category,
+        variantGroup: row.variantGroupId,
+        file: row.fileId,
+        media: row.mediaId,
+        creator: { id: row.creatorId },
+        sensitivity: row.sensitivity,
+        scope: scopeByProject.get(row.projectId) ?? [],
+        canDelete: true,
+      };
+      return dto as Row;
+    });
   }
 }
-
-export const progressReportMediaFilters = filter.define<
-  Pick<ListArgs, 'variants'>
->(() => ListArgs, {
-  variants: ({ value }) => ({
-    'node.variant': inArray(value.map((v) => v.key)),
-  }),
-});

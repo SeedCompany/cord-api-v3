@@ -209,7 +209,7 @@ const sensitivityRefForResource = (
     case 'ProgressReport':
       // Progress rows on the shared periodic_reports table are always
       // engagement-parented (never project-parented directly) — see
-      // PeriodicReportDrizzleRepository.parentCondition.
+      // PeriodicReportRepository.parentCondition.
       return sql`(
         select "p"."sensitivity" from "projects" "p"
         join "engagements" "e" on "e"."project_id" = "p"."id"
