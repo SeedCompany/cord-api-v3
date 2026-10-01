@@ -52,11 +52,9 @@ jobs:
     # never match at all. The last of those hid the fact that webhooks was never
     # ported. The `E2E Tests` job below now proves nothing is left out.
     #
-    # Suites that genuinely cannot pass under Postgres switch themselves off
-    # inside the test file (`describe.skip` on a DATABASE check), so they are
-    # reported as skipped, appear in the run output, and state their reason —
-    # instead of being invisible. Currently: the *-changeset-aware specs
-    # (changesets are not being carried forward). Add that condition to the
+    # A suite that genuinely cannot run switches itself off inside the test file
+    # (`describe.skip` with a stated reason), so it is reported as skipped and
+    # appears in the run output instead of being invisible. Add that to the
     # test file — never a filter here.
     #
     # Shards are split by recorded duration, not by Jest's path hash
@@ -158,7 +156,6 @@ jobs:
         # for coverage and turns into refreshed timings. Reporters still print.
         run: yarn test:e2e --maxWorkers=1 --workerIdleMemoryLimit=1500MB --shard=${{ matrix.shard }}/${{ matrix.total }} --reporters=default --reporters=github-actions --json --outputFile=e2e-results-${{ matrix.shard }}-of-${{ matrix.total }}.json
         env:
-          DATABASE: postgres
           # `sslmode=no-verify` is required, not incidental: the certificate
           # generated above is self-signed, and without this the client
           # verifies it against the bundled Amazon RDS roots and rejects it.

@@ -47,15 +47,6 @@ import {
   createRootDirectory,
 } from './utility/create-directory';
 
-// Some cases below exercise behaviour that only exists on the postgres side (the
-// recursive-CTE cycle guard, and the live-query announcements the neo4j arm gets
-// from its base helpers instead). Declaring them with these makes jest report
-// them as SKIPPED rather than counting a body that returned before asserting
-// anything as a pass — which reads as coverage that is not there.
-const isPostgres = process.env.DATABASE === 'postgres';
-const itPostgresOnly = isPostgres ? it : it.skip;
-const describePostgresOnly = isPostgres ? describe : describe.skip;
-
 export async function uploadFile(
   app: TestApp,
   parent: ID,
@@ -270,40 +261,35 @@ describe('File e2e', () => {
     expect(parents.map((n) => n.id)).toEqual([c.id, b.id, a.id, root.id]);
   });
 
-  // Postgres-only: the Neo4j move() tolerates a cycle (variable-length
-  // `[:parent*]` match), but the PG recursive CTEs (computeRoots /
-  // computeDirectoryAggregates / delete's subtree walk) have no cycle guard
-  // and would recurse forever — so the guard, and this test, are PG-specific.
-  itPostgresOnly(
-    'cannot move a directory into its own descendant (cycle guard)',
-    async () => {
-      const parent = await createDirectory(app, root.id);
-      const child = await createDirectory(app, parent.id);
+  // The recursive CTEs (computeRoots / computeDirectoryAggregates / delete's
+  // subtree walk) have no cycle guard of their own and would recurse forever,
+  // so move() must refuse a cycle.
+  it('cannot move a directory into its own descendant (cycle guard)', async () => {
+    const parent = await createDirectory(app, root.id);
+    const child = await createDirectory(app, parent.id);
 
-      await app.graphql
-        .mutate(
-          graphql(`
-            mutation moveFileNode($input: MoveFile!) {
-              moveFileNode(input: $input) {
-                id
-              }
+    await app.graphql
+      .mutate(
+        graphql(`
+          mutation moveFileNode($input: MoveFile!) {
+            moveFileNode(input: $input) {
+              id
             }
-          `),
-          { input: { id: parent.id, parent: child.id } },
-        )
-        .expectError(
-          errors.input({
-            message: 'Cannot move a node into its own descendant',
-          }),
-        );
-    },
-  );
+          }
+        `),
+        { input: { id: parent.id, parent: child.id } },
+      )
+      .expectError(
+        errors.input({
+          message: 'Cannot move a node into its own descendant',
+        }),
+      );
+  });
 
   /**
-   * The Neo4j file repo announces mutations to the live-query store through its
-   * shared helpers — `db.updateProperties` on rename, `deleteNode` on delete.
-   * The Drizzle repo is a standalone `@Injectable()` and reaches neither, so it
-   * has to announce for itself. Without it, cord-field's `@live` file documents
+   * The file repository is a standalone `@Injectable()` with no invalidating
+   * base helpers, so it has to announce mutations to the live-query store
+   * itself. Without it, cord-field's `@live` file documents
    * kept showing the old name / a deleted node until a manual refresh.
    *
    * Spy on `invalidateAll` rather than `invalidate`: the singular form delegates
@@ -313,9 +299,7 @@ describe('File e2e', () => {
    * `mockRestore()` clears `mock.calls`, which makes the positive cases fail and
    * any negative case pass vacuously.
    */
-  // Postgres-only: the Neo4j arm gets this from its base helpers and is
-  // unchanged.
-  describePostgresOnly('live-query invalidation', () => {
+  describe('live-query invalidation', () => {
     afterEach(() => {
       jest.restoreAllMocks();
     });

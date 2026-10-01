@@ -1,11 +1,9 @@
 import { type Provider } from '@nestjs/common';
-import { csv, simpleSwitch } from '@seedcompany/common';
+import { csv } from '@seedcompany/common';
 import type { EmailModuleOptions as EmailOptions } from '@seedcompany/nestjs-email';
 import type { Server as HttpServer } from 'http';
 import { type LRUCache } from 'lru-cache';
-import { DateTime, Duration, type DurationLike } from 'luxon';
-import { customAlphabet } from 'nanoid';
-import { type Config as Neo4JDriverConfig } from 'neo4j-driver';
+import { Duration, type DurationLike } from 'luxon';
 import { BehaviorSubject } from 'rxjs';
 import type { DeepPartial } from 'ts-essentials';
 import type { Class, Merge, ReadonlyDeep } from 'type-fest';
@@ -104,8 +102,9 @@ export const makeConfig = (env: EnvironmentService) =>
      * Is this a schema-generation-only boot (`yarn start -- --gen-schema`)?
      * It initializes the app to emit the GraphQL schema and exits without ever
      * querying, so it must not need a database — CI generates the schema in
-     * jobs that have no database service at all. Boot-time writes (index
-     * creation, migrations, root object sync) are skipped, as in read-only mode.
+     * jobs that have no database service at all. Boot-time writes (migrations,
+     * root object sync, webhook channel sync) are skipped, as in read-only
+     * mode.
      */
     isGenSchema = process.argv.includes('--gen-schema');
 
@@ -176,40 +175,6 @@ export const makeConfig = (env: EnvironmentService) =>
 
     frontendUrl = env.url('FRONTEND_URL').optional('http://localhost:3001');
 
-    neo4j = (() => {
-      const driverConfig: Neo4JDriverConfig = {};
-      let url = env.string('NEO4J_URL').optional('bolt://localhost');
-      const parsed = new URL(url);
-      const username = env
-        .string('NEO4J_USERNAME')
-        .optional(parsed.username || 'neo4j');
-      const password = env
-        .string('NEO4J_PASSWORD')
-        .optional(parsed.password || 'admin');
-      const database =
-        env.string('NEO4J_DBNAME').optional() ??
-        (parsed.pathname.slice(1) || undefined);
-      if (parsed.username || parsed.password || parsed.pathname) {
-        parsed.username = '';
-        parsed.password = '';
-        parsed.pathname = '';
-        url = parsed.toString();
-      }
-      return {
-        url,
-        username,
-        password,
-        database: this.jest
-          ? `test.${DateTime.now().toFormat(
-              'y-MM-dd.HH-mm-ss',
-            )}.${customAlphabet('abcdefghjkmnpqrstuvwxyz', 7)()}`
-          : database,
-        ephemeral: this.jest,
-        driverConfig,
-        isLocal: parsed.hostname === 'localhost',
-      };
-    })();
-
     postgres = (() => {
       const url = env.string('POSTGRES_URL').optional();
       let hostname;
@@ -220,23 +185,18 @@ export const makeConfig = (env: EnvironmentService) =>
       }
       return {
         url,
-        // Mirrors neo4j.isLocal. An absent or unparseable URL counts as
-        // local, preserving always-run behavior for setups without one.
+        // An absent or unparseable URL counts as local, preserving
+        // always-run behavior for setups without one.
         isLocal: !hostname || hostname === 'localhost',
       };
     })();
 
-    // Which database engine is active. Postgres has been the production
-    // engine since the 2026-09 cutover; the other values exist only while the
-    // legacy engine code awaits removal.
-    // migration-todo: drop this switch (and the env var) with the Neo4j arm.
-    databaseEngine = env.string('DATABASE').optional('postgres').toLowerCase();
-
     /**
      * Puts the API in read-only maintenance mode.
      * Every mutation is refused, except signing in & out — sessions are not
-     * part of the frozen data. Boot-time writes (index creation, migrations,
-     * root object sync) are also skipped, regardless of their own flags.
+     * part of the frozen data. Boot-time writes (migrations, root object
+     * sync, webhook channel sync) are also skipped, regardless of their own
+     * flags.
      * Queued background jobs (BullMQ) are NOT covered — anything already in
      * the queue when the freeze starts can still run and write; let the
      * queue drain before counting on the freeze.
@@ -247,31 +207,13 @@ export const makeConfig = (env: EnvironmentService) =>
       readOnly: env.boolean('READ_ONLY').optional(false),
     };
 
-    dbIndexesCreate =
-      !this.maintenance.readOnly &&
-      !this.isGenSchema &&
-      env
-        .boolean('DB_CREATE_INDEXES')
-        .optional(isDev ? this.neo4j.isLocal : true);
-    dbAutoMigrate =
-      !this.maintenance.readOnly &&
-      !this.isGenSchema &&
-      env
-        .boolean('DB_AUTO_MIGRATE')
-        .optional(isDev && this.neo4j.isLocal && !this.jest);
     dbRootObjectsSync =
       !this.maintenance.readOnly &&
       !this.isGenSchema &&
-      env.boolean('DB_ROOT_OBJECTS_SYNC').optional(
-        isDev
-          ? // In dev, don't write root objects into a shared/remote database —
-            // judged by the ACTIVE engine's own URL, not always Neo4j's.
-            (simpleSwitch(this.databaseEngine, {
-              postgres: this.postgres.isLocal,
-              neo4j: this.neo4j.isLocal,
-            }) ?? this.neo4j.isLocal)
-          : true,
-      );
+      env
+        .boolean('DB_ROOT_OBJECTS_SYNC')
+        // In dev, don't write root objects into a shared/remote database.
+        .optional(isDev ? this.postgres.isLocal : true);
     /**
      * Whether the Drizzle boot migrator applies pending migrations.
      * Off during read-only maintenance — a schema change is still a write.

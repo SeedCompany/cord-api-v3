@@ -30,22 +30,6 @@ import {
   type TestUser,
 } from './utility';
 
-// The audit log lives in postgres; under neo4j the writer is a no-op, so the
-// history is expected to be empty there.
-const isPostgres = process.env.DATABASE === 'postgres';
-
-// Cases that read `resource_mutations` itself have nothing to check under neo4j —
-// the table has no counterpart there. Declaring them with these instead of
-// returning early inside the body makes jest report them as SKIPPED. A test that
-// returns before it asserts anything still counts as a pass, which reads as
-// coverage that does not exist.
-//
-// The `expect(history.total).toBe(0)` branches further down are deliberately NOT
-// converted: those assert real neo4j behaviour (the writer stays inert and the
-// history query still resolves), so they earn their pass on both engines.
-const itPostgresOnly = isPostgres ? it : it.skip;
-const describePostgresOnly = isPostgres ? describe : describe.skip;
-
 describe('Audit log (resource_mutations) e2e', () => {
   let app: TestApp;
   let project: fragments.project;
@@ -90,11 +74,6 @@ describe('Audit log (resource_mutations) e2e', () => {
     );
     const history = read.history;
 
-    if (!isPostgres) {
-      expect(history.total).toBe(0);
-      return;
-    }
-
     expect(history.total).toBeGreaterThanOrEqual(2);
     const actions = history.items.map((i) => i.action);
     expect(actions).toContain('Create');
@@ -125,11 +104,6 @@ describe('Audit log (resource_mutations) e2e', () => {
     );
     const history = read.history;
 
-    if (!isPostgres) {
-      expect(history.total).toBe(0);
-      return;
-    }
-
     expect(history.total).toBeGreaterThanOrEqual(2);
     const actions = history.items.map((i) => i.action);
     expect(actions).toContain('Create');
@@ -155,11 +129,6 @@ describe('Audit log (resource_mutations) e2e', () => {
     );
     const history = read.history;
 
-    if (!isPostgres) {
-      expect(history.total).toBe(0);
-      return;
-    }
-
     expect(history.total).toBeGreaterThanOrEqual(2);
     const actions = history.items.map((i) => i.action);
     expect(actions).toContain('Create');
@@ -183,10 +152,6 @@ describe('Audit log (resource_mutations) e2e', () => {
       app.graphql.query(EngagementHistoryDoc, { id: engagement.id }),
     );
 
-    if (!isPostgres) {
-      expect(read.history.total).toBe(0);
-      return;
-    }
     expect(read.history.total).toBeGreaterThanOrEqual(1);
     expect(read.history.items.map((i) => i.action)).toContain('Create');
   });
@@ -209,51 +174,44 @@ describe('Audit log (resource_mutations) e2e', () => {
       app.graphql.query(ProductHistoryDoc, { id: product.id }),
     );
 
-    if (!isPostgres) {
-      expect(read.history.total).toBe(0);
-      return;
-    }
     expect(read.history.total).toBeGreaterThanOrEqual(1);
     expect(read.history.items.map((i) => i.action)).toContain('Create');
   });
 
-  itPostgresOnly(
-    'does not record an OtherProduct update that repeats its scriptureReferences',
-    async () => {
-      const language = await runAsAdmin(app, createLanguage);
-      const engagement = await createLanguageEngagement(app, {
-        project: project.id,
-        language: language.id,
-        startDateOverride: engStart.toISO(),
-        endDateOverride: engEnd.toISO(),
-      });
-      const scriptureReferences = ScriptureRange.randomList();
-      const product = await createOtherProduct(app, {
-        engagement: engagement.id,
-        scriptureReferences,
-      });
-      const updateActions = async () => {
-        const { product: read } = await runAsAdmin(app, () =>
-          app.graphql.query(ProductHistoryDoc, { id: product.id }),
-        );
-        return read.history.items.filter((i) => i.action === 'Update');
-      };
+  it('does not record an OtherProduct update that repeats its scriptureReferences', async () => {
+    const language = await runAsAdmin(app, createLanguage);
+    const engagement = await createLanguageEngagement(app, {
+      project: project.id,
+      language: language.id,
+      startDateOverride: engStart.toISO(),
+      endDateOverride: engEnd.toISO(),
+    });
+    const scriptureReferences = ScriptureRange.randomList();
+    const product = await createOtherProduct(app, {
+      engagement: engagement.id,
+      scriptureReferences,
+    });
+    const updateActions = async () => {
+      const { product: read } = await runAsAdmin(app, () =>
+        app.graphql.query(ProductHistoryDoc, { id: product.id }),
+      );
+      return read.history.items.filter((i) => i.action === 'Update');
+    };
 
-      // Scripture ranges arrive as new objects, so an identity comparison
-      // would see this as a change.
-      await app.graphql.mutate(UpdateOtherProductDoc, {
-        input: { id: product.id, scriptureReferences },
-      });
-      expect(await updateActions()).toHaveLength(0);
+    // Scripture ranges arrive as new objects, so an identity comparison
+    // would see this as a change.
+    await app.graphql.mutate(UpdateOtherProductDoc, {
+      input: { id: product.id, scriptureReferences },
+    });
+    expect(await updateActions()).toHaveLength(0);
 
-      // Control: a real change is recorded, so the empty result above is
-      // not an absence of OtherProduct auditing.
-      await app.graphql.mutate(UpdateOtherProductDoc, {
-        input: { id: product.id, title: 'Renamed Other Goal' },
-      });
-      expect(await updateActions()).toHaveLength(1);
-    },
-  );
+    // Control: a real change is recorded, so the empty result above is
+    // not an absence of OtherProduct auditing.
+    await app.graphql.mutate(UpdateOtherProductDoc, {
+      input: { id: product.id, title: 'Renamed Other Goal' },
+    });
+    expect(await updateActions()).toHaveLength(1);
+  });
 
   // Registration runs under an anonymous session: there is no logged-in user,
   // and the anonymous SystemAgent id lives in `system_agents`, NOT `users`. The
@@ -269,10 +227,6 @@ describe('Audit log (resource_mutations) e2e', () => {
       app.graphql.query(UserHistoryDoc, { id: newUser.id }),
     );
 
-    if (!isPostgres) {
-      expect(read.history.total).toBe(0);
-      return;
-    }
     // registration should record a Create
     const create = read.history.items.find((i) => i.action === 'Create');
     expect(create).toBeTruthy();
@@ -284,51 +238,48 @@ describe('Audit log (resource_mutations) e2e', () => {
   // Audit writes happen inside the triggering mutation's transaction, so if the
   // mutation later fails the audit row must roll back with it — no orphaned
   // "this happened" record for something that didn't.
-  itPostgresOnly(
-    'rolls back the audit row when the surrounding transaction fails',
-    async () => {
-      const drizzle = app.get(DrizzleService);
-      const repo = app.get(ResourceMutationRepository);
-      const committedId = await generateId();
-      const rolledBackId = await generateId();
-      // The repo's insert uses the ambient (ALS) transaction client, so this
-      // exercises the same in-transaction write path the audit hook takes —
-      // without needing a session context for the actor lookup.
-      const mutation = (resourceId: typeof committedId) => ({
-        resourceType: 'Project',
-        resourceId,
-        action: 'Update' as const,
-        actorId: null,
-        actorSystemAgent: null,
-        impersonatorId: null,
-        roleAtTime: [],
-        changes: { a: 1 },
-      });
+  it('rolls back the audit row when the surrounding transaction fails', async () => {
+    const drizzle = app.get(DrizzleService);
+    const repo = app.get(ResourceMutationRepository);
+    const committedId = await generateId();
+    const rolledBackId = await generateId();
+    // The repo's insert uses the ambient (ALS) transaction client, so this
+    // exercises the same in-transaction write path the audit hook takes —
+    // without needing a session context for the actor lookup.
+    const mutation = (resourceId: typeof committedId) => ({
+      resourceType: 'Project',
+      resourceId,
+      action: 'Update' as const,
+      actorId: null,
+      actorSystemAgent: null,
+      impersonatorId: null,
+      roleAtTime: [],
+      changes: { a: 1 },
+    });
 
-      // Positive control: a record written in a committed tx persists.
-      await drizzle.inTx(async () => {
-        await repo.record(mutation(committedId));
-      });
+    // Positive control: a record written in a committed tx persists.
+    await drizzle.inTx(async () => {
+      await repo.record(mutation(committedId));
+    });
 
-      // The record is written, then the surrounding tx throws -> it must vanish.
-      await expect(
-        drizzle.inTx(async () => {
-          await repo.record(mutation(rolledBackId));
-          throw new Error('boom: force rollback');
-        }),
-      ).rejects.toThrow('boom');
+    // The record is written, then the surrounding tx throws -> it must vanish.
+    await expect(
+      drizzle.inTx(async () => {
+        await repo.record(mutation(rolledBackId));
+        throw new Error('boom: force rollback');
+      }),
+    ).rejects.toThrow('boom');
 
-      const db = drizzle.client;
-      const countFor = async (id: string) => {
-        const res = await db.execute<{ n: number } & Record<string, unknown>>(
-          sql`select count(*)::int as n from resource_mutations where resource_id = ${id}`,
-        );
-        return res.rows[0]!.n;
-      };
-      expect(await countFor(committedId)).toBe(1);
-      expect(await countFor(rolledBackId)).toBe(0);
-    },
-  );
+    const db = drizzle.client;
+    const countFor = async (id: string) => {
+      const res = await db.execute<{ n: number } & Record<string, unknown>>(
+        sql`select count(*)::int as n from resource_mutations where resource_id = ${id}`,
+      );
+      return res.rows[0]!.n;
+    };
+    expect(await countFor(committedId)).toBe(1);
+    expect(await countFor(rolledBackId)).toBe(0);
+  });
 
   // `Identity.currentMaybe` hands back the EFFECTIVE session, so all three of
   // these used to go wrong in the same place: an impersonated mutation was
@@ -339,10 +290,8 @@ describe('Audit log (resource_mutations) e2e', () => {
   // header-based and the e2e client exposes no per-request headers; sessions are
   // still built by the real SessionManager path (including its 'ghost' literal
   // swap and the CanImpersonateHook gate) rather than hand-assembled.
-  // Every case here reads the actor columns on `resource_mutations`, so the whole
-  // block is postgres-only. `describe.skip` also stops the beforeAll below from
-  // running, which is why that hook no longer needs its own engine check.
-  describePostgresOnly('actor attribution', () => {
+  // Every case here reads the actor columns on `resource_mutations`.
+  describe('actor attribution', () => {
     let audit: AuditService;
     let sessions: SessionManager;
     let host: SessionHost;

@@ -28,51 +28,22 @@ import {
  *
  * These assert only that the mutation runs and gives back something of the
  * right shape. That is deliberate. The job here is to find mutations that are
- * unwired or broken on one engine, not to pin down their semantics; where this
- * file turns something up, the real test belongs in that domain's own spec.
- *
- * Run it against BOTH engines and compare — a mutation that works on Neo4j and
- * fails on Postgres is a cutover regression, while one that fails on both is a
- * pre-existing defect and belongs after the cutover.
- *
- *   DATABASE=neo4j    yarn test:e2e --testPathPatterns mutation-smoke
- *   DATABASE=postgres yarn test:e2e --testPathPatterns mutation-smoke
+ * unwired or broken, not to pin down their semantics; where this file turns
+ * something up, the real test belongs in that domain's own spec.
  *
  * Of the 30 mutations with no test, this file reaches 25. The five it does not,
  * and why — none of them silently:
  *
  * - `deleteProjectChangeRequest` — changesets are out of scope for the cutover.
  * - `modifyQueue` and `scheduledTask` — BullMQ and scheduler controls living in
- *   src/core/queue and src/core/schedule. They touch no domain table on either
- *   engine, so they cannot produce a difference between the two.
+ *   src/core/queue and src/core/schedule. They touch no domain table.
  * - `updateMediaMetadata` — needs an uploaded image to have media to describe.
  *   The upload flow exists (progress-report-media.e2e-spec.ts), so this is
  *   reachable and simply not done yet.
  * - `reextractPnpProgress` — needs a progress report with a real PnP
  *   spreadsheet attached, and no such fixture exists anywhere in test/.
  *   Genuinely blocked until someone makes one.
- *
- * On its first run against `develop` this turned up exactly what it was built
- * to find: `setProjectTypeFinancialApprover` works on Neo4j and fails on
- * Postgres, because that domain has no Drizzle repository here yet. See
- * `itUntilFinancialApproverPort` below.
  */
-
-const isPostgres = process.env.DATABASE === 'postgres';
-
-/**
- * Runs on Neo4j, held back on Postgres.
- *
- * migration-todo: switch this back to plain `it` once the financial-approver
- * Postgres port merges (branch `pg-financial-approvers`, two commits, adding
- * `financial-approver.drizzle.repository.ts`). Until then `develop` has only
- * `financial-approver-neo4j.repository.ts` and no Drizzle sibling, so
- * `setProjectTypeFinancialApprover` fails on Postgres with "Failed to set
- * project type financial approver" — correctly, because the domain is not
- * ported here yet. This smoke pass found that on its first run against
- * `develop`, which is the point of it.
- */
-const itUntilFinancialApproverPort = isPostgres ? it.skip : it;
 
 /** Minimal block-editor document the RichText (JSONObject) scalar accepts. */
 const doc = (text: string) => ({
@@ -641,33 +612,30 @@ describe('Mutation smoke coverage e2e', () => {
       expect(result.secret).toBeTruthy();
     });
 
-    itUntilFinancialApproverPort(
-      'setProjectTypeFinancialApprover',
-      async () => {
-        const { result } = await app.graphql.mutate(
-          graphql(`
-            mutation SmokeSetFinancialApprover(
-              $input: SetProjectTypeFinancialApprover!
-            ) {
-              result: setProjectTypeFinancialApprover(input: $input) {
-                projectTypes
-                user {
-                  id
-                }
+    it('setProjectTypeFinancialApprover', async () => {
+      const { result } = await app.graphql.mutate(
+        graphql(`
+          mutation SmokeSetFinancialApprover(
+            $input: SetProjectTypeFinancialApprover!
+          ) {
+            result: setProjectTypeFinancialApprover(input: $input) {
+              projectTypes
+              user {
+                id
               }
             }
-          `),
-          {
-            input: {
-              user: admin.id,
-              projectTypes: ['MomentumTranslation'],
-            },
+          }
+        `),
+        {
+          input: {
+            user: admin.id,
+            projectTypes: ['MomentumTranslation'],
           },
-        );
-        expect(result?.user.id).toBe(admin.id);
-        expect(result?.projectTypes).toEqual(['MomentumTranslation']);
-      },
-    );
+        },
+      );
+      expect(result?.user.id).toBe(admin.id);
+      expect(result?.projectTypes).toEqual(['MomentumTranslation']);
+    });
 
     // The only field UpdateBudget carries besides the id is a new version of
     // the universal template file, which needs the upload machinery. Passing
