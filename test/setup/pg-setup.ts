@@ -11,18 +11,12 @@ const TEST_DB_PREFIX = 'cord_e2e_';
  * (AdminService) itself on boot, so no template/seeding is needed here.
  */
 export const ephemeralPg = async () => {
-  if (process.env.DATABASE !== 'postgres') {
-    return undefined;
-  }
-
-  // Mirror the app's DrizzleService, which refuses to guess a connection when
-  // DATABASE=postgres. Note: .env.local is NOT visible here — this setup reads
+  // Mirror the app's DrizzleService, which refuses to guess a connection.
+  // Note: .env.local is NOT visible here — this setup reads
   // raw process.env before ConfigService loads dotenv — so POSTGRES_URL must be
   // a real env var (CI sets it; locally export it or pass it on the CLI).
   if (!process.env.POSTGRES_URL) {
-    throw new Error(
-      'POSTGRES_URL is required to run e2e tests with DATABASE=postgres',
-    );
+    throw new Error('POSTGRES_URL is required to run e2e tests');
   }
   const base = new URL(process.env.POSTGRES_URL);
   const admin = new Pool({ connectionString: base.toString(), max: 1 });

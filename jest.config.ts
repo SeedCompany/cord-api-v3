@@ -12,8 +12,6 @@ export default async (): Promise<Config> => {
     setupFiles: ['./test/setup/jest.d.ts'],
     setupFilesAfterEnv: ['./src/polyfills.ts'],
     moduleNameMapper: {
-      // Imports for *.edgeql files are really *.edgeql.ts files
-      [`(.+)\\.edgeql$`]: '$1.edgeql.ts',
       // TypeScript path aliases (needed for unstable_mockModule which bypasses ts-jest resolution)
       '^~/core$': '<rootDir>/src/core',
       '^~/core/(.+)$': '<rootDir>/src/core/$1',
@@ -33,12 +31,6 @@ export default async (): Promise<Config> => {
     // Once per file.
     setupFiles: [
       ...base.setupFiles,
-      // Must come before anything that reads process.env.DATABASE: a test file
-      // decides which database it is testing when it loads, before any app
-      // starts, so it never sees a DATABASE set only in .env.local. This makes
-      // the test files agree with the database the app will actually use. An
-      // explicitly set variable still wins.
-      './test/setup/resolve-engine-env.ts',
       // Set longer timeout.
       // Cannot be done at project level config.
       // Don't want to override cli arg or timeout set below for debugging either.

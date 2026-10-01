@@ -24,7 +24,6 @@ export class DrizzleMigrator implements OnModuleInit {
   ) {}
 
   async onModuleInit() {
-    if (this.config.databaseEngine !== 'postgres') return;
     // Schema generation has nothing to migrate and, in CI, no database to
     // reach; see ConfigService.isGenSchema.
     if (this.config.isGenSchema) return;

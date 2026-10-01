@@ -8,7 +8,6 @@ import { HttpAdapter, type NestHttpApplication } from '~/core/http';
 import { LogLevel } from '~/core/logger';
 import { LevelMatcher } from '~/core/logger/level-matcher';
 import { AppModule } from '../../src/app.module';
-import { wipeNeo4jAfterFile } from './neo4j-wipe';
 import { ephemeralPg } from './pg-setup';
 
 export type TestApp = Pick<NestHttpApplication, 'get'>;
@@ -28,11 +27,6 @@ afterAll(async () => {
   for (const app of [...appsToClose].reverse()) {
     await app.close();
   }
-  // PG gets an ephemeral per-file DB (cleaned per app above); Neo4j was one
-  // shared instance per CI job, so it got wiped here instead. Inert since
-  // #3890 — nothing sets NEO4J_TEST_WIPE now that CI does not run the suite
-  // against Neo4j. Removed with the rest of the Neo4j test infrastructure.
-  await wipeNeo4jAfterFile();
 });
 
 export const createApp = async ({

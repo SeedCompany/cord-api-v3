@@ -1696,12 +1696,7 @@ describe('Webhooks', () => {
         await using receiver = await serve(handleRequest(events));
 
         // Create a separate app/tester instance to avoid polluting other tests
-        const thisApp = await createApp({
-          config: {
-            // share db with the suite app for testing perf
-            neo4j: app.get(ConfigService).neo4j,
-          },
-        });
+        const thisApp = await createApp();
         const thisTester = await createTesterWithRole(
           thisApp,
           'RegionalDirector',
@@ -1751,12 +1746,7 @@ describe('Webhooks', () => {
         await using receiver = await serve(handleRequest(events));
 
         // Create a separate app/tester instance to avoid polluting other tests
-        const thisApp = await createApp({
-          config: {
-            // share db with the suite app for testing perf
-            neo4j: app.get(ConfigService).neo4j,
-          },
-        });
+        const thisApp = await createApp();
         const thisTester = await createTesterWithRole(
           thisApp,
           'RegionalDirector',
@@ -1836,10 +1826,7 @@ describe('Webhooks', () => {
       const newVersion = DateTime.now();
       const newApp = await createApp({
         config: {
-          // Share db with the suite app. Both are passed regardless of which
-          // engine is active — the one that matters takes effect, and the
-          // other is an inert unused field on the given engine.
-          neo4j: isolatedApp.get(ConfigService).neo4j,
+          // Share db with the suite app.
           postgres: isolatedApp.get(ConfigService).postgres,
         },
         overrides: (builder) =>
@@ -1912,10 +1899,7 @@ describe('Webhooks', () => {
       const newVersion = DateTime.now();
       const newApp = await createApp({
         config: {
-          // Share db with the suite app. Both are passed regardless of which
-          // engine is active — the one that matters takes effect, and the
-          // other is an inert unused field on the given engine.
-          neo4j: isolatedApp.get(ConfigService).neo4j,
+          // Share db with the suite app.
           postgres: isolatedApp.get(ConfigService).postgres,
         },
         overrides: (builder) =>

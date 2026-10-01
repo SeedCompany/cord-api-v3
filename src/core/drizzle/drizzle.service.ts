@@ -47,17 +47,15 @@ export class DrizzleService implements OnModuleDestroy {
   private readonly baseDb: DrizzleDb;
   private readonly als = new AsyncLocalStorage<TransactionScope>();
   private readonly pool: Pool;
-  private readonly isPostgresEngine: boolean;
 
   constructor(config: ConfigService) {
-    this.isPostgresEngine = config.databaseEngine === 'postgres';
     const url = config.postgres.url;
     if (!url) {
       // A schema-generation boot never queries, so it gets no pool instead of
       // an error: CI emits the schema in jobs without a Postgres service. Any
-      // other Postgres boot without a URL fails here, at startup, on purpose.
-      if (this.isPostgresEngine && !config.isGenSchema) {
-        throw new Error('POSTGRES_URL is required when DATABASE=postgres');
+      // other boot without a URL fails here, at startup, on purpose.
+      if (!config.isGenSchema) {
+        throw new Error('POSTGRES_URL is required');
       }
       return;
     }
@@ -85,12 +83,7 @@ export class DrizzleService implements OnModuleDestroy {
       if (!scope.alive) throw outlivedTransaction();
       return scope.db;
     }
-    if (!this.baseDb)
-      throw new Error(
-        this.isPostgresEngine
-          ? 'POSTGRES_URL is required when DATABASE=postgres'
-          : 'DrizzleService.client accessed but DATABASE is not postgres',
-      );
+    if (!this.baseDb) throw new Error('POSTGRES_URL is required');
     return this.baseDb;
   }
 

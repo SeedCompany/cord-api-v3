@@ -31,12 +31,7 @@ import {
  * ordinary resources with no reason to hold tool usages, and nothing about
  * either is special to the tools domain. That is the point — the field is on
  * every resource, so it has to answer for every resource.
- *
- * Runs on BOTH engines on purpose. These are parity tests, and they are only
- * meaningful if the Neo4j arm is asserted too.
  */
-/** Same engine gate the audit-log spec uses — `DATABASE`, not `DATABASE_ENGINE`. */
-const isPostgres = process.env.DATABASE === 'postgres';
 
 describe('Resource.tools answers for containers of any type', () => {
   let app: TestApp;
@@ -348,14 +343,11 @@ describe('Resource.tools answers for containers of any type', () => {
     expect(result.organization.tools.items).toHaveLength(0);
   });
   /**
-   * Neither engine gave this list an order: both read paths collect rows
-   * without one, so Postgres returned them in heap order — a chip could change
-   * position after an unrelated update, with nothing to explain it. Postgres
-   * now orders by tool name; Neo4j deliberately keeps no order (the grid is not
-   * in production, so there is no existing order to preserve, and that
-   * repository goes away at cutover). Hence the asymmetric assertion.
+   * This list used to have no order: rows came back in heap order, so a chip
+   * could change position after an unrelated update, with nothing to explain
+   * it. It now orders by tool name.
    */
-  it("orders a container's tools by name on Postgres", async () => {
+  it("orders a container's tools by name", async () => {
     const prefix = faker.string.alpha({ length: 8 });
     const org = await createOrganization(app);
     // Added out of name order, and the names mix cases, so the expected order
@@ -399,11 +391,6 @@ describe('Resource.tools answers for containers of any type', () => {
       usage.tool.name.value?.replace(prefix + ' ', ''),
     );
 
-    if (isPostgres) {
-      expect(names).toEqual(['apple', 'Mango', 'Zebra']);
-    } else {
-      // No defined order over there, so only membership is assertable.
-      expect(new Set(names)).toEqual(new Set(['apple', 'Mango', 'Zebra']));
-    }
+    expect(names).toEqual(['apple', 'Mango', 'Zebra']);
   });
 });

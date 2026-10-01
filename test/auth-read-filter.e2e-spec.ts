@@ -35,10 +35,6 @@ import {
 //  transitively covered by project-level hiding. Project/Language read is global
 //  for most roles — there the auth boundary is property redaction, not row
 //  hiding, which is a different test.)
-// migration-todo: drop the isPostgres gate on the engagement test when the
-// Language + Engagement domains recut onto develop — their fixtures can't be
-// created under DATABASE=postgres until then.
-const isPostgres = process.env.DATABASE === 'postgres';
 
 describe('Read-filter hides restricted rows from a non-privileged requester', () => {
   let app: TestApp;
@@ -83,42 +79,34 @@ describe('Read-filter hides restricted rows from a non-privileged requester', ()
     expect(seen.projects.items.map((p) => p.id)).not.toContain(projectId);
   });
 
-  // Language/Engagement fixtures can't be created under postgres yet (domains
-  // not migrated on this branch) — reported as skipped there, not passed.
-  // Covered under neo4j; see the migration-todo at the top of this file.
-  (isPostgres ? it.skip : it)(
-    'hides a non-member engagement from the engagements list',
-    async () => {
-      // Fixture setup must run as admin: the ambient session at this point is
-      // the outsider Intern (registerUser logs the session in as the new user),
-      // who can't even read the project.
-      const engagementId = await runAsAdmin(app, async () => {
-        const language = await createLanguage(app);
-        const engagement = await createLanguageEngagement(app, {
-          project: projectId,
-          language: language.id,
-          startDateOverride: mouStart,
-          endDateOverride: mouEnd,
-        });
-        return engagement.id;
+  it('hides a non-member engagement from the engagements list', async () => {
+    // Fixture setup must run as admin: the ambient session at this point is
+    // the outsider Intern (registerUser logs the session in as the new user),
+    // who can't even read the project.
+    const engagementId = await runAsAdmin(app, async () => {
+      const language = await createLanguage(app);
+      const engagement = await createLanguageEngagement(app, {
+        project: projectId,
+        language: language.id,
+        startDateOverride: mouStart,
+        endDateOverride: mouEnd,
       });
+      return engagement.id;
+    });
 
-      const admin = await runAsAdmin(
-        app,
-        async () =>
-          await app.graphql.query(EngagementsDoc, { input: { count: 100 } }),
-      );
-      expect(admin.engagements.items.map((e) => e.id)).toContain(engagementId);
+    const admin = await runAsAdmin(
+      app,
+      async () =>
+        await app.graphql.query(EngagementsDoc, { input: { count: 100 } }),
+    );
+    expect(admin.engagements.items.map((e) => e.id)).toContain(engagementId);
 
-      const seen = await outsider.runAs(
-        async () =>
-          await app.graphql.query(EngagementsDoc, { input: { count: 100 } }),
-      );
-      expect(seen.engagements.items.map((e) => e.id)).not.toContain(
-        engagementId,
-      );
-    },
-  );
+    const seen = await outsider.runAs(
+      async () =>
+        await app.graphql.query(EngagementsDoc, { input: { count: 100 } }),
+    );
+    expect(seen.engagements.items.map((e) => e.id)).not.toContain(engagementId);
+  });
 
   it('hides a partnership from a requester with no Partnership read grant', async () => {
     const admin = await runAsAdmin(
@@ -139,10 +127,8 @@ describe('Read-filter hides restricted rows from a non-privileged requester', ()
 });
 
 // The member condition on Partner/Organization traverses the partnership
-// chain (project → partnership → partner [→ organization]), mirroring the
-// Neo4j list queries' wrapContext patterns. The User member condition is
-// "requester is an active member of ANY project" (Neo4j's unbound-project
-// exists()). Each arm gets a negative (non-member/insufficient-sensitivity
+// chain (project → partnership → partner [→ organization]). The User member
+// condition is "requester is an active member of ANY project". Each arm gets a negative (non-member/insufficient-sensitivity
 // sees nothing) and a positive (membership flips visibility), so a vacuous
 // empty list can't pass for the wrong reason.
 describe('Member/sensitivity condition arms via the partnership chain', () => {

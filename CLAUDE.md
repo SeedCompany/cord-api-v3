@@ -2,25 +2,24 @@
 
 ## Project Summary
 
-CORD API v3 is a **Bible translation project management API** built with NestJS + TypeScript. It is 100% GraphQL (code-first, no REST). The project is actively migrating its primary database from Neo4j to **Gel** (a next-generation graph database formerly known as EdgeDB).
+CORD API v3 is a **Bible translation project management API** built with NestJS + TypeScript. It is 100% GraphQL (code-first, no REST). The database is **PostgreSQL**, accessed through **Drizzle**. Production moved to Postgres from Neo4j in September 2026; the Neo4j and Gel code is gone.
 
 ---
 
 ## Tech Stack
 
-| Layer            | Choice                                                               |
-| ---------------- | -------------------------------------------------------------------- |
-| Framework        | NestJS v11 (Fastify adapter — not Express)                           |
-| Language         | TypeScript v5 (`type: "module"`, strict mode, ESM)                   |
-| API              | GraphQL Yoga, `@nestjs/graphql` code-first, graphql-ws subscriptions |
-| Primary DB (new) | Gel v2 (`gel`, `@gel/generate`)                                      |
-| Legacy DB        | Neo4j (`neo4j-driver`, `cypher-query-builder`)                       |
-| Queues           | BullMQ + Redis                                                       |
-| Auth             | JWT + argon2                                                         |
-| File storage     | AWS S3                                                               |
-| Package manager  | Yarn v4 (Berry) — use `yarn`, never `npm`                            |
-| Node             | >= 24                                                                |
-| Testing          | Jest 30 + `ts-jest`, ephemeral Gel DB per test file                  |
+| Layer           | Choice                                                               |
+| --------------- | -------------------------------------------------------------------- |
+| Framework       | NestJS v11 (Fastify adapter — not Express)                           |
+| Language        | TypeScript v5 (`type: "module"`, strict mode, ESM)                   |
+| API             | GraphQL Yoga, `@nestjs/graphql` code-first, graphql-ws subscriptions |
+| Database        | PostgreSQL 16 via Drizzle ORM (`drizzle-orm`, `pg`)                  |
+| Queues          | BullMQ + Redis                                                       |
+| Auth            | JWT + argon2                                                         |
+| File storage    | AWS S3                                                               |
+| Package manager | Yarn v4 (Berry) — use `yarn`, never `npm`                            |
+| Node            | >= 24                                                                |
+| Testing         | Jest 30 + `ts-jest`, ephemeral Postgres database per test file       |
 
 ---
 
@@ -30,23 +29,22 @@ CORD API v3 is a **Bible translation project management API** built with NestJS 
 src/
   app.module.ts          # Root module
   main.ts                # Bootstrap
-  components/            # 45+ feature modules (see below)
+  components/            # Feature modules
   core/                  # Global infrastructure
     authentication/      # JWT, session, guards
-    authorization/       # RBAC, policy engine, conditions
     config/              # ConfigService (dotenv)
     data-loader/         # DataLoader batching base classes
-    gel/                 # Gel DB client, generated types, seeding
+    database/            # TransactionRunner, @Transactional(), transaction hooks
+    drizzle/             # DrizzleService, schema, migrations, repository base, order-by helpers
     hooks/               # Internal event bus (re-export from @seedcompany/nest/hooks)
-    neo4j/               # Legacy Neo4j module (being phased out)
     queue/               # BullMQ setup
-    resources/           # Resource registry, @RegisterResource, ResourceMap
+    resources/           # Resource registry, @RegisterResource, ResourceMap, BaseNode
   common/                # Shared types, decorators, scalars, validators
 test/
-  setup/                 # createApp(), ephemeralGel(), faker patches
-  *.e2e-spec.ts          # E2E test files (primary test pattern)
+  setup/                 # createApp(), ephemeral Postgres, faker patches, shard sequencer
+  utility/               # createTestApp() and entity fixture helpers
   operations/            # Shared GraphQL operations for tests
-dbschema/                # Gel schema (.gel files, 30 domains)
+  *.e2e-spec.ts          # E2E test files (primary test pattern)
 ```
 
 ### Feature module anatomy
@@ -56,8 +54,7 @@ src/components/{entity}/
   {entity}.module.ts
   {entity}.resolver.ts
   {entity}.service.ts
-  {entity}.repository.ts          # Neo4j (legacy)
-  {entity}.gel.repository.ts      # Gel (new)
+  {entity}.repository.ts          # Drizzle repository
   {entity}.loader.ts              # DataLoader
   dto/
     index.ts                      # barrel export
@@ -66,9 +63,7 @@ src/components/{entity}/
     update-{entity}.dto.ts        # @InputType
     list-{entity}.dto.ts          # pagination input/output
   hooks/                          # event bus hooks
-  migrations/                     # application/data transformation migrations
-                                  # (src/components/*/migrations/); DB schema
-                                  # migrations are generated under dbschema/migrations/
+  handlers/                       # @OnHook handlers
 ```
 
 ---
@@ -78,32 +73,17 @@ src/components/{entity}/
 ```
 GraphQL request
   → Resolver (@Loader injection)
-  → DataLoader batches → service.readMany(ids, view)
+  → DataLoader batches → service.readMany(ids)
   → service calls repo.readMany()
-      splitDb() routes: if Gel repo exists, use it; else fall back to Neo4j
-  → repo applies privileges.filterToReadable()  ← auth WHERE clause injection
-  → repo applies hydrate()                       ← assembles full DTO
-  → repo applies input filters                   ← filter.define() / SQL conditions
-  → service calls privileges.secure(dto)         ← wraps fields in { value, canRead, canEdit }
+  → list reads apply the read policy as SQL   ← PolicyExecutor.applyReadFilter (not automatic)
+  → repo builds the DTO from rows             ← toDto()
+  → repo applies input filters / sorting      ← resolveOrderBy, SortMap
+  → service calls privileges.secure(dto)      ← wraps fields in { value, canRead, canEdit }
   → resolver returns secured DTO to GraphQL
 
-Mutations fire Hooks in the same DB transaction — sequential, awaited.
-Everything above the repository is DB-agnostic; splitDb() is the migration boundary.
+Mutations run in one transaction (DrizzleTransactionalMutationsInterceptor).
+Hooks fire inside that transaction — sequential, awaited.
 ```
-
----
-
-## Database Migration Status
-
-**Current state:** Neo4j is still the primary database. Gel repositories are being built domain-by-domain. `splitDb()` routes each domain to whichever implementation is ready.
-
-- `*.repository.ts` — Neo4j implementation (cypher-query-builder)
-- `*.gel.repository.ts` — Gel implementation (EdgeQL, generated client)
-- `splitDb(EntityRepository, { gel: EntityGelRepository })` — the routing provider
-
-**Do not remove Neo4j repositories** until a domain's Gel repository is fully built and validated.
-
-**Next phase (planning):** A subsequent migration from Gel to PostgreSQL (Kysely vs Drizzle) is under evaluation. Planning docs have not yet been committed to this repository — ask the team for access. Do not start this work without explicit instruction.
 
 ---
 
@@ -112,7 +92,7 @@ Everything above the repository is DB-agnostic; splitDb() is the migration bound
 ### DTOs
 
 ```typescript
-@RegisterResource({ db: e.Partnership })
+@RegisterResource()
 @ObjectType({ implements: Interfaces.members })
 export class Partnership extends Interfaces {
   static readonly Relations = (() => ({
@@ -128,13 +108,10 @@ export class Partnership extends Interfaces {
   readonly mouStart: SecuredDateNullable;
 }
 
-// Always declare resource in ResourceMap via module augmentation:
+// Always declare the resource in ResourceMap via module augmentation:
 declare module '~/core/resources/map' {
   interface ResourceMap {
     Partnership: typeof Partnership;
-  }
-  interface ResourceDBMap {
-    Partnership: typeof e.default.Partnership;
   }
 }
 ```
@@ -171,18 +148,14 @@ export class UserResolver {
 - Fire hooks via `Hooks` injection after mutations
 - Use `Privileges` for `secure(dto)` and permission checks
 
-### Repositories (Neo4j legacy)
+### Repositories
 
-- Extend `DtoRepository` from `~/core/neo4j`
-- Use `cypher-query-builder` for query composition
-- `matchProps()`, `ACTIVE`, `createProperty()`, `deactivateProperty()` are the Neo4j-specific helpers
+- Extend `DrizzleDtoRepository` from `~/core/drizzle` and implement `toDto(row)`
+- Tables come from `~/core/drizzle/schema`; query with `this.db` (transaction-aware)
+- Writes through `this.updateColumns()` / `this.softDelete()` invalidate the live-query store; a repository that hand-rolls writes must call `liveQueryStore.invalidate(...)` itself (the `live-query-invalidation.spec.ts` unit test enforces this)
+- List reads should call `PolicyExecutor.applyReadFilter` so rows the requester can't read never leave the database — the base class does not do it for you (the base `readMany` filters only by id and liveness)
+- Sort user-chosen keys with the `~/core/drizzle` order-by helpers (`resolveOrderBy`, `orderEntry`) so text sorts are collated and blanks sort last
 - Return `UnsecuredDto<T>` (never apply security in the repo)
-
-### Repositories (Gel)
-
-- Use the auto-generated Gel client from `~/core/gel`
-- EdgeQL queries via `e.select()`, `e.insert()`, etc.
-- Return `UnsecuredDto<T>`
 
 ### Hooks (internal event bus)
 
@@ -208,10 +181,20 @@ class SomeHandler {
 ### Authorization
 
 - `@RegisterResource` makes a DTO policy-aware
-- `privileges.filterToReadable()` injects a database-level WHERE clause
+- `PolicyExecutor.applyReadFilter` adds the read policy to a query's WHERE clause (each condition's `asDrizzleCondition`)
 - `privileges.secure(unsecuredDto)` wraps each field in `{ value, canRead, canEdit }`
 - Policies are defined in `src/components/authorization/policies/`
 - Conditions are in `src/components/authorization/policy/conditions/`
+
+---
+
+## Database
+
+- Schema: `src/core/drizzle/schema`
+- Migrations: hand-written SQL in `src/core/drizzle/migrations`, each with an entry in `migrations/meta/_journal.json`; `DrizzleMigrator` applies them at boot
+- **Don't run `yarn migrate:generate`** — there are no drizzle-kit snapshots, so it emits the whole schema
+- Drizzle skips a journal entry whose `when` is not later than the newest one a database has applied, so a new entry's `when` must be later than every existing one
+- Soft-delete tables use `deleted_at`; uniqueness is a partial unique index `… WHERE deleted_at IS NULL`, never an inline UNIQUE
 
 ---
 
@@ -221,12 +204,14 @@ class SomeHandler {
 
 ```bash
 yarn test          # unit tests
-yarn test:e2e      # e2e tests (spins up full NestJS app + ephemeral Gel DB)
+export POSTGRES_URL='postgresql://postgres:postgres@localhost:5432/cord?sslmode=no-verify'
+yarn test:e2e      # e2e tests (full NestJS app + ephemeral Postgres database per file)
+yarn test:e2e --testPathPatterns=<pattern>   # one spec
 ```
 
 - E2E tests live in `test/*.e2e-spec.ts`
-- Each test file gets its own ephemeral Gel database via `ephemeralGel()` in `createApp()`
-- Use `createApp()` from `test/setup/create-app.ts` — do not bootstrap the app manually
+- `POSTGRES_URL` must be a real environment variable — the per-file database is created before the app (and dotenv) loads
+- Use `createApp()` from `test/setup/create-app.ts` (or `createTestApp()` from `test/utility`) — do not bootstrap the app manually
 - Use faker helpers from `test/operations/` for creating entities
 - **Do NOT use `jest.unstable_mockModule`** in any spec file — it causes "import after environment torn down" errors across the entire test suite (ESM contamination)
 - When creating language engagements in tests, always set `startDateOverride` and `endDateOverride` to match the project's MOU window, not `DateTime.now()` — otherwise progress reports won't exist for the expected fiscal quarter
@@ -239,15 +224,11 @@ yarn test:e2e      # e2e tests (spins up full NestJS app + ephemeral Gel DB)
 # Development
 yarn start:dev          # dev server with hot reload
 yarn start:debug        # debug mode
+yarn start -- --gen-schema   # write schema.graphql and exit (no database needed)
 
 # Build
 yarn build              # compile to dist/
 yarn start:prod         # run compiled output
-
-# Database
-yarn gel:gen            # regenerate Gel TypeScript client (run after schema changes)
-yarn gel:seed           # seed development data
-yarn gel:migration      # run DB migrations via CLI console
 
 # Code quality
 yarn lint               # ESLint --fix, fails on any warning (--max-warnings 0)
@@ -258,16 +239,16 @@ yarn test               # unit (Jest, Unit project)
 yarn test:e2e           # e2e (Jest, E2E project)
 
 # Utilities
-yarn clean              # remove dist, schema.graphql, generated gel files
+yarn clean              # remove dist, schema.graphql
 yarn repl               # TypeScript REPL with app context
-yarn console -- [cmd]   # CLI commands (e.g., gel migration)
+yarn console -- [cmd]   # CLI commands
 ```
 
 ---
 
 ## Code Conventions
 
-- **File naming:** kebab-case, `{entity}.{role}.ts` — e.g. `user.service.ts`, `user.gel.repository.ts`
+- **File naming:** kebab-case, `{entity}.{role}.ts` — e.g. `user.service.ts`, `user.repository.ts`
 - **Barrel exports:** each `dto/` folder has an `index.ts` that re-exports everything
 - **Path aliases:** use `~/` for `src/` (e.g., `import { ID } from '~/common'`), not relative imports across modules
 - **No `any`:** TypeScript strict mode. Use `unknown` and narrow.
@@ -281,11 +262,10 @@ yarn console -- [cmd]   # CLI commands (e.g., gel migration)
 
 ## Important Gotchas
 
-1. **`splitDb()` is the migration boundary.** Do not change the service/loader/resolver layers during a migration — only the repository layer changes.
-2. **`*.neo4j.repository.ts` vs `*.repository.ts`**: Some modules use a separate `*.neo4j.repository.ts` filename; others embed Neo4j logic in the base `*.repository.ts`. Follow the existing pattern for the domain you're working in.
-3. **Project + ProjectMember have circular filter dependencies** via lazy thunks — they must be migrated together.
-4. **`status` on projects is a GENERATED column** — derived from `step`. Never write to it directly.
-5. **Changeset-aware fields must be enumerated explicitly** — do not use an open JSONB blob.
-6. **Hooks run inside the triggering transaction** — if a hook handler throws, the entire operation rolls back.
+1. **CI boots the app with no database** (`--gen-schema` runs first in every job). Anything that touches the database at boot must skip when `config.isGenSchema` is set.
+2. **`status` on projects is a GENERATED column** — derived from `step`. Never write to it directly.
+3. **Changesets were not carried forward.** The GraphQL surface (`changeset` args, `Project.changeRequests`) stays because the web app selects it, but nothing stores changesets.
+4. **Hooks run inside the triggering transaction** — if a hook handler throws, the entire operation rolls back. Work that must happen only after commit goes through `TransactionHooks.afterCommitOrNow(fn)`: inside a GraphQL mutation it waits for the commit, anywhere else it runs right away. Plain `afterCommit` is only drained for mutations.
+5. **`TransactionRetryInformer.markForRetry`** re-runs the whole transaction, so a handler that uses it must be idempotent.
+6. **Non-unique sorts tie on the random `id`**, so give list sorts a meaningful tiebreaker when order matters.
 7. **`@seedcompany/*` packages** are internal — `@seedcompany/nest`, `@seedcompany/common`, `@seedcompany/data-loader`, etc. Check their source in `node_modules` if docs are sparse.
-8. **Gel schema files** in `dbschema/` cover ~30 domains and are useful as a reference for data shape. ~14 domains have no Gel schema and require reading the Neo4j repository directly.
