@@ -1,12 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { type Node, node, type Query, relation } from 'cypher-query-builder';
+import { node, type Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { type ID, type Range } from '~/common';
+import { type ID } from '~/common';
 import { DatabaseService } from '~/core/neo4j';
 import { ACTIVE, collect } from '~/core/neo4j/query';
+import { type DbScriptureReferences } from './db-scripture-references';
 import { ScriptureRange, type ScriptureRangeInput } from './dto';
-
-export type DbScriptureReferences = ReadonlyArray<Node<Range<number>>>;
 
 @Injectable()
 export class ScriptureReferenceRepository {

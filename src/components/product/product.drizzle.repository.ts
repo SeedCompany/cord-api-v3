@@ -36,8 +36,7 @@ import {
   products,
 } from '~/core/drizzle/schema';
 import { LiveQueryStore } from '~/core/live-query';
-import { type BaseNode } from '~/core/neo4j/results';
-import { type ResourceLike } from '~/core/resources';
+import { type BaseNode, type ResourceLike } from '~/core/resources';
 import { type ScopedRole } from '../authorization/dto/role.dto';
 import { requesterScopeByProject } from '../project/project-member/membership-scope';
 import {

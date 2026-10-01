@@ -1,7 +1,7 @@
 import { Inject } from '@nestjs/common';
 import { and, asc, eq, isNull } from 'drizzle-orm';
 import { LazyGetter as Once } from 'lazy-get-decorator';
-import { DateTime } from 'luxon';
+import { DateTime, type DurationLikeObject } from 'luxon';
 import {
   EnhancedResource,
   generateId,
@@ -20,8 +20,7 @@ import {
   promptVariantResponses,
 } from '~/core/drizzle/schema';
 import { LiveQueryStore } from '~/core/live-query';
-import { defaultPermanentAfter } from '~/core/neo4j/query/properties/update-property';
-import { type BaseNode } from '~/core/neo4j/results';
+import { type BaseNode } from '~/core/resources';
 import { type EdgePrivileges, Privileges } from '../authorization';
 import { type ChildListAction } from '../authorization/policy/actions';
 import {
@@ -31,6 +30,9 @@ import {
   type UpdatePromptVariantResponse,
 } from './dto';
 import { type ListEdge } from './prompt-variant-response.repository';
+
+/** How long after a change the previous response stays restorable. */
+const permanentAfter: DurationLikeObject = { minutes: 30 };
 
 type ResponseRow = typeof promptVariantResponses.$inferSelect & {
   entries: Array<typeof promptVariantResponseEntries.$inferSelect>;
@@ -158,7 +160,7 @@ export const PromptVariantResponseDrizzleRepository = <
             isNull(promptVariantResponseEntries.deletedAt),
           ),
         );
-      const permanentCutoff = DateTime.now().minus(defaultPermanentAfter);
+      const permanentCutoff = DateTime.now().minus(permanentAfter);
       const isPermanent =
         entry && DateTime.fromJSDate(entry.createdAt) <= permanentCutoff;
       if (entry && !isPermanent) {

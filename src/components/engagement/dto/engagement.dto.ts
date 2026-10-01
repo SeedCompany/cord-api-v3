@@ -22,8 +22,8 @@ import {
   SensitivityField,
   type UnsecuredDto,
 } from '~/common';
-import { type BaseNode } from '~/core/neo4j/results';
 import {
+  type BaseNode,
   type LinkTo,
   type LinkToUnknown,
   RegisterResource,

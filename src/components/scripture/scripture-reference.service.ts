@@ -5,11 +5,9 @@ import { ConfigService } from '~/core/config';
 import { DrizzleService } from '~/core/drizzle/drizzle.service';
 import { products } from '~/core/drizzle/schema';
 import { ILogger, Logger } from '~/core/logger';
+import { type DbScriptureReferences } from './db-scripture-references';
 import { ScriptureRange, type ScriptureRangeInput } from './dto';
-import {
-  type DbScriptureReferences,
-  ScriptureReferenceRepository,
-} from './scripture-reference.repository';
+import { ScriptureReferenceRepository } from './scripture-reference.repository';
 
 export class ScriptureReferenceService {
   constructor(

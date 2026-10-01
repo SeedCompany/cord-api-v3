@@ -15,7 +15,7 @@ import {
   SecuredProperty,
   ServerException,
 } from '~/common';
-import { type BaseNode } from '~/core/neo4j/results';
+import { type BaseNode } from '~/core/resources';
 import { RegisterResource } from '~/core/resources';
 import { FileNodeType } from './file-node-type.enum';
 

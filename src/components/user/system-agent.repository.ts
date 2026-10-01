@@ -1,13 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { CachedByArg } from '@seedcompany/common';
-import { type Role } from '~/common';
-import { DbTraceLayer } from '~/core/neo4j';
+import { type Role, TraceLayer } from '~/common';
 import { type SystemAgent } from './dto';
 
 @Injectable()
 export abstract class SystemAgentRepository {
   constructor() {
-    DbTraceLayer.applyToInstance(this);
+    TraceLayer.as('db').applyToInstance(this);
   }
 
   @CachedByArg()

@@ -17,7 +17,7 @@ import {
   type SortMap,
 } from '~/core/drizzle';
 import { posts, projectMembers } from '~/core/drizzle/schema';
-import { type BaseNode } from '~/core/neo4j/results';
+import { type BaseNode } from '~/core/resources';
 import { type CreatePost, Post, type UpdatePost } from './dto';
 import { type PostListInput } from './dto/list-posts.dto';
 

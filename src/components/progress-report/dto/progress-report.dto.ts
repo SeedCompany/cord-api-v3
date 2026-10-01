@@ -8,7 +8,7 @@ import {
   SecuredProperty,
 } from '~/common';
 import { sortingForEnumIndex } from '~/core/neo4j/query';
-import { type BaseNode } from '~/core/neo4j/results';
+import { type BaseNode } from '~/core/resources';
 import { RegisterResource } from '~/core/resources';
 import { Commentable } from '../../comments/dto';
 import { LanguageEngagement } from '../../engagement/dto';

@@ -15,7 +15,7 @@ import {
   resolveResourceBaseNode,
 } from '~/core/drizzle';
 import { comments } from '~/core/drizzle/schema';
-import { type BaseNode } from '~/core/neo4j/results';
+import { type BaseNode } from '~/core/resources';
 import { CommentThreadDrizzleRepository } from './comment-thread.drizzle.repository';
 import {
   Comment,
