@@ -1,8 +1,7 @@
 import { and, inArray, isNull, sql, type SQL } from 'drizzle-orm';
 import { type PgColumn, type PgTable, unionAll } from 'drizzle-orm/pg-core';
-import { DateTime } from 'luxon';
 import { type ID } from '~/common';
-import { type BaseNode } from '~/core/resources';
+import { type LinkToUnknown, type ResourceMap } from '~/core/resources';
 import { type DrizzleDb } from './drizzle.service';
 import {
   budgetRecords,
@@ -36,14 +35,10 @@ import {
   users,
 } from './schema';
 
-/**
- * A resource row reduced to what a {@link BaseNode} needs.
- * `labels` is concrete-typename-first, without the trailing `BaseNode`.
- */
+/** A resource row reduced to its id and concrete GraphQL `__typename`. */
 interface ResourceRow {
   readonly id: ID;
-  readonly createdAt: Date;
-  readonly labels: readonly string[];
+  readonly typename: string;
 }
 
 /**
@@ -56,18 +51,16 @@ interface ResourceRow {
  *
  * Each entry contributes a SELECT rather than running one. That is what lets the
  * probe below be a single round trip no matter how many tables are registered —
- * see {@link resolveResourceBaseNodes} for why that matters.
+ * see {@link runBranches} for why that matters.
  *
- * A branch MUST filter liveness. A soft-deleted row must not resolve: Neo4j's soft
- * delete strips every label including `BaseNode`, so the Cypher's
- * `node(container, 'BaseNode')` match drops it. Returning it here instead produces
- * a live-looking node that the concrete ResourceLoader will then fail to load —
- * surfacing as `NotFoundException` inside a non-null GraphQL field.
+ * A branch MUST filter liveness. A soft-deleted row must not resolve: returning it
+ * produces a live-looking reference that the concrete ResourceLoader will then fail
+ * to load — surfacing as `NotFoundException` inside a non-null GraphQL field.
  */
 interface ResourceTable {
   /** The concrete GraphQL `__typename`s this table can yield. */
   readonly typenames: readonly string[];
-  /** Selects `{ id, createdAt, labels }` for these ids, live rows only. */
+  /** Selects `{ id, typename }` for these ids, live rows only. */
   readonly branch: (db: DrizzleDb, ids: readonly ID[]) => ResourceSelect;
 }
 
@@ -85,32 +78,21 @@ const suffixed = (values: readonly string[], suffix: string) =>
   Object.fromEntries(values.map((value) => [value, `${value}${suffix}`]));
 
 /**
- * Any table whose rows are resources: an id, a creation time, and — unless the
- * domain hard-deletes — a soft-delete marker.
+ * Any table whose rows are resources: an id and — unless the domain
+ * hard-deletes — a soft-delete marker.
  */
 type ResourceTableColumns = PgTable & {
   readonly id: PgColumn;
-  readonly createdAt: PgColumn;
   readonly deletedAt?: PgColumn;
 };
 
-/**
- * One branch of the union: the three things a BaseNode needs, from one table.
- *
- * Built through the query builder rather than as raw text so the driver's own
- * type parsing applies — the timestamp arrives as a `Date` and the label array as
- * an array, instead of whatever a hand-written statement's rows happen to hold.
- */
+/** One branch of the union: the id and concrete typename, from one table. */
 const selectResourceRows = (
   db: DrizzleDb,
   table: ResourceTableColumns,
-  labels: SQL<string[]>,
+  typename: SQL<string>,
   where: SQL | undefined,
-) =>
-  db
-    .select({ id: table.id, createdAt: table.createdAt, labels })
-    .from(table)
-    .where(where);
+) => db.select({ id: table.id, typename }).from(table).where(where);
 
 type ResourceSelect = ReturnType<typeof selectResourceRows>;
 
@@ -134,7 +116,7 @@ const ofOneType = (
     selectResourceRows(
       db,
       table,
-      sql`array[${typename}]::text[]`,
+      sql<string>`${typename}::text`,
       liveWithId(table, ids),
     ),
 });
@@ -142,23 +124,18 @@ const ofOneType = (
 /**
  * A table holding several concrete types, told apart by a stored column.
  *
- * `extraLabel` appends a family label, so a project row carries both
- * `TranslationProject` and `Project` exactly as it did when each family had its
- * own hand-written entry.
- *
  * A stored value with no mapping is excluded by the WHERE, so an id of an unmapped
  * subtype behaves like one that does not exist rather than resolving to a wrong
- * type or a NULL label.
+ * type or a NULL typename.
  */
 const ofSeveralTypes = (
   table: ResourceTableColumns & { readonly type: PgColumn },
   typenameByStoredValue: Readonly<Record<string, string>>,
-  extraLabel?: string,
 ): ResourceTable => {
   const stored = Object.keys(typenameByStoredValue);
   // Compared and returned as text so one CASE serves enum and text columns alike,
-  // and so every branch's `labels` shares a type across the UNION.
-  const concrete = sql`case ${table.type}::text ${sql.join(
+  // and so every branch's `typename` shares a type across the UNION.
+  const concrete = sql<string>`case ${table.type}::text ${sql.join(
     Object.entries(typenameByStoredValue).map(
       ([value, typename]) => sql`when ${value} then ${typename}`,
     ),
@@ -170,9 +147,7 @@ const ofSeveralTypes = (
       selectResourceRows(
         db,
         table,
-        extraLabel
-          ? sql`array[${concrete}, ${extraLabel}]::text[]`
-          : sql`array[${concrete}]::text[]`,
+        concrete,
         and(liveWithId(table, ids), inArray(sql`${table.type}::text`, stored)),
       ),
   };
@@ -186,8 +161,7 @@ const ofSeveralTypes = (
  * so an id this registry cannot place is not a niche case. The field is non-null,
  * so failing to resolve does not produce an empty list: the DataLoader raises a
  * "could not find" error, which nulls the parent object and, inside a list, the
- * whole list. Neo4j had no equivalent gap because it matched any `BaseNode`. So a
- * new table must be added here the moment its domain is ported.
+ * whole list. So a new resource table must be added here when it is created.
  *
  * `ProjectChangeRequest` is the sole deliberate omission: changesets are not
  * carried forward, so there is no table to register.
@@ -196,15 +170,10 @@ const RESOURCE_TABLES: readonly ResourceTable[] = [
   ofOneType(users, 'User'),
   ofOneType(languages, 'Language'),
   ofOneType(partners, 'Partner'),
-  ofSeveralTypes(
-    projects,
-    suffixed(projectTypeEnum.enumValues, 'Project'),
-    'Project',
-  ),
+  ofSeveralTypes(projects, suffixed(projectTypeEnum.enumValues, 'Project')),
   ofSeveralTypes(
     engagements,
     suffixed(engagementTypeEnum.enumValues, 'Engagement'),
-    'Engagement',
   ),
   // Reports of all three kinds share one table. Soft-deleted as of migration 0035,
   // which `liveWithId` picks up from the column's presence.
@@ -261,10 +230,10 @@ const TABLE_BY_TYPENAME: ReadonlyMap<string, ResourceTable> = new Map(
   ),
 );
 
-const toBaseNode = (row: ResourceRow): BaseNode => ({
-  identity: row.id,
-  labels: [...row.labels, 'BaseNode'],
-  properties: { id: row.id, createdAt: DateTime.fromJSDate(row.createdAt) },
+// The typename comes from the registry above, so it names a registered resource.
+const toRef = (row: ResourceRow): LinkToUnknown => ({
+  __typename: row.typename as keyof ResourceMap,
+  id: row.id,
 });
 
 /**
@@ -286,63 +255,53 @@ const runBranches = async (
   if (!first) return [];
   // `unionAll` needs two or more; one branch is already a complete query.
   const rows = !second ? await first : await unionAll(first, second, ...rest);
-  return rows.map((row) => ({
-    id: row.id as ID,
-    createdAt: row.createdAt as Date,
-    labels: row.labels,
-  }));
+  return rows.map((row) => ({ id: row.id as ID, typename: row.typename }));
 };
 
 /**
- * Resolve an arbitrary resource id to a Neo4j-shaped {@link BaseNode} by probing
- * every table in the registry — the same job the Neo4j `DtoRepository.getBaseNode(id)`
- * did against the single graph. Polymorphic domains (Comments, Post, ToolUsage)
- * hand the service this node so `ResourceLoader.loadByBaseNode` can resolve the
- * concrete type from `labels` and load the full DTO.
+ * Resolve an arbitrary resource id to a `{ __typename, id }` reference by probing
+ * every table in the registry. Polymorphic domains (Comments, Post, ToolUsage)
+ * hand the service this reference so `ResourceLoader.loadByRef` can load the full
+ * DTO.
  *
  * Use this only when the caller has an id and no discriminator. When a stored
- * `*_type` column is available, prefer {@link resolveResourceBaseNodesByType} — it
+ * `*_type` column is available, prefer {@link resolveResourceRefsByType} — it
  * reads fewer tables and can distinguish "deleted" from "unsupported type".
- *
- * This is the Postgres implementation, not a shim: it stays for as long as the
- * loader takes a {@link BaseNode}. Retiring that shape in favor of
- * `{ id, __typename }` references is a separate refactor.
  */
-export const resolveResourceBaseNode = async (
+export const resolveResourceRef = async (
   db: DrizzleDb,
   id: ID,
-): Promise<BaseNode | undefined> => {
+): Promise<LinkToUnknown | undefined> => {
   const rows = await runBranches(
     RESOURCE_TABLES.map((table) => table.branch(db, [id])),
   );
-  return rows[0] ? toBaseNode(rows[0]) : undefined;
+  return rows[0] ? toRef(rows[0]) : undefined;
 };
 
 /**
- * Batched id → {@link BaseNode} probe: one statement regardless of how many ids or
- * how many tables are registered.
+ * Batched id → reference probe: one statement regardless of how many ids or how
+ * many tables are registered.
  */
-export const resolveResourceBaseNodes = async (
+export const resolveResourceRefs = async (
   db: DrizzleDb,
   ids: readonly ID[],
-): Promise<ReadonlyMap<ID, BaseNode>> => {
+): Promise<ReadonlyMap<ID, LinkToUnknown>> => {
   const unique = [...new Set(ids)];
-  const nodes = new Map<ID, BaseNode>();
-  if (unique.length === 0) return nodes;
+  const refs = new Map<ID, LinkToUnknown>();
+  if (unique.length === 0) return refs;
   const rows = await runBranches(
     RESOURCE_TABLES.map((table) => table.branch(db, unique)),
   );
-  for (const row of rows) nodes.set(row.id, toBaseNode(row));
-  return nodes;
+  for (const row of rows) refs.set(row.id, toRef(row));
+  return refs;
 };
 
-export interface ResolvedResourceBaseNodes {
+export interface ResolvedResourceRefs {
   /**
-   * The live node per id. An id whose row is missing or soft-deleted is ABSENT —
-   * callers must drop it, matching the Cypher's required
-   * `node(container, 'BaseNode')` match.
+   * The live reference per id. An id whose row is missing or soft-deleted is
+   * ABSENT, and callers must drop it.
    */
-  readonly nodes: ReadonlyMap<ID, BaseNode>;
+  readonly refs: ReadonlyMap<ID, LinkToUnknown>;
   /**
    * `__typename`s no registry entry claims. This is a COVERAGE GAP, not a
    * deletion, and callers must surface it — silently dropping these makes a
@@ -352,19 +311,19 @@ export interface ResolvedResourceBaseNodes {
 }
 
 /**
- * Resolve ids to {@link BaseNode}s using a stored discriminator, so only the
- * tables actually referenced are read — typically one or two per page rather than
- * the whole registry.
+ * Resolve ids to references using a stored discriminator, so only the tables
+ * actually referenced are read — typically one or two per page rather than the
+ * whole registry.
  *
  * The discriminator also lets a caller tell the two failure modes apart, which an
  * id-only probe cannot: a known type that resolved to nothing is a deleted
  * resource (drop it), while an unclaimed type means the registry is behind the
  * schema (a bug worth logging).
  */
-export const resolveResourceBaseNodesByType = async (
+export const resolveResourceRefsByType = async (
   db: DrizzleDb,
   refs: ReadonlyArray<{ id: ID; type: string }>,
-): Promise<ResolvedResourceBaseNodes> => {
+): Promise<ResolvedResourceRefs> => {
   const idsByTable = new Map<ResourceTable, Set<ID>>();
   const unknownTypes = new Set<string>();
   for (const ref of refs) {
@@ -380,7 +339,7 @@ export const resolveResourceBaseNodesByType = async (
   const rows = await runBranches(
     [...idsByTable].map(([table, ids]) => table.branch(db, [...ids])),
   );
-  const nodes = new Map<ID, BaseNode>();
-  for (const row of rows) nodes.set(row.id, toBaseNode(row));
-  return { nodes, unknownTypes };
+  const resolved = new Map<ID, LinkToUnknown>();
+  for (const row of rows) resolved.set(row.id, toRef(row));
+  return { refs: resolved, unknownTypes };
 };

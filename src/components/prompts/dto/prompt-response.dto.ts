@@ -14,11 +14,7 @@ import {
   type UnsecuredDto,
   Variant,
 } from '~/common';
-import {
-  type BaseNode,
-  type LinkTo,
-  type LinkToUnknown,
-} from '~/core/resources';
+import { type LinkTo, type LinkToUnknown } from '~/core/resources';
 import { type Prompt, SecuredPrompt } from './prompt.dto';
 
 @ObjectType()
@@ -60,7 +56,7 @@ export class PromptVariantResponse<
 
   readonly creator: Secured<LinkTo<'User'>>;
 
-  readonly parent: BaseNode;
+  readonly parent: LinkToUnknown;
 
   @Field(() => SecuredPrompt)
   readonly prompt: SecuredPrompt & SetUnsecuredType<ID<Prompt>>;

@@ -16,7 +16,7 @@ import {
 } from '~/core/drizzle';
 import { fileNodes } from '~/core/drizzle/schema';
 import { LiveQueryStore } from '~/core/live-query';
-import { type BaseNode } from '~/core/resources';
+import { type LinkToUnknown } from '~/core/resources';
 import {
   FileListInput,
   type FileListOutput,
@@ -168,20 +168,16 @@ export class FileRepository {
     };
   }
 
-  async getBaseNode(id: ID): Promise<BaseNode | undefined> {
+  async getRef(id: ID): Promise<LinkToUnknown | undefined> {
     const [row] = await this.db
-      .select({
-        id: fileNodes.id,
-        type: fileNodes.type,
-        createdAt: fileNodes.createdAt,
-      })
+      .select({ id: fileNodes.id, type: fileNodes.type })
       .from(fileNodes)
       .where(and(eq(fileNodes.id, id), sql`${fileNodes.deletedAt} is null`))
       .limit(1);
     if (!row) {
       return undefined;
     }
-    return this.fakeBaseNode(row.id, row.type, row.createdAt);
+    return this.fileRef(row.id, row.type);
   }
 
   async createDirectory(
@@ -208,9 +204,8 @@ export class FileRepository {
     name,
     public: isPublic,
   }: {
-    // `resource` + `relation` describe the attachment point in Neo4j (an
-    // incoming `[relation]` edge from the owning BaseNode). Under PG this is a
-    // no-op: the consuming domain's own repo writes the FK column directly
+    // `resource` + `relation` describe the attachment point. They are not
+    // written here: the consuming domain's own repo writes the FK column directly
     // (e.g. `project.repository.ts` sets `rootDirectoryId`), and
     // `resolveFileRootAttachments` resolves `rootAttachedTo` at read time by
     // reverse-looking-up which row's FK points at this id — see
@@ -314,7 +309,7 @@ export class FileRepository {
   async move(
     id: ID,
     newParentId: ID,
-  ): Promise<{ oldParent: BaseNode; newParent: BaseNode }> {
+  ): Promise<{ oldParent: LinkToUnknown; newParent: LinkToUnknown }> {
     const [current] = await this.db
       .select({ parentId: fileNodes.parentId })
       .from(fileNodes)
@@ -324,11 +319,7 @@ export class FileRepository {
       throw new InputException('Old or new parent does not exist');
     }
     const parents = await this.db
-      .select({
-        id: fileNodes.id,
-        type: fileNodes.type,
-        createdAt: fileNodes.createdAt,
-      })
+      .select({ id: fileNodes.id, type: fileNodes.type })
       .from(fileNodes)
       .where(inArray(fileNodes.id, [current.parentId, newParentId]));
     const oldRow = parents.find((p) => p.id === current.parentId);
@@ -361,8 +352,8 @@ export class FileRepository {
       .set({ parentId: newParentId })
       .where(eq(fileNodes.id, id));
     return {
-      oldParent: this.fakeBaseNode(oldRow.id, oldRow.type, oldRow.createdAt),
-      newParent: this.fakeBaseNode(newRow.id, newRow.type, newRow.createdAt),
+      oldParent: this.fileRef(oldRow.id, oldRow.type),
+      newParent: this.fileRef(newRow.id, newRow.type),
     };
   }
 
@@ -487,8 +478,8 @@ export class FileRepository {
     return rows.map((row) => {
       const root = roots.get(row.id);
       const rootNode = root
-        ? this.fakeBaseNode(root.id, root.type, root.createdAt)
-        : this.fakeBaseNode(row.id, row.type, row.createdAt);
+        ? this.fileRef(root.id, root.type)
+        : this.fileRef(row.id, row.type);
       const base = {
         id: row.id,
         type: row.type,
@@ -496,7 +487,6 @@ export class FileRepository {
         public: row.public ?? false,
         createdAt: toDateTime(row.createdAt),
         createdById: row.createdById,
-        root: rootNode,
         // The resource holding the tree root. Falls back to the root node
         // itself (a Directory — never ProgressReportMedia, so the upload-time
         // file-is-media check short-circuits) when nothing references it, e.g.
@@ -696,19 +686,8 @@ export class FileRepository {
     return parent?.public ?? null;
   }
 
-  private fakeBaseNode(
-    id: ID,
-    type: FileNodeType,
-    createdAt: Date | string,
-  ): BaseNode {
-    return {
-      identity: id,
-      labels: [type, 'FileNode', 'BaseNode'],
-      properties: {
-        id,
-        createdAt: toDateTime(createdAt),
-      },
-    } as unknown as BaseNode;
+  private fileRef(id: ID, type: FileNodeType): LinkToUnknown {
+    return { __typename: type, id };
   }
 }
 

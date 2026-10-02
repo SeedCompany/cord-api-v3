@@ -21,7 +21,7 @@ import {
   promptVariantResponses,
 } from '~/core/drizzle/schema';
 import { LiveQueryStore } from '~/core/live-query';
-import { type BaseNode } from '~/core/resources';
+import { type LinkToUnknown } from '~/core/resources';
 import { type EdgePrivileges, Privileges } from '../authorization';
 import { type ChildListAction } from '../authorization/policy/actions';
 import {
@@ -216,17 +216,10 @@ export const PromptVariantResponseRepository = <
     protected toDto(
       row: ResponseRow,
     ): UnsecuredDto<PromptVariantResponse<TVariant>> {
-      // Neo4j-shaped BaseNode so ResourceLoader.loadByBaseNode() keeps
-      // working for the parent field / privilege context — only labels +
-      // properties.id are read (createdAt is along for type shape).
       const parentResource = EnhancedResource.of(parentEdge[0] as any);
-      const parent: BaseNode = {
-        identity: row.parentId,
-        labels: [parentResource.name, 'BaseNode'],
-        properties: {
-          id: row.parentId,
-          createdAt: DateTime.fromJSDate(row.createdAt),
-        },
+      const parent: LinkToUnknown = {
+        __typename: parentResource.name,
+        id: row.parentId,
       };
       // `canDelete` is intersected in because `UnsecuredDto` deliberately drops
       // it — the policy layer in the service decides it.

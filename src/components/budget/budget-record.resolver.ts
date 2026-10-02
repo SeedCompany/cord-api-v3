@@ -9,12 +9,26 @@ import { mapSecuredValue } from '~/common';
 import { Loader, type LoaderOf } from '~/core/data-loader';
 import { OrganizationLoader } from '../organization';
 import { SecuredOrganization } from '../organization/dto';
+import { BudgetLoader } from './budget.loader';
 import { BudgetService } from './budget.service';
-import { BudgetRecord, BudgetRecordUpdated, UpdateBudgetRecord } from './dto';
+import {
+  Budget,
+  BudgetRecord,
+  BudgetRecordUpdated,
+  UpdateBudgetRecord,
+} from './dto';
 
 @Resolver(BudgetRecord)
 export class BudgetRecordResolver {
   constructor(private readonly service: BudgetService) {}
+
+  @ResolveField(() => Budget)
+  async parent(
+    @Parent() record: BudgetRecord,
+    @Loader(BudgetLoader) budgets: LoaderOf<BudgetLoader>,
+  ): Promise<Budget> {
+    return await budgets.load({ id: record.budget.id, view: { active: true } });
+  }
 
   @ResolveField(() => SecuredOrganization)
   async organization(

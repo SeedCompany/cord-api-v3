@@ -39,10 +39,9 @@ export abstract class AggregateConditions<
   asDrizzleCondition(params: AsDrizzleParams<TResourceStatic>): SQL {
     const inner = this.conditions.map((condition) => {
       if (!condition.asDrizzleCondition) {
-        // migration-todo: fires for conditions not yet ported to Drizzle
-        // (creator / enum-field / variant / etc.) — port each alongside the
-        // first migrated domain whose policies need it. Post-cutover the
-        // throw stays as the fail-loud for brand-new conditions.
+        // Fires for a condition with no SQL form (creator / variant today) the
+        // first time a read policy needs one — implement it then. Stays as the
+        // fail-loud for brand-new conditions.
         throw new Error(
           `Condition ${condition.constructor.name} has not been ported to Drizzle — implement asDrizzleCondition`,
         );

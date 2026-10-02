@@ -211,11 +211,9 @@ const sensitivityRefForResource = (
           and "e"."deleted_at" is null
           and "p"."deleted_at" is null
       ), "languages"."sensitivity") <= ${accessLiteral}`;
-    // migration-todo: re-add a case per domain as it ports to Postgres
-    // (Engagement/Ceremony/Language read sensitivity via
-    // their parent project). Kept stripped so an unmigrated domain routed
-    // through Drizzle fails loud here instead of emitting SQL against a
-    // missing table.
+    // Add a case for each new project-scoped resource. The default throws so
+    // a resource without one fails loud instead of emitting SQL against the
+    // wrong table.
     //
     // migration-todo: these subselects don't check `projects.deleted_at` —
     // same soft-deleted-project liveness class as projectIdRefForResource in

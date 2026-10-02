@@ -204,12 +204,9 @@ export class ProgressReportMediaRepository {
       .where(eq(progressReportMedia.id, id));
   }
 
-  async deleteNode(objectOrId: { id: ID } | ID) {
-    const id = typeof objectOrId === 'string' ? objectOrId : objectOrId.id;
-    // Unlike `update` above, the Neo4j arm DOES announce here: it inherits
-    // DtoRepository.deleteNode, which defaults `resource` to `this.resource` and
-    // invalidates before deleting. This override bypasses that base entirely, so
-    // it has to do it itself.
+  async delete(id: ID): Promise<void> {
+    // Unlike `update` above, a delete announces itself: this is a hand-rolled
+    // write, so it invalidates live queries itself.
     this.liveQueryStore.invalidate([ReportMedia, id]);
     await this.db
       .update(progressReportMedia)

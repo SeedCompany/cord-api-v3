@@ -238,11 +238,7 @@ export class PartnershipRepository extends DrizzleDtoRepository<
     });
   }
 
-  async deleteNode(
-    object: { id: ID } | ID,
-    _options?: { changeset?: ID },
-  ): Promise<void> {
-    const id = typeof object === 'string' ? object : object.id;
+  async delete(id: ID): Promise<void> {
     await this.softDelete(id);
   }
 
@@ -556,12 +552,6 @@ export class PartnershipRepository extends DrizzleDtoRepository<
       // The requester's project-scoped roles — `member` policy conditions
       // read these for field-level permissions.
       scope,
-      // Required by the `parent` field on the DTO. The service constructs a
-      // BaseNode-shaped object; here we just pass the project id through.
-      parent: {
-        id: row.project.id,
-        __typename: `${row.project.type}Project`,
-      },
     };
     return dto as UnsecuredDto<Partnership>;
   }

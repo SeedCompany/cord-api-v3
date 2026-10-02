@@ -59,6 +59,7 @@ export class ProgressReportCommunityStoryResolver {
     @Loader(PeriodicReportLoader) reports: LoaderOf<PeriodicReportLoader>,
   ): Promise<PeriodicReport> {
     const response = await this.service.delete(id);
-    return await reports.load(response.parent.properties.id);
+    // These responses always hang off a progress report.
+    return await reports.load(response.parent.id as ID<PeriodicReport>);
   }
 }

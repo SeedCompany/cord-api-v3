@@ -7,7 +7,11 @@ import {
   type SetUnsecuredType,
   type UnsecuredDto,
 } from '~/common';
-import { type BaseNode, type LinkTo, RegisterResource } from '~/core/resources';
+import {
+  type LinkTo,
+  type LinkToUnknown,
+  RegisterResource,
+} from '~/core/resources';
 import { Tool } from '../../tool/dto';
 
 @RegisterResource()
@@ -17,7 +21,7 @@ import { Tool } from '../../tool/dto';
 export class ToolUsage extends Resource {
   static readonly Parent = 'dynamic';
 
-  readonly container: Secured<BaseNode>;
+  readonly container: Secured<LinkToUnknown>;
 
   @Field(() => Tool)
   readonly tool: Tool & SetUnsecuredType<UnsecuredDto<Tool>>;

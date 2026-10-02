@@ -170,7 +170,7 @@ export class PartnerService {
     this.privileges.for(Partner, object).verifyCan('delete');
 
     try {
-      await this.repo.deleteNode(object);
+      await this.repo.delete(object.id);
     } catch (exception: any) {
       throw new ServerException('Failed to delete', exception);
     }

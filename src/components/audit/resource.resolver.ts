@@ -49,9 +49,7 @@ export class ResourceHistoryResolver {
     }
     // `info.parentType.name` is the concrete GraphQL type GraphQL already
     // resolved this object to (e.g. MomentumTranslationProject), which is what
-    // the firing service records under. NOT `resource.__typename` — for the
-    // polymorphic interfaces (Engagement) that holds a Gel FQN like
-    // 'default::LanguageEngagement', which wouldn't match the stored row.
+    // the firing service records under.
     return await this.audit.list(info.parentType.name, resource.id, input);
   }
 }

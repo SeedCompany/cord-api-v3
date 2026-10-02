@@ -12,10 +12,10 @@ import {
   DrizzleDtoRepository,
   DrizzleService,
   resolveOrderBy,
-  resolveResourceBaseNode,
+  resolveResourceRef,
 } from '~/core/drizzle';
 import { comments } from '~/core/drizzle/schema';
-import { type BaseNode } from '~/core/resources';
+import { type LinkToUnknown } from '~/core/resources';
 import { CommentThreadRepository } from './comment-thread.repository';
 import {
   Comment,
@@ -76,16 +76,14 @@ export class CommentRepository extends DrizzleDtoRepository<
   }
 
   /**
-   * Resolve the commentable PARENT id to a BaseNode (loadCommentable calls
-   * this with a parent resource id, not a comment id). Probes the migrated
-   * commentable tables.
+   * Resolve the commentable PARENT id to a reference (loadCommentable calls
+   * this with a parent resource id, not a comment id).
    */
-  async getBaseNode(id: ID): Promise<BaseNode | undefined> {
-    return await resolveResourceBaseNode(this.db, id);
+  async getRef(id: ID): Promise<LinkToUnknown | undefined> {
+    return await resolveResourceRef(this.db, id);
   }
 
-  async deleteNode(objectOrId: { id: ID } | ID): Promise<void> {
-    const id = typeof objectOrId === 'string' ? objectOrId : objectOrId.id;
+  async delete(id: ID): Promise<void> {
     await this.db.delete(comments).where(eq(comments.id, id as ID<'Comment'>));
     // Hand-rolled delete (a hard delete, not the base's softDelete()), so it
     // has to invalidate itself — see the base class's doc comment on why

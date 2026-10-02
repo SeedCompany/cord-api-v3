@@ -243,7 +243,7 @@ export class PartnershipService {
     return event.updated;
   }
 
-  async delete(id: ID, changeset?: ID): Promise<void> {
+  async delete(id: ID, _changeset?: ID): Promise<void> {
     const object = await this.readOne(id);
 
     this.privileges.for(Partnership, object).verifyCan('delete');
@@ -262,7 +262,7 @@ export class PartnershipService {
     await this.hooks.run(new ResourceMutatedHook('Partnership', id, 'Delete'));
 
     try {
-      await this.repo.deleteNode(object, { changeset });
+      await this.repo.delete(object.id);
     } catch (exception) {
       this.logger.error('Failed to delete', { id, exception });
       throw new ServerException('Failed to delete', exception);

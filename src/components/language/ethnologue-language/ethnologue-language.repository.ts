@@ -80,8 +80,8 @@ export class EthnologueLanguageRepository extends DrizzleDtoRepository<
     // the value. The `as unknown as` cast is the smallest temp patch possible —
     // populating a placeholder would read as a real default.
     //
-    // migration-todo: (Phase 3&4) when Language migrates, JOIN
-    // `languages.sensitivity` into readMany and remove this cast.
+    // migration-todo: JOIN `languages.sensitivity` into readMany and remove
+    // this cast (no longer blocked: Language is on Postgres).
     return {
       id: row.id,
       __typename: 'EthnologueLanguage',

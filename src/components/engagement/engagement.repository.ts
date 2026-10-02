@@ -341,7 +341,8 @@ export class EngagementRepository extends DrizzleDtoRepository<
     // migration-todo: the `(simple as any)` reads bridge fields the service's
     // getActualChanges diff carries beyond the Update DTO's declared type
     // (rev79CommunityId / initialEndDate / milestoneReached / modifiedAt) —
-    // type the changes shape properly when the Neo4j repo retires.
+    // type the changes shape properly (no longer blocked: the Neo4j repo is
+    // gone).
     await this.updateColumns(id, {
       firstScripture: simple.firstScripture,
       lukePartnership: simple.lukePartnership,
@@ -765,17 +766,9 @@ export class EngagementRepository extends DrizzleDtoRepository<
     const endDate = row.endDateOverride ?? row.project.mouEnd ?? null;
     const dto: unknown = {
       id: row.id,
-      // The `default::` prefix matches the Neo4j/Gel hydrates —
-      // resolveEngagementType keys off the prefixed form.
-      __typename: isLanguage
-        ? 'default::LanguageEngagement'
-        : 'default::InternshipEngagement',
+      __typename: isLanguage ? 'LanguageEngagement' : 'InternshipEngagement',
       createdAt: DateTime.fromJSDate(row.createdAt),
       modifiedAt: DateTime.fromJSDate(row.modifiedAt),
-      parent: {
-        id: row.project.id,
-        __typename: `${row.project.type}Project`,
-      },
       project: {
         id: row.project.id,
         type: row.project.type,
