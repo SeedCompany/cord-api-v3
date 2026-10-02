@@ -289,7 +289,7 @@ export class ToolUsageService {
       .for(ToolUsage, { ...container, ...dto })
       .verifyCan('delete');
     try {
-      await this.repo.deleteNode(dto);
+      await this.repo.delete(dto.id);
     } catch (exception) {
       throw new ServerException('Failed to delete', exception);
     }

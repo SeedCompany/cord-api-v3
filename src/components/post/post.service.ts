@@ -90,7 +90,7 @@ export class PostService {
     this.privileges.for(Post, object).verifyCan('delete');
 
     try {
-      await this.repo.deleteNode(object);
+      await this.repo.delete(object.id);
     } catch (exception) {
       this.logger.warning('Failed to delete post', {
         exception,
