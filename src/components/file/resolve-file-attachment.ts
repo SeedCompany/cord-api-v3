@@ -1,23 +1,17 @@
 import { sql } from 'drizzle-orm';
-import { DateTime } from 'luxon';
 import { type ID } from '~/common';
 import { type DrizzleDb } from '~/core/drizzle';
-import { type BaseNode } from '~/core/resources';
+import { type LinkToUnknown, type ResourceMap } from '~/core/resources';
 
-export type Attachment = [resource: BaseNode, relation: string];
+export type Attachment = [resource: LinkToUnknown, relation: string];
 
 /**
- * Reverse of {@link resolveResourceBaseNode}: given file tree *root* ids, find
- * the resource each root is attached to — by matching the root id against every
- * consuming DefinedFile FK column — and build the owning resource as a
- * Neo4j-shaped {@link BaseNode}. The Postgres equivalent of the Neo4j
- * `MATCH (resource)-[rel]->(root)` in the File/Media hydrate.
+ * Given file tree *root* ids, find the resource each root is attached to — by
+ * matching the root id against every consuming DefinedFile FK column — as a
+ * `{ __typename, id }` reference.
  *
  * Batched (one UNION query for all roots) because FileNode.rootAttachedTo is
  * computed for every hydrated node.
- *
- * This is the Postgres implementation, not a shim; it stays for as long as the
- * file DTOs carry a {@link BaseNode}. Retiring that shape is a separate refactor.
  */
 export async function reverseAttachmentByRootIds(
   db: DrizzleDb,
@@ -40,59 +34,49 @@ export async function reverseAttachmentByRootIds(
     ownerId: ID;
     label: string;
     relation: string;
-    createdAt: Date | string;
   }>(sql`
     SELECT root_directory_id AS "rootId", id AS "ownerId", type || 'Project' AS "label",
-           'rootDirectory' AS "relation", created_at AS "createdAt"
+           'rootDirectory' AS "relation"
       FROM projects WHERE root_directory_id IN (${ids}) AND deleted_at IS NULL
     UNION ALL
-    SELECT photo_id, id, 'User', 'photo', created_at
+    SELECT photo_id, id, 'User', 'photo'
       FROM users WHERE photo_id IN (${ids}) AND deleted_at IS NULL
     UNION ALL
-    SELECT map_image_id, id, 'Location', 'mapImage', created_at
+    SELECT map_image_id, id, 'Location', 'mapImage'
       FROM locations WHERE map_image_id IN (${ids}) AND deleted_at IS NULL
     UNION ALL
-    SELECT mou_id, id, 'Partnership', 'mou', created_at
+    SELECT mou_id, id, 'Partnership', 'mou'
       FROM partnerships WHERE mou_id IN (${ids}) AND deleted_at IS NULL
     UNION ALL
-    SELECT agreement_id, id, 'Partnership', 'agreement', created_at
+    SELECT agreement_id, id, 'Partnership', 'agreement'
       FROM partnerships WHERE agreement_id IN (${ids}) AND deleted_at IS NULL
     UNION ALL
-    SELECT pnp_id, id, type || 'Engagement', 'pnp', created_at
+    SELECT pnp_id, id, type || 'Engagement', 'pnp'
       FROM engagements WHERE pnp_id IN (${ids}) AND deleted_at IS NULL
     UNION ALL
-    SELECT growth_plan_id, id, type || 'Engagement', 'growthPlan', created_at
+    SELECT growth_plan_id, id, type || 'Engagement', 'growthPlan'
       FROM engagements WHERE growth_plan_id IN (${ids}) AND deleted_at IS NULL
     UNION ALL
-    SELECT universal_template_file_id, id, 'Budget', 'universalTemplateFile', created_at
+    SELECT universal_template_file_id, id, 'Budget', 'universalTemplateFile'
       FROM budgets WHERE universal_template_file_id IN (${ids}) AND deleted_at IS NULL
     UNION ALL
-    SELECT file_id, id, 'ProgressReportMedia', 'media', created_at
+    SELECT file_id, id, 'ProgressReportMedia', 'media'
       FROM progress_report_media WHERE file_id IN (${ids}) AND deleted_at IS NULL
     UNION ALL
     -- reportFile + narrativeFile live on the base PeriodicReport, so the label
     -- is the concrete report type: 'Progress'/'Financial'/'Narrative' || 'Report'.
     -- periodic_reports gained deleted_at in migration 0035 (soft delete,
     -- matching Neo4j) — filter it like every other arm here.
-    SELECT report_file_id, id, type || 'Report', 'reportFile', created_at
+    SELECT report_file_id, id, type || 'Report', 'reportFile'
       FROM periodic_reports WHERE report_file_id IN (${ids}) AND deleted_at IS NULL
     UNION ALL
-    SELECT narrative_file_id, id, type || 'Report', 'narrativeFile', created_at
+    SELECT narrative_file_id, id, type || 'Report', 'narrativeFile'
       FROM periodic_reports WHERE narrative_file_id IN (${ids}) AND deleted_at IS NULL
   `);
   for (const r of rows.rows) {
-    const baseNode: BaseNode = {
-      identity: r.ownerId,
-      labels: [r.label, 'BaseNode'],
-      properties: {
-        id: r.ownerId,
-        createdAt:
-          r.createdAt instanceof Date
-            ? DateTime.fromJSDate(r.createdAt)
-            : DateTime.fromSQL(r.createdAt),
-      },
-    } as unknown as BaseNode;
-    map.set(r.rootId, [baseNode, r.relation]);
+    // Each arm's label is a concrete resource name.
+    const owner = { __typename: r.label as keyof ResourceMap, id: r.ownerId };
+    map.set(r.rootId, [owner, r.relation]);
   }
   return map;
 }

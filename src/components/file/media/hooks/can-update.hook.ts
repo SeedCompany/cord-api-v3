@@ -1,7 +1,7 @@
 import { Inject, Injectable, Optional, Scope } from '@nestjs/common';
 import { CachedByArg as Once } from '@seedcompany/common';
 import { Polls } from '~/common';
-import { ResourceResolver, ResourcesHost } from '~/core/resources';
+import { ResourcesHost } from '~/core/resources';
 import { type AnyMedia, MediaUserMetadata } from '../media.dto';
 
 /**
@@ -11,7 +11,6 @@ import { type AnyMedia, MediaUserMetadata } from '../media.dto';
 @Injectable({ scope: Scope.TRANSIENT })
 export class CanUpdateMediaUserMetadataHook {
   @Inject() private readonly resourceHost: ResourcesHost;
-  @Inject() private readonly resourceResolver: ResourceResolver;
 
   constructor(
     @Optional() readonly media: AnyMedia,
@@ -26,10 +25,6 @@ export class CanUpdateMediaUserMetadataHook {
       // authorize the update. Callers treat this as "abstain" (fail closed).
       return undefined;
     }
-    const attachedResName = this.resourceResolver.resolveTypeByBaseNode(
-      attachedTo[0],
-    );
-    const attachedResource = this.resourceHost.getByName(attachedResName);
-    return attachedResource;
+    return this.resourceHost.getByName(attachedTo[0].__typename);
   }
 }

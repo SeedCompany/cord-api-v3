@@ -221,10 +221,6 @@ export class CeremonyRepository extends DrizzleDtoRepository<
       actualDate: row.actualDate ? CalendarDate.fromISO(row.actualDate) : null,
       sensitivity: row.engagement.project.sensitivity,
       engagement: { id: row.engagement.id },
-      parent: {
-        id: row.engagement.id,
-        __typename: `${row.engagement.type}Engagement`,
-      },
       canDelete: true,
       scope,
     };

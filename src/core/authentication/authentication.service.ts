@@ -149,7 +149,7 @@ export class AuthenticationService {
       resetToken.email,
       this.sessionHost.current,
     );
-    await this.repo.removeAllPasswordResetTokensByEmail(resetToken.email);
+    await this.repo.removeAllPasswordResetTokensForUser(resetToken.userId);
     return { user };
   }
 }

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { type ID } from '~/common';
-import { type BaseNode } from '~/core/resources';
+import { type LinkToUnknown } from '~/core/resources';
 
 /**
  * Changesets were not carried forward to Postgres: no changeset can exist, so
@@ -13,7 +13,9 @@ export class ChangesetRepository {
   async difference(
     _id: ID,
     _parent?: ID,
-  ): Promise<Record<'added' | 'removed' | 'changed', readonly BaseNode[]>> {
+  ): Promise<
+    Record<'added' | 'removed' | 'changed', readonly LinkToUnknown[]>
+  > {
     return { added: [], removed: [], changed: [] };
   }
 }

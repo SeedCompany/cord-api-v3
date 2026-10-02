@@ -1,20 +1,16 @@
 import { InputException } from '~/common';
 import { OnHook } from '~/core/hooks';
-import { ResourceLoader, ResourceResolver } from '~/core/resources';
+import { ResourceLoader } from '~/core/resources';
 import { AfterFileUploadHook } from '../../../file/hooks/after-file-upload.hook';
 import { MediaByFileVersionLoader } from '../../../file/media/media-by-file-version.loader';
 
 @OnHook(AfterFileUploadHook)
 export class ProgressReportMediaFileIsMediaCheckHandler {
-  constructor(
-    private readonly resourceResolver: ResourceResolver,
-    private readonly resources: ResourceLoader,
-  ) {}
+  constructor(private readonly resources: ResourceLoader) {}
 
   async handle({ file }: AfterFileUploadHook) {
     const [resource] = file.rootAttachedTo;
-    const resType = this.resourceResolver.resolveTypeByBaseNode(resource);
-    if (resType !== 'ProgressReportMedia') {
+    if (resource.__typename !== 'ProgressReportMedia') {
       return;
     }
 

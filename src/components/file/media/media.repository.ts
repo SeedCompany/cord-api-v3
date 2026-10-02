@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { and, desc, eq, inArray, isNull, ne, or, type SQL } from 'drizzle-orm';
-import { DateTime } from 'luxon';
 import type { Except, RequireAtLeastOne } from 'type-fest';
 import {
   generateId,
@@ -10,7 +9,6 @@ import {
 } from '~/common';
 import { DrizzleService } from '~/core/drizzle';
 import { fileNodes, media } from '~/core/drizzle/schema';
-import { type BaseNode } from '~/core/resources';
 import {
   type Attachment,
   resolveFileRootAttachments,
@@ -124,11 +122,11 @@ export class MediaRepository {
             .returning({ id: media.id });
       if (result.length === 0) {
         if (input.id) {
-          const exists = await this.getBaseNode(input.id, 'Media');
+          const exists = await this.exists(input.id, 'Media');
           if (!exists) throw new NotFoundException('Media could not be found');
         }
         if (input.file) {
-          const exists = await this.getBaseNode(input.file, 'FileVersion');
+          const exists = await this.exists(input.file, 'FileVersion');
           if (!exists) {
             throw new NotFoundException(
               'Media could not be saved to nonexistent file',
@@ -178,27 +176,14 @@ export class MediaRepository {
     return previous;
   }
 
-  async getBaseNode(
-    id: ID,
-    label: 'Media' | 'FileVersion',
-  ): Promise<BaseNode | undefined> {
-    const table = label === 'Media' ? media : fileNodes;
+  async exists(id: ID, type: 'Media' | 'FileVersion'): Promise<boolean> {
+    const table = type === 'Media' ? media : fileNodes;
     const [row] = await this.db
-      .select({ createdAt: table.createdAt })
+      .select({ id: table.id })
       .from(table)
       .where(eq(table.id, id))
       .limit(1);
-    if (!row) {
-      return undefined;
-    }
-    return {
-      identity: id,
-      labels: [label, 'BaseNode'],
-      // createdAt was selected but dropped here, while BaseNode.properties
-      // declares it required — the cast hid the gap. Current callers only test
-      // truthiness, so it was a latent undefined-read rather than a live bug.
-      properties: { id, createdAt: DateTime.fromJSDate(row.createdAt) },
-    } as unknown as BaseNode;
+    return !!row;
   }
 
   /** Synchronous: the caller resolves attachments in one batch beforehand. */

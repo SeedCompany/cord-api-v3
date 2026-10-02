@@ -8,11 +8,14 @@ import { ConfigService } from '~/core/config';
 import { DrizzleService } from '~/core/drizzle';
 import { users } from '~/core/drizzle/schema';
 import { graphql, type InputOf, type VariablesOf } from '~/graphql';
+import { ProjectType } from '../src/components/project/dto';
 import { UserStatus } from '../src/components/user/dto';
 import {
+  createInternshipEngagement,
   createLocation,
   createOrganization,
   createPerson,
+  createProject,
   createSession,
   createTestApp,
   createUnavailability,
@@ -512,6 +515,36 @@ describe('User e2e', () => {
       },
     );
     expect(result.updateUser.user.email.value).toBeNull();
+  });
+
+  it("lists a project the user interns on among the user's projects", async () => {
+    // The user is not a member of this project — only its engagement's intern —
+    // so the project can only come back through the intern path of the
+    // `userId` filter behind `User.projects`.
+    const intern = await createPerson(app);
+    const project = await createProject(app, { type: ProjectType.Internship });
+    await createInternshipEngagement(app, {
+      project: project.id,
+      intern: intern.id,
+    });
+
+    const result = await app.graphql.query(
+      graphql(`
+        query UserProjects($id: ID!) {
+          user(id: $id) {
+            projects {
+              items {
+                id
+              }
+            }
+          }
+        }
+      `),
+      { id: intern.id },
+    );
+    expect(result.user.projects.items.map((item) => item.id)).toContain(
+      project.id,
+    );
   });
 
   // The mutations return the very same `UserCreated`/`UserUpdated`/`UserDeleted`

@@ -197,11 +197,9 @@ const projectIdRefForResource = (resource: EnhancedResource<any>): SQL => {
         `any(array(select "e"."project_id" from "engagements" "e"
           where "e"."language_id" = "languages"."id" and "e"."deleted_at" is null))`,
       );
-    // migration-todo: re-add a case per domain as it ports to Postgres
-    // (Engagement/Ceremony/Language each dereference to
-    // their `project_id` FK — mono has the arms). Kept stripped so an
-    // unmigrated domain routed through Drizzle fails loud here instead of
-    // emitting SQL against a non-existent table.
+    // Add a case for each new project-scoped resource. The default throws so
+    // a resource without one fails loud instead of emitting SQL against the
+    // wrong table.
     //
     // Partner/Organization/User are NOT project-scoped rows — their member
     // checks are bespoke EXISTS branches in asDrizzleCondition above, not

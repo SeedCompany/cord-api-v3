@@ -78,10 +78,7 @@ export class ProductService {
       | CreateDerivativeScriptureProduct
       | CreateOtherProduct,
   ): Promise<AnyProduct> {
-    const engagement = await this.repo.getBaseNode(
-      input.engagement,
-      'Engagement',
-    );
+    const engagement = await this.repo.getRef(input.engagement, 'Engagement');
     if (!engagement) {
       this.logger.warning(`Could not find engagement`, {
         id: input.engagement,
@@ -105,7 +102,7 @@ export class ProductService {
 
     let producibleType: ProducibleType | undefined = undefined;
     if (derivativeInput) {
-      const producible = await this.repo.getBaseNode(
+      const producible = await this.repo.getRef(
         derivativeInput.produces,
         'Producible',
       );
@@ -118,9 +115,7 @@ export class ProductService {
           'produces',
         );
       }
-      producibleType = this.resources.resolveTypeByBaseNode(
-        producible,
-      ) as ProducibleType;
+      producibleType = producible.__typename as ProducibleType;
 
       totalVerses = getTotalVerses(
         ...(derivativeInput.scriptureReferencesOverride ?? []),

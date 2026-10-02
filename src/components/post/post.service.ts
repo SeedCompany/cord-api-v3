@@ -15,7 +15,7 @@ import { Identity } from '~/core/authentication';
 import { Hooks } from '~/core/hooks';
 import { LiveQueryStore } from '~/core/live-query';
 import { ILogger, Logger } from '~/core/logger';
-import { type BaseNode, isBaseNode } from '~/core/resources';
+import { isRefOnly, type LinkToUnknown } from '~/core/resources';
 import { ResourceLoader, ResourcesHost } from '~/core/resources';
 import { ResourceMutatedHook } from '../audit/resource-mutated.hook';
 import { Privileges } from '../authorization';
@@ -24,7 +24,7 @@ import { type PostListInput, type SecuredPostList } from './dto/list-posts.dto';
 import { PostRepository } from './post.repository';
 
 type ConcretePostable = Postable & { __typename: string };
-type PostableRef = ID | BaseNode | ConcretePostable;
+type PostableRef = ID | LinkToUnknown | ConcretePostable;
 
 @Injectable()
 export class PostService {
@@ -62,7 +62,7 @@ export class PostService {
         exception,
       });
 
-      if (!(await this.repo.getBaseNode(input.parent))) {
+      if (!(await this.repo.getRef(input.parent))) {
         throw new InputException('Parent is invalid', 'parent');
       }
 
@@ -140,15 +140,15 @@ export class PostService {
   }
 
   private async loadPostable(resource: PostableRef): Promise<ConcretePostable> {
-    const parentNode = isIdLike(resource)
-      ? await this.repo.getBaseNode(resource)
+    const parentRef = isIdLike(resource)
+      ? await this.repo.getRef(resource)
       : resource;
-    if (!parentNode) {
+    if (!parentRef) {
       throw new NotFoundException('Resource does not exist', 'resource');
     }
-    const parent = isBaseNode(parentNode)
-      ? ((await this.resources.loadByBaseNode(parentNode)) as ConcretePostable)
-      : parentNode;
+    const parent = isRefOnly(parentRef)
+      ? ((await this.resources.loadByRef(parentRef)) as ConcretePostable)
+      : parentRef;
 
     try {
       this.resourcesHost.verifyImplements(parent.__typename, Postable);

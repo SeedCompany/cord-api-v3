@@ -13,7 +13,6 @@ import {
 } from '~/common';
 import { MetadataDiscovery } from '~/core/discovery';
 import { ILogger, Logger } from '../logger';
-import { type BaseNode } from './base-node';
 import { type ResourceMap } from './map';
 import { ResourcesHost } from './resources.host';
 
@@ -60,13 +59,6 @@ export class ResourceResolver {
   ) {}
 
   /**
-   * Lookup a resource from a Neo4j BaseNode.
-   */
-  async lookupByBaseNode(node: BaseNode, view?: ObjectView) {
-    return await this.lookup(node.labels, node.properties.id, view);
-  }
-
-  /**
    * Lookup a resource by type and ID.
    *
    * It's expected that possibleTypes is or includes a _single_ concrete type.
@@ -109,10 +101,6 @@ export class ResourceResolver {
     const { method } = filtered[0];
     const result = await method(id, view);
     return Object.assign({ __typename: type }, result);
-  }
-
-  resolveTypeByBaseNode(node: BaseNode) {
-    return this.resolveType(node.labels);
   }
 
   resolveType(types: Many<string | SomeResource>): keyof ResourceMap {

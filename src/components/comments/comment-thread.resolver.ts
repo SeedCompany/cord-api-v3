@@ -88,12 +88,12 @@ export class CommentThreadResolver {
 
   @ResolveField(() => Commentable)
   async parent(@Parent() thread: CommentThread) {
-    return await this.resources.loadByBaseNode(thread.parent);
+    return await this.resources.loadByRef(thread.parent);
   }
 
   @ResolveField(() => Commentable)
   async container(@Parent() thread: CommentThread) {
-    return await this.resources.loadByBaseNode(thread.parent);
+    return await this.resources.loadByRef(thread.parent);
   }
 
   @ResolveField(() => User)

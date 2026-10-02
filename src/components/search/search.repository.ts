@@ -1,11 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { sql, type SQL } from 'drizzle-orm';
-import { DateTime } from 'luxon';
 import { type Merge } from 'type-fest';
 import { type ID } from '~/common';
 import { DrizzleService } from '~/core/drizzle';
 import { escapeLikePattern } from '~/core/drizzle/like';
-import { type BaseNode, type ResourceMap } from '~/core/resources';
+import { type LinkToUnknown, type ResourceMap } from '~/core/resources';
 import { type SearchInput } from './dto';
 
 interface SearchRow {
@@ -18,7 +17,7 @@ interface SearchRow {
 }
 
 interface SearchResultRow {
-  node: BaseNode;
+  ref: LinkToUnknown;
   matchedProps: readonly string[];
 }
 
@@ -43,13 +42,8 @@ type SearchCol = readonly [expr: string, prop: string];
  * An exact `id` hit on any branch yields `matchedProps: ['id']`, mirroring the
  * Neo4j base-node-by-id branch.
  *
- * The repo returns the same `{ node, matchedProps }` shape as the Neo4j repo,
- * with `node` a fake {@link BaseNode} (`labels` drive `resolveTypeByBaseNode`),
- * so the DB-agnostic {@link import('./search.service').SearchService} needs no
- * changes.
- *
- * This stays for as long as the search service takes a {@link BaseNode};
- * retiring that shape is a separate refactor.
+ * Each result is `{ ref, matchedProps }`, where `ref` is the matched row's
+ * `{ __typename, id }`.
  *
  * ## Matching
  *
@@ -434,34 +428,23 @@ export class SearchRepository {
     `);
 
     return result.rows.map((row) => ({
-      node: this.toBaseNode(row),
+      ref: this.toRef(row),
       matchedProps: row.matchedProps,
     }));
   }
 
-  private toBaseNode(row: SearchRow): BaseNode {
-    const labels =
+  private toRef(row: SearchRow): LinkToUnknown {
+    // Every branch's kind (and subtype mapping) names a concrete resource.
+    const typename =
       row.kind === 'Project'
-        ? [`${row.subtype!}Project`, 'Project']
+        ? `${row.subtype!}Project`
         : row.kind === 'Producible'
-          ? [row.subtype!]
+          ? row.subtype!
           : row.kind === 'Product'
-            ? [PRODUCT_TYPE_LABELS[row.subtype!]!]
+            ? PRODUCT_TYPE_LABELS[row.subtype!]!
             : row.kind === 'PeriodicReport'
-              ? [`${row.subtype!}Report`]
-              : [row.kind];
-    return {
-      identity: row.id,
-      labels: [...labels, 'BaseNode'],
-      properties: {
-        id: row.id,
-        // createdAt is unused by SearchService; parse defensively anyway since
-        // raw `db.execute` returns timestamptz as a Postgres wire string.
-        createdAt:
-          row.createdAt instanceof Date
-            ? DateTime.fromJSDate(row.createdAt)
-            : DateTime.fromSQL(row.createdAt),
-      },
-    };
+              ? `${row.subtype!}Report`
+              : row.kind;
+    return { __typename: typename as keyof ResourceMap, id: row.id };
   }
 }

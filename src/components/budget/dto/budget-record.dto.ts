@@ -10,8 +10,7 @@ import {
   Sensitivity,
   SensitivityField,
 } from '~/common';
-import { type BaseNode, type LinkToUnknown } from '~/core/resources';
-import { RegisterResource } from '~/core/resources';
+import { type LinkTo, RegisterResource } from '~/core/resources';
 import { ChangesetAware } from '../../changeset/dto';
 import { type BudgetStatus } from './budget-status.enum';
 import { Budget } from './budget.dto';
@@ -26,8 +25,11 @@ const Interfaces = IntersectTypes(Resource, ChangesetAware);
 export class BudgetRecord extends Interfaces {
   static readonly Parent = () => import('./budget.dto').then((m) => m.Budget);
 
+  readonly budget: LinkTo<'Budget'>;
+
+  // Resolved by BudgetRecordResolver.parent from `budget`.
   @Field(() => Budget)
-  declare readonly parent: LinkToUnknown | BaseNode;
+  readonly parent?: never;
 
   @Calculated()
   readonly organization: Secured<ID>;

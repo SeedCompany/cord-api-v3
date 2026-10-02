@@ -6,8 +6,7 @@ import {
   type SetUnsecuredType,
   type UnsecuredDto,
 } from '~/common';
-import { type BaseNode } from '~/core/resources';
-import { RegisterResource } from '~/core/resources';
+import { type LinkToUnknown, RegisterResource } from '~/core/resources';
 import { Comment } from './comment.dto';
 
 @RegisterResource()
@@ -25,7 +24,7 @@ export class CommentThread extends Resource {
   readonly firstComment: Comment & SetUnsecuredType<UnsecuredDto<Comment>>;
   readonly latestComment: Comment & SetUnsecuredType<UnsecuredDto<Comment>>;
 
-  readonly parent: BaseNode;
+  readonly parent: LinkToUnknown;
 
   readonly creator: ID;
 }
