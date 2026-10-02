@@ -238,11 +238,7 @@ export class PartnershipRepository extends DrizzleDtoRepository<
     });
   }
 
-  async deleteNode(
-    object: { id: ID } | ID,
-    _options?: { changeset?: ID },
-  ): Promise<void> {
-    const id = typeof object === 'string' ? object : object.id;
+  async delete(id: ID): Promise<void> {
     await this.softDelete(id);
   }
 

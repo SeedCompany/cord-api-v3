@@ -112,8 +112,7 @@ export class CommentThreadRepository {
     return !!row;
   }
 
-  async deleteNode(objectOrId: { id: ID } | ID): Promise<void> {
-    const id = typeof objectOrId === 'string' ? objectOrId : objectOrId.id;
+  async delete(id: ID): Promise<void> {
     await this.db
       .delete(commentThreads)
       .where(eq(commentThreads.id, id as ID<'CommentThread'>));

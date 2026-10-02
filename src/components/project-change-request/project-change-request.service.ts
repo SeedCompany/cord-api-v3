@@ -119,7 +119,7 @@ export class ProjectChangeRequestService {
     this.privileges.for(ProjectChangeRequest, object).verifyCan('delete');
 
     try {
-      await this.repo.deleteNode(object);
+      await this.repo.delete(object.id);
     } catch (exception) {
       this.logger.warning('Failed to delete project change request', {
         exception,

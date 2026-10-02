@@ -98,7 +98,7 @@ const EXEMPT: Record<string, string> = {
   // --- named like a writer, but nothing is ever stored ---
   'src/components/project-change-request/project-change-request.repository.ts':
     'never writes — changesets are not carried forward, so create(), update() ' +
-    'and deleteNode() each throw NotImplementedException and there is no ' +
+    'and delete() each throw NotImplementedException and there is no ' +
     'insert/update/delete anywhere in the file; reads answer empty',
 
   // --- src/core repos (see the walk comment above) ---

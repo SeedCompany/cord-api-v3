@@ -65,7 +65,7 @@ export class ProjectChangeRequestRepository {
     );
   }
 
-  async deleteNode(_objectOrId: unknown): Promise<never> {
+  async delete(_id: ID): Promise<never> {
     throw new NotImplementedException(
       'Change requests are not supported under Postgres — the changeset feature is not being carried forward.',
     );
