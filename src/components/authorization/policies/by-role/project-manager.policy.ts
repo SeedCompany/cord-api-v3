@@ -111,6 +111,8 @@ export const momentumProjectsTransitions = () =>
     r.Producible.edit.create,
     r.Product.read.when(member).edit.create.delete,
     r.ProgressReport.when(member).edit,
+    // Read only for now; the GTL workflow piece adds edit (#3966).
+    r.GTLReport.when(member).read,
     [
       r.ProgressReportCommunityStory,
       r.ProgressReportHighlight,

@@ -21,6 +21,7 @@ import { createHash } from 'node:crypto';
 import {
   CalendarDate,
   type DateFilter,
+  EnhancedResource,
   generateId,
   type ID,
   isSecured,
@@ -43,11 +44,14 @@ import {
 } from '~/core/drizzle/schema';
 import { type BaseNode } from '~/core/resources';
 import { type ScopedRole } from '../authorization/dto/role.dto';
+import { PolicyExecutor } from '../authorization/policy/executor/policy-executor';
 import { FileService } from '../file';
+import { GTLReport, GtlReportStatus } from '../gtl-report/dto';
 import { ProgressReportStatus } from '../progress-report/dto';
 import { requesterScopeByProject } from '../project/project-member/membership-scope';
 import {
   IPeriodicReport,
+  isEngagementParented,
   type MergePeriodicReports,
   type PeriodicReport,
   type PeriodicReportListInput,
@@ -59,6 +63,7 @@ type ReportRow = typeof periodicReports.$inferSelect & {
   project?: ParentProject | null;
   engagement?: {
     id: ID<'Engagement'>;
+    type: string;
     createdAt: Date;
     project?: ParentProject | null;
   } | null;
@@ -78,7 +83,8 @@ const PROJECT_COLUMNS = {
 const RELATIONS = {
   project: PROJECT_COLUMNS,
   engagement: {
-    columns: { id: true, createdAt: true },
+    // `type` names the parent's concrete engagement type in `toDto`.
+    columns: { id: true, type: true, createdAt: true },
     with: { project: PROJECT_COLUMNS },
   },
 } as const;
@@ -107,10 +113,13 @@ export class PeriodicReportRepository extends DrizzleDtoRepository<
   typeof periodicReports,
   PeriodicReport & { id: ID }
 > {
+  private readonly gtlResource = EnhancedResource.of(GTLReport);
+
   constructor(
     db: DrizzleService,
     private readonly identity: Identity,
     private readonly files: FileService,
+    private readonly executor: PolicyExecutor,
   ) {
     super(db, periodicReports, IPeriodicReport as any);
   }
@@ -133,9 +142,10 @@ export class PeriodicReportRepository extends DrizzleDtoRepository<
    * A report's own `deleted_at` says nothing about its parents: soft-deleting a
    * project or an engagement leaves every report under it untouched. Neo4j's
    * hydrate requires a live `:Project`, so there it returns nothing — this is the
-   * equivalent. Financial and Narrative reports hang off a project directly;
-   * Progress reports reach one through their engagement, so both routes are
-   * checked and a report needs exactly one of them.
+   * equivalent. Project-parented reports (Financial, Narrative) hang off a
+   * project directly; engagement-parented ones (Progress, GTL) reach one through
+   * their engagement, so both routes are checked and a report needs exactly one
+   * of them.
    */
   private async liveReportIds(ids: readonly ID[]): Promise<ID[]> {
     if (ids.length === 0) return [];
@@ -168,7 +178,16 @@ export class PeriodicReportRepository extends DrizzleDtoRepository<
     if (input.intervals.length === 0) {
       return [];
     }
-    const isProgress = input.type === 'Progress';
+    const engagementParented = isEngagementParented(input.type);
+    // Which status column a new report starts in, if any. The two workflows use
+    // different enums in different columns, and the status-shape CHECK requires
+    // exactly the right one to be set for the type — leaving it null is a
+    // constraint violation, not a quiet default. @see migration 0003
+    const initialStatus = {
+      status:
+        input.type === 'Progress' ? ProgressReportStatus.NotStarted : null,
+      gtlStatus: input.type === 'GTL' ? GtlReportStatus.NotStarted : null,
+    };
     // Each report owns a `reportFile` DefinedFile placeholder. The FK is stored
     // here; the (version-less) file node is created by createDefinedFile after
     // the rows land, only for those actually inserted.
@@ -213,11 +232,15 @@ export class PeriodicReportRepository extends DrizzleDtoRepository<
         return {
           id,
           type: input.type,
-          projectId: isProgress ? null : (input.parent as ID<'Project'>),
-          engagementId: isProgress ? (input.parent as ID<'Engagement'>) : null,
+          projectId: engagementParented
+            ? null
+            : (input.parent as ID<'Project'>),
+          engagementId: engagementParented
+            ? (input.parent as ID<'Engagement'>)
+            : null,
           start: interval.start.toISODate(),
           end: interval.end.toISODate(),
-          status: isProgress ? ProgressReportStatus.NotStarted : null,
+          ...initialStatus,
           reportFileId,
           narrativeFileId,
         };
@@ -238,9 +261,12 @@ export class PeriodicReportRepository extends DrizzleDtoRepository<
       });
 
     if (inserted.length > 0) {
-      // Progress reports of Multiplication projects are publicly downloadable —
-      // mirrors the Neo4j reportFilePublic rule. Others are private.
-      const isPublic = isProgress && (await this.parentIsMultiplication(input));
+      // Engagement-parented reports under a Multiplication project are publicly
+      // downloadable — mirrors the Neo4j reportFilePublic rule for Progress
+      // reports. Others are private; Internship projects are never
+      // Multiplication, so GTL reports always land here as private.
+      const isPublic =
+        engagementParented && (await this.parentIsMultiplication(input));
       for (const row of inserted) {
         await this.files.createDefinedFile(
           reportFileIds.get(row.id)!,
@@ -272,7 +298,10 @@ export class PeriodicReportRepository extends DrizzleDtoRepository<
     }));
   }
 
-  /** Is the merge's parent (engagement, for Progress) under a Multiplication project? */
+  /**
+   * Is the merge's parent (an engagement, for the engagement-parented types)
+   * under a Multiplication project?
+   */
   private async parentIsMultiplication(
     input: MergePeriodicReports,
   ): Promise<boolean> {
@@ -349,6 +378,17 @@ export class PeriodicReportRepository extends DrizzleDtoRepository<
     const conditions: SQL[] = [isNull(periodicReports.deletedAt)];
     if (input.type) {
       conditions.push(eq(periodicReports.type, input.type));
+    }
+    // Rows the requester cannot read never leave the database, so a non-member
+    // sees an empty list rather than a page of redacted reports. GTL only for
+    // now: Progress lists through this path keep the behavior they have today,
+    // and Financial/Narrative have no Drizzle policy conditions configured yet
+    // (both condition files throw for an unconfigured resource).
+    if (
+      input.type === 'GTL' &&
+      !this.executor.applyReadFilter(this.gtlResource, conditions)
+    ) {
+      return { total: 0, items: [], hasMore: false };
     }
     if (input.parent) {
       conditions.push(
@@ -448,10 +488,11 @@ export class PeriodicReportRepository extends DrizzleDtoRepository<
    * removing anything (migration 0035, ledger PC-14).
    *
    * Because nothing is destroyed, the eligibility rules can now be exactly
-   * Neo4j's, with no extra content guard: progress reports only while still
-   * NotStarted; non-progress reports only while no file has been uploaded to
-   * either DefinedFile. A report's media, variance explanation and workflow
-   * events all survive the removal, attached to the dead row.
+   * Neo4j's, with no extra content guard: reports with a workflow (Progress,
+   * GTL) only while still NotStarted; the rest only while no file has been
+   * uploaded to either DefinedFile — see `removableCondition`. A report's
+   * media, variance explanation and workflow events all survive the removal,
+   * attached to the dead row.
    */
   async delete(
     baseNodeId: ID,
@@ -484,16 +525,29 @@ export class PeriodicReportRepository extends DrizzleDtoRepository<
         and(
           this.parentCondition(baseNodeId, type),
           or(...intervalConditions),
-          ...(type === 'Progress'
-            ? [eq(periodicReports.status, ProgressReportStatus.NotStarted)]
-            : // Non-progress reports are removable only while no file has been
-              // uploaded to EITHER DefinedFile — mirrors the Neo4j
-              // reportFileNode + narrativeFileNode FileVersion guards.
-              [not(hasUploadedFileVersion())]),
+          this.removableCondition(type),
         ),
       )
       .returning({ id: periodicReports.id });
     return { count: deleted.length };
+  }
+
+  /**
+   * When a date-range shrink may remove a report of this type. Types with a
+   * workflow are removable only while still NotStarted — each in its own status
+   * column (@see periodic_reports_status_shape_chk). Types without one are
+   * removable only while no file has been uploaded to EITHER DefinedFile —
+   * mirrors the Neo4j reportFileNode + narrativeFileNode FileVersion guards.
+   */
+  private removableCondition(type: ReportType): SQL {
+    switch (type) {
+      case 'Progress':
+        return eq(periodicReports.status, ProgressReportStatus.NotStarted);
+      case 'GTL':
+        return eq(periodicReports.gtlStatus, GtlReportStatus.NotStarted);
+      default:
+        return not(hasUploadedFileVersion());
+    }
   }
 
   /**
@@ -505,7 +559,7 @@ export class PeriodicReportRepository extends DrizzleDtoRepository<
     return and(
       isNull(periodicReports.deletedAt),
       eq(periodicReports.type, type),
-      type === 'Progress'
+      isEngagementParented(type)
         ? eq(periodicReports.engagementId, parentId as ID<'Engagement'>)
         : eq(periodicReports.projectId, parentId as ID<'Project'>),
     )!;
@@ -554,13 +608,19 @@ export class PeriodicReportRepository extends DrizzleDtoRepository<
         `PeriodicReport ${row.id} has no parent row — FK invariant violated`,
       );
     }
-    const isProgress = row.type === 'Progress';
     // Neo4j-shaped BaseNode so ResourceLoader.loadByBaseNode() on the parent
     // field keeps working — only labels + properties.{id,createdAt} are read.
-    const parent: BaseNode = isProgress
+    // The engagement's own discriminator names the concrete type, as the project
+    // branch does: Progress hangs off language engagements, GTL off internship
+    // ones.
+    const parent: BaseNode = isEngagementParented(row.type)
       ? {
           identity: row.engagement!.id,
-          labels: ['LanguageEngagement', 'Engagement', 'BaseNode'],
+          labels: [
+            `${row.engagement!.type}Engagement`,
+            'Engagement',
+            'BaseNode',
+          ],
           properties: {
             id: row.engagement!.id,
             createdAt: DateTime.fromJSDate(row.engagement!.createdAt),
@@ -577,7 +637,15 @@ export class PeriodicReportRepository extends DrizzleDtoRepository<
     const dto: unknown = {
       id: row.id,
       type: row.type,
-      ...(isProgress && { __typename: 'ProgressReport', status: row.status }),
+      ...(row.type === 'Progress' && {
+        __typename: 'ProgressReport',
+        status: row.status,
+      }),
+      ...(row.type === 'GTL' && {
+        __typename: 'GTLReport',
+        status: row.gtlStatus,
+        engagement: { id: row.engagement!.id },
+      }),
       parent,
       start: CalendarDate.fromISO(row.start),
       end: CalendarDate.fromISO(row.end),

@@ -28,6 +28,7 @@ import { type CeremonyType } from '../../../components/ceremony/dto/ceremony-typ
 import { type InternshipPosition } from '../../../components/engagement/dto/intern-position.enum';
 import { type EngagementStatus } from '../../../components/engagement/dto/status.enum';
 import { type FileNodeType } from '../../../components/file/dto/file-node-type.enum';
+import { type GtlReportStatus } from '../../../components/gtl-report/dto/gtl-report-status.enum';
 import { type AIAssistedTranslation } from '../../../components/language/dto/ai-assisted-translation.enum';
 import { type LanguageMilestone } from '../../../components/language/dto/language-milestone.enum';
 import { type LocationType } from '../../../components/location/dto/location-type.enum';
@@ -2446,6 +2447,7 @@ export const reportTypeEnum = pgEnum('report_type', [
   'Financial',
   'Narrative',
   'Progress',
+  'GTL',
 ]);
 
 export const progressReportStatusEnum = pgEnum('progress_report_status', [
@@ -2458,9 +2460,26 @@ export const progressReportStatusEnum = pgEnum('progress_report_status', [
 ]);
 
 /**
- * Single table over FinancialReport / NarrativeReport / ProgressReport.
- * Financial+Narrative hang off projects; Progress hangs off (language)
- * engagements — the CHECK keeps the parent FK coherent with the type.
+ * GTL reports run their own workflow, so they get their own status enum rather
+ * than sharing `progress_report_status` — `PendingSupervisorSignOff` is a state
+ * a language-engagement report can never reach. Workflow order; mirrors
+ * `GtlReportStatus`. @see migration 0003
+ */
+export const gtlReportStatusEnum = pgEnum('gtl_report_status', [
+  'NotStarted',
+  'InProgress',
+  'PendingSupervisorSignOff',
+  'PendingTranslation',
+  'InReview',
+  'Approved',
+  'Published',
+]);
+
+/**
+ * Single table over FinancialReport / NarrativeReport / ProgressReport /
+ * GTLReport. Financial+Narrative hang off projects; Progress hangs off
+ * language engagements and GTL off internship engagements — the CHECK keeps
+ * the parent FK coherent with the type.
  *
  * The id is deterministic — sha256(parent:type:start:end), same derivation as
  * Neo4j — but it is a FIRST CHOICE, not a guarantee. Deletion is a soft delete
@@ -2477,8 +2496,9 @@ export const progressReportStatusEnum = pgEnum('progress_report_status', [
  * Read paths must therefore filter `deleted_at`, including where this table is
  * the joined side rather than the driving one.
  *
- * `status` is ProgressReport-only (workflow-driven; plain column like
- * engagement.status).
+ * `status` is ProgressReport-only and `gtl_status` is GTLReport-only (both
+ * workflow-driven; plain columns like engagement.status). The status-shape
+ * CHECK ties each to its type.
  */
 export const periodicReports = pgTable(
   'periodic_reports',
@@ -2505,6 +2525,7 @@ export const periodicReports = pgTable(
     narrativeFileId: text('narrative_file_id').$type<ID<'File'>>(),
     narrativeReceivedDate: date('narrative_received_date'),
     status: progressReportStatusEnum('status').$type<ProgressReportStatus>(),
+    gtlStatus: gtlReportStatusEnum('gtl_status').$type<GtlReportStatus>(),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -2517,14 +2538,18 @@ export const periodicReports = pgTable(
     deletedAt: timestamp('deleted_at', { withTimezone: true }),
   },
   (t) => [
+    // 'GTL' is compared through `::text` because the label was added with
+    // `ALTER TYPE ... ADD VALUE`, which Postgres won't let a constraint use in
+    // the same transaction. @see migration 0003
     check(
       'periodic_reports_parent_shape_chk',
       sql`(${t.type} IN ('Financial', 'Narrative') AND ${t.projectId} IS NOT NULL AND ${t.engagementId} IS NULL)
-        OR (${t.type} = 'Progress' AND ${t.engagementId} IS NOT NULL AND ${t.projectId} IS NULL)`,
+        OR (${t.type}::text IN ('Progress', 'GTL') AND ${t.engagementId} IS NOT NULL AND ${t.projectId} IS NULL)`,
     ),
     check(
       'periodic_reports_status_shape_chk',
-      sql`(${t.type} = 'Progress') = (${t.status} IS NOT NULL)`,
+      sql`(${t.status} IS NOT NULL) = (${t.type} = 'Progress')
+        AND (${t.gtlStatus} IS NOT NULL) = (${t.type}::text = 'GTL')`,
     ),
     index('periodic_reports_project_id_idx').on(t.projectId),
     index('periodic_reports_engagement_id_idx').on(t.engagementId),

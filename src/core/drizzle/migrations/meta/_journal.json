@@ -22,6 +22,13 @@
       "when": 1790035200000,
       "tag": "0002_unaccent_extension",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1790985600000,
+      "tag": "0003_gtl_reports",
+      "breakpoints": true
     }
   ]
 }

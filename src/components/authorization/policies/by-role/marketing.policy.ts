@@ -19,6 +19,7 @@ import {
     .read.specifically((p) => p.many('pmcEntityCode', 'pointOfContact').none)
     .children((c) => c.posts.edit),
   r.ProgressReport.specifically((p) => p.status.read), // allows access to workflow
+  r.GTLReport.specifically((p) => p.status.read),
   [
     r.ProgressReportCommunityStory,
     r.ProgressReportHighlight,

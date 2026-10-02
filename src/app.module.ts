@@ -16,6 +16,7 @@ import { FileModule } from './components/file/file.module';
 import { FilmModule } from './components/film/film.module';
 import { FinanceDepartmentModule } from './components/finance/department/finance-department.module';
 import { FundingAccountModule } from './components/funding-account/funding-account.module';
+import { GtlReportModule } from './components/gtl-report/gtl-report.module';
 import { LanguageModule } from './components/language/language.module';
 import { LocationModule } from './components/location/location.module';
 import { SystemNotificationModule } from './components/notification-system/system-notification.module';
@@ -89,6 +90,7 @@ if (process.env.NODE_ENV !== 'production') {
     ProductProgressModule,
     PartnershipProducingMediumModule,
     ProgressReportModule,
+    GtlReportModule,
     PromptsModule,
     PnpExtractionResultModule,
     NotificationModule,

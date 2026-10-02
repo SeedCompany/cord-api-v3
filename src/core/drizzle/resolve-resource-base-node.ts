@@ -206,12 +206,13 @@ const RESOURCE_TABLES: readonly ResourceTable[] = [
     suffixed(engagementTypeEnum.enumValues, 'Engagement'),
     'Engagement',
   ),
-  // Reports of all three kinds share one table. Soft-deleted as of migration 0035,
+  // Reports of all four kinds share one table. Soft-deleted as of migration 0035,
   // which `liveWithId` picks up from the column's presence.
   ofSeveralTypes(periodicReports, {
     Progress: 'ProgressReport',
     Financial: 'FinancialReport',
     Narrative: 'NarrativeReport',
+    GTL: 'GTLReport',
   }),
   ofSeveralTypes(products, {
     DirectScripture: 'DirectScriptureProduct',

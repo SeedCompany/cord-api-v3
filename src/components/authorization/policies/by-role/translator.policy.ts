@@ -20,6 +20,9 @@ import { member, Policy, Role, variant } from '../util';
   r.ProgressReport.when(member).read.specifically(
     (p) => p.many('reportFile', 'narrativeFile').none,
   ),
+  r.GTLReport.when(member).read.specifically(
+    (p) => p.many('reportFile', 'narrativeFile').none,
+  ),
   [
     r.ProgressReportCommunityStory,
     r.ProgressReportHighlight,

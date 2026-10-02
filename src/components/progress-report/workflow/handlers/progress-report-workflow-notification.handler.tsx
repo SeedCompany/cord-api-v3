@@ -1,6 +1,6 @@
 import { entries, mapEntries } from '@seedcompany/common';
 import { type RequireExactlyOne } from 'type-fest';
-import { type ID, Role, type UnsecuredDto } from '~/common';
+import { type ID, Role, ServerException, type UnsecuredDto } from '~/common';
 import { Identity } from '~/core/authentication';
 import { ConfigService } from '~/core/config';
 import { TransactionHooks } from '~/core/database';
@@ -148,6 +148,14 @@ export class ProgressReportWorkflowNotificationHandler {
       const project = await this.projectService.readOne(projectId);
       const language = await this.languageService.readOne(languageId);
       const report = await this.reportService.readOne(reportId);
+      if (report.type !== 'Progress') {
+        // The periodic-report read returns every report kind, but this workflow
+        // only ever fires for progress reports — the check narrows the type so
+        // the status below is a ProgressReportStatus, not a GTL one.
+        throw new ServerException(
+          `Report ${reportId} is not a progress report`,
+        );
+      }
       // The template only names the actor for human changes — automated ones
       // carry the reason sentence instead — so skip the read entirely there.
       // An agent or unloadable actor degrades to the actor-less sentence.

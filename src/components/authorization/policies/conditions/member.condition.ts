@@ -183,7 +183,8 @@ const projectIdRefForResource = (resource: EnhancedResource<any>): SQL => {
         `(select "e"."project_id" from "engagements" "e" where "e"."id" = "ceremonies"."engagement_id")`,
       );
     case 'ProgressReport':
-      // Progress rows on the shared periodic_reports table are always
+    case 'GTLReport':
+      // Progress and GTL rows on the shared periodic_reports table are always
       // engagement-parented (never project-parented directly) — see
       // PeriodicReportRepository.parentCondition.
       return sql.raw(

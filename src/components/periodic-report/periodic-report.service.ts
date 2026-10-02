@@ -15,6 +15,7 @@ import { HandleIdLookup } from '~/core/resources';
 import { ResourceMutatedHook } from '../audit/resource-mutated.hook';
 import { Privileges } from '../authorization';
 import { FileService } from '../file';
+import { GTLReport } from '../gtl-report/dto';
 import { ProgressReport } from '../progress-report/dto';
 import {
   FinancialReport,
@@ -112,7 +113,7 @@ export class PeriodicReportService {
     return updated;
   }
 
-  @HandleIdLookup([FinancialReport, NarrativeReport, ProgressReport])
+  @HandleIdLookup([FinancialReport, NarrativeReport, ProgressReport, GTLReport])
   async readOne(id: ID, _view?: ObjectView): Promise<PeriodicReport> {
     const result = await this.repo.readOne(id);
     return this.secure(result);
