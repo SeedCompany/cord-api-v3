@@ -194,6 +194,19 @@ const sensitivityRefForResource = (
         join "engagements" "e" on "e"."project_id" = "p"."id"
         where "e"."id" = "periodic_reports"."engagement_id"
       ) <= ${accessLiteral}`;
+    case 'GtlGoal':
+      return sql`(
+        select "p"."sensitivity" from "projects" "p"
+        join "engagements" "e" on "e"."project_id" = "p"."id"
+        where "e"."id" = "gtl_goals"."engagement_id"
+      ) <= ${accessLiteral}`;
+    case 'GtlGoalProgress':
+      return sql`(
+        select "p"."sensitivity" from "projects" "p"
+        join "engagements" "e" on "e"."project_id" = "p"."id"
+        join "gtl_goals" "g" on "g"."engagement_id" = "e"."id"
+        where "g"."id" = "gtl_goal_progress"."goal_id"
+      ) <= ${accessLiteral}`;
     case 'Language':
       // Effective sensitivity: lowest across projects engaging the language,
       // falling back to the language's own (user-set) sensitivity when

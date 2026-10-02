@@ -5,7 +5,11 @@ import { resolve } from 'node:path';
 import { type MadeEnum, Role, Sensitivity } from '~/common';
 import { type DrizzleDb, DrizzleService } from '~/core/drizzle';
 import { EngagementStatus } from '../src/components/engagement/dto';
-import { GtlReportStatus } from '../src/components/gtl-report/dto';
+import {
+  GtlGoalMeasurement,
+  GtlGoalStatus,
+  GtlReportStatus,
+} from '../src/components/gtl-report/dto';
 import { PartnerType } from '../src/components/partner/dto';
 import { ReportType } from '../src/components/periodic-report/dto';
 import {
@@ -191,6 +195,8 @@ describe('Postgres schema invariants', () => {
     ['report_type', ReportType],
     ['progress_report_status', ProgressReportStatus],
     ['gtl_report_status', GtlReportStatus],
+    ['gtl_goal_measurement', GtlGoalMeasurement],
+    ['gtl_goal_status', GtlGoalStatus],
   ];
 
   it.each(enumPairs)(

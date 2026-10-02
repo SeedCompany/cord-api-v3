@@ -198,6 +198,18 @@ const projectIdRefForResource = (resource: EnhancedResource<any>): SQL => {
       return sql.raw(
         `(select "e"."project_id" from "periodic_reports" "pr" join "engagements" "e" on "e"."id" = "pr"."engagement_id" where "pr"."id" = "gtl_report_workflow_events"."report_id")`,
       );
+    case 'GtlGoal':
+      // A goal hangs off its Internship engagement. The Field Partner /
+      // Project Manager grants are member-conditioned, so `applyReadFilter`
+      // emits this for the engagement's goal list.
+      return sql.raw(
+        `(select "e"."project_id" from "engagements" "e" where "e"."id" = "gtl_goals"."engagement_id")`,
+      );
+    case 'GtlGoalProgress':
+      // Two hops: the entry hangs off a goal, which hangs off an engagement.
+      return sql.raw(
+        `(select "e"."project_id" from "engagements" "e" join "gtl_goals" "g" on "g"."engagement_id" = "e"."id" where "g"."id" = "gtl_goal_progress"."goal_id")`,
+      );
     case 'Language':
       // A language is "member-visible" through ANY project engaging it.
       // `pm.project_id = any(array(...))` keeps the shared `= ${ref}` template

@@ -36,6 +36,13 @@
       "when": 1790989200000,
       "tag": "0004_gtl_report_workflow_events",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790992800000,
+      "tag": "0005_gtl_goals",
+      "breakpoints": true
     }
   ]
 }

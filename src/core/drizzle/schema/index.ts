@@ -28,6 +28,10 @@ import { type CeremonyType } from '../../../components/ceremony/dto/ceremony-typ
 import { type InternshipPosition } from '../../../components/engagement/dto/intern-position.enum';
 import { type EngagementStatus } from '../../../components/engagement/dto/status.enum';
 import { type FileNodeType } from '../../../components/file/dto/file-node-type.enum';
+import {
+  type GtlGoalMeasurement,
+  type GtlGoalStatus,
+} from '../../../components/gtl-report/dto/gtl-goal.enums';
 import { type GtlReportStatus } from '../../../components/gtl-report/dto/gtl-report-status.enum';
 import { type AIAssistedTranslation } from '../../../components/language/dto/ai-assisted-translation.enum';
 import { type LanguageMilestone } from '../../../components/language/dto/language-milestone.enum';
@@ -3335,6 +3339,156 @@ export const gtlReportWorkflowEventsRelations = relations(
   ({ one }) => ({
     report: one(periodicReports, {
       fields: [gtlReportWorkflowEvents.reportId],
+      references: [periodicReports.id],
+    }),
+  }),
+);
+
+// ─── GTL Goals ───────────────────────────────────────────────────────────────
+
+/** How a GTL goal's completion is measured. Mirrors `GtlGoalMeasurement`. */
+export const gtlGoalMeasurementEnum = pgEnum('gtl_goal_measurement', [
+  'Number',
+  'Percent',
+  'Boolean',
+]);
+
+/** Mirrors `GtlGoalStatus`. Shared by the goal's own column and its entries. */
+export const gtlGoalStatusEnum = pgEnum('gtl_goal_status', [
+  'Planned',
+  'InProgress',
+  'AtRisk',
+  'OnHold',
+  'Done',
+  'Cancelled',
+]);
+
+/**
+ * A goal on a Global Translation Leader's growth plan. Belongs to the
+ * Internship engagement, not to one quarter's report, so it carries across
+ * quarters; `set_in_report_id` only records where it was first proposed.
+ *
+ * The current status/value are NOT stored here — they are derived at read time
+ * from the latest live `gtl_goal_progress` entry on a live report
+ * (`GtlGoalRepository`), so a soft-deleted entry or report can never leave a
+ * stale value behind. `status` is the goal's own initial/manual state and the
+ * fallback when no entry exists. @see migration 0005
+ */
+export const gtlGoals = pgTable(
+  'gtl_goals',
+  {
+    id: text('id').$type<ID<'GtlGoal'>>().primaryKey(),
+    engagementId: text('engagement_id')
+      .$type<ID<'InternshipEngagement'>>()
+      .notNull()
+      .references(() => engagements.id, { onDelete: 'cascade' }),
+    setInReportId: text('set_in_report_id')
+      .$type<ID<'GTLReport'>>()
+      .references(() => periodicReports.id, { onDelete: 'set null' }),
+    goal: text('goal').notNull(),
+    details: jsonb('details'), // RichText
+    targetDate: date('target_date', { mode: 'string' }),
+    measurement: gtlGoalMeasurementEnum('measurement')
+      .$type<GtlGoalMeasurement>()
+      .notNull()
+      .default('Boolean'),
+    targetNumber: integer('target_number'),
+    targetDescription: text('target_description'),
+    status: gtlGoalStatusEnum('status')
+      .$type<GtlGoalStatus>()
+      .notNull()
+      .default('Planned'),
+    order: integer('order').notNull().default(0),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    modifiedAt: timestamp('modified_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (t) => [
+    index('gtl_goals_engagement_id_idx').on(t.engagementId),
+    index('gtl_goals_set_in_report_id_idx').on(t.setInReportId),
+    // A counted goal needs a target above zero and a non-blank description of
+    // what is counted; the other measurements derive their target and carry no
+    // number. The service checks first (field-attributed error); this is the
+    // backstop.
+    check(
+      'gtl_goals_measurement_shape_chk',
+      sql`(${t.measurement} = 'Number' AND ${t.targetNumber} > 0 AND nullif(btrim(${t.targetDescription}), '') IS NOT NULL)
+        OR (${t.measurement} <> 'Number' AND ${t.targetNumber} IS NULL)`,
+    ),
+  ],
+);
+
+/**
+ * One quarter's statement about one goal. A report says one thing about a goal,
+ * so at most one LIVE entry per (goal, report) — the partial unique index —
+ * and re-saving the same quarter upserts against it. @see migration 0005
+ */
+export const gtlGoalProgress = pgTable(
+  'gtl_goal_progress',
+  {
+    id: text('id').$type<ID<'GtlGoalProgress'>>().primaryKey(),
+    goalId: text('goal_id')
+      .$type<ID<'GtlGoal'>>()
+      .notNull()
+      .references(() => gtlGoals.id, { onDelete: 'cascade' }),
+    reportId: text('report_id')
+      .$type<ID<'GTLReport'>>()
+      .notNull()
+      .references(() => periodicReports.id, { onDelete: 'cascade' }),
+    status: gtlGoalStatusEnum('status').$type<GtlGoalStatus>().notNull(),
+    progressValue: integer('progress_value'),
+    notes: jsonb('notes'), // RichText
+    progressDate: date('progress_date', { mode: 'string' }).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    modifiedAt: timestamp('modified_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (t) => [
+    uniqueIndex('gtl_goal_progress_goal_report_active_unique')
+      .on(t.goalId, t.reportId)
+      .where(sql`${t.deletedAt} IS NULL`),
+    // Required even with the unique index above: a partial index can't serve
+    // the FK-maintenance scan, so the FK-index invariant needs this full one.
+    index('gtl_goal_progress_goal_id_idx').on(t.goalId),
+    index('gtl_goal_progress_report_id_idx').on(t.reportId),
+  ],
+);
+
+export const gtlGoalsRelations = relations(gtlGoals, ({ one, many }) => ({
+  engagement: one(engagements, {
+    fields: [gtlGoals.engagementId],
+    references: [engagements.id],
+  }),
+  setInReport: one(periodicReports, {
+    fields: [gtlGoals.setInReportId],
+    references: [periodicReports.id],
+  }),
+  progress: many(gtlGoalProgress),
+}));
+
+export const gtlGoalProgressRelations = relations(
+  gtlGoalProgress,
+  ({ one }) => ({
+    goal: one(gtlGoals, {
+      fields: [gtlGoalProgress.goalId],
+      references: [gtlGoals.id],
+    }),
+    report: one(periodicReports, {
+      fields: [gtlGoalProgress.reportId],
       references: [periodicReports.id],
     }),
   }),
