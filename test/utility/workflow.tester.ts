@@ -1,6 +1,8 @@
 import { fileURLToPath } from 'url';
 import { type ID, UnauthorizedException } from '~/common';
 import { jestSkipFileInExceptionSource } from '~/core/exception';
+import { type ExecuteGtlReportTransition } from '../../src/components/gtl-report/workflow/dto';
+import { type GtlReportWorkflow } from '../../src/components/gtl-report/workflow/gtl-report-workflow';
 import { type ExecuteProjectTransition } from '../../src/components/project/workflow/dto';
 import { type ProjectWorkflow } from '../../src/components/project/workflow/project-workflow';
 import { type Workflow } from '../../src/components/workflow/define-workflow';
@@ -9,6 +11,11 @@ import {
   type WorkflowTransition,
 } from '../../src/components/workflow/dto';
 import { type TestApp } from './create-app';
+import {
+  forceGtlReportTo,
+  getGtlReportTransitions,
+  transitionGtlReport,
+} from './transition-gtl-report';
 import { getProjectTransitions, transitionProject } from './transition-project';
 
 const filepath = fileURLToPath(import.meta.url);
@@ -126,6 +133,53 @@ export class ProjectWorkflowTester extends WorkflowTester<
     return {
       state: res.step.value!,
       transitions: res.step.transitions.map((t) => ({
+        ...t,
+        disabledReason: t.disabledReason ?? undefined,
+      })),
+    };
+  }
+}
+
+export class GtlReportWorkflowTester extends WorkflowTester<
+  typeof GtlReportWorkflow
+> {
+  static async for(app: TestApp, id: ID) {
+    const { status } = await getGtlReportTransitions(app, id);
+    return new GtlReportWorkflowTester(app, id, status.value!);
+  }
+
+  /** Every transition offered to the current user, disabled ones included. */
+  async all() {
+    return await this.freshTransitions();
+  }
+
+  /**
+   * Jump the report to a state as an administrator (workflow bypass), keeping
+   * the tester's own view of the state in step so its transition cache is not
+   * answered from the state the report used to be in.
+   */
+  async forceTo(state: (typeof GtlReportWorkflow)['state']) {
+    await forceGtlReportTo(this.app, this.id, state);
+    this.state = state;
+    return this;
+  }
+
+  protected async fetchTransitions() {
+    const res = await getGtlReportTransitions(this.app, this.id);
+    return res.status.transitions.map((t) => ({
+      ...t,
+      disabledReason: t.disabledReason ?? undefined,
+    }));
+  }
+
+  protected async doExecute(input: ExecuteGtlReportTransition) {
+    const res = await transitionGtlReport(this.app, {
+      ...input,
+      report: this.id,
+    });
+    return {
+      state: res.status.value!,
+      transitions: res.status.transitions.map((t) => ({
         ...t,
         disabledReason: t.disabledReason ?? undefined,
       })),

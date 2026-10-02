@@ -190,6 +190,14 @@ const projectIdRefForResource = (resource: EnhancedResource<any>): SQL => {
       return sql.raw(
         `(select "e"."project_id" from "engagements" "e" where "e"."id" = "periodic_reports"."engagement_id")`,
       );
+    case 'GtlReportWorkflowEvent':
+      // Two hops: the event hangs off a GTL report, which hangs off an
+      // engagement. Reached because the Field Partner / Project Manager read
+      // grant on these events is member-conditioned, so `applyReadFilter`
+      // emits this for the event list.
+      return sql.raw(
+        `(select "e"."project_id" from "periodic_reports" "pr" join "engagements" "e" on "e"."id" = "pr"."engagement_id" where "pr"."id" = "gtl_report_workflow_events"."report_id")`,
+      );
     case 'Language':
       // A language is "member-visible" through ANY project engaging it.
       // `pm.project_id = any(array(...))` keeps the shared `= ${ref}` template

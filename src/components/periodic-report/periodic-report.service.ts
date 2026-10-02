@@ -119,6 +119,15 @@ export class PeriodicReportService {
     return this.secure(result);
   }
 
+  /**
+   * The report as stored, before securing — for callers that feed it to the
+   * policy engine themselves (the GTL workflow uses the report's `scope` and
+   * `sensitivity` as the privilege context for its transitions).
+   */
+  async readOneUnsecured(id: ID): Promise<UnsecuredDto<PeriodicReport>> {
+    return await this.repo.readOne(id);
+  }
+
   async readMany(ids: readonly ID[]) {
     const periodicReports = await this.repo.readMany(ids);
     return periodicReports.map((dto) => this.secure(dto));

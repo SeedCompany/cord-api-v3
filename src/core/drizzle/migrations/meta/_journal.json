@@ -29,6 +29,13 @@
       "when": 1790985600000,
       "tag": "0003_gtl_reports",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790989200000,
+      "tag": "0004_gtl_report_workflow_events",
+      "breakpoints": true
     }
   ]
 }

@@ -1,6 +1,7 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import {
   Calculated,
+  Grandparent,
   Resource,
   type ResourceRelationsShape,
   SecuredProperty,
@@ -47,7 +48,11 @@ export class GTLReport extends IPeriodicReport {
 
   declare readonly narrativeFile: DefinedFile;
 
-  @Field(() => SecuredStatus)
+  // `Grandparent.store` lets the transitions resolver on the status type reach
+  // back to this report, the way `Project.step` does.
+  @Field(() => SecuredStatus, {
+    middleware: [Grandparent.store],
+  })
   @Calculated()
   readonly status: SecuredStatus;
 }

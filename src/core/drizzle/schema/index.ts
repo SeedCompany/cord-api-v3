@@ -3282,6 +3282,64 @@ export const progressReportWorkflowEventsRelations = relations(
   }),
 );
 
+// ─── GTL Report Workflow Events ─────────────────────────────────────────────
+
+/**
+ * Append-only status-transition history for a GTL report — the same shape as
+ * `progress_report_workflow_events`, keyed to the GTL status enum. Immutable
+ * facts: no soft delete, no `updated_at`.
+ *
+ * `transition_key` is null when the workflow was bypassed (status set directly).
+ * No trigger syncs the parent: `periodic_reports.gtl_status` is written
+ * app-side by the workflow repository's `changeStatus`, like the Progress
+ * sibling. @see migration 0004
+ */
+export const gtlReportWorkflowEvents = pgTable(
+  'gtl_report_workflow_events',
+  {
+    id: text('id').$type<ID<'GtlReportWorkflowEvent'>>().primaryKey(),
+    reportId: text('report_id')
+      .$type<ID<'GTLReport'>>()
+      .notNull()
+      .references(() => periodicReports.id, { onDelete: 'cascade' }),
+    // Exactly one of `who` / `who_system_agent_id` is set — the actor is a
+    // User or a SystemAgent. Same shape as the two sibling event tables;
+    // reasoning in migration 0001's header.
+    who: text('who')
+      .$type<ID<'User'>>()
+      .references(() => users.id),
+    whoSystemAgentId: text('who_system_agent_id')
+      .$type<ID<'SystemAgent'>>()
+      .references(() => systemAgents.id),
+    status: gtlReportStatusEnum('status').$type<GtlReportStatus>().notNull(),
+    transitionKey: text('transition_key'),
+    notes: jsonb('notes'), // RichText
+    at: timestamp('at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    // Lists read oldest-first.
+    index('gtl_report_workflow_events_report_id_at_idx').on(t.reportId, t.at),
+    index('gtl_report_workflow_events_who_idx').on(t.who),
+    index('gtl_report_workflow_events_who_system_agent_id_idx').on(
+      t.whoSystemAgentId,
+    ),
+    check(
+      'gtl_report_workflow_events_actor_shape_chk',
+      sql`num_nonnulls(${t.who}, ${t.whoSystemAgentId}) = 1`,
+    ),
+  ],
+);
+
+export const gtlReportWorkflowEventsRelations = relations(
+  gtlReportWorkflowEvents,
+  ({ one }) => ({
+    report: one(periodicReports, {
+      fields: [gtlReportWorkflowEvents.reportId],
+      references: [periodicReports.id],
+    }),
+  }),
+);
+
 // ─── PnP Extraction Results ──────────────────────────────────────────────────
 
 /**
