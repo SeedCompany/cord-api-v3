@@ -1,7 +1,6 @@
 import { Field, InterfaceType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { type ID, IdField } from '~/common';
-import { type LinkToUnknown } from '~/core/resources';
 import { Changeset } from './changeset.dto';
 
 @InterfaceType({
@@ -24,10 +23,4 @@ export abstract class ChangesetAware {
     nullable: true,
   })
   readonly changeset?: ID;
-
-  /**
-   * A reference to the resource that owns this one — used for navigation
-   * (breadcrumbs, `project: parent { … }`), not only for changesets.
-   */
-  readonly parent?: LinkToUnknown;
 }

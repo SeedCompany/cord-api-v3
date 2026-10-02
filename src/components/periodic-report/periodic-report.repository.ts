@@ -41,7 +41,6 @@ import {
   periodicReports,
   projects,
 } from '~/core/drizzle/schema';
-import { type LinkToUnknown, type ResourceMap } from '~/core/resources';
 import { type ScopedRole } from '../authorization/dto/role.dto';
 import { FileService } from '../file';
 import { ProgressReportStatus } from '../progress-report/dto';
@@ -555,17 +554,15 @@ export class PeriodicReportRepository extends DrizzleDtoRepository<
       );
     }
     const isProgress = row.type === 'Progress';
-    const parent: LinkToUnknown = isProgress
-      ? { __typename: 'LanguageEngagement', id: row.engagement!.id }
-      : {
-          __typename: `${project.type}Project` as keyof ResourceMap,
-          id: project.id,
-        };
     const dto: unknown = {
       id: row.id,
       type: row.type,
-      ...(isProgress && { __typename: 'ProgressReport', status: row.status }),
-      parent,
+      ...(isProgress && {
+        __typename: 'ProgressReport',
+        status: row.status,
+        engagement: { id: row.engagement!.id },
+      }),
+      project: { id: project.id },
       start: CalendarDate.fromISO(row.start),
       end: CalendarDate.fromISO(row.end),
       receivedDate: row.receivedDate

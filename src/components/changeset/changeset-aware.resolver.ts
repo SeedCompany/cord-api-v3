@@ -1,6 +1,6 @@
-import { Info, Parent, ResolveField, Resolver } from '@nestjs/graphql';
+import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { Fields, IsOnlyId, Resource } from '~/common';
+import { Resource } from '~/common';
 import { Identity } from '~/core/authentication';
 import { ResourceLoader } from '~/core/resources';
 import { ChangesetResolver } from './changeset.resolver';
@@ -25,23 +25,11 @@ export class ChangesetAwareResolver {
     description: 'The parent resource of this resource',
     nullable: true,
   })
-  async parent(
-    @Parent() object: ChangesetAware,
-    @Info(Fields, IsOnlyId) isOnlyId: boolean,
-  ) {
-    if (!object.parent) {
-      return null;
-    }
-    const ref = object.parent;
-
-    if (isOnlyId) {
-      return {
-        __typename: ref.__typename,
-        id: ref.id,
-        changeset: object.changeset,
-      };
-    }
-    return await this.resources.loadByRef(ref);
+  parent(): null {
+    // Only projects reach this: they have no parent. Every other
+    // ChangesetAware type resolves `parent` in its own resolver (from its
+    // `project` or `budget` link), which takes precedence over this one.
+    return null;
   }
 
   @ResolveField(() => ChangesetDiff, {

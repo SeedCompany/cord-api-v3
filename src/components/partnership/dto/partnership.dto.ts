@@ -11,11 +11,7 @@ import {
   Sensitivity,
   SensitivityField,
 } from '~/common';
-import {
-  type LinkTo,
-  type LinkToUnknown,
-  RegisterResource,
-} from '~/core/resources';
+import { type LinkTo, RegisterResource } from '~/core/resources';
 import { ChangesetAware } from '../../changeset/dto';
 import { Organization } from '../../organization/dto';
 import { SecuredPartnerTypes } from '../../partner/dto';
@@ -40,8 +36,9 @@ export class Partnership extends Interfaces {
 
   readonly project: LinkTo<'Project'>;
 
+  // Resolved by PartnershipResolver.parent from `project`.
   @Field(() => IProject)
-  declare readonly parent: LinkToUnknown;
+  readonly parent?: never;
 
   @Field()
   readonly agreementStatus: SecuredPartnershipAgreementStatus;

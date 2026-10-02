@@ -769,10 +769,6 @@ export class EngagementRepository extends DrizzleDtoRepository<
       __typename: isLanguage ? 'LanguageEngagement' : 'InternshipEngagement',
       createdAt: DateTime.fromJSDate(row.createdAt),
       modifiedAt: DateTime.fromJSDate(row.modifiedAt),
-      parent: {
-        id: row.project.id,
-        __typename: `${row.project.type}Project`,
-      },
       project: {
         id: row.project.id,
         type: row.project.type,

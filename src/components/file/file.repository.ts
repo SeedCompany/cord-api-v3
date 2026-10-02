@@ -487,7 +487,6 @@ export class FileRepository {
         public: row.public ?? false,
         createdAt: toDateTime(row.createdAt),
         createdById: row.createdById,
-        root: rootNode,
         // The resource holding the tree root. Falls back to the root node
         // itself (a Directory — never ProgressReportMedia, so the upload-time
         // file-is-media check short-circuits) when nothing references it, e.g.

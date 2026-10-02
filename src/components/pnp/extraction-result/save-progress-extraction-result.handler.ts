@@ -1,4 +1,3 @@
-import { type ID } from '~/common';
 import { OnHook } from '~/core/hooks';
 import { PeriodicReportUploadedHook } from '../../periodic-report/hooks';
 import { ProductStep } from '../../product/dto';
@@ -13,13 +12,14 @@ export class SaveProgressExtractionResultHandler {
   ) {}
 
   async handle(event: PeriodicReportUploadedHook) {
-    if (!event.pnpResultUsed) {
+    // Only the progress-report extraction marks the result as used.
+    if (!event.pnpResultUsed || event.report.type !== 'Progress') {
       return;
     }
 
     // Parse product/goal sync to hydrate problems from that process.
     await this.productSyncer.parse({
-      engagementId: event.report.parent.id as ID<'LanguageEngagement'>,
+      engagementId: event.report.engagement.id,
       // Roll with all the steps to get something since we don't have the actual
       // methodology from the user to filter with
       availableSteps: [...ProductStep],

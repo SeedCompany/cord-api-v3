@@ -199,10 +199,7 @@ export class BudgetRepository extends DrizzleDtoRepository<
       universalTemplateFile: row.universalTemplateFileId,
       // Assembled by the service via listRecords.
       records: [],
-      parent: {
-        id: row.project.id,
-        __typename: `${row.project.type}Project`,
-      },
+      project: { id: row.project.id },
       // PCR is excluded; resolver navigation marker stays undefined.
       changeset: undefined,
       canDelete: true,

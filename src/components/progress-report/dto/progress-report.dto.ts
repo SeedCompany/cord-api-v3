@@ -6,7 +6,7 @@ import {
   type ResourceRelationsShape,
   SecuredProperty,
 } from '~/common';
-import { type LinkToUnknown, RegisterResource } from '~/core/resources';
+import { type LinkTo, RegisterResource } from '~/core/resources';
 import { Commentable } from '../../comments/dto';
 import { LanguageEngagement } from '../../engagement/dto';
 import { type DefinedFile } from '../../file/dto';
@@ -35,8 +35,10 @@ export class ProgressReport extends Interfaces {
 
   declare readonly type: 'Progress';
 
+  readonly engagement: LinkTo<'LanguageEngagement'>;
+
   @Field(() => LanguageEngagement)
-  declare readonly parent: LinkToUnknown;
+  declare readonly parent?: never;
 
   declare readonly reportFile: DefinedFile;
 

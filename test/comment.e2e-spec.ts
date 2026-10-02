@@ -104,8 +104,8 @@ describe('Comment e2e', () => {
     });
   });
 
-  // ProgressReport implements Commentable. Regression guard for the
-  // parent-resolution path (resolveResourceRef), which previously excluded
+  // ProgressReport implements Commentable. Regression guard for the shared
+  // parent-resolution registry (now resolveResourceRef), which once excluded
   // ProgressReport and rejected this valid commentable.
   it('creates a comment on a ProgressReport parent', async () => {
     await runAsAdmin(app, async (a) => {

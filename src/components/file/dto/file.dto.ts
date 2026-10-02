@@ -64,9 +64,6 @@ abstract class FileNode extends Resource {
 
   readonly createdById: ID;
 
-  /** The root FileNode. This could be self */
-  readonly root: LinkToUnknown;
-
   /** The resource the root FileNode is attached to */
   readonly rootAttachedTo: [resource: LinkToUnknown, relationName: string];
 }

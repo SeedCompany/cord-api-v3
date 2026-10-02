@@ -1,5 +1,5 @@
 import { Info, Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { Fields, type ID, IsOnlyId } from '~/common';
+import { Fields, IsOnlyId } from '~/common';
 import { Loader, type LoaderOf } from '~/core/data-loader';
 import { EngagementLoader } from '../../engagement';
 import { ProgressReport } from '../dto';
@@ -12,8 +12,7 @@ export class ProgressReportParentResolver {
     @Parent() report: ProgressReport,
     @Loader(EngagementLoader) engagements: LoaderOf<EngagementLoader>,
   ) {
-    // A progress report's parent is always a language engagement.
-    const id = report.parent.id as ID<'LanguageEngagement'>;
+    const { id } = report.engagement;
     if (onlyId) {
       return { id };
     }

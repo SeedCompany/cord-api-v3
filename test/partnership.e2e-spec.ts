@@ -120,26 +120,13 @@ describe('Partnership e2e', () => {
   });
 
   /**
-   * `parent` on a ChangesetAware resource is resolved from the DTO's
-   * `{ __typename, id }` reference.
-   *
-   * SKIPPED — narrow pre-existing bug, unrelated to the reference shape.
-   * `Partnership.parent` is typed as the `Project` INTERFACE, which carries a
-   * custom `resolveType` (`resolveProjectType`, project.dto.ts:82) that reads
-   * `val.type`. graphql-js always calls a custom resolveType and ignores
-   * `__typename`. The `IsOnlyId` shortcut in ChangesetAwareResolver.parent
-   * returns `{ __typename, id, changeset }` — no `type` — so selecting ONLY
-   * `id`/`changeset` under `parent` throws:
-   *
-   *   ServerException: Could not resolve project type: 'undefined'
-   *
-   * It was identical on Neo4j, so it is pre-existing and not a migration
-   * regression. Selecting any additional field takes the `loadByRef` path,
-   * which returns the real DTO (with `type`) and works — which is why normal
-   * client queries never hit this.
+   * Selecting only `id` under `parent` used to throw
+   * `Could not resolve project type: 'undefined'`: the shared ChangesetAware
+   * resolver answered id-only selections with `{ __typename, id }`, and the
+   * `Project` interface's resolveType reads `type`, which that object lacked.
+   * PartnershipResolver.parent now always loads the project, so this works.
    */
-  // Named so the reason shows up in the test output, not just in the note above.
-  it.skip('resolves parent (id-only branch) — skipped: pre-existing on every engine, Project.resolveType reads `type` and ignores `__typename`', async () => {
+  it('resolves parent when only its id is selected', async () => {
     const partnership = await createPartnership(app, { project: project.id });
 
     const onlyId = await app.graphql.query(
@@ -157,10 +144,6 @@ describe('Partnership e2e', () => {
     expect(onlyId.partnership.parent?.id).toBe(project.id);
   });
 
-  /**
-   * The working path: selecting any field beyond `id`/`changeset` takes
-   * `ResourceLoader.loadByRef` on the parent reference.
-   */
   it('resolves parent as a hydrated Project', async () => {
     const partnership = await createPartnership(app, { project: project.id });
 
