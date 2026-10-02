@@ -1,17 +1,19 @@
-import { type ID } from '~/common';
 import {
   type DataLoaderStrategy,
   LoaderFactory,
   type LoaderOptionsOf,
 } from '~/core/data-loader';
-import { type ProgressReport } from '../dto';
-import { type ProgressReportMedia as ReportMedia } from './dto';
+import {
+  type MediaReportId,
+  type ProgressReportMedia as ReportMedia,
+} from './dto';
 import { ProgressReportMediaService } from './progress-report-media.service';
 
+/** Keyed by the report id — a ProgressReport or a GTLReport. */
 @LoaderFactory()
 export class ProgressReportFeaturedMediaLoader implements DataLoaderStrategy<
   ReportMedia,
-  ID<ProgressReport>
+  MediaReportId
 > {
   constructor(private readonly service: ProgressReportMediaService) {}
 
@@ -21,7 +23,7 @@ export class ProgressReportFeaturedMediaLoader implements DataLoaderStrategy<
     } satisfies LoaderOptionsOf<ProgressReportFeaturedMediaLoader>;
   }
 
-  async loadMany(ids: ReadonlyArray<ID<ProgressReport>>) {
+  async loadMany(ids: readonly MediaReportId[]) {
     return await this.service.readFeaturedOfReport(ids);
   }
 }

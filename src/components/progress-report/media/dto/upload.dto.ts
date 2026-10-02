@@ -10,8 +10,8 @@ import {
 } from '~/common';
 import { CreateDefinedFileVersion } from '../../../file/dto';
 import { MediaUserMetadata } from '../../../file/media/media.dto';
-import { type ProgressReport } from '../../dto';
 import {
+  type MediaReportId,
   type MediaVariant,
   ProgressReportMedia,
   type VariantGroup,
@@ -21,8 +21,10 @@ import {
 export class UploadProgressReportMedia extends PickType(ProgressReportMedia, [
   'category',
 ]) {
-  @IdField()
-  readonly report: ID<ProgressReport>;
+  @IdField({
+    description: 'The report (Progress or GTL) to attach the media to',
+  })
+  readonly report: MediaReportId;
 
   @Field()
   readonly file: CreateDefinedFileVersion;
@@ -41,6 +43,26 @@ export class UploadProgressReportMedia extends PickType(ProgressReportMedia, [
     nullable: true,
   })
   readonly variantGroup?: VariantGroup;
+}
+
+@InputType()
+export class ReuseProgressReportMedia {
+  @IdField({
+    description: stripIndent`
+      The existing media item to reuse.
+
+      Its file, category, caption and alt text are copied into a new item in
+      the SAME variant group, on the same report, under the given variant.
+      Typical use: a draft image is chosen for the investor report, so it is
+      copied into the \`published\` variant.
+    `,
+  })
+  readonly id: ID<ProgressReportMedia>;
+
+  @VariantInputField(ProgressReportMedia, {
+    description: 'The variant the copy is placed in',
+  })
+  readonly variant: Variant<MediaVariant>;
 }
 
 @InputType()

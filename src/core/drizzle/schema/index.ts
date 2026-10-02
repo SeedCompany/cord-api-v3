@@ -3179,12 +3179,19 @@ export const progressReportMediaCategoryEnum = pgEnum(
 );
 
 /**
- * Media (image/video/audio) attached to a ProgressReport. Each row carries one
- * `variant` (draft/translated/fpm/published); rows sharing a `variant_group_id`
- * are the "same image" across variants (≤1 row per (group, variant)). The
- * `file_id` is a DefinedFile placeholder created by FileService.createDefinedFile
- * after the row lands (so it's FK-less here, like other defined-file columns);
- * the media sidecar is reached via that file's latest FileVersion.
+ * Media (image/video/audio) attached to an engagement report — a ProgressReport
+ * or a GTLReport. The table keeps its original name: one resource
+ * (`ProgressReportMedia`) serves both report kinds, so every grant, handler and
+ * attachment lookup written for it applies to GTL rows unchanged. `report_id`
+ * references `periodic_reports` without a type CHECK; the service refuses the
+ * project-parented kinds (Financial/Narrative) before a row is written.
+ *
+ * Each row carries one `variant` (draft/translated/fpm/published); rows sharing
+ * a `variant_group_id` are the "same image" across variants (≤1 row per (group,
+ * variant)). The `file_id` is a DefinedFile placeholder created by
+ * FileService.createDefinedFile after the row lands (so it's FK-less here, like
+ * other defined-file columns); the media sidecar is reached via that file's
+ * latest FileVersion.
  *
  * The Neo4j VariantGroup node collapses to a plain `variant_group_id` here — a
  * group "exists" exactly as long as some media references it (matching the
@@ -3195,7 +3202,7 @@ export const progressReportMedia = pgTable(
   {
     id: text('id').$type<ID>().primaryKey(),
     reportId: text('report_id')
-      .$type<ID<'ProgressReport'>>()
+      .$type<ID<'ProgressReport' | 'GTLReport'>>()
       .notNull()
       .references(() => periodicReports.id),
     variant: text('variant').notNull(),

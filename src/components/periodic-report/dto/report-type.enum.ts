@@ -15,8 +15,15 @@ export const ReportType = makeEnum({
  * rule, so the repository asks "is this engagement-parented?" instead of
  * naming types one by one.
  */
+export type EngagementParentedReportType = Extract<
+  ReportType,
+  'Progress' | 'GTL'
+>;
+
 export const engagementParentedReportTypes: ReadonlySet<ReportType> =
   new Set<ReportType>(['Progress', 'GTL']);
 
-export const isEngagementParented = (type: ReportType) =>
+export const isEngagementParented = (
+  type: ReportType,
+): type is EngagementParentedReportType =>
   engagementParentedReportTypes.has(type);

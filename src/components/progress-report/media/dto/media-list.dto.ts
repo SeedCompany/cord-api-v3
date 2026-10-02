@@ -5,6 +5,7 @@ import {
   Variant,
   VariantInputField,
 } from '~/common';
+import { type GTLReport } from '../../../gtl-report/dto';
 import { type ProgressReport } from '../../dto';
 import { type MediaVariant, ProgressReportMedia } from './media.dto';
 
@@ -26,7 +27,8 @@ export class ProgressReportMediaListInput extends SortablePaginationInput<
 export class ProgressReportMediaList extends PaginatedList(
   ProgressReportMedia,
 ) {
-  readonly report: ProgressReport;
+  /** The report the list belongs to; the condition context for the variants. */
+  readonly report: ProgressReport | GTLReport;
 }
 
 @ObjectType()

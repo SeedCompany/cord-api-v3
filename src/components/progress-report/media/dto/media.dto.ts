@@ -6,12 +6,22 @@ import { RegisterResource } from '~/core/resources';
 import { type LinkTo } from '~/core/resources';
 import { type FileId } from '../../../file/dto';
 import { type Media } from '../../../file/media/media.dto';
-import { type ProgressReport } from '../../dto';
 import { ProgressReportHighlight } from '../../dto/highlights.dto';
 import { MediaCategory } from '../media-category.enum';
 
 export type VariantGroup = ID<'ProgressReportMediaVariantGroup'>;
 
+/**
+ * The reports media can hang off: the engagement-parented kinds. One resource
+ * serves both, so the id is typed by the union rather than by `ProgressReport`.
+ */
+export type MediaReportId = ID<'ProgressReport' | 'GTLReport'>;
+
+/**
+ * Media (image/video/audio) on an engagement report. Despite the name this is
+ * the ONE media resource for both `ProgressReport` and `GTLReport`: the same
+ * table, variants, variant groups and grants serve both report kinds.
+ */
 @RegisterResource()
 @InputType({ isAbstract: true })
 @ObjectType()
@@ -27,7 +37,7 @@ export class ProgressReportMedia extends Resource {
     ProgressReportHighlight.Variants.slice(-1).map((v) => v.key),
   );
 
-  readonly report: ID<ProgressReport>;
+  readonly report: MediaReportId;
 
   @Field(() => Variant)
   readonly variant: Variant<MediaVariant> & SetDbType<MediaVariant>;

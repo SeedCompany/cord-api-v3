@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { and, desc, eq, inArray, isNull, type SQL } from 'drizzle-orm';
+import { and, count, desc, eq, inArray, isNull, type SQL } from 'drizzle-orm';
 import { DateTime } from 'luxon';
 import {
   generateId,
@@ -21,9 +21,10 @@ import {
 } from '~/core/drizzle/schema';
 import { LiveQueryStore } from '~/core/live-query';
 import { requesterScopeByProject } from '../../project/project-member/membership-scope';
-import { type ProgressReport as Report } from '../dto';
 import {
   type ProgressReportMediaListInput as ListArgs,
+  type MediaReportId,
+  type MediaVariant,
   ProgressReportMedia as ReportMedia,
   type UpdateProgressReportMedia as UpdateMedia,
   type UploadProgressReportMedia as UploadMedia,
@@ -31,16 +32,24 @@ import {
 
 type Row = DbTypeOf<ReportMedia>;
 
+/**
+ * What a new row needs. `UploadProgressReportMedia` minus the file, so the
+ * reuse path (which copies an existing file rather than taking an upload) can
+ * share the insert.
+ */
+export type CreateMediaRow = Omit<UploadMedia, 'file'>;
+
 const variantOrder = new Map(
   ReportMedia.Variants.map((v, i) => [v.key, i] as const),
 );
 
 /**
- * ProgressReportMedia storage. One row per
- * (variantGroup, variant); `file_id` is a DefinedFile placeholder; the media
- * sidecar is reached via that file's latest FileVersion. Project sensitivity +
- * the requester's project-scoped roles (for `secure()`) come from the
- * report → engagement → project chain.
+ * ProgressReportMedia storage, for media on ProgressReports AND GTLReports (one
+ * resource, one table). One row per (variantGroup, variant); `file_id` is a
+ * DefinedFile placeholder; the media sidecar is reached via that file's latest
+ * FileVersion. Project sensitivity + the requester's project-scoped roles (for
+ * `secure()`) come from the report → engagement → project chain, which both
+ * report kinds share.
  *
  * migration-todo: no row-level read filter — `secure()` handles field access and
  *   the only caller paths run as project members; add an applyReadFilter when a
@@ -58,7 +67,7 @@ export class ProgressReportMediaRepository {
     return this.drizzle.client;
   }
 
-  async listForReport(report: Report, args: ListArgs) {
+  async listForReport(report: { id: MediaReportId }, args: ListArgs) {
     const variantKeys = args.variants?.map((v) => v.key);
     const all = await this.hydrate([
       eq(progressReportMedia.reportId, report.id),
@@ -99,7 +108,7 @@ export class ProgressReportMediaRepository {
     return row;
   }
 
-  async readFeaturedOfReport(ids: ReadonlyArray<ID<Report>>) {
+  async readFeaturedOfReport(ids: readonly MediaReportId[]) {
     if (ids.length === 0) return [];
     const publishedVariant = ReportMedia.Variants.at(-1)!.key;
     // Latest published-variant media per report.
@@ -110,7 +119,7 @@ export class ProgressReportMediaRepository {
       .from(progressReportMedia)
       .where(
         and(
-          inArray(progressReportMedia.reportId, ids as Array<ID<Report>>),
+          inArray(progressReportMedia.reportId, ids as MediaReportId[]),
           eq(progressReportMedia.variant, publishedVariant),
           isNull(progressReportMedia.deletedAt),
         ),
@@ -122,8 +131,42 @@ export class ProgressReportMediaRepository {
     return await this.readMany(featured.map((r) => r.id));
   }
 
+  /**
+   * Lock the report's row for the rest of the surrounding transaction (the
+   * DrizzleTransactionalMutationsInterceptor opens one per mutation).
+   *
+   * The investor cap is a SELECT-count-then-INSERT, and the partial unique
+   * index on (group, variant) cannot help: five uploads to five different
+   * groups are five distinct rows. Without this lock two concurrent uploads
+   * could both count 3 and both land, leaving 5 in the slot. Serializing on the
+   * report row makes the second wait for the first to commit and then count 4.
+   * Only called for the capped (public) variant, so draft uploads never queue.
+   */
+  async lockReport(reportId: MediaReportId) {
+    await this.db
+      .select({ id: periodicReports.id })
+      .from(periodicReports)
+      .where(eq(periodicReports.id, reportId))
+      .for('update');
+  }
+
+  /** Live media rows on the report in the given variant. */
+  async countLiveInVariant(reportId: MediaReportId, variant: MediaVariant) {
+    const [row] = await this.db
+      .select({ total: count() })
+      .from(progressReportMedia)
+      .where(
+        and(
+          eq(progressReportMedia.reportId, reportId),
+          eq(progressReportMedia.variant, variant),
+          isNull(progressReportMedia.deletedAt),
+        ),
+      );
+    return row?.total ?? 0;
+  }
+
   async create(
-    input: UploadMedia,
+    input: CreateMediaRow,
     fileId: ID<'File'>,
   ): Promise<Omit<Row, 'media' | 'file'>> {
     let variantGroupId = input.variantGroup;

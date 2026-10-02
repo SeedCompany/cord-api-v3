@@ -6,6 +6,7 @@ import { ProgressReportFeaturedMediaLoader } from './progress-report-featured-me
 import { ProgressReportMediaLoader } from './progress-report-media.loader';
 import { ProgressReportMediaRepository } from './progress-report-media.repository';
 import { ProgressReportMediaService } from './progress-report-media.service';
+import { ProgressReportMediaGtlReportConnectionResolver } from './resolvers/gtl-report-connection.resolver';
 import { ProgressReportMediaListResolver } from './resolvers/list.resolver';
 import { ProgressReportMediaResolver } from './resolvers/media.resolver';
 import { ProgressReportMediaProgressReportConnectionResolver } from './resolvers/report-connection.resolver';
@@ -17,6 +18,7 @@ import { ProgressReportMediaProgressReportConnectionResolver } from './resolvers
     ProgressReportMediaResolver,
     ProgressReportMediaListResolver,
     ProgressReportMediaProgressReportConnectionResolver,
+    ProgressReportMediaGtlReportConnectionResolver,
     ProgressReportMediaLoader,
     ProgressReportFeaturedMediaLoader,
     ProgressReportMediaService,

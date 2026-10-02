@@ -445,6 +445,30 @@ export class FileService {
     return { ...file, newVersion: fv };
   }
 
+  /**
+   * Copy a stored file version's bytes to a fresh id, ready to hand to
+   * {@link createFileVersion} / {@link createDefinedFile} as `upload`.
+   *
+   * The copy lands directly at its final key (not under `temp/`), which
+   * `createFileVersion` already accepts as "an upload that has been placed".
+   * The copied object is removed again if the surrounding transaction rolls
+   * back, the same way an upload is moved back to `temp/` on rollback.
+   */
+  async copyFileVersion(sourceVersionId: ID): Promise<ID> {
+    const copyId = await generateId();
+    await this.bucket.copyObject(sourceVersionId, copyId);
+    this.txHooks.afterRollback.add(async () => {
+      await this.bucket.deleteObject(copyId).catch((e) => {
+        this.logger.error('Failed to remove copied file after rollback', {
+          sourceVersionId,
+          copyId,
+          exception: e,
+        });
+      });
+    });
+    return copyId;
+  }
+
   private async validateParentNode(
     id: ID,
     isType: (type: FileNodeType) => boolean,

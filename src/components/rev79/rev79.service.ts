@@ -288,16 +288,19 @@ export class Rev79Service {
 
     const file = new File([buffer], filename, { type: contentType });
 
-    await this.mediaService.upload({
-      report: reportId,
-      file: {
-        file,
-        name: filename,
-        media: input.description ? { caption: input.description } : undefined,
+    await this.mediaService.upload(
+      {
+        report: reportId,
+        file: {
+          file,
+          name: filename,
+          media: input.description ? { caption: input.description } : undefined,
+        },
+        variant: ProgressReportMedia.Variants.byKey('draft'),
+        category: input.category,
       },
-      variant: ProgressReportMedia.Variants.byKey('draft'),
-      category: input.category,
-    });
+      'Progress',
+    );
   }
 
   private async applyCommunityStory(
