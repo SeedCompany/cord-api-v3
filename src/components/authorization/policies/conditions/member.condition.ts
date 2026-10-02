@@ -210,6 +210,14 @@ const projectIdRefForResource = (resource: EnhancedResource<any>): SQL => {
       return sql.raw(
         `(select "e"."project_id" from "engagements" "e" join "gtl_goals" "g" on "g"."engagement_id" = "e"."id" where "g"."id" = "gtl_goal_progress"."goal_id")`,
       );
+    case 'GtlReportPracticum':
+      // Two hops: the practicum hangs off a GTL report, which hangs off an
+      // engagement. Reached because the Field Partner / Project Manager /
+      // Translator read grants are member-conditioned, so `applyReadFilter`
+      // emits this for the report's practicum list.
+      return sql.raw(
+        `(select "e"."project_id" from "engagements" "e" join "periodic_reports" "pr" on "pr"."engagement_id" = "e"."id" where "pr"."id" = "gtl_report_practicums"."report_id")`,
+      );
     case 'Language':
       // A language is "member-visible" through ANY project engaging it.
       // `pm.project_id = any(array(...))` keeps the shared `= ${ref}` template

@@ -3,11 +3,9 @@ import {
   type ID,
   InputException,
   NotFoundException,
-  type Sensitivity,
   type UnsecuredDto,
 } from '~/common';
 import { Privileges } from '../../authorization';
-import { type ScopedRole } from '../../authorization/dto/role.dto';
 import {
   type CreateGtlGoal,
   GtlGoal,
@@ -19,23 +17,8 @@ import {
   type ReportGtlGoalProgress,
   type UpdateGtlGoal,
 } from '../dto';
+import { contextOf } from '../privilege-context';
 import { GtlGoalRepository } from './gtl-goal.repository';
-
-/**
- * A parent's membership and sensitivity, standing in as the privilege context
- * for a child that does not exist yet. The member and sensitivity conditions
- * read exactly these two properties off whatever object they are given.
- */
-const contextOf = <T extends GtlGoal | GtlGoalProgress>(parent: {
-  scope: readonly ScopedRole[];
-  sensitivity: Sensitivity;
-}): UnsecuredDto<T> => {
-  const context: unknown = {
-    scope: parent.scope,
-    sensitivity: parent.sensitivity,
-  };
-  return context as UnsecuredDto<T>;
-};
 
 @Injectable()
 export class GtlGoalService {

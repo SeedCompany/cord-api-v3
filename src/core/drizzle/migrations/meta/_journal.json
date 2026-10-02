@@ -43,6 +43,13 @@
       "when": 1790992800000,
       "tag": "0005_gtl_goals",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790996400000,
+      "tag": "0006_gtl_report_sections",
+      "breakpoints": true
     }
   ]
 }

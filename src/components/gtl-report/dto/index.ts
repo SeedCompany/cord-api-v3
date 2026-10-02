@@ -6,3 +6,7 @@ export * from './gtl-goal.dto';
 export * from './gtl-goal-progress.dto';
 export * from './gtl-goal-summary.dto';
 export * from './gtl-goal-mutations.dto';
+export * from './gtl-report-prose.dto';
+export * from './gtl-report-practicum.dto';
+export * from './create-gtl-report-practicum.dto';
+export * from './gtl-progress-explanation.dto';

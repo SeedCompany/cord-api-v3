@@ -32,6 +32,7 @@ import {
   type GtlGoalMeasurement,
   type GtlGoalStatus,
 } from '../../../components/gtl-report/dto/gtl-goal.enums';
+import { type GtlProgressStatus } from '../../../components/gtl-report/dto/gtl-progress-explanation.dto';
 import { type GtlReportStatus } from '../../../components/gtl-report/dto/gtl-report-status.enum';
 import { type AIAssistedTranslation } from '../../../components/language/dto/ai-assisted-translation.enum';
 import { type LanguageMilestone } from '../../../components/language/dto/language-milestone.enum';
@@ -3492,6 +3493,95 @@ export const gtlGoalProgressRelations = relations(
       references: [periodicReports.id],
     }),
   }),
+);
+
+// ─── GTL Report Sections ─────────────────────────────────────────────────────
+
+/**
+ * Practicum and workshop involvement reported for one quarter of a GTL
+ * report. Several rows per report; each is three independent fields, one of
+ * which is a person, which is why it is a flat table rather than a prompt
+ * response like the report's Community Impact and Highlights sections.
+ * Soft-deleted. @see migration 0006
+ */
+export const gtlReportPracticums = pgTable(
+  'gtl_report_practicums',
+  {
+    id: text('id').$type<ID<'GtlReportPracticum'>>().primaryKey(),
+    reportId: text('report_id')
+      .$type<ID<'GTLReport'>>()
+      .notNull()
+      .references(() => periodicReports.id, { onDelete: 'cascade' }),
+    involvement: text('involvement').notNull(),
+    mentorId: text('mentor_id')
+      .$type<ID<'User'>>()
+      .references(() => users.id),
+    outcomes: jsonb('outcomes'), // RichText
+    order: integer('order').notNull().default(0),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    modifiedAt: timestamp('modified_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (t) => [
+    index('gtl_report_practicums_report_id_idx').on(t.reportId),
+    index('gtl_report_practicums_mentor_id_idx').on(t.mentorId),
+  ],
+);
+
+export const gtlReportPracticumsRelations = relations(
+  gtlReportPracticums,
+  ({ one }) => ({
+    report: one(periodicReports, {
+      fields: [gtlReportPracticums.reportId],
+      references: [periodicReports.id],
+    }),
+    mentor: one(users, {
+      fields: [gtlReportPracticums.mentorId],
+      references: [users.id],
+    }),
+  }),
+);
+
+/** Mirrors `GtlProgressStatus`. */
+export const gtlProgressStatusEnum = pgEnum('gtl_progress_status', [
+  'AheadOfSchedule',
+  'OnTrack',
+  'DelayedYetExpectedToCompleteOnTime',
+  'NeedsAChangeToPlan',
+]);
+
+/**
+ * The Field Project Manager's confidential explanation of how the internship
+ * is tracking, one per GTL report. The primary key IS the report id, so a
+ * write is an upsert — the same shape as
+ * `progressReportVarianceExplanations`. No soft delete: there is only ever a
+ * current explanation to revise. @see migration 0006
+ */
+export const gtlReportProgressExplanations = pgTable(
+  'gtl_report_progress_explanations',
+  {
+    reportId: text('report_id')
+      .$type<ID<'GTLReport'>>()
+      .primaryKey()
+      .references(() => periodicReports.id, { onDelete: 'cascade' }),
+    status: gtlProgressStatusEnum('status')
+      .$type<GtlProgressStatus>()
+      .notNull(),
+    context: jsonb('context'), // RichText
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
 );
 
 // ─── PnP Extraction Results ──────────────────────────────────────────────────

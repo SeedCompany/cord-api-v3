@@ -31,3 +31,4 @@ export * from './by-feature/new-progress-reports-beta.policy';
 export * from './by-feature/project-managers-can-retract-own-change-to-plan-approval';
 export * from './by-feature/gtl-report-workflow.policy';
 export * from './by-feature/gtl-goals.policy';
+export * from './by-feature/gtl-report-sections.policy';

@@ -10,6 +10,10 @@ import { type BaseNode, type LinkTo, RegisterResource } from '~/core/resources';
 import { InternshipEngagement } from '../../engagement/dto';
 import { type DefinedFile } from '../../file/dto';
 import { IPeriodicReport } from '../../periodic-report/dto/periodic-report.dto';
+import {
+  GtlReportCommunityImpact,
+  GtlReportHighlight,
+} from './gtl-report-prose.dto';
 import { SecuredGtlReportStatus as SecuredStatus } from './gtl-report-status.enum';
 
 /**
@@ -32,8 +36,13 @@ export class GTLReport extends IPeriodicReport {
   static readonly Parent = () =>
     import('../../engagement/dto').then((m) => m.InternshipEngagement);
 
+  // The two prompt-driven written sections. Listing them here is what makes
+  // `[GTLReport, 'communityImpact']` a valid child-list edge for the
+  // prompt-variant-response factories and for the `children(...)` grants.
   static readonly Relations = (() => ({
     ...Resource.Relations(),
+    communityImpact: [GtlReportCommunityImpact],
+    highlights: [GtlReportHighlight],
   })) satisfies ResourceRelationsShape;
 
   declare readonly type: 'GTL';

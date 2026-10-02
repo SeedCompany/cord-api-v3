@@ -8,6 +8,7 @@ import { EngagementStatus } from '../src/components/engagement/dto';
 import {
   GtlGoalMeasurement,
   GtlGoalStatus,
+  GtlProgressStatus,
   GtlReportStatus,
 } from '../src/components/gtl-report/dto';
 import { PartnerType } from '../src/components/partner/dto';
@@ -197,6 +198,7 @@ describe('Postgres schema invariants', () => {
     ['gtl_report_status', GtlReportStatus],
     ['gtl_goal_measurement', GtlGoalMeasurement],
     ['gtl_goal_status', GtlGoalStatus],
+    ['gtl_progress_status', GtlProgressStatus],
   ];
 
   it.each(enumPairs)(
