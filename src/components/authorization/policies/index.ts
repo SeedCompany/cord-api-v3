@@ -32,3 +32,6 @@ export * from './by-feature/project-managers-can-retract-own-change-to-plan-appr
 export * from './by-feature/gtl-report-workflow.policy';
 export * from './by-feature/gtl-goals.policy';
 export * from './by-feature/gtl-report-sections.policy';
+export * from './by-feature/engagement-posts.policy';
+export * from './by-feature/moderate-posts.policy';
+export * from './by-feature/feature-post-for-investor-report.policy';

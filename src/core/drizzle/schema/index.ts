@@ -3036,9 +3036,16 @@ export const postShareabilityEnum = pgEnum('post_shareability', [
 ]);
 
 /**
- * Posts attach to any Postable resource (Language/Partner/Project) via a
- * polymorphic FK-less parent_id + parent_type discriminator. Membership
- * shareability is enforced in the repo against project_members.
+ * Posts attach to any Postable resource (Language/Partner/Project/Engagement)
+ * via a polymorphic FK-less parent_id + parent_type discriminator. Membership
+ * shareability is enforced in the repo against project_members (one hop
+ * through engagements.project_id for engagement parents).
+ *
+ * The moderation columns (`approved_*`), the report link and `featured` came
+ * with prayer requests on engagements (migration 0007). `shareability` is what
+ * the author asked for; `approved_shareability` is what a moderator cleared,
+ * NULL until someone has looked. `final_body` is the wording shown once the
+ * post leaves the author's hands; `body` is never overwritten.
  */
 export const posts = pgTable(
   'posts',
@@ -3055,6 +3062,21 @@ export const posts = pgTable(
       .$type<PostShareability>()
       .notNull(),
     body: text('body').notNull(),
+    // The quarterly report this was submitted with. Attribution, not
+    // ownership: losing the report must not lose the post, hence SET NULL.
+    reportId: text('report_id')
+      .$type<ID<'PeriodicReport'>>()
+      .references(() => periodicReports.id, { onDelete: 'set null' }),
+    approvedShareability: postShareabilityEnum(
+      'approved_shareability',
+    ).$type<PostShareability>(),
+    approvedById: text('approved_by_id')
+      .$type<ID<'User'>>()
+      .references(() => users.id, { onDelete: 'set null' }),
+    approvedAt: timestamp('approved_at', { withTimezone: true }),
+    finalBody: text('final_body'),
+    // Curated into the report's Investor Report. Only meaningful with a report.
+    featured: boolean('featured').notNull().default(false),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -3065,6 +3087,16 @@ export const posts = pgTable(
   (t) => [
     index('posts_parent_id_idx').on(t.parentId),
     index('posts_creator_id_idx').on(t.creatorId),
+    index('posts_report_id_idx').on(t.reportId),
+    index('posts_approved_by_id_idx').on(t.approvedById),
+    // The moderation queue: posts on a parent nobody has cleared yet.
+    index('posts_awaiting_moderation_idx')
+      .on(t.parentId)
+      .where(sql`${t.approvedShareability} is null`),
+    // The per-report cap on featured posts counts through this.
+    index('posts_featured_report_idx')
+      .on(t.reportId)
+      .where(sql`${t.featured}`),
   ],
 );
 

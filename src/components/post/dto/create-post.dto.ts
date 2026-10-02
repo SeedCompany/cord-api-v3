@@ -21,6 +21,17 @@ export class CreatePost {
   })
   @IsNotEmpty()
   readonly body: string;
+
+  @IdField({
+    nullable: true,
+    description: `
+      Submit this post as part of a quarterly report on the same engagement.
+
+      Optional: a post created straight on an engagement between reports leaves
+      this unset, and can be attached to a report later.
+    `,
+  })
+  readonly report?: ID<'PeriodicReport'> | null;
 }
 
 @ObjectType()

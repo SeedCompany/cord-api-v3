@@ -31,6 +31,7 @@ import { ChangesetAware } from '../../changeset/dto';
 import { Commentable } from '../../comments/dto';
 import { SecuredLanguageMilestone } from '../../language/dto';
 import { SecuredAIAssistedTranslation } from '../../language/dto/ai-assisted-translation.enum';
+import { Postable } from '../../post/dto';
 import { Product, SecuredMethodologies } from '../../product/dto';
 import {
   InternshipProject,
@@ -49,7 +50,17 @@ export type AnyEngagement = MergeExclusive<
   InternshipEngagement
 >;
 
-const Interfaces = IntersectTypes(Resource, ChangesetAware, Commentable);
+// Postable is declared here, on the interface, and NOT via `implements:` on
+// the concrete types: `implements:` is GraphQL-only metadata, while the
+// resource registry derives interfaces from the TS parent chain, so a
+// concrete-only declaration would leave `ResourcesHost.getImplementations(
+// Postable)` and interface-level policy grants blind to engagements.
+const Interfaces = IntersectTypes(
+  Resource,
+  ChangesetAware,
+  Postable,
+  Commentable,
+);
 
 export const resolveEngagementType = (
   val: Pick<AnyEngagement, '__typename'>,
@@ -75,6 +86,7 @@ const RequiredWhenNotInDev = RequiredWhen(() => Engagement)({
 class Engagement extends Interfaces {
   static readonly Relations = (() => ({
     ...Resource.Relations(),
+    ...Postable.Relations(),
     ...Commentable.Relations(),
   })) satisfies ResourceRelationsShape;
   static readonly Parent = () =>

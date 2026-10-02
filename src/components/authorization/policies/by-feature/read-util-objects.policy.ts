@@ -7,7 +7,18 @@ import { Policy } from '../util';
 
   // If anyone is able to read the post, then they can read its properties as well.
   // These are declared via `XPostable.children(c => c.posts.read)`
-  r.Post.specifically((p) => p.many('body', 'creator').read),
+  r.Post.specifically(
+    (p) =>
+      p.many(
+        'body',
+        'creator',
+        'approvedShareability',
+        'approvedBy',
+        'report',
+        'finalBody',
+        'featured',
+      ).read,
+  ),
 
   r.Tool.read,
 ])
