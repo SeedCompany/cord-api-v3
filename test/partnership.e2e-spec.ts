@@ -120,30 +120,23 @@ describe('Partnership e2e', () => {
   });
 
   /**
-   * `parent` on a ChangesetAware resource is resolved from a Neo4j-shaped
-   * BaseNode (`{ identity, labels, properties }`). A flat `{ id }` is a
-   * TypeError, because both branches of ChangesetAwareResolver.parent read
-   * `.labels` and `.properties.id`. Four Drizzle repos shipped the flat shape;
-   * no spec on any migrated entity queried this field, which is how it survived
-   * three PRs.
+   * `parent` on a ChangesetAware resource is resolved from the DTO's
+   * `{ __typename, id }` reference.
    *
-   * Negative case verified 2026-08-03: with the shape fix reverted this test
-   * fails with `TypeError: Cannot read properties of undefined (reading 'id')`.
-   *
-   * SKIPPED — narrow pre-existing bug, unrelated to the BaseNode shape.
+   * SKIPPED — narrow pre-existing bug, unrelated to the reference shape.
    * `Partnership.parent` is typed as the `Project` INTERFACE, which carries a
    * custom `resolveType` (`resolveProjectType`, project.dto.ts:82) that reads
    * `val.type`. graphql-js always calls a custom resolveType and ignores
-   * `__typename`. The `IsOnlyId` shortcut (changeset-aware.resolver.ts:36-42)
+   * `__typename`. The `IsOnlyId` shortcut in ChangesetAwareResolver.parent
    * returns `{ __typename, id, changeset }` — no `type` — so selecting ONLY
    * `id`/`changeset` under `parent` throws:
    *
    *   ServerException: Could not resolve project type: 'undefined'
    *
-   * Identical under DATABASE=neo4j and DATABASE=postgres, so it is pre-existing
-   * and not a migration regression. Selecting any additional field takes the
-   * `loadByBaseNode` path, which returns the real DTO (with `type`) and works —
-   * which is why normal client queries never hit this.
+   * It was identical on Neo4j, so it is pre-existing and not a migration
+   * regression. Selecting any additional field takes the `loadByRef` path,
+   * which returns the real DTO (with `type`) and works — which is why normal
+   * client queries never hit this.
    */
   // Named so the reason shows up in the test output, not just in the note above.
   it.skip('resolves parent (id-only branch) — skipped: pre-existing on every engine, Project.resolveType reads `type` and ignores `__typename`', async () => {
@@ -165,11 +158,8 @@ describe('Partnership e2e', () => {
   });
 
   /**
-   * The working path, and the regression test for the BaseNode shape fix.
-   *
-   * Selecting any field beyond `id`/`changeset` takes
-   * `ResourceLoader.loadByBaseNode`, which reads `.labels` and
-   * `.properties.id` off the parent BaseNode. Verified on both engines.
+   * The working path: selecting any field beyond `id`/`changeset` takes
+   * `ResourceLoader.loadByRef` on the parent reference.
    */
   it('resolves parent as a hydrated Project', async () => {
     const partnership = await createPartnership(app, { project: project.id });

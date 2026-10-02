@@ -16,8 +16,7 @@ import {
   NameField,
   ServerException,
 } from '~/common';
-import { type BaseNode } from '~/core/resources';
-import { RegisterResource } from '~/core/resources';
+import { type LinkToUnknown, RegisterResource } from '~/core/resources';
 import { type FileVersion } from '../dto';
 
 export type AnyMedia = Image | Video | Audio;
@@ -76,7 +75,7 @@ export class Media extends MediaUserMetadata {
    * Absent when the root can't be resolved to a live resource (e.g. the owner
    * was soft-deleted, or a free-floating tree) — consumers must guard for it.
    */
-  readonly attachedTo?: [resource: BaseNode, relation: string];
+  readonly attachedTo?: [resource: LinkToUnknown, relation: string];
 
   @Field(() => String)
   readonly mimeType: string;

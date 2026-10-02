@@ -10,8 +10,7 @@ import {
   Sensitivity,
   SensitivityField,
 } from '~/common';
-import { type BaseNode as DbBaseNode } from '~/core/resources';
-import { RegisterResource } from '~/core/resources';
+import { type LinkToUnknown, RegisterResource } from '~/core/resources';
 import { type ScopedRole } from '../../authorization/dto';
 import { type DefinedFile } from '../../file/dto';
 import { ReportType } from './report-type.enum';
@@ -29,7 +28,7 @@ class PeriodicReport extends Resource {
   readonly type: ReportType;
 
   @Field(() => Resource)
-  readonly parent: DbBaseNode;
+  readonly parent: LinkToUnknown;
 
   @Field()
   readonly start: CalendarDate;

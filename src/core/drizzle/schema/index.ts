@@ -2935,8 +2935,8 @@ export const partnershipProducingMediums = pgTable(
  * A comment thread attached to any Commentable resource. `parent_id` is
  * FK-less and polymorphic (User/Language/Partner/Project/Engagement/
  * ProgressReport span tables, same rationale as
- * prompt_variant_responses.parent_id); `parent_type` is the discriminator used
- * to rebuild the parent's fake BaseNode at read time.
+ * prompt_variant_responses.parent_id); `parent_type` is the concrete
+ * `__typename` of the parent, read back as its `{ __typename, id }` reference.
  */
 export const commentThreads = pgTable(
   'comment_threads',

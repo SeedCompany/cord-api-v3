@@ -6,8 +6,7 @@ import {
   type ResourceRelationsShape,
   SecuredProperty,
 } from '~/common';
-import { type BaseNode } from '~/core/resources';
-import { RegisterResource } from '~/core/resources';
+import { type LinkToUnknown, RegisterResource } from '~/core/resources';
 import { Commentable } from '../../comments/dto';
 import { LanguageEngagement } from '../../engagement/dto';
 import { type DefinedFile } from '../../file/dto';
@@ -37,7 +36,7 @@ export class ProgressReport extends Interfaces {
   declare readonly type: 'Progress';
 
   @Field(() => LanguageEngagement)
-  declare readonly parent: BaseNode;
+  declare readonly parent: LinkToUnknown;
 
   declare readonly reportFile: DefinedFile;
 

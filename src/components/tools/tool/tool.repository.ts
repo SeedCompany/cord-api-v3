@@ -20,7 +20,7 @@ import { type DrizzleDb, DrizzleService } from '~/core/drizzle/drizzle.service';
 import {
   ENGAGEMENT_TYPENAMES,
   PROJECT_TYPENAMES,
-} from '~/core/drizzle/resolve-resource-base-node';
+} from '~/core/drizzle/resolve-resource-ref';
 import { tools, toolUsages, users } from '~/core/drizzle/schema';
 import { PolicyExecutor } from '../../authorization/policy/executor/policy-executor';
 import {

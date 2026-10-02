@@ -1,3 +1,4 @@
+import { type ID } from '~/common';
 import { OnHook } from '~/core/hooks';
 import { PeriodicReportUploadedHook } from '../../periodic-report/hooks';
 import { ProductStep } from '../../product/dto';
@@ -18,7 +19,7 @@ export class SaveProgressExtractionResultHandler {
 
     // Parse product/goal sync to hydrate problems from that process.
     await this.productSyncer.parse({
-      engagementId: event.report.parent.properties.id,
+      engagementId: event.report.parent.id as ID<'LanguageEngagement'>,
       // Roll with all the steps to get something since we don't have the actual
       // methodology from the user to filter with
       availableSteps: [...ProductStep],

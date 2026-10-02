@@ -2,7 +2,7 @@ import { Info, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { Fields, IsOnlyId, Resource } from '~/common';
 import { Identity } from '~/core/authentication';
-import { isBaseNode, ResourceLoader, ResourceResolver } from '~/core/resources';
+import { ResourceLoader } from '~/core/resources';
 import { ChangesetResolver } from './changeset.resolver';
 import { Changeset, ChangesetAware, ChangesetDiff } from './dto';
 
@@ -11,7 +11,6 @@ export class ChangesetAwareResolver {
   constructor(
     private readonly resources: ResourceLoader,
     private readonly identity: Identity,
-    private readonly resourceResolver: ResourceResolver,
     private readonly changesetResolver: ChangesetResolver,
   ) {}
 
@@ -33,17 +32,7 @@ export class ChangesetAwareResolver {
     if (!object.parent) {
       return null;
     }
-    // migration-todo: drop this normalization with the BaseNode retirement —
-    // it handles a raw graph node, which only the deleted Neo4j/Gel repos
-    // handed over.
-    const ref = isBaseNode(object.parent)
-      ? {
-          __typename: this.resourceResolver.resolveTypeByBaseNode(
-            object.parent,
-          ),
-          id: object.parent.properties.id,
-        }
-      : object.parent;
+    const ref = object.parent;
 
     if (isOnlyId) {
       return {

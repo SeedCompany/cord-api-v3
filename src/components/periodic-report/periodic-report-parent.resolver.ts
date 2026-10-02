@@ -8,6 +8,6 @@ export class PeriodicReportParentResolver {
 
   @ResolveField()
   async parent(@Parent() report: PeriodicReport) {
-    return await this.resources.loadByBaseNode(report.parent);
+    return await this.resources.loadByRef(report.parent);
   }
 }

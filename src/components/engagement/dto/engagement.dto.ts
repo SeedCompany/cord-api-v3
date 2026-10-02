@@ -22,7 +22,6 @@ import {
   type UnsecuredDto,
 } from '~/common';
 import {
-  type BaseNode,
   type LinkTo,
   type LinkToUnknown,
   RegisterResource,
@@ -87,7 +86,7 @@ class Engagement extends Interfaces {
     Pick<UnsecuredDto<IProject>, 'status' | 'step' | 'type'>;
 
   @Field(() => IProject)
-  declare readonly parent: LinkToUnknown | BaseNode;
+  declare readonly parent: LinkToUnknown;
 
   readonly label: Readonly<{
     project: string;
@@ -178,7 +177,7 @@ export class LanguageEngagement extends Engagement {
   declare readonly __typename: 'LanguageEngagement';
 
   @Field(() => TranslationProject)
-  declare readonly parent: LinkToUnknown | BaseNode;
+  declare readonly parent: LinkToUnknown;
 
   readonly language: Secured<LinkTo<'Language'>>;
 
@@ -233,7 +232,7 @@ export class InternshipEngagement extends Engagement {
   declare readonly __typename: 'InternshipEngagement';
 
   @Field(() => InternshipProject)
-  declare readonly parent: LinkToUnknown | BaseNode;
+  declare readonly parent: LinkToUnknown;
 
   @RequiredWhenNotInDev()
   readonly countryOfOrigin: Secured<LinkTo<'Location'> | null>;

@@ -1,7 +1,7 @@
 import { Field, InterfaceType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { type ID, IdField } from '~/common';
-import { type BaseNode, type LinkToUnknown } from '~/core/resources';
+import { type LinkToUnknown } from '~/core/resources';
 import { Changeset } from './changeset.dto';
 
 @InterfaceType({
@@ -28,12 +28,6 @@ export abstract class ChangesetAware {
   /**
    * A reference to the resource that owns this one — used for navigation
    * (breadcrumbs, `project: parent { … }`), not only for changesets.
-   *
-   * Repositories emit the typed {@link LinkToUnknown} form. The {@link BaseNode}
-   * arm was for the deleted Neo4j/Gel repos, which handed over a raw graph node.
-   *
-   * migration-todo: drop the `| BaseNode` arm with the BaseNode retirement (and
-   * the normalizing branch in ChangesetAwareResolver.parent with it).
    */
-  readonly parent?: LinkToUnknown | BaseNode;
+  readonly parent?: LinkToUnknown;
 }

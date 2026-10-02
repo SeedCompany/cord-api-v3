@@ -9,8 +9,7 @@ import {
   Sensitivity,
   SensitivityField,
 } from '~/common';
-import { type BaseNode, type LinkToUnknown } from '~/core/resources';
-import { RegisterResource } from '~/core/resources';
+import { type LinkToUnknown, RegisterResource } from '~/core/resources';
 import { ChangesetAware } from '../../changeset/dto';
 import { type DefinedFile } from '../../file/dto';
 import { IProject } from '../../project/dto';
@@ -52,7 +51,7 @@ export class Budget extends Interfaces {
     import('../../project/dto').then((m) => m.IProject);
 
   @Field(() => IProject)
-  declare readonly parent: LinkToUnknown | BaseNode;
+  declare readonly parent: LinkToUnknown;
 
   @Field()
   readonly status: BudgetStatus;

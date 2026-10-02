@@ -556,8 +556,7 @@ export class PartnershipRepository extends DrizzleDtoRepository<
       // The requester's project-scoped roles — `member` policy conditions
       // read these for field-level permissions.
       scope,
-      // Required by the `parent` field on the DTO. The service constructs a
-      // BaseNode-shaped object; here we just pass the project id through.
+      // Required by the `parent` field on the DTO.
       parent: {
         id: row.project.id,
         __typename: `${row.project.type}Project`,

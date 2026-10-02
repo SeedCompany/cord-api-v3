@@ -41,7 +41,7 @@ import {
   periodicReports,
   projects,
 } from '~/core/drizzle/schema';
-import { type BaseNode } from '~/core/resources';
+import { type LinkToUnknown, type ResourceMap } from '~/core/resources';
 import { type ScopedRole } from '../authorization/dto/role.dto';
 import { FileService } from '../file';
 import { ProgressReportStatus } from '../progress-report/dto';
@@ -555,24 +555,11 @@ export class PeriodicReportRepository extends DrizzleDtoRepository<
       );
     }
     const isProgress = row.type === 'Progress';
-    // Neo4j-shaped BaseNode so ResourceLoader.loadByBaseNode() on the parent
-    // field keeps working — only labels + properties.{id,createdAt} are read.
-    const parent: BaseNode = isProgress
-      ? {
-          identity: row.engagement!.id,
-          labels: ['LanguageEngagement', 'Engagement', 'BaseNode'],
-          properties: {
-            id: row.engagement!.id,
-            createdAt: DateTime.fromJSDate(row.engagement!.createdAt),
-          },
-        }
+    const parent: LinkToUnknown = isProgress
+      ? { __typename: 'LanguageEngagement', id: row.engagement!.id }
       : {
-          identity: project.id,
-          labels: [`${project.type}Project`, 'Project', 'BaseNode'],
-          properties: {
-            id: project.id,
-            createdAt: DateTime.fromJSDate(project.createdAt),
-          },
+          __typename: `${project.type}Project` as keyof ResourceMap,
+          id: project.id,
         };
     const dto: unknown = {
       id: row.id,

@@ -94,13 +94,8 @@ export class SearchService {
 
     const maybeHydrated = await Promise.all(
       results
-        // Normalize result & resolve type from neo4j data
-        .map(({ node, matchedProps }) => {
-          const result = {
-            type: this.resourceResolver.resolveTypeByBaseNode(node),
-            id: node.properties.id,
-            matchedProps,
-          };
+        .map(({ ref, matchedProps }) => {
+          const result = { type: ref.__typename, id: ref.id, matchedProps };
           return result as Match<keyof ResourceMap>;
         })
         // Ensure resource types matched are within the search type filters

@@ -133,27 +133,27 @@ export class ProjectRepository extends DrizzleDtoRepository<
     super(db, projects, IProject);
   }
 
-  // migration-todo: Neo4j-shaped existence check kept for the service layer's
-  // validateOtherResourceId. Only the labels project create/update actually
-  // validates are mapped; extend if a new label appears. Replace with a
-  // shared exists() helper when getBaseNode leaves the service layer (the
-  // BaseNode retirement).
-  async getBaseNode(id: ID, label?: string) {
-    if (label === 'FieldRegion') {
-      return await this.db.query.fieldRegions.findFirst({
+  /**
+   * Whether a live row of the given type exists, for the service's
+   * validateOtherResourceId. Only the types project create/update validates
+   * are mapped; extend if a new one appears.
+   */
+  async exists(id: ID, type: 'FieldRegion' | 'Location'): Promise<boolean> {
+    if (type === 'FieldRegion') {
+      return !!(await this.db.query.fieldRegions.findFirst({
         where: (fr) =>
           and(eq(fr.id, id as ID<'FieldRegion'>), isNull(fr.deletedAt)),
         columns: { id: true },
-      });
+      }));
     }
-    if (label === 'Location') {
-      return await this.db.query.locations.findFirst({
+    if (type === 'Location') {
+      return !!(await this.db.query.locations.findFirst({
         where: (l) => and(eq(l.id, id as ID<'Location'>), isNull(l.deletedAt)),
         columns: { id: true },
-      });
+      }));
     }
     throw new NotImplementedException(
-      `getBaseNode existence check for label "${String(label)}" under postgres`,
+      `Existence check for type "${String(type)}"`,
     );
   }
 

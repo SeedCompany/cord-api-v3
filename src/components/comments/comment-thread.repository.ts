@@ -11,10 +11,9 @@ import { Identity } from '~/core/authentication';
 import {
   DrizzleService,
   resolveOrderBy,
-  resolveResourceBaseNode,
+  resolveResourceRef,
 } from '~/core/drizzle';
 import { comments, commentThreads } from '~/core/drizzle/schema';
-import { type BaseNode } from '~/core/resources';
 import { type CommentThread, type CommentThreadListInput } from './dto';
 import { mapCommentRow } from './map-comment-row';
 
@@ -33,8 +32,8 @@ export class CommentThreadRepository {
   }
 
   async create(parent: ID): Promise<ID<'CommentThread'>> {
-    const parentNode = await resolveResourceBaseNode(this.db, parent);
-    if (!parentNode) {
+    const parentRef = await resolveResourceRef(this.db, parent);
+    if (!parentRef) {
       throw new NotFoundException('Resource does not exist', 'resource');
     }
     const id = await generateId<ID<'CommentThread'>>();
@@ -42,8 +41,8 @@ export class CommentThreadRepository {
       id,
       parentId: parent,
       // The concrete typename (e.g. 'MomentumTranslationProject', 'User') —
-      // enough for ResourceLoader.loadByBaseNode to find the loader.
-      parentType: parentNode.labels[0]!,
+      // enough for ResourceLoader.loadByRef to find the loader.
+      parentType: parentRef.__typename,
       creatorId: this.identity.current.userId,
     });
     return id;
@@ -104,18 +103,13 @@ export class CommentThreadRepository {
     return row?.total ?? 0;
   }
 
-  async getBaseNode(id: ID): Promise<BaseNode | undefined> {
+  async exists(id: ID): Promise<boolean> {
     const [row] = await this.db
-      .select({ createdAt: commentThreads.createdAt })
+      .select({ id: commentThreads.id })
       .from(commentThreads)
       .where(eq(commentThreads.id, id as ID<'CommentThread'>))
       .limit(1);
-    if (!row) return undefined;
-    return {
-      identity: id,
-      labels: ['CommentThread', 'BaseNode'],
-      properties: { id, createdAt: DateTime.fromJSDate(row.createdAt) },
-    };
+    return !!row;
   }
 
   async deleteNode(objectOrId: { id: ID } | ID): Promise<void> {
@@ -153,15 +147,7 @@ export class CommentThreadRepository {
     const dto: unknown = {
       id: row.id,
       createdAt: DateTime.fromJSDate(row.createdAt),
-      // Fake BaseNode so ResourceLoader.loadByBaseNode resolves the parent.
-      parent: {
-        identity: row.parentId,
-        labels: [row.parentType, 'BaseNode'],
-        properties: {
-          id: row.parentId,
-          createdAt: DateTime.fromJSDate(row.createdAt),
-        },
-      },
+      parent: { __typename: row.parentType, id: row.parentId },
       creator: row.creatorId,
       firstComment: first ? mapCommentRow(first) : undefined,
       latestComment: latest ? mapCommentRow(latest) : undefined,

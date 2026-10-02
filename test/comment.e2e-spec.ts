@@ -104,9 +104,9 @@ describe('Comment e2e', () => {
     });
   });
 
-  // ProgressReport implements Commentable. Regression guard for the PG
-  // parent-resolution path (resolveResourceBaseNode), which previously excluded
-  // ProgressReport and rejected this valid commentable under DATABASE=postgres.
+  // ProgressReport implements Commentable. Regression guard for the
+  // parent-resolution path (resolveResourceRef), which previously excluded
+  // ProgressReport and rejected this valid commentable.
   it('creates a comment on a ProgressReport parent', async () => {
     await runAsAdmin(app, async (a) => {
       const mouStart = CalendarDate.local(2023, 1, 1);

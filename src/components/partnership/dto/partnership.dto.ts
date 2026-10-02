@@ -12,7 +12,6 @@ import {
   SensitivityField,
 } from '~/common';
 import {
-  type BaseNode,
   type LinkTo,
   type LinkToUnknown,
   RegisterResource,
@@ -42,7 +41,7 @@ export class Partnership extends Interfaces {
   readonly project: LinkTo<'Project'>;
 
   @Field(() => IProject)
-  declare readonly parent: LinkToUnknown | BaseNode;
+  declare readonly parent: LinkToUnknown;
 
   @Field()
   readonly agreementStatus: SecuredPartnershipAgreementStatus;
