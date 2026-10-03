@@ -117,6 +117,8 @@ export const momentumProjectsTransitions = () =>
       r.ProgressReportCommunityStory,
       r.ProgressReportHighlight,
       r.ProgressReportTeamNews,
+      r.ProgressReportOtherActivities,
+      r.ProgressReportNextQuarterPlans,
     ].flatMap((it) => [
       it.read,
       it.when(member).create,

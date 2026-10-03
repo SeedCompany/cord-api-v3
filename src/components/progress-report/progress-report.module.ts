@@ -8,6 +8,12 @@ import { ProgressReportHighlightsRepository } from './highlights/progress-report
 import { ProgressReportHighlightsResolver } from './highlights/progress-report-highlights.resolver';
 import { ProgressReportHighlightsService } from './highlights/progress-report-highlights.service';
 import { ProgressReportMediaModule } from './media/progress-report-media.module';
+import { ProgressReportNextQuarterPlansRepository } from './next-quarter-plans/progress-report-next-quarter-plans.repository';
+import { ProgressReportNextQuarterPlansResolver } from './next-quarter-plans/progress-report-next-quarter-plans.resolver';
+import { ProgressReportNextQuarterPlansService } from './next-quarter-plans/progress-report-next-quarter-plans.service';
+import { ProgressReportOtherActivitiesRepository } from './other-activities/progress-report-other-activities.repository';
+import { ProgressReportOtherActivitiesResolver } from './other-activities/progress-report-other-activities.resolver';
+import { ProgressReportOtherActivitiesService } from './other-activities/progress-report-other-activities.service';
 import { ProgressReportRepository } from './progress-report.repository';
 import { ProgressReportService } from './progress-report.service';
 import { ProgressReportEngagementConnectionResolver } from './resolvers/progress-report-engagement-connection.resolver';
@@ -36,6 +42,12 @@ import { ProgressReportWorkflowModule } from './workflow/progress-report-workflo
     ProgressReportTeamNewsResolver,
     ProgressReportTeamNewsService,
     ProgressReportTeamNewsRepository,
+    ProgressReportOtherActivitiesResolver,
+    ProgressReportOtherActivitiesService,
+    ProgressReportOtherActivitiesRepository,
+    ProgressReportNextQuarterPlansResolver,
+    ProgressReportNextQuarterPlansService,
+    ProgressReportNextQuarterPlansRepository,
     ProgressReportHighlightsResolver,
     ProgressReportHighlightsService,
     ProgressReportHighlightsRepository,
@@ -47,6 +59,8 @@ import { ProgressReportWorkflowModule } from './workflow/progress-report-workflo
   ],
   exports: [
     ProgressReportTeamNewsService,
+    ProgressReportOtherActivitiesService,
+    ProgressReportNextQuarterPlansService,
     ProgressReportCommunityStoryService,
     ProgressReportMediaModule,
   ],

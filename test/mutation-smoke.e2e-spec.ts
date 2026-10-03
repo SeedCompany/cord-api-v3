@@ -291,6 +291,204 @@ describe('Mutation smoke coverage e2e', () => {
         expect(result.id).toBe(reportId);
       });
     });
+
+    describe('other activities', () => {
+      let responseId: ID;
+
+      it('createProgressReportOtherActivities', async () => {
+        const { prompts } = await availableFor(
+          app,
+          reportId,
+          'otherActivities',
+        );
+        const { result } = await app.graphql.mutate(
+          graphql(`
+            mutation SmokeCreateOtherActivities($input: ChoosePrompt!) {
+              result: createProgressReportOtherActivities(input: $input) {
+                id
+              }
+            }
+          `),
+          { input: { prompt: prompts[0]!.id, resource: reportId } },
+        );
+        expect(result.id).toBeTruthy();
+        responseId = result.id;
+      });
+
+      it('changeProgressReportOtherActivitiesPrompt', async () => {
+        const { prompts } = await availableFor(
+          app,
+          reportId,
+          'otherActivities',
+        );
+        // One prompt only, so this re-chooses it; the mutation still runs.
+        const next = prompts[1] ?? prompts[0]!;
+        const { result } = await app.graphql.mutate(
+          graphql(`
+            mutation SmokeChangeOtherActivitiesPrompt($input: ChangePrompt!) {
+              result: changeProgressReportOtherActivitiesPrompt(input: $input) {
+                id
+                prompt {
+                  value {
+                    id
+                  }
+                }
+              }
+            }
+          `),
+          { input: { id: responseId, prompt: next.id } },
+        );
+        expect(result.prompt.value?.id).toBe(next.id);
+      });
+
+      it('updateProgressReportOtherActivitiesResponse', async () => {
+        const { variants } = await availableFor(
+          app,
+          reportId,
+          'otherActivities',
+        );
+        const { result } = await app.graphql.mutate(
+          graphql(`
+            mutation SmokeUpdateOtherActivitiesResponse(
+              $input: UpdatePromptVariantResponse!
+            ) {
+              result: updateProgressReportOtherActivitiesResponse(
+                input: $input
+              ) {
+                id
+                responses {
+                  variant {
+                    key
+                  }
+                }
+              }
+            }
+          `),
+          {
+            input: {
+              id: responseId,
+              variant: variants[0]!.key,
+              response: doc('smoke other activities'),
+            },
+          },
+        );
+        expect(result.responses.length).toBeGreaterThan(0);
+      });
+
+      it('deleteProgressReportOtherActivities', async () => {
+        const { result } = await app.graphql.mutate(
+          graphql(`
+            mutation SmokeDeleteOtherActivities($id: ID!) {
+              result: deleteProgressReportOtherActivities(id: $id) {
+                id
+              }
+            }
+          `),
+          { id: responseId },
+        );
+        expect(result.id).toBe(reportId);
+      });
+    });
+
+    describe('next quarter plans', () => {
+      let responseId: ID;
+
+      it('createProgressReportNextQuarterPlans', async () => {
+        const { prompts } = await availableFor(
+          app,
+          reportId,
+          'nextQuarterPlans',
+        );
+        const { result } = await app.graphql.mutate(
+          graphql(`
+            mutation SmokeCreateNextQuarterPlans($input: ChoosePrompt!) {
+              result: createProgressReportNextQuarterPlans(input: $input) {
+                id
+              }
+            }
+          `),
+          { input: { prompt: prompts[0]!.id, resource: reportId } },
+        );
+        expect(result.id).toBeTruthy();
+        responseId = result.id;
+      });
+
+      it('changeProgressReportNextQuarterPlansPrompt', async () => {
+        const { prompts } = await availableFor(
+          app,
+          reportId,
+          'nextQuarterPlans',
+        );
+        // One prompt only, so this re-chooses it; the mutation still runs.
+        const next = prompts[1] ?? prompts[0]!;
+        const { result } = await app.graphql.mutate(
+          graphql(`
+            mutation SmokeChangeNextQuarterPlansPrompt($input: ChangePrompt!) {
+              result: changeProgressReportNextQuarterPlansPrompt(
+                input: $input
+              ) {
+                id
+                prompt {
+                  value {
+                    id
+                  }
+                }
+              }
+            }
+          `),
+          { input: { id: responseId, prompt: next.id } },
+        );
+        expect(result.prompt.value?.id).toBe(next.id);
+      });
+
+      it('updateProgressReportNextQuarterPlansResponse', async () => {
+        const { variants } = await availableFor(
+          app,
+          reportId,
+          'nextQuarterPlans',
+        );
+        const { result } = await app.graphql.mutate(
+          graphql(`
+            mutation SmokeUpdateNextQuarterPlansResponse(
+              $input: UpdatePromptVariantResponse!
+            ) {
+              result: updateProgressReportNextQuarterPlansResponse(
+                input: $input
+              ) {
+                id
+                responses {
+                  variant {
+                    key
+                  }
+                }
+              }
+            }
+          `),
+          {
+            input: {
+              id: responseId,
+              variant: variants[0]!.key,
+              response: doc('smoke next quarter plans'),
+            },
+          },
+        );
+        expect(result.responses.length).toBeGreaterThan(0);
+      });
+
+      it('deleteProgressReportNextQuarterPlans', async () => {
+        const { result } = await app.graphql.mutate(
+          graphql(`
+            mutation SmokeDeleteNextQuarterPlans($id: ID!) {
+              result: deleteProgressReportNextQuarterPlans(id: $id) {
+                id
+              }
+            }
+          `),
+          { id: responseId },
+        );
+        expect(result.id).toBe(reportId);
+      });
+    });
   });
 
   describe('progress report variance', () => {
@@ -682,7 +880,12 @@ describe('Mutation smoke coverage e2e', () => {
 async function availableFor(
   app: TestApp,
   id: ID<'ProgressReport'>,
-  list: 'communityStories' | 'highlights' | 'teamNews',
+  list:
+    | 'communityStories'
+    | 'highlights'
+    | 'teamNews'
+    | 'otherActivities'
+    | 'nextQuarterPlans',
   { expectPrompts = true }: { expectPrompts?: boolean } = {},
 ) {
   const { report } = await app.graphql.query(
@@ -712,6 +915,26 @@ async function availableFor(
               }
             }
             teamNews {
+              available {
+                prompts {
+                  id
+                }
+                variants {
+                  key
+                }
+              }
+            }
+            otherActivities {
+              available {
+                prompts {
+                  id
+                }
+                variants {
+                  key
+                }
+              }
+            }
+            nextQuarterPlans {
               available {
                 prompts {
                   id
