@@ -7,6 +7,10 @@ import { PostRepository } from './post.repository';
 import { PostResolver } from './post.resolver';
 import { PostService } from './post.service';
 import { PostableResolver } from './postable.resolver';
+import {
+  GtlReportPostsResolver,
+  ProgressReportPostsResolver,
+} from './report-posts.resolver';
 
 @Module({
   imports: [
@@ -20,6 +24,8 @@ import { PostableResolver } from './postable.resolver';
     PostService,
     PostRepository,
     PostableResolver,
+    GtlReportPostsResolver,
+    ProgressReportPostsResolver,
     PostLoader,
   ],
   exports: [PostService],

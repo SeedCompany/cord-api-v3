@@ -6,7 +6,6 @@ import {
   InvalidIdForTypeException,
   isIdLike,
   NotFoundException,
-  type Resource,
   SecuredList,
   ServerException,
   type UnsecuredDto,
@@ -277,8 +276,17 @@ export class PostService {
     await this.hooks.run(new ResourceMutatedHook('Post', id, 'Delete'));
   }
 
+  /**
+   * The posts under a Postable, as the requester may see them.
+   *
+   * `parent` is whatever the caller has in hand: the loaded Postable itself
+   * (`Engagement.posts`), or just a reference to it — a report's `parent`
+   * BaseNode, for `GTLReport.posts` / `ProgressReport.posts`, which resolve
+   * the engagement here so the permissions and `canCreate` come out exactly
+   * as they do on the engagement's own feed.
+   */
   async securedList(
-    parent: ConcretePostable & Resource,
+    parent: PostableRef,
     input: PostListInput,
   ): Promise<SecuredPostList> {
     // TODO move to auth policy

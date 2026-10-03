@@ -2,6 +2,7 @@ import { InputType, ObjectType } from '@nestjs/graphql';
 import {
   FilterField,
   type ID,
+  IdField,
   OptionalField,
   Order,
   PaginatedList,
@@ -30,6 +31,20 @@ export abstract class PostFilters {
     `,
   })
   readonly types?: readonly PostType[];
+
+  @IdField({
+    optional: true,
+    description: `
+      Only posts submitted with this quarterly report.
+
+      Follows the report's *period*, the same way \`Post.report\` does: a post
+      attached to a report row that has since been removed and re-created (an
+      engagement's date range shrank and grew back) is listed under the live
+      report for that quarter. \`GTLReport.posts\` and \`ProgressReport.posts\`
+      set this for you.
+    `,
+  })
+  readonly report?: ID<'PeriodicReport'>;
 }
 
 @InputType()

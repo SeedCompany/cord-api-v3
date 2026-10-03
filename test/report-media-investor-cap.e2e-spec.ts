@@ -431,6 +431,76 @@ describe('Report media for any engagement report', () => {
       expect(report.__typename).toBe('GTLReport');
       expect(report.media.total).toBe(0);
     });
+
+    // The UI's "include in investor report" checkbox is a reuse into
+    // `published`, so the GTL family has to answer it the way the Progress
+    // one does: Marketing copies a member's draft across; the author and
+    // non-members are refused; the published cap counts the copy.
+    it('Marketing copies a GTL draft into published by reuse; the author and non-members are refused', async () => {
+      const { reportId } = await createGtlReport();
+
+      const uploaded = await memberFieldPartner.runAs(
+        async () => await uploadGtlMedia(await mediaInput(reportId, draft)),
+      );
+      const source = uploaded.media.items[0]!;
+
+      // Placing into published is Marketing's call, by upload or by reuse.
+      await memberFieldPartner.runAs(async () => {
+        await app.graphql
+          .mutate(ReuseGtlMediaDoc, {
+            input: { id: source.id, variant: published },
+          })
+          .expectError(errors.unauthorized());
+      });
+      const expectRefused = async (outsider: TestUser) =>
+        await outsider.runAs(async () => {
+          await app.graphql
+            .mutate(ReuseGtlMediaDoc, {
+              input: { id: source.id, variant: fpm },
+            })
+            .expectError(errors.unauthorized());
+        });
+      await expectRefused(outsiderFieldPartner);
+      await expectRefused(outsiderProjectManager);
+
+      await marketing.runAs(async () => {
+        const { reuse } = await app.graphql.mutate(ReuseGtlMediaDoc, {
+          input: { id: source.id, variant: published },
+        });
+        expect(reuse.__typename).toBe('GTLReport');
+        expect(reuse.id).toBe(reportId);
+        expect(reuse.media.total).toBe(2);
+        const copy = reuse.media.items.find((item) => item.id !== source.id)!;
+        expect(copy.variant.key).toBe('published');
+        expect(copy.variantGroup).toBe(source.variantGroup);
+        // Its own file, not a second reference to the source's.
+        expect(copy.media.id).not.toBe(source.media.id);
+        // Published, so it is the report's featured media.
+        expect(reuse.featuredMedia?.id).toBe(copy.id);
+
+        // The Progress-report reuse refuses a GTL item, as upload and delete
+        // do...
+        await app.graphql
+          .mutate(ReuseProgressMediaDoc, {
+            input: { id: source.id, variant: fpm },
+          })
+          .expectError(errors.input({ field: 'report' }));
+
+        // ...and the copy counts toward the GTL report's published cap.
+        await uploadMany(
+          3,
+          async () =>
+            await uploadGtlMedia(await mediaInput(reportId, published)),
+        );
+        await app.graphql
+          .mutate(UploadGtlMediaDoc, {
+            input: await mediaInput(reportId, published),
+          })
+          .expectError(
+            errors.input({ field: 'variant', message: CAP_MESSAGE }),
+          );
+      });
+    });
   });
 
   describe('Only engagement reports take media', () => {
@@ -556,6 +626,27 @@ const ReuseProgressMediaDoc = graphql(
   `
     mutation ReuseProgressMedia($input: ReuseProgressReportMedia!) {
       reuse: reuseProgressReportMedia(input: $input) {
+        id
+        media {
+          items {
+            ...reportMedia
+          }
+          total
+        }
+        featuredMedia {
+          id
+        }
+      }
+    }
+  `,
+  [reportMediaFrag],
+);
+
+const ReuseGtlMediaDoc = graphql(
+  `
+    mutation ReuseGtlMedia($input: ReuseProgressReportMedia!) {
+      reuse: reuseGtlReportMedia(input: $input) {
+        __typename
         id
         media {
           items {

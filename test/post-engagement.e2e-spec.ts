@@ -127,9 +127,25 @@ describe('Posts on engagements e2e', () => {
     return result.moderatePost.posts[0]!;
   };
 
-  const languagePosts = async (id: ID) => {
-    const result = await app.graphql.query(LanguageEngagementPostsDoc, { id });
+  const languagePosts = async (
+    id: ID,
+    input?: InputOf<typeof LanguageEngagementPostsDoc>,
+  ) => {
+    const result = await app.graphql.query(LanguageEngagementPostsDoc, {
+      id,
+      input,
+    });
     return result.languageEngagement.posts;
+  };
+
+  /** `ProgressReport.posts` — what was submitted with this quarter. */
+  const progressReportPosts = async (id: ID) => {
+    const result = await app.graphql.query(ProgressReportPostsDoc, { id });
+    const report = result.periodicReport;
+    if (report.__typename !== 'ProgressReport') {
+      throw new Error('expected a Progress report');
+    }
+    return report.posts;
   };
 
   const internshipPosts = async (id: ID) => {
@@ -308,6 +324,55 @@ describe('Posts on engagements e2e', () => {
       const detached = await updatePost({ ...updateInput(post), report: null });
       expect(detached.report.value).toBeNull();
       expect(detached.body.value).toBe('Submitted with the quarter');
+    });
+
+    // A report is not Postable — a post lives on its engagement and is
+    // attributed to a report — so `ProgressReport.posts` is the engagement's
+    // feed narrowed to one quarter, and the same narrowing is a filter on the
+    // feed itself.
+    it('the report lists the posts submitted with it, and the feed can be narrowed to one report', async () => {
+      const { engagement, reports } = await createLanguageSide();
+      const [firstReport, secondReport] = reports;
+
+      const withFirst = await createPost({
+        parent: engagement.id,
+        type: 'Prayer',
+        shareability: 'Internal',
+        body: 'With the first quarter',
+        report: firstReport!.id,
+      });
+      const withSecond = await createPost({
+        parent: engagement.id,
+        type: 'Prayer',
+        shareability: 'Internal',
+        body: 'With the second quarter',
+        report: secondReport!.id,
+      });
+      const unattached = await createPost({
+        parent: engagement.id,
+        type: 'Prayer',
+        shareability: 'Internal',
+        body: 'Between quarters',
+      });
+
+      const onFirst = await progressReportPosts(firstReport!.id);
+      expect(onFirst.canRead).toBe(true);
+      expect(onFirst.canCreate).toBe(true);
+      expect(onFirst.total).toBe(1);
+      expect(onFirst.items.map((post) => post.id)).toEqual([withFirst.id]);
+      const onSecond = await progressReportPosts(secondReport!.id);
+      expect(onSecond.items.map((post) => post.id)).toEqual([withSecond.id]);
+
+      // The feed holds all three; the filter picks one quarter's.
+      const feed = await languagePosts(engagement.id);
+      expect(new Set(feed.items.map((post) => post.id))).toEqual(
+        new Set([withFirst.id, withSecond.id, unattached.id]),
+      );
+      const narrowed = await languagePosts(engagement.id, {
+        filter: { report: firstReport!.id },
+      });
+      expect(narrowed.total).toBe(1);
+      expect(narrowed.items.map((post) => post.id)).toEqual([withFirst.id]);
     });
 
     // Reports are soft-deleted and come back under a NEW row id when an
@@ -837,14 +902,35 @@ const PostDoc = graphql(
 
 const LanguageEngagementPostsDoc = graphql(
   `
-    query LanguageEngagementPosts($id: ID!) {
+    query LanguageEngagementPosts($id: ID!, $input: PostListInput) {
       languageEngagement(id: $id) {
-        posts {
+        posts(input: $input) {
           canRead
           canCreate
           total
           items {
             ...engagementPostFields
+          }
+        }
+      }
+    }
+  `,
+  [postFields],
+);
+
+const ProgressReportPostsDoc = graphql(
+  `
+    query ProgressReportPosts($id: ID!) {
+      periodicReport(id: $id) {
+        __typename
+        ... on ProgressReport {
+          posts {
+            canRead
+            canCreate
+            total
+            items {
+              ...engagementPostFields
+            }
           }
         }
       }

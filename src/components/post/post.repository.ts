@@ -270,6 +270,9 @@ export class PostRepository extends DrizzleDtoRepository<typeof posts, Post> {
     if (filter?.types?.length) {
       conditions.push(inArray(posts.type, [...filter.types]));
     }
+    if (filter?.report) {
+      conditions.push(this.submittedWith(filter.report));
+    }
     const predicate = and(...conditions);
     const offset = (input.page - 1) * input.count;
     const [countRows, rows] = await Promise.all([
@@ -301,6 +304,29 @@ export class PostRepository extends DrizzleDtoRepository<typeof posts, Post> {
       total,
       hasMore: offset + rows.length < total,
     };
+  }
+
+  /**
+   * Posts submitted with this report, by the same rule `liveReportId` reads
+   * by: the stored `report_id` is the report itself, or a since-removed row
+   * for the same period that now re-resolves to it. One uncorrelated subquery
+   * over `periodic_reports` rather than `liveReportId` evaluated per row, so
+   * the lookup still runs on `posts_report_id_idx`. A report that is itself
+   * gone matches only by its stored id — its posts read back (`Post.report`)
+   * as belonging to whatever live row replaced it.
+   */
+  private submittedWith(reportId: ID<'PeriodicReport'>): SQL {
+    return sql`(${posts.reportId} = ${reportId} or ${posts.reportId} in (
+      select "same"."id"
+      from ${periodicReports} as "live"
+      join ${periodicReports} as "same"
+        on "same"."engagement_id" = "live"."engagement_id"
+       and "same"."type" = "live"."type"
+       and "same"."start" = "live"."start"
+       and "same"."end" = "live"."end"
+      where "live"."id" = ${reportId}
+        and "live"."deleted_at" is null
+    ))`;
   }
 
   async getBaseNode(id: ID): Promise<BaseNode | undefined> {
