@@ -35,3 +35,4 @@ export * from './by-feature/gtl-report-sections.policy';
 export * from './by-feature/engagement-posts.policy';
 export * from './by-feature/moderate-posts.policy';
 export * from './by-feature/feature-post-for-investor-report.policy';
+export * from './by-feature/feature-community-story.policy';

@@ -2623,11 +2623,21 @@ export const promptVariantResponses = pgTable(
     updatedAt: timestamp('updated_at', { withTimezone: true })
       .notNull()
       .defaultNow(),
+    // The one response its report puts forward (the Progress Report's
+    // featured community story). Written only by the featured repository,
+    // which clears the previous holder in the same transaction.
+    featured: boolean('featured').notNull().default(false),
     deletedAt: timestamp('deleted_at', { withTimezone: true }),
   },
   (t) => [
     index('prompt_variant_responses_parent_id_idx').on(t.parentId),
     index('prompt_variant_responses_creator_id_idx').on(t.creatorId),
+    // Fail-safe for the clear-then-set: at most one live featured row per
+    // (parent, section), so a concurrent loser gets a unique violation rather
+    // than a report with two featured stories.
+    uniqueIndex('prompt_variant_responses_one_featured')
+      .on(t.parentId, t.resourceType)
+      .where(sql`${t.featured} AND ${t.deletedAt} IS NULL`),
   ],
 );
 

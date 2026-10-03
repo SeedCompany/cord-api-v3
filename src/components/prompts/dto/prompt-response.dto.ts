@@ -8,6 +8,7 @@ import {
   type RichTextDocument,
   RichTextField,
   type Secured,
+  SecuredBoolean,
   SecuredRichText,
   SecuredRichTextNullable,
   type SetUnsecuredType,
@@ -68,6 +69,12 @@ export class PromptVariantResponse<
   @Field(() => [VariantResponse])
   readonly responses: ReadonlyArray<VariantResponse<Key>> &
     SetUnsecuredType<ReadonlyArray<UnsecuredDto<VariantResponse<Key>>>>;
+
+  @Field({
+    description:
+      'Whether this is the one response its report puts forward, such as the featured community story. At most one per report and section.',
+  })
+  readonly featured: SecuredBoolean;
 
   @Field()
   readonly modifiedAt: DateTime;

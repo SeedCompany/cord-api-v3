@@ -1,6 +1,7 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { FileModule } from '../file/file.module';
 import { PeriodicReportModule } from '../periodic-report/periodic-report.module';
+import { PromptVariantResponseFeaturedRepository } from '../prompts/prompt-variant-response-featured.repository';
 import { ProgressReportCommunityStoryRepository } from './community-stories/progress-report-community-story.repository';
 import { ProgressReportCommunityStoryResolver } from './community-stories/progress-report-community-story.resolver';
 import { ProgressReportCommunityStoryService } from './community-stories/progress-report-community-story.service';
@@ -54,6 +55,7 @@ import { ProgressReportWorkflowModule } from './workflow/progress-report-workflo
     ProgressReportCommunityStoryResolver,
     ProgressReportCommunityStoryService,
     ProgressReportCommunityStoryRepository,
+    PromptVariantResponseFeaturedRepository,
     ProgressReportService,
     ProgressReportRepository,
   ],

@@ -202,11 +202,13 @@ export const PromptVariantResponseRepository = <
     }
 
     async delete(id: ID) {
-      // Mirrors the Neo4j arm, whose `this.deleteNode(id)` invalidates via the
-      // shared base with `this.resource`. `submitResponse`/`changePrompt` are
-      // deliberately NOT invalidated here: their Neo4j counterparts use raw
-      // Cypher with no invalidation either, so leaving them alone is parity.
-      this.liveQueryStore.invalidate([this.resource, id]);
+      // Keyed on `PromptVariantResponse`, not the subtype: the subtypes are
+      // `@RegisterResource` only and every one resolves as the GraphQL type
+      // `PromptVariantResponse`, which is how live queries index their rows.
+      // (Keying on `this.resource` emitted `ProgressReportCommunityStory:<id>`,
+      // which nothing was listening for.) `submitResponse`/`changePrompt` are
+      // invalidated by the service with the same key.
+      this.liveQueryStore.invalidate(`PromptVariantResponse:${id}`);
       await this.db
         .update(promptVariantResponses)
         .set({ deletedAt: new Date() })
@@ -239,6 +241,7 @@ export const PromptVariantResponseRepository = <
         creator: { id: row.creatorId },
         parent,
         prompt: row.prompt,
+        featured: row.featured,
         responses: row.entries
           .filter((entry) => !entry.deletedAt)
           .map((entry) => ({

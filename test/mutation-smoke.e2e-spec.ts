@@ -100,12 +100,18 @@ describe('Mutation smoke coverage e2e', () => {
                     id
                   }
                 }
+                featured {
+                  value
+                  canEdit
+                }
               }
             }
           `),
           { input: { prompt: prompts[0]!.id, resource: reportId } },
         );
         expect(result.id).toBeTruthy();
+        // A new story is never featured; whoever is logged in sees the flag.
+        expect(result.featured.value).toBe(false);
         responseId = result.id;
       });
 

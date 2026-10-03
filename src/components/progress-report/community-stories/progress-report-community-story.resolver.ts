@@ -5,6 +5,7 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
+import { stripIndent } from 'common-tags';
 import { type ID, IdArg } from '~/common';
 import { Loader, type LoaderOf } from '~/core/data-loader';
 import { PeriodicReportLoader } from '../../periodic-report';
@@ -51,6 +52,31 @@ export class ProgressReportCommunityStoryResolver {
     input: UpdatePromptVariantResponse<CommunityStoryVariant>,
   ): Promise<PromptVariantResponse> {
     return await this.service.submitResponse(input);
+  }
+
+  @Mutation(() => [PromptVariantResponse], {
+    description: stripIndent`
+      Choose this story as the report's featured community story.
+
+      Returns every story whose \`featured\` changed: the chosen one first,
+      then the one it displaced, if any — so both can be updated from one
+      response.
+    `,
+  })
+  async featureProgressReportCommunityStory(
+    @IdArg() id: ID<PromptVariantResponse>,
+  ): Promise<ReadonlyArray<PromptVariantResponse<CommunityStoryVariant>>> {
+    return await this.service.feature(id);
+  }
+
+  @Mutation(() => PromptVariantResponse, {
+    description:
+      'Take the featured place away from this story, leaving the report with no featured story.',
+  })
+  async unfeatureProgressReportCommunityStory(
+    @IdArg() id: ID<PromptVariantResponse>,
+  ): Promise<PromptVariantResponse<CommunityStoryVariant>> {
+    return await this.service.unfeature(id);
   }
 
   @Mutation(() => ProgressReport)
