@@ -153,6 +153,7 @@ describe('Rev79Service — applyMedia', () => {
         report: REPORT_ID,
         category: 'Team',
       }),
+      'Progress',
     );
   });
 
@@ -176,6 +177,7 @@ describe('Rev79Service — applyMedia', () => {
           }),
         }),
       }),
+      'Progress',
     );
   });
 
@@ -190,6 +192,7 @@ describe('Rev79Service — applyMedia', () => {
       expect.objectContaining({
         file: expect.objectContaining({ name: 'team-photo.png' }),
       }),
+      'Progress',
     );
   });
 
