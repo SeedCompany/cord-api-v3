@@ -169,6 +169,12 @@ export const makeConfig = (env: EnvironmentService) =>
       },
     };
 
+    gtlReportStatusChange = {
+      enabled: env
+        .boolean('NOTIFY_GTL_REPORT_STATUS_CHANGES')
+        .optional(this.emailDriver.send),
+    };
+
     defaultTimeZone = env
       .string('DEFAULT_TIMEZONE')
       .optional('America/Chicago');

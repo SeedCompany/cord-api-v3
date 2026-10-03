@@ -15,6 +15,7 @@ import {
   generateId,
   type ID,
   type RichTextDocument,
+  ServerException,
   type UnsecuredDto,
 } from '~/common';
 import { Identity } from '~/core/authentication';
@@ -213,6 +214,54 @@ export class GtlReportWorkflowRepository {
     // repository helpers do this on their own; this is not one of them. A
     // status change is exactly what an open report page needs to pick up.
     this.liveQueryStore.invalidate([GTLReport, report]);
+  }
+
+  /**
+   * Where a report sits, for the status-change email: the project its members
+   * are notified from, the engagement the email links to, and the leader (the
+   * engagement's intern) with their email.
+   *
+   * Not the Progress Report's `getProjectInfoByReportId`: that one inner-joins
+   * `languages`, and an internship engagement has none. The intern is a LEFT
+   * join so a soft-deleted leader yields no email rather than no row — the
+   * project members should still hear about the change.
+   */
+  async getNotificationInfo(reportId: ID): Promise<{
+    projectId: ID<'Project'>;
+    engagementId: ID<'Engagement'>;
+    internId: ID<'User'> | null;
+    internEmail: string | null;
+  }> {
+    const [row] = await this.db
+      .select({
+        projectId: projects.id,
+        engagementId: engagements.id,
+        internId: engagements.internId,
+        internEmail: users.email,
+      })
+      .from(periodicReports)
+      .innerJoin(engagements, eq(engagements.id, periodicReports.engagementId))
+      .innerJoin(projects, eq(projects.id, engagements.projectId))
+      .leftJoin(
+        users,
+        and(eq(users.id, engagements.internId), isNull(users.deletedAt)),
+      )
+      .where(
+        and(
+          eq(periodicReports.id, reportId),
+          eq(periodicReports.type, 'GTL'),
+          isNull(periodicReports.deletedAt),
+          isNull(engagements.deletedAt),
+          isNull(projects.deletedAt),
+        ),
+      )
+      .limit(1);
+    if (!row) {
+      throw new ServerException(
+        `Unable to retrieve project and engagement information for GTL report ${reportId}`,
+      );
+    }
+    return row;
   }
 
   /**
