@@ -73,6 +73,23 @@ const LoginDoc = graphql(`
   }
 `);
 
+export const loginWithAuth0 =
+  (input: InputOf<typeof LoginWithAuth0Doc>) => async (tester: Tester) => {
+    await tester.apply(initSessionOnce());
+    const res = await tester.run(LoginWithAuth0Doc, { input });
+    return res.loginWithAuth0;
+  };
+
+const LoginWithAuth0Doc = graphql(`
+  mutation LoginWithAuth0($input: LoginWithAuth0Input!) {
+    loginWithAuth0(input: $input) {
+      user {
+        id
+      }
+    }
+  }
+`);
+
 export const logout = () => async (tester: Tester) => {
   await tester.run(LogoutDoc);
   return tester;
