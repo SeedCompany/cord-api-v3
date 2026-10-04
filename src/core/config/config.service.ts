@@ -113,6 +113,14 @@ export const makeConfig = (env: EnvironmentService) =>
 
     jwtKey = env.string('JWT_AUTH_KEY').optional('cord-field');
 
+    // Both optional so `--gen-schema`/CI boot with no Auth0 tenant
+    // configured; `Auth0Service` fails closed (UnauthenticatedException) if
+    // `loginWithAuth0` is actually called without these set.
+    auth0 = {
+      domain: env.string('AUTH0_DOMAIN').optional(),
+      audience: env.string('AUTH0_AUDIENCE').optional(),
+    };
+
     emailDriver = (() => {
       const send = env.boolean('EMAIL_SEND').optional(false);
       const from = env
