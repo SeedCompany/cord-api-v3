@@ -10,7 +10,7 @@ import { Loader, type LoaderOf } from '~/core/data-loader';
 import { UserLoader } from '../../../components/user';
 import { User } from '../../../components/user/dto';
 import { AuthenticationService } from '../authentication.service';
-import { LoggedIn, LoggedOut, LoginInput } from '../dto';
+import { LoggedIn, LoggedOut, LoginInput, LoginWithAuth0Input } from '../dto';
 import { AuthLevel } from '../session/auth-level.decorator';
 import { SessionHost } from '../session/session.host';
 
@@ -30,6 +30,19 @@ export class LoginResolver {
   })
   async login(@Args('input') input: LoginInput): Promise<LoggedIn> {
     const user = await this.authentication.login(input);
+    return { user };
+  }
+
+  @Mutation(() => LoggedIn, {
+    description: stripIndent`
+      Login a user via an Auth0-issued ID token
+      @sensitive-secrets
+    `,
+  })
+  async loginWithAuth0(
+    @Args('input') input: LoginWithAuth0Input,
+  ): Promise<LoggedIn> {
+    const user = await this.authentication.loginWithAuth0(input);
     return { user };
   }
 

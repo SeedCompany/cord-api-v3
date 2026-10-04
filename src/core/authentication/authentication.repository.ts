@@ -4,6 +4,7 @@ import { DateTime } from 'luxon';
 import { type ID, ServerException } from '~/common';
 import {
   authIdentities,
+  authIdentitiesAuth0,
   authPasswordResetTokens,
   authSessions,
   DrizzleService,
@@ -61,15 +62,23 @@ export class AuthenticationRepository {
       .where(eq(authSessions.token, token));
   }
 
-  async connectSessionToUser(input: LoginInput, session: Session) {
+  async connectSessionToUser(input: { email: string }, session: Session) {
     const user = await this.drizzle.client.query.users.findFirst({
       where: (user) => and(eq(user.email, input.email), isNull(user.deletedAt)),
     });
     if (!user) return undefined;
 
+    return await this.connectSessionToUserId(user.id, session);
+  }
+
+  // Auth0's `sub` is the stable re-match key for an already-linked user —
+  // unlike a fresh email match, we must not re-derive the user by email
+  // here, since the claims' email can drift from what's on file (Okta
+  // profile edit, Auth0-side password reset, etc.) without us knowing.
+  async connectSessionToUserId(userId: ID<'User'>, session: Session) {
     const result = await this.drizzle.client
       .update(authSessions)
-      .set({ userId: user.id, loggedInAt: new Date() })
+      .set({ userId, loggedInAt: new Date() })
       .where(
         and(
           eq(authSessions.token, session.token),
@@ -78,7 +87,7 @@ export class AuthenticationRepository {
       )
       .returning();
 
-    return result.length > 0 ? user.id : undefined;
+    return result.length > 0 ? userId : undefined;
   }
 
   async deactivateAllOtherSessions(session: Session) {
@@ -127,6 +136,46 @@ export class AuthenticationRepository {
       .onConflictDoUpdate({
         target: authIdentities.userId,
         set: { passwordHash, updatedAt: new Date() },
+      });
+  }
+
+  // Returns `status` alongside `id` (a small deviation from "id or
+  // undefined") so the Auth0 login flow can refuse a disabled account
+  // without a second round trip. Soft-deleted users resolve to `undefined`,
+  // same liveness pattern as `connectSessionToUser` above — a stale
+  // identity row left behind after a user is deleted must not silently
+  // resurrect their session.
+  async findUserByAuth0Sub(sub: string) {
+    const row = await this.drizzle.client.query.authIdentitiesAuth0.findFirst({
+      where: (identity) => eq(identity.sub, sub),
+      with: {
+        user: { columns: { id: true, status: true, deletedAt: true } },
+      },
+    });
+    if (!row?.user || row.user.deletedAt) return undefined;
+    return { id: row.user.id, status: row.user.status };
+  }
+
+  // Unlike `connectSessionToUser`/`doesEmailAddressExist`, this is NOT
+  // liveness-filtered — the Auth0 login flow needs to tell "no user has
+  // this email" (JIT-provision) apart from "a user has this email but is
+  // disabled/deleted" (refuse), which it can't do if deleted rows are
+  // already excluded from the query.
+  async findUserStatusByEmail(email: string) {
+    const row = await this.drizzle.client.query.users.findFirst({
+      where: (user) => eq(user.email, email),
+      columns: { id: true, status: true, deletedAt: true },
+    });
+    return row;
+  }
+
+  async saveAuth0IdentityOnUser(userId: ID, sub: string) {
+    await this.drizzle.client
+      .insert(authIdentitiesAuth0)
+      .values({ userId, sub })
+      .onConflictDoUpdate({
+        target: authIdentitiesAuth0.userId,
+        set: { sub, updatedAt: new Date() },
       });
   }
 

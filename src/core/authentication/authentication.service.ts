@@ -9,11 +9,13 @@ import {
 } from '~/common';
 import { MailerService } from '~/core/email';
 import { ILogger, Logger } from '~/core/logger';
+import { type Auth0Claims, Auth0Service } from './auth0.service';
 import { AuthenticationRepository } from './authentication.repository';
 import { CryptoService } from './crypto.service';
 import {
   type ChangePassword,
   type LoginInput,
+  type LoginWithAuth0Input,
   type RegisterUser,
   type RequestPasswordReset,
   type ResetPassword,
@@ -37,6 +39,7 @@ export class AuthenticationService {
     private readonly sessionManager: SessionManager,
     private readonly sessionHost: SessionHost,
     private readonly moduleRef: ModuleRef,
+    private readonly auth0: Auth0Service,
   ) {}
 
   async register({ password, ...input }: RegisterUser): Promise<ID> {
@@ -86,6 +89,86 @@ export class AuthenticationService {
     await this.sessionManager.refreshCurrentSession();
 
     return userId;
+  }
+
+  /**
+   * Login via an Auth0-issued ID token, reusing the same session-issuance
+   * machinery as password `login()`.
+   *
+   * Match order: `sub` (Auth0's stable subject id) first, then email,
+   * then JIT-provision a brand-new user if neither matches. A disabled or
+   * soft-deleted match is refused the same way the password path refuses
+   * it — a disabled account gets `UserDisabledException`, same as `login()`
+   * above; a deleted account gets the same opaque "Invalid credentials" as
+   * an unknown password-login email, both to avoid a deleted-account oracle
+   * and because `users.email` is uniquely constrained even across deleted
+   * rows, so silently provisioning a new user over that email would just
+   * fail with a DB constraint error instead.
+   */
+  async loginWithAuth0({ idToken }: LoginWithAuth0Input): Promise<ID> {
+    const claims = await this.auth0.verifyToken(idToken);
+
+    const bySub = await this.repo.findUserByAuth0Sub(claims.sub);
+    if (bySub) {
+      if (bySub.status === 'Disabled') {
+        throw new UserDisabledException();
+      }
+
+      const userId = await this.repo.connectSessionToUserId(
+        bySub.id,
+        this.sessionHost.current,
+      );
+      if (!userId) {
+        throw new ServerException('Login failed');
+      }
+
+      await this.sessionManager.refreshCurrentSession();
+      return userId;
+    }
+
+    const existing = await this.repo.findUserStatusByEmail(claims.email);
+    if (existing?.deletedAt) {
+      throw new UnauthenticatedException('Invalid credentials');
+    }
+    if (existing?.status === 'Disabled') {
+      throw new UserDisabledException();
+    }
+
+    if (!existing) {
+      await this.provisionUserFromAuth0(claims);
+    }
+
+    const userId = await this.repo.connectSessionToUser(
+      { email: claims.email },
+      this.sessionHost.current,
+    );
+    if (!userId) {
+      throw new ServerException('Login failed');
+    }
+
+    await this.repo.saveAuth0IdentityOnUser(userId, claims.sub);
+    await this.sessionManager.refreshCurrentSession();
+    return userId;
+  }
+
+  private async provisionUserFromAuth0(claims: Auth0Claims): Promise<ID> {
+    const userMod = await import('../../components/user');
+    const users = this.moduleRef.get(userMod.UserService, { strict: false });
+    const nameParts = claims.name?.split(' ') ?? [];
+    const given =
+      claims.givenName ??
+      nameParts[0] ??
+      claims.email.split('@')[0] ??
+      claims.email;
+    const family = claims.familyName ?? (nameParts.slice(1).join(' ') || given);
+    const { id } = await users.create({
+      email: claims.email,
+      realFirstName: given,
+      realLastName: family,
+      displayFirstName: given,
+      displayLastName: family,
+    });
+    return id;
   }
 
   async logout(token: string, refresh = true): Promise<void> {

@@ -1,6 +1,7 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { UserModule } from '../../components/user/user.module';
+import { Auth0Service } from './auth0.service';
 import { AuthenticationRepository } from './authentication.repository';
 import { AuthenticationService } from './authentication.service';
 import { CryptoService } from './crypto.service';
@@ -38,6 +39,7 @@ import { SessionManager } from './session/session.manager';
     AuthenticationRepository,
     JwtService,
     CryptoService,
+    Auth0Service,
 
     DisablingUserLogsThemOutHandler,
     DeletedUserLogsThemOutHandler,
