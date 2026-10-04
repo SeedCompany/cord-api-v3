@@ -106,6 +106,10 @@ export const usersRelations = relations(users, ({ many, one }) => ({
     fields: [users.id],
     references: [authIdentities.userId],
   }),
+  auth0Identity: one(authIdentitiesAuth0, {
+    fields: [users.id],
+    references: [authIdentitiesAuth0.userId],
+  }),
   educations: many(educations),
   unavailabilities: many(unavailabilities),
   locations: many(userLocations),
@@ -261,6 +265,40 @@ export const authIdentitiesRelations = relations(authIdentities, ({ one }) => ({
     references: [users.id],
   }),
 }));
+
+// One row per user; re-saved (not replaced) if the same user logs in via a
+// different Auth0 connection later. `sub` (not email) is the re-match key —
+// it's Auth0's immutable subject identifier, so it survives an email change
+// upstream (Okta profile edit, Auth0 Database password reset, etc.) that our
+// side never hears about. No `deletedAt` needed, same as `authIdentities` —
+// this is FK-cascaded off `users` and carries no independent lifecycle.
+export const authIdentitiesAuth0 = pgTable(
+  'auth_identities_auth0',
+  {
+    userId: text('user_id')
+      .$type<ID<'User'>>()
+      .primaryKey()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    sub: text('sub').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [uniqueIndex('auth_identities_auth0_sub_unique').on(t.sub)],
+);
+
+export const authIdentitiesAuth0Relations = relations(
+  authIdentitiesAuth0,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [authIdentitiesAuth0.userId],
+      references: [users.id],
+    }),
+  }),
+);
 
 // Tokens for password resets. Deleted after use.
 export const authPasswordResetTokens = pgTable(
