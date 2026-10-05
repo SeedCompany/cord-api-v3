@@ -1,7 +1,11 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import { DateTimeField, Resource, type Secured, SecuredString } from '~/common';
-import { type BaseNode, type LinkTo, RegisterResource } from '~/core/resources';
+import {
+  type LinkTo,
+  type LinkToUnknown,
+  RegisterResource,
+} from '~/core/resources';
 import { PostType } from './post-type.enum';
 import { PostShareability } from './shareability.dto';
 
@@ -12,7 +16,7 @@ import { PostShareability } from './shareability.dto';
 export class Post extends Resource {
   static readonly Parent = 'dynamic';
 
-  readonly parent: BaseNode;
+  readonly parent: LinkToUnknown;
 
   readonly creator: Secured<LinkTo<'User'>>;
 

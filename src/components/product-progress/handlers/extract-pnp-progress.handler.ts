@@ -45,7 +45,7 @@ export class ExtractPnpProgressHandler {
     }
 
     // Fetch products for report mapped to a book/story name
-    const engagementId = event.report.parent.properties.id;
+    const engagementId = event.report.engagement.id;
     const storyProducts = progressRows[0].story
       ? await this.products.loadProductIdsWithProducibleNames(
           engagementId,

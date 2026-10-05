@@ -1,7 +1,6 @@
 import { Field, InterfaceType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { type ID, IdField } from '~/common';
-import { type BaseNode, type LinkToUnknown } from '~/core/resources';
 import { Changeset } from './changeset.dto';
 
 @InterfaceType({
@@ -24,17 +23,4 @@ export abstract class ChangesetAware {
     nullable: true,
   })
   readonly changeset?: ID;
-
-  /**
-   * A reference to the resource that owns this one — used for navigation
-   * (breadcrumbs, `project: parent { … }`), not only for changesets.
-   *
-   * Postgres repos emit the typed {@link LinkToUnknown} form. The
-   * {@link BaseNode} arm is only for the Neo4j/Gel repos, which hand over a raw
-   * graph node; `ChangesetAwareResolver.parent` normalizes it.
-   *
-   * migration-todo: drop the `| BaseNode` arm at Phase 7 cutover (and the
-   * normalizing branch in ChangesetAwareResolver.parent with it).
-   */
-  readonly parent?: LinkToUnknown | BaseNode;
 }

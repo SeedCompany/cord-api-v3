@@ -14,8 +14,7 @@ import {
   SecuredProperty,
   ServerException,
 } from '~/common';
-import { type BaseNode } from '~/core/resources';
-import { RegisterResource } from '~/core/resources';
+import { type LinkToUnknown, RegisterResource } from '~/core/resources';
 import { FileNodeType } from './file-node-type.enum';
 
 /**
@@ -65,11 +64,8 @@ abstract class FileNode extends Resource {
 
   readonly createdById: ID;
 
-  /** The root FileNode. This could be self */
-  readonly root: BaseNode;
-
   /** The resource the root FileNode is attached to */
-  readonly rootAttachedTo: [resource: BaseNode, relationName: string];
+  readonly rootAttachedTo: [resource: LinkToUnknown, relationName: string];
 }
 
 // class name has to match schema name for interface resolvers to work.

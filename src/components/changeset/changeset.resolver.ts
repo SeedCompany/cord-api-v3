@@ -1,7 +1,7 @@
 import { Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
 import { type ID, IdArg, type ObjectView } from '~/common';
 import { Identity } from '~/core/authentication';
-import { type BaseNode } from '~/core/resources';
+import { type LinkToUnknown } from '~/core/resources';
 import { ResourceLoader } from '~/core/resources';
 import { ChangesetRepository } from './changeset.repository';
 import { Changeset, ChangesetDiff, type ResourceChange } from './dto';
@@ -38,8 +38,8 @@ export class ChangesetResolver {
     }
 
     const diff = await this.repo.difference(changeset.id, parent);
-    const load = (node: BaseNode, view?: ObjectView) =>
-      this.resources.loadByBaseNode(node, view ?? { changeset: changeset.id });
+    const load = (ref: LinkToUnknown, view?: ObjectView) =>
+      this.resources.loadByRef(ref, view ?? { changeset: changeset.id });
     const [added, removed, changed] = await Promise.all([
       Promise.all(diff.added.map((node) => load(node))),
       // If the changeset is approved, we read deleted node otherwise read node in changeset

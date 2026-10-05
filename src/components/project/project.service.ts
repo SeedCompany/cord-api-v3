@@ -658,13 +658,13 @@ export class ProjectService {
 
   protected async validateOtherResourceId(
     ids: Many<ID> | null | undefined,
-    label: string,
+    type: 'FieldRegion' | 'Location',
     resourceField: string,
     errMsg: string,
   ): Promise<void> {
     await Promise.all(
       many(ids ?? []).map(async (id, index) => {
-        const exists = await this.repo.getBaseNode(id, label);
+        const exists = await this.repo.exists(id, type);
         if (exists) {
           return;
         }

@@ -11,11 +11,24 @@ import { Loader, type LoaderOf } from '~/core/data-loader';
 import { BudgetService } from '../budget';
 import { FileNodeLoader, resolveDefinedFile } from '../file';
 import { SecuredFile } from '../file/dto';
+import { ProjectLoader } from '../project';
+import { IProject, type Project } from '../project/dto';
 import { Budget, BudgetSummary, BudgetUpdated, UpdateBudget } from './dto';
 
 @Resolver(Budget)
 export class BudgetResolver {
   constructor(private readonly service: BudgetService) {}
+
+  @ResolveField(() => IProject)
+  async parent(
+    @Parent() budget: Budget,
+    @Loader(ProjectLoader) projects: LoaderOf<ProjectLoader>,
+  ): Promise<Project> {
+    return await projects.load({
+      id: budget.project.id,
+      view: { active: true },
+    });
+  }
 
   @ResolveField(() => Float)
   async total(@Parent() budget: Budget): Promise<number> {

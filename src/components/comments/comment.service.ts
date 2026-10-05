@@ -12,7 +12,7 @@ import {
 } from '~/common';
 import { Identity } from '~/core/authentication';
 import { Hooks } from '~/core/hooks';
-import { type BaseNode, isBaseNode } from '~/core/resources';
+import { isRefOnly, type LinkToUnknown } from '~/core/resources';
 import { ResourceLoader, ResourcesHost } from '~/core/resources';
 import { ResourceMutatedHook } from '../audit/resource-mutated.hook';
 import { Privileges } from '../authorization';
@@ -30,7 +30,7 @@ import {
 } from './dto';
 import { CommentViaMentionNotificationService } from './mention-notification/comment-via-mention-notification.service';
 
-type CommentableRef = ID | BaseNode | Commentable;
+type CommentableRef = ID | LinkToUnknown | Commentable;
 
 @Injectable()
 export class CommentService {
@@ -56,10 +56,7 @@ export class CommentService {
       }
       dto = await this.repo.readOne(result.id);
     } catch (exception) {
-      if (
-        input.thread &&
-        !(await this.repo.threads.getBaseNode(input.thread))
-      ) {
+      if (input.thread && !(await this.repo.threads.exists(input.thread))) {
         throw new NotFoundException('Comment thread does not exist', 'thread');
       }
 
@@ -91,22 +88,22 @@ export class CommentService {
   }
 
   async loadCommentable(resource: CommentableRef): Promise<Commentable> {
-    const parentNode = isIdLike(resource)
-      ? await this.repo.getBaseNode(resource)
+    const parentRef = isIdLike(resource)
+      ? await this.repo.getRef(resource)
       : resource;
-    if (!parentNode) {
+    if (!parentRef) {
       throw new NotFoundException('Resource does not exist', 'resource');
     }
-    const parent = isBaseNode(parentNode)
-      ? await this.resources.loadByBaseNode(parentNode)
-      : parentNode;
+    const parent = isRefOnly(parentRef)
+      ? ((await this.resources.loadByRef(parentRef)) as Commentable)
+      : parentRef;
 
     try {
       this.resourcesHost.verifyImplements(parent.__typename, Commentable);
     } catch (e) {
       throw new NonCommentableType(e.message);
     }
-    return parent as Commentable;
+    return parent;
   }
 
   async readOne(id: ID): Promise<Comment> {

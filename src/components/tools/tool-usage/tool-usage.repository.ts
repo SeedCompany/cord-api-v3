@@ -15,13 +15,13 @@ import { DrizzleDtoRepository } from '~/core/drizzle/dto.repository';
 import {
   ENGAGEMENT_TYPENAMES,
   PROJECT_TYPENAMES,
-  resolveResourceBaseNode,
-  resolveResourceBaseNodes,
-  resolveResourceBaseNodesByType,
-} from '~/core/drizzle/resolve-resource-base-node';
+  resolveResourceRef,
+  resolveResourceRefs,
+  resolveResourceRefsByType,
+} from '~/core/drizzle/resolve-resource-ref';
 import { tools, toolUsages, users } from '~/core/drizzle/schema';
 import { ILogger, Logger } from '~/core/logger';
-import { type BaseNode } from '~/core/resources';
+import { type LinkToUnknown } from '~/core/resources';
 import {
   type CreateToolUsage,
   type ToolContainerType,
@@ -119,31 +119,27 @@ export class ToolUsageRepository extends DrizzleDtoRepository<
   }
 
   /**
-   * Neo4j-shaped {@link BaseNode}s for the containers of the given usage rows,
-   * resolved through the shared resource-table registry.
+   * References to the LIVE containers of the given usage rows, resolved through
+   * the shared resource-table registry.
    *
-   * The service (`readManyForContainers`) reads `container.properties.id` and
-   * may fall back to `resolveTypeByBaseNode(container)`, and the resolver calls
-   * `loadByBaseNode` — so this repo has to produce real BaseNodes rather than
-   * the typed refs used elsewhere.
+   * `container_type` already stores the concrete __typename, so the reference
+   * itself needs no query. The query is the liveness check: a usage whose
+   * container was soft-deleted must be dropped, or the resolver would hand
+   * GraphQL an unloadable container in a non-null field.
    *
    * Containers are deliberately NOT restricted to Project/Engagement: the
-   * `container` input is an `ID<'Resource'>`, the Cypher matches any `BaseNode`,
-   * and `Resource.tools` is a field on the `Resource` interface — so any
-   * resource may be a container, and more are expected over time. That is why
-   * this keys off the stored `container_type` and reports types the registry
-   * does not cover instead of dropping them: an uncovered type is a registry
-   * gap, and must not be indistinguishable from a deleted container.
-   *
-   * migration-todo: at cutover, `ToolUsage.container` should become a
-   * `PolymorphicLinkTo` and this whole lookup disappears — `container_type`
-   * already stores the concrete __typename, so no query would be needed.
+   * `container` input is an `ID<'Resource'>` and `Resource.tools` is a field on
+   * the `Resource` interface — so any resource may be a container, and more are
+   * expected over time. That is why this keys off the stored `container_type`
+   * and reports types the registry does not cover instead of dropping them: an
+   * uncovered type is a registry gap, and must not be indistinguishable from a
+   * deleted container.
    */
-  private async containerBaseNodesFor(
+  private async containerRefsFor(
     rows: ReadonlyArray<{ containerId: ID; containerType: string }>,
-  ): Promise<ReadonlyMap<ID, BaseNode>> {
+  ): Promise<ReadonlyMap<ID, LinkToUnknown>> {
     if (rows.length === 0) return new Map();
-    const { nodes, unknownTypes } = await resolveResourceBaseNodesByType(
+    const { refs, unknownTypes } = await resolveResourceRefsByType(
       this.db,
       rows.map((row) => ({ id: row.containerId, type: row.containerType })),
     );
@@ -153,7 +149,7 @@ export class ToolUsageRepository extends DrizzleDtoRepository<
         { containerTypes: [...unknownTypes] },
       );
     }
-    return nodes;
+    return refs;
   }
 
   /** Joined tool row is required — the DTO embeds the full Tool. */
@@ -165,12 +161,11 @@ export class ToolUsageRepository extends DrizzleDtoRepository<
       with: { tool: true, creator: { columns: { deletedAt: true } } },
     });
     const live = rows.filter(hasLiveCreator);
-    const containers = await this.containerBaseNodesFor(live);
+    const containers = await this.containerRefsFor(live);
     // A usage whose container no longer resolves is dropped, not returned with a
-    // hole: the Cypher's `node(container, 'BaseNode')` match was required, so
-    // Neo4j never yielded such a row either. Returning it would hand the service
-    // an unloadable container and surface as NotFoundException on a non-null
-    // field. Callers see a missing id, which readOne turns into NotFound.
+    // hole. Returning it would hand the service an unloadable container and
+    // surface as NotFoundException on a non-null field. Callers see a missing
+    // id, which readOne turns into NotFound.
     return live.flatMap((row) => {
       const container = containers.get(row.containerId);
       return container ? [this.toDto(row as ToolUsageRow, container)] : [];
@@ -187,7 +182,7 @@ export class ToolUsageRepository extends DrizzleDtoRepository<
    */
   protected toDto(
     row: ToolUsageRow,
-    container?: BaseNode,
+    container?: LinkToUnknown,
   ): UnsecuredDto<ToolUsage> {
     if (!container) {
       throw new ServerException(
@@ -233,24 +228,23 @@ export class ToolUsageRepository extends DrizzleDtoRepository<
     // Only ids are given here, with no discriminator to key off — the caller
     // asks about containers that may hold no usages at all. So probe by id
     // instead: one query per registry table, flat as the page grows.
-    const nodes = await resolveResourceBaseNodes(this.db, containers);
+    const refs = await resolveResourceRefs(this.db, containers);
     const byContainer = new Map<ID, Array<UnsecuredDto<ToolUsage>>>();
     for (const row of live) {
-      const container = nodes.get(row.containerId);
+      const container = refs.get(row.containerId);
       if (!container) continue;
       const list = byContainer.get(row.containerId) ?? [];
       list.push(this.toDto(row as ToolUsageRow, container));
       byContainer.set(row.containerId, list);
     }
-    // Only containers that actually resolved are returned — the Cypher matched
-    // on `BaseNode`, so an id belonging to nothing yielded no row either.
+    // Only containers that actually resolved are returned.
     return containers.flatMap((id) => {
-      const container = nodes.get(id);
+      const container = refs.get(id);
       return container
         ? [{ container, usages: byContainer.get(id) ?? [] }]
         : [];
     }) as Array<{
-      container: BaseNode;
+      container: LinkToUnknown;
       usages: ReadonlyArray<UnsecuredDto<ToolUsage>>;
     }>;
   }
@@ -278,12 +272,12 @@ export class ToolUsageRepository extends DrizzleDtoRepository<
     // effectively orders by oldest-first — still a defined order rather than
     // whichever rows Postgres happened to hand back.
     const live = orderUsageRows(rows.filter(hasLiveCreator));
-    const nodes = await this.containerBaseNodesFor(live);
+    const refs = await this.containerRefsFor(live);
     const byTool = new Map<ID, Array<UnsecuredDto<ToolUsage>>>();
     for (const row of live) {
       // Drop rather than emit a container-less usage — one dead container would
       // otherwise null out every tool in the list via non-null propagation.
-      const container = nodes.get(row.containerId);
+      const container = refs.get(row.containerId);
       if (!container) continue;
       const list = byTool.get(row.toolId) ?? [];
       list.push(this.toDto(row as ToolUsageRow, container));
@@ -354,21 +348,19 @@ export class ToolUsageRepository extends DrizzleDtoRepository<
       with: { tool: true, creator: { columns: { deletedAt: true } } },
     });
     if (!row || !hasLiveCreator(row)) return null;
-    const nodes = await this.containerBaseNodesFor([row]);
-    const containerNode = nodes.get(row.containerId);
-    // No live container means the Cypher would have matched nothing — the
-    // service reads this as "no existing usage", which is the right answer.
-    if (!containerNode) return null;
-    return this.toDto(row as ToolUsageRow, containerNode);
+    const refs = await this.containerRefsFor([row]);
+    const containerRef = refs.get(row.containerId);
+    // No live container: the service reads this as "no existing usage", which
+    // is the right answer.
+    if (!containerRef) return null;
+    return this.toDto(row as ToolUsageRow, containerRef);
   }
 
   async create(input: CreateToolUsage) {
-    const container = await resolveResourceBaseNode(this.db, input.container);
+    const container = await resolveResourceRef(this.db, input.container);
     if (!container) {
       throw new CreationFailed(ToolUsage);
     }
-    // labels are [Concrete, Interface, 'BaseNode'] — the concrete one is first.
-    const containerType = container.labels[0]!;
 
     // The foreign key proves only that the tool row exists, and a soft-deleted
     // tool still satisfies it. Neo4j's create matches `:Tool`, and deleting a
@@ -389,7 +381,7 @@ export class ToolUsageRepository extends DrizzleDtoRepository<
       .values({
         id,
         containerId: input.container,
-        containerType,
+        containerType: container.__typename,
         toolId: input.tool,
         creatorId: this.identity.current.userId,
         startDate: input.startDate?.toISODate() ?? null,
@@ -416,7 +408,7 @@ export class ToolUsageRepository extends DrizzleDtoRepository<
     await this.softDelete(id);
   }
 
-  async getBaseNode(id: ID, _resource?: unknown) {
-    return await resolveResourceBaseNode(this.db, id);
+  async getRef(id: ID): Promise<LinkToUnknown | undefined> {
+    return await resolveResourceRef(this.db, id);
   }
 }

@@ -5,7 +5,6 @@ import {
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { bufferFromStream, cleanJoin, type Nil } from '@seedcompany/common';
 import { fileTypeFromBuffer } from 'file-type';
-import { intersection } from 'lodash';
 import { Duration } from 'luxon';
 import mime from 'mime';
 import { extname } from 'node:path';
@@ -450,14 +449,11 @@ export class FileService {
     isType: (type: FileNodeType) => boolean,
     typeMismatchError: string,
   ) {
-    const node = await this.repo.getBaseNode(id);
-    if (!node) {
+    const ref = await this.repo.getRef(id);
+    if (!ref) {
       throw new NotFoundException('Could not find parent', 'parent');
     }
-    const type = intersection(
-      node.labels,
-      Object.keys(FileNodeType),
-    )[0] as FileNodeType;
+    const type = ref.__typename as FileNodeType;
     if (!isType(type)) {
       throw new InputException(typeMismatchError, 'parent');
     }
@@ -598,11 +594,7 @@ export class FileService {
 
     const change = await this.repo.move(input.id, input.parent);
     for (const parent of [change.oldParent, change.newParent]) {
-      this.liveQueryStore.invalidate([
-        // Cheat to resolve typename since it's just these two.
-        parent.labels.includes('Directory') ? 'Directory' : 'File',
-        parent.properties.id,
-      ]);
+      this.liveQueryStore.invalidate([parent.__typename, parent.id]);
     }
 
     await this.hooks.run(

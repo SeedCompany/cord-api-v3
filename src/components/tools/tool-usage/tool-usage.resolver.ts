@@ -35,7 +35,7 @@ export class ToolUsageResolver {
     if (!container) {
       throw new ServerException('Container resolution failure');
     }
-    return (await this.resources.loadByBaseNode(container)) as Resource;
+    return (await this.resources.loadByRef(container)) as Resource;
   }
 
   /**

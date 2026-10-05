@@ -38,7 +38,7 @@ import {
   products,
 } from '~/core/drizzle/schema';
 import { LiveQueryStore } from '~/core/live-query';
-import { type BaseNode, type ResourceLike } from '~/core/resources';
+import { type LinkToUnknown, type ResourceLike } from '~/core/resources';
 import { type ScopedRole } from '../authorization/dto/role.dto';
 import { requesterScopeByProject } from '../project/project-member/membership-scope';
 import {
@@ -232,37 +232,29 @@ export class ProductRepository {
   }
 
   /**
-   * Lookup shim for the service's pre-flight existence checks. Returns a
-   * Neo4j-shaped BaseNode so `ResourceResolver.resolveTypeByBaseNode()` keeps
-   * working — only `labels` and `properties.{id,createdAt}` are consumed.
+   * The service's pre-flight existence checks: a reference to the live
+   * engagement or producible, carrying its concrete type.
    */
-  async getBaseNode(id: ID, label?: unknown): Promise<BaseNode | undefined> {
-    const asBaseNode = (labels: string[], createdAt: Date): BaseNode => ({
-      identity: id,
-      labels: [...labels, 'BaseNode'],
-      properties: { id, createdAt: DateTime.fromJSDate(createdAt) },
-    });
-    if (label === 'Engagement') {
+  async getRef(
+    id: ID,
+    type: 'Engagement' | 'Producible',
+  ): Promise<LinkToUnknown | undefined> {
+    if (type === 'Engagement') {
       const [row] = await this.db
-        .select({ type: engagements.type, createdAt: engagements.createdAt })
+        .select({ type: engagements.type })
         .from(engagements)
         .where(and(eq(engagements.id, id), isNull(engagements.deletedAt)));
       return row
-        ? asBaseNode([`${row.type}Engagement`, 'Engagement'], row.createdAt)
+        ? { __typename: `${row.type}Engagement`, id: id as ID<'Engagement'> }
         : undefined;
     }
-    if (label === 'Producible') {
-      const [row] = await this.db
-        .select({ type: producibles.type, createdAt: producibles.createdAt })
-        .from(producibles)
-        .where(and(eq(producibles.id, id), isNull(producibles.deletedAt)));
-      return row
-        ? asBaseNode([row.type, 'Producible'], row.createdAt)
-        : undefined;
-    }
-    throw new ServerException(
-      `ProductRepository.getBaseNode: label ${String(label)} not supported`,
-    );
+    const [row] = await this.db
+      .select({ type: producibles.type })
+      .from(producibles)
+      .where(and(eq(producibles.id, id), isNull(producibles.deletedAt)));
+    return row
+      ? { __typename: row.type, id: id as ID<'Producible'> }
+      : undefined;
   }
 
   async findProducible(produces: ID | undefined) {

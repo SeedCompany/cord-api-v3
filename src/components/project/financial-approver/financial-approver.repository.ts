@@ -8,10 +8,6 @@ import { type ProjectType } from '../dto/project-type.enum';
 import { type FinancialApprover, type SetFinancialApprover } from './dto';
 
 @Injectable()
-// Only `read`/`write` are the contract here. The canonical extends
-// CommonRepository, so its public surface also carries Neo4j plumbing
-// (getBaseNode, getBaseNodes, deleteNode) that no consumer of this repository
-// calls and that has no Postgres counterpart.
 export class FinancialApproverRepository {
   constructor(private readonly db: DrizzleService) {}
 

@@ -5,12 +5,25 @@ import { FileNodeLoader, resolveDefinedFile } from '../file';
 import { SecuredFile } from '../file/dto';
 import { LocationLoader } from '../location';
 import { SecuredLocation } from '../location/dto';
+import { ProjectLoader } from '../project';
+import { InternshipProject, type Project } from '../project/dto';
 import { UserLoader } from '../user';
 import { SecuredUser } from '../user/dto';
 import { InternshipEngagement } from './dto';
 
 @Resolver(InternshipEngagement)
 export class InternshipEngagementResolver {
+  @ResolveField(() => InternshipProject)
+  async parent(
+    @Parent() engagement: InternshipEngagement,
+    @Loader(ProjectLoader) projects: LoaderOf<ProjectLoader>,
+  ): Promise<Project> {
+    return await projects.load({
+      id: engagement.project.id,
+      view: { active: true },
+    });
+  }
+
   @ResolveField(() => SecuredFile)
   async growthPlan(
     @Parent() engagement: InternshipEngagement,

@@ -13,11 +13,11 @@ import {
   DrizzleDtoRepository,
   DrizzleService,
   resolveOrderBy,
-  resolveResourceBaseNode,
+  resolveResourceRef,
   type SortMap,
 } from '~/core/drizzle';
 import { posts, projectMembers } from '~/core/drizzle/schema';
-import { type BaseNode } from '~/core/resources';
+import { type LinkToUnknown } from '~/core/resources';
 import { type CreatePost, Post, type UpdatePost } from './dto';
 import { type PostListInput } from './dto/list-posts.dto';
 
@@ -34,15 +34,7 @@ export class PostRepository extends DrizzleDtoRepository<typeof posts, Post> {
     const dto: unknown = {
       id: row.id,
       createdAt: DateTime.fromJSDate(row.createdAt),
-      // Fake BaseNode so ResourceLoader.loadByBaseNode resolves the parent.
-      parent: {
-        identity: row.parentId,
-        labels: [row.parentType, 'BaseNode'],
-        properties: {
-          id: row.parentId,
-          createdAt: DateTime.fromJSDate(row.createdAt),
-        },
-      },
+      parent: { __typename: row.parentType, id: row.parentId },
       creator: { id: row.creatorId },
       type: row.type,
       shareability: row.shareability,
@@ -53,15 +45,15 @@ export class PostRepository extends DrizzleDtoRepository<typeof posts, Post> {
   }
 
   async create(input: CreatePost): Promise<{ dto: UnsecuredDto<Post> }> {
-    const parentNode = await resolveResourceBaseNode(this.db, input.parent);
-    if (!parentNode) {
+    const parentRef = await resolveResourceRef(this.db, input.parent);
+    if (!parentRef) {
       throw new NotFoundException('Resource does not exist', 'parent');
     }
     const id = await generateId<ID<'Post'>>();
     await this.db.insert(posts).values({
       id,
       parentId: input.parent,
-      parentType: parentNode.labels[0]!,
+      parentType: parentRef.__typename,
       creatorId: this.identity.current.userId,
       type: input.type,
       shareability: input.shareability,
@@ -144,8 +136,8 @@ export class PostRepository extends DrizzleDtoRepository<typeof posts, Post> {
     };
   }
 
-  async getBaseNode(id: ID): Promise<BaseNode | undefined> {
-    return await resolveResourceBaseNode(this.db, id);
+  async getRef(id: ID): Promise<LinkToUnknown | undefined> {
+    return await resolveResourceRef(this.db, id);
   }
 
   async deleteNode(objectOrId: { id: ID } | ID): Promise<void> {

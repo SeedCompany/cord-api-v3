@@ -12,11 +12,12 @@ export class ProgressReportParentResolver {
     @Parent() report: ProgressReport,
     @Loader(EngagementLoader) engagements: LoaderOf<EngagementLoader>,
   ) {
+    const { id } = report.engagement;
     if (onlyId) {
-      return { id: report.parent.properties.id };
+      return { id };
     }
     return await engagements.load({
-      id: report.parent.properties.id,
+      id,
       view: { active: true },
     });
   }

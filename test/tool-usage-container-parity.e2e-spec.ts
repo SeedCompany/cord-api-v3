@@ -21,8 +21,8 @@ import {
  * produce a null `tools`: it nulls the whole parent object, and inside a list it
  * nulls the entire list.
  *
- * Neo4j answers an empty list for every one of those types, because its query
- * matched any `BaseNode`. Postgres has no single table holding every resource,
+ * Neo4j answered an empty list for every one of those types, because its query
+ * matched any graph node. Postgres has no single table holding every resource,
  * so its repository has to work out which table an id belongs to — and for a
  * type it cannot place, the id used to be dropped, which the DataLoader turned
  * into a thrown "could not find" error.

@@ -35,7 +35,7 @@ type Match<Types extends string> = ValueOf<{
 
 @Injectable()
 export class SearchService {
-  // mapping of base nodes to functions that,
+  // mapping of search types to functions that,
   // given id will return the object.
   /* eslint-disable @typescript-eslint/naming-convention */
   private readonly customHydrators: HydratorMap = {
@@ -85,8 +85,8 @@ export class SearchService {
     types.has('Partner') && resourceTypes.add('Organization');
     types.has('Language') && resourceTypes.add('EthnologueLanguage');
 
-    // Search for nodes based on input, only returning their id and "type"
-    // which is based on their first valid search label.
+    // Search based on input, only returning each match's id and concrete
+    // `__typename`.
     const results = await this.repo.search({
       ...input,
       type: [...resourceTypes],
@@ -94,13 +94,8 @@ export class SearchService {
 
     const maybeHydrated = await Promise.all(
       results
-        // Normalize result & resolve type from neo4j data
-        .map(({ node, matchedProps }) => {
-          const result = {
-            type: this.resourceResolver.resolveTypeByBaseNode(node),
-            id: node.properties.id,
-            matchedProps,
-          };
+        .map(({ ref, matchedProps }) => {
+          const result = { type: ref.__typename, id: ref.id, matchedProps };
           return result as Match<keyof ResourceMap>;
         })
         // Ensure resource types matched are within the search type filters

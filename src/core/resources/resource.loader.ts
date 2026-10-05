@@ -5,7 +5,6 @@ import { ConfigService } from '~/core/config';
 import { DataLoaderContext, type DataLoaderStrategy } from '~/core/data-loader';
 import { Identity } from '../authentication';
 import { GqlContextHost } from '../graphql';
-import { type BaseNode } from './base-node';
 import { ResourceLoaderRegistry } from './loader.registry';
 import { type ResourceMap } from './map';
 import { ResourceResolver } from './resource-resolver.service';
@@ -24,6 +23,13 @@ export interface PolymorphicLinkTo<Key extends keyof ResourceMap> {
  * A reference to a resource with a dynamic / unknown type.
  */
 export type LinkToUnknown = PolymorphicLinkTo<keyof ResourceMap>;
+
+/**
+ * Whether this is a bare reference — nothing but `__typename` and `id` — rather
+ * than a loaded resource, which carries those two along with its fields.
+ */
+export const isRefOnly = (value: object): value is LinkToUnknown =>
+  Object.keys(value).every((key) => key === '__typename' || key === 'id');
 
 /**
  * A reference to a resource with a static / known type.
@@ -45,15 +51,6 @@ export class ResourceLoader {
     private readonly loaderContext: DataLoaderContext,
     private readonly resourceResolver: ResourceResolver,
   ) {}
-
-  async loadByBaseNode(node: BaseNode, view?: ObjectView) {
-    // @ts-expect-error we are expecting at least one of the labels to be one
-    // of our registered resources. If this turns out to be false a runtime
-    // error is thrown.
-    // I like this better than allowing string on load argument.
-    const types: Array<keyof ResourceMap> = node.labels;
-    return await this.load(types, node.properties.id, view);
-  }
 
   async loadByRef<Key extends keyof ResourceMap>(
     obj: PolymorphicLinkTo<Key>,

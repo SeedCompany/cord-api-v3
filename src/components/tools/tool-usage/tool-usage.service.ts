@@ -7,16 +7,16 @@ import {
   InputException,
   isIdLike,
   NotFoundException,
-  Resource,
+  type Resource,
   ServerException,
   type UnsecuredDto,
 } from '~/common';
 import { LiveQueryStore } from '~/core/live-query';
-import { type BaseNode, isBaseNode } from '~/core/resources';
 import {
   HandleIdLookup,
+  isRefOnly,
+  type LinkToUnknown,
   ResourceLoader,
-  ResourceResolver,
   ResourcesHost,
 } from '~/core/resources';
 import { Privileges } from '../../authorization';
@@ -37,7 +37,7 @@ import { type UsagesByTool } from './tool-usage-by-tool.loader';
 import { ToolUsageRepository } from './tool-usage.repository';
 
 type TypedResource = Resource & { __typename: string };
-type ResourceRef = TypedResource | ID<Resource> | BaseNode;
+type ResourceRef = TypedResource | ID<Resource> | LinkToUnknown;
 
 @Injectable()
 export class ToolUsageService {
@@ -45,7 +45,6 @@ export class ToolUsageService {
     private readonly privileges: Privileges,
     private readonly resources: ResourceLoader,
     private readonly resourcesHost: ResourcesHost,
-    private readonly resourceResolver: ResourceResolver,
     private readonly liveQueryStore: LiveQueryStore,
     private readonly repo: ToolUsageRepository,
     private readonly toolRepo: ToolRepository,
@@ -71,11 +70,9 @@ export class ToolUsageService {
     const containersById = mapKeys.fromList(containers, (r) => r.id).asMap;
     const rows = await this.repo.listForContainers(containers.map((r) => r.id));
     return rows.map((row): UsagesByContainer => {
-      const container = containersById.get(row.container.properties.id)!;
+      const container = containersById.get(row.container.id)!;
 
-      const typeName =
-        container.__typename ??
-        this.resourceResolver.resolveTypeByBaseNode(row.container);
+      const typeName = container.__typename ?? row.container.__typename;
       const containerType = this.resourcesHost.enhance(
         typeName,
       ) as EnhancedResource<typeof Resource>;
@@ -158,14 +155,13 @@ export class ToolUsageService {
     return rows.map(({ tool, usages }) => {
       const totals = new Map<ToolContainerType, number>();
       for (const usage of usages.items) {
-        const labels: readonly string[] = usage.container.value?.labels ?? [];
-        // labels may be Neo4j node labels or Gel FQN type names; both contain
-        // the substring 'Engagement' or 'Project' for the relevant subtypes
-        const containerType: ToolContainerType | null = labels.some((l) =>
-          l.includes('Engagement'),
+        // Concrete typenames carry their family name, e.g. `LanguageEngagement`.
+        const typename = usage.container.value?.__typename ?? '';
+        const containerType: ToolContainerType | null = typename.includes(
+          'Engagement',
         )
           ? 'Engagement'
-          : labels.some((l) => l.includes('Project'))
+          : typename.includes('Project')
             ? 'Project'
             : null;
         if (containerType) {
@@ -207,16 +203,15 @@ export class ToolUsageService {
   }
 
   private async loadContainer(container: ResourceRef): Promise<TypedResource> {
-    const node = isIdLike(container)
-      ? await this.repo.getBaseNode(container, Resource)
+    const ref = isIdLike(container)
+      ? await this.repo.getRef(container)
       : container;
-    if (!node) {
+    if (!ref) {
       throw new NotFoundException('Resource does not exist', 'container');
     }
-    const loaded = isBaseNode(node)
-      ? ((await this.resources.loadByBaseNode(node)) as TypedResource)
-      : node;
-    return loaded;
+    return isRefOnly(ref)
+      ? ((await this.resources.loadByRef(ref)) as TypedResource)
+      : ref;
   }
 
   async create(input: CreateToolUsage): Promise<ToolUsage> {

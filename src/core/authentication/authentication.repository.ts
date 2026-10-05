@@ -229,11 +229,10 @@ export class AuthenticationRepository {
     return { user: { id: user.id } };
   }
 
-  async removeAllPasswordResetTokensByEmail(email: string) {
-    // migration-todo: switch to userId after Neo4j is removed
+  async removeAllPasswordResetTokensForUser(userId: ID<'User'>) {
     await this.drizzle.client
       .delete(authPasswordResetTokens)
-      .where(eq(authPasswordResetTokens.email, email));
+      .where(eq(authPasswordResetTokens.userId, userId));
   }
 
   async rolesForUser(user: ID) {
