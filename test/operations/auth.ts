@@ -1,7 +1,5 @@
-import { faker } from '@faker-js/faker';
 import { graphql, type InputOf } from '~/graphql';
 import { type Tester } from '../setup';
-import { fragments } from '../utility';
 
 export const initSessionOnce = () => async (tester: Tester) => {
   if (!(HasSession in tester)) {
@@ -17,58 +15,6 @@ const SessionDoc = graphql(`
   query SessionToken {
     session(browser: true) {
       __typename
-    }
-  }
-`);
-
-export const registerUser =
-  (input?: Partial<InputOf<typeof RegisterUserDoc>>) =>
-  async (tester: Tester) => {
-    await tester.apply(initSessionOnce());
-    const password = faker.internet.password();
-    const res = await tester.run(RegisterUserDoc, {
-      input: {
-        email: faker.internet.email(),
-        password,
-        realFirstName: faker.person.firstName(),
-        realLastName: faker.person.lastName(),
-        displayFirstName: faker.person.firstName(),
-        displayLastName: faker.person.lastName(),
-        ...input,
-      },
-    });
-    return {
-      password,
-      ...res.register.user,
-    };
-  };
-
-const RegisterUserDoc = graphql(
-  `
-    mutation RegisterUser($input: RegisterUser!) {
-      register(input: $input) {
-        user {
-          ...user
-        }
-      }
-    }
-  `,
-  [fragments.user],
-);
-
-export const login =
-  (input: InputOf<typeof LoginDoc>) => async (tester: Tester) => {
-    await tester.apply(initSessionOnce());
-    const res = await tester.run(LoginDoc, { input });
-    return res.login;
-  };
-
-const LoginDoc = graphql(`
-  mutation Login($input: LoginInput!) {
-    login(input: $input) {
-      user {
-        id
-      }
     }
   }
 `);

@@ -1,17 +1,41 @@
+import { jest } from '@jest/globals';
+import { generateId } from '~/common';
+import {
+  type Auth0Claims,
+  Auth0Service,
+} from '~/core/authentication/auth0.service';
 import { ConfigService } from '~/core/config';
-import { graphql, type InputOf } from '~/graphql';
+import { graphql } from '~/graphql';
 import { type TestApp } from './create-app';
 import { createSession } from './create-session';
 
-/** @deprecated use multiple {@link import('../setup').Tester} instead  */
-export async function login(app: TestApp, input: InputOf<typeof LoginDoc>) {
-  const res = await app.graphql.mutate(LoginDoc, { input });
+/**
+ * Logs the current session in as the user with this email, by
+ * JIT/re-provisioning them through `loginWithAuth0` with a stubbed
+ * `Auth0Service.verifyToken` rather than the retired password `login`
+ * mutation. There's no password anymore, so that's all this needs.
+ *
+ * @deprecated use multiple {@link import('../setup').Tester} instead
+ */
+export async function login(app: TestApp, input: { email: string }) {
+  const claims: Auth0Claims = {
+    sub: `test|${await generateId()}`,
+    email: input.email,
+    emailVerified: true,
+  };
+  jest
+    .spyOn(app.get(Auth0Service), 'verifyToken')
+    .mockResolvedValueOnce(claims);
+
+  const res = await app.graphql.mutate(LoginWithAuth0Doc, {
+    input: { idToken: `test-token-${claims.sub}` },
+  });
   app.graphql.email = input.email;
   return res;
 }
-export const LoginDoc = graphql(`
-  mutation login($input: LoginInput!) {
-    login(input: $input) {
+export const LoginWithAuth0Doc = graphql(`
+  mutation loginWithAuth0ForLogin($input: LoginWithAuth0Input!) {
+    loginWithAuth0(input: $input) {
       user {
         id
       }
@@ -21,8 +45,8 @@ export const LoginDoc = graphql(`
 
 /** @deprecated use an admin tester instead  */
 export const loginAsAdmin = async (app: TestApp) => {
-  const { email, password } = app.get(ConfigService).rootUser;
-  await login(app, { email, password });
+  const { email } = app.get(ConfigService).rootUser;
+  await login(app, { email });
 };
 
 /** @deprecated use an admin tester instead  */

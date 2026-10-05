@@ -1,12 +1,17 @@
 import { faker } from '@faker-js/faker';
-import { expect } from '@jest/globals';
+import { expect, jest } from '@jest/globals';
 import { generateId, isValidId, Role } from '~/common';
+import {
+  type Auth0Claims,
+  Auth0Service,
+} from '~/core/authentication/auth0.service';
 import { graphql, type InputOf } from '~/graphql';
 import { type TestApp } from './create-app';
+import { type CreatePersonDoc } from './create-person';
 import * as fragments from './fragments';
 import { login, runAsAdmin, runInIsolatedSession } from './login';
 
-type RegisterUser = InputOf<typeof RegisterUserDoc>;
+type RegisterUser = InputOf<typeof CreatePersonDoc>;
 
 /** @deprecated */
 export const generateRegisterInput = async () =>
@@ -27,24 +32,8 @@ export const generateRequireFieldsRegisterInput = async () =>
     realLastName: faker.person.lastName(),
     displayFirstName: faker.person.firstName() + (await generateId()),
     displayLastName: faker.person.lastName() + (await generateId()),
-    password: faker.internet.password(),
     timezone: 'America/Chicago',
   }) satisfies RegisterUser;
-
-/** @deprecated use {@link import('../setup').createTesterWithRole} instead */
-export async function registerUserWithStrictInput(
-  app: TestApp,
-  input: RegisterUser,
-) {
-  const result = await app.graphql.mutate(RegisterUserDoc, { input });
-  const actual = result.register.user;
-  expect(actual).toBeTruthy();
-
-  expect(isValidId(actual.id)).toBe(true);
-  expect(actual.email.value).toBe(input.email.toLowerCase());
-
-  return actual;
-}
 
 /** @deprecated use {@link import('../setup').Tester} instead */
 export type TestUser = fragments.user & {
@@ -61,36 +50,66 @@ export type TestUser = fragments.user & {
   runAs: <R>(execution: () => Promise<R>) => Promise<R>;
 };
 
-/** @deprecated use {@link import('../setup').createTesterWithRole} instead */
+/**
+ * Creates a user by JIT-provisioning it through `loginWithAuth0` (stubbing
+ * `Auth0Service.verifyToken` for the one call) instead of the retired
+ * password `register` mutation. Defaults still come from
+ * `generateRegisterInput()` merged under whatever the caller passed — same
+ * as this always did — which is where the default `roles` (and the other
+ * fixture fields: display name, phone, about, status, title) come from when
+ * the caller doesn't specify them.
+ *
+ * JIT-provisioning itself only ever sets name/email and deliberately never
+ * assigns roles (a real production safeguard, not a bug), so everything
+ * else gets applied afterward via `updateUser` as admin — same end state
+ * the retired `register` mutation produced in one shot.
+ *
+ * @deprecated use {@link import('../setup').createTesterWithRole} instead
+ */
 export async function registerUser(
   app: TestApp,
   input: Partial<RegisterUser> = {},
 ): Promise<TestUser> {
-  const { roles, ...user }: RegisterUser = {
+  const {
+    email: emailInput,
+    realFirstName,
+    realLastName,
+    ...rest
+  } = {
     ...(await generateRegisterInput()),
     ...input,
   };
+  const email = emailInput ?? faker.internet.email();
 
-  const result = await app.graphql.mutate(RegisterUserDoc, { input: user });
-  const actual = result.register.user;
+  const sub = `test|${await generateId()}`;
+  const claims: Auth0Claims = {
+    sub,
+    email,
+    emailVerified: true,
+    givenName: realFirstName,
+    familyName: realLastName,
+  };
+  jest
+    .spyOn(app.get(Auth0Service), 'verifyToken')
+    .mockResolvedValueOnce(claims);
+
+  const result = await app.graphql.mutate(LoginWithAuth0Doc, {
+    input: { idToken: `test-token-${sub}` },
+  });
+  const actual = result.loginWithAuth0.user;
   expect(actual).toBeTruthy();
 
   expect(isValidId(actual.id)).toBe(true);
-  expect(actual.email.value).toBe(user.email.toLowerCase());
+  expect(actual.email.value).toBe(email.toLowerCase());
 
-  // Add roles to user as admin as we are assuming this is a fixture setup
-  // instead of actually trying to create a user the intended way.
-  if (roles && roles.length > 0) {
-    await runAsAdmin(app, async () => {
-      await app.graphql.mutate(AddRolesToUser, {
-        userId: actual.id,
-        roles,
-      });
+  await runAsAdmin(app, async () => {
+    await app.graphql.mutate(UpdateUserForRegisterDoc, {
+      input: { id: actual.id, ...rest },
     });
-  }
+  });
 
   const loginMe = async () => {
-    await login(app, { email: user.email, password: user.password });
+    await login(app, { email });
   };
   return {
     ...actual,
@@ -103,10 +122,10 @@ export async function registerUser(
   };
 }
 
-const RegisterUserDoc = graphql(
+const LoginWithAuth0Doc = graphql(
   `
-    mutation RegisterUser($input: RegisterUser!) {
-      register(input: $input) {
+    mutation RegisterUserViaAuth0($input: LoginWithAuth0Input!) {
+      loginWithAuth0(input: $input) {
         user {
           ...user
         }
@@ -116,9 +135,9 @@ const RegisterUserDoc = graphql(
   [fragments.user],
 );
 
-const AddRolesToUser = graphql(`
-  mutation AddRolesToUser($userId: ID!, $roles: [Role!]!) {
-    updateUser(input: { id: $userId, roles: $roles }) {
+const UpdateUserForRegisterDoc = graphql(`
+  mutation UpdateUserForRegisterUser($input: UpdateUser!) {
+    updateUser(input: $input) {
       __typename
     }
   }
