@@ -3,9 +3,6 @@ import {
   Injectable,
   type OnApplicationBootstrap,
 } from '@nestjs/common';
-import { ModuleRef } from '@nestjs/core';
-import { LazyGetter as Once } from 'lazy-get-decorator';
-import { CryptoService } from '~/core/authentication/crypto.service';
 import { ConfigService } from '~/core/config';
 import { ILogger, Logger } from '~/core/logger';
 import { AdminRepository } from './admin.repository';
@@ -15,13 +12,8 @@ export class AdminService implements OnApplicationBootstrap {
   constructor(
     private readonly config: ConfigService,
     @Inject(AdminRepository) private readonly repo: AdminRepository,
-    private readonly moduleRef: ModuleRef,
     @Logger('admin:service') private readonly logger: ILogger,
   ) {}
-
-  @Once() private get crypto() {
-    return this.moduleRef.get(CryptoService, { strict: false });
-  }
 
   async onApplicationBootstrap(): Promise<void> {
     // Same switch the Neo4j AdminService honors — also how read-only
@@ -52,14 +44,17 @@ export class AdminService implements OnApplicationBootstrap {
     await this.repo.mergeDefaultOrg(id, name);
   }
 
+  // Root authenticates via Auth0 like every other account — no password, no
+  // break-glass fallback. This just ensures the `users` row exists with the
+  // configured id/email, so `loginWithAuth0`'s ordinary "existing user,
+  // match by email" path has something to find on root's first login.
   private async setupRootUser(): Promise<void> {
     const root = this.config.rootUser;
 
     const existing = await this.repo.findRootUser();
     if (!existing) {
       this.logger.notice('Setting up root user');
-      const hashed = await this.crypto.hash(root.password);
-      await this.repo.createRootUser(root.id, root.email, hashed);
+      await this.repo.createRootUser(root.id, root.email);
       return;
     }
 
@@ -71,16 +66,9 @@ export class AdminService implements OnApplicationBootstrap {
       Object.assign(this.config.rootUser, { id: existing.id });
     }
 
-    const passwordSame = await this.crypto
-      .verify(existing.hash, root.password)
-      .catch(() => false);
-    if (existing.email !== root.email || !passwordSame) {
+    if (existing.email !== root.email) {
       this.logger.notice('Updating root user to match app configuration');
       await this.repo.updateEmail(root.id, root.email);
-      if (!passwordSame) {
-        const hashed = await this.crypto.hash(root.password);
-        await this.repo.auth.savePasswordHashOnUser(root.id, hashed);
-      }
     }
   }
 }

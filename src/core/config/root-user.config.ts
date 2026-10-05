@@ -10,23 +10,19 @@ export const RootUserAlias = 'root';
 
 export const determineRootUser = (env: EnvironmentService) => {
   const user = JSON.parse(env.string('ROOT_USER').optional('{}')) as {
-    [_ in 'id' | 'email' | 'password']?: string;
+    [_ in 'id' | 'email']?: string;
   };
   const email =
     env.string('ROOT_USER_EMAIL').optional() ?? user.email ?? 'devops@tsco.org';
-  const password =
-    env.string('ROOT_USER_PASSWORD').optional() ??
-    user.password ??
-    env.string('ROOT_ADMIN_PASSWORD').optional() ??
-    'admin';
   const id =
     env.string('ROOT_USER_ID').optional() ??
     user.id ??
-    // Use static ID in dev, so that devs can change email/password while
-    // still sharing the same ID.
+    // Use static ID in dev, so that devs can change email while still
+    // sharing the same ID.
     (isDev ? 'd1bebdaa-efcf-57ee-84cd-0b2bfa01eaa7' : undefined) ??
     // Otherwise in production if ID has not been provided, hash it from
-    // the email & password.
-    uuidV5(`${email}\0${password}`, UserNs);
-  return { id: id as ID, email, password } as const;
+    // the email — root authenticates via Auth0 like everyone else, so
+    // there's no password to fold into the derivation anymore.
+    uuidV5(email, UserNs);
+  return { id: id as ID, email } as const;
 };

@@ -1,27 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { ModuleRef } from '@nestjs/core';
 import { and, eq, isNull } from 'drizzle-orm';
-import { LazyGetter as Once } from 'lazy-get-decorator';
 import { type ID, Role } from '~/common';
-import { AuthenticationRepository } from '~/core/authentication/authentication.repository';
 import { DrizzleService } from '~/core/drizzle/drizzle.service';
-import {
-  authIdentities,
-  organizations,
-  userGlobalRoles,
-  users,
-} from '~/core/drizzle/schema';
+import { organizations, userGlobalRoles, users } from '~/core/drizzle/schema';
 
 @Injectable()
 export class AdminRepository {
-  constructor(
-    private readonly drizzle: DrizzleService,
-    private readonly moduleRef: ModuleRef,
-  ) {}
-
-  @Once() get auth() {
-    return this.moduleRef.get(AuthenticationRepository, { strict: false });
-  }
+  constructor(private readonly drizzle: DrizzleService) {}
 
   async finishing(callback: () => Promise<void>) {
     await callback();
@@ -32,10 +17,8 @@ export class AdminRepository {
       .select({
         id: users.id,
         email: users.email,
-        hash: authIdentities.passwordHash,
       })
       .from(users)
-      .leftJoin(authIdentities, eq(authIdentities.userId, users.id))
       .where(and(eq(users.isRoot, true), isNull(users.deletedAt)))
       .limit(1);
     return row;
@@ -43,12 +26,11 @@ export class AdminRepository {
 
   /**
    * Atomic: a partial failure would leave a row with isRoot=true but no admin
-   * role/password, and findRootUser would then skip re-creation forever.
-   * Bootstrap isn't a GraphQL mutation, so the transactional-mutations
-   * interceptor doesn't cover it — wrap explicitly. (client is ALS-bound, so
-   * the auth write below joins the same tx.)
+   * role, and findRootUser would then skip re-creation forever. Bootstrap
+   * isn't a GraphQL mutation, so the transactional-mutations interceptor
+   * doesn't cover it — wrap explicitly.
    */
-  async createRootUser(id: ID, email: string, passwordHash: string) {
+  async createRootUser(id: ID, email: string) {
     const userId = id as ID<'User'>;
     await this.drizzle.inTx(async () => {
       await this.drizzle.client.insert(users).values({
@@ -64,7 +46,6 @@ export class AdminRepository {
       await this.drizzle.client
         .insert(userGlobalRoles)
         .values({ userId, role: Role.Administrator });
-      await this.auth.savePasswordHashOnUser(userId, passwordHash);
     });
   }
 
