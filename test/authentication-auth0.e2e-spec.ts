@@ -6,12 +6,7 @@ import {
   Auth0Service,
 } from '~/core/authentication/auth0.service';
 import { graphql } from '~/graphql';
-import {
-  currentUser,
-  loginWithAuth0,
-  logout,
-  registerUser,
-} from './operations/auth';
+import { currentUser, loginWithAuth0, logout } from './operations/auth';
 import {
   createApp,
   createTester,
@@ -39,12 +34,30 @@ describe('Authentication via Auth0 e2e', () => {
     ...overrides,
   });
 
+  /**
+   * Fixture setup: JIT-provision a brand-new user through the Auth0 path
+   * itself (the retired password `register` mutation isn't available
+   * anymore), then log them back out, leaving a live `users` row with one
+   * bound Auth0 identity for the test body to log back in against.
+   */
+  const provisionUser = () => async (tester: Tester) => {
+    const email = faker.internet.email();
+    const claims = claimsFor(email);
+    jest
+      .spyOn(app.get(Auth0Service), 'verifyToken')
+      .mockResolvedValueOnce(claims);
+    const res = await tester.apply(loginWithAuth0({ idToken: 'seed-token' }));
+    await tester.apply(logout());
+    return { id: res.user.id, email };
+  };
+
   it('logs in an existing user by matching email on first try', async () => {
     const tester = createTester(app);
-    const user = await tester.apply(registerUser());
-    await tester.apply(logout());
+    const user = await tester.apply(provisionUser());
 
-    const claims = claimsFor(user.email.value!);
+    // A fresh sub with the same email — proves email-matching kicks in when
+    // the sub isn't recognized yet.
+    const claims = claimsFor(user.email);
     jest.spyOn(app.get(Auth0Service), 'verifyToken').mockResolvedValue(claims);
 
     const res = await tester.apply(loginWithAuth0({ idToken: 'fake-token' }));
@@ -53,12 +66,11 @@ describe('Authentication via Auth0 e2e', () => {
 
   it('re-matches the same user by sub even when the claimed email changes', async () => {
     const tester = createTester(app);
-    const user = await tester.apply(registerUser());
-    await tester.apply(logout());
+    const user = await tester.apply(provisionUser());
 
     const sub = `auth0|${faker.string.uuid()}`;
 
-    const firstClaims = claimsFor(user.email.value!, { sub });
+    const firstClaims = claimsFor(user.email, { sub });
     jest
       .spyOn(app.get(Auth0Service), 'verifyToken')
       .mockResolvedValueOnce(firstClaims);
@@ -108,13 +120,13 @@ describe('Authentication via Auth0 e2e', () => {
     ).rejects.toThrow();
   });
 
-  it('refuses a disabled user via the Auth0 path, same as the password path', async () => {
+  it('refuses a disabled user via the Auth0 path', async () => {
     const tester = createTester(app);
     const admin = await getRootTester(app);
-    const user = await tester.apply(registerUser());
+    const user = await tester.apply(provisionUser());
     await admin.apply(disableUser(user.id));
 
-    const claims = claimsFor(user.email.value!);
+    const claims = claimsFor(user.email);
     jest.spyOn(app.get(Auth0Service), 'verifyToken').mockResolvedValue(claims);
 
     await expect(
@@ -125,14 +137,13 @@ describe('Authentication via Auth0 e2e', () => {
     });
   });
 
-  it('refuses a deleted user via the Auth0 path, same as the password path', async () => {
+  it('refuses a deleted user via the Auth0 path', async () => {
     const tester = createTester(app);
     const admin = await getRootTester(app);
-    const user = await tester.apply(registerUser());
-    const email = user.email.value!;
+    const user = await tester.apply(provisionUser());
     await admin.apply(deleteUser(user.id));
 
-    const claims = claimsFor(email);
+    const claims = claimsFor(user.email);
     jest.spyOn(app.get(Auth0Service), 'verifyToken').mockResolvedValue(claims);
 
     await expect(

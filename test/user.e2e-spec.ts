@@ -41,7 +41,7 @@ describe('User e2e', () => {
   });
 
   it('read one user by id', async () => {
-    const { password: _, ...fakeUser } = await generateRegisterInput();
+    const fakeUser = await generateRegisterInput();
 
     const user = await createPerson(app, fakeUser);
 
@@ -82,7 +82,7 @@ describe('User e2e', () => {
   });
 
   it('create user with required input fields', async () => {
-    const { password: _, ...user } = await generateRequireFieldsRegisterInput();
+    const user = await generateRequireFieldsRegisterInput();
     const actual = await createPerson(app, user, false);
 
     expect(isValidId(actual.id)).toBe(true);
@@ -478,14 +478,15 @@ describe('User e2e', () => {
 
   it('Email is case insensitive', async () => {
     const email = faker.internet.email().toUpperCase();
-    const password = faker.internet.password();
 
     await runInIsolatedSession(app, async () => {
-      const user = await registerUser(app, { email, password });
+      const user = await registerUser(app, { email });
       expect(user.email.value).toBe(email.toLowerCase());
 
-      await login(app, { email: email.toLowerCase(), password });
-      await login(app, { email, password });
+      // Two Auth0 logins with different casings of the same email must both
+      // resolve to the same user rather than JIT-provisioning a duplicate.
+      await login(app, { email: email.toLowerCase() });
+      await login(app, { email });
     });
   });
 
@@ -526,7 +527,7 @@ describe('User e2e', () => {
   // users the watcher cannot see. Ceremony and Language have the same gap.
   describe('user mutation events', () => {
     it('createPerson identifies the new user and the acting actor', async () => {
-      const { password: _, ...input } = await generateRegisterInput();
+      const input = await generateRegisterInput();
 
       const { createPerson: event } = await app.graphql.mutate(
         CreatePersonReturningDoc,
