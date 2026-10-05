@@ -6,7 +6,13 @@ import { type ID } from '~/common';
 import { type ForgotPassword } from '~/core/authentication/emails/forgot-password.email';
 import { MailerService } from '~/core/email';
 import { graphql } from '~/graphql';
-import { currentUser, login, logout, registerUser } from './operations/auth';
+import {
+  currentUser,
+  initSessionOnce,
+  login,
+  logout,
+  registerUser,
+} from './operations/auth';
 import {
   createApp,
   createTester,
@@ -138,6 +144,42 @@ describe('Authentication e2e', () => {
     });
   });
 
+  it('a reset token only changes the password of the user it was issued to', async () => {
+    const sendEmail = jest.spyOn(app.get(MailerService), 'send');
+    const admin = await getRootTester(app);
+    // A fresh browser session for each anonymous step.
+    const anonymous = () => createTester(app).apply(initSessionOnce());
+    const requester = await createTester(app).apply(registerUser());
+    const oldEmail = requester.email.value!;
+
+    const asRequestingBrowser = await anonymous();
+    await asRequestingBrowser.apply(forgotPassword(oldEmail));
+    const lastMail = sendEmail.mock.calls.at(-1)![0]! as ForgotPasswordMsg;
+    const { token } = lastMail.body.props;
+
+    // The requester's email moves, and someone else takes the old one.
+    const newEmail = faker.internet.email();
+    await admin.apply(changeEmail(requester.id, newEmail));
+    const other = await createTester(app).apply(
+      registerUser({ email: oldEmail }),
+    );
+
+    const newPassword = faker.internet.password();
+    const asResettingBrowser = await anonymous();
+    await asResettingBrowser.apply(resetPassword(token, newPassword));
+
+    // The requester got the new password, under their new email...
+    const asRequester = await anonymous();
+    await asRequester.apply(login({ email: newEmail, password: newPassword }));
+    // ...and the account now holding the old email kept its own.
+    const asOther = await anonymous();
+    await asOther.apply(login({ email: oldEmail, password: other.password }));
+    const asAttacker = await anonymous();
+    await expect(
+      asAttacker.apply(login({ email: oldEmail, password: newPassword })),
+    ).rejects.toThrowGqlError({ message: 'Invalid credentials' });
+  });
+
   it('Password changed', async () => {
     const tester = createTester(app);
 
@@ -209,6 +251,19 @@ const deleteUser = (userId: ID) => async (tester: Tester) => {
       }
     `),
     { id: userId },
+  );
+};
+
+const changeEmail = (userId: ID, email: string) => async (tester: Tester) => {
+  await tester.run(
+    graphql(`
+      mutation ChangeUserEmail($id: ID!, $email: String!) {
+        updateUser(input: { id: $id, email: $email }) {
+          __typename
+        }
+      }
+    `),
+    { id: userId, email },
   );
 };
 

@@ -257,13 +257,10 @@ export class PartnerRepository extends DrizzleDtoRepository<
   }
 
   /**
-   * Soft-delete. The service still calls `deleteNode(object)` (the Neo4j-base
-   * name; Partner hasn't been converted to the `delete(id)` rename yet), so we
-   * match that here. Soft-delete drops the row from the partial unique index,
-   * freeing the organization for a new Partner.
+   * Soft-delete. This drops the row from the partial unique index, freeing the
+   * organization for a new Partner.
    */
-  async deleteNode(objectOrId: ID | { id: ID }): Promise<void> {
-    const id = typeof objectOrId === 'string' ? objectOrId : objectOrId.id;
+  async delete(id: ID): Promise<void> {
     await this.softDelete(id);
   }
 

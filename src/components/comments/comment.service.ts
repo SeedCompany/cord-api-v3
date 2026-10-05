@@ -156,11 +156,11 @@ export class CommentService {
 
     const thread = await this.repo.threads.readOne(object.thread);
     if (object.id === thread.firstComment.id) {
-      await this.repo.threads.deleteNode(object.thread);
+      await this.repo.threads.delete(object.thread);
     }
 
     try {
-      await this.repo.deleteNode(object);
+      await this.repo.delete(object.id);
     } catch (exception) {
       throw new ServerException('Failed to delete comment', exception);
     }

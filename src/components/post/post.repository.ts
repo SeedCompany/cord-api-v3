@@ -140,8 +140,7 @@ export class PostRepository extends DrizzleDtoRepository<typeof posts, Post> {
     return await resolveResourceRef(this.db, id);
   }
 
-  async deleteNode(objectOrId: { id: ID } | ID): Promise<void> {
-    const id = typeof objectOrId === 'string' ? objectOrId : objectOrId.id;
+  async delete(id: ID): Promise<void> {
     await this.db.delete(posts).where(eq(posts.id, id as ID<'Post'>));
     // Hand-rolled delete (a hard delete, not the base's softDelete()), so it
     // has to invalidate itself — see the base class's doc comment on why

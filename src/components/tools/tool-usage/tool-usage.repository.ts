@@ -403,8 +403,7 @@ export class ToolUsageRepository extends DrizzleDtoRepository<
     return await this.readOne(id);
   }
 
-  async deleteNode(objectOrId: { id: ID } | ID) {
-    const id = typeof objectOrId === 'string' ? objectOrId : objectOrId.id;
+  async delete(id: ID): Promise<void> {
     await this.softDelete(id);
   }
 
