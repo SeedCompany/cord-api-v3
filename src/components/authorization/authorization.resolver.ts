@@ -6,11 +6,7 @@ import {
 } from '@nestjs/graphql';
 import { mapValues } from '@seedcompany/common';
 import { EnhancedResource } from '~/common';
-import {
-  LoggedIn,
-  SessionOutput,
-  UserRegistered,
-} from '~/core/authentication/dto';
+import { LoggedIn, SessionOutput } from '~/core/authentication/dto';
 import { Power } from './dto';
 import { BetaFeatures } from './dto/beta-features.dto';
 import { Privileges } from './policy';
@@ -53,8 +49,4 @@ export class SessionExtraInfoResolver extends AuthExtraInfoResolver(
 
 export class LoginExtraInfoResolver extends AuthExtraInfoResolver(
   () => LoggedIn,
-) {}
-
-export class RegisterExtraInfoResolver extends AuthExtraInfoResolver(
-  () => UserRegistered,
 ) {}

@@ -10,7 +10,7 @@ import { Loader, type LoaderOf } from '~/core/data-loader';
 import { UserLoader } from '../../../components/user';
 import { User } from '../../../components/user/dto';
 import { AuthenticationService } from '../authentication.service';
-import { LoggedIn, LoggedOut, LoginInput, LoginWithAuth0Input } from '../dto';
+import { LoggedIn, LoggedOut, LoginWithAuth0Input } from '../dto';
 import { AuthLevel } from '../session/auth-level.decorator';
 import { SessionHost } from '../session/session.host';
 
@@ -21,17 +21,6 @@ export class LoginResolver {
     private readonly authentication: AuthenticationService,
     private readonly sessionHost: SessionHost,
   ) {}
-
-  @Mutation(() => LoggedIn, {
-    description: stripIndent`
-      Login a user
-      @sensitive-secrets
-    `,
-  })
-  async login(@Args('input') input: LoginInput): Promise<LoggedIn> {
-    const user = await this.authentication.login(input);
-    return { user };
-  }
 
   @Mutation(() => LoggedIn, {
     description: stripIndent`

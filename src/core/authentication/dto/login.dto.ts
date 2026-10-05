@@ -1,14 +1,5 @@
-import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import { EmailField, type ID } from '~/common';
-
-@InputType()
-export abstract class LoginInput {
-  @EmailField()
-  email: string;
-
-  @Field()
-  password: string;
-}
+import { ObjectType } from '@nestjs/graphql';
+import { type ID } from '~/common';
 
 @ObjectType()
 export class LoggedIn {

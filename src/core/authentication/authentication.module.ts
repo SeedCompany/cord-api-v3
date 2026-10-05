@@ -4,14 +4,11 @@ import { UserModule } from '../../components/user/user.module';
 import { Auth0Service } from './auth0.service';
 import { AuthenticationRepository } from './authentication.repository';
 import { AuthenticationService } from './authentication.service';
-import { CryptoService } from './crypto.service';
 import { DeletedUserLogsThemOutHandler } from './handlers/deleted-user-logs-them-out.handler';
 import { DisablingUserLogsThemOutHandler } from './handlers/disabling-user-logs-them-out.handler';
 import { Identity } from './identity.service';
 import { JwtService } from './jwt.service';
 import { LoginResolver } from './resolvers/login.resolver';
-import { PasswordResolver } from './resolvers/password.resolver';
-import { RegisterResolver } from './resolvers/register.resolver';
 import { SessionResolver } from './resolvers/session.resolver';
 import { SessionHost } from './session/session.host';
 import { SessionInitiator } from './session/session.initiator';
@@ -22,8 +19,6 @@ import { SessionManager } from './session/session.manager';
   imports: [forwardRef(() => UserModule)],
   providers: [
     LoginResolver,
-    PasswordResolver,
-    RegisterResolver,
     SessionResolver,
 
     Identity,
@@ -38,7 +33,6 @@ import { SessionManager } from './session/session.manager';
     AuthenticationService,
     AuthenticationRepository,
     JwtService,
-    CryptoService,
     Auth0Service,
 
     DisablingUserLogsThemOutHandler,

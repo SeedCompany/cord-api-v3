@@ -3,7 +3,6 @@ import { AssignableRolesGranter } from './assignable-roles.granter';
 import {
   AuthorizationResolver,
   LoginExtraInfoResolver,
-  RegisterExtraInfoResolver,
   SessionExtraInfoResolver,
 } from './authorization.resolver';
 import { BetaFeaturesGranter } from './dto/beta-features.dto';
@@ -17,7 +16,6 @@ import { PolicyModule } from './policy/policy.module';
   providers: [
     AuthorizationResolver,
     LoginExtraInfoResolver,
-    RegisterExtraInfoResolver,
     SessionExtraInfoResolver,
     CanImpersonateViaPrivilegesHandler,
     ...Object.values(Policies),
