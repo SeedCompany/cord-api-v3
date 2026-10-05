@@ -31,11 +31,9 @@ import { Plugin } from './plugin.decorator';
 export class ReadOnlyModePlugin implements OnModuleInit {
   /**
    * Mutations that only touch session state, which is not part of the freeze.
-   * Password mutations are NOT here on purpose: they write real user data,
-   * which would be silently lost when the frozen source is replaced.
    */
   static readonly sessionOnlyMutations: ReadonlySet<string> = new Set([
-    'login',
+    'loginWithAuth0',
     'logout',
   ]);
 
@@ -46,7 +44,7 @@ export class ReadOnlyModePlugin implements OnModuleInit {
   onModuleInit() {
     if (this.config.maintenance.readOnly) {
       this.logger.warning(
-        'Read-only maintenance mode is ON — refusing every mutation except login/logout',
+        'Read-only maintenance mode is ON — refusing every mutation except loginWithAuth0/logout',
       );
     }
   }
