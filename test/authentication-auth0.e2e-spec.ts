@@ -113,7 +113,6 @@ describe('Authentication via Auth0 e2e', () => {
     const admin = await getRootTester(app);
     const user = await tester.apply(registerUser());
     await admin.apply(disableUser(user.id));
-    await tester.apply(logout());
 
     const claims = claimsFor(user.email.value!);
     jest.spyOn(app.get(Auth0Service), 'verifyToken').mockResolvedValue(claims);
@@ -132,7 +131,6 @@ describe('Authentication via Auth0 e2e', () => {
     const user = await tester.apply(registerUser());
     const email = user.email.value!;
     await admin.apply(deleteUser(user.id));
-    await tester.apply(logout());
 
     const claims = claimsFor(email);
     jest.spyOn(app.get(Auth0Service), 'verifyToken').mockResolvedValue(claims);
