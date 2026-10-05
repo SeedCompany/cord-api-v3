@@ -101,11 +101,6 @@ export const users = pgTable('users', {
 export const usersRelations = relations(users, ({ many, one }) => ({
   globalRoles: many(userGlobalRoles),
   sessions: many(authSessions),
-  passwordResetTokens: many(authPasswordResetTokens),
-  identity: one(authIdentities, {
-    fields: [users.id],
-    references: [authIdentities.userId],
-  }),
   auth0Identity: one(authIdentitiesAuth0, {
     fields: [users.id],
     references: [authIdentitiesAuth0.userId],
@@ -247,31 +242,12 @@ export const authSessionsRelations = relations(authSessions, ({ one }) => ({
   }),
 }));
 
-// One row per user; updated in place on password change.
-export const authIdentities = pgTable('auth_identities', {
-  userId: text('user_id')
-    .$type<ID<'User'>>()
-    .primaryKey()
-    .references(() => users.id, { onDelete: 'cascade' }),
-  passwordHash: text('password_hash').notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-});
-
-export const authIdentitiesRelations = relations(authIdentities, ({ one }) => ({
-  user: one(users, {
-    fields: [authIdentities.userId],
-    references: [users.id],
-  }),
-}));
-
 // One row per user; re-saved (not replaced) if the same user logs in via a
 // different Auth0 connection later. `sub` (not email) is the re-match key —
 // it's Auth0's immutable subject identifier, so it survives an email change
-// upstream (Okta profile edit, Auth0 Database password reset, etc.) that our
-// side never hears about. No `deletedAt` needed, same as `authIdentities` —
-// this is FK-cascaded off `users` and carries no independent lifecycle.
+// upstream (Okta profile edit, Auth0 Database connection password reset,
+// etc.) that our side never hears about. No `deletedAt` needed — this is
+// FK-cascaded off `users` and carries no independent lifecycle.
 export const authIdentitiesAuth0 = pgTable(
   'auth_identities_auth0',
   {
@@ -295,33 +271,6 @@ export const authIdentitiesAuth0Relations = relations(
   ({ one }) => ({
     user: one(users, {
       fields: [authIdentitiesAuth0.userId],
-      references: [users.id],
-    }),
-  }),
-);
-
-// Tokens for password resets. Deleted after use.
-export const authPasswordResetTokens = pgTable(
-  'auth_password_reset_tokens',
-  {
-    token: text('token').primaryKey(),
-    userId: text('user_id')
-      .$type<ID<'User'>>()
-      .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
-    email: text('email').notNull(),
-    createdOn: timestamp('created_on', { withTimezone: true })
-      .notNull()
-      .defaultNow(),
-  },
-  (t) => [index('auth_password_reset_tokens_user_id_idx').on(t.userId)],
-);
-
-export const authPasswordResetTokensRelations = relations(
-  authPasswordResetTokens,
-  ({ one }) => ({
-    user: one(users, {
-      fields: [authPasswordResetTokens.userId],
       references: [users.id],
     }),
   }),

@@ -29,6 +29,13 @@
       "when": 1791115200000,
       "tag": "0003_auth0_identities",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791158400000,
+      "tag": "0004_drop_password_auth",
+      "breakpoints": true
     }
   ]
 }
