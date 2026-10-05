@@ -95,18 +95,16 @@ export class AuthenticationRepository {
       );
   }
 
-  async deactivateAllOtherSessionsByEmail(email: string, session: Session) {
-    const user = await this.drizzle.client.query.users.findFirst({
-      where: (user) => eq(user.email, email),
-    });
-    if (!user) return;
-
+  async deactivateAllOtherSessionsForUser(
+    userId: ID<'User'>,
+    session: Session,
+  ) {
     await this.drizzle.client
       .update(authSessions)
       .set({ active: false })
       .where(
         and(
-          eq(authSessions.userId, user.id),
+          eq(authSessions.userId, userId),
           ne(authSessions.token, session.token),
           eq(authSessions.active, true),
         ),
@@ -211,18 +209,24 @@ export class AuthenticationRepository {
     };
   }
 
-  async updatePasswordViaEmailToken(
-    { email }: { email: string },
+  /**
+   * Sets the password of the user the token was issued to. Looked up by the
+   * token's user id, not its email: the email can have moved to another
+   * account since the token was issued.
+   */
+  async updatePasswordViaResetToken(
+    { userId }: { userId: ID<'User'> },
     passwordHash: string,
   ) {
     // Liveness backstop for findPasswordResetToken's check above.
     const user = await this.drizzle.client.query.users.findFirst({
-      where: (user) => and(eq(user.email, email), isNull(user.deletedAt)),
+      where: (user) => and(eq(user.id, userId), isNull(user.deletedAt)),
+      columns: { id: true },
     });
     if (!user) {
       throw new ServerException(
         'Failed to reset password',
-        new ServerException('Could not find user by email'),
+        new ServerException('Could not find the user the token was issued to'),
       );
     }
     await this.savePasswordHashOnUser(user.id, passwordHash);

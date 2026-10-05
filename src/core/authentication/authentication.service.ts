@@ -141,12 +141,13 @@ export class AuthenticationService {
 
     const pash = await this.crypto.hash(password);
 
-    const { user } = await this.repo.updatePasswordViaEmailToken(
+    // Every step targets the user the token was issued to, by id.
+    const { user } = await this.repo.updatePasswordViaResetToken(
       resetToken,
       pash,
     );
-    await this.repo.deactivateAllOtherSessionsByEmail(
-      resetToken.email,
+    await this.repo.deactivateAllOtherSessionsForUser(
+      resetToken.userId,
       this.sessionHost.current,
     );
     await this.repo.removeAllPasswordResetTokensForUser(resetToken.userId);
