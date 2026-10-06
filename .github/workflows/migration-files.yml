@@ -1,0 +1,64 @@
+name: Migration Files
+on:
+  pull_request:
+    paths:
+      - 'src/core/drizzle/migrations/**'
+
+# One active run per branch/PR — a force-push cancels the now-stale run
+# instead of letting it occupy runners for its full duration.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check-migrations:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Need real history to diff base...head, not just the merge commit
+          # actions/checkout gives by default.
+          fetch-depth: 0
+
+      - name: Check migration files
+        run: |
+          set -euo pipefail
+
+          MIGRATIONS_DIR="src/core/drizzle/migrations"
+          JOURNAL="$MIGRATIONS_DIR/meta/_journal.json"
+          BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+
+          fail=0
+
+          while IFS=$'\t' read -r status file; do
+            # Only top-level .sql files directly in the migrations dir — not
+            # meta/_journal.json or the per-migration snapshot files.
+            case "$file" in
+              "$MIGRATIONS_DIR"/*.sql) ;;
+              *) continue ;;
+            esac
+
+            tag=$(basename "$file" .sql)
+
+            case "$status" in
+              A)
+                if ! jq -e --arg tag "$tag" \
+                  '.entries[]? | select(.tag == $tag)' "$JOURNAL" > /dev/null
+                then
+                  echo "::error file=$file::New migration has no matching entry in $JOURNAL (expected tag \"$tag\"). Run the migration generator so the journal and the .sql file land together."
+                  fail=1
+                fi
+                ;;
+              M)
+                echo "::error file=$file::This migration already exists on the base branch — editing it risks schema drift between environments that already ran the old version. Add a new migration instead of modifying this one."
+                fail=1
+                ;;
+              D)
+                echo "::error file=$file::This migration already exists on the base branch — deleting it leaves a journal entry with no file, and doesn't undo it anywhere it already ran. Add a new migration that reverses it instead."
+                fail=1
+                ;;
+            esac
+          done < <(git diff --name-status "$BASE_SHA" "$HEAD_SHA" -- "$MIGRATIONS_DIR")
+
+          exit $fail
