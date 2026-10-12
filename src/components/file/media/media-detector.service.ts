@@ -101,8 +101,10 @@ export class MediaDetector {
         exception.message;
       return text.split(url).join('<signed url>').trim();
     };
-    const isUndecodable = (exception: Error) =>
-      UNDECODABLE.test(describe(exception));
+    // Decodability does not change between attempts, and every attempt
+    // re-downloads the whole object from S3 to reach the same verdict.
+    const isRetryable = (exception: Error) =>
+      !UNDECODABLE.test(describe(exception));
 
     try {
       return await retry(
@@ -129,23 +131,21 @@ export class MediaDetector {
         },
         {
           retries: 2,
-          // Decodability does not change between attempts, and every attempt
-          // re-downloads the whole object from S3 to reach the same verdict.
-          shouldRetry: (exception) => !isUndecodable(exception),
+          shouldRetry: isRetryable,
           onFailedAttempt: (exception) => {
             const context = { file: file.id, mimeType: file.mimeType };
-            if (isUndecodable(exception)) {
-              // Ordinary user content: someone uploaded a corrupt or mislabeled
-              // file. The caller falls back to zeroed dimensions and duration,
-              // and the upload still succeeds, so this is not a fault.
-              this.logger.info('File is not decodable media', context);
+            if (isRetryable(exception)) {
+              const level = exception.retriesLeft > 0 ? 'warning' : 'error';
+              this.logger[level]('ffprobe failed', {
+                ...context,
+                reason: describe(exception),
+              });
               return;
             }
-            const level = exception.retriesLeft > 0 ? 'warning' : 'error';
-            this.logger[level]('ffprobe failed', {
-              ...context,
-              reason: describe(exception),
-            });
+            // Ordinary user content: someone uploaded a corrupt or mislabeled
+            // file. The caller falls back to zeroed dimensions and duration,
+            // and the upload still succeeds, so this is not a fault.
+            this.logger.info('File is not decodable media', context);
           },
         },
       );
