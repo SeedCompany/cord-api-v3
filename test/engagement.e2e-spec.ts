@@ -755,6 +755,36 @@ describe('Engagement e2e', () => {
       return { engagement, ceremonyId: read.engagement.ceremony.value!.id };
     }
 
+    it('rejects out-of-range milestone dates during creation', async () => {
+      // A rejected creation rolls back, so one project serves every case.
+      const internProject = await createProject(app, {
+        type: ProjectType.Internship,
+      });
+      const create = (milestones: {
+        completeDate?: string;
+        disbursementCompleteDate?: string;
+      }) =>
+        createInternshipEngagement(app, {
+          project: internProject.id,
+          intern: intern.id,
+          mentor: mentor.id,
+          countryOfOrigin: location.id,
+          startDateOverride: '1991-03-01',
+          endDateOverride: '1991-09-01',
+          ...milestones,
+        });
+
+      await expect(create({ completeDate: '1991-02-28' })).rejects.toThrow(
+        /Growth plan complete date cannot be before/,
+      );
+      await expect(create({ completeDate: '1991-09-02' })).rejects.toThrow(
+        /Growth plan complete date cannot be after/,
+      );
+      await expect(
+        create({ disbursementCompleteDate: '1991-02-28' }),
+      ).rejects.toThrow(/Disbursement complete date cannot be before/);
+    });
+
     it('keeps the growth plan complete date within the engagement dates', async () => {
       const { engagement } = await createDatedInternship();
 
