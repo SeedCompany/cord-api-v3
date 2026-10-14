@@ -9,8 +9,10 @@ import {
   IdField,
   IsId,
   NameField,
+  OmitType,
 } from '~/common';
 import { FinanceDepartmentIdBlockInput } from '../../finance/department/dto/id-blocks.input';
+import { CreateOrganization } from '../../organization/dto/create-organization.dto';
 import { FinancialReportingType } from '../../partnership/dto/financial-reporting-type.enum';
 import { ProjectType } from '../../project/dto/project-type.enum';
 import { PartnerType } from './partner-type.enum';
@@ -84,4 +86,22 @@ export abstract class CreatePartner {
 export abstract class PartnerCreated {
   @Field()
   readonly partner: Partner;
+}
+
+@InputType()
+export abstract class CreatePartnerDetails extends OmitType(CreatePartner, [
+  'organization',
+]) {}
+
+@InputType()
+export abstract class CreatePartnerWithOrganization {
+  @Field()
+  @ValidateNested()
+  @Type(() => CreateOrganization)
+  readonly organization: CreateOrganization;
+
+  @Field()
+  @ValidateNested()
+  @Type(() => CreatePartnerDetails)
+  readonly partner: CreatePartnerDetails;
 }

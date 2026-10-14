@@ -21,6 +21,7 @@ import {
 } from '../language/dto';
 import { LocationLoader } from '../location';
 import { type Location, LocationType } from '../location/dto';
+import { OrganizationService } from '../organization';
 import { type FinancialReportingType } from '../partnership/dto';
 import { ProjectService } from '../project';
 import {
@@ -32,6 +33,7 @@ import { UserService } from '../user';
 import { type SecuredUserList } from '../user/dto';
 import {
   type CreatePartner,
+  type CreatePartnerWithOrganization,
   Partner,
   type PartnerListInput,
   type PartnerListOutput,
@@ -53,6 +55,8 @@ export class PartnerService {
     private readonly languageService: LanguageService & {},
     @Inject(forwardRef(() => UserService))
     private readonly userService: UserService & {},
+    @Inject(forwardRef(() => OrganizationService))
+    private readonly organizationService: OrganizationService & {},
     private readonly repo: PartnerRepository,
     private readonly resourceLoader: ResourceLoader,
     private readonly hooks: Hooks,
@@ -77,6 +81,17 @@ export class PartnerService {
     );
 
     return this.secure(created);
+  }
+
+  /**
+   * Creates a partner and its related organization
+   */
+  async createWithOrganization({
+    organization,
+    partner,
+  }: CreatePartnerWithOrganization): Promise<Partner> {
+    const created = await this.organizationService.create(organization);
+    return await this.create({ ...partner, organization: created.id });
   }
 
   async readOnePartnerByOrgId(id: ID): Promise<Partner> {

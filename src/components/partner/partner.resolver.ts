@@ -37,6 +37,7 @@ import { UserLoader } from '../user';
 import { SecuredUser, SecuredUserList } from '../user/dto';
 import {
   CreatePartner,
+  CreatePartnerWithOrganization,
   Partner,
   PartnerCreated,
   PartnerDeleted,
@@ -209,6 +210,17 @@ export class PartnerResolver {
     @Args('input') input: CreatePartner,
   ): Promise<PartnerCreated> {
     const partner = await this.partnerService.create(input);
+    return { partner };
+  }
+
+  @Mutation(() => PartnerCreated, {
+    description:
+      'Create a partner and its related organization in a single transaction',
+  })
+  async createPartnerWithOrganization(
+    @Args('input') input: CreatePartnerWithOrganization,
+  ): Promise<PartnerCreated> {
+    const partner = await this.partnerService.createWithOrganization(input);
     return { partner };
   }
 
