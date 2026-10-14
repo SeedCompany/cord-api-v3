@@ -31,7 +31,11 @@ describe('Partnership e2e', () => {
       roles: [Role.FieldOperationsDirector, Role.Controller],
     });
 
-    project = await createProject(app);
+    // Long enough that partnership MOU overrides in these tests fit inside.
+    project = await createProject(app, {
+      mouStart: '1980-01-01',
+      mouEnd: '2030-01-01',
+    });
   });
 
   // A project's `primaryPartnership` is whichever of its partnerships is
@@ -285,6 +289,81 @@ describe('Partnership e2e', () => {
     );
     expect(result.updatePartnership.partnership.mouEnd.value).toBe(
       mouEndOverride,
+    );
+  });
+
+  it('rejects mou overrides outside the project dates', async () => {
+    const partnership = await createPartnership(app, { project: project.id });
+
+    const update = (input: Record<string, string>) =>
+      app.graphql.mutate(
+        graphql(`
+          mutation updatePartnership($input: UpdatePartnership!) {
+            updatePartnership(input: $input) {
+              partnership {
+                id
+              }
+            }
+          }
+        `),
+        { input: { id: partnership.id, ...input } },
+      );
+
+    await expect(update({ mouStartOverride: '1979-12-31' })).rejects.toThrow(
+      /start date cannot be before/,
+    );
+    await expect(update({ mouEndOverride: '2030-01-02' })).rejects.toThrow(
+      /end date cannot be after/,
+    );
+  });
+
+  it('rejects creating a partnership with mou overrides outside the project dates', async () => {
+    await expect(
+      createPartnership(app, {
+        project: project.id,
+        mouStartOverride: '1979-12-31',
+      }),
+    ).rejects.toThrow(/start date cannot be before/);
+  });
+
+  it('allows mou overrides equal to the project dates', async () => {
+    const created = await createPartnership(app, {
+      project: project.id,
+      mouStartOverride: project.mouStart.value!,
+      mouEndOverride: project.mouEnd.value!,
+    });
+    expect(created.mouStart.value).toBe(project.mouStart.value);
+    expect(created.mouEnd.value).toBe(project.mouEnd.value);
+
+    const partnership = await createPartnership(app, { project: project.id });
+    const result = await app.graphql.mutate(
+      graphql(`
+        mutation updatePartnership($input: UpdatePartnership!) {
+          updatePartnership(input: $input) {
+            partnership {
+              mouStart {
+                value
+              }
+              mouEnd {
+                value
+              }
+            }
+          }
+        }
+      `),
+      {
+        input: {
+          id: partnership.id,
+          mouStartOverride: project.mouStart.value!,
+          mouEndOverride: project.mouEnd.value!,
+        },
+      },
+    );
+    expect(result.updatePartnership.partnership.mouStart.value).toBe(
+      project.mouStart.value,
+    );
+    expect(result.updatePartnership.partnership.mouEnd.value).toBe(
+      project.mouEnd.value,
     );
   });
 
