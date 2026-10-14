@@ -19,6 +19,7 @@
     "start:debug": "yarn start --debug --watch",
     "start:prod": "node --import=extensionless/register --enable-source-maps dist/src/main",
     "repl": "yarn start --entryFile repl",
+    "scrub": "yarn start --entryFile core/scrub/scrub.run --",
     "migrate:generate": "drizzle-kit generate",
     "migrate:apply": "drizzle-kit migrate",
     "lint": "eslint --ext .ts,.tsx --fix --max-warnings 0 .",

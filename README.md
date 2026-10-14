@@ -31,7 +31,8 @@ Bible translation project management API.
       --no-owner --no-privileges < cord-scrubbed-<date>.dump
     ```
    Sign in as `devops@tsco.org` / `admin` — the default root account, which the
-   app re-syncs on every boot. Skipping this step is fine too — the app boots
+   app re-syncs on every boot. Producing a fresh dump from production is
+   `yarn scrub`; see `src/core/scrub/README.md`. Skipping this step is fine too — the app boots
    against the empty database and applies migrations itself. To load a
    dump later, stop the app and drop/recreate the `cord` database first
    (`dropdb` / `createdb` inside the container); `pg_restore` will not
