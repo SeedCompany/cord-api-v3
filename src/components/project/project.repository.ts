@@ -692,6 +692,31 @@ export class ProjectRepository extends DrizzleDtoRepository<
     projectIds: ReadonlyArray<ID<'Project'>>,
   ): Promise<readonly ProjectSensitivityChange[]> {
     if (projectIds.length === 0) return [];
+
+    // Lock the projects first, in a statement of their own, so concurrent
+    // recomputes of one project run one at a time. Without this, the update
+    // below reads a project's engagements from a snapshot taken before a
+    // concurrent recompute committed, so it can write a stale value or report
+    // a stale `previous`. The lock waits for that transaction to commit, and
+    // the next statement then sees its result. Locking in id order keeps two
+    // multi-project recomputes (a language edit fans out) from deadlocking.
+    // It only covers projects already in `projectIds`: a language edit picks
+    // its projects before locking, so it can miss a project engaging that
+    // language at the same moment.
+    // NO KEY UPDATE rather than UPDATE: inserting an engagement takes FOR KEY
+    // SHARE on its project for the foreign key, which FOR UPDATE conflicts
+    // with, so two engagement creates on one project would deadlock here. NO
+    // KEY UPDATE still conflicts with itself, which is all the serializing
+    // needs.
+    await this.db
+      .select({ id: projects.id })
+      .from(projects)
+      .where(
+        and(inArray(projects.id, [...projectIds]), isNull(projects.deletedAt)),
+      )
+      .orderBy(projects.id)
+      .for('no key update');
+
     // The CTE captures each project's current value before the update, so
     // unchanged rows are skipped and RETURNING can give both sides.
     const { rows: changed } = await this.db.execute<{
