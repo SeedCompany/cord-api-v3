@@ -80,10 +80,18 @@ export class EngagementService {
     this.verifyCreationStatus(input.status);
     EngagementDateRangeException.throwIfInvalid(input);
 
-    const engagement = await this.repo.createLanguageEngagement(
-      input,
-      changeset,
-    );
+    let engagement = await this.repo.createLanguageEngagement(input, changeset);
+
+    // The project's sensitivity comes from its engaged languages, and the
+    // engagement reads its own from the project, so re-read if this changed it.
+    const sensitivityChanges = await this.projectService.recomputeSensitivity([
+      input.project,
+    ]);
+    if (sensitivityChanges.length > 0) {
+      engagement = (await this.repo.readOne(
+        engagement.id,
+      )) as UnsecuredDto<LanguageEngagement>;
+    }
 
     RequiredWhen.verify(LanguageEngagement, engagement);
 
@@ -398,6 +406,9 @@ export class EngagementService {
 
     await this.hooks.run(new EngagementWillDeleteHook(object));
     await this.repo.delete(object.id, changeset);
+    if (resolveEngagementType(object) === LanguageEngagement) {
+      await this.projectService.recomputeSensitivity([object.project.id]);
+    }
     await this.hooks.run(
       new ResourceMutatedHook(resolveEngagementType(object).name, id, 'Delete'),
     );
