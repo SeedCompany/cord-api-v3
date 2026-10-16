@@ -81,6 +81,7 @@ import {
   type ProjectMemberListInput,
   type SecuredProjectMemberList,
 } from './project-member/dto';
+import { type ProjectSensitivityChange } from './project-sensitivity.repository';
 import { ProjectChannels } from './project.channels';
 import { ProjectRepository } from './project.repository';
 
@@ -567,6 +568,29 @@ export class ProjectService {
       canRead: true, // false handled above
       canCreate: false, // This flag doesn't make sense here
     };
+  }
+
+  /**
+   * Announces projects whose sensitivity was recomputed, as `projectUpdated`.
+   * The engagement and language services pass what their repositories'
+   * recomputes return (see ProjectSensitivityRepository).
+   */
+  publishSensitivityChanges(changes: readonly ProjectSensitivityChange[]) {
+    // Deliberately no ProjectUpdatedHook or ResourceMutatedHook. The cause is
+    // already audited by the language or engagement mutation; a project row
+    // would credit that user with a project edit they never made. And
+    // SetDepartmentIdHandler runs on every ProjectUpdatedHook regardless of
+    // what changed, so firing it here could assign a department ID, or throw
+    // and roll back the language edit.
+    for (const change of changes) {
+      this.channels.publishToAll('updated', {
+        program: change.type,
+        project: change.id,
+        at: change.at,
+        updated: { sensitivity: change.sensitivity },
+        previous: { sensitivity: change.previous },
+      });
+    }
   }
 
   async addOtherLocation(project: ID<'Project'>, location: ID<'Location'>) {

@@ -138,7 +138,7 @@ export class LanguageService {
 
     this.privileges.for(Language, language).verifyChanges(changes);
 
-    const [updated] = await Promise.all([
+    const [{ language: updated, sensitivityChanges }] = await Promise.all([
       this.repo.update({ id: language.id, ...changes }, view?.changeset),
       ethnologueUpdate &&
         this.ethnologueLanguageService.update(
@@ -159,6 +159,7 @@ export class LanguageService {
         ethnologue: ethnologueUpdate?.previous,
       },
     });
+    this.projectService.publishSensitivityChanges(sensitivityChanges);
 
     await this.hooks.run(
       new ResourceMutatedHook('Language', updated.id, 'Update', {
@@ -178,13 +179,14 @@ export class LanguageService {
 
     this.privileges.for(Language, object).verifyCan('delete');
 
-    await this.repo.delete(id).catch((exception) => {
+    const sensitivityChanges = await this.repo.delete(id).catch((exception) => {
       throw new ServerException('Failed to delete', exception);
     });
     const at = DateTime.now();
 
     await this.hooks.run(new ResourceMutatedHook('Language', id, 'Delete'));
 
+    this.projectService.publishSensitivityChanges(sensitivityChanges);
     return this.channels.publishToAll('deleted', {
       language: id,
       at,

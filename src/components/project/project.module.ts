@@ -18,6 +18,7 @@ import { ProjectEngagementIdResolvers } from './project-engagement-id.resolver';
 import { ProjectMemberModule } from './project-member/project-member.module';
 import { ProjectMutationActorResolver } from './project-mutation-actor.resolver';
 import { ProjectMutationSubscriptionsResolver } from './project-mutation-subscriptions.resolver';
+import { ProjectSensitivityRepository } from './project-sensitivity.repository';
 import { ProjectUpdateLinksResolver } from './project-update-links.resolver';
 import { ProjectUpdatedResolver } from './project-updated.resolver';
 import { ProjectChannels } from './project.channels';
@@ -60,9 +61,10 @@ import { ProjectWorkflowModule } from './workflow/project-workflow.module';
     ProjectChannels,
     ProjectService,
     ProjectRepository,
+    ProjectSensitivityRepository,
     ProjectLoader,
     ...Object.values(handlers),
   ],
-  exports: [ProjectService, ProjectMemberModule],
+  exports: [ProjectService, ProjectSensitivityRepository, ProjectMemberModule],
 })
 export class ProjectModule {}

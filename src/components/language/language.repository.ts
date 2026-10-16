@@ -46,7 +46,10 @@ import { type ScopedRole } from '../authorization/dto/role.dto';
 import { PolicyExecutor } from '../authorization/policy/executor/policy-executor';
 import { pinnedByRequester, pinnedFilter } from '../pin/pinned-by-requester';
 import { requesterScopeByProject } from '../project/project-member/membership-scope';
-import { recomputeProjectSensitivity } from '../project/project.repository';
+import {
+  type ProjectSensitivityChange,
+  ProjectSensitivityRepository,
+} from '../project/project-sensitivity.repository';
 import {
   type CreateLanguage,
   type EthnologueLanguage,
@@ -82,6 +85,7 @@ export class LanguageRepository extends DrizzleDtoRepository<
     private readonly executor: PolicyExecutor,
     private readonly identity: Identity,
     private readonly ethnologueLanguageService: EthnologueLanguageService,
+    private readonly projectSensitivity: ProjectSensitivityRepository,
   ) {
     super(db, languages, Language);
   }
@@ -124,7 +128,10 @@ export class LanguageRepository extends DrizzleDtoRepository<
   async update(
     changes: Omit<UpdateLanguage, 'ethnologue'>,
     _changeset?: ID,
-  ): Promise<UnsecuredDto<Language>> {
+  ): Promise<{
+    language: UnsecuredDto<Language>;
+    sensitivityChanges: readonly ProjectSensitivityChange[];
+  }> {
     const { id, ...fields } = changes;
     await this.updateColumns(id, {
       name: fields.name,
@@ -147,6 +154,7 @@ export class LanguageRepository extends DrizzleDtoRepository<
       isAvailableForReporting: fields.isAvailableForReporting,
     }).catch(catchRolvUnique);
 
+    let sensitivityChanges: readonly ProjectSensitivityChange[] = [];
     if (fields.sensitivity !== undefined) {
       // Mirror of Gel's recalculateProjectSens trigger: keep engaging
       // translation projects' denormalized sensitivity current.
@@ -159,13 +167,13 @@ export class LanguageRepository extends DrizzleDtoRepository<
             isNull(engagements.deletedAt),
           ),
         );
-      await recomputeProjectSensitivity(
-        this.db,
+      sensitivityChanges = await this.projectSensitivity.recompute(
         engaged.map((e) => e.projectId),
       );
     }
 
-    return await this.readOne(id);
+    const language = await this.readOne(id);
+    return { language, sensitivityChanges };
   }
 
   override async readMany(
@@ -352,7 +360,7 @@ export class LanguageRepository extends DrizzleDtoRepository<
     return !!row;
   }
 
-  async delete(id: ID): Promise<void> {
+  async delete(id: ID): Promise<readonly ProjectSensitivityChange[]> {
     // Capture engaging projects BEFORE the soft-delete: the denormalized
     // projects.sensitivity must be recomputed once this language stops
     // counting (Neo4j computes sensitivity live, so its delete needs no
@@ -367,8 +375,7 @@ export class LanguageRepository extends DrizzleDtoRepository<
         ),
       );
     await this.softDelete(id);
-    await recomputeProjectSensitivity(
-      this.db,
+    return await this.projectSensitivity.recompute(
       engaged.map((row) => row.projectId),
     );
   }

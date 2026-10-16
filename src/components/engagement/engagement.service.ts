@@ -80,10 +80,8 @@ export class EngagementService {
     this.verifyCreationStatus(input.status);
     EngagementDateRangeException.throwIfInvalid(input);
 
-    const engagement = await this.repo.createLanguageEngagement(
-      input,
-      changeset,
-    );
+    const { engagement, sensitivityChanges } =
+      await this.repo.createLanguageEngagement(input, changeset);
 
     RequiredWhen.verify(LanguageEngagement, engagement);
 
@@ -108,6 +106,7 @@ export class EngagementService {
       engagement: engagement.id,
       at: engagement.createdAt,
     });
+    this.projectService.publishSensitivityChanges(sensitivityChanges);
 
     return this.secure(event.engagement) as LanguageEngagement;
   }
@@ -397,7 +396,7 @@ export class EngagementService {
       .verifyCan('delete');
 
     await this.hooks.run(new EngagementWillDeleteHook(object));
-    await this.repo.delete(object.id, changeset);
+    const sensitivityChanges = await this.repo.delete(object.id, changeset);
     await this.hooks.run(
       new ResourceMutatedHook(resolveEngagementType(object).name, id, 'Delete'),
     );
@@ -415,6 +414,7 @@ export class EngagementService {
         at,
       },
     );
+    this.projectService.publishSensitivityChanges(sensitivityChanges);
     return { engagement: object, payload };
   }
 

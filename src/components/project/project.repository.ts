@@ -377,7 +377,7 @@ export class ProjectRepository extends DrizzleDtoRepository<
           input.type === 'Internship' ? (input.sensitivity ?? 'High') : null,
         // For Internship: keep `sensitivity` in lockstep with own_sensitivity
         // on create. For Translation: 'High' until the first engagement's
-        // language recomputes it (recomputeProjectSensitivity).
+        // language recomputes it (ProjectSensitivityRepository).
         sensitivity:
           input.type === 'Internship' ? (input.sensitivity ?? 'High') : 'High',
         primaryLocationId: input.primaryLocation ?? null,
@@ -677,35 +677,6 @@ export class ProjectRepository extends DrizzleDtoRepository<
     return dto;
   }
 }
-
-/**
- * Recompute the denormalized `projects.sensitivity` for translation projects
- * from their engaged languages — max(language sensitivity) ?? High. Mirror of
- * Gel's recalculateProjectSens triggers; called from the engagement/language
- * drizzle repos whenever the inputs change (create/delete engagement,
- * language sensitivity update). Internship projects are untouched — they
- * read own_sensitivity.
- */
-export const recomputeProjectSensitivity = async (
-  db: DrizzleDb,
-  projectIds: ReadonlyArray<ID<'Project'>>,
-) => {
-  if (projectIds.length === 0) return;
-  await db.execute(sql`
-    update "projects" set "sensitivity" = coalesce((
-      select max("l"."sensitivity") from "engagements" "e"
-      join "languages" "l" on "l"."id" = "e"."language_id"
-      where "e"."project_id" = "projects"."id"
-        and "e"."deleted_at" is null
-        and "l"."deleted_at" is null
-    ), 'High')
-    where "id" in (${sql.join(
-      projectIds.map((id) => sql`${id}`),
-      sql`, `,
-    )})
-      and "type" <> 'Internship'
-  `);
-};
 
 /**
  * Sortable columns on `projects` itself. Cross-domain sorts (primaryLocation.*,

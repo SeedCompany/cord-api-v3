@@ -66,9 +66,12 @@ import { periodicReportSortColumns } from '../periodic-report/periodic-report.so
 import { IProject } from '../project/dto';
 import { requesterScopeByProject } from '../project/project-member/membership-scope';
 import {
+  type ProjectSensitivityChange,
+  ProjectSensitivityRepository,
+} from '../project/project-sensitivity.repository';
+import {
   projectFilterClauses,
   projectSortEntry,
-  recomputeProjectSensitivity,
 } from '../project/project.repository';
 import { toolFilterClauses } from '../tools/tool/tool.repository';
 import { userFilterClauses } from '../user/user.repository';
@@ -153,6 +156,7 @@ export class EngagementRepository extends DrizzleDtoRepository<
     private readonly executor: PolicyExecutor,
     private readonly identity: Identity,
     private readonly files: FileService,
+    private readonly projectSensitivity: ProjectSensitivityRepository,
   ) {
     // migration-todo: as-any bridges the IEngagement interface class into the
     // concrete-resource slot DrizzleDtoRepository expects — goes with a
@@ -217,7 +221,10 @@ export class EngagementRepository extends DrizzleDtoRepository<
   async createLanguageEngagement(
     input: CreateLanguageEngagement,
     _changeset?: ID,
-  ): Promise<UnsecuredDto<LanguageEngagement>> {
+  ): Promise<{
+    engagement: UnsecuredDto<LanguageEngagement>;
+    sensitivityChanges: readonly ProjectSensitivityChange[];
+  }> {
     await this.verifyRelationshipEligibility(
       input.project,
       input.language,
@@ -257,9 +264,14 @@ export class EngagementRepository extends DrizzleDtoRepository<
 
     await this.files.createDefinedFile(pnpId, `PNP`, id, 'pnp', input.pnp);
 
-    await recomputeProjectSensitivity(this.db, [input.project]);
+    const sensitivityChanges = await this.projectSensitivity.recompute([
+      input.project,
+    ]);
 
-    return (await this.readOne(id)) as UnsecuredDto<LanguageEngagement>;
+    const engagement = (await this.readOne(
+      id,
+    )) as UnsecuredDto<LanguageEngagement>;
+    return { engagement, sensitivityChanges };
   }
 
   async createInternshipEngagement(
@@ -727,15 +739,19 @@ export class EngagementRepository extends DrizzleDtoRepository<
     }
   }
 
-  async delete(id: ID, _changeset?: ID): Promise<void> {
+  async delete(
+    id: ID,
+    _changeset?: ID,
+  ): Promise<readonly ProjectSensitivityChange[]> {
     const [row] = await this.db
       .select({ projectId: engagements.projectId, type: engagements.type })
       .from(engagements)
       .where(eq(engagements.id, id as ID<'Engagement'>));
     await this.softDelete(id);
-    if (row?.type === 'Language') {
-      await recomputeProjectSensitivity(this.db, [row.projectId]);
+    if (row?.type !== 'Language') {
+      return [];
     }
+    return await this.projectSensitivity.recompute([row.projectId]);
   }
 
   private async mapRows(rows: EngagementRow[]) {

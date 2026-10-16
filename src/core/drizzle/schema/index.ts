@@ -1206,7 +1206,7 @@ export const roleEnum = pgEnum('role', [
  * discriminator; `own_sensitivity` is meaningful only for Internship (Translation
  * rows ignore it and read the denormalized `sensitivity` column).
  *
- * `sensitivity` is denormalized: kept current by `recomputeProjectSensitivity`,
+ * `sensitivity` is denormalized: kept current by `ProjectSensitivityRepository`,
  * which the engagement and language repositories call when either changes.
  *
  * `status` is `GENERATED ALWAYS AS (CASE step ... END) STORED` in the raw SQL
@@ -1277,7 +1277,7 @@ export const projects = pgTable(
         END`,
       )
       .notNull(),
-    // Denormalized — `recomputeProjectSensitivity` keeps Translation rows
+    // Denormalized — `ProjectSensitivityRepository` keeps Translation rows
     // current from their engagements' languages; Internship rows mirror
     // own_sensitivity.
     sensitivity: sensitivityEnum('sensitivity').notNull().default('High'),

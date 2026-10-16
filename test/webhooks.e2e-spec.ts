@@ -1,3 +1,4 @@
+import { faker } from '@faker-js/faker';
 import {
   afterAll,
   afterEach,
@@ -34,7 +35,7 @@ import {
 } from 'rxjs';
 import type { SetNonNullable, SetRequired } from 'type-fest';
 import { validate as isUUID } from 'uuid';
-import { type ID } from '~/common';
+import { type ID, type Sensitivity } from '~/common';
 import { Identity } from '~/core/authentication';
 import { Broadcaster } from '~/core/broadcast';
 import { ConfigService } from '~/core/config';
@@ -51,6 +52,7 @@ import {
   type ResultOf,
   type VariablesOf,
 } from '~/graphql';
+import { ProjectSensitivityRepository } from '../src/components/project/project-sensitivity.repository';
 import { ProjectChannels } from '../src/components/project/project.channels';
 import { SubscriptionChannelVersion } from '../src/subscription-channel-version';
 import { createProject } from './operations/project';
@@ -1436,6 +1438,392 @@ describe('Webhooks', () => {
       const payload2 = JSON.parse(requests2[0]!.body);
       expect(payload2.extensions.webhook.id).toBe(webhook2.id);
       expect(payload2.data.projectUpdated.project.id).toBe(project2.id);
+    });
+
+    // A translation project's sensitivity is recomputed from its engaged
+    // languages, so it changes without anyone updating the project itself.
+    describe('when a recompute changes a project sensitivity', () => {
+      const ProjectSensitivityUpdated = graphql(`
+        subscription ProjectSensitivityUpdated($project: ID!) {
+          projectUpdated(project: $project) {
+            at
+            project {
+              id
+              sensitivity
+              modifiedAt
+            }
+            previous {
+              sensitivity
+            }
+            updated {
+              sensitivity
+            }
+          }
+        }
+      `);
+      const CreateLanguageDoc = graphql(`
+        mutation CreateLanguageWithSensitivity($input: CreateLanguage!) {
+          createLanguage(input: $input) {
+            language {
+              id
+            }
+          }
+        }
+      `);
+      const UpdateLanguageSensitivityDoc = graphql(`
+        mutation UpdateLanguageSensitivity(
+          $id: ID!
+          $sensitivity: Sensitivity!
+        ) {
+          updateLanguage(input: { id: $id, sensitivity: $sensitivity }) {
+            __typename
+          }
+        }
+      `);
+      const CreateEngagementDoc = graphql(`
+        mutation EngageLanguage($input: CreateLanguageEngagement!) {
+          createLanguageEngagement(input: $input) {
+            engagement {
+              id
+            }
+          }
+        }
+      `);
+      const DeleteEngagementDoc = graphql(`
+        mutation DeleteEngagement($id: ID!) {
+          deleteEngagement(id: $id) {
+            __typename
+          }
+        }
+      `);
+      const RenameProjectDoc = graphql(`
+        mutation RenameProject($id: ID!, $name: String!) {
+          updateProject(input: { id: $id, name: $name }) {
+            __typename
+          }
+        }
+      `);
+      const DeleteProjectDoc = graphql(`
+        mutation DeleteProject($id: ID!) {
+          deleteProject(id: $id) {
+            __typename
+          }
+        }
+      `);
+      const DeleteLanguageDoc = graphql(`
+        mutation DeleteLanguage($id: ID!) {
+          deleteLanguage(id: $id) {
+            __typename
+          }
+        }
+      `);
+      const ProjectSensitivityDoc = graphql(`
+        query ProjectSensitivity($id: ID!) {
+          project(id: $id) {
+            sensitivity
+          }
+        }
+      `);
+
+      let admin: Tester;
+      let events: Subject<WebhookRequest>;
+      let receiver: { url: string } & AsyncDisposable;
+
+      beforeAll(async () => {
+        admin = await createTesterWithRole(app, 'Administrator');
+        events = new Subject();
+        receiver = await serve(handleRequest(events));
+      });
+
+      afterAll(async () => {
+        await receiver[Symbol.asyncDispose]();
+      });
+
+      const watch = (project: { id: ID }) =>
+        tester.apply(
+          webhooks.save({
+            subscription: ProjectSensitivityUpdated,
+            url: receiver.url,
+            key: `ProjectSensitivity:${project.id}` as ID,
+            variables: { project: project.id },
+          }),
+        );
+
+      const createLanguage = async (sensitivity: Sensitivity) => {
+        const res = await admin.run(CreateLanguageDoc, {
+          input: {
+            name: `Language ${faker.string.uuid()}`,
+            displayName: `Language ${faker.string.uuid()}`,
+            sensitivity,
+          },
+        });
+        return res.createLanguage.language.id;
+      };
+
+      // Dated to the project's MOU window, per CLAUDE.md, so the engagement's
+      // progress reports land in the project's quarters.
+      const engage = async (
+        project: Pick<
+          Awaited<ReturnType<ReturnType<typeof createProject>>>,
+          'id' | 'mouStart' | 'mouEnd'
+        >,
+        language: ID,
+      ) => {
+        const res = await admin.run(CreateEngagementDoc, {
+          input: {
+            project: project.id,
+            language,
+            startDateOverride: project.mouStart.value,
+            endDateOverride: project.mouEnd.value,
+          },
+        });
+        return res.createLanguageEngagement.engagement.id;
+      };
+
+      const changeOf = (request: WebhookRequest) => {
+        const { projectUpdated } = JSON.parse(request.body).data;
+        return {
+          project: projectUpdated.project.id,
+          previous: projectUpdated.previous.sensitivity,
+          updated: projectUpdated.updated.sensitivity,
+          current: projectUpdated.project.sensitivity,
+        };
+      };
+
+      it('publishes projectUpdated when an engagement changes it', async () => {
+        const project = await tester.apply(createProject());
+        const low = await createLanguage('Low');
+        await watch(project);
+
+        const waiting = collectRequests(app, events, 1);
+        await engage(project, low);
+        const requests = await waiting;
+
+        expect(requests.map(changeOf)).toEqual([
+          {
+            project: project.id,
+            previous: 'High',
+            updated: 'Low',
+            current: 'Low',
+          },
+        ]);
+      });
+
+      it('does not publish when the recomputed value is unchanged', async () => {
+        const project = await tester.apply(createProject());
+        const [low1, low2] = await Promise.all([
+          createLanguage('Low'),
+          createLanguage('Low'),
+        ]);
+        await watch(project);
+
+        const first = collectRequests(app, events, 1);
+        await engage(project, low1);
+        expect(await first).toHaveLength(1);
+
+        // A second Low language leaves the project at Low. The rename gives the
+        // collector a delivery to wait for, so a sensitivity event from the
+        // engagement would show up as a second one.
+        const second = collectRequests(app, events, 1);
+        await engage(project, low2);
+        await tester.run(RenameProjectDoc, {
+          id: project.id,
+          name: `${project.name.value!} Renamed`,
+        });
+        const requests = await second;
+
+        expect(requests.map(changeOf)).toEqual([
+          {
+            project: project.id,
+            previous: null,
+            updated: null,
+            current: 'Low',
+          },
+        ]);
+      });
+
+      it('publishes projectUpdated when deleting an engagement changes it', async () => {
+        const project = await tester.apply(createProject());
+        const [medium, low] = await Promise.all([
+          createLanguage('Medium'),
+          createLanguage('Low'),
+        ]);
+        await watch(project);
+
+        const engaged = collectRequests(app, events, 1);
+        const mediumEngagement = await engage(project, medium);
+        expect((await engaged).map(changeOf)).toEqual([
+          {
+            project: project.id,
+            previous: 'High',
+            updated: 'Medium',
+            current: 'Medium',
+          },
+        ]);
+
+        // Adding Low leaves the project at Medium, so the delete is the only
+        // change in this window.
+        const deleted = collectRequests(app, events, 1);
+        await engage(project, low);
+        await admin.run(DeleteEngagementDoc, { id: mediumEngagement });
+        const requests = await deleted;
+
+        expect(requests.map(changeOf)).toEqual([
+          {
+            project: project.id,
+            previous: 'Medium',
+            updated: 'Low',
+            current: 'Low',
+          },
+        ]);
+      });
+
+      it('publishes projectUpdated for every project engaging a language whose sensitivity changes', async () => {
+        const [project1, project2] = await Promise.all([
+          tester.apply(createProject()),
+          tester.apply(createProject()),
+        ]);
+        const language = await createLanguage('Low');
+        await Promise.all([watch(project1), watch(project2)]);
+
+        const engaged = collectRequests(app, events, 2);
+        await engage(project1, language);
+        await engage(project2, language);
+        expect(await engaged).toHaveLength(2);
+
+        const changed = collectRequests(app, events, 2);
+        await admin.run(UpdateLanguageSensitivityDoc, {
+          id: language,
+          sensitivity: 'Medium',
+        });
+        const requests = await changed;
+
+        const toMedium = {
+          previous: 'Low',
+          updated: 'Medium',
+          current: 'Medium',
+        };
+        expect(
+          requests
+            .map(changeOf)
+            .sort((a, b) => a.project.localeCompare(b.project)),
+        ).toEqual(
+          [project1.id, project2.id]
+            .toSorted((a, b) => a.localeCompare(b))
+            .map((project) => ({ project, ...toMedium })),
+        );
+      });
+
+      it('does not publish projectUpdated for a soft-deleted project', async () => {
+        const [deleted, live] = await Promise.all([
+          tester.apply(createProject()),
+          tester.apply(createProject()),
+        ]);
+        const language = await createLanguage('Low');
+        await engage(deleted, language);
+        await engage(live, language);
+        // Deleting a project leaves its engagements live, so the language
+        // change below still reaches it.
+        await admin.run(DeleteProjectDoc, { id: deleted.id });
+
+        // Watched on the channels rather than through a webhook: a webhook
+        // drops an event for a project it can't load, so it can't tell
+        // whether one was published. The live project is the control — its
+        // event shows this mutation's publishes have arrived by the time it
+        // returns.
+        const channels = app.get(ProjectChannels);
+        const published: Array<ID<'Project'>> = [];
+        const listening = merge(
+          channels.updated({ project: deleted.id }),
+          channels.updated({ project: live.id }),
+        ).subscribe(({ project }) => published.push(project));
+        try {
+          await admin.run(UpdateLanguageSensitivityDoc, {
+            id: language,
+            sensitivity: 'Medium',
+          });
+        } finally {
+          listening.unsubscribe();
+        }
+
+        expect(published).toEqual([live.id]);
+      });
+
+      it('bumps modifiedAt to the event time', async () => {
+        const project = await tester.apply(createProject());
+        const low = await createLanguage('Low');
+        await watch(project);
+
+        const waiting = collectRequests(app, events, 1);
+        await engage(project, low);
+        const requests = await waiting;
+
+        expect(requests).toHaveLength(1);
+        const { projectUpdated } = JSON.parse(requests[0]!.body).data;
+        const at = DateTime.fromISO(projectUpdated.at);
+        const modifiedAt = DateTime.fromISO(projectUpdated.project.modifiedAt);
+        // Without the bump, modifiedAt would still be the creation time.
+        expect(+modifiedAt).toBe(+at);
+        expect(+at).toBeGreaterThan(+DateTime.fromISO(project.createdAt));
+      });
+
+      it('publishes projectUpdated when deleting a language changes it', async () => {
+        const project = await tester.apply(createProject());
+        const [medium, low] = await Promise.all([
+          createLanguage('Medium'),
+          createLanguage('Low'),
+        ]);
+        await watch(project);
+
+        // Adding Low leaves the project at Medium, so only the first
+        // engagement changes it.
+        const engaged = collectRequests(app, events, 1);
+        await engage(project, medium);
+        await engage(project, low);
+        expect((await engaged).map(changeOf)).toEqual([
+          {
+            project: project.id,
+            previous: 'High',
+            updated: 'Medium',
+            current: 'Medium',
+          },
+        ]);
+
+        // The deleted language stops counting; the Low one still does.
+        const deleted = collectRequests(app, events, 1);
+        await admin.run(DeleteLanguageDoc, { id: medium });
+        const requests = await deleted;
+
+        expect(requests.map(changeOf)).toEqual([
+          {
+            project: project.id,
+            previous: 'Medium',
+            updated: 'Low',
+            current: 'Low',
+          },
+        ]);
+      });
+
+      it('leaves an Internship project at its own sensitivity', async () => {
+        const internship = await tester.apply(
+          createProject({ type: 'Internship', sensitivity: 'Low' }),
+        );
+        expect(internship.sensitivity).toBe('Low');
+
+        // Called directly: the API never sends an Internship project to a
+        // recompute, since it rejects a language engagement on one. With no
+        // engagements, a recompute that didn't skip Internships would
+        // overwrite this one to High.
+        const changes = await app
+          .get(ProjectSensitivityRepository)
+          .recompute([internship.id]);
+
+        expect(changes).toEqual([]);
+        const { project } = await tester.run(ProjectSensitivityDoc, {
+          id: internship.id,
+        });
+        expect(project.sensitivity).toBe('Low');
+      });
     });
 
     describe('Consumer Error Handling', () => {
