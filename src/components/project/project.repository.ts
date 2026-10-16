@@ -27,6 +27,7 @@ import {
   NotImplementedException,
   type PaginatedListType,
   type Role,
+  type Sensitivity,
   type UnsecuredDto,
 } from '~/common';
 import { Identity } from '~/core/authentication';
@@ -76,6 +77,8 @@ import {
   type Project,
   type ProjectFilters,
   type ProjectListInput,
+  type ProjectType,
+  resolveProjectType,
   type UpdateProject,
 } from './dto';
 import { projectMemberFilterClauses } from './project-member/project-member.repository';
@@ -377,7 +380,7 @@ export class ProjectRepository extends DrizzleDtoRepository<
           input.type === 'Internship' ? (input.sensitivity ?? 'High') : null,
         // For Internship: keep `sensitivity` in lockstep with own_sensitivity
         // on create. For Translation: 'High' until the first engagement's
-        // language recomputes it (recomputeProjectSensitivity).
+        // language recomputes it (recomputeSensitivity).
         sensitivity:
           input.type === 'Internship' ? (input.sensitivity ?? 'High') : 'High',
         primaryLocationId: input.primaryLocation ?? null,
@@ -676,36 +679,86 @@ export class ProjectRepository extends DrizzleDtoRepository<
     };
     return dto;
   }
+
+  /**
+   * Recomputes the denormalized `projects.sensitivity` of translation projects
+   * from their engaged languages: max(language sensitivity), or High with no
+   * engagements. Internship projects keep their own sensitivity, and
+   * soft-deleted projects are left alone. Only projects whose value actually
+   * changes are written, and those are returned so the caller can announce
+   * them (ProjectService.recomputeSensitivity publishes `projectUpdated`).
+   */
+  async recomputeSensitivity(
+    projectIds: ReadonlyArray<ID<'Project'>>,
+  ): Promise<readonly ProjectSensitivityChange[]> {
+    if (projectIds.length === 0) return [];
+    // The CTE captures each project's current value before the update, so
+    // unchanged rows are skipped and RETURNING can give both sides.
+    const { rows: changed } = await this.db.execute<{
+      id: ID<'Project'>;
+      type: ProjectType;
+      previous: Sensitivity;
+      sensitivity: Sensitivity;
+    }>(
+      sql`
+        with "recomputed" as (
+          select "p"."id", "p"."sensitivity" as "previous", coalesce((
+            select max("l"."sensitivity") from "engagements" "e"
+            join "languages" "l" on "l"."id" = "e"."language_id"
+            where "e"."project_id" = "p"."id"
+              and "e"."deleted_at" is null
+              and "l"."deleted_at" is null
+          ), 'High') as "sensitivity"
+          from "projects" "p"
+          where "p"."id" in (${sql.join(
+            projectIds.map((id) => sql`${id}`),
+            sql`, `,
+          )})
+            and "p"."type" <> 'Internship'
+            and "p"."deleted_at" is null
+        )
+        update "projects" set "sensitivity" = "recomputed"."sensitivity"
+        from "recomputed"
+        where "projects"."id" = "recomputed"."id"
+          and "recomputed"."sensitivity" is distinct from "recomputed"."previous"
+        returning "projects"."id", "projects"."type",
+          "recomputed"."previous", "projects"."sensitivity"
+      `,
+    );
+    this.liveQueryStore.invalidateAll(
+      changed.map((row) => [resolveProjectType(row), row.id] as const),
+    );
+    return changed;
+  }
+
+  /**
+   * Recomputes sensitivity for every project with a live engagement of this
+   * language. Works after the language is soft-deleted too, since its
+   * engagements stay live; the deleted language just stops counting.
+   */
+  async recomputeSensitivityForLanguage(
+    language: ID,
+  ): Promise<readonly ProjectSensitivityChange[]> {
+    const engaged = await this.db
+      .select({ projectId: engagements.projectId })
+      .from(engagements)
+      .where(
+        and(
+          eq(engagements.languageId, language as ID<'Language'>),
+          isNull(engagements.deletedAt),
+        ),
+      );
+    return await this.recomputeSensitivity(engaged.map((row) => row.projectId));
+  }
 }
 
-/**
- * Recompute the denormalized `projects.sensitivity` for translation projects
- * from their engaged languages — max(language sensitivity) ?? High. Mirror of
- * Gel's recalculateProjectSens triggers; called from the engagement/language
- * drizzle repos whenever the inputs change (create/delete engagement,
- * language sensitivity update). Internship projects are untouched — they
- * read own_sensitivity.
- */
-export const recomputeProjectSensitivity = async (
-  db: DrizzleDb,
-  projectIds: ReadonlyArray<ID<'Project'>>,
-) => {
-  if (projectIds.length === 0) return;
-  await db.execute(sql`
-    update "projects" set "sensitivity" = coalesce((
-      select max("l"."sensitivity") from "engagements" "e"
-      join "languages" "l" on "l"."id" = "e"."language_id"
-      where "e"."project_id" = "projects"."id"
-        and "e"."deleted_at" is null
-        and "l"."deleted_at" is null
-    ), 'High')
-    where "id" in (${sql.join(
-      projectIds.map((id) => sql`${id}`),
-      sql`, `,
-    )})
-      and "type" <> 'Internship'
-  `);
-};
+/** A project whose sensitivity a recompute changed. */
+export interface ProjectSensitivityChange {
+  readonly id: ID<'Project'>;
+  readonly type: ProjectType;
+  readonly previous: Sensitivity;
+  readonly sensitivity: Sensitivity;
+}
 
 /**
  * Sortable columns on `projects` itself. Cross-domain sorts (primaryLocation.*,

@@ -46,7 +46,6 @@ import { type ScopedRole } from '../authorization/dto/role.dto';
 import { PolicyExecutor } from '../authorization/policy/executor/policy-executor';
 import { pinnedByRequester, pinnedFilter } from '../pin/pinned-by-requester';
 import { requesterScopeByProject } from '../project/project-member/membership-scope';
-import { recomputeProjectSensitivity } from '../project/project.repository';
 import {
   type CreateLanguage,
   type EthnologueLanguage,
@@ -146,24 +145,6 @@ export class LanguageRepository extends DrizzleDtoRepository<
       ...(fields.tags !== undefined && { tags: [...fields.tags] }),
       isAvailableForReporting: fields.isAvailableForReporting,
     }).catch(catchRolvUnique);
-
-    if (fields.sensitivity !== undefined) {
-      // Mirror of Gel's recalculateProjectSens trigger: keep engaging
-      // translation projects' denormalized sensitivity current.
-      const engaged = await this.db
-        .select({ projectId: engagements.projectId })
-        .from(engagements)
-        .where(
-          and(
-            eq(engagements.languageId, id as ID<'Language'>),
-            isNull(engagements.deletedAt),
-          ),
-        );
-      await recomputeProjectSensitivity(
-        this.db,
-        engaged.map((e) => e.projectId),
-      );
-    }
 
     return await this.readOne(id);
   }
@@ -353,24 +334,7 @@ export class LanguageRepository extends DrizzleDtoRepository<
   }
 
   async delete(id: ID): Promise<void> {
-    // Capture engaging projects BEFORE the soft-delete: the denormalized
-    // projects.sensitivity must be recomputed once this language stops
-    // counting (Neo4j computes sensitivity live, so its delete needs no
-    // equivalent). Same recipe as update()'s sensitivity-change path.
-    const engaged = await this.db
-      .select({ projectId: engagements.projectId })
-      .from(engagements)
-      .where(
-        and(
-          eq(engagements.languageId, id as ID<'Language'>),
-          isNull(engagements.deletedAt),
-        ),
-      );
     await this.softDelete(id);
-    await recomputeProjectSensitivity(
-      this.db,
-      engaged.map((row) => row.projectId),
-    );
   }
 
   protected toDto(

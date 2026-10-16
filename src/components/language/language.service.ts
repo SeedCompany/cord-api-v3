@@ -138,7 +138,7 @@ export class LanguageService {
 
     this.privileges.for(Language, language).verifyChanges(changes);
 
-    const [updated] = await Promise.all([
+    let [updated] = await Promise.all([
       this.repo.update({ id: language.id, ...changes }, view?.changeset),
       ethnologueUpdate &&
         this.ethnologueLanguageService.update(
@@ -146,6 +146,17 @@ export class LanguageService {
           ethnologueUpdate.changes,
         ),
     ]);
+
+    if (changes.sensitivity !== undefined) {
+      // Engaging projects derive their sensitivity from their languages, and
+      // this language's effectiveSensitivity from those projects, so re-read
+      // if the recompute changed any of them.
+      const sensitivityChanges =
+        await this.projectService.recomputeSensitivityForLanguage(language.id);
+      if (sensitivityChanges.length > 0) {
+        updated = await this.repo.readOne(language.id);
+      }
+    }
 
     const updatedPayload = this.channels.publishToAll('updated', {
       language: updated.id,
@@ -181,6 +192,8 @@ export class LanguageService {
     await this.repo.delete(id).catch((exception) => {
       throw new ServerException('Failed to delete', exception);
     });
+    // The deleted language stops counting toward its projects' sensitivity.
+    await this.projectService.recomputeSensitivityForLanguage(id);
     const at = DateTime.now();
 
     await this.hooks.run(new ResourceMutatedHook('Language', id, 'Delete'));
