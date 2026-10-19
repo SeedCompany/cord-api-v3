@@ -68,7 +68,6 @@ import { requesterScopeByProject } from '../project/project-member/membership-sc
 import {
   projectFilterClauses,
   projectSortEntry,
-  recomputeProjectSensitivity,
 } from '../project/project.repository';
 import { toolFilterClauses } from '../tools/tool/tool.repository';
 import { userFilterClauses } from '../user/user.repository';
@@ -256,8 +255,6 @@ export class EngagementRepository extends DrizzleDtoRepository<
       .catch(catchDuplicateLanguageEngagement);
 
     await this.files.createDefinedFile(pnpId, `PNP`, id, 'pnp', input.pnp);
-
-    await recomputeProjectSensitivity(this.db, [input.project]);
 
     return (await this.readOne(id)) as UnsecuredDto<LanguageEngagement>;
   }
@@ -728,14 +725,7 @@ export class EngagementRepository extends DrizzleDtoRepository<
   }
 
   async delete(id: ID, _changeset?: ID): Promise<void> {
-    const [row] = await this.db
-      .select({ projectId: engagements.projectId, type: engagements.type })
-      .from(engagements)
-      .where(eq(engagements.id, id as ID<'Engagement'>));
     await this.softDelete(id);
-    if (row?.type === 'Language') {
-      await recomputeProjectSensitivity(this.db, [row.projectId]);
-    }
   }
 
   private async mapRows(rows: EngagementRow[]) {

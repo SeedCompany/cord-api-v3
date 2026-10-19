@@ -82,7 +82,10 @@ import {
   type SecuredProjectMemberList,
 } from './project-member/dto';
 import { ProjectChannels } from './project.channels';
-import { ProjectRepository } from './project.repository';
+import {
+  ProjectRepository,
+  type ProjectSensitivityChange,
+} from './project.repository';
 
 @Injectable()
 export class ProjectService {
@@ -567,6 +570,45 @@ export class ProjectService {
       canRead: true, // false handled above
       canCreate: false, // This flag doesn't make sense here
     };
+  }
+
+  /**
+   * Recomputes the sensitivity of these translation projects from their
+   * engaged languages and publishes `projectUpdated` for each one that
+   * changed. The engagement and language services call this after changing
+   * which languages a project engages, since nothing else announces it.
+   */
+  async recomputeSensitivity(projectIds: ReadonlyArray<ID<'Project'>>) {
+    return this.publishSensitivityChanges(
+      await this.repo.recomputeSensitivity(projectIds),
+    );
+  }
+
+  /** The same, for every project engaging this language. */
+  async recomputeSensitivityForLanguage(language: ID) {
+    return this.publishSensitivityChanges(
+      await this.repo.recomputeSensitivityForLanguage(language),
+    );
+  }
+
+  private publishSensitivityChanges(
+    changes: readonly ProjectSensitivityChange[],
+  ) {
+    // No ProjectUpdatedHook or ResourceMutatedHook here. The language or
+    // engagement mutation that caused this is already audited, and
+    // SetDepartmentId runs on every ProjectUpdatedHook regardless of what
+    // changed, so it could assign a department ID from a language edit.
+    const at = DateTime.now();
+    for (const change of changes) {
+      this.channels.publishToAll('updated', {
+        program: change.type,
+        project: change.id,
+        at,
+        updated: { sensitivity: change.sensitivity },
+        previous: { sensitivity: change.previous },
+      });
+    }
+    return changes;
   }
 
   async addOtherLocation(project: ID<'Project'>, location: ID<'Location'>) {
