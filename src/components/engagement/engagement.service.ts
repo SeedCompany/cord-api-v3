@@ -134,6 +134,7 @@ export class EngagementService {
     );
 
     RequiredWhen.verify(InternshipEngagement, engagement);
+    InternshipMilestoneDateException.throwIfInvalid(engagement, input);
 
     const event = new EngagementCreatedHook(engagement, input);
     await this.hooks.run(event);
@@ -341,6 +342,8 @@ export class EngagementService {
       changeset,
     );
 
+    InternshipMilestoneDateException.throwIfInvalid(updated, changes);
+
     const prevMissing = RequiredWhen.calc(InternshipEngagement, previous);
     const nowMissing = RequiredWhen.calc(InternshipEngagement, updated);
     if (
@@ -509,6 +512,64 @@ class EngagementDateRangeException extends RangeException {
     readonly field: string,
   ) {
     const message = "Engagement's start date must be before the end date";
+    super({ message, field });
+  }
+}
+
+class InternshipMilestoneDateException extends RangeException {
+  /**
+   * Throws if a changed milestone date is outside its allowed engagement bounds.
+   *
+   * Growth plan complete date must be within the engagement dates.
+   * Disbursement complete date must not be before the engagement start.
+   * Only changed dates are checked, so existing out-of-range data does not block other edits.
+   *
+   * @example
+   * ```ts
+   * // engagement is 2026-01-01 to 2026-12-31
+   * throwIfInvalid(engagement, { completeDate: CalendarDate.local(2027, 1, 1) });
+   * // => throws, field "engagement.completeDate"
+   * ```
+   */
+  static throwIfInvalid(
+    engagement: Pick<
+      UnsecuredDto<InternshipEngagement>,
+      'startDate' | 'endDate'
+    >,
+    changes: Partial<
+      Pick<
+        UnsecuredDto<InternshipEngagement>,
+        'completeDate' | 'disbursementCompleteDate'
+      >
+    >,
+  ) {
+    const { startDate, endDate } = engagement;
+    const { completeDate, disbursementCompleteDate } = changes;
+    if (completeDate && startDate && completeDate < startDate) {
+      throw new InternshipMilestoneDateException(
+        "Growth plan complete date cannot be before the engagement's start date",
+        'engagement.completeDate',
+      );
+    }
+    if (completeDate && endDate && completeDate > endDate) {
+      throw new InternshipMilestoneDateException(
+        "Growth plan complete date cannot be after the engagement's end date",
+        'engagement.completeDate',
+      );
+    }
+    if (
+      disbursementCompleteDate &&
+      startDate &&
+      disbursementCompleteDate < startDate
+    ) {
+      throw new InternshipMilestoneDateException(
+        "Disbursement complete date cannot be before the engagement's start date",
+        'engagement.disbursementCompleteDate',
+      );
+    }
+  }
+
+  constructor(message: string, field: string) {
     super({ message, field });
   }
 }
