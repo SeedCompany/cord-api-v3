@@ -1,5 +1,5 @@
 import { expect } from '@jest/globals';
-import { CalendarDate, isValidId } from '~/common';
+import { isValidId } from '~/common';
 import { graphql, type InputOf } from '~/graphql';
 import { type TestApp } from './create-app';
 import { createPartner } from './create-partner';
@@ -17,8 +17,6 @@ export async function createPartnership(
     types: ['Managing'],
     financialReportingType: 'Funded',
     partner: input.partner || (await createPartner(app)).id,
-    mouStartOverride: CalendarDate.local().toISO(),
-    mouEndOverride: CalendarDate.local().toISO(),
     ...input,
   } satisfies InputOf<typeof CreatePartnershipDoc>;
 
