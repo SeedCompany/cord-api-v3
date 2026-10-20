@@ -1283,6 +1283,92 @@ describe('Project e2e', () => {
     });
   });
 
+  // Deleting a location or field region leaves the project pointing at it, and
+  // the loaders skip deleted rows. These fields are non-null, so a NotFound that
+  // escaped would fail the whole project, along with every webhook payload that
+  // selects them. mapSecuredValue catches it, so they read as unset instead.
+  it('reads a deleted location or field region as unset', async () => {
+    await runAsAdmin(app, async () => {
+      const fundingAccount = await createFundingAccount(app);
+      const location = await createLocation(app, {
+        fundingAccount: fundingAccount.id,
+      });
+      const region = await createRegion(app);
+      const project = await createProject(app, {
+        primaryLocation: location.id,
+        marketingLocation: location.id,
+        fieldRegion: region.id,
+      });
+
+      const readLinks = async () => {
+        const result = await app.graphql.query(
+          graphql(`
+            query projectLinks($id: ID!) {
+              project(id: $id) {
+                name {
+                  value
+                }
+                primaryLocation {
+                  canRead
+                  value {
+                    id
+                  }
+                }
+                marketingLocation {
+                  canRead
+                  value {
+                    id
+                  }
+                }
+                fieldRegion {
+                  canRead
+                  value {
+                    id
+                  }
+                }
+              }
+            }
+          `),
+          { id: project.id },
+        );
+        return result.project;
+      };
+
+      const before = await readLinks();
+      expect(before.primaryLocation.value?.id).toBe(location.id);
+      expect(before.marketingLocation.value?.id).toBe(location.id);
+      expect(before.fieldRegion.value?.id).toBe(region.id);
+
+      await app.graphql.mutate(
+        graphql(`
+          mutation deleteLocation($id: ID!) {
+            deleteLocation(id: $id) {
+              __typename
+            }
+          }
+        `),
+        { id: location.id },
+      );
+      await app.graphql.mutate(
+        graphql(`
+          mutation deleteFieldRegion($id: ID!) {
+            deleteFieldRegion(id: $id) {
+              __typename
+            }
+          }
+        `),
+        { id: region.id },
+      );
+
+      const after = await readLinks();
+      expect(after.name.value).toBe(project.name.value);
+      const unset = { canRead: true, value: null };
+      expect(after.primaryLocation).toEqual(unset);
+      expect(after.marketingLocation).toEqual(unset);
+      expect(after.fieldRegion).toEqual(unset);
+    });
+  });
+
   // #727 create without mouStart, mouEnd, estimatedSubmission
   it('can create without mouStart, mouEnd and estimatedSubmission', async () => {
     const { createProject } = await app.graphql.mutate(
