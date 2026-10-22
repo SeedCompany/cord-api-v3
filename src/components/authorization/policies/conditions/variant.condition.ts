@@ -1,5 +1,5 @@
 import { type NonEmptyArray } from '@seedcompany/common';
-import { inspect, type InspectOptionsStylized } from 'util';
+import { inspect, type InspectContext } from 'util';
 import {
   type Many,
   type ResourceShape,
@@ -48,7 +48,7 @@ export class VariantCondition<
     return new VariantCondition(new Set(variants));
   }
 
-  [inspect.custom](_depth: number, _options: InspectOptionsStylized) {
+  [inspect.custom](_depth: number, _options: InspectContext) {
     return `Variant(s) { ${[...this.variants].join(', ')} }`;
   }
 }

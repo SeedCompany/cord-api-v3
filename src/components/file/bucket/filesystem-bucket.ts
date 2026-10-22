@@ -26,8 +26,9 @@ export class FilesystemBucket extends LocalBucket<FilesystemBucketOptions> {
   }
 
   async clear(): Promise<void> {
-    await fs.rmdir(this.rootDir, {
+    await fs.rm(this.rootDir, {
       recursive: true,
+      force: true,
     });
   }
 
