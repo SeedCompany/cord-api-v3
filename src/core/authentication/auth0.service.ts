@@ -1,5 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { createRemoteJWKSet, jwtVerify, type JWTVerifyGetKey } from 'jose';
+import {
+  createRemoteJWKSet,
+  decodeJwt,
+  jwtVerify,
+  type JWTVerifyGetKey,
+} from 'jose';
 import { UnauthenticatedException } from '~/common';
 import { ConfigService } from '~/core/config';
 import { ILogger, Logger } from '~/core/logger';
@@ -11,6 +16,14 @@ export interface Auth0Claims {
   readonly givenName?: string;
   readonly familyName?: string;
   readonly name?: string;
+}
+
+export interface AccessTokenClaims {
+  readonly sub: string;
+  /** The Auth0 application the token was issued to (`azp`, else `client_id`). */
+  readonly clientId: string;
+  /** Seconds since epoch. */
+  readonly issuedAt: number;
 }
 
 /**
@@ -63,6 +76,63 @@ export class Auth0Service {
       this.logger.warning('Failed to verify Auth0 ID token', { exception });
       throw new UnauthenticatedException(
         'Invalid Auth0 token',
+        exception instanceof Error ? exception : undefined,
+      );
+    }
+  }
+
+  /**
+   * Is this bearer token claiming to be from our Auth0 tenant?
+   *
+   * Routing only. The `iss` is read WITHOUT verifying the signature, so it
+   * decides which verifier runs and grants nothing; {@link verifyAccessToken}
+   * does the real checking. Cord's own session tokens carry no `iss`.
+   */
+  isIssuedByAuth0(token: string): boolean {
+    const { domain } = this.config.auth0;
+    if (!domain) {
+      return false;
+    }
+    try {
+      return decodeJwt(token).iss === `https://${domain}/`;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Verifies an Auth0 access token issued for the Cord API (assistant access).
+   * Fails closed when the tenant or API audience isn't configured.
+   *
+   * An ID token can't pass here: its `aud` is the login client, not the API.
+   */
+  async verifyAccessToken(token: string): Promise<AccessTokenClaims> {
+    const { domain, apiAudience } = this.config.auth0;
+    if (!domain || !apiAudience) {
+      this.logger.warning(
+        'Rejecting Auth0 access token; AUTH0_DOMAIN/AUTH0_API_AUDIENCE are not configured',
+      );
+      throw new UnauthenticatedException('Agent access is not configured');
+    }
+
+    try {
+      const { payload } = await jwtVerify(token, this.jwksFor(domain), {
+        issuer: `https://${domain}/`,
+        audience: apiAudience,
+        algorithms: ['RS256'],
+        clockTolerance: 30,
+        requiredClaims: ['sub', 'exp', 'iat'],
+      });
+      const clientId = asOptionalString(payload.azp ?? payload.client_id);
+      if (!clientId) {
+        // Can't attribute the access to an application, so don't grant it.
+        throw new Error('Access token is missing an azp/client_id claim');
+      }
+      return { sub: payload.sub!, clientId, issuedAt: payload.iat! };
+    } catch (exception) {
+      this.logger.warning('Failed to verify Auth0 access token', { exception });
+      throw new UnauthenticatedException(
+        'Invalid access token',
         exception instanceof Error ? exception : undefined,
       );
     }

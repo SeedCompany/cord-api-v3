@@ -7,7 +7,7 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
-import { type GqlContextType, ServerException } from '~/common';
+import { type GqlContextType, InputException, ServerException } from '~/common';
 import { ConfigService } from '~/core/config';
 import { Loader, type LoaderOf } from '~/core/data-loader';
 import { UserLoader, UserService } from '../../../components/user';
@@ -53,6 +53,11 @@ export class SessionResolver {
     // Set for data loaders invoked later in operation
     this.sessionHost.current$.next(session);
 
+    if (browser && session.via) {
+      throw new InputException(
+        'Cookie sessions are not available with agent access tokens',
+      );
+    }
     if (browser) {
       const { name, expires, ...options } = this.config.sessionCookie(request);
       if (!response) {
@@ -69,7 +74,7 @@ export class SessionResolver {
     }
 
     return {
-      token: !browser ? session.token : undefined,
+      token: !browser && !session.via ? session.token : undefined,
       user: session.anonymous ? undefined : session.userId,
       session,
     };

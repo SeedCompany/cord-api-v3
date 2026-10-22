@@ -119,6 +119,10 @@ export const makeConfig = (env: EnvironmentService) =>
     auth0 = {
       domain: env.string('AUTH0_DOMAIN').optional(),
       audience: env.string('AUTH0_AUDIENCE').optional(),
+      // Identifier of the Auth0 API that stands for Cord itself. Access tokens
+      // issued for assistants (MCP) carry this as `aud`. Distinct from
+      // `audience` above, which is the Cord Field login client for ID tokens.
+      apiAudience: env.string('AUTH0_API_AUDIENCE').optional(),
     };
 
     emailDriver = (() => {

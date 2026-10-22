@@ -26,6 +26,17 @@ class RawSession extends DataObject {
   readonly systemAgentName?: string;
 
   /**
+   * Set when the session is an agent (assistant) acting for the user through an
+   * OAuth access token, rather than the user's own Cord Field session.
+   * Issued by the token, never asserted by a header: `clientId` is the Auth0
+   * application the token was issued to. These sessions are read-only.
+   */
+  readonly via?: {
+    readonly type: 'oauth';
+    readonly clientId: string;
+  };
+
+  /**
    * The "real", requesting user's session, when they are impersonating.
    */
   readonly impersonator?: Session;
