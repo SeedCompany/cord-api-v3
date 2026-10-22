@@ -8,6 +8,7 @@ import { GqlExecutionContext } from '@nestjs/graphql';
 import { type FnLike } from '@seedcompany/common';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { BehaviorSubject } from 'rxjs';
+import { UnauthorizedException } from '~/common';
 import { GlobalHttpHook } from '../../http';
 import { Identity } from '../identity.service';
 import { AuthLevel } from './auth-level.decorator';
@@ -66,6 +67,11 @@ export class SessionInterceptor implements NestInterceptor {
       throw new Error('Session holder for request is not in async context');
     }
     session$.next(session);
+    // Assistants read; they don't write. Enforced here, in Cord, because the
+    // token is a bearer token that works against this API without the sidecar.
+    if (session.via && isMutation) {
+      throw new UnauthorizedException('Agent access tokens are read-only');
+    }
     if (authLevel === AuthLevel.Authenticated) {
       this.identity.verifyLoggedIn();
     }

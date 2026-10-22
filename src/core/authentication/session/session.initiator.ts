@@ -8,6 +8,7 @@ import {
   type Many,
   Role,
   UnauthenticatedException,
+  UnauthorizedException,
 } from '~/common';
 import { ConfigService } from '~/core/config';
 import { ILogger, Logger } from '~/core/logger';
@@ -28,6 +29,11 @@ export class SessionInitiator {
   ) {}
 
   async start(request: IRequest) {
+    const agentSession = await this.tryAgentSession(request);
+    if (agentSession) {
+      return agentSession;
+    }
+
     const existingToken = this.getToken(request);
     const impersonatee = this.getImpersonatee(request);
 
@@ -51,12 +57,35 @@ export class SessionInitiator {
   }
 
   async resume(request: IRequest) {
+    const agentSession = await this.tryAgentSession(request);
+    if (agentSession) {
+      return agentSession;
+    }
+
     const token = this.getToken(request);
     if (!token) {
       throw new UnauthenticatedException();
     }
     const impersonatee = this.getImpersonatee(request);
     return await this.sessionManager.resumeSession(token, impersonatee);
+  }
+
+  /**
+   * An assistant presents an Auth0 access token as a bearer token. Header
+   * only: cookies only ever hold Cord's own session tokens.
+   */
+  private async tryAgentSession(request: IRequest) {
+    const token = this.getTokenFromAuthHeader(request);
+    if (!token || !this.sessionManager.isAuth0AccessToken(token)) {
+      return undefined;
+    }
+    // Acting as someone else on top of acting for them: never.
+    if (this.getImpersonatee(request)) {
+      throw new UnauthorizedException(
+        'Impersonation is not available with agent access tokens',
+      );
+    }
+    return await this.sessionManager.resumeSessionFromAuth0AccessToken(token);
   }
 
   private getToken(request: IRequest): string | null {

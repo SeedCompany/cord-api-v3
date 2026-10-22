@@ -7,12 +7,14 @@ import {
   Polls,
   type Role,
   ServerException,
+  UnauthenticatedException,
   UnauthorizedException,
 } from '~/common';
 import { Hooks } from '~/core/hooks';
 import { ILogger, Logger } from '~/core/logger';
 import { type SystemAgent } from '../../../components/user/dto';
 import { SystemAgentRepository } from '../../../components/user/system-agent.repository';
+import { Auth0Service } from '../auth0.service';
 import { AuthenticationRepository } from '../authentication.repository';
 import { CanImpersonateHook } from '../hooks/can-impersonate.hook';
 import { JwtService } from '../jwt.service';
@@ -31,6 +33,7 @@ export class SessionManager {
     private readonly jwt: JwtService,
     private readonly sessionHost: SessionHost,
     private readonly repo: AuthenticationRepository,
+    private readonly auth0: Auth0Service,
     @Logger('session') private readonly logger: ILogger,
   ) {}
 
@@ -39,6 +42,46 @@ export class SessionManager {
 
     await this.repo.saveSessionToken(token);
     return token;
+  }
+
+  isAuth0AccessToken(token: string) {
+    return this.auth0.isIssuedByAuth0(token);
+  }
+
+  /**
+   * Resolve an Auth0 access token to a stateless, read-only agent session for
+   * the linked Cord user. No `auth_sessions` row exists or is created.
+   *
+   * Users are matched by `sub` only, never by email and never provisioned: an
+   * assistant must not be a way to create or claim an account. A person links
+   * their Auth0 identity by signing in to Cord Field once (`loginWithAuth0`).
+   */
+  async resumeSessionFromAuth0AccessToken(accessToken: string) {
+    const claims = await this.auth0.verifyAccessToken(accessToken);
+
+    const user = await this.repo.findUserByAuth0Sub(claims.sub);
+    if (!user) {
+      this.logger.debug('Access token sub is not linked to a Cord user', {
+        sub: claims.sub,
+        clientId: claims.clientId,
+      });
+      throw new UnauthenticatedException(
+        'No Cord account is linked to this sign-in. Sign in to Cord Field once first.',
+      );
+    }
+    if (user.status === 'Disabled') {
+      throw new UnauthenticatedException('User is disabled');
+    }
+
+    return Session.from({
+      // Not a stored session; a sentinel so nothing can look this up or log it out.
+      token: 'auth0-access-token',
+      issuedAt: DateTime.fromSeconds(claims.issuedAt),
+      userId: user.id,
+      anonymous: false,
+      roles: await this.repo.rolesForUser(user.id),
+      via: { type: 'oauth', clientId: claims.clientId },
+    });
   }
 
   async refreshCurrentSession() {
