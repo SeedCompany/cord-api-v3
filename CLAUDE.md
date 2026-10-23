@@ -156,6 +156,7 @@ export class UserResolver {
 - List reads should call `PolicyExecutor.applyReadFilter` so rows the requester can't read never leave the database — the base class does not do it for you (the base `readMany` filters only by id and liveness)
 - Sort user-chosen keys with the `~/core/drizzle` order-by helpers (`resolveOrderBy`, `orderEntry`) so text sorts are collated and blanks sort last
 - Return `UnsecuredDto<T>` (never apply security in the repo)
+- Put a row lock (`.for('update')`) inside the repository method whose read it protects, beside that read, ideally as the locking `SELECT` of the read itself. Add a comment that names the race. Then no caller can get the answer without the lock.
 
 ### Hooks (internal event bus)
 
