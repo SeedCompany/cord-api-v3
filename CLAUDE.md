@@ -157,6 +157,7 @@ export class UserResolver {
 - Sort user-chosen keys with the `~/core/drizzle` order-by helpers (`resolveOrderBy`, `orderEntry`) so text sorts are collated and blanks sort last
 - Return `UnsecuredDto<T>` (never apply security in the repo)
 - Put a row lock (`.for('update')`) inside the repository method whose read it protects, beside that read, ideally as the locking `SELECT` of the read itself. Add a comment that names the race. Then no caller can get the answer without the lock.
+- For an existence check that can find no rows, lock the shared parent row instead (such as the `users` row), because a lock on an empty result locks nothing. Every side of the race must take that same lock.
 
 ### Hooks (internal event bus)
 
