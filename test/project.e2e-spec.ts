@@ -19,6 +19,7 @@ import { PartnerType } from '../src/components/partner/dto';
 import { ProjectType } from '../src/components/project/dto';
 import {
   createFundingAccount,
+  createIntern,
   createInternshipEngagement,
   createLanguage,
   createLanguageEngagement,
@@ -129,7 +130,7 @@ describe('Project e2e', () => {
 
       return [location, fieldRegion];
     });
-    intern = director;
+    intern = await createIntern(app);
     mentor = director;
   });
 

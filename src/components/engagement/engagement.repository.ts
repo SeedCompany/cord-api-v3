@@ -53,6 +53,7 @@ import {
   projects,
   tools,
   toolUsages,
+  userGlobalRoles,
   users,
 } from '~/core/drizzle/schema';
 import { type ScopedRole } from '../authorization/dto/role.dto';
@@ -265,6 +266,15 @@ export class EngagementRepository extends DrizzleDtoRepository<
   ): Promise<UnsecuredDto<InternshipEngagement>> {
     await this.verifyRelationshipEligibility(input.project, input.intern, true);
 
+    // Lock before checking the role, to guard against a race with role removal
+    await this.lockIntern(input.intern);
+
+    if (!(await this.userHasInternRole(input.intern))) {
+      throw new InputException(
+        'The intern must have the Intern role',
+        'intern',
+      );
+    }
     if (input.mentor && !(await this.userExists(input.mentor))) {
       throw new NotFoundException('Could not find mentor', 'mentor');
     }
@@ -628,6 +638,34 @@ export class EngagementRepository extends DrizzleDtoRepository<
       .select({ id: users.id })
       .from(users)
       .where(and(eq(users.id, id as ID<'User'>), isNull(users.deletedAt)))
+      .limit(1);
+    return !!row;
+  }
+
+  /**
+   * Locks the live user row until the surrounding transaction ends.
+   */
+  private async lockIntern(id: ID) {
+    const [row] = await this.db
+      .select({ id: users.id })
+      .from(users)
+      .where(and(eq(users.id, id as ID<'User'>), isNull(users.deletedAt)))
+      .for('update');
+    if (!row) {
+      throw new NotFoundException('Could not find intern', 'intern');
+    }
+  }
+
+  private async userHasInternRole(id: ID) {
+    const [row] = await this.db
+      .select({ userId: userGlobalRoles.userId })
+      .from(userGlobalRoles)
+      .where(
+        and(
+          eq(userGlobalRoles.userId, id as ID<'User'>),
+          eq(userGlobalRoles.role, 'Intern'),
+        ),
+      )
       .limit(1);
     return !!row;
   }
