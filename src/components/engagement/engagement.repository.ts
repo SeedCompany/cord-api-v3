@@ -266,9 +266,6 @@ export class EngagementRepository extends DrizzleDtoRepository<
   ): Promise<UnsecuredDto<InternshipEngagement>> {
     await this.verifyRelationshipEligibility(input.project, input.intern, true);
 
-    // Lock before checking the role, to guard against a race with role removal
-    await this.lockIntern(input.intern);
-
     if (!(await this.userHasInternRole(input.intern))) {
       throw new InputException(
         'The intern must have the Intern role',
@@ -643,21 +640,47 @@ export class EngagementRepository extends DrizzleDtoRepository<
   }
 
   /**
-   * Locks the live user row until the surrounding transaction ends.
+   * Reads the engagement's current status.
+   *
+   * Locks the engagement row for the rest of the surrounding transaction, so
+   * the status cannot change before the caller writes.
    */
-  private async lockIntern(id: ID) {
+  async currentEngagementStatus(id: ID) {
     const [row] = await this.db
+      .select({ status: engagements.status })
+      .from(engagements)
+      .where(
+        and(
+          eq(engagements.id, id as ID<'Engagement'>),
+          isNull(engagements.deletedAt),
+        ),
+      )
+      .for('update');
+    if (!row) {
+      throw new NotFoundException('Could not find engagement');
+    }
+    return row.status;
+  }
+
+  /**
+   * Whether the user has the Intern role.
+   *
+   * Locks the live user row for the rest of the surrounding transaction, so
+   * the answer cannot race with a concurrent role removal or delete. Throws a
+   * `NotFoundException` on the `intern` field if no live user row exists.
+   */
+  async userHasInternRole(id: ID) {
+    const [user] = await this.db
       .select({ id: users.id })
       .from(users)
       .where(and(eq(users.id, id as ID<'User'>), isNull(users.deletedAt)))
       .for('update');
-    if (!row) {
+    // A concurrent delete can commit after an earlier existence check
+    if (!user) {
       throw new NotFoundException('Could not find intern', 'intern');
     }
-  }
 
-  private async userHasInternRole(id: ID) {
-    const [row] = await this.db
+    const [role] = await this.db
       .select({ userId: userGlobalRoles.userId })
       .from(userGlobalRoles)
       .where(
@@ -667,7 +690,7 @@ export class EngagementRepository extends DrizzleDtoRepository<
         ),
       )
       .limit(1);
-    return !!row;
+    return !!role;
   }
 
   private async languageExists(id: ID) {
