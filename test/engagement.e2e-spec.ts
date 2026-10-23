@@ -13,6 +13,7 @@ import { ProjectStep, ProjectType } from '../src/components/project/dto';
 import {
   createDirectProduct,
   createFundingAccount,
+  createIntern,
   createInternshipEngagement,
   createInternshipEngagementWithMinimumValues,
   createLanguage,
@@ -92,7 +93,7 @@ describe('Engagement e2e', () => {
       return [language, location];
     });
 
-    intern = await getUserFromSession(app);
+    intern = await createIntern(app);
     mentor = await getUserFromSession(app);
   });
 
@@ -200,7 +201,7 @@ describe('Engagement e2e', () => {
       {
         input: {
           project: internshipProject.id,
-          intern: user.id,
+          intern: intern.id,
         },
       },
     );
@@ -928,7 +929,7 @@ describe('Engagement e2e', () => {
     const project = await createProject(app, {
       type: ProjectType.Internship,
     });
-    const intern = await createPerson(app);
+    const intern = await createIntern(app);
 
     await createInternshipEngagement(app, {
       project: project.id,
@@ -943,6 +944,25 @@ describe('Engagement e2e', () => {
     ).rejects.toThrowGqlError(
       errors.duplicate({
         message: 'Engagement for this project and person already exists',
+        field: 'intern',
+      }),
+    );
+  });
+
+  it('rejects an internship engagement whose intern lacks the Intern role', async () => {
+    const project = await createProject(app, {
+      type: ProjectType.Internship,
+    });
+    const person = await createPerson(app);
+
+    await expect(
+      createInternshipEngagement(app, {
+        project: project.id,
+        intern: person.id,
+      }),
+    ).rejects.toThrowGqlError(
+      errors.input({
+        message: 'The intern must have the Intern role',
         field: 'intern',
       }),
     );

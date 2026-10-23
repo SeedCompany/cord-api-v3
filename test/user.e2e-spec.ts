@@ -522,7 +522,7 @@ describe('User e2e', () => {
     // The user is not a member of this project — only its engagement's intern —
     // so the project can only come back through the intern path of the
     // `userId` filter behind `User.projects`.
-    const intern = await createPerson(app);
+    const intern = await createPerson(app, { roles: ['Intern'] });
     const project = await createProject(app, { type: ProjectType.Internship });
     await createInternshipEngagement(app, {
       project: project.id,
