@@ -574,6 +574,17 @@ describe('User e2e', () => {
         }
       }
     `);
+    const ReopenEngagementDoc = graphql(`
+      mutation reopenInternEngagement($id: ID!) {
+        updateInternshipEngagement(input: { id: $id, status: Active }) {
+          engagement {
+            status {
+              value
+            }
+          }
+        }
+      }
+    `);
 
     const createInternWithEngagement = async () => {
       const intern = await createPerson(app, { roles: ['Intern'] });
@@ -630,6 +641,34 @@ describe('User e2e', () => {
         roles: [],
       });
       expect(result.updateUser.user.roles.value).toEqual([]);
+    });
+
+    it('blocks reopening a terminal internship whose intern lost the role', async () => {
+      const { intern, engagement } = await createInternWithEngagement();
+      await completeEngagement(engagement.id);
+      await app.graphql.mutate(UpdateRolesDoc, { id: intern.id, roles: [] });
+
+      await expect(
+        app.graphql.mutate(ReopenEngagementDoc, { id: engagement.id }),
+      ).rejects.toThrowGqlError(
+        errors.input({
+          message:
+            'The intern must have the Intern role to reopen this internship engagement',
+          field: 'engagement.status',
+        }),
+      );
+    });
+
+    it('allows reopening a terminal internship whose intern kept the role', async () => {
+      const { engagement } = await createInternWithEngagement();
+      await completeEngagement(engagement.id);
+
+      const result = await app.graphql.mutate(ReopenEngagementDoc, {
+        id: engagement.id,
+      });
+      expect(result.updateInternshipEngagement.engagement.status.value).toBe(
+        'Active',
+      );
     });
 
     it('blocks deleting a person who is the intern on any internship', async () => {
