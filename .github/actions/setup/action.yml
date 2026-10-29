@@ -5,7 +5,7 @@ runs:
   steps:
     - uses: actions/setup-node@v4
       with:
-        node-version: 24.14.1
+        node-version: 26
 
     - name: Yarn cache
       uses: actions/cache@v4
@@ -18,7 +18,8 @@ runs:
 
     - name: Install dependencies
       shell: bash
-      run: corepack enable && yarn install
+      # Node no longer bundles Corepack, so it has to be installed before it can enable yarn
+      run: npm install -g corepack && corepack enable && yarn install
       env:
         YARN_ENABLE_GLOBAL_CACHE: 'false' # Use local cache folder to keep downloaded archives
         YARN_NM_MODE: 'hardlinks-local' # Hardlinks-(local|global) reduces io / node_modules size
