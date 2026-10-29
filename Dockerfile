@@ -1,10 +1,7 @@
 ARG NODE_VERSION=26
 ARG NODE_IMAGE=public.ecr.aws/docker/library/node:${NODE_VERSION}-slim
-# Node no longer bundles Corepack, so it has to be installed before it can enable yarn
-ARG COREPACK_VERSION=0.36.0
 
 FROM ${NODE_IMAGE} AS base-runtime
-ARG COREPACK_VERSION
 
 # Install these native packages
 RUN apt-get update \
@@ -23,14 +20,13 @@ RUN curl -sSL https://rover.apollo.dev/nix/latest | sh
 # GraphQL Hive CLI
 RUN curl -sSL https://graphql-hive.com/install.sh | sh
 
-# Enable yarn via corepack
-RUN npm install -g corepack@${COREPACK_VERSION} && corepack enable
+# Node no longer bundles Corepack, so it has to be installed before it can enable yarn
+RUN npm install -g corepack && corepack enable
 
 FROM ${NODE_IMAGE} AS builder
-ARG COREPACK_VERSION
 
-# Enable yarn via corepack
-RUN npm install -g corepack@${COREPACK_VERSION} && corepack enable
+# Node no longer bundles Corepack, so it has to be installed before it can enable yarn
+RUN npm install -g corepack && corepack enable
 
 ENV NODE_ENV=development \
     # Don't flood log with cache debug messages
