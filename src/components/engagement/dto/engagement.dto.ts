@@ -178,14 +178,17 @@ export class LanguageEngagement extends Engagement {
 
   readonly language: Secured<LinkTo<'Language'>>;
 
-  @Field()
-  readonly firstScripture: SecuredBoolean;
+  // Nullable in TS: these columns have always allowed a blank, and a create
+  // that omits them stores one. The WIRE type stays `SecuredBoolean` — its
+  // `value` was always nullable, so the schema does not change.
+  @Field(() => SecuredBoolean)
+  readonly firstScripture: SecuredBooleanNullable;
 
-  @Field()
-  readonly lukePartnership: SecuredBoolean;
+  @Field(() => SecuredBoolean)
+  readonly lukePartnership: SecuredBooleanNullable;
 
-  @Field()
-  readonly openToInvestorVisit: SecuredBoolean;
+  @Field(() => SecuredBoolean)
+  readonly openToInvestorVisit: SecuredBooleanNullable;
 
   @Field({
     description: 'Not used anymore, but exposing for legacy data.',
