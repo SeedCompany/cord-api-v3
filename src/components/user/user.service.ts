@@ -2,6 +2,7 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { DateTime } from 'luxon';
 import {
   type ID,
+  InputException,
   type ObjectView,
   Role,
   SecuredList,
@@ -130,6 +131,10 @@ export class UserService {
 
   async update(input: UpdateUser) {
     this.logger.debug('mutation update User', { input });
+    if (input.roles) {
+      // Lock before reading, so the Intern role check sees fresh roles
+      await this.userRepo.lockUser(input.id);
+    }
     const user = await this.userRepo.readOne(input.id);
 
     const changes = this.userRepo.getActualChanges(user, input);
@@ -142,6 +147,14 @@ export class UserService {
 
     if (changes.roles) {
       this.verifyRolesAreAssignable(changes.roles);
+
+      const changeRemovesInternRole =
+        user.roles.includes(Role.Intern) &&
+        !changes.roles.includes(Role.Intern);
+
+      if (changeRemovesInternRole) {
+        await this.verifyInternRoleRemovable(user);
+      }
     }
 
     input = {
@@ -217,6 +230,12 @@ export class UserService {
   async delete(id: ID) {
     const object = await this.readOne(id);
     this.privileges.for(User, object).verifyCan('delete');
+    await this.userRepo.lockUser(id);
+    if (await this.userRepo.hasAnyInternship(id)) {
+      throw new InputException(
+        'A user with an internship engagement cannot be deleted',
+      );
+    }
     await this.userRepo.delete(id);
     // Same-transaction side effects (e.g. session revocation — a deleted
     // user must not keep live sessions).
@@ -254,6 +273,22 @@ export class UserService {
     const invalidStr = invalid.join(', ');
     throw new UnauthorizedException(
       `You do not have the permission to assign users the roles: ${invalidStr}`,
+    );
+  }
+
+  /**
+   * Verifies that a user's Intern role can be removed.
+   *
+   * Throws an `InputException` on the `roles` field if the user has an ongoing
+   * internship.
+   */
+  private async verifyInternRoleRemovable(user: UnsecuredDto<User>) {
+    if (!(await this.userRepo.hasOngoingInternship(user.id))) {
+      return;
+    }
+    throw new InputException(
+      'The Intern role cannot be removed from a user with an ongoing internship engagement',
+      'roles',
     );
   }
 

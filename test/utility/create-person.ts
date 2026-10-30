@@ -4,6 +4,7 @@ import { generateId, isValidId } from '~/common';
 import { graphql, type InputOf, type ResultOf } from '~/graphql';
 import { type TestApp } from './create-app';
 import * as fragments from './fragments';
+import { runAsAdmin } from './login';
 
 export async function createPerson(
   app: TestApp,
@@ -44,6 +45,14 @@ export async function createPerson(
 
   return actual;
 }
+
+/**
+ * Creates a person with the Intern role, as an admin.
+ *
+ * Only a person with the Intern role can be the intern on an internship.
+ */
+export const createIntern = async (app: TestApp) =>
+  await runAsAdmin(app, () => createPerson(app, { roles: ['Intern'] }));
 
 const CreatePersonDoc = graphql(
   `

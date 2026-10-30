@@ -1,4 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { setHas } from '@seedcompany/common';
 import { DateTime } from 'luxon';
 import {
   type CalendarDate,
@@ -315,6 +316,7 @@ export class EngagementService {
     }
     if (changes.status) {
       await this.engagementRules.verifyStatusChange(input.id, changes.status);
+      await this.verifyInternStillHasRole(previous, changes.status);
     }
     this.privileges
       .for(InternshipEngagement, object)
@@ -389,6 +391,38 @@ export class EngagementService {
       engagement: this.secure(event.updated) as InternshipEngagement,
       payload: updatedPayload,
     };
+  }
+
+  /**
+   * Verifies that an internship engagement that leaves a terminal status has
+   * an intern who still holds the Intern role.
+   *
+   * The Intern role can be removed once an internship ends, so a reopened
+   * internship must prove the role again. The decision uses the status read
+   * under the engagement row lock, so a concurrent status change cannot skip
+   * the check.
+   *
+   * Throws an `InputException` on the `engagement.status` field if the role is
+   * gone.
+   */
+  private async verifyInternStillHasRole(
+    previous: UnsecuredDto<InternshipEngagement>,
+    nextStatus: EngagementStatus,
+  ) {
+    if (!setHas(EngagementStatus.Ongoing, nextStatus)) {
+      return;
+    }
+    const currentStatus = await this.repo.currentEngagementStatus(previous.id);
+    if (!setHas(EngagementStatus.Terminal, currentStatus)) {
+      return;
+    }
+    if (await this.repo.userHasInternRole(previous.intern.id)) {
+      return;
+    }
+    throw new InputException(
+      'The intern must have the Intern role to reopen this internship engagement',
+      'engagement.status',
+    );
   }
 
   async triggerUpdateEvent(id: ID) {

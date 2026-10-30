@@ -4,6 +4,7 @@ import { graphql } from '~/graphql';
 import { PartnerType } from '../src/components/partner/dto';
 import { ProjectType } from '../src/components/project/dto';
 import {
+  createIntern,
   createInternshipEngagement,
   createLanguage,
   createLanguageEngagement,
@@ -11,7 +12,6 @@ import {
   createProject,
   createSession,
   createTestApp,
-  getUserFromSession,
   registerUser,
   runAsAdmin,
   type TestApp,
@@ -106,7 +106,7 @@ describe('Resource parent e2e', () => {
     const project = await createProject(app, {
       type: ProjectType.Internship,
     });
-    const intern = await getUserFromSession(app);
+    const intern = await createIntern(app);
     const engagement = await createInternshipEngagement(app, {
       project: project.id,
       intern: intern.id,

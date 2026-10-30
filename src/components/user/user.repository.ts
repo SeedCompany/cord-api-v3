@@ -39,6 +39,7 @@ import {
   users,
 } from '~/core/drizzle/schema';
 import { PolicyExecutor } from '../authorization/policy/executor/policy-executor';
+import { EngagementStatus } from '../engagement/dto/status.enum';
 import { FileService } from '../file';
 import { type FileId } from '../file/dto';
 import { pinnedByRequester, pinnedFilter } from '../pin/pinned-by-requester';
@@ -122,6 +123,51 @@ export class UserRepository extends DrizzleDtoRepository<typeof users, User> {
         ),
       );
     return new Set(rows.flatMap((row) => (row.id ? [row.id] : [])));
+  }
+
+  /**
+   * Locks the user row until the surrounding transaction ends.
+   */
+  async lockUser(userId: ID): Promise<void> {
+    await this.db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.id, userId as ID<'User'>))
+      .for('update');
+  }
+
+  /**
+   * Whether the user is the intern on a live InternshipEngagement, whatever
+   * its status.
+   */
+  async hasAnyInternship(userId: ID): Promise<boolean> {
+    return await this.hasInternshipWhere(userId, []);
+  }
+
+  /**
+   * Whether the user is the intern on a live InternshipEngagement that has not
+   * reached a terminal status.
+   */
+  async hasOngoingInternship(userId: ID): Promise<boolean> {
+    return await this.hasInternshipWhere(userId, [
+      inArray(engagements.status, [...EngagementStatus.Ongoing]),
+    ]);
+  }
+
+  private async hasInternshipWhere(userId: ID, extra: SQL[]): Promise<boolean> {
+    const [row] = await this.db
+      .select({ id: engagements.id })
+      .from(engagements)
+      .where(
+        and(
+          eq(engagements.internId, userId as ID<'User'>),
+          eq(engagements.type, 'Internship'),
+          isNull(engagements.deletedAt),
+          ...extra,
+        ),
+      )
+      .limit(1);
+    return !!row;
   }
 
   async readManyActors(ids: readonly ID[]) {

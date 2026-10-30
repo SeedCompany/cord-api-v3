@@ -6,6 +6,7 @@ import { graphql, type InputOf } from '~/graphql';
 import { type TestApp } from './create-app';
 import { createLanguage } from './create-language';
 import { createLocation } from './create-location';
+import { createIntern } from './create-person';
 import { createProject } from './create-project';
 import { getUserFromSession } from './create-session';
 import * as fragments from './fragments';
@@ -83,9 +84,8 @@ export async function createInternshipEngagementWithMinimumValues(
   app: TestApp,
   input: Partial<InputOf<typeof UpdateInternshipEngDoc>> = {},
 ) {
-  const currentUserId = (await getUserFromSession(app)).id;
   const project = input.project || (await createProject(app)).id;
-  const intern = input.intern || currentUserId;
+  const intern = input.intern || (await createIntern(app)).id;
 
   const result = await app.graphql.mutate(UpdateInternshipEngDoc, {
     input: {
