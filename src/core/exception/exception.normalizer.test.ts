@@ -2,9 +2,7 @@ import { describe, expect, it } from '@jest/globals';
 // eslint-disable-next-line no-restricted-imports,@seedcompany/no-restricted-imports
 import * as Nest from '@nestjs/common';
 import * as Fastify from 'fastify';
-import { Neo4jError } from 'neo4j-driver';
 import { InputException, ServerException } from '~/common';
-import * as Neo from '~/core/neo4j/errors';
 import { ExceptionNormalizer } from './exception.normalizer';
 
 describe('ExceptionNormalizer', () => {
@@ -144,32 +142,6 @@ describe('ExceptionNormalizer', () => {
     expect(res.message).toEqual('what happened');
     expect(res.code).toEqual('Server');
     expect(res.codes).toEqual(['Server']);
-  });
-
-  describe('Neo4j', () => {
-    it('Syntax Error', () => {
-      const ex = new Neo4jError('Bad syntax', Neo.SyntaxError.code, '', '');
-      const res = sut.normalize({ ex });
-      expect(res.message).toEqual('Failed');
-      expect(res.code).toEqual('Syntax');
-      expect(res.codes).toEqual(['Syntax', 'Database', 'Server']);
-    });
-
-    it('Constraint Error', () => {
-      const ex = new Neo4jError('Bad syntax', Neo.ConstraintError.code, '', '');
-      const res = sut.normalize({ ex });
-      expect(res.message).toEqual('Failed');
-      expect(res.code).toEqual('ConstraintValidation');
-      expect(res.codes).toEqual(['ConstraintValidation', 'Database', 'Server']);
-    });
-
-    it('Unknown Error', () => {
-      const ex = new Neo4jError('what happened', 'N/A', '', '');
-      const res = sut.normalize({ ex });
-      expect(res.message).toEqual('Failed');
-      expect(res.code).toEqual('Database');
-      expect(res.codes).toEqual(['Database', 'Server']);
-    });
   });
 
   it('Unknown Error', () => {

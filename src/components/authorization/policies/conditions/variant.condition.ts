@@ -1,6 +1,5 @@
 import { type NonEmptyArray } from '@seedcompany/common';
-import { type Query } from 'cypher-query-builder';
-import { inspect, type InspectOptionsStylized } from 'util';
+import { inspect, type InspectContext } from 'util';
 import {
   type Many,
   type ResourceShape,
@@ -8,7 +7,6 @@ import {
   type VariantOf,
 } from '~/common';
 import {
-  type AsCypherParams,
   type Condition,
   type IsAllowedParams,
   MissingContextException,
@@ -38,11 +36,6 @@ export class VariantCondition<
     return this.variants.has(current);
   }
 
-  asCypherCondition(query: Query, _other: AsCypherParams<TResourceStatic>) {
-    const variants = query.params.addParam([...this.variants], 'variants');
-    return `node.variant = ${String(variants)}`;
-  }
-
   union(this: void, conditions: NonEmptyArray<this>) {
     const variants = conditions.flatMap((cond) => [...cond.variants]);
     return new VariantCondition(new Set(variants));
@@ -55,7 +48,7 @@ export class VariantCondition<
     return new VariantCondition(new Set(variants));
   }
 
-  [inspect.custom](_depth: number, _options: InspectOptionsStylized) {
+  [inspect.custom](_depth: number, _options: InspectContext) {
     return `Variant(s) { ${[...this.variants].join(', ')} }`;
   }
 }

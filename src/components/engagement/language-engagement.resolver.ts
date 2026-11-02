@@ -7,12 +7,25 @@ import { LanguageLoader } from '../language';
 import { SecuredLanguage } from '../language/dto';
 import { ProductLoader } from '../product';
 import { ProductListInput, SecuredProductList } from '../product/dto';
+import { ProjectLoader } from '../project';
+import { type Project, TranslationProject } from '../project/dto';
 import { LanguageEngagement } from './dto';
 import { EngagementService } from './engagement.service';
 
 @Resolver(LanguageEngagement)
 export class LanguageEngagementResolver {
   constructor(private readonly engagements: EngagementService) {}
+
+  @ResolveField(() => TranslationProject)
+  async parent(
+    @Parent() engagement: LanguageEngagement,
+    @Loader(ProjectLoader) projects: LoaderOf<ProjectLoader>,
+  ): Promise<Project> {
+    return await projects.load({
+      id: engagement.project.id,
+      view: { active: true },
+    });
+  }
 
   @ResolveField(() => SecuredLanguage)
   async language(

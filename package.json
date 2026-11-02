@@ -4,7 +4,7 @@
   "license": "MIT",
   "packageManager": "yarn@4.12.0",
   "engines": {
-    "node": "24.14.1"
+    "node": ">=26.12.1 <27.0.0"
   },
   "type": "module",
   "scripts": {
@@ -55,7 +55,7 @@
     "@nestjs/platform-fastify": "^11.1.23",
     "@patarapolw/prettyprint": "^1.0.3",
     "@seedcompany/cache": "^4.0.1",
-    "@seedcompany/common": "^1.3.0",
+    "@seedcompany/common": "patch:@seedcompany/common@npm%3A1.3.0#~/.yarn/patches/@seedcompany-common-npm-1.3.0-f9f5e8e26a.patch",
     "@seedcompany/data-loader": "^3.0.0",
     "@seedcompany/nest": "^2.2.6",
     "@seedcompany/nestjs-email": "^6.0.1",
@@ -71,7 +71,6 @@
     "common-tags": "^1.8.2",
     "croner": "^10.0.1",
     "cronstrue": "^3.12.0",
-    "cypher-query-builder": "patch:cypher-query-builder@npm%3A6.0.4#~/.yarn/patches/cypher-query-builder-npm-6.0.4-e8707a5e8e.patch",
     "dotenv": "^16.3.1",
     "dotenv-expand": "^12.0.2",
     "drizzle-orm": "^0.45.2",
@@ -107,7 +106,6 @@
     "mjml": "^4.15.3",
     "msgpackr": "^1.11.2",
     "nanoid": "^5.1.5",
-    "neo4j-driver": "^5.28.1",
     "p-retry": "^6.2.1",
     "pg": "^8.20.0",
     "plur": "^5.1.0",
@@ -132,6 +130,8 @@
   },
   "devDependencies": {
     "@graphql-hive/cli": ">=0.51",
+    "@jest/test-result": "30.2.0",
+    "@jest/test-sequencer": "30.2.0",
     "@nestjs/cli": "^11.0.7",
     "@nestjs/schematics": "^11.0.5",
     "@nestjs/testing": "^11.1.0",
@@ -143,7 +143,7 @@
     "@types/jsonwebtoken": "^9.0.4",
     "@types/lodash": "^4.14.200",
     "@types/luxon": "^3.7.1",
-    "@types/node": "^24.10.11",
+    "@types/node": "^26.6.5",
     "@types/pg": "^8.20.0",
     "@types/prismjs": "^1.26.2",
     "@types/react": "^19.1.8",
@@ -171,7 +171,6 @@
     "typescript-transform-paths": "^3.4.6"
   },
   "resolutions": {
-    "cypher-query-builder/neo4j-driver": "^5",
     "@angular-devkit/core": "^19.2",
     "@angular-devkit/schematics": "^19.2",
     "@nestjs/cli/fork-ts-checker-webpack-plugin": "npm:empty-npm-package@*",
@@ -189,7 +188,9 @@
     "process-warning": "^5",
     "rxjs": "^7.8",
     "secure-json-parse": "^4",
-    "subscriptions-transport-ws": "npm:empty-npm-package@*"
+    "subscriptions-transport-ws": "npm:empty-npm-package@*",
+    "buffer-equal-constant-time@npm:1.0.1": "patch:buffer-equal-constant-time@npm%3A1.0.1#~/.yarn/patches/buffer-equal-constant-time-npm-1.0.1-41826f3419.patch",
+    "@seedcompany/common@npm:^1.0.0": "patch:@seedcompany/common@npm%3A1.3.0#~/.yarn/patches/@seedcompany-common-npm-1.3.0-f9f5e8e26a.patch"
   },
   "dependenciesMeta": {
     "@nestjs/core": {

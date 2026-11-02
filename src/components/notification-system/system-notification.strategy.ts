@@ -1,4 +1,3 @@
-import { node, type Query } from 'cypher-query-builder';
 import { isNull } from 'drizzle-orm';
 import { type ID } from '~/common';
 import { type DrizzleDb, users } from '~/core/drizzle';
@@ -11,17 +10,11 @@ import { SystemNotification } from './system-notification.dto';
 
 @NotificationStrategy(SystemNotification)
 export class SystemNotificationStrategy extends INotificationStrategy<SystemNotification> {
-  recipientsForNeo4j() {
-    return (query: Query) =>
-      query.match(node('recipient', 'User')).return('recipient');
-  }
-
   override async recipientsForDrizzle(
     _input: unknown,
     db: DrizzleDb,
   ): Promise<ReadonlyArray<ID<'User'>>> {
-    // Neo4j excludes deleted users structurally (relabelled to Deleted_User);
-    // PG user deletion is a soft delete, so filter explicitly.
+    // User deletion is a soft delete, so filter explicitly.
     const rows = await db
       .select({ id: users.id })
       .from(users)

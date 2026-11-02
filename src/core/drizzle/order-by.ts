@@ -130,8 +130,8 @@ export const collateDisplayOrder = (expr: SQL): SQL =>
  * asked for.
  *
  * Postgres puts nulls last on ASC but FIRST on DESC, and Neo4j puts them last
- * both ways — `sortWith` orders by `[sortValue IS NOT NULL, sortValue]` on DESC
- * for exactly this reason (`src/core/neo4j/query/sorting.ts`). So every list
+ * both ways (its sorter ordered by `[sortValue IS NOT NULL, sortValue]` on DESC
+ * for exactly this reason). So every list
  * sorted DESC on a nullable key disagreed between the engines, with the blank
  * rows moving from the end of the list to the front of it.
  *

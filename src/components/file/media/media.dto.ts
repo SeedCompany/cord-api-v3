@@ -10,15 +10,13 @@ import { simpleSwitch } from '@seedcompany/common';
 import { stripIndent } from 'common-tags';
 import {
   DataObject,
-  DbLabel,
   type ID,
   IdField,
   IntersectTypes,
   NameField,
   ServerException,
 } from '~/common';
-import { type BaseNode } from '~/core/neo4j/results';
-import { RegisterResource } from '~/core/resources';
+import { type LinkToUnknown, RegisterResource } from '~/core/resources';
 import { type FileVersion } from '../dto';
 
 export type AnyMedia = Image | Video | Audio;
@@ -34,7 +32,6 @@ export const resolveMedia = (val: Pick<AnyMedia, '__typename'>) => {
 @InputType()
 @InterfaceType({ isAbstract: true })
 @ObjectType({ isAbstract: true })
-@DbLabel(null)
 export class MediaUserMetadata extends DataObject {
   @NameField({
     description: stripIndent`
@@ -78,7 +75,7 @@ export class Media extends MediaUserMetadata {
    * Absent when the root can't be resolved to a live resource (e.g. the owner
    * was soft-deleted, or a free-floating tree) — consumers must guard for it.
    */
-  readonly attachedTo?: [resource: BaseNode, relation: string];
+  readonly attachedTo?: [resource: LinkToUnknown, relation: string];
 
   @Field(() => String)
   readonly mimeType: string;

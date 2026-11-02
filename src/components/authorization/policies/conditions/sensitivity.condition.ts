@@ -1,7 +1,6 @@
 import { type NonEmptyArray } from '@seedcompany/common';
-import { type Query } from 'cypher-query-builder';
 import { type SQL, sql } from 'drizzle-orm';
-import { inspect, type InspectOptionsStylized } from 'util';
+import { inspect, type InspectContext } from 'util';
 import {
   type EnhancedResource,
   type ResourceShape,
@@ -11,7 +10,6 @@ import {
   organizationDerivedSensitivity,
   partnerDerivedSensitivity,
 } from '~/core/drizzle/derived-sensitivity';
-import { matchProjectSens, rankSens } from '~/core/neo4j/query';
 import {
   type AsDrizzleParams,
   type Condition,
@@ -20,7 +18,6 @@ import {
 } from '../../policy/conditions';
 
 const sensitivityRank = { High: 3, Medium: 2, Low: 1 };
-const CQL_VAR = 'sens';
 
 const EffectiveSensitivity = Symbol('EffectiveSensitivity');
 
@@ -56,25 +53,6 @@ export class SensitivityCondition<
     return sensitivityRank[actual] <= sensitivityRank[this.access];
   }
 
-  setupCypherContext(query: Query, prevApplied: Set<any>) {
-    if (prevApplied.has('sensitivity')) {
-      return query;
-    }
-    prevApplied.add('sensitivity');
-
-    return query.subQuery('project', (sub) =>
-      sub
-        .apply(matchProjectSens())
-        .return(`${rankSens('sensitivity')} as ${CQL_VAR}`),
-    );
-  }
-
-  asCypherCondition(query: Query) {
-    const ranked = sensitivityRank[this.access];
-    const param = query.params.addParam(ranked, 'requiredSens');
-    return `${CQL_VAR} <= ${String(param)}`;
-  }
-
   asDrizzleCondition({ resource }: AsDrizzleParams<TResourceStatic>) {
     // PG's sensitivity enum is declared in `Low < Medium < High` order, so
     // `node.sensitivity <= 'access'` is a single-column compare. For Project
@@ -104,7 +82,7 @@ export class SensitivityCondition<
     return ranked[0]!;
   }
 
-  [inspect.custom](_depth: number, _options: InspectOptionsStylized) {
+  [inspect.custom](_depth: number, _options: InspectContext) {
     const map = {
       High: 'Any',
       Medium: 'Medium/Low',
@@ -209,7 +187,7 @@ const sensitivityRefForResource = (
     case 'ProgressReport':
       // Progress rows on the shared periodic_reports table are always
       // engagement-parented (never project-parented directly) — see
-      // PeriodicReportDrizzleRepository.parentCondition.
+      // PeriodicReportRepository.parentCondition.
       return sql`(
         select "p"."sensitivity" from "projects" "p"
         join "engagements" "e" on "e"."project_id" = "p"."id"
@@ -233,11 +211,9 @@ const sensitivityRefForResource = (
           and "e"."deleted_at" is null
           and "p"."deleted_at" is null
       ), "languages"."sensitivity") <= ${accessLiteral}`;
-    // migration-todo: re-add a case per domain as it ports to Postgres
-    // (Engagement/Ceremony/Language read sensitivity via
-    // their parent project). Kept stripped so an unmigrated domain routed
-    // through Drizzle fails loud here instead of emitting SQL against a
-    // missing table.
+    // Add a case for each new project-scoped resource. The default throws so
+    // a resource without one fails loud instead of emitting SQL against the
+    // wrong table.
     //
     // migration-todo: these subselects don't check `projects.deleted_at` —
     // same soft-deleted-project liveness class as projectIdRefForResource in

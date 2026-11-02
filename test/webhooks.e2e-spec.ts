@@ -1,3 +1,4 @@
+import { faker } from '@faker-js/faker';
 import {
   afterAll,
   afterEach,
@@ -23,23 +24,26 @@ import { createHmac } from 'node:crypto';
 import { createServer } from 'node:http';
 import { promisify } from 'node:util';
 import {
-  bufferTime,
   defer,
   firstValueFrom,
   merge,
+  of,
+  skip,
   Subject,
+  take,
   timeout,
 } from 'rxjs';
 import type { SetNonNullable, SetRequired } from 'type-fest';
 import { validate as isUUID } from 'uuid';
-import { type ID } from '~/common';
+import { type ID, type Sensitivity } from '~/common';
 import { Identity } from '~/core/authentication';
 import { Broadcaster } from '~/core/broadcast';
 import { ConfigService } from '~/core/config';
-import { DatabaseMigrationCommand } from '~/core/neo4j/migration/migration.command';
-import { WebhookChannelSyncMigration } from '~/core/webhooks/channels/channel-sync.migration';
+import { WebhookChannelSync } from '~/core/webhooks/channels/webhook-channel-sync.service';
 import { WebhookChannelRepository } from '~/core/webhooks/channels/webhook-channel.repository';
+import { WebhookDeliveryQueue } from '~/core/webhooks/delivery/webhook-delivery.queue';
 import { WebhooksRepository } from '~/core/webhooks/management/webhooks.repository';
+import { WebhookProcessorQueue } from '~/core/webhooks/processor/webhook-processor.queue';
 import { WebhookListener } from '~/core/webhooks/processor/webhook.listener';
 import {
   type FragmentOf,
@@ -62,26 +66,86 @@ import { GqlError } from './setup/gql-client/gql-result';
 
 const SHORT = +Duration.from('30s');
 
-const isPostgres = process.env.DATABASE === 'postgres';
+/**
+ * Collects webhook requests until `count` have arrived (or SHORT passes), then
+ * until the webhook pipeline has nothing left in flight — so a test can assert
+ * an exact count, including that some webhook did NOT fire, without sitting
+ * through a fixed SHORT window. Call it BEFORE triggering the event: `events`
+ * is hot, and listening starts on the call.
+ */
+async function collectRequests(
+  app: TestApp,
+  events: Subject<WebhookRequest>,
+  count: number,
+): Promise<WebhookRequest[]> {
+  const received: WebhookRequest[] = [];
+  const listening = events.subscribe((request) => received.push(request));
+  try {
+    // Too few by the deadline: return what arrived, so the caller's length
+    // assertion reports the real count rather than a bare TimeoutError.
+    await firstValueFrom(
+      events.pipe(
+        skip(count - 1),
+        take(1),
+        timeout({ first: SHORT, with: () => of(undefined) }),
+      ),
+    );
+    await pipelineIdle(app);
+    return received;
+  } finally {
+    listening.unsubscribe();
+  }
+}
 
 /**
- * `DatabaseMigrationCommand` runs every registered migration through
- * `MigrationRunner`, which tracks the schema version as a `:SchemaVersion`
- * node in Neo4j — raw Cypher, no engine split. That's fine at real app
- * bootstrap, which guards it to Neo4j only (`migration.module.ts`) precisely
- * because it has no Postgres counterpart and never will (it's gone at
- * cutover along with the rest of that module).
+ * Waits until no webhook work is queued or running: the listener has handed
+ * off its batches, and neither the processor queue (event → payloads) nor the
+ * delivery queue (payload → HTTP request) has a job waiting or active. A
+ * delivery job stays active until its request is answered, so once this
+ * resolves every delivery already queued has reached the receiver.
  *
- * These two tests call the command directly to simulate "a deploy just
- * happened," bypassing that guard. Under Postgres there's nothing for it to
- * track, so go straight to the one migration these tests actually care
- * about — which is already properly split — instead of the Neo4j-only
- * version bookkeeping around it.
+ * Only meaningful once the trigger's first requests have ARRIVED: that proves
+ * the listener's short batching timer has fired, so an empty queue means done
+ * rather than not-yet-started. `delayed` is deliberately not counted — those
+ * are retries of failed deliveries, minutes out, not extra deliveries.
  */
-const runDeployMigrations = async (app: TestApp) =>
-  isPostgres
-    ? await app.get(WebhookChannelSyncMigration).up()
-    : await app.get(DatabaseMigrationCommand).execute();
+async function pipelineIdle(app: TestApp) {
+  await app.get(WebhookListener).draining;
+  // Checked in pipeline order, one after the other — never in parallel. A
+  // processor job queues its deliveries before it stops being active, so an
+  // empty processor queue followed by an empty delivery queue can't miss a
+  // delivery queued in between. Read concurrently, it could.
+  const processor = app.get(WebhookProcessorQueue);
+  const delivery = app.get(WebhookDeliveryQueue);
+  const isEmpty = async (
+    queue: WebhookProcessorQueue | WebhookDeliveryQueue,
+  ) => {
+    const counts = await queue.getJobCounts('waiting', 'active', 'prioritized');
+    return Object.values(counts).every((jobs) => jobs === 0);
+  };
+  const deadline = Date.now() + SHORT;
+  while (Date.now() < deadline) {
+    if ((await isEmpty(processor)) && (await isEmpty(delivery))) {
+      return;
+    }
+    await delay(50);
+  }
+  throw new Error('Webhook queues did not go idle within SHORT');
+}
+
+/**
+ * The channel sync runs at boot. These tests patch a subscription resolver
+ * AFTER boot to simulate a deploy that changes channels, so the second app
+ * boots with the boot-time run turned off and the test calls `sync()` itself.
+ */
+class ManualWebhookChannelSync extends WebhookChannelSync {
+  override async onApplicationBootstrap() {
+    // Run explicitly by the test instead.
+  }
+}
+
+const runDeploySync = async (app: TestApp) =>
+  await app.get(WebhookChannelSync).sync();
 
 describe('Move to Generic Subscriptions Tests', () => {
   it.todo(
@@ -1162,7 +1226,7 @@ describe('Webhooks', () => {
       );
 
       // Listen for both webhook events
-      const waitingForWebhooks = firstValueFrom(events.pipe(bufferTime(SHORT)));
+      const waitingForWebhooks = collectRequests(app, events, 2);
 
       // Trigger the event
       const project = await tester.apply(createProject());
@@ -1235,7 +1299,7 @@ describe('Webhooks', () => {
       `);
 
       // Listen for both webhook events
-      const waitingForWebhooks = firstValueFrom(events.pipe(bufferTime(SHORT)));
+      const waitingForWebhooks = collectRequests(app, events, 2);
 
       // Trigger an update on the project
       await tester.run(UpdateProject, {
@@ -1282,7 +1346,7 @@ describe('Webhooks', () => {
       );
 
       // Listen for both webhook events
-      const waitingForWebhooks = firstValueFrom(events.pipe(bufferTime(SHORT)));
+      const waitingForWebhooks = collectRequests(app, events, 2);
 
       // Trigger the event (as first user)
       await tester.apply(createProject());
@@ -1351,9 +1415,7 @@ describe('Webhooks', () => {
       `);
 
       // Emit & collect events for update for project 1
-      const waitingForProjectUpdates1 = firstValueFrom(
-        events.pipe(bufferTime(SHORT)),
-      );
+      const waitingForProjectUpdates1 = collectRequests(app, events, 1);
       await tester.run(UpdateProject, {
         input: { id: project1.id, name: `${project1.name.value!} Updated` },
       });
@@ -1365,9 +1427,7 @@ describe('Webhooks', () => {
       expect(payload1.data.projectUpdated.project.id).toBe(project1.id);
 
       // Trigger update for project 2
-      const waitingForProjectUpdates2 = firstValueFrom(
-        events.pipe(bufferTime(SHORT)),
-      );
+      const waitingForProjectUpdates2 = collectRequests(app, events, 1);
       await tester.run(UpdateProject, {
         input: { id: project2.id, name: `${project2.name.value!} Updated` },
       });
@@ -1377,6 +1437,302 @@ describe('Webhooks', () => {
       const payload2 = JSON.parse(requests2[0]!.body);
       expect(payload2.extensions.webhook.id).toBe(webhook2.id);
       expect(payload2.data.projectUpdated.project.id).toBe(project2.id);
+    });
+
+    // A translation project's sensitivity is recomputed from its engaged
+    // languages, so it changes without anyone updating the project itself.
+    describe('when a recompute changes a project sensitivity', () => {
+      const ProjectSensitivityUpdated = graphql(`
+        subscription ProjectSensitivityUpdated($project: ID!) {
+          projectUpdated(project: $project) {
+            project {
+              id
+              sensitivity
+            }
+            previous {
+              sensitivity
+            }
+            updated {
+              sensitivity
+            }
+          }
+        }
+      `);
+      const CreateLanguageDoc = graphql(`
+        mutation CreateLanguageWithSensitivity($input: CreateLanguage!) {
+          createLanguage(input: $input) {
+            language {
+              id
+            }
+          }
+        }
+      `);
+      const UpdateLanguageSensitivityDoc = graphql(`
+        mutation UpdateLanguageSensitivity(
+          $id: ID!
+          $sensitivity: Sensitivity!
+        ) {
+          updateLanguage(input: { id: $id, sensitivity: $sensitivity }) {
+            __typename
+          }
+        }
+      `);
+      const CreateEngagementDoc = graphql(`
+        mutation EngageLanguage($input: CreateLanguageEngagement!) {
+          createLanguageEngagement(input: $input) {
+            engagement {
+              id
+            }
+          }
+        }
+      `);
+      const DeleteEngagementDoc = graphql(`
+        mutation DeleteEngagement($id: ID!) {
+          deleteEngagement(id: $id) {
+            __typename
+          }
+        }
+      `);
+      const RenameProjectDoc = graphql(`
+        mutation RenameProject($id: ID!, $name: String!) {
+          updateProject(input: { id: $id, name: $name }) {
+            __typename
+          }
+        }
+      `);
+      const DeleteLanguageDoc = graphql(`
+        mutation DeleteLanguage($id: ID!) {
+          deleteLanguage(id: $id) {
+            __typename
+          }
+        }
+      `);
+
+      let admin: Tester;
+      let events: Subject<WebhookRequest>;
+      let receiver: { url: string } & AsyncDisposable;
+
+      beforeAll(async () => {
+        admin = await createTesterWithRole(app, 'Administrator');
+        events = new Subject();
+        receiver = await serve(handleRequest(events));
+      });
+
+      afterAll(async () => {
+        await receiver[Symbol.asyncDispose]();
+      });
+
+      const watch = (project: { id: ID }) =>
+        tester.apply(
+          webhooks.save({
+            subscription: ProjectSensitivityUpdated,
+            url: receiver.url,
+            key: `ProjectSensitivity:${project.id}` as ID,
+            variables: { project: project.id },
+          }),
+        );
+
+      const createLanguage = async (sensitivity: Sensitivity) => {
+        const res = await admin.run(CreateLanguageDoc, {
+          input: {
+            name: `Language ${faker.string.uuid()}`,
+            displayName: `Language ${faker.string.uuid()}`,
+            sensitivity,
+          },
+        });
+        return res.createLanguage.language.id;
+      };
+
+      // Dated to the project's MOU window so the engagement's progress
+      // reports land in the project's quarters.
+      const engage = async (
+        project: Pick<
+          Awaited<ReturnType<ReturnType<typeof createProject>>>,
+          'id' | 'mouStart' | 'mouEnd'
+        >,
+        language: ID,
+      ) => {
+        const res = await admin.run(CreateEngagementDoc, {
+          input: {
+            project: project.id,
+            language,
+            startDateOverride: project.mouStart.value,
+            endDateOverride: project.mouEnd.value,
+          },
+        });
+        return res.createLanguageEngagement.engagement.id;
+      };
+
+      const changeOf = (request: WebhookRequest) => {
+        const { projectUpdated } = JSON.parse(request.body).data;
+        return {
+          project: projectUpdated.project.id,
+          previous: projectUpdated.previous.sensitivity,
+          updated: projectUpdated.updated.sensitivity,
+          current: projectUpdated.project.sensitivity,
+        };
+      };
+
+      it('publishes projectUpdated when an engagement changes it', async () => {
+        const project = await tester.apply(createProject());
+        const low = await createLanguage('Low');
+        await watch(project);
+
+        const waiting = collectRequests(app, events, 1);
+        await engage(project, low);
+        const requests = await waiting;
+
+        expect(requests.map(changeOf)).toEqual([
+          {
+            project: project.id,
+            previous: 'High',
+            updated: 'Low',
+            current: 'Low',
+          },
+        ]);
+      });
+
+      it('does not publish when the recomputed value is unchanged', async () => {
+        const project = await tester.apply(createProject());
+        const [low1, low2] = await Promise.all([
+          createLanguage('Low'),
+          createLanguage('Low'),
+        ]);
+        await watch(project);
+
+        const first = collectRequests(app, events, 1);
+        await engage(project, low1);
+        expect(await first).toHaveLength(1);
+
+        // A second Low language leaves the project at Low. The rename gives the
+        // collector a delivery to wait for, so a sensitivity event from the
+        // engagement would show up as a second one.
+        const second = collectRequests(app, events, 1);
+        await engage(project, low2);
+        await tester.run(RenameProjectDoc, {
+          id: project.id,
+          name: `${project.name.value!} Renamed`,
+        });
+        const requests = await second;
+
+        expect(requests.map(changeOf)).toEqual([
+          {
+            project: project.id,
+            previous: null,
+            updated: null,
+            current: 'Low',
+          },
+        ]);
+      });
+
+      it('publishes projectUpdated when deleting an engagement changes it', async () => {
+        const project = await tester.apply(createProject());
+        const [medium, low] = await Promise.all([
+          createLanguage('Medium'),
+          createLanguage('Low'),
+        ]);
+        await watch(project);
+
+        const engaged = collectRequests(app, events, 1);
+        const mediumEngagement = await engage(project, medium);
+        expect((await engaged).map(changeOf)).toEqual([
+          {
+            project: project.id,
+            previous: 'High',
+            updated: 'Medium',
+            current: 'Medium',
+          },
+        ]);
+
+        // Adding Low leaves the project at Medium, so the delete is the only
+        // change in this window.
+        const deleted = collectRequests(app, events, 1);
+        await engage(project, low);
+        await admin.run(DeleteEngagementDoc, { id: mediumEngagement });
+        const requests = await deleted;
+
+        expect(requests.map(changeOf)).toEqual([
+          {
+            project: project.id,
+            previous: 'Medium',
+            updated: 'Low',
+            current: 'Low',
+          },
+        ]);
+      });
+
+      it('publishes projectUpdated for every project engaging a language whose sensitivity changes', async () => {
+        const [project1, project2] = await Promise.all([
+          tester.apply(createProject()),
+          tester.apply(createProject()),
+        ]);
+        const language = await createLanguage('Low');
+        await Promise.all([watch(project1), watch(project2)]);
+
+        const engaged = collectRequests(app, events, 2);
+        await engage(project1, language);
+        await engage(project2, language);
+        expect(await engaged).toHaveLength(2);
+
+        const changed = collectRequests(app, events, 2);
+        await admin.run(UpdateLanguageSensitivityDoc, {
+          id: language,
+          sensitivity: 'Medium',
+        });
+        const requests = await changed;
+
+        const toMedium = {
+          previous: 'Low',
+          updated: 'Medium',
+          current: 'Medium',
+        };
+        expect(
+          requests
+            .map(changeOf)
+            .sort((a, b) => a.project.localeCompare(b.project)),
+        ).toEqual(
+          [project1.id, project2.id]
+            .toSorted((a, b) => a.localeCompare(b))
+            .map((project) => ({ project, ...toMedium })),
+        );
+      });
+
+      it('publishes projectUpdated when deleting a language changes it', async () => {
+        const project = await tester.apply(createProject());
+        const [medium, low] = await Promise.all([
+          createLanguage('Medium'),
+          createLanguage('Low'),
+        ]);
+        await watch(project);
+
+        // Adding Low leaves the project at Medium, so only the first
+        // engagement changes it.
+        const engaged = collectRequests(app, events, 1);
+        await engage(project, medium);
+        await engage(project, low);
+        expect((await engaged).map(changeOf)).toEqual([
+          {
+            project: project.id,
+            previous: 'High',
+            updated: 'Medium',
+            current: 'Medium',
+          },
+        ]);
+
+        // The deleted language stops counting; the Low one still does.
+        const deleted = collectRequests(app, events, 1);
+        await admin.run(DeleteLanguageDoc, { id: medium });
+        const requests = await deleted;
+
+        expect(requests.map(changeOf)).toEqual([
+          {
+            project: project.id,
+            previous: 'Medium',
+            updated: 'Low',
+            current: 'Low',
+          },
+        ]);
+      });
     });
 
     describe('Consumer Error Handling', () => {
@@ -1618,8 +1974,13 @@ describe('Webhooks', () => {
         const updated = await tester.apply(webhooks.get(webhook.key));
         expect(updated.valid).toBe(false);
 
+        // Nothing should arrive. Deliveries land ~1–2s after the trigger, and
+        // this window starts before it, so 5s leaves margin without paying
+        // the full SHORT every run.
         const waitingForWebhook2 = firstValueFrom(
-          events.pipe(timeout({ each: SHORT, with: () => [undefined] })),
+          events.pipe(
+            timeout({ each: +Duration.from('5s'), with: () => [undefined] }),
+          ),
         );
         // Trigger event by creating a project
         await tester.apply(createProject());
@@ -1632,12 +1993,7 @@ describe('Webhooks', () => {
         await using receiver = await serve(handleRequest(events));
 
         // Create a separate app/tester instance to avoid polluting other tests
-        const thisApp = await createApp({
-          config: {
-            // share db with the suite app for testing perf
-            neo4j: app.get(ConfigService).neo4j,
-          },
-        });
+        const thisApp = await createApp();
         const thisTester = await createTesterWithRole(
           thisApp,
           'RegionalDirector',
@@ -1687,12 +2043,7 @@ describe('Webhooks', () => {
         await using receiver = await serve(handleRequest(events));
 
         // Create a separate app/tester instance to avoid polluting other tests
-        const thisApp = await createApp({
-          config: {
-            // share db with the suite app for testing perf
-            neo4j: app.get(ConfigService).neo4j,
-          },
-        });
+        const thisApp = await createApp();
         const thisTester = await createTesterWithRole(
           thisApp,
           'RegionalDirector',
@@ -1751,14 +2102,6 @@ describe('Webhooks', () => {
         isolatedApp,
         'RegionalDirector',
       );
-      // Call db migrate, as would have happened on a previous deployment.
-      // For these tests it sets the db version to the current app version
-      // without applying any changes, since there is no version previously
-      // established in the ephemeral tests db.
-      // It would probably be better to move this to db setup as it would
-      // mirror prod more closely.
-      await runDeployMigrations(isolatedApp);
-
       // Create a webhook with a valid subscription
       const webhook = await isolatedTester.apply(
         webhooks.save({
@@ -1780,16 +2123,15 @@ describe('Webhooks', () => {
       const newVersion = DateTime.now();
       const newApp = await createApp({
         config: {
-          // Share db with the suite app. Both are passed regardless of which
-          // engine is active — the one that matters takes effect, and the
-          // other is an inert unused field on the given engine.
-          neo4j: isolatedApp.get(ConfigService).neo4j,
+          // Share db with the suite app.
           postgres: isolatedApp.get(ConfigService).postgres,
         },
         overrides: (builder) =>
           builder
             .overrideProvider(SubscriptionChannelVersion.TOKEN)
-            .useValue(newVersion),
+            .useValue(newVersion)
+            .overrideProvider(WebhookChannelSync)
+            .useClass(ManualWebhookChannelSync),
       });
 
       // Patch projectCreated subscription resolver to observe another channel
@@ -1805,8 +2147,8 @@ describe('Webhooks', () => {
       // endregion
 
       // region Act
-      // Call db migrate, as would happen on deployment, which should trigger webhook migration
-      await runDeployMigrations(newApp);
+      // Run the sync, as would happen at boot after a deploy
+      await runDeploySync(newApp);
       // endregion
 
       // region Assert
@@ -1833,14 +2175,6 @@ describe('Webhooks', () => {
         isolatedApp,
         'RegionalDirector',
       );
-      // Call db migrate, as would have happened on a previous deployment.
-      // For these tests it sets the db version to the current app version
-      // without applying any changes, since there is no version previously
-      // established in the ephemeral tests db.
-      // It would probably be better to move this to db setup as it would
-      // mirror prod more closely.
-      await runDeployMigrations(isolatedApp);
-
       // Create a webhook with a valid subscription
       const webhook = await isolatedTester.apply(
         webhooks.save({
@@ -1862,16 +2196,15 @@ describe('Webhooks', () => {
       const newVersion = DateTime.now();
       const newApp = await createApp({
         config: {
-          // Share db with the suite app. Both are passed regardless of which
-          // engine is active — the one that matters takes effect, and the
-          // other is an inert unused field on the given engine.
-          neo4j: isolatedApp.get(ConfigService).neo4j,
+          // Share db with the suite app.
           postgres: isolatedApp.get(ConfigService).postgres,
         },
         overrides: (builder) =>
           builder
             .overrideProvider(SubscriptionChannelVersion.TOKEN)
-            .useValue(newVersion),
+            .useValue(newVersion)
+            .overrideProvider(WebhookChannelSync)
+            .useClass(ManualWebhookChannelSync),
       });
 
       // Patch projectCreated subscription resolver to be invalid
@@ -1888,8 +2221,8 @@ describe('Webhooks', () => {
       // region Act
       const waitingForWebhook = firstValueFrom(events.pipe(timeout(SHORT)));
 
-      // Call db migrate, as would happen on deployment, which should trigger webhook migration
-      await runDeployMigrations(newApp);
+      // Run the sync, as would happen at boot after a deploy
+      await runDeploySync(newApp);
       // endregion
 
       // region Assert

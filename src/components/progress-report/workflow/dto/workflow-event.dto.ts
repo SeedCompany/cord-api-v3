@@ -16,8 +16,6 @@ import { ProgressReportWorkflowTransition as PublicTransition } from './workflow
 @RegisterResource()
 @ObjectType()
 export abstract class ProgressReportWorkflowEvent {
-  static readonly BaseNodeProps = ['id', 'createdAt', 'status', 'transition'];
-
   @IdField()
   readonly id: ID;
 

@@ -16,11 +16,10 @@ import { type TransitionName, Transitions } from './transitions';
  * of `drizzleFilter` and always asks for `read`, so nothing reaches the arm this
  * file tests.
  *
- * It is still worth pinning. The Cypher and EdgeQL arms have carried a
- * `transition IN …` shape for a long time, this one has to agree with them, and
- * the day a policy is written condition-first (`.transitions(...).read`) it
- * becomes the thing standing between a reader and a report's whole internal
- * review-and-reject history. Two ways of getting it wrong are silent: naming the
+ * It is still worth pinning: the filter has always had a `transition IN …`
+ * shape, and the day a policy is written condition-first
+ * (`.transitions(...).read`) it becomes the thing standing between a reader and
+ * a report's whole internal review-and-reject history. Two ways of getting it wrong are silent: naming the
  * wrong column gives valid SQL that filters nothing useful, and letting an event
  * with no transition match hands out rows `isAllowed` refuses in memory.
  */

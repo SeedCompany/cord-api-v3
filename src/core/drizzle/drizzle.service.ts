@@ -47,17 +47,15 @@ export class DrizzleService implements OnModuleDestroy {
   private readonly baseDb: DrizzleDb;
   private readonly als = new AsyncLocalStorage<TransactionScope>();
   private readonly pool: Pool;
-  private readonly isPostgresEngine: boolean;
 
   constructor(config: ConfigService) {
-    this.isPostgresEngine = config.databaseEngine === 'postgres';
     const url = config.postgres.url;
     if (!url) {
       // A schema-generation boot never queries, so it gets no pool instead of
       // an error: CI emits the schema in jobs without a Postgres service. Any
-      // other Postgres boot without a URL fails here, at startup, on purpose.
-      if (this.isPostgresEngine && !config.isGenSchema) {
-        throw new Error('POSTGRES_URL is required when DATABASE=postgres');
+      // other boot without a URL fails here, at startup, on purpose.
+      if (!config.isGenSchema) {
+        throw new Error('POSTGRES_URL is required');
       }
       return;
     }
@@ -70,6 +68,13 @@ export class DrizzleService implements OnModuleDestroy {
     this.pool = new Pool({
       connectionString: parsedUrl.toString(),
       ssl: noVerify ? { rejectUnauthorized: false } : { ca: rdsCaBundle },
+      // Both were previously left to the driver. `max` defaulted to 10, which
+      // is fine but was nobody's decision; `connectionTimeoutMillis` defaulted
+      // to 0, which means a caller that cannot get a connection waits forever.
+      // See config.postgres.pool for what each bound is and how to size it.
+      max: config.postgres.pool.max,
+      connectionTimeoutMillis:
+        config.postgres.pool.acquireTimeout.as('milliseconds'),
     });
     this.baseDb = drizzle(this.pool, { schema });
   }
@@ -85,12 +90,7 @@ export class DrizzleService implements OnModuleDestroy {
       if (!scope.alive) throw outlivedTransaction();
       return scope.db;
     }
-    if (!this.baseDb)
-      throw new Error(
-        this.isPostgresEngine
-          ? 'POSTGRES_URL is required when DATABASE=postgres'
-          : 'DrizzleService.client accessed but DATABASE is not postgres',
-      );
+    if (!this.baseDb) throw new Error('POSTGRES_URL is required');
     return this.baseDb;
   }
 
@@ -119,7 +119,7 @@ export class DrizzleService implements OnModuleDestroy {
    *
    * **If you actually want an inner failure to stay isolated**, do not reach for
    * a second `inTx` — call `.transaction()` on the current client, which Drizzle
-   * emits as a savepoint on the same connection. `PartnershipDrizzleRepository`
+   * emits as a savepoint on the same connection. `PartnershipRepository`
    * does exactly that so losing a uniqueness race cannot poison the surrounding
    * mutation. Continuation here and savepoints there are the two halves of the
    * same design: joined by default, isolated only where asked for.

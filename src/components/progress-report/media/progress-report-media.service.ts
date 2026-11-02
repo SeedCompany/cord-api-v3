@@ -133,7 +133,7 @@ export class ProgressReportMediaService {
       .for(ReportMedia, this.dbRowToDto(media))
       .verifyCan('delete');
 
-    await this.repo.deleteNode(id);
+    await this.repo.delete(id);
     await this.repo.deleteVariantGroupIfEmpty(media.variantGroup);
 
     await this.hooks.run(

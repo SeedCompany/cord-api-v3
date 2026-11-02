@@ -167,7 +167,6 @@ const namingConvention = [
     format: null,
   },
   // Allow object literal keys to be anything if they are in quotes
-  // Used mainly by cypher query builder
   {
     selector: 'objectLiteralProperty',
     modifiers: ['requiresQuotes'],
@@ -245,17 +244,6 @@ const config = {
       },
     ],
   },
-  overrides: [
-    {
-      files: './src/core/neo4j/query-augmentation/*.ts',
-      rules: {
-        // This is enforced to treat functions arguments as contravariant instead of bivariant.
-        // This doesn't matter here as this class won't be overridden.
-        // Declaring them as methods keeps their color the same as the rest of the query methods.
-        '@typescript-eslint/method-signature-style': 'off',
-      },
-    },
-  ],
 };
 
 module.exports = config;

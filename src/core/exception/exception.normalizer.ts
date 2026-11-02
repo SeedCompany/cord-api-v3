@@ -1,14 +1,12 @@
 import { type ArgumentsHost, Inject, Injectable } from '@nestjs/common';
 // eslint-disable-next-line no-restricted-imports,@seedcompany/no-restricted-imports
 import * as Nest from '@nestjs/common';
-import { GqlExecutionContext } from '@nestjs/graphql';
 import { isNotFalsy, simpleSwitch } from '@seedcompany/common';
 import { GraphQLError } from 'graphql';
-import { lowerCase, uniq } from 'lodash';
+import { uniq } from 'lodash';
 import type { AbstractClass } from 'type-fest';
-import { Exception, getCauseList, getParentTypes, JsonSet } from '~/common';
+import { Exception, getParentTypes, JsonSet } from '~/common';
 import type { ConfigService } from '~/core/config';
-import * as Neo from '~/core/neo4j/errors';
 import { prettyStack } from './pretty-stack';
 
 interface NormalizeParams {
@@ -66,40 +64,9 @@ export class ExceptionNormalizer {
 
   private gatherExtraInfo(params: NormalizeParams): Record<string, any> {
     const { ex } = params;
-    const { context } = params;
 
     if (ex instanceof Nest.HttpException) {
       return this.httpException(ex);
-    }
-
-    // If the exception or any of the previous ones are a database connection
-    // failure, then return that as the error. This way we can have an "unknown"
-    // failure for the specific action without having to check for this error
-    // in every catch statement (assuming no further logic is done).
-    const exs = getCauseList(ex);
-    if (exs.some((e) => e instanceof Neo.ServiceUnavailableError)) {
-      return {
-        codes: [
-          'DatabaseConnectionFailure',
-          'ServiceUnavailable',
-          'Transient',
-          'Database',
-          'Server',
-        ],
-        message: 'Failed to connect to CORD database',
-      };
-    }
-    if (exs.some((e) => e instanceof Neo.ConnectionTimeoutError)) {
-      return {
-        codes: ['DatabaseTimeoutFailure', 'Transient', 'Database', 'Server'],
-        message: 'Failed to retrieve data from CORD database',
-      };
-    }
-    if (exs.some((e) => e instanceof Neo.SessionExpiredError)) {
-      return {
-        codes: ['SessionExpired', 'Transient', 'Database', 'Server'],
-        message: 'The query to the database has expired',
-      };
     }
 
     if (
@@ -119,26 +86,6 @@ export class ExceptionNormalizer {
         codes: [
           aggregatees.every((e) => e.codes.has('Client')) ? 'Client' : 'Server',
         ],
-      };
-    }
-
-    const gqlContext =
-      context && context.getType() === 'graphql'
-        ? GqlExecutionContext.create(context as any)
-        : undefined;
-
-    if (Neo.isNeo4jError(ex)) {
-      // Mask actual DB error with a nicer user error message.
-      let message = 'Failed';
-      if (gqlContext) {
-        const info = gqlContext.getInfo();
-        if (info.operation.operation === 'mutation') {
-          message += ` to ${lowerCase(info.fieldName)}`;
-        }
-      }
-      return {
-        message,
-        codes: this.errorToCodes(ex),
       };
     }
 
@@ -264,18 +211,6 @@ export class ExceptionNormalizer {
     if (type === Nest.IntrinsicException) {
       return [];
     }
-    if (Neo.isNeo4jError(ex)) {
-      return [
-        (ex.code === 'N/A' ? '' : ex.code)
-          .split('.')
-          .at(-1)!
-          .replaceAll(/(Error|Failed)/g, ''),
-        ex.classification === 'TRANSIENT_ERROR' && 'Transient',
-        'Database',
-        'Server',
-      ].filter(isNotFalsy);
-    }
-
     return type.name.replace(/(Exception|Error)$/, '');
   }
 }

@@ -18,15 +18,11 @@ import { ProjectStep, stepToStatus } from '../src/components/project/dto';
 import { createTestApp, type TestApp } from './utility';
 
 // These assertions introspect the live Postgres catalog + the on-disk drizzle
-// migrations, so they only make sense under DATABASE=postgres. Under neo4j the
-// whole suite is skipped (the schema doesn't exist there).
-// migration-todo: drop the engine gate at Phase 7 cutover (always postgres).
-const isPostgres = process.env.DATABASE === 'postgres';
-const describePg = isPostgres ? describe : describe.skip;
+// migrations.
 
 const migrationsDir = resolve(process.cwd(), 'src/core/drizzle/migrations');
 
-describePg('Postgres schema invariants', () => {
+describe('Postgres schema invariants', () => {
   let app: TestApp;
   let db: DrizzleDb;
 

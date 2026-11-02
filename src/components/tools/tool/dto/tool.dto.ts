@@ -1,6 +1,5 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import {
-  DbUnique,
   NameField,
   Resource,
   SecuredBoolean,
@@ -16,7 +15,6 @@ import { SecuredToolKey } from './tool-key.enum';
 })
 export class Tool extends Resource {
   @NameField()
-  @DbUnique()
   readonly name: SecuredString;
 
   @Field()

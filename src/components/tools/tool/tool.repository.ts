@@ -1,0 +1,232 @@
+import { Injectable } from '@nestjs/common';
+import { and, eq, ilike, inArray, isNull, sql, type SQL } from 'drizzle-orm';
+import { DateTime } from 'luxon';
+import {
+  generateId,
+  type ID,
+  NotFoundException,
+  type PaginatedListType,
+  type UnsecuredDto,
+} from '~/common';
+import {
+  catchUniqueViolation,
+  DrizzleDtoRepository,
+  EMPTY_PAGE,
+  escapeLikePattern,
+  resolveOrderBy,
+  type SortMap,
+} from '~/core/drizzle';
+import { type DrizzleDb, DrizzleService } from '~/core/drizzle/drizzle.service';
+import {
+  ENGAGEMENT_TYPENAMES,
+  PROJECT_TYPENAMES,
+} from '~/core/drizzle/resolve-resource-ref';
+import { tools, toolUsages, users } from '~/core/drizzle/schema';
+import { PolicyExecutor } from '../../authorization/policy/executor/policy-executor';
+import {
+  type CreateTool,
+  Tool,
+  type ToolFilters,
+  type ToolListInput,
+  type UpdateTool,
+} from './dto';
+import { type ToolKey } from './dto/tool-key.enum';
+
+/**
+ * The number the Tools grid's "Usages" column shows, as a correlated subquery so
+ * the list can be ordered by it.
+ *
+ * Counted exactly the way `containerSummaryForTools` counts — because that is
+ * what the column displays, and a sort that counts a different population would
+ * order the grid by a number nobody can see:
+ *
+ * - **Project and engagement containers only.** Any resource may hold a tool
+ *   usage, and the summary drops every other container type rather than
+ *   bucketing it, so a usage on (say) an organization is invisible in that
+ *   column and must not count here either.
+ * - **A dead creator drops the usage**, same as the summary's inner join.
+ * - Container liveness is NOT checked, also matching the summary. The list read
+ *   paths do drop container-less usages, so a usage whose container is gone can
+ *   still be counted here — a pre-existing quirk of the summary, reproduced
+ *   rather than fixed, so the sort agrees with the displayed number.
+ *
+ * ⚠ POSTGRES ONLY. Neo4j's tool list applies the default sorters, which for a
+ * key with no stored property is a required match that eliminates every row — so
+ * this sort returns an EMPTY list over there. The Tools grid must keep its
+ * Usages column unsortable until cutover; see the UI handoff.
+ */
+const usageCount = sql<number>`(
+  select count(*) from ${toolUsages}
+  inner join ${users}
+    on ${users.id} = ${toolUsages.creatorId} and ${users.deletedAt} is null
+  where ${toolUsages.toolId} = ${tools.id}
+    and ${toolUsages.deletedAt} is null
+    and ${inArray(toolUsages.containerType, [
+      ...PROJECT_TYPENAMES,
+      ...ENGAGEMENT_TYPENAMES,
+    ])}
+)`;
+
+const catchNameUnique = catchUniqueViolation(
+  'tools_name_active_unique',
+  'name',
+  'Tool with this name already exists.',
+);
+const catchKeyUnique = catchUniqueViolation(
+  'tools_key_unique',
+  'key',
+  'Key is already assigned to another tool.',
+);
+
+@Injectable()
+export class ToolRepository extends DrizzleDtoRepository<typeof tools, Tool> {
+  constructor(
+    db: DrizzleService,
+    private readonly executor: PolicyExecutor,
+  ) {
+    super(db, tools, Tool);
+  }
+
+  async create(input: CreateTool): Promise<UnsecuredDto<Tool>> {
+    const id = await generateId();
+    await this.db
+      .insert(tools)
+      .values({
+        id,
+        name: input.name,
+        description: input.description,
+        aiBased: input.aiBased,
+        key: input.key,
+      })
+      .catch(catchKeyUnique)
+      .catch(catchNameUnique);
+    return await this.readOne(id);
+  }
+
+  async update(changes: UpdateTool): Promise<UnsecuredDto<Tool>> {
+    const { id, ...fields } = changes;
+    await this.updateColumns(id, {
+      name: fields.name,
+      description: fields.description,
+      aiBased: fields.aiBased,
+      key: fields.key,
+    })
+      .catch(catchKeyUnique)
+      .catch(catchNameUnique);
+    return await this.readOne(id);
+  }
+
+  /**
+   * Soft-delete the tool, and every usage of it along with it.
+   *
+   * Rob's call 2026-08-05: a deleted tool's usages are deleted too. The
+   * alternative was to leave the usage rows live and filter them out on every
+   * read by joining `tools` — four call sites, each of which has to remember. All
+   * five read paths in the usage repository already exclude
+   * `tool_usages.deleted_at`, so cascading here makes those reads correct with no
+   * change to them at all, and it makes the data true rather than only the
+   * queries.
+   *
+   * The same statement reports what it changed, so announcing the usages to live
+   * queries costs no extra round trip — the shape `FileRepository.delete`
+   * already uses for a deleted directory's subtree. A database trigger was the
+   * other option and is the wrong one here specifically because it is invisible
+   * to the application: nothing would tell the live-query store, so a page
+   * showing a resource's tools would sit there stale.
+   *
+   * Neo4j does NOT do this — it leaves the usage live and its `hydrate()` drops
+   * the row because the required `node('tool','Tool')` match fails. Reads agree
+   * either way, so this is a divergence in stored state only, and the direction
+   * that survives the cutover.
+   *
+   * Both statements run inside the mutation's transaction, so a tool cannot end
+   * up deleted with its usages still live.
+   */
+  async delete(id: ID): Promise<void> {
+    await this.softDelete(id);
+    const usages = await this.db
+      .update(toolUsages)
+      .set({ deletedAt: new Date() })
+      .where(and(eq(toolUsages.toolId, id), isNull(toolUsages.deletedAt)))
+      .returning({ id: toolUsages.id });
+    this.liveQueryStore.invalidateAll(
+      usages.map((usage) => ['ToolUsage', usage.id] as const),
+    );
+  }
+
+  async list(
+    input: ToolListInput,
+  ): Promise<PaginatedListType<UnsecuredDto<Tool>>> {
+    const conditions: SQL[] = [isNull(tools.deletedAt)];
+    if (!this.executor.applyReadFilter(this.resource, conditions)) {
+      return EMPTY_PAGE;
+    }
+    conditions.push(...toolFilterClauses(this.db, input.filter));
+
+    const sortColumns = {
+      name: tools.name,
+      // Both are plain columns Neo4j's default property sorter already
+      // answers; `aiBased` is a sortable column on the tools grid.
+      description: tools.description,
+      aiBased: tools.aiBased,
+      createdAt: tools.createdAt,
+      usageCount,
+    } satisfies SortMap<keyof Tool | 'usageCount'>;
+
+    const { rows, total, hasMore } = await this.paginatedSelect({
+      predicate: and(...conditions),
+      orderBy: resolveOrderBy(input, sortColumns, tools.name),
+      page: input.page,
+      count: input.count,
+    });
+    return {
+      total,
+      items: rows.map((row) => this.toDto(row)),
+      hasMore,
+    };
+  }
+
+  async idByKey(key: ToolKey): Promise<ID<'Tool'>> {
+    const rows = await this.db
+      .select({ id: tools.id })
+      .from(tools)
+      .where(and(eq(tools.key, key), isNull(tools.deletedAt)))
+      .limit(1);
+    const row = rows[0];
+    if (!row) throw new NotFoundException('Tool not found', 'key');
+    return row.id;
+  }
+
+  protected toDto(row: typeof tools.$inferSelect): UnsecuredDto<Tool> {
+    return {
+      id: row.id,
+      __typename: 'Tool',
+      createdAt: DateTime.fromJSDate(row.createdAt),
+      name: row.name,
+      description: row.description,
+      aiBased: row.aiBased,
+      key: row.key,
+    };
+  }
+}
+
+/**
+ * Build the column-level WHERE clauses for a `ToolFilters` input against the
+ * `tools` table. Reusable from sub-filters in other domains (e.g. ToolUsage's
+ * `tool` filter once it is migrated).
+ */
+export const toolFilterClauses = (
+  _db: DrizzleDb,
+  filter: ToolFilters | undefined,
+): SQL[] => {
+  const conditions: SQL[] = [];
+  if (!filter) return conditions;
+  if (filter.id) conditions.push(eq(tools.id, filter.id));
+  if (filter.name) {
+    conditions.push(ilike(tools.name, `%${escapeLikePattern(filter.name)}%`));
+  }
+  if (filter.aiBased != null) {
+    conditions.push(eq(tools.aiBased, filter.aiBased));
+  }
+  return conditions;
+};

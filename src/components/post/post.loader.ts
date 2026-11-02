@@ -14,11 +14,13 @@ export class PostLoader implements DataLoaderStrategy<Post, ID<Post>> {
   async loadMany(ids: ReadonlyArray<ID<Post>>) {
     const posts = await this.repo.readMany(ids);
 
-    const parentIds = new Set(posts.map((post) => post.parent.properties.id));
+    const parentRefs = new Map(
+      posts.map((post) => [post.parent.id, post.parent]),
+    );
     const parents = new Map(
       await Promise.all(
-        [...parentIds].map(async (id) => {
-          const parent = await this.service.getPermissionsFromPostable(id);
+        [...parentRefs].map(async ([id, ref]) => {
+          const parent = await this.service.getPermissionsFromPostable(ref);
           return [id, parent] as const;
         }),
       ),
@@ -26,7 +28,7 @@ export class PostLoader implements DataLoaderStrategy<Post, ID<Post>> {
 
     return posts.map((dto) => {
       try {
-        parents.get(dto.parent.properties.id)!.verifyCan('read');
+        parents.get(dto.parent.id)!.verifyCan('read');
       } catch (error) {
         return { key: dto.id, error };
       }

@@ -83,6 +83,49 @@ describe('Partner e2e', () => {
     expect(partner.modifiedAt).toBeDefined();
   });
 
+  it('create partner with its organization in one mutation', async () => {
+    const name = faker.company.name() + faker.string.uuid();
+    const result = await runAsAdmin(app, () =>
+      app.graphql.mutate(
+        graphql(`
+          mutation createPartnerWithOrganization(
+            $input: CreatePartnerWithOrganization!
+          ) {
+            createPartnerWithOrganization(input: $input) {
+              partner {
+                id
+                types {
+                  value
+                }
+                organization {
+                  value {
+                    id
+                    name {
+                      value
+                    }
+                  }
+                }
+              }
+            }
+          }
+        `),
+        {
+          input: {
+            organization: { name },
+            partner: {
+              types: ['Managing'],
+              financialReportingTypes: ['Funded'],
+            },
+          },
+        },
+      ),
+    );
+
+    const { partner } = result.createPartnerWithOrganization;
+    expect(partner.organization.value?.name.value).toBe(name);
+    expect(partner.types.value).toEqual(['Managing']);
+  });
+
   it('update partner', async () => {
     const org = await createOrganization(app);
     const pt = await createPartner(app, { organization: org.id });

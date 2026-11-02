@@ -239,10 +239,8 @@ describe('ProgressReport Media e2e', () => {
     });
   });
 
-  // The Neo4j repo inherits DtoRepository.deleteNode, which defaults `resource`
-  // to `this.resource` and announces to the live-query store before deleting.
-  // The Drizzle repo overrides deleteNode outright and so reaches none of that —
-  // it has to announce for itself, or cord-field's `@live` progress-report
+  // The repository's delete is a hand-rolled write, so it has to announce to
+  // the live-query store itself, or cord-field's `@live` progress-report
   // document keeps rendering media that is already gone.
   // Restore in afterEach, never in a finally ahead of the assertion:
   // mockRestore() clears mock.calls.

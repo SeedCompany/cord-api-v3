@@ -16,10 +16,6 @@ import {
  * that would change data is refused with a `ReadOnlyMode` error. Signing in
  * and out keeps working: sessions are excluded from the cutover, so those
  * writes are outside the freeze — and reading requires being signed in.
- *
- * Run on both engines:
- *   yarn test:e2e --testPathPatterns read-only-mode
- *   DATABASE=postgres POSTGRES_URL=... yarn test:e2e --testPathPatterns read-only-mode
  */
 describe('Read-only maintenance mode', () => {
   let app: TestApp;

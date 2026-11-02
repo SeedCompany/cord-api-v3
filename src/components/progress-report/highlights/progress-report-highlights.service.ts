@@ -16,7 +16,7 @@ export class ProgressReportHighlightsService extends PromptVariantResponseListSe
   }
 
   protected async getPrivilegeContext(dto: UnsecuredDto<Highlight>) {
-    const report = (await this.resources.loadByBaseNode(
+    const report = (await this.resources.loadByRef(
       dto.parent,
     )) as ProgressReport;
     return withEffectiveSensitivity(

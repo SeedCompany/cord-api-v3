@@ -1,165 +1,217 @@
 import { Injectable } from '@nestjs/common';
-import { node, type Query, relation } from 'cypher-query-builder';
+import { and, eq, inArray } from 'drizzle-orm';
 import { DateTime } from 'luxon';
 import { nanoid } from 'nanoid';
-import { EnhancedResource, type ID } from '~/common';
-import { DtoRepository } from '~/core/neo4j';
+import { generateId, type ID } from '~/common';
+import { Identity } from '~/core/authentication';
+import { DrizzleService } from '~/core/drizzle';
 import {
-  apoc,
-  collect,
-  currentUser,
-  merge,
-  randomUUID,
-} from '~/core/neo4j/query';
-import { type DeleteWebhookArgs, Webhook, type WebhookConfig } from './dto';
+  webhookChannelObservations,
+  webhookExecutors,
+  webhooks,
+} from '~/core/drizzle/schema';
+import { cleanupOrphanedChannels } from '../channels/cleanup-orphaned-channels';
+import {
+  type DeleteWebhookArgs,
+  type Webhook,
+  type WebhookConfig,
+} from './dto';
+
+type WebhookRow = typeof webhooks.$inferSelect;
 
 /**
- * Each `User` can have multiple `Webhooks`.
- *
- * Each `User` can have a single `WebhookExecutor`, which is used to encapsulate
- * authentication/authorization for the user's webhook.
- * Currently, all this does is hold the `secret` that is used to sign the webhook POSTs.
+ * Every read/write here is scoped to `identity.current.userId` — there is no
+ * ResourceMap entry or policy grant for Webhook, so this owner scoping *is*
+ * the entire access control. Neo4j gets this for free by always traversing
+ * from `currentUser`; nothing else stands in for that here.
  */
 @Injectable()
-export class WebhooksRepository extends DtoRepository(Webhook) {
-  protected matchWebhook(filters?: Partial<Webhook>) {
-    return (query: Query) =>
-      query.match([
-        currentUser,
-        relation('out', 'rel', 'webhook'),
-        node('node', 'Webhook', filters),
-      ]);
+export class WebhooksRepository {
+  constructor(
+    private readonly drizzle: DrizzleService,
+    private readonly identity: Identity,
+  ) {}
+
+  protected get db() {
+    return this.drizzle.client;
   }
 
-  hydrate() {
-    return (query: Query) =>
-      query
-        .match([
-          node('executor', 'WebhookExecutor'),
-          relation('in', '', 'webhookExecutor'),
-          node('owner', 'User'),
-          relation('out', '', 'webhook'),
-          node('node', 'Webhook'),
-        ])
-        .return<{ dto: Webhook }>(
-          merge('node', {
-            owner: 'owner { .id }',
-            secret: 'executor.secret',
-            variables: apoc.convert.fromJsonMap('node.variables'),
-            metadata: apoc.convert.fromJsonMap('node.metadata'),
-          }).as('dto'),
-        );
+  /**
+   * Neo4j's hydrate() matches `WebhookExecutor -> owner -> Webhook` as one
+   * required pattern, so a webhook whose owner has no executor row never
+   * comes back from any query there. Returning `undefined` here (instead of
+   * a fallback secret) lets every call site drop the row the same way.
+   */
+  private async getSecret(userId: ID<'User'>): Promise<string | undefined> {
+    const [row] = await this.db
+      .select({ secret: webhookExecutors.secret })
+      .from(webhookExecutors)
+      .where(eq(webhookExecutors.userId, userId));
+    return row?.secret;
   }
 
-  async readByUserKey(key: ID) {
-    return await this.db
-      .query()
-      .apply(this.matchWebhook({ key }))
-      .apply(this.hydrate())
-      .map((row) => row.dto)
-      .first();
+  private toDto(row: WebhookRow, secret: string): Webhook {
+    const dto: Webhook = {
+      id: row.id,
+      key: row.key,
+      owner: { id: row.ownerId },
+      name: row.name,
+      subscription: row.subscription,
+      variables: row.variables ?? undefined,
+      url: row.url,
+      metadata: row.metadata ?? undefined,
+      secret,
+      createdAt: DateTime.fromJSDate(row.createdAt),
+      modifiedAt: DateTime.fromJSDate(row.modifiedAt),
+      valid: row.valid,
+    };
+    return dto;
   }
 
-  async listForUser() {
-    return await this.db
-      .query()
-      .apply(this.matchWebhook())
-      .apply(this.hydrate())
-      .map((row) => row.dto)
-      .run();
+  async readByUserKey(key: ID<'Webhook'>): Promise<Webhook | undefined> {
+    const userId = this.identity.current.userId;
+    const [row] = await this.db
+      .select()
+      .from(webhooks)
+      .where(and(eq(webhooks.ownerId, userId), eq(webhooks.key, key)));
+    if (!row) return undefined;
+    const secret = await this.getSecret(userId);
+    if (secret === undefined) return undefined;
+    return this.toDto(row, secret);
   }
 
-  async save(input: WebhookConfig & Pick<Webhook, 'key' | 'name'>) {
-    const maybeNewSecret = nanoid(32);
-    const query = this.db
-      .query()
-      .match(currentUser.as('requestingUser'))
-      .merge([
-        node('requestingUser'),
-        relation('out', '', 'webhookExecutor'),
-        node('executor', 'WebhookExecutor'),
-      ])
-      .onCreate.set({
-        values: { 'executor.secret': maybeNewSecret },
+  async listForUser(): Promise<Webhook[]> {
+    const userId = this.identity.current.userId;
+    const rows = await this.db
+      .select()
+      .from(webhooks)
+      .where(eq(webhooks.ownerId, userId));
+    if (rows.length === 0) return [];
+    const secret = await this.getSecret(userId);
+    if (secret === undefined) return [];
+    return rows.map((row) => this.toDto(row, secret));
+  }
+
+  /** Hydrates webhooks that may span multiple owners — used by the channel repo. */
+  async readManyByIds(ids: ReadonlyArray<ID<'Webhook'>>): Promise<Webhook[]> {
+    if (ids.length === 0) return [];
+    const rows = await this.db
+      .select()
+      .from(webhooks)
+      .where(inArray(webhooks.id, [...ids]));
+    if (rows.length === 0) return [];
+    const ownerIds = [...new Set(rows.map((row) => row.ownerId))];
+    const executors = await this.db
+      .select()
+      .from(webhookExecutors)
+      .where(inArray(webhookExecutors.userId, ownerIds));
+    const secretByOwner = new Map(
+      executors.map((row) => [row.userId, row.secret]),
+    );
+    return rows.flatMap((row) => {
+      const secret = secretByOwner.get(row.ownerId);
+      return secret === undefined ? [] : [this.toDto(row, secret)];
+    });
+  }
+
+  /**
+   * Upsert-by-(owner, key): the executor is bootstrapped once (its secret is
+   * left alone if it already exists — resaving a webhook must not rotate the
+   * secret), then the webhook row is fully overwritten, matching Neo4j's
+   * `setValues(..., true)` semantics of replacing every field on every save.
+   */
+  async save(
+    input: WebhookConfig & Pick<Webhook, 'key' | 'name'>,
+  ): Promise<Webhook> {
+    const userId = this.identity.current.userId;
+
+    await this.db
+      .insert(webhookExecutors)
+      .values({ userId, secret: nanoid(32) })
+      .onConflictDoNothing();
+
+    const now = new Date();
+    const [row] = await this.db
+      .insert(webhooks)
+      .values({
+        id: await generateId<ID<'Webhook'>>(),
+        ownerId: userId,
+        key: input.key,
+        name: input.name,
+        subscription: input.subscription,
+        variables: input.variables ?? null,
+        url: input.url,
+        metadata: input.metadata ?? null,
+        valid: true,
+        createdAt: now,
+        modifiedAt: now,
       })
-      .merge([
-        node('requestingUser'),
-        relation('out', '', 'webhook'),
-        node('node', EnhancedResource.of(Webhook).dbLabels, {
-          key: input.key,
-        }),
-      ])
-      .onCreate.set({
-        variables: {
-          'node.id': randomUUID(),
-          'node.createdAt': 'datetime()',
+      .onConflictDoUpdate({
+        target: [webhooks.ownerId, webhooks.key],
+        set: {
+          name: input.name,
+          subscription: input.subscription,
+          variables: input.variables ?? null,
+          url: input.url,
+          metadata: input.metadata ?? null,
+          valid: true,
+          modifiedAt: now,
         },
       })
-      .setValues(
-        {
-          node: {
-            ...input,
-            valid: true,
-            modifiedAt: DateTime.now(),
-            variables: input.variables ? JSON.stringify(input.variables) : null,
-            metadata: input.metadata ? JSON.stringify(input.metadata) : null,
-          },
-        },
-        true,
-      )
-      .with('node')
-      .apply(this.hydrate())
-      .map((row) => row.dto);
-    return (await query.first())!;
+      .returning();
+
+    // The insert above just bootstrapped the executor row if it didn't
+    // already exist, so a secret is guaranteed here.
+    const secret = await this.getSecret(userId);
+    return this.toDto(row!, secret!);
   }
 
-  async deleteBy(filters: Omit<DeleteWebhookArgs, 'all'>) {
-    return await this.db
-      .query()
-      .apply(this.matchWebhook(filters))
-      .subQuery('node', this.hydrate())
+  async deleteBy(
+    filters: Omit<DeleteWebhookArgs, 'all'>,
+  ): Promise<readonly Webhook[]> {
+    const userId = this.identity.current.userId;
+    const conditions = [eq(webhooks.ownerId, userId)];
+    if (filters.id) conditions.push(eq(webhooks.id, filters.id));
+    if (filters.key) conditions.push(eq(webhooks.key, filters.key));
+    if (filters.name) conditions.push(eq(webhooks.name, filters.name));
+    const predicate = and(...conditions);
 
-      // Cascade delete to orphaned channels
-      .subQuery('node', (sub) =>
-        sub
-          .match([
-            node('node'),
-            relation('out', '', 'observes'),
-            node('channel', 'BroadcastChannel'),
-          ])
-          .raw(
-            `WHERE NOT EXISTS {
-              MATCH (channel)<-[:observes]-(other:Webhook)
-              WHERE other <> node
-            }`,
-          )
-          .with(['channel', 'channel.name as name'])
-          .detachDelete('channel')
-          .return(collect('name').as('orphaned')),
+    // Cascade removes the observation rows; capture the channel names first
+    // so orphans among them can be cleaned up after.
+    const observedChannels = await this.db
+      .selectDistinct({ name: webhookChannelObservations.channelName })
+      .from(webhookChannelObservations)
+      .innerJoin(
+        webhooks,
+        eq(webhooks.id, webhookChannelObservations.webhookId),
       )
+      .where(predicate);
 
-      .detachDelete('node')
-      .return('dto')
-      .map('dto')
-      .run();
+    const rows = await this.db.delete(webhooks).where(predicate).returning();
+    if (rows.length === 0) return [];
+
+    await cleanupOrphanedChannels(
+      this.db,
+      observedChannels.map((row) => row.name),
+    );
+
+    const secret = await this.getSecret(userId);
+    if (secret === undefined) return [];
+    return rows.map((row) => this.toDto(row, secret));
   }
 
-  async rotateSecret() {
-    const newSecret = nanoid(32);
-    const query = this.db
-      .query()
-      .match(currentUser.as('requestingUser'))
-      .merge([
-        node('requestingUser'),
-        relation('out', '', 'webhookExecutor'),
-        node('executor', 'WebhookExecutor'),
-      ])
-      .with('executor')
-      .set({
-        values: { 'executor.secret': newSecret },
+  /** Rotates the secret shared by every webhook the current user owns. */
+  async rotateSecret(): Promise<string> {
+    const userId = this.identity.current.userId;
+    const secret = nanoid(32);
+    const [row] = await this.db
+      .insert(webhookExecutors)
+      .values({ userId, secret })
+      .onConflictDoUpdate({
+        target: webhookExecutors.userId,
+        set: { secret, updatedAt: new Date() },
       })
-      .return<{ secret: string }>('executor.secret as secret')
-      .map((row) => row.secret);
-    return (await query.first())!;
+      .returning({ secret: webhookExecutors.secret });
+    return row!.secret;
   }
 }

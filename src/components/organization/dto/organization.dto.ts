@@ -1,6 +1,5 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import {
-  DbUnique,
   NameField,
   Resource,
   type ResourceRelationsShape,
@@ -26,7 +25,6 @@ export class Organization extends Resource {
   })) satisfies ResourceRelationsShape;
 
   @NameField()
-  @DbUnique('OrgName')
   readonly name: SecuredString;
 
   @NameField()

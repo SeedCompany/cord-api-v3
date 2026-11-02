@@ -18,20 +18,11 @@ export class EthnologueLanguageService {
 
   async create(
     input: CreateEthnologueLanguage,
-    languageId?: ID<'Language'>,
+    languageId: ID<'Language'>,
   ): Promise<ID> {
     this.privileges.for(EthnologueLanguage).verifyCan('create');
 
-    // languageId is only meaningful under postgres (real FK column); the
-    // Neo4j repo ignores it and wires the relationship from the Language
-    // side after this returns. migration-todo: make it required at Phase 7
-    // cutover and drop the 'temp' fallback.
-    return (
-      await this.repo.create({
-        languageId: (languageId ?? 'temp') as ID,
-        ...input,
-      })
-    ).id;
+    return (await this.repo.create({ languageId, ...input })).id;
   }
 
   async readOne(id: ID, sensitivity: Sensitivity): Promise<EthnologueLanguage> {

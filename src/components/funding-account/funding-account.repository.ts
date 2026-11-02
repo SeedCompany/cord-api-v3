@@ -1,17 +1,22 @@
 import { Injectable } from '@nestjs/common';
-import { node, type Query, relation } from 'cypher-query-builder';
-import { type ID, type UnsecuredDto } from '~/common';
-import { DtoRepository } from '~/core/neo4j';
+import { and, eq, isNull, type SQL } from 'drizzle-orm';
+import { DateTime } from 'luxon';
 import {
-  ACTIVE,
-  apoc,
-  createNode,
-  matchProps,
-  merge,
-  paginate,
-  sorting,
-  variable,
-} from '~/core/neo4j/query';
+  generateId,
+  type ID,
+  type PaginatedListType,
+  type UnsecuredDto,
+} from '~/common';
+import {
+  catchUniqueViolation,
+  DrizzleDtoRepository,
+  EMPTY_PAGE,
+  resolveOrderBy,
+  type SortMap,
+} from '~/core/drizzle';
+import { DrizzleService } from '~/core/drizzle/drizzle.service';
+import { departmentIdBlocks, fundingAccounts } from '~/core/drizzle/schema';
+import { PolicyExecutor } from '../authorization/policy/executor/policy-executor';
 import { ProjectType as Program } from '../project/dto/project-type.enum';
 import {
   type CreateFundingAccount,
@@ -20,6 +25,14 @@ import {
   type UpdateFundingAccount,
 } from './dto';
 
+const catchNameUnique = catchUniqueViolation(
+  'name',
+  'name',
+  'FundingAccount with this name already exists.',
+);
+
+// Same formula as the Neo4j repo: the first 10 IDs of each 10k block are
+// reserved, and the block is inclusive of its last ID.
 const blockOfAccount = (accountNumber: number) => [
   {
     start: accountNumber * 10000 + 11,
@@ -28,81 +41,114 @@ const blockOfAccount = (accountNumber: number) => [
 ];
 
 @Injectable()
-export class FundingAccountRepository extends DtoRepository(FundingAccount) {
-  async create(input: CreateFundingAccount) {
-    const initialProps = {
-      name: input.name,
-      accountNumber: input.accountNumber,
-      canDelete: true,
-    };
-    const query = this.db
-      .query()
-      .apply(await createNode(FundingAccount, { initialProps }))
-      .create([
-        node('node'),
-        relation('out', '', 'departmentIdBlock', ACTIVE),
-        node('', 'DepartmentIdBlock', {
-          id: variable(apoc.create.uuid()),
-          blocks: variable(
-            apoc.convert.toJson(blockOfAccount(input.accountNumber)),
-          ),
-          programs: [Program.MomentumTranslation, Program.Internship],
-        }),
-      ])
-      .return<{ id: ID }>('node.id as id');
-
-    return await query.first();
+export class FundingAccountRepository extends DrizzleDtoRepository<
+  typeof fundingAccounts,
+  FundingAccount
+> {
+  constructor(
+    db: DrizzleService,
+    private readonly executor: PolicyExecutor,
+  ) {
+    super(db, fundingAccounts, FundingAccount);
   }
 
-  async update(changes: UpdateFundingAccount) {
-    const { id, ...simpleChanges } = changes;
-    const { accountNumber } = changes;
-    await this.updateProperties({ id }, simpleChanges);
-    if (accountNumber) {
-      await this.db
-        .query()
-        .match([
-          node('node', 'FundingAccount', { id }),
-          relation('out', '', 'departmentIdBlock'),
-          node('block', 'DepartmentIdBlock'),
-        ])
-        .setVariables({
-          'block.blocks': apoc.convert.toJson(blockOfAccount(accountNumber)),
-        })
-        .run();
+  async create(
+    input: CreateFundingAccount,
+  ): Promise<UnsecuredDto<FundingAccount>> {
+    const id = await generateId();
+    const blockId = await generateId();
+    await this.db.insert(departmentIdBlocks).values({
+      id: blockId,
+      range: blockOfAccount(input.accountNumber),
+      programs: [Program.MomentumTranslation, Program.Internship],
+    });
+    await this.db
+      .insert(fundingAccounts)
+      .values({
+        id,
+        name: input.name,
+        accountNumber: input.accountNumber,
+        departmentIdBlockId: blockId,
+      })
+      .catch(catchNameUnique);
+    return await this.readOne(id);
+  }
+
+  async update(
+    changes: UpdateFundingAccount,
+  ): Promise<UnsecuredDto<FundingAccount>> {
+    const { id, ...fields } = changes;
+    await this.updateColumns(id, {
+      name: fields.name,
+      accountNumber: fields.accountNumber,
+    }).catch(catchNameUnique);
+    if (fields.accountNumber != null) {
+      const row = await this.db.query.fundingAccounts.findFirst({
+        where: (fa) => eq(fa.id, id as ID<'FundingAccount'>),
+        columns: { departmentIdBlockId: true },
+      });
+      if (row?.departmentIdBlockId) {
+        await this.db
+          .update(departmentIdBlocks)
+          .set({ range: blockOfAccount(fields.accountNumber) })
+          .where(eq(departmentIdBlocks.id, row.departmentIdBlockId));
+      } else {
+        const blockId = await generateId();
+        await this.db.insert(departmentIdBlocks).values({
+          id: blockId,
+          range: blockOfAccount(fields.accountNumber),
+          programs: [Program.MomentumTranslation, Program.Internship],
+        });
+        await this.updateColumns(id, { departmentIdBlockId: blockId });
+      }
     }
     return await this.readOne(id);
   }
 
   async delete(id: ID): Promise<void> {
-    await this.deleteNode(id);
+    await this.softDelete(id);
   }
 
-  protected hydrate() {
-    return (query: Query) =>
-      query
-        .apply(matchProps())
-        .match([
-          node('node'),
-          relation('out', '', 'departmentIdBlock'),
-          node('departmentIdBlock', 'DepartmentIdBlock'),
-        ])
-        .return<{ dto: UnsecuredDto<FundingAccount> }>(
-          merge('props', {
-            departmentIdBlock: merge('departmentIdBlock', {
-              blocks: apoc.convert.fromJsonList('departmentIdBlock.blocks'),
-            }),
-          }).as('dto'),
-        );
+  async list(
+    input: FundingAccountListInput,
+  ): Promise<PaginatedListType<UnsecuredDto<FundingAccount>>> {
+    const conditions: SQL[] = [isNull(fundingAccounts.deletedAt)];
+    if (!this.executor.applyReadFilter(this.resource, conditions)) {
+      return EMPTY_PAGE;
+    }
+
+    const sortColumns = {
+      name: fundingAccounts.name,
+      accountNumber: fundingAccounts.accountNumber,
+      createdAt: fundingAccounts.createdAt,
+    } satisfies SortMap<keyof FundingAccount>;
+
+    const { rows, total, hasMore } = await this.paginatedSelect({
+      predicate: and(...conditions),
+      orderBy: resolveOrderBy(input, sortColumns, fundingAccounts.name),
+      page: input.page,
+      count: input.count,
+    });
+    return {
+      total,
+      items: rows.map((row) => this.toDto(row)),
+      hasMore,
+    };
   }
 
-  async list(input: FundingAccountListInput) {
-    const result = await this.db
-      .query()
-      .match(node('node', 'FundingAccount'))
-      .apply(sorting(FundingAccount, input))
-      .apply(paginate(input, this.hydrate()))
-      .first();
-    return result!; // result from paginate() will always have 1 row.
+  protected toDto(
+    row: typeof fundingAccounts.$inferSelect,
+  ): UnsecuredDto<FundingAccount> {
+    // departmentIdBlock is intentionally not hydrated: FundingAccount doesn't
+    // expose the block over GraphQL. The block rows ARE live under PG — this
+    // repo writes them (deterministic from accountNumber) and SetDepartmentId
+    // reads them via its own SQL, not through this DTO.
+    return {
+      id: row.id,
+      __typename: 'FundingAccount',
+      createdAt: DateTime.fromJSDate(row.createdAt),
+      name: row.name,
+      accountNumber: row.accountNumber,
+    };
   }
 }

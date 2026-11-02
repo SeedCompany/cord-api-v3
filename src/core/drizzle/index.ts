@@ -8,6 +8,6 @@ export * from './int4-multirange';
 export * from './like';
 export * from './order-by';
 export * from './pg-error-codes';
-export * from './resolve-resource-base-node';
+export * from './resolve-resource-ref';
 export * from './schema/index';
 export * from './sub-filter';

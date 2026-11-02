@@ -62,7 +62,7 @@ export class MediaService {
       return await this.repo.save(input);
     } catch (e) {
       if (e instanceof ServerException) {
-        const exists = await this.repo.getBaseNode(
+        const exists = await this.repo.exists(
           input.id ?? input.file!,
           input.id ? 'Media' : 'FileVersion',
         );

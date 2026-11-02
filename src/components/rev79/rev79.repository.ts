@@ -1,79 +1,71 @@
 import { Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
+import { and, eq, isNotNull, isNull } from 'drizzle-orm';
 import { type ID } from '~/common';
-import { CommonRepository } from '~/core/neo4j';
-import { ACTIVE } from '~/core/neo4j/query';
+import { DrizzleService } from '~/core/drizzle/drizzle.service';
+import { engagements, languages, projects } from '~/core/drizzle/schema';
 
 @Injectable()
-export class Rev79Repository extends CommonRepository {
-  /**
-   * Returns IDs of all projects whose rev79ProjectId property matches.
-   * Uniqueness is not enforced in the schema, so multiple results are possible;
-   * the service layer checks for that condition.
-   */
+export class Rev79Repository {
+  constructor(private readonly drizzle: DrizzleService) {}
+
+  protected get db() {
+    return this.drizzle.client;
+  }
+
   async findProjectsByRev79Id(
     rev79ProjectId: string,
   ): Promise<ReadonlyArray<{ id: ID<'Project'> }>> {
     return await this.db
-      .query()
-      .match([
-        node('project', 'Project'),
-        relation('out', '', 'rev79ProjectId', ACTIVE),
-        node('', 'Property', { value: rev79ProjectId }),
-      ])
-      .return<{ id: ID<'Project'> }>('project.id as id')
-      .run();
+      .select({ id: projects.id })
+      .from(projects)
+      .where(
+        and(
+          eq(projects.rev79ProjectId, rev79ProjectId),
+          isNull(projects.deletedAt),
+        ),
+      );
   }
 
-  /**
-   * Returns all Rev79 community IDs (and their language display names) for
-   * LanguageEngagements that belong to `projectId` and have a rev79CommunityId set.
-   */
   async findCommunitiesByRev79ProjectId(
     projectId: ID<'Project'>,
   ): Promise<ReadonlyArray<{ id: string; name: string }>> {
-    return await this.db
-      .query()
-      .match([
-        node('project', 'Project', { id: projectId }),
-        relation('out', '', 'engagement', ACTIVE),
-        node('engagement', 'LanguageEngagement'),
-        relation('out', '', 'rev79CommunityId', ACTIVE),
-        node('communityId', 'Property'),
-      ])
-      .match([
-        node('engagement'),
-        relation('out', '', 'language', ACTIVE),
-        node('language', 'Language'),
-        relation('out', '', 'name', ACTIVE),
-        node('languageName', 'Property'),
-      ])
-      .return<{ id: string; name: string }>([
-        'communityId.value as id',
-        'languageName.value as name',
-      ])
-      .run();
+    const rows = await this.db
+      .select({ id: engagements.rev79CommunityId, name: languages.name })
+      .from(engagements)
+      .innerJoin(languages, eq(engagements.languageId, languages.id))
+      .where(
+        and(
+          eq(engagements.projectId, projectId),
+          isNotNull(engagements.rev79CommunityId),
+          isNull(engagements.deletedAt),
+          // Exclude soft-deleted languages — Neo4j matches the `:Language`
+          // label, which excludes deleted (relabeled) nodes. Without this an
+          // active engagement joined to a deleted language leaks that community.
+          isNull(languages.deletedAt),
+        ),
+      );
+    return rows.map((row) => ({ id: row.id!, name: row.name }));
   }
 
-  /**
-   * Returns IDs of all LanguageEngagements within `projectId` whose
-   * rev79CommunityId property matches.
-   * The service layer enforces that exactly one result is returned.
-   */
   async findEngagementsByRev79CommunityId(
     projectId: ID<'Project'>,
     rev79CommunityId: string,
   ): Promise<ReadonlyArray<{ id: ID<'LanguageEngagement'> }>> {
-    return await this.db
-      .query()
-      .match([
-        node('project', 'Project', { id: projectId }),
-        relation('out', '', 'engagement', ACTIVE),
-        node('engagement', 'LanguageEngagement'),
-        relation('out', '', 'rev79CommunityId', ACTIVE),
-        node('', 'Property', { value: rev79CommunityId }),
-      ])
-      .return<{ id: ID<'LanguageEngagement'> }>('engagement.id as id')
-      .run();
+    const rows = await this.db
+      .select({ id: engagements.id })
+      .from(engagements)
+      .where(
+        and(
+          eq(engagements.projectId, projectId),
+          eq(engagements.rev79CommunityId, rev79CommunityId),
+          // Constrain to LanguageEngagements — the Neo4j repo matches the
+          // `:LanguageEngagement` label. The shared engagements table doesn't
+          // enforce rev79CommunityId is null for Internships, so without this
+          // an Internship id could be returned as an ID<'LanguageEngagement'>.
+          isNotNull(engagements.languageId),
+          isNull(engagements.deletedAt),
+        ),
+      );
+    return rows as Array<{ id: ID<'LanguageEngagement'> }>;
   }
 }

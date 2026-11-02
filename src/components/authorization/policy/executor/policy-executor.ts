@@ -1,10 +1,8 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { CachedByArg } from '@seedcompany/common';
 import { type SQL } from 'drizzle-orm';
-import { identity } from 'lodash';
 import { type EnhancedResource } from '~/common';
 import { Identity, type Session } from '~/core/authentication';
-import { type QueryFragment } from '~/core/neo4j/query';
 import { type Permission } from '../builder/perm-granter';
 import {
   AggregateConditions,
@@ -30,11 +28,6 @@ export interface ResolveParams {
    * A function to partially resolve conditions.
    */
   conditionResolver?: (condition: Condition) => boolean | undefined;
-}
-
-export interface FilterOptions {
-  wrapContext?: (next: QueryFragment) => QueryFragment;
-  wrapConditions?: (next: QueryFragment) => QueryFragment;
 }
 
 @Injectable()
@@ -135,47 +128,6 @@ export class PolicyExecutor {
     if (filter === false) return false;
     if (filter !== true) conditions.push(filter);
     return true;
-  }
-
-  cypherFilter({
-    wrapContext = identity,
-    wrapConditions = identity,
-    ...params
-  }: FilterOptions & ResolveParams): QueryFragment {
-    const perm = this.resolve(params);
-
-    return (query) => {
-      if (perm === true) {
-        // There's no need to check because the user has roles that have global read
-        // access without any (unmet) conditions.
-        return query;
-      }
-      if (perm === false) {
-        // Under no circumstances is user able to read, so just block everything.
-        // Ideally this could be done without round tripping to the DB, but
-        // for simplicity its here. Also, I think it's not the normal hot path.
-        return query.with('*').raw('WHERE false');
-      }
-
-      const other = {
-        resource: params.resource,
-        session: this.identity.current,
-      };
-      return query
-        .comment("Loading policy condition's context")
-        .apply(
-          wrapContext(
-            (q1) => perm.setupCypherContext?.(q1, new Set(), other) ?? q1,
-          ),
-        )
-        .comment('Filtering by policy conditions')
-        .with('*')
-        .apply(
-          wrapConditions((q2) =>
-            q2.raw(`WHERE ${perm.asCypherCondition(query, other)}`),
-          ),
-        );
-    };
   }
 
   private partialResolve(

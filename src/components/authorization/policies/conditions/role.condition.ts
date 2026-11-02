@@ -12,10 +12,6 @@ export class RoleCondition implements Condition {
     return given.some((role) => this.allowed.has(role));
   }
 
-  asCypherCondition() {
-    return 'false';
-  }
-
   asDrizzleCondition() {
     return sql`false`;
   }

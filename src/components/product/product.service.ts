@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { asNonEmptyArray, mapEntries, simpleSwitch } from '@seedcompany/common';
-import { intersection, sumBy, uniq } from 'lodash';
+import { intersection, pickBy, sumBy, uniq } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   type ID,
@@ -78,10 +78,7 @@ export class ProductService {
       | CreateDerivativeScriptureProduct
       | CreateOtherProduct,
   ): Promise<AnyProduct> {
-    const engagement = await this.repo.getBaseNode(
-      input.engagement,
-      'Engagement',
-    );
+    const engagement = await this.repo.getRef(input.engagement, 'Engagement');
     if (!engagement) {
       this.logger.warning(`Could not find engagement`, {
         id: input.engagement,
@@ -105,7 +102,7 @@ export class ProductService {
 
     let producibleType: ProducibleType | undefined = undefined;
     if (derivativeInput) {
-      const producible = await this.repo.getBaseNode(
+      const producible = await this.repo.getRef(
         derivativeInput.produces,
         'Producible',
       );
@@ -118,9 +115,7 @@ export class ProductService {
           'produces',
         );
       }
-      producibleType = this.resources.resolveTypeByBaseNode(
-        producible,
-      ) as ProducibleType;
+      producibleType = producible.__typename as ProducibleType;
 
       totalVerses = getTotalVerses(
         ...(derivativeInput.scriptureReferencesOverride ?? []),
@@ -529,20 +524,41 @@ export class ProductService {
 
   async updateOther(input: UpdateOtherProduct) {
     const currentProduct = await this.readOneUnsecured(input.id);
+
     if (!currentProduct.title) {
       throw new InputException('Product given is not an OtherProduct');
     }
 
-    let changes = this.repo.getActualOtherChanges(currentProduct, input);
-    changes = {
-      ...changes,
+    const partialChanges = this.repo.getActualOtherChanges(currentProduct, {
+      ...input,
+      // `getActualOtherChanges` compares items in an array by object identity,
+      // but scripture ranges are new objects each request.
+      // An array of the same scripture references would still count as an edit — failing permission checks and writing a false auditentry.
+      // `possibleChanges.scriptureReferences` below compares the actual scripture references instead.
+      scriptureReferences: undefined,
+    });
+
+    const possibleChanges = {
+      ...partialChanges,
       progressTarget: this.restrictProgressTargetChange(
         currentProduct,
         input,
-        changes,
+        partialChanges,
+      ),
+      scriptureReferences: ifDiff(isScriptureEqual)(
+        input.scriptureReferences === null ? [] : input.scriptureReferences,
+        currentProduct.scriptureReferences,
       ),
     };
 
+    // Drop keys with value of `undefined`, signaling "no change".
+    // Otherwise an unchanged submission would still count as an edit.
+    const changes = pickBy(
+      possibleChanges,
+      (value) => value !== undefined,
+    ) as Partial<typeof possibleChanges>;
+
+    // If no changes, return the current product without performing an update.
     if (Object.keys(changes).length === 0) {
       return { product: this.secure(currentProduct) as OtherProduct };
     }
@@ -553,10 +569,18 @@ export class ProductService {
 
     await this.mergeCompletionDescription(changes, currentProduct);
 
-    const currentSecured = asProductType(OtherProduct)(
-      this.secure(currentProduct),
+    const { scriptureReferences, ...simpleChanges } = changes;
+
+    await this.scriptureRefs.update(input.id, scriptureReferences);
+
+    const productWithUpdatedScripture = asProductType(OtherProduct)(
+      await this.readOne(input.id),
     );
-    const updated = await this.repo.updateOther(currentSecured, changes);
+
+    const updated = await this.repo.updateOther(
+      productWithUpdatedScripture,
+      simpleChanges,
+    );
 
     const updatedPayload = this.channels.publishToAll('other', 'updated', {
       program: 'MomentumTranslation',

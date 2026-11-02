@@ -5,7 +5,6 @@ import {
   Calculated,
   DateInterval,
   DateTimeField,
-  DbLabel,
   Grandparent,
   IntersectTypes,
   RequiredWhen,
@@ -22,12 +21,7 @@ import {
   SensitivityField,
   type UnsecuredDto,
 } from '~/common';
-import { type BaseNode } from '~/core/neo4j/results';
-import {
-  type LinkTo,
-  type LinkToUnknown,
-  RegisterResource,
-} from '~/core/resources';
+import { type LinkTo, RegisterResource } from '~/core/resources';
 import { ChangesetAware } from '../../changeset/dto';
 import { Commentable } from '../../comments/dto';
 import { SecuredLanguageMilestone } from '../../language/dto';
@@ -55,7 +49,7 @@ const Interfaces = IntersectTypes(Resource, ChangesetAware, Commentable);
 export const resolveEngagementType = (
   val: Pick<AnyEngagement, '__typename'>,
 ) =>
-  val.__typename === 'default::LanguageEngagement'
+  val.__typename === 'LanguageEngagement'
     ? LanguageEngagement
     : InternshipEngagement;
 
@@ -82,15 +76,14 @@ class Engagement extends Interfaces {
     import('../../project/dto').then((m) => m.IProject);
   static readonly resolve = resolveEngagementType;
 
-  declare readonly __typename:
-    | 'default::LanguageEngagement'
-    | 'default::InternshipEngagement';
+  declare readonly __typename: 'LanguageEngagement' | 'InternshipEngagement';
 
   readonly project: LinkTo<'Project'> &
     Pick<UnsecuredDto<IProject>, 'status' | 'step' | 'type'>;
 
+  // Resolved by each concrete engagement resolver's `parent` from `project`.
   @Field(() => IProject)
-  declare readonly parent: LinkToUnknown | BaseNode;
+  readonly parent?: never;
 
   readonly label: Readonly<{
     project: string;
@@ -101,7 +94,6 @@ class Engagement extends Interfaces {
   @Field(() => SecuredEngagementStatus, {
     middleware: [Grandparent.store],
   })
-  @DbLabel('EngagementStatus')
   readonly status: SecuredEngagementStatus;
 
   readonly ceremony: Secured<LinkTo<'Ceremony'>>;
@@ -179,10 +171,10 @@ export class LanguageEngagement extends Engagement {
   static readonly Parent = () =>
     import('../../project/dto').then((m) => m.TranslationProject);
 
-  declare readonly __typename: 'default::LanguageEngagement';
+  declare readonly __typename: 'LanguageEngagement';
 
   @Field(() => TranslationProject)
-  declare readonly parent: LinkToUnknown | BaseNode;
+  declare readonly parent?: never;
 
   readonly language: Secured<LinkTo<'Language'>>;
 
@@ -234,10 +226,10 @@ export class InternshipEngagement extends Engagement {
   static readonly Parent = () =>
     import('../../project/dto').then((m) => m.InternshipProject);
 
-  declare readonly __typename: 'default::InternshipEngagement';
+  declare readonly __typename: 'InternshipEngagement';
 
   @Field(() => InternshipProject)
-  declare readonly parent: LinkToUnknown | BaseNode;
+  declare readonly parent?: never;
 
   @RequiredWhenNotInDev()
   readonly countryOfOrigin: Secured<LinkTo<'Location'> | null>;
@@ -248,12 +240,10 @@ export class InternshipEngagement extends Engagement {
   readonly mentor: Secured<LinkTo<'User'> | null>;
 
   @Field()
-  @DbLabel('InternPosition')
   @RequiredWhenNotInDev()
   readonly position: SecuredInternPosition;
 
   @Field()
-  @DbLabel('ProductMethodology')
   readonly methodologies: SecuredMethodologies;
 
   // Nullable in TS (migration 0042): 6,866 migrated rows carry a kept blank.

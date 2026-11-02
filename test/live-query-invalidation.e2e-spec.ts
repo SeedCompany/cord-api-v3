@@ -19,14 +19,6 @@ import {
   type TestApp,
 } from './utility';
 
-// The Drizzle repository base is only in play under postgres; under the other
-// engines their own bases already invalidate and are unchanged by this fix.
-const isPostgres = process.env.DATABASE === 'postgres';
-// Neo4j and Gel invalidate generically from their own bases (see the docblock
-// below), so these cases don't apply there. `it.skip` reports that honestly;
-// an early `return` inside the body would report the same run as PASSED.
-const itPostgresOnly = isPostgres ? it : it.skip;
-
 type Identifier = Parameters<LiveQueryStore['invalidate']>[0];
 
 /**
@@ -45,8 +37,8 @@ const keyOf = (identifier: Identifier): string => {
 
 /**
  * Regression guard for LQ-1: the Drizzle repository base did not invalidate the
- * live-query store on update/delete, while the Neo4j and Gel bases both do it
- * generically. The consequence was user-visible rather than theoretical — ~12
+ * live-query store on update/delete, while the Neo4j and Gel bases it replaced
+ * both did it generically. The consequence was user-visible rather than theoretical — ~12
  * cord-field documents carry `@live` and they are the detail page of nearly
  * every domain, so after cutover editing any of them left an open page stale
  * until manual refresh.
@@ -70,9 +62,7 @@ describe('Live-query invalidation (Drizzle base) e2e', () => {
     await registerUser(app, {
       roles: [Role.Administrator, Role.ProjectManager],
     });
-    if (isPostgres) {
-      engagement = await createLanguageEngagement(app);
-    }
+    engagement = await createLanguageEngagement(app);
   });
 
   afterEach(() => {
@@ -83,7 +73,7 @@ describe('Live-query invalidation (Drizzle base) e2e', () => {
   const watchInvalidations = () =>
     jest.spyOn(app.get(LiveQueryStore), 'invalidate');
 
-  itPostgresOnly('invalidates the mutated resource on update', async () => {
+  it('invalidates the mutated resource on update', async () => {
     const org = await createOrganization(app);
     const spy = watchInvalidations();
 
@@ -101,61 +91,52 @@ describe('Live-query invalidation (Drizzle base) e2e', () => {
     );
   });
 
-  itPostgresOnly(
-    'invalidates the mutated resource on soft delete',
-    async () => {
-      const org = await createOrganization(app);
-      const spy = watchInvalidations();
+  it('invalidates the mutated resource on soft delete', async () => {
+    const org = await createOrganization(app);
+    const spy = watchInvalidations();
 
-      await app.graphql.mutate(DeleteOrgDoc, { id: org.id });
+    await app.graphql.mutate(DeleteOrgDoc, { id: org.id });
 
-      expect(spy.mock.calls.map(([arg]) => keyOf(arg))).toContain(
-        `Organization:${org.id}`,
-      );
-    },
-  );
+    expect(spy.mock.calls.map(([arg]) => keyOf(arg))).toContain(
+      `Organization:${org.id}`,
+    );
+  });
 
   // The no-op guard in updateColumns() returns before touching the DB; it must
   // return before invalidating too, or every empty update wakes every live query
   // watching that resource for no reason.
-  itPostgresOnly(
-    'does not invalidate when an update changes nothing',
-    async () => {
-      const org = await createOrganization(app);
-      const spy = watchInvalidations();
+  it('does not invalidate when an update changes nothing', async () => {
+    const org = await createOrganization(app);
+    const spy = watchInvalidations();
 
-      // Same name it already has -> getActualChanges yields an empty change set.
-      await app.graphql.mutate(UpdateOrgDoc, {
-        input: { id: org.id, name: org.name.value ?? 'Org' },
-      });
+    // Same name it already has -> getActualChanges yields an empty change set.
+    await app.graphql.mutate(UpdateOrgDoc, {
+      input: { id: org.id, name: org.name.value ?? 'Org' },
+    });
 
-      expect(spy.mock.calls.map(([arg]) => keyOf(arg))).not.toContain(
-        `Organization:${org.id}`,
-      );
-    },
-  );
+    expect(spy.mock.calls.map(([arg]) => keyOf(arg))).not.toContain(
+      `Organization:${org.id}`,
+    );
+  });
 
   // Product hand-rolls its own writes, so it invalidates itself rather than
   // inheriting from the base. The interesting part is the KEY: the store keys on
-  // `${resource.name}:${id}`, and the Neo4j arm passes the CONCRETE subtype
+  // `${resource.name}:${id}`, and subscribers key on the CONCRETE subtype
   // (DirectScriptureProduct, not Product). A generic `Product:` key would emit
   // something nothing subscribes to — an invalidation that exists and does
   // nothing, which is worse than none because it looks fixed.
-  itPostgresOnly(
-    'invalidates a product under its concrete subtype, not the interface',
-    async () => {
-      const product = await createDirectProduct(app, {
-        engagement: engagement.id,
-      });
-      const spy = watchInvalidations();
+  it('invalidates a product under its concrete subtype, not the interface', async () => {
+    const product = await createDirectProduct(app, {
+      engagement: engagement.id,
+    });
+    const spy = watchInvalidations();
 
-      await app.graphql.mutate(UpdateDirectProductDoc, { id: product.id });
+    await app.graphql.mutate(UpdateDirectProductDoc, { id: product.id });
 
-      const keys = spy.mock.calls.map(([arg]) => keyOf(arg));
-      expect(keys).toContain(`DirectScriptureProduct:${product.id}`);
-      expect(keys).not.toContain(`Product:${product.id}`);
-    },
-  );
+    const keys = spy.mock.calls.map(([arg]) => keyOf(arg));
+    expect(keys).toContain(`DirectScriptureProduct:${product.id}`);
+    expect(keys).not.toContain(`Product:${product.id}`);
+  });
 });
 
 const UpdateOrgDoc = graphql(`

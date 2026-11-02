@@ -23,7 +23,7 @@ async function bootstrap() {
     await app.close();
   }
 
-  // I believe it is Neo4j that keeps the event loop from being empty.
+  // Exit explicitly in case an open handle keeps the event loop alive.
   exit();
 }
 void bootstrap().catch((err: any) => {

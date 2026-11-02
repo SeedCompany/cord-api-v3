@@ -8,11 +8,14 @@ import { ConfigService } from '~/core/config';
 import { DrizzleService } from '~/core/drizzle';
 import { users } from '~/core/drizzle/schema';
 import { graphql, type InputOf, type VariablesOf } from '~/graphql';
+import { ProjectType } from '../src/components/project/dto';
 import { UserStatus } from '../src/components/user/dto';
 import {
+  createInternshipEngagement,
   createLocation,
   createOrganization,
   createPerson,
+  createProject,
   createSession,
   createTestApp,
   createUnavailability,
@@ -219,29 +222,25 @@ describe('User e2e', () => {
   });
 
   it('leaves the anonymous system user out of the people list', async () => {
-    // Un-gated on purpose: the anonymous record exists on both engines in a
-    // real deployment, and the point is that they agree about hiding it.
-    // Postgres used to list it — shadow-diff caught it as a one-row total
+    // The anonymous record exists in a real deployment, and it must stay
+    // hidden. Postgres used to list it — shadow-diff caught it as a one-row total
     // difference against the production copy (2,376 vs 2,375), easy to dismiss
     // as rounding until you notice it is a nameless system account sitting on
     // the People page.
     const anonId = app.get(ConfigService).anonUser.id;
 
-    // Seeded here on Postgres, and this is the whole reason the test is worth
-    // writing carefully. Neo4j's admin bootstrap creates the anonymous user
-    // (AdminService.mergeAnonUser); the Drizzle one does not, so a fresh
-    // Postgres database has no such row and an assertion about it would pass
-    // no matter what the repository did. The first version of this test did
-    // exactly that — it still passed with the exclusion commented out. In a
-    // real cutover the row arrives via the ETL, so seeding it reproduces the
-    // deployed state rather than inventing one.
-    if (process.env.DATABASE === 'postgres') {
-      await app
-        .get(DrizzleService)
-        .client.insert(users)
-        .values({ id: anonId, status: 'Active' })
-        .onConflictDoNothing();
-    }
+    // Seeded here, and this is the whole reason the test is worth writing
+    // carefully. The admin bootstrap does not create the anonymous user, so a
+    // fresh database has no such row and an assertion about it would pass no
+    // matter what the repository did. The first version of this test did
+    // exactly that — it still passed with the exclusion commented out. In
+    // production the row arrived via the cutover ETL, so seeding it reproduces
+    // the deployed state rather than inventing one.
+    await app
+      .get(DrizzleService)
+      .client.insert(users)
+      .values({ id: anonId, status: 'Active' })
+      .onConflictDoNothing();
 
     const { users: listed } = await app.graphql.query(
       graphql(`
@@ -516,6 +515,36 @@ describe('User e2e', () => {
       },
     );
     expect(result.updateUser.user.email.value).toBeNull();
+  });
+
+  it("lists a project the user interns on among the user's projects", async () => {
+    // The user is not a member of this project — only its engagement's intern —
+    // so the project can only come back through the intern path of the
+    // `userId` filter behind `User.projects`.
+    const intern = await createPerson(app);
+    const project = await createProject(app, { type: ProjectType.Internship });
+    await createInternshipEngagement(app, {
+      project: project.id,
+      intern: intern.id,
+    });
+
+    const result = await app.graphql.query(
+      graphql(`
+        query UserProjects($id: ID!) {
+          user(id: $id) {
+            projects {
+              items {
+                id
+              }
+            }
+          }
+        }
+      `),
+      { id: intern.id },
+    );
+    expect(result.user.projects.items.map((item) => item.id)).toContain(
+      project.id,
+    );
   });
 
   // The mutations return the very same `UserCreated`/`UserUpdated`/`UserDeleted`

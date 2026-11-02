@@ -15,9 +15,9 @@ import {
   type VariantList,
   type VariantOf,
 } from '~/common';
+import { mapListResults } from '~/common';
 import { Identity } from '~/core/authentication';
 import { LiveQueryStore } from '~/core/live-query';
-import { mapListResults } from '~/core/neo4j/results';
 import { ResourceLoader } from '~/core/resources';
 import {
   Privileges,
@@ -256,7 +256,7 @@ export const PromptVariantResponseListService = <
                 modifiedAt: DateTime.now(),
               } satisfies UnsecuredDto<VariantResponse>)
             : {}),
-        })),
+        })) as UnsecuredDto<PromptVariantResponse<TVariant>>['responses'],
       };
       return await this.secure(updated);
     }

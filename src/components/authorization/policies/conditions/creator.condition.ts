@@ -1,6 +1,6 @@
 import { Logger } from '@nestjs/common';
 import { type NonEmptyArray } from '@seedcompany/common';
-import { inspect, type InspectOptionsStylized } from 'util';
+import { inspect, type InspectContext } from 'util';
 import {
   type ID,
   isIdLike,
@@ -46,15 +46,6 @@ class CreatorCondition<
     return creator === session.userId;
   }
 
-  asCypherCondition() {
-    const requester = '$currentUser';
-    return [
-      `node.creator = ${requester}`,
-      `exists((node)-[:creator { active: true }]->(:Property { value: ${requester} }))`,
-      `exists((node)-[:creator { active: true }]->(:User { id: ${requester} }))`,
-    ].join(' OR ');
-  }
-
   union(this: void, conditions: NonEmptyArray<this>) {
     return conditions[0];
   }
@@ -63,7 +54,7 @@ class CreatorCondition<
     return conditions[0];
   }
 
-  [inspect.custom](_depth: number, _options: InspectOptionsStylized) {
+  [inspect.custom](_depth: number, _options: InspectContext) {
     return `Creator`;
   }
 }

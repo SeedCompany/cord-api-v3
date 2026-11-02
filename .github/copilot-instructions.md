@@ -2,15 +2,14 @@
 
 ## Project Context
 
-CORD API v3 is a **Bible translation project management API**. It is a NestJS + TypeScript application that is 100% GraphQL (code-first, no REST). The primary database is Neo4j (legacy), being migrated domain-by-domain to **Gel** (a next-generation graph database). Node >= 24, `"type": "module"` (ESM), Yarn v4.
+CORD API v3 is a **Bible translation project management API**. It is a NestJS + TypeScript application that is 100% GraphQL (code-first, no REST). The database is **PostgreSQL**, accessed through **Drizzle**. Node >= 24, `"type": "module"` (ESM), Yarn v4.
 
 ---
 
 ## File and Naming Conventions
 
-- File names are **kebab-case**: `project.service.ts`, `user.gel.repository.ts`
+- File names are **kebab-case**: `project.service.ts`, `user.repository.ts`
 - Pattern: `{entity}.{role}.ts` — roles are `module`, `resolver`, `service`, `repository`, `loader`, `dto`
-- Gel repositories are `{entity}.gel.repository.ts`; Neo4j are `{entity}.repository.ts` (or `{entity}.neo4j.repository.ts`)
 - Each `dto/` folder has an `index.ts` barrel
 - Use `~/` path alias for `src/` imports — never use deep relative paths across modules
 
@@ -59,13 +58,12 @@ import {
   SecuredString,
   SecuredDateNullable,
 } from '~/common';
-import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
 import { OtherEntity } from '../other-entity/dto';
 
 const Interfaces = IntersectTypes(Resource);
 
-@RegisterResource({ db: e.EntityName })
+@RegisterResource()
 @ObjectType({ implements: Interfaces.members })
 export class EntityName extends Interfaces {
   static readonly Relations = (() => ({
@@ -87,7 +85,6 @@ export class EntityName extends Interfaces {
 // Always augment ResourceMap in the same DTO file:
 declare module '~/core/resources/map' {
   interface ResourceMap { EntityName: typeof EntityName; }
-  interface ResourceDBMap { EntityName: typeof e.default.EntityName; }
 }
 ```
 
@@ -110,8 +107,8 @@ export class EntityNameService {
     private readonly hooks: Hooks,
   ) {}
 
-  async readOne(id: ID, view?: ObjectView): Promise<EntityName> {
-    const dto = await this.repo.readOne(id, view);
+  async readOne(id: ID): Promise<EntityName> {
+    const dto = await this.repo.readOne(id);
     const privileges = this.privileges.for(EntityName);
     return privileges.secure(dto);
   }
@@ -132,51 +129,33 @@ export class EntityNameService {
 
 ## Repository Patterns
 
-### Neo4j (legacy)
 ```typescript
-import { DtoRepository } from '~/core/neo4j';
+import { Injectable } from '@nestjs/common';
+import { type UnsecuredDto } from '~/common';
+import { DrizzleDtoRepository } from '~/core/drizzle';
+import { DrizzleService } from '~/core/drizzle/drizzle.service';
+import { entityNames } from '~/core/drizzle/schema';
+import { EntityName } from './dto';
 
 @Injectable()
-export class EntityNameRepository extends DtoRepository(EntityName) {
-  async readOne(id: ID): Promise<UnsecuredDto<EntityName>> {
-    const result = await this.db.query()
-      .match([node('node', 'EntityName', { id })])
-      .apply(matchProps())
-      .return('props')
-      .first();
-    return this.db.hydrateOrFail(result, id);
+export class EntityNameRepository extends DrizzleDtoRepository<
+  typeof entityNames,
+  EntityName
+> {
+  constructor(db: DrizzleService) {
+    super(db, entityNames, EntityName);
+  }
+
+  protected toDto(row: typeof entityNames.$inferSelect): UnsecuredDto<EntityName> {
+    return { ...row /* map columns to DTO fields */ };
   }
 }
 ```
 
-### Gel (new)
-```typescript
-import { e, GelService } from '~/core/gel';
-
-@Injectable()
-export class EntityNameGelRepository {
-  constructor(private readonly gel: GelService) {}
-
-  async readOne(id: ID): Promise<UnsecuredDto<EntityName>> {
-    const result = await this.gel.run(
-      e.select(e.EntityName, (n) => ({
-        filter_single: e.op(n.id, '=', e.uuid(id)),
-        id: true,
-        name: true,
-        active: true,
-      }))
-    );
-    if (!result) throw new NotFoundException();
-    return result;
-  }
-}
-```
-
-### splitDb registration
-```typescript
-// In {entity}.module.ts — route to Gel if available, else Neo4j:
-splitDb(EntityNameRepository, { gel: EntityNameGelRepository })
-```
+- `readOne` / `readMany` come from the base; `this.db` is transaction-aware
+- Write through `this.updateColumns()` / `this.softDelete()` so the live-query store is invalidated; hand-rolled writes must call `liveQueryStore.invalidate(...)` themselves
+- List reads should call `PolicyExecutor.applyReadFilter` so unreadable rows never leave the database — the base class does not do it for you
+- Register the class directly in the module's `providers`
 
 ---
 
@@ -209,7 +188,7 @@ export class SomeHandler {
 
 ```typescript
 // In a service — check before acting:
-const privileges = this.privileges.for(this.session, EntityName, entity);
+const privileges = this.privileges.for(EntityName, entity);
 privileges.verifyCan('edit');
 
 // Secure a repo result for return:
@@ -244,7 +223,7 @@ describe('EntityName', () => {
 });
 ```
 
-- Use `createApp()` from `test/setup/create-app.ts` — it provisions an ephemeral Gel DB
+- Use `createApp()` from `test/setup/create-app.ts` — it provisions an ephemeral Postgres database (export `POSTGRES_URL` first)
 - Use faker helpers from `test/operations/` for test data creation
 - **Never** use `jest.unstable_mockModule` — it causes ESM contamination across test files
 - When creating language engagements, always override `startDateOverride` / `endDateOverride` to match the MOU window
@@ -259,6 +238,6 @@ describe('EntityName', () => {
 - **No `npm` commands** — always use `yarn`
 - **No `jest.unstable_mockModule`** — ESM contamination issue
 - **Do not return unsecured DTOs from services** — always call `privileges.secure()` first
-- **Do not touch the loader/service layer when migrating a repository** — only the repo changes
+- **Do not run `yarn migrate:generate`** — migrations are hand-written SQL plus a journal entry
 - **Do not write to generated `status` column** on projects — it is `GENERATED ALWAYS AS`
-- **Do not add changeset fields as an open JSONB blob** — enumerate them explicitly
+- **Changesets were not carried forward** — the GraphQL surface stays for the web app, but nothing stores changesets

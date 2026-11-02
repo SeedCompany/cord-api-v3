@@ -37,7 +37,8 @@ import { User } from '../../user/dto';
 
 // A mapping of searchable types to their results. Expand as needed.
 // Keys become the SearchType enum. Values become the SearchResult union.
-// The keys should match DB "base-node" labels.
+// The keys should match the concrete `__typename`s SearchRepository.toRef
+// produces; a key that matches none is silently filtered out.
 const publicSearchable = {
   Organization,
   Partner,

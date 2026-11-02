@@ -1,7 +1,6 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import {
-  DbLabel,
   type ID,
   IdField,
   Resource,
@@ -15,8 +14,7 @@ import {
   type UnsecuredDto,
   Variant,
 } from '~/common';
-import { type BaseNode } from '~/core/neo4j/results';
-import type { LinkTo, LinkToUnknown } from '~/core/resources';
+import { type LinkTo, type LinkToUnknown } from '~/core/resources';
 import { type Prompt, SecuredPrompt } from './prompt.dto';
 
 @ObjectType()
@@ -31,7 +29,6 @@ export class PromptResponse extends Resource {
 }
 
 @ObjectType()
-@DbLabel(VariantResponse.name, 'Property')
 export abstract class VariantResponse<Key extends string = string> {
   @Field(() => Variant)
   readonly variant: Variant<Key> & SetUnsecuredType<Key>;
@@ -59,7 +56,7 @@ export class PromptVariantResponse<
 
   readonly creator: Secured<LinkTo<'User'>>;
 
-  readonly parent: BaseNode;
+  readonly parent: LinkToUnknown;
 
   @Field(() => SecuredPrompt)
   readonly prompt: SecuredPrompt & SetUnsecuredType<ID<Prompt>>;

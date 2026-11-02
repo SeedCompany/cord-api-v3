@@ -1,12 +1,9 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { splitDb } from '~/core/database';
 import { UserModule } from '../../user/user.module';
 import { ProjectModule } from '../project.module';
 import { ProjectWorkflowNotificationHandler } from './handlers/project-workflow-notification.handler';
-import { StepHistoryToWorkflowEventsMigration } from './migrations/step-history-to-workflow-events.migration';
 import { ProjectWorkflowEventLoader } from './project-workflow-event.loader';
 import { ProjectWorkflowChannels } from './project-workflow.channels';
-import { ProjectWorkflowDrizzleRepository } from './project-workflow.drizzle.repository';
 import { ProjectWorkflowFlowchart } from './project-workflow.flowchart';
 import { ProjectWorkflowEventGranter } from './project-workflow.granter';
 import { ProjectWorkflowRepository } from './project-workflow.repository';
@@ -29,14 +26,9 @@ import { ProjectWorkflowMutationSubscriptionsResolver } from './resolvers/projec
     ProjectWorkflowService,
     ProjectWorkflowChannels,
     ProjectWorkflowEventGranter,
-    splitDb(ProjectWorkflowRepository, {
-      // migration-todo: `as any` removed at Phase 7 cutover when splitDb
-      // disappears with the Neo4j path.
-      postgres: ProjectWorkflowDrizzleRepository as any,
-    }),
+    ProjectWorkflowRepository,
     ProjectWorkflowFlowchart,
     ProjectWorkflowNotificationHandler,
-    StepHistoryToWorkflowEventsMigration,
   ],
   exports: [ProjectWorkflowService],
 })

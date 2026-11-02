@@ -1,13 +1,10 @@
 import {
-  asNonEmptyArray,
   cached,
   type FnLike,
-  mapValues,
   CachedGetter as Once,
   setInspectOnClass,
   setToJson,
 } from '@seedcompany/common';
-import { DbLabel } from '~/common/db';
 import { CalculatedSymbol } from '~/common/decorators';
 import { ServerException } from '~/common/exceptions';
 import { getParentTypes } from '~/common/functions';
@@ -216,36 +213,6 @@ export class EnhancedResource<T extends ResourceShape<any>> {
       return !!Reflect.getMetadata(CalculatedSymbol, this.type.prototype, prop);
     });
     return new Set(props);
-  }
-
-  @Once()
-  get dbLabels() {
-    const labels = getParentTypes(this.type).flatMap((cls) => {
-      if (
-        // Is declared as some gql object. i.e. avoids DataObject.
-        !GqlMetadata.ClassType.get(cls) ||
-        // Avoid intersected classes.
-        // getParentTypes will give us the intersect-ees directly.
-        cls.name.startsWith('Intersection')
-      ) {
-        return [];
-      }
-      const declared = DbLabel.getOwn(cls);
-      return declared ? [...declared] : [cls.name];
-    });
-    return asNonEmptyArray([...new Set([...labels, 'BaseNode'])])!;
-  }
-  get dbLabel() {
-    return this.dbLabels[0];
-  }
-  @Once()
-  get dbPropLabels(): {
-    readonly [K in keyof T['prototype'] & string]?: readonly string[];
-  } {
-    return mapValues.fromList(this.props, (prop) => {
-      const declared = DbLabel.get(this.type, prop as unknown as string);
-      return [...new Set([...(declared ?? []), 'Property'])];
-    }).asRecord;
   }
 }
 setInspectOnClass(EnhancedResource, (res) => ({ collapsed }) => {

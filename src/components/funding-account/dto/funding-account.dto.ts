@@ -1,7 +1,5 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import {
-  DbLabel,
-  DbUnique,
   NameField,
   Resource,
   SecuredInt,
@@ -16,11 +14,9 @@ import { RegisterResource } from '~/core/resources';
 })
 export class FundingAccount extends Resource {
   @NameField()
-  @DbUnique()
   readonly name: SecuredString;
 
   @Field()
-  @DbLabel('FundingAccountNumber')
   readonly accountNumber: SecuredInt;
 }
 

@@ -22,10 +22,7 @@ export class EngagementStatusResolver {
     if (!status.canRead || !status.canEdit || !status.value) {
       return [];
     }
-    return await this.engagementRules.getAvailableTransitions(
-      eng.id,
-      eng.changeset,
-    );
+    return await this.engagementRules.getAvailableTransitions(eng.id);
   }
 
   @ResolveField(() => Boolean, {

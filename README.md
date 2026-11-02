@@ -39,17 +39,15 @@ Bible translation project management API.
 
 ## Database
 
-PostgreSQL is the database — production cut over from Neo4j in September 2026.
-The legacy Neo4j code paths are still in the tree pending removal.
-`DATABASE` picks the engine and defaults to `postgres`; there is no longer a
-reason to set it to anything else.
+PostgreSQL is the database (production cut over from Neo4j in September 2026),
+accessed through Drizzle. The schema lives in `src/core/drizzle/schema`.
 
-Migrations run automatically on startup. To generate a new migration after a
-schema change:
-
-```bash
-yarn migrate:generate
-```
+Migrations run automatically on startup. They are hand-written SQL files in
+`src/core/drizzle/migrations`, each with a matching entry in
+`migrations/meta/_journal.json`. A file without a journal entry is never
+applied, and drizzle skips any entry whose `when` is not later than the newest
+one a database has already applied. Don't use `yarn migrate:generate`: there
+are no drizzle-kit snapshots, so it emits the entire schema as one migration.
 
 ## Usage
 

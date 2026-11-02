@@ -1,11 +1,9 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { splitDb } from '~/core/database';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { EngagementModule } from '../engagement/engagement.module';
 import { LocationModule } from '../location/location.module';
 import { ProjectModule } from '../project/project.module';
 import { EthnologueLanguageService } from './ethnologue-language';
-import { EthnologueLanguageDrizzleRepository } from './ethnologue-language/ethnologue-language.drizzle.repository';
 import { EthnologueLanguageRepository } from './ethnologue-language/ethnologue-language.repository';
 import { InternalFirstScriptureResolver } from './internal-first-scripture.resolver';
 import { LanguageMutationActorResolver } from './language-mutation-actor.resolver';
@@ -13,13 +11,10 @@ import { LanguageMutationSubscriptionsResolver } from './language-mutation-subsc
 import { LanguageUpdateLinksResolver } from './language-update-links.resolver';
 import { LanguageUpdatedResolver } from './language-updated.resolver';
 import { LanguageChannels } from './language.channels';
-import { LanguageDrizzleRepository } from './language.drizzle.repository';
 import { LanguageLoader } from './language.loader';
 import { LanguageRepository } from './language.repository';
 import { LanguageResolver } from './language.resolver';
 import { LanguageService } from './language.service';
-import { AddLanguageFlagsMigration } from './migrations/add-flags.migration';
-import { RegistryOfDialectToRegistryOfLanguageVarietiesMigration } from './migrations/rename-rod-to-rolv.migration';
 
 @Module({
   imports: [
@@ -37,19 +32,10 @@ import { RegistryOfDialectToRegistryOfLanguageVarietiesMigration } from './migra
     LanguageService,
     LanguageChannels,
     EthnologueLanguageService,
-    splitDb(EthnologueLanguageRepository, {
-      // migration-todo: `as any` removed at Phase 7 cutover when splitDb
-      // disappears with the Neo4j path.
-      postgres: EthnologueLanguageDrizzleRepository as any,
-    }),
-    splitDb(LanguageRepository, {
-      // migration-todo: same as above.
-      postgres: LanguageDrizzleRepository as any,
-    }),
+    EthnologueLanguageRepository,
+    LanguageRepository,
     LanguageLoader,
     InternalFirstScriptureResolver,
-    RegistryOfDialectToRegistryOfLanguageVarietiesMigration,
-    AddLanguageFlagsMigration,
   ],
   exports: [LanguageService],
 })

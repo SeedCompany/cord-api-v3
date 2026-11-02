@@ -104,9 +104,9 @@ describe('Comment e2e', () => {
     });
   });
 
-  // ProgressReport implements Commentable. Regression guard for the PG
-  // parent-resolution path (resolveResourceBaseNode), which previously excluded
-  // ProgressReport and rejected this valid commentable under DATABASE=postgres.
+  // ProgressReport implements Commentable. Regression guard for the shared
+  // parent-resolution registry (now resolveResourceRef), which once excluded
+  // ProgressReport and rejected this valid commentable.
   it('creates a comment on a ProgressReport parent', async () => {
     await runAsAdmin(app, async (a) => {
       const mouStart = CalendarDate.local(2023, 1, 1);
@@ -140,12 +140,11 @@ describe('Comment e2e', () => {
     });
   });
 
-  // Engagement is the one commentable whose `__typename` is module-qualified
-  // (`default::LanguageEngagement`) — the hydrate stamps that prefix on and
-  // `resolveEngagementType` matches on it. The comment service looks a parent
-  // up by `__typename`, so a lookup that cannot handle the prefix throws
-  // `Unable to determine resource from ResourceMap`. The cases above use a
-  // Language and a ProgressReport, whose names are bare, so neither covers it.
+  // Engagement is the one commentable reached through a polymorphic interface
+  // (`resolveEngagementType`). The comment service looks a parent up by its
+  // `__typename`, so a mismatch there throws `Unable to determine resource
+  // from ResourceMap`. The cases above use a Language and a ProgressReport,
+  // so neither covers it.
   it('creates a comment on a LanguageEngagement parent', async () => {
     await runAsAdmin(app, async (a) => {
       const mouStart = CalendarDate.local(2023, 1, 1);

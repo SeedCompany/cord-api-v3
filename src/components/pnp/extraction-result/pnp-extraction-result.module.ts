@@ -1,10 +1,8 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { splitDb } from '~/core/database';
 import { ProductModule } from '../../product/product.module';
 import { PlanningExtractionResultSaver } from './planning-extraction-result-saver';
 import { PnpExtractionResultLanguageEngagementConnectionResolver } from './pnp-extraction-result-language-engagement-connection.resolver';
 import { PnpExtractionResultProgressReportConnectionResolver } from './pnp-extraction-result-progress-report-connection.resolver';
-import { PnpExtractionResultDrizzleRepository } from './pnp-extraction-result.drizzle.repository';
 import { PnpExtractionResultLoader } from './pnp-extraction-result.loader';
 import { PnpExtractionResultRepository } from './pnp-extraction-result.repository';
 import { PnpProblemResolver } from './pnp-problem.resolver';
@@ -19,10 +17,7 @@ import { SaveProgressExtractionResultHandler } from './save-progress-extraction-
     PnpExtractionResultLoader,
     PlanningExtractionResultSaver,
     SaveProgressExtractionResultHandler,
-    // migration-todo: drop the `as any` with the Neo4j path.
-    splitDb(PnpExtractionResultRepository, {
-      postgres: PnpExtractionResultDrizzleRepository as any,
-    }),
+    PnpExtractionResultRepository,
   ],
   exports: [PlanningExtractionResultSaver],
 })

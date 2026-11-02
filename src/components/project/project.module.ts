@@ -1,5 +1,4 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { splitDb } from '~/core/database';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { BudgetModule } from '../budget/budget.module';
 import { EngagementModule } from '../engagement/engagement.module';
@@ -15,8 +14,6 @@ import { ProjectEngagementConnectionResolver } from './engagement-connection.res
 import { FinancialApproverModule } from './financial-approver/financial-approver.module';
 import * as handlers from './handlers';
 import { InternshipProjectResolver } from './internship-project.resolver';
-import { FixDeptIdLabelMigration } from './migrations/fix-dept-id-label.migration';
-import { RenameTranslationToMomentumMigration } from './migrations/rename-translation-to-momentum.migration';
 import { ProjectEngagementIdResolvers } from './project-engagement-id.resolver';
 import { ProjectMemberModule } from './project-member/project-member.module';
 import { ProjectMutationActorResolver } from './project-mutation-actor.resolver';
@@ -24,7 +21,6 @@ import { ProjectMutationSubscriptionsResolver } from './project-mutation-subscri
 import { ProjectUpdateLinksResolver } from './project-update-links.resolver';
 import { ProjectUpdatedResolver } from './project-updated.resolver';
 import { ProjectChannels } from './project.channels';
-import { ProjectDrizzleRepository } from './project.drizzle.repository';
 import { ProjectLoader } from './project.loader';
 import { ProjectRepository } from './project.repository';
 import { ProjectResolver } from './project.resolver';
@@ -63,14 +59,9 @@ import { ProjectWorkflowModule } from './workflow/project-workflow.module';
     ...ProjectEngagementIdResolvers,
     ProjectChannels,
     ProjectService,
-    splitDb(ProjectRepository, {
-      // migration-todo: drop the `as any` with the Neo4j path.
-      postgres: ProjectDrizzleRepository as any,
-    }),
+    ProjectRepository,
     ProjectLoader,
     ...Object.values(handlers),
-    RenameTranslationToMomentumMigration,
-    FixDeptIdLabelMigration,
   ],
   exports: [ProjectService, ProjectMemberModule],
 })

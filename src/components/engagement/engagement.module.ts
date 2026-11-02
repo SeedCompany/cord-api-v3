@@ -1,5 +1,4 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { splitDb } from '~/core/database';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { CeremonyModule } from '../ceremony/ceremony.module';
 import { FileModule } from '../file/file.module';
@@ -16,7 +15,6 @@ import {
 } from './engagement-update-links.resolver';
 import { EngagementUpdatedResolver } from './engagement-updated.resolver';
 import { EngagementChannels } from './engagement.channels';
-import { EngagementDrizzleRepository } from './engagement.drizzle.repository';
 import { EngagementLoader } from './engagement.loader';
 import { EngagementRepository } from './engagement.repository';
 import { EngagementResolver } from './engagement.resolver';
@@ -26,10 +24,6 @@ import * as handlers from './handlers';
 import { InternshipEngagementResolver } from './internship-engagement.resolver';
 import { InternshipPositionResolver } from './internship-position.resolver';
 import { LanguageEngagementResolver } from './language-engagement.resolver';
-import { AddAiAssistFlagMigration } from './migrations/add-ai-assist-flag.migration';
-import { AddMarketableMigration } from './migrations/add-marketable.migration';
-import { FixNullMethodologiesMigration } from './migrations/fix-null-methodologies.migration';
-import { RenameMilestoneReachedToMilestonePlannedMigration } from './migrations/rename-milestoneReached-to-milestonePlanned.migration';
 import { EngagementProductConnectionResolver } from './product-connection.resolver';
 
 @Module({
@@ -57,17 +51,9 @@ import { EngagementProductConnectionResolver } from './product-connection.resolv
     EngagementRules,
     EngagementService,
     EngagementChannels,
-    splitDb(EngagementRepository, {
-      // migration-todo: `as any` removed at Phase 7 cutover when splitDb
-      // disappears with the Neo4j path.
-      postgres: EngagementDrizzleRepository as any,
-    }),
+    EngagementRepository,
     EngagementLoader,
     ...Object.values(handlers),
-    FixNullMethodologiesMigration,
-    AddAiAssistFlagMigration,
-    AddMarketableMigration,
-    RenameMilestoneReachedToMilestonePlannedMigration,
   ],
   exports: [EngagementService, EngagementRepository],
 })

@@ -1,25 +1,19 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import {
   Calculated,
-  DbSort,
   IntersectTypes,
   Resource,
   type ResourceRelationsShape,
   SecuredProperty,
 } from '~/common';
-import { sortingForEnumIndex } from '~/core/neo4j/query';
-import { type BaseNode } from '~/core/neo4j/results';
-import { RegisterResource } from '~/core/resources';
+import { type LinkTo, RegisterResource } from '~/core/resources';
 import { Commentable } from '../../comments/dto';
 import { LanguageEngagement } from '../../engagement/dto';
 import { type DefinedFile } from '../../file/dto';
 import { IPeriodicReport } from '../../periodic-report/dto/periodic-report.dto';
 import { ProgressReportCommunityStory } from './community-stories.dto';
 import { ProgressReportHighlight } from './highlights.dto';
-import {
-  SecuredProgressReportStatus as SecuredStatus,
-  ProgressReportStatus as Status,
-} from './progress-report-status.enum';
+import { SecuredProgressReportStatus as SecuredStatus } from './progress-report-status.enum';
 import { ProgressReportTeamNews } from './team-news.dto';
 
 const Interfaces = IntersectTypes(IPeriodicReport, Resource, Commentable);
@@ -41,8 +35,10 @@ export class ProgressReport extends Interfaces {
 
   declare readonly type: 'Progress';
 
+  readonly engagement: LinkTo<'LanguageEngagement'>;
+
   @Field(() => LanguageEngagement)
-  declare readonly parent: BaseNode;
+  declare readonly parent?: never;
 
   declare readonly reportFile: DefinedFile;
 
@@ -50,7 +46,6 @@ export class ProgressReport extends Interfaces {
 
   @Field(() => SecuredStatus)
   @Calculated()
-  @DbSort(sortingForEnumIndex(Status))
   readonly status: SecuredStatus;
 }
 

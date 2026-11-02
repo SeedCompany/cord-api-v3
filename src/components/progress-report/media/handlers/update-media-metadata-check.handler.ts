@@ -16,7 +16,7 @@ export class ProgressReportUpdateMediaMetadataCheckHandler {
     if (!event.media.attachedTo || !attached?.is(ReportMedia)) {
       return;
     }
-    const reportMediaId = event.media.attachedTo[0].properties.id;
+    const reportMediaId = event.media.attachedTo[0].id;
 
     const reportMedia = await this.resources.load(ReportMedia, reportMediaId);
     const allowed = this.privileges.for(ReportMedia, reportMedia).can('edit');

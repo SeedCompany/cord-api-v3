@@ -1,7 +1,5 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import {
-  DbLabel,
-  DbUnique,
   NameField,
   Resource,
   type Secured,
@@ -25,15 +23,12 @@ export abstract class SecuredLocationType extends SecuredEnum(LocationType) {}
 })
 export class Location extends Resource {
   @NameField()
-  @DbUnique()
   readonly name: SecuredString;
 
   @Field()
-  @DbLabel('LocationType')
   readonly type: SecuredLocationType;
 
   @Field()
-  @DbLabel('IsoAlpha3')
   readonly isoAlpha3: SecuredStringNullable;
 
   readonly fundingAccount: Secured<LinkTo<'FundingAccount'> | null>;

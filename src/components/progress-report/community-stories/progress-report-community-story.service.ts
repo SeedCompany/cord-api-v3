@@ -17,7 +17,7 @@ export class ProgressReportCommunityStoryService extends PromptVariantResponseLi
   }
 
   protected async getPrivilegeContext(dto: UnsecuredDto<CommunityStory>) {
-    const report = (await this.resources.loadByBaseNode(
+    const report = (await this.resources.loadByRef(
       dto.parent,
     )) as ProgressReport;
     return withEffectiveSensitivity(

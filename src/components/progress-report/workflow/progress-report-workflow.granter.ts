@@ -1,7 +1,6 @@
 import { entries, type NonEmptyArray } from '@seedcompany/common';
-import { type Query } from 'cypher-query-builder';
 import { inArray } from 'drizzle-orm';
-import { inspect, type InspectOptionsStylized } from 'util';
+import { inspect, type InspectContext } from 'util';
 import { type ID, isIdLike, type Many } from '~/common';
 import { progressReportWorkflowEvents } from '~/core/drizzle/schema';
 import { Granter, ResourceGranter } from '../../authorization';
@@ -121,15 +120,6 @@ class TransitionCondition implements Condition<typeof Event> {
     );
   }
 
-  asCypherCondition(query: Query) {
-    // TODO bypasses to statuses won't work with this. How should these be filtered?
-    const required = query.params.addParam(
-      this.allowedTransitionIds,
-      'allowedTransitions',
-    );
-    return `node.transition IN ${String(required)}`;
-  }
-
   asDrizzleCondition() {
     // TODO bypasses to statuses won't work with this. How should these be filtered?
     //
@@ -170,7 +160,7 @@ class TransitionCondition implements Condition<typeof Event> {
     return new TransitionCondition(checks);
   }
 
-  [inspect.custom](_depth: number, _options: InspectOptionsStylized) {
+  [inspect.custom](_depth: number, _options: InspectContext) {
     const render = (label: string, items: readonly string[]) => {
       const itemsStr = items.map((l) => `  ${l}`).join('\n');
       return `${label} {\n${itemsStr}\n}`;

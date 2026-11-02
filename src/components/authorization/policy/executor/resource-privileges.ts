@@ -26,11 +26,7 @@ import {
   createAllPermissionsView,
 } from './all-permissions-view';
 import { EdgePrivileges } from './edge-privileges';
-import {
-  type FilterOptions,
-  type PolicyExecutor,
-  type ResolveParams,
-} from './policy-executor';
+import { type PolicyExecutor, type ResolveParams } from './policy-executor';
 
 export class ResourcePrivileges<TResourceStatic extends ResourceShape<any>> {
   readonly resource: EnhancedResource<TResourceStatic>;
@@ -219,25 +215,6 @@ export class ResourcePrivileges<TResourceStatic extends ResourceShape<any>> {
       ...securedProps,
       canDelete: perms.can('delete'),
     };
-  }
-
-  /**
-   * Applies a filter to the `node` so that only readable nodes continue based on our polices.
-   * This requires `node` & `project` to be defined where this cypher snippet
-   * is inserted.
-   */
-  filterToReadable(options?: FilterOptions) {
-    return this.dbFilter({
-      action: 'read',
-      ...options,
-    });
-  }
-
-  dbFilter(options: FilterOptions & Pick<ResolveParams, 'action'>) {
-    return this.policyExecutor.cypherFilter({
-      ...options,
-      resource: this.resource,
-    });
   }
 }
 

@@ -2,8 +2,6 @@ import { Field, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import {
   Calculated,
-  DbLabel,
-  DbUnique,
   type ID,
   IntersectTypes,
   NameField,
@@ -85,7 +83,6 @@ export class Language extends Interfaces {
   @NameField({
     description: `The real language name`,
   })
-  @DbLabel('LanguageName')
   readonly name: SecuredString;
 
   @NameField({
@@ -95,7 +92,6 @@ export class Language extends Interfaces {
       This should always be viewable.
     `,
   })
-  @DbLabel('LanguageDisplayName')
   readonly displayName: SecuredString;
 
   @Field({
@@ -129,7 +125,6 @@ export class Language extends Interfaces {
       https://globalrecordings.net/en/rolv
     `,
   })
-  @DbUnique('RegistryOfLanguageVarietiesCode')
   readonly registryOfLanguageVarietiesCode: SecuredStringNullable;
 
   // consider making object

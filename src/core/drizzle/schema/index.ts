@@ -971,12 +971,12 @@ export const partners = pgTable(
     globalInnovationsClient: boolean('global_innovations_client'),
     active: boolean('active'),
     address: text('address'),
-    // migration-todo: deferred FK → languages(id); add REFERENCES when Language
-    // migrates. Plain text until then (same pattern as locations.funding_account_id).
+    // migration-todo: deferred FK → languages(id). No longer blocked (Language
+    // is on Postgres); adding it is a schema change on live rows.
     languageOfWiderCommunicationId: text(
       'language_of_wider_communication_id',
     ).$type<ID<'Language'>>(),
-    // migration-todo: deferred FK → languages(id); add when Language migrates.
+    // migration-todo: deferred FK → languages(id); same as the column above.
     languageOfReportingId: text('language_of_reporting_id').$type<
       ID<'Language'>
     >(),
@@ -1065,8 +1065,8 @@ export const partnerLanguagesOfConsulting = pgTable(
       .$type<ID<'Partner'>>()
       .notNull()
       .references(() => partners.id, { onDelete: 'cascade' }),
-    // migration-todo: deferred FK → languages(id); add REFERENCES when
-    // Language migrates.
+    // migration-todo: deferred FK → languages(id). No longer blocked (Language
+    // is on Postgres); adding it is a schema change on live rows.
     languageId: text('language_id').$type<ID<'Language'>>().notNull(),
   },
   (t) => [
@@ -1206,9 +1206,8 @@ export const roleEnum = pgEnum('role', [
  * discriminator; `own_sensitivity` is meaningful only for Internship (Translation
  * rows ignore it and read the denormalized `sensitivity` column).
  *
- * `sensitivity` is denormalized: kept current via a hook that recomputes from
- * Engagement/Language. The hook is stubbed (`migration-todo:`) until Language
- * migrates — Translation projects read 'High' in DATABASE=postgres until then.
+ * `sensitivity` is denormalized: kept current by `ProjectRepository.recomputeSensitivity`,
+ * which the engagement and language services call when either changes.
  *
  * `status` is `GENERATED ALWAYS AS (CASE step ... END) STORED` in the raw SQL
  * migration; mirrors Gel's `Project::statusFromStep(.step)`. Drizzle marks it
@@ -1278,9 +1277,9 @@ export const projects = pgTable(
         END`,
       )
       .notNull(),
-    // migration-todo: denormalized — recompute hook fires when Engagement/Language
-    // sensitivity changes (Tier 2 Language migration wires the hook). Translation
-    // rows read 'High' until then; Internship reads own_sensitivity.
+    // Denormalized — `ProjectRepository.recomputeSensitivity` keeps Translation rows
+    // current from their engagements' languages; Internship rows mirror
+    // own_sensitivity.
     sensitivity: sensitivityEnum('sensitivity').notNull().default('High'),
     // Writable only for Internship projects; Translation rows ignore it.
     ownSensitivity: sensitivityEnum('own_sensitivity'),
@@ -2077,22 +2076,29 @@ export const engagements = pgTable(
     openToInvestorVisit: boolean('open_to_investor_visit'),
     paratextRegistryId: text('paratext_registry_id'),
     rev79CommunityId: text('rev79_community_id'),
-    // migration-todo: deferred FK → files(id); populate when File migrates
-    // (Phase 7). Null until then.
+    // migration-todo: plain text (not FK) for the same reason as `mou_id`:
+    // create() inserts this row before files.createDefinedFile() makes the file.
     pnpId: text('pnp_id').$type<ID<'File'>>(),
     sentPrintingDate: date('sent_printing_date'),
     historicGoal: text('historic_goal'),
-    milestonePlanned: languageMilestoneEnum('milestone_planned')
-      .$type<LanguageMilestone>()
-      .notNull()
-      .default('Unknown'),
+    // Nullable with no default, matching every other language-only column on
+    // this table. These two used to be NOT NULL DEFAULT 'Unknown', which
+    // stamped a language-translation answer onto all 1,370 internship rows —
+    // engagements where the concepts do not apply and the API never exposes
+    // the fields. `milestoneReached` just below is the control: same table,
+    // same concept, nullable, and correctly blank on every internship.
+    //
+    // Keep them nullable. A NOT NULL DEFAULT here re-creates the problem
+    // silently, because Drizzle omits `undefined` and the column fills itself.
+    // `engagements_language_fields_shape_chk` now refuses a value on an
+    // internship and refuses a blank on a language engagement, so the shape
+    // is enforced rather than assumed.
+    milestonePlanned:
+      languageMilestoneEnum('milestone_planned').$type<LanguageMilestone>(),
     milestoneReached: boolean('milestone_reached'),
     usingAIAssistedTranslation: aiAssistedTranslationEnum(
       'using_ai_assisted_translation',
-    )
-      .$type<AIAssistedTranslation>()
-      .notNull()
-      .default('Unknown'),
+    ).$type<AIAssistedTranslation>(),
 
     // ── InternshipEngagement only ──
     internId: text('intern_id')
@@ -2110,7 +2116,7 @@ export const engagements = pgTable(
     countryOfOriginId: text('country_of_origin_id')
       .$type<ID<'Location'>>()
       .references(() => locations.id),
-    // migration-todo: deferred FK → files(id); Phase 7.
+    // migration-todo: plain text (not FK); same insert-order reason as pnp_id.
     growthPlanId: text('growth_plan_id').$type<ID<'File'>>(),
     // Nullable (migration 0042) — same filter reasoning as preset_inventory.
     marketable: boolean('marketable'),
@@ -2132,6 +2138,16 @@ export const engagements = pgTable(
       'engagements_type_shape_chk',
       sql`(${t.type} = 'Language' AND ${t.languageId} IS NOT NULL AND ${t.internId} IS NULL)
         OR (${t.type} = 'Internship' AND ${t.internId} IS NOT NULL AND ${t.languageId} IS NULL)`,
+    ),
+    // These two belong to language engagements and to nothing else. Stating
+    // that here does the job the old NOT NULL was doing for language rows,
+    // and adds the half it was missing: an internship cannot carry a value.
+    // Written as an equivalence, the same shape as
+    // `periodic_reports_status_shape_chk`, so neither direction can drift.
+    check(
+      'engagements_language_fields_shape_chk',
+      sql`(${t.type} = 'Language') = (${t.milestonePlanned} IS NOT NULL)
+        AND (${t.type} = 'Language') = (${t.usingAIAssistedTranslation} IS NOT NULL)`,
     ),
     uniqueIndex('engagements_project_language_active_unique')
       .on(t.projectId, t.languageId)
@@ -2309,6 +2325,7 @@ export const progressMeasurementEnum = pgEnum('progress_measurement', [
  * Scripture columns mirror how the DTOs distinguish the subtypes:
  * - Direct: `scriptureReferences` (or the unspecified-portion pair for legacy
  *   data where only a verse total is known).
+ * - Other: `scriptureReferences` too, but it never feeds the verse totals.
  * - Derivative: `scriptureReferencesOverride`; null means "not overriding"
  *   (use the producible's list) — this replaces Neo4j's `isOverriding` flag.
  */
@@ -2935,8 +2952,8 @@ export const partnershipProducingMediums = pgTable(
  * A comment thread attached to any Commentable resource. `parent_id` is
  * FK-less and polymorphic (User/Language/Partner/Project/Engagement/
  * ProgressReport span tables, same rationale as
- * prompt_variant_responses.parent_id); `parent_type` is the discriminator used
- * to rebuild the parent's fake BaseNode at read time.
+ * prompt_variant_responses.parent_id); `parent_type` is the concrete
+ * `__typename` of the parent, read back as its `{ __typename, id }` reference.
  */
 export const commentThreads = pgTable(
   'comment_threads',

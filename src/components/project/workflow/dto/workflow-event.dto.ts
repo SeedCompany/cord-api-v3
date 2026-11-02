@@ -10,7 +10,6 @@ export abstract class ProjectWorkflowEvent extends WorkflowEvent(
   ProjectStep,
   ProjectWorkflowTransition,
 ) {
-  static readonly BaseNodeProps = WorkflowEvent.BaseNodeProps;
   static readonly ConfirmThisClassPassesSensitivityToPolicies = true;
 
   readonly project: Pick<IProject, 'id' | 'type'>;

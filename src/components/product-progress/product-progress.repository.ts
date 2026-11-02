@@ -1,383 +1,322 @@
 import { Injectable } from '@nestjs/common';
-import { stripIndent } from 'common-tags';
-import { node, type Query, relation } from 'cypher-query-builder';
+import { and, asc, desc, eq, inArray, isNull, lt } from 'drizzle-orm';
 import { DateTime } from 'luxon';
 import {
-  EnhancedResource,
+  CalendarDate,
   generateId,
   type ID,
   NotFoundException,
+  type Sensitivity,
+  type UnsecuredDto,
   type Variant,
 } from '~/common';
-import { DatabaseService } from '~/core/neo4j';
+import { Identity } from '~/core/authentication';
+import { DrizzleService } from '~/core/drizzle/drizzle.service';
 import {
-  ACTIVE,
-  collect,
-  matchProjectScopedRoles,
-  matchProjectSens,
-  matchProps,
-  merge,
-  updateProperty,
-  variable,
-} from '~/core/neo4j/query';
-import { PeriodicReportService } from '../periodic-report';
-import { ReportType } from '../periodic-report/dto';
+  engagements,
+  periodicReports,
+  productProgress,
+  products,
+  projects,
+  stepProgress,
+} from '~/core/drizzle/schema';
+import { type ScopedRole } from '../authorization/dto/role.dto';
 import { type ProductStep } from '../product/dto';
+import { requesterScopeByProject } from '../project/project-member/membership-scope';
 import {
-  type ProgressVariant,
   type ProgressVariantByProductInput,
   type ProgressVariantByReportInput,
-  ProductProgress as RawProductProgress,
-  StepProgress as RawStepProgress,
+  type StepProgress as StepProgressDto,
   type UnsecuredProductProgress,
   type UpdateProductProgress,
 } from './dto';
 
-const ProductProgress = EnhancedResource.of(RawProductProgress);
-const StepProgress = EnhancedResource.of(RawStepProgress);
+type ProgressRow = typeof productProgress.$inferSelect & {
+  steps: Array<typeof stepProgress.$inferSelect>;
+};
 
 @Injectable()
 export class ProductProgressRepository {
   constructor(
-    private readonly db: DatabaseService,
-    private readonly reports: PeriodicReportService,
+    private readonly drizzle: DrizzleService,
+    private readonly identity: Identity,
   ) {}
 
-  async readOne(productId: ID, reportId: ID, variant: Variant) {
-    const result = await this.db
-      .query()
-      .match([
-        [node('product', 'Product', { id: productId })],
-        [node('report', 'PeriodicReport', { id: reportId })],
-      ])
-      .apply(this.withVariant(variant))
-      .apply(this.hydrateAll())
-      .first();
-    if (!result) {
+  protected get db() {
+    return this.drizzle.client;
+  }
+
+  async readOne(
+    productId: ID,
+    reportId: ID,
+    variant: Variant,
+  ): Promise<UnsecuredProductProgress> {
+    const product = await this.getProduct(productId);
+    if (!product) {
       throw new NotFoundException(
         'Could not find progress for product and report period',
       );
     }
-    return result;
+    const rows = await this.progressRows([productId], [reportId], variant.key);
+    return this.toDto(product.steps, productId, reportId, variant.key, rows[0]);
   }
 
   async readOneForCurrentReport(input: ProgressVariantByProductInput) {
-    const result = await this.db
-      .query()
-      .match(node('product', 'Product', { id: input.product.id }))
-      .apply(this.withVariant(input.variant))
-      .subQuery('product', (sub) =>
-        sub
-          .match([
-            node('product'),
-            relation('in', '', 'product'),
-            node('baseNode', 'Engagement'),
-          ])
-          .apply(
-            this.reports.matchCurrentDue(
-              variable('baseNode.id'),
-              ReportType.Progress,
-            ),
-          )
-          .return('node as report'),
+    const product = await this.getProduct(input.product.id);
+    if (!product) return undefined;
+    const [report] = await this.db
+      .select({ id: periodicReports.id })
+      .from(periodicReports)
+      .where(
+        and(
+          isNull(periodicReports.deletedAt),
+          eq(periodicReports.engagementId, product.engagementId),
+          eq(periodicReports.type, 'Progress'),
+          lt(periodicReports.end, CalendarDate.local().toISODate()),
+        ),
       )
-      .apply(this.hydrateAll())
-      .first();
-    return result;
+      .orderBy(desc(periodicReports.end), asc(periodicReports.start))
+      .limit(1);
+    if (!report) return undefined;
+    return await this.readOne(input.product.id, report.id, input.variant);
   }
 
   async readAllProgressReportsForManyProducts(
-    products: readonly ProgressVariantByProductInput[],
+    inputs: readonly ProgressVariantByProductInput[],
   ) {
-    const result = await this.db
-      .query()
-      .unwind(
-        products.map((r) => ({
-          productId: r.product.id,
-          variant: r.variant.key,
-        })),
-        'input',
-      )
-      .match([
-        node('eng', 'Engagement'),
-        relation('out', '', 'product', ACTIVE),
-        node('product', 'Product', {
-          id: variable('input.productId'),
-        }),
-      ])
-      .with('eng, product, input.variant as variant')
-      .subQuery(['eng', 'product', 'variant'], (sub) =>
-        sub
-          .match([
-            node('eng'),
-            relation('out', '', 'report', ACTIVE),
-            node('report', 'ProgressReport'),
-          ])
-          .subQuery(['report', 'product', 'variant'], this.hydrateAll())
-          .return(collect('dto').as('progressList')),
-      )
-      .return<{
-        productId: ID;
-        variant: ProgressVariant;
-        progressList: UnsecuredProductProgress[];
-      }>(['product.id as productId', 'variant', 'progressList'])
-      .run();
-    return result;
+    const results = [];
+    for (const input of inputs) {
+      const product = await this.getProduct(input.product.id);
+      if (!product) continue;
+      const reports = await this.db
+        .select({ id: periodicReports.id })
+        .from(periodicReports)
+        .where(
+          and(
+            isNull(periodicReports.deletedAt),
+            eq(periodicReports.engagementId, product.engagementId),
+            eq(periodicReports.type, 'Progress'),
+          ),
+        );
+      const progressRows = await this.progressRows(
+        [input.product.id],
+        reports.map((r) => r.id),
+        input.variant.key,
+      );
+      const byReport = new Map(progressRows.map((row) => [row.reportId, row]));
+      results.push({
+        productId: input.product.id,
+        variant: input.variant.key,
+        progressList: reports.map((report) =>
+          this.toDto(
+            product.steps,
+            input.product.id,
+            report.id,
+            input.variant.key,
+            byReport.get(report.id),
+          ),
+        ),
+      });
+    }
+    return results;
   }
 
   async readAllProgressReportsForManyReports(
-    reports: readonly ProgressVariantByReportInput[],
+    inputs: readonly ProgressVariantByReportInput[],
   ) {
-    const result = await this.db
-      .query()
-      .unwind(
-        reports.map((r) => ({
-          reportId: r.report.id,
-          variant: r.variant.key,
-        })),
-        'input',
-      )
-      .match([
-        node('eng', 'Engagement'),
-        relation('out', '', 'report', ACTIVE),
-        node('report', 'ProgressReport', {
-          id: variable('input.reportId'),
-        }),
-      ])
-      .with('eng, report, input.variant as variant')
-      .subQuery(['eng', 'report', 'variant'], (sub) =>
-        sub
-          .match([
-            node('eng'),
-            relation('out', '', 'product', ACTIVE),
-            node('product', 'Product'),
-          ])
-          .subQuery(['report', 'product', 'variant'], this.hydrateAll())
-          .return(collect('dto').as('progressList')),
-      )
-      .return<{
-        reportId: ID;
-        variant: ProgressVariant;
-        progressList: UnsecuredProductProgress[];
-      }>(['report.id as reportId', 'variant', 'progressList'])
-      .run();
-    return result;
-  }
-
-  private hydrateAll() {
-    return <R>(query: Query<R>) =>
-      query
-        .comment('hydrateAll()')
-        .optionalMatch([
-          node('report'),
-          relation('out', '', 'progress', ACTIVE),
-          node('progress', ProductProgress.dbLabel, {
-            variant: variable('variant'),
-          }),
-          relation('in', '', 'progress', ACTIVE),
-          node('product'),
-        ])
-        .apply(this.hydrateOne())
-        .return('dto')
-        .map('dto');
-  }
-
-  private hydrateOne() {
-    return <R>(query: Query<R>) =>
-      query.comment`hydrateOne()`.subQuery(
-        ['product', 'report', 'progress', 'variant'],
-        (sub1) =>
-          sub1
-            .subQuery(['product', 'report', 'progress'], (sub2) =>
-              sub2
-                .match([
-                  node('progress'),
-                  relation('out', '', 'step', ACTIVE),
-                  node('stepNode', StepProgress.dbLabel),
-                ])
-                .apply(matchProps({ nodeName: 'stepNode', outputVar: 'step' }))
-                .return(collect('step').as('steps')),
-            )
-            .match([
-              node('product'),
-              relation('out', '', 'steps', ACTIVE),
-              node('declaredSteps', 'Property'),
-            ])
-            .with([
-              '*',
-              // Convert StepProgress list to a map keyed by step
-              'apoc.map.fromPairs([sp in steps | [sp.step, sp]]) as progressStepMap',
-            ])
-            .return<{ dto: UnsecuredProductProgress }>(
-              // FYI `progress` is nullable, so this could include its props or not.
-              merge('progress', {
-                productId: 'product.id',
-                reportId: 'report.id',
-                variant: 'variant',
-                // Convert the products step strings into actual StepProgress
-                // or fallback to a placeholder. This ensures that the list is
-                // in the correct order and indicates which steps still need
-                // progress reported.
-                steps: stripIndent`
-                  [step in declaredSteps.value |
-                    apoc.map.get(progressStepMap, step, { step: step, completed: null })
-                  ]
-                `,
-              }).as('dto'),
-            ),
+    const results = [];
+    for (const input of inputs) {
+      const [report] = await this.db
+        .select({
+          id: periodicReports.id,
+          engagementId: periodicReports.engagementId,
+        })
+        .from(periodicReports)
+        .where(
+          and(
+            eq(periodicReports.id, input.report.id),
+            isNull(periodicReports.deletedAt),
+          ),
+        );
+      if (!report?.engagementId) continue;
+      const engagementProducts = await this.db
+        .select({ id: products.id, steps: products.steps })
+        .from(products)
+        .where(
+          and(
+            eq(products.engagementId, report.engagementId),
+            isNull(products.deletedAt),
+          ),
+        );
+      const progressRows = await this.progressRows(
+        engagementProducts.map((p) => p.id),
+        [report.id],
+        input.variant.key,
       );
+      const byProduct = new Map(
+        progressRows.map((row) => [row.productId, row]),
+      );
+      results.push({
+        reportId: report.id,
+        variant: input.variant.key,
+        progressList: engagementProducts.map((product) =>
+          this.toDto(
+            product.steps,
+            product.id,
+            report.id,
+            input.variant.key,
+            byProduct.get(product.id),
+          ),
+        ),
+      });
+    }
+    return results;
   }
 
   async update(input: UpdateProductProgress) {
-    const createdAt = DateTime.local();
-    // Create temp IDs in case the Progress/Step nodes need to be created.
-    const tempProgressId = await generateId();
-    const stepsInput = await Promise.all(
-      input.steps.map(async (stepIn) => ({
-        ...stepIn,
-        tempId: await generateId(),
-      })),
-    );
-
-    const query = this.db
-      .query()
-      .match([node('product', 'Product', { id: input.product })])
-      .match([node('report', 'PeriodicReport', { id: input.report })])
-      .apply(this.withVariant(input.variant))
-
-      .comment('Create ProductProgress if needed')
-      .subQuery(['product', 'report', 'variant'], (sub) =>
-        sub
-          .merge([
-            node('product'),
-            relation('out', 'productProgressRel', 'progress', ACTIVE),
-            node('progress', ProductProgress.dbLabel, {
-              variant: variable('variant'),
-            }),
-            relation('in', 'reportProgressRel', 'progress', ACTIVE),
-            node('report'),
-          ])
-          .onCreate.set(
-            {
-              labels: {
-                progress: ProductProgress.dbLabels,
-              },
-              values: {
-                progress: { id: tempProgressId, createdAt },
-                productProgressRel: { createdAt },
-                reportProgressRel: { createdAt },
-              },
-            },
-            { merge: true },
-          )
-          .return('progress'),
-      )
-
-      .comment('For each step input given')
-      .subQuery('progress', (sub) =>
-        sub
-          .unwind(stepsInput, 'stepInput')
-
-          .comment('Match or Create StepProgress')
-          .subQuery(['progress', 'stepInput'], (sub2) =>
-            sub2
-              .merge([
-                node('progress'),
-                relation('out', 'progressStepRel', 'step', ACTIVE),
-                node('stepNode', StepProgress.dbLabel, {
-                  step: variable('stepInput.step'),
-                }),
-              ])
-              .onCreate.set(
-                {
-                  labels: {
-                    stepNode: StepProgress.dbLabels,
-                  },
-                  values: {
-                    stepNode: { createdAt },
-                    progressStepRel: { createdAt },
-                  },
-                },
-                { merge: true },
-              )
-              .onCreate.setVariables({
-                stepNode: { id: 'stepInput.tempId' },
-              })
-              .return('stepNode'),
-          ).raw`
-            // Update current completed values that have changed
-            WITH *
-            WHERE NOT (stepNode)-[:completed { active: true }]->(:Property { value: stepInput.completed })
-          `
-          .apply(
-            updateProperty({
-              nodeName: 'stepNode',
-              resource: StepProgress,
-              key: 'completed',
-              value: variable('stepInput.completed'),
-            }),
-          )
-          .return([
-            'sum(stats.created) as numProgressPercentCreated',
-            'sum(stats.deactivated) as numProgressPercentDeactivated',
-          ]),
-      )
-
-      .comment('Now read back progress node')
-      .apply(this.hydrateOne())
-      .return([
-        'dto',
-        'numProgressPercentCreated',
-        'numProgressPercentDeactivated',
-      ]);
-
-    const result = await query.first();
-    if (!result) {
+    const product = await this.getProduct(input.product);
+    const [report] = await this.db
+      .select({ id: periodicReports.id })
+      .from(periodicReports)
+      .where(
+        and(
+          eq(periodicReports.id, input.report),
+          isNull(periodicReports.deletedAt),
+        ),
+      );
+    if (!product || !report) {
       throw new NotFoundException(
         'Could not find product or report to add progress to',
       );
     }
-    return result.dto;
+    await this.db
+      .insert(productProgress)
+      .values({
+        id: await generateId(),
+        productId: input.product,
+        reportId: input.report,
+        variant: input.variant.key,
+      })
+      .onConflictDoNothing();
+    const [row] = await this.db
+      .select({ id: productProgress.id })
+      .from(productProgress)
+      .where(
+        and(
+          eq(productProgress.productId, input.product),
+          eq(productProgress.reportId, input.report),
+          eq(productProgress.variant, input.variant.key),
+        ),
+      );
+    for (const step of input.steps) {
+      await this.db
+        .insert(stepProgress)
+        .values({
+          id: await generateId(),
+          progressId: row!.id,
+          step: step.step,
+          completed: step.completed,
+        })
+        .onConflictDoUpdate({
+          target: [stepProgress.progressId, stepProgress.step],
+          set: { completed: step.completed, updatedAt: new Date() },
+        });
+    }
+    return await this.readOne(input.product, input.report, input.variant);
   }
 
-  async getScope(productId: ID) {
-    const query = this.db
-      .query()
-      .match([
-        node('product', 'Product', { id: productId }),
-        relation('in', '', 'product'),
-        node('engagement', 'Engagement'),
-        relation('in', '', 'engagement'),
-        node('project', 'Project'),
-      ])
-      .apply(matchProjectScopedRoles({ outputVar: 'scope' }))
-      .apply(matchProjectSens())
-      .subQuery('product', (sub) =>
-        sub
-          .match([
-            node('steps', 'Property'),
-            relation('in', '', 'steps', ACTIVE),
-            node('product'),
-            relation('out', '', 'progressTarget', ACTIVE),
-            node('progressTarget', 'Property'),
-          ])
-          .return<{
-            progressTarget: number;
-            steps: ProductStep[];
-          }>('progressTarget.value as progressTarget, steps.value as steps'),
-      )
-      .return(['sensitivity', 'scope', 'progressTarget', 'steps']);
-    const result = await query.first();
-    if (!result) {
+  async getScope(productId: ID): Promise<{
+    sensitivity: Sensitivity;
+    scope: ScopedRole[];
+    progressTarget: number;
+    steps: readonly ProductStep[];
+  }> {
+    const [row] = await this.db
+      .select({
+        progressTarget: products.progressTarget,
+        steps: products.steps,
+        projectId: projects.id,
+        sensitivity: projects.sensitivity,
+      })
+      .from(products)
+      .innerJoin(engagements, eq(products.engagementId, engagements.id))
+      .innerJoin(projects, eq(engagements.projectId, projects.id))
+      .where(and(eq(products.id, productId), isNull(products.deletedAt)));
+    if (!row) {
       throw new NotFoundException('Could not find product');
     }
-    return result;
+    const scopeByProject = await requesterScopeByProject(
+      this.db,
+      this.identity.current.userId,
+      [row.projectId],
+    );
+    return {
+      sensitivity: row.sensitivity,
+      scope: scopeByProject.get(row.projectId) ?? [],
+      progressTarget: row.progressTarget,
+      steps: row.steps,
+    };
   }
 
-  private withVariant(variant: Variant) {
-    return (q: Query) => {
-      const p = q.params.addParam(variant.key, 'variant');
-      return q.with(`*, ${String(p)} as variant`);
+  private async getProduct(productId: ID) {
+    const [product] = await this.db
+      .select({
+        id: products.id,
+        engagementId: products.engagementId,
+        steps: products.steps,
+        progressTarget: products.progressTarget,
+      })
+      .from(products)
+      .where(and(eq(products.id, productId), isNull(products.deletedAt)));
+    return product;
+  }
+
+  private async progressRows(
+    productIds: readonly ID[],
+    reportIds: readonly ID[],
+    variantKey: string,
+  ): Promise<ProgressRow[]> {
+    if (productIds.length === 0 || reportIds.length === 0) return [];
+    const rows = await this.db.query.productProgress.findMany({
+      where: (pp) =>
+        and(
+          inArray(pp.productId, [...productIds] as Array<ID<'Product'>>),
+          inArray(pp.reportId, [...reportIds]),
+          eq(pp.variant, variantKey),
+        ),
+      with: { steps: true },
+    });
+    return rows as ProgressRow[];
+  }
+
+  private toDto(
+    declaredSteps: readonly ProductStep[],
+    productId: ID,
+    reportId: ID,
+    variant: string,
+    row?: ProgressRow,
+  ): UnsecuredProductProgress {
+    const byStep = new Map(row?.steps.map((s) => [s.step, s]) ?? []);
+    const dto: unknown = {
+      ...(row && {
+        id: row.id,
+        createdAt: DateTime.fromJSDate(row.createdAt),
+      }),
+      productId,
+      reportId,
+      variant,
+      steps: declaredSteps.map((step): UnsecuredDto<StepProgressDto> => {
+        const sp = byStep.get(step);
+        return sp
+          ? {
+              id: sp.id,
+              createdAt: DateTime.fromJSDate(sp.createdAt),
+              step,
+              completed: sp.completed,
+            }
+          : { step, completed: null };
+      }),
     };
+    return dto as UnsecuredProductProgress;
   }
 }

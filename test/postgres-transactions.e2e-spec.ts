@@ -3,13 +3,6 @@ import { sql } from 'drizzle-orm';
 import { DrizzleService } from '~/core/drizzle';
 import { createTestApp, type TestApp } from './utility';
 
-// Transaction scoping is engine-specific, so these only mean anything under
-// DATABASE=postgres. Reported as skipped under neo4j rather than passing while
-// asserting nothing.
-// migration-todo: drop the engine check at Phase 7 cutover (always postgres).
-const isPostgres = process.env.DATABASE === 'postgres';
-const describePg = isPostgres ? describe : describe.skip;
-
 /**
  * A nested transaction must CONTINUE the one already open, not begin a second.
  *
@@ -26,7 +19,7 @@ const describePg = isPostgres ? describe : describe.skip;
  * waiting on a connection that only frees when those same requests finish. The
  * e2e suite runs with a single worker, so it can never produce that.
  */
-describePg('Postgres transaction scoping', () => {
+describe('Postgres transaction scoping', () => {
   let app: TestApp;
   let drizzle: DrizzleService;
 

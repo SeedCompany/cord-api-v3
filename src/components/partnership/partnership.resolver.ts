@@ -19,6 +19,8 @@ import { SecuredFile } from '../file/dto';
 import { PartnerLoader } from '../partner';
 import { SecuredPartner } from '../partner/dto';
 import { PartnershipLoader, PartnershipService } from '../partnership';
+import { ProjectLoader } from '../project';
+import { IProject, type Project } from '../project/dto';
 import {
   CreatePartnership,
   Partnership,
@@ -72,6 +74,17 @@ export class PartnershipResolver {
     @Loader(FileNodeLoader) files: LoaderOf<FileNodeLoader>,
   ): Promise<SecuredFile> {
     return await resolveDefinedFile(files, partnership.agreement);
+  }
+
+  @ResolveField(() => IProject)
+  async parent(
+    @Parent() partnership: Partnership,
+    @Loader(ProjectLoader) projects: LoaderOf<ProjectLoader>,
+  ): Promise<Project> {
+    return await projects.load({
+      id: partnership.project.id,
+      view: { active: true },
+    });
   }
 
   @ResolveField(() => SecuredPartner)

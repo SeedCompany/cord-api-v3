@@ -4,14 +4,12 @@ import {
   isNotNil,
   type Nil,
 } from '@seedcompany/common';
-import { type Query } from 'cypher-query-builder';
 import { and, or, type SQL } from 'drizzle-orm';
 import { type Class, type Constructor } from 'type-fest';
-import { inspect, type InspectOptionsStylized } from 'util';
+import { inspect, type InspectContext } from 'util';
 import { type ResourceShape } from '~/common';
 import { type Policy } from '../policy.factory';
 import type {
-  AsCypherParams,
   AsDrizzleParams,
   Condition,
   IsAllowedParams,
@@ -38,39 +36,12 @@ export abstract class AggregateConditions<
     return this.conditions[aggFn]((condition) => condition.isAllowed(params));
   }
 
-  setupCypherContext(
-    query: Query,
-    prevApplied: Set<any>,
-    other: AsCypherParams<TResourceStatic>,
-  ) {
-    for (const condition of this.conditions) {
-      query =
-        condition.setupCypherContext?.(query, prevApplied, other) ?? query;
-    }
-    return query;
-  }
-
-  asCypherCondition(
-    query: Query,
-    other: AsCypherParams<TResourceStatic>,
-  ): string {
-    if (this.conditions.length === 0) {
-      return 'true';
-    }
-    const separator = this instanceof AndConditions ? ' AND ' : ' OR ';
-    const inner = this.conditions
-      .map((condition) => condition.asCypherCondition(query, other))
-      .join(separator);
-    return `(${inner})`;
-  }
-
   asDrizzleCondition(params: AsDrizzleParams<TResourceStatic>): SQL {
     const inner = this.conditions.map((condition) => {
       if (!condition.asDrizzleCondition) {
-        // migration-todo: fires for conditions not yet ported to Drizzle
-        // (creator / enum-field / variant / etc.) — port each alongside the
-        // first migrated domain whose policies need it. Post-cutover the
-        // throw stays as the fail-loud for brand-new conditions.
+        // Fires for a condition with no SQL form (creator / variant today) the
+        // first time a read policy needs one — implement it then. Stays as the
+        // fail-loud for brand-new conditions.
         throw new Error(
           `Condition ${condition.constructor.name} has not been ported to Drizzle — implement asDrizzleCondition`,
         );
@@ -83,7 +54,7 @@ export abstract class AggregateConditions<
     return combined!;
   }
 
-  [inspect.custom](_depth: number, _options: InspectOptionsStylized) {
+  [inspect.custom](_depth: number, _options: InspectContext) {
     const name = this instanceof AndConditions ? ' AND ' : ' OR ';
     const asStrings = this.conditions.map((condition) => {
       const label = inspect(condition);

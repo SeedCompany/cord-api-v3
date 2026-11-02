@@ -1,12 +1,10 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { splitDb } from '~/core/database';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { CeremonyEngagementConnectionResolver } from './ceremony-engagement-connection.resolver';
 import { CeremonyMutationActorResolver } from './ceremony-mutation-actor.resolver';
 import { CeremonyMutationSubscriptionsResolver } from './ceremony-mutation-subscriptions.resolver';
 import { CeremonyUpdatedResolver } from './ceremony-updated.resolver';
 import { CeremonyChannels } from './ceremony.channels';
-import { CeremonyDrizzleRepository } from './ceremony.drizzle.repository';
 import { CeremonyLoader } from './ceremony.loader';
 import { CeremonyRepository } from './ceremony.repository';
 import { CeremonyResolver } from './ceremony.resolver';
@@ -23,11 +21,7 @@ import * as handlers from './handlers';
     CeremonyUpdatedResolver,
     CeremonyService,
     CeremonyChannels,
-    splitDb(CeremonyRepository, {
-      // migration-todo: `as any` removed at Phase 7 cutover when splitDb
-      // disappears with the Neo4j path.
-      postgres: CeremonyDrizzleRepository as any,
-    }),
+    CeremonyRepository,
     CeremonyLoader,
     ...Object.values(handlers),
   ],

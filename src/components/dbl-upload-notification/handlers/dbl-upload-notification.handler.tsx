@@ -68,7 +68,7 @@ export class DBLUploadNotificationHandler {
     }
 
     const completedBooks = await this.determineCompletedBooks(
-      report.parent.properties.id,
+      report.engagement.id,
       completedProducts,
     );
     if (!completedBooks) {
@@ -84,7 +84,7 @@ export class DBLUploadNotificationHandler {
   ) {
     const engagement = await this.resources.load(
       'LanguageEngagement',
-      report.parent.properties.id,
+      report.engagement.id,
     );
     const notifyees = await this.moduleRef
       .get(ProjectMemberRepository, { strict: false })

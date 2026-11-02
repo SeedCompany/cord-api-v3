@@ -18,17 +18,13 @@ import {
 } from './utility';
 
 /**
- * Sorts that reach ACROSS domains, plus where each engine puts blanks.
+ * Sorts that reach ACROSS domains, plus where blanks go.
  *
  * Its own spec rather than one per domain because that is the shape of the
  * thing being tested: an engagement sorted by `project.name` exercises the
  * engagement repository, the project repository's sort map, and the shared
- * order-by helper together, and the same is true of every case below. The file
- * runs against both engines, and every case asserts an order they have to agree
- * on — except `nameProjectLast` and users-by-`title`, which disagree on purpose
- * and assert a different answer per engine: every text sort folds case on
- * Postgres (decided 2026-09-15), while Neo4j folds only names and orders plain
- * text by raw code points.
+ * order-by helper together, and the same is true of every case below. Every
+ * text sort folds case (decided 2026-09-15).
  *
  * Every fixture set is scoped by a random name prefix and given labels whose
  * alphabetical order DISAGREES with the order under test. That is deliberate:
@@ -36,15 +32,6 @@ import {
  * fallback column, so a fixture set whose name order matches the expected order
  * would pass without the sort working at all.
  */
-/** Same engine gate the audit-log spec uses — `DATABASE`, not `DATABASE_ENGINE`. */
-const isPostgres = process.env.DATABASE === 'postgres';
-
-/**
- * Reported as SKIPPED on Neo4j rather than passing silently — `it.skip`, not an
- * early `return`, which jest counts as a pass.
- */
-const itPostgresOnly = isPostgres ? it : it.skip;
-
 describe('cross-domain list sorts', () => {
   let app: TestApp;
 
@@ -194,18 +181,16 @@ describe('cross-domain list sorts', () => {
       await createEngagementFixture(`${prefix} ${label}`);
     }
 
-    // Folded, so `apple` leads. Neo4j folds a name where `DbSort` finds a
-    // transformer for the sorted field, and this key resolves to Project's
-    // `@NameField` name; raw code points would lead with `Zebra`.
+    // Folded, so `apple` leads; raw code points would lead with `Zebra`.
     expect(
       await engagementsSortedBy('project.name', Order.ASC, prefix),
     ).toEqual(['apple', 'Zebra']);
   });
 
-  it('engagements by nameProjectLast — display name on Postgres, name on Neo4j', async () => {
+  it('engagements by nameProjectLast — display name, folded', async () => {
     const prefix = faker.string.alpha({ length: 8 });
-    // Arranged so the Postgres expectation is unique to "sorted by DISPLAY
-    // name, case-folded": raw code points on the display name give the
+    // Arranged so the expectation is unique to "sorted by DISPLAY name,
+    // case-folded": raw code points on the display name give the
     // opposite order (`Bravo` leads `apple`), and the `name` column gives the
     // opposite order whether folded or not.
     await createEngagementFixture(`${prefix} First`, {
@@ -218,13 +203,11 @@ describe('cross-domain list sorts', () => {
     });
 
     // The grid's "Language / Intern" column SHOWS the language's display name,
-    // so Postgres sorts by that (decided 2026-09-10) and folds it like every
-    // text sort (decided 2026-09-15): `apple` before `Bravo`. Neo4j still
-    // sorts by the language's `name`, unfolded — a sort-only key carries no
-    // fold transformer — so capitals lead: `Alpha` before `zulu`.
+    // so it sorts by that (decided 2026-09-10) and folds it like every text
+    // sort (decided 2026-09-15): `apple` before `Bravo`.
     expect(
       await engagementsSortedBy('nameProjectLast', Order.ASC, prefix),
-    ).toEqual(isPostgres ? ['First', 'Second'] : ['Second', 'First']);
+    ).toEqual(['First', 'Second']);
   });
 
   const languagesSortedBy = async (
@@ -280,8 +263,8 @@ describe('cross-domain list sorts', () => {
       await languagesSortedBy('ethnologue.code', Order.ASC, prefix),
     ).toEqual(['Bravo', 'Charlie', 'Alpha']);
     // Bravo has no override, so it sorts by its ethnologue population (100);
-    // Alpha's override (200) wins over its ethnologue value (900). Both engines
-    // sort by the same coalesced number the API returns as `population`.
+    // Alpha's override (200) wins over its ethnologue value (900). It sorts by
+    // the same coalesced number the API returns as `population`.
     expect(await languagesSortedBy('population', Order.ASC, prefix)).toEqual([
       'Bravo',
       'Alpha',
@@ -306,11 +289,9 @@ describe('cross-domain list sorts', () => {
       await createLanguageMinimal(app, { name: `${prefix} Bravo` });
     });
 
-    // Postgres puts nulls last on ASC but FIRST on DESC by default, while
-    // Neo4j puts them last both ways (`sortWith` orders DESC by
-    // `[sortValue IS NOT NULL, sortValue]` for exactly this reason). Without
-    // the `nulls last` in `orderEntry`, the DESC case here returns
-    // `Bravo | Alpha | Charlie` on Postgres.
+    // Postgres puts nulls last on ASC but FIRST on DESC by default; blanks go
+    // last both ways here. Without the `nulls last` in `orderEntry`, the DESC
+    // case here returns `Bravo | Alpha | Charlie`.
     expect(
       await languagesSortedBy(
         'registryOfLanguageVarietiesCode',
@@ -491,7 +472,7 @@ describe('cross-domain list sorts', () => {
     expect(await sorted(Order.DESC)).toEqual([true, false]);
   });
 
-  it('users by title — plain text folds on Postgres, code points on Neo4j', async () => {
+  it('users by title — plain text folds', async () => {
     const prefix = faker.string.alpha({ length: 8 });
     // A case-crossing pair: raw code points put every capital ahead of every
     // lowercase letter, so `Zulu` leads `apple` unfolded and trails it folded.
@@ -522,31 +503,23 @@ describe('cross-domain list sorts', () => {
         input: { sort: 'title', order: Order.ASC, filter: { name: prefix } },
       },
     );
-    // `title` is a plain `@Field()`, not a name — the class of sort where the
-    // engines deliberately disagree: every text sort folds case on Postgres
-    // (decided 2026-09-15), while Neo4j folds only `@NameField`s and orders
-    // the rest by raw code points.
-    expect(users.items.map((user) => user.title.value)).toEqual(
-      isPostgres
-        ? [`${prefix} apple`, `${prefix} Zulu`]
-        : [`${prefix} Zulu`, `${prefix} apple`],
-    );
+    // `title` is a plain `@Field()`, not a name; every text sort folds case
+    // (decided 2026-09-15).
+    expect(users.items.map((user) => user.title.value)).toEqual([
+      `${prefix} apple`,
+      `${prefix} Zulu`,
+    ]);
   });
 
   it('users by fullName — ONE concatenated string, not first-then-last', async () => {
-    // Neo4j's matching sorter concatenates first and last name and orders that
-    // one string (`multiPropsAsSortString`). Ordering by first name and then by
-    // last name is NOT the same thing: the two disagree whenever one first name
+    // The sort concatenates first and last name and orders that one string.
+    // Ordering by first name and then by last name is NOT the same thing: the two disagree whenever one first name
     // is a prefix of another, which real names do constantly.
     //
-    // These two fixtures are chosen so the answers differ AND both engines can
-    // assert the same one. The names diverge at the character after `Ann`:
+    // These two fixtures are chosen so the answers differ. The names diverge at
+    // the character after `Ann`:
     //   concatenated -> "annvan dyke" vs "annabrown" => Anna Brown first
     //   two columns  -> "Ann"         vs "Anna"      => Ann van Dyke first
-    // A lower-case surname initial is what makes it engine-neutral — this key
-    // is collated on Postgres and raw code points on Neo4j (a registered known
-    // delta), and those two agree only while the deciding characters share a
-    // case.
     const prefix = faker.string.alpha({ length: 8 });
     await runAsAdmin(app, async () => {
       await createPerson(app, {
@@ -728,23 +701,20 @@ describe('cross-domain list sorts', () => {
     expectOldestFirst(user.unavailabilities.items, unavailabilities);
   });
 
-  itPostgresOnly(
-    'treats an inherited property name as an unknown sort key',
-    async () => {
-      const prefix = faker.string.alpha({ length: 8 });
-      await runAsAdmin(app, async () => {
-        await createLanguageMinimal(app, { name: `${prefix} Alpha` });
-      });
+  it('treats an inherited property name as an unknown sort key', async () => {
+    const prefix = faker.string.alpha({ length: 8 });
+    await runAsAdmin(app, async () => {
+      await createLanguageMinimal(app, { name: `${prefix} Alpha` });
+    });
 
-      // `sort` is a plain String validated only against `/^[A-Za-z0-9_.]+$/`
-      // (`SortablePaginationInput`), so `constructor` is a request anyone can
-      // send. Looked up in a plain object it answers with Object's own
-      // constructor — truthy, and indistinguishable from a real entry — which
-      // Drizzle then binds as a query parameter. The list has to fall back
-      // instead, the way any other unknown key does.
-      expect(await languagesSortedBy('constructor', Order.ASC, prefix)).toEqual(
-        ['Alpha'],
-      );
-    },
-  );
+    // `sort` is a plain String validated only against `/^[A-Za-z0-9_.]+$/`
+    // (`SortablePaginationInput`), so `constructor` is a request anyone can
+    // send. Looked up in a plain object it answers with Object's own
+    // constructor — truthy, and indistinguishable from a real entry — which
+    // Drizzle then binds as a query parameter. The list has to fall back
+    // instead, the way any other unknown key does.
+    expect(await languagesSortedBy('constructor', Order.ASC, prefix)).toEqual([
+      'Alpha',
+    ]);
+  });
 });

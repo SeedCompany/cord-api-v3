@@ -1,207 +1,181 @@
 import { Injectable } from '@nestjs/common';
-import { node, type Query, relation } from 'cypher-query-builder';
+import { and, eq, ilike, isNull, type SQL } from 'drizzle-orm';
+import { DateTime } from 'luxon';
 import {
-  CreationFailed,
-  DuplicateException,
+  generateId,
   type ID,
-  NotFoundException,
-  ReadAfterCreationFailed,
-  SecuredList,
+  type PaginatedListType,
   type UnsecuredDto,
 } from '~/common';
-import { DtoRepository, OnIndex } from '~/core/neo4j';
 import {
-  ACTIVE,
-  createNode,
-  createRelationships,
-  defineSorters,
-  filter,
-  FullTextIndex,
-  matchProps,
-  merge,
-  paginate,
-  sortWith,
-} from '~/core/neo4j/query';
-import {
-  fieldZoneFilters,
-  fieldZoneSorters,
-} from '../field-zone/field-zone.repository';
-import { userFilters, userSorters } from '../user/user.repository';
+  catchUniqueViolation,
+  DrizzleDtoRepository,
+  EMPTY_PAGE,
+  escapeLikePattern,
+  resolveOrderBy,
+  type SortMap,
+  subFilter,
+} from '~/core/drizzle';
+import { type DrizzleDb, DrizzleService } from '~/core/drizzle/drizzle.service';
+import { fieldRegions, fieldZones, users } from '~/core/drizzle/schema';
+import { PolicyExecutor } from '../authorization/policy/executor/policy-executor';
+import { fieldZoneFilterClauses } from '../field-zone/field-zone.repository';
+import { userFilterClauses } from '../user/user.repository';
 import {
   type CreateFieldRegion,
   FieldRegion,
-  FieldRegionFilters,
+  type FieldRegionFilters,
   type FieldRegionListInput,
   type UpdateFieldRegion,
 } from './dto';
 
+const catchNameUnique = catchUniqueViolation(
+  'name',
+  'name',
+  'FieldRegion with this name already exists.',
+);
+
 @Injectable()
-export class FieldRegionRepository extends DtoRepository(FieldRegion) {
-  async create(input: CreateFieldRegion) {
-    if (!(await this.isUnique(input.name))) {
-      throw new DuplicateException(
-        'name',
-        'FieldRegion with this name already exists.',
-      );
-    }
-
-    const initialProps = {
-      name: input.name,
-      canDelete: true,
-    };
-
-    // create field region
-    const query = this.db
-      .query()
-      .apply(await createNode(FieldRegion, { initialProps }))
-      .apply(
-        createRelationships(FieldRegion, 'out', {
-          director: ['User', input.director],
-          zone: ['FieldZone', input.fieldZone],
-        }),
-      )
-      .return<{ id: ID }>('node.id as id');
-
-    const result = await query.first();
-    if (!result) {
-      throw new CreationFailed(FieldRegion);
-    }
-
-    return await this.readOne(result.id).catch((e) => {
-      throw e instanceof NotFoundException
-        ? new ReadAfterCreationFailed(FieldRegion)
-        : e;
-    });
+export class FieldRegionRepository extends DrizzleDtoRepository<
+  typeof fieldRegions,
+  FieldRegion
+> {
+  constructor(
+    db: DrizzleService,
+    private readonly executor: PolicyExecutor,
+  ) {
+    super(db, fieldRegions, FieldRegion);
   }
 
-  async update(changes: UpdateFieldRegion) {
-    const { id, director, fieldZone, ...simpleChanges } = changes;
-    await this.updateProperties({ id }, simpleChanges);
-
-    if (director !== undefined) {
-      await this.updateRelation('director', 'User', id, director);
-    }
-
-    if (fieldZone !== undefined) {
-      await this.updateRelation('zone', 'FieldZone', id, fieldZone);
-    }
-
+  async create(input: CreateFieldRegion): Promise<UnsecuredDto<FieldRegion>> {
+    const id = await generateId();
+    await this.db
+      .insert(fieldRegions)
+      .values({
+        id,
+        name: input.name,
+        fieldZoneId: input.fieldZone,
+        directorId: input.director,
+      })
+      .catch(catchNameUnique);
     return await this.readOne(id);
   }
 
-  protected hydrate() {
-    return (query: Query) =>
-      query
-        .apply(matchProps())
-        .optionalMatch([
-          node('node'),
-          relation('out', '', 'director', ACTIVE),
-          node('director', 'User'),
-        ])
-        .optionalMatch([
-          node('node'),
-          relation('out', '', 'zone', ACTIVE),
-          node('fieldZone', 'FieldZone'),
-        ])
-        .return<{ dto: UnsecuredDto<FieldRegion> }>(
-          merge('props', {
-            director: 'director { .id }',
-            fieldZone: 'fieldZone { .id }',
-          }).as('dto'),
-        );
+  async update(changes: UpdateFieldRegion): Promise<UnsecuredDto<FieldRegion>> {
+    const { id, fieldZone, director, ...fields } = changes;
+    await this.updateColumns(id, {
+      name: fields.name,
+      fieldZoneId: fieldZone,
+      directorId: director,
+    }).catch(catchNameUnique);
+    return await this.readOne(id);
   }
 
   async delete(id: ID): Promise<void> {
-    await this.deleteNode(id);
+    await this.softDelete(id);
   }
 
-  async list(input: FieldRegionListInput) {
-    if (!this.privileges.can('read')) {
-      return SecuredList.Redacted;
+  async list(
+    input: FieldRegionListInput,
+  ): Promise<PaginatedListType<UnsecuredDto<FieldRegion>>> {
+    const conditions: SQL[] = [isNull(fieldRegions.deletedAt)];
+    if (!this.executor.applyReadFilter(this.resource, conditions)) {
+      return EMPTY_PAGE;
     }
-    const result = await this.db
-      .query()
-      .match(node('node', 'FieldRegion'))
-      .apply(fieldRegionFilters(input.filter))
-      .apply(sortWith(fieldRegionSorters, input))
-      .apply(paginate(input, this.hydrate()))
-      .first();
-    return result!; // result from paginate() will always have 1 row.
+
+    conditions.push(...fieldRegionFilterClauses(this.db, input.filter));
+
+    const sortColumns = {
+      name: fieldRegions.name,
+      createdAt: fieldRegions.createdAt,
+    } satisfies SortMap<keyof FieldRegion>;
+
+    const { rows, total, hasMore } = await this.paginatedSelect({
+      predicate: and(...conditions),
+      orderBy: resolveOrderBy(input, sortColumns, fieldRegions.name),
+      page: input.page,
+      count: input.count,
+    });
+    return {
+      total,
+      items: rows.map((row) => this.toDto(row)),
+      hasMore,
+    };
   }
 
-  async readAllByDirector(id: ID<'User'>) {
-    return await this.db
-      .query()
-      .match([
-        node('node', 'FieldRegion'),
-        relation('out', '', 'director', ACTIVE),
-        node('', 'User', { id }),
-      ])
-      .apply(this.hydrate())
-      .map('dto')
-      .run();
+  async readAllByDirector(
+    id: ID<'User'>,
+  ): Promise<ReadonlyArray<UnsecuredDto<FieldRegion>>> {
+    const rows = await this.db
+      .select()
+      .from(fieldRegions)
+      .where(
+        and(eq(fieldRegions.directorId, id), isNull(fieldRegions.deletedAt)),
+      );
+    return rows.map((row) => this.toDto(row));
   }
 
-  @OnIndex('schema')
-  private async createSchemaIndexes() {
-    await this.db.query().apply(FieldRegionNameIndex.create()).run();
+  protected toDto(
+    row: typeof fieldRegions.$inferSelect,
+  ): UnsecuredDto<FieldRegion> {
+    return {
+      id: row.id,
+      __typename: 'FieldRegion',
+      createdAt: DateTime.fromJSDate(row.createdAt),
+      name: row.name,
+      fieldZone: { id: row.fieldZoneId },
+      director: { id: row.directorId },
+    };
   }
 }
 
-export const fieldRegionFilters = filter.define(() => FieldRegionFilters, {
-  id: filter.baseNodeProp(),
-  name: filter.fullText({
-    index: () => FieldRegionNameIndex,
-    matchToNode: (q) =>
-      q.match([
-        node('node', 'FieldRegion'),
-        relation('out', '', 'name', ACTIVE),
-        node('match'),
-      ]),
-    minScore: 0.8,
-  }),
-  director: filter.sub(() => userFilters)((sub) =>
-    sub.match([
-      node('outer'),
-      relation('out', '', 'director', ACTIVE),
-      node('node', 'User'),
-    ]),
-  ),
-  fieldZone: filter.sub(() => fieldZoneFilters)((sub) =>
-    sub.match([
-      node('outer'),
-      relation('out', '', 'zone', ACTIVE),
-      node('node', 'FieldZone'),
-    ]),
-  ),
-});
+/**
+ * Sortable columns on `field_regions`. Exported for cross-domain sort
+ * (Project sorts by `fieldRegion.*`), parallel to `*FilterClauses`.
+ */
+export const fieldRegionSortColumns = {
+  name: fieldRegions.name,
+  createdAt: fieldRegions.createdAt,
+} satisfies SortMap<keyof FieldRegion>;
 
-export const fieldRegionSorters = defineSorters(FieldRegion, {
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  'director.*': (query, input) =>
-    query
-      .with('node as region')
-      .match([
-        node('region'),
-        relation('out', '', 'director', ACTIVE),
-        node('node', 'User'),
-      ])
-      .apply(sortWith(userSorters, input)),
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  'fieldZone.*': (query, input) =>
-    query
-      .with('node as region')
-      .match([
-        node('region'),
-        relation('out', '', 'zone', ACTIVE),
-        node('node', 'FieldZone'),
-      ])
-      .apply(sortWith(fieldZoneSorters, input)),
-});
-
-const FieldRegionNameIndex = FullTextIndex({
-  indexName: 'FieldRegionName',
-  labels: 'FieldRegionName',
-  properties: 'value',
-  analyzer: 'standard-folding',
-});
+/**
+ * Build the column-level WHERE clauses for a `FieldRegionFilters` input against
+ * the `field_regions` table. Reusable from sub-filters in other domains
+ * (e.g. Project's `fieldRegion` filter).
+ */
+export const fieldRegionFilterClauses = (
+  db: DrizzleDb,
+  filter: FieldRegionFilters | undefined,
+): SQL[] => {
+  const conditions: SQL[] = [];
+  if (!filter) return conditions;
+  if (filter.id) {
+    conditions.push(eq(fieldRegions.id, filter.id));
+  }
+  if (filter.name) {
+    conditions.push(
+      ilike(fieldRegions.name, `%${escapeLikePattern(filter.name)}%`),
+    );
+  }
+  if (filter.director) {
+    conditions.push(
+      subFilter(
+        db,
+        fieldRegions.directorId,
+        users,
+        userFilterClauses(db, filter.director),
+      ),
+    );
+  }
+  if (filter.fieldZone) {
+    conditions.push(
+      subFilter(
+        db,
+        fieldRegions.fieldZoneId,
+        fieldZones,
+        fieldZoneFilterClauses(db, filter.fieldZone),
+      ),
+    );
+  }
+  return conditions;
+};

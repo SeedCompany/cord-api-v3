@@ -1,7 +1,5 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { splitDb } from '~/core/database';
 import { AuthorizationModule } from '../../authorization/authorization.module';
-import { UnavailabilityDrizzleRepository } from './unavailability.drizzle.repository';
 import { UnavailabilityLoader } from './unavailability.loader';
 import { UnavailabilityRepository } from './unavailability.repository';
 import { UnavailabilityResolver } from './unavailability.resolver';
@@ -12,10 +10,7 @@ import { UnavailabilityService } from './unavailability.service';
   providers: [
     UnavailabilityResolver,
     UnavailabilityService,
-    splitDb(UnavailabilityRepository, {
-      // migration-todo: remove `as any` once splitDb types accept drizzle repos directly
-      postgres: UnavailabilityDrizzleRepository as any,
-    }),
+    UnavailabilityRepository,
     UnavailabilityLoader,
   ],
   exports: [UnavailabilityService],

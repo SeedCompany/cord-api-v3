@@ -19,8 +19,6 @@ import {
   updateProject,
 } from './utility';
 
-const isPostgres = process.env.DATABASE === 'postgres';
-
 const SearchDoc = graphql(`
   query search($input: SearchInput!) {
     search(input: $input) {
@@ -442,10 +440,9 @@ describe('Search e2e', () => {
     });
   });
 
-  // Two places where Postgres deliberately does NOT match Neo4j, because
-  // Neo4j's behavior was worse. Asserted only on Postgres so the Neo4j engine
-  // job does not fail on behavior it never had.
-  (isPostgres ? describe : describe.skip)('deliberate improvements', () => {
+  // Two places where search deliberately does NOT match the old Neo4j search,
+  // because Neo4j's behavior was worse.
+  describe('deliberate improvements', () => {
     it('a fragment from the middle of a word finds it', async () => {
       // Lucene has no leading wildcard, so Neo4j could only match whole words
       // and prefixes. Matching substrings anywhere is a superset: it finds

@@ -9,8 +9,8 @@ import {
   ServerException,
   viewOfChangeset,
 } from '~/common';
+import { mapListResults } from '~/common';
 import { Hooks } from '~/core/hooks';
-import { mapListResults } from '~/core/neo4j/results';
 import { HandleIdLookup, ResourceResolver } from '~/core/resources';
 import { ResourceMutatedHook } from '../audit/resource-mutated.hook';
 import { Privileges } from '../authorization';
@@ -107,7 +107,7 @@ export class BudgetService {
 
   @HandleIdLookup(Budget)
   async readOne(id: ID, view?: ObjectView): Promise<Budget> {
-    const result = await this.budgetRepo.readOne(id, view);
+    const result = await this.budgetRepo.readOne(id);
 
     const privs = this.privileges.for(Budget, result);
 
