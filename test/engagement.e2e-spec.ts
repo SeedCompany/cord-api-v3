@@ -643,7 +643,8 @@ describe('Engagement e2e', () => {
     expect(ceremony).toBeDefined();
 
     await registerUser(app, { roles: [Role.FieldOperationsDirector] });
-    const date = '2020-05-13';
+    // Certifications may fall after the engagement end.
+    const date = CalendarDate.local().plus({ years: 1 }).toISO();
     const result = await app.graphql.mutate(
       graphql(`
         mutation updateCeremony($input: UpdateCeremony!) {
@@ -674,6 +675,180 @@ describe('Engagement e2e', () => {
     expect(result.updateCeremony.ceremony.estimatedDate.value).toBe(date);
 
     await user.login();
+  });
+
+  describe('internship milestone dates', () => {
+    const updateInternship = (input: {
+      id: ID;
+      completeDate?: string;
+      disbursementCompleteDate?: string;
+    }) =>
+      app.graphql.mutate(
+        graphql(`
+          mutation updateInternshipEngagement(
+            $input: UpdateInternshipEngagement!
+          ) {
+            updateInternshipEngagement(input: $input) {
+              engagement {
+                completeDate {
+                  value
+                }
+                disbursementCompleteDate {
+                  value
+                }
+              }
+            }
+          }
+        `),
+        { input },
+      );
+
+    const updateCertification = (input: {
+      id: ID;
+      estimatedDate?: string;
+      actualDate?: string;
+    }) =>
+      app.graphql.mutate(
+        graphql(`
+          mutation updateCeremony($input: UpdateCeremony!) {
+            updateCeremony(input: $input) {
+              ceremony {
+                estimatedDate {
+                  value
+                }
+                actualDate {
+                  value
+                }
+              }
+            }
+          }
+        `),
+        { input },
+      );
+
+    async function createDatedInternship() {
+      const internProject = await createProject(app, {
+        type: ProjectType.Internship,
+      });
+      const engagement = await createInternshipEngagement(app, {
+        project: internProject.id,
+        intern: intern.id,
+        mentor: mentor.id,
+        countryOfOrigin: location.id,
+        startDateOverride: '1991-03-01',
+        endDateOverride: '1991-09-01',
+      });
+      const read = await app.graphql.query(
+        graphql(`
+          query engagementCeremony($id: ID!) {
+            engagement(id: $id) {
+              ceremony {
+                value {
+                  id
+                }
+              }
+            }
+          }
+        `),
+        { id: engagement.id },
+      );
+      return { engagement, ceremonyId: read.engagement.ceremony.value!.id };
+    }
+
+    it('rejects out-of-range milestone dates during creation', async () => {
+      // A rejected creation rolls back, so one project serves every case.
+      const internProject = await createProject(app, {
+        type: ProjectType.Internship,
+      });
+      const create = (milestones: {
+        completeDate?: string;
+        disbursementCompleteDate?: string;
+      }) =>
+        createInternshipEngagement(app, {
+          project: internProject.id,
+          intern: intern.id,
+          mentor: mentor.id,
+          countryOfOrigin: location.id,
+          startDateOverride: '1991-03-01',
+          endDateOverride: '1991-09-01',
+          ...milestones,
+        });
+
+      await expect(create({ completeDate: '1991-02-28' })).rejects.toThrow(
+        /Growth plan complete date cannot be before/,
+      );
+      await expect(create({ completeDate: '1991-09-02' })).rejects.toThrow(
+        /Growth plan complete date cannot be after/,
+      );
+      await expect(
+        create({ disbursementCompleteDate: '1991-02-28' }),
+      ).rejects.toThrow(/Disbursement complete date cannot be before/);
+    });
+
+    it('keeps the growth plan complete date within the engagement dates', async () => {
+      const { engagement } = await createDatedInternship();
+
+      await expect(
+        updateInternship({ id: engagement.id, completeDate: '1991-02-28' }),
+      ).rejects.toThrow(/Growth plan complete date cannot be before/);
+      await expect(
+        updateInternship({ id: engagement.id, completeDate: '1991-09-02' }),
+      ).rejects.toThrow(/Growth plan complete date cannot be after/);
+
+      const result = await updateInternship({
+        id: engagement.id,
+        completeDate: '1991-09-01',
+      });
+      expect(
+        result.updateInternshipEngagement.engagement.completeDate.value,
+      ).toBe('1991-09-01');
+    });
+
+    it('allows the disbursement complete date after the engagement end only', async () => {
+      const { engagement } = await createDatedInternship();
+
+      await expect(
+        updateInternship({
+          id: engagement.id,
+          disbursementCompleteDate: '1991-02-28',
+        }),
+      ).rejects.toThrow(/Disbursement complete date cannot be before/);
+
+      const result = await updateInternship({
+        id: engagement.id,
+        disbursementCompleteDate: '1991-12-01',
+      });
+      expect(
+        result.updateInternshipEngagement.engagement.disbursementCompleteDate
+          .value,
+      ).toBe('1991-12-01');
+    });
+
+    it('allows certification dates after the engagement end only', async () => {
+      const { ceremonyId } = await createDatedInternship();
+      await registerUser(app, { roles: [Role.FieldOperationsDirector] });
+
+      await expect(
+        updateCertification({ id: ceremonyId, estimatedDate: '1991-02-28' }),
+      ).rejects.toThrow(/Estimated certification date cannot be before/);
+      await expect(
+        updateCertification({ id: ceremonyId, actualDate: '1991-02-28' }),
+      ).rejects.toThrow(/Actual certification date cannot be before/);
+
+      const result = await updateCertification({
+        id: ceremonyId,
+        estimatedDate: '1991-12-01',
+        actualDate: '1991-12-15',
+      });
+      expect(result.updateCeremony.ceremony.estimatedDate.value).toBe(
+        '1991-12-01',
+      );
+      expect(result.updateCeremony.ceremony.actualDate.value).toBe(
+        '1991-12-15',
+      );
+
+      await user.login();
+    });
   });
 
   it('lists both language engagements and internship engagements', async () => {

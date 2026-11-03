@@ -71,10 +71,11 @@ export async function createInternshipEngagement(
     mentor: input.mentor || currentUserId,
     position: 'Administration',
     methodologies: ['Film'],
-    disbursementCompleteDate: now,
     startDateOverride: now,
     endDateOverride: now,
-    completeDate: now,
+    // Milestones must not precede the engagement start.
+    disbursementCompleteDate: input.startDateOverride ?? now,
+    completeDate: input.startDateOverride ?? now,
     ...input,
   });
 }

@@ -1,19 +1,22 @@
 import { Injectable } from '@nestjs/common';
 import { DateTime } from 'luxon';
 import {
+  type CalendarDate,
   type ID,
   type ObjectView,
+  RangeException,
   ServerException,
   type UnsecuredDto,
 } from '~/common';
 import { Hooks } from '~/core/hooks';
-import { HandleIdLookup } from '~/core/resources';
+import { HandleIdLookup, ResourceLoader } from '~/core/resources';
 import { ResourceMutatedHook } from '../audit/resource-mutated.hook';
 import { Privileges } from '../authorization';
 import { CeremonyChannels } from './ceremony.channels';
 import { CeremonyRepository } from './ceremony.repository';
 import {
   Ceremony,
+  CeremonyType,
   CeremonyUpdate,
   type CreateCeremony,
   type UpdateCeremony,
@@ -26,6 +29,7 @@ export class CeremonyService {
     private readonly channels: CeremonyChannels,
     private readonly repo: CeremonyRepository,
     private readonly hooks: Hooks,
+    private readonly resourceLoader: ResourceLoader,
   ) {}
 
   async create(
@@ -67,6 +71,7 @@ export class CeremonyService {
     }
 
     this.privileges.for(Ceremony, object).verifyChanges(changes);
+    await this.verifyDatesAfterEngagementStart(object, changes);
     const updated = await this.repo.update({
       id: input.id,
       ...changes,
@@ -83,6 +88,28 @@ export class CeremonyService {
     });
 
     return { ceremony: this.secure(updated), payload };
+  }
+
+  private async verifyDatesAfterEngagementStart(
+    ceremony: UnsecuredDto<Ceremony>,
+    changes: Partial<
+      Pick<UnsecuredDto<Ceremony>, 'estimatedDate' | 'actualDate'>
+    >,
+  ) {
+    if (
+      ceremony.type !== CeremonyType.Certification ||
+      (!changes.estimatedDate && !changes.actualDate)
+    ) {
+      return;
+    }
+    const engagement = await this.resourceLoader.load(
+      'Engagement',
+      ceremony.engagement.id,
+    );
+    CertificationDateException.throwIfBeforeStart(
+      engagement.startDate.value,
+      changes,
+    );
   }
 
   async delete(id: ID): Promise<void> {
@@ -102,5 +129,46 @@ export class CeremonyService {
       ceremony: id,
       at: DateTime.now(),
     });
+  }
+}
+
+class CertificationDateException extends RangeException {
+  /**
+   * Throws if a changed certification date is before the engagement start.
+   *
+   * Dates after the engagement end are allowed.
+   *
+   * @example
+   * ```ts
+   * // engagement starts 2026-01-01
+   * throwIfBeforeStart(start, { actualDate: CalendarDate.local(2025, 12, 31) });
+   * // => throws, field "ceremony.actualDate"
+   * ```
+   */
+  static throwIfBeforeStart(
+    startDate: CalendarDate | null | undefined,
+    changes: Partial<
+      Pick<UnsecuredDto<Ceremony>, 'estimatedDate' | 'actualDate'>
+    >,
+  ) {
+    if (!startDate) {
+      return;
+    }
+    if (changes.estimatedDate && changes.estimatedDate < startDate) {
+      throw new CertificationDateException(
+        "Estimated certification date cannot be before the engagement's start date",
+        'ceremony.estimatedDate',
+      );
+    }
+    if (changes.actualDate && changes.actualDate < startDate) {
+      throw new CertificationDateException(
+        "Actual certification date cannot be before the engagement's start date",
+        'ceremony.actualDate',
+      );
+    }
+  }
+
+  constructor(message: string, field: string) {
+    super({ message, field });
   }
 }
