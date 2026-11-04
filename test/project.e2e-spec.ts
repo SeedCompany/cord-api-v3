@@ -1281,6 +1281,36 @@ describe('Project e2e', () => {
         expect(marketingRegion.value?.id).not.toBe(locationDefaultRegion.id);
       });
     });
+
+    it('uses the default of a Region marketing location that has one', async () => {
+      await runAsAdmin(app, async () => {
+        const regionDefault = await createLocation(app, { type: 'Region' });
+        const regionLocation = await createLocation(app, {
+          type: 'Region',
+          defaultMarketingRegion: regionDefault.id,
+        });
+        const project = await createProject(app, {
+          marketingLocation: regionLocation.id,
+          fieldRegion: fieldRegion.id,
+        });
+
+        const marketingRegion = await readMarketingRegion(project.id);
+        expect(marketingRegion.value?.id).toBe(regionDefault.id);
+      });
+    });
+
+    it('is a Region marketing location itself when it has no default', async () => {
+      await runAsAdmin(app, async () => {
+        const regionLocation = await createLocation(app, { type: 'Region' });
+        const project = await createProject(app, {
+          marketingLocation: regionLocation.id,
+          fieldRegion: fieldRegion.id,
+        });
+
+        const marketingRegion = await readMarketingRegion(project.id);
+        expect(marketingRegion.value?.id).toBe(regionLocation.id);
+      });
+    });
   });
 
   // Deleting a location or field region leaves the project pointing at it, and
