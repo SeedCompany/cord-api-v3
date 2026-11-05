@@ -24,7 +24,7 @@ import { FileService } from '../file';
 import { PartnerService } from '../partner';
 import { type Partner, PartnerType } from '../partner/dto';
 import { ProjectService } from '../project';
-import { resolveProjectType } from '../project/dto';
+import { type Project, resolveProjectType } from '../project/dto';
 import {
   type CreatePartnership,
   type FinancialReportingType,
@@ -72,6 +72,8 @@ export class PartnershipService {
           : e;
       }),
     ]);
+
+    PartnershipProjectRangeException.throwIfOutside(project, input);
 
     const isFirstPartnership = await this.repo.isFirstPartnership(
       input.project,
@@ -212,6 +214,21 @@ export class PartnershipService {
 
     PartnershipDateRangeException.throwIfInvalid(existing, changes);
 
+    if (
+      changes.mouStartOverride !== undefined ||
+      changes.mouEndOverride !== undefined
+    ) {
+      const project = await this.resourceLoader.load(
+        'Project',
+        existing.project.id,
+      );
+      PartnershipProjectRangeException.throwIfOutside(project, {
+        mouStartOverride: existing.mouStartOverride,
+        mouEndOverride: existing.mouEndOverride,
+        ...changes,
+      });
+    }
+
     if (changes.primary) {
       await this.repo.removePrimaryFromOtherPartnerships(input.id);
     }
@@ -339,6 +356,47 @@ class PartnershipDateRangeException extends RangeException {
   ) {
     const message =
       "Partnership's MOU start date must be before the MOU end date";
+    super({ message, field });
+  }
+}
+
+class PartnershipProjectRangeException extends RangeException {
+  /**
+   * Throws if the MOU override dates fall outside the project's MOU dates.
+   *
+   * Unreadable or unset project dates are not enforced.
+   *
+   * @example
+   * ```ts
+   * // project is 2026-01-01 to 2026-12-31
+   * throwIfOutside(project, { mouStartOverride: CalendarDate.local(2025, 12, 1) });
+   * // => throws, field "partnership.mouStartOverride"
+   * ```
+   */
+  static throwIfOutside(
+    project: Pick<Project, 'mouStart' | 'mouEnd'>,
+    overrides: Partial<
+      Pick<UnsecuredDto<Partnership>, 'mouStartOverride' | 'mouEndOverride'>
+    >,
+  ) {
+    const { mouStartOverride: start, mouEndOverride: end } = overrides;
+    const projectStart = project.mouStart.value;
+    const projectEnd = project.mouEnd.value;
+    if (start && projectStart && start < projectStart) {
+      throw new PartnershipProjectRangeException(
+        "Partnership's MOU start date cannot be before the project's MOU start date",
+        'partnership.mouStartOverride',
+      );
+    }
+    if (end && projectEnd && end > projectEnd) {
+      throw new PartnershipProjectRangeException(
+        "Partnership's MOU end date cannot be after the project's MOU end date",
+        'partnership.mouEndOverride',
+      );
+    }
+  }
+
+  constructor(message: string, field: string) {
     super({ message, field });
   }
 }
