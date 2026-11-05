@@ -1,0 +1,94 @@
+name: Dev Deploy Selector
+
+# Deploy a specific PR to the Dev environment by adding the `dev-deploy` label.
+#
+# How it works: this moves the `deployment/dev-environment-pipeline` branch to
+# point at the labeled PR's head commit. The AWS pipeline watches that branch
+# (see the infra repo: src/stacks/cord-v3.ts, Cord-Dev source) and builds +
+# deploys whatever it points at.
+#
+#   - Add the `dev-deploy` label to a PR -> Dev deploys that PR.
+#   - Push more commits to that PR       -> Dev redeploys automatically.
+#   - Only one PR may hold Dev at a time. Labeling a second PR while another
+#     holds it is declined (label removed + a comment pointing at the holder)
+#     rather than silently stealing it.
+#   - Merging/closing the PR frees the slot; Dev keeps running that last deploy
+#     until someone else grabs it.
+#
+# Note: there is deliberately no branch protection on the pointer branch, so a
+# manual push to it would also deploy. The long, namespaced branch name is what
+# keeps that from happening by accident.
+
+on:
+  pull_request:
+    types: [labeled, synchronize]
+
+# Pointer moves must not race each other.
+concurrency:
+  group: dev-deploy-selector
+  cancel-in-progress: false
+
+permissions:
+  contents: write # move the pointer branch
+  pull-requests: write # comment on / unlabel the PR
+
+env:
+  LABEL: dev-deploy
+  POINTER_BRANCH: deployment/dev-environment-pipeline
+  DEV_URL: https://dev.cordfield.com
+
+jobs:
+  select:
+    # Act only when the dev-deploy label is added, or when a PR that already
+    # holds the label receives new commits.
+    if: >-
+      (github.event.action == 'labeled' && github.event.label.name == 'dev-deploy')
+      || (github.event.action == 'synchronize' && contains(github.event.pull_request.labels.*.name, 'dev-deploy'))
+    runs-on: ubuntu-latest
+    steps:
+      - name: Point Dev at this PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ACTION: ${{ github.event.action }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+          IS_FORK: ${{ github.event.pull_request.head.repo.fork }}
+        run: |
+          set -euo pipefail
+
+          # Fork PRs can't be deployed this way: their commits aren't in this
+          # repo and the token can't write to the fork.
+          if [ "$IS_FORK" = "true" ]; then
+            if [ "$ACTION" = "labeled" ]; then
+              gh pr edit "$PR" --remove-label "$LABEL" || true
+              gh pr comment "$PR" --body ":warning: Dev deploy via \`$LABEL\` isn't supported for PRs from forks."
+            fi
+            exit 0
+          fi
+
+          # On a grab, make sure no other OPEN PR already holds the label.
+          if [ "$ACTION" = "labeled" ]; then
+            HOLDER=$(gh pr list --state open --label "$LABEL" --json number \
+              --jq "[.[] | select(.number != $PR)][0].number // empty")
+            if [ -n "$HOLDER" ]; then
+              gh pr edit "$PR" --remove-label "$LABEL"
+              gh pr comment "$PR" --body "Dev is currently held by #$HOLDER. Remove the \`$LABEL\` label from #$HOLDER first, then re-add it here to take over."
+              echo "Dev already held by #$HOLDER; takeover declined."
+              exit 0
+            fi
+          fi
+
+          # Move the pointer branch to this PR's head commit. PATCH the ref if it
+          # exists; create it on the very first run.
+          if ! gh api -X PATCH "repos/$REPO/git/refs/heads/$POINTER_BRANCH" \
+                 -f sha="$SHA" -F force=true >/dev/null 2>&1; then
+            gh api -X POST "repos/$REPO/git/refs" \
+              -f ref="refs/heads/$POINTER_BRANCH" -f sha="$SHA" >/dev/null
+          fi
+          echo "Pointed $POINTER_BRANCH at $SHA"
+
+          # Confirm on a grab; stay quiet on every push to avoid comment spam.
+          if [ "$ACTION" = "labeled" ]; then
+            gh pr comment "$PR" --body ":rocket: Dev is now deploying this PR (\`$(echo "$SHA" | cut -c1-7)\`). Push more commits here and Dev will redeploy. Deploy status shows on this PR's checks; the running app is at $DEV_URL."
+          fi
