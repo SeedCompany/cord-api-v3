@@ -13,6 +13,7 @@
     "build": "nest build",
     "clean": "rimraf -g dist schema.graphql",
     "console": "yarn start --entryFile console --",
+    "db:restore": "bash docker/restore-db.sh",
     "console:prod": "node --import=extensionless/register dist/src/console",
     "start": "NODE_OPTIONS=\"${NODE_OPTIONS:-} --import=extensionless/register\" nest start",
     "start:dev": "yarn start --watch",

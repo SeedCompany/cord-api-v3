@@ -23,19 +23,26 @@ Bible translation project management API.
    certificate. The API's PG client always performs an SSL handshake — even
    against a local server — which is also why `POSTGRES_URL` ends in
    `?sslmode=no-verify`.
-1. Load data (recommended): ask a teammate for the current scrubbed production
-   dump and restore it into the still-empty database, before the app's first
-   boot:
+1. Load data (recommended): restore the current scrubbed production dump,
+   which lives in the private `cord-v3-seed-data` S3 bucket. You need AWS
+   credentials that can read it (same SSO profile you use for the other envs):
     ```bash
-    docker compose exec -T postgres pg_restore -U postgres -d cord \
-      --no-owner --no-privileges < cord-scrubbed-<date>.dump
+    yarn db:restore                      # download from S3 and restore
+    yarn db:restore --file <dump>        # or use a dump you already have
+    yarn db:restore --s3 <uri-or-key>    # or a different object in S3
     ```
+   This drops and recreates the `cord` database inside the compose container
+   (so stop the API first), restores the dump, and stamps the database as
+   seeded from the scrubbed dump. It only ever talks to the compose container —
+   never to a host/port — so it can't be aimed at a tunnel to a real
+   environment. Start the API afterwards; it applies any migrations newer than
+   the dump.
+
    Sign in as `devops@tsco.org` / `admin` — the default root account, which the
    app re-syncs on every boot. Skipping this step is fine too — the app boots
-   against the empty database and applies migrations itself. To load a
-   dump later, stop the app and drop/recreate the `cord` database first
-   (`dropdb` / `createdb` inside the container); `pg_restore` will not
-   overwrite tables the app has already created.
+   against the empty database and applies migrations itself. To load a dump
+   later, stop the app and run `yarn db:restore` again; it replaces whatever is
+   in the `cord` database.
 
 ## Database
 
