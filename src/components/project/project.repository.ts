@@ -104,8 +104,9 @@ type ProjectRow = typeof projects.$inferSelect & {
   engagementTotal?: number;
   pinned?: boolean;
   /**
-   * The marketing location's default region — batched in `readMany`. Feeds
-   * `marketingRegion`, which falls back to this when there's no override.
+   * The marketing location's default region, else the location itself if it
+   * is a Region — batched in `readMany`. Feeds `marketingRegion`, which falls back to this
+   * when there's no override.
    */
   inheritedMarketingRegionId?: ID<'Location'> | null;
   /** Has a live ToolUsage for the Rev79 tool — batched in `readMany`. */
@@ -233,10 +234,9 @@ export class ProjectRepository extends DrizzleDtoRepository<
     const engagementTotalByProject = new Map(
       engagementCounts.map((c) => [c.projectId, c.total]),
     );
-    // A project with no marketing region override inherits the one its
-    // marketing location points at — the same fallback the Neo4j repo does with
-    // `coalesce`. Soft-deleted locations contribute nothing, matching Neo4j,
-    // where a deleted location's link is no longer active.
+    // A project with no marketing region override inherits one from its
+    // marketing location: its default region, or the location itself when it
+    // is a Region with no default. Soft-deleted locations contribute nothing.
     const marketingLocationIds = [
       ...new Set(
         rows
@@ -248,6 +248,7 @@ export class ProjectRepository extends DrizzleDtoRepository<
       ? await this.db
           .select({
             id: locations.id,
+            type: locations.type,
             defaultMarketingRegionId: locations.defaultMarketingRegionId,
           })
           .from(locations)
@@ -259,7 +260,10 @@ export class ProjectRepository extends DrizzleDtoRepository<
           )
       : [];
     const inheritedRegionByLocation = new Map(
-      marketingLocations.map((loc) => [loc.id, loc.defaultMarketingRegionId]),
+      marketingLocations.map((loc) => [
+        loc.id,
+        loc.defaultMarketingRegionId ?? (loc.type === 'Region' ? loc.id : null),
+      ]),
     );
     const pinnedSet = await pinnedByRequester(
       this.db,

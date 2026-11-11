@@ -1,12 +1,13 @@
 import { faker } from '@faker-js/faker';
 import { beforeAll, describe, expect, it } from '@jest/globals';
+import { eq } from 'drizzle-orm';
 import { times } from 'lodash';
 import { firstValueFrom, timeout } from 'rxjs';
 import { firstLettersOfWords, generateId, type ID, isValidId } from '~/common';
 import { Broadcaster } from '~/core/broadcast';
 import { ConfigService } from '~/core/config';
 import { DrizzleService } from '~/core/drizzle';
-import { users } from '~/core/drizzle/schema';
+import { engagements, users } from '~/core/drizzle/schema';
 import { graphql, type InputOf, type VariablesOf } from '~/graphql';
 import { ProjectType } from '../src/components/project/dto';
 import { UserStatus } from '../src/components/user/dto';
@@ -521,7 +522,7 @@ describe('User e2e', () => {
     // The user is not a member of this project — only its engagement's intern —
     // so the project can only come back through the intern path of the
     // `userId` filter behind `User.projects`.
-    const intern = await createPerson(app);
+    const intern = await createPerson(app, { roles: ['Intern'] });
     const project = await createProject(app, { type: ProjectType.Internship });
     await createInternshipEngagement(app, {
       project: project.id,
@@ -545,6 +546,154 @@ describe('User e2e', () => {
     expect(result.user.projects.items.map((item) => item.id)).toContain(
       project.id,
     );
+  });
+
+  describe('intern guards', () => {
+    const UpdateRolesDoc = graphql(`
+      mutation updateUserRoles($id: ID!, $roles: [Role!]!) {
+        updateUser(input: { id: $id, roles: $roles }) {
+          user {
+            roles {
+              value
+            }
+          }
+        }
+      }
+    `);
+    const DeleteInternDoc = graphql(`
+      mutation deleteIntern($id: ID!) {
+        deleteUser(id: $id) {
+          __typename
+        }
+      }
+    `);
+    const DeleteEngagementDoc = graphql(`
+      mutation deleteInternEngagement($id: ID!) {
+        deleteEngagement(id: $id) {
+          __typename
+        }
+      }
+    `);
+    const ReopenEngagementDoc = graphql(`
+      mutation reopenInternEngagement($id: ID!) {
+        updateInternshipEngagement(input: { id: $id, status: Active }) {
+          engagement {
+            status {
+              value
+            }
+          }
+        }
+      }
+    `);
+
+    const createInternWithEngagement = async () => {
+      const intern = await createPerson(app, { roles: ['Intern'] });
+      const project = await createProject(app, {
+        type: ProjectType.Internship,
+      });
+      const engagement = await createInternshipEngagement(app, {
+        project: project.id,
+        intern: intern.id,
+      });
+      return { intern, engagement };
+    };
+
+    const completeEngagement = async (id: ID) => {
+      await app
+        .get(DrizzleService)
+        .client.update(engagements)
+        .set({ status: 'Completed' })
+        .where(eq(engagements.id, id as ID<'Engagement'>));
+    };
+
+    it('blocks removing the Intern role while an internship is ongoing', async () => {
+      const { intern } = await createInternWithEngagement();
+
+      await expect(
+        app.graphql.mutate(UpdateRolesDoc, { id: intern.id, roles: [] }),
+      ).rejects.toThrowGqlError(
+        errors.input({
+          message:
+            'The Intern role cannot be removed from a user with an ongoing internship engagement',
+          field: 'roles',
+        }),
+      );
+    });
+
+    it('allows other role changes that keep the Intern role', async () => {
+      const { intern } = await createInternWithEngagement();
+
+      const result = await app.graphql.mutate(UpdateRolesDoc, {
+        id: intern.id,
+        roles: ['Intern', 'Translator'],
+      });
+      expect(result.updateUser.user.roles.value).toEqual(
+        expect.arrayContaining(['Intern', 'Translator']),
+      );
+    });
+
+    it('allows removing the Intern role once the internship is terminal', async () => {
+      const { intern, engagement } = await createInternWithEngagement();
+      await completeEngagement(engagement.id);
+
+      const result = await app.graphql.mutate(UpdateRolesDoc, {
+        id: intern.id,
+        roles: [],
+      });
+      expect(result.updateUser.user.roles.value).toEqual([]);
+    });
+
+    it('blocks reopening a terminal internship whose intern lost the role', async () => {
+      const { intern, engagement } = await createInternWithEngagement();
+      await completeEngagement(engagement.id);
+      await app.graphql.mutate(UpdateRolesDoc, { id: intern.id, roles: [] });
+
+      await expect(
+        app.graphql.mutate(ReopenEngagementDoc, { id: engagement.id }),
+      ).rejects.toThrowGqlError(
+        errors.input({
+          message:
+            'The intern must have the Intern role to reopen this internship engagement',
+          field: 'engagement.status',
+        }),
+      );
+    });
+
+    it('allows reopening a terminal internship whose intern kept the role', async () => {
+      const { engagement } = await createInternWithEngagement();
+      await completeEngagement(engagement.id);
+
+      const result = await app.graphql.mutate(ReopenEngagementDoc, {
+        id: engagement.id,
+      });
+      expect(result.updateInternshipEngagement.engagement.status.value).toBe(
+        'Active',
+      );
+    });
+
+    it('blocks deleting a person who is the intern on any internship', async () => {
+      const { intern, engagement } = await createInternWithEngagement();
+      // Terminal engagements still count — they keep the person as history.
+      await completeEngagement(engagement.id);
+
+      await expect(
+        app.graphql.mutate(DeleteInternDoc, { id: intern.id }),
+      ).rejects.toThrowGqlError(
+        errors.input({
+          message: 'A user with an internship engagement cannot be deleted',
+        }),
+      );
+    });
+
+    it('allows deleting the person once their internship is deleted', async () => {
+      const { intern, engagement } = await createInternWithEngagement();
+      await app.graphql.mutate(DeleteEngagementDoc, { id: engagement.id });
+
+      const result = await app.graphql.mutate(DeleteInternDoc, {
+        id: intern.id,
+      });
+      expect(result.deleteUser.__typename).toBe('UserDeleted');
+    });
   });
 
   // The mutations return the very same `UserCreated`/`UserUpdated`/`UserDeleted`
