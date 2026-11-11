@@ -15,15 +15,32 @@ name: Dev Deploy Selector
 #   - Merging/closing the PR frees the slot; Dev keeps running that last deploy
 #     until someone else grabs it.
 #
+# Correctness note: workflow runs are NOT guaranteed to execute in the order
+# their events fired, and the event payload can be stale. So this reads the PR's
+# current state (head SHA, labels, open/closed) live at run time rather than
+# trusting the payload, which keeps out-of-order runs from moving the pointer to
+# a stale commit or acting on a label that was already removed.
+#
 # Note: there is deliberately no branch protection on the pointer branch, so a
 # manual push to it would also deploy. The long, namespaced branch name is what
 # keeps that from happening by accident.
 
 on:
-  pull_request:
+  # pull_request_target (not pull_request) so a PR that conflicts with its base
+  # branch still runs — GitHub won't run pull_request workflows for a conflicted
+  # PR, which would strand long-lived branches. Safe here: this workflow never
+  # checks out or executes PR code — it only reads PR metadata and moves a ref —
+  # and it runs the base branch's copy of this file, so a PR can't alter it.
+  pull_request_target:
     types: [labeled, synchronize]
 
-# Pointer moves must not race each other.
+# Serialize pointer moves so two grabs can't both pass the single-holder check
+# and leave two PRs holding Dev. A rare side effect (see GitHub concurrency
+# docs): if several runs queue while one is executing, only the latest pending
+# run is kept. A dropped `labeled` run leaves the label without a deploy, but
+# the live re-checks below mean that can never produce *wrong* state (two
+# holders / stale pointer) — worst case the next push to that PR self-heals it,
+# or the user re-toggles the label.
 concurrency:
   group: dev-deploy-selector
   cancel-in-progress: false
@@ -39,8 +56,7 @@ env:
 
 jobs:
   select:
-    # Act only when the dev-deploy label is added, or when a PR that already
-    # holds the label receives new commits.
+    # Cheap pre-filter; the authoritative checks run live below.
     if: >-
       (github.event.action == 'labeled' && github.event.label.name == 'dev-deploy')
       || (github.event.action == 'synchronize' && contains(github.event.pull_request.labels.*.name, 'dev-deploy'))
@@ -49,46 +65,68 @@ jobs:
       - name: Point Dev at this PR
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }} # so `gh` targets this repo (no checkout)
           ACTION: ${{ github.event.action }}
-          REPO: ${{ github.repository }}
           PR: ${{ github.event.pull_request.number }}
-          SHA: ${{ github.event.pull_request.head.sha }}
-          IS_FORK: ${{ github.event.pull_request.head.repo.fork }}
         run: |
           set -euo pipefail
 
-          # Fork PRs can't be deployed this way: their commits aren't in this
-          # repo and the token can't write to the fork.
+          # Read the PR's CURRENT state at run time (never trust the payload).
+          PR_JSON=$(gh api "repos/$GH_REPO/pulls/$PR")
+          STATE=$(echo "$PR_JSON" | jq -r '.state')
+          HEAD_SHA=$(echo "$PR_JSON" | jq -r '.head.sha')
+          IS_FORK=$(echo "$PR_JSON" | jq -r '.head.repo.fork')
+          HAS_LABEL=$(echo "$PR_JSON" | jq -r --arg l "$LABEL" 'any(.labels[]; .name == $l)')
+
+          # Freeze semantics: nothing to do once the PR is closed/merged.
+          if [ "$STATE" != "open" ]; then
+            echo "PR #$PR is $STATE; nothing to do."
+            exit 0
+          fi
+
+          # The label may have been removed between the event firing and now
+          # (e.g. a takeover declined elsewhere). If it's gone, leave Dev alone.
+          if [ "$HAS_LABEL" != "true" ]; then
+            echo "PR #$PR no longer has the $LABEL label; skipping."
+            exit 0
+          fi
+
+          # Fork PRs can't be deployed: their head commit isn't in this repo.
+          # Let failures surface (no `|| true`) so broken cleanup is visible.
           if [ "$IS_FORK" = "true" ]; then
             if [ "$ACTION" = "labeled" ]; then
-              gh pr edit "$PR" --remove-label "$LABEL" || true
+              gh pr edit "$PR" --remove-label "$LABEL"
               gh pr comment "$PR" --body ":warning: Dev deploy via \`$LABEL\` isn't supported for PRs from forks."
             fi
             exit 0
           fi
 
-          # On a grab, make sure no other OPEN PR already holds the label.
-          if [ "$ACTION" = "labeled" ]; then
-            HOLDER=$(gh pr list --state open --label "$LABEL" --json number \
-              --jq "[.[] | select(.number != $PR)][0].number // empty")
-            if [ -n "$HOLDER" ]; then
+          # Enforce one holder: is any OTHER open PR currently holding the label?
+          OTHER=$(gh pr list --state open --label "$LABEL" --json number \
+            --jq "[.[] | select(.number != $PR)][0].number // empty")
+          if [ -n "$OTHER" ]; then
+            if [ "$ACTION" = "labeled" ]; then
+              # Decline the takeover rather than stealing it.
               gh pr edit "$PR" --remove-label "$LABEL"
-              gh pr comment "$PR" --body "Dev is currently held by #$HOLDER. Remove the \`$LABEL\` label from #$HOLDER first, then re-add it here to take over."
-              echo "Dev already held by #$HOLDER; takeover declined."
-              exit 0
+              gh pr comment "$PR" --body "Dev is currently held by #$OTHER. Remove the \`$LABEL\` label from #$OTHER first, then re-add it here to take over."
+              echo "Dev already held by #$OTHER; takeover declined."
+            else
+              # A push to a PR that isn't the current holder: leave Dev alone.
+              echo "Dev is held by #$OTHER, not #$PR; skipping pointer move."
             fi
+            exit 0
           fi
 
-          # Move the pointer branch to this PR's head commit. PATCH the ref if it
-          # exists; create it on the very first run.
-          if ! gh api -X PATCH "repos/$REPO/git/refs/heads/$POINTER_BRANCH" \
-                 -f sha="$SHA" -F force=true >/dev/null 2>&1; then
-            gh api -X POST "repos/$REPO/git/refs" \
-              -f ref="refs/heads/$POINTER_BRANCH" -f sha="$SHA" >/dev/null
+          # Move the pointer branch to this PR's CURRENT head commit. The ref
+          # update is atomic; PATCH if it exists, create it on the first run.
+          if ! gh api -X PATCH "repos/$GH_REPO/git/refs/heads/$POINTER_BRANCH" \
+                 -f sha="$HEAD_SHA" -F force=true >/dev/null 2>&1; then
+            gh api -X POST "repos/$GH_REPO/git/refs" \
+              -f ref="refs/heads/$POINTER_BRANCH" -f sha="$HEAD_SHA" >/dev/null
           fi
-          echo "Pointed $POINTER_BRANCH at $SHA"
+          echo "Pointed $POINTER_BRANCH at $HEAD_SHA"
 
-          # Confirm on a grab; stay quiet on every push to avoid comment spam.
+          # Confirm on a grab; stay quiet on each push to avoid comment spam.
           if [ "$ACTION" = "labeled" ]; then
-            gh pr comment "$PR" --body ":rocket: Dev is now deploying this PR (\`$(echo "$SHA" | cut -c1-7)\`). Push more commits here and Dev will redeploy. Deploy status shows on this PR's checks; the running app is at $DEV_URL."
+            gh pr comment "$PR" --body ":rocket: Dev is now deploying this PR (\`${HEAD_SHA:0:7}\`). Push more commits here and Dev will redeploy. Deploy status shows on this PR's checks; the running app is at $DEV_URL."
           fi
