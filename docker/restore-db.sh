@@ -25,8 +25,8 @@ set -euo pipefail
 #     It never connects over a host/port, so it cannot be pointed at an SSM
 #     tunnel to a real environment (those forward RDS to localhost too).
 #   - It also refuses to run against a non-local Docker daemon (a remote
-#     DOCKER_HOST or Docker context), since compose would run the destructive
-#     commands there instead.
+#     DOCKER_HOST or DOCKER_CONTEXT, or a remote configured context), since
+#     compose would run the destructive commands there instead.
 #   - The dump is restored into a scratch database first. `cord` is only dropped
 #     and replaced once that restore has fully succeeded, so a truncated or
 #     corrupt dump leaves your existing database untouched.
@@ -86,30 +86,54 @@ done
 
 cd "$(dirname "$0")/.."
 
-# Refuse a non-local Docker daemon. `docker compose` follows DOCKER_HOST and the
-# active Docker context, so a remote daemon that happens to have a matching
-# `postgres` service would receive the drop/restore. DOCKER_HOST wins over the
-# context; DOCKER_CONTEXT is honored by `docker context inspect`.
-DOCKER_ENDPOINT=${DOCKER_HOST:-}
-if [[ -z $DOCKER_ENDPOINT ]]; then
-  DOCKER_ENDPOINT=$(docker context inspect --format '{{.Endpoints.docker.Host}}' 2>/dev/null || true)
-fi
-case $DOCKER_ENDPOINT in
-  "" | unix://* | npipe://* | tcp://localhost | tcp://localhost:* | tcp://127.0.0.1 | tcp://127.0.0.1:* | 'tcp://[::1]' | 'tcp://[::1]:*') ;;
-  *)
-    echo "Refusing: the Docker daemon is not local ($DOCKER_ENDPOINT)." >&2
-    echo "Unset DOCKER_HOST / switch to a local Docker context, then retry." >&2
-    exit 1
-    ;;
-esac
+# Refuse a non-local Docker daemon. `docker compose` follows DOCKER_HOST,
+# DOCKER_CONTEXT and the configured Docker context, so a remote daemon that
+# happens to have a matching `postgres` service would receive the drop/restore.
+# Which of these wins is not something to rely on (the docs and the CLI's actual
+# behavior have disagreed, and it can vary by version), so every one that could
+# be in play must be local, not just the one we think takes precedence.
+local_endpoint() {
+  case $1 in
+    unix://* | npipe://* | tcp://localhost | tcp://localhost:* | tcp://127.0.0.1 | tcp://127.0.0.1:* | 'tcp://[::1]' | 'tcp://[::1]:*') return 0 ;;
+    *) return 1 ;;
+  esac
+}
+context_endpoint() { docker context inspect "$@" --format '{{.Endpoints.docker.Host}}' 2>/dev/null; }
 
-INCOMING=${DB}_seed_incoming
+DAEMON_DESC=""
+DAEMON_LOCAL=true
+if [[ -n ${DOCKER_HOST:-} ]]; then
+  DAEMON_DESC="DOCKER_HOST=$DOCKER_HOST"
+  local_endpoint "$DOCKER_HOST" || DAEMON_LOCAL=false
+fi
+if [[ -n ${DOCKER_CONTEXT:-} ]]; then
+  ctx_endpoint=$(context_endpoint "$DOCKER_CONTEXT" || true)
+  DAEMON_DESC+="${DAEMON_DESC:+, }DOCKER_CONTEXT=$DOCKER_CONTEXT (${ctx_endpoint:-unresolvable})"
+  { [[ -n $ctx_endpoint ]] && local_endpoint "$ctx_endpoint"; } || DAEMON_LOCAL=false
+fi
+if [[ -z ${DOCKER_HOST:-} && -z ${DOCKER_CONTEXT:-} ]]; then
+  ctx_endpoint=$(context_endpoint || true)
+  DAEMON_DESC="context $(docker context show 2>/dev/null || echo default) (${ctx_endpoint:-default socket})"
+  [[ -z $ctx_endpoint ]] || local_endpoint "$ctx_endpoint" || DAEMON_LOCAL=false
+fi
+$DAEMON_LOCAL || {
+  echo "Refusing: the Docker daemon is not local: $DAEMON_DESC." >&2
+  echo "Unset DOCKER_HOST / DOCKER_CONTEXT or switch to a local Docker context, then retry." >&2
+  exit 1
+}
+
+# Every invocation gets its own scratch database and only ever drops the one it
+# created, so concurrent runs (or one that bails out early) can't delete another
+# run's in-flight restore.
+INCOMING=${DB}_seed_incoming_$(date +%s)_$$
+INCOMING_CREATED=false
 TMPFILE=""
 cleanup() {
   [[ -z $TMPFILE ]] || rm -f "$TMPFILE"
-  # Only exists if we got as far as the scratch restore and it didn't get
-  # renamed into place; harmless otherwise.
-  docker compose exec -T postgres dropdb -U postgres --force --if-exists "$INCOMING" >/dev/null 2>&1 || true
+  # Exists only if this run created it and it wasn't renamed into place.
+  if $INCOMING_CREATED; then
+    docker compose exec -T postgres dropdb -U postgres --force --if-exists "$INCOMING" >/dev/null 2>&1 || true
+  fi
 }
 trap cleanup EXIT
 
@@ -170,7 +194,7 @@ fi
 # Confirm --------------------------------------------------------------------------
 echo
 echo "About to WIPE and rebuild:"
-echo "  daemon    : ${DOCKER_ENDPOINT:-default local socket}"
+echo "  daemon    : $DAEMON_DESC"
 echo "  container : compose service 'postgres' ($(compose ps -q postgres | cut -c1-12))"
 echo "  database  : $DB"
 echo "  dump      : $FILE"
@@ -185,7 +209,7 @@ fi
 # succeeded: the header check above can't tell a truncated or corrupt archive
 # from a good one, and dropping $DB before finding out would lose local data.
 echo "==> Restoring into scratch database $INCOMING"
-compose exec -T postgres dropdb -U postgres --force --if-exists "$INCOMING"
+INCOMING_CREATED=true
 compose exec -T postgres createdb -U postgres "$INCOMING"
 compose exec -T postgres pg_restore -U postgres -d "$INCOMING" \
   --no-owner --no-privileges --exit-on-error <"$FILE"
