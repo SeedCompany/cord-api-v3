@@ -165,11 +165,14 @@ if [[ -n $exists ]]; then
     "select count(*) from information_schema.tables where table_schema in ('public', 'drizzle')")
 fi
 
-if [[ $marker == cord-seed-lineage=* && $marker != "cord-seed-lineage=$LINEAGE"* ]]; then
+# The stamp is `cord-seed-lineage=<lineage>; restored=<time>`. Compare the lineage
+# part exactly: a prefix match would treat e.g. `scrubbed-production` as `scrubbed`.
+lineage_marker=${marker%%;*}
+if [[ $marker == cord-seed-lineage=* && $lineage_marker != "cord-seed-lineage=$LINEAGE" ]]; then
   echo "Refusing: local '$DB' is marked '$marker', not lineage '$LINEAGE'." >&2
   exit 1
 fi
-if [[ $tables -gt 0 && $marker != "cord-seed-lineage=$LINEAGE"* ]]; then
+if [[ $tables -gt 0 && $lineage_marker != "cord-seed-lineage=$LINEAGE" ]]; then
   echo "Note: local '$DB' has $tables table(s) and no seed marker (hand-built data)."
 fi
 
