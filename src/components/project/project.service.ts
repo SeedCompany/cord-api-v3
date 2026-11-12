@@ -57,6 +57,7 @@ import { ToolKey } from '../tools/tool/dto/tool-key.enum';
 import { User } from '../user/dto';
 import {
   type CreateProject,
+  InitialFiscalYearAllocation,
   InternshipProject,
   IProject,
   MomentumTranslationProject,
@@ -285,6 +286,15 @@ export class ProjectService {
       currentProject.type !== ProjectType.MomentumTranslation
     ) {
       throw new InputException('Rev79 is only applicable to Momentum projects');
+    }
+    if (
+      regularInput.initialFiscalYearAllocation != null &&
+      !InitialFiscalYearAllocation.appliesTo(currentProject.type)
+    ) {
+      throw new InputException(
+        `Initial fiscal year allocation is not applicable to ${currentProject.type} projects`,
+        'initialFiscalYearAllocation',
+      );
     }
 
     const projectPrivs = this.privileges.for(

@@ -19,6 +19,8 @@ import { field, Policy, Role } from '../util';
   r.Product.edit.create.delete,
   r.Project.edit.create.delete.specifically((p) => [
     p.many('mouStart', 'mouEnd').when(field('status', 'InDevelopment')).edit,
+    // Only RD & FOD (while in development) and Admins may set this.
+    p.initialFiscalYearAllocation.read,
   ]),
   r.ProjectMember.edit.create.delete,
   r.PeriodicReport.edit,

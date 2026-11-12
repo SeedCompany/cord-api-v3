@@ -534,6 +534,11 @@ export const project = graphql(`
       canRead
       canEdit
     }
+    initialFiscalYearAllocation {
+      value
+      canRead
+      canEdit
+    }
     tags {
       value
       canRead

@@ -20,6 +20,7 @@ import {
   SecuredDateNullable,
   SecuredDateTime,
   SecuredDateTimeNullable,
+  SecuredIntNullable,
   SecuredString,
   SecuredStringNullable,
   SecuredTags,
@@ -41,6 +42,7 @@ import { Pinnable } from '../../pin/dto';
 import { Postable } from '../../post/dto';
 import { ProjectChangeRequest } from '../../project-change-request/dto';
 import { ProjectMember } from '../project-member/dto';
+import { InitialFiscalYearAllocation } from './initial-fiscal-year-allocation';
 import { ProjectStatus } from './project-status.enum';
 import { SecuredProjectStep } from './project-step.enum';
 import { ProjectType } from './project-type.enum';
@@ -170,6 +172,13 @@ class Project extends Interfaces {
 
   @Field()
   readonly estimatedSubmission: SecuredDateNullable;
+
+  /**
+   * The fiscal year the initial fiscal year allocation was applied in.
+   * Always null on Multiplication projects — see {@link InitialFiscalYearAllocation}.
+   */
+  @Field({ description: InitialFiscalYearAllocation.description })
+  readonly initialFiscalYearAllocation: SecuredIntNullable;
 
   @DateTimeField()
   readonly modifiedAt: DateTime;
