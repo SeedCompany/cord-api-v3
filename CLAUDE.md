@@ -242,6 +242,7 @@ yarn test:e2e           # e2e (Jest, E2E project)
 yarn clean              # remove dist, schema.graphql
 yarn repl               # TypeScript REPL with app context
 yarn console -- [cmd]   # CLI commands
+yarn db:restore         # reset the local compose DB from the scrubbed dump (see README: Seeding the database)
 ```
 
 ---
