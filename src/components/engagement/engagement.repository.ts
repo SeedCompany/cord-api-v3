@@ -53,6 +53,7 @@ import {
   projects,
   tools,
   toolUsages,
+  userGlobalRoles,
   users,
 } from '~/core/drizzle/schema';
 import { type ScopedRole } from '../authorization/dto/role.dto';
@@ -265,6 +266,12 @@ export class EngagementRepository extends DrizzleDtoRepository<
   ): Promise<UnsecuredDto<InternshipEngagement>> {
     await this.verifyRelationshipEligibility(input.project, input.intern, true);
 
+    if (!(await this.userHasInternRole(input.intern))) {
+      throw new InputException(
+        'The intern must have the Intern role',
+        'intern',
+      );
+    }
     if (input.mentor && !(await this.userExists(input.mentor))) {
       throw new NotFoundException('Could not find mentor', 'mentor');
     }
@@ -630,6 +637,60 @@ export class EngagementRepository extends DrizzleDtoRepository<
       .where(and(eq(users.id, id as ID<'User'>), isNull(users.deletedAt)))
       .limit(1);
     return !!row;
+  }
+
+  /**
+   * Reads the engagement's current status.
+   *
+   * Locks the engagement row for the rest of the surrounding transaction, so
+   * the status cannot change before the caller writes.
+   */
+  async currentEngagementStatus(id: ID) {
+    const [row] = await this.db
+      .select({ status: engagements.status })
+      .from(engagements)
+      .where(
+        and(
+          eq(engagements.id, id as ID<'Engagement'>),
+          isNull(engagements.deletedAt),
+        ),
+      )
+      .for('update');
+    if (!row) {
+      throw new NotFoundException('Could not find engagement');
+    }
+    return row.status;
+  }
+
+  /**
+   * Whether the user has the Intern role.
+   *
+   * Locks the live user row for the rest of the surrounding transaction, so
+   * the answer cannot race with a concurrent role removal or delete. Throws a
+   * `NotFoundException` on the `intern` field if no live user row exists.
+   */
+  async userHasInternRole(id: ID) {
+    const [user] = await this.db
+      .select({ id: users.id })
+      .from(users)
+      .where(and(eq(users.id, id as ID<'User'>), isNull(users.deletedAt)))
+      .for('update');
+    // A concurrent delete can commit after an earlier existence check
+    if (!user) {
+      throw new NotFoundException('Could not find intern', 'intern');
+    }
+
+    const [role] = await this.db
+      .select({ userId: userGlobalRoles.userId })
+      .from(userGlobalRoles)
+      .where(
+        and(
+          eq(userGlobalRoles.userId, id as ID<'User'>),
+          eq(userGlobalRoles.role, 'Intern'),
+        ),
+      )
+      .limit(1);
+    return !!role;
   }
 
   private async languageExists(id: ID) {

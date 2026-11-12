@@ -6,7 +6,7 @@ import {
 } from '@seedcompany/common';
 import { and, or, type SQL } from 'drizzle-orm';
 import { type Class, type Constructor } from 'type-fest';
-import { inspect, type InspectOptionsStylized } from 'util';
+import { inspect, type InspectContext } from 'util';
 import { type ResourceShape } from '~/common';
 import { type Policy } from '../policy.factory';
 import type {
@@ -54,7 +54,7 @@ export abstract class AggregateConditions<
     return combined!;
   }
 
-  [inspect.custom](_depth: number, _options: InspectOptionsStylized) {
+  [inspect.custom](_depth: number, _options: InspectContext) {
     const name = this instanceof AndConditions ? ' AND ' : ' OR ';
     const asStrings = this.conditions.map((condition) => {
       const label = inspect(condition);

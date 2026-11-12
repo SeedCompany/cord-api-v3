@@ -131,6 +131,40 @@ Requiring the URL to be passed explicitly, rather than reading it from
 `.env.local` alongside everything else, is what keeps all of that from pointing
 at a server inherited from a file you had forgotten about.
 
+## Deploying a PR to the Dev environment
+
+The shared Dev environment (API at https://api.dev.cordfield.com, UI at
+https://dev.cordfield.com) can run the code from a specific PR instead of
+`develop`, so you can test a branch — including long-lived ones — on real infra.
+
+**To use it:** add the `dev-deploy` label to your PR.
+
+- The PR's code deploys to Dev within a few minutes; deploy status shows on the
+  PR's checks.
+- Push more commits to that PR and Dev redeploys automatically.
+- Only one PR holds Dev at a time. If another PR already has it, adding the label
+  is declined — the label is removed and a comment tells you which PR to free up
+  first.
+- Remove the label, or merge/close the PR, to release your hold. Dev keeps
+  running that last deploy until someone else grabs it (it does not revert to
+  `develop` on its own).
+
+**How it works:** a machine-owned pointer branch,
+`deployment/dev-environment-pipeline`, always points at whatever is currently
+deployed to Dev. The [`dev-deploy` workflow](.github/workflows/dev-deploy.yml)
+moves that pointer to your PR's head commit when the label is added (or when a
+labeled PR gets new commits). The AWS pipeline — configured in the infra repo at
+`src/stacks/cord-v3.ts` (the `Cord-Dev` stack) — watches that branch and builds
+and deploys whatever it points at.
+
+A couple of notes:
+
+- Don't push to `deployment/dev-environment-pipeline` by hand. It's managed by
+  the workflow, and because it has no branch protection a manual push would also
+  deploy.
+- PRs from forks aren't supported (their commits aren't in this repo); the
+  workflow removes the label and comments if you try.
+
 ## Documentation
 
 [NestJS](https://docs.nestjs.com/)

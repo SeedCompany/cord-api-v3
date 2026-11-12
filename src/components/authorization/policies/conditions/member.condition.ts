@@ -1,7 +1,7 @@
 import { type NonEmptyArray } from '@seedcompany/common';
 import { type SQL, sql } from 'drizzle-orm';
 import { intersection } from 'lodash';
-import { inspect, type InspectOptionsStylized } from 'util';
+import { inspect, type InspectContext } from 'util';
 import { type EnhancedResource, type ResourceShape, type Role } from '~/common';
 import { rolesForScope, type ScopedRole, splitScope } from '../../dto/role.dto';
 import {
@@ -101,7 +101,7 @@ class MemberCondition<
     return conditions[0];
   }
 
-  [inspect.custom](_depth: number, _options: InspectOptionsStylized) {
+  [inspect.custom](_depth: number, _options: InspectContext) {
     return 'Member';
   }
 }
@@ -136,7 +136,7 @@ class MemberWithRolesCondition<
     )`;
   }
 
-  [inspect.custom](_depth: number, _options: InspectOptionsStylized) {
+  [inspect.custom](_depth: number, _options: InspectContext) {
     return `Member with ${this.roles.join(', ')}`;
   }
 }

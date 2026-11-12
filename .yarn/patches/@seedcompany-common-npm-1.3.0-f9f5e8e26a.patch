@@ -1,0 +1,42 @@
+diff --git a/index.d.cts b/index.d.cts
+index 76928171462fc7ae112810812be8965f21d6b18d..39d547cbfcb236c2684a17210675809b6a654680 100644
+--- a/index.d.cts
++++ b/index.d.cts
+@@ -1,6 +1,6 @@
+ import { PartialDeep, SetRequired, SetNonNullable, LiteralUnion, ConditionalKeys, Paths, PickDeep, Simplify, Primitive } from 'type-fest';
+ import { Readable } from 'stream';
+-import { InspectOptionsStylized, InspectOptions } from 'node:util';
++import { InspectContext, InspectOptions } from 'node:util';
+ import { F as FnLike, W as WidenLiteral, N as Nil } from './types-f4f3040b.js';
+ export { A as ArrayItem, a as IterableItem, I as IteratorItem, M as MaybeAsync, U as UnknownFn, V as ValOrFn } from './types-f4f3040b.js';
+ 
+@@ -376,7 +376,7 @@ declare const isRegularObject: (value: unknown) => value is object;
+ declare const isObjectStringTag: (value: unknown) => boolean;
+ 
+ type Inspect<T> = InspectFn<T> | InspectShortcut<T>;
+-type InspectFn<TThis = unknown> = (this: TThis, params: SetRequired<SetNonNullable<InspectOptionsStylized, 'depth'>, 'depth'> & {
++type InspectFn<TThis = unknown> = (this: TThis, params: SetRequired<SetNonNullable<InspectContext, 'depth'>, 'depth'> & {
+     inspect: InnerInspectFn;
+ } & WithCollapsedFn) => string | object;
+ interface WithCollapsedFn {
+diff --git a/index.d.ts b/index.d.ts
+index 76928171462fc7ae112810812be8965f21d6b18d..39d547cbfcb236c2684a17210675809b6a654680 100644
+--- a/index.d.ts
++++ b/index.d.ts
+@@ -1,6 +1,6 @@
+ import { PartialDeep, SetRequired, SetNonNullable, LiteralUnion, ConditionalKeys, Paths, PickDeep, Simplify, Primitive } from 'type-fest';
+ import { Readable } from 'stream';
+-import { InspectOptionsStylized, InspectOptions } from 'node:util';
++import { InspectContext, InspectOptions } from 'node:util';
+ import { F as FnLike, W as WidenLiteral, N as Nil } from './types-f4f3040b.js';
+ export { A as ArrayItem, a as IterableItem, I as IteratorItem, M as MaybeAsync, U as UnknownFn, V as ValOrFn } from './types-f4f3040b.js';
+ 
+@@ -376,7 +376,7 @@ declare const isRegularObject: (value: unknown) => value is object;
+ declare const isObjectStringTag: (value: unknown) => boolean;
+ 
+ type Inspect<T> = InspectFn<T> | InspectShortcut<T>;
+-type InspectFn<TThis = unknown> = (this: TThis, params: SetRequired<SetNonNullable<InspectOptionsStylized, 'depth'>, 'depth'> & {
++type InspectFn<TThis = unknown> = (this: TThis, params: SetRequired<SetNonNullable<InspectContext, 'depth'>, 'depth'> & {
+     inspect: InnerInspectFn;
+ } & WithCollapsedFn) => string | object;
+ interface WithCollapsedFn {

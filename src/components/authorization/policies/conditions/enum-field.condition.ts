@@ -2,7 +2,7 @@ import { groupBy, type NonEmptyArray } from '@seedcompany/common';
 import { sql } from 'drizzle-orm';
 import { get, startCase } from 'lodash';
 import type { Get, Paths } from 'type-fest';
-import { inspect, type InspectOptionsStylized } from 'util';
+import { inspect, type InspectContext } from 'util';
 import {
   type ResourceShape,
   unwrapSecured,
@@ -93,7 +93,7 @@ export class EnumFieldCondition<
     });
   }
 
-  [inspect.custom](_depth: number, _options: InspectOptionsStylized) {
+  [inspect.custom](_depth: number, _options: InspectContext) {
     if (this.customId) {
       return this.customId;
     }

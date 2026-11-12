@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/method-signature-style */
 import { type Many, type NonEmptyArray } from '@seedcompany/common';
 import { type SQL } from 'drizzle-orm';
-import { inspect, type InspectOptionsStylized } from 'util';
+import { inspect, type InspectContext } from 'util';
 import { type EnhancedResource, type ResourceShape } from '~/common';
 import { type Session } from '~/core/authentication';
 import { type ResourceObjectContext } from '../object.type';
@@ -78,8 +78,5 @@ export abstract class Condition<
    * This is used to uniquely identify the condition.
    * And is what is displayed in dumper/debugger.
    */
-  abstract [inspect.custom](
-    depth: number,
-    options: InspectOptionsStylized,
-  ): string;
+  abstract [inspect.custom](depth: number, options: InspectContext): string;
 }

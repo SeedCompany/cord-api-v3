@@ -1,6 +1,6 @@
 import { type NonEmptyArray } from '@seedcompany/common';
 import { type SQL, sql } from 'drizzle-orm';
-import { inspect, type InspectOptionsStylized } from 'util';
+import { inspect, type InspectContext } from 'util';
 import {
   type EnhancedResource,
   type ResourceShape,
@@ -82,7 +82,7 @@ export class SensitivityCondition<
     return ranked[0]!;
   }
 
-  [inspect.custom](_depth: number, _options: InspectOptionsStylized) {
+  [inspect.custom](_depth: number, _options: InspectContext) {
     const map = {
       High: 'Any',
       Medium: 'Medium/Low',
