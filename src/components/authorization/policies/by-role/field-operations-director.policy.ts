@@ -15,7 +15,9 @@ import { field, Policy, Role } from '../util';
   r.Product.edit.create.delete,
   r.Project.edit.specifically((p) => [
     p.departmentId.read,
-    p.many('mouStart', 'mouEnd').when(field('status', 'InDevelopment')).edit,
+    p
+      .many('mouStart', 'mouEnd', 'initialFiscalYearAllocation')
+      .when(field('status', 'InDevelopment')).edit,
   ]),
   r.ProjectMember.edit.create.delete,
   r.ProjectWorkflowEvent.read.transitions(

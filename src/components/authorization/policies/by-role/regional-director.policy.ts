@@ -12,6 +12,10 @@ import * as PM from './project-manager.policy';
     p
       .many('mouStart', 'mouEnd')
       .whenAll(member, field('status', 'InDevelopment')).edit,
+    p.initialFiscalYearAllocation.whenAll(
+      member,
+      field('status', 'InDevelopment'),
+    ).edit,
   ]),
   r.ProjectWorkflowEvent.transitions(
     PM.projectTransitions,

@@ -29,6 +29,13 @@
       "when": 1790222400000,
       "tag": "0003_engagement_language_fields_shape",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794441600000,
+      "tag": "0004_project_initial_fiscal_year_allocation",
+      "breakpoints": true
     }
   ]
 }

@@ -170,6 +170,9 @@ export const momentumProjectsTransitions = () =>
             // field('step', stepsUntilFinancialEndorsement),
           ).edit,
         p.departmentId.read,
+        // Read-only here. This policy also covers RD, FOD & Field Services;
+        // the RD & FOD policies grant their own edit while in development.
+        p.initialFiscalYearAllocation.read,
       ])
       .children((c) => c.posts.read.create),
     r.ProjectMember.read.when(member).edit.create.delete,

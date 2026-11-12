@@ -619,6 +619,7 @@ export class ProjectRepository extends DrizzleDtoRepository<
       estimatedSubmission: row.estimatedSubmission
         ? CalendarDate.fromISO(row.estimatedSubmission)
         : null,
+      initialFiscalYearAllocation: row.initialFiscalYearAllocation ?? null,
       financialReportReceivedAt: row.financialReportReceivedAt
         ? DateTime.fromJSDate(row.financialReportReceivedAt)
         : null,
@@ -807,6 +808,7 @@ export const projectSortColumns = {
   mouStart: projects.mouStart,
   mouEnd: projects.mouEnd,
   estimatedSubmission: projects.estimatedSubmission,
+  initialFiscalYearAllocation: projects.initialFiscalYearAllocation,
   departmentId: projects.departmentId,
 } satisfies SortMap<keyof Project>;
 

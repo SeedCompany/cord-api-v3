@@ -1314,6 +1314,11 @@ export const projects = pgTable(
     mouEnd: date('mou_end'),
     initialMouEnd: date('initial_mou_end'),
     estimatedSubmission: date('estimated_submission'),
+    // The fiscal year (an integer, as `budget_records.fiscal_year`) the
+    // project's initial fiscal year allocation was applied in. Blank until someone
+    // records it, always a four-digit year when set, and always blank on
+    // Multiplication projects (migration 0004).
+    initialFiscalYearAllocation: integer('initial_fiscal_year_allocation'),
     financialReportReceivedAt: timestamp('financial_report_received_at', {
       withTimezone: true,
     }),
@@ -1359,6 +1364,16 @@ export const projects = pgTable(
     index('projects_type_idx').on(t.type),
     index('projects_step_idx').on(t.step),
     index('projects_status_idx').on(t.status),
+    check(
+      'projects_initial_fiscal_year_allocation_not_multiplication_chk',
+      sql`${t.initialFiscalYearAllocation} IS NULL OR ${t.type} <> 'MultiplicationTranslation'`,
+    ),
+    // Four digits. Mirrors InitialFiscalYearAllocation.min/max (the unit spec
+    // pins them together); literals because this file can't import the DTO.
+    check(
+      'projects_initial_fiscal_year_allocation_four_digits_chk',
+      sql`${t.initialFiscalYearAllocation} IS NULL OR ${t.initialFiscalYearAllocation} BETWEEN 1000 AND 9999`,
+    ),
   ],
 );
 

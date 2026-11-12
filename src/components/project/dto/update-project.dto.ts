@@ -14,6 +14,7 @@ import {
 } from '~/common';
 import { ChangesetIdField } from '../../changeset';
 import { ReportPeriod } from '../../periodic-report/dto';
+import { InitialFiscalYearAllocationField } from './initial-fiscal-year-allocation';
 
 @InputType()
 export abstract class UpdateProject {
@@ -57,6 +58,9 @@ export abstract class UpdateProject {
 
   @DateField({ nullable: true })
   readonly estimatedSubmission?: CalendarDate | null;
+
+  @InitialFiscalYearAllocationField()
+  readonly initialFiscalYearAllocation?: number | null;
 
   @SensitivityField({
     description: 'Update only available to internship projects',
