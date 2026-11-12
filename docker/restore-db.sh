@@ -94,7 +94,7 @@ cd "$(dirname "$0")/.."
 # be in play must be local, not just the one we think takes precedence.
 local_endpoint() {
   case $1 in
-    unix://* | npipe://* | tcp://localhost | tcp://localhost:* | tcp://127.0.0.1 | tcp://127.0.0.1:* | 'tcp://[::1]' | 'tcp://[::1]:*') return 0 ;;
+    unix://* | npipe://* | tcp://localhost | tcp://localhost:* | tcp://127.0.0.1 | tcp://127.0.0.1:* | 'tcp://[::1]' | 'tcp://[::1]:'*) return 0 ;;
     *) return 1 ;;
   esac
 }
